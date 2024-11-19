@@ -1,0 +1,176 @@
+{% comment %}theme-check-disable UndefinedObject{% endcomment %}
+{{ 'section-footer.css' | asset_url | stylesheet_tag }}
+{{ 'component-list-menu.css' | asset_url | stylesheet_tag }}
+{{ 'component-list-social.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .footer {
+    margin-top: {{ section.settings.margin_top | times: 0.75 | round: 0 }}px;
+  }
+
+  .section-{{ section.id }}-padding .footer__top {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .footer {
+      margin-top: {{ section.settings.margin_top }}px;
+    }
+
+    .section-{{ section.id }}-padding .footer__top {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{% liquid
+  assign has_social_icons = true
+  if settings.social_facebook_link == blank and settings.social_linkedin_link == blank and settings.social_instagram_link == blank and settings.social_youtube_link == blank and settings.social_tiktok_link == blank and settings.social_twitter_link == blank and settings.social_pinterest_link == blank and settings.social_snapchat_link == blank and settings.social_tumblr_link == blank and settings.social_vimeo_link == blank
+    assign has_social_icons = false
+  endif
+%}
+
+<footer class="footer section-{{ section.id }}-padding">
+  <div class="page-width">
+    <div class="footer__top">
+      <div class="footer__info">
+        {%- if settings.brand_image != blank -%}
+          <a href="/" class="footer__logo">
+            {%- assign brand_image_height = settings.brand_image_width
+                | divided_by: settings.brand_image.aspect_ratio
+            -%}
+            <div style="max-width: min(245px, {{ settings.brand_image_width }}px);">
+              {{
+              settings.brand_image
+              | image_url: width: 1100
+              | image_tag:
+              loading: 'lazy',
+              widths: '50, 100, 150, 200, 300, 400, 550, 800, 1100',
+              height: brand_image_height,
+              width: settings.brand_image_width
+              }}
+            </div>
+          </a>
+        {%- endif -%}
+
+        <div class="footer__contacts">
+          <div class="footer__address">
+            {{ shop.address.street }}<br>
+            {{ shop.address.city }}, {{ shop.address.province_code }} {{ shop.address.zip }}
+          </div>
+
+          {% if shop.phone != empty %}
+            {% assign phone = shop.phone | remove: '-' | remove: ' ' %}
+            <a href="tel:+{{ phone }}" class="footer__phone">{{ shop.phone }}</a>
+          {% endif %}
+
+          {% if shop.email != empty %}
+            <a href="mailto:{{ shop.email }}" class="footer__email">{{ shop.email }}</a>
+          {% endif %}
+        </div>
+
+        {%- if has_social_icons -%}
+          {%- render 'social-icons', class: 'footer__socials' -%}
+        {%- endif -%}
+      </div>
+
+      {% if section.settings.menu != blank %}
+        <div class="footer__menu">
+          {% for link in section.settings.menu.links %}
+            {% assign has_submenu = false %}
+            {% if link.links.size > 0 %}
+              {% assign has_submenu = true %}
+            {% endif %}
+
+            <div class="footer__menu-col">
+              {% if has_submenu %}
+                <h4 class="footer__menu-label">{{ link.title | escape }}</h4>
+
+                <ul class="footer__menu-links">
+                  {% for sub_link in link.links %}
+                    <li>
+                      <a href="{{ sub_link.url }}" class="footer__menu-link">{{ sub_link.title | escape }}</a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <a href="{{ link.url }}" class="footer__menu-label">{{ link.title | escape }}</a>
+              {% endif %}
+            </div>
+
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+    <div class="footer__bottom">
+      <div class="footer__copyright">
+        Copyright © {{ 'now' | date: '%Y' }} {{ shop.name | link_to: routes.root_url -}} | All Rights Reserved
+      </div>
+    </div>
+  </div>
+</footer>
+
+{% schema %}
+{
+  "name": "t:sections.footer.name",
+  "settings": [
+    {
+      "type": "link_list",
+      "id": "menu",
+      "default": "footer",
+      "label": "t:sections.footer.blocks.link_list.settings.menu.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.footer.settings.header__2.content",
+      "info": "t:sections.footer.settings.header__2.info"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_social",
+      "default": true,
+      "label": "t:sections.footer.settings.show_social.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.spacing"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.footer.settings.margin_top.label",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 36
+    }
+  ]
+}
+{% endschema %}

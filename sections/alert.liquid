@@ -1,0 +1,143 @@
+{{ 'section-alert.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }} {
+    margin-top: {{ section.settings.margin_top | times: 0.6 | round: 0 }}px;
+    margin-bottom: {{ section.settings.margin_bottom | times: 0.6 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }} {
+      margin-top: {{ section.settings.margin_top }}px;
+      margin-bottom: {{ section.settings.margin_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="alert section-{{ section.id }}">
+  <div class="alert__icon">
+    {% render 'icon-red-info' %}
+  </div>
+
+  <div class="alert__content">
+    {% if section.settings.title != empty %}
+      <div class="alert__title-container">
+        <span class="alert__icon--mobile">{% render 'icon-red-info' %}</span>
+        <h4 class="alert__title">{{ section.settings.title }}</h4>
+      </div>
+    {% endif %}
+
+    {% if section.settings.text != empty %}
+      <div class="alert__text">{{ section.settings.text }}</div>
+    {% endif %}
+
+    {% if section.blocks.size > 0 %}
+      <div class="alert__buttons">
+        {% for block in section.blocks %}
+          {% case block.type %}
+            {% when 'primary_button' %}
+              {% if block.settings.label != empty %}
+                <a href="{{ block.settings.url }}" class="button button--secondary">{{ block.settings.label }}</a>
+              {% endif %}
+
+            {% when 'secondary_button' %}
+              {% if block.settings.label != empty %}
+                <a href="{{ block.settings.url }}" class="button button--outline">
+                  {{ block.settings.label }}
+                  {% render 'icon-link-arrow' %}
+                </a>
+              {% endif %}
+          {% endcase %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Alert",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text"
+    },
+    {
+      "type": "header",
+      "content": "Margin"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Margin top",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Margin bottom",
+      "default": 0
+    }
+  ],
+  "blocks": [
+    {
+      "type": "primary_button",
+      "name": "Primary button",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "URL"
+        }
+      ]
+    },
+    {
+      "type": "secondary_button",
+      "name": "Secondary button",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "URL"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Alert"
+    }
+  ]
+}
+{% endschema %}

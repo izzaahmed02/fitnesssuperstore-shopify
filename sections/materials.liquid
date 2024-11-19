@@ -1,0 +1,61 @@
+<div class="material section-padding">
+  <div class="page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="h2">{{ section.settings.title }}</h2>
+    {% endif %}
+    <div class="material__wrapper">
+      {% assign blocks = section.blocks %}
+      {% assign block_count = blocks.size %}
+      {% assign blocks_per_row = 3 %}
+      {% assign current_block = 0 %}
+      {% for block in blocks %}
+        {% if current_block == 0 %}
+          <div class="block-row">
+          {% endif %}
+
+          <div class="block">
+            <span></span>
+            {{ block.settings.title }}
+          </div>
+
+          {% assign current_block = current_block | plus: 1 %}
+
+          {% if current_block == blocks_per_row or forloop.last %}
+          </div>
+          {% assign current_block = 0 %}
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "Materials",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Title"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "material",
+        "name": "Material",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "Material"
+      }
+    ]
+  }
+{% endschema %}

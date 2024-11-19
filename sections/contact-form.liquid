@@ -1,0 +1,219 @@
+{{ 'section-contact-form1.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.3 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.3 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{% assign contact_blocks = section.blocks | where: 'type', 'contact-info' %}
+{% assign hours_blocks = section.blocks | where: 'type', 'hours-info' %}
+
+<div class="page-width contact-form section-{{ section.id }}-padding">
+  <div class="contact-info">
+    <h2 class="contact-title">{{ section.settings.heading }}</h2>
+    <p class="contact-subtitle">{{ section.settings.subheading }}</p>
+
+    <div>
+      <div>
+        <h3 class="contact_info_title">Contact information</h3>
+        {% for block in contact_blocks %}
+          <div class="contact-info-block">
+            <img
+              src="{{ block.settings.icon | image_url }}"
+              alt="{{ block.settings.icon.alt | escape }}"
+              width=""
+              height=""
+            >
+            <h5>{{ block.settings.heading }}</h5>
+            {% assign content = block.settings.content | replace: '|', '<span class="contact-content-divder"></span>' %}
+
+            <div>{{ content }}</div>
+
+          </div>
+        {% endfor %}
+      </div>
+
+      {% for block in hours_blocks %}
+        <div>
+          <h5 class="content_hours_title">{{ block.settings.heading }}</h5>
+          <div class="contact_content_blocks">
+            {% for i in (1..3) %}
+              {% liquid
+                assign content_key = 'content' | append: i
+                assign content_block = block.settings[content_key]
+                assign content_title_key = 'content_title' | append: i
+                assign content_title = block.settings[content_title_key]
+              %}
+
+              {% if content_block != blank %}
+                <div class="content_hours_block">
+                  <p>{{ content_title }}</p>
+                  <span>{{ content_block }}</span>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="contact-form-wrapper">
+    <h2 class="contact-form-heading">FILL OUT THE FORM</h2>
+    <div class="globo-formbuilder" data-id="NjI3MzM="></div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.contact-form.name",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "default": "t:sections.contact-form.settings.title.default",
+      "label": "t:sections.contact-form.settings.title.label"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "options": [
+        {
+          "value": "h2",
+          "label": "t:sections.all.heading_size.options__1.label"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.all.heading_size.options__2.label"
+        },
+        {
+          "value": "h0",
+          "label": "t:sections.all.heading_size.options__3.label"
+        },
+        {
+          "value": "hxl",
+          "label": "t:sections.all.heading_size.options__4.label"
+        },
+        {
+          "value": "hxxl",
+          "label": "t:sections.all.heading_size.options__5.label"
+        }
+      ],
+      "default": "h1",
+      "label": "t:sections.all.heading_size.label"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 36
+    }
+  ],
+  "blocks": [
+    {
+      "type": "contact-info",
+      "name": "Contact info",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading"
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "Content"
+        }
+      ]
+    },
+    {
+      "type": "hours-info",
+      "name": "Hours info",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading"
+        },
+        {
+          "type": "text",
+          "id": "content_title1",
+          "label": "Content Title 1"
+        },
+        {
+          "type": "text",
+          "id": "content_title2",
+          "label": "Content Title 2"
+        },
+        {
+          "type": "text",
+          "id": "content_title3",
+          "label": "Content Title 3"
+        },
+        {
+          "type": "text",
+          "id": "content1",
+          "label": "Content 1"
+        },
+        {
+          "type": "text",
+          "id": "content2",
+          "label": "Content 2"
+        },
+        {
+          "type": "text",
+          "id": "content3",
+          "label": "Content 3"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.contact-form.presets.name"
+    }
+  ]
+}
+{% endschema %}

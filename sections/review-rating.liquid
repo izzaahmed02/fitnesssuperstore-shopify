@@ -1,0 +1,256 @@
+<script>
+    document.addEventListener("DOMContentLoaded", async (event) => {
+      let aggrReviews = [];
+    
+      try {
+        // Fetch the reviews data from the API
+        const response = await fetch('https://fitnesssuperstore-api.azurewebsites.net/api/reviews/all?from=&orderBy=');
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        // Parse the JSON data and assign it to aggrReviews
+        aggrReviews = await response.json();
+    
+        // Calculate the total and average ratings
+        const total = aggrReviews.reduce((sum, item) => sum + parseFloat(item.rating), 0);
+        const average = total / aggrReviews.length;
+    
+        // Update the average rating and reviews count in the DOM
+        document.querySelector('.average').innerHTML = average.toFixed(1);
+        document.querySelector('.reviews-count span').innerHTML = aggrReviews.length;
+        document.querySelector('.reviews-total .Stars').setAttribute('style', `--rating: ${average.toFixed(1)}`);
+    
+        // Calculate the percentage for each star rating (1 to 5)
+        const progressBars = document.querySelectorAll('.progress-bar');
+        const percentage = document.querySelectorAll('.percentage');
+    
+        for (let i = 1; i <= 5; i++) {
+          let stars = aggrReviews.filter(item => item.rating == i);
+          let avg = (100 * stars.length) / aggrReviews.length;
+          progressBars[5 - i].setAttribute('data-progress', avg);
+          percentage[5 - i].innerHTML = avg.toFixed(1) + '%';
+        }
+    
+        // Set the width of each progress bar based on the calculated percentage
+        progressBars.forEach(bar => {
+          const progress = bar.getAttribute('data-progress');
+          const progressElement = bar.querySelector('.progress');
+          progressElement.style.width = progress + '%';
+        });
+    
+      } catch (error) {
+        console.error("Failed to fetch reviews:", error);
+      }
+    });
+
+</script>
+
+
+
+<div class="container">
+  <div class="rating-wrapper">
+    <h2 class="title">{{ section.settings.title }}</h2>
+    <div class="reviews-total">
+        <span class="reviews-count"><span></span> REVIEWS</span>
+        <div class="stars">
+          <div class="Stars" style="--rating: ${ item.rating };" aria-label="Rating of this product is 2.3 out of 5."></div>
+        </div>
+        <div class="scores">Avarage:<span class="average"></span> </div>
+      </div>
+    <div class="reviews-statistic">
+      <div class="item">
+        5
+        <div class="star-label">★</div>
+        <div class="progress-bar" data-progress="25">
+          <div class="progress"></div>
+        </div>
+        <div class="percentage"></div>
+      </div>
+      <div class="item">
+        4
+        <div class="star-label">★</div>
+        <div class="progress-bar" data-progress="25">
+          <div class="progress"></div>
+        </div>
+        <div class="percentage"></div>
+      </div>
+      <div class="item">
+        3
+        <div class="star-label">★</div>
+        <div class="progress-bar" data-progress="25">
+          <div class="progress"></div>
+        </div>
+        <div class="percentage"></div>
+      </div>
+      <div class="item">
+        2
+        <div class="star-label">★</div>
+        <div class="progress-bar" data-progress="25">
+          <div class="progress"></div>
+        </div>
+        <div class="percentage"></div>
+      </div>
+      <div class="item">
+        1
+        <div class="star-label">★</div>
+        <div class="progress-bar" data-progress="25">
+          <div class="progress"></div>
+        </div>
+        <div class="percentage"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #shopify-section-{{ section.id }}{
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    border-bottom: 1px solid #E5E5E5;
+    padding-left: 15px;
+    padding-right: 15px;
+    
+  }
+  #shopify-section-{{ section.id }} .container{
+    max-width: 624px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  #shopify-section-{{ section.id }} .title{
+    font-size: 48px;
+    font-weight: 600;
+    color: #23232B;
+    line-height: #23232B;
+    margin-top: 0;
+    margin-bottom: 52px;
+    text-align: center;
+  }
+  #shopify-section-{{ section.id }} .reviews-total{
+    background: transparent;
+    margin-bottom: 32px;
+  }
+  #shopify-section-{{ section.id }} .reviews-total{
+    background: transparent;
+    height: auto;
+    max-width: none;
+    padding: 0;
+  }
+  #shopify-section-{{ section.id }} .reviews-total .reviews-count{
+    font-size: 18px;
+    font-weight: 700;
+    color: #393940;
+    line-height: 24px;
+    margin-bottom: 12px;
+  }
+  #shopify-section-{{ section.id }} .scores{
+    color: #393940;
+    margin-top: 6px;
+    margin-bottom: 0;
+  }
+  #shopify-section-{{ section.id }} .progress-bar {
+    width: 100%;
+    height: 12px;
+    background-color: #FBD1C3;
+    margin-right: 24px;
+    position: relative;
+    overflow: hidden;
+    display: block;
+    border-radius: 20px;
+  }
+  
+  #shopify-section-{{ section.id }} .progress {
+    display: block;
+    height: 100%;
+    width: 0; 
+    background-color: #F1592A;
+    transition: width 0.3s ease;
+  }
+  .reviews-statistic .item{
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #000000;
+  }
+  .reviews-statistic .star-label{
+    margin-left: 4px;
+    margin-right: 24px;
+    -webkit-text-stroke: 1px #FFC107;
+    color: #FFC107;
+  }
+  .percentage{
+    font-size: 16px;
+    font-weight: 400;
+    color: #393940;
+    width: 50px;
+  }
+
+  @media(max-width: 767px){
+    #shopify-section-{{ section.id }}{
+      padding-top: 48px;
+      padding-bottom: 0;
+    }
+    #shopify-section-{{ section.id }} .title{
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    #shopify-section-{{ section.id }} .reviews-total .reviews-count{
+      font-size: 16px;
+    }
+    #shopify-section-{{ section.id }} .scores{
+      font-size: 14px;
+    }
+    #shopify-section-{{ section.id }} .reviews-total{
+      margin-bottom: 16px;
+    }
+    #shopify-section-{{ section.id }} .progress-bar{
+      height: 8px;
+    }
+    #shopify-section-{{ section.id }} .reviews-statistic .item{
+      margin-bottom: 24px;
+    }
+  }
+</style>
+
+{% schema %}
+  {
+    "name": "Review rating",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Heading"
+      },
+      {
+        "type": "range",
+        "id": "padding_top",
+        "min": 0,
+        "max": 200,
+        "step": 4,
+        "unit": "px",
+        "label": "t:sections.all.padding.padding_top",
+        "default": 40
+      },
+      {
+        "type": "range",
+        "id": "padding_bottom",
+        "min": 0,
+        "max": 200,
+        "step": 4,
+        "unit": "px",
+        "label": "t:sections.all.padding.padding_bottom",
+        "default": 40
+      }
+    ],
+    "presets": [
+      {
+        "name": "Review rating"
+      }
+    ]
+  }
+{% endschema %}

@@ -1,0 +1,72 @@
+{% style %}
+
+  #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.bg }};
+
+  }
+{% endstyle %}
+
+<div class="custom-breadcrumbs">
+  <div class="page-width">
+    <div class="custom-breadcrumbs__wrapper">
+      <div class="custom-breadcrumbs__navigation">
+        {% for block in section.blocks %}
+          <a href="{{ block.settings.url }}">{{ block.settings.title }}</a>
+          {% unless forloop.last %}
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M6.31051 3.64645C6.50577 3.45118 6.82235 3.45118 7.01762 3.64645L11.0176 7.64645C11.2129 7.84171 11.2129 8.15829 11.0176 8.35355L7.01762 12.3536C6.82235 12.5488 6.50577 12.5488 6.31051 12.3536C6.11525 12.1583 6.11525 11.8417 6.31051 11.6464L9.95696 8L6.31051 4.35355C6.11525 4.15829 6.11525 3.84171 6.31051 3.64645Z"
+                fill="#DCDFE5" />
+            </svg>
+
+          {% endunless %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% schema %}
+  {
+    "name": "Custom breadcrumbs",
+    "settings": [
+      {
+        "type": "color",
+        "id": "bg",
+        "label": "Background color",
+        "default": "#fff"
+      }
+    ],
+
+    "blocks": [
+      {
+        "type": "link",
+        "name": "Link",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Title"
+          }, {
+            "type": "url",
+            "id": "url",
+            "label": "url"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "Custom breadcrumbs"
+      }
+    ]
+  }
+{% endschema %}

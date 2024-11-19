@@ -1,0 +1,202 @@
+{{ 'section-address.css' | asset_url | stylesheet_tag }}
+
+<style>
+  #shopify-section-{{ section.id }}{
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+
+  #address-map-{{ section.id }} {
+    min-height: 208px;
+    height: 100%;
+  }
+
+  @media screen and (max-width: 750px) {
+    #shopify-section-{{ section.id }}{
+      padding-top: {{ section.settings.padding_top | times: 0.3 | round }}px;
+      padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round }}px;
+    }
+  }
+
+</style>
+
+<div class="page-width address-section">
+  <div class="contact-map-container">
+    <div id="address-map-{{ section.id }}"></div>
+
+  </div>
+
+  <div>
+    <h2 class="address_title">{{ section.settings.title }}</h2>
+
+    {% for block in section.blocks %}
+      <div class="address-info-container">
+        <h5>{{ block.settings.title }}</h5>
+        <div>{{ block.settings.text }}</div>
+
+        {% if block.settings.location != blank %}
+          <div class="address_info_block">
+            <img
+              src="{{ block.settings.location_icon | image_url }}"
+              alt="{{ block.settings.location_icon.alt | escape }}"
+              width=""
+              height=""
+            >
+            <p>{{ block.settings.location }}</p>
+          </div>
+        {% endif %}
+
+        {% if block.settings.work_time != blank %}
+          <div class="address_info_block">
+            <img
+              src="{{ block.settings.work_time_icon | image_url }}"
+              alt="{{ block.settings.work_time_icon.alt | escape }}"
+              width=""
+              height=""
+            >
+            <p>{{ block.settings.work_time }}</p>
+          </div>
+        {% endif %}
+
+        {% if block.settings.url != blank %}
+          <a href="{{ block.settings.url }}" class="address_info_link">
+            {{ block.settings.link }}
+            {% render 'icon-link-arrow' %}
+          </a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  window.addEventListener('load', function () {
+      const map = new google.maps.Map(document.getElementById('address-map-{{ section.id }}'), {
+          center: { lat: 38.0764, lng: -122.1241 },
+          zoom: 15
+      });
+
+      const locations = [
+          {
+              position: { lat: 38.07726, lng: -122.12476 },
+              title: 'Fitness Superstore, Inc.',
+              address: '537 Stone Rd Suite F, Benicia, CA 94510, USA'
+          },
+          {
+              position: { lat: 38.0755, lng: -122.1235 },
+              title: 'French Fitness HQ',
+              address: '457 Industrial Way, Benicia, CA 94510'
+          }
+      ];
+
+      locations.forEach(location => {
+          const marker = new google.maps.Marker({
+              position: location.position,
+              map: map,
+              title: location.title
+          });
+
+          const content = `
+              <div style="display:flex; flex-direction: column;">
+                  <strong>${location.title}</strong><br>
+                  ${location.address}
+              </div>`
+          ;
+
+          const infoWindow = new google.maps.InfoWindow({
+              content: content
+          });
+
+          marker.addListener('click', () => {
+              infoWindow.open(map, marker);
+          });
+      });
+  });
+</script>
+
+
+{% schema %}
+{
+  "name": "Address section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 80
+    }
+  ],
+  "blocks": [
+    {
+      "name": "Address info item",
+      "type": "address_item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text"
+        },
+        {
+          "type": "image_picker",
+          "id": "location_icon",
+          "label": "Location icon"
+        },
+        {
+          "type": "text",
+          "id": "location",
+          "label": "Location"
+        },
+        {
+          "type": "image_picker",
+          "id": "work_time_icon",
+          "label": "Working hours icon"
+        },
+        {
+          "type": "text",
+          "id": "work_time",
+          "label": "Working hours"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "Link url"
+        },
+        {
+          "type": "text",
+          "id": "link",
+          "label": "Link text"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Address section"
+    }
+  ]
+}
+{% endschema %}
