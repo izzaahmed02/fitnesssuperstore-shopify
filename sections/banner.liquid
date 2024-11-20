@@ -1,138 +1,83 @@
 {{ 'section-banner.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
-    .section-{{ section.id }} {
-      padding-top: 72px;
-      padding-bottom: 72px;
-      margin-top: 0px;
-      margin-bottom: 24px;
-      margin-left: 16px;
-      margin-right: 16px;
-      background-image: url({{ section.settings.image | img_url:'' }});
-      background-size: cover;
+  .section-{{ section.id }} {
+
+    padding-top: 72px;
+    padding-bottom: 72px;
+    margin-top: 0px;
+    margin-bottom: 24px;
+    margin-left: 16px;
+    margin-right: 16px;
+    background-image: url({{ section.settings.image | img_url:'' }});
+    background-size: cover;
+    position: relative;
+
+  }
+
+  .section-{{ section.id }} .container{
+      max-width: {{ section.settings.container }}px;
+      margin-left: auto;
+      margin-right: auto;
+  }
+
+  .section-{{ section.id }}:after{
+     content: "";
+     display: block;
+     width: 100%;
+     height: 100%;
+     position: absolute;
+     top: 0;
+     left: 0;
+     background-color: {{ section.settings.color }};
+     opacity: {{ section.settings.opacity | divided_by: 100.0 }};
+     z-index: 2;
+     border-radius: 24px;
+  }
+      
+  .section-{{ section.id }} .banner__heading{
+      margin-bottom: 16px;
       position: relative;
-    }
+      z-index: 10;
+  }
 
-    .section-{{ section.id }} .container{
-        max-width: {{ section.settings.container }}px;
-        margin-left: auto;
-        margin-right: auto;
-    }
+  .section-{{ section.id }} p{
+      margin-top: 0;
+      margin-bottom: 0;
+      font-size: 24px;
+      line-height: 32px;
+      color: #F2F2F2;
+      position: relative;
+      z-index: 10;
 
-    .section-{{ section.id }}:after{
-       content: "";
-       display: block;
-       width: 100%;
-       height: 100%;
-       position: absolute;
-       top: 0;
-       left: 0;
-       background-color: {{ section.settings.color }};
-       opacity: {{ section.settings.opacity | divided_by: 100.0 }};
-       z-index: 2;
-       border-radius: 24px;
-    }
+  }
 
+  @media screen and (max-width: 750px) {
     .section-{{ section.id }} .banner__heading{
-        margin-bottom: 16px;
-        position: relative;
-        z-index: 10;
-    }
-
-    .section-{{ section.id }} p{
-        margin-top: 0;
-        margin-bottom: 0;
         font-size: 24px;
         line-height: 32px;
-        color: #F2F2F2;
-        position: relative;
-        z-index: 10;
+    }
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 56px;
+      margin-bottom: 80px;
     }
 
-    .mobile_image-container {
-      display: none;
-    }
-
-    @media screen and (max-width: 750px) {
-      .section-{{ section.id }} .banner__heading{
-        font-size: 24px;
-        line-height: 32px;
-      }
-    }
-
-  {% if section.settings.mobile_layout == 'column' %}
-    @media screen and (max-width: 750px) {
-        .section-{{ section.id }} {
-          background-image: none;
-        }
-
-        .section-{{ section.id }}.banner {
-          margin-bottom: 20px;
-          padding: 0;
-          padding-top: 24px;
-        }
-
-        .section-{{ section.id }}:after {
-          background-color: transparent;
-        }
-
-        .section-{{ section.id }} .banner__heading{
-          font-size: 24px;
-          line-height: 32px;
-          color: #23232B;
-          text-align: start;
-          z-index: 1;
-        }
-
-        .section-{{ section.id }} .container p {
-          font-size: 16px;
-          line-height: 24px;
-          text-align: start;
-          color: #393940;
-          margin-bottom: 16px;
-          z-index: 1;
-        }
-
-        .mobile_image-container img {
-          width: 100%;
-          min-height: 208px;
-          border-radius: 16px;
-        }
-
-        .mobile_image-container {
-          display: block;
-        }
-    }
-  {% endif %}
-
-
-    @media screen and (min-width: 750px) {
-      .section-{{ section.id }} {
-        padding-top: {{ section.settings.padding_top }}px;
-        padding-bottom: {{ section.settings.padding_bottom }}px;
-        margin-left: auto;
-        margin-right: auto;
-        margin-top: 56px;
-        margin-bottom: 80px;
-      }
-    }
+  }
 {%- endstyle -%}
 
 <div class="banner section-{{ section.id }} page-width">
   <div class="container">
-    <h2 class="banner__heading">{{ section.settings.heading }}</h2>
-    {% if section.settings.text %}
-      <p>{{ section.settings.text }}</p>
-    {% endif %}
-  </div>
-
-  <div class="mobile_image-container">
-    <img
-      src="{{ section.settings.mobile_image | image_url }}"
-      alt="{{ section.settings.mobile_image.alt | escape }}"
-      width=""
-      height=""
-    >
+  <h2 class="banner__heading">{{ section.settings.heading }}</h2>
+  {% if section.settings.text %}
+    <p>{{ section.settings.text }}</p>
+  {% endif %}
   </div>
 </div>
 
@@ -140,7 +85,7 @@
 {
   "name": "Banner",
   "tag": "section",
-  "class": "section banner-section",
+  "class": "section",
   "disabled_on": {
     "groups": ["header", "footer"]
   },
@@ -177,28 +122,6 @@
       "default": 60
     },
     {
-      "type": "image_picker",
-      "id": "mobile_image",
-      "label": "Mobile image",
-      "info": "If mobile layout is column"
-    },
-    {
-      "type": "select",
-      "id": "mobile_layout",
-      "options": [
-        {
-          "value": "banner",
-          "label": "Banner"
-        },
-        {
-          "value": "column",
-          "label": "Column"
-        }
-      ],
-      "label": "Mobile layout",
-      "default": "banner"
-    },
-    {
       "type": "header",
       "content": "t:sections.all.padding.section_padding_heading"
     },
@@ -231,7 +154,7 @@
       "unit": "px",
       "label": "Container",
       "default": 500
-    }
+    },
   ],
   "presets": [
     {

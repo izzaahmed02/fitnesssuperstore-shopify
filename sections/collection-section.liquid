@@ -1,0 +1,637 @@
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    function filterProducts() {
+      const searchText = document.getElementById('search-input').value.toLowerCase();
+      const products = document.querySelectorAll('#product-grid li');
+  
+      products.forEach(product => {
+        const productName = product.querySelector('.card__heading').textContent.toLowerCase();
+  
+        if (productName.includes(searchText)) {
+          product.style.display = '';
+        } else {
+          product.style.display = 'none';
+        }
+      });
+    }
+    
+    document.getElementById('search-input').addEventListener('input', filterProducts);
+
+    document.querySelector('.sort-per-page select.num').addEventListener('change', function(){
+      const url = new URL(window.location.href);
+      url.searchParams.delete('page');
+      url.searchParams.set('view', this.value.split('=')[1]); 
+      window.location.replace(url.toString()); 
+    });
+
+    function initSlider(element) {
+    $(element).slick({
+      slidesToShow: 1,
+      slidesToScroll: 1,
+      lazyLoad: 'ondemand',
+      arrows: true,
+      dots: true,
+      responsive: [
+        {
+          breakpoint: 768,
+          settings: {
+            slidesToShow: 1
+          }
+        }
+      ],
+      
+    });
+
+    console.log('test');
+    $(element).find('img.lazy-load').each(function() {
+        const img = $(this);
+        img.attr('src', img.data('src'));
+        img.removeClass('lazy-load'); 
+        img.css({
+          'opacity': '1',
+          'visibility': 'visible'
+        });
+    });
+  }
+
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        initSlider(entry.target);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  $('.image-wrap').each(function() {
+    observer.observe(this);
+  });
+    
+  });
+</script>
+
+{% style %}
+  .container{
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .collection-wrapper{
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 40px;
+  }
+  .collection-product-wrapper{
+    
+    max-width: 952px;
+    width: 100%;
+    gap: 20px;
+  }
+  #product-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    column-gap: 32px;
+    row-gap: 48px;
+  }
+  #verticalTitle{
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 36px;
+    color: #393940;
+    text-transform: none;
+    margin-bottom: 12px;
+  }
+  .heading-filter-count{
+    color: #F3744C;
+  }
+  .facets__summary-label{
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 24px;
+    color: #393940;
+  }
+  .facets__summary .icon-caret{
+    width: 12px;
+  }
+  .facets__selected{
+    display: none;
+  }
+  .facets-wrap-vertical{
+    margin-right: 0;
+    padding: 0;
+  }
+  .filterSearchInput{
+    width: 248px;
+    height: 48px;
+    border-radius: 8px;
+    border: 1.5px solid #E5E5E5;
+    background: #ffffff;
+    margin-bottom: 12px;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath fill-rule="evenodd" clip-rule="evenodd" d="M3.75 11C3.75 6.99594 6.99594 3.75 11 3.75C15.0041 3.75 18.25 6.99594 18.25 11C18.25 15.0041 15.0041 18.25 11 18.25C6.99594 18.25 3.75 15.0041 3.75 11ZM11 2.25C6.16751 2.25 2.25 6.16751 2.25 11C2.25 15.8325 6.16751 19.75 11 19.75C13.1462 19.75 15.112 18.9773 16.6342 17.6949L19.4697 20.5303C19.7626 20.8232 20.2374 20.8232 20.5303 20.5303C20.8232 20.2374 20.8232 19.7626 20.5303 19.4697L17.6949 16.6342C18.9773 15.112 19.75 13.1462 19.75 11C19.75 6.16751 15.8325 2.25 11 2.25Z" fill="%23B3B3B3"/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: 12px center;
+    padding-left: 44px;
+  }
+  #search-input{
+    width: 248px;
+    height: 48px;
+    border-radius: 8px;
+    border: 1.5px solid #E5E5E5;
+    background: #ffffff;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath fill-rule="evenodd" clip-rule="evenodd" d="M3.75 11C3.75 6.99594 6.99594 3.75 11 3.75C15.0041 3.75 18.25 6.99594 18.25 11C18.25 15.0041 15.0041 18.25 11 18.25C6.99594 18.25 3.75 15.0041 3.75 11ZM11 2.25C6.16751 2.25 2.25 6.16751 2.25 11C2.25 15.8325 6.16751 19.75 11 19.75C13.1462 19.75 15.112 18.9773 16.6342 17.6949L19.4697 20.5303C19.7626 20.8232 20.2374 20.8232 20.5303 20.5303C20.8232 20.2374 20.8232 19.7626 20.5303 19.4697L17.6949 16.6342C18.9773 15.112 19.75 13.1462 19.75 11C19.75 6.16751 15.8325 2.25 11 2.25Z" fill="%23B3B3B3"/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: 12px center;
+    padding-left: 44px;
+  }
+  .facet-checkbox__text-label{
+    font-size: 16px;
+    line-height: 24px;
+    color: #393940;
+  }
+  #Filter-Price-LTE{
+    width: 248px;
+    height: 48px;
+    border-radius: 8px;
+    background: #F2F2F2;
+    border: 1.5px solid #E5E5E5;
+    padding: 12px;
+  }
+  #sel1{
+    width: 76px;
+    height: 48px;
+    border-radius: 8px;
+    border: 1.5px solid #E5E5E5;
+    padding: 12px;
+    background: #ffffff;
+  }
+  #sel1:focus-visible{
+    box-shadow:none;
+    outline: none;
+  }
+  .collection-grid-top{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .facets-vertical-sort{
+    margin-right: 32px;
+  }
+  .facet-filters__sort{
+    width: 212px;
+    height: 48px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1.5px solid #E5E5E5;
+    padding-right: 16px;
+    
+  }
+  .facet-filters__sort + svg{
+    margin-right: 16px;
+  }
+  .facet-filters__sort:focus-visible{
+    box-shadow: none!important;
+    outline: none!important;
+  }
+  .sort-per-page .label{
+    font-size: 16px;
+    line-height: 24px;
+    color: #393940;
+  }
+  .collection-grid-top .right-side{
+    display: flex;
+  }
+  .sort-per-page .select{
+    width: auto!important;
+    margin-left: 8px;
+    margin-right: 8px;
+  }
+  .sort-per-page .select select{
+    appearance: none;
+  }
+  .sort-per-page .select:after{
+    display: none;
+  }
+  .sort-per-page{
+    display: flex;
+    align-items: center;
+  }
+  .active-facets__button-remove span{
+    display: flex;
+    align-items: center;
+  }
+  .collecion-count{
+    margin-top: 32px;
+    color: #393940;
+  }
+  .collecion-count span{
+    font-weight: 700;
+  }
+  .tags-wrapper{
+    margin-bottom: 24px;
+  }
+  .active-facets__button-remove span{
+    font-size: 16px;
+    font-weight: 700;
+    color: #E9380D;
+    line-height: 24px;
+  }
+  .active-facets__button-remove span svg{
+    margin-left: 4px;
+  }
+  .pagination{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 48px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .pagination a{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 48px;
+    height: 48px;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    color: #393940;
+  }
+  .pagination span{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 48px;
+    height: 48px;
+    background: #F1592A;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    color: #fff;
+  }
+  .pagination a:first-child{
+    margin-right: 24px;
+  }
+  .pagination a:last-child{
+    margin-left: 24px;
+  }
+  .product-item .image-wrap{
+    max-width: 296px;
+    height: 283px;
+    margin-bottom: 32px;
+  }
+  .image-item{
+    
+  }
+  .product-item .image-wrap img{
+    max-width: 100%;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .ship-wrapper{
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+    color: #00A344;
+    margin-bottom: 8px;
+  
+  }
+  .ship-wrapper svg{
+    margin-right: 4px;
+  }
+  .product-item{
+    position: relative;
+  }
+  .product-item .title{
+    display: block;
+    margin-bottom: 12px;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 26px;
+    color: #23232B;
+    margin-top: 0;
+    text-decoration: uppercase;
+  }
+  .image-wrap{
+    position: relative;
+    border-radius: 12px;
+    
+  }
+  .product-item .tags-wrapper{
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    display: flex;
+    align-items: center;
+    
+  }
+  .condition-tag{
+    margin-right: 8px;
+    padding: 5px 8px;
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 18px;
+    color: #F1592A;
+    border-radius: 100px;
+  }
+  .sale-tag{
+    padding: 5px 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #FEEAE8;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 18px;
+    color: #F52419;
+    border-radius: 100px;
+  }
+  .star_container{
+    margin-bottom: 12px;
+  }
+  .old-price-wrapper{
+    font-size: 16px;
+    line-height: 24px;
+    color: #B3B3B3;
+  }
+  .price-wrapper{
+    font-size: 16px;
+    line-height: 24px;
+    color: #000000;
+  }
+  .price-wrapper span{
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 36px;
+    color: #F1592A;
+    margin-top: 4px;
+  }
+  .image-wrap img {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease-in-out;
+      width: 100%;
+      height: auto; 
+  }
+  .product-item .slick-dots{
+    bottom: 12px;
+  }
+  .product-item .slick-dots li button:before{
+    display: none;
+  }
+  .product-item .slick-dots{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+  .product-item .slick-dots li{
+    width: 8px;
+    height: 8px;
+    border-radius: 50px;
+    background: #D3D9E5;
+  }
+  .product-item .slick-dots li button{
+    display: none;
+  }
+  .product-item .slick-dots li.slick-active{
+    background: #23232B;
+  }
+  
+{% endstyle %}
+
+{%- liquid
+  if collection.url
+    assign results_url = collection.url
+  else
+    assign terms = collection.terms | escape
+    assign results_url = '?q=' | append: terms | append: '&options%5Bprefix%5D=last&sort_by=' | append: sort_by
+  endif
+-%}
+
+<div class="container">
+       <div  id="ProductGridContainer" class="collection-wrapper">
+         <div class="collection-filter-wrapper">
+           
+             {{ 'component-facets.css' | asset_url | stylesheet_tag }}
+              <script src="{{ 'facets.js' | asset_url }}" defer="defer"></script>
+          
+                <aside
+                  aria-labelledby="verticalTitle"
+                  class="facets-wrapper{% unless section.settings.enable_filtering %} facets-wrapper--no-filters{% endunless %}"
+                  id="main-collection-filters"
+                  data-id="{{ section.id }}"
+                >
+                  
+                  {% render 'facets',
+                    results: collection,
+                    enable_filtering: true,
+                    enable_sorting: true,
+                    filter_type: 'vertical',
+                    paginate: paginate
+                  %}
+                </aside>
+         
+         </div>
+
+
+      
+         <div id="ProductGridContainer" class="collection-product-wrapper">
+           {%- liquid
+            assign sort_by = collection.sort_by | default: collection.default_sort_by
+          -%}
+           <div class="collection-grid-top">
+          <input type="text" id="search-input" placeholder="Search within collection">
+
+          <div class="right-side">
+          <facet-filters-form class="facets facets-vertical-sort small-hide">
+          <form class="facets-vertical-form" id="FacetSortForm">
+            <div class="facet-filters sorting caption">
+              <div class="facet-filters__field">
+                <div class="select">
+                  {%- assign sort_by = collection.sort_by | default: collection.default_sort_by -%}
+                  <select
+                    name="sort_by"
+                    class="facet-filters__sort select__select caption-large"
+                    id="SortBy"
+                    aria-describedby="a11y-refresh-page-message"
+                  >
+                    {%- for option in collection.sort_options -%}
+                      <option
+                        value="{{ option.value | escape }}"
+                        {% if option.value == sort_by %}
+                          selected="selected"
+                        {% endif %}
+                      >
+                        {{ 'products.facets.sort_by_label' | t }}
+                        {{ option.name | escape }}
+                      </option>
+                    {%- endfor -%}
+                  </select>
+                  {% render 'icon-caret' %}
+                </div>
+              </div>
+            </div>
+  
+          </form>
+        </facet-filters-form>
+             
+             {%- capture contentForQuerystring -%}{{ content_for_header }}{%- endcapture -%}
+             {%- assign pageUrl = contentForQuerystring | split:'"pageurl":"' | last | split:'"' | first | split:'.myshopify.com' | last | replace:'\/','/' | replace:'%20',' ' | replace:'\u0026','&' -%}
+             {%- assign products_per_page = 2 -%}
+              {%- for i in (1..1) -%}
+            	{%- unless pageUrl contains "?" -%}{% break %}{%- endunless -%}
+            	{%- if pageUrl contains "view=2" -%}{%- assign products_per_page = 2 -%}{%- endif -%}
+                {%- if pageUrl contains "view=3" -%}{%- assign products_per_page = 3 -%}{%- endif -%}
+                {%- if pageUrl contains "view=6" -%}{%- assign products_per_page = 6 -%}{%- endif -%}
+              {%- endfor -%}
+             <div class="sort-per-page">
+             <span class="label">Show </span>
+               <div class="select">
+               <select id="sel1" class="num">
+                 <option value="/collections/{{ collection.handle }}?view=2" {% if products_per_page == 2 %}selected="selected"{% endif %}>2</option>
+                 <option value="/collections/{{ collection.handle }}?view=3" {% if products_per_page == 3 %}selected="selected"{% endif %}>3</option>
+                 <option value="/collections/{{ collection.handle }}?view=6" {% if products_per_page == 6 %}selected="selected"{% endif %}>6</option>
+               </select>
+                 {% render 'icon-caret' %}
+               </div>
+             <span class="label"> per page</span>
+            </div>
+          </div>
+           </div>
+
+           <div class="tags-wrapper">
+           {% paginate collection.products by products_per_page %}
+              {% assign current_page = paginate.current_page %}
+              {% assign current_offset = paginate.current_offset %}
+              {% assign items_count = paginate.items %}
+            {% endpaginate %}
+           {% assign current_offset = current_offset | plus: 1 %}
+           {% assign page_count = current_page | times: products_per_page %}
+           <div class="collecion-count"><span>{% if current_offset != items_count %} {{ current_offset }}-{% if page_count <= items_count %}{{ page_count  }}{% else %}{{ items_count }}{% endif %}{% else %}{{ current_offset }}{% endif %}</span> of {{ items_count }}</div>
+           <div class="active-facets active-facets-desktop">
+                
+                {%- for filter in collection.filters -%}
+                  {%- for value in filter.active_values -%}
+                    <facet-remove>
+                      <a href="{{ value.url_to_remove }}" class="active-facets__button active-facets__button--light">
+                        <span class="active-facets__button-inner button button--tertiary">
+                          <span>{{ filter.label | escape }}: </span> {{ value.label | escape }}
+                          {% render 'icon-close-small' %}
+                          <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
+                        </span>
+                      </a>
+                    </facet-remove>
+                  {%- endfor -%}
+                  {% if filter.type == 'price_range' %}
+                    {% assign min = filter.min_value.value %}
+                    {% assign max = filter.max_value.value %}
+                    {%- if min != null or max != null -%}
+                      <facet-remove>
+                        <a href="{{ filter.url_to_remove }}" class="active-facets__button active-facets__button--light">
+                          <span class="active-facets__button-inner button button--tertiary">
+                            {{ min | default: 0 | money }} - {{ max | default: filter.range_max | money }}
+                            {% render 'icon-close-small' %}
+                            <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
+                          </span>
+                        </a>
+                      </facet-remove>
+                    {%- endif -%}
+                  {% endif %}
+                {%- endfor -%}
+                 <div class="active-facets-vertical-filter">
+                  {% assign tagsCount = 0 %}
+                  {%- for filter in collection.filters -%}
+                    {%- for value in filter.active_values -%}
+                      {% assign tagsCount = tagsCount | plus: 1 %}
+                    {% endfor %}
+                  {% endfor %}
+                  {% if tagsCount > 0 %}
+                  <facet-remove class="active-facets__button-wrapper">
+                    <a href="{{ results_url }}" class="active-facets__button-remove underlined-link">
+                      <span>
+                        Clear all
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 5.46967C5.76256 5.17678 6.23744 5.17678 6.53033 5.46967L12 10.9393L17.4697 5.46967C17.7626 5.17678 18.2374 5.17678 18.5303 5.46967C18.8232 5.76256 18.8232 6.23744 18.5303 6.53033L13.0607 12L18.5303 17.4697C18.8232 17.7626 18.8232 18.2374 18.5303 18.5303C18.2374 18.8232 17.7626 18.8232 17.4697 18.5303L12 13.0607L6.53033 18.5303C6.23744 18.8232 5.76256 18.8232 5.46967 18.5303C5.17678 18.2374 5.17678 17.7626 5.46967 17.4697L10.9393 12L5.46967 6.53033C5.17678 6.23744 5.17678 5.76256 5.46967 5.46967Z" fill="#E9380D"/>
+</svg>
+                      </span>
+                    </a>
+                  </facet-remove>
+                  {% endif %}
+                </div>
+              </div>
+         </div>
+
+      {% paginate collection.products by products_per_page %}
+           <div
+            class="collection" id="product-grid" data-id="{{ section.id }}"
+          >
+             
+            <div class="loading-overlay gradient"></div>
+       {%- for product in collection.products -%}
+                <li
+                  class=""
+                >
+                  {% render 'product-item',
+                    product: product,
+                    
+                  %}
+                </li>
+        {%- endfor -%}
+             
+           </div>
+           <div class="pagination">
+              
+                <a href="{{ paginate.previous.url }}">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" fill="{% if paginate.previous %}#F1592A{% else %}#CCCCCC{% endif %}"/>
+</svg>
+
+                </a>
+              
+          
+              {% for part in paginate.parts %}
+                {% if part.is_link %}
+                  <a href="{{ part.url }}">{{ part.title }}</a>
+                {% else %}
+                  <span class="current">{{ part.title }}</span>
+                {% endif %}
+              {% endfor %}
+          
+          
+                <a href="{{ paginate.next.url }}">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="{% if paginate.next %}#F1592A{% else %}#CCCCCC{% endif %}"/>
+</svg>
+
+                </a>
+              
+            </div>
+           {% endpaginate %}
+         </div>
+        
+       </div>
+</div>
+
+{% schema %}
+  {
+    "name": "Collection section",
+    "settings": [
+      
+    ],
+    "presets": [
+      {
+        "name": "Collection section"
+      }
+    ]
+  }
+{% endschema %}

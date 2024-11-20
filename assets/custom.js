@@ -27,6 +27,8 @@ window.addEventListener('DOMContentLoaded', () => {
         })
     }
 
+    
+
     // TABS SECTION
     let tabsSections = document.querySelectorAll('[data-tabs-section');
     
@@ -55,34 +57,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 })
             })
         })
-    }
-
-    if (window.innerWidth <= 749) {
-      let dropdownButtons = document.querySelectorAll('.dropdown-btn');
-  
-      if (dropdownButtons.length) {
-          dropdownButtons.forEach((btn) => {
-              let section = btn.nextElementSibling;
-              
-              btn.addEventListener('click', () => {
-                  if (section) {
-                      const isVisible = section.classList.contains('visible');
-                      const arrow = btn.querySelector('.dropdown-btn svg');
-                      
-                      if (!isVisible) {
-                          section.classList.add('visible');
-                          let height = section.scrollHeight;
-                          section.style.height = `${height}px`;
-                          arrow.style.transform = 'rotate(180deg)';
-                      } else {
-                        section.classList.remove('visible');
-                          section.style.height = "0";
-                          arrow.style.transform = 'rotate(0deg)';
-                      }
-                  }
-              });
-          });
-      }
     }
 
 
@@ -197,30 +171,4 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Calculate order form (body scrolling prevent)
-  const calculateButtons = document.querySelectorAll('.button.globo-formbuilder-open');
-  calculateButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelector('body').style.overflow = 'hidden';
-
-      setTimeout(() => {
-        const closeCalculateFormBtn = document.querySelector('.header.dismiss');
-      closeCalculateFormBtn.addEventListener('click', () => {
-        document.querySelector('body').style.overflow = 'auto';
-      })
-      }, 500)
-    })
-  });
-
-    const link = document.getElementById('paytomorrow-link');
-    if (link) {
-        link.addEventListener('click', (event) => {
-            event.preventDefault(); 
-            window.open(
-                'https://api.paytomorrow.com/api/ecommerce/public/pre-approval/a4f00e481c4f3e28756375f86d272b22',
-                '_blank',
-                'location=yes,height=670,width=500,scrollbars=yes,status=yes'
-            );
-        });
-    }
 });
