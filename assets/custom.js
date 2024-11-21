@@ -211,4 +211,16 @@ window.addEventListener('DOMContentLoaded', () => {
       }, 500)
     })
   });
+
+  const link = document.getElementById('paytomorrow-link');
+  if (link) {
+      link.addEventListener('click', (event) => {
+          event.preventDefault(); 
+          window.open(
+              'https://api.paytomorrow.com/api/ecommerce/public/pre-approval/a4f00e481c4f3e28756375f86d272b22',
+              '_blank',
+              'location=yes,height=670,width=500,scrollbars=yes,status=yes'
+          );
+      });
+  }
 });
