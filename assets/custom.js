@@ -171,4 +171,30 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Calculate order form (body scrolling prevent)
+  const calculateButtons = document.querySelectorAll('.button.globo-formbuilder-open');
+  calculateButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelector('body').style.overflow = 'hidden';
+
+      setTimeout(() => {
+        const closeCalculateFormBtn = document.querySelector('.header.dismiss');
+      closeCalculateFormBtn.addEventListener('click', () => {
+        document.querySelector('body').style.overflow = 'auto';
+      })
+      }, 500)
+    })
+  });
+
+  const link = document.getElementById('paytomorrow-link');
+  if (link) {
+      link.addEventListener('click', (event) => {
+          event.preventDefault(); 
+          window.open(
+              'https://api.paytomorrow.com/api/ecommerce/public/pre-approval/a4f00e481c4f3e28756375f86d272b22',
+              '_blank',
+              'location=yes,height=670,width=500,scrollbars=yes,status=yes'
+          );
+      });
+  }
 });
