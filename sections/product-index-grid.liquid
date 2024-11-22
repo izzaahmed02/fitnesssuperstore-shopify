@@ -1,16 +1,116 @@
-<style>
-  #shopify-section-{{ section.id }} {
-    padding-top: 80px;
-    padding-bottom: 80px;
+<script>
+  function applySort() {
+    var sortValue = document.getElementById("sort").value;
+    window.location.href = '/collections/all?sort_by=' + sortValue;
   }
+  
+  // Function to handle product filtering by brand and model
+  function filterProducts() {
+    var brandFilters = document.querySelectorAll('.brand-filter input');
+    var modelSearch = document.getElementById('modelSearch').value.toLowerCase();
+    
+    var products = document.querySelectorAll('.product-item');
+    products.forEach(function(product) {
+      var productBrand = product.getAttribute('data-brand') ? product.getAttribute('data-brand').toLowerCase() : '';
+      var productModel = product.getAttribute('data-model') ? product.getAttribute('data-model').toLowerCase() : '';
+      
+      // Check if brand filter is selected
+      var isBrandChecked = Array.from(brandFilters).some(function(input) {
+        return input.checked && input.getAttribute('data-brand').toLowerCase() === productBrand;
+      });
+  
+      // Check if the model matches the search query
+      var isModelMatch = productModel.includes(modelSearch);
+      
+      // Display or hide the product based on filter conditions
+      if ((isBrandChecked || brandFilters.length === 0) && (isModelMatch || modelSearch === "")) {
+        product.style.display = 'block';
+      } else {
+        product.style.display = 'none';
+      }
+    });
+  }
+
+</script>
+
+<style>
+  .filters {
+  width: 250px;
+  float: left;
+  margin-right: 20px;
+}
+
+.product-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.product-item {
+  width: 30%;
+  box-sizing: border-box;
+}
+
+.product-item.hidden {
+  display: none;
+}
+
+.sorting, .brand-filter, .model-filter {
+  margin-bottom: 15px;
+}
+
 </style>
 
-<div class="page-width">
-  {% for product in collections['body-solid'].products %}
-    {{ product.title }}
-  {% endfor %}
-  {{ collections['body-solid'].title }}
+<!-- Sorting and Showing options -->
+<div class="filters">
+  <div class="sorting">
+    <label for="sort">Sort by:</label>
+    <select id="sort" onchange="applySort()">
+      <option value="manual">Most Popular</option>
+      <option value="price_asc">Price: Low to High</option>
+      <option value="price_desc">Price: High to Low</option>
+      <option value="created_desc">Newest</option>
+    </select>
+  </div>
+
+  <!-- Brand Filter -->
+  <div class="brand-filter">
+    <h3>Brand</h3>
+    <ul>
+      {% assign brand_options = "" %}
+      {% for product in collections.all.products %}
+        {% if product.metafields.custom.brand %}
+          {% assign brand_name = product.metafields.custom.brand %}
+          {% unless brand_options contains brand_name %}
+            <li>
+              <input type="checkbox" class="brand-filter" data-brand="{{ brand_name }}" /> 
+              <label for="{{ brand_name }}">{{ brand_name }}</label>
+            </li>
+            {% assign brand_options = brand_options | append: brand_name %}
+          {% endunless %}
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Model Filter -->
+  <div class="model-filter">
+    <h3>Model</h3>
+    <input type="text" id="modelSearch" placeholder="Search by model" oninput="filterProducts()" />
+  </div>
 </div>
+
+<!-- Product List -->
+<div class="product-list">
+  {% for product in collections.all.products %}
+    <div class="product-item" data-brand="{{ product.metafields.custom.brand }}" data-model="{{ product.metafields.custom.model }}">
+      <div class="product-model">{{ product.metafields.custom.model }}</div>
+      <div class="product-price">${{ product.price | money }}</div>
+      <div class="product-name">{{ product.title }}</div>
+    </div>
+  {% endfor %}
+</div>
+
 
 {% schema %}
   {

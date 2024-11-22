@@ -27,6 +27,8 @@ window.addEventListener('DOMContentLoaded', () => {
         })
     }
 
+    
+
     // TABS SECTION
     let tabsSections = document.querySelectorAll('[data-tabs-section');
     
@@ -55,34 +57,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 })
             })
         })
-    }
-
-    if (window.innerWidth <= 749) {
-      let dropdownButtons = document.querySelectorAll('.dropdown-btn');
-  
-      if (dropdownButtons.length) {
-          dropdownButtons.forEach((btn) => {
-              let section = btn.nextElementSibling;
-              
-              btn.addEventListener('click', () => {
-                  if (section) {
-                      const isVisible = section.classList.contains('visible');
-                      const arrow = btn.querySelector('.dropdown-btn svg');
-                      
-                      if (!isVisible) {
-                          section.classList.add('visible');
-                          let height = section.scrollHeight;
-                          section.style.height = `${height}px`;
-                          arrow.style.transform = 'rotate(180deg)';
-                      } else {
-                        section.classList.remove('visible');
-                          section.style.height = "0";
-                          arrow.style.transform = 'rotate(0deg)';
-                      }
-                  }
-              });
-          });
-      }
     }
 
 

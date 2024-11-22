@@ -16,6 +16,29 @@
 {{ 'component-swatch-input.css' | asset_url | stylesheet_tag }}
 {{ 'component-swatch.css' | asset_url | stylesheet_tag }}
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const searchInputs = document.querySelectorAll(".filterSearchInput");
+    searchInputs.forEach((input) => {
+      input.addEventListener("input", function () {
+        console.log('ev');
+        const query = input.value.toLowerCase();
+        const filterWrap = input.closest(".facets-wrap");
+        const filterItems = filterWrap.querySelectorAll(".facets__item"); // Знаходимо всі параметри всередині цього facets-wrap
+  
+        filterItems.forEach((item) => {
+          const labelText = item.querySelector(".facet-checkbox__text-label").innerText.toLowerCase();
+          if (labelText.includes(query)) {
+            item.style.display = "block";
+          } else {
+            item.style.display = "none";
+          }
+        });
+      });
+    });
+  });
+</script>
+
 {%- liquid
   assign sort_by = results.sort_by | default: results.default_sort_by
   assign total_active_values = 0
@@ -63,43 +86,21 @@
                       id="verticalTitle"
                       tabindex="-1"
                     >
-                      {{ 'products.facets.filter_by_label' | t }}
+                      Filter
+                      {% assign selected_filters_count = 0 %}
+                        {% for filter in collection.filters %}
+                          {% for value in filter.values %}
+                            {% if value.active %}
+                              {% assign selected_filters_count = selected_filters_count | plus: 1 %}
+                            {% endif %}
+                          {% endfor %}
+                        {% endfor %}
+                        <span class="heading-filter-count">({{ selected_filters_count }})</span>
+
                     </h2>
                   {%- endunless -%}
-                  <facet-remove class="active-facets__button-wrapper">
-                    <a href="{{ results_url }}" class="active-facets__button-remove underlined-link">
-                      <span>{{ 'products.facets.clear_all' | t }}</span>
-                    </a>
-                  </facet-remove>
                 </div>
-                {%- for filter in results.filters -%}
-                  {%- for value in filter.active_values -%}
-                    <facet-remove>
-                      <a href="{{ value.url_to_remove }}" class="active-facets__button active-facets__button--light">
-                        <span class="active-facets__button-inner button button--tertiary">
-                          {{ filter.label | escape }}: {{ value.label | escape }}
-                          {% render 'icon-close-small' %}
-                          <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
-                        </span>
-                      </a>
-                    </facet-remove>
-                  {%- endfor -%}
-                  {% if filter.type == 'price_range' %}
-                    {% assign min = filter.min_value.value %}
-                    {% assign max = filter.max_value.value %}
-                    {%- if min != null or max != null -%}
-                      <facet-remove>
-                        <a href="{{ filter.url_to_remove }}" class="active-facets__button active-facets__button--light">
-                          <span class="active-facets__button-inner button button--tertiary">
-                            {{ min | default: 0 | money }} - {{ max | default: filter.range_max | money }}
-                            {% render 'icon-close-small' %}
-                            <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
-                          </span>
-                        </a>
-                      </facet-remove>
-                    {%- endif -%}
-                  {% endif %}
-                {%- endfor -%}
+                
               </div>
             {%- endif -%}
 
@@ -175,6 +176,14 @@
                       {%- endif -%}
                       <fieldset class="facets-wrap parent-wrap {% if filter_type == 'vertical' %} facets-wrap-vertical{% endif %}">
                         <legend class="visually-hidden">{{ filter.label | escape }}</legend>
+                        
+                        {% if filter.values.size > 5 %}
+                          <input
+                            type="text"
+                            class="filterSearchInput"
+                            placeholder="Search"
+                          />
+                        {% endif %}
                         {%- liquid
                           assign sorted_values = filter.values
                           # Keep the selected values grouped together when operator is AND
@@ -202,7 +211,7 @@
 
                             {%- capture text_value -%}
                               <span class="facet-checkbox__text" aria-hidden="true">
-                                <span class="facet-checkbox__text-label">{{- value.label | escape }}</span> ({{- value.count -}})
+                                <span class="facet-checkbox__text-label">{{- value.label | escape }}</span>
                               </span>
                               <span class="visually-hidden">
                                 {{- value.label | escape }} (
@@ -259,31 +268,11 @@
                                       {%- endif -%}
                                     </div>
                                   {%- else -%}
-                                    <svg
-                                      width="1.6rem"
-                                      height="1.6rem"
-                                      viewBox="0 0 16 16"
-                                      aria-hidden="true"
-                                      focusable="false"
-                                    >
-                                      <rect width="16" height="16" stroke="currentColor" fill="none" stroke-width="1"></rect>
-                                    </svg>
+                                    
 
-                                    <svg
-                                      aria-hidden="true"
-                                      class="icon icon-checkmark"
-                                      width="1.1rem"
-                                      height="0.7rem"
-                                      viewBox="0 0 11 7"
-                                      fill="none"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                      <path d="M1.5 3.5L2.83333 4.75L4.16667 6L9.5 1"
-                                        stroke="currentColor"
-                                        stroke-width="1.75"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                    </svg>
+                                    <svg class="icon icon-checkmark" width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M10.9649 0.177498C11.143 0.340769 11.155 0.617518 10.9918 0.795632L4.57511 7.79563C4.49448 7.8836 4.38141 7.93481 4.26211 7.9374C4.14281 7.93999 4.02762 7.89374 3.94325 7.80936L1.02658 4.8927C0.855724 4.72184 0.855724 4.44483 1.02658 4.27398C1.19743 4.10312 1.47444 4.10312 1.6453 4.27398L4.23886 6.86754L10.3468 0.204373C10.51 0.0262585 10.7868 0.014226 10.9649 0.177498Z" fill="white"/>
+</svg>
                                   {%- endif -%}
 
                                   {{ text_value }}
@@ -330,7 +319,7 @@
                       id="Facet-{{ forloop.index }}-{{ section.id }}"
                       class="{% if filter_type == 'horizontal' %}facets__display{% else %}facets__display-vertical{% endif %}"
                     >
-                      <div class="{% if filter_type == 'horizontal' %}facets__header{% else %}facets__header-vertical{% endif %}">
+                      {% comment %}<div class="{% if filter_type == 'horizontal' %}facets__header{% else %}facets__header-vertical{% endif %}">
                         {%- assign max_price_amount = filter.range_max | money | strip_html | escape -%}
                         <span class="facets__selected">
                           {{- 'products.facets.max_price' | t: price: max_price_amount -}}
@@ -342,7 +331,7 @@
                             </a>
                           </facet-remove>
                         {%- endif -%}
-                      </div>
+                      </div>{% endcomment %}
                       <price-range class="facets__price">
                         {% render 'price-facet', filter: filter, id_prefix: 'Filter-', filter_type: filter_type %}
                       </price-range>
@@ -577,7 +566,7 @@
 
                               {%- capture text_value -%}
                                 <span class="facet-checkbox__text" aria-hidden="true">
-                                  <span class="facet-checkbox__text-label">{{- value.label | escape }}</span> ({{- value.count -}})
+                                  <span class="facet-checkbox__text-label">{{- value.label | escape }}</span>
                                 </span>
                                 <span class="visually-hidden">
                                   {{- value.label | escape }} (

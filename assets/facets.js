@@ -4,11 +4,58 @@ class FacetFiltersForm extends HTMLElement {
     this.onActiveFilterClick = this.onActiveFilterClick.bind(this);
 
     this.debouncedOnSubmit = debounce((event) => {
-      this.onSubmitHandler(event);
+        
+        this.onSubmitHandler(event);
+
     }, 800);
 
     const facetForm = this.querySelector('form');
-    facetForm.addEventListener('input', this.debouncedOnSubmit.bind(this));
+    facetForm.addEventListener('input', (e) => {
+      if(e.srcElement.className !== "filterSearchInput"){
+        this.debouncedOnSubmit(e) 
+      }
+                          
+    });
+
+    const searchInputs = document.querySelectorAll(".filterSearchInput");
+    searchInputs.forEach((input) => {
+      input.addEventListener("input", function () {
+        const query = input.value.toLowerCase();
+        const filterWrap = input.closest(".facets-wrap");
+        const filterItems = filterWrap.querySelectorAll(".facets__item");
+  
+        filterItems.forEach((item) => {
+          const labelText = item.querySelector(".facet-checkbox__text-label").innerText.toLowerCase();
+          if (labelText.includes(query)) {
+            item.style.display = "block";
+          } else {
+            item.style.display = "none";
+          }
+        });
+      });
+    });
+
+    document.querySelector('.sort-per-page select.num').addEventListener('change', function(){
+      const url = new URL(window.location.href);
+      url.searchParams.set('view', this.value.split('=')[1]); 
+      window.location.replace(url.toString()); 
+    });
+    
+    function filterProducts() {
+    const searchText = document.getElementById('search-input').value.toLowerCase();
+    const products = document.querySelectorAll('#product-grid li');
+
+    products.forEach(product => {
+      const productName = product.querySelector('.card__heading').textContent.toLowerCase();
+
+      if (productName.includes(searchText)) {
+        product.style.display = '';
+      } else {
+        product.style.display = 'none';
+      }
+    });
+  }
+    document.getElementById('search-input').addEventListener('input', filterProducts);
 
     const facetWrapper = this.querySelector('#FacetsWrapperDesktop');
     if (facetWrapper) facetWrapper.addEventListener('keyup', onKeyUpEscape);
@@ -302,6 +349,7 @@ FacetFiltersForm.setListeners();
 class PriceRange extends HTMLElement {
   constructor() {
     super();
+  
     this.querySelectorAll('input').forEach((element) => {
       element.addEventListener('change', this.onRangeChange.bind(this));
       element.addEventListener('keydown', this.onKeyDown.bind(this));
@@ -322,7 +370,7 @@ class PriceRange extends HTMLElement {
   }
 
   setMinAndMaxValues() {
-    const inputs = this.querySelectorAll('input');
+    const inputs = this.querySelectorAll('.price-filter-input');
     const minInput = inputs[0];
     const maxInput = inputs[1];
     if (maxInput.value) minInput.setAttribute('data-max', maxInput.value);
