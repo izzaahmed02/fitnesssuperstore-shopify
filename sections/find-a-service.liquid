@@ -1,54 +1,87 @@
-{{ 'find-a-service.css' | asset_url | stylesheet_tag }}
-
+<link rel="stylesheet" href="{{ 'section-find-a-service.css' | asset_url }}">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+<script defer src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <section class="service-provider-search">
-    <h1>{{ settings.title }}</h1>
+    <h1>{{ section.settings.title }}</h1>
     <div class="search-container">
-      <input
-        type="text"
-        placeholder="{{ settings.placeholder_zip }}"
-        id="zip-search" />
-      <div class="dropdown">
-        <button class="dropdown-button" id="distance-button">
-          {{ settings.dropdown_default }}
-        </button>
-        <div class="dropdown-menu" id="distance-menu">
-          {% for option in settings.dropdown_default.options %}
-            <label class="dropdown-option">
-              <input type="radio" name="distance" value="{{ option.value }}" 
-                     {% if option.value == settings.dropdown_default %}checked{% endif %} />
-              {{ option.label }}
-            </label>
-          {% endfor %}
+      <input type="text" placeholder="{{ section.settings.placeholder_zip }}" id="zip-search" />
+        <div class="dropdown">
+            <button class="dropdown-button">Select Distance</button>
+            <ul class="dropdown-menu">
+              <li class="dropdown-option">
+                <label class="dropdown-label">
+                    <input type="radio" id="20-miles" name="distance" checked />
+                    <span for="20-miles">20 miles</span>
+                </label>
+              </li>
+              <li class="dropdown-option">
+                <label class="dropdown-label">
+                    <input type="radio" id="30-miles" name="distance" />
+                    <span for="30-miles">30 miles</span>
+                </label>
+              </li>
+              <li class="dropdown-option">
+                <label class="dropdown-label">
+                    <input type="radio" id="50-miles" name="distance" />
+                    <span for="50-miles">50 miles</span>
+                </label>
+              </li>
+              <li class="dropdown-option">
+                <label class="dropdown-label">
+                    <input type="radio" id="100-miles" name="distance" />
+                    <span for="100-miles">100 miles</span>
+                </label>
+              </li>
+              <li class="dropdown-option">
+                <label class="dropdown-label">
+                    <input type="radio" id="150-miles" name="distance" />
+                    <span for="150-miles">150 miles</span>
+                </label>
+              </li>
+            </ul>
         </div>
-      </div>
-      
-      <button class="search-button">{{ settings.search_button_label }}</button>
+      <button class="search-button">{{ section.settings.search_button_label }}</button>
     </div>
-    <p>{{ settings.description }}</p>
-    <img src="{{ settings.map_image | file_url }}" alt="Service provider map"
-        width=""
-        height="" />
+    <p class="description">{{ section.settings.description }}</p>
+    <div class="map-container">
+        <img src="{{ section.settings.map_image | image_url }}" alt="Service provider map" width="1280" height="790" />
+    </div>
     <div class="disclaimer-section">
-        <span>{{ settings.disclaimer }}</span>
+        <span>{{ section.settings.disclaimer }}</span>
     </div>
-  </section>  
+    <table id="service-table">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Address</th>
+            <th>Distance From You (Miles)</th>
+            <th>Contact</th>
+            <th>Email</th>
+            <th>Service</th>
+            <th>ZipCode</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</section>  
 
-
-<script>
+<script defer>
     document.addEventListener("DOMContentLoaded", function () {
-        const distanceButton = document.getElementById("distance-button");
-        const distanceMenu = document.getElementById("distance-menu");
+        const distanceButton = document.querySelector(".dropdown-button");
+        const distanceMenu = document.querySelector(".dropdown-menu");
+        const distanceOptions = document.querySelectorAll(".dropdown-option input");
       
-        distanceButton.addEventListener("click", function () {
-          distanceMenu.style.display =
+        distanceButton.addEventListener("click", function (e) {
+            e.stopPropagation();
+            distanceMenu.style.display =
             distanceMenu.style.display === "block" ? "none" : "block";
         });
       
-        distanceMenu.addEventListener("change", function (e) {
-          if (e.target.name === "distance") {
-            distanceButton.textContent = e.target.value;
+        distanceOptions.forEach((option) => {
+          option.addEventListener("click", function () {
+            distanceButton.textContent = this.nextElementSibling.textContent;
             distanceMenu.style.display = "none";
-          }
+          });
         });
       
         document.addEventListener("click", function (e) {
@@ -56,7 +89,87 @@
             distanceMenu.style.display = "none";
           }
         });
-      });      
+
+        const table = $('#service-table').DataTable({
+            searching: false,
+            info: false,
+            stripeClasses: ['odd-row', 'even-row'],
+            language: {
+                'paginate': {
+                  'previous': `<svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.53033 0.46967C7.82322 0.762563 7.82322 1.23744 7.53033 1.53033L2.06066 7L7.53033 12.4697C7.82322 12.7626 7.82322 13.2374 7.53033 13.5303C7.23744 13.8232 6.76256 13.8232 6.46967 13.5303L0.46967 7.53033C0.176777 7.23744 0.176777 6.76256 0.46967 6.46967L6.46967 0.46967C6.76256 0.176777 7.23744 0.176777 7.53033 0.46967Z" fill="#CCCCCC"/></svg>`,
+                  'next': `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="14" viewBox="0 0 8 14" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#F1592A"/></svg>`
+                }
+            },
+            columnDefs: [
+                { width: "100px", targets: [0,1,3,4,5,6] },
+                { width: "300px", targets: 2 },
+            ],
+            columns: [
+              { data: 'company' },
+              { data: 'address' },
+              { data: 'distance' },
+              { data: 'contact' },
+              { data: 'email' },
+              { data: 'typesOfService' },
+              { data: 'zipCode' },
+            ],
+            order: [[2, 'asc']],
+            autoWidth: false 
+          });
+        
+          const fetchTechniciansData = (zipCode, distance, callback) => {
+            const url = `https://localhost:52417/api/distance/techniciansdistance2?zipCode=${zipCode}&miles=${distance}`;
+            fetch(url)
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error('Network response was not ok');
+                }
+                callback();
+                return response.json();
+              })
+              .then((data) => {
+                table.clear();
+                table.rows.add(data).draw();
+                callback();
+              })
+              .catch((error) => {
+                callback();
+                console.error('Error fetching data:', error);
+              });
+          };
+        
+          $('.search-button').on('click', () => {
+            const zipCode = $('#zip-search').val();
+            const distance = $('.dropdown-button').text().replace(' miles', '');
+
+            if (!zipCode) {
+                $('#zip-search').addClass('validation-error')
+                return;
+            } else {
+                $('#zip-search').removeClass('validation-error').addClass('validation-default')
+            }
+  
+            if (distance === 'Select Distance') {
+                $('.dropdown-button').addClass('validation-error');
+                return;
+            } else {
+                $('.dropdown-button').removeClass('validation-error').addClass('validation-default')
+            }
+
+            $('.search-button').prop('disabled', true).text('Searching...')
+
+            const finishCallBack = () => {
+                $('#service-table').show();
+                $('#service-table_wrapper').show();
+                $('.search-button').prop('disabled', false).text('Search');
+                document.querySelector('#service-table').scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+
+            fetchTechniciansData(zipCode, distance, finishCallBack);
+          });
+      });          
 </script>
 
 {% schema %}
@@ -100,42 +213,6 @@
         "id": "map_image",
         "label": "Map Image"
       },
-      {
-        "type": "select",
-        "id": "dropdown_default",
-        "label": "Default Dropdown Value",
-        "default": "100 miles",
-        "options": [
-          {
-            "value": "20 miles",
-            "label": "20 miles"
-          },
-          {
-            "value": "30 miles",
-            "label": "30 miles"
-          },
-          {
-            "value": "50 miles",
-            "label": "50 miles"
-          },
-          {
-            "value": "100 miles",
-            "label": "100 miles"
-          },
-          {
-            "value": "150 miles",
-            "label": "150 miles"
-          },
-          {
-            "value": "200 miles",
-            "label": "200 miles"
-          },
-          {
-            "value": "250 miles",
-            "label": "250 miles"
-          }
-        ]
-      }
     ],
     "presets": [
       {
