@@ -1,0 +1,146 @@
+{{ 'find-a-service.css' | asset_url | stylesheet_tag }}
+
+<section class="service-provider-search">
+    <h1>{{ settings.title }}</h1>
+    <div class="search-container">
+      <input
+        type="text"
+        placeholder="{{ settings.placeholder_zip }}"
+        id="zip-search" />
+      <div class="dropdown">
+        <button class="dropdown-button" id="distance-button">
+          {{ settings.dropdown_default }}
+        </button>
+        <div class="dropdown-menu" id="distance-menu">
+          {% for option in settings.dropdown_default.options %}
+            <label class="dropdown-option">
+              <input type="radio" name="distance" value="{{ option.value }}" 
+                     {% if option.value == settings.dropdown_default %}checked{% endif %} />
+              {{ option.label }}
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+      
+      <button class="search-button">{{ settings.search_button_label }}</button>
+    </div>
+    <p>{{ settings.description }}</p>
+    <img src="https://www.fitnesssuperstore.com/v/vspfiles/templates/fitness-resp/images/usmap.jpg" alt="Service provider map"
+        width=""
+        height="" />
+    <div class="disclaimer-section">
+        <span>{{ settings.disclaimer }}</span>
+    </div>
+  </section>  
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const distanceButton = document.getElementById("distance-button");
+        const distanceMenu = document.getElementById("distance-menu");
+      
+        distanceButton.addEventListener("click", function () {
+          distanceMenu.style.display =
+            distanceMenu.style.display === "block" ? "none" : "block";
+        });
+      
+        distanceMenu.addEventListener("change", function (e) {
+          if (e.target.name === "distance") {
+            distanceButton.textContent = e.target.value;
+            distanceMenu.style.display = "none";
+          }
+        });
+      
+        document.addEventListener("click", function (e) {
+          if (!distanceButton.contains(e.target) && !distanceMenu.contains(e.target)) {
+            distanceMenu.style.display = "none";
+          }
+        });
+      });      
+</script>
+
+{% schema %}
+{
+    "name": "Service Provider Search",
+    "tag": "section",
+    "class": "service-provider-search",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Title",
+        "default": "Service Provider Search"
+      },
+      {
+        "type": "text",
+        "id": "placeholder_zip",
+        "label": "Zip Placeholder",
+        "default": "Search by Zip"
+      },
+      {
+        "type": "text",
+        "id": "search_button_label",
+        "label": "Search Button Label",
+        "default": "Search"
+      },
+      {
+        "type": "text",
+        "id": "disclaimer",
+        "label": "disclaimer",
+        "default": "* Fitnesssuperstore.com is not affiliated with, nor does it endorse or recommend any of the below listed companies. They have listed themselves as a service center in the shown areas."
+      },
+      {
+        "type": "textarea",
+        "id": "description",
+        "label": "Description",
+        "default": "Find a service provider for your fitness equipment near you."
+      },
+      {
+        "type": "image_picker",
+        "id": "map_image",
+        "label": "Map Image"
+      },
+      {
+        "type": "select",
+        "id": "dropdown_default",
+        "label": "Default Dropdown Value",
+        "default": "100 miles",
+        "options": [
+          {
+            "value": "20 miles",
+            "label": "20 miles"
+          },
+          {
+            "value": "30 miles",
+            "label": "30 miles"
+          },
+          {
+            "value": "50 miles",
+            "label": "50 miles"
+          },
+          {
+            "value": "100 miles",
+            "label": "100 miles"
+          },
+          {
+            "value": "150 miles",
+            "label": "150 miles"
+          },
+          {
+            "value": "200 miles",
+            "label": "200 miles"
+          },
+          {
+            "value": "250 miles",
+            "label": "250 miles"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "Service Provider Search"
+      }
+    ]
+  }  
+{% endschema %}
