@@ -1,35 +1,37 @@
-{{ 'find-a-service.css' | asset_url | stylesheet_tag }}
+<link rel="stylesheet" href="{{ 'section-find-a-service.css' | asset_url }}">
 
 <section class="service-provider-search">
-    <h1>{{ settings.title }}</h1>
+    <h1>{{ section.settings.title }}</h1>
     <div class="search-container">
       <input
         type="text"
-        placeholder="{{ settings.placeholder_zip }}"
+        placeholder="{{ section.settings.placeholder_zip }}"
         id="zip-search" />
       <div class="dropdown">
         <button class="dropdown-button" id="distance-button">
-          {{ settings.dropdown_default }}
+          {{ section.settings.dropdown_default }}
         </button>
         <div class="dropdown-menu" id="distance-menu">
-          {% for option in settings.dropdown_default.options %}
+          {% for option in section.settings.dropdown_default.options %}
             <label class="dropdown-option">
               <input type="radio" name="distance" value="{{ option.value }}" 
-                     {% if option.value == settings.dropdown_default %}checked{% endif %} />
+                     {% if option.value == section.settings.dropdown_default %}checked{% endif %} />
               {{ option.label }}
             </label>
           {% endfor %}
         </div>
       </div>
       
-      <button class="search-button">{{ settings.search_button_label }}</button>
+      <button class="search-button">{{ section.settings.search_button_label }}</button>
     </div>
-    <p>{{ settings.description }}</p>
-    <img src="{{ settings.map_image | file_url }}" alt="Service provider map"
-        width=""
-        height="" />
+    <p>{{ section.settings.description }}</p>
+    <div class="map-container">
+        <img src="{{ section.settings.map_image | image_url }}" alt="Service provider map"
+            width="1280"
+            height="790" />
+      </div>
     <div class="disclaimer-section">
-        <span>{{ settings.disclaimer }}</span>
+        <span>{{ section.settings.disclaimer }}</span>
     </div>
   </section>  
 
