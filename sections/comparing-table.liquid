@@ -72,8 +72,14 @@
   @media screen and (max-width: 750px) {
     .section-{{ section.id }}-padding .comparing-table__table-item > div:first-child,
     .section-{{ section.id }}-padding .comparing-table__table-header > div:first-child {
-      width: 100px;
+      width: calc((100% / {{ section.settings.columns }}) * 1.17);
     }
+
+    .section-{{ section.id }}-padding .comparing-table__table-item > div:not(:first-child),
+    .section-{{ section.id }}-padding .comparing-table__table-header > div:not(:first-child) {
+      width: calc((100% - ((100% / {{ section.settings.columns }}) * 1.17)) / ({{ section.settings.columns | minus: 1 }}));
+    }
+
     .comparing-table__container .title {
       font-size: 18px;
       line-height: 24px;
