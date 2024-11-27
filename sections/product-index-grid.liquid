@@ -1,116 +1,369 @@
 <script>
-  function applySort() {
-    var sortValue = document.getElementById("sort").value;
-    window.location.href = '/collections/all?sort_by=' + sortValue;
-  }
-  
-  // Function to handle product filtering by brand and model
+  document.addEventListener("DOMContentLoaded", function () {
   function filterProducts() {
-    var brandFilters = document.querySelectorAll('.brand-filter input');
-    var modelSearch = document.getElementById('modelSearch').value.toLowerCase();
-    
-    var products = document.querySelectorAll('.product-item');
-    products.forEach(function(product) {
-      var productBrand = product.getAttribute('data-brand') ? product.getAttribute('data-brand').toLowerCase() : '';
-      var productModel = product.getAttribute('data-model') ? product.getAttribute('data-model').toLowerCase() : '';
-      
-      // Check if brand filter is selected
-      var isBrandChecked = Array.from(brandFilters).some(function(input) {
-        return input.checked && input.getAttribute('data-brand').toLowerCase() === productBrand;
-      });
-  
-      // Check if the model matches the search query
-      var isModelMatch = productModel.includes(modelSearch);
-      
-      // Display or hide the product based on filter conditions
-      if ((isBrandChecked || brandFilters.length === 0) && (isModelMatch || modelSearch === "")) {
-        product.style.display = 'block';
+    const searchText = document.getElementById('search-input').value.toLowerCase();
+    const products = document.querySelectorAll('#product-grid li');
+
+    products.forEach(product => {
+      const productName = product.querySelector('.card__heading').textContent.toLowerCase();
+
+      if (productName.includes(searchText)) {
+        product.style.display = '';
       } else {
         product.style.display = 'none';
       }
     });
   }
 
+  document.getElementById('search-input').addEventListener('input', filterProducts);
+
+  
+
+  document.querySelector('.sort-per-page select.num').addEventListener('change', function(){
+    const url = new URL(window.location.href);
+    const searchParams = new URLSearchParams(window.location.search);
+
+    searchParams.delete('page');
+
+    searchParams.set('perview', this.value.split('=')[1]);
+
+    url.search = searchParams.toString();
+
+    window.location.replace(url.toString());
+  });
+
+  document.querySelector('#SortBy').addEventListener('change', function(){
+    const url = new URL(window.location.href);
+    const searchParams = new URLSearchParams(window.location.search);
+
+    const perviewValue = searchParams.get('perview');
+    
+    searchParams.delete('page');
+
+    searchParams.set('sort_by', this.value);
+    
+    if (perviewValue) {
+      searchParams.set('perview', perviewValue);
+    }
+
+    url.search = searchParams.toString();
+
+    window.location.replace(url.toString());
+  });
+
+  const paginationLinks = document.querySelectorAll('.pagination a');
+  paginationLinks.forEach(link => {
+    link.addEventListener('click', function(event) {
+      event.preventDefault();
+
+      const url = new URL(this.href);
+      const searchParams = new URLSearchParams(url.search);
+
+      if (new URLSearchParams(window.location.search).has('perview')) {
+        searchParams.set('perview', new URLSearchParams(window.location.search).get('perview'));
+      }
+      
+      if (new URLSearchParams(window.location.search).has('sort_by')) {
+        searchParams.set('sort_by', new URLSearchParams(window.location.search).get('sort_by'));
+      }
+
+      url.search = searchParams.toString();
+      window.location.href = url.toString();
+    });
+  });
+
+  function initSlider(element) {
+    $(element).slick({
+      slidesToShow: 1,
+      slidesToScroll: 1,
+      lazyLoad: 'ondemand',
+      arrows: true,
+      dots: true,
+      responsive: [
+        {
+          breakpoint: 768,
+          settings: {
+            slidesToShow: 1
+          }
+        }
+      ],
+    });
+
+    $(element).find('.image-item').each(function() {
+      console.log($(this));
+      $(this).css({
+        'background': '#edeff3',
+      });
+    });
+
+    $(element).find('img.lazy-load').each(function() {
+      const img = $(this);
+      img.attr('src', img.data('src'));
+      img.removeClass('lazy-load'); 
+      img.css({
+        'opacity': '1',
+        'visibility': 'visible'
+      });
+    });
+  }
+
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        initSlider(entry.target);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  $('.image-wrap').each(function() {
+    observer.observe(this);
+  });
+
+  const productGrid = document.getElementById("product-grid");
+
+  if (!productGrid) return;
+
+  const products = Array.from(productGrid.querySelectorAll(".product-li-item"));
+
+  let currentBrand = null;
+
+  products.forEach(product => {
+    console.log(product);
+    const brand = product.dataset.brand;
+
+    if (brand && brand !== currentBrand) {
+      const brandTitle = document.createElement("h2");
+      brandTitle.textContent = brand;
+      brandTitle.className = "brand-title";
+
+      productGrid.insertBefore(brandTitle, product);
+      currentBrand = brand;
+    }
+  });
+});
+
+
 </script>
 
-<style>
-  .filters {
-  width: 250px;
-  float: left;
-  margin-right: 20px;
-}
+{% render 'product-index-style' %}
 
-.product-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
+{%- liquid
+  if collection.url
+    assign results_url = collection.url
+  else
+    assign terms = collection.terms | escape
+    assign results_url = '?q=' | append: terms | append: '&options%5Bprefix%5D=last&sort_by=' | append: sort_by
+  endif
+-%}
 
-.product-item {
-  width: 30%;
-  box-sizing: border-box;
-}
+<div class="container">
+       <div  id="ProductGridContainer" class="collection-wrapper">
+         <div class="collection-filter-wrapper">
+           
+             {{ 'component-facets.css' | asset_url | stylesheet_tag }}
+              <script src="{{ 'facets.js' | asset_url }}" defer="defer"></script>
+          
+                <aside
+                  aria-labelledby="verticalTitle"
+                  class="facets-wrapper{% unless section.settings.enable_filtering %} facets-wrapper--no-filters{% endunless %}"
+                  id="main-collection-filters"
+                  data-id="{{ section.id }}"
+                >
+                  
+                  {% render 'facets',
+                    results: collection,
+                    enable_filtering: true,
+                    enable_sorting: true,
+                    filter_type: 'vertical',
+                    paginate: paginate
+                  %}
+                </aside>
+         
+         </div>
+ 
 
-.product-item.hidden {
-  display: none;
-}
+      
+         <div id="ProductGridContainerMain" class="collection-product-wrapper">
+           {%- liquid
+            assign sort_by = collection.sort_by | default: 'title-ascending'
+          -%}
+           <div class="collection-grid-top">
+          <input type="text" id="search-input" placeholder="Search within collection">
 
-.sorting, .brand-filter, .model-filter {
-  margin-bottom: 15px;
-}
+          <div class="right-side">
+          <facet-filters-form class="facets facets-vertical-sort small-hide">
+          <form class="facets-vertical-form" id="FacetSortForm">
+            <div class="facet-filters sorting caption">
+              <div class="facet-filters__field">
+                <div class="select">
+                  {%- assign sort_by = collection.sort_by | default: 'title-ascending' -%}
+                  <select
+                    name="sort_by"
+                    class="facet-filters__sort select__select caption-large"
+                    id="SortBy"
+                    aria-describedby="a11y-refresh-page-message"
+                  >
+                    {%- for option in collection.sort_options -%}
+                      {% if option.value == "title-ascending" or option.value == "title-descending" %}
+                      
+                      <option
+                        value="{{ option.value | escape }}"
+                        {% if option.value == sort_by %}
+                          selected="selected"
+                        {% endif %}
+                      >
+                        {{ 'products.facets.sort_by_label' | t }}
+                        {{ option.name | escape }} 
+                      </option>
+                        {% endif %}
+                    {%- endfor -%}
+                  </select>
+                  {% render 'icon-caret' %}
+                </div>
+              </div>
+            </div>
+  
+          </form>
+        </facet-filters-form>
+             
+             {%- capture contentForQuerystring -%}{{ content_for_header }}{%- endcapture -%}
+             {%- assign pageUrl = contentForQuerystring | split:'"pageurl":"' | last | split:'"' | first | split:'.myshopify.com' | last | replace:'\/','/' | replace:'%20',' ' | replace:'\u0026','&' -%}
+             {%- assign products_per_page = 2 -%}
+              {%- for i in (1..1) -%}
+            	{%- unless pageUrl contains "?" -%}{% break %}{%- endunless -%}
+            	{%- if pageUrl contains "perview=2" -%}{%- assign products_per_page = 2 -%}{%- endif -%}
+                {%- if pageUrl contains "perview=3" -%}{%- assign products_per_page = 3 -%}{%- endif -%}
+                {%- if pageUrl contains "perview=6" -%}{%- assign products_per_page = 6 -%}{%- endif -%}
+              {%- endfor -%}
+          
+             <div class="sort-per-page">
+             <span class="label">Show </span>
+               <div class="select">
+               <select id="sel1" class="num">
+                 <option value="/collections/{{ collection.handle }}?perview=2" {% if products_per_page == 2 %}selected="selected"{% endif %}>2</option>
+                 <option value="/collections/{{ collection.handle }}?perview=3" {% if products_per_page == 3 %}selected="selected"{% endif %}>3</option>
+                 <option value="/collections/{{ collection.handle }}?perview=6" {% if products_per_page == 6 %}selected="selected"{% endif %}>6</option>
+               </select>
+                 {% render 'icon-caret' %}
+               </div>
+             <span class="label"> per page</span>
+            </div>
+          </div>
+           </div>
 
-</style>
+           <div class="tags-wrapper">
+           {% paginate collection.products by products_per_page %}
+              {% assign current_page = paginate.current_page %}
+              {% assign current_offset = paginate.current_offset %}
+              {% assign items_count = paginate.items %}
+            {% endpaginate %}
+           {% assign current_offset = current_offset | plus: 1 %}
+           {% assign page_count = current_page | times: products_per_page %}
+           <div class="collecion-count"><span>{% if current_offset != items_count %} {{ current_offset }}-{% if page_count <= items_count %}{{ page_count  }}{% else %}{{ items_count }}{% endif %}{% else %}{{ current_offset }}{% endif %}</span> of {{ items_count }}</div>
+           <div class="active-facets active-facets-desktop">
+                
+                {%- for filter in collection.filters -%}
+                  {%- for value in filter.active_values -%}
+                    <facet-remove>
+                      <a href="{{ value.url_to_remove }}" class="active-facets__button active-facets__button--light">
+                        <span class="active-facets__button-inner button button--tertiary">
+                          <span>{{ filter.label | escape }}: </span> {{ value.label | escape }}
+                          {% render 'icon-close-small' %}
+                          <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
+                        </span>
+                      </a>
+                    </facet-remove>
+                  {%- endfor -%}
+                  {% if filter.type == 'price_range' %}
+                    {% assign min = filter.min_value.value %}
+                    {% assign max = filter.max_value.value %}
+                    {%- if min != null or max != null -%}
+                      <facet-remove>
+                        <a href="{{ filter.url_to_remove }}" class="active-facets__button active-facets__button--light">
+                          <span class="active-facets__button-inner button button--tertiary">
+                            {{ min | default: 0 | money }} - {{ max | default: filter.range_max | money }}
+                            {% render 'icon-close-small' %}
+                            <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
+                          </span>
+                        </a>
+                      </facet-remove>
+                    {%- endif -%}
+                  {% endif %}
+                {%- endfor -%}
+                 <div class="active-facets-vertical-filter">
+                  {% assign tagsCount = 0 %}
+                  {%- for filter in collection.filters -%}
+                    {%- for value in filter.active_values -%}
+                      {% assign tagsCount = tagsCount | plus: 1 %}
+                    {% endfor %}
+                  {% endfor %}
+                  {% if tagsCount > 0 %}
+                  <facet-remove class="active-facets__button-wrapper">
+                    <a href="{{ results_url }}" class="active-facets__button-remove underlined-link">
+                      <span>
+                        Clear all
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 5.46967C5.76256 5.17678 6.23744 5.17678 6.53033 5.46967L12 10.9393L17.4697 5.46967C17.7626 5.17678 18.2374 5.17678 18.5303 5.46967C18.8232 5.76256 18.8232 6.23744 18.5303 6.53033L13.0607 12L18.5303 17.4697C18.8232 17.7626 18.8232 18.2374 18.5303 18.5303C18.2374 18.8232 17.7626 18.8232 17.4697 18.5303L12 13.0607L6.53033 18.5303C6.23744 18.8232 5.76256 18.8232 5.46967 18.5303C5.17678 18.2374 5.17678 17.7626 5.46967 17.4697L10.9393 12L5.46967 6.53033C5.17678 6.23744 5.17678 5.76256 5.46967 5.46967Z" fill="#E9380D"/>
+</svg>
+                      </span>
+                    </a>
+                  </facet-remove>
+                  {% endif %}
+                </div>
+              </div>
+         </div>
 
-<!-- Sorting and Showing options -->
-<div class="filters">
-  <div class="sorting">
-    <label for="sort">Sort by:</label>
-    <select id="sort" onchange="applySort()">
-      <option value="manual">Most Popular</option>
-      <option value="price_asc">Price: Low to High</option>
-      <option value="price_desc">Price: High to Low</option>
-      <option value="created_desc">Newest</option>
-    </select>
-  </div>
+      {% paginate collection.products by products_per_page %}
+           <div
+            class="collection product-index-grid" id="product-grid" data-id="{{ section.id }}"
+          >
+             
+            <div class="loading-overlay gradient"></div>
+            
+       {%- for product in collection.products -%}
+                  {% render 'product-li-item',
+                    product: product,
+                    
+                  %}
+        {%- endfor -%}
+             
+           </div>
+      
+        {% if paginate.pages > 1 %}
+           <div class="pagination">
+              
+                <a href="{{ paginate.previous.url }}">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" fill="{% if paginate.previous %}#F1592A{% else %}#CCCCCC{% endif %}"/>
+</svg>
 
-  <!-- Brand Filter -->
-  <div class="brand-filter">
-    <h3>Brand</h3>
-    <ul>
-      {% assign brand_options = "" %}
-      {% for product in collections.all.products %}
-        {% if product.metafields.custom.brand %}
-          {% assign brand_name = product.metafields.custom.brand %}
-          {% unless brand_options contains brand_name %}
-            <li>
-              <input type="checkbox" class="brand-filter" data-brand="{{ brand_name }}" /> 
-              <label for="{{ brand_name }}">{{ brand_name }}</label>
-            </li>
-            {% assign brand_options = brand_options | append: brand_name %}
-          {% endunless %}
-        {% endif %}
-      {% endfor %}
-    </ul>
-  </div>
+                </a>
+              
+          
+              {% for part in paginate.parts %}
+                {% if part.is_link %}
+                  <a href="{{ part.url }}">{{ part.title }}</a>
+                {% else %}
+                  <span class="{% if part.title == paginate.current_page %}current{% endif %}">{{ part.title }}</span>
+                {% endif %}
+              {% endfor %}
+          
+          
+                <a href="{{ paginate.next.url }}">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="{% if paginate.next %}#F1592A{% else %}#CCCCCC{% endif %}"/>
+</svg>
 
-  <!-- Model Filter -->
-  <div class="model-filter">
-    <h3>Model</h3>
-    <input type="text" id="modelSearch" placeholder="Search by model" oninput="filterProducts()" />
-  </div>
+                </a>
+              
+            </div>
+          {% endif %}
+           {% endpaginate %}
+         </div>
+        
+       </div>
 </div>
-
-<!-- Product List -->
-<div class="product-list">
-  {% for product in collections.all.products %}
-    <div class="product-item" data-brand="{{ product.metafields.custom.brand }}" data-model="{{ product.metafields.custom.model }}">
-      <div class="product-model">{{ product.metafields.custom.model }}</div>
-      <div class="product-price">${{ product.price | money }}</div>
-      <div class="product-name">{{ product.title }}</div>
-    </div>
-  {% endfor %}
-</div>
-
 
 {% schema %}
   {

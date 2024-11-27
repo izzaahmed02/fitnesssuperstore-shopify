@@ -1,179 +1,204 @@
-{{ 'index-section.css' | asset_url | stylesheet_tag }}
+<style>
+  .index-wrapper{
+    column-count: 2;
+  }
+  .coll-depth-1{
+    font-size: 16px;
+    font-weight: 700;
+    color: #3E77AA;
+    line-height: 24px;
+    text-decoration: none;
+    position: relative;
+    margin-bottom: 12px;
+  }
+  .coll-depth-2{
+    font-size: 14px;
+    font-weight: 700;
+    color: #3E77AA;
+    line-height: 24px;
+    text-decoration: none;
+    padding-left: 32px;
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .coll-depth-2:before{
+    content: "";
+    display: block;
+    width: 8px;
+    height: 8px;
+    background: #F1592A;
+    border-radius: 50%;
+    position: absolute;
+    top: 6px;
+    left: 16px;
+  }
+  .coll-depth-3{
+    font-size: 14px;
+    font-weight: 700;
+    color: #3E77AA;
+    line-height: 24px;
+    text-decoration: none;
+    padding-left: 48px;
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .coll-depth-3:before{
+    content: "";
+    display: block;
+    width: 8px;
+    height: 8px;
+    background: #F58E6E;
+    border-radius: 50%;
+    position: absolute;
+    top: 6px;
+    left: 32px;
+  }
+  .coll-depth-4{
+    font-size: 14px;
+    font-weight: 700;
+    color: #3E77AA;
+    line-height: 24px;
+    text-decoration: none;
+    padding-left: 64px;
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .coll-depth-4:before{
+    content: "";
+    display: block;
+    width: 8px;
+    height: 8px;
+    background: #FAC3B2;
+    border-radius: 50%;
+    position: absolute;
+    top: 6px;
+    left: 48px;
+  }
+  .coll-depth-5{
+    font-size: 14px;
+    font-weight: 700;
+    color: #3E77AA;
+    line-height: 24px;
+    text-decoration: none;
+    padding-left: 80px;
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .coll-depth-5:before{
+    content: ""; 
+    display: block;
+    width: 8px;
+    height: 8px;
+    background: #FCE6DE;
+    border-radius: 50%;
+    position: absolute; 
+    top: 6px;
+    left: 64px;
+  }
+  .alpha-header{
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 28px;
+    color: #393940;
+    font-weight: 700;
+    line-height: 36px;
+  }
+  .alpha-item{
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 32px;
+    flex: 1 1 calc(50% - 20px);
+  }
+</style>
 
-<script>
-  document.addEventListener('DOMContentLoaded', (event) => {});
-</script>
-
-<div class="container page-width">
+<div class="container">
   <h2 class="title">{{ section.settings.title }}</h2>
 
-  <div class="index_sorting">
-    <span class="index_products_number">
-      <b>{{ shop.products_count }}</b> products
-    </span>
+ <div class="index-wrapper">
 
-    <div class="index-select">
-      <div class="dropdown-label">
-        Sort by:
-        <span class="selected-option"> A-Z </span>
-
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="black"/>
-        </svg>
-      </div>
-      <ul class="dropdown-options">
-        <li data-value="a-z">A-Z</li>
-        <li data-value="z-a">Z-A</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="mobile_navigation">
-    {% for block in section.blocks %}
-      <span data-scroll-to-section="alpha-item-{{ block.id }}" class="mobile_navigation-letter">
-        {{ block.settings.title }}
-      </span>
-    {% endfor %}
-  </div>
-
-  <div class="index-wrapper">
-    {% for block in section.blocks %}
+     {% for block in section.blocks %}
       {%- case block.type -%}
-        {%- when 'item' -%}
-          <div class="alpha-item" id="alpha-item-{{ block.id }}">
-            <h2 class="alpha-header">{{ block.settings.title }}</h2>
-            {% assign collectionsArr = block.settings.list_of_col | replace: ' ', '' | split: ',' %}
-
-            {% for item in collectionsArr %}
-              <a
-                class="coll-depth-{{ collections[item].metafields.custom.navigation_level }}"
-                href="/collections/{{ collections[item].handle }}"
-              >
-                {{- collections[item].title -}}
-              </a>
-            {% endfor %}
-          </div>
-      {% endcase %}
-    {% endfor %}
+        {%- when "item" -%}
+        <div class="alpha-item">
+         <h2 class="alpha-header">{{ block.settings.title }}</h2>
+         {% assign collectionsArr = block.settings.list_of_col | replace: ' ', '' | split: "," %}
+    
+       
+         
+         {% for item in collectionsArr %}
+            <a class="coll-depth-{{ collections[item].metafields.custom.navigation_level }}" href="/collections/{{ collections[item].handle }}">{{ collections[item].title }}</a>
+         {% endfor %}
+         </div>
+       {% endcase %}
+     {% endfor %}
+     
   </div>
 </div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const dropdown = document.querySelector('.index-select');
-    const dropdownLabel = document.querySelector('.dropdown-label');
-    const selectedOption = document.querySelector('.selected-option');
-    const options = document.querySelector('.dropdown-options');
-    const wrapper = document.querySelector('.index-wrapper');
-
-    dropdownLabel.addEventListener('click', () => {
-      dropdown.classList.toggle('active');
-    });
-
-    options.addEventListener('click', (event) => {
-      if (event.target.tagName === 'LI') {
-        const value = event.target.getAttribute('data-value');
-        const items = Array.from(wrapper.children);
-
-        if (value === 'z-a') {
-          items.reverse();
-        } else if (value === 'a-z') {
-          items.sort((a, b) => a.textContent.localeCompare(b.textContent));
-        }
-
-        wrapper.innerHTML = '';
-        items.forEach((item) => wrapper.appendChild(item));
-
-        selectedOption.textContent = ` ${event.target.textContent} `;
-
-        dropdown.classList.remove('active');
-      }
-    });
-
-    document.addEventListener('click', (event) => {
-      if (!dropdown.contains(event.target)) {
-        dropdown.classList.remove('active');
-      }
-    });
-  });
-</script>
 
 <style>
   #shopify-section-{{ section.id }}{
     padding-top: {{ section.settings.padding_top }}px;
     padding-bottom: {{ section.settings.padding_bottom }}px;
+    max-width: 1280px;
     margin-left: auto;
     margin-right: auto;
     border-bottom: 1px solid #E5E5E5;
   }
-
-  @media (max-width: 750px) {
-    #shopify-section-{{ section.id }}{
-      padding-top: {{ section.settings.padding_top | times: 0.6 | round }}px;
-      padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round }}px;
-    }
-
-    #shopify-section-{{ section.id }} .title {
-      font-size: 24px;
-      line-height: 32px;
-      margin-top: 0;
-      margin-bottom: 20px;
-    }
-  }
+  
 </style>
 
 {% schema %}
-{
-  "name": "Index section",
-  "settings": [
-    {
-      "type": "text",
-      "id": "title",
-      "label": "Heading"
-    },
-    {
-      "type": "range",
-      "id": "padding_top",
-      "min": 0,
-      "max": 200,
-      "step": 4,
-      "unit": "px",
-      "label": "t:sections.all.padding.padding_top",
-      "default": 40
-    },
-    {
-      "type": "range",
-      "id": "padding_bottom",
-      "min": 0,
-      "max": 200,
-      "step": 4,
-      "unit": "px",
-      "label": "t:sections.all.padding.padding_bottom",
-      "default": 40
-    }
-  ],
-  "blocks": [
-    {
-      "type": "item",
-      "name": "Item",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Heading"
-        },
-        {
-          "type": "text",
-          "id": "list_of_col",
-          "label": "List of collections"
-        }
-      ]
-    }
-  ],
-  "presets": [
-    {
-      "name": "Index section"
-    }
-  ]
-}
+  {
+    "name": "Index section",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Heading"
+      },
+      {
+        "type": "range",
+        "id": "padding_top",
+        "min": 0,
+        "max": 200,
+        "step": 4,
+        "unit": "px",
+        "label": "t:sections.all.padding.padding_top",
+        "default": 40
+      },
+      {
+        "type": "range",
+        "id": "padding_bottom",
+        "min": 0,
+        "max": 200,
+        "step": 4,
+        "unit": "px",
+        "label": "t:sections.all.padding.padding_bottom",
+        "default": 40
+      }
+    ],
+    "blocks": [
+      {
+        "type": "item",
+        "name": "Item",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Heading"
+          },
+          {
+            "type": "text",
+            "id": "list_of_col",
+            "label": "List of collections"
+          }, 
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "Index section"
+      }
+    ]
+  }
 {% endschema %}

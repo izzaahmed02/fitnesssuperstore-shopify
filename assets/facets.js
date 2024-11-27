@@ -7,16 +7,34 @@ class FacetFiltersForm extends HTMLElement {
         
         this.onSubmitHandler(event);
 
-    }, 800);
+    }, 800); 
 
     const facetForm = this.querySelector('form');
     facetForm.addEventListener('input', (e) => {
-      if(e.srcElement.className !== "filterSearchInput"){
-        this.debouncedOnSubmit(e) 
+      const target = e.srcElement;
+      
+      if (target.type === "checkbox") {
+        
+        this.onSubmitHandler(e);
+      } else if (target.className !== "filterSearchInput") {
+        this.debouncedOnSubmit(e);
       }
                           
     });
 
+    document.querySelector('.sort-per-page select.num').addEventListener('change', function(){
+    const url = new URL(window.location.href);
+    const searchParams = new URLSearchParams(window.location.search);
+
+    searchParams.delete('page');
+
+    searchParams.set('perview', this.value.split('=')[1]);
+
+    url.search = searchParams.toString();
+
+    window.location.replace(url.toString());
+  });
+    
     const searchInputs = document.querySelectorAll(".filterSearchInput");
     searchInputs.forEach((input) => {
       input.addEventListener("input", function () {
@@ -35,18 +53,83 @@ class FacetFiltersForm extends HTMLElement {
       });
     });
 
-    document.querySelector('.sort-per-page select.num').addEventListener('change', function(){
-      const url = new URL(window.location.href);
-      url.searchParams.set('view', this.value.split('=')[1]); 
-      window.location.replace(url.toString()); 
+    function initSlider(element) {
+      if (!$(element).hasClass('slick-initialized')) {
+    $(element).slick({
+      slidesToShow: 1,
+      slidesToScroll: 1,
+      lazyLoad: 'ondemand',
+      arrows: true,
+      dots: true,
+      responsive: [
+        {
+          breakpoint: 768,
+          settings: {
+            slidesToShow: 1
+          }
+        }
+      ],
+      
     });
+
+        $(element).find('.image-item').each(function() {
+          console.log($(this));
+          $(this).css({
+            'background': '#edeff3',
+          });
+        });
+      $(element).find('img.lazy-load').each(function() {
+          const img = $(this);
+        if(img){
+          img.attr('src', img.data('src'));
+          img.removeClass('lazy-load'); 
+          img.css({
+            'opacity': '1',
+            'visibility': 'visible'
+          });
+        }
+      });
+      }
+    }
+  
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          initSlider(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.8 });
+  
+    $('.image-wrap').each(function() {
+      if ($(this).length > 0) {
+      observer.observe(this);
+      }
+    });
+
+    // document.querySelector('.sort-per-page select.num').addEventListener('change', function () {
+    //     const selectedValue = this.value;
+    //     const url = new URL(window.location.href);
+    
+    //     url.searchParams.delete('page');
+    //     url.searchParams.set('perview', selectedValue);
+    
+    //     window.location.replace(url.toString()); 
+    // });
     
     function filterProducts() {
     const searchText = document.getElementById('search-input').value.toLowerCase();
     const products = document.querySelectorAll('#product-grid li');
 
     products.forEach(product => {
-      const productName = product.querySelector('.card__heading').textContent.toLowerCase();
+      console.log(product);
+      let productName;
+      if(product.querySelector('.card__heading')){
+        productName = product.querySelector('.card__heading').textContent.toLowerCase();
+      } else {
+        productName = product.querySelector('a').textContent.toLowerCase();
+      }
+      
 
       if (productName.includes(searchText)) {
         product.style.display = '';
@@ -307,27 +390,47 @@ class FacetFiltersForm extends HTMLElement {
   }
 
   onSubmitHandler(event) {
-    event.preventDefault();
-    const sortFilterForms = document.querySelectorAll('facet-filters-form form');
-    if (event.srcElement.className == 'mobile-facets__checkbox') {
-      const searchParams = this.createSearchParams(event.target.closest('form'));
-      this.onSubmitForm(searchParams, event);
-    } else {
-      const forms = [];
-      const isMobile = event.target.closest('form').id === 'FacetFiltersFormMobile';
+  event.preventDefault();
+  const sortFilterForms = document.querySelectorAll('facet-filters-form form');
+  const currentURLParams = new URLSearchParams(window.location.search); // Отримуємо поточні параметри
+  const perview = currentURLParams.get('perview'); // Отримуємо значення параметра perview, якщо є
 
-      sortFilterForms.forEach((form) => {
-        if (!isMobile) {
-          if (form.id === 'FacetSortForm' || form.id === 'FacetFiltersForm' || form.id === 'FacetSortDrawerForm') {
-            forms.push(this.createSearchParams(form));
-          }
-        } else if (form.id === 'FacetFiltersFormMobile') {
+  if (event.srcElement.className == 'mobile-facets__checkbox') {
+    const searchParams = this.createSearchParams(event.target.closest('form'));
+    if (perview) {
+     
+      const updatedParams = new URLSearchParams(searchParams);
+      updatedParams.set('perview', perview);
+      this.onSubmitForm(updatedParams.toString(), event);
+    } else {
+      this.onSubmitForm(searchParams, event);
+    }
+  } else {
+    const forms = [];
+    const isMobile = event.target.closest('form').id === 'FacetFiltersFormMobile';
+
+    sortFilterForms.forEach((form) => {
+      if (!isMobile) {
+        if (form.id === 'FacetSortForm' || form.id === 'FacetFiltersForm' || form.id === 'FacetSortDrawerForm') {
           forms.push(this.createSearchParams(form));
         }
-      });
-      this.onSubmitForm(forms.join('&'), event);
+      } else if (form.id === 'FacetFiltersFormMobile') {
+        forms.push(this.createSearchParams(form));
+      }
+    });
+
+    let finalParams = forms.join('&');
+    if (perview) {
+      
+      const updatedParams = new URLSearchParams(finalParams);
+      updatedParams.set('perview', perview);
+      finalParams = updatedParams.toString();
     }
+
+    this.onSubmitForm(finalParams, event);
   }
+}
+
 
   onActiveFilterClick(event) {
     event.preventDefault();
