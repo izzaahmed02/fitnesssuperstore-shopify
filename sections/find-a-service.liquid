@@ -4,7 +4,19 @@
 <section class="service-provider-search">
     <h1>{{ section.settings.title }}</h1>
     <div class="search-container">
-      <input type="text" placeholder="{{ section.settings.placeholder_zip }}" id="zip-search" />
+      <div class="zip-container">
+        <span class="search">
+            <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.75 9C1.75 4.99594 4.99594 1.75 9 1.75C13.0041 1.75 16.25 4.99594 16.25 9C16.25 13.0041 13.0041 16.25 9 16.25C4.99594 16.25 1.75 13.0041 1.75 9ZM9 0.25C4.16751 0.25 0.25 4.16751 0.25 9C0.25 13.8325 4.16751 17.75 9 17.75C11.1462 17.75 13.112 16.9773 14.6342 15.6949L17.4697 18.5303C17.7626 18.8232 18.2374 18.8232 18.5303 18.5303C18.8232 18.2374 18.8232 17.7626 18.5303 17.4697L15.6949 14.6342C16.9773 13.112 17.75 11.1462 17.75 9C17.75 4.16751 13.8325 0.25 9 0.25Z" fill="#B3B3B3"/>
+            </svg>
+        </span>
+        <input type="text" placeholder="{{ section.settings.placeholder_zip }}" id="zip-search" />
+        <span class="delete-text">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M0.476018 0.472112C0.766959 0.181171 1.23867 0.181171 1.52961 0.472112L7.00281 5.94532L12.476 0.472112C12.767 0.181171 13.2387 0.181171 13.5296 0.472112C13.8205 0.763052 13.8205 1.23476 13.5296 1.5257L8.0564 6.99891L13.5296 12.4721C13.8205 12.7631 13.8205 13.2348 13.5296 13.5257C13.2387 13.8166 12.767 13.8166 12.476 13.5257L7.00281 8.0525L1.52961 13.5257C1.23867 13.8166 0.766959 13.8166 0.476018 13.5257C0.185077 13.2348 0.185077 12.7631 0.476018 12.4721L5.94922 6.99891L0.476018 1.5257C0.185077 1.23476 0.185077 0.763052 0.476018 0.472112Z" fill="black"/>
+            </svg>                
+        </span>
+      </div>
         <div class="dropdown">
             <button class="dropdown-button">Select Distance</button>
             <ul class="dropdown-menu">
@@ -69,7 +81,7 @@
     document.addEventListener("DOMContentLoaded", function () {
         const distanceButton = document.querySelector(".dropdown-button");
         const distanceMenu = document.querySelector(".dropdown-menu");
-        const distanceOptions = document.querySelectorAll(".dropdown-option input");
+        const distanceOptions = document.querySelectorAll(".dropdown-option");
       
         distanceButton.addEventListener("click", function (e) {
             e.stopPropagation();
@@ -80,6 +92,7 @@
         distanceOptions.forEach((option) => {
           option.addEventListener("click", function () {
             distanceButton.textContent = this.nextElementSibling.textContent;
+            distanceButton.style.backgroundColor = "#F2F2F2"; 
             distanceMenu.style.display = "none";
           });
         });
@@ -137,7 +150,23 @@
                 console.error('Error fetching data:', error);
               });
           };
+
+          $('#zip-search').on('change', function() {
+                var value = $(this).val();
+                if (value) {
+                    $('.zip-container span.delete-text svg').show();
+                    $(this).css('background-color', '#F2F2F2');
+                } else {
+                    $('.zip-container span.delete-text svg').hide();
+                    $(this).css('background-color', 'white');
+                }
+          })
         
+          $('.zip-container span.delete-text svg').on('click', function() {
+            $(this).hide();
+            $('#zip-search').val('')
+          })
+
           $('.search-button').on('click', () => {
             const zipCode = $('#zip-search').val();
             const distance = $('.dropdown-button').text().replace(' miles', '');
