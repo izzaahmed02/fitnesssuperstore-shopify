@@ -1,16 +1,9 @@
 {{ 'section-contact-form1.css' | asset_url | stylesheet_tag }}
-{{ 'section-custom-form.css' | asset_url | stylesheet_tag }}
-{{ 'section-address.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
   .section-{{ section.id }}-padding {
     padding-top: {{ section.settings.padding_top | times: 0.3 | round: 0 }}px;
     padding-bottom: {{ section.settings.padding_bottom | times: 0.3 | round: 0 }}px;
-  }
-
-  #address-map-{{ section.id }} {
-    min-height: 208px;
-    height: 100%;
   }
 
   @media screen and (min-width: 750px) {
@@ -24,158 +17,61 @@
 {% assign contact_blocks = section.blocks | where: 'type', 'contact-info' %}
 {% assign hours_blocks = section.blocks | where: 'type', 'hours-info' %}
 
-<div class="page-width section-{{ section.id }}-padding">
-  <div class="contact-form">
-    <div class="contact-info">
-      <h2 class="contact-title">{{ section.settings.heading }}</h2>
-      <p class="contact-subtitle">{{ section.settings.subheading }}</p>
+<div class="page-width contact-form section-{{ section.id }}-padding">
+  <div class="contact-info">
+    <h2 class="contact-title">{{ section.settings.heading }}</h2>
+    <p class="contact-subtitle">{{ section.settings.subheading }}</p>
 
+    <div>
       <div>
-        <div>
-          <h3 class="contact_info_title">Contact information</h3>
-          {% for block in contact_blocks %}
-            <div class="contact-info-block">
-              <img
-                src="{{ block.settings.icon | image_url }}"
-                alt="{{ block.settings.icon.alt | escape }}"
-                width=""
-                height=""
-              >
-              <h5>{{ block.settings.heading }}</h5>
-              {% assign content = block.settings.content
-                | replace: '|', '<span class="contact-content-divder"></span>'
-              %}
+        <h3 class="contact_info_title">Contact information</h3>
+        {% for block in contact_blocks %}
+          <div class="contact-info-block">
+            <img
+              src="{{ block.settings.icon | image_url }}"
+              alt="{{ block.settings.icon.alt | escape }}"
+              width=""
+              height=""
+            >
+            <h5>{{ block.settings.heading }}</h5>
+            {% assign content = block.settings.content | replace: '|', '<span class="contact-content-divder"></span>' %}
 
-              <div>{{ content }}</div>
-            </div>
-          {% endfor %}
-        </div>
+            <div>{{ content }}</div>
 
-        {% for block in hours_blocks %}
-          <div>
-            <h5 class="content_hours_title">{{ block.settings.heading }}</h5>
-            <div class="contact_content_blocks">
-              {% for i in (1..3) %}
-                {% liquid
-                  assign content_key = 'content' | append: i
-                  assign content_block = block.settings[content_key]
-                  assign content_title_key = 'content_title' | append: i
-                  assign content_title = block.settings[content_title_key]
-                %}
-
-                {% if content_block != blank %}
-                  <div class="content_hours_block">
-                    <p>{{ content_title }}</p>
-                    <span>{{ content_block }}</span>
-                  </div>
-                {% endif %}
-              {% endfor %}
-            </div>
           </div>
         {% endfor %}
       </div>
-    </div>
 
-    <div class="contact-form-wrapper">
-      <h2 class="contact-form-heading">FILL OUT THE FORM</h2>
-      <div class="globo-formbuilder" data-id="NjI3MzM="></div>
-    </div>
+      {% for block in hours_blocks %}
+        <div>
+          <h5 class="content_hours_title">{{ block.settings.heading }}</h5>
+          <div class="contact_content_blocks">
+            {% for i in (1..3) %}
+              {% liquid
+                assign content_key = 'content' | append: i
+                assign content_block = block.settings[content_key]
+                assign content_title_key = 'content_title' | append: i
+                assign content_title = block.settings[content_title_key]
+              %}
 
-    <div class="address-section">
-      <div class="contact-map-container">
-        <div id="address-map-{{ section.id }}"></div>
-      </div>
-  
-      <div>
-        <h2 class="address_title">Location</h2>
-  
-        {% for block in section.blocks %}
-          {% case block.type %}
-            {% when 'address_item' %}
-              <div class="address-info-container">
-                <h5>{{ block.settings.title }}</h5>
-                <div>{{ block.settings.text }}</div>
-  
-                {% if block.settings.location != blank %}
-                  <div class="address_info_block">
-                    <img
-                      src="{{ block.settings.location_icon | image_url }}"
-                      alt="{{ block.settings.location_icon.alt | escape }}"
-                      width=""
-                      height=""
-                    >
-                    <p>{{ block.settings.location }}</p>
-                  </div>
-                {% endif %}
-  
-                {% if block.settings.work_time != blank %}
-                  <div class="address_info_block">
-                    <img
-                      src="{{ block.settings.work_time_icon | image_url }}"
-                      alt="{{ block.settings.work_time_icon.alt | escape }}"
-                      width=""
-                      height=""
-                    >
-                    <p>{{ block.settings.work_time }}</p>
-                  </div>
-                {% endif %}
-  
-                {% if block.settings.url != blank %}
-                  <a href="{{ block.settings.url }}" class="address_info_link">
-                    {{ block.settings.link }}
-                    {% render 'icon-link-arrow' %}
-                  </a>
-                {% endif %}
-              </div>
-          {% endcase %}
-        {% endfor %}
-      </div>
+              {% if content_block != blank %}
+                <div class="content_hours_block">
+                  <p>{{ content_title }}</p>
+                  <span>{{ content_block }}</span>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
     </div>
   </div>
+
+  <div class="contact-form-wrapper">
+    <h2 class="contact-form-heading">FILL OUT THE FORM</h2>
+    <div class="globo-formbuilder" data-id="NjI3MzM="></div>
+  </div>
 </div>
-
-<script>
-  window.addEventListener('load', function () {
-    const map = new google.maps.Map(document.getElementById('address-map-{{ section.id }}'), {
-      center: { lat: 38.0764, lng: -122.1241 },
-      zoom: 15,
-    });
-
-    const locations = [
-      {
-        position: { lat: 38.07726, lng: -122.12476 },
-        title: 'Fitness Superstore, Inc.',
-        address: '537 Stone Rd Suite F, Benicia, CA 94510, USA',
-      },
-      {
-        position: { lat: 38.0755, lng: -122.1235 },
-        title: 'French Fitness HQ',
-        address: '457 Industrial Way, Benicia, CA 94510',
-      },
-    ];
-
-    locations.forEach((location) => {
-      const marker = new google.maps.Marker({
-        position: location.position,
-        map: map,
-        title: location.title,
-      });
-
-      const content = `
-              <div style="display:flex; flex-direction: column;">
-                  <strong>${location.title}</strong><br>
-                  ${location.address}
-              </div>`;
-      const infoWindow = new google.maps.InfoWindow({
-        content: content,
-      });
-
-      marker.addListener('click', () => {
-        infoWindow.open(map, marker);
-      });
-    });
-  });
-</script>
 
 {% schema %}
 {
@@ -310,52 +206,6 @@
           "type": "text",
           "id": "content3",
           "label": "Content 3"
-        }
-      ]
-    },
-    {
-      "name": "Address info item",
-      "type": "address_item",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Title"
-        },
-        {
-          "type": "richtext",
-          "id": "text",
-          "label": "Text"
-        },
-        {
-          "type": "image_picker",
-          "id": "location_icon",
-          "label": "Location icon"
-        },
-        {
-          "type": "text",
-          "id": "location",
-          "label": "Location"
-        },
-        {
-          "type": "image_picker",
-          "id": "work_time_icon",
-          "label": "Working hours icon"
-        },
-        {
-          "type": "text",
-          "id": "work_time",
-          "label": "Working hours"
-        },
-        {
-          "type": "url",
-          "id": "url",
-          "label": "Link url"
-        },
-        {
-          "type": "text",
-          "id": "link",
-          "label": "Link text"
         }
       ]
     }

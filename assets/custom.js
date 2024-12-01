@@ -10,11 +10,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
             btn.addEventListener('click',()=>{
                 if(!btn.classList.contains('opened')){
-                  setTimeout(() => {  
-                  btn.classList.add('opened');
+                    btn.classList.add('opened');
                     let height = contentELem.scrollHeight;
                     contentELem.style.height = `${height}px`;
-                  }, 50);
                 }else{
                     btn.classList.remove('opened');
                     contentELem.style.height = '0px';
@@ -28,6 +26,8 @@ window.addEventListener('DOMContentLoaded', () => {
             })
         })
     }
+
+    
 
     // TABS SECTION
     let tabsSections = document.querySelectorAll('[data-tabs-section');
@@ -148,18 +148,22 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (section) {
                     const isVisible = section.classList.contains('visible');
                     const arrow = btn.querySelector('.scrollable-faq__arrow');
+                    document.querySelectorAll('.scrollable-faq__item--mob').forEach(item => {
+                        item.classList.remove('visible');
+                        item.style.height = "0";
+                    });
+                    document.querySelectorAll('.scrollable-faq__arrow').forEach((arrow) => {
+                      arrow.style.transform = 'rotate(0deg)';
+                    })
                     
                     if (!isVisible) {
                         section.classList.add('visible');
                         let height = section.scrollHeight;
                         section.style.height = `${height}px`;
+
                         arrow.style.transform = 'rotate(180deg)';
 
                         // section.scrollIntoView({ behavior: "smooth", block: "start", inline: "start" });
-                    } else {
-                      section.classList.remove('visible');
-                      section.style.height = '0';
-                      arrow.style.transform = 'rotate(0deg)';
                     }
                 }
             });
