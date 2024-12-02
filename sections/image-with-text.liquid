@@ -1,7 +1,5 @@
 {{ 'component-image-with-text.css' | asset_url | stylesheet_tag }}
 
-
-
 {%- style -%}
   .padding-{{ section.id }} {
     padding-top: {{ section.settings.padding_top | times: 0.6 | round: 0 }}px;
@@ -28,7 +26,6 @@
     display: flex;
     align-items: center;
     font-size: 14px;
-    font-weight: 700;
     color: #393940;
     line-height: 20px;
   }
@@ -52,8 +49,11 @@
       flex-direction: column-reverse;
       gap: 24px;
     }
-  }
 
+    .note{
+      align-items: start;
+    }
+  }
 {%- endstyle -%}
 
 {%- liquid
@@ -69,9 +69,7 @@
 <div class="section-{{ section.id }}-padding padding-{{ section.id }} gradient color-{{ section.settings.section_color_scheme }}">
   <div class="page-width">
     <div class="image-with-text image-with-text--{{ section.settings.content_layout }} isolate{% if settings.text_boxes_border_thickness > 0 and settings.text_boxes_border_opacity > 0 and settings.media_border_thickness > 0 and settings.media_border_opacity > 0 %} collapse-borders{% endif %}{% unless section.settings.color_scheme == section.settings.section_color_scheme and settings.media_border_thickness > 0 and settings.text_boxes_shadow_opacity == 0 and settings.text_boxes_border_thickness == 0 or settings.text_boxes_border_opacity == 0 %} collapse-corners{% endunless %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
-
       <div class="image-with-text__grid grid {% if section.settings.mobile_layout == 'column-reverse' %}grid-column-reverse{% endif %} grid--1-col grid--{% if section.settings.desktop_image_width == 'medium' %}2-col-tablet{% elsif section.settings.desktop_image_width == 'full-screen' %}full{% else %}3-col-tablet{% endif %}{% if section.settings.layout == 'text_first' %} image-with-text__grid--reverse{% endif %} {% if section.settings.layout == 'column' %} image-with-text__grid--column{% endif %}">
-
         <div class="image-with-text__media-item {% if section.settings.original_image_proportions %}original-proportions{% endif %} image-with-text__media-item--{{ section.settings.desktop_image_width }} image-with-text__media-item--{{ section.settings.desktop_content_position }} grid__item">
           <div
             class="image-with-text__media image-with-text__media--{{ section.settings.height }} global-media-settings{% unless remove_color_classes %} gradient color-{{ section.settings.color_scheme }}{% else %} background-transparent{% endunless %}{% if section.settings.image != blank %} media{% else %} image-with-text__media--placeholder placeholder{% endif %}{% if section.settings.image_behavior != 'none' %} animate--{{ section.settings.image_behavior }}{% endif %}"
@@ -149,7 +147,9 @@
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path fill-rule="evenodd" clip-rule="evenodd" d="M17.3307 8.99935C17.3307 13.6017 13.5998 17.3327 8.9974 17.3327C4.39502 17.3327 0.664062 13.6017 0.664062 8.99935C0.664062 4.39698 4.39502 0.666016 8.9974 0.666016C13.5998 0.666016 17.3307 4.39698 17.3307 8.99935ZM8.9974 5.04102C9.34257 5.04102 9.6224 5.32084 9.6224 5.66602V9.83268C9.6224 10.1779 9.34257 10.4577 8.9974 10.4577C8.65222 10.4577 8.3724 10.1779 8.3724 9.83268V5.66602C8.3724 5.32084 8.65222 5.04102 8.9974 5.04102ZM8.9974 13.166C9.45763 13.166 9.83073 12.7929 9.83073 12.3327C9.83073 11.8724 9.45763 11.4993 8.9974 11.4993C8.53716 11.4993 8.16406 11.8724 8.16406 12.3327C8.16406 12.7929 8.53716 13.166 8.9974 13.166Z" fill="#3E77AA"/>
                     </svg>
-                    {{ block.settings.note }}
+                    <div>
+                      {{ block.settings.note }}
+                    </div>
                   </div>
                 {%- when 'button' -%}
                   {%- if block.settings.button_label != blank -%}
@@ -205,7 +205,7 @@
                       </li>
                     {% endfor %}
                   </ul>
-                
+
                 {% when 'icon-with-text' %}
                   <div class="image-with-text__content-icon-block">
                     <img src="{{ block.settings.icon | image_url }}" alt="icon" width="24" height="24">
@@ -546,10 +546,10 @@
           "label": "t:sections.all.heading_size.label"
         },
         {
-         "type": "checkbox",
-         "id": "text_transform",
-         "label": "Uppercase text",
-         "default": true
+          "type": "checkbox",
+          "id": "text_transform",
+          "label": "Uppercase text",
+          "default": true
         },
         {
           "type": "select",
