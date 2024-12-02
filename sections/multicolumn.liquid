@@ -21,6 +21,12 @@
       padding-bottom: {{ section.settings.padding_bottom }}px;
     }
   }
+
+  @media screen and (max-width: 750px) {
+    #shopify-section-{{ section.id }} .multicolumn-card {
+      text-align: start;
+    }
+  }
 {%- endstyle -%}
 
 {%- liquid
@@ -33,7 +39,7 @@
 
 <div class="multicolumn {% unless section.settings.background_style == 'none' and settings.text_boxes_border_thickness > 0 or settings.text_boxes_shadow_opacity > 0 %} background-{{ section.settings.background_style }}{% endunless %}{% if section.settings.title == blank %} no-heading{% endif %}">
   <div
-    class="page-width section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+    class="page-width multicolumn-padding section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
     {% if settings.animations_reveal_on_scroll %}
       data-cascade
     {% endif %}
@@ -130,6 +136,14 @@
                 {%- if block.settings.title != blank -%}
                   <h3 class="multicolumn-card__info-title {% if block.settings.label_text != blank %}shrink{% endif %}">{{ block.settings.title }}</h3>
                 {%- endif -%}
+
+                {% if block.settings.label_text != blank %}
+                  <div class="multicolumn-cart__label">
+                    <img src="{{ block.settings.label_img | image_url }}" width="18" height="18">
+                    <span>{{ block.settings.label_text }}</span>
+                  </div>
+                {% endif %}
+                
                 {%- if block.settings.subtitle != blank -%}
                   <h5 class="multicolumn-card__info-subtitle">{{ block.settings.subtitle }}</h5>
                 {%- endif -%}
@@ -150,13 +164,6 @@
                   >
                 {%- endif -%}
               </div>
-
-              {% if block.settings.label_text != blank %}
-                <div class="multicolumn-cart__label">
-                  <img src="{{ block.settings.label_img | image_url }}" width="18" height="18">
-                  <span>{{ block.settings.label_text }}</span>
-                </div>
-              {% endif %}
             </div>
           </li>
         {%- endfor -%}
