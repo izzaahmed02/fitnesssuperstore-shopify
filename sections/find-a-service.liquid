@@ -1,0 +1,254 @@
+<link rel="stylesheet" href="{{ 'section-find-a-service.css' | asset_url }}">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+<script defer src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<section class="service-provider-search">
+    <h1>{{ section.settings.title }}</h1>
+    <div class="search-container">
+      <div class="zip-container">
+        <span class="search">
+            <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.75 9C1.75 4.99594 4.99594 1.75 9 1.75C13.0041 1.75 16.25 4.99594 16.25 9C16.25 13.0041 13.0041 16.25 9 16.25C4.99594 16.25 1.75 13.0041 1.75 9ZM9 0.25C4.16751 0.25 0.25 4.16751 0.25 9C0.25 13.8325 4.16751 17.75 9 17.75C11.1462 17.75 13.112 16.9773 14.6342 15.6949L17.4697 18.5303C17.7626 18.8232 18.2374 18.8232 18.5303 18.5303C18.8232 18.2374 18.8232 17.7626 18.5303 17.4697L15.6949 14.6342C16.9773 13.112 17.75 11.1462 17.75 9C17.75 4.16751 13.8325 0.25 9 0.25Z" fill="#B3B3B3"/>
+            </svg>
+        </span>
+        <input type="text" placeholder="{{ section.settings.placeholder_zip }}" id="zip-search" />
+        <span class="delete-text">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M0.476018 0.472112C0.766959 0.181171 1.23867 0.181171 1.52961 0.472112L7.00281 5.94532L12.476 0.472112C12.767 0.181171 13.2387 0.181171 13.5296 0.472112C13.8205 0.763052 13.8205 1.23476 13.5296 1.5257L8.0564 6.99891L13.5296 12.4721C13.8205 12.7631 13.8205 13.2348 13.5296 13.5257C13.2387 13.8166 12.767 13.8166 12.476 13.5257L7.00281 8.0525L1.52961 13.5257C1.23867 13.8166 0.766959 13.8166 0.476018 13.5257C0.185077 13.2348 0.185077 12.7631 0.476018 12.4721L5.94922 6.99891L0.476018 1.5257C0.185077 1.23476 0.185077 0.763052 0.476018 0.472112Z" fill="black"/>
+            </svg>                
+        </span>
+      </div>
+        <div class="dropdown">
+            <button class="dropdown-button">Select Distance</button>
+            <ul class="dropdown-menu">
+              <li class="dropdown-option">
+                <label class="dropdown-label">
+                    <input type="radio" id="20-miles" name="distance" checked />
+                    <span for="20-miles">20 miles</span>
+                </label>
+              </li>
+              <li class="dropdown-option">
+                <label class="dropdown-label">
+                    <input type="radio" id="30-miles" name="distance" />
+                    <span for="30-miles">30 miles</span>
+                </label>
+              </li>
+              <li class="dropdown-option">
+                <label class="dropdown-label">
+                    <input type="radio" id="50-miles" name="distance" />
+                    <span for="50-miles">50 miles</span>
+                </label>
+              </li>
+              <li class="dropdown-option">
+                <label class="dropdown-label">
+                    <input type="radio" id="100-miles" name="distance" />
+                    <span for="100-miles">100 miles</span>
+                </label>
+              </li>
+              <li class="dropdown-option">
+                <label class="dropdown-label">
+                    <input type="radio" id="150-miles" name="distance" />
+                    <span for="150-miles">150 miles</span>
+                </label>
+              </li>
+            </ul>
+        </div>
+      <button class="search-button">{{ section.settings.search_button_label }}</button>
+    </div>
+    <p class="description">{{ section.settings.description }}</p>
+    <div class="map-container">
+        <img src="{{ section.settings.map_image | image_url }}" alt="Service provider map" width="1280" height="790" />
+    </div>
+    <div class="disclaimer-section">
+        <span>{{ section.settings.disclaimer }}</span>
+    </div>
+    <table id="service-table">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Address</th>
+            <th>Distance From You (Miles)</th>
+            <th>Contact</th>
+            <th>Email</th>
+            <th>Service</th>
+            <th>ZipCode</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</section>  
+
+<script defer>
+    document.addEventListener("DOMContentLoaded", function () {
+        const distanceButton = document.querySelector(".dropdown-button");
+        const distanceMenu = document.querySelector(".dropdown-menu");
+        const distanceOptions = document.querySelectorAll(".dropdown-option input");
+      
+        distanceButton.addEventListener("click", function (e) {
+            e.stopPropagation();
+            distanceMenu.style.display =
+            distanceMenu.style.display === "block" ? "none" : "block";
+        });
+      
+        distanceOptions.forEach((option) => {
+          option.addEventListener("click", function () {
+            distanceButton.textContent = this.nextElementSibling.textContent;
+            distanceButton.style.backgroundColor = "#F2F2F2"; 
+            distanceMenu.style.display = "none";
+          });
+        });
+      
+        document.addEventListener("click", function (e) {
+          if (!distanceButton.contains(e.target) && !distanceMenu.contains(e.target)) {
+            distanceMenu.style.display = "none";
+          }
+        });
+
+        const table = $('#service-table').DataTable({
+            searching: false,
+            info: false,
+            stripeClasses: ['odd-row', 'even-row'],
+            language: {
+                'paginate': {
+                  'previous': `<svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.53033 0.46967C7.82322 0.762563 7.82322 1.23744 7.53033 1.53033L2.06066 7L7.53033 12.4697C7.82322 12.7626 7.82322 13.2374 7.53033 13.5303C7.23744 13.8232 6.76256 13.8232 6.46967 13.5303L0.46967 7.53033C0.176777 7.23744 0.176777 6.76256 0.46967 6.46967L6.46967 0.46967C6.76256 0.176777 7.23744 0.176777 7.53033 0.46967Z" fill="#CCCCCC"/></svg>`,
+                  'next': `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="14" viewBox="0 0 8 14" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#F1592A"/></svg>`
+                },
+                "lengthMenu": "Show _MENU_ per page"
+            },
+            columnDefs: [
+                { width: "150px", targets: [0] },
+                { width: "110px", targets: [1,3,4,5,6] },
+                { width: "190px", targets: 2 },
+            ],
+            columns: [
+              { data: 'company' },
+              { data: 'address' },
+              { data: 'distance' },
+              { data: 'contact' },
+              { data: 'email' },
+              { data: 'typesOfService' },
+              { data: 'zipCode' },
+            ],
+            order: [[2, 'asc']],
+            autoWidth: false 
+          });
+        
+          const fetchTechniciansData = (zipCode, distance, callback) => {
+            const url = `https://fitnesssuperstore-api.azurewebsites.net/api/distance/techniciansdistance2?zipCode=${zipCode}&miles=${distance}`;
+            fetch(url)
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error('Network response was not ok');
+                }
+                callback();
+                return response.json();
+              })
+              .then((data) => {
+                table.clear();
+                table.rows.add(data).draw();
+                callback();
+              })
+              .catch((error) => {
+                callback();
+                console.error('Error fetching data:', error);
+              });
+          };
+
+          $('#zip-search').on('change', function() {
+                var value = $(this).val();
+                if (value) {
+                    $('.zip-container span.delete-text svg').show();
+                    $(this).css('background-color', '#F2F2F2');
+                } else {
+                    $('.zip-container span.delete-text svg').hide();
+                    $(this).css('background-color', 'white');
+                }
+          })
+        
+          $('.zip-container span.delete-text svg').on('click', function() {
+            $(this).hide();
+            $('#zip-search').val('')
+          })
+
+          $('.search-button').on('click', () => {
+            const zipCode = $('#zip-search').val();
+            const distance = $('.dropdown-button').text().replace(' miles', '');
+
+            if (!zipCode) {
+                $('#zip-search').addClass('validation-error')
+                return;
+            } else {
+                $('#zip-search').removeClass('validation-error').addClass('validation-default')
+            }
+  
+            if (distance === 'Select Distance') {
+                $('.dropdown-button').addClass('validation-error');
+                return;
+            } else {
+                $('.dropdown-button').removeClass('validation-error').addClass('validation-default')
+            }
+
+            $('.search-button').prop('disabled', true).text('Searching...')
+
+            const finishCallBack = () => {
+                $('#service-table').show();
+                $('#service-table_wrapper').show();
+                $('.search-button').prop('disabled', false).text('Search');
+                document.querySelector('#service-table').scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+
+            fetchTechniciansData(zipCode, distance, finishCallBack);
+          });
+      });          
+</script>
+
+{% schema %}
+{
+    "name": "Service Provider Search",
+    "tag": "section",
+    "class": "service-provider-search",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Title",
+        "default": "Service Provider Search"
+      },
+      {
+        "type": "text",
+        "id": "placeholder_zip",
+        "label": "Zip Placeholder",
+        "default": "Search by Zip"
+      },
+      {
+        "type": "text",
+        "id": "search_button_label",
+        "label": "Search Button Label",
+        "default": "Search"
+      },
+      {
+        "type": "text",
+        "id": "disclaimer",
+        "label": "disclaimer",
+        "default": "* Fitnesssuperstore.com is not affiliated with, nor does it endorse or recommend any of the below listed companies. They have listed themselves as a service center in the shown areas."
+      },
+      {
+        "type": "textarea",
+        "id": "description",
+        "label": "Description",
+        "default": "Find a service provider for your fitness equipment near you."
+      },
+      {
+        "type": "image_picker",
+        "id": "map_image",
+        "label": "Map Image"
+      },
+    ],
+    "presets": [
+      {
+        "name": "Service Provider Search"
+      }
+    ]
+  }  
+{% endschema %}
