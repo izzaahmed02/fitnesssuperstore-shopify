@@ -87,6 +87,34 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // IMAGE WITH TEXT DROPDOWNS
+
+    let imageWithTextDropdownButtons = document.querySelectorAll('.image-with-text__dropdown-button');
+  
+    if (imageWithTextDropdownButtons.length) {
+      imageWithTextDropdownButtons.forEach((btn) => {
+            let section = btn.nextElementSibling;
+            
+            btn.addEventListener('click', () => {
+                if (section) {
+                    const isVisible = section.classList.contains('visible');
+                    const arrow = btn.querySelector('svg');
+                    
+                    if (!isVisible) {
+                        section.classList.add('visible');
+                        let height = section.scrollHeight;
+                        section.style.height = `${height}px`;
+                        arrow.style.transform = 'rotate(180deg)';
+                    } else {
+                      section.classList.remove('visible');
+                        section.style.height = "0";
+                        arrow.style.transform = 'rotate(0deg)';
+                    }
+                }
+            });
+        });
+    }
+
 
     // SCROLL TO SECTION
 
