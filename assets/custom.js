@@ -162,18 +162,6 @@ window.addEventListener('DOMContentLoaded', () => {
       customElements.define("scrollable-faq", ScrollableFaq);
     }
 
-    const link = document.getElementById('paytomorrow-link');
-    if (link) {
-        link.addEventListener('click', (event) => {
-            event.preventDefault(); 
-            window.open(
-                'https://api.paytomorrow.com/api/ecommerce/public/pre-approval/a4f00e481c4f3e28756375f86d272b22',
-                '_blank',
-                'location=yes,height=670,width=500,scrollbars=yes,status=yes'
-            );
-        });
-    }
-
   if (window.innerWidth <= 749) {
     let scrollToSectionButtons = document.querySelectorAll('[data-scroll-to-mobile]');
     console.log("scrollToSectionButtons", scrollToSectionButtons);
