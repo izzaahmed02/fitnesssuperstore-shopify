@@ -1,25 +1,35 @@
 <script>
-  document.addEventListener("DOMContentLoaded", (event) => {
-  $('.gallery-wrapper').slick({
-          dots: true,
-          infinite: true,
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          centerMode: true,
-          centerPadding: '202px',
-          appendArrows: $('.slick-slider-nav'),
-          appendDots: $('.slick-slider-dots'),
-          prevArrow: `<button class='slick-prev btn btn-white rounded-circle'><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  document.addEventListener('DOMContentLoaded', (event) => {
+    if ($(window).width() > 749) {
+      $('.gallery-wrapper').slick({
+        dots: true,
+        infinite: true,
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        centerMode: true,
+        centerPadding: '202px',
+        responsive: [
+          {
+            breakpoint: 750,
+            settings: {
+              slidesToShow: 1,
+              dots: true,
+            },
+          },
+        ],
+        appendArrows: $('.slick-slider-nav'),
+        appendDots: $('.slick-slider-dots'),
+        prevArrow: `<button class='slick-prev btn btn-white rounded-circle'><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect width="48" height="48" rx="24" fill="#616166"/>
 <path fill-rule="evenodd" clip-rule="evenodd" d="M26.5303 17.4697C26.8232 17.7626 26.8232 18.2374 26.5303 18.5303L21.0607 24L26.5303 29.4697C26.8232 29.7626 26.8232 30.2374 26.5303 30.5303C26.2374 30.8232 25.7626 30.8232 25.4697 30.5303L19.4697 24.5303C19.1768 24.2374 19.1768 23.7626 19.4697 23.4697L25.4697 17.4697C25.7626 17.1768 26.2374 17.1768 26.5303 17.4697Z" fill="white"/>
 </svg>
 </button>`,
-          nextArrow: `<button class='slick-next btn btn-white rounded-circle'><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        nextArrow: `<button class='slick-next btn btn-white rounded-circle'><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect width="48" height="48" rx="24" fill="#616166"/>
 <path fill-rule="evenodd" clip-rule="evenodd" d="M21.4697 17.4697C21.7626 17.1768 22.2374 17.1768 22.5303 17.4697L28.5303 23.4697C28.8232 23.7626 28.8232 24.2374 28.5303 24.5303L22.5303 30.5303C22.2374 30.8232 21.7626 30.8232 21.4697 30.5303C21.1768 30.2374 21.1768 29.7626 21.4697 29.4697L26.9393 24L21.4697 18.5303C21.1768 18.2374 21.1768 17.7626 21.4697 17.4697Z" fill="white"/>
 </svg></button>`,
-        
       });
+    }
   });
 </script>
 
@@ -155,30 +165,47 @@
   #shopify-section-{{ section.id }} .slick-next{
     right: 60px;
   }
+
+  @media screen and (max-width: 750px) {
+    .gallery-wrapper {
+      margin-top: 0;
+    }
+    .gallery-wrapper .item {
+      height: 208px;
+      border-radius: 16px;
+      margin-left: 0;
+      margin-right: 0;
+      margin-bottom: 20px;
+    }
+
+    .gallery-wrapper .item img {
+      height: 208px;
+      border-radius: 16px;
+      object-position: bottom;
+    }
+  }
 {%- endstyle -%}
 
 <div class="page-width">
   <div class="container">
-  <h2 class="contact__heading">{{ section.settings.heading }}</h2>
-  {% if section.settings.text != blank %}
-    <p>{{ section.settings.text }}</p>
-  {% endif %}
-  {% if section.settings.link != blank %}
-    <a href="{{ section.settings.href }}" class="btn__link">{{ section.settings.link }}</a>
-  {% endif %}
+    <h2 class="contact__heading">{{ section.settings.heading }}</h2>
+    {% if section.settings.text != blank %}
+      <p>{{ section.settings.text }}</p>
+    {% endif %}
+    {% if section.settings.link != blank %}
+      <a href="{{ section.settings.href }}" class="btn__link">{{ section.settings.link }}</a>
+    {% endif %}
   </div>
   <div class="gallery-wrapper-main">
-  <div class="gallery-wrapper">
+    <div class="gallery-wrapper">
       {% for block in section.blocks %}
         {%- case block.type -%}
-          {%- when "item" -%}
+          {%- when 'item' -%}
             <div class="item">{{ block.settings.image | image_url: width: auto | image_tag }}</div>
         {% endcase %}
       {% endfor %}
-  </div>
-  <div class="slick-slider-dots">
-    
-  </div>
+    </div>
+    <div class="slick-slider-dots"></div>
     <div class="slick-slider-nav"></div>
   </div>
 </div>
@@ -229,7 +256,6 @@
       "label": "t:sections.all.padding.padding_bottom",
       "default": 80
     }
-
   ],
   "blocks": [
     {
