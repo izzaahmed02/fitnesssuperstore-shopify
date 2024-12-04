@@ -249,4 +249,74 @@ window.addEventListener('DOMContentLoaded', () => {
           );
       });
   }
+
+  // MENU MOBILE ACCORDION
+
+  const menuAccordionButtons = document.querySelectorAll('.accordion-item');
+
+if (menuAccordionButtons.length) {
+    menuAccordionButtons.forEach((btn) => {
+        const content = btn.nextElementSibling;
+
+        btn.addEventListener('click', () => {
+            if (content) {
+                const isVisible = content.classList.contains('visible');
+                const plus = btn.querySelector('.icon-plus');
+                const minus = btn.querySelector('.icon-minus');
+
+                if (!isVisible) {
+                    content.classList.add('visible');
+                    let height = content.scrollHeight;
+                    content.style.height = `${height}px`;
+                    plus.style.display = 'none';
+                    minus.style.display = 'block';
+                } else {
+                    content.classList.remove('visible');
+                    content.style.height = '0';
+                    plus.style.display = 'block';
+                    minus.style.display = 'none';
+                }
+            }
+        });
+    });
+}
+
+const thirdLevelButtons = document.querySelectorAll('.menu--second-level .accordion-item--second-level');
+
+if (thirdLevelButtons.length) {
+    thirdLevelButtons.forEach((btn) => {
+        const thirdLevelContent = btn.nextElementSibling;
+        const parentContainer = thirdLevelContent.closest('.menu-drawer__menu.menu--second-level').parentElement;
+        const plusIcon = btn.querySelector('.icon-plus');
+        const minusIcon = btn.querySelector('.icon-minus');
+
+        btn.addEventListener('click', () => {
+            if (thirdLevelContent) {
+                const isVisible = thirdLevelContent.classList.contains('visible');
+
+                if (!isVisible) {
+                    thirdLevelContent.classList.add('visible');
+                    thirdLevelContent.style.maxHeight = `${thirdLevelContent.scrollHeight}px`;
+                    parentContainer.style.height = 'auto';
+                    plusIcon.style.display = 'none';
+                    minusIcon.style.display = 'block';
+                    
+                } else {
+                    thirdLevelContent.classList.remove('visible');
+                    thirdLevelContent.style.maxHeight = '0';
+                    plusIcon.style.display = 'block';
+                    minusIcon.style.display = 'none';
+                }
+            }
+        });
+
+        thirdLevelContent.addEventListener('transitionend', () => {
+            if (!thirdLevelContent.classList.contains('visible')) {
+                thirdLevelContent.style.maxHeight = null;
+            }
+        });
+    });
+}
+
+
 });
