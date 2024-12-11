@@ -2,21 +2,74 @@ class FacetFiltersForm extends HTMLElement {
   constructor() {
     super();
     this.onActiveFilterClick = this.onActiveFilterClick.bind(this);
-
     this.debouncedOnSubmit = debounce((event) => {
         
         this.onSubmitHandler(event);
 
-    }, 800);
+    }, 800); 
 
     const facetForm = this.querySelector('form');
     facetForm.addEventListener('input', (e) => {
-      if(e.srcElement.className !== "filterSearchInput"){
-        this.debouncedOnSubmit(e) 
+      const target = e.srcElement;
+    
+      if (target.classList.contains('mobile-facets__checkbox') || target.closest('.mobile-price-range')) {
+        return; 
       }
-                          
-    });
+    
+      if (target.type === "checkbox") {
+        this.onSubmitHandler(e);
 
+      } else if (target.className !== "filterSearchInput") {
+        this.debouncedOnSubmit(e);
+      }
+    });
+    
+    const applyButton = document.querySelectorAll('.button--primary.apply-filters-mobile');
+    
+    applyButton.forEach((btn) => {
+      const form = btn.closest('form');
+      applyButton.forEach((btn) => {
+        const form = btn.closest('form');
+        
+        btn.addEventListener('click', (event) => {
+          // Retrieve the price range inputs
+          const minInput = form.querySelector('#price-range-min');
+          const maxInput = form.querySelector('#price-range-max');
+          
+          // Check if price range values are default
+          const isPriceFilterDefault = 
+            minInput.value === minInput.getAttribute('min') && 
+            maxInput.value === maxInput.getAttribute('max');
+
+            console.log(isPriceFilterDefault)
+          
+          // Remove price range params if they are default
+          
+          if (isPriceFilterDefault) {
+            const searchParams = new URLSearchParams(new FormData(form));
+            searchParams.delete(minInput.name);
+            searchParams.delete(maxInput.name);
+            FacetFiltersForm.renderPage(searchParams.toString(), event);
+          } else {
+            // Proceed normally if price filter is not default
+            FacetFiltersForm.renderPage(this.createSearchParams(form), event);
+          }
+          document.querySelector('body').classList.remove('overflow-hidden-mobile');
+        });
+      });
+          });
+
+    document.querySelector('.sort-per-page select.num').addEventListener('change', function(){
+    const url = new URL(window.location.href);
+    const searchParams = new URLSearchParams(window.location.search);
+
+    searchParams.delete('page');
+    searchParams.set('perview', this.value.split('=')[1]);
+    url.search = searchParams.toString();
+
+    window.location.replace(url.toString());
+  });
+    
     const searchInputs = document.querySelectorAll(".filterSearchInput");
     searchInputs.forEach((input) => {
       input.addEventListener("input", function () {
@@ -35,18 +88,83 @@ class FacetFiltersForm extends HTMLElement {
       });
     });
 
-    document.querySelector('.sort-per-page select.num').addEventListener('change', function(){
-      const url = new URL(window.location.href);
-      url.searchParams.set('view', this.value.split('=')[1]); 
-      window.location.replace(url.toString()); 
+    function initSlider(element) {
+      if (!$(element).hasClass('slick-initialized')) {
+    $(element).slick({
+      slidesToShow: 1,
+      slidesToScroll: 1,
+      lazyLoad: 'ondemand',
+      arrows: true,
+      dots: true,
+      responsive: [
+        {
+          breakpoint: 768,
+          settings: {
+            slidesToShow: 1
+          }
+        }
+      ],
+      
     });
+
+        $(element).find('.image-item').each(function() {
+          console.log($(this));
+          $(this).css({
+            'background': '#edeff3',
+          });
+        });
+      $(element).find('img.lazy-load').each(function() {
+          const img = $(this);
+        if(img){
+          img.attr('src', img.data('src'));
+          img.removeClass('lazy-load'); 
+          img.css({
+            'opacity': '1',
+            'visibility': 'visible'
+          });
+        }
+      });
+      }
+    }
+  
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          initSlider(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.8 });
+  
+    $('.image-wrap').each(function() {
+      if ($(this).length > 0) {
+      observer.observe(this);
+      }
+    });
+
+    // document.querySelector('.sort-per-page select.num').addEventListener('change', function () {
+    //     const selectedValue = this.value;
+    //     const url = new URL(window.location.href);
+    
+    //     url.searchParams.delete('page');
+    //     url.searchParams.set('perview', selectedValue);
+    
+    //     window.location.replace(url.toString()); 
+    // });
     
     function filterProducts() {
     const searchText = document.getElementById('search-input').value.toLowerCase();
     const products = document.querySelectorAll('#product-grid li');
 
     products.forEach(product => {
-      const productName = product.querySelector('.card__heading').textContent.toLowerCase();
+      console.log(product);
+      let productName;
+      if(product.querySelector('.card__heading')){
+        productName = product.querySelector('.card__heading').textContent.toLowerCase();
+      } else {
+        productName = product.querySelector('a').textContent.toLowerCase();
+      }
+      
 
       if (productName.includes(searchText)) {
         product.style.display = '';
@@ -307,27 +425,46 @@ class FacetFiltersForm extends HTMLElement {
   }
 
   onSubmitHandler(event) {
-    event.preventDefault();
-    const sortFilterForms = document.querySelectorAll('facet-filters-form form');
-    if (event.srcElement.className == 'mobile-facets__checkbox') {
-      const searchParams = this.createSearchParams(event.target.closest('form'));
-      this.onSubmitForm(searchParams, event);
-    } else {
-      const forms = [];
-      const isMobile = event.target.closest('form').id === 'FacetFiltersFormMobile';
+  event.preventDefault();
+  const sortFilterForms = document.querySelectorAll('facet-filters-form form');
+  const currentURLParams = new URLSearchParams(window.location.search); // Отримуємо поточні параметри
+  const perview = currentURLParams.get('perview'); // Отримуємо значення параметра perview, якщо є
 
-      sortFilterForms.forEach((form) => {
-        if (!isMobile) {
-          if (form.id === 'FacetSortForm' || form.id === 'FacetFiltersForm' || form.id === 'FacetSortDrawerForm') {
-            forms.push(this.createSearchParams(form));
-          }
-        } else if (form.id === 'FacetFiltersFormMobile') {
+  if (event.srcElement.className == 'mobile-facets__checkbox') {
+    const searchParams = this.createSearchParams(event.target.closest('form'));
+    if (perview) {
+     
+      const updatedParams = new URLSearchParams(searchParams);
+      updatedParams.set('perview', 18);
+      this.onSubmitForm(updatedParams.toString(), event);
+    } else {
+      this.onSubmitForm(searchParams, event);
+    }
+  } else {
+    const forms = [];
+    const isMobile = event.target.closest('form').id === 'FacetFiltersFormMobile';
+
+    sortFilterForms.forEach((form) => {
+      if (!isMobile) {
+        if (form.id === 'FacetSortForm' || form.id === 'FacetFiltersForm' || form.id === 'FacetSortDrawerForm') {
           forms.push(this.createSearchParams(form));
         }
-      });
-      this.onSubmitForm(forms.join('&'), event);
+      } else if (form.id === 'FacetFiltersFormMobile') {
+        forms.push(this.createSearchParams(form));
+      }
+    });
+
+    let finalParams = forms.join('&');
+    if (perview) {
+      
+      const updatedParams = new URLSearchParams(finalParams);
+      updatedParams.set('perview', perview);
+      finalParams = updatedParams.toString();
     }
+
+    this.onSubmitForm(finalParams, event);
   }
+}
 
   onActiveFilterClick(event) {
     event.preventDefault();
@@ -346,51 +483,87 @@ FacetFiltersForm.searchParamsPrev = window.location.search.slice(1);
 customElements.define('facet-filters-form', FacetFiltersForm);
 FacetFiltersForm.setListeners();
 
-class PriceRange extends HTMLElement {
+class PriceRangeSlider extends HTMLElement {
   constructor() {
     super();
-  
-    this.querySelectorAll('input').forEach((element) => {
-      element.addEventListener('change', this.onRangeChange.bind(this));
-      element.addEventListener('keydown', this.onKeyDown.bind(this));
+    this.minInput = this.querySelector('#price-range-min');
+    this.maxInput = this.querySelector('#price-range-max');
+    this.textInputs = this.querySelectorAll('.field__input');
+    this.minSlider = this.querySelector('#price-range-min');
+    this.maxSlider = this.querySelector('#price-range-max');
+
+    // Add event listeners for range sliders
+    this.minSlider.addEventListener('input', this.updateMinValue.bind(this));
+    this.maxSlider.addEventListener('input', this.updateMaxValue.bind(this));
+
+    // Add event listeners for text inputs
+    this.textInputs.forEach((input) => {
+      input.addEventListener('change', this.syncTextInputs.bind(this));
     });
-    this.setMinAndMaxValues();
+
+    this.updateSliderBackground(); // Initial background setup
   }
 
-  onRangeChange(event) {
-    this.adjustToValidValues(event.currentTarget);
-    this.setMinAndMaxValues();
+  updateMinValue() {
+    const minValue = Number(this.minSlider.value);
+    const maxValue = Number(this.maxSlider.value);
+
+    if (minValue > maxValue) {
+      this.minSlider.value = maxValue;
+    }
+
+    this.textInputs[0].value = this.minSlider.value;
+    this.updateSliderBackground();
   }
 
-  onKeyDown(event) {
-    if (event.metaKey) return;
+  updateMaxValue() {
+    const minValue = Number(this.minSlider.value);
+    const maxValue = Number(this.maxSlider.value);
 
-    const pattern = /[0-9]|\.|,|'| |Tab|Backspace|Enter|ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Delete|Escape/;
-    if (!event.key.match(pattern)) event.preventDefault();
+    if (maxValue < minValue) {
+      this.maxSlider.value = minValue;
+    }
+
+    this.textInputs[1].value = this.maxSlider.value;
+    this.updateSliderBackground();
   }
 
-  setMinAndMaxValues() {
-    const inputs = this.querySelectorAll('.price-filter-input');
-    const minInput = inputs[0];
-    const maxInput = inputs[1];
-    if (maxInput.value) minInput.setAttribute('data-max', maxInput.value);
-    if (minInput.value) maxInput.setAttribute('data-min', minInput.value);
-    if (minInput.value === '') maxInput.setAttribute('data-min', 0);
-    if (maxInput.value === '') minInput.setAttribute('data-max', maxInput.getAttribute('data-max'));
+  syncTextInputs() {
+    const minValue = Number(this.textInputs[0].value);
+    const maxValue = Number(this.textInputs[1].value);
+
+    if (minValue >= 0 && minValue <= maxValue) {
+      this.minSlider.value = minValue;
+    }
+
+    if (maxValue >= minValue) {
+      this.maxSlider.value = maxValue;
+    }
+
+    this.updateSliderBackground();
   }
 
-  adjustToValidValues(input) {
-    const value = Number(input.value);
-    const min = Number(input.getAttribute('data-min'));
-    const max = Number(input.getAttribute('data-max'));
+  updateSliderBackground() {
+    const minValue = Number(this.minSlider.value);
+    const maxValue = Number(this.maxSlider.value);
+    const rangeMax = this.maxSlider.max;
 
-    if (value < min) input.value = min;
-    if (value > max) input.value = max;
+    const fromPosition = (minValue * 100 / rangeMax);
+    const toPosition = (maxValue * 100 / rangeMax);
+    
+    this.maxSlider.style.background = `linear-gradient(
+      to right,
+      #C6C6C6 0%,
+      #C6C6C6 ${fromPosition}%,
+      #F1592A ${fromPosition}%,
+      #F1592A ${toPosition}%,
+      #C6C6C6 ${toPosition}%,
+      #C6C6C6 100%
+    )`;
   }
 }
 
-customElements.define('price-range', PriceRange);
-
+customElements.define('price-range-slider', PriceRangeSlider);
 class FacetRemove extends HTMLElement {
   constructor() {
     super();
@@ -407,6 +580,7 @@ class FacetRemove extends HTMLElement {
     event.preventDefault();
     const form = this.closest('facet-filters-form') || document.querySelector('facet-filters-form');
     form.onActiveFilterClick(event);
+    document.querySelector('body').classList.remove('overflow-hidden-mobile');
   }
 }
 
