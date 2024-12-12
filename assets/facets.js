@@ -501,7 +501,7 @@ class PriceRangeSlider extends HTMLElement {
       input.addEventListener('change', this.syncTextInputs.bind(this));
     });
 
-    this.updateSliderBackground(); // Initial background setup
+    this.updateSliderBackground();
   }
 
   updateMinValue() {
