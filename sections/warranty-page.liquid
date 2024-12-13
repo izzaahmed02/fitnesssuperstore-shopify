@@ -1,0 +1,126 @@
+{{ 'section-main-page.css' | asset_url | stylesheet_tag }}
+{{ 'section-waranty-page.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{% liquid
+  assign info = page.metafields.custom.warranty_info.value
+  assign badges = page.metafields.custom.badges.value
+%}
+
+<div class="gradient">
+  <div class="page-width section-{{ section.id }}-padding">
+    <div class="warranty_page_links rte{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+      {%- if section.settings.page.content != blank -%}
+        {{ section.settings.page.content }}
+      {%- endif -%}
+    </div>
+
+    {% if info != blank %}
+      <div class="warranty_badges_info">
+        <div>
+          <h2>{{ info.title }}</h2>
+          <p>{{ info.text }}</p>
+
+          <div class="warranty_badges_buttons">
+            <a href="{{ info.accent_link.value.url }}" class="warranty_badges_accent-link">
+              {{ info.accent_link.value.text }}
+
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="white"/>
+              </svg>
+            </a>
+            <a href="{{ info.link.value.url }}" class="warranty_badges_link">
+              {{ info.link.value.text }}
+
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12.4697 5.46967C12.7626 5.17678 13.2374 5.17678 13.5303 5.46967L19.5303 11.4697C19.8232 11.7626 19.8232 12.2374 19.5303 12.5303L13.5303 18.5303C13.2374 18.8232 12.7626 18.8232 12.4697 18.5303C12.1768 18.2374 12.1768 17.7626 12.4697 17.4697L17.1893 12.75H5C4.58579 12.75 4.25 12.4142 4.25 12C4.25 11.5858 4.58579 11.25 5 11.25H17.1893L12.4697 6.53033C12.1768 6.23744 12.1768 5.76256 12.4697 5.46967Z" fill="#23232B"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <img src="{{ info.image | image_url }}" alt="{{ info.image.alt }}" width="" height="">
+      </div>
+    {% endif %}
+
+    {% if badges != blank %}
+      <div class="warranty_badges-wrapper">
+        <h2 class="warranty_badges_title">Click on a warranty badge below for details</h2>
+        <ul class="warranty_badges-container">
+          {% for badge in badges %}
+            <li class="warranty_badge">
+              <a href="{{ badge.badge_url }}">
+                <img
+                  src="{{ badge.image | image_url }}"
+                  alt="{{ badge.image.alt | default: 'warranty badge' }}"
+                  width=""
+                  height=""
+                >
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Warranty page",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "page",
+      "id": "page",
+      "label": "t:sections.page.settings.page.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 36
+    }
+  ],
+  "presets": [
+    {
+      "name": "Warranty page"
+    }
+  ]
+}
+{% endschema %}

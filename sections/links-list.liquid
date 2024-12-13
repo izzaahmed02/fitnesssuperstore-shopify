@@ -1,0 +1,204 @@
+
+{%- style -%}
+  .section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top | times: 0.6 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<style>
+  .links_search_wrapper {
+    position: relative;
+    width: 405px;
+    height: 48px;
+    border: 1.5px solid #E5E5E5;
+    border-radius: 8px;
+    margin-top: 16px;
+    margin-bottom: 32px;
+  }
+  
+  .links_search_wrapper::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    background-image: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.75 11C3.75 6.99594 6.99594 3.75 11 3.75C15.0041 3.75 18.25 6.99594 18.25 11C18.25 15.0041 15.0041 18.25 11 18.25C6.99594 18.25 3.75 15.0041 3.75 11ZM11 2.25C6.16751 2.25 2.25 6.16751 2.25 11C2.25 15.8325 6.16751 19.75 11 19.75C13.1462 19.75 15.112 18.9773 16.6342 17.6949L19.4697 20.5303C19.7626 20.8232 20.2374 20.8232 20.5303 20.5303C20.8232 20.2374 20.8232 19.7626 20.5303 19.4697L17.6949 16.6342C18.9773 15.112 19.75 13.1462 19.75 11C19.75 6.16751 15.8325 2.25 11 2.25Z" fill="%23B3B3B3"/></svg>');
+    background-repeat: no-repeat;
+    background-size: contain;
+  }
+  
+  .links_search {
+    position: relative;
+    width: calc(100% - 44px);
+    height: 100%;
+    border: none;
+    outline: none;
+    border-radius: 8px;
+    margin-left: 44px;
+    padding-block: 12px;
+    font-family: 'Lato';
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+  }
+
+  .links_search::placeholder {
+    color: #B3B3B3;
+  }
+  
+  .links_search:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .links_list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .links_list-item {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    color: var(--link-color);
+  }
+
+  .links_list_section h3 {
+    font-family: 'Lato';
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 36px;
+    color: var(--grey-dark);
+    margin-top: 32px;
+    margin-bottom: 16px;
+  }
+</style>
+
+<div class="section-{{ section.id }} page-width">
+  <div class="links_search_wrapper">
+    <input
+      class="links_search"
+      type="text"
+      placeholder="Search"
+      oninput="findPages()"
+    />
+  </div>
+
+  <div class="links_list_section">
+  {% for block in section.blocks %}
+    <h3>{{ block.settings.heading }}</h3>
+
+    {% assign links = block.settings.content | replace: '<ul>', ' ' | replace: '</ul>', ' ' | split: '</li>' %}
+
+    {% if links.size > 1 %}
+      <ul class="links_list-container">
+      {% for link in links %}
+        <li class="links_list-item">{{ link | replace: '<li>', ' ' }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+
+  {% endfor %}
+  </div>
+</div>
+
+<script>
+  function findPages() {
+    const searchInput = document.querySelector('.links_search').value.toLowerCase();
+    const manuals = document.querySelectorAll('.links_list-item');
+    const headings = document.querySelectorAll('.links_list_section h3');
+
+    const url = new URL(window.location);
+    url.searchParams.set('search', searchInput);
+    window.history.replaceState({}, '', url);
+
+    manuals.forEach((manual) => {
+      const title = manual.textContent.toLowerCase();
+      manual.style.display = title.includes(searchInput) ? 'block' : 'none';
+    });
+
+    headings.forEach((heading) => {
+      heading.style.display = heading.nextElementSibling.clientHeight > 0 ? 'block' : 'none';
+    });
+  }
+
+  function applySearchFromURL() {
+    const url = new URL(window.location);
+    const searchTerm = url.searchParams.get('search') || '';
+    const searchInput = document.querySelector('.links_search');
+    if (searchInput) {
+      searchInput.value = searchTerm;
+      findPages();
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', applySearchFromURL);
+</script>
+
+
+{% schema %}
+{
+  "name": "Links list",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 50
+    }
+  ],
+  "blocks": [
+    {
+      "type": "links",
+      "name": "Links block",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading"
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "Content"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Links list"
+    }
+  ]
+}
+{% endschema %}

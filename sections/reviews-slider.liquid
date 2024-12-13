@@ -105,33 +105,32 @@
   });
   
   {% if request.design_mode %}
-  document.addEventListener('shopify:section:load', async () => {
-    const reviewsWrapper = document.querySelector('.reviews-slider');
-    
-    const aggrReviewsResponse = await fetch('https://fitnesssuperstore-api.azurewebsites.net/api/reviews/aggregatedreviews');
-    if (aggrReviewsResponse.ok) {
-      const aggrReviews = await aggrReviewsResponse.json();
-  
-      const reviewsHTML = aggrReviews.reduce((accumulator, item) => {
-        return accumulator + `<div class="review-item">
-                <div class="review-item__wrapper">
-                <div class="stars">
-                  <div class="Stars" style="--rating: ${item.rating};" aria-label="Rating of this product is ${item.rating} out of 5."></div>
-                </div>
-                <span class="name">${item.reviewer}</span>
-                <span class="review-date">${item.dateReviewed}</span>
-                <span class="review-text">
-                  ${item.comment}
-                </span>
-                </div>
-              </div>`;
-      }, '');
+    document.addEventListener('shopify:section:load', async () => {
+      const reviewsWrapper = document.querySelector('.reviews-slider');
       
-      reviewsWrapper.innerHTML = reviewsHTML;  
-    }
-  });
+      const aggrReviewsResponse = await fetch('https://fitnesssuperstore-api.azurewebsites.net/api/reviews/aggregatedreviews');
+      if (aggrReviewsResponse.ok) {
+        const aggrReviews = await aggrReviewsResponse.json();
+    
+        const reviewsHTML = aggrReviews.reduce((accumulator, item) => {
+          return accumulator + `<div class="review-item">
+                  <div class="review-item__wrapper">
+                  <div class="stars">
+                    <div class="Stars" style="--rating: ${item.rating};" aria-label="Rating of this product is ${item.rating} out of 5."></div>
+                  </div>
+                  <span class="name">${item.reviewer}</span>
+                  <span class="review-date">${item.dateReviewed}</span>
+                  <span class="review-text">
+                    ${item.comment}
+                  </span>
+                  </div>
+                </div>`;
+        }, '');
+        
+        reviewsWrapper.innerHTML = reviewsHTML;  
+      }
+    });
   {% endif %}
-
 </script>
 
 
@@ -358,8 +357,8 @@
   }
   @media(max-width: 600px){
     #shopify-section-{{ section.id }}{
-      padding-top: 48px;
-      padding-bottom: 60px;
+      padding-block: 24px;
+      padding-bottom: 30px;
     }
     #shopify-section-{{ section.id }} .slick-slider-nav svg{
       width: 36px;
