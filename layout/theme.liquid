@@ -32,7 +32,7 @@
     <script src="{{ 'pubsub.js' | asset_url }}" defer="defer"></script>
     <script src="{{ 'global.js' | asset_url }}" defer="defer"></script>
     <script src="{{ 'custom.js' | asset_url }}" defer="defer"></script>
-    
+
     {%- if settings.animations_reveal_on_scroll -%}
       <script src="{{ 'animations.js' | asset_url }}" defer="defer"></script>
     {%- endif -%}
@@ -291,15 +291,23 @@
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw"
       defer
     ></script>
-    
+
     <script>
       if (Shopify.designMode) {
         document.documentElement.classList.add('shopify-design-mode');
       }
     </script>
-  {% render 'rapid-search-settings' %}
-    <script type="text/javascript"> function saLoadScript(src) { var js = window.document.createElement('script'); js.src = src; js.type = 'text/javascript'; document.getElementsByTagName("head")[0].appendChild(js); } saLoadScript("https://www.shopperapproved.com/widgets/group2.0/34099.js"); </script>
-</head>
+    {% render 'rapid-search-settings' %}
+    <script type="text/javascript">
+      function saLoadScript(src) {
+        var js = window.document.createElement('script');
+        js.src = src;
+        js.type = 'text/javascript';
+        document.getElementsByTagName('head')[0].appendChild(js);
+      }
+      saLoadScript('https://www.shopperapproved.com/widgets/group2.0/34099.js');
+    </script>
+  </head>
 
   <body class="gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %}">
     <a class="skip-to-content-link button visually-hidden" href="#MainContent">
@@ -311,6 +319,10 @@
     {%- endif -%}
 
     {% sections 'header-group' %}
+    {% if settings.show_sidebar_menu %}
+      <div class="content layout-side-menu">
+        {% render 'header-sidebar-menu' %}
+    {% endif %}
 
     <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
       {% if request.page_type == 'page' and page.metafields.layout.narrow == true %}
@@ -319,8 +331,12 @@
         </div>
       {% else %}
         {{ content_for_layout }}
-      {%endif%}
+      {% endif %}
     </main>
+
+    {% if settings.show_sidebar_menu %}
+      </div>
+    {% endif %}
 
     {% sections 'footer-group' %}
 
@@ -377,6 +393,5 @@
     {%- if settings.predictive_search_enabled -%}
       <script src="{{ 'predictive-search.js' | asset_url }}" defer="defer"></script>
     {%- endif -%}
-    
   </body>
 </html>
