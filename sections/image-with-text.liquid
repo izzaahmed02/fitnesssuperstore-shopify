@@ -64,11 +64,38 @@
   if section.settings.color_scheme == section.settings.section_color_scheme and section.settings.content_layout == 'no-overlap'
     assign remove_color_classes = true
   endif
+
+  assign heading_block = section.blocks | where: 'type', 'heading' | first
+  assign heading = heading_block.settings.heading
 -%}
 
 <div class="section-{{ section.id }}-padding padding-{{ section.id }} gradient color-{{ section.settings.section_color_scheme }}">
   <div class="page-width">
-    <div class="image-with-text image-with-text--{{ section.settings.content_layout }} isolate{% if settings.text_boxes_border_thickness > 0 and settings.text_boxes_border_opacity > 0 and settings.media_border_thickness > 0 and settings.media_border_opacity > 0 %} collapse-borders{% endif %}{% unless section.settings.color_scheme == section.settings.section_color_scheme and settings.media_border_thickness > 0 and settings.text_boxes_shadow_opacity == 0 and settings.text_boxes_border_thickness == 0 or settings.text_boxes_border_opacity == 0 %} collapse-corners{% endunless %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+    {% if section.settings.dropdown %}
+      <div class="image-with-text__dropdown-button">
+        <h2 class="heading-block">{{ heading }}</h2>
+
+        <svg
+          class="image-with-text__dropdown-arrow"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="black"/>
+        </svg>
+      </div>
+    {% endif %}
+    <div 
+      class="
+      image-with-text image-with-text--{{ section.settings.content_layout }} 
+      isolate
+      {% if settings.text_boxes_border_thickness > 0 and settings.text_boxes_border_opacity > 0 and settings.media_border_thickness > 0 and settings.media_border_opacity > 0 %} collapse-borders{% endif %}
+       {% unless section.settings.color_scheme == section.settings.section_color_scheme and settings.media_border_thickness > 0 and settings.text_boxes_shadow_opacity == 0 and settings.text_boxes_border_thickness == 0 or settings.text_boxes_border_opacity == 0 %} collapse-corners{% endunless %}
+        {% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}
+         {% if section.settings.dropdown %}image-with-text__dropdown-content{% endif %}
+      ">
       <div class="image-with-text__grid grid {% if section.settings.mobile_layout == 'column-reverse' %}grid-column-reverse{% endif %} grid--1-col grid--{% if section.settings.desktop_image_width == 'medium' %}2-col-tablet{% elsif section.settings.desktop_image_width == 'full-screen' %}full{% else %}3-col-tablet{% endif %}{% if section.settings.layout == 'text_first' %} image-with-text__grid--reverse{% endif %} {% if section.settings.layout == 'column' %} image-with-text__grid--column{% endif %}">
         <div class="image-with-text__media-item {% if section.settings.original_image_proportions %}original-proportions{% endif %} image-with-text__media-item--{{ section.settings.desktop_image_width }} image-with-text__media-item--{{ section.settings.desktop_content_position }} grid__item">
           <div
@@ -109,7 +136,7 @@
             {%- for block in section.blocks -%}
               {% case block.type %}
                 {%- when 'heading' -%}
-                  <div class="heading-block {% if section.settings.desktop_image_width == 'full-screen' %}half-screen-size{% endif %}">
+                  <div class="heading-block {% if section.settings.desktop_image_width == 'full-screen' %}half-screen-size{% endif %} {% if section.settings.dropdown %}image-with-text__dropdown-hidden{% endif %}">
                     {% if block.settings.number %}
                       <span class="number">{{ block.settings.number }}</span>
                     {% endif %}
@@ -439,6 +466,12 @@
     {
       "type": "header",
       "content": "Mobile layout"
+    },
+    {
+      "type": "checkbox",
+      "id": "dropdown",
+      "label": "Show content as dropdown",
+      "default": false
     },
     {
       "type": "select",
