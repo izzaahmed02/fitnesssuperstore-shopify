@@ -30,7 +30,54 @@
     {% endfor %}
   </div>
 </section>
-
+<div class="scroll-buttons">
+    <button id="scroll-up" class="scroll-btn">
+        <svg width="30" height="34" viewBox="0 0 30 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M13.8951 1.31311C14.5053 0.70292 15.4947 0.70292 16.1049 1.31311L28.6049 13.8131C29.215 14.4233 29.215 15.4126 28.6049 16.0228C27.9947 16.633 27.0053 16.633 26.3951 16.0228L16.5625 6.19018L16.5625 31.5846C16.5625 32.4476 15.8629 33.1471 15 33.1471C14.1371 33.1471 13.4375 32.4476 13.4375 31.5846L13.4375 6.19018L3.60485 16.0228C2.99466 16.633 2.00534 16.633 1.39515 16.0228C0.784951 15.4126 0.784951 14.4233 1.39515 13.8131L13.8951 1.31311Z" fill="white"/>
+        </svg>            
+    </button>
+    <button id="scroll-down" class="scroll-btn">
+        <svg width="28" height="34" viewBox="0 0 28 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M14 0.917969C14.8284 0.917969 15.5 1.58954 15.5 2.41797L15.5 27.9633L25.4393 18.024C26.0251 17.4382 26.9749 17.4382 27.5607 18.024C28.1464 18.6098 28.1464 19.5595 27.5607 20.1453L15.0607 32.6453C14.7794 32.9266 14.3978 33.0846 14 33.0846C13.6022 33.0846 13.2206 32.9266 12.9393 32.6453L0.43934 20.1453C-0.146447 19.5595 -0.146447 18.6098 0.43934 18.024C1.02513 17.4382 1.97487 17.4382 2.56066 18.024L12.5 27.9633L12.5 2.41797C12.5 1.58954 13.1716 0.917969 14 0.917969Z" fill="white"/>
+        </svg>            
+    </button>
+</div>  
+<script>
+    const scrollUpBtn = document.getElementById("scroll-up");
+    const scrollDownBtn = document.getElementById("scroll-down");
+  
+    const toggleScrollButtons = () => {
+      const scrolled = window.scrollY;
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+  
+      if (scrolled < maxScroll / 2) {
+        scrollDownBtn.style.display = "block";
+        scrollUpBtn.style.display = "none";
+      }
+      else {
+        scrollUpBtn.style.display = "block";
+        scrollDownBtn.style.display = "none";
+      }
+    };
+  
+    scrollUpBtn.addEventListener("click", () => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    });
+  
+    scrollDownBtn.addEventListener("click", () => {
+      window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: "smooth",
+      });
+    });
+  
+    window.addEventListener("scroll", toggleScrollButtons);
+  
+    toggleScrollButtons();      
+</script>
 {% schema %}
 {
   "name": "Reman Product Photos",
