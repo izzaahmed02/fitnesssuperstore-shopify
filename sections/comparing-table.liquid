@@ -3,10 +3,6 @@
     padding-top: {{ section.settings.padding_top | times: 0.5 | round: 0 }}px;
     padding-bottom: {{ section.settings.padding_bottom | times: 0.5 | round: 0 }}px;
   }
-  /* .section-{{ section.id }}-padding .comparing-table__table-item > div,
-  .section-{{ section.id }}-padding .comparing-table__table-header > div{
-      width: calc(100% / {{ section.settings.columns }});
-  } */
 
   .section-{{ section.id }}-padding .comparing-table__table-item > div:first-child,
   .section-{{ section.id }}-padding .comparing-table__table-header > div:first-child {
@@ -107,6 +103,22 @@
     }
     .section-{{ section.id }}-padding .comparing-table__table-item > div{
       border-right: 1px solid #E5E5E5;
+    }
+  {% endif %}
+
+  {% if section.settings.mobile_layout == 'scroll' %}
+    @media screen and (max-width: 750px) {
+      .comparing-table__table-wrapper {
+        min-width: 1280px;
+      }
+
+      .comparing-table__table-item > div:first-child, 
+      .header-title:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        box-shadow: 0px 0px 12px 0px #0000001A;
+      }
     }
   {% endif %}
 {%- endstyle -%}
@@ -349,6 +361,22 @@
       "unit": "pcs",
       "label": "Columns",
       "default": 7
+    },
+    {
+      "type": "select",
+      "id": "mobile_layout",
+      "label": "Mobile layout",
+      "options": [
+        {
+          "label": "Scroll",
+          "value": "scroll"
+        },
+        {
+          "label": "Fit screen width",
+          "value": "fit"
+        }
+      ],
+      "default": "fit"
     },
     {
       "type": "checkbox",

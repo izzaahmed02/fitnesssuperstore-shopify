@@ -26,8 +26,6 @@ class FacetFiltersForm extends HTMLElement {
     
     const applyButton = document.querySelectorAll('.button--primary.apply-filters-mobile');
     
-    applyButton.forEach((btn) => {
-      const form = btn.closest('form');
       applyButton.forEach((btn) => {
         const form = btn.closest('form');
         
@@ -35,13 +33,14 @@ class FacetFiltersForm extends HTMLElement {
           // Retrieve the price range inputs
           const minInput = form.querySelector('#price-range-min');
           const maxInput = form.querySelector('#price-range-max');
+          let isPriceFilterDefault = false;
           
           // Check if price range values are default
-          const isPriceFilterDefault = 
+          if (minInput && maxInput) {
+            isPriceFilterDefault = 
             minInput.value === minInput.getAttribute('min') && 
             maxInput.value === maxInput.getAttribute('max');
-
-            console.log(isPriceFilterDefault)
+          }
           
           // Remove price range params if they are default
           
@@ -57,18 +56,17 @@ class FacetFiltersForm extends HTMLElement {
           document.querySelector('body').classList.remove('overflow-hidden-mobile');
         });
       });
-          });
 
     document.querySelector('.sort-per-page select.num').addEventListener('change', function(){
-    const url = new URL(window.location.href);
-    const searchParams = new URLSearchParams(window.location.search);
+      const url = new URL(window.location.href);
+      const searchParams = new URLSearchParams(window.location.search);
 
-    searchParams.delete('page');
-    searchParams.set('perview', this.value.split('=')[1]);
-    url.search = searchParams.toString();
+      searchParams.delete('page');
+      searchParams.set('perview', this.value.split('=')[1]);
+      url.search = searchParams.toString();
 
-    window.location.replace(url.toString());
-  });
+      window.location.replace(url.toString());
+    });
     
     const searchInputs = document.querySelectorAll(".filterSearchInput");
     searchInputs.forEach((input) => {
@@ -80,7 +78,7 @@ class FacetFiltersForm extends HTMLElement {
         filterItems.forEach((item) => {
           const labelText = item.querySelector(".facet-checkbox__text-label").innerText.toLowerCase();
           if (labelText.includes(query)) {
-            item.style.display = "block";
+            item.setAttribute("style","display:block!important");
           } else {
             item.style.display = "none";
           }
@@ -141,39 +139,6 @@ class FacetFiltersForm extends HTMLElement {
       observer.observe(this);
       }
     });
-
-    // document.querySelector('.sort-per-page select.num').addEventListener('change', function () {
-    //     const selectedValue = this.value;
-    //     const url = new URL(window.location.href);
-    
-    //     url.searchParams.delete('page');
-    //     url.searchParams.set('perview', selectedValue);
-    
-    //     window.location.replace(url.toString()); 
-    // });
-    
-    function filterProducts() {
-    const searchText = document.getElementById('search-input').value.toLowerCase();
-    const products = document.querySelectorAll('#product-grid li');
-
-    products.forEach(product => {
-      console.log(product);
-      let productName;
-      if(product.querySelector('.card__heading')){
-        productName = product.querySelector('.card__heading').textContent.toLowerCase();
-      } else {
-        productName = product.querySelector('a').textContent.toLowerCase();
-      }
-      
-
-      if (productName.includes(searchText)) {
-        product.style.display = '';
-      } else {
-        product.style.display = 'none';
-      }
-    });
-  }
-    document.getElementById('search-input').addEventListener('input', filterProducts);
 
     const facetWrapper = this.querySelector('#FacetsWrapperDesktop');
     if (facetWrapper) facetWrapper.addEventListener('keyup', onKeyUpEscape);
