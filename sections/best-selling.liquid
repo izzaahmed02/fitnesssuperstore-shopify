@@ -1,6 +1,166 @@
-{% schema %}
-  {
-    "name": "Section name",
-    "settings": []
+{{ 'section-featured-products.css' | asset_url | stylesheet_tag }}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+
+    function initSlider(element) {
+      if (!$(element).hasClass('slick-initialized')) {
+        $(element).slick({
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          lazyLoad: 'ondemand',
+          arrows: true,
+          prevArrow: '<button type="button" class="slick-prev"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" fill="black"/></svg></button>',
+          nextArrow: '<button type="button" class="slick-next"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="black"/></svg></button>',
+          dots: true,
+          responsive: [
+            {
+              breakpoint: 768,
+              settings: {
+                slidesToShow: 1,
+              },
+            },
+          ],
+        });
+
+        $(element)
+          .find('.image-item')
+          .each(function () {
+            console.log($(this));
+            $(this).css({
+              background: '#edeff3',
+            });
+          });
+        $(element)
+          .find('img.lazy-load')
+          .each(function () {
+            const img = $(this);
+            if (img) {
+              img.attr('src', img.data('src'));
+              img.removeClass('lazy-load');
+              img.css({
+                opacity: '1',
+                visibility: 'visible',
+              });
+            }
+          });
+      }
+    }
+
+    const observer = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            initSlider(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.8 }
+    );
+
+    $('.image-wrap').each(function () {
+      if ($(this).length > 0) {
+        observer.observe(this);
+      }
+    });
+  });
+</script>
+
+{% render 'collection-section-style' %}
+
+<style>
+  #shopify-section-{{ section.id }}{
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    background-color: {{ section.settings.bg }};
   }
+  .comparable-custom-action{
+    display: none;
+  }
+</style>
+
+<div class="custom-container">
+  {{ customer.first_name }}
+  <div class="featured_products_header">
+    {% if section.settings.heading != blank %}
+      <h3>{{ section.settings.heading }}</h3>
+    {% endif %}
+
+    {% if section.settings.link != blank %}
+      <a href="{{ section.settings.url }}" class="featured_products_link">
+        {{ section.settings.link }}
+
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M7.8017 4.46967C8.09459 4.17678 8.56947 4.17678 8.86236 4.46967L13.8624 9.46967C14.1553 9.76256 14.1553 10.2374 13.8624 10.5303L8.86236 15.5303C8.56947 15.8232 8.09459 15.8232 7.8017 15.5303C7.50881 15.2374 7.50881 14.7626 7.8017 14.4697L12.2714 10L7.8017 5.53033C7.50881 5.23744 7.50881 4.76256 7.8017 4.46967Z" fill="#fff"/>
+        </svg>
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="featured_products_container">
+    {% for product in section.settings.products %}
+      {% render 'product-item', product: product %}
+    {% endfor %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Featured products",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg",
+      "label": "Background color",
+      "default": "#F5F5F5"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading"
+    },
+    {
+      "type": "text",
+      "id": "link",
+      "label": "Link text"
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "Link url"
+    },
+    {
+      "type": "product_list",
+      "id": "products",
+      "label": "Choose Products"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 60
+    }
+  ],
+  "presets": [
+    {
+      "name": "Featured products"
+    }
+  ]
+}
 {% endschema %}
