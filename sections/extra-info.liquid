@@ -221,6 +221,54 @@
                 </div>
               </div>
             {% endif %}
+
+            <div class="extra-info-accordion">
+              <span class="accordion-item">
+                <h4>Comparisons</h4>
+
+                <svg class="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                </svg>
+              </span>
+
+              <div class="extra-info-accordion-content">
+                  <div class="menu--second-level">
+                    <span class="accordion-item--second-level">
+                      FSR80 vs FSR 90
+                      <svg class="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                      </svg>
+                    </span>
+                    {% comment %} 
+                    <ul class="extra-info-accordion-content--second-level">
+                      {% for link in extra.owners_manual.value %}
+                        <li>
+                          <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
+                        </li>
+                      {% endfor %}
+                    </ul> {% endcomment %}
+                  </div>
+
+                {% comment %} {% if extra.exercises_manual != blank %}
+                  <div class="menu--second-level">
+                    <span class="accordion-item--second-level">
+                      Exercises Manual
+                      <svg class="arrow" width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                      </svg>
+                    </span>
+
+                    <ul class="extra-info-accordion-content--second-level">
+                      {% for link in extra.exercises_manual.value %}
+                        <li>
+                          <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                {% endif %} {% endcomment %}
+              </div>
+            </div>
           </div>
         {% endif %}
 
@@ -290,9 +338,17 @@
         {% endif %}
 
       {% when 'list' %}
-        {% if block.settings.list %}
+        {% if block.settings.list != blank %}
           <div class="product__extra_list">
             <div>{{ block.settings.list }}</div>
+          </div>
+        {% endif %}
+
+      {% when 'text' %}
+        {% if block.settings.text != blank %}
+          <div class="product__extra_warning_text">
+            {% render 'icon-alert' %}
+            <div>{{ block.settings.text }}</div>
           </div>
         {% endif %}
     {% endcase %}
@@ -459,6 +515,17 @@
           "type": "richtext",
           "id": "list",
           "label": "List content"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Text",
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text"
         }
       ]
     }
