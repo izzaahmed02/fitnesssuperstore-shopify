@@ -1103,13 +1103,19 @@ class VariantSelects extends HTMLElement {
   
       // Clear custom color when a Shopify option is clicked
       const customColorInput = document.getElementById('custom-color-hidden');
+      const customProductProperty = document.getElementById('custom-color-properties');
       if (customColorInput) {
         customColorInput.value = '';
+        customProductProperty.value = '';
       }
 
       const customColorProduct = document.getElementById('custom-color-product');
+      const customColorProductQuantity = document.getElementById('custom-color-quantity');
+
       if (customColorProduct) {
         customColorProduct.disabled = true;
+        customColorProductQuantity.disabled = true;
+        customProductProperty.disabled = true;
       }
       const customSwatches = document.querySelectorAll('.swatch--custom.selected');
       if (customSwatches) {
