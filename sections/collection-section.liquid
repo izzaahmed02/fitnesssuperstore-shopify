@@ -289,7 +289,7 @@
   .product-item .image-wrap img{
     max-width: 100%;
     width: 100%;
-    height: 100%;
+    height: 283px;
     object-fit: contain;
   }
   .ship-wrapper{
@@ -457,6 +457,11 @@
   .compare_mode-collection .comparable-products:before{
     display: none!important;
   }
+  @media (max-width: 768px) {
+    .product-item .image-wrap img {
+      height: auto;
+    }
+  }
 {% endstyle %}
 
 {%- liquid
@@ -537,20 +542,22 @@
              
              {%- capture contentForQuerystring -%}{{ content_for_header }}{%- endcapture -%}
              {%- assign pageUrl = contentForQuerystring | split:'"pageurl":"' | last | split:'"' | first | split:'.myshopify.com' | last | replace:'\/','/' | replace:'%20',' ' | replace:'\u0026','&' -%}
-             {%- assign products_per_page = 2 -%}
+             {%- assign products_per_page = 30 -%}
               {%- for i in (1..1) -%}
             	{%- unless pageUrl contains "?" -%}{% break %}{%- endunless -%}
-            	{%- if pageUrl contains "view=2" -%}{%- assign products_per_page = 2 -%}{%- endif -%}
-                {%- if pageUrl contains "view=3" -%}{%- assign products_per_page = 3 -%}{%- endif -%}
-                {%- if pageUrl contains "view=6" -%}{%- assign products_per_page = 6 -%}{%- endif -%}
+            	{%- if pageUrl contains "view=30" -%}{%- assign products_per_page = 30 -%}{%- endif -%}
+                {%- if pageUrl contains "view=60" -%}{%- assign products_per_page = 60 -%}{%- endif -%}
+                {%- if pageUrl contains "view=90" -%}{%- assign products_per_page = 90 -%}{%- endif -%}
+                {%- if pageUrl contains "view=120" -%}{%- assign products_per_page = 120 -%}{%- endif -%}
               {%- endfor -%}
              <div class="sort-per-page">
              <span class="label">Show </span>
                <div class="select">
                <select id="sel1" class="num">
-                 <option value="/collections/{{ collection.handle }}?view=2" {% if products_per_page == 2 %}selected="selected"{% endif %}>2</option>
-                 <option value="/collections/{{ collection.handle }}?view=3" {% if products_per_page == 3 %}selected="selected"{% endif %}>3</option>
-                 <option value="/collections/{{ collection.handle }}?view=6" {% if products_per_page == 6 %}selected="selected"{% endif %}>6</option>
+                 <option value="/collections/{{ collection.handle }}?view=30" {% if products_per_page == 30 %}selected="selected"{% endif %}>30</option>
+                 <option value="/collections/{{ collection.handle }}?view=60" {% if products_per_page == 60 %}selected="selected"{% endif %}>60</option>
+                 <option value="/collections/{{ collection.handle }}?view=90" {% if products_per_page == 90 %}selected="selected"{% endif %}>90</option>
+                 <option value="/collections/{{ collection.handle }}?view=120" {% if products_per_page == 120 %}selected="selected"{% endif %}>120</option>
                </select>
                  {% render 'icon-caret' %}
                </div>

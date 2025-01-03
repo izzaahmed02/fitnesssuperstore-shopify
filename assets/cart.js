@@ -174,7 +174,7 @@ class CartItems extends HTMLElement {
         }
       }
 
-      // Removing matching product
+      // Updating matching product
       if (matchingProductLine) {
         await fetch(window.Shopify.routes.root + 'cart/update.js', {
                   method: 'POST',
