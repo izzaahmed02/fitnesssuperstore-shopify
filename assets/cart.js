@@ -190,9 +190,6 @@ class CartItems extends HTMLElement {
   
       // Removing matching product
       if (matchingProductLine) {
-        const secondaryBody = JSON.stringify({
-          [matchingProductLine]: 0
-        });
 
         await fetch(window.Shopify.routes.root + 'cart/update.js', {
                   method: 'POST',
@@ -201,7 +198,7 @@ class CartItems extends HTMLElement {
                   },
                   body: JSON.stringify({
                     updates: {
-                      [matchingProductLine]: 0,
+                      [matchingProductLine]: quantity,
                     },
                   }),
               })
