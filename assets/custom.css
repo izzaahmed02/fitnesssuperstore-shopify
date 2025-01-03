@@ -494,6 +494,7 @@ a.link-style{
 .image-with-text__text a {
   color: var(--primary-orange);
   text-decoration: underline;
+  font-weight: 700;
 }
 
 .image-with-text__text p:has(a) {
@@ -936,6 +937,7 @@ margin: auto;
 .tabs__item-list-item a{
   color: #31639A;
   text-decoration: none;
+  font-weight: 700;
 }
 .tabs__item-content img{
   width: 100%;
@@ -1410,11 +1412,6 @@ margin-bottom: 4px;
     line-height: 32px;
     margin-bottom: 24px;
     text-align: start;
-  }
-
-  .comparing-table__table-wrapper {
-    min-width: 100%;
-    max-width: 100%;
   }
   
   .comparing-table__table-header>div, .comparing-table__table-item>div:first-child {
@@ -1989,31 +1986,37 @@ margin-bottom: 4px;
   color: var(--primary-orange);
 }
 
+.docapp-single-shipping-calculator .docapp-shipping-show-trigger {
+  margin-bottom: 0 !important;
+}
+
 /* END SHIPPING RATE */
 
 
 /* AVIS OPTIONS */
 
-/* {
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 24px;
-  color: #000;
-} */
-
 .apo-title {
-  font-size: 16px;
+  font-size: 16px !important;
   line-height: 24px;
   color: #000;
 }
 
-.ap-options__swatch {
+.ap-options__swatch fieldset {
   display: grid !important;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   border-width: 1px, 0px, 1px, 0px;
   border-style: solid;
   border-color: #E5E5E5;
+  padding-top: 16px !important;
+}
+
+.avp-option {
+  border-bottom: 1px solid #E5E5E5 !important;
+}
+
+.avp-option:not(.ap-options__heading-container) {
+  padding: 12px !important;
 }
 
 .avp-productoptionswatchwrapper {
@@ -2025,7 +2028,11 @@ margin-bottom: 4px;
   background-color: #fff !important;
 }
 
-.avp-productoptionswatchwrapper:has(.avpoptions-container__v2 input:checked) {
+.avpoptions-container__v2 div.avp-option, .avpoptions-container__v2>div {
+  margin: 0 !important;
+}
+
+.avpoptions-container__v2 input:checked+.avp-productoptionswatch-box .avp-productoptionswatch::before .avp-productoptionswatchwrapper {
   border-color: var(--primary-orange) !important;
 }
 
@@ -2049,6 +2056,7 @@ margin-bottom: 4px;
   line-height: 14px;
   text-align: center;
   color: #000;
+  padding-bottom: 12px !important;
 }
 
 .swatch-variant-title .money.apo-money {
@@ -2058,10 +2066,51 @@ margin-bottom: 4px;
   line-height: 20px;
 }
 
-.product__info-wrapper .avp-select select[name^="Shipping Type"] {
-  border: 1.5px solid #E5E5E5;
-  border-radius: 8px;
+.avpoptions-container__v2 select {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.product__info-container {
+  counter-reset: section;
+}
+
+.options-title {
+  display: flex;
+  gap: 8px;
+}
+
+.options-title::before {
+  counter-increment: section;
+  content: counter(section);
+  margin-block: 40px 16px;
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  gap: 0px;
+  border-radius: 26.67px;
+  background-color: #FCE6DE;
+  font-size: 10.67px;
   font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  color: var(--primary-orange);
+}
+
+.product__info-wrapper .avp-select select[name^="Shipping Type"] {
+  border: 1.5px solid #E5E5E5 !important;
+  border-radius: 8px;
+  background: #FAF9F9;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
+  height: 48px;
+  width: 100%;
+  padding: 12px;
+}
+
+.avp-select:has(select[name^="Shipping Type"]) {
+  margin-bottom: 24px;
 }
 
 .avp-select:has(select[name^="Shipping Type"])::after {
@@ -2072,5 +2121,117 @@ margin-bottom: 4px;
   color: #808080;
   margin-block: 4px;
 }
+
+.ap-label-tooltip {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
+.avp-option.ap-options__swatch-container .ap-label-tooltip::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M11.4697 8.46967C11.7626 8.17678 12.2374 8.17678 12.5303 8.46967L18.5303 14.4697C18.8232 14.7626 18.8232 15.2374 18.5303 15.5303C18.2374 15.8232 17.7626 15.8232 17.4697 15.5303L12 10.0607L6.53033 15.5303C6.23744 15.8232 5.76256 15.8232 5.46967 15.5303C5.17678 15.2374 5.17678 14.7626 5.46967 14.4697L11.4697 8.46967Z' fill='black'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  transition: transform 0.3s ease;
+  margin-left: 8px;
+}
+
+.ap-label-tooltip.open::before {
+  transform: rotate(180deg);
+}
+
+.avp-option.ap-options__select-container:has(select[name^="Shipping Type"]) {
+  display: none;
+}
+
+.avp-option.ap-options__select-container:has(select[name^="Shipping Type"]) .ap-label-tooltip::after {
+  display: none;
+}
+
+.ap-options__swatch {
+  display: none;
+  transition: max-height 0.5s ease, opacity 0.3s ease;
+  overflow: hidden;
+  max-height: 0;
+  pointer-events: none;
+}
+
+.ap-options__swatch.show {
+  display: block;
+  max-height: 2500px;
+  opacity: 1;
+  pointer-events: all;
+}
+
+.ap-options__combo_select-container {
+  position: relative;
+  border: none !important;
+}
+
+.ap-options__combo_select-container .ap-label-tooltip {
+  position: absolute;
+ }
+
+ .combo_input-container {
+  border: none !important;
+ }
+
+ .option-avis-arrow-select {
+  top: unset!important;
+  width: 10px;
+  height: 10px;
+  border-color: #000 !important;
+  padding: 4px !important;
+  transform: rotate(225deg) !important;
+  transition: all .3s ease;
+ }
+
+ .avpoptions-container__v2 .combo_input-container {
+  padding: 0 7px !important;
+ }
+
+ .avp-option {
+  border-bottom: 1px solid #E5E5E5 !important;
+ }
+
+ .avpoptions-container__v2 {
+  margin-block: 0 !important;
+ }
+
+ .avp-option:has(select[name^="Shipping Type"]) {
+  padding: 6px 0 24px 0 !important;
+  border-bottom: none !important;
+ }
+
+ .avp-option:has(select[name^="Shipping Type"]) .ap-label-tooltip svg {
+  display: none;
+ }
+
+ .avpoptions-container__v2 div.ap-label-tooltip {
+  margin-bottom: 0 !important;
+ }
+
+ .avpoptions-container__v2 .combo_input-container {
+  height: 24px !important;
+ }
+
+ .combo_option-result-item {
+    height: 26px !important;
+    padding: 4px 8px 4px 10px !important;
+    gap: 6px !important;
+    border-radius: 6px !important;
+    border: 1px solid #F2F2F2 !important;
+    background-color: #fff !important;
+ }
+
+ .choice-list-variatnt-title {
+  font-size: 10px !important;
+ }
 
 /* END AVIS OPTIONS */

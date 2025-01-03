@@ -19,6 +19,13 @@
     grid-template-columns: 1fr 1fr;
     gap: 54px;
   }
+
+  .product-main-left-container {
+    position: sticky;
+    top: 0;
+    height: fit-content;
+  }
+
   .product-main-left {
     max-width: 800px;
     margin: auto;
@@ -225,7 +232,7 @@
   {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
   <div class="pdp-page-width">
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
-      <div class="">
+      <div class="product-main-left-container">
         <div class="product-main-left">
           <div class="thumbnail-slider">
             {% for item in product.images %}
@@ -284,68 +291,6 @@
             {%- case block.type -%}
               {%- when '@app' -%}
                 {% render block %}
-
-              {% when 'shipping-rate' %}
-                <div class="docapp-single-shipping-calculator"></div>
-
-                <script>
-                  window.addEventListener('DOMContentLoaded', () => {
-                    // Polling function to check if the form elements and shippingInfo element exist
-                    function checkForElements() {
-                      const shippingInfo = document.querySelector(
-                        '.docapp-single-shipping-calculator .docapp-shipping-show-trigger'
-                      );
-                      const cityInput = document.querySelector('input[name="shipping_address[city]"]');
-                      const zipInput = document.querySelector('input[name="shipping_address[zip]"]');
-
-                      if (shippingInfo && cityInput && zipInput) {
-                        cityInput.addEventListener('input', () => {
-                          localStorage.setItem('city', cityInput.value);
-                        });
-
-                        zipInput.addEventListener('input', () => {
-                          localStorage.setItem('zip', zipInput.value);
-                        });
-
-                        getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
-
-                        clearInterval(pollingInterval);
-                      }
-
-                      document.querySelector('.docapp-shipping-calculator--button').addEventListener('click', () => {
-                        const shippingInfo = document.querySelector(
-                          '.docapp-single-shipping-calculator .docapp-shipping-show-trigger'
-                        );
-                        const cityInput = document.querySelector('input[name="shipping_address[city]"]');
-                        const zipInput = document.querySelector('input[name="shipping_address[zip]"]');
-
-                        if (shippingInfo && cityInput && zipInput) {
-                          getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
-                        }
-                      });
-                    }
-
-                    function getFormDataAndDisplay(cityInput, zipInput, shippingInfo) {
-                      const city = cityInput.value || localStorage.getItem('city') || 'Not entered';
-                      const zip = zipInput.value || localStorage.getItem('zip') || 'Not entered';
-                      const shippingData = document.querySelector('.shipping-data');
-                      const resultText = `${city}, ${zip}`;
-
-                      if (shippingData) {
-                        shippingData.innerHTML = resultText;
-                        shippingInfo.appendChild(shippingData);
-                      } else {
-                        const shippingData = document.createElement('span');
-                        shippingData.classList.add('shipping-data');
-
-                        shippingData.innerHTML = resultText;
-                        shippingInfo.appendChild(shippingData);
-                      }
-                    }
-
-                    const pollingInterval = setInterval(checkForElements, 1000);
-                  });
-                </script>
 
               {% when 'product-info' %}
                 <div class="metainfo-wrapper">
@@ -416,6 +361,10 @@
                   </a>
                 </div>
               {% when 'price' %}
+                <div id="fs-paytomorrow-price"></div>
+                <div id="fs-paytomorrow-mpe"></div>
+                <div id="mpe"></div>
+                
                 <div>
                   {% if product.selected_or_first_available_variant.compare_at_price
                       > product.selected_or_first_available_variant.price
@@ -452,6 +401,7 @@
                   data-hide-errors="{{ gift_card_recipient_feature_active }}"
                   data-section-id="{{ section.id }}"
                 >
+                  <div class="docapp-single-shipping-calculator"></div>
                   <div class="product-form__error-message-wrapper" role="alert" hidden>
                     <svg
                       aria-hidden="true"
@@ -478,6 +428,7 @@
                           price_class: 'price--large'
                         -%}
                       </div>
+                      
                       {%- if product.quantity_price_breaks_configured? -%}
                         <div class="volume-pricing-note" id="Volume-Note-{{ section.id }}">
                           <span>{{ 'products.product.volume_pricing.note' | t }}</span>
@@ -821,6 +772,94 @@
                     </div>
                 </div>
                 </product-form>
+
+                <script>
+                  window.addEventListener('DOMContentLoaded', () => {
+                    // Polling function to check if the form elements and shippingInfo element exist
+                    function checkForElements() {
+                      const shippingInfo = document.querySelector(
+                        '.docapp-single-shipping-calculator .docapp-shipping-show-trigger'
+                      );
+                      const cityInput = document.querySelector('input[name="shipping_address[city]"]');
+                      const zipInput = document.querySelector('input[name="shipping_address[zip]"]');
+                      const shippingType = document.querySelector(
+                        '.avp-option.ap-options__select-container:has(select[name^="Shipping Type"])'
+                      );
+                  
+                      if (shippingInfo && cityInput && zipInput) {
+                        cityInput.addEventListener('input', () => {
+                          localStorage.setItem('city', cityInput.value);
+                        });
+                  
+                        zipInput.addEventListener('input', () => {
+                          localStorage.setItem('zip', zipInput.value);
+                        });
+                  
+                        getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
+                  
+                        // Move the shippingType element under shippingInfo
+                        if (shippingType) {
+                          shippingInfo.parentElement.insertAdjacentElement('afterend', shippingType);
+                          shippingType.style.display = 'block';
+                  
+                          // Change font size of .apo-title inside shippingType
+                          const apoTitle = shippingType.querySelector('.apo-title');
+                          if (apoTitle) {
+                            apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
+                          }
+                        }
+                  
+                        clearInterval(pollingInterval);
+                      }
+                  
+                      document.querySelector('.docapp-shipping-calculator--button').addEventListener('click', () => {
+                        const shippingInfo = document.querySelector(
+                          '.docapp-single-shipping-calculator .docapp-shipping-show-trigger'
+                        );
+                        const cityInput = document.querySelector('input[name="shipping_address[city]"]');
+                        const zipInput = document.querySelector('input[name="shipping_address[zip]"]');
+                        const shippingType = document.querySelector(
+                          '.avp-option.ap-options__select-container:has(select[name^="Shipping Type"])'
+                        );
+                  
+                        if (shippingInfo && cityInput && zipInput) {
+                          getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
+                  
+                          // Move the shippingType element under shippingInfo
+                          if (shippingType) {
+                            shippingInfo.parentElement.insertAdjacentElement('afterend', shippingType);
+                  
+                            // Change font size of .apo-title inside shippingType
+                            const apoTitle = shippingType.querySelector('.apo-title');
+                            if (apoTitle) {
+                              apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
+                            }
+                          }
+                        }
+                      });
+                    }
+                  
+                    function getFormDataAndDisplay(cityInput, zipInput, shippingInfo) {
+                      const city = cityInput.value || localStorage.getItem('city') || 'Not entered';
+                      const zip = zipInput.value || localStorage.getItem('zip') || 'Not entered';
+                      const shippingData = document.querySelector('.shipping-data');
+                      const resultText = `${city}, ${zip}`;
+                  
+                      if (shippingData) {
+                        shippingData.innerHTML = resultText;
+                        shippingInfo.appendChild(shippingData);
+                      } else {
+                        const shippingData = document.createElement('span');
+                        shippingData.classList.add('shipping-data');
+                  
+                        shippingData.innerHTML = resultText;
+                        shippingInfo.appendChild(shippingData);
+                      }
+                    }
+                  
+                    const pollingInterval = setInterval(checkForElements, 1000);
+                  });
+                </script>
 
               {%- when 'inventory' -%}
                 <p
@@ -1445,6 +1484,7 @@
             const toolTip = element.querySelector('svg');
             if (toolTip) {
               toolTip.addEventListener('click', (event) => {
+                event.preventDefault();
                 event.stopPropagation();
                 const parentWithHandle = element.closest('[class^="handle-"]');
                 modalWrapper.style.display = 'flex';
@@ -1462,7 +1502,7 @@
                     const mainContent = tempDiv.querySelector('#MainContent');
                     if (mainContent) {
                       container.innerHTML =
-                        mainContent.innerHTML + `<span class="modal-close">{% render 'icon-close' %}</span>`;
+                        mainContent.innerHTML + `<span class="modal-close">{% render 'icon-close-small' %}</span>`;
                       const closeModalButton = document.querySelector('.modal-close');
                       closeModalButton.addEventListener('click', () => {
                         modalWrapper.style.display = 'none';
@@ -1496,7 +1536,7 @@
               });
             }
         });
-      })
+      }, 500)
   
       const modalWrapper = document.querySelector('.modal-wrapper');
       const modalContent = document.querySelector('#dynamic-product-content');
@@ -1537,6 +1577,55 @@
   } catch (error) {
     console.log(error)
   }
+  
+  document.addEventListener('DOMContentLoaded', (event) => {
+    setTimeout(() => {
+      const headings = document.querySelectorAll('.ap-options__heading');
+      console.log(headings);
+      headings.forEach(heading => heading.classList.add('options-title'));
+
+      document.querySelectorAll('.avpoptions-container__v2 input').forEach(input => {
+        input.addEventListener('change', () => {
+            const watchBox = input.nextElementSibling;
+            const wrapper = watchBox.closest('.avp-productoptionswatchwrapper');
+
+            if (input.checked) {
+                if (wrapper) {
+                  wrapper.setAttribute("style", "border: 1px solid #F1592A !important;"); 
+                }
+            } else {
+                if (wrapper) {
+                  wrapper.setAttribute("style", "border: 1px solid #E5E5E5 !important;");
+                }
+            }
+        });
+      });
+
+     const dropdownContainers = document.querySelectorAll('.ap-options__swatch-container');
+
+      dropdownContainers.forEach(container => {
+          const title = container.querySelector('.ap-label-tooltip');
+          const content = container.querySelector('.ap-options__swatch');
+
+          if (title && content) {
+              title.addEventListener('click', () => {
+                  content.classList.toggle('show');
+                  title.classList.toggle('open');
+              });
+          }
+      });
+
+      const arrows = document.querySelectorAll('.option-avis-arrow-select');
+      arrows.forEach((arrow) => arrow.addEventListener('click', () => {
+        if (arrow.style.transform === "rotate(45deg)") {
+          arrow.setAttribute('style', 'transform: rotate(225deg) !important');
+        } else {
+          arrow.setAttribute('style', 'transform: rotate(45deg) !important');
+        }
+      }))
+
+    }, 1000);
+  });
 </script>
 
 {% schema %}
@@ -1785,10 +1874,6 @@
           "info": "t:sections.custom-liquid.settings.custom_liquid.info"
         }
       ]
-    },
-    {
-      "type": "shipping-rate",
-      "name": "Shipping rate"
     },
     {
       "type": "collapsible_tab",
