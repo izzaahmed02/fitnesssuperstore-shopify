@@ -173,6 +173,21 @@ class CartItems extends HTMLElement {
           matchingProductLine = matchingProduct.key;
         }
       }
+
+      // Removing matching product
+      if (matchingProductLine) {
+        await fetch(window.Shopify.routes.root + 'cart/update.js', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    updates: {
+                      [matchingProductLine]: quantity,
+                    },
+                  }),
+              })
+      }
   
       // Main product update
       const body = JSON.stringify({
@@ -187,25 +202,6 @@ class CartItems extends HTMLElement {
         body,
       });
       const mainUpdateState = JSON.parse(await mainUpdateResponse.text());
-  
-      // Removing matching product
-      if (matchingProductLine) {
-        const secondaryBody = JSON.stringify({
-          [matchingProductLine]: 0
-        });
-
-        await fetch(window.Shopify.routes.root + 'cart/update.js', {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    updates: {
-                      [matchingProductLine]: 0,
-                    },
-                  }),
-              })
-      }
   
       const quantityElement =
         document.getElementById(`Quantity-${line}`) ||
