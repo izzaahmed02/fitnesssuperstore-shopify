@@ -106,7 +106,7 @@
   </div>
 
   <!-- Hidden input to store the custom color value -->
-  <input type="hidden" name="properties[Custom color]" id="custom-color-hidden" form="{{ product_form_id }}">
+  {% comment %} <input type="hidden" name="properties[Custom color]" id="custom-color-hidden" form="{{ product_form_id }}">
   <input
     type="hidden"
     name="items[1][id]"
@@ -123,7 +123,7 @@
       form="{{ product_form_id }}"
       disabled
     />
-    <input type="hidden" name="items[1][properties][Color]" id="custom-color-properties" form="{{ product_form_id }}" disabled>
+    <input type="hidden" name="items[1][properties][Color]" id="custom-color-properties" form="{{ product_form_id }}" disabled> {% endcomment %}
 {%- endunless -%}
 
 <script>
@@ -297,7 +297,6 @@
     const closeIcon = document.querySelector('.custom-color-input-header svg');
     const errorMessage = document.querySelector('.custom-color-error_message');
     const productSwatches = document.querySelectorAll('.color-options-container input[type=radio]');
-
     // Show the input field when "+" is clicked
     trigger.addEventListener('click', () => {
       inputContainer.style.display = 'block';
@@ -315,100 +314,118 @@
 
     // Add custom color swatch
     addButton.addEventListener('click', () => {
-      const color = colorInput.value.trim();
+      setTimeout(() => {
+        const color = colorInput.value.trim();
+        // Validate the hex color
+        if (/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(color)) {
+          const matchedColor = availableColors.find((c) => c.HEX.toLowerCase() === color.toLowerCase());
+          if (matchedColor) {
+            const customColorAvis = document.querySelector('.custom-color-avis input');
+  
+            if (customColorAvis) {
+              customColorAvis.value = matchedColor.HEX
+              triggerInputChange(customColorAvis);
+              $('.product-form__input--swatch label[title="Custom"]').click();
+            }
 
-      // Validate the hex color
-      if (/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(color)) {
-        const matchedColor = availableColors.find((c) => c.HEX.toLowerCase() === color.toLowerCase());
-        if (matchedColor) {
-          // Display Pantone value
-          selectedColorElement.textContent = `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`;
-          selectedColorPriceElement.textContent = '$600';
+            // Display Pantone value
+            selectedColorElement.textContent = `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`;
+            selectedColorPriceElement.textContent = '$600';
 
+  
+            const updatedProductSwatches = document.querySelectorAll('.color-options-container input[type=radio]');
+            updatedProductSwatches.forEach((input) => (input.checked = false));
+  
+            errorMessage.style.display = 'none';
+            addButton.classList.remove('disabled');
+            selectedColorInfo.style.display = 'flex';
+          } else {
+            errorMessage.style.display = 'flex';
+            addButton.classList.add('disabled');
+            return;
+          }
+  
+          hiddenInput.value = color;
+          hiddenProductProperty.value = color;
+          hiddenProduct.disabled = false;
+          hiddenProductQuantity.disabled = false;
+          hiddenProductProperty.disabled = false;
+  
+          // Create the custom swatch
+          const customSwatch = document.createElement('div');
+  
+          const customSwatchesOnPage = document.querySelectorAll('.swatch--custom');
+          customSwatchesOnPage.forEach((swatch) => swatch.classList.remove('selected'));
+  
           const updatedProductSwatches = document.querySelectorAll('.color-options-container input[type=radio]');
           updatedProductSwatches.forEach((input) => (input.checked = false));
+  
+          customSwatch.classList.add('swatch', 'swatch--custom', 'selected');
+          customSwatch.style.backgroundColor = color;
+          customSwatch.title = matchedColor
+            ? `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`
+            : `Custom Color: ${color}`;
 
+          // Add radio input for variant logic
+          customSwatch.innerHTML = `
+            <input
+              type="radio"
+              id="custom-color-swatch-${color}"
+              name="custom-color"
+              value="${color}"
+            >
+            <label for="custom-color-swatch-${color}">
+              <span class="swatch-label" style="background: ${color};"></span>
+            </label>
+          `;
+  
+          // Ensure swatch is selectable
+          customSwatch.addEventListener('click', () => {
+            document.querySelectorAll('.swatch--custom').forEach((swatch) => swatch.classList.remove('selected'));
+            customSwatch.classList.add('selected');
+  
+            const updatedProductSwatches = document.querySelectorAll('.color-options-container input');
+            updatedProductSwatches.forEach((input) => (input.checked = false));
+  
+            if (matchedColor) {
+              selectedColorElement.textContent = `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`;
+              selectedColorPriceElement.textContent = '$600';
+              selectedColorInfo.style.display = 'flex';
+  
+              hiddenInput.value = color;
+              hiddenProductProperty.value = color;
+              hiddenProduct.disabled = false;
+              hiddenProductQuantity.disabled = false;
+              hiddenProductProperty.disabled = false;
+            }
+          });
+  
+          swatchContainer.appendChild(customSwatch);
+  
+          // Reset input and hide container
+          colorInput.value = '';
+          inputContainer.style.display = 'none';
           errorMessage.style.display = 'none';
           addButton.classList.remove('disabled');
-          selectedColorInfo.style.display = 'flex';
+  
+          console.log(`Custom color ${color} added.`);
         } else {
           errorMessage.style.display = 'flex';
           addButton.classList.add('disabled');
-          return;
         }
-
-        hiddenInput.value = color;
-        hiddenProductProperty.value = color;
-        hiddenProduct.disabled = false;
-        hiddenProductQuantity.disabled = false;
-        hiddenProductProperty.disabled = false;
-
-        // Create the custom swatch
-        const customSwatch = document.createElement('div');
-
-        const customSwatchesOnPage = document.querySelectorAll('.swatch--custom');
-        customSwatchesOnPage.forEach((swatch) => swatch.classList.remove('selected'));
-
-        const updatedProductSwatches = document.querySelectorAll('.color-options-container input[type=radio]');
-        updatedProductSwatches.forEach((input) => (input.checked = false));
-
-        customSwatch.classList.add('swatch', 'swatch--custom', 'selected');
-        customSwatch.style.backgroundColor = color;
-        customSwatch.title = matchedColor
-          ? `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`
-          : `Custom Color: ${color}`;
-
-        // Add radio input for variant logic
-        customSwatch.innerHTML = `
-          <input
-            type="radio"
-            id="custom-color-swatch-${color}"
-            name="custom-color"
-            value="${color}"
-          >
-          <label for="custom-color-swatch-${color}">
-            <span class="swatch-label" style="background: ${color};"></span>
-          </label>
-        `;
-
-        // Ensure swatch is selectable
-        customSwatch.addEventListener('click', () => {
-          document.querySelectorAll('.swatch--custom').forEach((swatch) => swatch.classList.remove('selected'));
-          customSwatch.classList.add('selected');
-
-          const updatedProductSwatches = document.querySelectorAll('.color-options-container input');
-          updatedProductSwatches.forEach((input) => (input.checked = false));
-
-          if (matchedColor) {
-            selectedColorElement.textContent = `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`;
-            selectedColorPriceElement.textContent = '$600';
-            selectedColorInfo.style.display = 'flex';
-
-            hiddenInput.value = color;
-            hiddenProductProperty.value = color;
-            hiddenProduct.disabled = false;
-            hiddenProductQuantity.disabled = false;
-            hiddenProductProperty.disabled = false;
-          }
-        });
-
-        swatchContainer.appendChild(customSwatch);
-
-        // Reset input and hide container
-        colorInput.value = '';
-        inputContainer.style.display = 'none';
-        errorMessage.style.display = 'none';
-        addButton.classList.remove('disabled');
-
-        console.log(`Custom color ${color} added.`);
-      } else {
-        errorMessage.style.display = 'flex';
-        addButton.classList.add('disabled');
-      }
+      })
     });
 
     closeSelectedInfoBtn.addEventListener('click', () => {
       selectedColorInfo.style.display = 'none';
+      
+      const customColorAvis = document.querySelector('.custom-color-avis input');
+
+      if (customColorAvis) {
+        customColorAvis.value = null;
+        triggerInputChange(customColorAvis);
+        $('.product-form__input--swatch label').eq(0).click();
+      }
     });
 
     // Handle Shopify swatches
@@ -436,4 +453,15 @@
         customQuantityInput.value = mainQuantity;
       });
   });
+
+  function triggerInputChange(input) {
+    input.value += ' ';
+    
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    input.value = input.value.slice(0, -1);
+  
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
 </script>
