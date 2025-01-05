@@ -1073,36 +1073,73 @@ class VariantSelects extends HTMLElement {
 
   updateSelectionMetadata({ target }) {
     const { value, tagName } = target;
-
+  
     if (tagName === 'SELECT' && target.selectedOptions.length) {
       Array.from(target.options)
         .find((option) => option.getAttribute('selected'))
         .removeAttribute('selected');
       target.selectedOptions[0].setAttribute('selected', 'selected');
-
+  
       const swatchValue = target.selectedOptions[0].dataset.optionSwatchValue;
       const selectedDropdownSwatchValue = target
         .closest('.product-form__input')
         .querySelector('[data-selected-value] > .swatch');
-      if (!selectedDropdownSwatchValue) return;
-      if (swatchValue) {
-        selectedDropdownSwatchValue.style.setProperty('--swatch--background', swatchValue);
-        selectedDropdownSwatchValue.classList.remove('swatch--unavailable');
-      } else {
-        selectedDropdownSwatchValue.style.setProperty('--swatch--background', 'unset');
-        selectedDropdownSwatchValue.classList.add('swatch--unavailable');
+      if (selectedDropdownSwatchValue) {
+        if (swatchValue) {
+          selectedDropdownSwatchValue.style.setProperty('--swatch--background', swatchValue);
+          selectedDropdownSwatchValue.classList.remove('swatch--unavailable');
+        } else {
+          selectedDropdownSwatchValue.style.setProperty('--swatch--background', 'unset');
+          selectedDropdownSwatchValue.classList.add('swatch--unavailable');
+        }
+        selectedDropdownSwatchValue.style.setProperty(
+          '--swatch-focal-point',
+          target.selectedOptions[0].dataset.optionSwatchFocalPoint || 'unset'
+        );
+      }
+    } else if (tagName === 'INPUT' && target.type === 'radio') {
+      const selectedSwatchValue = target.closest('.product-form__input').querySelector('[data-selected-value]');
+      if (selectedSwatchValue) selectedSwatchValue.innerHTML = value;
+  
+      // Clear custom color when a Shopify option is clicked
+      const customColorInput = document.getElementById('custom-color-hidden');
+      const customProductProperty = document.getElementById('custom-color-properties');
+      if (customColorInput) {
+        customColorInput.value = '';
+        customProductProperty.value = '';
       }
 
-      selectedDropdownSwatchValue.style.setProperty(
-        '--swatch-focal-point',
-        target.selectedOptions[0].dataset.optionSwatchFocalPoint || 'unset'
-      );
-    } else if (tagName === 'INPUT' && target.type === 'radio') {
-      const selectedSwatchValue = target.closest(`.product-form__input`).querySelector('[data-selected-value]');
-      if (selectedSwatchValue) selectedSwatchValue.innerHTML = value;
+      const customColorProduct = document.getElementById('custom-color-product');
+      const customColorProductQuantity = document.getElementById('custom-color-quantity');
+
+      if (customColorProduct) {
+        customColorProduct.disabled = true;
+        customColorProductQuantity.disabled = true;
+        customProductProperty.disabled = true;
+      }
+      const customSwatches = document.querySelectorAll('.swatch--custom.selected');
+      if (customSwatches) {
+        customSwatches.forEach((swatch) => swatch.classList.remove('selected'));
+      }
+      const selectedColorElement = document.querySelector('.color_option_selected');
+      const selectedColorPriceElement = document.querySelector('.color_option_selected-price');
+      const selectedColorInfo = document.querySelector('.color_option_selected-container');
+
+      if (selectedColorElement) {
+        selectedColorElement.textContent = `Color: ${value}`;          
+      }
+
+      if(selectedColorPriceElement) {
+        selectedColorPriceElement.textContent = '$0';
+      }
+
+      if (selectedColorInfo) {
+        selectedColorInfo.style.display = 'flex';
+      }
     }
   }
 
+  
   getInputForEventTarget(target) {
     return target.tagName === 'SELECT' ? target.selectedOptions[0] : target;
   }

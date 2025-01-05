@@ -262,32 +262,44 @@ if (menuAccordionButtons.length) {
                 const isVisible = content.classList.contains('visible');
                 const plus = btn.querySelector('.icon-plus');
                 const minus = btn.querySelector('.icon-minus');
+                const arrow = btn.querySelector('.arrow');
 
                 if (!isVisible) {
                     content.classList.add('visible');
                     let height = content.scrollHeight;
                     content.style.height = `${height}px`;
-                    plus.style.display = 'none';
-                    minus.style.display = 'block';
+
+                    if (plus && minus) {
+                      plus.style.display = 'none';
+                      minus.style.display = 'block';
+                    } else if (arrow) {
+                      arrow.style.transform = 'rotate(180deg)';
+                    }
                 } else {
                     content.classList.remove('visible');
                     content.style.height = '0';
-                    plus.style.display = 'block';
-                    minus.style.display = 'none';
+
+                    if (plus && minus) {
+                      plus.style.display = 'block';
+                      minus.style.display = 'none';
+                    } else if (arrow) {
+                      arrow.style.transform = 'rotate(0deg)';
+                    }
                 }
             }
         });
     });
 }
 
-const thirdLevelButtons = document.querySelectorAll('.menu--second-level .accordion-item--second-level');
+const thirdLevelButtons = document.querySelectorAll('.accordion-item--second-level');
 
 if (thirdLevelButtons.length) {
     thirdLevelButtons.forEach((btn) => {
         const thirdLevelContent = btn.nextElementSibling;
-        const parentContainer = thirdLevelContent.closest('.menu-drawer__menu.menu--second-level').parentElement;
+        const parentContainer = thirdLevelContent.closest('.menu--second-level').parentElement;
         const plusIcon = btn.querySelector('.icon-plus');
         const minusIcon = btn.querySelector('.icon-minus');
+        const arrowIcon = btn.querySelector('.arrow');
 
         btn.addEventListener('click', () => {
             if (thirdLevelContent) {
@@ -297,14 +309,22 @@ if (thirdLevelButtons.length) {
                     thirdLevelContent.classList.add('visible');
                     thirdLevelContent.style.maxHeight = `${thirdLevelContent.scrollHeight}px`;
                     parentContainer.style.height = 'auto';
-                    plusIcon.style.display = 'none';
-                    minusIcon.style.display = 'block';
+                    if (plusIcon && minusIcon) {
+                      plusIcon.style.display = 'none';
+                      minusIcon.style.display = 'block';
+                    } else if (arrowIcon) {
+                      arrowIcon.style.transform = 'rotate(180deg)';
+                    }
                     
                 } else {
                     thirdLevelContent.classList.remove('visible');
                     thirdLevelContent.style.maxHeight = '0';
-                    plusIcon.style.display = 'block';
-                    minusIcon.style.display = 'none';
+                    if (plusIcon && minusIcon) {
+                      plusIcon.style.display = 'block';
+                      minusIcon.style.display = 'none';
+                    } else if (arrowIcon) {
+                      arrowIcon.style.transform = 'rotate(0deg)';
+                    }
                 }
             }
         });
@@ -404,4 +424,3 @@ const initializeScrolling = () => {
 
 initializeScrolling();
 window.addEventListener('resize', initializeScrolling);
-
