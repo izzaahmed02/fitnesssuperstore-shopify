@@ -124,7 +124,7 @@ window.addEventListener('DOMContentLoaded', () => {
                         const mainContent = tempDiv.querySelector('#MainContent');
                         if (mainContent) {
                         container.innerHTML =
-                            mainContent.innerHTML + `<span class="modal-close">{% render 'icon-close-small' %}</span>`;
+                        mainContent.innerHTML + `<span class="modal-close">{% render 'icon-close-small' %}</span>`;
                         const closeModalButton = document.querySelector('.modal-close');
                         closeModalButton.addEventListener('click', () => {
                             modalWrapper.style.display = 'none';
@@ -320,4 +320,29 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+      
+      function updatePopupDetails(button) {
+        const card = button.closest('.popup-card');
+        
+        const title = card.dataset.title;
+        const description = card.dataset.description;
+        const price = card.dataset.price;
+        const code = card.dataset.code;
+        const features = JSON.parse(card.dataset.features);
+      
+        const detailSection = document.querySelector('.popup-modal-details');
+      
+        detailSection.querySelector('.popup-detail-title').textContent = title;
+        detailSection.querySelector('.popup-detail-description').textContent = description;
+        detailSection.querySelector('.popup-detail-code').textContent = `Product Code: ${code}`;
+        detailSection.querySelector('.popup-detail-price').textContent = `Price: ${price}`;
+      
+        const featuresList = detailSection.querySelector('.popup-detail-features');
+        featuresList.innerHTML = ''; 
+        features.forEach(feature => {
+          const li = document.createElement('li');
+          li.textContent = feature;
+          featuresList.appendChild(li);
+        });
+      }
 }
