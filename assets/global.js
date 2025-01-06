@@ -1121,9 +1121,9 @@ class VariantSelects extends HTMLElement {
       if (customSwatches) {
         customSwatches.forEach((swatch) => swatch.classList.remove('selected'));
       }
-      const selectedColorElement = document.querySelector('.color_option_selected');
-      const selectedColorPriceElement = document.querySelector('.color_option_selected-price');
-      const selectedColorInfo = document.querySelector('.color_option_selected-container');
+      const selectedColorElement = document.querySelector('.option_selected');
+      const selectedColorPriceElement = document.querySelector('.option_selected-price');
+      const selectedColorInfo = document.querySelector('.option_selected-container');
 
       if (selectedColorElement) {
         selectedColorElement.textContent = `Color: ${value}`;          
