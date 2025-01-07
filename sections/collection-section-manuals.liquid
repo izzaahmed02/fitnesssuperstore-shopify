@@ -1,0 +1,78 @@
+{{ 'custom-manuals.css' | asset_url | stylesheet_tag }}
+
+<div class="container manuals">
+  <custom-manuals>
+    <div class="manuals-header">
+      <div class="page-width">
+        <h2 class="manuals-title">{{ collection.title }}</h2>
+  
+        <div class="manuals-search__wrapper">
+          <div class="manuals-search__container">
+            {% render 'icon-search-manuals' %}
+            <input class="manuals-search__input" placeholder="Search by item name"/>
+          </div>
+        </div>
+        <div class="manuals-filters">
+          <div class="manuals-filters-header">
+            {% for col in collection.metafields.custom.related_collections.value %}
+              <div class="custom-tab manuals-filter-item {% if forloop.index == 1 %} tab-active {% endif %}" data-tab="{{ col.handle }}" data-tab-id="{{ col.id }}">
+                <span>{{ col.title }}</span>
+                <script type="application/json" id="related-collections-data-{{ col.id }}">
+                  {{ col.metafields.custom.related_collections.value | json }}
+                </script>
+              </div>
+            {% endfor %}
+          </div>
+          <div class="manuals-filters-list"></div>
+        </div>
+      </div>
+    </div>
+    <div class="manuals-main page-width">
+      <div class="manuals-content__wrapper">
+
+        {% comment %} RESET BUTTON {% endcomment %}
+        <button class="manuals-reset-button">
+          {% render 'icon-arrow-left' %}
+          <span>Back to all manuals</span>
+        </button>
+
+        {% comment %} LOADER WHILE FETCHING DATA{% endcomment %}
+        <div class="manuals-loader">
+          <div class="spinner"></div>
+        </div>
+
+        {% comment %} NO SEARCH RESULTS BLOCK {% endcomment %}
+        <div class="manuals-no-search-results">
+          <p class="manuals-no-search-message"></p>
+          <div class="manuals-search-tips">
+            <h4 class="manuals-search-tips__title">Search tips</h4>
+
+            <ul class="manuals-search-tips__list">
+              <li class="search-tips__item">Be patient and try different search approaches</li>
+              <li class="search-tips__item">Use our quick brand filters above if search isn't working</li>
+              <li class="search-tips__item">Check for typos or alternative product descriptions</li>
+              <li class="search-tips__item">Use full product names or common abbreviations</li>
+            </ul>
+          </div>
+        </div>
+
+        {% comment %} MANUALS LIST {% endcomment %}
+        <div class="manuals-content"></div>
+      </div>
+    </div>
+  </custom-manuals>
+</div>
+
+<script src="{{ 'custom-manuals.js' | asset_url }}" defer="defer"></script>
+
+{% schema %}
+  {
+    "name": "Collection section new",
+    "settings": [],
+    "presets": [
+      {
+        "name": "Collection section new"
+      }
+    ]
+  }
+{% endschema %}

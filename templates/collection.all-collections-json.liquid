@@ -1,0 +1,18 @@
+{% layout none %}
+[
+  {% for innerCol in collection.metafields.custom.related_collections.value %}
+  {
+    "id": "{{ innerCol.id }}",
+    "title": "{{ innerCol.title | remove: 'Manuals' | escape }}",
+    "products": [
+      {% for product in innerCol.products %}
+      {
+        "title": "{{ product.title | escape }}",
+        "manual_file": "{{ product.metafields.custom.manual_file | file_url | escape }}"
+      }{% if forloop.last == false %},{% endif %}
+      {% endfor %}
+    ]
+  }{% if forloop.last == false %},{% endif %}
+  {% endfor %}
+]
+
