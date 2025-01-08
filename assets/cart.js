@@ -84,7 +84,6 @@ class CartItems extends HTMLElement {
   }
 
   onChange(event) {
-    console.log('test update 2');
     this.validateQuantity(event);
   }
 
