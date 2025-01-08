@@ -384,7 +384,7 @@ try {
 				var ptFrameContainer = document.querySelector('.__pt-iframe-container');
 				if (ptFrameContainer) {
 					document.querySelector('.paylater-container').style.display = 'flex';
-					var productPrice = '{{product.price}}';
+					var productPrice = parseFloat(document.querySelector('.hidden-product-price').innerHTML);
 					const priceInDollars = (productPrice / 100);
 					if (priceInDollars > 499) {
 						const monthlyPrice = PayTomorrow.getMonthlyPayment(priceInDollars, 48);
