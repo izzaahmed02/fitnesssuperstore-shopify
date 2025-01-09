@@ -193,7 +193,7 @@ if (!customElements.get('custom-manuals')) {
                 ${collection.image && collection.image.src ? 
                   `<img class="manuals-filter-collection__img" src="${collection.image.src}" width="${collection.image.width || 'auto'}" />` 
                   : ''}
-                <p class="manuals-filter-collection__title">${collection.title.replace('Manuals', '')}</p>
+                <p class="manuals-filter-collection__title">${collection.title.replace('Manuals','').replace('Assembly','').replace('Owners','')}</p>
               </div>
             `;
 
