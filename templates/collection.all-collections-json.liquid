@@ -3,15 +3,18 @@
   {% for innerCol in collection.metafields.custom.related_collections.value %}
   {
     "id": "{{ innerCol.id }}",
-    "title": "{{ innerCol.title | remove: 'Manuals' | escape }}",
+    "title": "{{ innerCol.title | remove: "Assembly Manuals" | remove: "Owners Manuals" | remove: "All Manuals" | escape }}",
+    "handle": "{{ innerCol.handle }}",
     "products": [
       {% for product in innerCol.products %}
       {
         "title": "{{ product.title | escape }}",
-        "manual_file": "{{ product.metafields.custom.manual_file | file_url | escape }}"
+        "manual_file": "{{ product.metafields.custom.manual_file | file_url | escape }}",
+        "manual_link": "{{ product.metafields.custom.manual_link }}"
       }{% if forloop.last == false %},{% endif %}
       {% endfor %}
-    ]
+    ],
+    "products_count": {{ innerCol.products_count }}
   }{% if forloop.last == false %},{% endif %}
   {% endfor %}
 ]

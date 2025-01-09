@@ -7,9 +7,10 @@ if (!customElements.get('custom-manuals')) {
         this.tabs = this.querySelectorAll('.custom-tab');
         this.filtersList = this.querySelector('.manuals-filters-list');
         this.resetButton = this.querySelector('.manuals-reset-button');
+        this.resetSearchButton = this.querySelector('.manuals-search__reset-btn');
         this.contentContainer = this.querySelector('.manuals-content');
         this.loader = this.querySelector('.manuals-loader');
-        this.paginationContainer = null; // Pagination container will be initialized later
+        this.paginationContainer = null;
         this.allCollections = [];
 
 
@@ -20,12 +21,13 @@ if (!customElements.get('custom-manuals')) {
 
         // Add event listeners
         this.resetButton.addEventListener('click', this.resetFilters);
+        this.resetSearchButton.addEventListener('click', this.onSearch.bind(this, true));
         this.tabs.forEach(tab => tab.addEventListener('click', this.onChangeTab));
 
         // Attach search functionality
-        const searchInput = this.querySelector('.manuals-search__input');
-        if (searchInput) {
-          searchInput.addEventListener('input', this.onSearch.bind(this));
+        this.searchInput = this.querySelector('.manuals-search__input');
+        if (this.searchInput) {
+          this.searchInput.addEventListener('input', this.onSearch.bind(this));
         }
 
         // Fetch default content for the first tab
@@ -56,6 +58,12 @@ if (!customElements.get('custom-manuals')) {
           if (this.contentContainer) {
             this.contentContainer.innerHTML = htmlContent;
 
+            this.loadMoreButtons = this.querySelectorAll('.manuals-load-more');
+            if(this.loadMoreButtons.length > 0) {
+              this.loadMoreButtons.forEach(button => {
+                button.addEventListener('click', () => this.fetchMoreManuals(button, ));
+              });
+            }
             // Initialize pagination container and add event listeners
             this.initPagination();
           }
@@ -67,9 +75,58 @@ if (!customElements.get('custom-manuals')) {
           this.contentContainer.style.display = 'block';
         }
       }
+      async fetchMoreManuals(button) {
+        const handle = button.getAttribute('data-handle');
+        const currentPage = +button.getAttribute('data-current-page');
+
+        if (!handle) {
+          console.error('Collection handle is missing!');
+          return;
+        }
+  
+        // Build the URL with limit and offset
+        const url = `/collections/${handle}?view=manual-item&page=${currentPage + 1}`;
+  
+        try {
+          // Fetch products
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`Error fetching products: ${response.statusText}`);
+          }
+  
+          const data = await response.text();
+  
+          // Process the fetched data (e.g., render products on the page)
+          this.manualListInner = this.querySelector(`[data-list-name="${handle}"`);
+          // Parse the HTML string into a DOM object
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(data, 'text/html');
+
+          // Query the elements you need
+          const items = doc.querySelectorAll('.manuals-list-item');
+          const nextButton = doc.querySelector('.manuals-load-more');
+
+          // Append these items to your container
+          items.forEach(item => {
+            this.manualListInner.appendChild(item);
+          });
+
+          // Disable the button if all products are loaded
+          if (nextButton) {
+            button.setAttribute('data-current-page', nextButton.getAttribute('data-current-page'));
+          } else {
+            button.style.display = "none";
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      }
 
       async onPaginate(event) {
         event.preventDefault();
+
+        // Scroll to the top of the content container
+        this.scrollToTop();
 
         // Get the URL from the clicked pagination element
         const target = event.currentTarget;
@@ -84,6 +141,11 @@ if (!customElements.get('custom-manuals')) {
       initPagination() {
         // Find the pagination container within the newly fetched content
         this.paginationContainer = this.contentContainer.querySelector('.pagination');
+        this.dots = this.paginationContainer && this.paginationContainer.querySelector('[data-title="…"');
+        if(this.dots) {
+          this.dots.classList.remove('current');
+          this.dots.classList.add('dots');
+        }
 
         if (this.paginationContainer) {
           // Add click event listeners to pagination links
@@ -97,6 +159,7 @@ if (!customElements.get('custom-manuals')) {
       onChangeTab(event) {
         const clickedTab = event.currentTarget;
 
+        this.resetButton.classList.remove('active');
         this.getFilters(clickedTab);
         // Remove active class from all tabs
         this.tabs.forEach(tab => tab.classList.remove('tab-active'));
@@ -117,11 +180,19 @@ if (!customElements.get('custom-manuals')) {
         const relatedCollectionsJson = JSON.parse(relatedCollections.textContent);
 
         if (relatedCollectionsJson) {
+          // Sort the collections alphabetically by title (A-Z)
+          relatedCollectionsJson.sort((a, b) => a.title.localeCompare(b.title));
+
+          const rowCount = Math.ceil(relatedCollectionsJson.length / 4);
+          this.filtersList.style.gridTemplateRows = `repeat(${rowCount}, auto)`;
+
           this.filtersList.innerHTML = '';
           relatedCollectionsJson.forEach(collection => {
             const collectionHTML = `
-              <div class="manuals-filter-collection" data-handle="${collection.handle}">
-                <img src="${collection.image.src}" width="${collection.image.width}"/>
+              <div class="manuals-filter-collection" data-title="${collection.title}" data-handle="${collection.handle}">
+                ${collection.image && collection.image.src ? 
+                  `<img class="manuals-filter-collection__img" src="${collection.image.src}" width="${collection.image.width || 'auto'}" />` 
+                  : ''}
                 <p class="manuals-filter-collection__title">${collection.title.replace('Manuals', '')}</p>
               </div>
             `;
@@ -148,7 +219,11 @@ if (!customElements.get('custom-manuals')) {
       }
 
       async getSelectedManualsList(selectedManualList) {
+        const filterButtons = this.querySelectorAll('.manuals-filter-collection');
+        filterButtons.forEach(button => button.classList.remove('filter-active'));
+
         const selectedFilter = this.querySelector(`[data-handle="${selectedManualList}"]`);
+        const selectedFilterTitle = selectedFilter.dataset.title;
         selectedFilter.classList.add('filter-active');
         this.resetButton.classList.add('active');
 
@@ -165,6 +240,13 @@ if (!customElements.get('custom-manuals')) {
           const htmlContent = await response.text();
           if (this.contentContainer) {
             this.contentContainer.innerHTML = htmlContent;
+            this.loadMoreButtons = this.contentContainer.querySelectorAll('.manuals-load-more');
+            if(this.loadMoreButtons.length > 0) {
+              this.loadMoreButtons.forEach(button => {
+                button.addEventListener('click', () => this.fetchMoreManuals(button));
+              });
+            }
+
             this.initPagination();
           }
         } catch (error) {
@@ -188,13 +270,17 @@ if (!customElements.get('custom-manuals')) {
         }
       }
 
-      onSearch(event) {
-        const query = event.target.value.toLowerCase();
+      onSearch(event, resetQuery) {
+        if(resetQuery) {
+          this.searchInput.value = '';
+        }
+        const query = resetQuery ? '' : event.target.value.toLowerCase();
         const selectedTab = Array.from(this.tabs).find(tab => tab.classList.contains('tab-active'));
         const tabId = selectedTab.getAttribute('data-tab');
         const noResults = this.querySelector('.manuals-no-search-results');
 
         this.resetButton.classList.remove('active');
+        this.resetSearchButton.classList.add('active');
         this.querySelectorAll('.manuals-filter-collection').forEach(filter => filter.classList.remove('filter-active'));
         // Filter collections based on the search query
         const filteredCollections = this.allCollections.filter(collection => {
@@ -210,6 +296,7 @@ if (!customElements.get('custom-manuals')) {
         // Update the UI with the filtered collections
         if(query === '') {
           this.contentContainer.classList.remove('none');
+          this.resetSearchButton.classList.remove('active');
           this.fetchTabContent(tabId);
           noResults.classList.remove('active');
         }
@@ -228,26 +315,51 @@ if (!customElements.get('custom-manuals')) {
 
       renderCollections(collections) {
         // Render the filtered collections
-        this.contentContainer.innerHTML = collections
-          .map(
-            collection => `
-          <div class="manuals-list__container">
-            <h3 class="manuals-list__title">${collection.title}</h3>
-            <div class="manuals-list-inner">
-              ${collection.products
-                .map(
-                  product => `
-                <a class="manuals-list-item" href="${product.manual_file}" target="_blank">
-                  ${product.title}
-                </a>
+        this.contentContainer.innerHTML = `
+          <div class="manuals-list__wrapper">
+            ${collections.map(
+              collection => `
+                <div class="manuals-list__container">
+                  <h3 class="manuals-list__title">${collection.title}</h3>
+                  <div class="manuals-list-inner" data-list-name="${collection.handle}">
+                    ${collection.products
+                      .map(
+                        product => `
+                      <a class="manuals-list-item" href="${product.manual_file ? product.manual_file : product.manual_link }" target="_blank">
+                        ${product.title}
+                      </a>
+                    `
+                      )
+                      .join('')}
+                  </div>
+                  ${collection.products_count > 50
+                    ? `<button class="manuals-load-more" data-handle="${collection.handle}" data-product-count="${collection.products_count }" data-current-page="1">Show more manuals</button>`
+                    : ''
+                  }
+                </div>
               `
-                )
-                .join('')}
-            </div>
+            ).join('')}
           </div>
-        `
-          )
-          .join('');
+        `;
+
+        this.loadMoreButtons = this.querySelectorAll('.manuals-load-more');
+        if(this.loadMoreButtons.length > 0) {
+          this.loadMoreButtons.forEach(button => {
+            button.addEventListener('click', () => this.fetchMoreManuals(button, ));
+          });
+        }
+      }
+
+      scrollToTop() {
+        const manualsList = this.querySelector('.manuals-main');
+        const offset = 100;  // Adjust this value to control how much higher you want to scroll
+      
+        if (manualsList) {
+          const topPosition = manualsList.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top: topPosition, behavior: 'smooth' });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
     }
   );

@@ -3,14 +3,17 @@
   <div class="manuals-list__wrapper">
     {% for innerCol in collection.metafields.custom.related_collections.value %}
       <div class="manuals-list__container">
-        <h3 class="manuals-list__title">{{ innerCol.title | remove: "Manuals" }}</h3>
-        <div class="manuals-list-inner">
+        <h3 class="manuals-list__title">{{ innerCol.title | remove: "Assembly Manuals" | remove: "Owners Manuals" | remove: "All Manuals" }}</h3>
+        <div class="manuals-list-inner" data-list-name="{{ innerCol.handle }}">
           {%- for product in innerCol.products -%}
-            <a class="manuals-list-item" href="{{ product.metafields.custom.manual_file | file_url  }}" target="_blank">
+            <a class="manuals-list-item" href="{% if product.metafields.custom.manual_file %} {{ product.metafields.custom.manual_file | file_url  }} {% else %} {{ product.metafields.custom.manual_link  }} {% endif %}" target="_blank">
               {{ product.title }}
             </a>
           {%- endfor -%}
         </div>
+        {% if innerCol.products_count > 50 %}
+          <button class="manuals-load-more" data-handle="{{ innerCol.handle }}" data-offset="50" data-product-count="{{ innerCol.products_count }}" data-current-page="1">Show more manuals</button>
+        {% endif %}
       </div>
     {% endfor %}
   </div>
@@ -26,7 +29,7 @@
         {% if part.is_link %}
           <div data-href="{{ part.url }}">{{ part.title }}</div>
         {% else %}
-          <span class="current">{{ part.title }}</span>
+          <span class="current" data-title="{{ part.title }}">{{ part.title }}</span>
         {% endif %}
       {% endfor %}
       <div data-href="{{ paginate.next.url }}">
