@@ -309,6 +309,7 @@ if (!customElements.get('custom-manuals')) {
           noResults.classList.add('active');
         }
         else {
+          this.resetButton.classList.add('active');
           this.contentContainer.classList.remove('none');
           this.renderCollections(filteredCollections);
           noResults.classList.remove('active');
