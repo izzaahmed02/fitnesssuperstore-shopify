@@ -215,7 +215,8 @@ if (!customElements.get('custom-manuals')) {
         const selectedTab = Array.from(this.tabs).find(tab => tab.classList.contains('tab-active'));
         const tabId = selectedTab.getAttribute('data-tab');
 
-        this.fetchTabContent(tabId);
+        this.onSearch(this, true)
+        // this.fetchTabContent(tabId);
       }
 
       async getSelectedManualsList(selectedManualList) {
@@ -302,6 +303,7 @@ if (!customElements.get('custom-manuals')) {
         }
         else if(filteredCollections.length < 1){
           this.contentContainer.classList.add('none');
+          this.resetButton.classList.add('active');
           const message = noResults.querySelector('.manuals-no-search-message');
           message.innerHTML = `We cannot find <strong>“${query}”</strong>. Try searching again.`
           noResults.classList.add('active');
