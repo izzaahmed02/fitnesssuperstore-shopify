@@ -452,8 +452,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		clearInterval(avisOptionsPolling);
 
 		const benchOptionClassHandle = '.handle-780';
-		setupOptionHandler(benchOptionClassHandle);
+		const olympicWeightPlateSetHandle = '.handle-720';
 
+		setupOptionHandler(benchOptionClassHandle);
+		setupOptionHandler(olympicWeightPlateSetHandle);
+		
 		const dropdownContainers = document.querySelectorAll('.ap-options__swatch-container');
 
 		dropdownContainers.forEach(container => {
@@ -498,7 +501,7 @@ function setupOptionHandler(optionClassHandle) {
 
 	optionContainer.querySelectorAll('.avp-productoptionswatchwrapper').forEach(wrapper => {
 		wrapper.addEventListener('click', event => {
-			const input = wrapper.querySelector('input[type="checkbox"]');
+			const input = wrapper.querySelector('input[type="radio"]');
 			const inputTextValue = input.value;
 			const inputMoneyValue = input.parentElement.querySelector('.swatch-variant-title .money').innerText.replace('(', '').replace(')', '').replace('+', '');
 
@@ -530,7 +533,7 @@ function setupOptionHandler(optionClassHandle) {
 						if (optionContainer) {
 							const value = icon.getAttribute('data-value');
 
-							const relatedInput = Array.from(document.querySelector(optionClassHandle).querySelectorAll('input[type="checkbox"]')).find(
+							const relatedInput = Array.from(document.querySelector(optionClassHandle).querySelectorAll('input[type="radio"]')).find(
 								input => input.value === value
 							);
 							if (relatedInput) {
@@ -554,7 +557,7 @@ function setupOptionHandler(optionClassHandle) {
 		});
 	});
 
-	optionContainer.querySelectorAll('input[type="checkbox"]').forEach(input => {
+	optionContainer.querySelectorAll('input[type="radio"]').forEach(input => {
 		input.addEventListener('change', event => {
 			const wrapper = input.closest('.avp-productoptionswatchwrapper');
 			if (!input.checked) {
