@@ -101,6 +101,26 @@ async function fetchProductByHandle(handle) {
 	}
 }
 
+async function fetchProductByTitle(title) {
+	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/title/${title}`;
+
+	try {
+		const response = await fetch(shopifyUrl, {
+			method: "GET",
+		});
+
+		if (!response.ok) {
+			throw new Error("Failed to fetch product by title");
+		}
+
+		const data = await response.json();
+		return data.products[0];
+	} catch (error) {
+		console.error("Error fetching product by title:", error);
+		return null;
+	}
+}
+
 async function fetchProductMetafields(productId) {
     const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${productId}/`;
     try {
@@ -169,11 +189,11 @@ async function fetchProductDetailsWithMetafields(productId) {
     }
 }  
   
-async function renderOptionPopupProducts(handle) {
-    const product = await fetchProductByHandle(handle);
+async function renderOptionPopupProducts(title) {
+    const product = await fetchProductByTitle(title);
 
     if (!product) {
-      console.error("No product found for the given handle.");
+      console.error("No product found for the given title.");
       return;
     }
   
@@ -273,15 +293,14 @@ try {
 						modalWrapper.style.display = 'flex';
 						container.innerHTML = '';
 						const handleClass = Array.from(parentWithHandle.classList).find((cls) => cls.startsWith('handle-'));
+						const productTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
 
-						if (handleClass) {
+						if (productTitle) {
                             let optionHTML = '';
-							const productHandle = handleClass.split('-')[1];
-
-                            var optionPopupProductsHtml = await renderOptionPopupProducts(productHandle);
+                            var optionPopupProductsHtml = await renderOptionPopupProducts(productTitle);
 
                             if (!optionPopupProductsHtml) {
-                                var product = await fetchProductByHandle(productHandle);
+                                var product = await fetchProductByTitle(productTitle);
                                 if (product) {
                                     optionHTML = product.body_html;
                                 }
@@ -506,7 +525,7 @@ function setupOptionsHandler() {
 				if (inputTextValue != 'No Thanks') {
 					inputMoneyValue = input.parentElement.querySelector('.swatch-variant-title .money').innerText.replace('(', '').replace(')', '').replace('+', '');
 				} else {
-					inputMoneyValue = Shopify.currency.active == 'USD' ? "$0" : `${Shopify.currency.active} 0`
+					inputMoneyValue = Shopify.currency.active == 'USD' ? "$0" : ''
 				}
 	
 				const selectedOptionHTML = `
