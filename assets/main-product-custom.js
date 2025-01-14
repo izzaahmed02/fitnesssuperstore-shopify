@@ -451,12 +451,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 		clearInterval(avisOptionsPolling);
 
-		const benchOptionClassHandle = '.handle-780';
-		const olympicWeightPlateSetHandle = '.handle-720';
+		setupOptionsHandler();
 
-		setupOptionHandler(benchOptionClassHandle);
-		setupOptionHandler(olympicWeightPlateSetHandle);
-		
 		const dropdownContainers = document.querySelectorAll('.ap-options__swatch-container');
 
 		dropdownContainers.forEach(container => {
@@ -482,91 +478,104 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	}, 100);
 });
 
-function setupOptionHandler(optionClassHandle) {
-	const optionContainer = document.querySelector(optionClassHandle);
-	if (!optionContainer) {
-		console.error(`Element with class handle "${optionClassHandle}" not found.`);
+function setupOptionsHandler() {
+	var handle = `[class^="handle-"]`
+	const optionsContainer = document.querySelectorAll(handle);
+	if (!optionsContainer) {
+		console.error(`Element with class handle "${handle}" not found.`);
 		return;
 	}
 
-	const optionLabel = optionContainer.querySelector('.ap-label-tooltip');
-	if (!optionLabel) {
-		console.error(`Label with class ".ap-label-tooltip" not found in "${optionClassHandle}".`);
-		return;
-	}
-
-	const selectedOptionsContainer = document.createElement('div');
-	selectedOptionsContainer.classList.add('selected_options_container');
-	optionLabel.append(selectedOptionsContainer);
-
-	optionContainer.querySelectorAll('.avp-productoptionswatchwrapper').forEach(wrapper => {
-		wrapper.addEventListener('click', event => {
-			const input = wrapper.querySelector('input[type="radio"]');
-			const inputTextValue = input.value;
-			const inputMoneyValue = input.parentElement.querySelector('.swatch-variant-title .money').innerText.replace('(', '').replace(')', '').replace('+', '');
-
-			const selectedOptionHTML = `
-                <div class="option_selected-container">
-                    <p class="option_selected">${inputTextValue}</p>
-                    <span class="option_selected-price">${inputMoneyValue}</span>
-                    <svg class="remove-icon" data-value="${inputTextValue}" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z" fill="black"/>
-                    </svg>
-                </div>
-            `;
-
-			if (input.checked) {
-				if (!selectedOptionsContainer.querySelector(`[data-value="${inputTextValue}"]`)) {
-					selectedOptionsContainer.innerHTML += selectedOptionHTML;
+	optionsContainer.forEach(optionContainer => {
+		const optionLabel = optionContainer.querySelector('.ap-label-tooltip');
+		if (!optionLabel) {
+			console.error(`Label with class ".ap-label-tooltip" not found in "${handle}".`);
+			return;
+		}
+	
+		const selectedOptionsContainer = document.createElement('div');
+		selectedOptionsContainer.classList.add('selected_options_container');
+		optionLabel.append(selectedOptionsContainer);
+	
+		optionContainer.querySelectorAll('.avp-productoptionswatchwrapper').forEach(wrapper => {
+			wrapper.addEventListener('click', event => {
+				const input = wrapper.querySelector('input[type="radio"]');
+				const inputTextValue = input.value;
+				let inputMoneyValue;
+	
+				if (inputTextValue != 'No Thanks') {
+					inputMoneyValue = input.parentElement.querySelector('.swatch-variant-title .money').innerText.replace('(', '').replace(')', '').replace('+', '');
+				} else {
+					inputMoneyValue = Shopify.currency.active == 'USD' ? "$0" : `${Shopify.currency.active} 0`
 				}
-
-				Array.from(selectedOptionsContainer.children).forEach(option => {
-					option.style.display = 'flex';
-				});
-
-				wrapper.setAttribute("style", "border: 1px solid #F1592A !important;");
-
-				document.querySelector(optionClassHandle).querySelectorAll('.remove-icon').forEach(icon => {
-					icon.addEventListener('click', event => {
-						event.stopPropagation();
-						const optionContainer = event.target.closest('.option_selected-container');
-						if (optionContainer) {
-							const value = icon.getAttribute('data-value');
-
-							const relatedInput = Array.from(document.querySelector(optionClassHandle).querySelectorAll('input[type="radio"]')).find(
-								input => input.value === value
-							);
-							if (relatedInput) {
-								relatedInput.checked = false;
-								relatedInput.dispatchEvent(new Event('change', {
-									bubbles: true
-								}));
-							}
-						}
+	
+				const selectedOptionHTML = `
+					<div class="option_selected-container">
+						<p class="option_selected">${inputTextValue}</p>
+						<span class="option_selected-price">${inputMoneyValue}</span>
+						<svg class="remove-icon" data-value="${inputTextValue}" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path fill-rule="evenodd" clip-rule="evenodd" d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z" fill="black"/>
+						</svg>
+					</div>
+				`;
+	
+				if (input.checked) {
+					if (!selectedOptionsContainer.querySelector(`[data-value="${inputTextValue}"]`)) {
+						selectedOptionsContainer.innerHTML = selectedOptionHTML;
+					}
+	
+					Array.from(selectedOptionsContainer.children).forEach(option => {
+						option.style.display = 'flex';
 					});
-				})
-
-			} else {
-				const optionToRemove = selectedOptionsContainer.querySelector(`[data-value="${inputTextValue}"]`);
-				if (optionToRemove) {
-					optionToRemove.closest('.option_selected-container').remove();
+	
+					optionContainer.querySelectorAll('.avp-productoptionswatchwrapper').forEach(wrapper => {
+						wrapper.setAttribute("style", "border: 1px solid #E5E5E5 !important;");
+					});
+	
+					wrapper.setAttribute("style", "border: 1px solid #F1592A !important;");
+	
+					optionContainer.querySelectorAll('.remove-icon').forEach(icon => {
+						icon.addEventListener('click', event => {
+							event.stopPropagation();
+							const optionSelectedContainer = event.target.closest('.option_selected-container');
+							if (optionSelectedContainer) {
+								const value = icon.getAttribute('data-value');
+	
+								const relatedInput = Array.from(optionContainer.querySelectorAll('input[type="radio"]')).find(
+									input => input.value === value
+								);
+								if (relatedInput) {
+									relatedInput.checked = false;
+									relatedInput.dispatchEvent(new Event('change', {
+										bubbles: true
+									}));
+								}
+							}
+						});
+					})
+	
+				} else {
+					const optionToRemove = selectedOptionsContainer.querySelector(`[data-value="${inputTextValue}"]`);
+					if (optionToRemove) {
+						optionToRemove.closest('.option_selected-container').remove();
+					}
+	
+					wrapper.setAttribute("style", "border: 1px solid #E5E5E5 !important;");
 				}
-
-				wrapper.setAttribute("style", "border: 1px solid #E5E5E5 !important;");
-			}
+			});
 		});
-	});
-
-	optionContainer.querySelectorAll('input[type="radio"]').forEach(input => {
-		input.addEventListener('change', event => {
-			const wrapper = input.closest('.avp-productoptionswatchwrapper');
-			if (!input.checked) {
-				const optionToRemove = selectedOptionsContainer.querySelector(`[data-value="${input.value}"]`);
-				if (optionToRemove) {
-					optionToRemove.closest('.option_selected-container').remove();
+	
+		optionContainer.querySelectorAll('input[type="radio"]').forEach(input => {
+			input.addEventListener('change', event => {
+				const wrapper = input.closest('.avp-productoptionswatchwrapper');
+				if (!input.checked) {
+					const optionToRemove = selectedOptionsContainer.querySelector(`[data-value="${input.value}"]`);
+					if (optionToRemove) {
+						optionToRemove.closest('.option_selected-container').remove();
+					}
+					wrapper.setAttribute("style", "border: 1px solid #E5E5E5 !important;");
 				}
-				wrapper.setAttribute("style", "border: 1px solid #E5E5E5 !important;");
-			}
+			});
 		});
 	});
 }
