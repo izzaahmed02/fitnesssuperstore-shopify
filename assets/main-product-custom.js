@@ -102,7 +102,7 @@ async function fetchProductByHandle(handle) {
 }
 
 async function fetchProductByTitle(title) {
-	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/title/${title}`;
+	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbytitle?title=${title}`;
 
 	try {
 		const response = await fetch(shopifyUrl, {
@@ -300,7 +300,8 @@ try {
                             var optionPopupProductsHtml = await renderOptionPopupProducts(productTitle);
 
                             if (!optionPopupProductsHtml) {
-                                var product = await fetchProductByTitle(productTitle);
+								const encodedProductTitle = encodeURIComponent(productTitle);
+                                var product = await fetchProductByTitle(encodedProductTitle);
                                 if (product) {
                                     optionHTML = product.body_html;
                                 }
