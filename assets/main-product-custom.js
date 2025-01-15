@@ -266,10 +266,48 @@ async function renderOptionPopupProducts(title) {
 
 try {
 	const container = document.getElementById('dynamic-product-content');
+	const modalWrapper = document.querySelector('.modal-wrapper');
+	const modalContent = document.querySelector('#dynamic-product-content');
+	const closeIconTemplate = document.getElementById('icon-close-template').innerHTML;
 
 	document.addEventListener('DOMContentLoaded', (event) => {
-		var avisOptionsPolling = setInterval(() => {
+		document.querySelectorAll('.metainfo-wrapper .more-info').forEach(element => {
+			element.addEventListener('click', async (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				var currentProduct = window.product;
 
+				if (currentProduct) {
+					var customFieldvalue = element.dataset.customfield;	
+					var brand = currentProduct.vendor
+
+					if (customFieldvalue) {			
+						if (customFieldvalue == 'Warranty' && brand == 'French Fitness') {
+							customFieldvalue = `${brand} ${customFieldvalue} Custom Field`
+						} else {
+							customFieldvalue += ' Custom Field';
+						}
+						
+						var product = await fetchProductByTitle(customFieldvalue);
+						if (product) {
+							modalWrapper.style.display = 'flex';
+							const tempDiv = document.createElement('div');
+							tempDiv.innerHTML = product.body_html;
+							const mainContent = tempDiv;
+							container.innerHTML = mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
+	
+							const closeModalButton = container.querySelector('.modal-close');
+	
+							closeModalButton.addEventListener('click', () => {
+								modalWrapper.style.display = 'none';
+							});
+						};
+					}
+				}
+			});
+		});
+
+		var avisOptionsPolling = setInterval(() => {
 			if (!document.querySelector('.avpoptions-container__v2'))
 				return;
 
@@ -292,7 +330,6 @@ try {
 						const parentWithHandle = element.closest('[class^="handle-"]');
 						modalWrapper.style.display = 'flex';
 						container.innerHTML = '';
-						const handleClass = Array.from(parentWithHandle.classList).find((cls) => cls.startsWith('handle-'));
 						const productTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
 
 						if (productTitle) {
@@ -314,13 +351,12 @@ try {
                                 tempDiv.innerHTML = optionHTML;
                                 const mainContent = tempDiv;
                                 if (mainContent) {
-                                    const closeIconTemplate = document.getElementById('icon-close-template').innerHTML;
                                     container.innerHTML =
                                         mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
-                                    const closeModalButton = document.querySelector('.modal-close');
-                                    closeModalButton.addEventListener('click', () => {
-                                        modalWrapper.style.display = 'none';
-                                    });
+										const closeModalButton = document.querySelector('.modal-close');
+										closeModalButton.addEventListener('click', () => {
+											modalWrapper.style.display = 'none';
+										});
 
                                     const scripts = mainContent.querySelectorAll('script');
                                     scripts.forEach((script) => {
@@ -387,9 +423,6 @@ try {
 				}
 			});
 		}, 100)
-
-		const modalWrapper = document.querySelector('.modal-wrapper');
-		const modalContent = document.querySelector('#dynamic-product-content');
 
 		modalWrapper.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';

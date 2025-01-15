@@ -159,23 +159,6 @@
     }
   {%- endstyle -%}
 
-  <script type="text/javascript">
-    var sa_products_count = 3;
-    var sa_date_format = 'F j, Y';
-    var sa_product = 'FF-FSR90';
-    (function (w, d, t, f, o, s, a) {
-      o = 'shopperapproved';
-      if (!w[o]) {
-        w[o] = function () {
-          (w[o].arg = w[o].arg || []).push(arguments);
-        };
-        (s = d.createElement(t)), (a = d.getElementsByTagName(t)[0]);
-        s.async = 1;
-        s.src = f;
-        a.parentNode.insertBefore(s, a);
-      }
-    })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
-  </script>
   <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
   <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
   {%- if product.quantity_price_breaks_configured? -%}
@@ -190,9 +173,7 @@
     <script src="{{ 'theme-editor.js' | asset_url }}" defer="defer"></script>
   {%- endif -%}
 
-
   <script defer>
-
     $(document).ready(function () {
       $('.main-slider').slick({
         slidesToShow: 1,
@@ -215,6 +196,7 @@
       });
     });
   </script>
+  
   {%- assign first_3d_model = product.media | where: 'media_type', 'model' | first -%}
   {%- if first_3d_model -%}
     {{ 'component-product-model.css' | asset_url | stylesheet_tag }}
@@ -311,6 +293,7 @@
                       <div class="img-wrap">{% render 'icon-chart' %}</div>
                       <span class="title">Grade:</span>
                       {{ product.metafields.custom.grade }}
+                      <span class="more-info" data-customfield="Grade">(More Info)</span>
                     </div>
                   {% endif %}
                   {% if product.metafields.custom.warranty != blank %}
@@ -318,6 +301,7 @@
                       <div class="img-wrap">{% render 'icon-verified' %}</div>
                       <span class="title">Warranty:</span>
                       {{ product.metafields.custom.warranty }}
+                      <span class="more-info" data-customfield="Warranty">(More Info)</span>
                     </div>
                   {% endif %}
                   {% if product.metafields.custom.ships != blank %}
@@ -332,6 +316,7 @@
                       <div class="img-wrap">{% render 'icon-timer' %}</div>
                       <span class="title">Processing Time:</span>
                       {{ product.metafields.custom.processing_time }}
+                      <span class="more-info" data-customfield="Processing Time">(More Info)</span>
                     </div>
                   {% endif %}
                   {% if product.metafields.custom.product_code != blank %}
@@ -1381,8 +1366,26 @@
   </div>
 </product-info>
 
-
+<script>window.product = {{ product | json }}</script>
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+
+<script defer type="text/javascript">
+  var sa_products_count = 3;
+  var sa_date_format = 'F j, Y';
+  var sa_product = window.product.variants[0].sku;
+  (function (w, d, t, f, o, s, a) {
+    o = 'shopperapproved';
+    if (!w[o]) {
+      w[o] = function () {
+        (w[o].arg = w[o].arg || []).push(arguments);
+      };
+      (s = d.createElement(t)), (a = d.getElementsByTagName(t)[0]);
+      s.async = 1;
+      s.src = f;
+      a.parentNode.insertBefore(s, a);
+    }
+  })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
+</script>
 
 {% schema %}
 {
