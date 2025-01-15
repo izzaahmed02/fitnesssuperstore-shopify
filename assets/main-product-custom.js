@@ -122,7 +122,7 @@ async function fetchProductByTitle(title) {
 }
 
 async function fetchProductMetafields(productId) {
-    const shopifyUrl = `https://localhost:52417/api/shopify/metafields/${productId}/`;
+    const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${productId}/`;
     try {
       const response = await fetch(shopifyUrl, {
         method: "GET",
