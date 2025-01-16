@@ -6,7 +6,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		const cityInput = document.querySelector('input[name="shipping_address[city]"]');
 		const zipInput = document.querySelector('input[name="shipping_address[zip]"]');
 		const shippingType = document.querySelector(
-			'.avp-option.ap-options__select-container:has(select[name^="Shipping Type"])'
+			'.avp-option.ap-options__select-container:has(select[name^="Full Assembly & Installation"])'
 		);
 
 		if (shippingInfo && cityInput && zipInput) {
@@ -40,7 +40,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			const cityInput = document.querySelector('input[name="shipping_address[city]"]');
 			const zipInput = document.querySelector('input[name="shipping_address[zip]"]');
 			const shippingType = document.querySelector(
-				'.avp-option.ap-options__select-container:has(select[name^="Shipping Type"])'
+				'.avp-option.ap-options__select-container:has(select[name^="Full Assembly & Installation"])'
 			);
 
 			if (shippingInfo && cityInput && zipInput) {
