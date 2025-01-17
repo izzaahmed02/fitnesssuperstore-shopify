@@ -1,4 +1,4 @@
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
 	function checkForElements() {
 		const shippingInfo = document.querySelector(
 			'.docapp-single-shipping-calculator .docapp-shipping-show-trigger'
@@ -77,6 +77,27 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const pollingInterval = setInterval(checkForElements, 1000);
+	
+	if (window.product) {
+		var product = await fetchProductDetailsWithMetafields(window.product.id)
+
+		const metaField3rdParty = product.metafields.find(
+            (metafield) => metafield.key === "3rd_party"
+        );
+
+		if (metaField3rdParty) {
+			var metaObject = await fetchProductMetaObject(metaField3rdParty.value);
+
+			const googleMaterial = metaObject.fields.find(
+				(metaObject) => metaObject.key === "google_material"
+			);
+
+			if (googleMaterial && googleMaterial.value.includes('display')) {
+				document.querySelector('.showroom').style.display = 'flex';
+				document.querySelector('.showroom-text').innerHTML = 'On Display at our Northern California Warehouse Showroom'
+			}
+		}
+	}
 });
 
 let optionProductsPopup = [];
@@ -189,6 +210,25 @@ async function fetchProductDetailsWithMetafields(productId) {
     }
 }  
   
+async function fetchProductMetaObject(metaObjectId) {
+    const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metaobject?metaobjectId=${metaObjectId}`;
+
+    try {
+      const response = await fetch(shopifyUrl, {
+        method: "GET",
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch metaobject");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching meta object:", error);
+      return null;
+    }
+}
+
 async function renderOptionPopupProducts(title) {
     const product = await fetchProductByTitle(title);
 
@@ -270,7 +310,7 @@ try {
 	const modalContent = document.querySelector('#dynamic-product-content');
 	const closeIconTemplate = document.getElementById('icon-close-template').innerHTML;
 
-	document.addEventListener('DOMContentLoaded', (event) => {
+	document.addEventListener('DOMContentLoaded', (event) => {	
 		document.querySelectorAll('.metainfo-wrapper .more-info').forEach(element => {
 			element.addEventListener('click', async (event) => {
 				event.preventDefault();
@@ -314,6 +354,16 @@ try {
 			clearInterval(avisOptionsPolling);
 
 			document.querySelectorAll('.ap-label-tooltip').forEach(element => {
+				const warrantySelect = document.querySelector('select[name="Warranty"]');
+
+				if (warrantySelect) {
+				  const warrantyParentContainer = warrantySelect.closest(".ap-options__select-container");
+			 
+				  if (warrantyParentContainer) {
+					warrantyParentContainer.style.display = "none";
+				  }
+				}
+				 
 				const style = document.createElement('style');
 				style.textContent = `.ap-label-tooltip::after { display: none !important; }`;
 				document.head.appendChild(style);
@@ -400,6 +450,7 @@ try {
                                                         <h2 class="product-details__title">${product.title}</h2>
                                                         <p class="product-details__short_description">${shortDescription}</p>
                                                     </div>`
+
                                                     const productDetailsContainer = document.querySelector('.product-details-container');
                                                     const productDetailsDescriptionBody = document.querySelector('.product-details-description-body')
                                                     productDetailsContainer.style.display = 'flex';
@@ -573,7 +624,9 @@ function setupOptionsHandler() {
 				`;
 	
 				if (input.checked) {
-					if (!selectedOptionsContainer.querySelector(`[data-value="${inputTextValue}"]`)) {
+					const escapedValue = escapeSelector(inputTextValue);
+
+					if (!selectedOptionsContainer?.querySelector(`[data-value="${escapedValue}"]`)) {
 						selectedOptionsContainer.innerHTML = selectedOptionHTML;
 					}
 	
@@ -632,3 +685,7 @@ function setupOptionsHandler() {
 		});
 	});
 }
+
+function escapeSelector(selector) {
+	return selector.replace(/([!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, '\\$1');
+  }

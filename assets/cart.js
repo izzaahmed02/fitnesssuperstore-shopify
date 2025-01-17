@@ -153,7 +153,6 @@ class CartItems extends HTMLElement {
     try {  
       const cartResponse = await fetch('/cart.js');
       const cartData = await cartResponse.json();
-    
       let matchingProductLine = null;
       const mainProduct = cartData.items[line - 1];
   
@@ -165,8 +164,6 @@ class CartItems extends HTMLElement {
             item.id === 50607223603516 &&
             item.properties?.['Color'] === customColorValue
         );
-  
-        console.log('Matching Product:', matchingProduct);
   
         if (matchingProduct) {
           matchingProductLine = matchingProduct.key;
@@ -186,6 +183,7 @@ class CartItems extends HTMLElement {
                     },
                   }),
               })
+              
       }
   
       // Main product update
