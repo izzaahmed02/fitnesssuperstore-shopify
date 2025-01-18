@@ -81,6 +81,16 @@ window.addEventListener('DOMContentLoaded', async () => {
 	if (window.product) {
 		var product = await fetchProductDetailsWithMetafields(window.product.id)
 
+		const warrantySelect = document.querySelector('select[name="Warranty"]');
+
+		if (warrantySelect) {
+		  const warrantyParentContainer = warrantySelect.closest(".ap-options__select-container");
+	 
+		  if (warrantyParentContainer) {
+			warrantyParentContainer.style.display = "none";
+		  }
+		}
+		 
 		const metaField3rdParty = product.metafields.find(
             (metafield) => metafield.key === "3rd_party"
         );
@@ -354,16 +364,6 @@ try {
 			clearInterval(avisOptionsPolling);
 
 			document.querySelectorAll('.ap-label-tooltip').forEach(element => {
-				const warrantySelect = document.querySelector('select[name="Warranty"]');
-
-				if (warrantySelect) {
-				  const warrantyParentContainer = warrantySelect.closest(".ap-options__select-container");
-			 
-				  if (warrantyParentContainer) {
-					warrantyParentContainer.style.display = "none";
-				  }
-				}
-				 
 				const style = document.createElement('style');
 				style.textContent = `.ap-label-tooltip::after { display: none !important; }`;
 				document.head.appendChild(style);
