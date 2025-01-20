@@ -77,37 +77,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 	}
 
 	const pollingInterval = setInterval(checkForElements, 1000);
-	
-	if (window.product) {
-		var product = await fetchProductDetailsWithMetafields(window.product.id)
-
-		const warrantySelect = document.querySelector('select[name="Warranty"]');
-
-		if (warrantySelect) {
-		  const warrantyParentContainer = warrantySelect.closest(".ap-options__select-container");
-	 
-		  if (warrantyParentContainer) {
-			warrantyParentContainer.style.display = "none";
-		  }
-		}
-		 
-		const metaField3rdParty = product.metafields.find(
-            (metafield) => metafield.key === "3rd_party"
-        );
-
-		if (metaField3rdParty) {
-			var metaObject = await fetchProductMetaObject(metaField3rdParty.value);
-
-			const googleMaterial = metaObject.fields.find(
-				(metaObject) => metaObject.key === "google_material"
-			);
-
-			if (googleMaterial && googleMaterial.value.includes('display')) {
-				document.querySelector('.showroom').style.display = 'flex';
-				document.querySelector('.showroom-text').innerHTML = 'On Display at our Northern California Warehouse Showroom'
-			}
-		}
-	}
 });
 
 let optionProductsPopup = [];
@@ -357,11 +326,42 @@ try {
 			});
 		});
 
-		var avisOptionsPolling = setInterval(() => {
+		var avisOptionsPolling = setInterval(async () => {
 			if (!document.querySelector('.avpoptions-container__v2'))
 				return;
 
 			clearInterval(avisOptionsPolling);
+
+			const warrantySelect = document.querySelector('select[name="Warranty"]');
+		
+			if (warrantySelect) {
+			  const warrantyParentContainer = warrantySelect.closest(".ap-options__select-container");
+		 
+			  if (warrantyParentContainer) {
+				warrantyParentContainer.style.display = "none";
+			  }
+			}
+			 
+			if (window.product) {
+				var product = await fetchProductDetailsWithMetafields(window.product.id)
+
+				const metaField3rdParty = product.metafields.find(
+					(metafield) => metafield.key === "3rd_party"
+				);
+		
+				if (metaField3rdParty) {
+					var metaObject = await fetchProductMetaObject(metaField3rdParty.value);
+		
+					const googleMaterial = metaObject.fields.find(
+						(metaObject) => metaObject.key === "google_material"
+					);
+		
+					if (googleMaterial && googleMaterial.value.includes('display')) {
+						document.querySelector('.showroom').style.display = 'flex';
+						document.querySelector('.showroom-text').innerHTML = 'On Display at our Northern California Warehouse Showroom'
+					}
+				}
+			}
 
 			document.querySelectorAll('.ap-label-tooltip').forEach(element => {
 				const style = document.createElement('style');
