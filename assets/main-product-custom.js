@@ -82,15 +82,15 @@ window.addEventListener('DOMContentLoaded', async () => {
     
     function attachArrowHandlers() {
       document.querySelector('.next-arrow').addEventListener('click', () => {
-        currentPageIndex++; 
+		var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
+		currentPageIndex = activeIndex; 
         saOpenPage(currentPageIndex, sa_start_sort); 
       });
 
       document.querySelector('.prev-arrow').addEventListener('click', () => {
-        if (currentPageIndex > 0) {
-          currentPageIndex--; 
-          saOpenPage(currentPageIndex, sa_start_sort);
-        }
+		var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
+		currentPageIndex = activeIndex - 2; 
+		saOpenPage(currentPageIndex, sa_start_sort);
       });
     }
 
