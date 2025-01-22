@@ -130,31 +130,31 @@ window.addEventListener('DOMContentLoaded', async () => {
       const sortByDropdown = document.createElement('select');
       sortByDropdown.setAttribute('id', 'sortByDropdown');
       sortByDropdown.innerHTML = `
-        <option value="high"><span>Sort by: <b>Highest to Lowest</b></span></option>
-        <option value="low"><span>Sort by: <b>Lowest to Highest</b></span></option>
-        <option value="new"><span>Sort by: <b>Newest to Oldest</b></span></option>
-        <option value="old"><span>Sort by: <b>Oldest to Newest</b></span></option>
-        <option value="featured"><span>Sort by: <b>Favorite Reviews</b></span></option>
+        <option value="high">Sort by: Highest to Lowest</option>
+        <option value="low">Sort by: Lowest to Highest</option>
+        <option value="new">Sort by: Newest to Oldest</option>
+        <option value="old">Sort by: Oldest to Newest</option>
+        <option value="featured">Sort by: Favorite Reviews</option>
       `;
       dropdownContainer.appendChild(sortByDropdown);
       
       const showContainer = document.createElement('div');
       showContainer.setAttribute('class', 'show-dropdown-container');
       
-      const showLabel = document.createElement('label');
-      showLabel.setAttribute('for', 'showDropdown');
-      showLabel.textContent = 'Show';
-      showLabel.classList.add('show-label'); 
-      showContainer.appendChild(showLabel);
+    //   const showLabel = document.createElement('label');
+    //   showLabel.setAttribute('for', 'showDropdown');
+    //   showLabel.textContent = 'Show';
+    //   showLabel.classList.add('show-label'); 
+    //   showContainer.appendChild(showLabel);
       
-      const showDropdown = document.createElement('select');
-      showDropdown.setAttribute('id', 'showDropdown');
-      showDropdown.innerHTML = `
-        <option value="all">All Ratings</option>
-        <option value="5">5 Stars</option>
-        <option value="4">4 Stars</option>
-      `;
-      showContainer.appendChild(showDropdown);
+    //   const showDropdown = document.createElement('select');
+    //   showDropdown.setAttribute('id', 'showDropdown');
+    //   showDropdown.innerHTML = `
+    //     <option value="all">All Ratings</option>
+    //     <option value="5">5 Stars</option>
+    //     <option value="4">4 Stars</option>
+    //   `;
+    //   showContainer.appendChild(showDropdown);
       
       dropdownContainer.appendChild(showContainer);
        
@@ -187,65 +187,75 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     function registerCustomActionEvent() {
-      setTimeout(() => {
-		let sortByDropDownCurrentValue = '';
-		let showDropDownCurrentValue = '';
-
-        const sortByDropdown = document.getElementById('sortByDropdown');
-        const saSort = document.getElementById('sa_sort');
-		var showDropdownSelect = document.getElementById('showDropdown');
-
-		if (sortByDropdown) {
-			sortByDropDownCurrentValue = sortByDropdown.value;
-		}
-
-        if (sortByDropdown && saSort) {
-          const newSortByDropdown = sortByDropdown.cloneNode(true);
-
-		  if (sortByDropDownCurrentValue) {
-			newSortByDropdown.value = sortByDropDownCurrentValue;
-		  }  
-
-          sortByDropdown.parentNode.replaceChild(newSortByDropdown, sortByDropdown);
-    
-          newSortByDropdown.addEventListener('change', () => {
-            saSort.value = newSortByDropdown.value;
-    
-            const changeEvent = new Event('change');
-            saSort.dispatchEvent(changeEvent);
-    
-            registerCustomActionEvent();
-          });
-
-		  
-		if (showDropdownSelect) {
-			showDropDownCurrentValue = showDropdownSelect.value;
-		}
-
-		  const newShowDropdownSelect = showDropdownSelect.cloneNode(true);
-
-          showDropdownSelect.parentNode.replaceChild(newShowDropdownSelect, showDropdownSelect);
-
-		  if (showDropDownCurrentValue) {
-			newShowDropdownSelect.value = showDropDownCurrentValue;
-		  }  
-    
-		  newShowDropdownSelect.addEventListener('change', () => {
-			if (newShowDropdownSelect.value === '5') {
-				saSort.value = 'high';
-			} else if (newShowDropdownSelect.value === '4') {
-				saSort.value = 'low';
-			} else {
-				saSort.value = 'high';
+		setTimeout(() => {
+			let sortByDropDownCurrentValue = '';
+			let showDropDownCurrentValue = '';
+	
+			const sortByDropdown = document.getElementById('sortByDropdown');
+			const saSort = document.getElementById('sa_sort');
+			var showDropdownSelect = document.getElementById('showDropdown');
+	
+			if (sortByDropdown) {
+				sortByDropDownCurrentValue = sortByDropdown.value;
 			}
+	
+			if (sortByDropdown && saSort) {
+			  const newSortByDropdown = sortByDropdown.cloneNode(true);
+	
+			  sortByDropdown.value = saSort.value;
 
-            const changeEvent = new Event('change');
-            saSort.dispatchEvent(changeEvent);
-    
-            registerCustomActionEvent();
-		  });
-        }
-      }, 2000);
+			  sortByDropdown.parentNode.replaceChild(newSortByDropdown, sortByDropdown);
+		
+			  if (sortByDropDownCurrentValue) {
+				newSortByDropdown.value = sortByDropDownCurrentValue;
+			  }
+
+			  newSortByDropdown.addEventListener('change', () => {
+				if (saJQ('#review_header').length > 0) {
+					saJQ('html, body').animate({
+						scrollTop: saJQ('#review_header').offset().top
+					});
+				}
+				saJQ('#product_page').toggleClass('sa_loading_bg', true);
+				saJQ('#sa_review_section').animate({
+					opacity: 0
+				}, 300);
+				sort = newSortByDropdown.value;
+				var reverse = (typeof (sa_productreverse) == 'undefined') ? '' : '&reverse=' + sa_productreverse;
+				var productId = (typeof (sa_product) != 'undefined') ? sa_product : sa_productid;
+				saLoadScript(sa_host + 'widgets/' + sa_page + '.php?siteid=' + sa_siteid + '&productid=' + productId + '&page=0&sort=' + sort + reverse + '&loadnow=1' + '&rtype=' + sa_rtype);
+				registerCustomActionEvent();
+			  });
+	
+			  
+			// if (showDropdownSelect) {
+			// 	showDropDownCurrentValue = showDropdownSelect.value;
+			// }
+	
+			//   const newShowDropdownSelect = showDropdownSelect.cloneNode(true);
+	
+			//   showDropdownSelect.parentNode.replaceChild(newShowDropdownSelect, showDropdownSelect);
+	
+			//   if (showDropDownCurrentValue) {
+			// 	newShowDropdownSelect.value = showDropDownCurrentValue;
+			//   }  
+		
+			//   newShowDropdownSelect.addEventListener('change', () => {
+			// 	if (newShowDropdownSelect.value === '5') {
+			// 		saSort.value = 'high';
+			// 	} else if (newShowDropdownSelect.value === '4') {
+			// 		saSort.value = 'low';
+			// 	} else {
+			// 		saSort.value = 'high';
+			// 	}
+	
+			// 	const changeEvent = new Event('change');
+			// 	saSort.dispatchEvent(changeEvent);
+		
+			// 	registerCustomActionEvent();
+			//   });
+			}
+		}, 1000);
     }
     
     registerSAReviewsPolling();
