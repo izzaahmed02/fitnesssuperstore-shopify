@@ -189,9 +189,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     function registerCustomActionEvent() {
       setTimeout(() => {
 		let sortByDropDownCurrentValue = '';
+		let showDropDownCurrentValue = '';
 
         const sortByDropdown = document.getElementById('sortByDropdown');
         const saSort = document.getElementById('sa_sort');
+		var showDropdownSelect = document.getElementById('showDropdown');
 
 		if (sortByDropdown) {
 			sortByDropDownCurrentValue = sortByDropdown.value;
@@ -214,6 +216,34 @@ window.addEventListener('DOMContentLoaded', async () => {
     
             registerCustomActionEvent();
           });
+
+		  
+		if (showDropdownSelect) {
+			showDropDownCurrentValue = showDropdownSelect.value;
+		}
+
+		  const newShowDropdownSelect = showDropdownSelect.cloneNode(true);
+
+          showDropdownSelect.parentNode.replaceChild(newShowDropdownSelect, showDropdownSelect);
+
+		  if (showDropDownCurrentValue) {
+			newShowDropdownSelect.value = showDropDownCurrentValue;
+		  }  
+    
+		  newShowDropdownSelect.addEventListener('change', () => {
+			if (newShowDropdownSelect.value === '5') {
+				saSort.value = 'high';
+			} else if (newShowDropdownSelect.value === '4') {
+				saSort.value = 'low';
+			} else {
+				saSort.value = 'high';
+			}
+
+            const changeEvent = new Event('change');
+            saSort.dispatchEvent(changeEvent);
+    
+            registerCustomActionEvent();
+		  });
         }
       }, 2000);
     }
