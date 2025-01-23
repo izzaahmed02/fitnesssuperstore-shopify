@@ -178,7 +178,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   
     function registerSAReviewsPolling() {
       const interval = setInterval(function () {
-        const reviewSection = document.querySelector("#sa_review_paging");\
+        const reviewSection = document.querySelector("#sa_review_paging");
 		if (reviewSection) {
 			addCustomActions();
 
