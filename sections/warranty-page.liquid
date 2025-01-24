@@ -7,6 +7,10 @@
     padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
   }
 
+  #MainContent .shopify-section:nth-child(1) {
+    background: none;
+  }
+
   @media screen and (min-width: 750px) {
     .section-{{ section.id }}-padding {
       padding-top: {{ section.settings.padding_top }}px;
@@ -18,6 +22,8 @@
 {% liquid
   assign info = page.metafields.custom.warranty_info.value
   assign badges = page.metafields.custom.badges.value
+  assign badges_desktop_title = page.metafields.custom.badges_desktop_title
+  assign badges_mobile_title = page.metafields.custom.badges_mobile_title
 %}
 
 <div class="gradient">
@@ -60,7 +66,8 @@
 
     {% if badges != blank %}
       <div class="warranty_badges-wrapper">
-        <h2 class="warranty_badges_title">Click on a warranty badge below for details</h2>
+        <h2 class="warranty_badges_title desktop">{{ badges_desktop_title }}</h2>
+        <h2 class="warranty_badges_title mobile">{{ badges_mobile_title }}</h2>
         <ul class="warranty_badges-container">
           {% for badge in badges %}
             <li class="warranty_badge">
