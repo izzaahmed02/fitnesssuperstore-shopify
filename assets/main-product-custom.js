@@ -790,14 +790,21 @@ function setupOptionsHandler() {
 		selectedOptionsContainer.classList.add('selected_options_container');
 		optionLabel.append(selectedOptionsContainer);
 	
+		const swatchContainer = optionContainer.querySelector('.ap-options__swatch')
+			
 		optionContainer.querySelectorAll('.avp-productoptionswatchwrapper').forEach(wrapper => {
 			wrapper.addEventListener('click', event => {
 				const input = wrapper.querySelector('input[type="radio"]');
+
+				const allInputs = Array.from(swatchContainer?.querySelectorAll('input[type="radio"]'));
+
+				const inputIndex = allInputs.indexOf(input);
+				
 				const inputTextValue = input.value;
 				let inputMoneyValue;
-	
+
 				if (inputTextValue != 'No Thanks') {
-					inputMoneyValue = input.parentElement.querySelector('.swatch-variant-title .money').innerText.replace('(', '').replace(')', '').replace('+', '');
+					inputMoneyValue = input?.parentElement?.querySelector('.swatch-variant-title .money')?.innerText.replace('(', '').replace(')', '').replace('+', '');
 				} else {
 					inputMoneyValue = Shopify.currency.active == 'USD' ? "$0" : ''
 				}
@@ -805,17 +812,15 @@ function setupOptionsHandler() {
 				const selectedOptionHTML = `
 					<div class="option_selected-container">
 						<p class="option_selected">${inputTextValue}</p>
-						<span class="option_selected-price">${inputMoneyValue}</span>
-						<svg class="remove-icon" data-value="${inputTextValue}" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg">
+						${inputMoneyValue ? `<span class="option_selected-price">${inputMoneyValue}</span>` : ''}
+						<svg class="remove-icon" data-value="${inputIndex}" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg">
 							<path fill-rule="evenodd" clip-rule="evenodd" d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z" fill="black"/>
 						</svg>
 					</div>
 				`;
 	
 				if (input.checked) {
-					const escapedValue = escapeSelector(inputTextValue);
-
-					if (!selectedOptionsContainer?.querySelector(`[data-value="${escapedValue}"]`)) {
+					if (!selectedOptionsContainer?.querySelector(`[data-value="${inputIndex}"]`)) {
 						selectedOptionsContainer.innerHTML = selectedOptionHTML;
 					}
 	
@@ -834,47 +839,31 @@ function setupOptionsHandler() {
 							event.stopPropagation();
 							const optionSelectedContainer = event.target.closest('.option_selected-container');
 							if (optionSelectedContainer) {
-								const value = icon.getAttribute('data-value');
+								const value = parseInt(icon.getAttribute('data-value'));
 	
-								const relatedInput = Array.from(optionContainer.querySelectorAll('input[type="radio"]')).find(
-									input => input.value === value
-								);
+								const relatedInput = optionContainer.querySelectorAll('.avp-productoptionswatchwrapper input[type="radio"]')[value];
+
 								if (relatedInput) {
 									relatedInput.checked = false;
 									relatedInput.dispatchEvent(new Event('change', {
 										bubbles: true
 									}));
+									optionSelectedContainer.remove();
+									wrapper.setAttribute("style", "border: 1px solid #E5E5E5 !important;");
 								}
 							}
 						});
 					})
 	
 				} else {
-					const optionToRemove = selectedOptionsContainer.querySelector(`[data-value="${inputTextValue}"]`);
+					const optionToRemove = selectedOptionsContainer.querySelector(`[data-value="${inputIndex}"]`);
 					if (optionToRemove) {
 						optionToRemove.closest('.option_selected-container').remove();
 					}
 	
-					wrapper.setAttribute("style", "border: 1px solid #E5E5E5 !important;");
-				}
-			});
-		});
-	
-		optionContainer.querySelectorAll('input[type="radio"]').forEach(input => {
-			input.addEventListener('change', event => {
-				const wrapper = input.closest('.avp-productoptionswatchwrapper');
-				if (!input.checked) {
-					const optionToRemove = selectedOptionsContainer.querySelector(`[data-value="${input.value}"]`);
-					if (optionToRemove) {
-						optionToRemove.closest('.option_selected-container').remove();
-					}
 					wrapper.setAttribute("style", "border: 1px solid #E5E5E5 !important;");
 				}
 			});
 		});
 	});
 }
-
-function escapeSelector(selector) {
-	return selector.replace(/([!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, '\\$1');
-  }
