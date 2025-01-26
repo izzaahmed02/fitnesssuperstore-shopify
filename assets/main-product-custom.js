@@ -185,6 +185,11 @@ window.addEventListener('DOMContentLoaded', async () => {
 			if (Object.keys(sa_product_reviews.high).length > sa_products_count) {
 				addPaginationArrows();
 			}
+
+			if (document.querySelector('.merchantheader')) {
+				document.querySelector('.sa-reviews').style.display = 'none';
+				document.querySelector('.available-wrap').style.flexDirection = 'row-reverse'
+			}
 		}
       }, 500);
     }
