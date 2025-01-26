@@ -643,10 +643,10 @@ try {
 			var ptIntervalTrigger = setInterval(() => {
 				var ptFrameContainer = document.querySelector('.__pt-iframe-container');
 				if (ptFrameContainer) {
-					document.querySelector('.paylater-container').style.display = 'flex';
 					var productPrice = parseFloat(document.querySelector('.hidden-product-price').innerHTML);
 					const priceInDollars = (productPrice / 100);
 					if (priceInDollars > 499) {
+						document.querySelector('.paylater-container').style.display = 'flex';
 						const monthlyPrice = PayTomorrow.getMonthlyPayment(priceInDollars, 48);
 						if (monthlyPrice) {
 							document.querySelector('.paylater-text').innerHTML = `<span>As low as $${monthlyPrice.toFixed(2)} / 4 interest-free payment</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -719,9 +719,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	
 				if (warrantySelect) {
 				  const warrantyParentContainer = warrantySelect.closest(".ap-options__select-container");
-			 
+					
 				  if (warrantyParentContainer) {
-					warrantyParentContainer.style.display = "none";
+					const selectOptions = warrantyParentContainer.querySelector('select').options.length;
+
+					if (selectOptions <= 1) {
+						warrantyParentContainer.style.display = "none";
+					}
 				  }
 				}
 				 
@@ -731,13 +735,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		
 				if (metaField3rdParty) {
 					fetchProductMetaObject(metaField3rdParty.value).then((metaObject) => {
-						const googleMaterial = metaObject.fields.find(
-							(metaObject) => metaObject.key === "google_material"
-						);
-			
-						if (googleMaterial && googleMaterial.value.includes('display')) {
-							document.querySelector('.showroom').style.display = 'flex';
-							document.querySelector('.showroom-text').innerHTML = 'On Display at our Northern California Warehouse Showroom'
+						if (metaObject.fields) {
+							const googleMaterial = metaObject.fields.find(
+								(metaObject) => metaObject.key === "google_material"
+							);
+				
+							if (googleMaterial && googleMaterial.value.includes('display')) {
+								document.querySelector('.showroom').style.display = 'flex';
+								document.querySelector('.showroom-text').innerHTML = 'On Display at our Northern California Warehouse Showroom'
+							}
 						}
 					});
 				}
