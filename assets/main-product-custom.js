@@ -719,21 +719,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		clearInterval(avisOptionsPolling);
 		
 		if (window.product) {
-			fetchProductDetailsWithMetafields(window.product.id).then((product) => {
-				const warrantySelect = document.querySelector('select[name="Warranty"]');
-	
-				if (warrantySelect) {
-				  const warrantyParentContainer = warrantySelect.closest(".ap-options__select-container");
-					
-				  if (warrantyParentContainer) {
-					const selectOptions = warrantyParentContainer.querySelector('select').options.length;
-
-					if (selectOptions <= 1) {
-						warrantyParentContainer.style.display = "none";
-					}
-				  }
-				}
-				 
+			fetchProductDetailsWithMetafields(window.product.id).then((product) => {	 
 				const metaField3rdParty = product.metafields.find(
 					(metafield) => metafield.key === "3rd_party"
 				);
