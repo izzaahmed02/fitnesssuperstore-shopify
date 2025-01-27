@@ -717,6 +717,22 @@ document.addEventListener('DOMContentLoaded', (event) => {
 			return;
 
 		clearInterval(avisOptionsPolling);
+
+		const warrantySelect = document.querySelector('select[name="Warranty"]');
+
+		const processingTimeSelect = document.querySelector('select[name="Processing Time"]');
+
+		if (warrantySelect) {
+		  const warrantyParentContainer = warrantySelect.closest(".ap-options__select-container");
+			
+		  if (warrantyParentContainer) {
+			const selectOptions = warrantyParentContainer.querySelector('select').options.length;
+
+			if (selectOptions <= 1) {
+				warrantyParentContainer.style.display = "none";
+			}
+		  }
+		}
 		
 		if (window.product) {
 			fetchProductDetailsWithMetafields(window.product.id).then((product) => {	 
