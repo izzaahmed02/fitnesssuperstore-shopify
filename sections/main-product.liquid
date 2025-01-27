@@ -1647,7 +1647,7 @@
     }
   })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
 </script>
-<script>
+<script defer>
   document.addEventListener("DOMContentLoaded", function () {
     let scrollTimeout;
 
@@ -1660,7 +1660,7 @@
             const stickyAddToCart = document.querySelector('.sticky-add-to-cart');
             const headerWrapper = document.querySelector('.header-wrapper');
             const headerBottom = headerWrapper.getBoundingClientRect().bottom;
-    
+          
             if (headerBottom <= 0) {
                 stickyAddToCart.style.display = 'block';
             } else {
@@ -1687,6 +1687,14 @@
         stickyQuantity.value = formQuantityInput.value;
       }
     });
+
+    if (!window.product.available) {
+      const stickyProductActions = document.querySelector('.sticky-product-actions');
+
+      if (stickyProductActions) {
+        stickyProductActions.innerHTML = `<div class="restock-rocket-button-container"><button class="restock-rocket-button restock-rocket-button-product restock-rocket-button-hover" style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;">Notify me when available</button><div class="restock-rocket-button-cover" style="position: absolute; inset: 0px; width: 100%; height: 100%; display: block; cursor: pointer; z-index: 600;"></div></div>`
+      }
+    }
   });
 
   function addToCart() {
