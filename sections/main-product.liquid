@@ -948,18 +948,22 @@
                                   assign quantity_rule_soldout = true
                                 endif
                               -%}
+                              {% if product.selected_or_first_available_variant.available == false
+                                or quantity_rule_soldout
+                                or product.selected_or_first_available_variant == null
+                              %}
+                             {%- endif -%}
+                             {% if product.selected_or_first_available_variant.available == false
+                              or quantity_rule_soldout
+                              or product.selected_or_first_available_variant == null
+                            %}
+                            <div class="restock-rocket-button-container"><button onclick="event.preventDefault();_RestockRocket.openModal()" class="sticky-restock-button restock-rocket-button restock-rocket-button-product restock-rocket-button-hover" style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;">Notify me when available</button></div>
+                            {%- else -%}
                               <button
                                 id="ProductSubmitButton-{{ section.id }}"
                                 type="submit"
                                 name="add"
-                                class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
-                                {% if product.selected_or_first_available_variant.available == false
-                                  or quantity_rule_soldout
-                                  or product.selected_or_first_available_variant == null
-                                %}
-                                  disabled
-                                {% endif %}
-                              >
+                                class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}">
                                 {% render 'icon-cart' %}
                                 <span>
                                   {%- if product.selected_or_first_available_variant == null -%}
@@ -974,6 +978,7 @@
                                 </span>
                                 {%- render 'loading-spinner' -%}
                               </button>
+                            {% endif %}
                             </div>
                           {%- endform -%}
                         {%- else -%}

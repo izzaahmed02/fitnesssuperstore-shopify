@@ -447,7 +447,7 @@ async function renderOptionPopupProducts(title) {
             : "No short description available.";
 
         const originalPrice = parseFloat(product.variants[0].price); 
-        const convertedPrice = (originalPrice * Shopify.currency.rate).toFixed(2); 
+        const price = Shopify.country !== 'US' ? (originalPrice * Shopify.currency.rate).toFixed(2) : originalPrice.toFixed(2); 
             
         contentHTML += `
           <div class="product-card" data-product-id="${product.id}">
@@ -455,7 +455,7 @@ async function renderOptionPopupProducts(title) {
             <h4 class="product-card__title">${product.title}</h4>
             <div class="product-card__mid">
                 <span class="product-card__code">#${product.variants[0].sku}</span>
-                <span class="product-card__price">${Shopify.currency.active} ${convertedPrice}</span>
+                <span class="product-card__price">${Shopify.currency.active} ${price}</span>
             </div>
             <p class="product-card__description">${shortDescription.substring(0, 150)}...</p>
             <a class="read-more-btn" data-id="${product.id}">Read more</a>
