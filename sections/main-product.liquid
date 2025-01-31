@@ -55,7 +55,8 @@
   .paylater-container {
     display: none;
     padding-bottom: 70px;
-    gap: 15px;
+    gap: 5px;
+    flex-direction: column;
   }
   .paylater-container .paylater-text {
       display: flex;
@@ -625,15 +626,18 @@
                       <s>{{ product.selected_or_first_available_variant.compare_at_price | money_with_currency -}}</s>
                     </span>
                   {% endif %}               
-                  <div class="pr_custom_price-container">
-                    <p class="pr_custom_price">
-                      {{ product.selected_or_first_available_variant.price | money }}
-                    </p>
+                  <div class="price-container">
+                    {%- render 'price',
+                      product: product,
+                      use_variant: true,
+                      show_badges: true,
+                      price_class: 'price--large'
+                    -%}
 
                     {% if product.selected_or_first_available_variant.compare_at_price
                         > product.selected_or_first_available_variant.price
                     %}
-                      <span
+                      <span class="you-save"
                         >You save
                         {{
                           product.selected_or_first_available_variant.compare_at_price
@@ -672,12 +676,11 @@
                   <div class="product_price_with_options-contaniner">
                     <div>
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
-                        {%- render 'price',
-                          product: product,
-                          use_variant: true,
-                          show_badges: true,
-                          price_class: 'price--large'
-                        -%}
+                        <div class="pr_custom_price-container">
+                          <p class="pr_custom_price">
+                            {{ product.selected_or_first_available_variant.price | money }}
+                          </p>
+                        </div>   
                       </div>
                       
                       {%- if product.quantity_price_breaks_configured? -%}
