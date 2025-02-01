@@ -1116,7 +1116,7 @@ function generateAfterPayPaymentTerms() {
 					currency: 'USD',
 				  })}</strong>
 			  </p>
-			  <p class="apr">monthly, 12% APR</p>
+			  <p class="apr">monthly, 9% APR</p>
 			  <p class="total">Total: ${parseFloat(payTomorrow24MosRate * 24).toLocaleString('en-US', {
 				style: 'currency',
 				currency: 'USD',
