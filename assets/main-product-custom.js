@@ -272,8 +272,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     
     registerSAReviewsPolling();
-
-	registerCustomActionEvent();
+	registerCustomActionEvent(); 
 });
 
 let optionProductsPopup = [];
@@ -625,7 +624,8 @@ try {
                                                     productDetailsDescriptionBody.innerHTML = productDetailsDescriptionBodyDiv.innerHTML;
                                                 })
                                             }
-                                        })
+                                        });
+										productCards[0]?.click();
                                     }
                                 } else {
                                     console.error('MainContent not found in the fetched HTML.');
