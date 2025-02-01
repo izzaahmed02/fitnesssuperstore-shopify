@@ -1105,7 +1105,7 @@ function generateAfterPayPaymentTerms() {
 
 	if (PayTomorrow) {
 		let productPrice = getProductPrice();  
-		let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 12});
+		let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 9});
 		
 		if (payTomorrow24MosRate) {
 			payTomorrowTermsHTML += `<div class="option">
