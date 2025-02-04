@@ -493,10 +493,15 @@ try {
 					var brand = currentProduct.vendor
 
 					if (customFieldvalue) {			
-						if (customFieldvalue == 'Warranty' && brand == 'French Fitness') {
+						if (customFieldvalue === 'Warranty' && brand === 'French Fitness') {
 							customFieldvalue = `${brand} ${customFieldvalue} Custom Field`
 						} else {
-							customFieldvalue += ' Custom Field';
+							if (customFieldvalue === 'Warranty') {
+								window.open(
+									"/pages/warranty", "_blank");
+							} else {
+								customFieldvalue += ' Custom Field';
+							}
 						}
 						
 						var product = await fetchProductByTitle(customFieldvalue);
