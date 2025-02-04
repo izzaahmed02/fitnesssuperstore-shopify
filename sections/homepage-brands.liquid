@@ -1,0 +1,102 @@
+{{ 'homepage-brands.css' | asset_url | stylesheet_tag }}
+
+<div class="page-width">
+    <div class="homepage-brands__wrapper">
+        <div class="homepage-brands__header">
+            <h2 class="homepage-brands__title">{{ section.settings.title }}</h2>
+            <a href="{{ section.settings.url }}"
+               class="homepage-brands__button button button--secondary">
+                {{ section.settings.label }}
+                {% render 'chevron-button' %}
+            </a>
+        </div>
+        <div class="homepage-brands__inner">
+            <div class="homepage-brands__slider swiper">
+                <div class="swiper-wrapper">
+                    {% for block in section.blocks %}
+                        <div class="homepage-brands__slide swiper-slide">
+                            <div class="homepage-brands__slide-img-wrapper">
+                                <img src="{{ block.settings.img | image_url: width: 400, height: 400 }}" alt=""
+                                     class="homepage-brands__slide-img">
+                            </div>
+                            <a href="{{ block.settings.url }}" class="homepage-brands__slide-link">
+                                <img src="{{ block.settings.logo | image_url: width: 200, height: 60 }}" alt=""
+                                     class="homepage-brands__slide-link-logo">
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="homepage-brands__slider-controls">
+                <a href="#" class="homepage-brands__slider-btn homepage-brands__slider-btn--prev swiper-button-prev">
+                    {% render 'chevron-button-prev' %}
+                </a>
+                <div class="swiper-pagination"></div>
+                <a href="#" class="homepage-brands__slider-btn homepage-brands__slider-btn--next swiper-button-next">
+                    {% render 'chevron-button-next' %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ 'homepage-brands.js' | asset_url }}" defer="defer"></script>
+
+{% schema %}
+{
+  "name": "Homepage Brands",
+  "tag": "section",
+  "class": "section homepage-brands",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section Title"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Section Button Label"
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "Section Button URL"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "brand",
+      "name": "Brand",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "img",
+          "label": "Brand Image"
+        },
+        {
+          "type": "image_picker",
+          "id": "logo",
+          "label": "Brand Logo"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "Brand URL"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Brands Slider"
+    }
+  ]
+}
+{% endschema %}

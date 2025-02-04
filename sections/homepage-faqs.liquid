@@ -1,0 +1,113 @@
+{{ 'homepage-faqs.css' | asset_url | stylesheet_tag }}
+{{ 'accordion.css' | asset_url | stylesheet_tag }}
+
+<style>
+    .accordion-content-inner a {
+        position: relative;
+        padding-right: 28px;
+        font-weight: 700;
+        font-size: 16px;
+        line-height: 24px;
+        color: #F1592A;
+        font-family: Lato, sans-serif;
+    }
+
+    .accordion-content-inner a:after {
+        position: absolute;
+        content: '';
+        width: 24px;
+        height: 24px;
+        background: url("{{ 'link-chevron.svg' |  asset_url }}");
+        top: -1px;
+        right: 0;
+    }
+</style>
+
+<div class="page-width">
+    <h2 class="homepage-faqs__title">{{ section.settings.title }}</h2>
+    <div class="homepage-faqs__accordions">
+        {% for block in section.blocks %}
+            <div class="homepage-faqs__accordion-item accordion">
+                <button
+                        class="accordion-header"
+                        type="button"
+                        aria-expanded="false"
+                        aria-controls="accordion-content-{{ forloop.index }}">
+                                <span class="accordion-title">
+                                  {{ block.settings.title }}
+                                </span>
+                    {% render 'chevron' %}
+                </button>
+                <div
+                        id="accordion-content-{{ forloop.index }}"
+                        class="accordion-content"
+                        aria-hidden="true"
+                >
+                    <div class="accordion-content-inner">
+                        {{ block.settings.copy }}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <a href="{{ section.settings.url }}" class="homepage-faqs__link">{{ section.settings.label }}
+        {% render 'chevron-button' %}
+    </a>
+</div>
+
+
+<script src="{{ 'accordion.js' | asset_url }}" defer="defer"></script>
+
+{% schema %}
+{
+  "name": "Homepage FAQS",
+  "tag": "section",
+  "class": "section homepage-faqs",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section Title"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Section Link Label"
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "Section Link URL"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "faq",
+      "name": "FAQ Item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "FAQ Item Title"
+        },
+        {
+          "type": "richtext",
+          "id": "copy",
+          "label": "FAQ Item Copy"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Homepage FAQS"
+    }
+  ]
+}
+{% endschema %}
