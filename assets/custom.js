@@ -1,240 +1,219 @@
 window.addEventListener('DOMContentLoaded', () => {
-    // FAQ
-    
-    let faqItems = document.querySelectorAll('.faq__item');
+  // FAQ
+  let faqItems = document.querySelectorAll('.faq__item');
 
-    if(faqItems.length){
-        faqItems.forEach((item)=>{
-            let contentELem = item.querySelector('.faq__item-content'); 
-            let btn = item.querySelector('.faq__item-btn'); 
+  if(faqItems.length){
+      faqItems.forEach((item)=>{
+          let contentELem = item.querySelector('.faq__item-content'); 
+          let btn = item.querySelector('.faq__item-btn'); 
 
-            btn.addEventListener('click',()=>{
-                if(!btn.classList.contains('opened')){
-                  setTimeout(() => {  
-                  btn.classList.add('opened');
-                    let height = contentELem.scrollHeight;
-                    contentELem.style.height = `${height}px`;
-                  }, 50);
-                }else{
-                    btn.classList.remove('opened');
-                    contentELem.style.height = '0px';
-                }
+          btn.addEventListener('click',()=>{
+              if(!btn.classList.contains('opened')){
+                btn.classList.add('opened');
+                let height = contentELem.scrollHeight;
+                contentELem.style.height = `${height}px`;
+              }else{
+                  btn.classList.remove('opened');
+                  contentELem.style.height = '0px';
+              }
 
-                if( !item.classList.contains('opened') ){
-                  item.classList.add('opened');
-                } else {
-                  item.classList.remove('opened');
-                }
-            })
-        })
-    }
-
-    // TABS SECTION
-    let tabsSections = document.querySelectorAll('[data-tabs-section');
-    
-    if(tabsSections.length){
-        tabsSections.forEach((section)=>{
-            const btns = section.querySelectorAll('.tab-btn');
-            const tabs = section.querySelectorAll('.tabs__item');
-
-            btns.forEach((btn)=>{
-                btn.addEventListener('click',()=>{
-                    let index = btn.getAttribute('data-index');
-                    let activeTab = section.querySelector(`.tabs__item[data-index="${index}"]`);
-
-                    if(activeTab){
-                        btns.forEach(button => button.classList.remove('active'));
-                        btn.classList.add('active');
-
-                        tabs.forEach(tab => tab.classList.remove('active'));
-                        activeTab.classList.add('active');
-
-                        setTimeout(()=>{
-                            tabs.forEach(tab => tab.classList.remove('visible'));
-                            activeTab.classList.add('visible');
-                        },100)
-                    }
-                })
-            })
-        })
-    }
-
-    if (window.innerWidth <= 749) {
-      let dropdownButtons = document.querySelectorAll('.dropdown-btn');
-  
-      if (dropdownButtons.length) {
-          dropdownButtons.forEach((btn) => {
-              let section = btn.nextElementSibling;
-              
-              btn.addEventListener('click', () => {
-                  if (section) {
-                      const isVisible = section.classList.contains('visible');
-                      const arrow = btn.querySelector('.dropdown-btn svg');
-                      
-                      if (!isVisible) {
-                          section.classList.add('visible');
-                          let height = section.scrollHeight;
-                          section.style.height = `${height}px`;
-                          arrow.style.transform = 'rotate(180deg)';
-                      } else {
-                        section.classList.remove('visible');
-                          section.style.height = "0";
-                          arrow.style.transform = 'rotate(0deg)';
-                      }
-                  }
-              });
-          });
-      }
-    }
-
-    // IMAGE WITH TEXT DROPDOWNS
-
-    let imageWithTextDropdownButtons = document.querySelectorAll('.image-with-text__dropdown-button');
-  
-    if (imageWithTextDropdownButtons.length) {
-      imageWithTextDropdownButtons.forEach((btn) => {
-            let section = btn.nextElementSibling;
-            
-            btn.addEventListener('click', () => {
-                if (section) {
-                    const isVisible = section.classList.contains('visible');
-                    const arrow = btn.querySelector('svg');
-                    
-                    if (!isVisible) {
-                        section.classList.add('visible');
-                        let height = section.scrollHeight;
-                        section.style.height = `${height}px`;
-                        arrow.style.transform = 'rotate(180deg)';
-                    } else {
-                      section.classList.remove('visible');
-                        section.style.height = "0";
-                        arrow.style.transform = 'rotate(0deg)';
-                    }
-                }
-            });
-        });
-    }
-
-
-    // SCROLL TO SECTION
-
-    let scrollToSectionBtns = document.querySelectorAll('[data-scroll-to-section]');
-
-    if(scrollToSectionBtns.length){
-        scrollToSectionBtns.forEach((btn)=>{
-            let id = btn.getAttribute('data-scroll-to-section');
-            let section = document.querySelector(`#${id}`);
-
-            btn.addEventListener('click',()=>{
-               if(section){
-                section.scrollIntoView({ behavior: "smooth", block: "start", inline: "start" });
-               }
-            })
-        })
-    }
-
-    class ScrollableFaq extends HTMLElement {  
-      constructor() {
-        super();
-        this.buttons = this.querySelectorAll('.scrollable-faq__nav button');
-        this.contentBlocks = this.querySelectorAll('.scrollable-faq__item');
-        this.activeClass = 'active';
-        this.offset = -10;
-        this.init();
-      }
-  
-      init(){
-          this.buttons.forEach((btn)=>{
-              let id = btn.getAttribute('data-scroll-to');
-              btn.addEventListener('click',()=>{this.scrollToElement(id)});
+              item.classList.toggle('opened');
           })
+      })
+  }
+
+  // TABS SECTION
+  let tabsSections = document.querySelectorAll('[data-tabs-section]');
   
-          window.addEventListener('scroll', () => this.handleScroll());
+  if(tabsSections.length){
+      tabsSections.forEach((section)=>{
+          const btns = section.querySelectorAll('.tab-btn');
+          const tabs = section.querySelectorAll('.tabs__item');
+
+          btns.forEach((btn)=>{
+              btn.addEventListener('click',()=>{
+                  let index = btn.getAttribute('data-index');
+                  let activeTab = section.querySelector(`.tabs__item[data-index="${index}"]`);
+
+                  if(activeTab){
+                      btns.forEach(button => button.classList.remove('active'));
+                      btn.classList.add('active');
+
+                      tabs.forEach(tab => tab.classList.remove('active'));
+                      activeTab.classList.add('active');
+
+                      tabs.forEach(tab => tab.classList.remove('visible'));
+                      activeTab.classList.add('visible');
+                  }
+              })
+          })
+      })
+  }
+
+  // MOBILE DROPDOWNS (Event Delegation)
+  document.body.addEventListener('click', (e) => {
+      const dropdownBtn = e.target.closest('.dropdown-btn');
+      if (dropdownBtn && window.innerWidth <= 749) {
+          const section = dropdownBtn.nextElementSibling;
+          if (section) {
+              const isVisible = section.classList.contains('visible');
+              const arrow = dropdownBtn.querySelector('svg');
+              
+              if (!isVisible) {
+                  section.classList.add('visible');
+                  section.style.height = `${section.scrollHeight}px`;
+                  if (arrow) arrow.style.transform = 'rotate(180deg)';
+              } else {
+                  section.classList.remove('visible');
+                  section.style.height = '0';
+                  if (arrow) arrow.style.transform = 'rotate(0deg)';
+              }
+          }
       }
-  
-      scrollToElement(id){
+  });
+
+  // IMAGE WITH TEXT DROPDOWNS
+  document.body.addEventListener('click', (e) => {
+      const btn = e.target.closest('.image-with-text__dropdown-button');
+      if (btn) {
+          const section = btn.nextElementSibling;
+          if (section) {
+              const isVisible = section.classList.contains('visible');
+              const arrow = btn.querySelector('svg');
+              
+              if (!isVisible) {
+                  section.classList.add('visible');
+                  section.style.height = `${section.scrollHeight}px`;
+                  if (arrow) arrow.style.transform = 'rotate(180deg)';
+              } else {
+                  section.classList.remove('visible');
+                  section.style.height = '0';
+                  if (arrow) arrow.style.transform = 'rotate(0deg)';
+              }
+          }
+      }
+  });
+
+  // SCROLL TO SECTION
+  let scrollToSectionBtns = document.querySelectorAll('[data-scroll-to-section]');
+
+  if(scrollToSectionBtns.length){
+      scrollToSectionBtns.forEach((btn)=>{
+          let id = btn.getAttribute('data-scroll-to-section');
+          let section = document.querySelector(`#${id}`);
+
+          btn.addEventListener('click',()=>{
+             if(section){
+              section.scrollIntoView({ behavior: "smooth", block: "start", inline: "start" });
+             }
+          })
+      })
+  }
+
+  class ScrollableFaq extends HTMLElement {  
+      constructor() {
+          super();
+          this.buttons = this.querySelectorAll('.scrollable-faq__nav button');
+          this.contentBlocks = this.querySelectorAll('.scrollable-faq__item');
+          this.activeClass = 'active';
+          this.offset = -10;
+          this.mediaQuery = window.matchMedia('(min-width: 750px)');
+          this.handleMediaChange = this.handleMediaChange.bind(this);
+          this.init();
+      }
+
+      init(){
+          this.mediaQuery.addListener(this.handleMediaChange);
+          this.handleMediaChange(this.mediaQuery);
+      }
+
+      handleMediaChange(e) {
+          if (e.matches) {
+              this.buttons.forEach(btn => {
+                  const id = btn.getAttribute('data-scroll-to');
+                  btn.addEventListener('click', () => this.scrollToElement(id));
+              });
+              window.addEventListener('scroll', this.handleScroll);
+          } else {
+              this.buttons.forEach(btn => {
+                  const id = btn.getAttribute('data-scroll-to');
+                  btn.removeEventListener('click', () => this.scrollToElement(id));
+              });
+              window.removeEventListener('scroll', this.handleScroll);
+          }
+      }
+
+      scrollToElement(id) {
           const element = document.querySelector(`#${id}`);
           if (element) {
               const elementTop = element.getBoundingClientRect().top + window.scrollY;
-  
               window.scrollTo({
                   top: elementTop - this.offset,
                   behavior: 'smooth'
               });
           }
       }
-  
-      handleScroll() {
-         const scrollPosition = window.scrollY + this.offset;
-  
-         this.contentBlocks.forEach((block, index) => {
-             const blockTop = block.offsetTop;
-             const blockBottom = blockTop + block.offsetHeight;
-  
-             if (scrollPosition >= (blockTop - 50 ) && scrollPosition < blockBottom) {
-                 
-                 this.setActiveButton(index);
-             }
-         });
+
+      handleScroll = () => {
+          if (window.innerWidth <= 749) return;
+          const scrollPosition = window.scrollY + this.offset;
+          this.contentBlocks.forEach((block, index) => {
+              const blockTop = block.offsetTop;
+              const blockBottom = blockTop + block.offsetHeight;
+              if (scrollPosition >= (blockTop - 50) && scrollPosition < blockBottom) {
+                  this.setActiveButton(index);
+              }
+          });
       }
-  
+
       setActiveButton(activeIndex) {
-          this.buttons.forEach((btn) => btn.classList.remove(this.activeClass));
-  
+          this.buttons.forEach(btn => btn.classList.remove(this.activeClass));
           this.buttons[activeIndex].classList.add(this.activeClass);
       }
-    
-    }
 
-    if (window.innerWidth > 749) {
-      customElements.define("scrollable-faq", ScrollableFaq);
-    }
-
-  if (window.innerWidth <= 749) {
-    let scrollToSectionButtons = document.querySelectorAll('[data-scroll-to-mobile]');
-
-    if (scrollToSectionButtons.length) {
-        scrollToSectionButtons.forEach((btn) => {
-
-            let id = btn.getAttribute('data-scroll-to-mobile');
-            let section = document.querySelector(`#${id}`);
-            
-            btn.addEventListener('click', () => {
-                if (section) {
-                    const isVisible = section.classList.contains('visible');
-                    const arrow = btn.querySelector('.scrollable-faq__arrow');
-                    
-                    if (!isVisible) {
-                        section.classList.add('visible');
-                        let height = section.scrollHeight;
-                        section.style.height = `${height}px`;
-                        arrow.style.transform = 'rotate(180deg)';
-
-                        // section.scrollIntoView({ behavior: "smooth", block: "start", inline: "start" });
-                    } else {
-                      section.classList.remove('visible');
-                      section.style.height = '0';
-                      arrow.style.transform = 'rotate(0deg)';
-                    }
-                }
-            });
-        });
-    }
+      disconnectedCallback() {
+          this.mediaQuery.removeListener(this.handleMediaChange);
+          window.removeEventListener('scroll', this.handleScroll);
+      }
   }
+
+  customElements.define("scrollable-faq", ScrollableFaq);
+
+  // MOBILE SCROLL TO SECTION (Event Delegation)
+  document.body.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-scroll-to-mobile]');
+      if (btn && window.innerWidth <= 749) {
+          const id = btn.getAttribute('data-scroll-to-mobile');
+          const section = document.querySelector(`#${id}`);
+          if (section) {
+              const isVisible = section.classList.contains('visible');
+              const arrow = btn.querySelector('.scrollable-faq__arrow');
+              
+              if (!isVisible) {
+                  section.classList.add('visible');
+                  section.style.height = `${section.scrollHeight}px`;
+                  if (arrow) arrow.style.transform = 'rotate(180deg)';
+              } else {
+                  section.classList.remove('visible');
+                  section.style.height = '0';
+                  if (arrow) arrow.style.transform = 'rotate(0deg)';
+              }
+          }
+      }
+  });
 
   // Calculate order form (body scrolling prevent)
   const calculateButtons = document.querySelectorAll('.button.globo-formbuilder-open');
   calculateButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelector('body').style.overflow = 'hidden';
-
-      setTimeout(() => {
-        const closeCalculateFormBtn = document.querySelector('.header.dismiss');
-      closeCalculateFormBtn.addEventListener('click', () => {
-        document.querySelector('body').style.overflow = 'auto';
-      })
-      }, 500)
-    })
+      btn.addEventListener('click', () => {
+          document.body.style.overflow = 'hidden';
+          const closeCalculateFormBtn = document.querySelector('.header.dismiss');
+          if (closeCalculateFormBtn) {
+              closeCalculateFormBtn.addEventListener('click', () => {
+                  document.body.style.overflow = 'auto';
+              }, { once: true });
+          }
+      });
   });
 
   const link = document.getElementById('paytomorrow-link');
@@ -249,95 +228,63 @@ window.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  // MENU MOBILE ACCORDION
-
-  const menuAccordionButtons = document.querySelectorAll('.accordion-item');
-
-if (menuAccordionButtons.length) {
-    menuAccordionButtons.forEach((btn) => {
-        const content = btn.nextElementSibling;
-
-        btn.addEventListener('click', () => {
-            if (content) {
-                const isVisible = content.classList.contains('visible');
-                const plus = btn.querySelector('.icon-plus');
-                const minus = btn.querySelector('.icon-minus');
-                const arrow = btn.querySelector('.arrow');
-
-                if (!isVisible) {
-                    content.classList.add('visible');
-                    let height = content.scrollHeight;
-                    content.style.height = `${height}px`;
-
-                    if (plus && minus) {
+  // MENU MOBILE ACCORDION (Event Delegation)
+  document.body.addEventListener('click', (e) => {
+      const btn = e.target.closest('.accordion-item');
+      if (btn) {
+          const content = btn.nextElementSibling;
+          if (content) {
+              const isVisible = content.classList.contains('visible');
+              const plus = btn.querySelector('.icon-plus');
+              const minus = btn.querySelector('.icon-minus');
+              const arrow = btn.querySelector('.arrow');
+              
+              if (!isVisible) {
+                  content.classList.add('visible');
+                  content.style.height = `${content.scrollHeight}px`;
+                  if (plus && minus) {
                       plus.style.display = 'none';
                       minus.style.display = 'block';
-                    } else if (arrow) {
+                  } else if (arrow) {
                       arrow.style.transform = 'rotate(180deg)';
-                    }
-                } else {
-                    content.classList.remove('visible');
-                    content.style.height = '0';
-
-                    if (plus && minus) {
+                  }
+              } else {
+                  content.classList.remove('visible');
+                  content.style.height = '0';
+                  if (plus && minus) {
                       plus.style.display = 'block';
                       minus.style.display = 'none';
-                    } else if (arrow) {
+                  } else if (arrow) {
                       arrow.style.transform = 'rotate(0deg)';
-                    }
-                }
-            }
-        });
-    });
-}
+                  }
+              }
+          }
+      }
+  });
 
-const thirdLevelButtons = document.querySelectorAll('.accordion-item--second-level');
+  // Update heights on resize for open elements
+  function updateHeights() {
+      document.querySelectorAll('.faq__item.opened .faq__item-content').forEach(content => {
+          content.style.height = `${content.scrollHeight}px`;
+      });
+      document.querySelectorAll('.visible').forEach(section => {
+          if (window.getComputedStyle(section).overflowY === 'hidden') {
+              section.style.height = `${section.scrollHeight}px`;
+          }
+      });
+  }
 
-if (thirdLevelButtons.length) {
-    thirdLevelButtons.forEach((btn) => {
-        const thirdLevelContent = btn.nextElementSibling;
-        const parentContainer = thirdLevelContent.closest('.menu--second-level').parentElement;
-        const plusIcon = btn.querySelector('.icon-plus');
-        const minusIcon = btn.querySelector('.icon-minus');
-        const arrowIcon = btn.querySelector('.arrow');
-
-        btn.addEventListener('click', () => {
-            if (thirdLevelContent) {
-                const isVisible = thirdLevelContent.classList.contains('visible');
-
-                if (!isVisible) {
-                    thirdLevelContent.classList.add('visible');
-                    thirdLevelContent.style.maxHeight = `${thirdLevelContent.scrollHeight}px`;
-                    parentContainer.style.height = 'auto';
-                    if (plusIcon && minusIcon) {
-                      plusIcon.style.display = 'none';
-                      minusIcon.style.display = 'block';
-                    } else if (arrowIcon) {
-                      arrowIcon.style.transform = 'rotate(180deg)';
-                    }
-                    
-                } else {
-                    thirdLevelContent.classList.remove('visible');
-                    thirdLevelContent.style.maxHeight = '0';
-                    if (plusIcon && minusIcon) {
-                      plusIcon.style.display = 'block';
-                      minusIcon.style.display = 'none';
-                    } else if (arrowIcon) {
-                      arrowIcon.style.transform = 'rotate(0deg)';
-                    }
-                }
-            }
-        });
-
-        thirdLevelContent.addEventListener('transitionend', () => {
-            if (!thirdLevelContent.classList.contains('visible')) {
-                thirdLevelContent.style.maxHeight = null;
-            }
-        });
-    });
-}
-
+  const debouncedResize = debounce(updateHeights, 250);
+  window.addEventListener('resize', debouncedResize);
 });
+
+function debounce(func, timeout = 250) {
+  let timer;
+  return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  };
+}
 
 
 // GRID INFO BLOCKS SCROLLING LOGIC
