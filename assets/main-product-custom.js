@@ -654,9 +654,8 @@ try {
 			var afterPayIntervalTrigger = setInterval(() => {
 				var afterPayModalContainer = document.querySelector('afterpay-modal');
 				if (afterPayModalContainer) {
-					var productPrice = parseFloat(document.querySelector('.hidden-product-price').innerHTML);
-					const priceInDollars = (productPrice / 100);
-					if (priceInDollars >= 400) {
+					var productPrice = getProductPrice();
+					if (productPrice >= 400) {
 						let payLaterText = '';
 						const afterPayElement = document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML;
 
@@ -697,6 +696,23 @@ try {
 				  clearInterval(afterPayIntervalTrigger)
 				}
 			}, 500)
+
+			//todo
+				const targetNode = document.querySelector('.pr_custom_price');
+
+				const observerCallback = (mutationsList, observer) => {
+				  for (const mutation of mutationsList) {
+					if (mutation.type === 'characterData') {
+					
+					}
+				  }
+				};
+			
+				const observer = new MutationObserver(observerCallback);
+		
+				const config = { characterData: true };
+			
+				observer.observe(targetNode, config);
 		}
 
         function removeEmptyElements(element) {
@@ -1000,10 +1016,11 @@ function showPayLaterModal() {
 }
 
 function generatePayLaterAggregate() {
-	let productPriceElement = document.querySelector('.hidden-product-price-formatted').innerHTML;
+	const priceElement = document.querySelector('.pr_custom_price');
+	const cleanedPrice = priceElement.textContent.replace(/[^\d,\.]/g, '');
 	let buyNowPayLaterHTML = `<div class="buy-now-pay-later">
 	<h1 class="title">BUY NOW. PAY LATER.</h1>
-	<p class="price">Purchase price: <strong>$${productPriceElement}</strong>
+	<p class="price">Purchase price: <strong>$${cleanedPrice}</strong>
 	</p>
 	<p class="description"> Select Affirm, Klarna, Afterpay or Paytomorrow as your payment method at checkout to pay in installments. </p>
 	<div class="steps-container">
@@ -1252,8 +1269,9 @@ function generateAfterPayPaymentTerms() {
   }
 
   function getProductPrice() {
-	const productPriceElement = document.querySelector('.hidden-product-price-formatted').innerHTML;
-	const formattedProductPrice = productPriceElement.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]  
+    const priceElement = document.querySelector('.pr_custom_price').innerText;
+
+	const formattedProductPrice = priceElement.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]  
 	.replace(/,/g, '') 
 	.replace(/(\.\d*?[1-9])0+$/, '$1') 
 	.replace(/\.0+$/, ''); 
