@@ -1068,10 +1068,8 @@ function generateAfterPayPaymentTerms() {
         let currentPrice = matchPrice ? parseFloat(matchPrice[0]) : null;
 
 		if (currentPrice) {
-		  let afterPayTermsHTML = ``
-           
+		  let afterPayTermsHTML = ``       
 		  let productPrice = getProductPrice();
-  
 		  let afterPay12MosRate = computeAfterPayLoanDetails(productPrice, currentPrice, 12, 12)
 
           if (afterPay12MosRate) {
