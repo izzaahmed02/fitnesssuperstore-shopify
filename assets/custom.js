@@ -279,26 +279,28 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const pricingReferenceLink = document.querySelector('a[href="#pricing-reference"]');
 
-  pricingReferenceLink.addEventListener('click', (event) => {
-    const container = document.getElementById('dynamic-product-content');
-    const modalWrapper = document.querySelector('.modal-wrapper');
-
-    modalWrapper.style.display = 'flex';
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = pricingRefenceModalContent;
-    const mainContent = tempDiv;
-    container.innerHTML = mainContent.innerHTML + `<span class="modal-close"><svg aria-hidden="true" focusable="false" width="12" height="13" class="icon icon-close-small" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8.48627 9.32917L2.82849 3.67098" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2.88539 9.38504L8.42932 3.61524" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </span>`;
-
-    const closeModalButton = container.querySelector('.modal-close');
-
-    closeModalButton.addEventListener('click', () => {
-        modalWrapper.style.display = 'none';
-    });
-  })
+  if (pricingReferenceLink) {
+    pricingReferenceLink.addEventListener('click', (event) => {
+        const container = document.getElementById('dynamic-product-content');
+        const modalWrapper = document.querySelector('.modal-wrapper');
+    
+        modalWrapper.style.display = 'flex';
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = pricingRefenceModalContent;
+        const mainContent = tempDiv;
+        container.innerHTML = mainContent.innerHTML + `<span class="modal-close"><svg aria-hidden="true" focusable="false" width="12" height="13" class="icon icon-close-small" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8.48627 9.32917L2.82849 3.67098" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2.88539 9.38504L8.42932 3.61524" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>`;
+    
+        const closeModalButton = container.querySelector('.modal-close');
+    
+        closeModalButton.addEventListener('click', () => {
+            modalWrapper.style.display = 'none';
+        });
+      })
+  }
 });
 
 function debounce(func, timeout = 250) {

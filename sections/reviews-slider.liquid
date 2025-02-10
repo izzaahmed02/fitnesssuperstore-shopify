@@ -7,7 +7,7 @@
   
     try {
       // Fetch aggregated reviews
-      const aggrReviewsResponse = await fetch('https://fitnesssuperstore-api.azurewebsites.net/api/reviews/aggregatedreviews');
+      const aggrReviewsResponse = await fetch('https://localhost:52417/api/reviews/aggregatedreviews');
       if (aggrReviewsResponse.ok) {
         aggrReviews = await aggrReviewsResponse.json();
       } else {
@@ -94,26 +94,32 @@
     {% endif %}
     });
   
-    // Implement "Read More" functionality
     const reviewTexts = document.querySelectorAll(".review-text");
     reviewTexts.forEach(function (reviewText) {
       const maxLines = 3;
-      const lineHeight = parseInt(window.getComputedStyle(reviewText).lineHeight);
+      const lineHeight = parseInt(window.getComputedStyle(reviewText).lineHeight) || 20; // Fallback for line height
       const maxHeight = lineHeight * maxLines;
       const readMoreBtn = reviewText.nextElementSibling;
-  
+    
       if (reviewText.scrollHeight > maxHeight) {
         reviewText.style.maxHeight = `${maxHeight}px`;
         reviewText.style.overflow = "hidden";
         readMoreBtn.style.display = "inline";
-  
+    
         let isExpanded = false;
+    
         readMoreBtn.addEventListener("click", function () {
+          const reviewItem = reviewText.closest(".review-item");
           if (isExpanded) {
             reviewText.style.maxHeight = `${maxHeight}px`;
+            reviewText.style.overflow = "hidden";
+            reviewItem.style.overflowY = "hidden";
             readMoreBtn.textContent = "Read more";
           } else {
             reviewText.style.maxHeight = `${reviewText.scrollHeight}px`;
+            reviewText.style.height = `${reviewText.scrollHeight}px`;
+            reviewText.style.overflow = "visible";
+            reviewItem.style.overflowY = "scroll";
             readMoreBtn.textContent = "Show less";
           }
           isExpanded = !isExpanded;
@@ -128,7 +134,7 @@
     document.addEventListener('shopify:section:load', async () => {
       const reviewsWrapper = document.querySelector('.reviews-slider');
       
-      const aggrReviewsResponse = await fetch('https://fitnesssuperstore-api.azurewebsites.net/api/reviews/aggregatedreviews');
+      const aggrReviewsResponse = await fetch('https://localhost:52417/api/reviews/aggregatedreviews');
       if (aggrReviewsResponse.ok) {
         const aggrReviews = await aggrReviewsResponse.json();
     
