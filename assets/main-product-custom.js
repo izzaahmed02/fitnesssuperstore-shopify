@@ -1,6 +1,5 @@
 const container = document.getElementById('dynamic-product-content');
 const modalWrapper = document.querySelector('.modal-wrapper');
-const modalContent = document.querySelector('#dynamic-product-content');
 const closeIconTemplate = document.getElementById('icon-close-template').innerHTML;
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -646,7 +645,7 @@ try {
 			modalWrapper.style.display = 'none';
 		});
 
-		modalContent.addEventListener('click', (event) => {
+		container.addEventListener('click', (event) => {
 			event.stopPropagation();
 		});
 
