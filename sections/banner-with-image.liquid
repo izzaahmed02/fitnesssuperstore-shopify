@@ -1,0 +1,146 @@
+{{ 'section-banner-with-image.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top | times: 0.6 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round: 0 }}px;
+
+    --background-image: url({{ section.settings.background_image | img_url: '' }});
+    --background-color: {{ section.settings.background_color }};
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="banner-with-image section-{{ section.id }} page-width">
+  <div class="banner-with-image__container {% if section.settings.background_image != empty %}banner-with-image__container--image{% endif %}">
+    {% for block in section.blocks %}
+      {% case block.type %}
+        {% when 'heading' %}
+          {% if block.settings.text != empty %}
+            <h2 class="banner-with-image__heading">{{ block.settings.text }}</h2>
+          {% endif %}
+
+        {% when 'text' %}
+          {% if block.settings.text != empty %}
+            <p class="banner-with-image__text">{{ block.settings.text }}</p>
+          {% endif %}
+
+        {% when 'button' %}
+          {% if block.settings.label != empty %}
+            <a href="{{ block.settings.url }}" class="button banner-with-image__button">
+              {{ block.settings.label }}
+
+              <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M9.96967 5.46967C10.2626 5.17678 10.7374 5.17678 11.0303 5.46967L17.0303 11.4697C17.3232 11.7626 17.3232 12.2374 17.0303 12.5303L11.0303 18.5303C10.7374 18.8232 10.2626 18.8232 9.96967 18.5303C9.67678 18.2374 9.67678 17.7626 9.96967 17.4697L15.4393 12L9.96967 6.53033C9.67678 6.23744 9.67678 5.76256 9.96967 5.46967Z" fill="white"/>
+              </svg>
+            </a>
+          {% endif %}
+      {% endcase %}
+    {% endfor %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Banner with image",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background image"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#EDEFF3"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 80
+    }
+  ],
+  "blocks": [
+    {
+      "type": "heading",
+      "name": "Heading",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Heading"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Text",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Lorem ipsum"
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "name": "Button",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Button"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "URL"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Banner with image"
+    }
+  ]
+}
+{% endschema %}

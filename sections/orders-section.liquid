@@ -1,0 +1,908 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.account-pages-link');
+        console.log(tabs);
+        const contents = document.querySelectorAll('.tab-content');
+        console.log(contents);
+        function activateTab(targetId) {
+          contents.forEach(content => content.classList.remove('active'));
+          
+          
+          
+          const targetContent = document.getElementById(targetId);
+          if (targetContent) {
+            targetContent.classList.add('active');
+          }
+        }
+        
+        tabs.forEach(tab => {
+          tab.addEventListener('click', function (event) {
+            
+            const targetId = tab.getAttribute('data-target');
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tab.classList.add('active');
+            
+            activateTab(targetId);
+          });
+        });
+        
+        if (tabs.length > 0) {
+          tabs[0].click();
+        }
+
+        const datailsBtns = document.querySelectorAll('.details-btn');
+        const datailsBlocks = document.querySelectorAll('.detail-info-column .detail-info');
+        datailsBtns.forEach((item,index) => {
+          item.addEventListener('click', function (event) {
+            datailsBlocks[index].classList.toggle('active');
+          });
+        });
+  
+        document.getElementById('sortOrders').addEventListener('change', function() {
+        const orderList = document.querySelector('.order-history tbody');
+        const rows = Array.from(orderList.querySelectorAll('tr[data-date]'));
+        const isNewest = this.value === 'newest';
+    
+        rows.sort((a, b) => {
+          const dateA = parseInt(a.getAttribute('data-date'));
+          const dateB = parseInt(b.getAttribute('data-date'));
+          return isNewest ? dateB - dateA : dateA - dateB;
+        });
+    
+        // Clear the table body and append sorted rows
+        orderList.innerHTML = '';
+        rows.forEach(row => orderList.appendChild(row));
+      });
+
+          const rows = document.querySelectorAll('.order-history tbody tr');
+          const loadMoreBtn = document.getElementById('loadMoreBtn');
+          let visibleRows = 6;
+      
+      
+          for (let i = 0; i < rows.length; i++) {
+            if (i < visibleRows) {
+              rows[i].style.display = '';
+            } else {
+              rows[i].style.display = 'none';
+            }
+          }
+      
+          loadMoreBtn.addEventListener('click', function() {
+          
+            if (loadMoreBtn.textContent === 'Load More') {
+              visibleRows = rows.length; 
+              loadMoreBtn.textContent = 'Show Less';
+            } else {
+              visibleRows = 3; 
+              loadMoreBtn.textContent = 'Load More';
+            }
+      
+      
+            for (let i = 0; i < rows.length; i++) {
+              if (i < visibleRows) {
+                rows[i].style.display = '';
+              } else {
+                rows[i].style.display = 'none';
+              }
+            }
+          });
+
+    const addr = document.querySelector('.address-wrapper');
+    const currentAddr = addr.getAttribute('data-current');
+    const addressArr = document.querySelectorAll('.address-item label');
+    const addressArrInput = document.querySelectorAll('.address-item input');
+    const customChecks = document.querySelectorAll('.custom-radio');
+      console.log(customChecks);
+
+      addressArr.forEach((item, index) => {
+          if(item.innerHTML == currentAddr){
+            addressArrInput[index].checked = true;
+            customChecks[index].classList.add('active');
+          }
+      });
+
+      
+
+       
+      
+      addressArrInput.forEach((item, index) => {
+          item.addEventListener('change', (e) => {
+            console.log(item.checked);
+            if(item.checked == false){
+              console.log('tt');
+              return null;
+            } else {
+              const formChild = item.parentElement;
+              const form = formChild.parentElement;
+              form.submit();
+            }
+            
+          })
+      });
+
+      customChecks.forEach((item, index) => {
+          item.addEventListener('click', (e) => {
+            addressArr[index].click();
+            
+          })
+      });
+
+      
+      
+      const turnover = document.querySelectorAll('.turnover-popup');
+      const closeBtn = document.querySelector('.cross-close');
+      turnover.forEach((item, index) => {
+        item.addEventListener('click', () => {
+          document.querySelector('.cancel-popup-container').style.display = "flex";
+        });
+      });
+
+      closeBtn.addEventListener('click', () => {
+          document.querySelector('.cancel-popup-container').style.display = "none";
+      });
+    });
+</script>
+
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+  #shopify-section-{{ section.id }} .container{
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  #shopify-section-{{ section.id }} .wrapper{
+    
+  }
+  .account-sidebar{
+    display: flex;
+    flex-direction: column;
+    background: #FAF9F9;
+    padding: 24px;
+    max-width: 296px;
+    width: 100%;
+    border-radius: 12px;
+    height: fit-content;
+  }
+  .account-sidebar .account-pages-link{
+    display: flex;
+    margin-bottom: 24px;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 24px;
+    color: #333;
+    cursor: pointer;
+  }
+  .account-sidebar .account-pages-link.active{
+    color: #F1592A;
+  }
+  .divider{
+    display: block!important;
+    width: 100%;
+    height: 1px;
+    background: #E5E5E5;
+    margin-bottom: 24px;
+  }
+  .account-sidebar a.logout-btn{
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 18px;
+    color: #3E77AA;
+    text-decoration: none;
+  }
+  .account-sidebar a.logout-btn svg{
+    margin-right: 4px;
+  }
+  .tab-content {
+    display: none;
+  }
+  
+  .tab-content.active {
+    display: block;
+  }
+  .account-title{
+    font-size: 72px;
+    font-weight: 600;
+    line-height: 82px;
+    color: #23232B;
+    margin-top: 0;
+    margin-bottom: 24px;
+  }
+  .order-section .wrapper{
+    display: flex;
+    justify-content: space-between;
+    gap: 32px;
+  }
+  .account-content{
+    width: 100%;
+  }
+  #orders table{
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    width: 100%;
+  }
+  #orders table th{
+    padding-top: 16px;
+    padding-bottom: 16px;
+    font-size: 14px;
+    line-height: 20px;
+    color: #393940;
+    padding-left: 16px;
+    padding-right: 16px;
+    text-align: left;
+  }
+  #orders table td{
+    padding-top: 17px;
+    padding-bottom: 17px;
+    padding-left: 16px;
+    padding-right: 16px;
+    font-size: 16px;
+    color: #23232B;
+  }
+  #orders table td time{
+    font-size: 16px;
+    color: #23232B;
+    text-decoration: none;
+  }
+  #orders table thead{
+    position: relative;
+  }
+  #orders table thead:after{
+    content: " ";
+    height: .1rem;
+    width: 100%;
+    display: block;
+    position: absolute;
+    left: 0;
+    background: rgba(var(--color-foreground), .08);
+  }
+  #orders table tr{
+    position: relative;
+  }
+  #orders table tr:first-child:after{
+    display: none;
+  }
+  #orders table tr:after{
+    content: " ";
+    height: .1rem;
+    width: 100%;
+    display: block;
+    position: absolute;
+    left: 0;
+    background: rgba(var(--color-foreground), .08);
+  }
+  #orders table #ColumnTotal, .column-total{
+    text-align: right;
+  }
+  .details-btn{
+    font-weight: 700;
+    color: #F1592A;
+    cursor: pointer;
+  }
+  .details-btn svg{
+    margin-left: 10px;
+  }
+  .order-status.green{
+    background: #CCEDDA;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 18px;
+    color: #00A344;
+    width: fit-content;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 100px;
+  }
+  .order-status.yellow{
+    background: #FFF3CD;
+    color: #EEB200;
+  }
+  .detail-info{
+    display: none;
+    width: 100%;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    background: #FAF9F9;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    padding: 16px;
+  }
+  #orders table .detail-info-column:after{
+    display: none;
+  }
+  .detail-info.active{
+    display: block;
+  }
+  .table-options{
+    margin-bottom: 32px;
+  }
+  .table-options{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #sortOrders{
+    width: 294px;
+    height: 48px;
+    border: 1.5px solid #E5E5E5;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #393940;
+  }
+  #loadMoreBtn{
+    width: 106px;
+    height: 40px;
+    background: #F1592A;
+    border-radius: 8px;
+    margin-top: 32px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 0;
+    cursor: pointer;
+  }
+  .product-info-wrapper{
+    margin-bottom: 24px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #E5E5E5;
+  }
+  .product-info{
+    display: grid;
+    grid-template-columns: auto 1fr 2fr 1fr 1fr;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .product-info img{
+    width: 76px;
+    height: 76px;
+    object-fit: cover;
+    margin-right: 12px;
+    border-radius: 8px;
+    border: 1px solid #E5E5E5;
+  }
+  .product-title{
+    font-size: 16px;
+    line-height: 24px;
+    color: #23232B;
+  }
+  .product-count{
+    font-size: 16px;
+    line-height: 24px;
+    color: #23232B;
+  }
+  .product-price{
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    color: #23232B;
+  }
+  .customer-info{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .customer-title{
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 24px;
+    color: #23232B;
+    display: block;
+    margin-bottom: 16px;
+  }
+  .customer-line{
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    font-size: 16px;
+    line-height: 24px;
+    color: #23232B;
+    margin-bottom: 16px;
+  }
+  .customer-line span{
+    color: #4F4F55;
+  }
+  .customer-block{
+    margin-bottom: 32px;
+  }
+  .customer-block .customer-title{
+    display: flex;
+    align-items: center;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 36px;
+    color: #000;
+  }
+  .customer-block .customer-title svg{
+    margin-left: 16px;
+  }
+  .customer-block .customer-line{
+    grid-template-columns: 1fr 8fr;
+  }
+  #account .account-title{
+    margin-bottom: 32px;
+  }
+  #RecoverEmail{
+    width: 100%;
+    max-width: 408px;
+    height: 48px;
+    border-radius: 8px;
+    border: 1.5px solid #E5E5E5;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    padding-left: 12px;
+  }
+  .address-item{
+    display: flex;
+    align-items: center;
+  }
+  .address-wrapper{
+    margin-bottom: -15px;
+  }
+  .address-wrapper form{
+    margin-bottom: 15px;
+  }
+  .turnover-popup{
+    font-weight: 700;
+    color: #F1592A;
+    line-height: 24px;
+    cursor: pointer;
+  }
+  .cancel-popup-container{
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(0,0,0, 0.30);
+    z-index: 100;
+    display: none;
+    justify-content: center;
+    align-items: center;
+  }
+  .cancel-popup{
+    background: #fff;
+    border-radius: 12px;
+    max-width: 842px;
+    width: 100%;
+    padding-left: 32px;
+    padding-right: 32px;
+    position: relative;
+  }
+  .cancel-popup h2{
+    margin-top: 32px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .cancel-popup p{
+    margin-top: 0;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+  .cancel-popup a{
+    font-weight: 700;
+    color: #F1592A;
+    text-decoration: none;
+  }
+  .cross-close{
+    position: absolute;
+    top: 32px;
+    right: 24px;
+    cursor: pointer;
+  }
+  .address-item input{
+    display: none;
+  }
+  .custom-radio{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid #F1592A;
+    border-radius: 50px;
+    margin-right: 8px;
+  }
+  
+  .inner-radio{
+    display: none;
+    width: 10px;
+    height: 10px;
+    background: #F1592A;
+    border-radius: 50px;
+    
+  }
+  .custom-radio.active .inner-radio{
+    display: flex;
+  }
+  .add-address{
+    font-weight: 700;
+    color: #F1592A;
+    line-height: 24px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+  }
+  .add-address span{
+    font-size: 28px;
+    color: #F1592A;
+    margin-right: 10px;
+  }
+  .customer button{
+    text-align: center;
+    justify-content: center;
+  }
+{%- endstyle -%}
+<div class="cancel-popup-container">
+  <div class="cancel-popup">
+      <h2>Cancelling your order?</h2>
+      <p>Email us at <a href="#">sales.cs@fitnesssuperstore.com</a> or call us at <a href="#">+1-925-215-2927.</a></p>
+      <div class="cross-close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L8.06066 7L13.5303 12.4697C13.8232 12.7626 13.8232 13.2374 13.5303 13.5303C13.2374 13.8232 12.7626 13.8232 12.4697 13.5303L7 8.06066L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#808080"/>
+</svg>
+      </div>
+  </div>
+</div>
+<div class="container">
+  <div class="wrapper"> 
+    <div class="account-sidebar">
+      <span class="account-pages-link" data-target="account">My account</span>
+      <span class="account-pages-link" data-target="orders">My orders</span>
+      <span class="account-pages-link" data-target="payment">Payment Settings</span>
+      <span class="account-pages-link" data-target="features">Other Features</span>
+      <div class="divider"></div>
+      <a class="logout-btn" href="{{ routes.account_logout_url }}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12.0834 1.75L12.1116 1.75C12.8257 1.74999 13.4018 1.74999 13.8701 1.78369C14.3517 1.81836 14.7769 1.89149 15.177 2.06758C16.0356 2.44535 16.7214 3.13115 17.0992 3.9897C17.2753 4.38989 17.3484 4.81505 17.3831 5.29669C17.4168 5.76493 17.4168 6.34101 17.4167 7.05519V7.08333V12.9167V12.9448C17.4168 13.659 17.4168 14.2351 17.3831 14.7033C17.3484 15.185 17.2753 15.6101 17.0992 16.0103C16.7214 16.8688 16.0356 17.5546 15.177 17.9324C14.7769 18.1085 14.3517 18.1816 13.8701 18.2163C13.4018 18.25 12.8258 18.25 12.1116 18.25H12.1116H12.0834H11.6667C11.2525 18.25 10.9167 17.9142 10.9167 17.5C10.9167 17.0858 11.2525 16.75 11.6667 16.75H12.0834C12.8323 16.75 13.3543 16.7495 13.7624 16.7202C14.1631 16.6913 14.3957 16.6374 14.5729 16.5595C15.0881 16.3328 15.4995 15.9213 15.7262 15.4062C15.8042 15.229 15.8581 14.9964 15.8869 14.5956C15.9163 14.1876 15.9167 13.6656 15.9167 12.9167V7.08333C15.9167 6.33443 15.9163 5.81241 15.8869 5.40438C15.8581 5.00361 15.8042 4.77103 15.7262 4.59382C15.4995 4.07869 15.0881 3.66721 14.5729 3.44055C14.3957 3.36257 14.1631 3.30867 13.7624 3.27982C13.3543 3.25045 12.8323 3.25 12.0834 3.25H11.6667C11.2525 3.25 10.9167 2.91421 10.9167 2.5C10.9167 2.08579 11.2525 1.75 11.6667 1.75H12.0834ZM6.96975 6.13634C7.26265 5.84344 7.73752 5.84344 8.03041 6.13634C8.3233 6.42923 8.3233 6.9041 8.03041 7.197L5.97741 9.25H11.6667C12.081 9.25 12.4167 9.58579 12.4167 10C12.4167 10.4142 12.081 10.75 11.6667 10.75H5.97741L8.03041 12.803C8.3233 13.0959 8.3233 13.5708 8.03041 13.8637C7.73752 14.1566 7.26265 14.1566 6.96975 13.8637L3.63642 10.5303C3.49577 10.3897 3.41675 10.1989 3.41675 10C3.41675 9.80109 3.49577 9.61032 3.63642 9.46967L6.96975 6.13634Z" fill="#3E77AA"/>
+          </svg>
+        {{ 'customer.log_out' | t }}
+      </a>
+    </div>
+    <div class="account-content">
+      <div class="tab-content" id="account">
+        <h2 class="account-title">MY ACCOUNT</h2>
+        <div class="customer-block">
+          <span class="customer-title">
+            Personal info
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+<g clip-path="url(#clip0_7578_47672)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M19.8408 3.90315C19.364 3.46978 18.636 3.46978 18.1592 3.90315C18.1405 3.92015 18.1161 3.94426 18.0303 4.03003L17.7233 4.33703C17.6991 5.41321 18.5865 6.30064 19.6627 6.27637L19.9697 5.96937C20.0554 5.8836 20.0795 5.85919 20.0965 5.84048C20.5299 5.36372 20.5299 4.63567 20.0965 4.15891C20.0795 4.14021 20.0554 4.11579 19.9697 4.03003C19.8839 3.94426 19.8595 3.92015 19.8408 3.90315ZM20.5357 7.52464L21.0303 7.03003L21.0429 7.01743C21.1103 6.9501 21.1621 6.89824 21.2065 6.84943C22.1599 5.80055 22.1599 4.19884 21.2065 3.14997C21.1622 3.10117 21.1103 3.04933 21.043 2.98204L21.0429 2.98197L21.0303 2.96937L21.0177 2.95677L21.0177 2.95674L21.0177 2.95672C20.9504 2.8894 20.8985 2.83754 20.8497 2.79318C19.8009 1.83977 18.1991 1.83977 17.1503 2.79318C17.1014 2.83756 17.0496 2.88943 16.9823 2.95679L16.9697 2.96937L16.475 3.46405C16.4711 3.46783 16.4673 3.47164 16.4635 3.4755L13.0365 6.90251L12.963 6.97603C12.2546 7.68411 11.7972 8.1414 11.4784 8.70438C11.1597 9.26735 11.0029 9.89491 10.7602 10.8666L10.735 10.9675L10.2724 12.8178C10.2085 13.0734 10.2834 13.3437 10.4697 13.53C10.656 13.7163 10.9263 13.7912 11.1819 13.7273L13.0322 13.2647L13.1331 13.2395L13.1331 13.2395L13.1331 13.2395C14.1048 12.9968 14.7324 12.84 15.2953 12.5213C15.8583 12.2025 16.3156 11.7451 17.0237 11.0367L17.0972 10.9632L20.5241 7.53623C20.528 7.53241 20.5319 7.52854 20.5357 7.52464ZM18.3917 7.54731C17.5064 7.20166 16.798 6.49333 16.4524 5.60797L14.0972 7.96317C13.2904 8.76993 12.9898 9.07934 12.7837 9.44343C12.5776 9.80751 12.4669 10.2244 12.1902 11.3313L12.0308 11.9689L12.6684 11.8095C13.7753 11.5328 14.1922 11.4221 14.5563 11.216C14.9204 11.0098 15.2298 10.7093 16.0365 9.90251L18.3917 7.54731ZM10.9436 2.2497L11 2.2497H12C12.4142 2.2497 12.75 2.58548 12.75 2.9997C12.75 3.41391 12.4142 3.7497 12 3.7497H11C9.09318 3.7497 7.73851 3.75129 6.71085 3.88946C5.70476 4.02472 5.12511 4.27839 4.7019 4.7016C4.27869 5.12481 4.02503 5.70446 3.88976 6.71055C3.75159 7.73821 3.75 9.09288 3.75 10.9997V12.9997C3.75 14.9065 3.75159 16.2612 3.88976 17.2888C4.02503 18.2949 4.2787 18.8746 4.7019 19.2978C5.12511 19.721 5.70476 19.9747 6.71085 20.1099C7.73851 20.2481 9.09318 20.2497 11 20.2497H13C14.9068 20.2497 16.2615 20.2481 17.2892 20.1099C18.2952 19.9747 18.8749 19.721 19.2981 19.2978C19.7213 18.8746 19.975 18.2949 20.1102 17.2888C20.2484 16.2612 20.25 14.9065 20.25 12.9997V11.9997C20.25 11.5855 20.5858 11.2497 21 11.2497C21.4142 11.2497 21.75 11.5855 21.75 11.9997V12.9997V13.0561V13.0562C21.75 14.8939 21.75 16.3495 21.5969 17.4887C21.4392 18.6611 21.1071 19.6101 20.3588 20.3585C19.6104 21.1068 18.6614 21.4389 17.489 21.5966C16.3498 21.7497 14.8942 21.7497 13.0565 21.7497H13.0564H13H11H10.9436H10.9435C9.1058 21.7497 7.65018 21.7497 6.51098 21.5966C5.33856 21.4389 4.38961 21.1068 3.64124 20.3585C2.89288 19.6101 2.56076 18.6611 2.40314 17.4887C2.24997 16.3495 2.24999 14.8939 2.25 13.0561V13.0561V12.9997V10.9997V10.9433V10.9432C2.24999 9.1055 2.24997 7.64988 2.40314 6.51067C2.56076 5.33825 2.89288 4.3893 3.64124 3.64094C4.38961 2.89258 5.33856 2.56046 6.51098 2.40283C7.65019 2.24967 9.10583 2.24968 10.9436 2.2497Z" fill="#F1592A"/>
+</g>
+<defs>
+<clipPath id="clip0_7578_47672">
+<rect width="24" height="24" rx="4" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+          </span>
+          <div class="customer-line"><span>Name</span>{{ customer.name }}</div>
+          <div class="customer-line"><span>Phone</span>{% if customer.phone != blank %}{{ customer.phone }}{% else %}-{% endif %}</div>
+          <div class="customer-line"><span>Email</span>{{ customer.email }}</div>
+        </div>
+        <div class="customer-block">
+          <span class="customer-title">
+            Change password
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+<g clip-path="url(#clip0_7578_47672)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M19.8408 3.90315C19.364 3.46978 18.636 3.46978 18.1592 3.90315C18.1405 3.92015 18.1161 3.94426 18.0303 4.03003L17.7233 4.33703C17.6991 5.41321 18.5865 6.30064 19.6627 6.27637L19.9697 5.96937C20.0554 5.8836 20.0795 5.85919 20.0965 5.84048C20.5299 5.36372 20.5299 4.63567 20.0965 4.15891C20.0795 4.14021 20.0554 4.11579 19.9697 4.03003C19.8839 3.94426 19.8595 3.92015 19.8408 3.90315ZM20.5357 7.52464L21.0303 7.03003L21.0429 7.01743C21.1103 6.9501 21.1621 6.89824 21.2065 6.84943C22.1599 5.80055 22.1599 4.19884 21.2065 3.14997C21.1622 3.10117 21.1103 3.04933 21.043 2.98204L21.0429 2.98197L21.0303 2.96937L21.0177 2.95677L21.0177 2.95674L21.0177 2.95672C20.9504 2.8894 20.8985 2.83754 20.8497 2.79318C19.8009 1.83977 18.1991 1.83977 17.1503 2.79318C17.1014 2.83756 17.0496 2.88943 16.9823 2.95679L16.9697 2.96937L16.475 3.46405C16.4711 3.46783 16.4673 3.47164 16.4635 3.4755L13.0365 6.90251L12.963 6.97603C12.2546 7.68411 11.7972 8.1414 11.4784 8.70438C11.1597 9.26735 11.0029 9.89491 10.7602 10.8666L10.735 10.9675L10.2724 12.8178C10.2085 13.0734 10.2834 13.3437 10.4697 13.53C10.656 13.7163 10.9263 13.7912 11.1819 13.7273L13.0322 13.2647L13.1331 13.2395L13.1331 13.2395L13.1331 13.2395C14.1048 12.9968 14.7324 12.84 15.2953 12.5213C15.8583 12.2025 16.3156 11.7451 17.0237 11.0367L17.0972 10.9632L20.5241 7.53623C20.528 7.53241 20.5319 7.52854 20.5357 7.52464ZM18.3917 7.54731C17.5064 7.20166 16.798 6.49333 16.4524 5.60797L14.0972 7.96317C13.2904 8.76993 12.9898 9.07934 12.7837 9.44343C12.5776 9.80751 12.4669 10.2244 12.1902 11.3313L12.0308 11.9689L12.6684 11.8095C13.7753 11.5328 14.1922 11.4221 14.5563 11.216C14.9204 11.0098 15.2298 10.7093 16.0365 9.90251L18.3917 7.54731ZM10.9436 2.2497L11 2.2497H12C12.4142 2.2497 12.75 2.58548 12.75 2.9997C12.75 3.41391 12.4142 3.7497 12 3.7497H11C9.09318 3.7497 7.73851 3.75129 6.71085 3.88946C5.70476 4.02472 5.12511 4.27839 4.7019 4.7016C4.27869 5.12481 4.02503 5.70446 3.88976 6.71055C3.75159 7.73821 3.75 9.09288 3.75 10.9997V12.9997C3.75 14.9065 3.75159 16.2612 3.88976 17.2888C4.02503 18.2949 4.2787 18.8746 4.7019 19.2978C5.12511 19.721 5.70476 19.9747 6.71085 20.1099C7.73851 20.2481 9.09318 20.2497 11 20.2497H13C14.9068 20.2497 16.2615 20.2481 17.2892 20.1099C18.2952 19.9747 18.8749 19.721 19.2981 19.2978C19.7213 18.8746 19.975 18.2949 20.1102 17.2888C20.2484 16.2612 20.25 14.9065 20.25 12.9997V11.9997C20.25 11.5855 20.5858 11.2497 21 11.2497C21.4142 11.2497 21.75 11.5855 21.75 11.9997V12.9997V13.0561V13.0562C21.75 14.8939 21.75 16.3495 21.5969 17.4887C21.4392 18.6611 21.1071 19.6101 20.3588 20.3585C19.6104 21.1068 18.6614 21.4389 17.489 21.5966C16.3498 21.7497 14.8942 21.7497 13.0565 21.7497H13.0564H13H11H10.9436H10.9435C9.1058 21.7497 7.65018 21.7497 6.51098 21.5966C5.33856 21.4389 4.38961 21.1068 3.64124 20.3585C2.89288 19.6101 2.56076 18.6611 2.40314 17.4887C2.24997 16.3495 2.24999 14.8939 2.25 13.0561V13.0561V12.9997V10.9997V10.9433V10.9432C2.24999 9.1055 2.24997 7.64988 2.40314 6.51067C2.56076 5.33825 2.89288 4.3893 3.64124 3.64094C4.38961 2.89258 5.33856 2.56046 6.51098 2.40283C7.65019 2.24967 9.10583 2.24968 10.9436 2.2497Z" fill="#F1592A"/>
+</g>
+<defs>
+<clipPath id="clip0_7578_47672">
+<rect width="24" height="24" rx="4" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+          </span>
+
+        <div class="customer login section-{{ section.id }}-padding">
+  
+  <div>
+    <p>
+      {{ 'customer.recover_password.subtext' | t }}
+    </p>
+
+    {%- form 'recover_customer_password' -%}
+      {% assign recover_success = form.posted_successfully? %}
+  
+        <input
+          type="email"
+          value=""
+          name="email"
+          id="RecoverEmail"
+          autocorrect="off"
+          autocapitalize="off"
+          autocomplete="email"
+          {% if form.errors %}
+            aria-invalid="true"
+            aria-describedby="RecoverEmail-email-error"
+            autofocus
+          {% endif %}
+          placeholder="{{ 'customer.login_page.email' | t }}"
+        >
+   
+      {%- if form.errors -%}
+        <small id="RecoverEmail-email-error" class="form__message">
+          <svg aria-hidden="true" focusable="false" viewBox="0 0 13 13">
+            <circle cx="6.5" cy="6.50049" r="5.5" stroke="white" stroke-width="2"/>
+            <circle cx="6.5" cy="6.5" r="5.5" fill="#EB001B" stroke="#EB001B" stroke-width="0.7"/>
+            <path d="M5.87413 3.52832L5.97439 7.57216H7.02713L7.12739 3.52832H5.87413ZM6.50076 9.66091C6.88091 9.66091 7.18169 9.37267 7.18169 9.00504C7.18169 8.63742 6.88091 8.34917 6.50076 8.34917C6.12061 8.34917 5.81982 8.63742 5.81982 9.00504C5.81982 9.37267 6.12061 9.66091 6.50076 9.66091Z" fill="white"/>
+            <path d="M5.87413 3.17832H5.51535L5.52424 3.537L5.6245 7.58083L5.63296 7.92216H5.97439H7.02713H7.36856L7.37702 7.58083L7.47728 3.537L7.48617 3.17832H7.12739H5.87413ZM6.50076 10.0109C7.06121 10.0109 7.5317 9.57872 7.5317 9.00504C7.5317 8.43137 7.06121 7.99918 6.50076 7.99918C5.94031 7.99918 5.46982 8.43137 5.46982 9.00504C5.46982 9.57872 5.94031 10.0109 6.50076 10.0109Z" fill="white" stroke="#EB001B" stroke-width="0.7">
+          </svg>
+          {{ form.errors.messages.form }}
+        </small>
+      {%- endif -%}
+
+      <button>
+        {{ 'customer.login_page.submit' | t }}
+      </button>
+    {%- endform -%}
+  </div>
+
+
+
+  <div>
+    {%- if recover_success == true -%}
+      <h3 class="form__message" tabindex="-1" autofocus>
+        <svg aria-hidden="true" focusable="false" viewBox="0 0 13 13">
+          <path d="M6.5 12.35C9.73087 12.35 12.35 9.73086 12.35 6.5C12.35 3.26913 9.73087 0.65 6.5 0.65C3.26913 0.65 0.65 3.26913 0.65 6.5C0.65 9.73086 3.26913 12.35 6.5 12.35Z" fill="#428445" stroke="white" stroke-width="0.7"/>
+          <path d="M5.53271 8.66357L9.25213 4.68197" stroke="white"/>
+          <path d="M4.10645 6.7688L6.13766 8.62553" stroke="white">
+        </svg>
+        {{ 'customer.recover_password.success' | t }}
+      </h3>
+    {%- endif -%}
+    
+  </div>
+
+ 
+</div>
+
+
+  
+        </div>
+        <div class="customer-block">
+          <span class="customer-title">
+            Billing
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+<g clip-path="url(#clip0_7578_47672)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M19.8408 3.90315C19.364 3.46978 18.636 3.46978 18.1592 3.90315C18.1405 3.92015 18.1161 3.94426 18.0303 4.03003L17.7233 4.33703C17.6991 5.41321 18.5865 6.30064 19.6627 6.27637L19.9697 5.96937C20.0554 5.8836 20.0795 5.85919 20.0965 5.84048C20.5299 5.36372 20.5299 4.63567 20.0965 4.15891C20.0795 4.14021 20.0554 4.11579 19.9697 4.03003C19.8839 3.94426 19.8595 3.92015 19.8408 3.90315ZM20.5357 7.52464L21.0303 7.03003L21.0429 7.01743C21.1103 6.9501 21.1621 6.89824 21.2065 6.84943C22.1599 5.80055 22.1599 4.19884 21.2065 3.14997C21.1622 3.10117 21.1103 3.04933 21.043 2.98204L21.0429 2.98197L21.0303 2.96937L21.0177 2.95677L21.0177 2.95674L21.0177 2.95672C20.9504 2.8894 20.8985 2.83754 20.8497 2.79318C19.8009 1.83977 18.1991 1.83977 17.1503 2.79318C17.1014 2.83756 17.0496 2.88943 16.9823 2.95679L16.9697 2.96937L16.475 3.46405C16.4711 3.46783 16.4673 3.47164 16.4635 3.4755L13.0365 6.90251L12.963 6.97603C12.2546 7.68411 11.7972 8.1414 11.4784 8.70438C11.1597 9.26735 11.0029 9.89491 10.7602 10.8666L10.735 10.9675L10.2724 12.8178C10.2085 13.0734 10.2834 13.3437 10.4697 13.53C10.656 13.7163 10.9263 13.7912 11.1819 13.7273L13.0322 13.2647L13.1331 13.2395L13.1331 13.2395L13.1331 13.2395C14.1048 12.9968 14.7324 12.84 15.2953 12.5213C15.8583 12.2025 16.3156 11.7451 17.0237 11.0367L17.0972 10.9632L20.5241 7.53623C20.528 7.53241 20.5319 7.52854 20.5357 7.52464ZM18.3917 7.54731C17.5064 7.20166 16.798 6.49333 16.4524 5.60797L14.0972 7.96317C13.2904 8.76993 12.9898 9.07934 12.7837 9.44343C12.5776 9.80751 12.4669 10.2244 12.1902 11.3313L12.0308 11.9689L12.6684 11.8095C13.7753 11.5328 14.1922 11.4221 14.5563 11.216C14.9204 11.0098 15.2298 10.7093 16.0365 9.90251L18.3917 7.54731ZM10.9436 2.2497L11 2.2497H12C12.4142 2.2497 12.75 2.58548 12.75 2.9997C12.75 3.41391 12.4142 3.7497 12 3.7497H11C9.09318 3.7497 7.73851 3.75129 6.71085 3.88946C5.70476 4.02472 5.12511 4.27839 4.7019 4.7016C4.27869 5.12481 4.02503 5.70446 3.88976 6.71055C3.75159 7.73821 3.75 9.09288 3.75 10.9997V12.9997C3.75 14.9065 3.75159 16.2612 3.88976 17.2888C4.02503 18.2949 4.2787 18.8746 4.7019 19.2978C5.12511 19.721 5.70476 19.9747 6.71085 20.1099C7.73851 20.2481 9.09318 20.2497 11 20.2497H13C14.9068 20.2497 16.2615 20.2481 17.2892 20.1099C18.2952 19.9747 18.8749 19.721 19.2981 19.2978C19.7213 18.8746 19.975 18.2949 20.1102 17.2888C20.2484 16.2612 20.25 14.9065 20.25 12.9997V11.9997C20.25 11.5855 20.5858 11.2497 21 11.2497C21.4142 11.2497 21.75 11.5855 21.75 11.9997V12.9997V13.0561V13.0562C21.75 14.8939 21.75 16.3495 21.5969 17.4887C21.4392 18.6611 21.1071 19.6101 20.3588 20.3585C19.6104 21.1068 18.6614 21.4389 17.489 21.5966C16.3498 21.7497 14.8942 21.7497 13.0565 21.7497H13.0564H13H11H10.9436H10.9435C9.1058 21.7497 7.65018 21.7497 6.51098 21.5966C5.33856 21.4389 4.38961 21.1068 3.64124 20.3585C2.89288 19.6101 2.56076 18.6611 2.40314 17.4887C2.24997 16.3495 2.24999 14.8939 2.25 13.0561V13.0561V12.9997V10.9997V10.9433V10.9432C2.24999 9.1055 2.24997 7.64988 2.40314 6.51067C2.56076 5.33825 2.89288 4.3893 3.64124 3.64094C4.38961 2.89258 5.33856 2.56046 6.51098 2.40283C7.65019 2.24967 9.10583 2.24968 10.9436 2.2497Z" fill="#F1592A"/>
+</g>
+<defs>
+<clipPath id="clip0_7578_47672">
+<rect width="24" height="24" rx="4" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+          </span>
+
+          <div class="customer-line"><span>Name</span>{{ customer.default_address.name }}</div>
+          <div class="customer-line"><span>Company</span>{{ customer.default_address.company }}</div>
+          <div class="customer-line"><span>City</span>{{ customer.default_address.city }}</div>
+          <div class="customer-line"><span>State</span>{{ customer.default_address.province }}</div>
+          <div class="customer-line"><span>Country</span>{{ customer.default_address.country }}</div>
+          <div class="customer-line"><span>Country</span>{{ customer.default_address.zip }}</div>
+          
+        </div>     
+
+        <div class="customer-block">
+          <span class="customer-title">
+            Shipping
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+<g clip-path="url(#clip0_7578_47672)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M19.8408 3.90315C19.364 3.46978 18.636 3.46978 18.1592 3.90315C18.1405 3.92015 18.1161 3.94426 18.0303 4.03003L17.7233 4.33703C17.6991 5.41321 18.5865 6.30064 19.6627 6.27637L19.9697 5.96937C20.0554 5.8836 20.0795 5.85919 20.0965 5.84048C20.5299 5.36372 20.5299 4.63567 20.0965 4.15891C20.0795 4.14021 20.0554 4.11579 19.9697 4.03003C19.8839 3.94426 19.8595 3.92015 19.8408 3.90315ZM20.5357 7.52464L21.0303 7.03003L21.0429 7.01743C21.1103 6.9501 21.1621 6.89824 21.2065 6.84943C22.1599 5.80055 22.1599 4.19884 21.2065 3.14997C21.1622 3.10117 21.1103 3.04933 21.043 2.98204L21.0429 2.98197L21.0303 2.96937L21.0177 2.95677L21.0177 2.95674L21.0177 2.95672C20.9504 2.8894 20.8985 2.83754 20.8497 2.79318C19.8009 1.83977 18.1991 1.83977 17.1503 2.79318C17.1014 2.83756 17.0496 2.88943 16.9823 2.95679L16.9697 2.96937L16.475 3.46405C16.4711 3.46783 16.4673 3.47164 16.4635 3.4755L13.0365 6.90251L12.963 6.97603C12.2546 7.68411 11.7972 8.1414 11.4784 8.70438C11.1597 9.26735 11.0029 9.89491 10.7602 10.8666L10.735 10.9675L10.2724 12.8178C10.2085 13.0734 10.2834 13.3437 10.4697 13.53C10.656 13.7163 10.9263 13.7912 11.1819 13.7273L13.0322 13.2647L13.1331 13.2395L13.1331 13.2395L13.1331 13.2395C14.1048 12.9968 14.7324 12.84 15.2953 12.5213C15.8583 12.2025 16.3156 11.7451 17.0237 11.0367L17.0972 10.9632L20.5241 7.53623C20.528 7.53241 20.5319 7.52854 20.5357 7.52464ZM18.3917 7.54731C17.5064 7.20166 16.798 6.49333 16.4524 5.60797L14.0972 7.96317C13.2904 8.76993 12.9898 9.07934 12.7837 9.44343C12.5776 9.80751 12.4669 10.2244 12.1902 11.3313L12.0308 11.9689L12.6684 11.8095C13.7753 11.5328 14.1922 11.4221 14.5563 11.216C14.9204 11.0098 15.2298 10.7093 16.0365 9.90251L18.3917 7.54731ZM10.9436 2.2497L11 2.2497H12C12.4142 2.2497 12.75 2.58548 12.75 2.9997C12.75 3.41391 12.4142 3.7497 12 3.7497H11C9.09318 3.7497 7.73851 3.75129 6.71085 3.88946C5.70476 4.02472 5.12511 4.27839 4.7019 4.7016C4.27869 5.12481 4.02503 5.70446 3.88976 6.71055C3.75159 7.73821 3.75 9.09288 3.75 10.9997V12.9997C3.75 14.9065 3.75159 16.2612 3.88976 17.2888C4.02503 18.2949 4.2787 18.8746 4.7019 19.2978C5.12511 19.721 5.70476 19.9747 6.71085 20.1099C7.73851 20.2481 9.09318 20.2497 11 20.2497H13C14.9068 20.2497 16.2615 20.2481 17.2892 20.1099C18.2952 19.9747 18.8749 19.721 19.2981 19.2978C19.7213 18.8746 19.975 18.2949 20.1102 17.2888C20.2484 16.2612 20.25 14.9065 20.25 12.9997V11.9997C20.25 11.5855 20.5858 11.2497 21 11.2497C21.4142 11.2497 21.75 11.5855 21.75 11.9997V12.9997V13.0561V13.0562C21.75 14.8939 21.75 16.3495 21.5969 17.4887C21.4392 18.6611 21.1071 19.6101 20.3588 20.3585C19.6104 21.1068 18.6614 21.4389 17.489 21.5966C16.3498 21.7497 14.8942 21.7497 13.0565 21.7497H13.0564H13H11H10.9436H10.9435C9.1058 21.7497 7.65018 21.7497 6.51098 21.5966C5.33856 21.4389 4.38961 21.1068 3.64124 20.3585C2.89288 19.6101 2.56076 18.6611 2.40314 17.4887C2.24997 16.3495 2.24999 14.8939 2.25 13.0561V13.0561V12.9997V10.9997V10.9433V10.9432C2.24999 9.1055 2.24997 7.64988 2.40314 6.51067C2.56076 5.33825 2.89288 4.3893 3.64124 3.64094C4.38961 2.89258 5.33856 2.56046 6.51098 2.40283C7.65019 2.24967 9.10583 2.24968 10.9436 2.2497Z" fill="#F1592A"/>
+</g>
+<defs>
+<clipPath id="clip0_7578_47672">
+<rect width="24" height="24" rx="4" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+          </span>
+          <div data-current="{{ customer.default_address.street }} {{ customer.default_address.city }} {{ customer.default_address.province }}" class="address-wrapper">
+            <div class="customer-line"><span>Address</span><div>
+          {% for item in customer.addresses %}
+            {%- form 'customer_address', item -%}
+              <div class="address-item">
+                <div class="custom-radio">
+                  <div class="inner-radio"><span></span></div>
+                </div>
+                {{ form.set_as_default_checkbox}}
+                
+                <label for="address_default_address_{{ form.id }}">{{ item.street }} {{ item.city }} {{ item.province }}</label>
+              </div>
+              
+            {% endform %}
+          {% endfor %}
+              <a href="/account/addresses" class="add-address"><span>+</span> Add address</a>
+          </div>
+            </div>
+          </div>
+      </div>
+</div>
+      <div class="tab-content" id="orders">
+      <h2 class="account-title">MY ORDERS</h2>
+        <div class="table-options">
+          <div class="items-count">{{ customer.orders_count }} orders</div>
+          <div class="sort-wrapper">
+            <select id="sortOrders" aria-label="Sort orders">
+              <option value="newest">Sort by: Newest</option>
+              <option value="oldest">Sort by: Oldest</option>
+            </select>
+          </div>
+        </div>
+        {%- if customer.orders.size > 0 -%}
+          <table role="table" class="order-history">
+            <caption class="visually-hidden">
+              {{ 'customer.orders.title' | t }}
+            </caption>
+            <thead role="rowgroup">
+              <tr role="row">
+                <th id="ColumnOrder" scope="col" role="columnheader">{{ 'customer.orders.order_number' | t }} #</th>
+                <th id="ColumnDate" scope="col" role="columnheader">{{ 'customer.orders.date' | t }}</th>
+                <th id="ColumnCount" scope="col" role="columnheader">Quantity</th>
+                <th id="ColumnShipping" scope="col" role="columnheader">Shipping method</th>
+                <th id="ColumnTotal" scope="col" role="columnheader">{{ 'customer.orders.total' | t }}</th>
+                <th id="ColumnFulfillment" scope="col" role="columnheader">
+                  Status
+                </th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              {%- for order in customer.orders -%}
+                  <tr role="row" data-date="{{ order.created_at | date: "%s" }}">
+                    <td
+                      id="RowOrder"
+                      role="cell"
+                      headers="ColumnOrder"
+                      data-label="{{ 'customer.orders.order_number' | t }}"
+                    >
+                      {% assign orderId = order.name | remove: "#" %}
+                      
+                        
+                        {{ orderId }}
+                   
+                    </td>
+                    <td headers="RowOrder ColumnDate" role="cell" data-label="{{ 'customer.orders.date' | t }}">
+                      {{ order.created_at | date: "%b %d, %Y" }}
+                    </td>
+                    <td>
+                      {{ order.item_count }}
+                    </td>
+                    <td>
+                      {{ order.shipping_methods.first.title }}
+                    </td>
+                   <td class="column-total" headers="RowOrder ColumnTotal" role="cell" data-label="{{ 'customer.orders.total' | t }}">
+                      {{ order.total_net_amount | money_with_currency }}
+                    </td>
+                    <td
+                      
+                      headers="RowOrder ColumnFulfillment"
+                      role="cell"
+                      data-label="{{ 'customer.orders.fulfillment_status' | t }}"
+                    >
+                      <div class="order-status {% if order.fulfillment_status_label == "Fulfilled" %}green{% else %}yellow{% endif %} {% if true %}green{% endif %}">{% if order.fulfillment_status_label == "Fulfilled" %}Delivered{% else %}In progress{% endif %}</div>
+                      
+                      
+                    </td>
+                    <td>
+                      <div class="details-btn">
+                        Details
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 14 8" fill="none">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#F1592A"/>
+</svg>
+                      </div>
+                    </td>
+                 
+                  </tr>
+                <tr class="detail-info-column">
+                  <td style="padding-top: 0;padding-bottom: 0;" colspan="7">
+                    <div class="detail-info">
+                      <div class="product-info-wrapper">
+                      {% for item in order.line_items %}
+                        <div class="product-info">
+                          {% if item.image != blank %}
+                          {{ item.image | image_url: width: auto | image_tag }}
+                          {% else %}
+                            <img src="{{ 'https://cdn.shopify.com/s/files/1/0884/2012/2940/files/placeholder-images-image_large_4c16b6bf-b25f-4094-b8c5-5736f7f030d1.webp?v=1727861193' }}">
+                          {% endif %}
+                          <span class="product-title">{{ item.title }}</span>
+                          <span class="product-count">{{ item.quantity }} pcs</span>
+                          <span class="product-price">{{ item.price | money }}</span>
+                          <div>test</div>
+                        </div>
+                      {% endfor %}
+                      </div>
+                      <div class="customer-info">
+                        <div class="left-col">
+                          <span class="customer-title">Detailed info</span>
+                          <div class="customer-line"><span>Name</span>{{ customer.name }}</div>
+                          <div class="customer-line"><span>Phone</span>{% if customer.phone != blank %}{{ customer.phone }}{% else %}-{% endif %}</div>
+                          <div class="customer-line"><span>Email</span>{{ customer.email }}</div>
+                        </div>
+                        <div class="right-col">
+                          <span class="customer-title">Shipping info</span>
+                          <div class="customer-line"><span>Address</span>{% if order.shipping_address.address1 != blank %}{{ order.shipping_address.address1 }}{% else %}-{% endif %}</div>
+                          <div class="customer-line"><span>Shipping method</span>{% if order.shipping_methods.first.title != blank %}{{ order.shipping_methods.first.title }}{% else %}-{% endif %}</div>
+                        </div>
+                        
+                        
+                      </div>
+                      <span class="turnover-popup">Turnover</span>
+                    </div>
+                  </td>
+                </tr>
+                {%- endfor -%}
+              </tbody>
+            </table>
+          <button id="loadMoreBtn" class="load-more-btn">Load More</button>
+          {%- else -%}
+            <p>{{ 'customer.orders.none' | t }}</p>
+          {%- endif -%}
+      </div>
+      <div class="tab-content" id="payment">Payment Settings content</div>
+      <div class="tab-content" id="features">Other Features content</div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "Orders",
+    "class": "order-section",
+    "settings": [
+      {
+        "type": "text",
+        "id": "popuptitle",
+        "label": "Turnover popup title"
+      },
+      {
+        "type": "richtext",
+        "id": "popuptext",
+        "label": "Turnover popup text"
+      },
+      {
+        "type": "range",
+        "id": "padding_top",
+        "min": 0,
+        "max": 100,
+        "step": 4,
+        "unit": "px",
+        "label": "t:sections.all.padding.padding_top",
+        "default": 36
+      },
+      {
+        "type": "range",
+        "id": "padding_bottom",
+        "min": 0,
+        "max": 100,
+        "step": 4,
+        "unit": "px",
+        "label": "t:sections.all.padding.padding_bottom",
+        "default": 36
+      }
+    ],
+    "presets": [
+      {
+        "name": "Orders",
+      }
+    ]
+  }
+{% endschema %}

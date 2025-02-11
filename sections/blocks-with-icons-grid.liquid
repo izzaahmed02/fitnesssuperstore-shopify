@@ -1,0 +1,212 @@
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.3 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+
+<style>
+  #shopify-section-{{ section.id }}{
+    background-color: {{ section.settings.bg_color }};
+  }
+</style>
+
+<div
+  class="blocks-grid section-{{ section.id }}-padding"
+  {% if section.settings.id != blank %}
+    id="{{ section.settings.id }}"
+  {% endif %}
+>
+
+  <div class="page-width">
+    <div class="blocks-grid__container">
+      {% if section.settings.title != blank %}
+        {% if section.settings.h1 %}
+          <h1 class="h0 blocks-grid__title">{{ section.settings.title }}</h1>
+        {% else %}
+          <h2 class="h2 blocks-grid__title">{{ section.settings.title }}</h2>
+        {% endif %}
+      {% endif %}
+
+      {% if section.settings.text != blank %}
+        <div class="blocks-grid__text">{{ section.settings.text }}</div>
+      {% endif %}
+
+      <div class="blocks-grid__wrapper grid grid--{{ section.settings.columns_mobile }}-col-tablet-down grid--{{ section.settings.columns_desktop }}-col-desktop">
+        {% for block in section.blocks %}
+          <div class="blocks-grid__item grid__item">
+            {% if block.settings.icon != blank %}
+              <img
+                src="{{ block.settings.icon | img_url: 'master' }}"
+                alt="{{ block.settings.icon.alt }}"
+                loading="lazy"
+              >
+            {% endif %}
+
+            <div>
+              {% if block.settings.title != blank %}
+                <h4 class="h4">{{ block.settings.title }}</h4>
+              {% endif %}
+
+              {% if block.settings.text != blank %}
+                <div class="blocks-grid__item-text">{{ block.settings.text }}</div>
+              {% endif %}
+
+              {% if block.settings.link != blank %}
+                <a
+                  style="margin-top: 24px;"
+                  href="{{ block.settings.href }}"
+                  class="link-style"
+                >
+                  {{ block.settings.link | escape }}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="#F1592A"/>
+                  </svg>
+                </a>
+              {% endif %}
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if section.settings.text_bottom != blank %}
+        <div class="blocks-grid__item-text-bottom">
+          <span>*</span>
+          {{ section.settings.text_bottom }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Blocks with icons grid",
+  "settings": [
+    {
+      "type": "text",
+      "id": "id",
+      "label": "Section id"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title"
+    },
+    {
+      "type": "checkbox",
+      "id": "h1",
+      "label": "Use h1",
+      "default": false
+    },
+    {
+      "type": "textarea",
+      "id": "text",
+      "label": "Text"
+    },
+    {
+      "type": "text",
+      "id": "text_bottom",
+      "label": "Text bottom"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 3,
+      "label": "t:sections.collection-list.settings.columns_desktop.label"
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "options": [
+        {
+          "value": "1",
+          "label": "t:sections.collection-list.settings.columns_mobile.options__1.label"
+        },
+        {
+          "value": "2",
+          "label": "t:sections.collection-list.settings.columns_mobile.options__2.label"
+        }
+      ],
+      "default": "1",
+      "label": "t:sections.collection-list.settings.columns_mobile.label"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 80
+    }
+  ],
+  "blocks": [
+    {
+      "type": "block",
+      "name": "Block",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Text"
+        },
+        {
+          "type": "text",
+          "id": "link",
+          "label": "Link laabel"
+        },
+        {
+          "type": "textarea",
+          "id": "href",
+          "label": "Href"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Blocks with icons grid"
+    }
+  ]
+}
+{% endschema %}
+

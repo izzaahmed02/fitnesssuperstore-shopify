@@ -1,0 +1,272 @@
+{{ 'section-faq.css' | asset_url | stylesheet_tag }}
+<style>
+  #shopify-section-{{ section.id }} .faq__item.opened {
+      border: 1px solid #F1592A;
+      border-radius: 8px;
+  }
+
+  #shopify-section-{{ section.id }} .faq__item-content-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    color: #ffffff;
+    background: #F1592A;
+    font-weight: 700;
+    line-height: 24px;
+    margin-top: 16px;
+    display: block;
+    width: fit-content;
+  }
+  #shopify-section-{{ section.id }} .faq__item-content-link {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+  }
+  #shopify-section-{{ section.id }} ul{
+    padding-left: 50px;
+  }
+  #shopify-section-{{ section.id }} ul li{
+    position: relative;
+    margin-bottom: 12px;
+  }
+  #shopify-section-{{ section.id }} ul li:before{
+    content: "";
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    position: absolute;
+    top: 8px;
+    left: -14px;
+    background: #3E77AA;
+  }
+  #shopify-section-{{ section.id }} ol{
+    padding-left: 85px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+  #shopify-section-{{ section.id }} ol li{
+    position: relative;
+    margin-bottom: 12px;
+  }
+  #shopify-section-{{ section.id }} ol li:before{
+    content: "";
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    position: absolute;
+    top: 8px;
+    left: -16px;
+    background: #D3D9E5;
+  }
+
+  @media screen and (max-width: 750px) {
+    #shopify-section-{{ section.id }} ul{
+      padding-left: 28px;
+    }
+
+    #shopify-section-{{ section.id }} ol{
+      padding-left: 40px;
+      margin-top: 8px;
+    }
+  }
+
+
+  {% if section.settings.full-column-width %}
+    #shopify-section-{{ section.id }} .faq__left {
+      max-width: none;
+    }
+
+    #shopify-section-{{ section.id }} .faq__image {
+      margin-top: 0;
+      margin-right: 24px;
+    }
+  {% endif %}
+
+</style>
+
+<div class="faq section-padding">
+  <div class="page-width">
+    <div class="faq__wrapper">
+      <div class="faq__left">
+
+        {% if section.settings.heading_position == 'left' %}
+          {% if section.settings.title != blank %}
+            <h2 class="h2">{{ section.settings.title }}</h2>
+          {% endif %}
+
+          {% if section.settings.text != blank %}
+            <div class="faq__text">{{ section.settings.text }}</div>
+          {% endif %}
+
+        {% endif %}
+
+        {% if section.settings.image != blank %}
+          <div class="faq__image">{{ section.settings.image | img_url: '' | img_tag }}</div>
+        {% endif %}
+      </div>
+      <div class="faq__right">
+
+        {% if section.settings.heading_position == 'right' %}
+          {% if section.settings.title != blank %}
+            <h2 class="h2">{{ section.settings.title }}</h2>
+          {% endif %}
+
+          {% if section.settings.text != blank %}
+            <div class="faq__text">{{ section.settings.text }}</div>
+          {% endif %}
+        {% endif %}
+
+        <div class="faq__items">
+          {% for block in section.blocks %}
+            <div class="faq__item">
+              <div class="faq__item-wrapper">
+                <button class="faq__item-btn">
+                  {{ block.settings.title }}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+
+                    fill="none"
+                  >
+
+                    <path
+                      fill-rule="evenodd"
+                      clip-rule="evenodd"
+                      d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z"
+                      fill="black" />
+                  </svg>
+                </button>
+                <div class="faq__item-content">
+                  {{ block.settings.text }}
+                  {% if block.settings.url_text != blank %}
+                    <a href="{{ block.settings.url_link }}" class="faq__item-content-link">
+                      {{ block.settings.url_text }}
+
+                      {% if block.settings.arrow == 'true' %}
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="#F1592A"/>
+                        </svg>
+                      {% endif %}
+
+                    </a>
+                  {% endif %}
+
+                  {% if block.settings.btn_text != blank %}
+
+                    <a href="{{ block.settings.url_link }}" class="faq__item-content-btn">
+
+                      {{ block.settings.btn_text }}
+                    </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "FAQ",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "text",
+      "label": "Text"
+    },
+    {
+      "type": "select",
+      "id": "heading_position",
+      "options": [
+        {
+          "label": "Left",
+          "value": "left"
+        },
+        {
+          "label": "Right",
+          "value": "right"
+        }
+      ],
+      "default": "left",
+      "label": "Heading position"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "checkbox",
+      "id": "full-column-width",
+      "label": "Use full left column width",
+      "default": false
+    }
+  ],
+  "blocks": [
+    {
+      "type": "question",
+      "name": "Question",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text"
+        },
+        {
+          "type": "text",
+          "id": "url_text",
+          "label": "Url text"
+        },
+        {
+          "type": "text",
+          "id": "btn_text",
+          "label": "Btn text"
+        },
+        {
+          "type": "url",
+          "id": "url_link",
+          "label": "Url link"
+        },
+        {
+          "type": "select",
+          "id": "arrow",
+          "label": "Link arrow",
+          "options": [
+            {
+              "value": "true",
+              "label": "True"
+            },
+            {
+              "value": "false",
+              "label": "False"
+            }
+          ],
+          "default": "false"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "FAQ"
+    }
+  ]
+}
+{% endschema %}
+
