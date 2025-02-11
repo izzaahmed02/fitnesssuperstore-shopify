@@ -1,0 +1,108 @@
+{{ 'delivery-first-acc.css' | asset_url | stylesheet_tag }}
+
+
+<div class="section-{{ section.id }} page-width scroll-trigger animate--slide-in">
+    <div class="container">
+        <div class="delivery-first-acc__wrapper">
+            <div class="delivery-first-acc__content">
+                <h2 class="delivery-first-acc__title">{{ section.settings.title }}</h2>
+                <div class="delivery-first-acc__copy">
+                    {{ section.settings.copy }}
+                </div>
+            </div>
+            <div class="delivery-first-acc__accordions">
+                {% for block in section.blocks %}
+                    <div class="delivery-accordion-item">
+                        <button
+                                class="accordion-header"
+                                type="button"
+                                aria-expanded="false"
+                                aria-controls="accordion-content-{{ forloop.index }}">
+
+                                <span class="accordion-title">
+                                  {{ block.settings.title }}
+                                </span>
+                            {% render 'chevron' %}
+                        </button>
+
+                        <div
+                                id="accordion-content-{{ forloop.index }}"
+                                class="accordion-content"
+                                aria-hidden="true"
+                        >
+                            <div class="accordion-content-inner">
+                                {{ block.settings.copy }}
+                                {% if block.settings.image != blank %}
+                                    <img src="{{ block.settings.image | image_url: width: 600, height: 220 }}"
+                                         alt="{{ block.settings.image.alt | escape }}"
+                                         width="{{ block.settings.image.width }}"
+                                         height="{{ block.settings.image.height }}"
+                                         class="accordion-content-image">
+                                {% endif %}
+                                {% if forloop.index == 2 %}
+                                    <div class="accordion-content-page">
+                                        {{ page.content }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{{ 'accordion.js' | asset_url }}" defer="defer"></script>
+{% schema %}
+{
+  "name": "First Accordeon Section",
+  "tag": "section",
+  "class": "section delivery-first-acc",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "copy",
+      "label": "Section Copy"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "accordion",
+      "name": "Accordion Block",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Block Title"
+        },
+        {
+          "type": "richtext",
+          "id": "copy",
+          "label": "Block Copy"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Block Image"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Delivery Banner"
+    }
+  ]
+}
+{% endschema %}

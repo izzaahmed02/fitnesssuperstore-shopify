@@ -1,19 +1,21 @@
 <link rel="stylesheet" href="{{ 'section-brand-category.css' | asset_url }}">
 
-<section class="brand-category-section">
+<section class="brand-category-section scroll-trigger animate--slide-in">
     <div class="brand-category-container">
       {% for block in section.blocks %}
         <div class="brand-category">
           <h3>{{ block.settings.category_title }}</h3>
           <ul>
-            {% for item in block.settings.items %}
-              <li><a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.name }}</a></li>
+            {% assign brand_items = block.settings.brand_items | split: '\n' %}
+            {% for item in brand_items %}
+              {% assign parts = item | split: '|' %}
+              <li><a href="{{ parts[1] | default: '#' }}" target="_blank" rel="noopener">{{ parts[0] }}</a></li>
             {% endfor %}
           </ul>
         </div>
       {% endfor %}
     </div>
-  </section>  
+  </section>
   
   {% schema %}
   {
@@ -32,13 +34,10 @@
             "default": "Category Name"
           },
           {
-            "type": "collection_list",
-            "id": "items",
-            "label": "Category Items",
-            "default": [
-              { "name": "Item 1", "url": "#" },
-              { "name": "Item 2", "url": "#" }
-            ]
+            "type": "textarea",
+            "id": "brand_items",
+            "label": "Category Items (One per line, format: Name|URL)",
+            "default": "Item 1|#\nItem 2|#"
           }
         ]
       }
@@ -50,4 +49,5 @@
     ]
   }
   {% endschema %}
+  
   

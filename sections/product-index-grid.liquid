@@ -1,22 +1,5 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    function filterProducts() {
-      const searchText = document.getElementById('search-input').value.toLowerCase();
-      const products = document.querySelectorAll('#product-grid li');
-
-      products.forEach((product) => {
-        const productName = product.querySelector('.card__heading').textContent.toLowerCase();
-
-        if (productName.includes(searchText)) {
-          product.style.display = '';
-        } else {
-          product.style.display = 'none';
-        }
-      });
-    }
-
-    document.getElementById('search-input').addEventListener('input', filterProducts);
-
     document.querySelector('.sort-per-page select.num').addEventListener('change', function () {
       const url = new URL(window.location.href);
       const searchParams = new URLSearchParams(window.location.search);
@@ -47,27 +30,6 @@
       url.search = searchParams.toString();
 
       window.location.replace(url.toString());
-    });
-
-    const paginationLinks = document.querySelectorAll('.pagination a');
-    paginationLinks.forEach((link) => {
-      link.addEventListener('click', function (event) {
-        event.preventDefault();
-
-        const url = new URL(this.href);
-        const searchParams = new URLSearchParams(url.search);
-
-        if (new URLSearchParams(window.location.search).has('perview')) {
-          searchParams.set('perview', new URLSearchParams(window.location.search).get('perview'));
-        }
-
-        if (new URLSearchParams(window.location.search).has('sort_by')) {
-          searchParams.set('sort_by', new URLSearchParams(window.location.search).get('sort_by'));
-        }
-
-        url.search = searchParams.toString();
-        window.location.href = url.toString();
-      });
     });
 
     function initSlider(element) {
@@ -128,7 +90,6 @@
     // Brands titles logic
 
     const productGrid = document.getElementById('product-grid');
-    console.log("Grid:", productGrid);
 
     if (!productGrid) return;
     const products = Array.from(productGrid.querySelectorAll('.product-li-item'));
@@ -154,7 +115,7 @@
           brandTitle.textContent = brand;
           brandTitle.className = 'brand-title';
           productGrid.insertBefore(brandTitle, brandContainerWrapper);
-      
+
           currentBrand = brand;
       }
 
@@ -167,6 +128,7 @@
 </script>
 
 {{ 'product-index-grid.css' | asset_url | stylesheet_tag }}
+{{ 'template-collection.css' | asset_url | stylesheet_tag }}
 
 {%- liquid
   if collection.url
@@ -204,7 +166,9 @@
         assign sort_by = collection.sort_by | default: 'title-ascending'
       -%}
       <div class="collection-grid-top">
-        <input type="text" id="search-input" placeholder="Search">
+        <form id="collection-search-form">
+          <input type="text" id="search-input" placeholder="Search">
+        </form>
 
         <div class="right-side">
           <facet-filters-form class="facets facets-vertical-sort small-hide">
@@ -252,12 +216,12 @@
             | replace: '%20', ' '
             | replace: '\u0026', '&'
           -%}
-          {%- assign products_per_page = 6 -%}
+          {%- assign products_per_page = 30 -%}
           {%- for i in (1..1) -%}
             {%- unless pageUrl contains '?' -%}{% break %}{%- endunless -%}
-            {%- if pageUrl contains 'perview=6' -%}{%- assign products_per_page = 6 -%}{%- endif -%}
-            {%- if pageUrl contains 'perview=12' -%}{%- assign products_per_page = 12 -%}{%- endif -%}
-            {%- if pageUrl contains 'perview=18' -%}{%- assign products_per_page = 18 -%}{%- endif -%}
+            {%- if pageUrl contains 'perview=30' -%}{%- assign products_per_page = 30 -%}{%- endif -%}
+            {%- if pageUrl contains 'perview=60' -%}{%- assign products_per_page = 60 -%}{%- endif -%}
+            {%- if pageUrl contains 'perview=90' -%}{%- assign products_per_page = 90 -%}{%- endif -%}
           {%- endfor -%}
 
           <div class="sort-per-page">
@@ -265,28 +229,28 @@
             <div class="select">
               <select id="sel1" class="num">
                 <option
-                  value="/collections/{{ collection.handle }}?perview=6"
-                  {% if products_per_page == 6 %}
+                  value="/collections/{{ collection.handle }}?perview=30"
+                  {% if products_per_page == 30 %}
                     selected="selected"
                   {% endif %}
                 >
-                  6
+                  30
                 </option>
                 <option
-                  value="/collections/{{ collection.handle }}?perview=12"
-                  {% if products_per_page == 12 %}
+                  value="/collections/{{ collection.handle }}?perview=60"
+                  {% if products_per_page == 60 %}
                     selected="selected"
                   {% endif %}
                 >
-                  12
+                  60
                 </option>
                 <option
-                  value="/collections/{{ collection.handle }}?perview=18"
-                  {% if products_per_page == 18 %}
+                  value="/collections/{{ collection.handle }}?perview=90"
+                  {% if products_per_page == 90 %}
                     selected="selected"
                   {% endif %}
                 >
-                  18
+                  90
                 </option>
               </select>
               {% render 'icon-caret' %}
@@ -307,7 +271,7 @@
       </div>
 
       <div class="tags-wrapper">
-        {% paginate collection.products by products_per_page %}
+        {% comment %} {% paginate collection.products by products_per_page %}
           {% assign current_page = paginate.current_page %}
           {% assign current_offset = paginate.current_offset %}
           {% assign items_count = paginate.items %}
@@ -324,7 +288,12 @@
             {%- endif -%}
           </span>
           of {{ items_count }}
+        </div> {% endcomment %}
+
+        <div class="collecion-count">
+          <span id="collection-count-range"></span> of <span id="collection-total-count"></span>
         </div>
+        
         <div class="active-facets active-facets-desktop">
           {%- for filter in collection.filters -%}
             {%- for value in filter.active_values -%}
@@ -377,82 +346,429 @@
         </div>
       </div>
 
-      {% paginate collection.products by products_per_page %}
         <div
-          class="collection product-index-grid"
+          class="collection product-index-grid search-results-container"
           id="product-grid"
           data-id="{{ section.id }}"
         >
-          <div class="loading-overlay gradient"></div>
 
-            {%- for product in collection.products -%}
-              {% render 'product-li-item', product: product %}
-            {%- endfor -%}
+          <!-- Filtered products will be rendered here -->
         </div>
 
-        {% if paginate.pages > 1 %}
-          <div class="pagination">
-            <a href="{{ paginate.previous.url }}">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" fill="{% if paginate.previous %}#F1592A{% else %}#CCCCCC{% endif %}"/>
-              </svg>
-            </a>
+        <div class="loading-overlay gradient"></div>
 
-            {% for part in paginate.parts %}
-              {% if part.is_link %}
-                <a href="{{ part.url }}">{{ part.title }}</a>
-              {% else %}
-                <span class="{% if part.title == paginate.current_page %}current{% endif %}">{{ part.title }}</span>
-              {% endif %}
-            {% endfor %}
-
-            <a href="{{ paginate.next.url }}">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="{% if paginate.next %}#F1592A{% else %}#CCCCCC{% endif %}"/>
-              </svg>
-            </a>
-          </div>
-        {% endif %}
-      {% endpaginate %}
+      <div id="pagination-container">
+        <!-- Pagination buttons will appear here -->
+      </div>
     </div>
   </div>
 </div>
 
-{% comment %} <script>
-  const wrapper = document.querySelector('.collection.product-index-grid');
-  const models = document.querySelectorAll('.product-li-item .model');
+<script>
+  let allProducts = [];
+  let filteredProducts = [];
+  let currentPage = 1;
+  const itemsPerPage = {{ products_per_page }};
 
-  wrapper.addEventListener('scroll', () => {
-    const maxScrollLeft = wrapper.scrollWidth - wrapper.clientWidth;
-    const scrollLeft = wrapper.scrollLeft;
+  const searchForm = document.getElementById('collection-search-form');
+  searchForm.addEventListener('submit', handleSearchInput);
+  
+  // Filter products based on the search query
+  function filterProducts(searchQuery, filters) {
+    if (!searchQuery && Object.keys(filters).length === 0) {
+      return allProducts;
+    }
+  
+    return allProducts.filter(product => {
+      const matchesQuery = product.title.toLowerCase().includes(searchQuery);
+      return matchesQuery;
+    });
+  }
 
-    const wrapperRect = wrapper.getBoundingClientRect();
+  function updateProductCount() {
+    const countRange = document.getElementById('collection-count-range');
+    const totalCount = document.getElementById('collection-total-count');
+    const mobileTotal = document.querySelectorAll('.product-count__text');
+  
+    const start = (currentPage - 1) * itemsPerPage + 1;
+    const end = Math.min(start + itemsPerPage - 1, filteredProducts.length);
+    const total = filteredProducts.length;
+  
+    // Update the count elements
+    countRange.textContent = start !== end ? `${start}-${end}` : `${start}`;
+    totalCount.textContent = total;
 
-    if (scrollLeft > 0) {
-      models.forEach((model) => {
-        model.style.boxShadow = '0px 0px 12px 0px #0000001A';
+    if (mobileTotal) {
+      console.log(`${total} results`);
+      mobileTotal.forEach((el) => el.textContent = `${total} results`);
+      console.log(mobileTotal);
+    }
+  }  
+  
+  // Render a single product
+  function renderProduct(product) {
+    return `
+      <li class="product-item product-li-item" data-brand="${product.brand}">
+        <span class="model">${product.model}</span>
+        <span class="price">${product.price}</span>
+        <span class=""><a href="${product.url}">${product.title}</a></span>
+      </li>
+    `;
+  }
+  
+  // Create brand title and product containers
+  function renderBrandsAndProducts() {
+    const productGrid = document.getElementById('product-grid');
+  
+    if (!productGrid) return;
+  
+    const products = Array.from(productGrid.querySelectorAll('.product-li-item'));
+  
+    let currentBrand = null;
+    let brandContainer = null;
+  
+    products.forEach((product) => {
+      const brand = product.dataset.brand || "";
+  
+      if (brand !== currentBrand) {
+        // Create a new container for the brand
+        const brandContainerWrapper = document.createElement('div');
+        brandContainerWrapper.className = 'brand-container--wrapper';
+        productGrid.appendChild(brandContainerWrapper);
+        
+        brandContainer = document.createElement('ul');
+        brandContainer.className = 'brand-container';
+        brandContainerWrapper.appendChild(brandContainer);
+  
+        // Create and insert the brand title before the container
+        const brandTitle = document.createElement('h2');
+        brandTitle.textContent = brand;
+        brandTitle.className = 'brand-title';
+        productGrid.insertBefore(brandTitle, brandContainerWrapper);
+  
+        currentBrand = brand;
+      }
+  
+      if (brandContainer) {
+        brandContainer.appendChild(product);
+      }
+    });
+  }
+  
+  // Render Pagination
+  function renderPagination(totalItems, itemsPerPage) {
+    const paginationContainer = document.getElementById('pagination-container');
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const maxVisibleButtons = 5; 
+  
+    if (totalPages <= 1) {
+      paginationContainer.innerHTML = '';
+      return;
+    }
+  
+    function updatePagination() {
+      const paginationContainer = document.getElementById('pagination-container');
+  
+      if (!paginationContainer) {
+          console.error('Pagination container not found.');
+          return;
+      }
+  
+      paginationContainer.innerHTML = ''; // Clear previous pagination
+  
+      // Previous button
+      const prevButton = document.createElement('button');
+      prevButton.className = 'pagination-prev';
+      prevButton.disabled = currentPage === 1;
+      prevButton.addEventListener('click', () => {
+          if (currentPage > 1) {
+              currentPage--;
+              renderPage();
+              updatePagination();
+          }
       });
-    } else {
-      models.forEach((model) => {
-        model.style.boxShadow = 'none';
+      paginationContainer.appendChild(prevButton);
+  
+      // Dynamic page range calculation
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisibleButtons / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
+  
+      // Adjust the range when close to edges
+      if (endPage - startPage < maxVisibleButtons - 1) {
+          startPage = Math.max(1, endPage - maxVisibleButtons + 1);
+      }
+  
+      // Add first page and ellipsis if needed
+      if (startPage > 1) {
+          createPageButton(1);
+          if (startPage > 2) {
+              createEllipsis();
+          }
+      }
+  
+      // Add page buttons in range
+      for (let i = startPage; i <= endPage; i++) {
+          createPageButton(i);
+      }
+  
+      // Add ellipsis and last page if needed
+      if (endPage < totalPages) {
+          if (endPage < totalPages - 1) {
+              createEllipsis();
+          }
+          createPageButton(totalPages);
+      }
+  
+      // Next button
+      const nextButton = document.createElement('button');
+      nextButton.className = 'pagination-next';
+      nextButton.disabled = currentPage === totalPages;
+      nextButton.addEventListener('click', () => {
+          if (currentPage < totalPages) {
+              currentPage++;
+              renderPage();
+              updatePagination();
+          }
       });
+      paginationContainer.appendChild(nextButton);
+    }
+  
+    function createPageButton(page) {
+      const pageButton = document.createElement('button');
+      pageButton.textContent = page;
+      pageButton.className = 'pagination-button';
+      if (page === currentPage) {
+        pageButton.classList.add('active');
+      }
+      pageButton.addEventListener('click', () => {
+        currentPage = page;
+        renderPage();
+        updatePagination();
+      });
+      paginationContainer.appendChild(pageButton);
+    }
+  
+    function createEllipsis() {
+      const ellipsis = document.createElement('span');
+      ellipsis.textContent = '...';
+      ellipsis.className = 'pagination-ellipsis';
+      paginationContainer.appendChild(ellipsis);
+    }
+  
+    updatePagination();
+  }
+  
+  // Render the current page of products
+  function renderPage() {
+    const resultsContainer = document.querySelector('.search-results-container');
+    const paginationContainer = document.getElementById('pagination-container');
+  
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+  
+    const pageProducts = filteredProducts.slice(start, end);
+  
+    resultsContainer.innerHTML = '';
+  
+    pageProducts.forEach(product => {
+      resultsContainer.innerHTML += renderProduct(product);
+    });
+  
+    renderPagination(filteredProducts.length, itemsPerPage);
+    renderBrandsAndProducts();
+    updateProductCount();
+  }
+    
+  async function handleSearchInput(event) {
+    event.preventDefault();
+  
+    const searchInput = document.getElementById('search-input');
+    const searchQuery = searchInput.value.toLowerCase().trim();
+    const resultsContainer = document.querySelector('.search-results-container');
+    const paginationContainer = document.getElementById('pagination-container');
+  
+    resultsContainer.innerHTML = '';
+    paginationContainer.innerHTML = '';
+  
+    const url = new URL(window.location);
+    const activeFilters = new URLSearchParams(window.location.search);
+  
+    if (!searchQuery) {
+      // If search input is cleared, remove query parameter
+      activeFilters.delete('q');
+      window.history.pushState({}, '', `${url.pathname}?${activeFilters.toString()}`);
+      
+      // Reset to show all products
+      filteredProducts = allProducts;
+      currentPage = 1;
+      renderPage();
+      return;
+    }
+  
+    // If there's a search query, update the query parameter
+    activeFilters.set('q', searchQuery);
+    window.history.pushState({}, '', `${url.pathname}?${activeFilters.toString()}`);
+  
+    try {
+      allProducts = await fetchAllProducts();
+      filteredProducts = filterProducts(searchQuery, {});
+  
+      if (filteredProducts.length) {
+        currentPage = 1;
+        renderPage();
+      } else {
+        resultsContainer.innerHTML = '<p>No products found matching your search and filters.</p>';
+      }
+    } catch (error) {
+      console.error('Error fetching filtered products:', error);
+      resultsContainer.innerHTML = '<p>Something went wrong while fetching products.</p>';
+    }
+  }  
+  
+  // Fetch all products
+  {% comment %} async function fetchAllProducts() {
+    const collectionWrapper = document.querySelector('.collection-product-wrapper');
+    collectionWrapper.classList.add('loading');
+  
+    try {
+      const collectionHandle = '{{ collection.handle }}';
+      const filterParams = new URLSearchParams(window.location.search);
+  
+      filterParams.append('view', 'ajax_full_collection');
+  
+      const response = await fetch(`/collections/${collectionHandle}?${filterParams.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch products');
+      }
+  
+      const rawResponseText = await response.text();
+      const sanitizedData = rawResponseText.replace(/[\x00-\x1F\x7F]/g, '');
+      const products = JSON.parse(sanitizedData);
+  
+      return products;
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      throw error;
+    } finally {
+      collectionWrapper.classList.remove('loading');
+    }
+  } {% endcomment %}
+
+  
+  async function fetchAllProducts() {
+    const collectionWrapper = document.querySelector('.collection-product-wrapper');
+    collectionWrapper.classList.add('loading');
+    const collectionHandle = '{{ collection.handle }}';
+    const filterParams = new URLSearchParams(window.location.search);
+    filterParams.append('view', 'ajax_full_collection');
+    
+    let allProducts = [];
+    let currentPage = 1;
+    const maxProductsPerPage = 1000;
+  
+    try {
+      while (true) {
+        filterParams.set('page', currentPage);
+        
+        const response = await fetch(`/collections/${collectionHandle}?${filterParams.toString()}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch products');
+        }
+  
+        const rawResponseText = await response.text();
+        const sanitizedData = rawResponseText.replace(/[\x00-\x1F\x7F]/g, '');
+        const products = JSON.parse(sanitizedData);
+  
+        allProducts = allProducts.concat(products);
+  
+        if (products.length < maxProductsPerPage) {
+          // Break the loop if fewer than max products are returned, indicating the last page.
+          break;
+        }
+  
+        currentPage += 1; // Move to the next page.
+      }
+  
+      return allProducts;
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      throw error;
+    } finally {
+      collectionWrapper.classList.remove('loading');
+    }
+  }
+  
+  // Initial page load logic
+  window.addEventListener('DOMContentLoaded', async function () {
+    try {
+      const searchQuery = new URLSearchParams(window.location.search).get('q') || '';
+      document.getElementById('search-input').value = searchQuery;
+  
+      allProducts = await fetchAllProducts();
+      filteredProducts = filterProducts(searchQuery.toLowerCase(), {});
+      currentPage = 1;
+      renderPage();
+    } catch (error) {
+      console.error('Error during initial product load:', error);
+      const resultsContainer = document.querySelector('.search-results-container');
+      resultsContainer.innerHTML = '<p>Failed to load products. Please try again.</p>';
     }
   });
-
-  document.addEventListener("DOMContentLoaded", function () {
-    const isMobile = window.innerWidth <= 750;
-    const url = new URL(window.location.href);
   
-    if (isMobile) {
-      const perview = url.searchParams.get("perview");
-      if (perview !== "18") {
-        url.searchParams.set("perview", "18");
-        window.location.href = url.toString();
+  let previousParams = new URLSearchParams(window.location.search).toString();
+
+  async function handleUrlChange() {
+    const currentParams = new URLSearchParams(window.location.search).toString();
+    
+    if (currentParams !== previousParams) {
+      previousParams = currentParams;
+  
+      const collectionWrapper = document.querySelector('.collection-product-wrapper');
+      const searchQuery = new URLSearchParams(window.location.search).get('q') || '';
+      const filters = {};
+  
+      for (const [key, value] of new URLSearchParams(window.location.search).entries()) {
+        if (key !== 'q') {
+          filters[key] = value;
+        }
+      }
+  
+      collectionWrapper.classList.add('loading');
+  
+      try {
+        document.getElementById('search-input').value = searchQuery;
+  
+        allProducts = await fetchAllProducts(filters);
+        filteredProducts = filterProducts(searchQuery.toLowerCase(), {});
+        currentPage = 1;
+        renderPage();
+      } catch (error) {
+        console.error('Error during initial product load:', error);
+        const resultsContainer = document.querySelector('.search-results-container');
+        resultsContainer.innerHTML = '<p>Failed to load products. Please try again.</p>';
+      } finally {
+        collectionWrapper.classList.remove('loading');
       }
     }
-  });
+  }
   
-</script> {% endcomment %}
+  // MutationObserver to watch for DOM changes that may update the URL
+  const observer = new MutationObserver(() => {
+    const currentParams = new URLSearchParams(window.location.search).toString();
+    if (currentParams !== previousParams) {
+      handleUrlChange();
+    }
+  });
+
+  // Observe the document for changes
+  observer.observe(document, { childList: true, subtree: true });
+
+  document.addEventListener('input', (event) => {
+    if (event.target && event.target.id === 'search-input') {
+      handleSearchInput(event);
+    }
+  });
+</script>
 
 {% schema %}
 {

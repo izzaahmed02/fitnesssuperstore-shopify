@@ -15,7 +15,27 @@
   Usage:
   {% render 'article-card' blog: blog, article: article, show_image: section.settings.show_image %}
 {% endcomment %}
-
+<style>
+  .article-card__image img {
+    object-fit: contain !important;
+  }
+  .card__information, .card__heading {
+    display: block !important;
+  }
+  .product-grid-container  .card__information, .card__heading {
+    display: none !important;
+  }
+  .article-card__excerpt {
+    margin-top: 10px;
+  }
+  .article-see-all-link {
+    display: flex;
+    align-items: center;
+    color: #F1592A;
+    font-weight: 700;
+    font-family: 'Lato';
+  }
+</style>
 {%- if article and article != empty -%}
   {%- liquid
     assign ratio = 1
@@ -25,6 +45,11 @@
   -%}
   <div class="article-card-wrapper card-wrapper underline-links-hover">
     {% comment %} <article aria-labelledby="Article-{{ article.id }}"> {% endcomment %}
+      {% assign img_tag_start = article.content | split: '<img' %}
+      {% if img_tag_start.size > 1 %}
+        {% assign img_tag = img_tag_start[1] | split: '>' | first | prepend: '<img' %}
+        {% assign img_url = img_tag | split: 'src="' | last | split: '"' | first %}
+      {% endif %}
     <div
       class="
         card article-card
@@ -40,7 +65,29 @@
         class="card__inner {% if settings.blog_card_style == 'standard' %} color-{{ settings.blog_card_color_scheme }} gradient{% endif %}{% if article.image and show_image or settings.blog_card_style == 'standard' %} ratio{% endif %}"
         style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
       >
-        {%- if show_image == true and article.image -%}
+        {% if img_url %}
+          <div class="article-card__image-wrapper card__media">
+            <div
+              class="article-card__image media media--hover-effect"
+              {% if section.settings.media_height == 'adapt' %}
+                style="padding-bottom: {{ 1 | divided_by: article.image.aspect_ratio | times: 100 }}%;"
+              {% endif %}
+            >
+              {% comment %}theme-check-disable ImgLazyLoading{% endcomment %}
+              <img
+                src="{{ img_url }}"
+                sizes="(min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 | divided_by: 2 }}px, (min-width: 750px) calc((100vw - 130px) / 2), calc((100vw - 50px) / 2)"
+                alt="{{ article.title | escape }}"
+                class="motion-reduce"
+                {% unless lazy_load == false %}
+                  loading="lazy"
+                {% endunless %}
+              >
+              {% comment %}theme-check-enable ImgLazyLoading{% endcomment %}
+            </div>
+          </div>
+        {% endif %}       
+        {% comment %} {%- if show_image == true and article.image -%}
           <div class="article-card__image-wrapper card__media">
             <div
               class="article-card__image media media--hover-effect"
@@ -72,7 +119,7 @@
               {% comment %}theme-check-enable ImgLazyLoading{% endcomment %}
             </div>
           </div>
-        {%- endif -%}
+        {%- endif -%} {% endcomment %}
       </div>
       <div class="card__content">
         <div class="card__information">

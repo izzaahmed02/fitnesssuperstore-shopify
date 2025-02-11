@@ -1,6 +1,11 @@
 <script>
   document.addEventListener('DOMContentLoaded', (event) => {
+
     if ($(window).width() > 749) {
+      gallerySlickInit();
+    }
+
+    function gallerySlickInit() {
       $('.gallery-wrapper').slick({
         dots: true,
         infinite: true,
@@ -30,6 +35,15 @@
 </svg></button>`,
       });
     }
+    $(window).on('resize', function() {
+      var viewportWidth = $(window).width();
+  
+      if (viewportWidth < 749) {
+        $('.gallery-wrapper').slick('unslick');
+      } else {
+        gallerySlickInit();
+      }
+  });
   });
 </script>
 
@@ -118,6 +132,7 @@
     height: 100%;
     object-fit: cover;
     border-radius: 24px;
+    image-rendering: pixelated;
   }
   #shopify-section-{{ section.id }} .slick-dots{
     bottom: unset;

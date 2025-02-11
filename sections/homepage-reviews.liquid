@@ -1,0 +1,216 @@
+{{ 'homepage-reviews.css' | asset_url | stylesheet_tag }}
+
+<div class="page-width">
+    <div class="homepage-reviews__wrapper">
+        <h2 class="homepage-reviews__title">
+            {{ section.settings.title }}
+        </h2>
+        <div class="homepage-reviews__copy">{{ section.settings.copy }}</div>
+        <div class="homepage-reviews__header">
+            <div class="homepage-reviews__tabs-header">
+                <button class="homepage-reviews__tab-btn active" data-tab="tab1"
+                        type="button">{{ section.settings.tab_title_1 }}</button>
+                <button class="homepage-reviews__tab-btn" data-tab="tab2"
+                        type="button">{{ section.settings.tab_title_2 }}</button>
+            </div>
+            <a href="{{ section.settings.url }}"
+               class="homepage-reviews__btn button button--secondary">
+                {{ section.settings.label }}
+                {% render 'chevron-button' %}
+            </a>
+        </div>
+        <div class="homepage-reviews__tabs">
+            <div class="homepage-reviews__tab homepage-reviews__tab-active" data-tab="tab1">
+                <div class="swiper homepage-reviews__swiper-1">
+                    <div class="swiper-wrapper">
+                        {% for block in section.blocks limit: 10 %}
+                            <div class="swiper-slide homepage-reviews__item">
+                                {% assign star_count = block.settings.stars %}
+                                {% if star_count > 5 %}
+                                    {% assign star_count = 5 %}
+                                {% endif %}
+                                <div class="homepage-reviews__item-rating">
+                                    {% for i in (1..star_count) %}
+                                        {% render 'review-star' %}
+                                    {% endfor %}
+                                </div>
+                                {% if block.settings.title != blank %}
+                                    <h6 class="homepage-reviews__item-title">{{ block.settings.title }}</h6>
+                                {% endif %}
+                                {% if block.settings.copy != blank %}
+                                    <p class="homepage-reviews__item-copy">
+                                        {{ block.settings.copy }}
+                                    </p>
+                                    <a href="#" class="homepage-reviews__item-copy-btn">Read More</a>
+                                {% endif %}
+                                <span class="homepage-reviews__item-author">{{ block.settings.author }}</span>
+                                <div class="homepage-reviews__item-label">
+                                    {% render 'verified-icon' %}
+                                    <span class="homepage-reviews__item-label-text">Verified buyer</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="homepage-reviews__swiper-controls">
+                    <div class="swiper-button-prev">
+                        {% render 'chevron-button-prev' %}
+                    </div>
+                    <div class="swiper-button-next">
+                        {% render 'chevron-button-next' %}
+                    </div>
+                </div>
+            </div>
+            <div class="homepage-reviews__tab" data-tab="tab2">
+                <div class="swiper homepage-reviews__swiper-2">
+                    <div class="swiper-wrapper">
+                        {% for block in section.blocks offset: 10 limit: 10 %}
+                            <div class="swiper-slide homepage-reviews__item">
+                                {% assign star_count = block.settings.stars %}
+                                {% if star_count > 5 %}
+                                    {% assign star_count = 5 %}
+                                {% endif %}
+                                <div class="homepage-reviews__item-rating">
+                                    {% for i in (1..star_count) %}
+                                        {% render 'review-star' %}
+                                    {% endfor %}
+                                </div>
+                                {% if block.settings.title != blank %}
+                                    <h6 class="homepage-reviews__item-title">{{ block.settings.title }}</h6>
+                                {% endif %}
+                                {% if block.settings.copy != blank %}
+                                    <p class="homepage-reviews__item-copy">
+                                        {{ block.settings.copy }}
+                                    </p>
+                                    <a href="#" class="homepage-reviews__item-copy-btn">Read More</a>
+                                {% endif %}
+                                <span class="homepage-reviews__item-author">{{ block.settings.author }}</span>
+                                <div class="homepage-reviews__item-label">
+                                    {% render 'verified-icon' %}
+                                    <span class="homepage-reviews__item-label-text">Verified buyer</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="homepage-reviews__swiper-controls">
+                    <div class="swiper-button-prev">
+                        {% render 'chevron-button-prev' %}
+                    </div>
+                    <div class="swiper-button-next">
+                        {% render 'chevron-button-next' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a href="{{ section.settings.url }}"
+           class="homepage-reviews__btn homepage-reviews__btn--mobile button button--secondary">
+            {{ section.settings.label }}
+            {% render 'chevron-button' %}
+        </a>
+    </div>
+</div>
+<script src="{{ 'homepage-reviews.js' | asset_url }}"></script>
+
+
+{% schema %}
+{
+  "name": "Homepage Reviews",
+  "tag": "section",
+  "class": "section homepage-reviews",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section Title"
+    },
+    {
+      "type": "text",
+      "id": "copy",
+      "label": "Section Copy"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Section Button Label"
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "Section Button URL"
+    },
+    {
+      "type": "text",
+      "id": "tab_title_1",
+      "label": "Section First Tab Title"
+    },
+    {
+      "type": "text",
+      "id": "tab_title_2",
+      "label": "Section Second Tab Title"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "review",
+      "name": "Review",
+      "settings": [
+        {
+          "type": "select",
+          "id": "stars",
+          "label": "Stars Quantity",
+          "options": [
+            {
+              "value": "1",
+              "label": "1"
+            },
+            {
+              "value": "2",
+              "label": "2"
+            },
+            {
+              "value": "3",
+              "label": "3"
+            },
+            {
+              "value": "4",
+              "label": "4"
+            },
+            {
+              "value": "5",
+              "label": "5"
+            }
+          ],
+          "default": "5"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Review Title"
+        },
+        {
+          "type": "text",
+          "id": "copy",
+          "label": "Review Copy"
+        },
+        {
+          "type": "text",
+          "id": "author",
+          "label": "Review Author"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Homepage Reviews"
+    }
+  ]
+}
+{% endschema %}

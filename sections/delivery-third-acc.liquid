@@ -1,0 +1,179 @@
+<style>
+    .delivery-third-acc .delivery-first-acc__copy li:before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: url("{{ "Check.svg" | asset_url }}") center center no-repeat;
+        display: block;
+        width: 24px;
+        height: 24px;
+    }
+
+    .delivery-third-acc .accordion-content-inner ul li:first-child:before {
+        content: '';
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        background: url("{{ "Pin.svg" | asset_url }}") center center no-repeat;
+        top: 0;
+        left: -38px;
+    }
+
+    .delivery-third-acc .accordion-content-inner ul li:nth-child(2):before {
+        content: '';
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        background: url("{{ "time.svg" | asset_url }}") center center no-repeat;
+        top: 0;
+        left: -38px;
+    }
+
+    .delivery-third-acc .accordion-content-inner ul li:last-child:before {
+        content: '';
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        background: url("{{ "phone.svg" | asset_url }}") center center no-repeat;
+        top: 0;
+        left: -38px;
+    }
+</style>
+<div class="section-{{ section.id }} page-width scroll-trigger animate--slide-in">
+    <div class="container">
+        <div class="delivery-first-acc__wrapper">
+            <div class="delivery-first-acc__content">
+                <h2 class="delivery-first-acc__title">{{ section.settings.title }}</h2>
+                <div class="delivery-first-acc__copy">
+                    {{ section.settings.copy }}
+                </div>
+            </div>
+            <div class="delivery-first-acc__accordions">
+                {% for block in section.blocks %}
+                    <div class="delivery-accordion-item">
+                        <button
+                                class="accordion-header"
+                                type="button"
+                                aria-expanded="false"
+                                aria-controls="accordion-content-{{ forloop.index }}">
+
+                                <span class="accordion-title">
+                                  {{ block.settings.title }}
+                                </span>
+                            {% render 'chevron' %}
+                        </button>
+
+                        <div
+                                id="accordion-content-{{ forloop.index }}"
+                                class="accordion-content"
+                                aria-hidden="true"
+                        >
+                            <div class="accordion-content-inner">
+                                {{ block.settings.subcopy }}
+                                {% if forloop.index == 2 %}
+                                    <div class="delivery-accordion-item">
+                                        <button
+                                                class="accordion-header"
+                                                type="button"
+                                                aria-expanded="true"
+                                                aria-controls="accordion-content-{{ forloop.index }}">
+                                            {% render 'subchevron' %}
+                                            <span class="accordion-title">
+                                  {{ block.settings.subtitle }}
+                                </span>
+                                        </button>
+
+                                        <div
+                                                id="accordion-content-{{ forloop.index }}"
+                                                class="accordion-content"
+                                                aria-hidden="false"
+                                        >
+                                            <div class="accordion-content-inner">
+                                                {% if block.settings.subimage != blank %}
+                                                    <img src="{{ block.settings.subimage | image_url: width: 600, height: 300 }}"
+                                                         alt="{{ block.settings.subimage.alt | escape }}"
+                                                         class="accordion-content-image">
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                {{ block.settings.copy }}
+                                {% if block.settings.image != blank %}
+                                    <img src="{{ block.settings.image | image_url: width: 600, height: 250 }}"
+                                         alt="{{ block.settings.image.alt | escape }}"
+                                         class="accordion-content-image">
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% schema %}
+{
+  "name": "Third Accordion Section",
+  "tag": "section",
+  "class": "section delivery-third-acc",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "copy",
+      "label": "Section Copy"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "accordion",
+      "name": "Accordion Block",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Block Title"
+        },
+        {
+          "type": "richtext",
+          "id": "copy",
+          "label": "Block Copy"
+        },
+        {
+          "type": "richtext",
+          "id": "subcopy",
+          "label": "Block Subcopy"
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Block Subaccordion Title"
+        },
+        {
+          "type": "image_picker",
+          "id": "subimage",
+          "label": "Block Subaccorion Image"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Delivery Banner"
+    }
+  ]
+}
+{% endschema %}
