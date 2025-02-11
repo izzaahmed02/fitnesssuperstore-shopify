@@ -661,7 +661,7 @@ try {
                         if (afterPayElement) {
 							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong').innerHTML} / 4 interest-free payment`;
 
-							document.querySelector('.paylater-logo').innerHTML += `<svg style="" onclick="document.querySelector('square-placement').shadowRoot.querySelector('button').click()" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" width="104" height="36" viewBox="0 0 104 36">
+							document.querySelector('.paylater-logo').innerHTML += `<svg class="afterPayLogo" onclick="document.querySelector('square-placement').shadowRoot.querySelector('button').click()" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" width="104" height="36" viewBox="0 0 104 36">
 							<path class="afterpay-logo-badge-background" fill="#b2fce4" d="m86.00173,35.9321l-68.00064,0c-9.90375,0 -17.93101,-8.02726 -17.93101,-17.93101l0,0c0,-9.90375 8.02726,-17.93101 17.93101,-17.93101l68.00064,0c9.90375,0 17.931,8.02726 17.931,17.93101l0,0c0.00652,9.89724 -8.02725,17.93101 -17.931,17.93101z"></path>
 							<g class="afterpay-logo-badge-lockup">
 							  <path d="m88.23074,13.52071l-2.25928,-1.29288l-2.29193,-1.31247c-1.51489,-0.86845 -3.40851,0.22201 -3.40851,1.97197l0,0.29384c0,0.16324 0.08489,0.31342 0.22854,0.39178l1.06435,0.60726c0.29383,0.16978 0.6595,-0.0457 0.6595,-0.38525l0,-0.69868c0,-0.34607 0.37219,-0.56155 0.67256,-0.39178l2.0895,1.20147l2.08298,1.19493c0.30037,0.16977 0.30037,0.60727 0,0.77704l-2.08298,1.19494l-2.0895,1.20146c-0.30037,0.16978 -0.67256,-0.0457 -0.67256,-0.39178l0,-0.34607c0,-1.74997 -1.89362,-2.84696 -3.40851,-1.97198l-2.29193,1.31247l-2.25928,1.29289c-1.52142,0.87498 -1.52142,3.07549 0,3.95047l2.25928,1.29289l2.29193,1.31247c1.51489,0.86845 3.40851,-0.22201 3.40851,-1.97198l0,-0.29383c0,-0.16325 -0.08489,-0.31343 -0.22854,-0.39179l-1.06435,-0.60726c-0.29383,-0.16977 -0.6595,0.04571 -0.6595,0.38525l0,0.69868c0,0.34608 -0.37219,0.56156 -0.67256,0.39179l-2.0895,-1.20147l-2.08298,-1.19494c-0.30037,-0.16977 -0.30037,-0.60726 0,-0.77703l2.08298,-1.19494l2.0895,-1.20147c0.30037,-0.16977 0.67256,0.04571 0.67256,0.39179l0,0.34607c0,1.74996 1.89362,2.84695 3.40851,1.97197l2.29193,-1.31247l2.25928,-1.29288c1.52142,-0.88151 1.52142,-3.0755 0,-3.95048z"></path>
@@ -696,22 +696,50 @@ try {
 				}
 			}, 500)
 
-			//todo
-				const targetNode = document.querySelector('.pr_custom_price');
+			const targetNode = document.querySelector('.pr_custom_price');
 
-				const observerCallback = (mutationsList, observer) => {
-				  for (const mutation of mutationsList) {
-					if (mutation.type === 'characterData') {
-					
-					}
-				  }
-				};
-			
-				const observer = new MutationObserver(observerCallback);
+			const observerCallback = (mutationsList, observer) => {
+				for (const mutation of mutationsList) {
+					console.log(mutation.type)
+					if (mutation.type === 'childList') {
+						const productPrice = getProductPrice();	
+						document.querySelector('square-placement').setAttribute('data-amount', productPrice);
+
+						const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2 strong');
+						let payLaterText = '';
 		
-				const config = { characterData: true };
-			
-				observer.observe(targetNode, config);
+						if (afterPayElement) {
+							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML} / 4 interest-free payment`;
+							document.querySelector('.afterPayLogo').style.display = 'block';
+						} else {
+							document.querySelector('.afterPayLogo').style.display = 'none';
+		
+							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 9});
+		
+							if (payTomorrow24MosRate) {
+								payLaterText = `As low as ${parseFloat(payTomorrow24MosRate).toLocaleString('en-US', {
+									style: 'currency',
+									currency: 'USD',
+									})}/mo. / 4 interest-free payment`
+							}
+						}
+		
+						document.querySelector('.paylater-text').innerHTML = `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"></path>
+						</svg>`
+						}
+						
+						if (mutation.type === 'characterData') { 
+							console.log('Character data changed. New text:', mutation.target.data);
+						}
+				}
+			};
+		
+			const observer = new MutationObserver(observerCallback);
+	
+			const config = { childList: true, characterData: true, subtree: true };
+		
+			observer.observe(targetNode, config);
 		}
 
         function removeEmptyElements(element) {
@@ -872,7 +900,7 @@ function setupOptionsHandler() {
 						</svg>
 					</div>
 				`;
-	
+
 				if (input.checked) {
 					if (!selectedOptionsContainer?.querySelector(`[data-value="${inputIndex}"]`)) {
 						selectedOptionsContainer.innerHTML = selectedOptionHTML;
@@ -1081,7 +1109,7 @@ function generateAfterPayPaymentTerms() {
 			  <p class="total">Total: ${afterPay12MosRate.TotalPaymentsNewTerm}</p>
 			</div>
 			<a href="#" class="terms-link">
-			  <svg style="" onclick="document.querySelector('square-placement').shadowRoot.querySelector('button').click()" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" width="104" height="36" viewBox="0 0 104 36">
+			  <svg onclick="document.querySelector('square-placement').shadowRoot.querySelector('button').click()" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" width="104" height="36" viewBox="0 0 104 36">
                     <path class="afterpay-logo-badge-background" fill="#b2fce4" d="m86.00173,35.9321l-68.00064,0c-9.90375,0 -17.93101,-8.02726 -17.93101,-17.93101l0,0c0,-9.90375 8.02726,-17.93101 17.93101,-17.93101l68.00064,0c9.90375,0 17.931,8.02726 17.931,17.93101l0,0c0.00652,9.89724 -8.02725,17.93101 -17.931,17.93101z"></path>
                     <g class="afterpay-logo-badge-lockup">
                       <path d="m88.23074,13.52071l-2.25928,-1.29288l-2.29193,-1.31247c-1.51489,-0.86845 -3.40851,0.22201 -3.40851,1.97197l0,0.29384c0,0.16324 0.08489,0.31342 0.22854,0.39178l1.06435,0.60726c0.29383,0.16978 0.6595,-0.0457 0.6595,-0.38525l0,-0.69868c0,-0.34607 0.37219,-0.56155 0.67256,-0.39178l2.0895,1.20147l2.08298,1.19493c0.30037,0.16977 0.30037,0.60727 0,0.77704l-2.08298,1.19494l-2.0895,1.20146c-0.30037,0.16978 -0.67256,-0.0457 -0.67256,-0.39178l0,-0.34607c0,-1.74997 -1.89362,-2.84696 -3.40851,-1.97198l-2.29193,1.31247l-2.25928,1.29289c-1.52142,0.87498 -1.52142,3.07549 0,3.95047l2.25928,1.29289l2.29193,1.31247c1.51489,0.86845 3.40851,-0.22201 3.40851,-1.97198l0,-0.29383c0,-0.16325 -0.08489,-0.31343 -0.22854,-0.39179l-1.06435,-0.60726c-0.29383,-0.16977 -0.6595,0.04571 -0.6595,0.38525l0,0.69868c0,0.34608 -0.37219,0.56156 -0.67256,0.39179l-2.0895,-1.20147l-2.08298,-1.19494c-0.30037,-0.16977 -0.30037,-0.60726 0,-0.77703l2.08298,-1.19494l2.0895,-1.20147c0.30037,-0.16977 0.67256,0.04571 0.67256,0.39179l0,0.34607c0,1.74996 1.89362,2.84695 3.40851,1.97197l2.29193,-1.31247l2.25928,-1.29288c1.52142,-0.88151 1.52142,-3.0755 0,-3.95048z"></path>
