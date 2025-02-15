@@ -1,6 +1,7 @@
 
 let allProducts = [];
 let debounceTimeout;
+let productNames = new Set();
 
 class FacetFiltersForm extends HTMLElement {
   constructor() {
@@ -32,7 +33,17 @@ class FacetFiltersForm extends HTMLElement {
 
     if (searchInput) {
       searchInput.removeEventListener("input", filterProducts);
-      searchInput.addEventListener("input", debounce(filterProducts, 800));
+      searchInput.addEventListener("input", debounce(filterProducts, 300));
+    }
+
+    document.querySelectorAll(".facet-checkbox__text-label").forEach(element => {
+        element.textContent = decodeHTML(element.innerHTML);
+    });
+
+    function decodeHTML(html) {
+      const txt = document.createElement("textarea");
+      txt.innerHTML = html;
+      return txt.value;
     }
   
     function fetchAllProducts() {
@@ -40,13 +51,21 @@ class FacetFiltersForm extends HTMLElement {
       fetch(collectionUrl)
         .then(response => response.text())
         .then(html => {
+
           const parser = new DOMParser();
           const doc = parser.parseFromString(html, "text/html");
           const productItems = doc.querySelectorAll("#product-grid li");
   
           productItems.forEach(product => {
-            allProducts.push(product.cloneNode(true)); 
+            const productName = product.querySelector('.product-item .title').textContent.trim().toLowerCase();
+                    
+            if (!productNames.has(productName)) {
+              productNames.add(productName);
+              allProducts.push(product.cloneNode(true));
+            }
           });
+
+          updatePriceFilter(productItems);
         });
     }
   
@@ -70,10 +89,12 @@ class FacetFiltersForm extends HTMLElement {
       if (filteredProducts.length > 0) {
         filteredProducts.forEach(product => {
           productGrid.appendChild(product);
+        });
+        filteredProducts.forEach(product => {
           initSlider(product.querySelector('.product-item .image-wrap'));
         });
       } else {
-        productGrid.innerHTML = "<li>No products found. Please refine your search</li>";
+        productGrid.innerHTML = "<li>No products found.</li>";
       }
     }
   
@@ -129,6 +150,34 @@ class FacetFiltersForm extends HTMLElement {
         history.pushState({ url }, '', `${window.location.pathname}${url && '?'.concat(url)}`);
       }
     }
+
+    function updatePriceFilter(products) {
+      let priceCounts = {
+          "0-1000": 0,
+          "1000-2000": 0,
+          "2000-3000": 0,
+          "3000-": 0
+      };
+
+      products.forEach(product => {
+          let priceText = product.querySelector(".price-wrapper")?.textContent || "";
+          let price = parseFloat(priceText.replace(/[^0-9.]/g, "")); 
+
+          if (!isNaN(price)) {
+              if (price < 1000) priceCounts["0-1000"]++;
+              else if (price >= 1000 && price < 2000) priceCounts["1000-2000"]++;
+              else if (price >= 2000 && price < 3000) priceCounts["2000-3000"]++;
+              else priceCounts["3000-"]++;
+          }
+      });
+
+      document.querySelectorAll("#price-filter-dropdown option").forEach(option => {
+          let value = option.value;
+          if (priceCounts[value] !== undefined) {
+              option.textContent = `${option.textContent.split(" (")[0]} (${priceCounts[value]})`;
+          }
+      });
+  }
     
     const applyButton = document.querySelectorAll('.button--primary.apply-filters-mobile');
     
@@ -234,11 +283,11 @@ class FacetFiltersForm extends HTMLElement {
       });
     }, { threshold: 0.8 });
   
-    $('.image-wrap').each(function() {
-      if ($(this).length > 0) {
-      observer.observe(this);
+    document.querySelectorAll('.image-wrap').forEach((element, key) => {
+      if (element) {
+        observer.observe(this);
       }
-    });
+    })
 
     const facetWrapper = this.querySelector('#FacetsWrapperDesktop');
     if (facetWrapper) facetWrapper.addEventListener('keyup', onKeyUpEscape);

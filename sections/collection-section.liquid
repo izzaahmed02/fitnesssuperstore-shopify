@@ -34,6 +34,28 @@
           'visibility': 'visible'
         });
     });
+
+    document.querySelectorAll('.main-review-container').forEach((element, id) => {
+      const saReviewPolling = setInterval(() => {
+        const starContainer = element.querySelector('.star_container div');
+        const reviewContainer = element.querySelector('.review-container');
+
+        if (starContainer) {
+          const starsCount = starContainer.querySelectorAll('.on')?.length;
+          const reviewCount = starContainer.querySelector('.ind_cnt_num').textContent;
+          const reviewText = starContainer.querySelector('.ind_cnt_desc').textContent;
+
+          if (reviewContainer) {
+            const reviewsRatingSpan = reviewContainer.querySelector('.reviews-count');
+            const starRatingCount = reviewContainer.querySelector('.star-count');
+            reviewsRatingSpan.textContent = `(${reviewCount} ${reviewText})`;
+            starRatingCount.textContent = starsCount.toFixed(1);
+          }
+          element.style.display = 'block';
+          clearInterval(saReviewPolling);
+        } 
+      }, 100)
+    });
   }
 
   const observer = new IntersectionObserver((entries, observer) => {
@@ -324,6 +346,7 @@
     line-height: 18px;
     color: #F1592A;
     border-radius: 100px;
+    gap: 5px;
   }
   .sale-tag{
     padding: 5px 8px;
@@ -337,13 +360,20 @@
     color: #F52419;
     border-radius: 100px;
   }
-  .star_container{
+  .review-container {
+    display: flex;
     margin-bottom: 12px;
+    align-items: center;
+    gap: 5px;
+  }
+  .main-review-container {
+    display: none;
   }
   .old-price-wrapper{
     font-size: 16px;
     line-height: 24px;
     color: #B3B3B3;
+    text-decoration: line-through;
   }
   .price-wrapper{
     font-size: 16px;
@@ -438,6 +468,18 @@
   }
   .compare_mode-collection .comparable-products:before{
     display: none!important;
+  }
+  .reviews-rating{
+    display: flex;
+    gap: 4px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    color: #000000;
+  }
+  .reviews-rating span{
+    font-weight: 400;
+    color: #808080;
   }
   @media (max-width: 768px) {
     .product-item .image-wrap img {

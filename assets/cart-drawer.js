@@ -146,7 +146,6 @@ class CartDrawer extends HTMLElement {
       const cartCount = document.querySelector('.cart-count-bubble span');
       
       
-      console.log(drawerHeadingSpan);
       if (drawerHeadingSpan && drawerSubHeadingSpan && cartCount ) {
           const initialCount = parseInt(drawerHeadingSpan.getAttribute('data-count'), 10);
           const newCount = isNaN(initialCount) ? 0 : initialCount - totalContentCount;

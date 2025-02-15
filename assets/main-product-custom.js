@@ -700,7 +700,6 @@ try {
 
 			const observerCallback = (mutationsList, observer) => {
 				for (const mutation of mutationsList) {
-					console.log(mutation.type)
 					if (mutation.type === 'childList') {
 						const productPrice = getProductPrice();	
 						document.querySelector('square-placement').setAttribute('data-amount', productPrice);

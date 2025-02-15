@@ -329,8 +329,6 @@ if (!customElements.get('custom-manuals')) {
 
 			renderCollections(collections) {
 				// Render the filtered collections
-				console.log('collections', collections);
-				console.log(collections)
 				this.contentContainer.innerHTML = `
           <div class="manuals-list__wrapper">
             ${collections.map(
