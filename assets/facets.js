@@ -73,8 +73,9 @@ class FacetFiltersForm extends HTMLElement {
       const searchText = document.getElementById('search-input').value.toLowerCase();
 
       if (!searchText) {
-          const searchParams = new URLSearchParams(window.location.search);
+          const searchParams = new URLSearchParams(window.location.search) ?? FacetFiltersForm.searchParamsInitial;
           FacetFiltersForm.renderPage(searchParams, event);
+          return;
       }
 
       const productGrid = document.getElementById('product-grid');
@@ -90,13 +91,37 @@ class FacetFiltersForm extends HTMLElement {
         filteredProducts.forEach(product => {
           productGrid.appendChild(product);
         });
-        filteredProducts.forEach(product => {
-          initSlider(product.querySelector('.product-item .image-wrap'));
-        });
+        initSlidersBatch();
       } else {
         productGrid.innerHTML = "<li>No products found.</li>";
       }
     }
+
+    function initSlidersBatch() {
+      const products = document.querySelectorAll('#product-grid li');
+      if (!products.length) return;
+  
+      let index = 0;
+      const batchSize = 5; 
+      const delay = 100; 
+  
+      function processBatch() {
+          requestAnimationFrame(() => {
+              for (let i = 0; i < batchSize && index < products.length; i++, index++) {
+                  const product = products[index];
+                  if (product) {
+                      initSlider(product.querySelector('.product-item .image-wrap'));
+                  }
+              }
+          });
+  
+          if (index < products.length) {
+              setTimeout(processBatch, delay); 
+          }
+      }
+  
+      processBatch();
+  }
   
     function debounce(func, delay) {
       return function (...args) {
@@ -238,28 +263,23 @@ class FacetFiltersForm extends HTMLElement {
 
     function initSlider(element) {
       if (!$(element).hasClass('slick-initialized')) {
-        $(element).slick({
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          lazyLoad: 'ondemand',
-          arrows: true,
-          dots: true,
-          responsive: [
-            {
-              breakpoint: 768,
-              settings: {
-                slidesToShow: 1
-              }
-            }
-          ],
-          
-        });
+    $(element).slick({
+      slidesToShow: 1,
+      slidesToScroll: 1,
+      lazyLoad: 'ondemand',
+      arrows: true,
+      dots: true,
+      responsive: [
+        {
+          breakpoint: 768,
+          settings: {
+            slidesToShow: 1
+          }
+        }
+      ],
+      
+    });
 
-        $(element).find('.image-item').each(function() {
-          $(this).css({
-            'background': '#edeff3',
-          });
-        });
       $(element).find('img.lazy-load').each(function() {
           const img = $(this);
         if(img){
@@ -283,11 +303,11 @@ class FacetFiltersForm extends HTMLElement {
       });
     }, { threshold: 0.8 });
   
-    document.querySelectorAll('.image-wrap').forEach((element, key) => {
-      if (element) {
-        observer.observe(this);
+    $('.image-wrap').each(function() {
+      if ($(this).length > 0) {
+      observer.observe(this);
       }
-    })
+    });
 
     const facetWrapper = this.querySelector('#FacetsWrapperDesktop');
     if (facetWrapper) facetWrapper.addEventListener('keyup', onKeyUpEscape);
@@ -516,7 +536,9 @@ class FacetFiltersForm extends HTMLElement {
   }
 
   static updateURLHash(searchParams) {
-    history.pushState({ searchParams }, '', `${window.location.pathname}${searchParams && '?'.concat(searchParams)}`);
+    if (searchParams.size > 0) {
+      history.pushState({ searchParams }, '', `${window.location.pathname}${searchParams && '?'.concat(searchParams)}`);
+    }
   }
 
   static getSections() {
