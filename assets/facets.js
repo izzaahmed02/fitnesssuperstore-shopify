@@ -103,7 +103,7 @@ class FacetFiltersForm extends HTMLElement {
   
       let index = 0;
       const batchSize = 5; 
-      const delay = 100; 
+      const delay = 200; 
   
       function processBatch() {
           requestAnimationFrame(() => {
