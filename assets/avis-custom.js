@@ -23,12 +23,14 @@ function renderCustomAvisOptions() {
 
     if (warrantySelect) {
       const warrantyParentContainer = warrantySelect.closest(".ap-options__select-container");
-        
+
       if (warrantyParentContainer) {
         const selectOptions = warrantyParentContainer.querySelector('select').options.length;
 
         if (selectOptions <= 1) {
             warrantyParentContainer.style.display = "none";
+        } else {
+            warrantyParentContainer.querySelector('.ap-label-tooltip').classList.add('ap-options__heading')
         }
       }
     }
