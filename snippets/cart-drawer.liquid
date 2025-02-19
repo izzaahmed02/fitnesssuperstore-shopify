@@ -1,524 +1,336 @@
 {{ 'quantity-popover.css' | asset_url | stylesheet_tag }}
 {{ 'component-card.css' | asset_url | stylesheet_tag }}
-  
-<script>
-  document.addEventListener("DOMContentLoaded", (event) => {
-      document.querySelectorAll('.cart-item-new .show-extra').forEach(button => {
-          button.addEventListener('click', () => {
-              let currentItem = button.parentElement;
-              let nextElement = currentItem.nextElementSibling;
-              button.classList.toggle('active');
-  
-              while (nextElement && !nextElement.classList.contains('cart-item-new')) {
-                  if (nextElement.classList.contains('extra-option-item')) {
-                      nextElement.classList.toggle('toggle');
-                  }
-                  nextElement = nextElement.nextElementSibling;
-              }
-          });
-      });
-      let totalContentCount = 0;
-      document.querySelectorAll('.cart-item-new').forEach(cartItem => {
-          let count = 0;
-          let totalSum = 0;
-          let hasExtraContent = false;
-          let nextElement = cartItem.nextElementSibling;
-  
-          while (nextElement && !nextElement.classList.contains('cart-item-new')) {
-              if (nextElement.classList.contains('extra-option-item')) {
-                  hasExtraContent = true;
-                  count++;
-                  totalContentCount++;
-                  const priceElement = nextElement.querySelector('.extra-option-price');
-                  if (priceElement) {
-                      const priceText = priceElement.textContent.replace('$', '');
-                      const price = parseFloat(priceText);
-                      totalSum += isNaN(price) ? 0 : price;
-                  }
-              }
-              nextElement = nextElement.nextElementSibling;
-          }
-  
-          const quantityDisplay = cartItem.querySelector('.extra-quantity .value');
-          if (quantityDisplay) {
-              quantityDisplay.textContent = count;
-          }
-  
-          const priceDisplay = cartItem.querySelector('.options-price');
-          if (priceDisplay) {
-              priceDisplay.textContent = `$${totalSum.toFixed(2)}`;
-          }
-  
-          const showExtraButton = cartItem.querySelector('.show-extra');
-        
-          if (showExtraButton && !hasExtraContent) {
-              showExtraButton.style.display = 'none';
-          } else {
-              showExtraButton.style.display = 'flex';
-          }
-      });
 
-      
-      const drawerHeadingSpan = document.querySelector('.drawer__heading span');
-      const drawerSubHeadingSpan = document.querySelector('.cart-drawer__subheading span');
-      const cartCount = document.querySelector('.cart-count-bubble span');
-      
-      if (drawerHeadingSpan && drawerSubHeadingSpan && cartCount ) {
-          const initialCount = parseInt(drawerHeadingSpan.getAttribute('data-count'), 10);
-          const newCount = isNaN(initialCount) ? 0 : initialCount - totalContentCount;
-          drawerHeadingSpan.textContent = newCount;
-          drawerSubHeadingSpan.textContent = newCount;
-          cartCount.textContent = newCount;
-        
-          cartCount.style.display = "flex";
-          // drawerHeadingSpan.style.display = "inline";
-          // drawerSubHeadingSpan.style.display = "inline";
-      }
-  });
-
-</script>
-
-{% style %}
-  .cart-link {
-    width: 100%;
-    height: 48px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 700;
-    color: #ffffff;
-    line-height: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #F1592A; 
-    margin-top: 16px!important;
-  }
-  .drawer__heading {
-    font-family: "Lato";
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 36px;
-    color: #23232B;
-    text-transform: none;
-    padding-top: 24px;
-    padding-bottom: 24px;
-    margin-bottom: 0!important;
-  }
-  .cart-drawer__subheading {
-    font-size: 16px;
-    font-weight: 400;
-    color: #4F4F55;
-    line-height: 24px;
-    margin-bottom: 24px;
-  }
-  .cart-drawer__subheading span {
-    font-weight: 700;
-  }
-  .product-option dt {
-    font-size: 12px;
-    font-weight: 400;
-    line-height: 18px;
-    color: #808080;
-  }
-  .cart-item__wrapper {
-    max-width: 310px;
-  }
-  .cart-item__details {
-    max-width: 400px;
-  }
-  .cart-item__details .cart-title {
-    display: flex;
-    align-items: center;
-  }
-  .cart-item {
-    flex-wrap: wrap;
-    padding-top: 16px;
-    border-top: 1px solid #E5E5E5;
-    margin-top: 16px;
-    position: relative;
-  }
-  .cart-item:first-child {
-    padding-top: 0; border-top: 0; margin-top: 0;
-  }
-
-  .extra-option-item {
-    align-items: center;
-    width: calc(100% - 126px) !important;
-    margin-left: auto;
-    margin-top: 10px;
-    column-gap: 16px;
-    padding-top: 5px;
-    padding-bottom: 0px;
-  }
-  .cart-drawer .extra-option-item.toggle {
-    display: flex;
-  }
-  .add-info {
-    display: flex;
-    justify-content: space-between;
-    width: calc(100% - 126px)!important;
-    margin-left: auto;
-  }
-  .extra-option-item dl {
-    margin-top: 0; margin-bottom: 0;
-  }
-  .cart-drawer .extra-option-item .cart-item__media {
-    width: 60px; height: 60px; min-width: 70px;
-  }
-  .cart-drawer .extra-option-item .cart-item__image {
-    width: 60px; height: 60px;
-  }
-  .cart-drawer .extra-option-item .product-option dd {
-    display: block; max-width: 256px;
-  }
-  cart-remove-button {
-    display: flex; flex-direction: column; align-items: end;
-    font-family: "Lato"; font-size: 14px; font-weight: 700; line-height: 20px;
-    color: #23232B; margin-left: auto!important;
-  }
-  .show-extra {
-    display: none;
-    justify-content: space-between;
-    align-items: center;
-    width: calc(100% - 126px)!important;
-    margin-top: 12px;
-    margin-left: auto;
-    cursor: pointer;
-  }
-  .show-extra.active svg { transform: scale(-1, -1); }
-  cart-remove-button svg { margin-bottom: 16px; }
-  .quantity-wrapper {
-    color: #4F4F55;
-  }
-  .quantity-wrapper span {
-    font-weight: 700; margin-left: 12px; color: #23232B;
-  }
-  .price-wrapper {
-    font-family: "Lato";
-    font-size: 16px; font-weight: 700; line-height: 24px; color: #23232B;
-  }
-  .cart-item dl {
-    margin-top: 0px; 
-    margin-bottom: 12px;
-  }
-  .total-wrapper {
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 16px; font-weight: 400; line-height: 24px; color: #808080;
-  }
-  .total-wrapper span {
-    font-size: 20px; font-weight: 700; line-height: 26px; color: #23232B;
-  }
-  .cart-remove-button {
-    background: transparent; padding: 0; border: 0; cursor: pointer;
-  }
-  .cart-item__quantity {
-    margin-left: auto;
-  }
-  .empty-cart__wrapper {
-    display: flex; justify-content: center; align-items: center;
-  }
-  .drawer__close {
-    margin-left: 10px; cursor: pointer;
-  }
-
-  @media(max-width: 524px){
-    .cart-item__details { order: 1; }
-    .extra-option-item .cart-item__details { order: 0; }
-    .add-info { width: 100%!important; order: 1; }
-    .show-extra { width: 100%!important; order: 1; }
-    .extra-option-item { width: 100%!important; }
-  }
-
-  .quantity-btn {
-    background: none;
-    border-radius: 4px;
-    cursor: pointer !important; 
-    line-height: 1;
-  }
-
-  .cart-item--main .cart-item__media img {
-    width: 110px; height: auto;
-  }
-  .cart-quantity-price {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .extra-price {
-    text-align: right;
-    font-weight: bold;
-    font-size: 16px;
-    font-family: 'Lato';
-  }
-  tr[id^=CartDrawer] .apo-cart-item, .apo-cart-item-mini {
-    display: block !important;
-  }
-  tr[id^=CartDrawer] cart-remove-button {
-    display: block !important;
-  }
-  tr[id^=CartDrawer] td.cart-item__details {
-    width: 100%;
-    padding-left: 15px;
-  }
-  @media (max-width: 768px) {
-    .cart-item dl .product-option {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 10px;
-    }
-    .cart-drawer .cart-item > td + td {
-      margin-left: 10px;
-    }
-    .cart-drawer .cart-item__media {
-      width: 60px;
-      height: 60px;
-      min-width: 70px;
-      vertical-align: baseline;
-      object-fit: contain;
-    }
-  }
-{% endstyle %}
 
 <script src="{{ 'cart.js' | asset_url }}" defer></script>
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer></script>
-
 <style>
-  .drawer {
-    visibility: hidden;
-  }
+    .drawer {
+        visibility: hidden;
+    }
 </style>
 
 <cart-drawer class="drawer{% if cart == empty %} is-empty{% endif %}">
-  <div id="CartDrawer" class="cart-drawer">
-    <div id="CartDrawer-Overlay" class="cart-drawer__overlay"></div>
-    <div
-      class="drawer__inner gradient color-{{ settings.cart_color_scheme }}"
-      role="dialog"
-      aria-modal="true"
-      aria-label="{{ 'sections.cart.title' | t }}"
-      tabindex="-1"
-    >
-      {% if cart == empty %}
-        <div class="drawer__inner-empty">
-          <div class="cart-drawer__warnings center{% if settings.cart_drawer_collection != blank %} cart-drawer__warnings--has-collection{% endif %}">
-            <div class="cart-drawer__empty-content">
-              <h2 class="cart__empty-text">{{ 'sections.cart.empty' | t }}</h2>
-              <div class="empty-cart__wrapper">
-                <a href="{{ routes.all_products_collection_url }}" class="button">
-                  {{ 'general.continue_shopping' | t }}
-                </a>
-                <button
-                  class="drawer__close"
-                  type="button"
-                  onclick="this.closest('cart-drawer').close()"
-                  aria-label="{{ 'accessibility.close' | t }}"
-                >
-                  {% render 'icon-close' %}
-                </button>
-              </div>
-              {% if shop.customer_accounts_enabled and customer == null %}
-                <p class="cart__login-title h3">{{ 'sections.cart.login.title' | t }}</p>
-                <p class="cart__login-paragraph">
-                  {{ 'sections.cart.login.paragraph_html' | t: link: routes.account_login_url }}
-                </p>
-              {% endif %}
-            </div>
-          </div>
-          {% if settings.cart_drawer_collection != blank %}
-            <div class="cart-drawer__collection">
-              {% render 'card-collection', card_collection: settings.cart_drawer_collection, columns: 1 %}
-            </div>
-          {% endif %}
-        </div>
-      {% endif %}
-
-      <div class="drawer__header">
-        <h2 class="drawer__heading">
-          Cart preview (<span data-count="{{ cart.item_count }}">{{ cart.item_count }}</span>)
-        </h2>
-        <button
-          class="drawer__close"
-          type="button"
-          onclick="this.closest('cart-drawer').close()"
-          aria-label="{{ 'accessibility.close' | t }}"
+    <div id="CartDrawer" class="cart-drawer">
+        <div id="CartDrawer-Overlay" class="cart-drawer__overlay"></div>
+        <div
+                class="drawer__inner gradient color-{{ settings.cart_color_scheme }}"
+                role="dialog"
+                aria-modal="true"
+                aria-label="{{ 'sections.cart.title' | t }}"
+                tabindex="-1"
         >
-          {% render 'icon-close' %}
-        </button>
-      </div>
-      {% comment %} <div data-count="{{ cart.item_count }}" class="cart-drawer__subheading">
-        You have <span>{{ cart.item_count }}</span> items in your cart
-      </div> {% endcomment %}
-
-      <cart-drawer-items {% if cart == empty %} class="is-empty" {% endif %}>
-        <form
-          action="{{ routes.cart_url }}"
-          id="CartDrawer-Form"
-          class="cart__contents cart-drawer__form"
-          method="post"
-        >
-          <div id="CartDrawer-CartItems" class="drawer__contents js-contents">
-            {% if cart != empty %}
-              <div class="drawer__cart-items-wrapper">
-                <table class="cart-items" role="table">
-                  <div role="rowgroup">
-                    {% for item in cart.items %}
-                      {% if item.product.title != 'Warranty' and item.product.title != 'Full Assembly & Installation' and item.product.title != 'Color' and item.product.title != 'Custom Color' and item.product.title != 'Paint Color' %}
-                        <tr
-                          id="CartDrawer-Item-{{ forloop.index }}"
-                          class="cart-item 
-                            {% if item.product.tags contains 'avisplus-product-options' %}
-                              extra-option-item
-                            {% else %}
-                              cart-item-new
-                            {% endif %}  apo-cart-item-mini"
-                          data-key="{{ item.key }}"
-                          role="row"
-                        >
-                          <!-- Product Image -->
-                          <td class="cart-item__media" role="cell">
-                            {% if item.image %}
-                              <a href="{{ item.url }}" class="cart-item__link" tabindex="-1" aria-hidden="true"></a>
-                              <img
-                                class="cart-item__image"
-                                src="{{ item.image | image_url: width: 300 }}"
-                                alt="{{ item.image.alt | escape }}"
-                                loading="lazy"
-                                width="150"
-                                height="{{ 150 | divided_by: item.image.aspect_ratio | ceil }}"
-                              >
-                            {% endif %}
-                          </td>
-  
-                          <!-- Product details -->
-                          <td class="cart-item__details" role="cell">
-                            <div class="cart-title">
-                              {% if item.product.tags contains 'avisplus-product-options' %}
-                                <a class="cart-item__name extra-option-title h4 break">
-                                  {{ item.variant.title | escape }}
-                                </a>  
-                              {% else %}
-                                <a href="{{ item.url }}" class="cart-item__name h4 break">
-                                  {{ item.product.title | escape }}
-                                </a>  
-                              {% endif %}
-  
-                              <cart-remove-button>
+            {% if cart == empty %}
+                <div class="drawer__inner-empty">
+                    <div class="cart-drawer__warnings center{% if settings.cart_drawer_collection != blank %} cart-drawer__warnings--has-collection{% endif %}">
+                        <div class="cart-drawer__empty-content">
+                            <h2 class="cart__empty-text">{{ 'sections.cart.empty' | t }}</h2>
+                            <div class="empty-cart__wrapper">
+                                <a href="{{ routes.all_products_collection_url }}" class="button">
+                                    {{ 'general.continue_shopping' | t }}
+                                </a>
                                 <button
-                                  type="button"
-                                  class="cart-remove-button"
-                                  data-key="{{ item.key }}"
-                                  aria-label="Remove {{ item.product.title }}"
+                                        class="drawer__close"
+                                        type="button"
+                                        onclick="this.closest('cart-drawer').close()"
+                                        aria-label="{{ 'accessibility.close' | t }}"
                                 >
-                                  {% render 'icon-remove' %}
+                                    {% render 'drawer-close' %}
                                 </button>
-                              </cart-remove-button>
                             </div>
-  
-                            {% assign extra_props = "" %}
-                            {% for prop in item.properties %}
-                              {% assign p_name = prop.first %}
-                              {% assign p_value = prop.last %}
-                              {% assign first_char = p_name | slice: 0, 1 %}
-                              {% if p_name == blank or p_value == blank or first_char == '_' %}
-                                {% continue %}
-                              {% endif %}
-                              {% if p_name contains "Warranty"
-                                 or p_name contains "Processing Time"
-                                 or p_name contains "Full Assembly & Installation" %}
-                                {%- capture extra_props -%}
-                                  {{ extra_props }}
-                                  <div class="product-option">
-                                    <dt>{{ p_name }}:</dt>
-                                    <dd>{{ p_value }}</dd>
-                                  </div>
-                                {%- endcapture -%}
-                              {% endif %}
-                            {% endfor %}
-                            {% if extra_props != "" %}
-                              <dl>
-                                {%- for option in item.options_with_values -%}
-                                  <div class="product-option">
-                                    <dt>{{ option.name }}:</dt>
-                                    <dd>{{ option.value }}</dd>
-                                  </div>
-                                {%- endfor -%}
-                                {{ extra_props }}
-                              </dl>
+                            {% if shop.customer_accounts_enabled and customer == null %}
+                                <p class="cart__login-title h3">{{ 'sections.cart.login.title' | t }}</p>
+                                <p class="cart__login-paragraph">
+                                    {{ 'sections.cart.login.paragraph_html' | t: link: routes.account_login_url }}
+                                </p>
                             {% endif %}
-                            <quantity-popover class="cart-quantity-price">
-                              <div class="cart-item__quantity-wrapper quantity-popover-wrapper">
-                                <a
-                                  type="button"
-                                  class="quantity-btn quantity-btn--minus"
-                                  data-key="{{ item.key }}"
-                                  data-variantId={{ item.variant.id }}
-                                >
-                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="0.5" y="0.5" width="23" height="23" rx="11.5" fill="white"/>
-                                    <rect x="0.5" y="0.5" width="23" height="23" rx="11.5" stroke="#D3D9E5"/>
-                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M7.25 12C7.25 11.5858 7.58579 11.25 8 11.25H12H16C16.4142 11.25 16.75 11.5858 16.75 12C16.75 12.4142 16.4142 12.75 16 12.75H12H8C7.58579 12.75 7.25 12.4142 7.25 12Z" fill="black"/>
-                                    </svg>                                    
-                                </a>
-                            
-                                <span class="quantity-text">{{ item.quantity }}</span>
-                            
-                                <a
-                                  type="button"
-                                  class="quantity-btn quantity-btn--plus"
-                                  data-key="{{ item.key }}"
-                                  data-variantId={{ item.variant.id }}
-                                >
-                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="0.5" y="0.5" width="23" height="23" rx="11.5" fill="white"/>
-                                    <rect x="0.5" y="0.5" width="23" height="23" rx="11.5" stroke="#D3D9E5"/>
-                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12.0004 7.39844C12.3318 7.39844 12.6004 7.66707 12.6004 7.99844V11.3984H16.0004C16.3318 11.3984 16.6004 11.6671 16.6004 11.9984C16.6004 12.3298 16.3318 12.5984 16.0004 12.5984H12.6004V15.9984C12.6004 16.3298 12.3318 16.5984 12.0004 16.5984C11.669 16.5984 11.4004 16.3298 11.4004 15.9984V12.5984H8.00039C7.66902 12.5984 7.40039 12.3298 7.40039 11.9984C7.40039 11.6671 7.66902 11.3984 8.00039 11.3984H11.4004V7.99844C11.4004 7.66707 11.669 7.39844 12.0004 7.39844Z" fill="#23232B"/>
-                                    </svg>                                    
-                                </a>
-                              </div>
-                              
-                              {% if item.original_price != item.final_price %}
-                                <div class="cart-item__discounted-prices">
-                                  <s class="cart-item__old-price product-option">
-                                    {{ item.original_price | money }}
-                                  </s>
-                                  <strong class="cart-item__final-price product-option">
-                                    {{ item.final_price | money }}
-                                  </strong>
-                                </div>
-                              {% else %}
-                                <div class="extra-price product-option">
-                                  {{ item.original_price | money }}
-                                </div>
-                              {% endif %}
-                            </quantity-popover>                  
-                          </td>
-                        </tr>
-                      {% endif %}
-                    {% endfor %}
-                  </div>
-                </table>
-              </div>
+                        </div>
+                    </div>
+                    {% if settings.cart_drawer_collection != blank %}
+                        <div class="cart-drawer__collection">
+                            {% render 'card-collection', card_collection: settings.cart_drawer_collection, columns: 1 %}
+                        </div>
+                    {% endif %}
+                </div>
             {% endif %}
-
-            <p id="CartDrawer-LiveRegionText" class="visually-hidden" role="status"></p>
-            <p id="CartDrawer-LineItemStatus" class="visually-hidden" aria-hidden="true" role="status">
-              {{ 'accessibility.loading' | t }}
-            </p>
-          </div>
-          {% comment %} <div id="CartDrawer-CartErrors" role="alert"></div> {% endcomment %}
-        </form>
-      </cart-drawer-items>
-
-      <div class="drawer__footer">
-        <div class="cart-drawer__footer" {{ block.shopify_attributes }}>
-          {% unless cart == empty %}
-            <div class="total-wrapper">
-              Total <span class="cart-total">{{ cart.total_price | money }}</span>
+            <div class="drawer__header">
+                <h2 class="drawer__heading">
+                    Cart preview (<span data-count="{{ cart.item_count }}">{{ cart.item_count }}</span>)
+                </h2>
+                <button
+                        class="drawer__close"
+                        type="button"
+                        onclick="this.closest('cart-drawer').close()"
+                        aria-label="{{ 'accessibility.close' | t }}"
+                >
+                    {% render 'drawer-close' %}
+                </button>
             </div>
-          {% endunless %}
-          <a class="cart-link" href="/cart">View cart</a>
+            {% comment %} <div data-count="{{ cart.item_count }}" class="cart-drawer__subheading">
+              You have <span>{{ cart.item_count }}</span> items in your cart
+            </div> {% endcomment %}
+            <cart-drawer-items {% if cart == empty %} class="is-empty" {% endif %}>
+                <form
+                        action="{{ routes.cart_url }}"
+                        id="CartDrawer-Form"
+                        class="cart__contents cart-drawer__form"
+                        method="post"
+                >
+                    <div id="CartDrawer-CartItems" class="drawer__contents js-contents">
+                        {% if cart != empty %}
+                            <div class="drawer__cart-items-wrapper">
+                                <table class="cart-items" role="table">
+                                    <div role="rowgroup">
+                                        {% for item in cart.items %}
+                                            {% if item.product.title != 'Warranty' and item.product.title != 'Full Assembly & Installation' and item.product.title != 'Color' and item.product.title != 'Custom Color' and item.product.title != 'Paint Color' %}
+                                                <tr
+                                                        id="CartDrawer-Item-{{ forloop.index }}"
+                                                        class="cart-item
+                                                {% if item.product.tags contains 'avisplus-product-options' %}
+                                                  extra-option-item
+                                                {% else %}
+                                                  cart-item-new
+                                                {% endif %}  apo-cart-item-mini"
+                                                        data-key="{{ item.key }}"
+                                                        role="row"
+                                                >
+                                                    <!-- Product Image -->
+                                                    <td class="cart-item__media" role="cell">
+                                                        {% if item.image %}
+                                                            <a href="{{ item.url }}" class="cart-item__link"
+                                                               tabindex="-1" aria-hidden="true"></a>
+                                                            <div>
+                                                                <img
+                                                                        class="cart-item__image"
+                                                                        src="{{ item.image | image_url: width: 300 }}"
+                                                                        alt="{{ item.image.alt | escape }}"
+                                                                        loading="lazy"
+                                                                        width="150"
+                                                                        height="{{ 150 | divided_by: item.image.aspect_ratio | ceil }}"
+                                                                >
+                                                            </div>
+                                                        {% endif %}
+                                                    </td>
+                                                    <!-- Product details -->
+                                                    <td class="cart-item__details" role="cell">
+                                                        <div class="cart-title">
+                                                            {% if item.product.tags contains 'avisplus-product-options' %}
+                                                                <span class="cart-item__name extra-option-title h4 break">
+                                                                    {{ item.variant.title | escape }}
+                                                                </span>
+                                                            {% else %}
+                                                                <a href="{{ item.url }}"
+                                                                   class="cart-item__name h4 break">
+                                                                    {{ item.product.title | escape }}
+                                                                </a>
+                                                            {% endif %}
+                                                            <cart-remove-button>
+                                                                <button
+                                                                        type="button"
+                                                                        class="cart-remove-button"
+                                                                        data-key="{{ item.key }}"
+                                                                        aria-label="Remove {{ item.product.title }}"
+                                                                >
+                                                                    {% render 'icon-remove' %}
+                                                                </button>
+                                                            </cart-remove-button>
+                                                        </div>
+                                                        {% assign extra_props = "" %}
+                                                        {% for prop in item.properties %}
+                                                            {% assign p_name = prop.first %}
+                                                            {% assign p_value = prop.last %}
+                                                            {% assign first_char = p_name | slice: 0, 1 %}
+                                                            {% if p_name == blank or p_value == blank or first_char == '_' %}
+                                                                {% continue %}
+                                                            {% endif %}
+                                                            {% if p_name contains "Warranty"
+                                                            or p_name contains "Processing Time"
+                                                            or p_name contains "Full Assembly & Installation" %}
+                                                                {%- capture extra_props -%}
+                                                                    {{ extra_props }}
+                                                                    <div class="product-option">
+                                                                        <dt>{{ p_name }}:</dt>
+                                                                        <dd>{{ p_value }}</dd>
+                                                                    </div>
+                                                                {%- endcapture -%}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                        {% if extra_props != "" %}
+                                                            <dl>
+                                                                {%- for option in item.options_with_values -%}
+                                                                    <div class="product-option">
+                                                                        <dt>{{ option.name }}:</dt>
+                                                                        <dd>{{ option.value }}</dd>
+                                                                    </div>
+                                                                {%- endfor -%}
+                                                                {{ extra_props }}
+                                                            </dl>
+                                                        {% endif %}
+                                                        <quantity-popover class="cart-quantity-price">
+                                                            <div class="cart-item__quantity-wrapper quantity-popover-wrapper">
+                                                                <a
+                                                                        type="button"
+                                                                        class="quantity-btn quantity-btn--minus"
+                                                                        data-key="{{ item.key }}"
+                                                                        data-variantId={{ item.variant.id }}
+                                                                >
+                                                                    <svg width="24" height="24" viewBox="0 0 24 24"
+                                                                         fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                        <rect x="0.5" y="0.5" width="23" height="23"
+                                                                              rx="11.5" fill="white"/>
+                                                                        <rect x="0.5" y="0.5" width="23" height="23"
+                                                                              rx="11.5" stroke="#D3D9E5"/>
+                                                                        <path fill-rule="evenodd" clip-rule="evenodd"
+                                                                              d="M7.25 12C7.25 11.5858 7.58579 11.25 8 11.25H12H16C16.4142 11.25 16.75 11.5858 16.75 12C16.75 12.4142 16.4142 12.75 16 12.75H12H8C7.58579 12.75 7.25 12.4142 7.25 12Z"
+                                                                              fill="black"/>
+                                                                    </svg>
+                                                                </a>
+                                                                <span class="quantity-text">{{ item.quantity }}</span>
+                                                                <a
+                                                                        type="button"
+                                                                        class="quantity-btn quantity-btn--plus"
+                                                                        data-key="{{ item.key }}"
+                                                                        data-variantId={{ item.variant.id }}
+                                                                >
+                                                                    <svg width="24" height="24" viewBox="0 0 24 24"
+                                                                         fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                        <rect x="0.5" y="0.5" width="23" height="23"
+                                                                              rx="11.5" fill="white"/>
+                                                                        <rect x="0.5" y="0.5" width="23" height="23"
+                                                                              rx="11.5" stroke="#D3D9E5"/>
+                                                                        <path fill-rule="evenodd" clip-rule="evenodd"
+                                                                              d="M12.0004 7.39844C12.3318 7.39844 12.6004 7.66707 12.6004 7.99844V11.3984H16.0004C16.3318 11.3984 16.6004 11.6671 16.6004 11.9984C16.6004 12.3298 16.3318 12.5984 16.0004 12.5984H12.6004V15.9984C12.6004 16.3298 12.3318 16.5984 12.0004 16.5984C11.669 16.5984 11.4004 16.3298 11.4004 15.9984V12.5984H8.00039C7.66902 12.5984 7.40039 12.3298 7.40039 11.9984C7.40039 11.6671 7.66902 11.3984 8.00039 11.3984H11.4004V7.99844C11.4004 7.66707 11.669 7.39844 12.0004 7.39844Z"
+                                                                              fill="#23232B"/>
+                                                                    </svg>
+                                                                </a>
+                                                            </div>
+                                                            {% if item.original_price != item.final_price %}
+                                                                <div class="cart-item__discounted-prices">
+                                                                    <s class="cart-item__old-price product-option">
+                                                                        {{ item.original_price | money }}
+                                                                    </s>
+                                                                    <strong class="cart-item__final-price product-option">
+                                                                        {{ item.final_price | money }}
+                                                                    </strong>
+                                                                </div>
+                                                            {% else %}
+                                                                <div class="extra-price product-option">
+                                                                    {{ item.original_price | money }}
+                                                                </div>
+                                                            {% endif %}
+                                                        </quantity-popover>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </table>
+                            </div>
+                        {% endif %}
+                        <p id="CartDrawer-LiveRegionText" class="visually-hidden" role="status"></p>
+                        <p id="CartDrawer-LineItemStatus" class="visually-hidden" aria-hidden="true" role="status">
+                            {{ 'accessibility.loading' | t }}
+                        </p>
+                    </div>
+                    <div id="CartDrawer-CartErrors" role="alert"></div>
+                </form>
+            </cart-drawer-items>
+            <div class="drawer__footer">
+                <div class="cart-drawer__footer" {{ block.shopify_attributes }}>
+                    {% unless cart == empty %}
+                        <div class="total-wrapper">
+                            Total <span class="cart-total">{{ cart.total_price | money }}</span>
+                        </div>
+                    {% endunless %}
+                    <a class="cart-link" href="/cart">View cart</a>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </cart-drawer>
+
+{% comment %}
+TODO: delete the script below, if it is no longer needed
+{% endcomment %}
+<script>
+	document.addEventListener("DOMContentLoaded", () => {
+		const cartItems = document.querySelectorAll('.cart-item-new');
+		let totalContentCount = 0;
+
+		// Click event for "show-extra" buttons
+		document.querySelectorAll('.cart-item-new .show-extra').forEach(button => {
+			button.addEventListener('click', () => {
+				button.classList.toggle('active');
+				let nextElement = button.closest('.cart-item-new')?.nextElementSibling;
+
+				while (nextElement && !nextElement.classList.contains('cart-item-new')) {
+					if (nextElement.classList.contains('extra-option-item')) {
+						nextElement.classList.toggle('toggle');
+					}
+					nextElement = nextElement.nextElementSibling;
+				}
+			});
+		});
+
+		// Iterate through each cart item and update its details
+		cartItems.forEach(cartItem => {
+			let count = 0;
+			let totalSum = 0;
+			let hasExtraContent = false;
+			let nextElement = cartItem.nextElementSibling;
+
+			while (nextElement && !nextElement.classList.contains('cart-item-new')) {
+				if (nextElement.classList.contains('extra-option-item')) {
+					hasExtraContent = true;
+					count++;
+					totalContentCount++;
+
+					const priceElement = nextElement.querySelector('.extra-option-price');
+					if (priceElement) {
+						const price = parseFloat(priceElement.textContent.replace('$', '').trim());
+						totalSum += isNaN(price) ? 0 : price;
+					}
+				}
+				nextElement = nextElement.nextElementSibling;
+			}
+
+			// Update quantity display if the element exists
+			const quantityDisplay = cartItem.querySelector('.extra-quantity .value');
+			if (quantityDisplay) {
+				quantityDisplay.textContent = count;
+			}
+
+			// Update price display if the element exists
+			const priceDisplay = cartItem.querySelector('.options-price');
+			if (priceDisplay) {
+				priceDisplay.textContent = `$${totalSum.toFixed(2)}`;
+			}
+
+			// Show or hide the "show-extra" button based on extra content availability
+			const showExtraButton = cartItem.querySelector('.show-extra');
+			if (showExtraButton) {
+				showExtraButton.style.display = hasExtraContent ? 'flex' : 'none';
+			}
+		});
+
+		// Update total cart count in the UI
+		updateCartCount(totalContentCount);
+	});
+
+	// Function to update the cart count in the drawer and header
+	function updateCartCount(totalContentCount) {
+		const drawerHeadingSpan = document.querySelector('.drawer__heading span');
+		const drawerSubHeadingSpan = document.querySelector('.cart-drawer__subheading span');
+		const cartCount = document.querySelector('.cart-count-bubble span');
+
+		if (drawerHeadingSpan && drawerSubHeadingSpan && cartCount) {
+			const initialCount = parseInt(drawerHeadingSpan.getAttribute('data-count'), 10) || 0;
+			const newCount = Math.max(0, initialCount - totalContentCount); // Prevent negative values
+			drawerHeadingSpan.textContent = newCount;
+			drawerSubHeadingSpan.textContent = newCount;
+			cartCount.textContent = newCount;
+
+			cartCount.style.display = newCount > 0 ? "flex" : "none"; // Hide if cart is empty
+		}
+	}
+</script>
