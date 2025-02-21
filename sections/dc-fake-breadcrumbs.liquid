@@ -1,0 +1,163 @@
+<style>
+  #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.bg }};
+  }
+  .fake-breadcrumbs__url{
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #000;
+    margin: 0;
+  }
+  .second-breadcrumb{
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 14px;
+    margin: 0;
+    line-height: 20px;
+    color: #F1592A;
+  }
+  .fake-breadcrumbs__wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap:wrap;
+  }
+  .breadcrumb-icon{
+    width:20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  @media(max-width: 999px){
+    .fake-breadcrumbs__url,
+    .second-breadcrumb{
+      font-size: 12px;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+  }
+</style>
+
+<section class="page-width-dc fake-breadcrumbs section-{{ section.id }}-padding">
+  <div class="fake-breadcrumbs__wrapper">
+
+    {% if section.settings.home_item_text != blank %}
+      <{% if section.settings.home_item_url != blank %}a href="{{ section.settings.home_item_url }}"{% else %}p{% endif %} class="fake-breadcrumbs__url">
+        {{ section.settings.home_item_text }}
+      </{% if section.settings.home_item_url != blank %}a{% else %}p{% endif %}>
+
+      <span class="breadcrumb-icon">
+        {% render 'icon-breadcrumb-arrow'%}
+      </span>
+    {% endif %}
+    
+    {% if section.settings.first_item_text != blank %}
+      <{% if section.settings.first_item_url != blank %}a href="{{ section.settings.first_item_url }}"{% else %}p{% endif %} class="fake-breadcrumbs__url">
+        {{ section.settings.first_item_text }}
+      </{% if section.settings.first_item_url != blank %}a{% else %}p{% endif %}>
+
+      <span class="breadcrumb-icon">
+        {% render 'icon-breadcrumb-arrow'%}
+      </span>
+    {% endif %}
+
+
+    {% if section.settings.second_item_text != blank %}
+      <{% if section.settings.second_item_url != blank %}a href="{{ section.settings.second_item_url }}"{% else %}p{% endif %} class="fake-breadcrumbs__url second-breadcrumb">
+        {{ section.settings.second_item_text }}
+      </{% if section.settings.second_item_url != blank %}a{% else %}p{% endif %}>
+    {% endif %}
+  </div>
+</section>
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{% schema %}
+  {
+    "name": "Fake breadcrumbs dc",
+    "settings": [
+      {
+        "type": "color",
+        "id": "bg",
+        "label": "Background color",
+        "default": "#fff"
+      },
+      {
+        "type": "text",
+        "id": "home_item_text",
+        "label": "Home item text"
+      },
+      {
+        "type": "url",
+        "id": "home_item_url",
+        "label": "Home item url"
+      },
+      {
+        "type": "text",
+        "id": "first_item_text",
+        "label": "First item text"
+      },
+      {
+        "type": "url",
+        "id": "first_item_url",
+        "label": "First item url"
+      },
+      {
+        "type": "text",
+        "id": "second_item_text",
+        "label": "Second item text"
+      },
+      {
+        "type": "url",
+        "id": "second_item_url",
+        "label": "Second item url"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.padding.section_padding_heading"
+      },
+      {
+        "type": "range",
+        "id": "padding_top",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:sections.all.padding.padding_top",
+        "default": 12
+      },
+      {
+        "type": "range",
+        "id": "padding_bottom",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:sections.all.padding.padding_bottom",
+        "default": 24
+      }
+    ],
+    "presets": [
+      {
+        "name": "Fake breacrumbs dc"
+      }
+    ]
+  }
+{% endschema %}
