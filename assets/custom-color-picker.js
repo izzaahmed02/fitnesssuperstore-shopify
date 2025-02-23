@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     const colorPrice = event.target.dataset.colorPrice;
 
                                     if (selectedColorPriceElement) {
-                                        selectedColorPriceElement.textContent = colorPrice;
+                                        selectedColorPriceElement.textContent = colorPrice ? colorPrice :  Shopify.country === 'US' ? "$0" : `${Shopify.currency.active} 0`;
                                     }
 
                                     if (selectedColorInfo) {
@@ -86,8 +86,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             const apoOptionColorSelected = Array.from(document.querySelectorAll('.ap-options__swatch-container .option_selected')).find(div => div.textContent.trim().includes(currentColorName));
                             if (apoOptionColorSelected) {
                                 apoColors[currentSwatchIndex].parentElement?.click();
-                                colorSwatches.forEach((x) => x.classList.remove('color-selected'));
                             }
+
+                            colorSwatches.forEach((x) => x.classList.remove('color-selected'));
 
                             const customColorAvis = document.querySelector(`.custom-color-${toLowerCaseFirstLetter(groupColorName)}-avis input`);
 
