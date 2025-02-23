@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 			return;
 
         if (window.location.pathname.includes('products')) { 
-            renderCustomAvisOptions();
+            renderCustomAvisOptions(); 
         }
 
 		clearInterval(avisOptionsPolling);
@@ -194,13 +194,11 @@ function setupOptionsHandler() {
 		const swatchContainer = optionContainer.querySelector('.ap-options__swatch')
 			
 		optionContainer.querySelectorAll('.avp-productoptionswatchwrapper').forEach(wrapper => {
+            const input = wrapper.querySelector('input[type="radio"]');
+
 			wrapper.addEventListener('click', event => {
-				const input = wrapper.querySelector('input[type="radio"]');
-
 				const allInputs = Array.from(swatchContainer?.querySelectorAll('input[type="radio"]'));
-
-				const inputIndex = allInputs.indexOf(input);
-				
+				const inputIndex = allInputs.indexOf(input);	
 				const inputTextValue = input.value;
 				let inputMoneyValue;
 
@@ -209,6 +207,21 @@ function setupOptionsHandler() {
 				} else {
 					inputMoneyValue = Shopify.currency.active == 'USD' ? "$0" : ''
 				}
+
+                if (input.getAttribute('field-name') === 'Weight Stack') {
+                    var weightStackField = document.querySelector('fieldset.weight-stack');
+                    
+                    if (weightStackField) {
+                        hasWeightStack = true;
+
+                        const wrapperIndex = [...optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')].indexOf(wrapper);
+                        const weightStackTarget = weightStackField.querySelectorAll('label')[wrapperIndex];
+                        if (weightStackTarget) {
+                            weightStackTarget.click();
+                            weightStackLabel = weightStackTarget.textContent;
+                        }
+                    }
+                }
 	
 				const selectedOptionHTML = `
 					<div class="option_selected-container">
@@ -267,6 +280,12 @@ function setupOptionsHandler() {
 					wrapper.setAttribute("style", "border: 1px solid #E5E5E5 !important;");
 				}
 			});
+
+            setTimeout(() => {
+              if (input.getAttribute('field-name') === 'Weight Stack') {
+                optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')[0]?.click();
+              }   
+            });
 		});
 	});
 }
