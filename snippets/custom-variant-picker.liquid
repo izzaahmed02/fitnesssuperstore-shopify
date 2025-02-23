@@ -27,21 +27,30 @@
     <variant-selects
       id="variant-selects-{{ section.id }}"
       data-section="{{ section.id }}"
-      {{ block.shopify_attributes }}
-    >
+      {{ block.shopify_attributes }}   >
       {%- for option in product.options_with_values -%}
+        {%- liquid
+          assign swatch_count = option.values | map: 'swatch' | compact | size
+        -%}
+        {% if option.name == 'Weight Stack' or option.name == 'weight stack' %}
+          <fieldset hidden class="js product-form__input product-form__input--pill weight-stack">
+            <legend class="form__label">{{ option.name }}</legend>
+            {% render 'product-variant-options',
+              product: product,
+              option: option,
+              block: block,
+              picker_type: 'button'
+            %}
+          </fieldset>
+        {% endif %}
         {% if option.name == 'Color' or option.name == 'color' %}
-          {%- liquid
-            assign swatch_count = option.values | map: 'swatch' | compact | size
-            assign picker_type = 'swatch'
-          -%}
           <fieldset class="js product-form__input product-form__input--swatch">
             <div class="color-options-container">
               {% render 'product-variant-options',
                 product: product,
                 option: option,
                 block: block,
-                picker_type: picker_type
+                picker_type: 'swatch'
               %}
             </div>
           </fieldset>
@@ -329,11 +338,11 @@
               triggerInputChange(customColorAvis);
               $('.product-form__input--swatch label[title="Custom"]').click();
             }
+            var customColorAvisCharge = document.querySelector('.custom-color-avis .apo-title-addcharge')?.textContent;
 
             // Display Pantone value
             selectedColorElement.textContent = `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`;
-            selectedColorPriceElement.textContent = '$600';
-
+            selectedColorPriceElement.textContent = customColorAvisCharge;
   
             const updatedProductSwatches = document.querySelectorAll('.color-options-container input[type=radio]');
             updatedProductSwatches.forEach((input) => (input.checked = false));
@@ -391,7 +400,7 @@
   
             if (matchedColor) {
               selectedColorElement.textContent = `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`;
-              selectedColorPriceElement.textContent = '$600';
+              selectedColorPriceElement.textContent = customColorAvisCharge;
               selectedColorInfo.style.display = 'flex';
   
               hiddenInput.value = color;
