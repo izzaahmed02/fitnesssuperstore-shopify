@@ -8,10 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const groupColorContainer = document.querySelectorAll('.group-color-container');
 
         if (groupColorContainer) {
-            if (groupColorContainer.length > 1) {
-                document.querySelector('.custom-color-group').style.display = 'block';
-            }
-
             groupColorContainer.forEach((colorGroupElement, colorGroupElementIndex) => {
                 const groupColorName = colorGroupElement.getAttribute('data-group-color-name');
 
@@ -25,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const swatchContainer = colorGroupElement.querySelector('.color-options');
 
                     if (apoColors && apoColors.length > 0) {
+                        document.querySelector('.custom-color-group').style.display = 'block';
                         apoColors?.forEach((color, colorIndex) => {
                             if (color.value && (!color.value.includes('Other') && !color.value.includes('Custom'))) {
                                 const isDisabled = color.getAttribute('disabled') === 'disabled';
