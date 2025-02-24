@@ -1,43 +1,43 @@
 <script>
-  document.addEventListener('DOMContentLoaded', async (event) => {
-    let allReviews = [];
-    const reviewsPerPage = 5;
-    let currentPage = 1;
-    let filteredReviews = allReviews;
-    const preloader = document.getElementById('preloader');
-    let sortOrder = 'recent';
-    let source = '';
+	document.addEventListener('DOMContentLoaded', async (event) => {
+		let allReviews = [];
+		const reviewsPerPage = 5;
+		let currentPage = 1;
+		let filteredReviews = allReviews;
+		const preloader = document.getElementById('preloader');
+		let sortOrder = 'recent';
+		let source = '';
 
-    function showPreloader() {
-      preloader.classList.add('active');
-    }
+		function showPreloader() {
+			preloader.classList.add('active');
+		}
 
-    function hidePreloader() {
-      preloader.classList.remove('active');
-    }
+		function hidePreloader() {
+			preloader.classList.remove('active');
+		}
 
-    async function fetchReviews() {
-      showPreloader();
-      try {
-        const response = await fetch(
-          `https://fitnesssuperstore-api.azurewebsites.net/api/reviews/all?from=${source}&orderBy=${sortOrder}`
-        );
-        if (!response.ok) throw new Error(`error: ${response.status}`);
-        allReviews = await response.json();
-        filteredReviews = allReviews;
-        renderReviews();
-      } catch (error) {
-        console.error('Loading error:', error);
-      } finally {
-        hidePreloader();
-      }
-    }
+		async function fetchReviews() {
+			showPreloader();
+			try {
+				const response = await fetch(
+					`https://fitnesssuperstore-api.azurewebsites.net/api/reviews/all?from=${source}&orderBy=${sortOrder}`
+				);
+				if (!response.ok) throw new Error(`error: ${response.status}`);
+				allReviews = await response.json();
+				filteredReviews = allReviews;
+				renderReviews();
+			} catch (error) {
+				console.error('Loading error:', error);
+			} finally {
+				hidePreloader();
+			}
+		}
 
-    function createReviewHTML(review) {
-      let date = review.dateReviewed || '';
+		function createReviewHTML(review) {
+			let date = review.dateReviewed || '';
 
-      if (review.imageUrl) {
-        return `
+			if (review.imageUrl) {
+				return `
                   <div class="review-item">
                       <div class="review-item__wrapper">
                           <div class="stars">
@@ -52,8 +52,8 @@
                       </div>
                   </div>
               `;
-      } else {
-        return `
+			} else {
+				return `
                   <div class="review-item">
                       <div class="review-item__wrapper">
                           <div class="stars">
@@ -65,48 +65,48 @@
                       </div>
                   </div>
               `;
-      }
-    }
+			}
+		}
 
-    function renderReviews() {
-      const reviewsWrapper = document.querySelector('.reviews-wrapper');
-      const startIndex = (currentPage - 1) * reviewsPerPage;
-      const endIndex = Math.min(startIndex + reviewsPerPage, filteredReviews.length);
+		function renderReviews() {
+			const reviewsWrapper = document.querySelector('.reviews-wrapper');
+			const startIndex = (currentPage - 1) * reviewsPerPage;
+			const endIndex = Math.min(startIndex + reviewsPerPage, filteredReviews.length);
 
-      // Check if the device is mobile
-      const isMobile = window.innerWidth <= 768;
+			// Check if the device is mobile
+			const isMobile = window.innerWidth <= 768;
 
-      if (!isMobile || currentPage === 1) {
-        // Replace reviews for desktop or on first page of mobile
-        reviewsWrapper.innerHTML = '';
-      }
+			if (!isMobile || currentPage === 1) {
+				// Replace reviews for desktop or on first page of mobile
+				reviewsWrapper.innerHTML = '';
+			}
 
-      if (filteredReviews.length) {
-        for (let i = startIndex; i < endIndex; i++) {
-          reviewsWrapper.innerHTML += createReviewHTML(filteredReviews[i]);
-        }
-      } else {
-        reviewsWrapper.innerHTML = `<h3>No reviews available</h3>`;
-      }
+			if (filteredReviews.length) {
+				for (let i = startIndex; i < endIndex; i++) {
+					reviewsWrapper.innerHTML += createReviewHTML(filteredReviews[i]);
+				}
+			} else {
+				reviewsWrapper.innerHTML = `<h3>No reviews available</h3>`;
+			}
 
-      // Update the pagination UI
-      updatePagination();
-    }
+			// Update the pagination UI
+			updatePagination();
+		}
 
-    function updatePagination() {
-      const paginationWrapper = document.querySelector('.pagination');
-      const totalPages = Math.ceil(filteredReviews.length / reviewsPerPage);
+		function updatePagination() {
+			const paginationWrapper = document.querySelector('.pagination');
+			const totalPages = Math.ceil(filteredReviews.length / reviewsPerPage);
 
-      // Clear previous pagination content
-      paginationWrapper.innerHTML = '';
+			// Clear previous pagination content
+			paginationWrapper.innerHTML = '';
 
-      // Check if the device is mobile
-      const isMobile = window.innerWidth <= 750;
+			// Check if the device is mobile
+			const isMobile = window.innerWidth <= 750;
 
-      if (isMobile) {
-        // Show "View More" button for mobile
-        if (currentPage < totalPages) {
-          paginationWrapper.innerHTML = `
+			if (isMobile) {
+				// Show "View More" button for mobile
+				if (currentPage < totalPages) {
+					paginationWrapper.innerHTML = `
                   <button class="view-more-btn">
                     View More
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -115,20 +115,20 @@
                   </button>
               `;
 
-          const viewMoreBtn = paginationWrapper.querySelector('.view-more-btn');
-          viewMoreBtn.addEventListener('click', () => {
-            currentPage++;
-            renderReviews(); // Append reviews for mobile
-          });
-        }
-      } else {
-        // Render pagination for desktop
-        const paginationWrapper = document.querySelector('.pagination');
-        const totalPages = Math.ceil(filteredReviews.length / reviewsPerPage);
-        let paginationHTML = '';
+					const viewMoreBtn = paginationWrapper.querySelector('.view-more-btn');
+					viewMoreBtn.addEventListener('click', () => {
+						currentPage++;
+						renderReviews(); // Append reviews for mobile
+					});
+				}
+			} else {
+				// Render pagination for desktop
+				const paginationWrapper = document.querySelector('.pagination');
+				const totalPages = Math.ceil(filteredReviews.length / reviewsPerPage);
+				let paginationHTML = '';
 
-        // Previous Arrow
-        paginationHTML += `<div class="prev ${currentPage > 1 ? 'active' : 'inactive'}">
+				// Previous Arrow
+				paginationHTML += `<div class="prev ${currentPage > 1 ? 'active' : 'inactive'}">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <g clip-path="url(#clip0_5595_63891)">
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" 
@@ -142,456 +142,495 @@
             </svg>
           </div>`;
 
-        // Define the range of pages to display
-        const startPage = Math.max(1, currentPage - 2);
-        const endPage = Math.min(totalPages, currentPage + 2);
+				// Define the range of pages to display
+				const startPage = Math.max(1, currentPage - 2);
+				const endPage = Math.min(totalPages, currentPage + 2);
 
-        // Show ellipsis if current page is greater than the range
-        if (startPage > 1) {
-          paginationHTML += `<div class="page-number" data-page="1">1</div>`;
-          if (startPage > 2) {
-            paginationHTML += `<div class="dots">...</div>`;
-          }
-        }
+				// Show ellipsis if current page is greater than the range
+				if (startPage > 1) {
+					paginationHTML += `<div class="page-number" data-page="1">1</div>`;
+					if (startPage > 2) {
+						paginationHTML += `<div class="dots">...</div>`;
+					}
+				}
 
-        // Render the range of pages around the current page
-        for (let i = startPage; i <= endPage; i++) {
-          paginationHTML += `<div class="page-number ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</div>`;
-        }
+				// Render the range of pages around the current page
+				for (let i = startPage; i <= endPage; i++) {
+					paginationHTML += `<div class="page-number ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</div>`;
+				}
 
-        // Show ellipsis if there are pages remaining after the current range
-        if (endPage < totalPages) {
-          if (endPage < totalPages - 1) {
-            paginationHTML += `<div class="dots">...</div>`;
-          }
-          paginationHTML += `<div class="page-number" data-page="${totalPages}">${totalPages}</div>`;
-        }
+				// Show ellipsis if there are pages remaining after the current range
+				if (endPage < totalPages) {
+					if (endPage < totalPages - 1) {
+						paginationHTML += `<div class="dots">...</div>`;
+					}
+					paginationHTML += `<div class="page-number" data-page="${totalPages}">${totalPages}</div>`;
+				}
 
-        // Next Arrow
-        paginationHTML += `<div class="next ${currentPage < totalPages ? 'active' : 'inactive'}">
+				// Next Arrow
+				paginationHTML += `<div class="next ${currentPage < totalPages ? 'active' : 'inactive'}">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" 
                     fill="${currentPage < totalPages ? '#F1592A' : '#CCCCCC'}"/>
             </svg>
           </div>`;
 
-        paginationWrapper.innerHTML = paginationHTML;
+				paginationWrapper.innerHTML = paginationHTML;
 
-        // Event Listeners for Page Numbers and Arrows
-        paginationWrapper.querySelectorAll('.page-number').forEach((page) => {
-          page.addEventListener('click', (e) => {
-            currentPage = parseInt(e.target.dataset.page);
-            renderReviews();
-          });
-        });
+				// Event Listeners for Page Numbers and Arrows
+				paginationWrapper.querySelectorAll('.page-number').forEach((page) => {
+					page.addEventListener('click', (e) => {
+						currentPage = parseInt(e.target.dataset.page);
+						renderReviews();
+					});
+				});
 
-        const prev = paginationWrapper.querySelector('.prev');
-        const next = paginationWrapper.querySelector('.next');
+				const prev = paginationWrapper.querySelector('.prev');
+				const next = paginationWrapper.querySelector('.next');
 
-        if (prev && prev.classList.contains('active')) {
-          prev.addEventListener('click', () => {
-            if (currentPage > 1) {
-              currentPage--;
-              renderReviews();
-            }
-          });
-        }
+				if (prev && prev.classList.contains('active')) {
+					prev.addEventListener('click', () => {
+						if (currentPage > 1) {
+							currentPage--;
+							renderReviews();
+						}
+					});
+				}
 
-        if (next && next.classList.contains('active')) {
-          next.addEventListener('click', () => {
-            if (currentPage < totalPages) {
-              currentPage++;
-              renderReviews();
-            }
-          });
-        }
-      }
-    }
+				if (next && next.classList.contains('active')) {
+					next.addEventListener('click', () => {
+						if (currentPage < totalPages) {
+							currentPage++;
+							renderReviews();
+						}
+					});
+				}
+			}
+		}
 
-    document.querySelector('#sort-select').addEventListener('change', (event) => {
-      sortOrder = event.detail.value;
+		document.querySelector('#sort-select').addEventListener('change', (event) => {
+			sortOrder = event.detail.value;
 
-      currentPage = 1;
-      fetchReviews();
-    });
+			currentPage = 1;
+			fetchReviews();
+		});
 
-    document.querySelector('#from-filter').addEventListener('change', (event) => {
-      source = event.detail.value;
+		document.querySelector('#from-filter').addEventListener('change', (event) => {
+			source = event.detail.value;
 
-      if (source === 'all') {
-        source = '';
-      }
+			if (source === 'all') {
+				source = '';
+			}
 
-      currentPage = 1;
-      fetchReviews();
-    });
+			currentPage = 1;
+			fetchReviews();
+		});
 
 
-    await fetchReviews();
-  });
+		await fetchReviews();
+	});
 </script>
 
 <style>
-  /* Add your previous styling */
-  #shopify-section-{{ section.id }} {
-    padding-top: {{ section.settings.padding_top }}px;
-    padding-bottom: {{ section.settings.padding_bottom }}px;
-  }
-  #shopify-section-{{ section.id }} .container {
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 1280px;
-    padding: 0 15px;
-    box-sizing: content-box;
-  }
-  .reviews-section .review-item {
-    width: auto;
-    height: 100%;
-  }
-  .reviews-section .review-text {
-    height: auto;
-    overflow: hidden;
-  }
-  .reviews-section .reviews-wrapper {
-    display: flex;
-    flex-direction: column;
-    row-gap: 12px;
-  }
-  .filter-wrapper {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    margin-bottom: 32px;
-  }
-  #from-filterб {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    column-gap: 20px;
-    margin-bottom: 10px;
-  }
-  #from-filter span {
-    margin-right: 4px;
-  }
-  #from-filter .from-filter-button {
-    width: 80px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: var(--black-color);
-    border: 2px solid rgba(0, 0, 0, 0.12);
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  #from-filter .from-filter-button.active {
-    border: 2px solid var(--main-color);
-  }
-  #sort-select,
-  #from-filter {
-    width: 294px;
-    height: 48px;
-    border: 1.5px solid #E5E5E5;
-    border-radius: 8px;
-    padding: 12px;
-    background-repeat: no-repeat;
-    background-position: right 0.7rem top 50%;
-    cursor: pointer;
-    box-sizing: border-box;
-  }
-  #from-select{
-    width: 294px;
-    height: 48px;
-    border-radius: 8px;
-    padding: 12px;
-    border: 1.5px solid #E5E5E5;
-    box-sizing: border-box;
-  }
-  .review-item .img-wrapper img {
-    display: flex;
-  }
-  .review-item .img-wrapper img {
-    height: 170px;
-    object-fit: contain;
-    margin-top: 20px;
-  }
-  .review-location {
-    color: rgba(0, 0, 0, 0.7);
-  }
-  /* Pagination styles */
-  .pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 32px;
-  }
-  .pagination .page-number {
-    padding: 8px 16px;
-    margin: 0 5px;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-  .pagination .page-number.active {
-    background-color: #F1592A;
-    color: #ffffff;
-  }
-  .pagination .dots {
-    padding: 8px 16px;
-  }
-  .pagination .prev, .pagination .next {
-    padding: 8px 16px;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-  .pagination .disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-  .reviews-wrapper .review-item .name{
-    font-size: 18px;
-    font-weight: 700;
-    color: #000000;
-    line-height: 24px;
-    margin-top: 16px;
-
-  }
-  .reviews-wrapper .review-item .review-text{
-    color: #393940;
-
-  }
-  .review-date{
-    color: #393940;
-    margin-bottom: 0;
-  }
-
-  .preloader {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .preloader.active {
-    display: flex;
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .spinner {
-    display: block!important;
-    border: 6px solid #f3f3f3;
-    border-top: 6px solid #f1592a;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  @media(max-width: 767px){
+    /* Add your previous styling */
     #shopify-section-{{ section.id }} {
-      padding-top: 20px;
-      padding-bottom: 24px;
-    }
-    #from-select{
-      width: 100%;
-      max-width: 400px;
-    }
-    #from-filter {
-      width: 100%;
-    }
-    #sort-select,
-    #from-filter {
-      width: 100%;
-      max-width: 400px;
+        padding-top: {{ section.settings.padding_top }}px;
+        padding-bottom: {{ section.settings.padding_bottom }}px;
     }
 
-    #from-filter {
-      margin-bottom: 12px;
+    #shopify-section-{{ section.id }} .container {
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 1280px;
+        box-sizing: border-box;
     }
 
-    #from-filter svg,
-    #sort-select svg {
-      transform: rotate(0deg);
-      transition: transform .3s ease;
+    .reviews-section .review-item {
+        width: auto;
+        height: 100%;
     }
 
-    #from-filter svg.active,
-    #sort-select svg.active {
-      transform: rotate(180deg);
+    .reviews-section .review-text {
+        height: auto;
+        overflow: hidden;
     }
 
-    #shopify-section-{{ section.id }} .view-more-btn {
-      display: flex;
-      gap: 4px;
-      font-family: 'Lato';
-      font-size: 16px;
-      font-weight: 700;
-      line-height: 24px;
-      color: var(--primary-orange);
-      background-color: transparent;
-      border: none;
+    .reviews-section .reviews-wrapper {
+        display: flex;
+        flex-direction: column;
+        row-gap: 12px;
     }
-  }
-</style>
 
-<div class="container">
-  <div class="filter-wrapper">
-    <div id="from-filter" class="custom-select-wrapper scroll-trigger animate--slide-in">
-      <div class="custom-select-trigger" data-value="all">
-        <strong>Show All Review Sources</strong>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="black"/>
-        </svg>
-      </div>
-      <div class="custom-options">
-        <div class="custom-option" data-value="all">Show All Review Sources</div>
-        <div class="custom-option" data-value="shopperApproved">Filter by Shopper Approved</div>
-        <div class="custom-option" data-value="trustPilot">Filter by Trustpilot</div>
-        <div class="custom-option" data-value="google">Filter by Google</div>
-        <div class="custom-option" data-value="facebook">Filter by Facebook</div>
-        <div class="custom-option" data-value="yelp">Filter by Yelp</div>
-      </div>
-    </div>
+    .filter-wrapper {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        margin-bottom: 32px;
+    }
 
-    <div id="sort-select" class="custom-select-wrapper scroll-trigger animate--slide-in">
-      <div class="custom-select-trigger" data-value="recent">
-        <div>
-          Sort by: <span class="selected-option"><strong>Most Recent</strong></span>
-        </div>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="black"/>
-        </svg>
-      </div>
-      <div class="custom-options">
-        <div class="custom-option" data-value="recent">Most Recent</div>
-        <div class="custom-option" data-value="oldest">Oldest</div>
-      </div>
-    </div>
-
-    <style>
-      .custom-select-wrapper {
-        position: relative;
-        width: 200px;
-      }
-      .custom-select-trigger {
-        cursor: pointer;
+    #from-filterб {
         display: flex;
         justify-content: space-between;
         align-items: center;
-      }
-      .custom-options {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background-color: #fff;
-        border: 1px solid #ccc;
+        column-gap: 20px;
+        margin-bottom: 10px;
+    }
+
+    #from-filter span {
+        margin-right: 4px;
+    }
+
+    #from-filter .from-filter-button {
+        width: 80px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--black-color);
+        border: 2px solid rgba(0, 0, 0, 0.12);
         border-radius: 4px;
-        display: none;
-        z-index: 10;
-      }
-      .custom-option {
-        padding: 10px;
         cursor: pointer;
-        text-align: left;
-      }
-      .custom-option:hover {
-        background-color: #f0f0f0;
-      }
-      .custom-option strong {
-        font-weight: bold;
-      }
-    </style>
-  </div>
-  <div class="preloader" id="preloader">
-    <div class="spinner"></div>
-  </div>
-  <div class="reviews-wrapper"></div>
-  <div class="pagination"></div>
+    }
+
+    #from-filter .from-filter-button.active {
+        border: 2px solid var(--main-color);
+    }
+
+    #sort-select,
+    #from-filter {
+        width: 294px;
+        height: 48px;
+        border: 1.5px solid #E5E5E5;
+        border-radius: 8px;
+        padding: 12px;
+        background-repeat: no-repeat;
+        background-position: right 0.7rem top 50%;
+        cursor: pointer;
+        box-sizing: border-box;
+    }
+
+    #from-select {
+        width: 294px;
+        height: 48px;
+        border-radius: 8px;
+        padding: 12px;
+        border: 1.5px solid #E5E5E5;
+        box-sizing: border-box;
+    }
+
+    .review-item .img-wrapper img {
+        display: flex;
+    }
+
+    .review-item .img-wrapper img {
+        height: 170px;
+        object-fit: contain;
+        margin-top: 20px;
+    }
+
+    .review-location {
+        color: rgba(0, 0, 0, 0.7);
+    }
+
+    /* Pagination styles */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 32px;
+    }
+
+    .pagination .page-number {
+        padding: 8px 16px;
+        margin: 0 5px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .pagination .page-number.active {
+        background-color: #F1592A;
+        color: #ffffff;
+    }
+
+    .pagination .dots {
+        padding: 8px 16px;
+    }
+
+    .pagination .prev, .pagination .next {
+        padding: 8px 16px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .pagination .disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .reviews-wrapper .review-item .name {
+        font-size: 18px;
+        font-weight: 700;
+        color: #000000;
+        line-height: 24px;
+        margin-top: 16px;
+
+    }
+
+    .reviews-wrapper .review-item .review-text {
+        color: #393940;
+
+    }
+
+    .review-date {
+        color: #393940;
+        margin-bottom: 0;
+    }
+
+    .preloader {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .preloader.active {
+        display: flex;
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .spinner {
+        display: block !important;
+        border: 6px solid #f3f3f3;
+        border-top: 6px solid #f1592a;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @media (max-width: 767px) {
+        #shopify-section-{{ section.id }} {
+            padding-top: 20px;
+            padding-bottom: 24px;
+        }
+
+        #from-select {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        #from-filter {
+            width: 100%;
+        }
+
+        #sort-select,
+        #from-filter {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        #from-filter {
+            margin-bottom: 12px;
+        }
+
+        #from-filter svg,
+        #sort-select svg {
+            transform: rotate(0deg);
+            transition: transform .3s ease;
+        }
+
+        #from-filter svg.active,
+        #sort-select svg.active {
+            transform: rotate(180deg);
+        }
+
+        #shopify-section-{{ section.id }} .view-more-btn {
+            display: flex;
+            gap: 4px;
+            font-family: 'Lato';
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 24px;
+            color: var(--primary-orange);
+            background-color: transparent;
+            border: none;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="filter-wrapper">
+        <div id="from-filter" class="custom-select-wrapper scroll-trigger animate--slide-in">
+            <div class="custom-select-trigger" data-value="all">
+                <strong>Show All Review Sources</strong>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd"
+                          d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z"
+                          fill="black"/>
+                </svg>
+            </div>
+            <div class="custom-options">
+                <div class="custom-option" data-value="all">Show All Review Sources</div>
+                <div class="custom-option" data-value="shopperApproved">Filter by Shopper Approved</div>
+                <div class="custom-option" data-value="trustPilot">Filter by Trustpilot</div>
+                <div class="custom-option" data-value="google">Filter by Google</div>
+                <div class="custom-option" data-value="facebook">Filter by Facebook</div>
+                <div class="custom-option" data-value="yelp">Filter by Yelp</div>
+            </div>
+        </div>
+
+        <div id="sort-select" class="custom-select-wrapper scroll-trigger animate--slide-in">
+            <div class="custom-select-trigger" data-value="recent">
+                <div>
+                    Sort by: <span class="selected-option"><strong>Most Recent</strong></span>
+                </div>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd"
+                          d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z"
+                          fill="black"/>
+                </svg>
+            </div>
+            <div class="custom-options">
+                <div class="custom-option" data-value="recent">Most Recent</div>
+                <div class="custom-option" data-value="oldest">Oldest</div>
+            </div>
+        </div>
+
+        <style>
+            .custom-select-wrapper {
+                position: relative;
+                width: 200px;
+            }
+
+            .custom-select-trigger {
+                cursor: pointer;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .custom-options {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background-color: #fff;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                display: none;
+                z-index: 10;
+            }
+
+            .custom-option {
+                padding: 10px;
+                cursor: pointer;
+                text-align: left;
+            }
+
+            .custom-option:hover {
+                background-color: #f0f0f0;
+            }
+
+            .custom-option strong {
+                font-weight: bold;
+            }
+        </style>
+    </div>
+    <div class="preloader" id="preloader">
+        <div class="spinner"></div>
+    </div>
+    <div class="reviews-wrapper"></div>
+    <div class="pagination"></div>
 </div>
 
 <script>
-  // Sort Dropdown
-  const sortSelect = document.querySelector('#sort-select');
-  const sortTrigger = sortSelect.querySelector('.custom-select-trigger');
-  const sortSelectedOption = sortTrigger.querySelector('.selected-option');
-  const sortOptions = sortSelect.querySelector('.custom-options');
-  const sortArrow = sortSelect.querySelector('svg');
+	// Sort Dropdown
+	const sortSelect = document.querySelector('#sort-select');
+	const sortTrigger = sortSelect.querySelector('.custom-select-trigger');
+	const sortSelectedOption = sortTrigger.querySelector('.selected-option');
+	const sortOptions = sortSelect.querySelector('.custom-options');
+	const sortArrow = sortSelect.querySelector('svg');
 
-  sortTrigger.addEventListener('click', () => {
-    sortOptions.style.display = sortOptions.style.display === 'block' ? 'none' : 'block';
-    sortArrow.classList.toggle('active');
-  });
+	sortTrigger.addEventListener('click', () => {
+		sortOptions.style.display = sortOptions.style.display === 'block' ? 'none' : 'block';
+		sortArrow.classList.toggle('active');
+	});
 
-  sortSelect.querySelectorAll('.custom-option').forEach((option) => {
-    option.addEventListener('click', (event) => {
-      const value = event.target.dataset.value;
+	sortSelect.querySelectorAll('.custom-option').forEach((option) => {
+		option.addEventListener('click', (event) => {
+			const value = event.target.dataset.value;
 
-      // Update the selected option text
-      sortSelectedOption.innerHTML = `<strong>${event.target.textContent}</strong>`;
-      sortTrigger.dataset.value = value;
-      sortOptions.style.display = 'none';
-      sortArrow.classList.toggle('active');
+			// Update the selected option text
+			sortSelectedOption.innerHTML = `<strong>${event.target.textContent}</strong>`;
+			sortTrigger.dataset.value = value;
+			sortOptions.style.display = 'none';
+			sortArrow.classList.toggle('active');
 
-      // Dispatch a custom change event
-      const changeEvent = new CustomEvent('change', {
-        detail: { value },
-      });
-      sortSelect.dispatchEvent(changeEvent);
-    });
-  });
+			// Dispatch a custom change event
+			const changeEvent = new CustomEvent('change', {
+				detail: {value},
+			});
+			sortSelect.dispatchEvent(changeEvent);
+		});
+	});
 
-  document.addEventListener('click', (e) => {
-    if (!sortSelect.contains(e.target)) {
-      if (sortOptions.style.display == 'block') {
-        sortOptions.style.display = 'none';
-        sortArrow.classList.toggle('active');
-      }
-    }
-  });
+	document.addEventListener('click', (e) => {
+		if (!sortSelect.contains(e.target)) {
+			if (sortOptions.style.display == 'block') {
+				sortOptions.style.display = 'none';
+				sortArrow.classList.toggle('active');
+			}
+		}
+	});
 
-  const fromSelect = document.querySelector('#from-filter');
-  const fromTrigger = fromSelect.querySelector('.custom-select-trigger');
-  const fromOptions = fromSelect.querySelector('.custom-options');
-  const fromArrow = fromSelect.querySelector('svg');
+	const fromSelect = document.querySelector('#from-filter');
+	const fromTrigger = fromSelect.querySelector('.custom-select-trigger');
+	const fromOptions = fromSelect.querySelector('.custom-options');
+	const fromArrow = fromSelect.querySelector('svg');
 
-  fromTrigger.addEventListener('click', () => {
-    fromOptions.style.display = fromOptions.style.display === 'block' ? 'none' : 'block';
-    fromArrow.classList.toggle('active');
-  });
+	fromTrigger.addEventListener('click', () => {
+		fromOptions.style.display = fromOptions.style.display === 'block' ? 'none' : 'block';
+		fromArrow.classList.toggle('active');
+	});
 
-  fromSelect.querySelectorAll('.custom-option').forEach((option) => {
-    option.addEventListener('click', (event) => {
-      const value = event.target.dataset.value;
+	fromSelect.querySelectorAll('.custom-option').forEach((option) => {
+		option.addEventListener('click', (event) => {
+			const value = event.target.dataset.value;
 
-      fromTrigger.querySelector('strong').innerHTML = event.target.innerHTML;
-      fromOptions.style.display = 'none';
-      fromArrow.classList.toggle('active');
+			fromTrigger.querySelector('strong').innerHTML = event.target.innerHTML;
+			fromOptions.style.display = 'none';
+			fromArrow.classList.toggle('active');
 
-        // Dispatch a custom change event
-        const changeEvent = new CustomEvent('change', {
-          detail: { value },
-        });
-        fromSelect.dispatchEvent(changeEvent);
-    });
-  });
+			// Dispatch a custom change event
+			const changeEvent = new CustomEvent('change', {
+				detail: {value},
+			});
+			fromSelect.dispatchEvent(changeEvent);
+		});
+	});
 
-  
-  document.addEventListener('click', (e) => {
-    if (!fromSelect.contains(e.target)) {
-      if (fromOptions.style.display == 'block') {
-        fromOptions.style.display = 'none';
-        fromArrow.classList.toggle('active');
-      }
-    }
-  });
+
+	document.addEventListener('click', (e) => {
+		if (!fromSelect.contains(e.target)) {
+			if (fromOptions.style.display == 'block') {
+				fromOptions.style.display = 'none';
+				fromArrow.classList.toggle('active');
+			}
+		}
+	});
 </script>
 
 {% schema %}

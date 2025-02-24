@@ -1,3 +1,4 @@
+
 const container = document.getElementById('dynamic-product-content');
 const modalWrapper = document.querySelector('.modal-wrapper');
 const closeIconTemplate = document.getElementById('icon-close-template').innerHTML;
@@ -8,9 +9,21 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		if (!document.querySelector('.avpoptions-container__v2'))
 			return;
 
-		if (window.location.pathname.includes('products')) {
-			renderCustomAvisOptions();
-		}
+        if (window.location.pathname.includes('products')) { 
+            renderCustomAvisOptions(); 
+
+            if (!window.product.available) {
+              document.querySelectorAll('.avp-select').forEach((select) => {
+                select.style.background = '#F2F2F2';
+                select.querySelector('select').disabled = true;
+                select.querySelector('select').style.color = '#808080'
+              });
+              // var tooltipElement = document.querySelector('.avp-option.ap-options__swatch-container .ap-label-tooltip');
+              // if (tooltipElement) {
+              //   tooltipElement.style.setProperty("--toolTipIcon", 'url("data:image/svg+xml,%3Csvg%20width%3D%2214%22%20height%3D%228%22%20viewBox%3D%220%200%2014%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20clip-rule%3D%22evenodd%22%20d%3D%22M0.46967%200.46967C0.762563%200.176777%201.23744%200.176777%201.53033%200.46967L7%205.93934L12.4697%200.46967C12.7626%200.176777%2013.2374%200.176777%2013.5303%200.46967C13.8232%200.762563%2013.8232%201.23744%2013.5303%201.53033L7.53033%207.53033C7.23744%207.82322%206.76256%207.82322%206.46967%207.53033L0.46967%201.53033C0.176777%201.23744%200.176777%200.762563%200.46967%200.46967Z%22%20fill%3D%22%23B3B3B3%22/%3E%3C/svg%3E")');
+              // }
+            }
+        }
 
 		clearInterval(avisOptionsPolling);
 
@@ -18,126 +31,134 @@ document.addEventListener('DOMContentLoaded', (event) => {
 });
 
 function renderCustomAvisOptions() {
-	const warrantySelect = document.querySelector('select[name="Warranty"]');
+    const warrantySelect = document.querySelector('select[name="Warranty"]');
 
-	if (warrantySelect) {
-		const warrantyParentContainer = warrantySelect.closest(".ap-options__select-container");
+    if (warrantySelect) {
+      const warrantyParentContainer = warrantySelect.closest(".ap-options__select-container");
 
-		if (warrantyParentContainer) {
-			const selectOptions = warrantyParentContainer.querySelector('select').options.length;
+      if (warrantyParentContainer) {
+        const selectOptions = warrantyParentContainer.querySelector('select').options.length;
 
-			if (selectOptions <= 1) {
-				warrantyParentContainer.style.display = "none";
-			} else {
-				warrantyParentContainer.querySelector('.ap-label-tooltip').classList.add('ap-options__heading')
-			}
-		}
-	}
+        if (selectOptions <= 1) {
+            warrantyParentContainer.style.display = "none";
+        } else {
+            warrantyParentContainer.querySelector('.ap-label-tooltip').classList.add('ap-options__heading')
+        }
+      }
+    }
 
-	const dropdownContainers = document.querySelectorAll('.ap-options__swatch-container');
+    const dropdownContainers = document.querySelectorAll('.ap-options__swatch-container');
 
-	dropdownContainers.forEach(container => {
-		const title = container.querySelector('.ap-label-tooltip');
-		const content = container.querySelector('.ap-options__swatch');
+    dropdownContainers.forEach(container => {
+        const title = container.querySelector('.ap-label-tooltip');
+        const content = container.querySelector('.ap-options__swatch');
 
-		if (title && content) {
-			title.addEventListener('click', () => {
-				content.classList.toggle('show');
-				title.classList.toggle('open');
-			});
-		}
-	});
+        if (title && content) {
+            title.addEventListener('click', () => {
+                content.classList.toggle('show');
+                title.classList.toggle('open');
+            });
+        }
+    });
 
-	const arrows = document.querySelectorAll('.option-avis-arrow-select');
-	arrows.forEach((arrow) => arrow.addEventListener('click', () => {
-		if (arrow.style.transform === "rotate(45deg)") {
-			arrow.setAttribute('style', 'transform: rotate(225deg) !important');
-		} else {
-			arrow.setAttribute('style', 'transform: rotate(45deg) !important');
-		}
-	}))
+    const arrows = document.querySelectorAll('.option-avis-arrow-select');
+    arrows.forEach((arrow) => arrow.addEventListener('click', () => {
+        if (arrow.style.transform === "rotate(45deg)") {
+            arrow.setAttribute('style', 'transform: rotate(225deg) !important');
+        } else {
+            arrow.setAttribute('style', 'transform: rotate(45deg) !important');
+        }
+    }))
 
-	document.querySelectorAll('.ap-label-tooltip').forEach(element => {
-		const style = document.createElement('style');
-		style.textContent = `.ap-label-tooltip::after { display: none !important; }`;
-		document.head.appendChild(style);
+    document.querySelectorAll('.ap-label-tooltip').forEach(element => {
+        const style = document.createElement('style');
+        style.textContent = `.ap-label-tooltip::after { display: none !important; }`;
+        document.head.appendChild(style);
+        if (window.product.available) {
+          element.innerHTML += `
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"/>
+          </svg>`;
+        } else {
+          element.innerHTML += `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#B3B3B3"/>
+</svg>
+`
+        }
 
-		element.innerHTML += `
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"/>
-        </svg>`;
-		const toolTip = element.querySelector('svg');
-		if (toolTip) {
-			toolTip.addEventListener('click', async (event) => {
-				event.preventDefault();
-				event.stopPropagation();
-				const parentWithHandle = element.closest('[class^="handle-"]');
-				modalWrapper.style.display = 'flex';
-				container.innerHTML = '';
-				const productTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
+        const toolTip = element.querySelector('svg');
+        if (toolTip) {
+            toolTip.addEventListener('click', async (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const parentWithHandle = element.closest('[class^="handle-"]');
+                document.querySelector('#dynamic-product-content').style.width = "auto";
+                modalWrapper.style.display = 'flex';
+                container.innerHTML = '';
+                const productTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
 
-				if (productTitle) {
-					let optionHTML = '';
-					var optionPopupProductsHtml = await renderOptionPopupProducts(productTitle);
+                if (productTitle) {
+                    let optionHTML = '';
+                    var optionPopupProductsHtml = await renderOptionPopupProducts(productTitle);
 
-					if (!optionPopupProductsHtml) {
-						const encodedProductTitle = encodeURIComponent(productTitle);
-						var product = await fetchProductByTitle(encodedProductTitle);
-						if (product) {
-							optionHTML = product.body_html;
-						}
-					} else {
-						optionHTML = optionPopupProductsHtml;
-					}
+                    if (!optionPopupProductsHtml) {
+                        const encodedProductTitle = encodeURIComponent(productTitle);
+                        var product = await fetchProductByTitle(encodedProductTitle);
+                        if (product) {
+                            optionHTML = product.body_html;
+                        }
+                    } else {
+                        optionHTML = optionPopupProductsHtml;
+                    }
 
-					if (optionHTML) {
-						const tempDiv = document.createElement('div');
-						tempDiv.innerHTML = optionHTML;
-						const mainContent = tempDiv;
-						if (mainContent) {
-							container.innerHTML =
-								mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
-							const closeModalButton = document.querySelector('.modal-close');
-							closeModalButton.addEventListener('click', () => {
-								modalWrapper.style.display = 'none';
-							});
+                    if (optionHTML) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = optionHTML;
+                        const mainContent = tempDiv;
+                        if (mainContent) {
+                            container.innerHTML =
+                                mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
+                                const closeModalButton = document.querySelector('.modal-close');
+                                closeModalButton.addEventListener('click', () => {
+                                    modalWrapper.style.display = 'none';
+                                });
 
-							const scripts = mainContent.querySelectorAll('script');
-							scripts.forEach((script) => {
-								const newScript = document.createElement('script');
-								if (script.src) {
-									newScript.src = script.src;
-								} else {
-									newScript.textContent = script.textContent;
-								}
-								document.body.appendChild(newScript);
-							});
+                            const scripts = mainContent.querySelectorAll('script');
+                            scripts.forEach((script) => {
+                                const newScript = document.createElement('script');
+                                if (script.src) {
+                                    newScript.src = script.src;
+                                } else {
+                                    newScript.textContent = script.textContent;
+                                }
+                                document.body.appendChild(newScript);
+                            });
 
-							const modalImgs = container.querySelectorAll('#dynamic-product-content img');
-							modalImgs.forEach((img) => {
-								const src = img.src;
-								const fileName = src.split('/').pop();
-								const newSrc = `https://cdn.shopify.com/s/files/1/0884/2012/2940/files/${fileName}`;
-								img.src = newSrc;
-							});
+                            const modalImgs = container.querySelectorAll('#dynamic-product-content img');
+                            modalImgs.forEach((img) => {
+                                const src = img.src;
+                                const fileName = src.split('/').pop();
+                                const newSrc = `https://cdn.shopify.com/s/files/1/0884/2012/2940/files/${fileName}`;
+                                img.src = newSrc;
+                            });
 
-							const productCards = document.querySelectorAll('.product-card');
+                            const productCards = document.querySelectorAll('.product-card');
 
-							if (productCards) {
-								productCards.forEach(p => {
-									var productId = parseInt(p.getAttribute('data-product-id'));
-									var product = optionProductsPopup.find(x => x.id === productId);
-									if (product) {
-										p.addEventListener('click', () => {
-											const shortDescriptionMetafield = product.metafields.find(
-												(metafield) => metafield.key === "short_description"
-											);
+                            if (productCards) {
+                                productCards.forEach(p => {
+                                    var productId = parseInt(p.getAttribute('data-product-id'));
+                                    var product = optionProductsPopup.find(x => x.id === productId);
+                                    if (product) {
+                                        p.addEventListener('click', () => {
+                                            const shortDescriptionMetafield = product.metafields.find(
+                                                (metafield) => metafield.key === "short_description"
+                                              );
+                                            
+                                            const shortDescription = shortDescriptionMetafield
+                                                ? shortDescriptionMetafield.value
+                                                : "No short description available.";
 
-											const shortDescription = shortDescriptionMetafield
-												? shortDescriptionMetafield.value
-												: "No short description available.";
-
-											var productDetailsHTML = `<div class="product-details__product-image">
+                                            var productDetailsHTML = `<div class="product-details__product-image">
                                                 <img src="${product.image.src}" alt="${product.title}">
                                             </div>
                                             <div class="product-details__product-info">
@@ -145,30 +166,31 @@ function renderCustomAvisOptions() {
                                                 <p class="product-details__short_description">${shortDescription}</p>
                                             </div>`
 
-											const productDetailsContainer = document.querySelector('.product-details-container');
-											const productDetailsDescriptionBody = document.querySelector('.product-details-description-body')
-											productDetailsContainer.style.display = 'flex';
-											productDetailsContainer.innerHTML = productDetailsHTML;
+                                            const productDetailsContainer = document.querySelector('.product-details-container');
+                                            const productDetailsDescriptionBody = document.querySelector('.product-details-description-body')
+                                            productDetailsContainer.style.display = 'flex';
+                                            productDetailsContainer.innerHTML = productDetailsHTML;
 
-											const productDetailsDescriptionBodyDiv = document.createElement('div');
-											productDetailsDescriptionBodyDiv.innerHTML = product.body_html.replace(shortDescription, '');
-											removeEmptyElements(productDetailsDescriptionBodyDiv);
-											clearImages(productDetailsDescriptionBodyDiv);
-											productDetailsDescriptionBody.innerHTML = productDetailsDescriptionBodyDiv.innerHTML;
-										})
-									}
-								});
-								productCards[0]?.click();
-							}
-						} else {
-							console.error('MainContent not found in the fetched HTML.');
-						}
-					}
-				}
-			});
-		}
-	});
-	setupOptionsHandler();
+                                            const productDetailsDescriptionBodyDiv = document.createElement('div');
+                                            productDetailsDescriptionBodyDiv.innerHTML = product.body_html.replace(shortDescription, '');
+                                            removeEmptyElements(productDetailsDescriptionBodyDiv);
+                                            clearImages(productDetailsDescriptionBodyDiv);
+                                            productDetailsDescriptionBody.innerHTML = productDetailsDescriptionBodyDiv.innerHTML;
+                                        })
+                                    }
+                                });
+                                productCards[0]?.click();
+                            }
+                        } else {
+                            console.error('MainContent not found in the fetched HTML.');
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    setupOptionsHandler();
 }
 
 function setupOptionsHandler() {
@@ -185,21 +207,23 @@ function setupOptionsHandler() {
 			console.error(`Label with class ".ap-label-tooltip" not found in "${handle}".`);
 			return;
 		}
-
+	
 		const selectedOptionsContainerNew = document.createElement('div');
 		selectedOptionsContainerNew.classList.add('selected_options_container');
 		optionLabel.append(selectedOptionsContainerNew);
-
+	
 		const swatchContainer = optionContainer.querySelector('.ap-options__swatch')
-
+			
 		optionContainer.querySelectorAll('.avp-productoptionswatchwrapper').forEach(wrapper => {
+            const input = wrapper.querySelector('input[type="radio"]');
+
 			wrapper.addEventListener('click', event => {
-				const input = wrapper.querySelector('input[type="radio"]');
-
+        if (!window.product.available) {
+          event.preventDefault();
+          return;
+        }
 				const allInputs = Array.from(swatchContainer?.querySelectorAll('input[type="radio"]'));
-
-				const inputIndex = allInputs.indexOf(input);
-
+				const inputIndex = allInputs.indexOf(input);	
 				const inputTextValue = input.value;
 				let inputMoneyValue;
 
@@ -209,6 +233,21 @@ function setupOptionsHandler() {
 					inputMoneyValue = Shopify.currency.active == 'USD' ? "$0" : ''
 				}
 
+                if (input.getAttribute('field-name') === 'Weight Stack') {
+                    var weightStackField = document.querySelector('fieldset.weight-stack');
+                    
+                    if (weightStackField) {
+                        hasWeightStack = true;
+
+                        const wrapperIndex = [...optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')].indexOf(wrapper);
+                        const weightStackTarget = weightStackField.querySelectorAll('label')[wrapperIndex];
+                        if (weightStackTarget) {
+                            weightStackTarget.click();
+                            weightStackLabel = weightStackTarget.textContent;
+                        }
+                    }
+                }
+	
 				const selectedOptionHTML = `
 					<div class="option_selected-container">
 						<p class="option_selected">${inputTextValue}</p>
@@ -219,30 +258,30 @@ function setupOptionsHandler() {
 					</div>
 				`;
 
-				const selectedOptionsContainer = wrapper.parentElement.parentElement.querySelector('.selected_options_container');
+                const selectedOptionsContainer = wrapper.parentElement.parentElement.querySelector('.selected_options_container');
 
 				if (input.checked) {
 					if (!selectedOptionsContainer?.querySelector(`[data-value="${inputIndex}"]`)) {
 						selectedOptionsContainer.innerHTML = selectedOptionHTML;
 					}
-
+	
 					Array.from(selectedOptionsContainer.children).forEach(option => {
 						option.style.display = 'flex';
 					});
-
+	
 					optionContainer.querySelectorAll('.avp-productoptionswatchwrapper').forEach(wrapper => {
 						wrapper.setAttribute("style", "border: 1px solid #E5E5E5 !important;");
 					});
-
+	
 					wrapper.setAttribute("style", "border: 1px solid #F1592A !important;");
-
+	
 					optionContainer.querySelectorAll('.remove-icon').forEach(icon => {
 						icon.addEventListener('click', event => {
 							event.stopPropagation();
 							const optionSelectedContainer = event.target.closest('.option_selected-container');
 							if (optionSelectedContainer) {
 								const value = parseInt(icon.getAttribute('data-value'));
-
+	
 								const relatedInput = optionContainer.querySelectorAll('.avp-productoptionswatchwrapper input[type="radio"]')[value];
 
 								if (relatedInput) {
@@ -256,16 +295,22 @@ function setupOptionsHandler() {
 							}
 						});
 					})
-
+	
 				} else {
 					const optionToRemove = selectedOptionsContainer.querySelector(`[data-value="${inputIndex}"]`);
 					if (optionToRemove) {
 						optionToRemove.closest('.option_selected-container').remove();
 					}
-
+	
 					wrapper.setAttribute("style", "border: 1px solid #E5E5E5 !important;");
 				}
 			});
+
+            setTimeout(() => {
+              if (input.getAttribute('field-name') === 'Weight Stack') {
+                optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')[0]?.click();
+              }   
+            });
 		});
 	});
 }
@@ -311,142 +356,142 @@ async function fetchProductByTitle(title) {
 }
 
 async function fetchProductMetafields(productId) {
-	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${productId}/`;
-	try {
-		const response = await fetch(shopifyUrl, {
-			method: "GET",
-		});
-
-		if (!response.ok) {
-			throw new Error("Failed to fetch product metafields");
-		}
-
-		const data = await response.json();
-		return data.metafields;
-	} catch (error) {
-		console.error("Error fetching product metafields:", error);
-		return null;
-	}
+    const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${productId}/`;
+    try {
+      const response = await fetch(shopifyUrl, {
+        method: "GET",
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch product metafields");
+      }
+  
+      const data = await response.json();
+      return data.metafields;
+    } catch (error) {
+      console.error("Error fetching product metafields:", error);
+      return null;
+    }
 }
 
 async function fetchProductDetails(productId) {
-	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${productId}`;
+    const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${productId}`;
 
-	try {
-		const response = await fetch(shopifyUrl, {
-			method: "GET",
-		});
-
-		if (!response.ok) {
-			throw new Error("Failed to fetch product details");
-		}
-
-		const data = await response.json();
-		return data.product;
-	} catch (error) {
-		console.error("Error fetching product details:", error);
-		return null;
-	}
+    try {
+      const response = await fetch(shopifyUrl, {
+        method: "GET",
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch product details");
+      }
+  
+      const data = await response.json();
+      return data.product;
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      return null;
+    }
 }
 
 async function fetchProductDetailsWithMetafields(productId) {
-	const productUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${productId}`;
-	const metafieldsUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${productId}/`;
+    const productUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${productId}`;
+    const metafieldsUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${productId}/`;
+  
+    try {
+      const [productResponse, metafieldsResponse] = await Promise.all([
+        fetch(productUrl, {
+          method: "GET",
+        }),
+        fetch(metafieldsUrl, {
+          method: "GET",
+        }),
+      ]);
+  
+      if (!productResponse.ok || !metafieldsResponse.ok) {
+        throw new Error("Failed to fetch product details or metafields");
+      }
+  
+      const productData = await productResponse.json();
+      const metafieldsData = await metafieldsResponse.json();
 
-	try {
-		const [productResponse, metafieldsResponse] = await Promise.all([
-			fetch(productUrl, {
-				method: "GET",
-			}),
-			fetch(metafieldsUrl, {
-				method: "GET",
-			}),
-		]);
-
-		if (!productResponse.ok || !metafieldsResponse.ok) {
-			throw new Error("Failed to fetch product details or metafields");
-		}
-
-		const productData = await productResponse.json();
-		const metafieldsData = await metafieldsResponse.json();
-
-		productData.product.metafields = metafieldsData.metafields;
-		return productData.product;
-	} catch (error) {
-		console.error("Error fetching product details with metafields:", error);
-		return null;
-	}
-}
-
+      productData.product.metafields = metafieldsData.metafields;
+      return productData.product;
+    } catch (error) {
+      console.error("Error fetching product details with metafields:", error);
+      return null;
+    }
+}  
+  
 async function fetchProductMetaObject(metaObjectId) {
-	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metaobject?metaobjectId=${metaObjectId}`;
+    const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metaobject?metaobjectId=${metaObjectId}`;
 
-	try {
-		const response = await fetch(shopifyUrl, {
-			method: "GET",
-		});
+    try {
+      const response = await fetch(shopifyUrl, {
+        method: "GET",
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch metaobject");
+      }
 
-		if (!response.ok) {
-			throw new Error("Failed to fetch metaobject");
-		}
-
-		return await response.json();
-	} catch (error) {
-		console.error("Error fetching meta object:", error);
-		return null;
-	}
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching meta object:", error);
+      return null;
+    }
 }
 
 async function renderOptionPopupProducts(title) {
-	const product = await fetchProductByTitle(title);
+    const product = await fetchProductByTitle(title);
 
-	if (!product) {
-		console.error("No product found for the given title.");
-		return;
-	}
+    if (!product) {
+      console.error("No product found for the given title.");
+      return;
+    }
+  
+    const productId = product.id;
+  
+    const metafields = await fetchProductMetafields(productId);
+    if (!metafields) {
+      console.error("No metafields found for the product.");
+      return null;
+    }
+  
+    const relatedProductsMetafield = metafields.find(
+      (field) => field.key === "related_products"
+    );
 
-	const productId = product.id;
+    if (!relatedProductsMetafield || !relatedProductsMetafield.value) {
+      console.error("No related products found in the metafield.");
+      return null;
+    }
+  
+    const optionProductIds = JSON.parse(relatedProductsMetafield.value).map((id) =>
+      id.split("/").pop()
+    );
+  
+    const optionProducts = await Promise.all(
+        optionProductIds.map((id) => fetchProductDetailsWithMetafields(id))
+    );
 
-	const metafields = await fetchProductMetafields(productId);
-	if (!metafields) {
-		console.error("No metafields found for the product.");
-		return null;
-	}
+    optionProductsPopup = optionProducts;
 
-	const relatedProductsMetafield = metafields.find(
-		(field) => field.key === "related_products"
-	);
+    let contentHTML = `<div class="option-title"><h2>ABOUT OPTIONS - ${product.title}</h2></div><div class="option-products">`;
 
-	if (!relatedProductsMetafield || !relatedProductsMetafield.value) {
-		console.error("No related products found in the metafield.");
-		return null;
-	}
+    optionProducts.forEach((product) => {
+        const shortDescriptionMetafield = product.metafields.find(
+            (metafield) => metafield.key === "short_description"
+          );
+        
+        const shortDescription = shortDescriptionMetafield
+            ? shortDescriptionMetafield.value
+            : "No short description available.";
 
-	const optionProductIds = JSON.parse(relatedProductsMetafield.value).map((id) =>
-		id.split("/").pop()
-	);
-
-	const optionProducts = await Promise.all(
-		optionProductIds.map((id) => fetchProductDetailsWithMetafields(id))
-	);
-
-	optionProductsPopup = optionProducts;
-
-	let contentHTML = `<div class="option-title"><h2>ABOUT OPTIONS - ${product.title}</h2></div><div class="option-products">`;
-
-	optionProducts.forEach((product) => {
-		const shortDescriptionMetafield = product.metafields.find(
-			(metafield) => metafield.key === "short_description"
-		);
-
-		const shortDescription = shortDescriptionMetafield
-			? shortDescriptionMetafield.value
-			: "No short description available.";
-
-		const originalPrice = parseFloat(product.variants[0].price);
-		const price = Shopify.country !== 'US' ? (originalPrice * Shopify.currency.rate).toFixed(2) : originalPrice.toFixed(2);
-
-		contentHTML += `
+        const originalPrice = parseFloat(product.variants[0].price); 
+        const price = Shopify.country !== 'US' ? (originalPrice * Shopify.currency.rate).toFixed(2) : originalPrice.toFixed(2); 
+            
+        contentHTML += `
           <div class="product-card" data-product-id="${product.id}">
             <div class="product-card__img"><img src="${product.images[0]?.src}" alt="${product.title}" /></div>
             <h4 class="product-card__title">${product.title}</h4>
@@ -457,78 +502,78 @@ async function renderOptionPopupProducts(title) {
             <p class="product-card__description">${shortDescription.substring(0, 150)}...</p>
             <a class="read-more-btn" data-id="${product.id}">Read more</a>
           </div>`;
-	});
+      });
 
-	let productDetailsHTML = `<div class="product-details-container">
+      let productDetailsHTML = `<div class="product-details-container">
 
         </div>
             <div class="product-details-description-body">
         </div>
         `;
 
-	contentHTML += productDetailsHTML;
-	contentHTML += '</div>'
+      contentHTML += productDetailsHTML;
+      contentHTML += '</div>'
 
-	return contentHTML;
-}
+      return contentHTML;
+ }
 
 function removeEmptyElements(element) {
-	const elements = element.querySelectorAll('p, div');
+    const elements = element.querySelectorAll('p, div');
 
-	elements.forEach(element => {
-		if (
-			(!element.textContent.trim() && element.children.length === 0) ||
-			element.innerHTML.trim() === '<br>' ||
-			element.innerHTML.trim() === '<br><br>' ||
-			(!element.textContent.trim() && element.innerHTML.trim().match(/^<br\s*\/?>$/i))
-		) {
-			element.remove();
-		}
-	});
+    elements.forEach(element => {
+        if (
+            (!element.textContent.trim() && element.children.length === 0) || 
+            element.innerHTML.trim() === '<br>' || 
+            element.innerHTML.trim() === '<br><br>' || 
+            (!element.textContent.trim() && element.innerHTML.trim().match(/^<br\s*\/?>$/i)) 
+        ) {
+            element.remove();
+        }
+    });
 
-	const brElements = element.querySelectorAll('br');
-	brElements.forEach(br => br.remove());
+    const brElements = element.querySelectorAll('br');
+    brElements.forEach(br => br.remove());
+    
+    const h5Elements = element.querySelectorAll('h5');
+    h5Elements.forEach(h5 => h5.remove());
 
-	const h5Elements = element.querySelectorAll('h5');
-	h5Elements.forEach(h5 => h5.remove());
-
-	const h6Elements = element.querySelectorAll('h6');
-	h6Elements.forEach(h6 => h6.remove());
+    const h6Elements = element.querySelectorAll('h6');
+    h6Elements.forEach(h6 => h6.remove());
 }
 
 function clearImages(element) {
-	const images = element.querySelectorAll('img');
+    const images = element.querySelectorAll('img');
 
-	images.forEach(img => {
-		if (img.parentElement) {
-			img.parentElement.remove();
-		} else {
-			img.remove();
-		}
-	})
+    images.forEach(img => {
+        if (img.parentElement) {
+            img.parentElement.remove();
+        } else {
+            img.remove();
+        }
+    })
 }
 
 if (window.location.pathname === '/cart') {
-	let isPopupOpen = false;
+    let isPopupOpen = false;
 
-	const observer = new MutationObserver(() => {
-		const avisCartOptionsPopupContainer = document.querySelector('.avis-cartOptionsPopup .ap-options__select-container');
-
-		if (avisCartOptionsPopupContainer && avisCartOptionsPopupContainer.style.display !== 'none') {
-			if (!isPopupOpen) {
-				isPopupOpen = true;
-				renderCustomAvisOptions();
-			}
-		} else {
-			isPopupOpen = false;
-		}
-	});
-
-	observer.observe(document.body, {
-		childList: true,
-		subtree: true,
-		attributes: true,
-		attributeFilter: ['style', 'class']
-	});
-
+    const observer = new MutationObserver(() => {
+      const avisCartOptionsPopupContainer = document.querySelector('.avis-cartOptionsPopup .ap-options__select-container');
+    
+      if (avisCartOptionsPopupContainer && avisCartOptionsPopupContainer.style.display !== 'none') {
+        if (!isPopupOpen) {
+          isPopupOpen = true;
+          renderCustomAvisOptions();
+        }
+      } else {
+        isPopupOpen = false;
+      }
+    });
+    
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,      
+      attributeFilter: ['style', 'class']
+    });
+    
 }

@@ -1,27 +1,27 @@
 {{ 'section-reviews.css' | asset_url | stylesheet_tag }}
 
 <script>
-  document.addEventListener("DOMContentLoaded", async (event) => {
-    const reviewsWrapper = document.querySelector('.reviews-slider');
-    let aggrReviews = [];
-  
-    try {
-      // Fetch aggregated reviews
-      const aggrReviewsResponse = await fetch('https://fitnesssuperstore-api.azurewebsites.net/api/reviews/aggregatedreviews');
-      if (aggrReviewsResponse.ok) {
-        aggrReviews = await aggrReviewsResponse.json();
-      } else {
-        console.error("Failed to fetch aggregated reviews.");
-      }
-    } catch (error) {
-      console.error("Error fetching reviews:", error);
-    }
-  
-    // Generate reviews HTML
+	document.addEventListener("DOMContentLoaded", async (event) => {
+		const reviewsWrapper = document.querySelector('.reviews-slider');
+		let aggrReviews = [];
+
+		try {
+			// Fetch aggregated reviews
+			const aggrReviewsResponse = await fetch('https://fitnesssuperstore-api.azurewebsites.net/api/reviews/aggregatedreviews');
+			if (aggrReviewsResponse.ok) {
+				aggrReviews = await aggrReviewsResponse.json();
+			} else {
+				console.error("Failed to fetch aggregated reviews.");
+			}
+		} catch (error) {
+			console.error("Error fetching reviews:", error);
+		}
+
+		// Generate reviews HTML
 
 
-    const reviewsHTML = aggrReviews.reduce((accumulator, item) => {
-      return accumulator + `<div class="review-item">
+		const reviewsHTML = aggrReviews.reduce((accumulator, item) => {
+			return accumulator + `<div class="review-item">
             <div class="review-item__wrapper">
             <div class="stars">
               <div class="Stars" style="--rating: ${item.rating};" aria-label="Rating of this product is ${item.rating} out of 5."></div>
@@ -40,106 +40,113 @@
             </span>
             </div>
           </div>`;
-    }, '');
-    
-    reviewsWrapper.innerHTML = reviewsHTML;
-  
-    // Initialize Slick Slider
-    $('.reviews-slider').slick({
-      dots: false,
-      infinite: false,
-      slidesToShow: 3,
-      slidesToScroll: 1,
-      appendArrows: $('.slick-slider-nav'),
-      appendDots: $('.slick-slider-dots'),
-      prevArrow: `<button class='slick-prev btn btn-white rounded-circle'><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+		}, '');
+
+		reviewsWrapper.innerHTML = reviewsHTML;
+
+		// Initialize Slick Slider
+		$('.reviews-slider').slick({
+			dots: false,
+			infinite: false,
+			slidesToShow: 3,
+			slidesToScroll: 1,
+			appendArrows: $('.slick-slider-nav'),
+			appendDots: $('.slick-slider-dots'),
+			prevArrow: `<button class='slick-prev btn btn-white rounded-circle'><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect width="48" height="48" rx="24" fill="#616166"/>
       <path fill-rule="evenodd" clip-rule="evenodd" d="M26.5303 17.4697C26.8232 17.7626 26.8232 18.2374 26.5303 18.5303L21.0607 24L26.5303 29.4697C26.8232 29.7626 26.8232 30.2374 26.5303 30.5303C26.2374 30.8232 25.7626 30.8232 25.4697 30.5303L19.4697 24.5303C19.1768 24.2374 19.1768 23.7626 19.4697 23.4697L25.4697 17.4697C25.7626 17.1768 26.2374 17.1768 26.5303 17.4697Z" fill="#B3B3B3"/>
       </svg></svg></button>`,
-      nextArrow: `<button class='slick-next btn btn-white rounded-circle'><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+			nextArrow: `<button class='slick-next btn btn-white rounded-circle'><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect width="48" height="48" rx="24" fill="#616166"/>
       <path fill-rule="evenodd" clip-rule="evenodd" d="M21.4697 17.4697C21.7626 17.1768 22.2374 17.1768 22.5303 17.4697L28.5303 23.4697C28.8232 23.7626 28.8232 24.2374 28.5303 24.5303L22.5303 30.5303C22.2374 30.8232 21.7626 30.8232 21.4697 30.5303C21.1768 30.2374 21.1768 29.7626 21.4697 29.4697L26.9393 24L21.4697 18.5303C21.1768 18.2374 21.1768 17.7626 21.4697 17.4697Z" fill="white"/>
       </svg>
       </button>`,
 
-  {% if section.settings.mobile_layout == 'slider' %}
-      responsive: [
-        {
-          breakpoint: 1024,
-          settings: {
-            slidesToShow: 2,
-          }
-        },
-        {
-          breakpoint: 600,
-          settings: {
-            slidesToShow: 1,
-            dots: true,
-          }
-        }
-      ]
-    {% else %}
-      responsive: [
-        {
-          breakpoint: 1024,
-          settings: {
-            slidesToShow: 2,
-          }
-        },
-        {
-          breakpoint: 600,
-          settings: "unslick"
-        }
-      ]
-    {% endif %}
-    });
-  
-    const reviewTexts = document.querySelectorAll(".review-text");
-    reviewTexts.forEach(function (reviewText) {
-      const maxLines = 3;
-      const lineHeight = parseInt(window.getComputedStyle(reviewText).lineHeight) || 20; // Fallback for line height
-      const maxHeight = lineHeight * maxLines;
-      const readMoreBtn = reviewText.nextElementSibling;
-    
-      if (reviewText.scrollHeight > maxHeight) {
-        reviewText.style.maxHeight = `${maxHeight}px`;
-        reviewText.style.overflow = "hidden";
-        readMoreBtn.style.display = "inline";
-    
-        let isExpanded = false;
-    
-        readMoreBtn.addEventListener("click", function () {
-          const reviewItem = reviewText.closest(".review-item");
-          if (isExpanded) {
-            reviewText.style.maxHeight = `${maxHeight}px`;
-            reviewText.style.overflow = "hidden";
-            reviewItem.style.overflowY = "hidden";
-            readMoreBtn.textContent = "Read more";
-          } else {
-            reviewText.style.maxHeight = `${reviewText.scrollHeight}px`;
-            reviewText.style.height = `${reviewText.scrollHeight}px`;
-            reviewText.style.overflow = "visible";
-            reviewItem.style.overflowY = "scroll";
-            readMoreBtn.textContent = "Show less";
-          }
-          isExpanded = !isExpanded;
-        });
-      } else {
-        readMoreBtn.style.display = "none";
-      }
-    });
-  });
-  
-  {% if request.design_mode %}
-    document.addEventListener('shopify:section:load', async () => {
-      const reviewsWrapper = document.querySelector('.reviews-slider');
-      
-      const aggrReviewsResponse = await fetch('https://fitnesssuperstore-api.azurewebsites.net/api/reviews/aggregatedreviews');
-      if (aggrReviewsResponse.ok) {
-        const aggrReviews = await aggrReviewsResponse.json();
-    
-        const reviewsHTML = aggrReviews.reduce((accumulator, item) => {
-          return accumulator + `<div class="review-item">
+            {% if section.settings.mobile_layout == 'slider' %}
+			responsive: [
+				{
+					breakpoint: 1024,
+					settings: {
+						slidesToShow: 2,
+					}
+				},
+				{
+					breakpoint: 767,
+					settings: {
+						slidesToShow: 2,
+						dots: true,
+					}
+				},
+				{
+					breakpoint: 600,
+					settings: {
+						slidesToShow: 1,
+						dots: true,
+					}
+				}
+			]
+            {% else %}
+			responsive: [
+				{
+					breakpoint: 1024,
+					settings: {
+						slidesToShow: 2,
+					}
+				},
+				{
+					breakpoint: 600,
+					settings: "unslick"
+				}
+			]
+            {% endif %}
+		});
+
+		const reviewTexts = document.querySelectorAll(".review-text");
+		reviewTexts.forEach(function (reviewText) {
+			const maxLines = 3;
+			const lineHeight = parseInt(window.getComputedStyle(reviewText).lineHeight) || 20; // Fallback for line height
+			const maxHeight = lineHeight * maxLines;
+			const readMoreBtn = reviewText.nextElementSibling;
+
+			if (reviewText.scrollHeight > maxHeight) {
+				reviewText.style.maxHeight = `${maxHeight}px`;
+				reviewText.style.overflow = "hidden";
+				readMoreBtn.style.display = "inline";
+
+				let isExpanded = false;
+
+				readMoreBtn.addEventListener("click", function () {
+					const reviewItem = reviewText.closest(".review-item");
+					if (isExpanded) {
+						reviewText.style.maxHeight = `${maxHeight}px`;
+						reviewText.style.overflow = "hidden";
+						reviewItem.style.overflowY = "hidden";
+						readMoreBtn.textContent = "Read more";
+					} else {
+						reviewText.style.maxHeight = `${reviewText.scrollHeight}px`;
+						reviewText.style.height = `${reviewText.scrollHeight}px`;
+						reviewText.style.overflow = "visible";
+						reviewItem.style.overflowY = "scroll";
+						readMoreBtn.textContent = "Show less";
+					}
+					isExpanded = !isExpanded;
+				});
+			} else {
+				readMoreBtn.style.display = "none";
+			}
+		});
+	});
+
+    {% if request.design_mode %}
+	document.addEventListener('shopify:section:load', async () => {
+		const reviewsWrapper = document.querySelector('.reviews-slider');
+
+		const aggrReviewsResponse = await fetch('https://fitnesssuperstore-api.azurewebsites.net/api/reviews/aggregatedreviews');
+		if (aggrReviewsResponse.ok) {
+			const aggrReviews = await aggrReviewsResponse.json();
+
+			const reviewsHTML = aggrReviews.reduce((accumulator, item) => {
+				return accumulator + `<div class="review-item">
                   <div class="review-item__wrapper">
                   <div class="stars">
                     <div class="Stars" style="--rating: ${item.rating};" aria-label="Rating of this product is ${item.rating} out of 5."></div>
@@ -151,117 +158,167 @@
                   </span>
                   </div>
                 </div>`;
-        }, '');
-        
-        reviewsWrapper.innerHTML = reviewsHTML;  
-      }
-    });
-  {% endif %}
+			}, '');
+
+			reviewsWrapper.innerHTML = reviewsHTML;
+		}
+	});
+    {% endif %}
 </script>
 
 <div class="container">
-  <h2 class="title">{{ section.settings.title }}</h2>
-  <p class="text">{{ section.settings.text }}</p>
-  <div class="reviews-slider__wrapper">
-    <div class="reviews-slider"></div>
+    <h2 class="title">{{ section.settings.title }}</h2>
+    <p class="text">{{ section.settings.text }}</p>
+    <div class="reviews-slider__wrapper">
+        <div class="reviews-slider"></div>
 
-    <div class="slick-slider-dots">
-      <div class="slick-slider-nav"></div>
+        <div class="slick-slider-dots">
+            <div class="slick-slider-nav"></div>
+        </div>
+
+        {% if section.settings.mobile_layout == 'blocks' %}
+            <a href="/pages/reviews">
+                See more
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd"
+                          d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z"
+                          fill="#F1592A"/>
+                </svg>
+            </a>
+        {% endif %}
     </div>
-
-    {% if section.settings.mobile_layout == 'blocks' %}
-      <a href="/pages/reviews">
-        See more
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="#F1592A"/>
-        </svg>
-      </a>
-    {% endif %}
-  </div>
 </div>
 
 <style>
-  #shopify-section-{{ section.id }}{
-    padding-top: {{ section.settings.padding_top }}px;
-    padding-bottom: {{ section.settings.padding_bottom }}px;
-    background: {{ section.settings.bg }};
-    padding-left: 15px;
-    padding-right: 15px;
-  }
-
-  #shopify-section-{{ section.id }} .container{
-    padding: 0px 60px;
-  }
-
-  #shopify-section-{{ section.id }} .title{
-    font-size: 48px;
-    font-weight: 600;
-    color: #23232B;
-    line-height: 68px;
-    margin-bottom: 52px;
-    text-align: center;
-  }
-
-  @media(max-width: 600px){
-    #shopify-section-{{ section.id }}{
-      padding-block: 24px;
-      padding-bottom: 30px;
-    }
-    #shopify-section-{{ section.id }} .slick-slider-nav svg{
-      width: 36px;
-      height: 36px;
-    }
-    #shopify-section-{{ section.id }} .slick-slider-nav button{
-      width: 36px;
-      height: 36px;
-    }
-    #shopify-section-{{ section.id }} .slick-prev{
-      transform: none;
-    }
-    #shopify-section-{{ section.id }} .slick-next{
-      transform: none;
-    }
-    .slick-slider-dots{
-      position: static;
-    }
-    .slick-slider-dots{
-      transform: none;
-    }
-  }
-  @media(max-width: 767px){
-    #shopify-section-{{ section.id }} .slick-list{
-      padding-right: 0;
-    }
-    #shopify-section-{{ section.id }} .review-item{
-      margin-right: 0;
-      height: auto;
-    }
-  }
-
-  @media screen and (max-width: 750px) {
-    #shopify-section-{{ section.id }} .container{
-      padding: 0px;
+    #shopify-section-{{ section.id }} {
+        padding-top: {{ section.settings.padding_top }}px;
+        padding-bottom: {{ section.settings.padding_bottom }}px;
+        background: {{ section.settings.bg }};
     }
 
-    #shopify-section-{{ section.id }}.reviews-slider-section .title {
-      font-size: 20px !important;
-      line-height: 26px !important;
-      text-align: start; 
-      margin-bottom: 20px;
+    #shopify-section-{{ section.id }} .container {
+        padding-left: 80px;
     }
+
+    #shopify-section-{{ section.id }} .title {
+        font-size: 48px;
+        font-weight: 600;
+        color: #23232B;
+        line-height: 68px;
+        margin-bottom: 52px;
+        text-align: center;
+    }
+    #shopify-section-{{ section.id }} .slick-prev, #shopify-section-{{ section.id }} .slick-next {
+        width: auto;
+        height: auto;
+        transform: none;
+    }
+    @media (max-width: 600px) {
+        #shopify-section-{{ section.id }} {
+            padding-block: 24px;
+            padding-bottom: 30px;
+        }
+
+        #shopify-section-{{ section.id }} .slick-slider-nav svg {
+            width: 36px;
+            height: 36px;
+        }
+
+        #shopify-section-{{ section.id }} .slick-slider-nav button {
+            width: 36px;
+            height: 36px;
+        }
+
+        #shopify-section-{{ section.id }} .slick-prev {
+            transform: none;
+        }
+
+        #shopify-section-{{ section.id }} .slick-next {
+            transform: none;
+        }
+
+        .slick-slider-dots {
+            position: static;
+        }
+
+        .slick-slider-dots {
+            transform: none;
+        }
+    }
+
+    @media (max-width: 767px) {
+        #shopify-section-{{ section.id }} .slick-list {
+            padding-right: 0;
+        }
+
+        #shopify-section-{{ section.id }} .review-item {
+            height: auto;
+            margin-right: 16px;
+        }
+
+        #shopify-section-{{ section.id }} .container {
+            padding: 0 16px;
+        }
+
+        #shopify-section-{{ section.id }} {
+            padding: 24px 0;
+        }
+
+        .slick-slider-dots {
+            position: static;
+            transform: none;
+            margin-top: 20px;
+        }
+
+        #shopify-section-{{ section.id }} .slick-prev, #shopify-section-{{ section.id }} .slick-next {
+            position: static;
+        }
+
+        #shopify-section-{{ section.id }} .slick-prev > svg, #shopify-section-{{ section.id }} .slick-next > svg {
+            width: 36px;
+            height: 36px;
+        }
+        .slick-slider-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    }
+
+    @media screen and (max-width: 750px) {
+        #shopify-section-{{ section.id }} .slick-dots {
+            position: absolute;
+            bottom: 10px;
+        }
+        #shopify-section-{{ section.id }}   .slick-dotted.slick-slider {
+            margin-bottom: 0;
+        }
+        #shopify-section-{{ section.id }}.reviews-slider-section .title {
+            font-size: 20px !important;
+            line-height: 26px !important;
+            text-align: start;
+            margin-bottom: 20px;
+        }
 
     {% if section.settings.mobile_layout == 'blocks' %}
-      .reviews-slider div:nth-child(n+4) {
-        display: none;
-      }
+        .reviews-slider div:nth-child(n+4) {
+            display: none;
+        }
 
-      .reviews-slider {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
+        .reviews-slider {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
     {% endif %}
-  }
+    }
+    @media (max-width: 599px) {
+        #shopify-section-{{ section.id }} .review-item {
+            height: auto;
+            margin-right: 0;
+        }
+    }
 </style>
 
 {% schema %}

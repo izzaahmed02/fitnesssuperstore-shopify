@@ -310,7 +310,7 @@
     </div>
   </div>
 </div>
-<div class="sticky-add-to-cart" style="display: none;">
+{% comment %} <div class="sticky-add-to-cart" style="display: none;">
   <div class="sticky-container">
       <img src="{{ product.featured_image | img_url: 'small' }}" alt="{{ product.title }}" class="sticky-product-image" height="" width="">
       <div class="sticky-product-info">
@@ -343,7 +343,7 @@
           </button>
       </div>
   </div>
-</div>
+</div> {% endcomment %}
 
 <product-info
   id="MainProduct-{{ section.id }}"
@@ -615,12 +615,12 @@
                 </div>
               {% when 'price' %}
                 <div>
-                  {% if product.selected_or_first_available_variant.compare_at_price
+                  {% if product.metafields.custom.retail_price
                       > product.selected_or_first_available_variant.price
                   %}
                     <span class="pr_custom_compare_price"
                       >As high as:
-                      <s>{{ product.selected_or_first_available_variant.compare_at_price | money_with_currency -}}</s>
+                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
                   {% endif %}               
                   <div class="price-container">
@@ -631,13 +631,13 @@
                       price_class: 'price--large'
                     -%}
 
-                    {% if product.selected_or_first_available_variant.compare_at_price
+                    {% if product.metafields.custom.retail_price
                         > product.selected_or_first_available_variant.price
                     %}
                       <span class="you-save"
                         >You save
                         {{
-                          product.selected_or_first_available_variant.compare_at_price
+                          product.metafields.custom.retail_price
                           | minus: product.selected_or_first_available_variant.price
                           | money_with_currency
                         -}}
@@ -674,7 +674,7 @@
                     <div>
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                          <p class="pr_custom_price">
+                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}">
                             {{ product.selected_or_first_available_variant.price | money }}
                           </p>
                         </div>   
@@ -726,7 +726,7 @@
                         {% # theme-check-enable %}
 
                         <div class="price-per-item__container">
-                          <quantity-input class="quantity" data-url="{{ product.url }}" data-section="{{ section.id }}">
+                          <quantity-input class="quantity {% unless product.available %} out-of-stock{% endunless %}" data-url="{{ product.url }}" data-section="{{ section.id }}">
                             <input
                               class="quantity__input"
                               type="number"
@@ -916,7 +916,7 @@
                               assign show_dynamic_checkout = true
                             endif
                           -%}
-
+                          {% if product.available == true %} 
                           {%- form 'product',
                             product,
                             id: product_form_id,
@@ -951,39 +951,42 @@
                                   assign quantity_rule_soldout = true
                                 endif
                               -%}
-                              {% if product.selected_or_first_available_variant.available == false
-                                or quantity_rule_soldout
-                                or product.selected_or_first_available_variant == null
-                              %}
-                             {%- endif -%}
-                             {% if product.selected_or_first_available_variant.available == false
-                              or quantity_rule_soldout
-                              or product.selected_or_first_available_variant == null
-                            %}
-                            <div class="restock-rocket-button-container"><button onclick="event.preventDefault();_RestockRocket.openModal()" class="sticky-restock-button restock-rocket-button restock-rocket-button-product restock-rocket-button-hover" style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;">Notify me when available</button></div>
-                            {%- else -%}
-                              <button
-                                id="ProductSubmitButton-{{ section.id }}"
-                                type="submit"
-                                name="add"
-                                class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}">
-                                {% render 'icon-cart' %}
-                                <span>
-                                  {%- if product.selected_or_first_available_variant == null -%}
-                                    {{ 'products.product.unavailable' | t }}
-                                  {%- elsif product.selected_or_first_available_variant.available == false
-                                    or quantity_rule_soldout
-                                  -%}
-                                    {{ 'products.product.sold_out' | t }}
-                                  {%- else -%}
-                                    {{ 'products.product.add_to_cart' | t }}
-                                  {%- endif -%}
-                                </span>
-                                {%- render 'loading-spinner' -%}
-                              </button>
-                            {% endif %}
+                            <button
+                              id="ProductSubmitButton-{{ section.id }}"
+                              type="submit"
+                              name="add"
+                              class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}">
+                              {% render 'icon-cart' %}
+                              <span>
+                                {%- if product.selected_or_first_available_variant == null -%}
+                                  {{ 'products.product.unavailable' | t }}
+                                {%- elsif product.selected_or_first_available_variant.available == false
+                                  or quantity_rule_soldout
+                                -%}
+                                  {{ 'products.product.sold_out' | t }}
+                                {%- else -%}
+                                  {{ 'products.product.add_to_cart' | t }}
+                                {%- endif -%}
+                              </span>
+                              {%- render 'loading-spinner' -%}
+                            </button>
                             </div>
                           {%- endform -%}
+                        {%- else -%}
+                        <div class="product-form__buttons form">
+                          <button
+                            name="add"
+                            class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %} out-of-stock"
+                          disabled>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                               <path fill-rule="evenodd" clip-rule="evenodd" d="M1.50007 3.75001H1.49998L1.00009 3.75007C0.585878 3.75012 0.250051 3.41437 0.25 3.00016C0.249949 2.58595 0.585695 2.25012 0.999908 2.25007L1.49991 2.25001L1.5 3.00001L1.50002 2.25001L1.54594 2.25L1.54594 2.25C1.88371 2.24996 2.1157 2.24993 2.33265 2.27521C3.58768 2.42143 4.68471 3.18983 5.25099 4.31935C5.34888 4.5146 5.42813 4.73264 5.54352 5.05009L5.5592 5.09324L5.61623 5.25007H17.0336L17.0773 5.25007C17.9753 5.25005 18.7102 5.25004 19.2878 5.31247C19.8799 5.37648 20.4293 5.51592 20.876 5.88873C21.2574 6.20703 21.5455 6.62269 21.7096 7.09156C21.9018 7.64074 21.8395 8.20414 21.6915 8.78104C21.5471 9.34375 21.2891 10.0319 20.9738 10.8726L20.9738 10.8726L20.9584 10.9136L20.9478 10.942C20.7035 11.5934 20.5046 12.1239 20.3055 12.5475C20.0986 12.9878 19.8706 13.3601 19.5454 13.6787C19.2426 13.9754 18.8917 14.2186 18.5075 14.3979C18.095 14.5905 17.6665 14.6733 17.1815 14.7124C16.7151 14.7501 16.1485 14.7501 15.4529 14.7501H15.4529H15.4529H15.4224H12.2026H12.1594C12.0647 14.7501 11.9717 14.7501 11.8804 14.75H6C5.30964 14.75 4.75 15.3097 4.75 16C4.75 16.6904 5.30964 17.25 6 17.25H9H17H21C21.4142 17.25 21.75 17.5858 21.75 18C21.75 18.4142 21.4142 18.75 21 18.75H19.4501C19.6419 19.125 19.75 19.5499 19.75 20C19.75 21.5188 18.5188 22.75 17 22.75C15.4812 22.75 14.25 21.5188 14.25 20C14.25 19.5499 14.3581 19.125 14.5499 18.75H11.4501C11.6419 19.125 11.75 19.5499 11.75 20C11.75 21.5188 10.5188 22.75 9 22.75C7.48122 22.75 6.25 21.5188 6.25 20C6.25 19.5499 6.35814 19.125 6.54985 18.75H6C4.48122 18.75 3.25 17.5188 3.25 16C3.25 14.4812 4.48122 13.25 6 13.25H7.14691C7.00916 13.0505 6.8859 12.8335 6.76987 12.5996C6.48068 12.0166 6.20831 11.2676 5.87372 10.3474L5.85896 10.3068L4.14951 5.60586C4.01249 5.22905 3.96389 5.09896 3.91007 4.99161C3.5703 4.3139 2.91209 3.85286 2.15907 3.76513C2.03981 3.75124 1.90095 3.75002 1.50009 3.75001H1.50007ZM14.0097 13.2501C14.0064 13.25 14.0032 13.25 14 13.25H11.9452C11.0494 13.2494 10.4099 13.2437 9.90375 13.1869C9.36922 13.1269 9.05809 13.0164 8.81046 12.843C8.56284 12.6695 8.35265 12.4149 8.11362 11.933C7.86618 11.4342 7.62158 10.7648 7.26865 9.79422L6.16168 6.75007H17.0336C17.986 6.75007 18.6393 6.75111 19.1266 6.80378C19.6087 6.8559 19.8051 6.9487 19.9149 7.04037C20.0883 7.18505 20.2192 7.37399 20.2938 7.58711C20.3411 7.72215 20.359 7.93864 20.2385 8.40835C20.1167 8.88312 19.8883 9.49514 19.5539 10.3869C19.2964 11.0736 19.1182 11.5472 18.948 11.9095C18.7826 12.2612 18.6461 12.4598 18.4957 12.6072C18.314 12.7852 18.1034 12.9312 17.8729 13.0388C17.6821 13.1279 17.4482 13.186 17.0608 13.2173C16.6618 13.2495 16.1558 13.2501 15.4224 13.2501H14.0097ZM9 18.75C8.30964 18.75 7.75 19.3097 7.75 20C7.75 20.6904 8.30964 21.25 9 21.25C9.69036 21.25 10.25 20.6904 10.25 20C10.25 19.3097 9.69036 18.75 9 18.75ZM17 18.75C16.3096 18.75 15.75 19.3097 15.75 20C15.75 20.6904 16.3096 21.25 17 21.25C17.6904 21.25 18.25 20.6904 18.25 20C18.25 19.3097 17.6904 18.75 17 18.75Z" fill="#B3B3B3"/>
+                            </svg>                            
+                            <span>
+                              {{ 'products.product.add_to_cart' | t }}
+                            </span>
+                          </button>
+                        </div>
+                        {% endif %}
                         {%- else -%}
                           <div class="product-form">
                             <div class="product-form__buttons form">
@@ -1001,6 +1004,19 @@
                       </div>
                     </div>
                   </div>
+                  {% if product.selected_or_first_available_variant.available == false
+                    or quantity_rule_soldout
+                    or product.selected_or_first_available_variant == null
+                  %}
+                    <div class="restock-rocket-button-container">
+                      <button onclick="event.preventDefault();_RestockRocket.openModal()" class="sticky-restock-button restock-rocket-button restock-rocket-button-product restock-rocket-button-hover" style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M11.9982 2.25C8.19221 2.25 4.98184 5.08406 4.50977 8.86064L3.52085 16.772C3.32319 18.3533 4.55618 19.75 6.14978 19.75H7.51075L7.56309 19.8678C8.34206 21.6205 10.0802 22.75 11.9982 22.75C13.9161 22.75 15.6542 21.6205 16.4332 19.8678L16.4856 19.75H17.8466C19.4402 19.75 20.6732 18.3533 20.4755 16.772L19.4866 8.86064C19.0145 5.08406 15.8042 2.25 11.9982 2.25ZM16.0153 18.25C16.0041 18.2498 15.993 18.2498 15.9819 18.25H8.01445C8.00333 18.2498 7.99219 18.2498 7.98104 18.25H6.14978C5.45843 18.25 4.92351 17.6441 5.00927 16.958L5.99818 9.04669C6.37643 6.02075 8.9487 3.75 11.9982 3.75C15.0477 3.75 17.6199 6.02075 17.9982 9.04669L18.9871 16.958C19.0729 17.6441 18.5379 18.25 17.8466 18.25H16.0153ZM9.20336 19.75H14.793C14.1788 20.6765 13.1341 21.25 11.9982 21.25C10.8622 21.25 9.81755 20.6765 9.20336 19.75Z" fill="white"/>
+                        </svg>                         
+                        <span>Notify about availability</span>
+                    </button>
+                  </div>    
+                  {% endif %}
                   <div class="paylater-container">
                     <div class="paylater-text">
                       <span>As low as $XXX / 4 interest-free payment</span>
@@ -1111,9 +1127,9 @@
                   </div>
 
                   {% if product.available == true %}
-                    <div class="stock-badge in">Available to Order</div>
+                    <div class="badge stock-badge in">Available to Order</div>
                   {% else %}
-                    <div class="stock-badge out">Out of stock</div>
+                    <div class="badge stock-badge out">Out of stock</div>
                   {% endif %}
                 </div>
 
@@ -1131,10 +1147,10 @@
                 {{ block.settings.custom_liquid }}
 
               {% when 'color_picker' %}
-                {% render 'custom-color-variant-picker',
+                <div></div>
+
+                {% render 'custom-color-picker',
                   product: product,
-                  block: block,
-                  product_form_id: product_form_id
                 %}
 
               {%- when 'collapsible_tab' -%}
@@ -1179,7 +1195,7 @@
                     </span>
                   </label>
                   <div class="price-per-item__container">
-                    <quantity-input class="quantity" data-url="{{ product.url }}" data-section="{{ section.id }}">
+                    <quantity-input class="quantity {% unless product.available %} out-of-stock{% endunless %}" data-url="{{ product.url }}" data-section="{{ section.id }}">
                       <button class="quantity__button" name="minus" type="button">
                         <span class="visually-hidden">
                           {{- 'products.product.quantity.decrease' | t: product: product.title | escape -}}
@@ -1666,7 +1682,7 @@
     }
   })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
 </script>
-<script defer>
+{% comment %} <script defer>
   document.addEventListener("DOMContentLoaded", function () {
     let scrollTimeout;
 
@@ -1723,7 +1739,7 @@
       addToCartMainButton.click();
     }
   }  
-</script>
+</script> {% endcomment %}
 {% schema %}
 {
   "name": "t:sections.main-product.name",

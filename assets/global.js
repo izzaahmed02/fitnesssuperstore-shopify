@@ -1073,7 +1073,9 @@ class VariantSelects extends HTMLElement {
 
   updateSelectionMetadata({ target }) {
     const { value, tagName } = target;
-  
+
+    let targetName = target.getAttribute('name');
+
     if (tagName === 'SELECT' && target.selectedOptions.length) {
       Array.from(target.options)
         .find((option) => option.getAttribute('selected'))
@@ -1125,17 +1127,19 @@ class VariantSelects extends HTMLElement {
       const selectedColorElement = document.querySelector('.option_selected');
       const selectedColorPriceElement = document.querySelector('.option_selected-price');
       const selectedColorInfo = document.querySelector('.option_selected-container');
-
-      if (selectedColorElement) {
-        selectedColorElement.textContent = `Color: ${value}`;          
-      }
-
-      if(selectedColorPriceElement) {
-        selectedColorPriceElement.textContent = '$0';
-      }
-
-      if (selectedColorInfo) {
-        selectedColorInfo.style.display = 'flex';
+       
+      if (targetName.toLowerCase().includes('color')) {
+        if (selectedColorElement) {
+          selectedColorElement.textContent = `Color: ${value}`;          
+        }
+  
+        if(selectedColorPriceElement) {
+          selectedColorPriceElement.textContent = '$0';
+        }
+  
+        if (selectedColorInfo) {
+          selectedColorInfo.style.display = 'flex';
+        }
       }
     }
   }

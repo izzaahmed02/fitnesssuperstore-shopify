@@ -30,6 +30,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 				}
 			}
 
+			if (!window.product.available) {
+				document.querySelector('.docapp-single-shipping-calculator .shipping-data').style.color = '#B3B3B3';
+			}
+
 			clearInterval(pollingInterval);
 		}
 
@@ -297,6 +301,7 @@ try {
 						
 						var product = await fetchProductByTitle(customFieldvalue);
 						if (product) {
+							document.querySelector('#dynamic-product-content').style.width = "auto";
 							modalWrapper.style.display = 'flex';
 							const tempDiv = document.createElement('div');
 							tempDiv.innerHTML = product.body_html;
@@ -372,7 +377,9 @@ try {
 						  </svg>`
 					
 						} else {
-							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(priceInDollars, 24, {displayPrimeOffers: true, primeApr: 9});
+							const productPrice = getProductPrice();	
+
+							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 9});
 
 							if (payTomorrow24MosRate) {
 								payLaterText = `As low as ${parseFloat(payTomorrow24MosRate).toLocaleString('en-US', {
@@ -526,6 +533,7 @@ function showPayLaterModal() {
 		closeModalButton.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
 		});
+		document.querySelector('#dynamic-product-content').style.width = "600px";
 	}
 }
 
