@@ -30,6 +30,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 				}
 			}
 
+			if (!window.product.available) {
+				document.querySelector('.docapp-single-shipping-calculator .shipping-data').style.color = '#B3B3B3';
+			}
+
 			clearInterval(pollingInterval);
 		}
 
@@ -297,6 +301,7 @@ try {
 						
 						var product = await fetchProductByTitle(customFieldvalue);
 						if (product) {
+							document.querySelector('#dynamic-product-content').style.width = "auto";
 							modalWrapper.style.display = 'flex';
 							const tempDiv = document.createElement('div');
 							tempDiv.innerHTML = product.body_html;
@@ -528,6 +533,7 @@ function showPayLaterModal() {
 		closeModalButton.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
 		});
+		document.querySelector('#dynamic-product-content').style.width = "600px";
 	}
 }
 
