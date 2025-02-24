@@ -18,11 +18,17 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 select.querySelector('select').disabled = true;
                 select.querySelector('select').style.color = '#808080'
               });
-              // var tooltipElement = document.querySelector('.avp-option.ap-options__swatch-container .ap-label-tooltip');
-              // if (tooltipElement) {
-              //   tooltipElement.style.setProperty("--toolTipIcon", 'url("data:image/svg+xml,%3Csvg%20width%3D%2214%22%20height%3D%228%22%20viewBox%3D%220%200%2014%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20clip-rule%3D%22evenodd%22%20d%3D%22M0.46967%200.46967C0.762563%200.176777%201.23744%200.176777%201.53033%200.46967L7%205.93934L12.4697%200.46967C12.7626%200.176777%2013.2374%200.176777%2013.5303%200.46967C13.8232%200.762563%2013.8232%201.23744%2013.5303%201.53033L7.53033%207.53033C7.23744%207.82322%206.76256%207.82322%206.46967%207.53033L0.46967%201.53033C0.176777%201.23744%200.176777%200.762563%200.46967%200.46967Z%22%20fill%3D%22%23B3B3B3%22/%3E%3C/svg%3E")');
-              // }
             }
+
+            document.querySelectorAll('.money.apo-money').forEach(function(el) {
+              let price = el.textContent.replace(/[()+]/g, '').trim();
+              
+              if (el.parentElement && el.parentElement.tagName.toLowerCase() === 'option') {
+                el.textContent = '[' + price + ']';
+              } else {
+                el.textContent = price;
+              }
+            });       
         }
 
 		clearInterval(avisOptionsPolling);

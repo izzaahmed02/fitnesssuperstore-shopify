@@ -107,6 +107,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         // Show the input field when "+" is clicked
                         customColorTrigger.addEventListener('click', () => {
+                            if (!window.product.available) {
+                                return;
+                            }
                             var customColorAvisCharge = document.querySelector(`.custom-color-${toLowerCaseFirstLetter(groupColorName)}-avis .apo-title-addcharge`)?.textContent;
 
                             if (customColorAvisCharge) {
