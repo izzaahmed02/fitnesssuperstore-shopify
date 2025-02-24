@@ -200,23 +200,16 @@ function renderCustomAvisOptions() {
 }
 
 function setupOptionsHandler() {
-	var handle = `[class^="handle-"]`
-	const optionsContainer = document.querySelectorAll(handle);
-	if (!optionsContainer) {
-		console.error(`Element with class handle "${handle}" not found.`);
-		return;
-	}
+	const optionsContainer = document.querySelectorAll('.avp-option');
 
 	optionsContainer.forEach(optionContainer => {
 		const optionLabel = optionContainer.querySelector('.ap-label-tooltip');
-		if (!optionLabel) {
-			console.error(`Label with class ".ap-label-tooltip" not found in "${handle}".`);
-			return;
-		}
-	
-		const selectedOptionsContainerNew = document.createElement('div');
-		selectedOptionsContainerNew.classList.add('selected_options_container');
-		optionLabel.append(selectedOptionsContainerNew);
+
+    if (optionLabel) {
+      const selectedOptionsContainerNew = document.createElement('div');
+      selectedOptionsContainerNew.classList.add('selected_options_container');
+      optionLabel.append(selectedOptionsContainerNew);
+    }
 	
 		const swatchContainer = optionContainer.querySelector('.ap-options__swatch')
 			

@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const groupColorContainer = document.querySelectorAll('.group-color-container');
 
+        //hack.. for some reason avis option need to be initialize by clicking on them first otherwise it will fire on 2nd click event
+        document.querySelector('input[name="Paint Color"]')?.click();
+        document.querySelector('input[name="Vinyl Color"]')?.click();
+        document.querySelector('input[name="Upholstery Color"]')?.click();
+
         if (groupColorContainer) {
             groupColorContainer.forEach((colorGroupElement, colorGroupElementIndex) => {
                 const groupColorName = colorGroupElement.getAttribute('data-group-color-name');
@@ -59,9 +64,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                         selectedColorElement.textContent = `Color: ${colorName}`;
                                         currentSwatchIndex = [...colorSwatches].indexOf(swatch);
                                         currentColorName = colorName;
-                                        const apoOptionColorSelected = Array.from(document.querySelectorAll('.ap-options__swatch-container .option_selected')).find(div => div.textContent.trim().includes(colorName));
+                                        const apoOptionColorSelected = Array.from(document.querySelectorAll('.ap-options__swatch-container .option_selected')).find(div => div.textContent === colorName);
                                         if (!apoOptionColorSelected) {
-                                            apoColors[currentSwatchIndex].parentElement?.click();
+                                            apoColors[currentSwatchIndex]?.parentElement.click();
                                         }
                                     }
 
@@ -257,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         document.querySelectorAll('.ap-options__swatch-container').forEach(container => {
             const titleElement = container.querySelector('.ap-label-tooltip .apo-title');
-            if (titleElement && titleElement.textContent.trim() === 'Paint Color' || titleElement && titleElement.textContent.trim() === 'Vinyl Color') {
+            if (titleElement && titleElement.textContent.trim() === 'Paint Color' || titleElement && titleElement.textContent.trim() === 'Vinyl Color' || titleElement && titleElement.textContent.trim() === 'Upholstery Color') {
               container.style.display = 'none';
             }
         });
