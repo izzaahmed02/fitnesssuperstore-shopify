@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     const colorPrice = event.target.dataset.colorPrice;
 
                                     if (selectedColorPriceElement) {
-                                        selectedColorPriceElement.textContent = colorPrice;
+                                        selectedColorPriceElement.textContent = colorPrice ? colorPrice :  Shopify.country === 'US' ? "$0" : `${Shopify.currency.active} 0`;
                                     }
 
                                     if (selectedColorInfo) {
@@ -86,8 +86,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             const apoOptionColorSelected = Array.from(document.querySelectorAll('.ap-options__swatch-container .option_selected')).find(div => div.textContent.trim().includes(currentColorName));
                             if (apoOptionColorSelected) {
                                 apoColors[currentSwatchIndex].parentElement?.click();
-                                colorSwatches.forEach((x) => x.classList.remove('color-selected'));
                             }
+
+                            colorSwatches.forEach((x) => x.classList.remove('color-selected'));
 
                             const customColorAvis = document.querySelector(`.custom-color-${toLowerCaseFirstLetter(groupColorName)}-avis input`);
 
@@ -106,6 +107,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         // Show the input field when "+" is clicked
                         customColorTrigger.addEventListener('click', () => {
+                            if (!window.product.available) {
+                                return;
+                            }
                             var customColorAvisCharge = document.querySelector(`.custom-color-${toLowerCaseFirstLetter(groupColorName)}-avis .apo-title-addcharge`)?.textContent;
 
                             if (customColorAvisCharge) {
@@ -218,10 +222,18 @@ document.addEventListener('DOMContentLoaded', function() {
                             })
                         });
                     } else {
-                        colorGroupElement.style.display = 'none';
+                        colorGroupElement.classList.add('hidden');
                     }
+
+                    colorGroupElement.querySelector('.group-color').addEventListener('click', (event) => {
+                        if (event.target.classList.contains('multi-color') || event.target.classList.contains('apo-title') && event.target.parentElement.classList.contains('multi-color')) {
+                            event.target.classList.toggle('open');
+                            colorGroupElement.querySelector('.custom-color-group .color_options_container').classList.toggle('show');
+                        }
+                    });
                 }
             });
+            
 
             const visibleGroupColorContainer = Array.from(groupColorContainer).filter(group => {
                 return group.offsetParent !== null; 
@@ -229,9 +241,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (visibleGroupColorContainer.length < 2 && visibleGroupColorContainer.length > 0) {
                 document.querySelector('.custom-color-group .options_heading').remove();
-                visibleGroupColorContainer[0].querySelector('.group-color').classList.add("options_heading", "options-title")
-                document.querySelector('.custom-color-group .color_options_container').style.marginTop = 0;
+                visibleGroupColorContainer[0].classList.add('single-color');
+                visibleGroupColorContainer[0].querySelector('.group-color span').classList.add("options_heading", "options-title");
+                const colorOptionsContainer = document.querySelector('.custom-color-group .color_options_container');
+                colorOptionsContainer.style.marginTop = 0;
+                colorOptionsContainer.classList.add('show');
+            } else {
+                visibleGroupColorContainer.forEach(x => x.querySelector('.group-color').classList.add('multi-color'));
             }
+     
+            const visibleContainers = visibleGroupColorContainer.filter(el => !el.classList.contains('hidden'));
+            if (visibleContainers.length) {
+          visibleContainers[visibleContainers.length - 1].classList.add('last-visible');
+        }
         }
         document.querySelectorAll('.ap-options__swatch-container').forEach(container => {
             const titleElement = container.querySelector('.ap-label-tooltip .apo-title');

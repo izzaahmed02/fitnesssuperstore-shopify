@@ -78,11 +78,42 @@
       .custom-color-group .group-color-container {
         display: flex;
         flex-direction: column;
-        margin-top: 20px;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        border-top: 1px solid #E5E5E5 !important;
+      }
+
+      .custom-color-group .group-color-container.hidden {
+        display: none;
+      }
+
+      .custom-color-group .group-color-container.last-visible {
+        border-bottom: 1px solid #E5E5E5 !important;
+      }
+
+      .custom-color-group .group-color-container.last-visible {
+        border-bottom: 1px solid #E5E5E5 !important;
+      }
+
+      .custom-color-group .group-color-container.single-color {
+        border-top: none !important;
+        border-bottom: none !important;
+        padding-top: 0px;
+        padding-bottom: 0px;
+      }
+
+      .custom-color-group .group-color-container.single-color .group-color:before {
+        background-image: none;
+      }
+
+      .custom-color-group .single-color .color_options_container {
+        padding-top: 5px;
+        margin-left: 1px;
       }
 
       .custom-color-group .color_options_container {
-        margin-top: 20px;
+        padding-top: 20px;
+        display: none;
       }
 
       .custom-color-group .color_options_container .color-selected  {
@@ -93,19 +124,59 @@
       .custom-color-group .group-color-container .group-color {
         display: flex;
         align-items: baseline;
+        position: relative;
+        cursor: pointer;
+      }
+
+      .custom-color-group .group-color-container .group-color-single {
+        display: flex;
+        align-items: baseline;
+        position: relative;
+        cursor: pointer;
+      }
+
+      .custom-color-group .color_options_container.show {
+        display: flex !important;
+      }
+
+      .color_options_container .options_container.show {
+        display: flex !important; 
+      }
+
+      .custom-color-group .group-color-container .group-color:before {
+        content: "";
+        position: absolute;
+        right: 10px;
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M11.4697 8.46967C11.7626 8.17678 12.2374 8.17678 12.5303 8.46967L18.5303 14.4697C18.8232 14.7626 18.8232 15.2374 18.5303 15.5303C18.2374 15.8232 17.7626 15.8232 17.4697 15.5303L12 10.0607L6.53033 15.5303C6.23744 15.8232 5.76256 15.8232 5.46967 15.5303C5.17678 15.2374 5.17678 14.7626 5.46967 14.4697L11.4697 8.46967Z' fill='black'/%3E%3C/svg%3E");
+        background-size: contain;
+        background-repeat: no-repeat;
+        transition: transform 0.3s ease;
+        margin-left: 8px;
+        transform: rotate(180deg);
+      }
+
+      .custom-color-group .group-color-container .group-color.open:before {
+        transform: rotate(0deg) !important;
       }
 
       .custom-color-group .group-color-container .option_selected-container {
         margin-top: 0px;
       }
+
+      .options-title {
+        align-items: baseline;
+      }
 </style>
 <div class="custom-color-group">
-  <div class="options_heading options-title">
-    <span>Colors</span>
+  <div class="options_heading ap-options__heading">
+    <h3>Colors</h3>
   </div>
     <div class="group-color-container" data-group-color-name="Paint">
       <div class="group-color">
-        <span>Paint Color</span>
+        <span class="apo-title">Paint Color</span>
         <div class="option_selected-container" style="display: none;">
           <p class="option_selected"></p>
           <span class="option_selected-price"></span>
@@ -121,13 +192,13 @@
       
       <div class="color_options_container options_container">
         <div class="color-options-container"></div>
-        {% render 'custom-color-wrapper', group: 'paint' %}  
+        {% render 'custom-color-wrapper', group: 'paint', product: product  %}  
       </div>
     </div>
    
     <div class="group-color-container" data-group-color-name="Vinyl">
       <div class="group-color">
-        <span>Vinyl Color</span>
+        <span class="apo-title">Vinyl Color</span>
         <div class="option_selected-container" style="display: none;">
           <p class="option_selected"></p>
           <span class="option_selected-price"></span>
@@ -143,13 +214,13 @@
       
       <div class="color_options_container options_container">
         <div class="color-options-container"></div>
-        {% render 'custom-color-wrapper', group: 'vinyl'  %}  
+        {% render 'custom-color-wrapper', group: 'vinyl', product: product  %}  
       </div>
     </div>
 
     <div class="group-color-container" data-group-color-name="Upholstery">
       <div class="group-color">
-        <span>Upholstery Color</span>
+        <span class="apo-title">Upholstery Color</span>
         <div class="option_selected-container" style="display: none;">
           <p class="option_selected"></p>
           <span class="option_selected-price"></span>
@@ -165,7 +236,7 @@
       
       <div class="color_options_container options_container">
         <div class="color-options-container"></div>
-        {% render 'custom-color-wrapper', group: 'upholstery'  %}  
+        {% render 'custom-color-wrapper', group: 'upholstery', product: product   %}  
       </div>
     </div>
 </div>
