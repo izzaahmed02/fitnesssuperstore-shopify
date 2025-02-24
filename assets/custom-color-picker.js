@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     colorGroupElement.querySelector('.group-color').addEventListener('click', (event) => {
-                        if (!event.target.parentElement.classList.contains('single-color')) {
+                        if (event.target.classList.contains('multi-color') || event.target.classList.contains('apo-title') && event.target.parentElement.classList.contains('multi-color')) {
                             event.target.classList.toggle('open');
                             colorGroupElement.querySelector('.custom-color-group .color_options_container').classList.toggle('show');
                         }
@@ -243,9 +243,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const colorOptionsContainer = document.querySelector('.custom-color-group .color_options_container');
                 colorOptionsContainer.style.marginTop = 0;
                 colorOptionsContainer.classList.add('show');
+            } else {
+                visibleGroupColorContainer.forEach(x => x.querySelector('.group-color').classList.add('multi-color'));
             }
-
-            
+     
             const visibleContainers = visibleGroupColorContainer.filter(el => !el.classList.contains('hidden'));
             if (visibleContainers.length) {
           visibleContainers[visibleContainers.length - 1].classList.add('last-visible');
