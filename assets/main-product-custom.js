@@ -372,7 +372,9 @@ try {
 						  </svg>`
 					
 						} else {
-							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(priceInDollars, 24, {displayPrimeOffers: true, primeApr: 9});
+							const productPrice = getProductPrice();	
+
+							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 9});
 
 							if (payTomorrow24MosRate) {
 								payLaterText = `As low as ${parseFloat(payTomorrow24MosRate).toLocaleString('en-US', {
