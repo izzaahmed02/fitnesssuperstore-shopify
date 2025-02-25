@@ -59,6 +59,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (event.target.classList.contains('unavailable')) {
                                     return;
                                 }
+                                if (!window.product.available) {
+                                    return;
+                                }
                                 if (colorName) {
                                     if (selectedColorElement) {
                                         selectedColorElement.textContent = `Color: ${colorName}`;
