@@ -400,66 +400,6 @@
     <script src="{{ 'theme-editor.js' | asset_url }}" defer="defer"></script>
   {%- endif -%}
 
-  <script defer>
-    document.addEventListener("DOMContentLoaded", function () {
-      const thumbnails = document.querySelectorAll(".thumbnail-custom");
-      const mainSlides = document.querySelectorAll(".main-slide");
-      const prevArrow = document.querySelector(".main-slider-arrow--left");
-      const nextArrow = document.querySelector(".main-slider-arrow--right");
-      const thumbnailSlider = document.querySelector(".thumbnail-slider");
-    
-      let currentIndex = 0;
-      const visibleThumbnails = 4; 
-      const thumbnailHeight = thumbnails[0].offsetHeight + 10; // Height + gap
-    
-      function updateSlider(index) {
-        currentIndex = index;
-    
-        mainSlides.forEach((slide, i) => {
-          slide.classList.toggle("active", i === index);
-        });
-    
-        updateActiveThumbnail(index);
-    
-        scrollThumbnailsToIndex(index);
-      }
-    
-      function updateActiveThumbnail(index) {
-        thumbnails.forEach((thumbnail, i) => {
-          thumbnail.classList.toggle("active", i === index);
-        });
-      }
-    
-      function scrollThumbnailsToIndex(index) {
-        const start = Math.max(0, index - Math.floor(visibleThumbnails / 2));
-        const offset = start * thumbnailHeight;
-    
-        thumbnailSlider.scrollTo({
-          top: offset,
-          behavior: "smooth",
-        });
-      }
-    
-      thumbnails.forEach((thumbnail, index) => {
-        thumbnail.addEventListener("click", () => {
-          updateSlider(index);
-        });
-      });
-    
-      prevArrow.addEventListener("click", () => {
-        const newIndex = (currentIndex - 1 + mainSlides.length) % mainSlides.length;
-        updateSlider(newIndex);
-      });
-    
-      nextArrow.addEventListener("click", () => {
-        const newIndex = (currentIndex + 1) % mainSlides.length;
-        updateSlider(newIndex);
-      });
-    
-      updateSlider(0);
-    });  
-  </script>
-
   {%- assign first_3d_model = product.media | where: 'media_type', 'model' | first -%}
   {%- if first_3d_model -%}
     {{ 'component-product-model.css' | asset_url | stylesheet_tag }}
@@ -483,36 +423,35 @@
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
       <div class="product-main-left-container">
         <div class="product-main-left">
-          <!-- Thumbnails -->
+          
           <div class="thumbnail-slider">
             {% for item in product.images %}
-              <div class="thumbnail-custom item" data-index="{{ forloop.index0 }}">
+              <div class="item">
                 {{ item | image_url: width: 100 | image_tag }}
               </div>
             {% endfor %}
           </div>
         
-          <!-- Main Slider -->
           <div class="main-slider-wrapper">
-            <div class="main-slider-arrow main-slider-arrow--left" type="button">
+            <div class="main-slider-arrow--left" type="button">
               <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M7.19635 0.46967C7.48924 0.762563 7.48924 1.23744 7.19635 1.53033L2.72668 6L7.19635 10.4697C7.48924 10.7626 7.48924 11.2374 7.19635 11.5303C6.90345 11.8232 6.42858 11.8232 6.13569 11.5303L1.13569 6.53033C0.995033 6.38968 0.916016 6.19891 0.916016 6C0.916016 5.80109 0.995033 5.61032 1.13569 5.46967L6.13569 0.46967C6.42858 0.176777 6.90345 0.176777 7.19635 0.46967Z" fill="white"/>
               </svg>
             </div>
             <div class="main-slider">
               {% for item in product.images %}
-                <div class="main-slide item">
+                <div class="item">
                   {{ item | image_url: width: auto | image_tag }}
                 </div>
               {% endfor %}
             </div>
-            <div class="main-slider-arrow main-slider-arrow--right" type="button">
+            <div class="main-slider-arrow--right" type="button">
               <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M0.803654 0.46967C1.09655 0.176777 1.57142 0.176777 1.86431 0.46967L6.86431 5.46967C7.15721 5.76256 7.15721 6.23744 6.86431 6.53033L1.86431 11.5303C1.57142 11.8232 1.09655 11.8232 0.803654 11.5303C0.510761 11.2374 0.510761 10.7626 0.803654 10.4697L5.27332 6L0.803654 1.53033C0.510761 1.23744 0.510761 0.762563 0.803654 0.46967Z" fill="white"/>
               </svg>
             </div>
           </div>
-        </div>        
+        </div>     
 
         {% if section.settings.accent_text != blank %}
           <div class="product__accesnt-text">
@@ -1639,6 +1578,32 @@
       <script src="{{ 'product-modal.js' | asset_url }}" defer="defer"></script>
       <script src="{{ 'media-gallery.js' | asset_url }}" defer="defer"></script>
     {%- endif -%}
+
+    <script defer>
+      setTimeout(() => {
+        $('.main-slider').slick({
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          arrows: true,
+          prevArrow: '.main-slider-arrow--left',
+          nextArrow: '.main-slider-arrow--right',
+          fade: true,
+          asNavFor: '.thumbnail-slider',
+        });
+      }, 500);
+      
+      setTimeout(() => {
+        $('.thumbnail-slider').slick({
+          slidesToShow: 4,
+          slidesToScroll: 1,
+          vertical: true,
+          asNavFor: '.main-slider',
+          dots: false,
+          centerMode: true,
+          focusOnSelect: true,
+        });
+      });
+    </script>
 
     {%- if first_3d_model -%}
       <script type="application/json" id="ProductJSON-{{ product.id }}">

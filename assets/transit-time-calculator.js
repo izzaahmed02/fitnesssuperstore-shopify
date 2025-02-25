@@ -39,14 +39,20 @@ var TransitTimeCalculator = {
         
         if (locationInfoResponse) {
           let locationInfoCountry = locationInfoResponse.country;
-          const parsed = JSON.parse(locationInfoResponse.zipCodeLocationResult);
-          const locationInfoJSON = Array.isArray(parsed) ? parsed[0] : parsed;
-          userLoc.region_code = locationInfoJSON.region_code || locationInfoJSON.state || locationInfoJSON.province;
-          userLoc.city = locationInfoJSON.city;
-          userLoc.country = locationInfoJSON.country_code || locationInfoCountry;
-          if (locationInfoJSON.state === 'PR') {
-            userLoc.country = 'PR';
+
+          if (locationInfoResponse.zipCodeLocationResult) {
+            const parsed = JSON.parse(locationInfoResponse.zipCodeLocationResult);
+            const locationInfoJSON = Array.isArray(parsed) ? parsed[0] : parsed;
+
+            userLoc.region_code = locationInfoJSON.region_code || locationInfoJSON.state || locationInfoJSON.province;
+            userLoc.city = locationInfoJSON.city;
+            userLoc.country = locationInfoJSON.country_code || locationInfoCountry;
+            if (locationInfoJSON.state === 'PR') {
+              userLoc.country = 'PR';
+            }
           }
+
+
           if (locationInfoCountry) {
             userLoc.country = locationInfoCountry;
             userLoc.country_code = locationInfoCountry;
