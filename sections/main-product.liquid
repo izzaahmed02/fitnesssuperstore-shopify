@@ -400,66 +400,6 @@
     <script src="{{ 'theme-editor.js' | asset_url }}" defer="defer"></script>
   {%- endif -%}
 
-  <script defer>
-    document.addEventListener("DOMContentLoaded", function () {
-      const thumbnails = document.querySelectorAll(".thumbnail-custom");
-      const mainSlides = document.querySelectorAll(".main-slide");
-      const prevArrow = document.querySelector(".main-slider-arrow--left");
-      const nextArrow = document.querySelector(".main-slider-arrow--right");
-      const thumbnailSlider = document.querySelector(".thumbnail-slider");
-    
-      let currentIndex = 0;
-      const visibleThumbnails = 4; 
-      const thumbnailHeight = thumbnails[0].offsetHeight + 10; // Height + gap
-    
-      function updateSlider(index) {
-        currentIndex = index;
-    
-        mainSlides.forEach((slide, i) => {
-          slide.classList.toggle("active", i === index);
-        });
-    
-        updateActiveThumbnail(index);
-    
-        scrollThumbnailsToIndex(index);
-      }
-    
-      function updateActiveThumbnail(index) {
-        thumbnails.forEach((thumbnail, i) => {
-          thumbnail.classList.toggle("active", i === index);
-        });
-      }
-    
-      function scrollThumbnailsToIndex(index) {
-        const start = Math.max(0, index - Math.floor(visibleThumbnails / 2));
-        const offset = start * thumbnailHeight;
-    
-        thumbnailSlider.scrollTo({
-          top: offset,
-          behavior: "smooth",
-        });
-      }
-    
-      thumbnails.forEach((thumbnail, index) => {
-        thumbnail.addEventListener("click", () => {
-          updateSlider(index);
-        });
-      });
-    
-      prevArrow.addEventListener("click", () => {
-        const newIndex = (currentIndex - 1 + mainSlides.length) % mainSlides.length;
-        updateSlider(newIndex);
-      });
-    
-      nextArrow.addEventListener("click", () => {
-        const newIndex = (currentIndex + 1) % mainSlides.length;
-        updateSlider(newIndex);
-      });
-    
-      updateSlider(0);
-    });  
-  </script>
-
   {%- assign first_3d_model = product.media | where: 'media_type', 'model' | first -%}
   {%- if first_3d_model -%}
     {{ 'component-product-model.css' | asset_url | stylesheet_tag }}
@@ -483,36 +423,35 @@
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
       <div class="product-main-left-container">
         <div class="product-main-left">
-          <!-- Thumbnails -->
+          
           <div class="thumbnail-slider">
             {% for item in product.images %}
-              <div class="thumbnail-custom item" data-index="{{ forloop.index0 }}">
+              <div class="item">
                 {{ item | image_url: width: 100 | image_tag }}
               </div>
             {% endfor %}
           </div>
         
-          <!-- Main Slider -->
           <div class="main-slider-wrapper">
-            <div class="main-slider-arrow main-slider-arrow--left" type="button">
+            <div class="main-slider-arrow--left" type="button">
               <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M7.19635 0.46967C7.48924 0.762563 7.48924 1.23744 7.19635 1.53033L2.72668 6L7.19635 10.4697C7.48924 10.7626 7.48924 11.2374 7.19635 11.5303C6.90345 11.8232 6.42858 11.8232 6.13569 11.5303L1.13569 6.53033C0.995033 6.38968 0.916016 6.19891 0.916016 6C0.916016 5.80109 0.995033 5.61032 1.13569 5.46967L6.13569 0.46967C6.42858 0.176777 6.90345 0.176777 7.19635 0.46967Z" fill="white"/>
               </svg>
             </div>
             <div class="main-slider">
               {% for item in product.images %}
-                <div class="main-slide item">
+                <div class="item">
                   {{ item | image_url: width: auto | image_tag }}
                 </div>
               {% endfor %}
             </div>
-            <div class="main-slider-arrow main-slider-arrow--right" type="button">
+            <div class="main-slider-arrow--right" type="button">
               <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M0.803654 0.46967C1.09655 0.176777 1.57142 0.176777 1.86431 0.46967L6.86431 5.46967C7.15721 5.76256 7.15721 6.23744 6.86431 6.53033L1.86431 11.5303C1.57142 11.8232 1.09655 11.8232 0.803654 11.5303C0.510761 11.2374 0.510761 10.7626 0.803654 10.4697L5.27332 6L0.803654 1.53033C0.510761 1.23744 0.510761 0.762563 0.803654 0.46967Z" fill="white"/>
               </svg>
             </div>
           </div>
-        </div>        
+        </div>     
 
         {% if section.settings.accent_text != blank %}
           <div class="product__accesnt-text">
@@ -667,7 +606,7 @@
                     </svg>
                     <span class="product-form__error-message"></span>
                   </div>
-
+                  {% render 'transit-time-calculator', product: product %}
                   <h5 class="product_price_with_options-heading">Total with options</h5>
 
                   <div class="product_price_with_options-contaniner">
@@ -1012,10 +951,10 @@
                       <button onclick="event.preventDefault();_RestockRocket.openModal()" class="sticky-restock-button restock-rocket-button restock-rocket-button-product restock-rocket-button-hover" style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path fill-rule="evenodd" clip-rule="evenodd" d="M11.9982 2.25C8.19221 2.25 4.98184 5.08406 4.50977 8.86064L3.52085 16.772C3.32319 18.3533 4.55618 19.75 6.14978 19.75H7.51075L7.56309 19.8678C8.34206 21.6205 10.0802 22.75 11.9982 22.75C13.9161 22.75 15.6542 21.6205 16.4332 19.8678L16.4856 19.75H17.8466C19.4402 19.75 20.6732 18.3533 20.4755 16.772L19.4866 8.86064C19.0145 5.08406 15.8042 2.25 11.9982 2.25ZM16.0153 18.25C16.0041 18.2498 15.993 18.2498 15.9819 18.25H8.01445C8.00333 18.2498 7.99219 18.2498 7.98104 18.25H6.14978C5.45843 18.25 4.92351 17.6441 5.00927 16.958L5.99818 9.04669C6.37643 6.02075 8.9487 3.75 11.9982 3.75C15.0477 3.75 17.6199 6.02075 17.9982 9.04669L18.9871 16.958C19.0729 17.6441 18.5379 18.25 17.8466 18.25H16.0153ZM9.20336 19.75H14.793C14.1788 20.6765 13.1341 21.25 11.9982 21.25C10.8622 21.25 9.81755 20.6765 9.20336 19.75Z" fill="white"/>
-                        </svg>                         
+                        </svg>
                         <span>Notify about availability</span>
                     </button>
-                  </div>    
+                  </div>
                   {% endif %}
                   <div class="paylater-container">
                     <div class="paylater-text">
@@ -1639,6 +1578,32 @@
       <script src="{{ 'product-modal.js' | asset_url }}" defer="defer"></script>
       <script src="{{ 'media-gallery.js' | asset_url }}" defer="defer"></script>
     {%- endif -%}
+
+    <script defer>
+      setTimeout(() => {
+        $('.main-slider').slick({
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          arrows: true,
+          prevArrow: '.main-slider-arrow--left',
+          nextArrow: '.main-slider-arrow--right',
+          fade: true,
+          asNavFor: '.thumbnail-slider',
+        });
+      }, 500);
+      
+      setTimeout(() => {
+        $('.thumbnail-slider').slick({
+          slidesToShow: 4,
+          slidesToScroll: 1,
+          vertical: true,
+          asNavFor: '.main-slider',
+          dots: false,
+          centerMode: true,
+          focusOnSelect: true,
+        });
+      });
+    </script>
 
     {%- if first_3d_model -%}
       <script type="application/json" id="ProductJSON-{{ product.id }}">

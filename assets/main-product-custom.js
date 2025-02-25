@@ -326,13 +326,13 @@ try {
 				);
 		
 				if (metaField3rdParty) {
-					fetchProductMetaObject(metaField3rdParty.value).then((metaObject) => {
-						if (metaObject.fields) {
-							const googleMaterial = metaObject.fields.find(
+					fetchProductMetaObject(metaField3rdParty.value).then((response) => {
+						if (response.data.metaobject.fields) {
+							const googleMaterial = response.data.metaobject.fields.find(
 								(metaObject) => metaObject.key === "google_material"
 							);
 				
-							if (googleMaterial && googleMaterial.value.includes('display')) {
+							if (googleMaterial && googleMaterial.value && googleMaterial.value.includes('display')) {
 								document.querySelector('.showroom').style.display = 'flex';
 								document.querySelector('.showroom-text').innerHTML = 'On Display at our Northern California Warehouse Showroom'
 							}
