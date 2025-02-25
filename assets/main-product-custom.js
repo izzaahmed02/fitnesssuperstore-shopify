@@ -409,12 +409,16 @@ try {
 
 						const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2 strong');
 						let payLaterText = '';
-		
+		                const afterPayLogo = document.querySelector('.afterPayLogo');
 						if (afterPayElement) {
 							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML} / 4 interest-free payment`;
-							document.querySelector('.afterPayLogo').style.display = 'block';
+							if (afterPayLogo) {
+								afterPayLogo.style.display = 'block';
+							}
 						} else {
-							document.querySelector('.afterPayLogo').style.display = 'none';
+							if (afterPayLogo) {
+								afterPayLogo.style.display = 'none';
+							}
 		
 							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 9});
 		

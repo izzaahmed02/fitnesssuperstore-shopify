@@ -1,53 +1,57 @@
 <link rel="stylesheet" href="{{ 'section-brand-category.css' | asset_url }}">
-
-<section class="brand-category-section scroll-trigger animate--slide-in">
+<div class="page-width">
     <div class="brand-category-container">
-      {% for block in section.blocks %}
-        <div class="brand-category">
-          <h3>{{ block.settings.category_title }}</h3>
-          <ul>
-            {% assign brand_items = block.settings.brand_items | split: '\n' %}
-            {% for item in brand_items %}
-              {% assign parts = item | split: '|' %}
-              <li><a href="{{ parts[1] | default: '#' }}" target="_blank" rel="noopener">{{ parts[0] }}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
-      {% endfor %}
+        {% for block in section.blocks %}
+            <div class="brand-category">
+                <h3>{{ block.settings.category_title }}</h3>
+                <ul>
+                    {% assign brand_items = block.settings.brand_items | split: '\n' %}
+                    {% for item in brand_items %}
+                        {% assign parts = item | split: '|' %}
+                        <li>
+                            <a href="{{ parts[1] | default: '#' }}" target="_blank" rel="noopener">{{ parts[0] }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
     </div>
-  </section>
-  
-  {% schema %}
-  {
-    "name": "Brand Categories",
-    "tag": "section",
-    "settings": [],
-    "blocks": [
-      {
-        "type": "category",
-        "name": "Category",
-        "settings": [
-          {
-            "type": "text",
-            "id": "category_title",
-            "label": "Category Title",
-            "default": "Category Name"
-          },
-          {
-            "type": "textarea",
-            "id": "brand_items",
-            "label": "Category Items (One per line, format: Name|URL)",
-            "default": "Item 1|#\nItem 2|#"
-          }
-        ]
-      }
-    ],
-    "presets": [
-      {
-        "name": "Brand Categories"
-      }
-    ]
-  }
-  {% endschema %}
+</div>
+
+<script src="{{ 'brand-catgory-filtration.js' | asset_url }}"></script>
+
+{% schema %}
+{
+  "name": "Brand Categories",
+  "tag": "section",
+  "class": "brand-category-section scroll-trigger animate--slide-in",
+  "settings": [],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Category",
+      "settings": [
+        {
+          "type": "text",
+          "id": "category_title",
+          "label": "Category Title",
+          "default": "Category Name"
+        },
+        {
+          "type": "textarea",
+          "id": "brand_items",
+          "label": "Category Items (One per line, format: Name|URL)",
+          "default": "Item 1|#\nItem 2|#"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Brand Categories"
+    }
+  ]
+}
+{% endschema %}
   
   

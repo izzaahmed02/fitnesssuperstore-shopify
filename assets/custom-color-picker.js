@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const groupColorContainer = document.querySelectorAll('.group-color-container');
 
+        //hack.. for some reason avis option need to be initialize by clicking on them first otherwise it will fire on 2nd click event
+        document.querySelector('input[name="Paint Color"]')?.click();
+        document.querySelector('input[name="Vinyl Color"]')?.click();
+        document.querySelector('input[name="Upholstery Color"]')?.click();
+
         if (groupColorContainer) {
             groupColorContainer.forEach((colorGroupElement, colorGroupElementIndex) => {
                 const groupColorName = colorGroupElement.getAttribute('data-group-color-name');
@@ -54,14 +59,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (event.target.classList.contains('unavailable')) {
                                     return;
                                 }
+                                if (!window.product.available) {
+                                    return;
+                                }
                                 if (colorName) {
                                     if (selectedColorElement) {
                                         selectedColorElement.textContent = `Color: ${colorName}`;
                                         currentSwatchIndex = [...colorSwatches].indexOf(swatch);
                                         currentColorName = colorName;
-                                        const apoOptionColorSelected = Array.from(document.querySelectorAll('.ap-options__swatch-container .option_selected')).find(div => div.textContent.trim().includes(colorName));
+                                        const apoOptionColorSelected = Array.from(document.querySelectorAll('.ap-options__swatch-container .option_selected')).find(div => div.textContent === colorName);
                                         if (!apoOptionColorSelected) {
-                                            apoColors[currentSwatchIndex].parentElement?.click();
+                                            apoColors[currentSwatchIndex]?.parentElement.click();
                                         }
                                     }
 
@@ -107,6 +115,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         // Show the input field when "+" is clicked
                         customColorTrigger.addEventListener('click', () => {
+                            if (!window.product.available) {
+                                return;
+                            }
                             var customColorAvisCharge = document.querySelector(`.custom-color-${toLowerCaseFirstLetter(groupColorName)}-avis .apo-title-addcharge`)?.textContent;
 
                             if (customColorAvisCharge) {
@@ -223,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     colorGroupElement.querySelector('.group-color').addEventListener('click', (event) => {
-                        if (!event.target.parentElement.classList.contains('single-color')) {
+                        if (event.target.classList.contains('multi-color') || event.target.classList.contains('apo-title') && event.target.parentElement.classList.contains('multi-color')) {
                             event.target.classList.toggle('open');
                             colorGroupElement.querySelector('.custom-color-group .color_options_container').classList.toggle('show');
                         }
@@ -243,9 +254,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const colorOptionsContainer = document.querySelector('.custom-color-group .color_options_container');
                 colorOptionsContainer.style.marginTop = 0;
                 colorOptionsContainer.classList.add('show');
+            } else {
+                visibleGroupColorContainer.forEach(x => x.querySelector('.group-color').classList.add('multi-color'));
             }
-
-            
+     
             const visibleContainers = visibleGroupColorContainer.filter(el => !el.classList.contains('hidden'));
             if (visibleContainers.length) {
           visibleContainers[visibleContainers.length - 1].classList.add('last-visible');
@@ -253,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         document.querySelectorAll('.ap-options__swatch-container').forEach(container => {
             const titleElement = container.querySelector('.ap-label-tooltip .apo-title');
-            if (titleElement && titleElement.textContent.trim() === 'Paint Color' || titleElement && titleElement.textContent.trim() === 'Vinyl Color') {
+            if (titleElement && titleElement.textContent.trim() === 'Paint Color' || titleElement && titleElement.textContent.trim() === 'Vinyl Color' || titleElement && titleElement.textContent.trim() === 'Upholstery Color') {
               container.style.display = 'none';
             }
         });
