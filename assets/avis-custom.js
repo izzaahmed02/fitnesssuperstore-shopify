@@ -33,6 +33,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    document.querySelectorAll('.ap-options__swatch-container').forEach(container => {
+      const titleElement = container.querySelector('.ap-label-tooltip .apo-title');
+      if (titleElement && titleElement.textContent.trim() === 'Paint Color' || titleElement && titleElement.textContent.trim() === 'Vinyl Color' || titleElement && titleElement.textContent.trim() === 'Upholstery Color') {
+        container.style.display = 'none';
+      }
+    });
+
     clearInterval(avisOptionsPolling);
   }, 100);
 });

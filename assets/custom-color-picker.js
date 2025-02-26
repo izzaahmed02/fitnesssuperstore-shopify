@@ -260,15 +260,9 @@ document.addEventListener('DOMContentLoaded', function() {
      
             const visibleContainers = visibleGroupColorContainer.filter(el => !el.classList.contains('hidden'));
             if (visibleContainers.length) {
-          visibleContainers[visibleContainers.length - 1].classList.add('last-visible');
-        }
-        }
-        document.querySelectorAll('.ap-options__swatch-container').forEach(container => {
-            const titleElement = container.querySelector('.ap-label-tooltip .apo-title');
-            if (titleElement && titleElement.textContent.trim() === 'Paint Color' || titleElement && titleElement.textContent.trim() === 'Vinyl Color' || titleElement && titleElement.textContent.trim() === 'Upholstery Color') {
-              container.style.display = 'none';
+               visibleContainers[visibleContainers.length - 1].classList.add('last-visible');
             }
-        });
+        }
 
     }, 300);
 
