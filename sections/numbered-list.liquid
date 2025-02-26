@@ -1,114 +1,117 @@
 {{ 'section-numbered-list.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
-  .section-{{ section.id }} {
+    .section-{{ section.id }} {
     padding-top: {{ section.settings.padding_top | times: 0.5 | round: 0 }}px;
     padding-bottom: {{ section.settings.padding_bottom | times: 0.5 | round: 0 }}px;
-  }
-
-  @media screen and (min-width: 750px) {
-    .section-{{ section.id }} {
-      padding-top: {{ section.settings.padding_top }}px;
-      padding-bottom: {{ section.settings.padding_bottom }}px;
     }
-  }
+
+    @media screen and (min-width: 750px) {
+    .section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+    }
 {%- endstyle -%}
 
 {% assign number = section.settings.number %}
 
 <div class="numbered-list section-{{ section.id }} scroll-trigger animate--slide-in">
-  <h3 class="numbered-list__heading">{{ number }}. {{ section.settings.heading }}</h3>
-  {% if section.blocks.size > 0 %}
-    <ul class="numbered-list__list">
-      {% for block in section.blocks %}
-        {% unless block.type == 'address_item' %}
-          <li class="numbered-list__list-item">
-            <div class="numbered-list__list-item-content">
-              {% if block.settings.text_without_number != blank %}
-                <div class="numbered-list__list-item-container">
-                  {{ block.settings.text_without_number }}
-                </div>
-              {% endif %}
-              <div class="numbered-list__list-item-container">
-                <span class="numbered-list__list-item-counter"> {{ number }}.{{ forloop.index }}. </span>
-                {{ block.settings.text }}
-              </div>
+    <h3 class="numbered-list__heading">{{ number }}. {{ section.settings.heading }}</h3>
+    {% if section.blocks.size > 0 %}
+        <ul class="numbered-list__list">
+            {% for block in section.blocks %}
+                {% unless block.type == 'address_item' %}
+                    <li class="numbered-list__list-item">
+                        <div class="numbered-list__list-item-content">
+                            {% if block.settings.text_without_number != blank %}
+                                <div class="numbered-list__list-item-container">
+                                    {{ block.settings.text_without_number }}
+                                </div>
+                            {% endif %}
+                            <div class="numbered-list__list-item-container">
+                                <span class="numbered-list__list-item-counter"> {{ number }}.{{ forloop.index }}. </span>
+                                {{ block.settings.text }}
+                            </div>
 
-              {% if block.settings.sub_items != empty %}
-                {% assign sub_items = block.settings.sub_items | split: '</p>' %}
-                {% assign parent_index = forloop.index %}
+                            {% if block.settings.sub_items != empty %}
+                                {% assign sub_items = block.settings.sub_items | split: '</p>' %}
+                                {% assign parent_index = forloop.index %}
 
-                <div class="numbered-list__list-sub-items">
-                  {% for sub_item in sub_items %}
-                    <div class="numbered-list__list-sub-item">
+                                <div class="numbered-list__list-sub-items">
+                                    {% for sub_item in sub_items %}
+                                        <div class="numbered-list__list-sub-item">
                       <span class="numbered-list__list-item-counter">
                         {{ number }}.{{ parent_index }}.{{ forloop.index }}.
                       </span>
-                      <p>
-                        {{ sub_item | replace: '<p>', '' }}
-                      </p>
-                    </div>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            </div>
-          </li>
-        {% else %}
-          <li class="numbered-list__list-item">
-            <div class="numbered-list__list-item-content">
-              <div class="numbered-list__list-item-container">
-                <span class="numbered-list__list-item-counter"> {{ number }}.{{ forloop.index }}. </span>
-                {{ block.settings.text }}
-              </div>
+                                            <p>
+                                                {{ sub_item | replace: '<p>', '' }}
+                                            </p>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% else %}
+                    <li class="numbered-list__list-item">
+                        <div class="numbered-list__list-item-content">
+                            <div class="numbered-list__list-item-container">
+                                <span class="numbered-list__list-item-counter"> {{ number }}.{{ forloop.index }}. </span>
+                                {{ block.settings.text }}
+                            </div>
 
-              <div class="numbered-list__list-item-wrapper">
-                <div class="numbered-list__list-item-company">{{ block.settings.company }}</div>
+                            <div class="numbered-list__list-item-wrapper">
+                                <div class="numbered-list__list-item-company">{{ block.settings.company }}</div>
 
-                {% if block.settings.address != empty %}
-                  <div class="numbered-list__address">
-                    {% render : 'icon-pin' %}
-                    <span>{{ block.settings.address }}</span>
-                  </div>
-                {% endif %}
+                                {% if block.settings.address != empty %}
+                                    <div class="numbered-list__address">
+                                        {% render  'icon-pin' %}
+                                        <span>{{ block.settings.address }}</span>
+                                    </div>
+                                {% endif %}
 
-                {% if block.settings.phone != empty %}
-                  <div class="numbered-list__address">
-                    {% render : 'icon-phone' %}
-                    <span>{{ block.settings.phone }}</span>
-                  </div>
-                {% endif %}
+                                {% if block.settings.phone != empty %}
+                                    <div class="numbered-list__address">
+                                        {% render 'icon-phone' %}
+                                        <span>{{ block.settings.phone }}</span>
+                                    </div>
+                                {% endif %}
 
-                <div class="numbered-list__list-item-hours">{{ block.settings.hours_text }}</div>
+                                <div class="numbered-list__list-item-hours">{{ block.settings.hours_text }}</div>
 
-                {% if block.settings.hours != empty %}
-                  <div class="numbered-list__address">
-                    {% render : 'icon-time' %}
-                    <span>{{ block.settings.hours }}</span>
-                  </div>
-                {% endif %}
-              </div>
-            </div>
-          </li>
-        {% endunless %}
-      {% endfor %}
+                                {% if block.settings.hours != empty %}
+                                    <div class="numbered-list__address">
+                                        {% render  'icon-time' %}
+                                        <span>{{ block.settings.hours }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                {% endunless %}
+            {% endfor %}
 
-      {% if section.settings.url != blank %}
-        <a href="{{ section.settings.url }}" class="numbered-list-btn">
-          {{ section.settings.button_text }}
-        </a>
-      {% endif %}
+            {% if section.settings.url != blank %}
+                <a href="{{ section.settings.url }}" class="numbered-list-btn">
+                    {{ section.settings.button_text }}
+                </a>
+            {% endif %}
 
-    </ul>
-  {% endif %}
+        </ul>
+    {% endif %}
 </div>
 
 {% schema %}
 {
   "name": "Numbered list",
   "tag": "section",
-  "class": "section",
+  "class": "section numbered-list",
   "disabled_on": {
-    "groups": ["header", "footer"]
+    "groups": [
+      "header",
+      "footer"
+    ]
   },
   "settings": [
     {
@@ -118,13 +121,11 @@
       "info": "Number needed for sections numeration"
     },
     {
-
       "type": "text",
       "id": "heading",
       "label": "Heading"
     },
     {
-
       "type": "url",
       "id": "url",
       "label": "Button url"
@@ -135,7 +136,6 @@
       "label": "Button text"
     },
     {
-
       "type": "range",
       "id": "padding_top",
       "min": 0,
@@ -170,7 +170,6 @@
           "type": "richtext",
           "id": "text",
           "label": "Text (with a number)"
-
         },
         {
           "type": "richtext",
@@ -215,7 +214,6 @@
           "label": "Working hours"
         }
       ]
-
     }
   ],
   "presets": [
