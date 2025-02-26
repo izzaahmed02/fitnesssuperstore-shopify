@@ -220,18 +220,15 @@ var TransitTimeCalculator = {
 
       setTimeout(() => {
         const shippingCalcBtn = document.querySelector('.docapp-shipping-calculator--button');
-        if (shippingCalcBtn) {
+        if (shippingCalcBtn && !shippingCalcBtn.dataset.listenerAttached) {
           shippingCalcBtn.addEventListener('click', () => {
             const zipInput = document.querySelector('.docapp-shipping-calculator--input-zip');
             sessionStorage.userPostal = zipInput.value.replace(/\s+/g, '');
-            const calcText = TransitTimeCalculator.getTransitTimeText() +
-              `<span class="transit-time-text">Calculating Transit Times...</span>`;
-            const container = document.querySelector('.transit-times-container');
-            if (container) { container.innerHTML = calcText; }
             TransitTimeCalculator.displayTransitTimes();
           });
+          shippingCalcBtn.dataset.listenerAttached = 'true';
         }
-      }, 500);
+      }, 1000);
       
     } catch (err) {
       console.error(err);
