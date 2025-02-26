@@ -76,7 +76,7 @@ var TransitTimeCalculator = {
       if (!ShopifyProduct) return;
 
       const product = ShopifyProduct;
-      const productWeight = parseFloat(product.weight);
+      const productWeight = parseFloat(Math.ceil(product.variants[0].weight * 0.0022046));
       
       let processingTime = TransitTimeCalculator.processingTime;
       
