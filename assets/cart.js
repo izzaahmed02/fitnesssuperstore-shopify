@@ -505,7 +505,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			const footerWrapper = document.querySelector(".cart__footer-wrapper");
 
 			if (!assistanceBlock || !footerWrapper) {
-				console.warn(".cart-items__assistance или .cart__footer-wrapper  not found.");
+				console.warn(".cart-items__assistance or .cart__footer-wrapper  not found.");
 				return;
 			}
 
