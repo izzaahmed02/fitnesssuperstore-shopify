@@ -4,13 +4,6 @@
 {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
 
 {% style %}
-  .main-container {
-    max-width: 1920px;
-    margin: 0 auto;
-  }
-  .main-container .custom-breadcrumbs__wrapper {
-     padding-left: 6rem;
-  }
   #shopify-section-{{ section.id }} .product-main-container{
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -57,7 +50,7 @@
   .paylater-container {
     display: none;
     padding-bottom: 70px;
-    gap: 5px;
+    gap: 10px;
     flex-direction: column;
   }
   .paylater-container .paylater-text {
@@ -266,77 +259,6 @@
     padding: 11px 14px !important;
 }
 
-@media (max-width: 991.98px) {
-  .sticky-add-to-cart {
-    display: none !important;
-  }
-}
-
-@media (max-width: 1359px) {
-  .main-container {
-    padding-left: 42px !important;
-  }
-}
-
-@media (min-width: 1360px) and (max-width: 1429px) {
-  .main-container {
-    padding-left: 54px !important;
-  }
-}
-
-@media (min-width: 1430px) and (max-width: 1499px) {
-  .main-container {
-    padding-left: 64px !important;
-  }
-}
-
-@media (min-width: 1500px) and (max-width: 1569px) {
-  .main-container {
-    padding-left: 109px !important;
-  }
-}
-
-
-@media (min-width: 1570px) and (max-width: 1639px) {
-  .main-container {
-    padding-left: 157px !important;
-  }
-}
-
-
-@media (min-width: 1640px) and (max-width: 1709px) {
-  .main-container {
-    padding-left: 197px !important;
-  }
-}
-
-
-@media (min-width: 1710px) and (max-width: 1779px) {
-  .main-container {
-    padding-left: 239px !important;
-  }
-}
-
-
-@media (min-width: 1780px) and (max-width: 1849px) {
-  .main-container {
-    padding-left: 275px !important;
-  }
-}
-
-
-@media (min-width: 1850px) and (max-width: 1917px) {
-  .main-container {
-    padding-left: 303px !important;
-  }
-}
-
-@media (min-width: 1918px) {
-  .main-container {
-    padding-left: 191px !important
-  }
-}
-
 {% endstyle %}
 
 {% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
@@ -485,7 +407,7 @@
     >
   {%- endif -%}
   {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
-  <div class="pdp-page-width main-container">
+  <div class="pdp-page-width">
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
       <div class="product-main-left-container">
         <div class="product-main-left">
@@ -554,7 +476,8 @@
                     <div class="item">
                       <div class="img-wrap">{% render 'icon-star' %}</div>
                       <span class="title">Condition:</span>
-                      {{ product.metafields.custom.condition_state }}
+                      {{ product.metafields.custom.condition_state | strip_html | replace: "(What Does this Mean?)", "" }}
+                      <span class="more-info" data-customfield="Condition">(More Info)</span>
                     </div>
                   {% endif %}
                   {% if product.metafields.custom.grade != blank %}
