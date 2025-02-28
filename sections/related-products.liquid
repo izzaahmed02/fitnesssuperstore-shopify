@@ -1,201 +1,9 @@
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-     
-    const relatedProductsUl = document.querySelector('.related-products');
-
-    if (relatedProductsUl) {
-
-      const observer = new MutationObserver((mutationsList) => {
-        mutationsList.forEach((mutation) => {
-          if (mutation.type === 'childList') {
-            function initSlider(element) {
-            if (!$(element).hasClass('slick-initialized')) {
-              $(element).slick({
-                slidesToShow: 1,
-                slidesToScroll: 1,
-                lazyLoad: 'ondemand',
-                arrows: true,
-                dots: true,
-                responsive: [
-                  {
-                    breakpoint: 768,
-                    settings: { 
-                      slidesToShow: 1,
-                    },
-                  },
-                ],
-              });
-      
-              $(element)
-                .find('.image-item')
-                .each(function () {
-                  $(this).css({
-                    background: '#edeff3',
-                  });
-                });
-              $(element)
-                .find('img.lazy-load')
-                .each(function () {
-                  const img = $(this);
-                  if (img) {
-                    img.attr('src', img.data('src'));
-                    img.removeClass('lazy-load');
-                    img.css({
-                      opacity: '1',
-                      visibility: 'visible',
-                    });
-                  }
-                });
-            }
-          }
-      
-          const observer = new IntersectionObserver(
-            (entries, observer) => {
-              entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                  initSlider(entry.target);
-                  observer.unobserve(entry.target);
-                }
-              });
-            },
-            { threshold: 0.5 }
-          );
-      
-            $('.image-wrap').each(function () {
-              if ($(this).length > 0) {
-                observer.observe(this);
-              }
-            }); 
-      
-          $('.related-products ul').slick({
-                infinite: false,
-                slidesToShow: 4,
-                slidesToScroll: 1,
-                prevArrow: $('.slick-prev'),
-                nextArrow: $('.slick-next'),
-                arrows: true,
-                dots: false,
-                draggable: false
-          });
-      
-          $('.related-products ul').on('afterChange', function (event, slick, currentSlide) {
-            const $prev = $('.slick-prev');
-            const $next = $('.slick-next');
-          
-            if (currentSlide === 0) { 
-            } else {
-              $prev.removeClass('slick-disabled');
-            }
-          
-            if (currentSlide === slick.slideCount - slick.options.slidesToShow) {
-              $next.addClass('slick-disabled');
-            } else {
-              $next.removeClass('slick-disabled');
-            }
-          });
-          $('.related-products').css("height", "auto");
-          $('.related-products').css("overflow-y", "visible");
-          }
-        });
-      });
-    
-      const config = {
-        childList: true,
-        attributes: false, 
-        subtree: false,
-      };
-    
-      observer.observe(relatedProductsUl, config);
-    }
-
-  });
-</script>
+{{ 'section-related-products.css' | asset_url | stylesheet_tag }}
 
 {% style %}
   #shopify-section-{{ section.id }}{
     padding-top: 80px;
     padding-bottom: 80px;
-  }
-  .related-products{
-    padding: 0;
-    display: flex;
-    height: 0;
-    margin: 0 auto;
-    overflow-y: hidden;
-  }
-  .related-products ul{
-    display: flex;
-    max-width: 1312px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .related-products .product-item{
-    margin-left: 16px;
-    margin-right: 16px;
-  }
-  .related-products .image-item {
-    padding: 50px 30px;
-  }
-
-  .slick-prev,
-  .slick-next {
-    position: absolute;
-    top: 30%;
-    transform: translateY(-50%);
-    z-index: 10;
-    cursor: pointer;
-  }
-  
-  .slick-prev:before {
-    display: none;
-  }
-
-  .slick-next:before {
-    display: none;
-  }
-  
-  
-  .slick-next {
-    right: 20px;
-  }
-  .slick-prev{
-    left: -10px;
-  }
-  .slick-prev-icon,
-  .slick-next-icon {
-    transition: fill 0.3s ease;
-  }
-  
-  .slick-disabled rect {
-    fill: #E5E5E5;
-  }
-  
-  .slick-disabled rect {
-    fill: #E5E5E5;
-  }
-
-  .recommendation-title{
-    font-size: 48px;
-    font-weight: 700;
-    line-height: 68px;
-    color: #23232B;
-    margin-top: 0;
-    margin-bottom: 52px;
-    text-align: center;
-  }
-  #product_page .paging .sa_page{
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    border: 0;
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 24px;
-    color: #393940;
-  }
-  #product_page .paging .sa_page.active{
-    background: #F1592A;
-    color: #fff;
   }
 {% endstyle %}
 
@@ -203,39 +11,68 @@
 
 <div class="product-recommendations"></div>
 
-<h2 class="recommendation-title">{{ section.settings.title }}</h2>
-
 <product-recommendations
-    class="related-products page-width section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
-    data-url="{{ routes.product_recommendations_url }}?limit=16"
-    data-section-id="{{ section.id }}"
-    data-product-id="{{ product.id }}"
-  >
-    {% if recommendations.performed and recommendations.products_count > 0 %}
-      <ul
-        class=""
-        role="list"
-      >
-        {% for recommendation in recommendations.products %}
-          {% render 'product-item', product: recommendation %}
-        {% endfor %}
-      </ul>
+  class="related-products section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+  data-url="{{ routes.product_recommendations_url }}?limit=16"
+  data-section-id="{{ section.id }}"
+  data-product-id="{{ product.id }}"
+>
+  <div class="page-width">
+    <div class="related-products__wrap">
+      {% if section.settings.title != blank %}
+        <div class="related-products__head">
+          <h2 class="recommendation-title">{{ section.settings.title }}</h2>
+        </div>
+      {% endif %}
 
-      <div class="slick-prev" aria-label="Previous">
-        <svg class="slick-prev-icon" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="48" height="48" rx="24" fill="#616166" />
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M26.5303 17.4697C26.8232 17.7626 26.8232 18.2374 26.5303 18.5303L21.0607 24L26.5303 29.4697C26.8232 29.7626 26.8232 30.2374 26.5303 30.5303C26.2374 30.8232 25.7626 30.8232 25.4697 30.5303L19.4697 24.5303C19.1768 24.2374 19.1768 23.7626 19.4697 23.4697L25.4697 17.4697C25.7626 17.1768 26.2374 17.1768 26.5303 17.4697Z" fill="#B3B3B3" />
-        </svg>
-      </div>
-      <div class="slick-next" aria-label="Next">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="48" height="48" rx="24" fill="#616166"/>
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M21.4697 17.4697C21.7626 17.1768 22.2374 17.1768 22.5303 17.4697L28.5303 23.4697C28.8232 23.7626 28.8232 24.2374 28.5303 24.5303L22.5303 30.5303C22.2374 30.8232 21.7626 30.8232 21.4697 30.5303C21.1768 30.2374 21.1768 29.7626 21.4697 29.4697L26.9393 24L21.4697 18.5303C21.1768 18.2374 21.1768 17.7626 21.4697 17.4697Z" fill="white"/>
-        </svg>
-      </div>
-    {% endif %}
-  </product-recommendations>
+      <div class="related-products__body">
+        {% if recommendations.performed and recommendations.products_count > 0 %}
+          <ul
+            class="related-products__list related-products-carousel"
+            role="list"
+          >
+            {% for recommendation in recommendations.products %}
+              <li class="related-products__item">
+                {% render 'product-item', product: recommendation %}
+              </li>
+            {% endfor %}
+          </ul>
 
+          <div class="slick-prev" aria-label="Previous">
+            <svg
+              class="slick-prev-icon"
+              width="48"
+              height="48"
+              viewBox="0 0 48 48"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect width="48" height="48" rx="24" fill="#616166" />
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M26.5303 17.4697C26.8232 17.7626 26.8232 18.2374 26.5303 18.5303L21.0607 24L26.5303 29.4697C26.8232 29.7626 26.8232 30.2374 26.5303 30.5303C26.2374 30.8232 25.7626 30.8232 25.4697 30.5303L19.4697 24.5303C19.1768 24.2374 19.1768 23.7626 19.4697 23.4697L25.4697 17.4697C25.7626 17.1768 26.2374 17.1768 26.5303 17.4697Z" fill="#B3B3B3" />
+            </svg>
+          </div>
+          <div class="slick-next" aria-label="Next">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="48" height="48" rx="24" fill="#616166"/>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M21.4697 17.4697C21.7626 17.1768 22.2374 17.1768 22.5303 17.4697L28.5303 23.4697C28.8232 23.7626 28.8232 24.2374 28.5303 24.5303L22.5303 30.5303C22.2374 30.8232 21.7626 30.8232 21.4697 30.5303C21.1768 30.2374 21.1768 29.7626 21.4697 29.4697L26.9393 24L21.4697 18.5303C21.1768 18.2374 21.1768 17.7626 21.4697 17.4697Z" fill="white"/>
+            </svg>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="related-products__footer">
+        <button class="load-more button" type="button" aria-label="View More" aria-live="polite">
+          <span>View More</span>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 4.25C12.4142 4.25 12.75 4.58579 12.75 5L12.75 17.1893L17.4697 12.4697C17.7626 12.1768 18.2374 12.1768 18.5303 12.4697C18.8232 12.7626 18.8232 13.2374 18.5303 13.5303L12.5303 19.5303C12.3897 19.671 12.1989 19.75 12 19.75C11.8011 19.75 11.6103 19.671 11.4697 19.5303L5.46967 13.5303C5.17678 13.2374 5.17678 12.7626 5.46967 12.4697C5.76256 12.1768 6.23744 12.1768 6.53033 12.4697L11.25 17.1893L11.25 5C11.25 4.58579 11.5858 4.25 12 4.25Z" fill="#F1592A"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</product-recommendations>
+
+<script src="{{ 'related-products-custom.js' | asset_url }}" defer="defer"></script>
 
 {% schema %}
 {
@@ -246,8 +83,8 @@
     {
       "type": "text",
       "id": "title",
-      "label": "t:sections.main-list-collections.settings.title.label",
-    },
+      "label": "t:sections.main-list-collections.settings.title.label"
+    }
   ]
 }
 {% endschema %}
