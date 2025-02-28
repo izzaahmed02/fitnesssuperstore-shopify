@@ -53,7 +53,9 @@ function renderCustomAvisOptions() {
       if (selectOptions <= 1) {
         warrantyParentContainer.style.display = 'none';
       } else {
-        warrantyParentContainer.querySelector('.ap-label-tooltip').classList.add('ap-options__heading');
+        if (selectOptions > 1) {
+          warrantyParentContainer.querySelector('.ap-label-tooltip').classList.add('ap-options__heading');
+        }      
       }
     }
   }

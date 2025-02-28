@@ -465,6 +465,8 @@ if (!customElements.get('cart-note')) {
 
 // Change Edit Options Button
 document.addEventListener("DOMContentLoaded", () => {
+
+
 	const updateText = (element) => {
 		if (!element) return;
 
@@ -485,7 +487,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	});
 
 	try {
-		observerLabels.observe(document.body, { childList: true, subtree: true });
+		observerLabels.observe(document.body, {childList: true, subtree: true});
 		document.querySelectorAll('.avis-edit-options').forEach(updateText);
 	} catch (error) {
 		console.error("Error initializing observer:", error);
@@ -505,7 +507,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			const footerWrapper = document.querySelector(".cart__footer-wrapper");
 
 			if (!assistanceBlock || !footerWrapper) {
-				console.warn(".cart-items__assistance или .cart__footer-wrapper  not found.");
+				console.warn(".cart-items__assistance or .cart__footer-wrapper  not found.");
 				return;
 			}
 
@@ -524,4 +526,20 @@ document.addEventListener("DOMContentLoaded", () => {
 		}, 200)
 	);
 	observerCartBlock.observe(document.body);
+});
+
+
+document.addEventListener('DOMContentLoaded', () => {
+	const chatBtn = document.getElementById('chat');
+	if (!chatBtn) return;
+	chatBtn.addEventListener('click', function (e) {
+		e.preventDefault();
+		if (chatBtn.classList.contains('active')) {
+			zE('messenger', 'close');
+			chatBtn.classList.remove('active');
+		} else {
+			zE('messenger', 'open');
+			chatBtn.classList.add('active');
+		}
+	});
 });
