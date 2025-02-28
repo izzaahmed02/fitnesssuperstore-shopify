@@ -5,10 +5,13 @@
     max-width: 1920px;
     padding-left: 80px;
   }
+  .product__extra_info {
+    overflow: hidden;
+  }
   #shopify-section-{{ section.id }} .product__extra_info {
     padding-top: {{ section.settings.padding_top }}px;
     padding-bottom: {{ section.settings.padding_bottom }}px;
-    padding-left: 100px;
+    /* padding-left: 100px; */
   }
 
   @media screen and (max-width: 750px) {
@@ -19,262 +22,266 @@
   }
 {%- endstyle -%}
 
-<div class="page-width product__extra_info main-container">
-  {% for block in section.blocks %}
-    {% case block.type %}
-      {% when 'description' %}
-        {% if product.content != blank %}
-          <div class="extra-info-width">
-            <h4>Description</h4>
-
-            {{ product.description }}
-          </div>
-        {% endif %}
-
-      {% when 'extra' %}
-        {% assign extra = product.metafields.custom.extra_info.value %}
-
-        {% if extra != blank %}
-          <h4>Extra info</h4>
-
-          <div class="extra-info-width">
-            {% if extra.manuals != blank %}
-              <div class="extra-info-accordion">
-                <span class="accordion-item">
-                  <h4>Manuals</h4>
-
-                  <svg
-                    class="arrow"
-                    width="14"
-                    height="8"
-                    viewBox="0 0 14 8"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                  </svg>
-                </span>
-
-                <div class="extra-info-accordion-content">
-                  <ul class="menu--second-level">
-                    {% for link in extra.manuals.value %}
-                      <li class="">
-                        <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
-
-                        <svg
-                          class="arrow"
-                          width="8"
-                          height="14"
-                          viewBox="0 0 8 14"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                        </svg>
-                      </li>
-                    {% endfor %}
-                  </ul>
-                </div>
+<div class="product__extra_info">
+  <div class="page-width">
+    <div class="product__extra_info-wrap">
+      {% for block in section.blocks %}
+        {% case block.type %}
+          {% when 'description' %}
+            {% if product.content != blank %}
+              <div class="extra-info-width">
+                <h4 class="product__extra_info-title">Description</h4>
+    
+                {{ product.description }}
               </div>
             {% endif %}
-
-            {% if extra.photos != blank %}
-              <div class="extra-info-accordion">
-                <span class="accordion-item">
-                  <h4>Photos</h4>
-
-                  <svg
-                    class="arrow"
-                    width="14"
-                    height="8"
-                    viewBox="0 0 14 8"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                  </svg>
-                </span>
-
-                <div class="extra-info-accordion-content">
-                  <ul class="menu--second-level">
-                    {% for link in extra.photos.value %}
-                      <li class="">
-                        <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
-
-                        <svg
-                          class="arrow"
-                          width="8"
-                          height="14"
-                          viewBox="0 0 8 14"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                        </svg>
-                      </li>
-                    {% endfor %}
-                  </ul>
-                </div>
-              </div>
-            {% endif %}
-
-            {% if extra.instructional_video_url != blank %}
-              <div class="extra-info-accordion">
-                <span class="accordion-item">
-                  <h4>Instructional video</h4>
-
-                  <svg
-                    class="arrow"
-                    width="14"
-                    height="8"
-                    viewBox="0 0 14 8"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                  </svg>
-                </span>
-
-                <div class="extra-info-accordion-content">
-                  <iframe
-                    width="560"
-                    height="315"
-                    loading="lazy"
-                    src="{{ extra.instructional_video_url.value }}"
-                    title="YouTube video player"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen
-                  >
-                  </iframe>
-
-                  {% if extra.instructional_text != blank %}
-                    <div>
-                      {{ extra.instructional_text }}
-                    </div>
-                  {% endif %}
-                </div>
-              </div>
-            {% endif %}
-
-            {% if extra.comparisons != blank %}
-              <div class="extra-info-accordion">
-                <span class="accordion-item">
-                  <h4>Comparisons</h4>
-
-                  <svg
-                    class="arrow"
-                    width="14"
-                    height="8"
-                    viewBox="0 0 14 8"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                  </svg>
-                </span>
-
-                <div class="extra-info-accordion-content">
-                  <div class="menu--second-level">
-                    <span class="accordion-item--second-level">
-                      <ul class="">
-                        {% for link in extra.comparisons.value %}
-                          <li>
+    
+          {% when 'extra' %}
+            {% assign extra = product.metafields.custom.extra_info.value %}
+    
+            {% if extra != blank %}
+              <h4 class="product__extra_info-title">Extra info</h4>
+    
+              <div class="extra-info-width">
+                {% if extra.manuals != blank %}
+                  <div class="extra-info-accordion">
+                    <span class="accordion-item">
+                      <h4 class="product__extra_info-title">Manuals</h4>
+    
+                      <svg
+                        class="arrow"
+                        width="14"
+                        height="8"
+                        viewBox="0 0 14 8"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                      </svg>
+                    </span>
+    
+                    <div class="extra-info-accordion-content">
+                      <ul class="menu--second-level">
+                        {% for link in extra.manuals.value %}
+                          <li class="">
                             <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
+    
+                            <svg
+                              class="arrow"
+                              width="8"
+                              height="14"
+                              viewBox="0 0 8 14"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                            </svg>
                           </li>
                         {% endfor %}
                       </ul>
-                    </span>
+                    </div>
                   </div>
+                {% endif %}
+    
+                {% if extra.photos != blank %}
+                  <div class="extra-info-accordion">
+                    <span class="accordion-item">
+                      <h4 class="product__extra_info-title">Photos</h4>
+    
+                      <svg
+                        class="arrow"
+                        width="14"
+                        height="8"
+                        viewBox="0 0 14 8"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                      </svg>
+                    </span>
+    
+                    <div class="extra-info-accordion-content">
+                      <ul class="menu--second-level">
+                        {% for link in extra.photos.value %}
+                          <li class="">
+                            <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
+    
+                            <svg
+                              class="arrow"
+                              width="8"
+                              height="14"
+                              viewBox="0 0 8 14"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                            </svg>
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </div>
+                {% endif %}
+    
+                {% if extra.instructional_video_url != blank %}
+                  <div class="extra-info-accordion">
+                    <span class="accordion-item">
+                      <h4 class="product__extra_info-title">Instructional video</h4>
+    
+                      <svg
+                        class="arrow"
+                        width="14"
+                        height="8"
+                        viewBox="0 0 14 8"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                      </svg>
+                    </span>
+    
+                    <div class="extra-info-accordion-content">
+                      <iframe
+                        width="560"
+                        height="315"
+                        loading="lazy"
+                        src="{{ extra.instructional_video_url.value }}"
+                        title="YouTube video player"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen
+                      >
+                      </iframe>
+    
+                      {% if extra.instructional_text != blank %}
+                        <div>
+                          {{ extra.instructional_text }}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endif %}
+    
+                {% if extra.comparisons != blank %}
+                  <div class="extra-info-accordion">
+                    <span class="accordion-item">
+                      <h4 class="product__extra_info-title">Comparisons</h4>
+    
+                      <svg
+                        class="arrow"
+                        width="14"
+                        height="8"
+                        viewBox="0 0 14 8"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                      </svg>
+                    </span>
+    
+                    <div class="extra-info-accordion-content">
+                      <div class="menu--second-level">
+                        <span class="accordion-item--second-level">
+                          <ul class="">
+                            {% for link in extra.comparisons.value %}
+                              <li>
+                                <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
+                              </li>
+                            {% endfor %}
+                          </ul>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+    
+          {% when 'all_in_one_overview' %}
+            {% if block.settings.overview != blank %}
+              <div class="product__extra_overview extra-info-width">
+                <h5>{{ block.settings.title }}</h5>
+                <div class="product__extra_overview-list">{{ block.settings.overview }}</div>
+              </div>
+            {% endif %}
+    
+          {% when 'features' %}
+            {% if block.settings.features != blank %}
+              <div class="product__extra_features extra-info-width">
+                <h5>{{ block.settings.title }}</h5>
+                <div>{{ block.settings.features }}</div>
+              </div>
+            {% endif %}
+    
+          {% when 'warranty' %}
+            {% if block.settings.warranty != blank %}
+              <div class="product__extra_warranty extra-info-width">
+                <h5>{{ block.settings.title }}</h5>
+                <div>{{ block.settings.warranty }}</div>
+              </div>
+            {% endif %}
+    
+          {% when 'tech' %}
+            {% if block.settings.tech != blank %}
+              <div class="product__extra_tech extra-info-width">
+                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <div>{{ block.settings.tech }}</div>
+              </div>
+            {% endif %}
+    
+          {% when 'smith' %}
+            {% if block.settings.smith != blank %}
+              <div class="product__extra_smith extra-info-width">
+                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <div>{{ block.settings.smith }}</div>
+              </div>
+            {% endif %}
+    
+          {% when 'accessories' %}
+            {% assign accessories = product.metafields.custom.features_specs.value.accessories_included.value %}
+    
+            {% if accessories != blank %}
+              <div class="product__extra_accessories extra-info-width">
+                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <div class="product__extra_accessories-container">
+                  {% for item in accessories %}
+                    <div class="product__extra_accessories-item">
+                      <img src="{{ item.image | image_url }}" alt="{{ item.title }}" width="60" height="40">
+                      <span>{{ item.title }}</span>
+                    </div>
+                  {% endfor %}
                 </div>
               </div>
             {% endif %}
-          </div>
-        {% endif %}
-
-      {% when 'all_in_one_overview' %}
-        {% if block.settings.overview != blank %}
-          <div class="product__extra_overview extra-info-width">
-            <h5>{{ block.settings.title }}</h5>
-            <div class="product__extra_overview-list">{{ block.settings.overview }}</div>
-          </div>
-        {% endif %}
-
-      {% when 'features' %}
-        {% if block.settings.features != blank %}
-          <div class="product__extra_features extra-info-width">
-            <h5>{{ block.settings.title }}</h5>
-            <div>{{ block.settings.features }}</div>
-          </div>
-        {% endif %}
-
-      {% when 'warranty' %}
-        {% if block.settings.warranty != blank %}
-          <div class="product__extra_warranty extra-info-width">
-            <h5>{{ block.settings.title }}</h5>
-            <div>{{ block.settings.warranty }}</div>
-          </div>
-        {% endif %}
-
-      {% when 'tech' %}
-        {% if block.settings.tech != blank %}
-          <div class="product__extra_tech extra-info-width">
-            <h4>{{ block.settings.title }}</h4>
-            <div>{{ block.settings.tech }}</div>
-          </div>
-        {% endif %}
-
-      {% when 'smith' %}
-        {% if block.settings.smith != blank %}
-          <div class="product__extra_smith extra-info-width">
-            <h4>{{ block.settings.title }}</h4>
-            <div>{{ block.settings.smith }}</div>
-          </div>
-        {% endif %}
-
-      {% when 'accessories' %}
-        {% assign accessories = product.metafields.custom.features_specs.value.accessories_included.value %}
-
-        {% if accessories != blank %}
-          <div class="product__extra_accessories extra-info-width">
-            <h4>{{ block.settings.title }}</h4>
-            <div class="product__extra_accessories-container">
-              {% for item in accessories %}
-                <div class="product__extra_accessories-item">
-                  <img src="{{ item.image | image_url }}" alt="{{ item.title }}" width="60" height="40">
-                  <span>{{ item.title }}</span>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        {% endif %}
-
-      {% when 'accessory-feature' %}
-        {% if block.settings['accessory-feature'] != blank %}
-          <div class="product__extra_accessory-feature">
-            <h4>{{ block.settings.title }}</h4>
-            <div>{{ block.settings['accessory-feature'] }}</div>
-          </div>
-        {% endif %}
-
-      {% when 'list' %}
-        {% if block.settings.list != blank %}
-          <div class="product__extra_list">
-            <div>{{ block.settings.list }}</div>
-          </div>
-        {% endif %}
-
-      {% when 'text' %}
-        {% if block.settings.text != blank %}
-          <div class="product__extra_warning_text">
-            {% render 'icon-alert' %}
-            <div>{{ block.settings.text }}</div>
-          </div>
-        {% endif %}
-    {% endcase %}
-  {% endfor %}
-
-  {% render 'prop65' %}
+    
+          {% when 'accessory-feature' %}
+            {% if block.settings['accessory-feature'] != blank %}
+              <div class="product__extra_accessory-feature">
+                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <div>{{ block.settings['accessory-feature'] }}</div>
+              </div>
+            {% endif %}
+    
+          {% when 'list' %}
+            {% if block.settings.list != blank %}
+              <div class="product__extra_list">
+                <div>{{ block.settings.list }}</div>
+              </div>
+            {% endif %}
+    
+          {% when 'text' %}
+            {% if block.settings.text != blank %}
+              <div class="product__extra_warning_text">
+                {% render 'icon-alert' %}
+                <div>{{ block.settings.text }}</div>
+              </div>
+            {% endif %}
+        {% endcase %}
+      {% endfor %}
+    
+      {% render 'prop65' %}
+    </div>
+  </div>
 </div>
 
 {% schema %}

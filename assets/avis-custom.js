@@ -179,7 +179,14 @@ function renderCustomAvisOptions() {
                   const productObj = optionProductsPopup.find((x) => x.id === productId);
 
                   if (productObj) {
-                    p.addEventListener('click', () => {
+                    p.addEventListener('click', (e) => {
+                      const currentP = e.currentTarget;
+                      const siblingsArray = [...currentP.parentElement.children].filter(
+                        (child) => child !== currentP.parentElement
+                      );
+                      siblingsArray.forEach((item) => item.classList.remove('active'));
+                      currentP.classList.add('active');
+
                       const shortDescriptionMetafield = productObj.metafields.find(
                         (metafield) => metafield.key === 'short_description'
                       );
@@ -199,6 +206,7 @@ function renderCustomAvisOptions() {
                       const productDetailsContainer = document.querySelector('.product-details-container');
                       const productDetailsDescriptionBody = document.querySelector('.product-details-description-body');
                       productDetailsContainer.style.display = 'flex';
+                      productDetailsDescriptionBody.style.display = 'block';
                       productDetailsContainer.innerHTML = productDetailsHTML;
 
                       const productDetailsDescriptionBodyDiv = document.createElement('div');
@@ -504,7 +512,8 @@ async function renderOptionPopupProducts(title) {
     <div class="option-title">
       <h2>ABOUT OPTIONS - ${product.title}</h2>
     </div>
-    <div class="option-products">`;
+    <div class="option-products">
+      <div class="product-cards">`;
 
   optionProducts.forEach((prod) => {
     const shortDescriptionMetafield = prod.metafields.find((metafield) => metafield.key === 'short_description');
@@ -532,12 +541,16 @@ async function renderOptionPopupProducts(title) {
         </div>
         <p class="product-card__description">${shortDescription.substring(0, 150)}...</p>
         <a class="read-more-btn" data-id="${prod.id}">Read more</a>
-      </div>`;
+      </div>
+    `;
   });
 
   const productDetailsHTML = `
-    <div class="product-details-container"></div>
-    <div class="product-details-description-body"></div>
+    </div>
+    <div class="product-details">
+      <div class="product-details-container"></div>
+      <div class="product-details-description-body"></div>
+    </div>
   `;
 
   contentHTML += productDetailsHTML;
