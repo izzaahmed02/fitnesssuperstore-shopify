@@ -7,9 +7,7 @@ class FacetFiltersForm extends HTMLElement {
 		super();
 		this.onActiveFilterClick = this.onActiveFilterClick.bind(this);
 		this.debouncedOnSubmit = debounce((event) => {
-
 			this.onSubmitHandler(event);
-
 		}, 800);
 
 		const facetForm = this.querySelector('form');
@@ -47,23 +45,27 @@ class FacetFiltersForm extends HTMLElement {
 
 		function fetchAllProducts() {
 			const collectionUrl = window.location.pathname + "?view=99999";
-			fetch(collectionUrl)
+			const searchUrl = window.location.pathname;
+			const page = document.querySelector('.search');
+			let url;
+			if (page) {
+				url = searchUrl
+			} else {
+				url = collectionUrl;
+			}
+			fetch(url)
 				.then(response => response.text())
 				.then(html => {
-
 					const parser = new DOMParser();
 					const doc = parser.parseFromString(html, "text/html");
 					const productItems = doc.querySelectorAll("#product-grid li");
-
 					productItems.forEach(product => {
 						const productName = product.querySelector('.product-item .title').textContent.trim().toLowerCase();
-
 						if (!productNames.has(productName)) {
 							productNames.add(productName);
 							allProducts.push(product.cloneNode(true));
 						}
 					});
-
 					updatePriceFilter(productItems);
 				});
 		}
@@ -186,7 +188,6 @@ class FacetFiltersForm extends HTMLElement {
 			products.forEach(product => {
 				let priceText = product.querySelector(".price-wrapper")?.textContent || "";
 				let price = parseFloat(priceText.replace(/[^0-9.]/g, ""));
-
 				if (!isNaN(price)) {
 					if (price < 1000) priceCounts["0-1000"]++;
 					else if (price >= 1000 && price < 2000) priceCounts["1000-2000"]++;
@@ -627,18 +628,29 @@ FacetFiltersForm.setListeners();
 class PriceRangeSlider extends HTMLElement {
 	constructor() {
 		super();
+
+		requestAnimationFrame(() => this.init());
+	}
+
+	init() {
 		this.minInput = this.querySelector('#price-range-min');
 		this.maxInput = this.querySelector('#price-range-max');
 		this.textInputs = this.querySelectorAll('.field__input');
 		this.minSlider = this.querySelector('#price-range-min');
 		this.maxSlider = this.querySelector('#price-range-max');
+		if (!this.minSlider || !this.maxSlider) {
+			console.error('PriceRangeSlider: Missing minSlider or maxSlider element.');
+			return;
+		}
 
 		this.minSlider.addEventListener('input', this.updateMinValue.bind(this));
 		this.maxSlider.addEventListener('input', this.updateMaxValue.bind(this));
 
-		this.textInputs.forEach((input) => {
-			input.addEventListener('change', this.syncTextInputs.bind(this));
-		});
+		if (this.textInputs.length > 1) {
+			this.textInputs.forEach((input) => {
+				input.addEventListener('change', this.syncTextInputs.bind(this));
+			});
+		}
 
 		this.updateSliderBackground();
 	}
@@ -651,7 +663,9 @@ class PriceRangeSlider extends HTMLElement {
 			this.minSlider.value = maxValue;
 		}
 
-		this.textInputs[0].value = this.minSlider.value;
+		if (this.textInputs.length > 0) {
+			this.textInputs[0].value = this.minSlider.value;
+		}
 		this.updateSliderBackground();
 	}
 
@@ -663,19 +677,21 @@ class PriceRangeSlider extends HTMLElement {
 			this.maxSlider.value = minValue;
 		}
 
-		this.textInputs[1].value = this.maxSlider.value;
+		if (this.textInputs.length > 1) {
+			this.textInputs[1].value = this.maxSlider.value;
+		}
 		this.updateSliderBackground();
 	}
 
 	syncTextInputs() {
-		const minValue = Number(this.textInputs[0].value);
-		const maxValue = Number(this.textInputs[1].value);
+		const minValue = Number(this.textInputs[0]?.value);
+		const maxValue = Number(this.textInputs[1]?.value);
 
-		if (minValue >= 0 && minValue <= maxValue) {
+		if (!isNaN(minValue) && minValue >= 0 && minValue <= maxValue) {
 			this.minSlider.value = minValue;
 		}
 
-		if (maxValue >= minValue) {
+		if (!isNaN(maxValue) && maxValue >= minValue) {
 			this.maxSlider.value = maxValue;
 		}
 
@@ -685,10 +701,10 @@ class PriceRangeSlider extends HTMLElement {
 	updateSliderBackground() {
 		const minValue = Number(this.minSlider.value);
 		const maxValue = Number(this.maxSlider.value);
-		const rangeMax = this.maxSlider.max;
+		const rangeMax = this.maxSlider.max || 100;
 
-		const fromPosition = (minValue * 100 / rangeMax);
-		const toPosition = (maxValue * 100 / rangeMax);
+		const fromPosition = (minValue * 100) / rangeMax;
+		const toPosition = (maxValue * 100) / rangeMax;
 
 		this.maxSlider.style.background = `linear-gradient(
       to right,
@@ -702,7 +718,11 @@ class PriceRangeSlider extends HTMLElement {
 	}
 }
 
-customElements.define('price-range-slider', PriceRangeSlider);
+// Определяем кастомный элемент после загрузки DOM
+document.addEventListener('DOMContentLoaded', () => {
+	customElements.define('price-range-slider', PriceRangeSlider);
+});
+
 
 class FacetRemove extends HTMLElement {
 	constructor() {
