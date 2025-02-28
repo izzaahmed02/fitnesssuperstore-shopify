@@ -29,6 +29,7 @@
 -%}
 
 <div class="facets-container{% if filter_type == 'drawer' %} facets-container-drawer{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
+    <input type="text" id="search-input" placeholder="Search within page">
     {%- if filter_type == 'vertical' or filter_type == 'horizontal' -%}
         <facet-filters-form class="facets small-hide">
             <form
@@ -322,7 +323,7 @@
                                             <price-range-slider class="facets__price"
                                                                 data-currency="{{ cart.currency.iso_code }}">
 
-                                                <div class="facets__display-vertical">
+                                                <div class="facets__display-vertical-wrapper">
                                                     <select id="price-filter-dropdown"
                                                             class="facet-filters__sort select__select caption-large">
                                                         <option value="">All Prices</option>
@@ -856,7 +857,13 @@
     >
         <h2 class="product-count__text text-body">
       <span id="ProductCount">
-         {{ 'products.facets.product_count_simple' | t: count: results.products_count }}
+
+          {% if template == 'collection' %}
+              {{ 'products.facets.product_count_simple' | t: count: results.products_count }}
+              {% else %}
+              {{ results.results_count  }} results
+          {% endif %}
+
       </span>
         </h2>
         {%- render 'loading-spinner' -%}
