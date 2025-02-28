@@ -292,9 +292,13 @@ try {
 							customFieldvalue = `${brand} ${customFieldvalue} Custom Field`
 						} else {
 							if (customFieldvalue === 'Warranty') {
-								window.open(
-									"/pages/warranty", "_blank");
-							} else {
+								window.open("/pages/warranty", "_blank");
+								return;
+							} else if (customFieldvalue === 'Condition' && window.product.title.includes('Remanufactured')) {
+								window.open("/pages/remanufactured-gym-equipment", "_blank");
+								return;
+							} 
+							else {
 								customFieldvalue += ' Custom Field';
 							}
 						}

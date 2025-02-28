@@ -91,29 +91,24 @@ var TransitTimeCalculator = {
       }
 
       let faiSelect = document.querySelector('select[name="Full Assembly & Installation"]');
-      if (faiSelect) {
-        let clonedSelect = faiSelect.cloneNode(true);
-        faiSelect.parentNode.replaceChild(clonedSelect, faiSelect);
-        clonedSelect.value = faiSelect.value;
-        clonedSelect.addEventListener('change', async () => {
+      if (faiSelect && !faiSelect.dataset.listenerAttached) {
+        faiSelect.dataset.listenerAttached = 'true';
+        faiSelect.addEventListener('change', async () => {
           await TransitTimeCalculator.displayTransitTimes();
         });
-        let selectedOption = clonedSelect.options[clonedSelect.selectedIndex];
+        let selectedOption = faiSelect.options[faiSelect.selectedIndex];
         if (selectedOption) {
           let faiOptionText = selectedOption.text;
           deliveryOptionText = faiOptionText.includes("Curbside") ? "Curbside Delivery" : faiOptionText;
         }
-        faiSelect = clonedSelect;
       }
       
       let state = userLoc.region_code;
       let deliveryOption = deliveryOptionText.toLocaleLowerCase();
       
-      // Adjust delivery times for US-CA based on distance and product weight.
       if (userLoc.country === 'US' && state === "CA") {
         if (distanceFromBenicia != null) {
           if (distanceFromBenicia <= 150 && productWeight >= 30) {
-            // No adjustment needed.
           } else if (distanceFromBenicia <= 150 && productWeight < 30) {
             minDeliveryTime += 1; maxDeliveryTime += 1;
           } else if (distanceFromBenicia > 150 && productWeight >= 30 && (deliveryOption.includes('curbside') || deliveryOption.includes('garage'))) {
@@ -126,7 +121,6 @@ var TransitTimeCalculator = {
         }
       }
       
-      // Adjustments for non-CA US states.
       if (userLoc.country === 'US' && state !== 'CA' && productWeight > 30) {
         switch (state) {
           case "NV": minDeliveryTime += 3; maxDeliveryTime += 4; break;
@@ -172,8 +166,7 @@ var TransitTimeCalculator = {
           default: minDeliveryTime += 6; maxDeliveryTime += 10; break;
         }
       }
-      
-      // Adjustments for Canadian provinces.
+
       if (userLoc.country === 'CA') {
         switch (state) {
           case 'BC': minDeliveryTime += 6; maxDeliveryTime += 10; break;
@@ -189,7 +182,6 @@ var TransitTimeCalculator = {
         }
       }
       
-      // Add installation time if applicable.
       if (deliveryOptionText) {
         if (deliveryOptionText.toLowerCase().includes("room") ||
             deliveryOptionText.toLowerCase().includes("process") ||
@@ -200,7 +192,6 @@ var TransitTimeCalculator = {
       
       TransitTimeCalculator.momentInitHolidays();
       
-      // FedEx rules for non-CA US regions.
       if (userLoc.country_code === 'US' && userLoc.region_code !== 'CA' && productWeight < 30) {
         const fedexDays = TransitTimeCalculator.calculateFedexDeliveryDays(userLoc.region_code);
         if (fedexDays) {
