@@ -191,8 +191,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 			}
 
 			if (document.querySelector('.merchantheader')) {
-				document.querySelector('.sa-reviews').style.display = 'none';
-				document.querySelector('.available-wrap').style.flexDirection = 'row-reverse'
+				document.querySelector('.product__info-container .available-wrap .sa-reviews').remove();
+				document.querySelector('.product__info-container .available-wrap').style.flexDirection = 'row-reverse'
 			}
 		}
       }, 500);
