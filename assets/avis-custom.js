@@ -538,7 +538,7 @@ async function renderOptionPopupProducts(title) {
         <div class="product-card__mid">
           <span class="product-card__code">#${prod.variants[0].sku}</span>
           <span class="product-card__price">
-            ${Shopify.country !== 'US' ? Shopify.currency.active + ' ' + price : '$' + price}
+            ${'$' + price}
           </span>
         </div>
         <p class="product-card__description">${shortDescription.substring(0, 150)}...</p>
