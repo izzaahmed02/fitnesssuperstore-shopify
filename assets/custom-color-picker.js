@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     const colorPrice = event.target.dataset.colorPrice;
 
                                     if (selectedColorPriceElement) {
-                                        selectedColorPriceElement.textContent = colorPrice ? colorPrice :  Shopify.country === 'US' ? "$0" : `${Shopify.currency.active} 0`;
+                                        selectedColorPriceElement.textContent = colorPrice ? colorPrice :  "$0";
                                     }
 
                                     if (selectedColorInfo) {
