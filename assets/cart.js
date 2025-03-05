@@ -507,19 +507,16 @@ document.addEventListener("DOMContentLoaded", () => {
 			const footerWrapper = document.querySelector(".cart__footer-wrapper");
 
 			if (!assistanceBlock || !footerWrapper) {
-				console.warn(".cart-items__assistance or .cart__footer-wrapper  not found.");
 				return;
 			}
 
 			if (window.innerWidth <= 992) {
 				if (!footerWrapper.contains(assistanceBlock)) {
-					console.log("replace .cart-items__assistance in .cart__footer-wrapper");
 					footerWrapper.appendChild(assistanceBlock);
 				}
 			} else {
 				const originalParent = document.querySelector(".section-cart-items");
 				if (originalParent && !originalParent.contains(assistanceBlock)) {
-					console.log("return .cart-items__assistance");
 					originalParent.appendChild(assistanceBlock);
 				}
 			}

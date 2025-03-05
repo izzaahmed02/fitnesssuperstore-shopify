@@ -29,7 +29,9 @@
 -%}
 
 <div class="facets-container{% if filter_type == 'drawer' %} facets-container-drawer{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
-    <input type="text" id="search-input" placeholder="Search within page">
+    <input type="text" id="search-input-mobile" placeholder="Search within page">
+
+
     {%- if filter_type == 'vertical' or filter_type == 'horizontal' -%}
         <facet-filters-form class="facets small-hide">
             <form
@@ -137,8 +139,8 @@
                                                     <span class="facets__selected">
                                                       {{- 'products.facets.filters_selected' | t: count: filter.active_values.size -}}
                                                     </span>
-                                                                                {%- if filter.operator == 'AND' -%}
-                                                                                    <span class="facets__and-helptext">
+                                                        {%- if filter.operator == 'AND' -%}
+                                                            <span class="facets__and-helptext">
                                                         {{ 'products.facets.filter_and_operator_subtitle' | t }}
                                                       </span>
                                                         {%- endif -%}
@@ -279,7 +281,7 @@
                                                       {{- 'products.facets.show_more' | t -}}
                                                       <span aria-hidden="true">{% render 'icon-caret' %}</span>
                                                     </span>
-                                                                                <span class="label-show-less label-text hidden">
+                                                        <span class="label-show-less label-text hidden">
                                                       {{- 'products.facets.show_less' | t -}}
                                                       <span aria-hidden="true">{% render 'icon-caret' %}</span>
                                                     </span>
@@ -326,7 +328,7 @@
                                                 <div class="facets__display-vertical-wrapper">
                                                     <select id="price-filter-dropdown"
                                                             class="facet-filters__sort select__select caption-large">
-                                                        <option value="">All Prices</option>
+                                                        <option value="all">All Prices</option>
                                                         <option value="0-1000" data-url="filter.v.price.lte=1000">Below
                                                             $1000
                                                         </option>
@@ -344,6 +346,7 @@
                                                     </select>
                                                 </div>
                                             </price-range-slider>
+
                                         </div>
                                     </details>
                             {% endcase %}
@@ -860,8 +863,8 @@
 
           {% if template == 'collection' %}
               {{ 'products.facets.product_count_simple' | t: count: results.products_count }}
-              {% else %}
-              {{ results.results_count  }} results
+          {% else %}
+              {{ results.results_count }} results
           {% endif %}
 
       </span>
