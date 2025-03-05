@@ -27,8 +27,13 @@ class FacetFiltersForm extends HTMLElement {
 		});
 
 		const searchInput = document.getElementById("search-input");
+		const searchInputMobile = document.getElementById("search-input-mobile");
 
 		if (searchInput) {
+			searchInput.removeEventListener("input", filterProducts);
+			searchInput.addEventListener("input", debounce(filterProducts, 300));
+		}
+		if (searchInputMobile) {
 			searchInput.removeEventListener("input", filterProducts);
 			searchInput.addEventListener("input", debounce(filterProducts, 300));
 		}
@@ -45,7 +50,7 @@ class FacetFiltersForm extends HTMLElement {
 
 		function fetchAllProducts() {
 			const collectionUrl = window.location.pathname + "?view=99999";
-			const searchUrl = window.location.pathname;
+			const searchUrl = window.location + "&view=99999";
 			const page = document.querySelector('.search');
 			let url;
 			if (page) {
@@ -53,11 +58,14 @@ class FacetFiltersForm extends HTMLElement {
 			} else {
 				url = collectionUrl;
 			}
+			console.log(url)
+
 			fetch(url)
 				.then(response => response.text())
 				.then(html => {
 					const parser = new DOMParser();
 					const doc = parser.parseFromString(html, "text/html");
+
 					const productItems = doc.querySelectorAll("#product-grid li");
 					productItems.forEach(product => {
 						const productName = product.querySelector('.product-item .title').textContent.trim().toLowerCase();
@@ -72,7 +80,6 @@ class FacetFiltersForm extends HTMLElement {
 
 		function filterProducts(event) {
 			const searchText = document.getElementById('search-input').value.toLowerCase();
-
 			if (!searchText) {
 				const searchParams = new URLSearchParams(window.location.search) ?? FacetFiltersForm.searchParamsInitial;
 				FacetFiltersForm.renderPage(searchParams, event);
@@ -80,13 +87,14 @@ class FacetFiltersForm extends HTMLElement {
 			}
 
 			const productGrid = document.getElementById('product-grid');
-
-			productGrid.innerHTML = "";
-
-			const filteredProducts = allProducts.filter(product => {
-				const productName = product.querySelector('.product-item .title').textContent.toLowerCase();
+			const productItems = Array.from(productGrid.querySelectorAll('li'));
+			const filteredProducts = productItems.filter(product => {
+				const titleElement = product.querySelector('.product-item .title');
+				if (!titleElement) return false;
+				const productName = titleElement.textContent.toLowerCase();
 				return productName.includes(searchText);
 			});
+			productGrid.innerHTML = "";
 
 			if (filteredProducts.length > 0) {
 				filteredProducts.forEach(product => {
@@ -97,6 +105,7 @@ class FacetFiltersForm extends HTMLElement {
 				productGrid.innerHTML = "<li>No products found.</li>";
 			}
 		}
+
 
 		function initSlidersBatch() {
 			const products = document.querySelectorAll('#product-grid li');
@@ -170,12 +179,51 @@ class FacetFiltersForm extends HTMLElement {
 
 		function filterProductsByPrice(event) {
 			const selectedOption = priceFilterDropdown.options[priceFilterDropdown.selectedIndex];
-			const url = selectedOption.getAttribute("data-url");
+			const newParamsString = selectedOption.getAttribute("data-url");
 
-			if (url) {
-				history.pushState({url}, '', `${window.location.pathname}${url && '?'.concat(url)}`);
+			// Check if the selected option's value is "all"
+			const isAll = selectedOption.value.toLowerCase() === "all";
+
+			if (document.querySelector('.search')) {
+				// On the search page, merge new parameters with existing ones
+				const currentUrl = new URL(window.location.href);
+				const currentParams = currentUrl.searchParams;
+
+				if (isAll) {
+					// Remove any parameter that includes "price"
+					[...currentParams.keys()].forEach((key) => {
+						if (key.includes("price")) {
+							currentParams.delete(key);
+						}
+					});
+				} else if (newParamsString) {
+					const newParams = new URLSearchParams(newParamsString);
+					// Merge new parameters into the current search params
+					for (const [key, value] of newParams.entries()) {
+						currentParams.set(key, value);
+					}
+				}
+
+				const newUrl = `${currentUrl.pathname}?${currentParams.toString()}`;
+				history.pushState({url: newUrl}, '', newUrl);
+			} else {
+				// For non-search pages
+				if (isAll) {
+					const currentParams = new URLSearchParams(window.location.search);
+					[...currentParams.keys()].forEach((key) => {
+						if (key.includes("price")) {
+							currentParams.delete(key);
+						}
+					});
+					const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+					history.pushState({url: newUrl}, '', newUrl);
+				} else if (newParamsString) {
+					const newUrl = `${window.location.pathname}?${newParamsString}`;
+					history.pushState({url: newUrl}, '', newUrl);
+				}
 			}
 		}
+
 
 		function updatePriceFilter(products) {
 			let priceCounts = {
@@ -314,7 +362,7 @@ class FacetFiltersForm extends HTMLElement {
 		});
 
 		const facetWrapper = this.querySelector('#FacetsWrapperDesktop');
-		if (facetWrapper) facetWrapper.addEventListener('keyup', onKeyUpEscape);
+
 	}
 
 	static setListeners() {
@@ -352,7 +400,6 @@ class FacetFiltersForm extends HTMLElement {
 		sections.forEach((section) => {
 			const url = `${window.location.pathname}?section_id=${section.section}&${searchParams}`;
 			const filterDataUrl = (element) => element.url === url;
-
 			FacetFiltersForm.filterData.some(filterDataUrl)
 				? FacetFiltersForm.renderSectionFromCache(filterDataUrl, event)
 				: FacetFiltersForm.renderSectionFromFetch(url, event);
@@ -541,9 +588,11 @@ class FacetFiltersForm extends HTMLElement {
 
 	static updateURLHash(searchParams) {
 		if (searchParams.size > 0) {
-			history.pushState({searchParams}, '', `${window.location.pathname}${searchParams && '?'.concat(searchParams)}`);
+			const searchParamsStr = searchParams.toString();
+			history.pushState({searchParams: searchParamsStr}, '', `${window.location.pathname}?${searchParamsStr}`);
 		}
 	}
+
 
 	static getSections() {
 		return [
@@ -628,21 +677,17 @@ FacetFiltersForm.setListeners();
 class PriceRangeSlider extends HTMLElement {
 	constructor() {
 		super();
-
 		requestAnimationFrame(() => this.init());
 	}
 
 	init() {
-		this.minInput = this.querySelector('#price-range-min');
-		this.maxInput = this.querySelector('#price-range-max');
+
 		this.textInputs = this.querySelectorAll('.field__input');
 		this.minSlider = this.querySelector('#price-range-min');
 		this.maxSlider = this.querySelector('#price-range-max');
 		if (!this.minSlider || !this.maxSlider) {
-			console.error('PriceRangeSlider: Missing minSlider or maxSlider element.');
 			return;
 		}
-
 		this.minSlider.addEventListener('input', this.updateMinValue.bind(this));
 		this.maxSlider.addEventListener('input', this.updateMaxValue.bind(this));
 
