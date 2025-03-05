@@ -151,26 +151,33 @@
 {% endstyle %}
 
 <script>
-	document.addEventListener('DOMContentLoaded', () => {
-		const popupBtns = document.querySelectorAll('a[href="#popup"]');
-		const closeBtns = document.querySelectorAll('.close-btn');
-		const popups = document.querySelectorAll('.grid-info-popup');
-
-		if (popupBtns.length !== popups.length) return;
-
-		popupBtns.forEach((btn, index) => {
-			btn.addEventListener('click', (event) => {
-				event.preventDefault();
-				popups[index].classList.add('active');
-				document.body.style.overflow = 'hidden';
-			});
-
-			closeBtns[index].addEventListener('click', () => {
-				popups[index].classList.remove('active');
-				document.body.style.overflow = '';
-			});
-		});
-	});
+  document.addEventListener('DOMContentLoaded', () => {
+    const popupBtns = document.querySelectorAll('a[href="#popup"]');
+    const closeBtns = document.querySelectorAll('.close-btn');
+    const popups = document.querySelectorAll('.grid-info-popup');
+  
+    if (popupBtns.length !== popups.length) return;
+  
+    popupBtns.forEach((btn, index) => {
+      btn.addEventListener('click', (event) => {
+        event.preventDefault();
+        popups[index].classList.add('active');
+        document.body.style.overflow = 'hidden';
+      });
+  
+      closeBtns[index].addEventListener('click', () => {
+        popups[index].classList.remove('active');
+        document.body.style.overflow = '';
+      });
+  
+      popups[index].addEventListener('click', (event) => {
+        if (event.target === popups[index]) {
+          popups[index].classList.remove('active');
+          document.body.style.overflow = '';
+        }
+      });
+    });
+  });  
 </script>
 
 <div class="info-grid section-padding scroll-trigger animate--slide-in">
