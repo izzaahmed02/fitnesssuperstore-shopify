@@ -163,6 +163,8 @@
         event.preventDefault();
         popups[index].classList.add('active');
         document.body.style.overflow = 'hidden';
+
+        event.stopPropagation();
       });
   
       closeBtns[index].addEventListener('click', () => {
@@ -173,6 +175,15 @@
       popups[index].addEventListener('click', (event) => {
         if (event.target === popups[index]) {
           popups[index].classList.remove('active');
+          document.body.style.overflow = '';
+        }
+      });
+    });
+
+    document.addEventListener('click', (event) => {
+      popups.forEach(popup => {
+        if (popup.classList.contains('active') && !popup.contains(event.target)) {
+          popup.classList.remove('active');
           document.body.style.overflow = '';
         }
       });
