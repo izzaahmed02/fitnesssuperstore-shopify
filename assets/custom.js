@@ -95,31 +95,28 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	// SCROLL TO SECTION
-	document.addEventListener('DOMContentLoaded', () => {
-		// Навигация по разделам
-		let scrollToSectionBtns = document.querySelectorAll('[data-scroll-to-section]');
+	let scrollToSectionBtns = document.querySelectorAll('[data-scroll-to-section]');
 
-		if (scrollToSectionBtns.length) {
-			scrollToSectionBtns.forEach((btn) => {
-				let id = btn.getAttribute('data-scroll-to-section');
-				let section = document.querySelector(`#${id}`);
+	if (scrollToSectionBtns.length) {
+		scrollToSectionBtns.forEach((btn) => {
+			let id = btn.getAttribute('data-scroll-to-section');
+			let section = document.querySelector(`#${id}`);
 
-				btn.addEventListener('click', () => {
-					if (section) {
-						section.scrollIntoView({behavior: "smooth", block: "start"});
-					}
-				});
+			btn.addEventListener('click', () => {
+				if (section) {
+					section.scrollIntoView({behavior: "smooth", block: "start"});
+				}
 			});
-		}
-	});
-
+		});
+	}
+	
 	class ScrollableFaq extends HTMLElement {
 		constructor() {
 			super();
 			this.buttons = this.querySelectorAll('.scrollable-faq__nav button');
 			this.contentBlocks = Array.from(this.querySelectorAll('.scrollable-faq__item'));
 			this.activeClass = 'active';
-			this.offset = 50; // Отступ перед фиксацией активного класса
+			this.offset = 50; 
 			this.mediaQuery = window.matchMedia('(min-width: 750px)');
 			this.handleMediaChange = this.handleMediaChange.bind(this);
 			this.observer = null;
@@ -207,10 +204,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-// Регистрация кастомного элемента
 	customElements.define('scrollable-faq', ScrollableFaq);
-
-
 	// MOBILE SCROLL TO SECTION (Event Delegation)
 	document.body.addEventListener('click', (e) => {
 		const btn = e.target.closest('[data-scroll-to-mobile]');
