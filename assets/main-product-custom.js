@@ -30,6 +30,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 				}
 			}
 
+			if (!window.product.available) {
+				document.querySelector('.docapp-single-shipping-calculator .shipping-data').style.color = '#B3B3B3';
+			}
+
 			clearInterval(pollingInterval);
 		}
 
@@ -187,8 +191,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 			}
 
 			if (document.querySelector('.merchantheader')) {
-				document.querySelector('.sa-reviews').style.display = 'none';
-				document.querySelector('.available-wrap').style.flexDirection = 'row-reverse'
+				document.querySelector('.product__info-container .available-wrap .sa-reviews').remove();
+				document.querySelector('.product__info-container .available-wrap').style.flexDirection = 'row-reverse'
 			}
 		}
       }, 500);
@@ -288,15 +292,20 @@ try {
 							customFieldvalue = `${brand} ${customFieldvalue} Custom Field`
 						} else {
 							if (customFieldvalue === 'Warranty') {
-								window.open(
-									"/pages/warranty", "_blank");
-							} else {
+								window.open("/pages/warranty", "_blank");
+								return;
+							} else if (customFieldvalue === 'Condition' && window.product.title.includes('Remanufactured')) {
+								window.open("/pages/remanufactured-gym-equipment", "_blank");
+								return;
+							} 
+							else {
 								customFieldvalue += ' Custom Field';
 							}
 						}
 						
 						var product = await fetchProductByTitle(customFieldvalue);
 						if (product) {
+							document.querySelector('#dynamic-product-content').style.width = "auto";
 							modalWrapper.style.display = 'flex';
 							const tempDiv = document.createElement('div');
 							tempDiv.innerHTML = product.body_html;
@@ -321,13 +330,13 @@ try {
 				);
 		
 				if (metaField3rdParty) {
-					fetchProductMetaObject(metaField3rdParty.value).then((metaObject) => {
-						if (metaObject.fields) {
-							const googleMaterial = metaObject.fields.find(
+					fetchProductMetaObject(metaField3rdParty.value).then((response) => {
+						if (response.data.metaobject.fields) {
+							const googleMaterial = response.data.metaobject.fields.find(
 								(metaObject) => metaObject.key === "google_material"
 							);
 				
-							if (googleMaterial && googleMaterial.value.includes('display')) {
+							if (googleMaterial && googleMaterial.value && googleMaterial.value.includes('display')) {
 								document.querySelector('.showroom').style.display = 'flex';
 								document.querySelector('.showroom-text').innerHTML = 'On Display at our Northern California Warehouse Showroom'
 							}
@@ -372,7 +381,9 @@ try {
 						  </svg>`
 					
 						} else {
-							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(priceInDollars, 24, {displayPrimeOffers: true, primeApr: 9});
+							const productPrice = getProductPrice();	
+
+							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 9});
 
 							if (payTomorrow24MosRate) {
 								payLaterText = `As low as ${parseFloat(payTomorrow24MosRate).toLocaleString('en-US', {
@@ -402,12 +413,16 @@ try {
 
 						const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2 strong');
 						let payLaterText = '';
-		
+		                const afterPayLogo = document.querySelector('.afterPayLogo');
 						if (afterPayElement) {
 							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML} / 4 interest-free payment`;
-							document.querySelector('.afterPayLogo').style.display = 'block';
+							if (afterPayLogo) {
+								afterPayLogo.style.display = 'block';
+							}
 						} else {
-							document.querySelector('.afterPayLogo').style.display = 'none';
+							if (afterPayLogo) {
+								afterPayLogo.style.display = 'none';
+							}
 		
 							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 9});
 		
@@ -526,6 +541,7 @@ function showPayLaterModal() {
 		closeModalButton.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
 		});
+		document.querySelector('#dynamic-product-content').style.width = "600px";
 	}
 }
 

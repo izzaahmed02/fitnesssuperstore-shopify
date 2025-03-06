@@ -2,14 +2,14 @@
 {{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
 
 {% style %}
-  .image-full{
+    .image-full{
     max-width: 100%;
     width: 100%;
     height: 100%;
     border-radius: 24px;
     object-fit: cover;
-  }
-  .bottom-wrapper{
+    }
+    .bottom-wrapper{
     max-width: 842px;
     margin-left: auto;
     margin-right: auto;
@@ -20,16 +20,16 @@
     align-items: center;
     font-size: 14px;
     text-align: center;
-  }
-  .bottom-wrapper a{
+    }
+    .bottom-wrapper a{
     font-family: "SF Pro Display";
     font-size: 16px;
     font-weight: 700;
     color: #F1592A;
     text-decoration: underline;
     margin-top: 24px;
-  }
-  .grid-info-popup{
+    }
+    .grid-info-popup{
     position: fixed;
     width: 100%;
     height: 100%;
@@ -40,11 +40,11 @@
     align-items: center;
     z-index: 1000;
     background: rgba(0,0,0, 0.30);
-  }
-  .grid-info-popup.active{
+    }
+    .grid-info-popup.active{
     display: flex;
-  }
-  .popup-wrapper{
+    }
+    .popup-wrapper{
     display: flex;
     flex-direction: column;
 
@@ -55,16 +55,16 @@
     border-radius: 12px;
     padding: 32px;
 
-  }
-  a.next{
+    }
+    a.next{
     order: 1;
-  }
+    }
 
-  .popup-wrapper::-webkit-scrollbar {
+    .popup-wrapper::-webkit-scrollbar {
     display: none;
-  }
+    }
 
-  .popup-title-wrapper{
+    .popup-title-wrapper{
     font-family: "Oswald";
     font-size: 48px;
     font-weight: 600;
@@ -74,11 +74,11 @@
     display: flex;
     justify-content: space-between;
 
-  }
-  .popup-text{
+    }
+    .popup-text{
     color: #393940;
-  }
-  .close-btn{
+    }
+    .close-btn{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -86,278 +86,301 @@
     height: 24px;
     cursor: pointer;
 
-  }
-  .popup-wrapper a{
+    }
+    .popup-wrapper a{
     display: block;
     margin-top: 24px;
     font-weight: 700;
     line-height: 24px;
     color: #F1592A;
     text-decoration: underline;
-  }
-  deferred-media{
-    margin-top: 32px;
-  }
-  @media(max-width: 767px){
-    .image-full{
-      height: 400px;
     }
-  }
+    deferred-media{
+    margin-top: 32px;
+    }
+    @media(max-width: 767px){
+    .image-full{
+    height: 400px;
+    }
+    }
 
-  @media screen and (max-width: 750px) {
+    @media screen and (max-width: 750px) {
     #shopify-section-{{ section.id }} .section-padding {
-      padding-block: 48px;
+    padding-block: 48px;
     }
 
     .popup-wrapper {
-      max-width: 342px;
-      padding: 24px;
+    max-width: 342px;
+    padding: 24px;
     }
 
     .popup-title-wrapper {
-      font-size: 20px;
-      line-height: 26px;
-      margin-bottom: 16px;
+    font-size: 20px;
+    line-height: 26px;
+    margin-bottom: 16px;
     }
 
     #shopify-section-{{ section.id }} deferred-media {
-      margin-top: 16px;
+    margin-top: 16px;
     }
 
     .popup-wrapper a {
-      margin-top: 16px;
+    margin-top: 16px;
     }
 
     a.link_block_style {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      background-color: var(--primary-orange);
-      border-radius: 8px;
-      padding: 12px;
-      padding-left: 24px;
-      color: #fff;
-      text-decoration: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    background-color: var(--primary-orange);
+    border-radius: 8px;
+    padding: 12px;
+    padding-left: 24px;
+    color: #fff;
+    text-decoration: none;
     }
 
     a.link_block_style svg {
-      display: block;
-      width: 24px;
-      height: 24px;
-      margin: auto;
-      flex-shrink: 0;
+    display: block;
+    width: 24px;
+    height: 24px;
+    margin: auto;
+    flex-shrink: 0;
     }
-  }
+    }
 {% endstyle %}
 
 <script>
-  document.addEventListener('DOMContentLoaded', (event) => {
+  document.addEventListener('DOMContentLoaded', () => {
     const popupBtns = document.querySelectorAll('a[href="#popup"]');
-    console.log(popupBtns);
     const closeBtns = document.querySelectorAll('.close-btn');
     const popups = document.querySelectorAll('.grid-info-popup');
-    if (popupBtns.length == popups.length) {
-      console.log('click');
-      for (let i = 0; i < popupBtns.length; i++) {
-        popupBtns[i].addEventListener('click', () => {
-          popups[i].classList.add('active');
-          document.querySelector('body').style.overflow = 'hidden';
-        });
-        closeBtns[i].addEventListener('click', () => {
-          popups[i].classList.remove('active');
-          document.querySelector('body').style.overflow = 'auto';
-        });
-      }
-    }
-  });
+  
+    if (popupBtns.length !== popups.length) return;
+  
+    popupBtns.forEach((btn, index) => {
+      btn.addEventListener('click', (event) => {
+        event.preventDefault();
+        popups[index].classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        event.stopPropagation();
+      });
+  
+      closeBtns[index].addEventListener('click', () => {
+        popups[index].classList.remove('active');
+        document.body.style.overflow = '';
+      });
+  
+      popups[index].addEventListener('click', (event) => {
+        if (event.target === popups[index]) {
+          popups[index].classList.remove('active');
+          document.body.style.overflow = '';
+        }
+      });
+    });
+
+    document.addEventListener('click', (event) => {
+      popups.forEach(popup => {
+        if (popup.classList.contains('active') && !popup.contains(event.target)) {
+          popup.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+      });
+    });
+  });  
 </script>
 
 <div class="info-grid section-padding scroll-trigger animate--slide-in">
-  <div class="page-width">
-    <div class="info-grid__container">
-      {% if section.settings.title != blank %}
-        <h2 class="h2 info-grid__title">{{ section.settings.title }}</h2>
-      {% endif %}
+    <div class="page-width">
+        <div class="info-grid__container">
+            {% if section.settings.title != blank %}
+                <h2 class="h2 info-grid__title">{{ section.settings.title }}</h2>
+            {% endif %}
 
-      {% if section.settings.text != blank %}
-        <div class="info-grid__text">{{ section.settings.text }}</div>
-      {% endif %}
+            {% if section.settings.text != blank %}
+                <div class="info-grid__text">{{ section.settings.text }}</div>
+            {% endif %}
 
-      {% if section.settings.link_text != blank %}
-        <a href="{{ section.settings.link_url }}" class="info-grid__link link-style">
-          {{ section.settings.link_text }}
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              fill-rule="evenodd"
-              clip-rule="evenodd"
-              d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z"
-              fill="#F1592A" />
-          </svg>
-        </a>
-      {% endif %}
-
-      <div class="info-grid__wrapper grid grid--1-col-tablet-down grid--3-col-desktop">
-        {% for block in section.blocks %}
-          {%- case block.type -%}
-            {%- when 'block' -%}
-              <div class="info-grid__item grid__item">
-                {% if block.settings.icon != blank %}
-                  <img
-                    src="{{ block.settings.icon | img_url: 'master' }}"
-                    alt="{{ block.settings.icon.alt }}"
-                    loading="lazy"
-                  >
-                {% endif %}
-
-                {% if block.settings.title != blank %}
-                  <h4 class="h4">{{ block.settings.title }}</h4>
-                {% endif %}
-
-                {% if block.settings.text != blank %}
-                  <div class="info-grid__item-text">{{ block.settings.text }}</div>
-                {% endif %}
-
-                {% if block.settings.link_text != blank %}
-                  <a href="{{ block.settings.link_url }}" class="link-style" {% if block.settings.target_id %}data-target="{{ block.settings.target_id }}"{% endif %}>
-                    <span>{{ block.settings.link_text }}</span>
+            {% if section.settings.link_text != blank %}
+                <a href="{{ section.settings.link_url }}" class="info-grid__link link-style">
+                    {{ section.settings.link_text }}
                     <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        clip-rule="evenodd"
-                        d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z"
-                        fill="#F1592A" />
-                    </svg>
-                  </a>
-                {% endif %}
-
-                {% if block.settings.popup_title != blank %}
-                  <div class="grid-info-popup">
-                    <div class="popup-wrapper">
-                      <div class="popup-title-wrapper">
-                        {{ block.settings.popup_title }}
-                        <div class="close-btn">
-                          <svg
-                            width="14"
-                            height="15"
-                            viewBox="0 0 14 15"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.96967C0.762563 0.676777 1.23744 0.676777 1.53033 0.96967L7 6.43934L12.4697 0.96967C12.7626 0.676777 13.2374 0.676777 13.5303 0.96967C13.8232 1.26256 13.8232 1.73744 13.5303 2.03033L8.06066 7.5L13.5303 12.9697C13.8232 13.2626 13.8232 13.7374 13.5303 14.0303C13.2374 14.3232 12.7626 14.3232 12.4697 14.0303L7 8.56066L1.53033 14.0303C1.23744 14.3232 0.762563 14.3232 0.46967 14.0303C0.176777 13.7374 0.176777 13.2626 0.46967 12.9697L5.93934 7.5L0.46967 2.03033C0.176777 1.73744 0.176777 1.26256 0.46967 0.96967Z" fill="#808080"/>
-                          </svg>
-                        </div>
-                      </div>
-                      <div class="popup-text">{{ block.settings.popup_text }}</div>
-                      <a
-                        class="{% if block.settings.order == "second" %}next{% endif %}"
-                        href="{{ block.settings.popup_link_url }}"
-                      >
-                        {{- block.settings.popup_link_text -}}
-                      </a>
-                      {%- if block.settings.video_url != blank -%}
-                        {%- capture sizes -%}
-                  {% if settings.page_width -%}
-                    (min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 }}px, (min-width: 750px)
-                    calc(100vw - 10rem), 100vw
-                  {%- endif %}
-                {%- endcapture -%}
-                        <deferred-media
-                          class="video-section__media deferred-media gradient global-media-settings{% if section.settings.full_width %} global-media-settings--full-width{% endif %}{% if fix_ratio %} media-fit-cover{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
-                          data-media-id="{{ video_id }}"
-                          {%- liquid
-                            assign video_id = block.settings.video_url.id
-                            assign poster = block.settings.video_url.preview_image | default: block.settings.cover_image
-                            assign loop = '&loop=1&playlist=' | append: video_id
-                          -%}
-                          {% if poster != null %}
-                            {% assign aspect_ratio = 1 | divided_by: poster.aspect_ratio | times: 100 %}
-                            {% assign aspect_ratio_mobile = 1 | divided_by: poster.aspect_ratio | times: 100 %}
+                    >
+                        <path
+                                fill-rule="evenodd"
+                                clip-rule="evenodd"
+                                d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z"
+                                fill="#F1592A"/>
+                    </svg>
+                </a>
+            {% endif %}
 
-                            {% if aspect_ratio > 47 %}
-                              {% assign aspect_ratio = 47 %}
-                            {% endif %}
-                            style="--ratio-percent: {{ aspect_ratio }}%;--ratio-percent-mobile: {{ aspect_ratio_mobile }}%;"
-                          {% endif %}
-                        >
-                          <button
-                            id="Deferred-Poster-Modal-{{ video_id }}"
-                            class="video-section__poster media deferred-media__poster media--landscape"
-                            type="button"
-                            aria-label="{{ alt }}"
-                          >
-                            {%- if poster != null -%}
-                              {{
-                                poster
-                                | image_url: width: 3840
-                                | image_tag:
-                                  sizes: sizes,
-                                  widths: '375, 750, 1100, 1500, 1780, 2000, 3000, 3840',
-                                  alt: alt
-                              }}
-                            {%- else -%}
-                              {{ 'hero-apparel-3' | placeholder_svg_tag: 'placeholder-svg placeholder' }}
-                            {%- endif -%}
-                            <span class="deferred-media__poster-button motion-reduce">
+            <div class="info-grid__wrapper grid grid--1-col-tablet-down grid--3-col-desktop">
+                {% for block in section.blocks %}
+                    {%- case block.type -%}
+                        {%- when 'block' -%}
+                            <div class="info-grid__item grid__item">
+                                {% if block.settings.icon != blank %}
+                                    <img
+                                            src="{{ block.settings.icon | img_url: 'master' }}"
+                                            alt="{{ block.settings.icon.alt }}"
+                                            loading="lazy"
+                                    >
+                                {% endif %}
+
+                                {% if block.settings.title != blank %}
+                                    <h4 class="h4">{{ block.settings.title }}</h4>
+                                {% endif %}
+
+                                {% if block.settings.text != blank %}
+                                    <div class="info-grid__item-text">{{ block.settings.text }}</div>
+                                {% endif %}
+
+                                {% if block.settings.link_text != blank %}
+                                    <a href="{{ block.settings.link_url }}" class="link-style"
+                                       {% if block.settings.target_id %}data-target="{{ block.settings.target_id }}"{% endif %}>
+                                        <span>{{ block.settings.link_text }}</span>
+                                        <svg
+                                                width="24"
+                                                height="24"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                    fill-rule="evenodd"
+                                                    clip-rule="evenodd"
+                                                    d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z"
+                                                    fill="#F1592A"/>
+                                        </svg>
+                                    </a>
+                                {% endif %}
+
+                                {% if block.settings.popup_title != blank %}
+                                    <div class="grid-info-popup">
+                                        <div class="popup-wrapper">
+                                            <div class="popup-title-wrapper">
+                                                {{ block.settings.popup_title }}
+                                                <div class="close-btn">
+                                                    <svg
+                                                            width="14"
+                                                            height="15"
+                                                            viewBox="0 0 14 15"
+                                                            fill="none"
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                    >
+                                                        <path fill-rule="evenodd" clip-rule="evenodd"
+                                                              d="M0.46967 0.96967C0.762563 0.676777 1.23744 0.676777 1.53033 0.96967L7 6.43934L12.4697 0.96967C12.7626 0.676777 13.2374 0.676777 13.5303 0.96967C13.8232 1.26256 13.8232 1.73744 13.5303 2.03033L8.06066 7.5L13.5303 12.9697C13.8232 13.2626 13.8232 13.7374 13.5303 14.0303C13.2374 14.3232 12.7626 14.3232 12.4697 14.0303L7 8.56066L1.53033 14.0303C1.23744 14.3232 0.762563 14.3232 0.46967 14.0303C0.176777 13.7374 0.176777 13.2626 0.46967 12.9697L5.93934 7.5L0.46967 2.03033C0.176777 1.73744 0.176777 1.26256 0.46967 0.96967Z"
+                                                              fill="#808080"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <div class="popup-text">{{ block.settings.popup_text }}</div>
+                                            <a
+                                                    class="{% if block.settings.order == "second" %}next{% endif %}"
+                                                    href="{{ block.settings.popup_link_url }}"
+                                            >
+                                                {{- block.settings.popup_link_text -}}
+                                            </a>
+                                            {%- if block.settings.video_url != blank -%}
+                                                {%- capture sizes -%}
+                                                    {% if settings.page_width -%}
+                                                        (min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 }}px, (min-width: 750px)
+                                                        calc(100vw - 10rem), 100vw
+                                                    {%- endif %}
+                                                {%- endcapture -%}
+                                                <deferred-media
+                                                        class="video-section__media deferred-media gradient global-media-settings{% if section.settings.full_width %} global-media-settings--full-width{% endif %}{% if fix_ratio %} media-fit-cover{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+                                                        data-media-id="{{ video_id }}"
+                                                        {%- liquid
+                                                            assign video_id = block.settings.video_url.id
+                                                            assign poster = block.settings.video_url.preview_image | default: block.settings.cover_image
+                                                            assign loop = '&loop=1&playlist=' | append: video_id
+                                                        -%}
+                                                        {% if poster != null %}
+                                                            {% assign aspect_ratio = 1 | divided_by: poster.aspect_ratio | times: 100 %}
+                                                            {% assign aspect_ratio_mobile = 1 | divided_by: poster.aspect_ratio | times: 100 %}
+
+                                                            {% if aspect_ratio > 47 %}
+                                                                {% assign aspect_ratio = 47 %}
+                                                            {% endif %}
+                                                            style="--ratio-percent: {{ aspect_ratio }}%;--ratio-percent-mobile: {{ aspect_ratio_mobile }}%;"
+                                                        {% endif %}
+                                                >
+                                                    <button
+                                                            id="Deferred-Poster-Modal-{{ video_id }}"
+                                                            class="video-section__poster media deferred-media__poster media--landscape"
+                                                            type="button"
+                                                            aria-label="{{ alt }}"
+                                                    >
+                                                        {%- if poster != null -%}
+                                                            {{
+                                                            poster
+                                                            | image_url: width: 3840
+                                                            | image_tag:
+                                                            sizes: sizes,
+                                                            widths: '375, 750, 1100, 1500, 1780, 2000, 3000, 3840',
+                                                            alt: alt
+                                                            }}
+                                                        {%- else -%}
+                                                            {{ 'hero-apparel-3' | placeholder_svg_tag: 'placeholder-svg placeholder' }}
+                                                        {%- endif -%}
+                                                        <span class="deferred-media__poster-button motion-reduce">
                               {%- render 'icon-play' -%}
                             </span>
-                          </button>
-                          <template>
-                            {%- if block.settings.video_url.type == 'youtube' -%}
-                              <iframe
-                                src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1{{ loop }}"
-                                class="js-youtube"
-                                allow="autoplay; encrypted-media"
-                                allowfullscreen
-                              ></iframe>
-                            {%- else -%}
-                              <iframe
-                                src="https://player.vimeo.com/video/{{ video_id }}?autoplay=1{{ loop }}"
-                                class="js-vimeo"
-                                allow="autoplay; encrypted-media"
-                                allowfullscreen
-                              ></iframe>
-                            {%- endif -%}
-                          </template>
-                        </deferred-media>
-                      {% endif %}
-                    </div>
-                  </div>
-                {% endif %}
-              </div>
+                                                    </button>
+                                                    <template>
+                                                        {%- if block.settings.video_url.type == 'youtube' -%}
+                                                            <iframe
+                                                                    src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1{{ loop }}"
+                                                                    class="js-youtube"
+                                                                    allow="autoplay; encrypted-media"
+                                                                    allowfullscreen
+                                                            ></iframe>
+                                                        {%- else -%}
+                                                            <iframe
+                                                                    src="https://player.vimeo.com/video/{{ video_id }}?autoplay=1{{ loop }}"
+                                                                    class="js-vimeo"
+                                                                    allow="autoplay; encrypted-media"
+                                                                    allowfullscreen
+                                                            ></iframe>
+                                                        {%- endif -%}
+                                                    </template>
+                                                </deferred-media>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
 
-            {% when 'image' %}
-              {% if block.settings.image_full != blank %}
-                {{ block.settings.image_full | image_url: width: auto | image_tag: class: 'image-full' }}
-              {% endif %}
-          {% endcase %}
-        {% endfor %}
+                        {% when 'image' %}
+                            {% if block.settings.image_full != blank %}
+                                {{ block.settings.image_full | image_url: width: auto | image_tag: class: 'image-full' }}
+                            {% endif %}
+                    {% endcase %}
+                {% endfor %}
 
-        <div class="bottom-wrapper">
-          {% if section.settings.bottom_t != blank %}
-            {{ section.settings.bottom_t }}
-          {% endif %}
-          {% if section.settings.bottom_link_text != blank %}
-            <a href="{{ section.settings.bottom_link_url }}" class="{% if section.settings.link_block_style %}link_block_style{% endif %}">
-              {{ section.settings.bottom_link_text }}
-              {% render: 'icon-arrow' %}
-            </a>
-          {% endif %}
+                <div class="bottom-wrapper">
+                    {% if section.settings.bottom_t != blank %}
+                        {{ section.settings.bottom_t }}
+                    {% endif %}
+                    {% if section.settings.bottom_link_text != blank %}
+                        <a href="{{ section.settings.bottom_link_url }}"
+                           class="{% if section.settings.link_block_style %}link_block_style{% endif %}">
+                            {{ section.settings.bottom_link_text }}
+                            {% render : 'icon-arrow' %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 
 
@@ -466,7 +489,10 @@
         {
           "type": "video_url",
           "id": "video_url",
-          "accept": ["youtube", "vimeo"],
+          "accept": [
+            "youtube",
+            "vimeo"
+          ],
           "default": "https://www.youtube.com/watch?v=_9VUPq3SxOc",
           "label": "Video url"
         },

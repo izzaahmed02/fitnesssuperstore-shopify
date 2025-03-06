@@ -1,137 +1,158 @@
 {{ 'section-feature-block.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
-  #shopify-section-{{ section.id }} .feature-block-container {
+    #shopify-section-{{ section.id }} .feature-block-container {
     padding-top: {{ section.settings.padding_top }}px;
     padding-bottom: {{ section.settings.padding_bottom }}px;
-  }
-
-  @media screen and (max-width: 750px) {
-    #shopify-section-{{ section.id }} .feature-block-container {
-      padding-top: {{ section.settings.padding_top | times: 0.6 | round }}px;
     }
-  }
+
+    @media screen and (max-width: 750px) {
+    #shopify-section-{{ section.id }} .feature-block-container {
+    padding-top: {{ section.settings.padding_top | times: 0.6 | round }}px;
+    }
+    }
 {%- endstyle -%}
 
 {% liquid
-  assign image_blocks = section.blocks | where: 'type', 'image'
-  assign accent_blocks = section.blocks | where: 'type', 'accent'
-  assign file_blocks = section.blocks | where: 'type', 'file'
+    assign image_blocks = section.blocks | where: 'type', 'image'
+    assign accent_blocks = section.blocks | where: 'type', 'accent'
+    assign file_blocks = section.blocks | where: 'type', 'file'
 %}
 
-<div class="page-width {% if section.settings.section_id != blank %}container-{{section.settings.section_id}}{% endif %} scroll-trigger animate--slide-in">
-  <div id="{{ section.settings.section_id }}" class="feature-block-container {% if section.settings.section_id != blank %}content-section{% endif %}">
-    <div class="feature-block-slider {% if section.settings.layout == 'text_first' %} slider-reversed{% endif %}">
-      <div class="feature-block-arrow-prev arrow-prev-{{ section.id }}">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="40" height="40" rx="20" fill="#616166"/>
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M17.8056 14.4697C18.0985 14.1768 18.5734 14.1768 18.8663 14.4697L23.8663 19.4697C24.1592 19.7626 24.1592 20.2374 23.8663 20.5303L18.8663 25.5303C18.5734 25.8232 18.0985 25.8232 17.8056 25.5303C17.5127 25.2374 17.5127 24.7626 17.8056 24.4697L22.2753 20L17.8056 15.5303C17.5127 15.2374 17.5127 14.7626 17.8056 14.4697Z" fill="white"/>
-        </svg>
-      </div>
-      <div class="feature-block-slider-wrapper feature-block-slider-{{ section.id }}">
-        {% for image in image_blocks %}
-          <div class="feature-block-slide">
-            <img
-              src="{{ image.settings.image | image_url }}"
-              alt="{{ image.settings.image.alt | escape }}"
-              width=""
-              height=""
-            >
-          </div>
-        {% endfor %}
-      </div>
-      <div class="feature-block-arrow-next arrow-next-{{ section.id }}">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="40" height="40" rx="20" fill="#616166"/>
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M17.8056 14.4697C18.0985 14.1768 18.5734 14.1768 18.8663 14.4697L23.8663 19.4697C24.1592 19.7626 24.1592 20.2374 23.8663 20.5303L18.8663 25.5303C18.5734 25.8232 18.0985 25.8232 17.8056 25.5303C17.5127 25.2374 17.5127 24.7626 17.8056 24.4697L22.2753 20L17.8056 15.5303C17.5127 15.2374 17.5127 14.7626 17.8056 14.4697Z" fill="white"/>
-        </svg>
-      </div>
+<div class="page-width {% if section.settings.section_id != blank %}container-{{ section.settings.section_id }}{% endif %} scroll-trigger animate--slide-in">
+    <div id="{{ section.settings.section_id }}"
+         class="feature-block-container {% if section.settings.section_id != blank %}content-section{% endif %}">
+        <div class="feature-block-slider {% if section.settings.layout == 'text_first' %} slider-reversed{% endif %}">
+            <div class="feature-block-arrow-prev arrow-prev-{{ section.id }}">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="20" fill="#616166"/>
+                    <path fill-rule="evenodd" clip-rule="evenodd"
+                          d="M17.8056 14.4697C18.0985 14.1768 18.5734 14.1768 18.8663 14.4697L23.8663 19.4697C24.1592 19.7626 24.1592 20.2374 23.8663 20.5303L18.8663 25.5303C18.5734 25.8232 18.0985 25.8232 17.8056 25.5303C17.5127 25.2374 17.5127 24.7626 17.8056 24.4697L22.2753 20L17.8056 15.5303C17.5127 15.2374 17.5127 14.7626 17.8056 14.4697Z"
+                          fill="white"/>
+                </svg>
+            </div>
+            <div class="feature-block-slider-wrapper feature-block-slider-{{ section.id }}">
+                {% for image in image_blocks %}
+                    <div class="feature-block-slide">
+                        <img
+                                src="{{ image.settings.image | image_url }}"
+                                alt="{{ image.settings.image.alt | escape }}"
+                                width=""
+                                height="">
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="feature-block-arrow-next arrow-next-{{ section.id }}">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="20" fill="#616166"/>
+                    <path fill-rule="evenodd" clip-rule="evenodd"
+                          d="M17.8056 14.4697C18.0985 14.1768 18.5734 14.1768 18.8663 14.4697L23.8663 19.4697C24.1592 19.7626 24.1592 20.2374 23.8663 20.5303L18.8663 25.5303C18.5734 25.8232 18.0985 25.8232 17.8056 25.5303C17.5127 25.2374 17.5127 24.7626 17.8056 24.4697L22.2753 20L17.8056 15.5303C17.5127 15.2374 17.5127 14.7626 17.8056 14.4697Z"
+                          fill="white"/>
+                </svg>
+            </div>
+        </div>
+        <div>
+            <h3 class="feature-block-title">{{ section.settings.title }}</h3>
+            <div class="feature-block-description">{{ section.settings.description }}</div>
+            <div class="feature-accent-blocks-wrapper">
+                {% for block in accent_blocks %}
+                    <div class="feature-accent-block">
+                        <h6>{{ block.settings.title }}</h6>
+                        <div>{{ block.settings.text }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="feature-files-wrapper">
+                {% for file in file_blocks %}
+                    <a
+                            href="{{ file.settings.link }}"
+                            class="feature-block-link"
+                            target="_blank"
+                            type="application/octet-stream"
+                            download>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                  d="M5.75 9C5.75 5.54822 8.54822 2.75 12 2.75C14.9382 2.75 17.4045 4.7782 18.0719 7.51188C18.1301 7.75035 18.3014 7.94523 18.5304 8.03365C20.1226 8.64848 21.25 10.1935 21.25 12C21.25 13.39 20.5835 14.624 19.5496 15.4007C19.2184 15.6495 19.1516 16.1196 19.4003 16.4508C19.6491 16.782 20.1192 16.8488 20.4504 16.6C21.8454 15.5523 22.75 13.8817 22.75 12C22.75 9.69141 21.3898 7.70217 19.4293 6.78706C18.4768 3.58539 15.512 1.25 12 1.25C7.8612 1.25 4.48014 4.49432 4.26126 8.57854C2.49832 9.27243 1.25 10.9897 1.25 13C1.25 14.7591 2.20663 16.2939 3.62446 17.1141C3.983 17.3215 4.4418 17.199 4.6492 16.8404C4.85661 16.4819 4.73409 16.0231 4.37554 15.8157C3.40216 15.2526 2.75 14.202 2.75 13C2.75 11.4863 3.78548 10.2126 5.18784 9.85211C5.52413 9.76566 5.7571 9.45969 5.75099 9.11252C5.75033 9.0751 5.75 9.0376 5.75 9ZM12.75 12C12.75 11.5858 12.4142 11.25 12 11.25C11.5858 11.25 11.25 11.5858 11.25 12V19.1893L9.03033 16.9697C8.73744 16.6768 8.26256 16.6768 7.96967 16.9697C7.67678 17.2626 7.67678 17.7374 7.96967 18.0303L11.4697 21.5303C11.7626 21.8232 12.2374 21.8232 12.5303 21.5303L16.0303 18.0303C16.3232 17.7374 16.3232 17.2626 16.0303 16.9697C15.7374 16.6768 15.2626 16.6768 14.9697 16.9697L12.75 19.1893V12Z"
+                                  fill="#F1592A"/>
+                        </svg>
+                        {{- file.settings.link_text -}}
+                    </a>
+                {% endfor %}
+            </div>
+            {% if section.settings.show_button %}
+                <button class="button btn globo-formbuilder-open" data-id="NjM1MDA=" style="cursor: pointer">
+                    {{ section.settings.button_text }}
+                </button>
+            {% endif %}
+        </div>
     </div>
-
-    <div>
-      <h3 class="feature-block-title">{{ section.settings.title }}</h3>
-      <div class="feature-block-description">{{ section.settings.description }}</div>
-
-      <div class="feature-accent-blocks-wrapper">
-        {% for block in accent_blocks %}
-          <div class="feature-accent-block">
-            <h6>{{ block.settings.title }}</h6>
-            <div>{{ block.settings.text }}</div>
-          </div>
-        {% endfor %}
-      </div>
-
-      <div class="feature-files-wrapper">
-        {% for file in file_blocks %}
-          <a
-            href="{{ file.settings.link }}"
-            class="feature-block-link"
-            target="_blank"
-            type="application/octet-stream"
-            download
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M5.75 9C5.75 5.54822 8.54822 2.75 12 2.75C14.9382 2.75 17.4045 4.7782 18.0719 7.51188C18.1301 7.75035 18.3014 7.94523 18.5304 8.03365C20.1226 8.64848 21.25 10.1935 21.25 12C21.25 13.39 20.5835 14.624 19.5496 15.4007C19.2184 15.6495 19.1516 16.1196 19.4003 16.4508C19.6491 16.782 20.1192 16.8488 20.4504 16.6C21.8454 15.5523 22.75 13.8817 22.75 12C22.75 9.69141 21.3898 7.70217 19.4293 6.78706C18.4768 3.58539 15.512 1.25 12 1.25C7.8612 1.25 4.48014 4.49432 4.26126 8.57854C2.49832 9.27243 1.25 10.9897 1.25 13C1.25 14.7591 2.20663 16.2939 3.62446 17.1141C3.983 17.3215 4.4418 17.199 4.6492 16.8404C4.85661 16.4819 4.73409 16.0231 4.37554 15.8157C3.40216 15.2526 2.75 14.202 2.75 13C2.75 11.4863 3.78548 10.2126 5.18784 9.85211C5.52413 9.76566 5.7571 9.45969 5.75099 9.11252C5.75033 9.0751 5.75 9.0376 5.75 9ZM12.75 12C12.75 11.5858 12.4142 11.25 12 11.25C11.5858 11.25 11.25 11.5858 11.25 12V19.1893L9.03033 16.9697C8.73744 16.6768 8.26256 16.6768 7.96967 16.9697C7.67678 17.2626 7.67678 17.7374 7.96967 18.0303L11.4697 21.5303C11.7626 21.8232 12.2374 21.8232 12.5303 21.5303L16.0303 18.0303C16.3232 17.7374 16.3232 17.2626 16.0303 16.9697C15.7374 16.6768 15.2626 16.6768 14.9697 16.9697L12.75 19.1893V12Z" fill="#F1592A"/>
-            </svg>
-            {{- file.settings.link_text -}}
-          </a>
-        {% endfor %}
-      </div>
-
-      {% if section.settings.show_button %}
-        <button class="button btn globo-formbuilder-open" data-id="NjM1MDA=" style="cursor: pointer">
-          {{ section.settings.button_text }}
-        </button>
-      {% endif %}
-    </div>
-  </div>
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', (event) => {
-    $('.feature-block-slider-{{ section.id }}').slick({
-      dots: true,
-      prevArrow: '.arrow-prev-{{ section.id }}',
-      nextArrow: '.arrow-next-{{ section.id }}',
-      infinite: false,
-      slidesToShow: 1,
-    });
-  });
+	document.addEventListener('DOMContentLoaded', () => {
+		initializeSlider();
+		setupFormObserver();
+	});
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const button = document.querySelector('.button.globo-formbuilder-open');
+	/**
+	 * Initializes the Slick slider only if there is more than one slide.
+	 */
+	function initializeSlider() {
+		const sliderSelector = `.feature-block-slider-{{ section.id }}`;
+		const slider = $(sliderSelector);
 
-    button.addEventListener('click', () => {
-      // MutationObserver to detect dynamically added elements
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          const formLines = document.querySelectorAll('.globo-form-control');
+		if (slider.children().length > 1) {
+			slider.slick({
+				dots: true,
+				prevArrow: `.arrow-prev-{{ section.id }}`,
+				nextArrow: `.arrow-next-{{ section.id }}`,
+				infinite: false,
+				slidesToShow: 1,
+			});
+		} else {
+			console.log(`Slick not initialized for ${sliderSelector} (only one slide present).`);
+		}
+	}
 
-          formLines.forEach((line) => {
-            const hint = line.querySelector('.help-text.globo-description');
-            const label = line.querySelector('label .label-content');
+	/**
+	 * Sets up an event listener for the form button to observe dynamically added elements.
+	 */
+	function setupFormObserver() {
+		const button = document.querySelector('.button.globo-formbuilder-open');
+		if (!button) return;
 
-            if (hint?.textContent && label && !label.classList.contains('hint-visible')) {
-              label.classList.add('hint-visible');
+		button.addEventListener('click', () => {
+			observeFormMutations();
+		});
+	}
 
-              label.addEventListener('mouseenter', () => {
-                hint.style.display = 'block';
-              });
+	/**
+	 * Observes mutations in the DOM and adds tooltip functionality for form labels.
+	 */
+	function observeFormMutations() {
+		const observer = new MutationObserver((mutations) => {
+			mutations.forEach(() => {
+				document.querySelectorAll('.globo-form-control').forEach((line) => {
+					const hint = line.querySelector('.help-text.globo-description');
+					const label = line.querySelector('label .label-content');
 
-              label.addEventListener('mouseleave', () => {
-                hint.style.display = 'none';
-              });
-            }
-          });
-        });
-      });
+					if (hint?.textContent && label && !label.classList.contains('hint-visible')) {
+						label.classList.add('hint-visible');
 
-      observer.observe(document.body, { childList: true, subtree: true });
-    });
-  });
+						label.addEventListener('mouseenter', () => {
+							hint.style.display = 'block';
+						});
 
+						label.addEventListener('mouseleave', () => {
+							hint.style.display = 'none';
+						});
+					}
+				});
+			});
+		});
 
-
+		observer.observe(document.body, {childList: true, subtree: true});
+	}
 </script>
 
 {% schema %}
