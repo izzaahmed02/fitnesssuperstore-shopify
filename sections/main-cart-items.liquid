@@ -40,8 +40,14 @@
         class="gradient color-{{ section.settings.color_scheme }} isolate{% if cart == empty %} is-empty{% else %} section-{{ section.id }}-padding{% endif %}">
     <div class="page-width">
         <div class="title-wrapper-with-link">
+            {% assign filtered_count = 0 %}
+                {% for item in cart.items %}
+                {% unless item.product.tags contains 'avisplus-product-options' %}
+                    {% assign filtered_count = filtered_count | plus: item.quantity %}
+                {% endunless %}
+                {% endfor %}
             <h1 class="title title--primary">{{ 'sections.cart.title' | t }} (<span
-                        data-count="{{ cart.item_count }}">{{ cart.item_count }}</span>)</h1>
+                        data-count="{{ filtered_count}}">{{ filtered_count}}</span>)</h1>
             <a href="{{ routes.all_products_collection_url }}" class="underlined-link">
                 {{- 'general.continue_shopping' | t -}}
             </a>
@@ -75,7 +81,6 @@
                                 </div>
                             </div>
 
-
                             <div>
                                 {% assign color_product = all_products['custom-color'] %}
                                 {%- for item in cart.items -%}
@@ -90,7 +95,7 @@
                                                 {% assign color_product_line_price = color_product.price | times: item.quantity %}
                                             {%- endif -%}
                                         {%- endfor -%}
-                                        <div class="cart-item {% if item.product.tags contains 'avis-option'%}avis-option{% else %}{% endif %}" id="CartItem-{{ item.index | plus: 1 }}">
+                                        <div class="cart-item {% if item.product.tags contains 'avisplus-product-options'%}avis-option{% else %}{% endif %}" id="CartItem-{{ item.index | plus: 1 }}">
                                             <div class="cart-item__media">
                                                 {% if item.image %}
                                                     {% comment %} Leave empty space due to a:empty CSS display: none rule {% endcomment %}

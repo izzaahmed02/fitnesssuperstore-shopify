@@ -207,8 +207,9 @@ class CartItems extends HTMLElement {
 		try {
 			const cartResponse = await fetch('/cart.js');
 			const cartData = await cartResponse.json();
-			let matchingProductLine = null;
 			const mainProduct = cartData.items[line - 1];
+	
+			let matchingProductLine = null;
 
 			if (mainProduct && mainProduct.properties?.['Custom color']) {
 				const customColorValue = mainProduct.properties['Custom color'];
@@ -255,7 +256,20 @@ class CartItems extends HTMLElement {
 			const mainUpdateState = JSON.parse(await mainUpdateResponse.text());
 			const cartTitle = document.querySelector('.title-wrapper-with-link .title > span');
 			if (cartTitle) {
-				cartTitle.textContent = mainUpdateState.item_count;
+				if (cartData && cartData.items && mainUpdateState) {
+					const mainProductCount = cartData.items.reduce((acc, product) => {
+						if (product.product_type !== "Avis-add-charge") {
+						  return acc + product.quantity;
+						}
+						return acc;
+					  }, 0);					  
+					
+					if (mainUpdateState.items_removed.length > 0) {
+						cartTitle.textContent = mainProductCount - mainUpdateState.items_removed.length;
+					} else {
+						cartTitle.textContent = mainProductCount + mainUpdateState.items_added.length;
+					}
+				}
 			}
 			const quantityElement =
 				document.getElementById(`Quantity-${line}`) ||
@@ -320,7 +334,18 @@ class CartItems extends HTMLElement {
 			const errors = document.getElementById('cart-errors') || document.getElementById('CartDrawer-CartErrors');
 			errors.textContent = window.cartStrings.error;
 		} finally {
-			this.disableLoading(line);
+			const currentProductLine = document.querySelector(`#CartItem-${line}`); 
+			if (currentProductLine) {
+				const nextElement = currentProductLine.nextElementSibling;
+
+				if (nextElement && nextElement.classList.contains('avis-option')) {
+					this.enableLoading(line);
+				} else {
+					this.disableLoading(line);
+				}
+			} else {
+				this.disableLoading(line);	
+			}
 		}
 	}
 
