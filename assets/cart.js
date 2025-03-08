@@ -205,41 +205,41 @@ class CartItems extends HTMLElement {
 		this.enableLoading(line);
 
 		try {
-			const cartResponse = await fetch('/cart.js');
-			const cartData = await cartResponse.json();
-			const mainProduct = cartData.items[line - 1];
+			// const cartResponse = await fetch('/cart.js');
+			// const cartData = await cartResponse.json();
+			// const mainProduct = cartData.items[line - 1];
 	
-			let matchingProductLine = null;
+			// let matchingProductLine = null;
 
-			if (mainProduct && mainProduct.properties?.['Custom color']) {
-				const customColorValue = mainProduct.properties['Custom color'];
+			// if (mainProduct && mainProduct.properties?.['Custom color']) {
+			// 	const customColorValue = mainProduct.properties['Custom color'];
 
-				const matchingProduct = cartData.items.find(
-					(item) =>
-						item.id === 50607223603516 &&
-						item.properties?.['Color'] === customColorValue
-				);
+			// 	const matchingProduct = cartData.items.find(
+			// 		(item) =>
+			// 			item.id === 50607223603516 &&
+			// 			item.properties?.['Color'] === customColorValue
+			// 	);
 
-				if (matchingProduct) {
-					matchingProductLine = matchingProduct.key;
-				}
-			}
+			// 	if (matchingProduct) {
+			// 		matchingProductLine = matchingProduct.key;
+			// 	}
+			// }
 
 			// Updating matching product
-			if (matchingProductLine) {
-				await fetch(window.Shopify.routes.root + 'cart/update.js', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({
-						updates: {
-							[matchingProductLine]: quantity,
-						},
-					}),
-				})
+			// if (matchingProductLine) {
+			// 	await fetch(window.Shopify.routes.root + 'cart/update.js', {
+			// 		method: 'POST',
+			// 		headers: {
+			// 			'Content-Type': 'application/json',
+			// 		},
+			// 		body: JSON.stringify({
+			// 			updates: {
+			// 				[matchingProductLine]: quantity,
+			// 			},
+			// 		}),
+			// 	})
 
-			}
+			// }
 
 			// Main product update
 			const body = JSON.stringify({
@@ -256,19 +256,14 @@ class CartItems extends HTMLElement {
 			const mainUpdateState = JSON.parse(await mainUpdateResponse.text());
 			const cartTitle = document.querySelector('.title-wrapper-with-link .title > span');
 			if (cartTitle) {
-				if (cartData && cartData.items && mainUpdateState) {
-					const mainProductCount = cartData.items.reduce((acc, product) => {
-						if (product.product_type !== "Avis-add-charge") {
-						  return acc + product.quantity;
-						}
-						return acc;
-					  }, 0);					  
-					
-					if (mainUpdateState.items_removed.length > 0) {
-						cartTitle.textContent = mainProductCount - mainUpdateState.items_removed.length;
-					} else {
-						cartTitle.textContent = mainProductCount + mainUpdateState.items_added.length;
-					}
+				const cartDataCount = cartTitle.dataset.count
+                 
+				if (name === 'plus') {
+					const plusResult = parseInt(cartDataCount) + 1;
+					cartTitle.textContent = cartTitle.dataset.count = plusResult;
+				} else {
+					const minusResult = parseInt(cartDataCount) - 1;
+					cartTitle.textContent = cartTitle.dataset.count = minusResult;
 				}
 			}
 			const quantityElement =
