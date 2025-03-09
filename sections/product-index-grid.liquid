@@ -16,22 +16,15 @@
     document.querySelector('#SortBy').addEventListener('change', function () {
       const url = new URL(window.location.href);
       const searchParams = new URLSearchParams(window.location.search);
-
       const perviewValue = searchParams.get('perview');
-
       searchParams.delete('page');
-
       searchParams.set('sort_by', this.value);
-
       if (perviewValue) {
         searchParams.set('perview', perviewValue);
       }
-
       url.search = searchParams.toString();
-
       window.location.replace(url.toString());
     });
-
     function initSlider(element) {
       $(element).slick({
         slidesToShow: 1,
@@ -48,7 +41,6 @@
           },
         ],
       });
-
       $(element)
         .find('.image-item')
         .each(function () {
@@ -56,7 +48,6 @@
             background: '#edeff3',
           });
         });
-
       $(element)
         .find('img.lazy-load')
         .each(function () {
@@ -69,7 +60,6 @@
           });
         });
     }
-
     const observer = new IntersectionObserver(
       (entries, observer) => {
         entries.forEach((entry) => {
@@ -81,53 +71,37 @@
       },
       { threshold: 0.3 }
     );
-
     $('.image-wrap').each(function () {
       observer.observe(this);
     });
-
-    // Brands titles logic
-
     const productGrid = document.getElementById('product-grid');
-
     if (!productGrid) return;
     const products = Array.from(productGrid.querySelectorAll('.product-li-item'));
-
     let currentBrand = null;
     let brandContainer = null;
-
     products.forEach((product) => {
       const brand = product.dataset.brand || "";
-
       if (brand !== currentBrand) {
-        // Create a new container for the brand or unbranded products
         brandContainerWrapper = document.createElement('div');
         brandContainerWrapper.className = 'brand-container--wrapper';
         productGrid.appendChild(brandContainerWrapper);
         brandContainer = document.createElement('ul');
         brandContainer.className = 'brand-container';
         brandContainerWrapper.appendChild(brandContainer);
-
-        // Create and insert the brand title before the container
           const brandTitle = document.createElement('h2');
           brandTitle.textContent = brand;
           brandTitle.className = 'brand-title';
           productGrid.insertBefore(brandTitle, brandContainerWrapper);
-
           currentBrand = brand;
       }
-
-      // Move the product into the current brand container
       if (brandContainer) {
         brandContainer.appendChild(product);
       }
     });
   });
 </script>
-
 {{ 'product-index-grid.css' | asset_url | stylesheet_tag }}
 {{ 'template-collection.css' | asset_url | stylesheet_tag }}
-
 {%- liquid
   if collection.url
     assign results_url = collection.url
@@ -136,13 +110,11 @@
     assign results_url = '?q=' | append: terms | append: '&options%5Bprefix%5D=last&sort_by=' | append: sort_by
   endif
 -%}
-
 <div class="container page-width">
   <div id="ProductGridContainer" class="collection-wrapper">
     <div class="collection-filter-wrapper">
       {{ 'component-facets.css' | asset_url | stylesheet_tag }}
       <script src="{{ 'facets.js' | asset_url }}" defer="defer"></script>
-
       <aside
         aria-labelledby="verticalTitle"
         class="facets-wrapper{% unless section.settings.enable_filtering %} facets-wrapper--no-filters{% endunless %}"
@@ -158,7 +130,6 @@
         %}
       </aside>
     </div>
-
     <div id="ProductGridContainerMain" class="collection-product-wrapper">
       {%- liquid
         assign sort_by = collection.sort_by | default: 'title-ascending'
@@ -167,7 +138,6 @@
         <form id="collection-search-form">
           <input type="text" id="search-input" placeholder="Search">
         </form>
-
         <div class="right-side">
           <facet-filters-form class="facets facets-vertical-sort small-hide">
             <form class="facets-vertical-form" id="FacetSortForm">
@@ -179,16 +149,14 @@
                       name="sort_by"
                       class="facet-filters__sort select__select caption-large"
                       id="SortBy"
-                      aria-describedby="a11y-refresh-page-message"
-                    >
+                      aria-describedby="a11y-refresh-page-message">
                       {%- for option in collection.sort_options -%}
                         {% if option.value == 'title-ascending' or option.value == 'title-descending' %}
                           <option
                             value="{{ option.value | escape }}"
                             {% if option.value == sort_by %}
                               selected="selected"
-                            {% endif %}
-                          >
+                            {% endif %}>
                             {{ 'products.facets.sort_by_label' | t }}
                             {{ option.name | escape }}
                           </option>
@@ -201,7 +169,6 @@
               </div>
             </form>
           </facet-filters-form>
-
           {%- capture contentForQuerystring -%}{{ content_for_header }}{%- endcapture -%}
           {%- assign pageUrl = contentForQuerystring
             | split: '"pageurl":"'
@@ -221,7 +188,6 @@
             {%- if pageUrl contains 'perview=60' -%}{%- assign products_per_page = 60 -%}{%- endif -%}
             {%- if pageUrl contains 'perview=90' -%}{%- assign products_per_page = 90 -%}{%- endif -%}
           {%- endfor -%}
-
           <div class="sort-per-page">
             <span class="label">Show </span>
             <div class="select">
