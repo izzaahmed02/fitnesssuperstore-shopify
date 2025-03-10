@@ -3,7 +3,6 @@
 		const appliedDiscountsContainer = document.getElementById('applied-discounts');
 		const applyBtn = document.getElementById('apply-discount-btn');
 		const discountInput = document.getElementById('discount-input');
-
 		if (!appliedDiscountsContainer || !applyBtn || !discountInput) return;
 
 		const strings = window.cartDiscountStrings || {};
@@ -74,8 +73,15 @@
 			const checkoutUrl = `/checkout?discount=${encodeURIComponent(discountString)}`;
 
 			try {
-				await fetch(checkoutUrl, { method: 'GET' });
-			} catch (err) {}
+				// Устанавливаем режим 'no-cors' для обхода ошибки CORS.
+				await fetch(checkoutUrl, {method: 'GET', mode: 'no-cors'});
+				setTimeout(() => {
+					window.location.reload();
+				}, 2000)
+			} catch (err) {
+				// Если ошибка происходит, можно залогировать её, если нужно.
+				console.error(err);
+			}
 
 			const cartRes = await fetch('/cart.js');
 			const cartData = await cartRes.json();
@@ -100,6 +106,7 @@
 				invalidCodes
 			};
 		}
+
 
 		applyBtn.addEventListener('click', async () => {
 			clearMessages();
@@ -138,8 +145,10 @@
 	});
 
 	if (typeof subscribe === 'function' && typeof PUB_SUB_EVENTS !== 'undefined') {
+		console.log('subscribe');
 		subscribe(PUB_SUB_EVENTS.cartUpdate, () => {
 			initDiscountScript();
 		});
 	}
 })();
+
