@@ -124,6 +124,25 @@ function renderCustomAvisOptions() {
         event.stopPropagation();
 
         const parentWithHandle = element.closest('[class^="handle-"]');
+
+        let headingElement = parentWithHandle.previousElementSibling;
+        
+        while (headingElement) {
+            if (headingElement.classList.contains('ap-options__heading-container')) {
+                break; 
+            }
+            headingElement = headingElement.previousElementSibling;
+        }
+
+        const headingTitle = headingElement.querySelector('.avp-heading')?.innerText
+
+        const handleClass = Array.from(parentWithHandle.classList).find((cls) => cls.startsWith('handle-'));
+        let optionCategoryId;
+
+        if (handleClass) {
+          optionCategoryId = handleClass.split('-')[1];
+        }
+
         document.querySelector('#dynamic-product-content').style.width = 'auto';
         modalWrapper.style.display = 'flex';
         container.innerHTML = '';
@@ -131,7 +150,8 @@ function renderCustomAvisOptions() {
         const productTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
         if (productTitle) {
           let optionHTML = '';
-          const optionPopupProductsHtml = await renderOptionPopupProducts(productTitle);
+          const productTitleSearch = `${productTitle} - ${headingTitle} (${optionCategoryId})`
+          const optionPopupProductsHtml = await renderOptionPopupProducts(productTitleSearch);
 
           if (!optionPopupProductsHtml) {
             const encodedProductTitle = encodeURIComponent(productTitle);
