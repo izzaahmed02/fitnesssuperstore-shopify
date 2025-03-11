@@ -40,39 +40,53 @@
         class="card__inner {% if settings.blog_card_style == 'standard' %} color-{{ settings.blog_card_color_scheme }} gradient{% endif %}{% if article.image and show_image or settings.blog_card_style == 'standard' %} ratio{% endif %}"
         style="--ratio-percent: {{ 1 | divided_by: ratio | times: 100 }}%;"
       >
-        {%- if show_image == true and article.image -%}
-          <div class="article-card__image-wrapper card__media">
-            <div
-              class="article-card__image media media--hover-effect"
-              {% if section.settings.media_height == 'adapt' %}
-                style="padding-bottom: {{ 1 | divided_by: article.image.aspect_ratio | times: 100 }}%;"
-              {% endif %}
-            >
-              {% comment %}theme-check-disable ImgLazyLoading{% endcomment %}
-              <img
-                srcset="
-                  {%- if article.image.src.width >= 165 -%}{{ article.image.src | image_url: width: 165 }} 165w,{%- endif -%}
-                  {%- if article.image.src.width >= 360 -%}{{ article.image.src | image_url: width: 360 }} 360w,{%- endif -%}
-                  {%- if article.image.src.width >= 533 -%}{{ article.image.src | image_url: width: 533 }} 533w,{%- endif -%}
-                  {%- if article.image.src.width >= 720 -%}{{ article.image.src | image_url: width: 720 }} 720w,{%- endif -%}
-                  {%- if article.image.src.width >= 1000 -%}{{ article.image.src | image_url: width: 1000 }} 1000w,{%- endif -%}
-                  {%- if article.image.src.width >= 1500 -%}{{ article.image.src | image_url: width: 1500 }} 1500w,{%- endif -%}
-                  {{ article.image.src | image_url }} {{ article.image.src.width }}w
-                "
-                src="{{ article.image.src | image_url: width: 533 }}"
-                sizes="(min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 | divided_by: 2 }}px, (min-width: 750px) calc((100vw - 130px) / 2), calc((100vw - 50px) / 2)"
-                alt="{{ article.image.src.alt | escape }}"
-                class="motion-reduce"
-                {% unless lazy_load == false %}
-                  loading="lazy"
-                {% endunless %}
-                width="{{ article.image.width }}"
-                height="{{ article.image.height }}"
+        {%- if show_image == true -%}
+          {%- if article.image -%}
+            <!-- Display the article's featured image -->
+            <div class="article-card__image-wrapper card__media">
+              <div
+                class="article-card__image media media--hover-effect"
+                {% if section.settings.media_height == 'adapt' %}
+                  style="padding-bottom: {{ 1 | divided_by: article.image.aspect_ratio | times: 100 }}%;"
+                {% endif %}
               >
-              {% comment %}theme-check-enable ImgLazyLoading{% endcomment %}
+                <img
+                  srcset="{
+                    {%- if article.image.width >= 165 -%}{{ article.image | image_url: width: 165 }} 165w,{%- endif -%}
+                    {%- if article.image.width >= 360 -%}{{ article.image | image_url: width: 360 }} 360w,{%- endif -%}
+                    {%- if article.image.width >= 533 -%}{{ article.image | image_url: width: 533 }} 533w,{%- endif -%}
+                    {%- if article.image.width >= 720 -%}{{ article.image | image_url: width: 720 }} 720w,{%- endif -%}
+                    {%- if article.image.width >= 1000 -%}{{ article.image | image_url: width: 1000 }} 1000w,{%- endif -%}
+                    {%- if article.image.width >= 1500 -%}{{ article.image | image_url: width: 1500 }} 1500w,{%- endif -%}
+                    {{ article.image | image_url }}
+                  "
+                  src="{{ article.image | image_url: width: 533 }}"
+                  sizes="(min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 | divided_by: 2 }}px, (min-width: 750px) calc((100vw - 130px) / 2), calc((100vw - 50px) / 2)"
+                  alt="{{ article.image.alt | escape }}"
+                  class="motion-reduce"
+                  {% unless lazy_load == false %} loading="lazy" {% endunless %}
+                  width="{{ article.image.width }}"
+                  height="{{ article.image.height }}"
+                >
+              </div>
             </div>
-          </div>
-        {%- endif -%}
+          {%- elsif article.content contains '<img' -%}
+            {%- assign first_image = article.content | split: '<img' | last | split: '>' | first -%}
+            {%- assign first_image_url = first_image | split: 'src="' | last | split: '"' | first -%}
+            <div class="article-card__image-wrapper card__media">
+              <div
+                class="article-card__image media media--hover-effect"
+              >
+                <img
+                  src="{{ first_image_url }}"
+                  alt="Article image"
+                  class="motion-reduce"
+                  {% unless lazy_load == false %} loading="lazy" {% endunless %}
+                >
+              </div>
+            </div>
+          {%- endif -%}
+        {%- endif -%}        
       </div>
       <div class="card__content">
         <div class="card__information">
