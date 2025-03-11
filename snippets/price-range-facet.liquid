@@ -1,124 +1,118 @@
 <div class="price-range-wrapper">
-  <div class="price-range-inputs">
-    <div class="price-range-field">
-      <input
-        class="field__input"
-        name="{{ filter.min_value.param_name }}"
-        id="{{ id_prefix }}{{ filter.label | escape }}-GTE"
-        value="{{ filter.min_value.value | money_without_currency | default: 0 }}"
-        type="text"
-        inputmode="decimal"
-        placeholder="0"
-        data-min="0"
-        data-max="{{ filter.range_max | money_without_currency }}"
-      >
+    <div class="price-range-inputs">
+        <div class="price-range-field">
+            <input
+                    class="field__input"
+                    name="{{ filter.min_value.param_name }}"
+                    id="{{ id_prefix }}{{ filter.label | escape }}-GTE"
+                    value="{{ filter.min_value.value | money_without_currency | default: 0 }}"
+                    type="text"
+                    inputmode="decimal"
+                    placeholder="0"
+                    data-min="0"
+                    data-max="{{ filter.range_max | money_without_currency }}">
+        </div>
+        -
+        <div class="price-range-field">
+            <input
+                    class="field__input"
+                    name="{{ filter.max_value.param_name }}"
+                    id="{{ id_prefix }}{{ filter.label | escape }}-LTE"
+                    value="{{ filter.max_value.value | default: filter.range_max | money_without_currency }}"
+                    type="text"
+                    inputmode="decimal"
+                    placeholder="{{ filter.range_max | money_without_currency }}"
+                    data-min="0"
+                    data-max="{{ filter.range_max | money_without_currency }}">
+        </div>
+        <span class="field-currency">{{ cart.currency.symbol }}</span>
     </div>
-    -
-    <div class="price-range-field">
-      <input
-        class="field__input"
-        name="{{ filter.max_value.param_name }}"
-        id="{{ id_prefix }}{{ filter.label | escape }}-LTE"
-        value="{{ filter.max_value.value | default: filter.range_max | money_without_currency  }}"
-        type="text"
-        inputmode="decimal"
-        placeholder="{{ filter.range_max | money_without_currency }}"
-        data-min="0"
-        data-max="{{ filter.range_max | money_without_currency }}"
-      >
+    <div class="price-range-slider">
+        <input
+                type="range"
+                class="range-input"
+                id="price-range-min"
+                name="{{ filter.min_value.param_name }}"
+                min="0"
+                max="{{ filter.range_max | divided_by: 100 }}"
+                step="1"
+                value="{{ filter.min_value.value | divided_by: 100 | default: 0 }}">
+        <input
+                type="range"
+                class="range-input"
+                id="price-range-max"
+                name="{{ filter.max_value.param_name }}"
+                min="0"
+                max="{{ filter.range_max | divided_by: 100 }}"
+                step="1"
+                value="{{ filter.max_value.value | default: filter.range_max | divided_by: 100 }}">
     </div>
-
-    <span class="field-currency">{{ cart.currency.symbol }}</span>
-  </div>
-
-  <div class="price-range-slider">
-    <input
-      type="range"
-      class="range-input"
-      id="price-range-min"
-      name="{{ filter.min_value.param_name }}"
-      min="0"
-      max="{{ filter.range_max | divided_by: 100 }}"
-      step="1"
-      value="{{ filter.min_value.value | divided_by: 100 | default: 0 }}"
-    >
-    <input
-      type="range"
-      class="range-input"
-      id="price-range-max"
-      name="{{ filter.max_value.param_name }}"
-      min="0"
-      max="{{ filter.range_max | divided_by: 100 }}"
-      step="1"
-      value="{{ filter.max_value.value | default: filter.range_max | divided_by: 100 }}"
-    >
-  </div>
-</div> 
+</div>
 
 <style>
-  .price-range-slider {
-    position: relative;
-    padding-top: 16px;
-    padding-bottom: 1rem;
-  }
-  
-  .range-input {
-    -webkit-appearance: none;
-    appearance: none;
-    position: absolute;
-    width: 100%;
-    height: 4px;
-    border-radius: 5px;
-    outline: none;
-    pointer-events: none;
-  }
-  
-  .range-input:hover {
-    opacity: 1;
-  }
-  
-  .range-input::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    z-index: 10;
-    width: 18px;
-    height: 18px;
-    background: #fff;
-    border: 4px solid var(--primary-orange);
-    border-radius: 50%;
-    pointer-events: all;
-    cursor: pointer;
-  }
-
-  #price-range-min {
-    height: 0;
-    bottom: 4px;
-    z-index: 1;
-  }
-  
-  .price-range-inputs {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .price-range-inputs .field__input {
-    height: 48px;
-    max-width: 104px;
-    width: 104px;
-    border: 1.5px solid #E5E5E5;
-    border-radius: 8px;
-    background-color: var(--grey);
-    padding: 12px;
-  }
-
-  .price-range-inputs .field-currency {
-    font-weight: 700;
-  }
-
-  @media (max-width: 750px) {
     .price-range-slider {
-      margin-right: 2px;
+        position: relative;
+        padding-top: 16px;
+        padding-bottom: 1rem;
     }
-  }
+
+    .range-input {
+        -webkit-appearance: none;
+        appearance: none;
+        position: absolute;
+        width: 100%;
+        height: 4px;
+        border-radius: 5px;
+        outline: none;
+        pointer-events: none;
+    }
+
+    .range-input:hover {
+        opacity: 1;
+    }
+
+    .range-input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        z-index: 10;
+        width: 18px;
+        height: 18px;
+        background: #fff;
+        border: 4px solid var(--primary-orange);
+        border-radius: 50%;
+        pointer-events: all;
+        cursor: pointer;
+    }
+
+    #price-range-min {
+        height: 0;
+        bottom: 4px;
+        z-index: 1;
+    }
+
+    .price-range-inputs {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .price-range-inputs .field__input {
+        height: 48px;
+        max-width: 104px;
+        width: 104px;
+        border: 1.5px solid #E5E5E5;
+        border-radius: 8px;
+        background-color: var(--grey);
+        padding: 12px;
+    }
+
+    .price-range-inputs .field-currency {
+        font-weight: 700;
+    }
+
+    @media (max-width: 750px) {
+        .price-range-slider {
+            margin-right: 2px;
+        }
+    }
 </style>
