@@ -83,10 +83,8 @@
 
                             </div>
                         {%- endif -%}
-
                         <script src="{{ 'show-more.js' | asset_url }}" defer="defer"></script>
                         {% comment %} Filters for both horizontal and vertical filter {% endcomment %}
-
                         {%- for filter in results.filters -%}
                             {% liquid
                                 assign total_active_values = total_active_values | plus: filter.active_values.size
@@ -129,10 +127,8 @@
                                                 {% render 'icon-caret' %}
                                             </div>
                                         </summary>
-                                        <div
-                                                id="Facet-{{ forloop.index }}-{{ section.id }}"
-                                                class="parent-display {% if filter_type == 'horizontal' %}facets__display{% else %}facets__display-vertical{% endif %}"
-                                        >
+                                        <div id="Facet-{{ forloop.index }}-{{ section.id }}"
+                                                class="parent-display {% if filter_type == 'horizontal' %}facets__display{% else %}facets__display-vertical{% endif %}">
                                             {%- if filter_type != 'vertical' -%}
                                                 <div class="facets__header">
                                                     <div>
@@ -153,16 +149,13 @@
                                                     </facet-remove>
                                                 </div>
                                             {%- endif -%}
-                                            <fieldset
-                                                    class="facets-wrap parent-wrap {% if filter_type == 'vertical' %} facets-wrap-vertical{% endif %}">
+                                            <fieldset class="facets-wrap parent-wrap {% if filter_type == 'vertical' %} facets-wrap-vertical{% endif %}">
                                                 <legend class="visually-hidden">{{ filter.label | escape }}</legend>
-
                                                 {% if filter.values.size > 5 %}
                                                     <input
                                                             type="text"
                                                             class="filterSearchInput"
-                                                            placeholder="Search"
-                                                    >
+                                                            placeholder="Search">
                                                 {% endif %}
                                                 {%- liquid
                                                     assign sorted_values = filter.values
@@ -173,10 +166,7 @@
                                                         assign sorted_values = active_filter_values | concat: inactive_filter_values
                                                     endif
                                                 -%}
-                                                <ul
-                                                        class="{{ visual_layout_class }}{% if filter_type == 'vertical' %} facets__list--vertical{% else %} facets__list{% endif %} list-unstyled"
-                                                        role="list"
-                                                >
+                                                <ul class="{{ visual_layout_class }}{% if filter_type == 'vertical' %} facets__list--vertical{% else %} facets__list{% endif %} list-unstyled" role="list">
                                                     {%- for value in sorted_values -%}
                                                         {% liquid
                                                             assign input_id = 'Filter-' | append: filter.param_name | escape | append: '-' | append: forloop.index
@@ -188,7 +178,6 @@
                                                         {%- capture label_class -%}
                                                             facets__label facet-checkbox{% if is_disabled %} disabled{% endif %}{% if value.active %} active{% endif %}
                                                         {%- endcapture -%}
-
                                                         {%- capture text_value -%}
                                                             <span class="facet-checkbox__text" aria-hidden="true">
                                 <span class="facet-checkbox__text-label">{{- value.label | escape }}</span>
@@ -199,11 +188,9 @@
                                     {{- 'products.facets.product_count_simple.one' | t: count: value.count -}}
                                 {%- else -%}
                                     {{- 'products.facets.product_count_simple.other' | t: count: value.count -}}
-                                {%- endif -%}
-                                )
+                                {%- endif -%})
                               </span>
                                                         {%- endcapture -%}
-
                                                         <li class="list-menu__item facets__item{% if forloop.index > show_more_number and filter_type == 'vertical' %} show-more-item hidden{% endif %}">
                                                             {%- if presentation == 'swatch' -%}
                                                                 <div class="{{ label_class }}">
@@ -254,15 +241,13 @@
                                                                                 height="8"
                                                                                 viewBox="0 0 12 8"
                                                                                 fill="none"
-                                                                                xmlns="http://www.w3.org/2000/svg"
-                                                                        >
+                                                                                xmlns="http://www.w3.org/2000/svg">
                                                                             <path fill-rule="evenodd"
                                                                                   clip-rule="evenodd"
                                                                                   d="M10.9649 0.177498C11.143 0.340769 11.155 0.617518 10.9918 0.795632L4.57511 7.79563C4.49448 7.8836 4.38141 7.93481 4.26211 7.9374C4.14281 7.93999 4.02762 7.89374 3.94325 7.80936L1.02658 4.8927C0.855724 4.72184 0.855724 4.44483 1.02658 4.27398C1.19743 4.10312 1.47444 4.10312 1.6453 4.27398L4.23886 6.86754L10.3468 0.204373C10.51 0.0262585 10.7868 0.014226 10.9649 0.177498Z"
                                                                                   fill="white"/>
                                                                         </svg>
                                                                     {%- endif -%}
-
                                                                     {{ text_value }}
                                                                 </label>
                                                             {%- endif -%}
@@ -295,8 +280,7 @@
                                             id="Details-{{ filter.param_name | escape }}-{{ section.id }}"
                                             class="{% if filter_type == 'horizontal' %}disclosure-has-popup facets__disclosure{% else %} facets__disclosure-vertical{% endif %} js-filter"
                                             data-index="{{ forloop.index }}"
-                                            open
-                                    >
+                                            open>
                                         <summary class="facets__summary caption-large focus-offset">
                                             <div>
                                                 <span>{{ filter.label | escape }}</span>
@@ -305,8 +289,7 @@
                                         </summary>
                                         <div
                                                 id="Facet-{{ forloop.index }}-{{ section.id }}"
-                                                class="{% if filter_type == 'horizontal' %}facets__display{% else %}facets__display-vertical{% endif %}"
-                                        >
+                                                class="{% if filter_type == 'horizontal' %}facets__display{% else %}facets__display-vertical{% endif %}">
                                             {% comment %}
                                               <div class="{% if filter_type == 'horizontal' %}facets__header{% else %}facets__header-vertical{% endif %}">
                                                 {%- assign max_price_amount = filter.range_max | money | strip_html | escape -%}
@@ -322,31 +305,9 @@
                                                 {%- endif -%}
                                               </div>
                                             {% endcomment %}
-                                            <price-range-slider class="facets__price"
-                                                                data-currency="{{ cart.currency.iso_code }}">
-
-                                                <div class="facets__display-vertical-wrapper">
-                                                    <select id="price-filter-dropdown"
-                                                            class="facet-filters__sort select__select caption-large">
-                                                        <option value="all">All Prices</option>
-                                                        <option value="0-1000" data-url="filter.v.price.lte=1000">Below
-                                                            $1000
-                                                        </option>
-                                                        <option value="1000-2000"
-                                                                data-url="filter.v.price.gte=1000&filter.v.price.lte=2000">
-                                                            $1000 - $2000
-                                                        </option>
-                                                        <option value="2000-3000"
-                                                                data-url="filter.v.price.gte=2000&filter.v.price.lte=3000">
-                                                            $2000 - $3000
-                                                        </option>
-                                                        <option value="3000-" data-url="filter.v.price.gte=3000">Above
-                                                            $3000
-                                                        </option>
-                                                    </select>
-                                                </div>
+                                            <price-range-slider class="facets__price" data-currency="{{ cart.currency.iso_code }}">
+                                                {% render 'price-range-facet', filter: filter, id_prefix: 'Filter-', filter_type: filter_type %}
                                             </price-range-slider>
-
                                         </div>
                                     </details>
                             {% endcase %}
@@ -360,11 +321,11 @@
                                     <facet-remove>
                                         <a href="{{ value.url_to_remove }}"
                                            class="active-facets__button active-facets__button--light">
-                      <span class="active-facets__button-inner button button--tertiary">
-                        {{ filter.label | escape }}: {{ value.label | escape }}
-                          {% render 'icon-close-small' %}
-                        <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
-                      </span>
+                                          <span class="active-facets__button-inner button button--tertiary">
+                                            {{ filter.label | escape }}: {{ value.label | escape }}
+                                              {% render 'icon-close-small' %}
+                                            <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
+                                          </span>
                                         </a>
                                     </facet-remove>
                                 {%- endfor -%}
