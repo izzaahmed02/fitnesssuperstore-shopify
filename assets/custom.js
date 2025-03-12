@@ -167,13 +167,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 			this.observer = new IntersectionObserver((entries) => {
 				let activeId = null;
-
 				entries.forEach(entry => {
 					if (entry.isIntersecting) {
 						activeId = entry.target.id;
 					}
 				});
-
 				if (activeId) {
 					this.setActiveButton(activeId);
 				}
@@ -182,7 +180,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				rootMargin: `-50px 0px -70% 0px`,
 				threshold: 0.3
 			});
-
 			this.contentBlocks.forEach(block => this.observer.observe(block));
 		}
 
@@ -205,7 +202,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	customElements.define('scrollable-faq', ScrollableFaq);
-	// MOBILE SCROLL TO SECTION (Event Delegation)
 	document.body.addEventListener('click', (e) => {
 		const btn = e.target.closest('[data-scroll-to-mobile]');
 		if (btn && window.innerWidth <= 749) {
@@ -214,7 +210,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (section) {
 				const isVisible = section.classList.contains('visible');
 				const arrow = btn.querySelector('.scrollable-faq__arrow');
-
 				if (!isVisible) {
 					section.classList.add('visible');
 					section.style.height = `${section.scrollHeight}px`;
@@ -228,7 +223,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-	// Calculate order form (body scrolling prevent)
 	const calculateButtons = document.querySelectorAll('.button.globo-formbuilder-open');
 	calculateButtons.forEach(btn => {
 		btn.addEventListener('click', () => {
@@ -322,7 +316,6 @@ window.addEventListener('DOMContentLoaded', () => {
             </span>`;
 
 			const closeModalButton = container.querySelector('.modal-close');
-
 			closeModalButton.addEventListener('click', () => {
 				modalWrapper.style.display = 'none';
 				document.querySelector('html').style.overflowY = '';
