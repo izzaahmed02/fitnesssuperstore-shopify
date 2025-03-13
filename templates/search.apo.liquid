@@ -14,6 +14,7 @@
     {%- if product.id?.blank -%}
     []
     {% else %}
+      {%- assign has_valid = false -%}
        [
         {%- for field in shop.metafields.avisplus_option -%}
           {% if field.first contains "optionset" %}
@@ -23,7 +24,8 @@
                   {% for product_id in optionSet.products %}
                     {%- assign product_id_number = product_id | plus: 0 -%}
                     {% if product_id_number == product.id %}
-                      {{ optionSet | json}}{% unless forloop.last %},{% endunless %}
+                      {%- assign has_valid = true -%}
+                      {% if has_valid == true %},{% endif %}{{ optionSet | json}}
                     {% break %}
                     {% endif %}
                   {% endfor %}
@@ -168,10 +170,12 @@
                   {% endif %}
                   
                   {% if valid_option_set %} 
-                    {{ optionSet | json}}{% unless forloop.last %},{% endunless %}
+                    {%- assign has_valid = true -%}
+                    {% if has_valid == true %},{% endif %}{{ optionSet | json}}
                   {% endif %}
                 {% else %}
-                 {{ optionSet | json}}{% unless forloop.last %},{% endunless %}
+                 {%- assign has_valid = true -%}
+                 {% if has_valid == true %},{% endif %}{{ optionSet | json}}
               {% endcase %}
             {%- endfor -%}
           {% endif %}
