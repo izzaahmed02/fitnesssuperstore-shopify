@@ -1,0 +1,181 @@
+{%- layout none -%}
+  {%- if search.terms contains 'handle:' -%}
+    {%- assign params = canonical_url | url_decode | split: "?" | last | split: "&" -%}
+    {%- assign handle = '' -%}
+    {%- for str in params -%}
+      {%- assign str_split = str | split: "=" -%}
+      {%- if str_split.first == 'q' -%}
+        {%- assign handle = str_split.last | remove_first: "handle:" -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if handle != '' -%}
+      {%- assign product = all_products[handle] -%}
+    {%- endif -%}
+    {%- if product.id?.blank -%}
+    []
+    {% else %}
+       [
+        {%- for field in shop.metafields.avisplus_option -%}
+          {% if field.first contains "optionset" %}
+            {% for optionSet in field.last.value %}
+              {% case optionSet.type %}
+                {% when 'manual' %}
+                  {% for product_id in optionSet.products %}
+                    {%- assign product_id_number = product_id | plus: 0 -%}
+                    {% if product_id_number == product.id %}
+                      {{ optionSet | json}},
+                    {% break %}
+                    {% endif %}
+                  {% endfor %}
+                {% when 'automated' %}
+                  {%- assign valid_option_set = false -%}
+                  {%- assign is_all_logic = false -%}
+                  {% if optionSet.conditional_applying_product.type == "all" %}
+                    {%- assign is_all_logic = true -%}
+                  {% endif %}
+                  {%- assign countCondition = 0 %}
+                  {% for condition in optionSet.conditional_applying_product.conditions %}
+                    {% if condition.type.blank? or condition.type.selector? %}
+                      {% if is_all_logic %} {% break %} {% endif %}
+                      {%  continue  %} 
+                    {% endif %}
+                    {%- assign selector = condition.selector | downcase | strip -%}
+                    {%- assign keywordCompareType = condition.keywordCompareType -%}
+                    
+                    {%- assign dataCompare = "" -%}
+                    {%- assign isStringCompare = false -%}
+                    {% case condition.type %}
+                      {% when "title" %}
+                        {%- assign dataCompare = product.title | downcase -%}
+                        {%- assign isStringCompare = true -%}
+                      {% when "type" %}
+                        {% if product.type.blank? %}
+                          {%- assign dataCompare = product.type | downcase -%}
+                        {% elsif product.product_type.blank? %}
+                          {%- assign dataCompare = product.product_type | downcase -%}
+                        {% endif %}
+                        {%- assign isStringCompare = true -%}
+                      {% when "vendor" %}
+                        {%- assign dataCompare = product.vendor | downcase -%}
+                        {%- assign isStringCompare = true -%}
+                      {% when "collection" %}
+                        {%- assign dataCompare = product.collections | downcase -%}
+                    {% endcase %}
+
+                    {%- assign valid_condition = false -%}
+
+                    {% if isStringCompare %}  
+                      {% case keywordCompareType %}
+                        {% when "is_equal_to" %}
+                          {% if selector == dataCompare %}
+                            {%- assign valid_condition = true -%}
+                          {% endif %}
+                        {% when "is_not_equal_to" %}
+                          {% if selector != dataCompare %}
+                          {%- assign valid_condition = true -%}
+                          {% endif %}
+                        {% else %}
+                          {%- assign valid_condition = true -%}
+                      {% endcase %}
+                    {% endif %}
+                    {% if condition.type == "tag" %}  
+                      {% case keywordCompareType %}
+                        {% when "is_equal_to" %}
+                          {% for item in product.tags %}
+                            {%- assign itemTemp = item |  downcase | strip %}
+                            {% if itemTemp == selector %}
+                              {%- assign valid_condition = true -%}
+                            {% endif %}
+                          {% endfor %}
+                        {% when "is_not_equal_to" %}
+                          {%- assign valid_condition = true -%}
+                          {% for item in product.tags %}
+                            {%- assign itemTemp = item |  downcase | strip %}
+                            {% if itemTemp == selector %}
+                              {%- assign valid_condition = false -%}
+                            {% endif %}
+                          {% endfor %}
+                        {% when "contains" %}
+                          {%- assign dataCompare = product.tags | join: ',' -%}
+                          {% if dataCompare contains selector %}
+                            {%- assign valid_condition = true -%}
+                          {% endif %}
+                        {% when "does_not_contain" %}
+                          {%- assign dataCompare = product.tags | join: ',' -%}
+                          {% if dataCompare contains selector %}
+                          {% else %}
+                            {%- assign valid_condition = true -%}
+                          {% endif %}
+                        {% when "starts_with" %}
+                          {% for item in product.tags %}
+                            {% assign prefix = item | slice: 0, selector.size %}
+                            {% assign prefix = prefix | downcase | strip %}
+                            console.log("prefix", "{{ prefix }}")
+                            console.log("prefix", "{{ selector }}")
+                            {% if prefix == selector %}
+                              {%- assign valid_condition = true -%}
+                            {% endif %}
+                          {% endfor %}
+                        {% when "ends_with" %}
+                          {% for item in product.tags %}
+                            {% assign item_length = item | size %}
+                            {% assign suffix_length = selector | size %}
+                            {% assign end_part = item | slice: item_length | minus: suffix_length, suffix_length %}
+                            {% if end_part == selector %}
+                              {%- assign valid_condition = true -%}
+                            {% endif %}
+                          {% endfor %}
+                      {% endcase %}
+                    {% endif %}
+
+                    {% if condition.type == "price" %}  
+                      {%- assign product_price = product.price -%}
+                      {%- assign selector = condition.selector | plus: 0 -%}
+                      {%- assign selector = selector | times: 100 -%}
+                      {% case keywordCompareType %}
+                        {% when "is_equal_to" %}
+                          {% if selector == product_price %}
+                            {%- assign valid_condition = true -%}
+                          {% endif %}
+                        {% when "is_not_equal_to" %}
+                          {% if selector != product_price %}
+                            {%- assign valid_condition = true -%}
+                          {% endif %}
+                        {% when "is_greater_than" %}
+                          {% if selector < product_price %}
+                            {%- assign valid_condition = true -%}
+                          {% endif %}
+                        {% when "is_less_than" %}
+                          {% if selector > product_price %}
+                            {%- assign valid_condition = true -%}
+                          {% endif %}
+                      {% endcase %}
+                    {% endif %}
+
+                    {% if valid_condition %}  
+                      {% if is_all_logic == false %} {%- assign valid_option_set = true -%} {% break %} 
+                      {% else %}
+                        {%- assign valid_condition_all = true %}
+                      {% endif %}
+                      {%- assign countCondition = countCondition | plus: 1 %}
+                    {% elsif is_all_logic %}
+                      {%- assign valid_condition_all = false %}
+                      {% break %}
+                    {% endif %}
+                  {% endfor %}
+                  {% if is_all_logic and valid_condition_all == true %}
+                    {%- assign valid_option_set = true -%}
+                  {% endif %}
+                  
+                  {% if valid_option_set %} 
+                    {{ optionSet | json}},
+                  {% endif %}
+                {% else %}
+                 {{ optionSet | json}},
+              {% endcase %}
+            {%- endfor -%},
+          {% endif %}
+        {%- endfor -%}
+      ]
+    {%- endif -%}
+  {%- endif -%}
