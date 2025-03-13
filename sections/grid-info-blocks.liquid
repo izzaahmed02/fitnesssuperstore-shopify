@@ -262,101 +262,7 @@
                                     </a>
                                 {% endif %}
 
-                                {% if block.settings.popup_title != blank %}
-                                    <div class="grid-info-popup">
-                                        <div class="popup-wrapper">
-                                            <div class="popup-title-wrapper">
-                                                {{ block.settings.popup_title }}
-                                                <div class="close-btn">
-                                                    <svg
-                                                            width="14"
-                                                            height="15"
-                                                            viewBox="0 0 14 15"
-                                                            fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                    >
-                                                        <path fill-rule="evenodd" clip-rule="evenodd"
-                                                              d="M0.46967 0.96967C0.762563 0.676777 1.23744 0.676777 1.53033 0.96967L7 6.43934L12.4697 0.96967C12.7626 0.676777 13.2374 0.676777 13.5303 0.96967C13.8232 1.26256 13.8232 1.73744 13.5303 2.03033L8.06066 7.5L13.5303 12.9697C13.8232 13.2626 13.8232 13.7374 13.5303 14.0303C13.2374 14.3232 12.7626 14.3232 12.4697 14.0303L7 8.56066L1.53033 14.0303C1.23744 14.3232 0.762563 14.3232 0.46967 14.0303C0.176777 13.7374 0.176777 13.2626 0.46967 12.9697L5.93934 7.5L0.46967 2.03033C0.176777 1.73744 0.176777 1.26256 0.46967 0.96967Z"
-                                                              fill="#808080"/>
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                            <div class="popup-text">{{ block.settings.popup_text }}</div>
-                                            <a
-                                                    class="{% if block.settings.order == "second" %}next{% endif %}"
-                                                    href="{{ block.settings.popup_link_url }}"
-                                            >
-                                                {{- block.settings.popup_link_text -}}
-                                            </a>
-                                            {%- if block.settings.video_url != blank -%}
-                                                {%- capture sizes -%}
-                                                    {% if settings.page_width -%}
-                                                        (min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 }}px, (min-width: 750px)
-                                                        calc(100vw - 10rem), 100vw
-                                                    {%- endif %}
-                                                {%- endcapture -%}
-                                                <deferred-media
-                                                        class="video-section__media deferred-media gradient global-media-settings{% if section.settings.full_width %} global-media-settings--full-width{% endif %}{% if fix_ratio %} media-fit-cover{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
-                                                        data-media-id="{{ video_id }}"
-                                                        {%- liquid
-                                                            assign video_id = block.settings.video_url.id
-                                                            assign poster = block.settings.video_url.preview_image | default: block.settings.cover_image
-                                                            assign loop = '&loop=1&playlist=' | append: video_id
-                                                        -%}
-                                                        {% if poster != null %}
-                                                            {% assign aspect_ratio = 1 | divided_by: poster.aspect_ratio | times: 100 %}
-                                                            {% assign aspect_ratio_mobile = 1 | divided_by: poster.aspect_ratio | times: 100 %}
 
-                                                            {% if aspect_ratio > 47 %}
-                                                                {% assign aspect_ratio = 47 %}
-                                                            {% endif %}
-                                                            style="--ratio-percent: {{ aspect_ratio }}%;--ratio-percent-mobile: {{ aspect_ratio_mobile }}%;"
-                                                        {% endif %}
-                                                >
-                                                    <button
-                                                            id="Deferred-Poster-Modal-{{ video_id }}"
-                                                            class="video-section__poster media deferred-media__poster media--landscape"
-                                                            type="button"
-                                                            aria-label="{{ alt }}"
-                                                    >
-                                                        {%- if poster != null -%}
-                                                            {{
-                                                            poster
-                                                            | image_url: width: 3840
-                                                            | image_tag:
-                                                            sizes: sizes,
-                                                            widths: '375, 750, 1100, 1500, 1780, 2000, 3000, 3840',
-                                                            alt: alt
-                                                            }}
-                                                        {%- else -%}
-                                                            {{ 'hero-apparel-3' | placeholder_svg_tag: 'placeholder-svg placeholder' }}
-                                                        {%- endif -%}
-                                                        <span class="deferred-media__poster-button motion-reduce">
-                              {%- render 'icon-play' -%}
-                            </span>
-                                                    </button>
-                                                    <template>
-                                                        {%- if block.settings.video_url.type == 'youtube' -%}
-                                                            <iframe
-                                                                    src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1{{ loop }}"
-                                                                    class="js-youtube"
-                                                                    allow="autoplay; encrypted-media"
-                                                                    allowfullscreen
-                                                            ></iframe>
-                                                        {%- else -%}
-                                                            <iframe
-                                                                    src="https://player.vimeo.com/video/{{ video_id }}?autoplay=1{{ loop }}"
-                                                                    class="js-vimeo"
-                                                                    allow="autoplay; encrypted-media"
-                                                                    allowfullscreen
-                                                            ></iframe>
-                                                        {%- endif -%}
-                                                    </template>
-                                                </deferred-media>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                {% endif %}
                             </div>
 
                         {% when 'image' %}
@@ -382,8 +288,102 @@
         </div>
     </div>
 </div>
+{% for block in section.blocks %}
+{% if block.settings.popup_title != blank %}
+    <div class="grid-info-popup">
+        <div class="popup-wrapper">
+            <div class="popup-title-wrapper">
+                {{ block.settings.popup_title }}
+                <div class="close-btn">
+                    <svg
+                            width="14"
+                            height="15"
+                            viewBox="0 0 14 15"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                              d="M0.46967 0.96967C0.762563 0.676777 1.23744 0.676777 1.53033 0.96967L7 6.43934L12.4697 0.96967C12.7626 0.676777 13.2374 0.676777 13.5303 0.96967C13.8232 1.26256 13.8232 1.73744 13.5303 2.03033L8.06066 7.5L13.5303 12.9697C13.8232 13.2626 13.8232 13.7374 13.5303 14.0303C13.2374 14.3232 12.7626 14.3232 12.4697 14.0303L7 8.56066L1.53033 14.0303C1.23744 14.3232 0.762563 14.3232 0.46967 14.0303C0.176777 13.7374 0.176777 13.2626 0.46967 12.9697L5.93934 7.5L0.46967 2.03033C0.176777 1.73744 0.176777 1.26256 0.46967 0.96967Z"
+                              fill="#808080"/>
+                    </svg>
+                </div>
+            </div>
 
+            <div class="popup-text">{{ block.settings.popup_text }}</div>
+            <a
+                    class="{% if block.settings.order == "second" %}next{% endif %}"
+                    href="{{ block.settings.popup_link_url }}">
+                {{- block.settings.popup_link_text -}}
+            </a>
+            {%- if block.settings.video_url != blank -%}
+                {%- capture sizes -%}
+                    {% if settings.page_width -%}
+                        (min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 }}px, (min-width: 750px)
+                        calc(100vw - 10rem), 100vw
+                    {%- endif %}
+                {%- endcapture -%}
+                <deferred-media
+                        class="video-section__media deferred-media gradient global-media-settings{% if section.settings.full_width %} global-media-settings--full-width{% endif %}{% if fix_ratio %} media-fit-cover{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+                        data-media-id="{{ video_id }}"
+                        {%- liquid
+                            assign video_id = block.settings.video_url.id
+                            assign poster = block.settings.video_url.preview_image | default: block.settings.cover_image
+                            assign loop = '&loop=1&playlist=' | append: video_id
+                        -%}
+                        {% if poster != null %}
+                            {% assign aspect_ratio = 1 | divided_by: poster.aspect_ratio | times: 100 %}
+                            {% assign aspect_ratio_mobile = 1 | divided_by: poster.aspect_ratio | times: 100 %}
 
+                            {% if aspect_ratio > 47 %}
+                                {% assign aspect_ratio = 47 %}
+                            {% endif %}
+                            style="--ratio-percent: {{ aspect_ratio }}%;--ratio-percent-mobile: {{ aspect_ratio_mobile }}%;"
+                        {% endif %}>
+                    <button
+                            id="Deferred-Poster-Modal-{{ video_id }}"
+                            class="video-section__poster media deferred-media__poster media--landscape"
+                            type="button"
+                            aria-label="{{ alt }}"
+                    >
+                        {%- if poster != null -%}
+                            {{
+                            poster
+                            | image_url: width: 3840
+                            | image_tag:
+                            sizes: sizes,
+                            widths: '375, 750, 1100, 1500, 1780, 2000, 3000, 3840',
+                            alt: alt
+                            }}
+                        {%- else -%}
+                            {{ 'hero-apparel-3' | placeholder_svg_tag: 'placeholder-svg placeholder' }}
+                        {%- endif -%}
+                        <span class="deferred-media__poster-button motion-reduce">
+                              {%- render 'icon-play' -%}
+                            </span>
+                    </button>
+                    <template>
+                        {%- if block.settings.video_url.type == 'youtube' -%}
+                            <iframe
+                                    src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1{{ loop }}"
+                                    class="js-youtube"
+                                    allow="autoplay; encrypted-media"
+                                    allowfullscreen
+                            ></iframe>
+                        {%- else -%}
+                            <iframe
+                                    src="https://player.vimeo.com/video/{{ video_id }}?autoplay=1{{ loop }}"
+                                    class="js-vimeo"
+                                    allow="autoplay; encrypted-media"
+                                    allowfullscreen
+                            ></iframe>
+                        {%- endif -%}
+                    </template>
+                </deferred-media>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endfor %}
 {% schema %}
 {
   "name": "Grid info blocks",
