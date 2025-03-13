@@ -329,18 +329,7 @@ class CartItems extends HTMLElement {
 			const errors = document.getElementById('cart-errors') || document.getElementById('CartDrawer-CartErrors');
 			errors.textContent = window.cartStrings.error;
 		} finally {
-			const currentProductLine = document.querySelector(`#CartItem-${line}`); 
-			if (currentProductLine) {
-				const nextElement = currentProductLine.nextElementSibling;
-
-				if (nextElement && nextElement.classList.contains('avis-option')) {
-					this.enableLoading(line);
-				} else {
-					this.disableLoading(line);
-				}
-			} else {
-				this.disableLoading(line);	
-			}
+			this.disableLoading(line);	
 		}
 	}
 
