@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function checkScroll() {
+    const announcementBarSection = document.querySelector(".announcement-bar-section");
+    const headerWrapper = document.querySelector(".header-wrapper");
     const productContainer = document.querySelector(".product");
     const productInfo = document.querySelector(".product__info-wrapper");
     const leftContainer = document.querySelector(
@@ -25,17 +27,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const productInfoRect = productInfo.getBoundingClientRect();
     const extraInfoRect = productExtraInfo.getBoundingClientRect();
 
+
     productContainer.style.minHeight = `${productInfo.offsetHeight}px`;
 
     if (productInfoRect.bottom <= window.innerHeight) {
       productInfo.classList.add("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = ``;
     }
     if (productContainerRect.bottom >= window.innerHeight) {
       productInfo.classList.remove("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = ``;
     }
 
     if (extraInfoRect.bottom <= window.innerHeight) {
       productInfo.classList.remove("fixed");
+      productInfo.classList.add("absolute");
+      productInfo.style.top = `${productExtraInfo.offsetHeight + announcementBarSection.offsetHeight + headerWrapper.offsetHeight}px`;
     }
   }
 
