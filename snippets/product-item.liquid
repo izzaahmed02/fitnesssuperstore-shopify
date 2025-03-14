@@ -92,7 +92,7 @@
       {{ product.title | replace: "(Remanufactured)", "" | replace: "(New)", "" }}
     </a>
     {% assign current_variant = product.selected_or_first_available_variant %}
-    <div class="main-review-container">
+    <div class="main-                             review-container">
         <div class="star_container {{ current_variant.sku | downcase }}" hidden></div>
         <div class="review-container">
             <svg width="20" height="19" viewBox="0 0 20 19" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -104,11 +104,13 @@
     </div>
     <div class="product-item__price-container">
         {%- if product.available != false -%}
+            {% if product.metafields.custom.retail_price != blank %}
             <div class="old-price-wrapper {% unless product.metafields.custom.retail_price != blank %}retail-price-blank{% endunless %}">
                 {% if product.metafields.custom.retail_price != blank %}
                     <span>As high as:</span> {{ product.metafields.custom.retail_price | money }}
                 {% endif %}
             </div>
+            {% endif %}
             <div class="price-wrapper">
                 <span class="price-title">Price USD:</span> <span class="price-value">{{ product.price | money }}</span>
             </div>
