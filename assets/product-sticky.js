@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
     );
     const productExtraInfo = document.querySelector(".product__extra_info");
 
-    if (!productInfo || !leftContainer || !productExtraInfo) return;
+    if (!productContainer || !productInfo || !leftContainer || !productExtraInfo) return;
 
     const productContainerRect = productContainer.getBoundingClientRect();
     const productInfoRect = productInfo.getBoundingClientRect();
