@@ -134,7 +134,11 @@ function renderCustomAvisOptions() {
             headingElement = headingElement.previousElementSibling;
         }
 
-        const headingTitle = headingElement.querySelector('.avp-heading')?.innerText
+        let headingTitle = '';
+
+        if (headingElement) {
+          headingTitle = headingElement.querySelector('.avp-heading')?.innerText
+        }
 
         const handleClass = Array.from(parentWithHandle.classList).find((cls) => cls.startsWith('handle-'));
         let optionCategoryId;
@@ -150,7 +154,14 @@ function renderCustomAvisOptions() {
         const productTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
         if (productTitle) {
           let optionHTML = '';
-          const productTitleSearch = `${productTitle} - ${headingTitle} (${optionCategoryId})`
+          const productTitleSearch = '';
+
+          if (headingTitle) {
+            productTitleSearch = `${productTitle} - ${headingTitle} (${optionCategoryId})`;
+          } else {
+            productTitleSearch = `${productTitle} (${optionCategoryId})`;
+          }
+
           const optionPopupProductsHtml = await renderOptionPopupProducts(productTitleSearch);
 
           if (!optionPopupProductsHtml) {
