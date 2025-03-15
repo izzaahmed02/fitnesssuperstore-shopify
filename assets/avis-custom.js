@@ -154,7 +154,7 @@ function renderCustomAvisOptions() {
         const productTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
         if (productTitle) {
           let optionHTML = '';
-          const productTitleSearch = '';
+          let productTitleSearch = '';
 
           if (headingTitle) {
             productTitleSearch = `${productTitle} - ${headingTitle} (${optionCategoryId})`;
