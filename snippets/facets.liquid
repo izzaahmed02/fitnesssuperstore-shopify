@@ -128,7 +128,7 @@
                                             </div>
                                         </summary>
                                         <div id="Facet-{{ forloop.index }}-{{ section.id }}"
-                                                class="parent-display {% if filter_type == 'horizontal' %}facets__display{% else %}facets__display-vertical{% endif %}">
+                                             class="parent-display {% if filter_type == 'horizontal' %}facets__display{% else %}facets__display-vertical{% endif %}">
                                             {%- if filter_type != 'vertical' -%}
                                                 <div class="facets__header">
                                                     <div>
@@ -149,7 +149,8 @@
                                                     </facet-remove>
                                                 </div>
                                             {%- endif -%}
-                                            <fieldset class="facets-wrap parent-wrap {% if filter_type == 'vertical' %} facets-wrap-vertical{% endif %}">
+                                            <fieldset
+                                                    class="facets-wrap parent-wrap {% if filter_type == 'vertical' %} facets-wrap-vertical{% endif %}">
                                                 <legend class="visually-hidden">{{ filter.label | escape }}</legend>
                                                 {% if filter.values.size > 5 %}
                                                     <input
@@ -166,7 +167,9 @@
                                                         assign sorted_values = active_filter_values | concat: inactive_filter_values
                                                     endif
                                                 -%}
-                                                <ul class="{{ visual_layout_class }}{% if filter_type == 'vertical' %} facets__list--vertical{% else %} facets__list{% endif %} list-unstyled" role="list">
+                                                <ul class="{{ visual_layout_class }}{% if filter_type == 'vertical' %} facets__list--vertical{% else %} facets__list{% endif %} list-unstyled"
+                                                    role="list">
+                                                    {% assign sorted_values = sorted_values | sort: 'count' | reverse %}
                                                     {%- for value in sorted_values -%}
                                                         {% liquid
                                                             assign input_id = 'Filter-' | append: filter.param_name | escape | append: '-' | append: forloop.index
@@ -180,16 +183,17 @@
                                                         {%- endcapture -%}
                                                         {%- capture text_value -%}
                                                             <span class="facet-checkbox__text" aria-hidden="true">
-                                <span class="facet-checkbox__text-label">{{- value.label | escape }}</span>
-                              </span>
+                                                            <span class="facet-checkbox__text-label">{{- value.label | escape }}</span> ({{- value.count -}})
+                                                          </span>
                                                             <span class="visually-hidden">
-                                {{- value.label | escape }} (
-                                {%- if value.count == 1 -%}
-                                    {{- 'products.facets.product_count_simple.one' | t: count: value.count -}}
-                                {%- else -%}
-                                    {{- 'products.facets.product_count_simple.other' | t: count: value.count -}}
-                                {%- endif -%})
-                              </span>
+                                                            {{- value.label | escape }} (
+                                                            {%- if value.count == 1 -%}
+                                                                {{- 'products.facets.product_count_simple.one' | t: count: value.count -}}
+                                                            {%- else -%}
+                                                                {{- 'products.facets.product_count_simple.other' | t: count: value.count -}}
+                                                            {%- endif -%}
+                                                            )
+                                                          </span>
                                                         {%- endcapture -%}
                                                         <li class="list-menu__item facets__item{% if forloop.index > show_more_number and filter_type == 'vertical' %} show-more-item hidden{% endif %}">
                                                             {%- if presentation == 'swatch' -%}
@@ -305,7 +309,8 @@
                                                 {%- endif -%}
                                               </div>
                                             {% endcomment %}
-                                            <price-range-slider class="facets__price" data-currency="{{ cart.currency.iso_code }}">
+                                            <price-range-slider class="facets__price"
+                                                                data-currency="{{ cart.currency.iso_code }}">
                                                 {% render 'price-range-facet', filter: filter, id_prefix: 'Filter-', filter_type: filter_type %}
                                             </price-range-slider>
                                         </div>
@@ -532,7 +537,7 @@
                                                         <ul class="{{ visual_layout_class }} mobile-facets__list list-unstyled"
                                                             role="list">
                                                             {%- liquid
-                                                                assign sorted_values = filter.values
+                                                                assign sorted_values = filter.values | sort: 'count' | reverse
                                                                 # Keep the selected values grouped together when operator is AND
                                                                 if filter.operator == 'AND'
                                                                     assign active_filter_values = filter.values | where: 'active', true
@@ -556,17 +561,17 @@
                                                                 {%- capture text_value -%}
                                                                     <span class="facet-checkbox__text"
                                                                           aria-hidden="true">
-                                    <span class="facet-checkbox__text-label">{{- value.label | escape }}</span>
-                                  </span>
-                                                                    <span class="visually-hidden">
-                                    {{- value.label | escape }} (
-                                    {%- if value.count == '1' -%}
-                                        {{- 'products.facets.product_count_simple.one' | t: count: value.count -}}
-                                    {%- else -%}
-                                        {{- 'products.facets.product_count_simple.other' | t: count: value.count -}}
-                                    {%- endif -%}
-                                    )
-                                  </span>
+                                                                      <span class="facet-checkbox__text-label">{{- value.label | escape }}</span>
+                                                                  </span>
+                                                                                                    <span class="visually-hidden">
+                                                                    {{- value.label | escape }} (
+                                                                    {%- if value.count == '1' -%}
+                                                                        {{- 'products.facets.product_count_simple.one' | t: count: value.count -}}
+                                                                    {%- else -%}
+                                                                        {{- 'products.facets.product_count_simple.other' | t: count: value.count -}}
+                                                                    {%- endif -%}
+                                                                    )
+                                                                  </span>
                                                                 {%- endcapture -%}
 
                                                                 <li class="mobile-facets__item facets__item list-menu__item {% if forloop.index > show_more_number %} show-more-item hidden{% endif %}">
@@ -575,7 +580,8 @@
                                                                             <div class="swatch-input-wrapper">
                                                                                 {% render 'swatch-input',
                                                                                         id: input_id,
-                                                                                        type: 'checkbox',
+                                                                                        count: value.count,
+                                                                                type: 'checkbox',
                                                                                         name: value.param_name,
                                                                                         value: value.value,
                                                                                         product_form_id: 'FacetFiltersFormMobile',
@@ -646,6 +652,7 @@
                                                                             {%- endif %}
 
                                                                             {{ text_value }}
+                                                                           <span class="filter-value"> ({{ value.count }})</span>
                                                                         </label>
                                                                     {% endif %}
                                                                 </li>
