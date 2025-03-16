@@ -205,51 +205,53 @@
                         {%- if forloop.index > 2 -%}
                             {%- assign lazy_load = true -%}
                         {%- endif -%}
-                        {% unless item.tags contains 'avisplus-product-options' %} 
-                            {% unless item.title contains 'Manual' %}
-                                {% unless item.object_type == 'page' %}
-                                    {% unless item.object_type == 'article' %}
-                                        <li class="scroll-trigger animate--slide-in"
-                                        {% if settings.animations_reveal_on_scroll %}
-                                            data-cascade
-                                                {% endif %}>
-                                            {%- case item.object_type -%}
-                                                {%- when 'product' -%}
-                                                    {% render 'product-item', product: item %}
-                                                    {%- assign skip_card_product_styles = true -%}
-                                                    {% comment %}
-                                                    {%- when 'article' -%}
-                                                        {% render 'card-article',
-                                                                article: item,
-                                                                show_image: true,
-                                                                show_date: true,
-                                                                show_author: false,
-                                                                show_badge: true,
-                                                                media_aspect_ratio: 1,
-                                                                lazy_load: lazy_load
-                                                        %}
-                                                    {%- when 'page' -%}
-                                                        <div class="page-card-wrapper card-wrapper underline-links-hover">
-                                                            <div class="card card--card card--text ratio" style="--ratio-percent: 100%;">
-                                                                <div class="card__content">
-                                                                    <div class="card__information">
-                                                                        <h3 class="card__heading">
-                                                                            <a href="{{ item.url }}" class="full-unstyled-link">
-                                                                                {{ item.title | truncate: 50 | escape }}
-                                                                            </a>
-                                                                        </h3>
-                                                                    </div>
-                                                                    <div class="card__badge {{ settings.badge_position }}">
-                                                                        <span class="badge color-{{ settings.color_schemes | first }}">
-                                                                        Page
-                                                                        </span>
+                        {% unless item.tags contains 'about_option_categories' %}
+                            {% unless item.tags contains 'avisplus-product-options' %} 
+                                {% unless item.title contains 'Manual' %}
+                                    {% unless item.object_type == 'page' %}
+                                        {% unless item.object_type == 'article' %}
+                                            <li class="scroll-trigger animate--slide-in"
+                                            {% if settings.animations_reveal_on_scroll %}
+                                                data-cascade
+                                                    {% endif %}>
+                                                {%- case item.object_type -%}
+                                                    {%- when 'product' -%}
+                                                        {% render 'product-item', product: item %}
+                                                        {%- assign skip_card_product_styles = true -%}
+                                                        {% comment %}
+                                                        {%- when 'article' -%}
+                                                            {% render 'card-article',
+                                                                    article: item,
+                                                                    show_image: true,
+                                                                    show_date: true,
+                                                                    show_author: false,
+                                                                    show_badge: true,
+                                                                    media_aspect_ratio: 1,
+                                                                    lazy_load: lazy_load
+                                                            %}
+                                                        {%- when 'page' -%}
+                                                            <div class="page-card-wrapper card-wrapper underline-links-hover">
+                                                                <div class="card card--card card--text ratio" style="--ratio-percent: 100%;">
+                                                                    <div class="card__content">
+                                                                        <div class="card__information">
+                                                                            <h3 class="card__heading">
+                                                                                <a href="{{ item.url }}" class="full-unstyled-link">
+                                                                                    {{ item.title | truncate: 50 | escape }}
+                                                                                </a>
+                                                                            </h3>
+                                                                        </div>
+                                                                        <div class="card__badge {{ settings.badge_position }}">
+                                                                            <span class="badge color-{{ settings.color_schemes | first }}">
+                                                                            Page
+                                                                            </span>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                        {% endcomment %}
-                                            {%- endcase -%}
-                                        </li>
+                                                            {% endcomment %}
+                                                {%- endcase -%}
+                                            </li>
+                                        {% endunless %}
                                     {% endunless %}
                                 {% endunless %}
                             {% endunless %}
