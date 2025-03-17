@@ -381,8 +381,22 @@ function setupOptionsHandler() {
       });
 
       setTimeout(() => {
-        if (input.getAttribute('field-name') === 'Weight Stack') {
-          optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')[0]?.click();
+        if (input.getAttribute('field-name') === 'Weight Stack' && !weightStackSelected) {
+          const weightStackFirstOption =  optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')[0];
+
+          if (weightStackFirstOption) {
+            weightStackFirstOption.click();
+            const weightStackFirstOptionRadio = weightStackFirstOption.querySelector('input[type="radio"]');
+            
+            if (weightStackFirstOptionRadio) {
+              weightStackFirstOptionRadio.checked = false;
+              weightStackFirstOptionRadio.dispatchEvent(
+                new Event('change', {
+                  bubbles: true
+                })
+              );
+            }
+          }
         }
       });
     });
