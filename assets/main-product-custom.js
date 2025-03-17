@@ -190,9 +190,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 				addPaginationArrows();
 			}
 
-			if (document.querySelector('.merchantheader')) {
-				document.querySelector('.product__info-container .available-wrap .sa-reviews').remove();
-				document.querySelector('.product__info-container .available-wrap').style.flexDirection = 'row-reverse'
+			if (!document.querySelector('.merchantheader')) {
+				document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
 			}
 		}
       }, 500);
