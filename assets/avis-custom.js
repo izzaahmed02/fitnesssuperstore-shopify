@@ -331,61 +331,76 @@ function setupOptionsHandler() {
             </svg>
           </div>`;
 
-				const selectedOptionsContainer = wrapper.parentElement.parentElement.querySelector('.selected_options_container');
 
-				if (input.checked) {
-					if (!selectedOptionsContainer?.querySelector(`[data-value="${inputIndex}"]`)) {
-						selectedOptionsContainer.innerHTML = selectedOptionHTML;
-					}
+        const selectedOptionsContainer = wrapper.parentElement.parentElement.querySelector('.selected_options_container');
 
-					Array.from(selectedOptionsContainer.children).forEach((option) => {
-						option.style.display = 'flex';
-					});
+        if (input.checked) {
+          if (!selectedOptionsContainer?.querySelector(`[data-value="${inputIndex}"]`)) {
+            selectedOptionsContainer.innerHTML = selectedOptionHTML;
+          }
 
-					optionContainer.querySelectorAll('.avp-productoptionswatchwrapper').forEach((wrap) => {
-						wrap.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
-					});
+          Array.from(selectedOptionsContainer.children).forEach((option) => {
+            option.style.display = 'flex';
+          });
 
-					wrapper.setAttribute('style', 'border: 1px solid #F1592A !important;');
+          optionContainer.querySelectorAll('.avp-productoptionswatchwrapper').forEach((wrap) => {
+            wrap.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
+          });
 
-					optionContainer.querySelectorAll('.remove-icon').forEach((icon) => {
-						icon.addEventListener('click', (event) => {
-							event.stopPropagation();
-							const optionSelectedContainer = event.target.closest('.option_selected-container');
-							if (optionSelectedContainer) {
-								const value = parseInt(icon.getAttribute('data-value'));
-								const relatedInput =
-									optionContainer.querySelectorAll('.avp-productoptionswatchwrapper input[type="radio"]')[value];
+          wrapper.setAttribute('style', 'border: 1px solid #F1592A !important;');
 
-								if (relatedInput) {
-									relatedInput.checked = false;
-									relatedInput.dispatchEvent(
-										new Event('change', {
-											bubbles: true
-										})
-									);
-									optionSelectedContainer.remove();
-									wrapper.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
-								}
-							}
-						});
-					});
-				} else {
-					const optionToRemove = selectedOptionsContainer.querySelector(`[data-value="${inputIndex}"]`);
-					if (optionToRemove) {
-						optionToRemove.closest('.option_selected-container').remove();
-					}
-					wrapper.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
-				}
-			});
+          optionContainer.querySelectorAll('.remove-icon').forEach((icon) => {
+            icon.addEventListener('click', (event) => {
+              event.stopPropagation();
+              const optionSelectedContainer = event.target.closest('.option_selected-container');
+              if (optionSelectedContainer) {
+                const value = parseInt(icon.getAttribute('data-value'));
+                const relatedInput =
+                  optionContainer.querySelectorAll('.avp-productoptionswatchwrapper input[type="radio"]')[value];
 
-			setTimeout(() => {
-				if (input.getAttribute('field-name') === 'Weight Stack') {
-					optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')[0]?.click();
-				}
-			});
-		});
-	});
+                if (relatedInput) {
+                  relatedInput.checked = false;
+                  relatedInput.dispatchEvent(
+                    new Event('change', {
+                      bubbles: true
+                    })
+                  );
+                  optionSelectedContainer.remove();
+                  wrapper.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
+                }
+              }
+            });
+          });
+        } else {
+          const optionToRemove = selectedOptionsContainer.querySelector(`[data-value="${inputIndex}"]`);
+          if (optionToRemove) {
+            optionToRemove.closest('.option_selected-container').remove();
+          }
+          wrapper.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
+        }
+      });
+
+      setTimeout(() => {
+        if (input.getAttribute('field-name') === 'Weight Stack' && !weightStackSelected) {
+          const weightStackFirstOption =  optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')[0];
+
+          if (weightStackFirstOption) {
+            weightStackFirstOption.click();
+            const weightStackFirstOptionRadio = weightStackFirstOption.querySelector('input[type="radio"]');
+            
+            if (weightStackFirstOptionRadio) {
+              weightStackFirstOptionRadio.checked = false;
+              weightStackFirstOptionRadio.dispatchEvent(
+                new Event('change', {
+                  bubbles: true
+                })
+              );
+            }
+          }
+        }
+      });
+    });
+  });
 }
 
 async function fetchProductByHandle(handle) {
