@@ -33,7 +33,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 			if (!window.product.available) {
 				document.querySelector('.docapp-single-shipping-calculator .shipping-data').style.color = '#B3B3B3';
 			}
-
 			clearInterval(pollingInterval);
 		}
 
@@ -273,8 +272,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 	registerCustomActionEvent(); 
 });
 
-try {
 
+try {
 	document.addEventListener('DOMContentLoaded', (event) => {	
 		document.querySelectorAll('.metainfo-wrapper .more-info').forEach(element => {
 			element.addEventListener('click', async (event) => {
@@ -390,7 +389,6 @@ try {
 									currency: 'USD',
 								  })}/mo. / 4 interest-free payment`
 							}
-		
 						}
 
 						document.querySelector('.paylater-container').style.display = 'flex';
