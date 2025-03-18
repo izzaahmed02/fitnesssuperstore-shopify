@@ -303,7 +303,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		pricingReferenceLink.addEventListener('click', (event) => {
 			const container = document.getElementById('dynamic-product-content');
 			const modalWrapper = document.querySelector('.modal-wrapper');
-
+			console.log('here')
 			modalWrapper.style.display = 'flex';
 			document.querySelector('html').style.overflowY = 'hidden';
 			const tempDiv = document.createElement('div');
