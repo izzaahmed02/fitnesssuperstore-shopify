@@ -1,7 +1,20 @@
 let allProducts = [];
 let debounceTimeout;
 let productNames = new Set();
+function removeRightSideOnSmallScreens() {
+	if (window.innerWidth <= 749) {
+		const rightSideEl = document.querySelector('.right-side');
+		if (rightSideEl) {
+			rightSideEl.remove();
+		}
+	}
+}
 
+// Выполняем при загрузке страницы
+document.addEventListener('DOMContentLoaded', removeRightSideOnSmallScreens);
+
+// Можно также проверять при изменении размера окна, если это требуется
+window.addEventListener('resize', removeRightSideOnSmallScreens);
 class FacetFiltersForm extends HTMLElement {
 	constructor() {
 		super();
@@ -9,22 +22,22 @@ class FacetFiltersForm extends HTMLElement {
 		this.debouncedOnSubmit = debounce((event) => {
 			this.onSubmitHandler(event);
 		}, 800);
+		console.log(document.querySelectorAll('.facet-filters__sort'));
+		const facetForm = this.querySelectorAll('form');
+		facetForm.forEach(facet => {
+			facet.addEventListener('input', (e) => {
+				const target = e.srcElement;
+				if (target.classList.contains('mobile-facets__checkbox') || target.closest('.mobile-price-range')) {
+					return;
+				}
+				if (target.type === "checkbox") {
+					this.onSubmitHandler(e);
+				} else if (target.className !== "filterSearchInput") {
+					this.debouncedOnSubmit(e);
+				}
+			});
+		})
 
-		const facetForm = this.querySelector('form');
-		facetForm.addEventListener('input', (e) => {
-			const target = e.srcElement;
-
-			if (target.classList.contains('mobile-facets__checkbox') || target.closest('.mobile-price-range')) {
-				return;
-			}
-
-			if (target.type === "checkbox") {
-				this.onSubmitHandler(e);
-
-			} else if (target.className !== "filterSearchInput") {
-				this.debouncedOnSubmit(e);
-			}
-		});
 
 		const searchInput = document.getElementById("search-input");
 		const searchInputMobile = document.getElementById("search-input-mobile");
@@ -58,8 +71,6 @@ class FacetFiltersForm extends HTMLElement {
 			} else {
 				url = collectionUrl;
 			}
-			console.log(url)
-
 			fetch(url)
 				.then(response => response.text())
 				.then(html => {
@@ -74,7 +85,6 @@ class FacetFiltersForm extends HTMLElement {
 							allProducts.push(product.cloneNode(true));
 						}
 					});
-					updatePriceFilter(productItems);
 				});
 		}
 
@@ -85,6 +95,8 @@ class FacetFiltersForm extends HTMLElement {
 				FacetFiltersForm.renderPage(searchParams, event);
 				return;
 			}
+
+
 
 			const productGrid = document.getElementById('product-grid');
 			const productItems = Array.from(productGrid.querySelectorAll('li'));
@@ -142,115 +154,6 @@ class FacetFiltersForm extends HTMLElement {
 
 		fetchAllProducts();
 
-		const priceFilterDropdown = document.getElementById("price-filter-dropdown");
-
-		if (priceFilterDropdown) {
-			priceFilterDropdown.removeEventListener("change", filterProductsByPrice);
-			priceFilterDropdown.addEventListener("change", filterProductsByPrice);
-			setActivePriceFilter();
-		}
-
-		function getUrlPriceParams() {
-			const params = new URLSearchParams(window.location.search);
-			return {
-				gte: params.get("filter.v.price.gte"),
-				lte: params.get("filter.v.price.lte"),
-			};
-		}
-
-		function setActivePriceFilter() {
-			const {gte, lte} = getUrlPriceParams();
-			let selectedValue = "";
-
-			if (gte === "1000" && lte === "2000") {
-				selectedValue = "1000-2000";
-			} else if (gte === "2000" && lte === "3000") {
-				selectedValue = "2000-3000";
-			} else if (gte === "3000") {
-				selectedValue = "3000-";
-			} else if (lte === "1000") {
-				selectedValue = "0-1000";
-			}
-
-			if (selectedValue) {
-				priceFilterDropdown.value = selectedValue;
-			}
-		}
-
-		function filterProductsByPrice(event) {
-			const selectedOption = priceFilterDropdown.options[priceFilterDropdown.selectedIndex];
-			const newParamsString = selectedOption.getAttribute("data-url");
-
-			// Check if the selected option's value is "all"
-			const isAll = selectedOption.value.toLowerCase() === "all";
-
-			if (document.querySelector('.search')) {
-				// On the search page, merge new parameters with existing ones
-				const currentUrl = new URL(window.location.href);
-				const currentParams = currentUrl.searchParams;
-
-				if (isAll) {
-					// Remove any parameter that includes "price"
-					[...currentParams.keys()].forEach((key) => {
-						if (key.includes("price")) {
-							currentParams.delete(key);
-						}
-					});
-				} else if (newParamsString) {
-					const newParams = new URLSearchParams(newParamsString);
-					// Merge new parameters into the current search params
-					for (const [key, value] of newParams.entries()) {
-						currentParams.set(key, value);
-					}
-				}
-
-				const newUrl = `${currentUrl.pathname}?${currentParams.toString()}`;
-				history.pushState({url: newUrl}, '', newUrl);
-			} else {
-				// For non-search pages
-				if (isAll) {
-					const currentParams = new URLSearchParams(window.location.search);
-					[...currentParams.keys()].forEach((key) => {
-						if (key.includes("price")) {
-							currentParams.delete(key);
-						}
-					});
-					const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
-					history.pushState({url: newUrl}, '', newUrl);
-				} else if (newParamsString) {
-					const newUrl = `${window.location.pathname}?${newParamsString}`;
-					history.pushState({url: newUrl}, '', newUrl);
-				}
-			}
-		}
-
-
-		function updatePriceFilter(products) {
-			let priceCounts = {
-				"0-1000": 0,
-				"1000-2000": 0,
-				"2000-3000": 0,
-				"3000-": 0
-			};
-
-			products.forEach(product => {
-				let priceText = product.querySelector(".price-wrapper")?.textContent || "";
-				let price = parseFloat(priceText.replace(/[^0-9.]/g, ""));
-				if (!isNaN(price)) {
-					if (price < 1000) priceCounts["0-1000"]++;
-					else if (price >= 1000 && price < 2000) priceCounts["1000-2000"]++;
-					else if (price >= 2000 && price < 3000) priceCounts["2000-3000"]++;
-					else priceCounts["3000-"]++;
-				}
-			});
-
-			document.querySelectorAll("#price-filter-dropdown option").forEach(option => {
-				let value = option.value;
-				if (priceCounts[value] !== undefined) {
-					option.textContent = `${option.textContent.split(" (")[0]} (${priceCounts[value]})`;
-				}
-			});
-		}
 
 		const applyButton = document.querySelectorAll('.button--primary.apply-filters-mobile');
 
@@ -433,7 +336,7 @@ class FacetFiltersForm extends HTMLElement {
 		document.getElementById('ProductGridContainer').innerHTML = new DOMParser()
 			.parseFromString(html, 'text/html')
 			.getElementById('ProductGridContainer').innerHTML;
-
+		removeRightSideOnSmallScreens()
 		document
 			.getElementById('ProductGridContainer')
 			.querySelectorAll('.scroll-trigger')
