@@ -381,7 +381,7 @@ function setupOptionsHandler() {
       });
 
       setTimeout(() => {
-        if (input.getAttribute('field-name') === 'Weight Stack' && !weightStackSelected) {
+        if (input.getAttribute('field-name') === 'Weight Stack') {
           const weightStackFirstOption =  optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')[0];
 
           if (weightStackFirstOption) {
