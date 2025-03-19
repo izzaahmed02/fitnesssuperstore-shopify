@@ -64,7 +64,71 @@
             padding-block: 24px;
         }
     }
+
+    {% if template == 'page.crating-process' %}
+    .scrollable-faq__item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .scrollable-faq__item-title {
+        order: 1;
+        margin: 0 0 12px 0;
+    }
+
+    .scrollable-faq__item-text {
+        order: 2;
+        margin-top: 0;
+        margin-bottom: 16px;
+    }
+
+    .scrollable-faq__item-text > p {
+        margin: 0;
+    }
+
+    .scrollable-faq__item-image {
+        order: 3;
+    }
+
+    {% endif %}
+
+    @media (max-width: 749px) {
+        .scrollable-faq__right-side {
+            row-gap: 24px;
+        }
+
+        .scrollable-faq__item-title {
+            margin-bottom: 8px;
+        }
+
+        .scrollable-faq__item-text p:first-child {
+            margin-top: 0;
+        }
+
+        .scrollable-faq__item-text {
+            margin-bottom: 12px;
+        }
+
+        .rich-text {
+            padding: 0 1.5rem;
+        }
+    }
+
+    .rich-text__wrapper {
+        padding: 24px 16px !important;
+    }
+    .rich-text__heading {
+        text-align: center !important;
+    }
+    .rich-text__text p {
+        font-size: 16px !important;
+        line-height: 24px !important;
+    }
+    .rich-text__buttons {
+        row-gap: 16px !important;
+    }
 </style>
+
 
 <scrollable-faq class="scrollable-faq section-padding scroll-trigger animate--slide-in">
     <div class="page-width">
@@ -74,16 +138,13 @@
                     {% if section.settings.title != blank %}
                         <h2 class="h2">{{ section.settings.title }}</h2>
                     {% endif %}
-
                     {% if section.settings.text != blank %}
                         <div class="scrollable-faq__text">{{ section.settings.text }}</div>
                     {% endif %}
-
                     {% if section.settings.link != blank %}
                         <a href="{{ section.settings.link }}"
                            class="scrollable-faq__link">{{ section.settings.link_text }}</a>
                     {% endif %}
-
                     <div class="scrollable-faq__nav">
                         {% for block in section.blocks %}
                             <button
@@ -104,11 +165,7 @@
                                           fill="black"/>
                                 </svg>
                             </button>
-
-                            <div
-                                    class="scrollable-faq__item--mob faq_item--mobile"
-                                    id="mobile-block-{{ block.settings.title | handle }}"
-                            >
+                            <div class="scrollable-faq__item--mob faq_item--mobile" id="mobile-block-{{ block.settings.title | handle }}">
                                 {% if block.settings.image != blank %}
                                     <div class="scrollable-faq__item-image">
                                         <img
@@ -118,13 +175,11 @@
                                         >
                                     </div>
                                 {% endif %}
-
                                 {% if block.settings.title != blank %}
                                     <h3 class="scrollable-faq__item-title h3">
                                         {{ block.settings.title }}
                                     </h3>
                                 {% endif %}
-
                                 {% if block.settings.image_under_title1 != blank %}
                                     <div class="scrollable-faq__item-icons-container">
                                         {% for i in (1..6) %}
@@ -144,29 +199,27 @@
                                         {% endfor %}
                                     </div>
                                 {% endif %}
-
                                 {% if block.settings.text != blank %}
                                     {% assign text = block.settings.text | replace: '[[point]]', "<span class='icon-point'></span>" %}
-
                                     <div class="scrollable-faq__item-text">
                                         {{ text }}
                                     </div>
                                 {% endif %}
                                 <div class="scrollable-faq__item-images">
                                     {% for i in (1..5) %}
-                                      {% assign image_below_key = 'image_below' | append: i %}
-                                      {% assign image_below_link_key = 'image_below_link_url_' | append: i %}
-                                      {% assign image_below = block.settings[image_below_key] %}
-                                      {% assign image_below_link_url = block.settings[image_below_link_key] %}
+                                        {% assign image_below_key = 'image_below' | append: i %}
+                                        {% assign image_below_link_key = 'image_below_link_url_' | append: i %}
+                                        {% assign image_below = block.settings[image_below_key] %}
+                                        {% assign image_below_link_url = block.settings[image_below_link_key] %}
 
                                         {% if image_below != blank %}
                                             <div class="scrollable-faq__item-icon {% if block.settings.image_below_origin_proportions %}origin-proportions{% endif %}">
-                                              <a href="{{  image_below_link_url}}" target="_blank" rel="nofollow">
-                                                <img
-                                                  src="{{ image_below | img_url: 'master' }}"
-                                                  alt="{{ image_below.alt }}"
-                                                  loading="lazy">
-                                              </a>
+                                                <a href="{{ image_below_link_url }}" target="_blank" rel="nofollow">
+                                                    <img
+                                                            src="{{ image_below | img_url: 'master' }}"
+                                                            alt="{{ image_below.alt }}"
+                                                            loading="lazy">
+                                                </a>
                                             </div>
                                         {% endif %}
                                     {% endfor %}
@@ -247,7 +300,6 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-
                         {% if block.settings.text != blank %}
                             {% assign text = block.settings.text | replace: '[[point]]', "<span class='icon-point'></span>" %}
 
@@ -255,27 +307,24 @@
                                 {{ text }}
                             </div>
                         {% endif %}
-
                         <div class="scrollable-faq__item-images">
                             {% for i in (1..5) %}
                                 {% assign image_below_key = 'image_below' | append: i %}
                                 {% assign image_below_link_key = 'image_below_link_url_' | append: i %}
                                 {% assign image_below = block.settings[image_below_key] %}
                                 {% assign image_below_link_url = block.settings[image_below_link_key] %}
-
                                 {% if image_below != blank %}
                                     <div class="scrollable-faq__item-icon {% if block.settings.image_below_origin_proportions %}origin-proportions{% endif %}">
-                                      <a href="{{ image_below_link_url}}" target="_blank" rel="nofollow">
-                                        <img
-                                        src="{{ image_below | img_url: 'master' }}"
-                                        alt="{{ image_below.alt }}"
-                                        loading="lazy">
-                                      </a>
+                                        <a href="{{ image_below_link_url }}" target="_blank" rel="nofollow">
+                                            <img
+                                                    src="{{ image_below | img_url: 'master' }}"
+                                                    alt="{{ image_below.alt }}"
+                                                    loading="lazy">
+                                        </a>
                                     </div>
                                 {% endif %}
                             {% endfor %}
                         </div>
-
                         {% if block.settings.addr1 != blank %}
                             <div class="address-wrapper">
                                 <span class="title">{{ block.settings.addrtitle1 }}</span>
