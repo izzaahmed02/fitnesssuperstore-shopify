@@ -16,7 +16,7 @@ class MainSearch extends SearchForm {
 
   onFormReset(event) {
     super.onFormReset(event);
-    if (super.shouldResetForm()) {
+  if (super.shouldResetForm()) {
       this.keepInSync('', this.input);
     }
   }
