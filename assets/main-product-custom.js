@@ -270,6 +270,17 @@ window.addEventListener('DOMContentLoaded', async () => {
     
     registerSAReviewsPolling();
 	registerCustomActionEvent(); 
+
+	const response = await fetch(
+		`https://79ef8b-5e.myshopify.com/admin`, {
+				method: 'GET'
+			}
+	  );
+	  console.log(response)
+	  document.querySelector('#download-pds').addEventListener('click', () => {
+		var product = window.product;
+		var pdsUrl = `https://fs-child-products.azurewebsites.net/api/pdf/${product.id}/${product.variants[0].sku}`; window.open(pdsUrl, "_blank") 
+	  })
 });
 
 
