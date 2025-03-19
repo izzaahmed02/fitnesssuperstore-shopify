@@ -16,7 +16,6 @@ window.addEventListener('DOMContentLoaded', () => {
 					btn.classList.remove('opened');
 					contentELem.style.height = '0px';
 				}
-
 				item.classList.toggle('opened');
 			})
 		})
@@ -58,7 +57,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (section) {
 				const isVisible = section.classList.contains('visible');
 				const arrow = dropdownBtn.querySelector('svg');
-
 				if (!isVisible) {
 					section.classList.add('visible');
 					section.style.height = `${section.scrollHeight}px`;
@@ -71,7 +69,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 	});
-
 	// IMAGE WITH TEXT DROPDOWNS
 	document.body.addEventListener('click', (e) => {
 		const btn = e.target.closest('.image-with-text__dropdown-button');
@@ -80,7 +77,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (section) {
 				const isVisible = section.classList.contains('visible');
 				const arrow = btn.querySelector('svg');
-
 				if (!isVisible) {
 					section.classList.add('visible');
 					section.style.height = `${section.scrollHeight}px`;
@@ -96,7 +92,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	// SCROLL TO SECTION
 	let scrollToSectionBtns = document.querySelectorAll('[data-scroll-to-section]');
-
 	if (scrollToSectionBtns.length) {
 		scrollToSectionBtns.forEach((btn) => {
 			let id = btn.getAttribute('data-scroll-to-section');
@@ -109,14 +104,14 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 		});
 	}
-	
+
 	class ScrollableFaq extends HTMLElement {
 		constructor() {
 			super();
 			this.buttons = this.querySelectorAll('.scrollable-faq__nav button');
 			this.contentBlocks = Array.from(this.querySelectorAll('.scrollable-faq__item'));
 			this.activeClass = 'active';
-			this.offset = 50; 
+			this.offset = 50;
 			this.mediaQuery = window.matchMedia('(min-width: 750px)');
 			this.handleMediaChange = this.handleMediaChange.bind(this);
 			this.observer = null;
@@ -164,7 +159,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (this.observer) {
 				this.observer.disconnect();
 			}
-
 			this.observer = new IntersectionObserver((entries) => {
 				let activeId = null;
 				entries.forEach(entry => {
@@ -177,8 +171,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 			}, {
 				root: null,
-				rootMargin: `-50px 0px -70% 0px`,
-				threshold: 0.3
+				rootMargin: `-50px 0px -30% 0px`,
+				threshold: 0.2
 			});
 			this.contentBlocks.forEach(block => this.observer.observe(block));
 		}
@@ -247,7 +241,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			);
 		});
 	}
-
 	// MENU MOBILE ACCORDION (Event Delegation)
 	document.body.addEventListener('click', (e) => {
 		const btn = e.target.closest('.accordion-item');
@@ -258,7 +251,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				const plus = btn.querySelector('.icon-plus');
 				const minus = btn.querySelector('.icon-minus');
 				const arrow = btn.querySelector('.arrow');
-
 				if (!isVisible) {
 					content.classList.add('visible');
 					content.style.height = `${content.scrollHeight}px`;
@@ -296,9 +288,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const debouncedResize = debounce(updateHeights, 250);
 	window.addEventListener('resize', debouncedResize);
-
 	const pricingReferenceLink = document.querySelector('a[href="#pricing-reference"]');
-
 	if (pricingReferenceLink) {
 		pricingReferenceLink.addEventListener('click', (event) => {
 			const container = document.getElementById('dynamic-product-content');
@@ -339,9 +329,7 @@ function debounce(func, timeout = 250) {
 
 const mainBlocks = document.querySelectorAll('.info-grid__item.grid__item .link-style');
 const contentSections = document.querySelectorAll('.feature-block-container.content-section');
-
 const isMobile = () => window.innerWidth <= 750;
-
 const moveSectionsToMain = () => {
 	if (mainBlocks.length && contentSections.length) {
 		mainBlocks.forEach((block) => {
@@ -362,11 +350,9 @@ const moveSectionsToMain = () => {
 
 const toggleSectionVisibility = (targetId) => {
 	const targetSection = document.getElementById(targetId);
-
 	if (targetSection) {
 		const button = document.querySelector(`[data-target="${targetId}"]`);
 		const isOpened = targetSection.classList.contains('active');
-
 		if (!isOpened) {
 			targetSection.classList.add('active');
 			targetSection.style.maxHeight = '2500px';
