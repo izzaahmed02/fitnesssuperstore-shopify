@@ -31,6 +31,15 @@
   }
 {% endstyle %}
 
+{% if product.available == true %}
+  <meta itemprop="availability" content="InStock">
+{% else %}
+  <meta itemprop="availability" content="OutOfStock">
+{% endif %}
+<script type="application/ld+json">
+  {{ product | structured_data }}
+</script>
+
 {% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
 {% assign first_breadcrumb = product_breadcrumbs | split: 'Home' %}
 {% assign jp = first_breadcrumb[1] | split: '>' %}
@@ -102,14 +111,6 @@
       </div>
   </div>
 </div> {% endcomment %}
-{% if product.available == true %}
-  <meta itemprop="availability" content="InStock">
-{% else %}
-  <meta itemprop="availability" content="OutOfStock">
-{% endif %}
-<script type="application/ld+json">
-  {{ product | structured_data }}
-</script>
 <product-info
   id="MainProduct-{{ section.id }}"
   class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }}"
