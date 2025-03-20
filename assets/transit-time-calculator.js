@@ -12,9 +12,12 @@ function getNthMonday(year, month, n) {
 var TransitTimeCalculator = {
   processingTime: null,
   displayTransitTimes: async function() {
+    if (!sessionStorage.userLoc)
+      return;
+
     try {
-      const locationRes = await fetch("https://french-fitness-api.azurewebsites.net/api/location");
-      const userLoc = await locationRes.json();
+      //const locationRes = await fetch("https://french-fitness-api.azurewebsites.net/api/location");
+      const userLoc = JSON.parse(sessionStorage.userLoc);
       let originalZipCode = userLoc.postal;
       
       if (sessionStorage.userPostal !== 'null') {
