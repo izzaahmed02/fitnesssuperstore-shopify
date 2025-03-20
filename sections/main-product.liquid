@@ -36,64 +36,6 @@
 {% else %}
   <meta itemprop="availability" content="OutOfStock">
 {% endif %}
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    if (!window.product) {
-      console.error('window.product is not defined.');
-      return;
-    }
-    
-    var productData = window.product;
-  
-    var productUrl = productData.url || (window.location.origin + "/products/" + productData.handle);
-    
-    var jsonLd = {
-      "@context": "http://schema.org/",
-      "@type": "Product",
-      "name": productData.title,
-      "url": productUrl,
-      "description": productData.description,
-      "brand": {
-        "@type": "Brand",
-        "name": productData.vendor
-      },
-      "offers": []
-    };
-    
-    // Add image property: check for the variant's featured media, or fall back to a general featured_image.
-    if (productData.images &&
-        productData.images.length > 0) {
-      jsonLd.image = productData.images[0];
-    } else if (productData.featured_image) {
-      jsonLd.image = productData.featured_image;
-    } else if (productData.media && productData.media.length > 0) {
-      jsonLd.image = productData.media[0].src;
-    }
-    
-    // Process product variants into offers.
-    if (productData.variants && Array.isArray(productData.variants)) {
-      jsonLd.offers = productData.variants.map(function(variant) {
-        var offer = {
-          "@type": "Offer",
-          "availability": "http://schema.org/" + (variant.available ? "InStock" : "OutOfStock"),
-          "price": (variant.price / 100).toFixed(2),
-          "priceCurrency": (window.cart && window.cart.currency && window.cart.currency.iso_code) || "USD",
-          // Use variant.url if available; otherwise, fallback to the main product URL.
-          "url": variant.url || productUrl
-        };
-        if (variant.sku) {
-          offer.sku = variant.sku;
-        }
-        return offer;
-      });
-    }
-    
-    var ldScript = document.createElement('script');
-    ldScript.type = 'application/ld+json';
-    ldScript.text = JSON.stringify(jsonLd, null, 2);
-    document.head.appendChild(ldScript);
-  });
-</script>
 
 {% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
 {% assign first_breadcrumb = product_breadcrumbs | split: 'Home' %}
@@ -1524,6 +1466,9 @@
         assign seo_media = product.featured_media
       endif
     -%}
+    <script type="application/ld+json">
+      {{ product | structured_data }}
+    </script>
   </div>
 </product-info>
 
