@@ -36,9 +36,59 @@
 {% else %}
   <meta itemprop="availability" content="OutOfStock">
 {% endif %}
-<script type="application/ld+json">
-  {{ product | structured_data }}
+<script>
+  setTimeout(function() {
+    if (!window.product) {
+      console.error('window.product is not defined.');
+      return;
+    }
+    
+    var productData = window.product;
+    
+    var jsonLd = {
+      "@context": "http://schema.org/",
+      "@type": "Product",
+      "name": productData.title,
+      "url": shopUrl + "/products/" + window.product.handle, 
+      "description": productData.description,
+      "brand": {
+        "@type": "Brand",
+        "name": productData.vendor
+      },
+      "offers": []
+    };
+    
+    if (productData.selected_or_first_available_variant &&
+        productData.selected_or_first_available_variant.featured_media &&
+        productData.selected_or_first_available_variant.featured_media.img_url) {
+      jsonLd.image = [
+        productData.selected_or_first_available_variant.featured_media.img_url
+      ];
+    }
+    
+    if (productData.variants && Array.isArray(productData.variants)) {
+      jsonLd.offers = productData.variants.map(function(variant) {
+        var offer = {
+          "@type": "Offer",
+          "availability": "http://schema.org/" + (variant.available ? "InStock" : "OutOfStock"),
+          "price": (variant.price / 100).toFixed(2),
+          "priceCurrency": (window.cart && window.cart.currency && window.cart.currency.iso_code) || "USD",
+          "url": variant.url
+        };
+        if (variant.sku) {
+          offer.sku = variant.sku;
+        }
+        return offer;
+      });
+    }
+    
+    var ldScript = document.createElement('script');
+    ldScript.type = 'application/ld+json';
+    ldScript.text = JSON.stringify(jsonLd, null, 2);
+    document.head.appendChild(ldScript);
+  }, 1000);
 </script>
+
 
 {% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
 {% assign first_breadcrumb = product_breadcrumbs | split: 'Home' %}
