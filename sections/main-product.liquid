@@ -44,12 +44,14 @@
     }
     
     var productData = window.product;
+  
+    var productUrl = productData.url || (window.location.origin + "/products/" + productData.handle);
     
     var jsonLd = {
       "@context": "http://schema.org/",
       "@type": "Product",
       "name": productData.title,
-      "url": shopUrl + "/products/" + window.product.handle, 
+      "url": productUrl,
       "description": productData.description,
       "brand": {
         "@type": "Brand",
@@ -58,14 +60,17 @@
       "offers": []
     };
     
-    if (productData.selected_or_first_available_variant &&
-        productData.selected_or_first_available_variant.featured_media &&
-        productData.selected_or_first_available_variant.featured_media.img_url) {
-      jsonLd.image = [
-        productData.selected_or_first_available_variant.featured_media.img_url
-      ];
+    // Add image property: check for the variant's featured media, or fall back to a general featured_image.
+    if (productData.images &&
+        productData.images.length > 0) {
+      jsonLd.image = productData.images[0];
+    } else if (productData.featured_image) {
+      jsonLd.image = productData.featured_image;
+    } else if (productData.media && productData.media.length > 0) {
+      jsonLd.image = productData.media[0].src;
     }
     
+    // Process product variants into offers.
     if (productData.variants && Array.isArray(productData.variants)) {
       jsonLd.offers = productData.variants.map(function(variant) {
         var offer = {
@@ -73,7 +78,8 @@
           "availability": "http://schema.org/" + (variant.available ? "InStock" : "OutOfStock"),
           "price": (variant.price / 100).toFixed(2),
           "priceCurrency": (window.cart && window.cart.currency && window.cart.currency.iso_code) || "USD",
-          "url": variant.url
+          // Use variant.url if available; otherwise, fallback to the main product URL.
+          "url": variant.url || productUrl
         };
         if (variant.sku) {
           offer.sku = variant.sku;
@@ -88,7 +94,6 @@
     document.head.appendChild(ldScript);
   });
 </script>
-
 
 {% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
 {% assign first_breadcrumb = product_breadcrumbs | split: 'Home' %}
