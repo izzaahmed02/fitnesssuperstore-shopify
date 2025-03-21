@@ -319,18 +319,18 @@ window.addEventListener('DOMContentLoaded', async () => {
 		if (locationRes) {
 			const userLoc = await locationRes.json();
 			sessionStorage.userLoc = JSON.stringify(userLoc);
-			if (userLoc) {		      
-				const distanceFromBenicia = await getDistanceFromBenicia(userLoc.postal, userLoc.country_code)
+			if (userLoc && userLoc.country_code === 'US') {		   
+				const distanceFromBenicia = await getDistanceFromBenicia(userLoc.postal)
 				if (distanceFromBenicia <= 100) {
 					document.querySelector('.utility-bar').style.display = 'block';
-				}
+				}  
 			}
 		}
 	} else {
 		const userLocFromSessionStorage = JSON.parse(sessionStorage.userLoc);
 
-		if (userLocFromSessionStorage) {
-			const distanceFromBenicia = await getDistanceFromBenicia(userLocFromSessionStorage.postal, userLocFromSessionStorage.country_code);
+		if (userLocFromSessionStorage && userLocFromSessionStorage.country_code === 'US') {
+			const distanceFromBenicia = await getDistanceFromBenicia(userLocFromSessionStorage.postal);
 
 			if (distanceFromBenicia <= 100) {
 				document.querySelector('.utility-bar').style.display = 'block';
@@ -339,17 +339,14 @@ window.addEventListener('DOMContentLoaded', async () => {
 	}
 });
 
-async function getDistanceFromBenicia(postal, country) {
-    if (country === 'US') {
-      try {
+async function getDistanceFromBenicia(postal) {
+	try {
         const res = await fetch(`https://french-fitness-api.azurewebsites.net/api/location/distancefrombenicia/${postal}`);
         return await res.json();
       } catch (err) {
         console.error(err);
         return null;
       }
-    }
-    return null;
 }
 
 function debounce(func, timeout = 250) {
