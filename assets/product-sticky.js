@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     productContainer.style.minHeight = `${productInfoHeight}px`;
 
-    if (window.scrollY === 0) {
+    if (window.scrollY <= announcementBarSection.offsetHeight + headerWrapper.offsetHeight) {
       productInfo.classList.remove("fixed");
       return;
     }
