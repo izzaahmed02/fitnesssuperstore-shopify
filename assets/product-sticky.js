@@ -12,7 +12,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function checkScroll() {
-    const announcementBarSection = document.querySelector(".announcement-bar-section");
+    const announcementBarSection = document.querySelector(
+      ".announcement-bar-section"
+    );
     const headerWrapper = document.querySelector(".header-wrapper");
     const productContainer = document.querySelector(".product");
     const productInfo = document.querySelector(".product__info-wrapper");
@@ -21,30 +23,63 @@ document.addEventListener("DOMContentLoaded", function () {
     );
     const productExtraInfo = document.querySelector(".product__extra_info");
 
-    if (!productContainer || !productInfo || !leftContainer || !productExtraInfo) return;
+    if (
+      !productContainer ||
+      !productInfo ||
+      !leftContainer ||
+      !productExtraInfo
+    )
+      return;
 
     const productContainerRect = productContainer.getBoundingClientRect();
     const productInfoRect = productInfo.getBoundingClientRect();
     const extraInfoRect = productExtraInfo.getBoundingClientRect();
 
+    const windowHeight = window.innerHeight;
+    const productInfoHeight = productInfo.offsetHeight;
+    const extraInfoHeight = productExtraInfo.offsetHeight;
 
-    productContainer.style.minHeight = `${productInfo.offsetHeight}px`;
+    productContainer.style.minHeight = `${productInfoHeight}px`;
 
-    if (productInfoRect.bottom <= window.innerHeight) {
+    if (window.scrollY === 0) {
+      productInfo.classList.remove("fixed");
+      return;
+    }
+
+    if (extraInfoRect.top <= windowHeight - productInfoHeight) {
       productInfo.classList.add("fixed");
       productInfo.classList.remove("absolute");
-      productInfo.style.top = ``;
-    }
-    if (productContainerRect.bottom >= window.innerHeight) {
+      productInfo.style.top = "";
+    } else {
       productInfo.classList.remove("fixed");
-      productInfo.classList.remove("absolute");
-      productInfo.style.top = ``;
     }
 
-    if (extraInfoRect.bottom <= window.innerHeight) {
+    if (
+      extraInfoRect.top <= windowHeight &&
+      extraInfoRect.bottom > windowHeight
+    ) {
+      productInfo.classList.add("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = "";
+    }
+
+    if (extraInfoRect.bottom <= windowHeight) {
       productInfo.classList.remove("fixed");
       productInfo.classList.add("absolute");
-      productInfo.style.top = `${productExtraInfo.offsetHeight + announcementBarSection.offsetHeight + headerWrapper.offsetHeight}px`;
+      productInfo.style.top = `${
+        extraInfoHeight +
+        announcementBarSection.offsetHeight +
+        headerWrapper.offsetHeight
+      }px`;
+    }
+
+    if (
+      extraInfoRect.bottom >= windowHeight &&
+      extraInfoRect.top <= windowHeight
+    ) {
+      productInfo.classList.add("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = "";
     }
   }
 
