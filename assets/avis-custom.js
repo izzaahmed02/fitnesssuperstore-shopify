@@ -395,7 +395,7 @@ function setupOptionsHandler() {
             }
           }
         }
-      });
+      }, 1000);
     });
   });
 }
