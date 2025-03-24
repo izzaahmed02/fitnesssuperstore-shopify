@@ -2,7 +2,7 @@ const container = document.getElementById('dynamic-product-content');
 const modalWrapper = document.querySelector('.modal-wrapper');
 const closeIconTemplate = document.getElementById('icon-close-template').innerHTML;
 let optionProductsPopup = [];
-
+let selectedNegativePrices = [];
 
 document.addEventListener('DOMContentLoaded', () => {
 	const avisOptionsPolling = setInterval(() => {
@@ -320,7 +320,7 @@ function setupOptionsHandler() {
 						? `<span class="option_selected-price">${inputMoneyValue}</span>`
 						: ''
 				}
-            <svg class="remove-icon" data-value="${inputIndex}" width="16" height="16" fill="none"
+            <svg class="remove-icon" data-group-name="${input.name}" data-value="${inputIndex}" width="16" height="16" fill="none"
                  xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd"
                     d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
@@ -365,6 +365,13 @@ function setupOptionsHandler() {
                   optionSelectedContainer.remove();
                   wrapper.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
                 }
+
+				const optionGroupName = icon.dataset.groupName;
+
+				if (optionGroupName) {
+					selectedNegativePrices = selectedNegativePrices.filter(x => x.target !== optionGroupName);
+					updateCustomPrice();
+				}
               }
             });
           });
@@ -376,27 +383,98 @@ function setupOptionsHandler() {
           wrapper.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
         }
       });
+    });
+  });
 
-      setTimeout(() => {
-        if (input.getAttribute('field-name') === 'Weight Stack') {
-          const weightStackFirstOption =  optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')[0];
+//   document.querySelectorAll('.avp-productoptionbackground').forEach(element => {
+// 	element.addEventListener('change', (radioInput) => {
+// 		const inputTextValue = radioInput.target.value;
+// 		if (inputTextValue !== 'No Thanks') {
+// 			inputMoneyValue = radioInput.target
+// 				?.parentElement
+// 				?.querySelector('.swatch-variant-title .money')
+// 				?.innerText.replace('(', '')
+// 				.replace(')', '')
+// 				.replace('+', '');
+// 		} else {
+// 			inputMoneyValue = Shopify.currency.active === 'USD' ? '$0' : '';
+// 		}
 
-          if (weightStackFirstOption) {
-            weightStackFirstOption.click();
-            const weightStackFirstOptionRadio = weightStackFirstOption.querySelector('input[type="radio"]');
-            
-            if (weightStackFirstOptionRadio) {
-              weightStackFirstOptionRadio.checked = false;
-              weightStackFirstOptionRadio.dispatchEvent(
-                new Event('change', {
-                  bubbles: true
-                })
-              );
-            }
+// 		if (selectedNegativePrices && inputMoneyValue.includes('-$')) {
+// 			const inputMoney = parseFloat(inputMoneyValue.replace('-$', ''));
+
+// 			if (selectedNegativePrices.findIndex(x => x.target == radioInput.target.name) === -1) {
+// 				selectedNegativePrices.push({ target: radioInput.target.name, value: inputMoney });
+// 			} else {
+// 				selectedNegativePrices.forEach(item => {
+// 					if (item.target === radioInput.target.name) {
+// 						item.value = inputMoney;
+// 					}
+// 				});
+// 			}
+// 		}
+		
+// 		updateCustomPrice();
+// 	})
+//   });
+
+  document.querySelectorAll('.avp-productoptionswatchwrapper').forEach((element) => {
+	element.addEventListener('click', (event) => {
+		const input = element.querySelector('input');
+		const inputTextValue = input.value;
+
+		if (inputTextValue !== 'No Thanks') {
+			inputMoneyValue = input
+				?.parentElement
+				?.querySelector('.swatch-variant-title .money')
+				?.innerText.replace('(', '')
+				.replace(')', '')
+				.replace('+', '');
+		} else {
+			inputMoneyValue = Shopify.currency.active === 'USD' ? '$0' : '';
+		}
+
+		const isChecked = input.checked;
+
+		if (!isChecked) {
+			const inputName = input.name;
+
+			selectedNegativePrices = selectedNegativePrices.filter(x => x.target !== inputName);
+		} else {
+			if (selectedNegativePrices && inputMoneyValue && inputMoneyValue.includes('-$')) {
+				const inputMoney = parseFloat(inputMoneyValue.replace('-$', ''));
+	
+				if (selectedNegativePrices.findIndex(x => x.target == input.name) === -1) {
+					selectedNegativePrices.push({ target: input.name, value: inputMoney });
+				} else {
+					selectedNegativePrices.forEach(item => {
+						if (item.target === input.name) {
+							item.value = inputMoney;
+						}
+					});
+				}
+			}
+			
+			updateCustomPrice();
+		}
+	});
+
+    const optionValueDes = element.querySelector('.option-value-des');
+
+    if (optionValueDes) {
+      const apoValueHelpText = optionValueDes.querySelector('.apo-value-help-text');
+      if (apoValueHelpText && apoValueHelpText.innerText.includes('-$')) {
+        const apoMoney = optionValueDes.querySelector('.apo-money');
+        if (apoMoney) {
+          const apoMoneyText = apoMoney.innerText;
+          if (apoMoneyText) {
+            const subtractText = apoValueHelpText.innerText.replace('Subtract ', '');
+            apoMoney.innerText = subtractText;
+            apoValueHelpText.style.display = 'none';
           }
         }
-      }, 1000);
-    });
+      }
+    }
   });
 }
 
@@ -695,5 +773,31 @@ function setupPopupHeaderCloseDelegate() {
 	});
 }
 
+function updateCustomPrice() {
+  setTimeout(() => {
+    const priceEl = document.querySelector('.pr_custom_price');
+    if (!priceEl) return;
+  
+    const formattedProductPrice = priceEl.innerText.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]  
+    .replace(/,/g, '') 
+    .replace(/(\.\d*?[1-9])0+$/, '$1') 
+    .replace(/\.0+$/, ''); 
+  
+    const productPrice = parseFloat(formattedProductPrice);
+
+	const totalAmountToSubtract = selectedNegativePrices.reduce((total, obj) => total + (obj.value || 0), 0);
+  
+	const newPrice = productPrice - totalAmountToSubtract;
+  
+	const formattedPrice = newPrice.toLocaleString('en-US', {
+	  style: 'currency',
+	  currency: 'USD'
+	});
+
+	document.querySelectorAll('.pr_custom_price').forEach((element) => {
+		element.innerText = formattedPrice  
+	});
+  }, 100);
+}
 
 setupPopupHeaderCloseDelegate();
