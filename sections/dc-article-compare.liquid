@@ -1,242 +1,245 @@
 {{ 'dc-article-compare.css' | asset_url | stylesheet_tag }}
 
-{%- style -%}
-  .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
-    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
-  }
+<style>
 
-  #shopify-section-{{ section.id }} {
-    background-color: {{ section.settings.bg }};
-  }
 
-  @media screen and (min-width: 750px) {
     .section-{{ section.id }}-padding {
-      padding-top: {{ section.settings.padding_top }}px;
-      padding-bottom: {{ section.settings.padding_bottom }}px;
+        padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+        padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
     }
-  }
 
-  @media screen and (max-width: 750px) {
-    #shopify-section-{{ section.id }} .multicolumn-card {
-      text-align: start;
+    #shopify-section-{{ section.id }} {
+        background-color: {{ section.settings.bg }};
     }
-  }
 
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-table:not([class]) td, table:not([class]) th {
-    padding: 12px;
-    min-width: 256px;
-}
-
-table:not([class]) td.legend_td{
-  font-weight: 700;
-}
-table:not([class]) th {
-    font-size: 18px;
-    font-weight: 700;
-    text-align:center;
-}
-table:not([class]) th img{
-  margin-top: 12px;
-  height: 120px;
-}
-  
-table:not([class]) tr:nth-child(odd){
-  background: #EDEFF3;
-}
-
-td {
-    font-size: 16px;
-}
-  @media(min-width: 999px){
-    table:not([class]){
-      display:block;
-      max-width: 100%;
-      overflow-x:scroll;
+    @media screen and (min-width: 750px) {
+        .section-{{ section.id }}-padding {
+            padding-top: {{ section.settings.padding_top }}px;
+            padding-bottom: {{ section.settings.padding_bottom }}px;
+        }
     }
-  }
-  @media(max-width: 999px){
-    .dc-article-compare-bottom-table{
-      overflow-x:scroll;
+
+    @media screen and (max-width: 750px) {
+        #shopify-section-{{ section.id }} .multicolumn-card {
+            text-align: start;
+        }
     }
+
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
     table:not([class]) td, table:not([class]) th {
         padding: 12px;
-        min-width: 160px;
-        font-size: 13px;
-        line-height: 1.6;
+        min-width: 256px;
     }
-    .dc-article-compare-title{
-      font-size: 36px;
-      line-height: 1.2;
+
+    table:not([class]) td.legend_td {
+        font-weight: 700;
     }
-    .dc-article-compare-bottom{
-      margin-top: 30px;
+
+    table:not([class]) th {
+        font-size: 18px;
+        font-weight: 700;
+        text-align: center;
     }
-  }
-{%- endstyle -%}
+
+    table:not([class]) th img {
+        margin-top: 12px;
+        height: 120px;
+    }
+
+    table:not([class]) tr:nth-child(odd) {
+        background: #EDEFF3;
+    }
+
+    td {
+        font-size: 16px;
+    }
+
+    @media (min-width: 999px) {
+        table:not([class]) {
+            display: block;
+            max-width: 100%;
+            overflow-x: scroll;
+        }
+    }
+
+    @media (max-width: 999px) {
+        .dc-article-compare-bottom-table {
+            overflow-x: scroll;
+        }
+
+        table:not([class]) td, table:not([class]) th {
+            padding: 12px;
+            min-width: 160px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .dc-article-compare-title {
+            font-size: 36px;
+            line-height: 1.2;
+        }
+
+        .dc-article-compare-bottom {
+            margin-top: 30px;
+        }
+    }
+</style>
 
 
 <div class="dc-article-compare">
-  <div
-    class="page-width-dc multicolumn-padding section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
-    {% if settings.animations_reveal_on_scroll %}
-      data-cascade
-    {% endif %}
-  >
+    <div
+            class="page-width-dc multicolumn-padding section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+            {% if settings.animations_reveal_on_scroll %}
+                data-cascade
+            {% endif %}
+    >
+        <h1 class="dc-article-compare-title">
+            {{ section.settings.title }}
+        </h1>
+        <div class="dc-article-compare-bottom">
+            {% if section.settings.subtitle != blank or article.content != blank %}
+                <div class="dc-article-compare-subtitle">
+                    {% if section.settings.subtitle != blank %}
+                        <p>{{ section.settings.subtitle }}</p>
+                    {% else %}
+                        <p>{{ article.content }}</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+            <div class="dc-article-compare-bottom-table">
+                <table>
+                    <tr>
+                        <th></th>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <th class="specs-table">
+                                {{ item_product.title }}
+                                <br/>
+                                <img src="{{ item_product.image | img_url: 'master' }}">
+                            </th>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Price</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.price }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Ceiling Height Clearance Needed</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.ceiling_height_clearance_needed }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Exercise Programs</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.exercise_programs }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Heart Rate Monitoring</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.heart_rate_monitoring }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Display Readouts</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.display_readouts }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Resistance Level</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.resistance_level }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Console</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.console }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Stepping Speed Range</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.stepping_speed_range }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Power Source</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.power_source }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Integrated Reading Rack</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.integrated_reading_rack }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Accessory Tray</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.accessory_tray }}</td>
+                        {% endfor %}
+                    </tr>
 
-    <h1 class="dc-article-compare-title">
-      {{ section.settings.title }}
-    </h1>
+                    <tr>
+                        <td class="legend_td">Support Handlebars</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.support_handlebars }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Wheels</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.wheels }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Maximum Step Height</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.maximum_step_height }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Pedals</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.pedals }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Weight</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.weight }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Max User Weight</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.max_user_weight }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="legend_td">Dimensions</td>
+                        {% for item_product in article.metafields.custom.compare_items.value %}
+                            <td>{{ item_product.dimensions }}</td>
+                        {% endfor %}
+                    </tr>
+                </table>
+            </div>
+        </div>
 
-    <div class="dc-article-compare-bottom">
-
-      {% if section.settings.subtitle != blank or article.content != blank %}
-      <div class="dc-article-compare-subtitle">
-        {% if section.settings.subtitle != blank %}
-          <p>{{ section.settings.subtitle }}</p>
-        {% else %}
-          <p>{{ article.content }}</p>
-        {% endif %}
-      </div>
-      {% endif %}
-
-      <div class="dc-article-compare-bottom-table">
-
-        <table>
-            <tr>
-                <th></th>
-              {% for item_product in article.metafields.custom.compare_items.value %}
-                <th class="specs-table">
-                  {{ item_product.title }}
-                  <br />
-                  <img src="{{ item_product.image | img_url:'master' }}">
-                </th>
-              {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Price</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.price }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Ceiling Height Clearance Needed</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.ceiling_height_clearance_needed }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Exercise Programs</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.exercise_programs }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Heart Rate Monitoring</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.heart_rate_monitoring }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Display Readouts</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.display_readouts }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td"d>Resistance Level</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.resistance_level }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Console</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.console }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Stepping Speed Range</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.stepping_speed_range }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Power Source</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.power_source }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Integrated Reading Rack</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.integrated_reading_rack }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Accessory Tray</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.accessory_tray }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Support Handlebars</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.support_handlebars }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Wheels</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.wheels }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Maximum Step Height</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.maximum_step_height }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Pedals</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.pedals }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Weight</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.weight }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Max User Weight</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.max_user_weight }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="legend_td">Dimensions</td>
-                {% for item_product in article.metafields.custom.compare_items.value %}
-                  <td>{{ item_product.dimensions }}</td>
-                {% endfor %}
-            </tr>
-        </table>
-        
-      </div>
-      
     </div>
 
-    
-    
-  </div>
 </div>
+
 
 {% schema %}
 {
@@ -244,7 +247,10 @@ td {
   "class": "section",
   "tag": "section",
   "disabled_on": {
-    "groups": ["header", "footer"]
+    "groups": [
+      "header",
+      "footer"
+    ]
   },
   "settings": [
     {
