@@ -53,6 +53,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         let currentSwatchIndex;
                         let currentColorName;
 
+                        const customColorInputContainer = colorGroupElement.querySelector('.custom-color-input');
+                        const customColorInput = colorGroupElement.querySelector('.custom-color-value');
+                        const customColorErrorMessage = colorGroupElement.querySelector('.custom-color-error_message');
+                        const customColorEmptyErrorMessage = colorGroupElement.querySelector('.custom-color-empty-error_message');
+                        const customColorTrigger = colorGroupElement.querySelector('.custom-color-trigger');
+                        const customColorCloseIcon = colorGroupElement.querySelector('.custom-color-input-header svg');
+                        const customColorAddButton = colorGroupElement.querySelector('.add-custom-color');
+
                         colorSwatches?.forEach((swatch) => {
                             const colorName = swatch.getAttribute('data-color-name');
                             swatch.addEventListener('click', (event) => {
@@ -70,6 +78,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                         const apoOptionColorSelected = Array.from(document.querySelectorAll('.ap-options__swatch-container .option_selected')).find(div => div.textContent === colorName);
                                         if (!apoOptionColorSelected) {
                                             apoColors[currentSwatchIndex]?.parentElement.click();
+                                        }
+                                        customColorInputContainer.style.display = 'none';
+
+                                        const customColorAvis = document.querySelector(`.custom-color-${toLowerCaseFirstLetter(groupColorName)}-avis input`);
+
+                                        if (customColorAvis) {
+                                            customColorAvis.value = '';
+                                            triggerInputChange(customColorAvis);
                                         }
                                     }
 
@@ -106,13 +122,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         });
 
-                        const customColorInputContainer = colorGroupElement.querySelector('.custom-color-input');
-                        const customColorInput = colorGroupElement.querySelector('.custom-color-value');
-                        const customColorErrorMessage = colorGroupElement.querySelector('.custom-color-error_message');
-                        const customColorTrigger = colorGroupElement.querySelector('.custom-color-trigger');
-                        const customColorCloseIcon = colorGroupElement.querySelector('.custom-color-input-header svg');
-                        const customColorAddButton = colorGroupElement.querySelector('.add-custom-color');
-
                         // Show the input field when "+" is clicked
                         customColorTrigger.addEventListener('click', () => {
                             if (!window.product.available) {
@@ -143,90 +152,119 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const group = event.target.dataset.group;
                                 const color = customColorInput?.value?.trim();
                                 // Validate the hex color
-                                if (/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(color)) {
-                                    const matchedColor = availableColors.find((c) => c.HEX.toLowerCase() === color.toLowerCase());
+                                // if (/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(color)) {
+
+
+                                // } else {
+                                //     customColorErrorMessage.style.display = 'flex';
+                                //     customColorAddButton.classList.add('disabled');
+                                // }
+
+                                const matchedColor = availableColors.find((c) => c.HEX.toLowerCase() === color.toLowerCase());
+                                // if (matchedColor) {
+
+                                // } else {
+                                //     customColorErrorMessage.style.display = 'flex';
+                                //     customColorAddButton.classList.add('disabled');
+                                //     return;
+                                // }
+
+                                const customColorAvis = document.querySelector(`.custom-color-${group}-avis input`);
+
+                                if (customColorAvis) {
                                     if (matchedColor) {
-                                        const customColorAvis = document.querySelector(`.custom-color-${group}-avis input`);
-
-                                        if (customColorAvis) {
-                                            customColorAvis.value = `${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`
-                                            triggerInputChange(customColorAvis);
-                                            //$('.product-form__input--swatch label[title="Custom"]').click();
-                                        }
-
-                                        var customColorAvisCharge = document.querySelector(`.custom-color-${group}-avis .apo-title-addcharge`)?.textContent;
-
-                                        // Display Pantone value
-                                        selectedColorElement.textContent = `Custom Color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`;
-                                        selectedColorPriceElement.textContent = customColorAvisCharge;
-
-                                        const updatedProductSwatches = colorGroupElement.querySelectorAll('.color-options-container input[type=radio]');
-                                        updatedProductSwatches.forEach((input) => (input.checked = false));
-
-                                        customColorErrorMessage.style.display = 'none';
-                                        customColorAddButton.classList.remove('disabled');
-                                        selectedColorInfo.style.display = 'flex';
+                                        customColorAvis.value = `${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`
                                     } else {
-                                        customColorErrorMessage.style.display = 'flex';
-                                        customColorAddButton.classList.add('disabled');
-                                        return;
+                                        if (color) {
+                                            customColorAvis.value = color.trim();
+                                            customColorEmptyErrorMessage.style.display = 'none';
+                                        } else {
+                                            customColorEmptyErrorMessage.style.display = 'block';
+                                            return;
+                                        }
                                     }
+                                    
+                                    const apoColors = document.querySelectorAll(`.ap-options__swatch-container input[field-name="${groupColorName} Color"]`);
 
-                                    const apoOptionColorSelected = Array.from(document.querySelectorAll('.ap-options__swatch-container .option_selected')).find(div => div.textContent.trim().includes(currentColorName));
-                                    if (apoOptionColorSelected) {
-                                        document.querySelectorAll(`input[field-name="${toUpperCaseFirstLetter(group)} Color"]`)[currentSwatchIndex].parentElement?.click();
-                                    }
+                                    apoColors.forEach((apoColor, index) => {
+                                        if (apoColor.checked) {
+                                            apoColors[index]?.parentElement.click();
+                                        }
+                                    });
 
-                                    colorSwatches.forEach((x) => x.classList.remove('color-selected'));
-
-                                    // // Create the custom swatch
-                                    // const customSwatch = document.createElement('div');
-
-                                    // const customSwatchesOnPage = colorGroupElement.querySelectorAll('.swatch--custom');
-                                    // customSwatchesOnPage.forEach((swatch) => swatch.classList.remove('selected'));
-
-                                    // const updatedProductSwatches = colorGroupElement.querySelectorAll('.color-options-container input[type=radio]');
-                                    // updatedProductSwatches.forEach((input) => (input.checked = false));
-
-                                    // customSwatch.classList.add('swatch', 'swatch--custom', 'selected');
-                                    // customSwatch.style.backgroundColor = color;
-                                    // customSwatch.title = matchedColor ?
-                                    //     `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})` :
-                                    //     `Custom Color: ${color}`;
-
-                                    // // Add radio input for variant logic
-                                    // customSwatch.innerHTML = `<input type="radio" class="custom-color-swatch-${color}" name="custom-color" value="${color}">
-                                    //          <label for="custom-color-swatch-${color}">
-                                    //              <span class="swatch-label" style="background: ${color};"></span>
-                                    //          </label>`;
-
-                                    // // Ensure swatch is selectable
-                                    // customSwatch.addEventListener('click', () => {
-                                    //     colorGroupElement.querySelectorAll('.swatch--custom').forEach((swatch) => swatch.classList.remove('selected'));
-                                    //     customSwatch.classList.add('selected');
-
-                                    //     const updatedProductSwatches = colorGroupElement.querySelectorAll('.color-options-container input');
-                                    //     updatedProductSwatches.forEach((input) => (input.checked = false));
-
-                                    //     if (matchedColor) {
-                                    //         selectedColorElement.textContent = `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`;
-                                    //         selectedColorPriceElement.textContent = customColorAvisCharge;
-                                    //         selectedColorInfo.style.display = 'flex';
-                                    //     }
-                                    // });
-
-                                    // swatchContainer.appendChild(customSwatch);                               
-
-                                    // // Reset input and hide container
-                                    // customColorInput.value = '';
-                                    // customColorInputContainer.style.display = 'none';
-                                    // customColorErrorMessage.style.display = 'none';
-                                    // customColorAddButton.classList.remove('disabled');
-
-                                } else {
-                                    customColorErrorMessage.style.display = 'flex';
-                                    customColorAddButton.classList.add('disabled');
+                                    triggerInputChange(customColorAvis);
+                                    //$('.product-form__input--swatch label[title="Custom"]').click();
                                 }
+
+                                var customColorAvisCharge = document.querySelector(`.custom-color-${group}-avis .apo-title-addcharge`)?.textContent;
+
+                                // Display Pantone value
+                                if (matchedColor) {
+                                    selectedColorElement.textContent = `Custom Color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`;
+                                } else {
+                                    if (color) {
+                                        selectedColorElement.textContent = color.trim();
+                                    }
+                                }
+                                selectedColorPriceElement.textContent = customColorAvisCharge;
+
+                                const updatedProductSwatches = colorGroupElement.querySelectorAll('.color-options-container input[type=radio]');
+                                updatedProductSwatches.forEach((input) => (input.checked = false));
+
+                                customColorErrorMessage.style.display = 'none';
+                                customColorAddButton.classList.remove('disabled');
+                                selectedColorInfo.style.display = 'flex';
+
+                                const apoOptionColorSelected = Array.from(document.querySelectorAll('.ap-options__swatch-container .option_selected')).find(div => div.textContent.trim().includes(currentColorName));
+                                if (apoOptionColorSelected) {
+                                    document.querySelectorAll(`input[field-name="${toUpperCaseFirstLetter(group)} Color"]`)[currentSwatchIndex].parentElement?.click();
+                                }
+
+                                colorSwatches.forEach((x) => x.classList.remove('color-selected'));
+
+                                // // Create the custom swatch
+                                // const customSwatch = document.createElement('div');
+
+                                // const customSwatchesOnPage = colorGroupElement.querySelectorAll('.swatch--custom');
+                                // customSwatchesOnPage.forEach((swatch) => swatch.classList.remove('selected'));
+
+                                // const updatedProductSwatches = colorGroupElement.querySelectorAll('.color-options-container input[type=radio]');
+                                // updatedProductSwatches.forEach((input) => (input.checked = false));
+
+                                // customSwatch.classList.add('swatch', 'swatch--custom', 'selected');
+                                // customSwatch.style.backgroundColor = color;
+                                // customSwatch.title = matchedColor ?
+                                //     `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})` :
+                                //     `Custom Color: ${color}`;
+
+                                // // Add radio input for variant logic
+                                // customSwatch.innerHTML = `<input type="radio" class="custom-color-swatch-${color}" name="custom-color" value="${color}">
+                                //          <label for="custom-color-swatch-${color}">
+                                //              <span class="swatch-label" style="background: ${color};"></span>
+                                //          </label>`;
+
+                                // // Ensure swatch is selectable
+                                // customSwatch.addEventListener('click', () => {
+                                //     colorGroupElement.querySelectorAll('.swatch--custom').forEach((swatch) => swatch.classList.remove('selected'));
+                                //     customSwatch.classList.add('selected');
+
+                                //     const updatedProductSwatches = colorGroupElement.querySelectorAll('.color-options-container input');
+                                //     updatedProductSwatches.forEach((input) => (input.checked = false));
+
+                                //     if (matchedColor) {
+                                //         selectedColorElement.textContent = `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`;
+                                //         selectedColorPriceElement.textContent = customColorAvisCharge;
+                                //         selectedColorInfo.style.display = 'flex';
+                                //     }
+                                // });
+
+                                // swatchContainer.appendChild(customSwatch);                               
+
+                                // // Reset input and hide container
+                                // customColorInput.value = '';
+                                // customColorInputContainer.style.display = 'none';
+                                // customColorErrorMessage.style.display = 'none';
+                                // customColorAddButton.classList.remove('disabled');
                             })
                         });
                     } else {
