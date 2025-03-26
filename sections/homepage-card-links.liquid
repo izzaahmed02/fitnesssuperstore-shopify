@@ -1,0 +1,96 @@
+{{ 'homepage-card-links.css' | asset_url | stylesheet_tag }}
+<style>
+    {% if section.settings.change-image == true %}
+    @media (max-width: 749px) {
+      #shopify-section-{{ section.id }}  .homepage-card-links__card-img {
+            display: none;
+        }
+
+      #shopify-section-{{ section.id }}  .homepage-card-links__card-img--mobile {
+            display: block;
+        }
+    }
+
+    {% endif %}
+</style>
+
+
+<div class="page-width">
+    {% if section.settings.title != blank %}
+        <h2 class="homepage-card-links__title">{{ section.settings.title }}</h2>
+    {% endif %}
+    <div class="homepage-card-links__wrapper">
+        {% for block in section.blocks %}
+            <div class="homepage-card-links__card">
+                <a href="{{ block.settings.url }}" class="homepage-card-links__card-link">{{ block.settings.label }}</a>
+                <img src="{{ block.settings.img | image_url: width: '300px', height: '300px' }}" alt=""
+                     class="homepage-card-links__card-img">
+                {% if block.settings.img_mob != blank %}
+                    <img src="{{ block.settings.img_mob | image_url: width: '300px', height: '300px' }}" alt=""
+                         class="homepage-card-links__card-img--mobile">
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+{% schema %}
+{
+  "name": "Homepage Card Links",
+  "tag": "section",
+  "class": "section homepage-card-links",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section Title"
+    },
+    {
+      "type": "checkbox",
+      "id": "change-image",
+      "label": "Change Images on Mobile Resolutions",
+      "default": false
+    }
+  ],
+  "blocks": [
+    {
+      "type": "card",
+      "name": "Card",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "img",
+          "label": "Card Image"
+        },
+        {
+          "type": "image_picker",
+          "id": "img_mob",
+          "label": "Card Image Mobile (Optional)"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "Card URL"
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Card Label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Cards with Links"
+    }
+  ]
+}
+{% endschema %}

@@ -5,52 +5,58 @@
   }
   table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
   }
-  
+
   th, td {
-      border: 1px solid #E5E5E5;
       padding: 8px;
       text-align: left;
   }
-  
+
+  .comparison-table th:not(:last-child),
+  .comparison-table td:not(:last-child) {
+    border-right: 1px solid #E5E5E5;
+  }
+
+  .comparison-table tr:not(:last-child) {
+    border-bottom: 1px solid #E5E5E5;
+  }
+
   th {
       font-weight: bold;
   }
-  
+
   thead tr:first-child th {
       text-align: center;
   }
 
-  .comparison-table th, 
+  .comparison-table th,
   .comparison-table td {
       text-align: center;
   }
-  
+
   td {
       vertical-align: middle;
   }
-  
+
   th[colspan] {
       text-align: center;
   }
-  
+
   .comparison-table .star {
       color: #f39c12;
   }
-  
+
   .comparison-table td .rating {
       font-size: 1.5rem;
   }
-  
-  .comparison-table th:first-child, 
+
+  .comparison-table th:first-child,
   .comparison-table td:first-child {
       text-align: left;
   }
 
-  .bold-title td{
-    font-weight: 700;
-  }
   td{
     color: #000000;
   }
@@ -72,10 +78,66 @@
     margin-bottom: 52px;
   }
 
+  
+  .comparison-table td:first-child,
+  .comparison-table th:first-child {
+    min-width: 140px;
+  }
+
+  .comparison-table-container {
+    position: relative;
+    width: 100%;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    overflow: auto;
+    display: flex;
+  }
+
+  .comparison-table {
+    flex-shrink: 0;
+  }
+
+  .comparison-table td:first-child,
+  .comparison-table th:first-child {
+    position: sticky;
+    left: 0;
+    background-color: #fff;
+    border-right: 1px solid #E5E5E5;
+  }
+
+  .comparison-table-item--no-border {
+    border-right: none;
+  }
+
+  .comparison-table-container .comparison-table thead tr:first-child th {
+    color: #000000;
+    font-size: 18px;
+    border-bottom: 1px solid #E5E5E5;
+  }
+
+  .comparison-table-container .comparison-table thead tr:last-child th  {
+    color: #000000;
+    font-size: 16px;
+    border-bottom: 1px solid #E5E5E5;
+  }
+  
+  .comparison-table-container .comparison-table td {
+    text-align: left;
+  }
+
+  .comparison-table-container .comparison-table tr:not(:last-child) td  {
+    border-bottom: 1px solid #E5E5E5;
+  }
+
   @media screen and (max-width: 750px) {
     #shopify-section-{{ section.id }}{
-      padding-top: 24px;
-      padding-bottom: 48px;
+      padding-block: 24px;
+    }
+
+    .comparison-table td:first-child,
+    .comparison-table th:first-child {
+      min-width: unset;
+      box-shadow: 6px 0px 12px -4px #0000001A;
     }
 
     #shopify-section-{{ section.id }} .title{
@@ -89,118 +151,202 @@
     #shopify-section-{{ section.id }} .page-width {
       overflow: auto;
     }
+
+    .comparison-table-item--no-border {
+      border-right: 1px solid #E5E5E5;
+    }
+
+    .comparison-table-container .comparison-table thead tr th {
+      text-align: left;
+    }
   }
 </style>
 
 <div class="page-width">
   <h2 class="title">{{ section.settings.title }}</h2>
-<table class="comparison-table">
-        <thead>
-            <tr>
-                <th style="background: transparent;" colspan="2"> <br></th>
-                <th style="background: #FAF9F9;" colspan="3">Remanufactured</th>
-                <th style="background: #FAF9F9;" colspan="3">New</th>
-            </tr>
-            <tr class="bold-title">
-                <th> <br></th>
-                <th style="color: #F1592A;">Fitness Superstore</th>
-                <th>Global Fitness</th>
-                <th>Total Body Experts</th>
-                <th>Gym Pros</th>
-                <th>Fitness Factory</th>
-                <th>Top Fitness</th>
-                <th>360 Fitness Superstore</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr class="bold-title">
-                <td>Warranty</td>
-                <td>1 year Parts & Labor on remanufactured products</td>
-                <td>30 days parts warranty for used, 1 year parts and labor warranty for refurbished</td>
-                <td>3 months parts and labor for remanufactured cardio equipment</td>
-                <td>6 months mechanical moving parts, 90 days labor, 15 days console and electronics on refurbished and remanufactured</td>
-                <td>None, only a 31-day money-back guarantee</td>
-                <td>Not declared for remanufactured</td>
-                <td>Not declared for remanufactured</td>
-            </tr>
-            <tr>
-                <td>Assembled in the USA?</td>
-                <td>Yes</td>
-                <td>Not declared</td>
-                <td>Not declared</td>
-                <td>Not declared</td>
-                <td>Not declared</td>
-                <td>Not declared</td>
-                <td>Not declared</td>
-            </tr>
-            <tr>
-                <td>Condition</td>
-                <td>Remanufactured</td>
-                <td>Used or Refurbished</td>
-                <td>Remanufactured & Refurbished</td>
-                <td>Remanufactured & Refurbished</td>
-                <td>Remanufactured</td>
-                <td>Not declared</td>
-                <td>Not declared</td>
-            </tr>
-            <tr>
-                <td>Google Reviews</td>
-                <td><div class="star">★</div>4.8</td>
-                <td><div class="star">★</div>4.0</td>
-                <td><div class="star">★</div>4.8</td>
-                <td><div class="star">★</div>2.3</td>
-                <td><div class="star">★</div>4.4</td>
-                <td><div class="star">★</div>4.9</td>
-                <td><div class="star">★</div>3.9</td>
-            </tr>
-            <tr>
-                <td>Yelp Reviews</td>
-                <td><div class="star">★</div>4.9</td>
-                <td><div class="star">★</div>3.9</td>
-                <td><div class="star">★</div>3.8</td>
-                <td><div class="star">★</div>1.4</td>
-                <td><div class="star">★</div>3.8</td>
-                <td><div class="star">★</div>4.3</td>
-                <td><div class="star">★</div>3.5</td>
-            </tr>
-            <tr>
-                <td>Facebook Reviews</td>
-                <td><div class="star">★</div>4.9</td>
-                <td>N/A</td>
-                <td><div class="star">★</div>4.0</td>
-                <td>N/A</td>
-                <td>N/A</td>
-                <td><div class="star">★</div>4.9</td>
-                <td><div class="star">★</div>4.9</td>
-            </tr>
-            <tr>
-                <td>TrustPilot Reviews</td>
-                <td><div class="star">★</div>4.9</td>
-                <td><div class="star">★</div>3.6</td>
-                <td>N/A</td>
-                <td>N/A</td>
-                <td><div class="star">★</div>3.1</td>
-                <td><div class="star">★</div>4.5</td>
-                <td><div class="star">★</div>3.5</td>
-            </tr>
-        </tbody>
+
+  <div class="comparison-table-container">
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th class="comparison-table-item--no-border"><br></th>
+          <th><br></th>
+          <th style="background: #FAF9F9;" colspan="3">Remanufactured</th>
+          <th style="background: #FAF9F9;" colspan="3">New</th>
+        </tr>
+        <tr class="bold-title">
+          <th><br></th>
+          <th style="color: #F1592A;">Fitness Superstore</th>
+          <th>Global Fitness</th>
+          <th>Total Body Experts</th>
+          <th>Gym Pros</th>
+          <th>Fitness Factory</th>
+          <th>Top Fitness</th>
+          <th>360 Fitness Superstore</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="bold-title">
+          <td>Warranty</td>
+          <td style="width: 158px;">1 year Parts & Labor on remanufactured products</td>
+          <td>30 days parts warranty for used, 1 year parts and labor warranty for refurbished</td>
+          <td>3 months parts and labor for remanufactured cardio equipment</td>
+          <td>
+            6 months mechanical moving parts, 90 days labor, 15 days console and electronics on refurbished and
+            remanufactured
+          </td>
+          <td>None, only a 31-day money-back guarantee</td>
+          <td>Not declared for remanufactured</td>
+          <td>Not declared for remanufactured</td>
+        </tr>
+        <tr>
+          <td>Assembled in the USA?</td>
+          <td>Yes</td>
+          <td>Not declared</td>
+          <td>Not declared</td>
+          <td>Not declared</td>
+          <td>Not declared</td>
+          <td>Not declared</td>
+          <td>Not declared</td>
+        </tr>
+        <tr>
+          <td>Condition</td>
+          <td>Remanufactured</td>
+          <td>Used or Refurbished</td>
+          <td>Remanufactured & Refurbished</td>
+          <td>Remanufactured & Refurbished</td>
+          <td>Remanufactured</td>
+          <td>Not declared</td>
+          <td>Not declared</td>
+        </tr>
+        <tr>
+          <td>Google Reviews</td>
+          <td>
+            <div class="star">★</div>
+            4.8
+          </td>
+          <td>
+            <div class="star">★</div>
+            4.0
+          </td>
+          <td>
+            <div class="star">★</div>
+            4.8
+          </td>
+          <td>
+            <div class="star">★</div>
+            2.3
+          </td>
+          <td>
+            <div class="star">★</div>
+            4.4
+          </td>
+          <td>
+            <div class="star">★</div>
+            4.9
+          </td>
+          <td>
+            <div class="star">★</div>
+            3.9
+          </td>
+        </tr>
+        <tr>
+          <td>Yelp Reviews</td>
+          <td>
+            <div class="star">★</div>
+            4.9
+          </td>
+          <td>
+            <div class="star">★</div>
+            3.9
+          </td>
+          <td>
+            <div class="star">★</div>
+            3.8
+          </td>
+          <td>
+            <div class="star">★</div>
+            1.4
+          </td>
+          <td>
+            <div class="star">★</div>
+            3.8
+          </td>
+          <td>
+            <div class="star">★</div>
+            4.3
+          </td>
+          <td>
+            <div class="star">★</div>
+            3.5
+          </td>
+        </tr>
+        <tr>
+          <td>Facebook Reviews</td>
+          <td>
+            <div class="star">★</div>
+            4.9
+          </td>
+          <td>N/A</td>
+          <td>
+            <div class="star">★</div>
+            4.0
+          </td>
+          <td>N/A</td>
+          <td>N/A</td>
+          <td>
+            <div class="star">★</div>
+            4.9
+          </td>
+          <td>
+            <div class="star">★</div>
+            4.9
+          </td>
+        </tr>
+        <tr>
+          <td>TrustPilot Reviews</td>
+          <td>
+            <div class="star">★</div>
+            4.9
+          </td>
+          <td>
+            <div class="star">★</div>
+            3.6
+          </td>
+          <td>N/A</td>
+          <td>N/A</td>
+          <td>
+            <div class="star">★</div>
+            3.1
+          </td>
+          <td>
+            <div class="star">★</div>
+            4.5
+          </td>
+          <td>
+            <div class="star">★</div>
+            3.5
+          </td>
+        </tr>
+      </tbody>
     </table>
+  </div>
 </div>
-  
+
 {% schema %}
-  {
-    "name": "Table section",
-    "settings": [
-      {
-        "type": "text",
-        "id": "title",
-        "label": "Title"
-      }
-    ],
-    "presets": [
-      {
-        "name": "Table section"
-      }
-    ]
-  }
+{
+  "name": "Table section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Table section"
+    }
+  ]
+}
 {% endschema %}

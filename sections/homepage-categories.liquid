@@ -1,0 +1,135 @@
+{{ 'homepage-categories.css' | asset_url | stylesheet_tag }}
+
+<div class="page-width">
+    <div class="homepage-categories__wrapper">
+        <div class="homepage-categories__header">
+            <h2 class="homepage-categories__title">
+                {{ section.settings.title }}
+            </h2>
+            <div class="homepage-categories__tabs-header">
+                <button class="homepage-categories__tab-btn active" data-tab="tab1"
+                        type="button">{{ section.settings.tab_title_1 }}</button>
+                <button class="homepage-categories__tab-btn" data-tab="tab2"
+                        type="button">{{ section.settings.tab_title_2 }}</button>
+            </div>
+        </div>
+        <div class="homepage-categories__tabs">
+            <div class="homepage-categories__tab homepage-categories__tab-active" data-tab="tab1">
+                <div class="swiper homepage-categories__swiper-1">
+                    <div class="swiper-wrapper">
+                        {% for block in section.blocks limit: 5 %}
+                            <div class="swiper-slide homepage-categories__item">
+                                <div class="homepage-categories__item-img-wrapper">
+                                    <img src="{{ block.settings.img | image_url: width: 500, height: 500 }}"
+                                         alt=""
+                                         class="homepage-categories__item-img">
+                                </div>
+                                <a href="{{ block.settings.url }}"
+                                   class="homepage-categories__item-link">{{ block.settings.title }}</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="homepage-categories__swiper-controls">
+                        <div class="swiper-button-prev">
+                            {% render 'chevron-button-prev' %}
+                        </div>
+                        <div class="swiper-pagination"></div>
+                        <div class="swiper-button-next">
+                            {% render 'chevron-button-next' %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="homepage-categories__tab" data-tab="tab2">
+                <div class="swiper homepage-categories__swiper-2">
+                    <div class="swiper-wrapper">
+                        {% for block in section.blocks offset: 5 limit: 8 %}
+                            <div class="swiper-slide homepage-categories__item">
+                                <div class="homepage-categories__item-img-wrapper">
+                                    <img src="{{ block.settings.img | image_url: width: 500, height: 500 }}"
+                                         alt=""
+                                         class="homepage-categories__item-img">
+                                </div>
+                                <a href="{{ block.settings.url }}"
+                                   class="homepage-categories__item-link">{{ block.settings.title }}</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="homepage-categories__swiper-controls">
+                        <div class="swiper-button-prev">
+                            {% render 'chevron-button-prev' %}
+                        </div>
+                        <div class="swiper-pagination"></div>
+                        <div class="swiper-button-next">
+                            {% render 'chevron-button-next' %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ 'homepage-categories.js' | asset_url }}" defer="defer"></script>
+
+
+{% schema %}
+{
+  "name": "Homepage categories",
+  "tag": "section",
+  "class": "section homepage-categories",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section Title"
+    },
+    {
+      "type": "text",
+      "id": "tab_title_1",
+      "label": "Section First Tab Title"
+    },
+    {
+      "type": "text",
+      "id": "tab_title_2",
+      "label": "Section Second Tab Title"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Category",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "img",
+          "label": "Category Image"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "Category URL"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Category Title"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Categories"
+    }
+  ]
+}
+{% endschema %}

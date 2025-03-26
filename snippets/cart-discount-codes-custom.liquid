@@ -1,0 +1,60 @@
+{{ 'cart-discounts-codes-custom.css' | asset_url | stylesheet_tag }}
+
+{% assign discount_codes = '' %}
+
+{% for discount_application in cart.cart_level_discount_applications %}
+    {% unless discount_codes == '' %}
+        {% assign discount_codes = discount_codes | append: ',' %}
+    {% endunless %}
+    {% assign discount_codes = discount_codes | append: discount_application.title %}
+{% endfor %}
+
+{% for item in cart.items %}
+    {% for allocation in item.line_level_discount_allocations %}
+        {% unless discount_codes contains allocation.discount_application.title %}
+            {% unless discount_codes == '' %}
+                {% assign discount_codes = discount_codes | append: ',' %}
+            {% endunless %}
+            {% assign discount_codes = discount_codes | append: allocation.discount_application.title %}
+        {% endunless %}
+    {% endfor %}
+{% endfor %}
+
+<div id="discount-code-container">
+    <form id="discount-form" onsubmit="return false;">
+        <input
+                type="text"
+                id="discount-input"
+                placeholder="{{ settings.cart_discount_input_placeholder | escape }}"
+                aria-label="Discount code"
+        >
+        <button type="button" id="apply-discount-btn">
+            {{ settings.cart_discount_apply_btn_text | escape }}
+        </button>
+    </form>
+    <div id="discount-error-message"></div>
+    <div id="applied-discounts">
+        {% if discount_codes != '' %}
+            {% assign codes_array = discount_codes | split: ',' %}
+            {% for code in codes_array %}
+                <span class="discount-pill" data-code="{{ code | escape }}">
+            <span class="svg-wrapper discount-icon">
+              {{ 'icon-price-tag.svg' | inline_asset_content }}
+            </span>
+            {{ code }}
+            <button
+                    type="button"
+                    class="remove-discount"
+                    aria-label="Remove discount code {{ code }}"
+            >
+              <span class="svg-wrapper">
+                {% render 'icon-remove' %}
+              </span>
+            </button>
+          </span>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+

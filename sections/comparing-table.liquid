@@ -3,10 +3,6 @@
     padding-top: {{ section.settings.padding_top | times: 0.5 | round: 0 }}px;
     padding-bottom: {{ section.settings.padding_bottom | times: 0.5 | round: 0 }}px;
   }
-  /* .section-{{ section.id }}-padding .comparing-table__table-item > div,
-  .section-{{ section.id }}-padding .comparing-table__table-header > div{
-      width: calc(100% / {{ section.settings.columns }});
-  } */
 
   .section-{{ section.id }}-padding .comparing-table__table-item > div:first-child,
   .section-{{ section.id }}-padding .comparing-table__table-header > div:first-child {
@@ -70,14 +66,19 @@
   }
 
   @media screen and (max-width: 750px) {
+    .comparing-table__table-wrapper {
+        width: auto;
+    }
     .section-{{ section.id }}-padding .comparing-table__table-item > div:first-child,
     .section-{{ section.id }}-padding .comparing-table__table-header > div:first-child {
       width: calc((100% / {{ section.settings.columns }}) * 1.17);
+      min-width: 100px;
     }
 
     .section-{{ section.id }}-padding .comparing-table__table-item > div:not(:first-child),
     .section-{{ section.id }}-padding .comparing-table__table-header > div:not(:first-child) {
       width: calc((100% - ((100% / {{ section.settings.columns }}) * 1.17)) / ({{ section.settings.columns | minus: 1 }}));
+      min-width: 196px;
     }
 
     .comparing-table__container .title {
@@ -109,9 +110,129 @@
       border-right: 1px solid #E5E5E5;
     }
   {% endif %}
+
+  {% if section.settings.mobile_layout == 'scroll' %}
+      .comparing-table__table-item > div:first-child, 
+      .header-title:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        box-shadow: 0px 0px 12px 0px #0000001A;
+      }
+  {% endif %}
+
+  {% if page.handle == 'international-sales' or page.handle == 'shipping-information' %}
+    @media screen and (max-width: 490px) {
+
+      .comparing-table__table-body .comparing-table__table-item div {
+        width: 115px !important;
+        min-width: 83px !important;;
+      }
+      .comparing-table__table-header .header-title {
+        width: 115px !important;;
+        min-width: 83px !important;;
+      }
+    }
+
+    @media screen and (max-width: 470px) {
+
+      .comparing-table__table-body .comparing-table__table-item div {
+        width: 110px !important;;
+        min-width: 78px !important;;
+      }
+      .comparing-table__table-header .header-title {
+        width: 110px !important;;
+        min-width: 78px !important;; 
+      } 
+    }
+
+    @media screen and (max-width: 450px) {
+
+      .comparing-table__table-body .comparing-table__table-item div {
+        width: 106px !important;
+        min-width: 76px !important;
+      }
+      .comparing-table__table-header .header-title {
+        width: 106px !important;
+        min-width: 76px !important;
+      } 
+    }
+
+    @media screen and (max-width: 434px) {
+
+      .comparing-table__table-body .comparing-table__table-item div {
+        width: 102px !important;
+        min-width: 75px !important;
+      }
+      .comparing-table__table-header .header-title {
+        width: 102px !important;
+        min-width: 75px !important;
+      } 
+    }
+
+    @media screen and (max-width: 424px) {
+
+      .comparing-table__table-body .comparing-table__table-item div {
+        width: 98px !important;
+        min-width: 72px !important;
+      }
+      .comparing-table__table-header .header-title {
+        width: 98px !important;
+        min-width: 72px !important;
+      } 
+    }
+
+    @media screen and (max-width: 412px) {
+
+      .comparing-table__table-body .comparing-table__table-item div {
+        width: 98px !important;
+        min-width: 69px !important;
+      }
+      .comparing-table__table-header .header-title {
+        width: 98px !important;
+        min-width: 69px !important;
+      } 
+    }
+
+    @media screen and (max-width: 404px) {
+
+      .comparing-table__table-body .comparing-table__table-item div {
+        width: 95px !important;
+        min-width: 66px !important;
+      }
+      .comparing-table__table-header .header-title {
+        width: 95px !important;
+        min-width: 66px !important;
+      } 
+    }
+
+    @media screen and (max-width: 384px) {
+
+      .comparing-table__table-body .comparing-table__table-item div {
+        width: 90px !important;
+        min-width: 64px !important;
+      }
+      .comparing-table__table-header .header-title {
+        width: 90px !important;
+        min-width: 64px !important;
+      } 
+    }
+
+    @media screen and (max-width: 367px) {
+      .comparing-table__table-body .comparing-table__table-item div {
+        width: 86px !important;
+        min-width: 62px !important;
+      }
+      .comparing-table__table-header .header-title {
+        width: 86px !important;
+        min-width: 62px !important;
+      } 
+    }
+  {% endif %}
+
 {%- endstyle -%}
 
-<div class="comparing-table section-{{ section.id }}-padding" id="comparing-table">
+<div class="comparing-table section-{{ section.id }}-padding scroll-trigger animate--slide-in" id="comparing-table">
   <div class="page-width comparing-table__container">
     {% if section.settings.title != blank %}
       <h2 class="h2">{{ section.settings.title }}</h2>
@@ -349,6 +470,22 @@
       "unit": "pcs",
       "label": "Columns",
       "default": 7
+    },
+    {
+      "type": "select",
+      "id": "mobile_layout",
+      "label": "Mobile layout",
+      "options": [
+        {
+          "label": "Scroll",
+          "value": "scroll"
+        },
+        {
+          "label": "Fit screen width",
+          "value": "fit"
+        }
+      ],
+      "default": "fit"
     },
     {
       "type": "checkbox",

@@ -6,182 +6,282 @@
 {% endcomment %}
 
 <nav class="header__inline-menu">
-  <ul class="list-menu list-menu--inline" role="list">
-    {%- for link in section.settings.menu.links -%}
-      <li>
-        {%- if link.links != blank -%}
-          <header-menu>
-            <details id="Details-HeaderMenu-{{ forloop.index }}" class="mega-menu">
-              <summary
-                id="HeaderMenu-{{ link.handle }}"
-                class="header__menu-item list-menu__item link focus-inset"
-              >
-                <span
-                  {%- if link.child_active %}
-                    class="header__active-menu-item"
-                  {% endif %}
-                >
-                  {{- link.title | escape -}}
-                </span>
-                {% comment %} {% render 'icon-caret' %} {% endcomment %}
-              </summary>
-              <div
-                id="MegaMenu-Content-{{ forloop.index }}"
-                class="mega-menu__content color-{{ section.settings.menu_color_scheme }} gradient motion-reduce global-settings-popup"
-                tabindex="-1"
-              >
-                <ul
-                  class="mega-menu__list page-width{% if link.levels == 1 %} mega-menu__list--condensed{% endif %}"
-                  role="list"
-                >
-                  {%- for childlink in link.links -%}
-                    <li>
-                      <a
-                        id="HeaderMenu-{{ link.handle }}-{{ childlink.handle }}"
-                        href="{{ childlink.url }}"
-                        class="mega-menu__link mega-menu__link--level-2 link{% if childlink.current %} mega-menu__link--active{% endif %}"
-                        {% if childlink.current %}
-                          aria-current="page"
-                        {% endif %}
-                      >
-                        {{ childlink.title | escape }}
-                      </a>
-                      {%- if childlink.links != blank -%}
-                        <ul class="list-unstyled" role="list">
-                          {%- for grandchildlink in childlink.links -%}
-                            <li>
-                              <a
-                                id="HeaderMenu-{{ link.handle }}-{{ childlink.handle }}-{{ grandchildlink.handle }}"
-                                href="{{ grandchildlink.url }}"
-                                class="mega-menu__link link{% if grandchildlink.current %} mega-menu__link--active{% endif %}"
-                                {% if grandchildlink.current %}
-                                  aria-current="page"
+    <ul class="list-menu list-menu--inline" role="list">
+        {%- for link in section.settings.menu.links -%}
+            <li>
+                {%- if link.links != blank -%}
+                    <header-menu>
+                        <details id="Details-HeaderMenu-{{ forloop.index }}" class="mega-menu">
+                            <summary
+                                    id="HeaderMenu-{{ link.handle }}"
+                                    class="header__menu-item list-menu__item link focus-inset">
+                            <span
+                              {%- if link.child_active %}
+                                  class="header__active-menu-item"
+                              {% endif %}
+                            >
+                              {{- link.title | escape -}}
+                            </span>
+                            </summary>
+                            <div
+                                    id="MegaMenu-Content-{{ forloop.index }}"
+                                    class="mega-menu__content main-menu color-{{ section.settings.menu_color_scheme }} gradient motion-reduce global-settings-popup"
+                                    tabindex="-1">
+                                {% if link.handle == 'shop-by-brand' %}
+                                    <h3>Shop By Brand</h3>
+                                    {% else %}
+                                    <h3>Categories</h3>
                                 {% endif %}
-                              >
-                                {{ grandchildlink.title | escape }}
-                              </a>
-                            </li>
-                          {%- endfor -%}
-                        </ul>
-                      {%- endif -%}
-                    </li>
-                  {%- endfor -%}
-                </ul>
-              </div>
-            </details>
-          </header-menu>
-        {%- else -%}
-          <a
-            id="HeaderMenu-{{ link.handle }}"
-            href="{{ link.url }}"
-            class="header__menu-item list-menu__item link link--text focus-inset"
-            {% if link.current %}
-              aria-current="page"
-            {% endif %}
-          >
+
+                                <ul class="mega-menu__list {% if link.levels == 1 %} mega-menu__list--condensed{% endif %}" role="list">
+                                    {%- for childlink in link.links -%}
+                                        <li>
+                                            <a
+                                                    id="HeaderMenu-{{ link.handle }}-{{ childlink.handle }}"
+                                                    href="{{ childlink.url }}"
+                                                    class="mega-menu__link mega-menu__link--level-2 link{% if childlink.current %} mega-menu__link--active{% endif %}"
+                                                    {% if childlink.current %}
+                                                        aria-current="page"
+                                                    {% endif %}>
+                                                <div class="mega-menu__link--level-2-image">
+                                                    <img
+                                                            src="{{ childlink.object.featured_image | image_url }}"
+                                                            alt="{{ childlink.title }}"
+                                                            width=""
+                                                            height=""
+                                                    >
+                                                </div>
+                                                {{ childlink.title | escape }}
+                                            </a>
+                                            {% comment %}
+                                              {%- if childlink.links != blank -%}
+                                                <ul class="list-unstyled" role="list">
+                                                  {%- for grandchildlink in childlink.links -%}
+                                                    <li>
+                                                      <a
+                                                        id="HeaderMenu-{{ link.handle }}-{{ childlink.handle }}-{{ grandchildlink.handle }}"
+                                                        href="{{ grandchildlink.url }}"
+                                                        class="mega-menu__link link{% if grandchildlink.current %} mega-menu__link--active{% endif %}"
+                                                        {% if grandchildlink.current %}
+                                                          aria-current="page"
+                                                        {% endif %}
+                                                      >
+                                                        {{ grandchildlink.title | escape }}
+                                                      </a>
+                                                    </li>
+                                                  {%- endfor -%}
+                                                </ul>
+                                              {%- endif -%}
+                                            {% endcomment %}
+                                        </li>
+                                    {%- endfor -%}
+                                    <li>
+                                        <a href="/collections/strength-training-equipment" class="mega-menu__link mega-menu__link--level-2 link">
+                                            <div class="mega-menu__link--level-2-image shop-link">Shop all</div>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </details>
+                    </header-menu>
+                {%- else -%}
+                    <a
+                            id="HeaderMenu-{{ link.handle }}"
+                            href="{{ link.url }}"
+                            class="header__menu-item list-menu__item link link--text focus-inset"
+                            {% if link.current %}
+                                aria-current="page"
+                            {% endif %}
+                    >
             <span
               {%- if link.current %}
-                class="header__active-menu-item"
+                  class="header__active-menu-item"
               {% endif %}
             >
               {{- link.title | escape -}}
             </span>
-          </a>
-        {%- endif -%}
-      </li>
-    {%- endfor -%}
-  </ul>
-
-  {% for block in section.blocks %}
-    {% case block.type %}
-      {% when 'menu' %}
-        {% if block.settings.additional_menu != blank %}
-          <ul class="list-menu list-menu--inline" role="list">
-            {%- for link in block.settings.additional_menu.links -%}
-              <li>
-                {%- if link.links != blank -%}
-                  <header-menu>
-                    <details id="Details-HeaderMenu-{{ forloop.index }}" class="mega-menu">
-                      <summary
-                        id="HeaderMenu-{{ link.handle }}"
-                        class="header__menu-item list-menu__item link focus-inset"
-                      >
-                        <span
-                          {%- if link.child_active %}
-                            class="header__active-menu-item"
-                          {% endif %}
-                        >
-                          {{- link.title | escape -}}
-                        </span>
-                        {% comment %} {% render 'icon-caret' %} {% endcomment %}
-                      </summary>
-                      <div
-                        id="MegaMenu-Content-{{ forloop.index }}"
-                        class="mega-menu__content color-{{ section.settings.menu_color_scheme }} gradient motion-reduce global-settings-popup"
-                        tabindex="-1"
-                      >
-                        <ul
-                          class="mega-menu__list page-width{% if link.levels == 1 %} mega-menu__list--condensed{% endif %}"
-                          role="list"
-                        >
-                          {%- for childlink in link.links -%}
-                            <li>
-                              <a
-                                id="HeaderMenu-{{ link.handle }}-{{ childlink.handle }}"
-                                href="{{ childlink.url }}"
-                                class="mega-menu__link mega-menu__link--level-2 link{% if childlink.current %} mega-menu__link--active{% endif %}"
-                                {% if childlink.current %}
-                                  aria-current="page"
-                                {% endif %}
-                              >
-                                {{ childlink.title | escape }}
-                              </a>
-                              {%- if childlink.links != blank -%}
-                                <ul class="list-unstyled" role="list">
-                                  {%- for grandchildlink in childlink.links -%}
-                                    <li>
-                                      <a
-                                        id="HeaderMenu-{{ link.handle }}-{{ childlink.handle }}-{{ grandchildlink.handle }}"
-                                        href="{{ grandchildlink.url }}"
-                                        class="mega-menu__link link{% if grandchildlink.current %} mega-menu__link--active{% endif %}"
-                                        {% if grandchildlink.current %}
-                                          aria-current="page"
-                                        {% endif %}
-                                      >
-                                        {{ grandchildlink.title | escape }}
-                                      </a>
-                                    </li>
-                                  {%- endfor -%}
-                                </ul>
-                              {%- endif -%}
-                            </li>
-                          {%- endfor -%}
-                        </ul>
-                      </div>
-                    </details>
-                  </header-menu>
-                {%- else -%}
-                  <a
-                    id="HeaderMenu-{{ link.handle }}"
-                    href="{{ link.url }}"
-                    class="header__menu-item list-menu__item link link--text focus-inset"
-                    {% if link.current %}
-                      aria-current="page"
-                    {% endif %}
-                  >
-                    <span
-                      {%- if link.current %}
-                        class="header__active-menu-item"
-                      {% endif %}
-                    >
-                      {{- link.title | escape -}}
-                    </span>
-                  </a>
+                    </a>
                 {%- endif -%}
-              </li>
-            {%- endfor -%}
-          </ul>
-        {% endif %}
-    {% endcase %}
-  {% endfor %}
+            </li>
+        {%- endfor -%}
+    </ul>
+    {% for block in section.blocks %}
+        {% case block.type %}
+            {% when 'menu' %}
+                {% if block.settings.additional_menu != blank %}
+                    <ul class="list-menu list-menu--inline desktop" role="list">
+                        {%- for link in block.settings.additional_menu.links -%}
+                            <li>
+                                {%- if link.links != blank -%}
+                                    <header-menu>
+                                        <details id="Details-HeaderMenu-{{ forloop.index }}" class="mega-menu">
+                                            <summary
+                                                    id="HeaderMenu-{{ link.handle }}"
+                                                    class="header__menu-item list-menu__item link focus-inset">
+                                            <span
+                                              {%- if link.child_active %}
+                                                  class="header__active-menu-item"
+                                              {% endif %}>
+                                              {{- link.title | escape -}}
+                                            </span>
+                                            </summary>
+                                            <div id="MegaMenu-Content-{{ forloop.index }}"
+                                                 class="mega-menu__content color-{{ section.settings.menu_color_scheme }} gradient motion-reduce global-settings-popup"
+                                                 tabindex="-1">
+                                                {%- if link.levels > 1 -%}
+                                                    <ul class="mega-menu__list-additional{% if link.levels == 1 %} mega-menu__list--condensed{% endif %}"
+                                                        role="list">
+                                                        {%- for childlink in link.links -%}
+                                                            <li class="mega-menu__grandchild-container">
+                                                                <h3
+                                                                        id="HeaderMenu-{{ link.handle }}-{{ childlink.handle }}"
+                                                                        href="{{ childlink.url }}"
+                                                                        class=""
+                                                                        {% if childlink.current %}
+                                                                            aria-current="page"
+                                                                        {% endif %}
+                                                                >
+                                                                    {{ childlink.title | escape }}
+                                                                </h3>
+                                                                <ul class="list-unstyled mega-menu__grandchild-links"
+                                                                    role="list">
+                                                                    {%- for grandchildlink in childlink.links -%}
+                                                                        <li>
+                                                                            <a
+                                                                                    id="HeaderMenu-{{ link.handle }}-{{ childlink.handle }}-{{ grandchildlink.handle }}"
+                                                                                    href="{{ grandchildlink.url }}"
+                                                                                    class="mega-menu__link link{% if grandchildlink.current %} mega-menu__link--active{% endif %}"
+                                                                                    {% if grandchildlink.current %}
+                                                                                        aria-current="page"
+                                                                                    {% endif %}>
+                                                                                {{ grandchildlink.title | escape }}
+                                                                            </a>
+                                                                        </li>
+                                                                    {%- endfor -%}
+                                                                </ul>
+                                                            </li>
+                                                        {%- endfor -%}
+                                                    </ul>
+                                                {% else %}
+                                                    <div class="mega-menu__child-links">
+                                                        <div class="mega-menu__child-links-wrapper">
+                                                            <h3>{{ link.title }}</h3>
+                                                            <ul>
+                                                                {% for childlink in link.links %}
+                                                                    <li>
+                                                                        <a id="HeaderMenu-{{ link.handle }}-{{ childlink.handle }}"
+                                                                           href="{{ childlink.url }}"
+                                                                           class="mega-menu__link link{% if childlink.current %} mega-menu__link--active{% endif %}"
+                                                                        {% if childlink.current %}
+                                                                            aria-current="page"
+                                                                                {% endif %}>
+                                                                            {{ childlink.title | escape }}
+                                                                        </a>
+                                                                    </li>
+                                                                {% endfor %}
+                                                            </ul>
+                                                        </div>
+                                                        {% if link.title == 'About' %}
+                                                            <div class="mega-menu__contacts">
+                                                                <h3>Contact Us</h3>
+                                                                <ul class="mega-menu__contacts-wrapper">
+                                                                    <li class="mega-menu__contacts-item">
+                                                                    <span>
+                                                                      <svg
+                                                                              width="20"
+                                                                              height="20"
+                                                                              viewBox="0 0 20 20"
+                                                                              fill="none"
+                                                                              xmlns="http://www.w3.org/2000/svg">
+                                                                        <path fill-rule="evenodd" clip-rule="evenodd"
+                                                                              d="M0.374157 3.59625C0.190733 1.71627 1.74128 0.25 3.52801 0.25C5.03171 0.25 6.34245 1.27339 6.70715 2.7322L7.06081 4.14683C7.06665 4.17022 7.07242 4.19328 7.07812 4.21604C7.21727 4.7722 7.31048 5.14477 7.3349 5.50979C7.40505 6.55882 7.06787 7.59449 6.39357 8.40114C6.15893 8.68183 5.86425 8.9281 5.42435 9.29574C5.40634 9.31078 5.38809 9.32603 5.3696 9.3415L3.94704 10.5308C5.25035 12.8902 7.11083 14.7507 9.47022 16.054L10.6595 14.6314C10.675 14.6129 10.6902 14.5947 10.7053 14.5767C11.0729 14.1368 11.3192 13.8421 11.5999 13.6075C12.4065 12.9331 13.4422 12.596 14.4912 12.6661C14.8563 12.6905 15.2288 12.7837 15.785 12.9229C15.8077 12.9286 15.8308 12.9344 15.8542 12.9402L17.2688 13.2939C18.7276 13.6586 19.751 14.9693 19.751 16.473C19.751 18.2597 18.2847 19.8103 16.4048 19.6269C13.7651 19.3693 11.3894 18.7099 9.32017 17.6702C6.24602 16.1255 3.87548 13.755 2.33086 10.6809C1.29115 8.61159 0.631701 6.23591 0.374157 3.59625ZM10.8587 16.7318C12.5391 17.452 14.4409 17.9281 16.5504 18.1339C17.4485 18.2216 18.251 17.4775 18.251 16.473C18.251 15.6576 17.6961 14.9468 16.905 14.7491L15.4904 14.3954C14.84 14.2328 14.6054 14.1771 14.3911 14.1628C13.7275 14.1184 13.0722 14.3317 12.5619 14.7583C12.3971 14.8961 12.2404 15.0792 11.8103 15.5935L10.8587 16.7318ZM3.2692 9.14234L4.40749 8.1907C4.92186 7.76067 5.10496 7.60389 5.2427 7.43911C5.66931 6.92877 5.88262 6.27355 5.83824 5.60988C5.82391 5.39559 5.7682 5.16107 5.60559 4.51063L5.25194 3.096C5.05417 2.30495 4.34341 1.75 3.52801 1.75C2.5235 1.75 1.77945 2.55253 1.86707 3.45059C2.07289 5.56013 2.54905 7.46189 3.2692 9.14234Z"
+                                                                              fill="#F1592A"/>
+                                                                      </svg>
+                                                                    </span>
+                                                                        <a href="tel:+1-925-215-2927">+1-925-215-2927</a>
+                                                                    </li>
+                                                                    <li class="mega-menu__contacts-item">
+                                                                    <span>
+                                                                      <svg
+                                                                              width="24"
+                                                                              height="24"
+                                                                              viewBox="0 0 24 24"
+                                                                              fill="none"
+                                                                              xmlns="http://www.w3.org/2000/svg"
+                                                                      >
+                                                                        <path fill-rule="evenodd" clip-rule="evenodd"
+                                                                              d="M10 3.25002L9.9436 3.25002C8.10584 3.25 6.65021 3.24999 5.511 3.40315C4.33857 3.56078 3.38963 3.8929 2.64126 4.64126C1.8929 5.38963 1.56078 6.33857 1.40315 7.511C1.24999 8.65021 1.25 10.1058 1.25002 11.9436L1.25002 12L1.25002 12.0564C1.25 13.8942 1.24999 15.3498 1.40315 16.489C1.56078 17.6615 1.8929 18.6104 2.64126 19.3588C3.38963 20.1071 4.33857 20.4393 5.511 20.5969C6.6502 20.75 8.10582 20.75 9.94356 20.75H9.94361H10H14H14.0564H14.0565C15.8942 20.75 17.3498 20.75 18.489 20.5969C19.6615 20.4393 20.6104 20.1071 21.3588 19.3588C22.1071 18.6104 22.4393 17.6615 22.5969 16.489C22.75 15.3498 22.75 13.8942 22.75 12.0565V12.0564V12V11.9436V11.9436C22.75 10.1058 22.75 8.6502 22.5969 7.511C22.4393 6.33857 22.1071 5.38963 21.3588 4.64126C20.6104 3.8929 19.6615 3.56078 18.489 3.40315C17.3498 3.24999 15.8942 3.25 14.0564 3.25002L14 3.25002H10ZM3.70192 5.70192C4.12513 5.27871 4.70478 5.02504 5.71087 4.88978C6.73853 4.75161 8.0932 4.75002 10 4.75002H14C15.9068 4.75002 17.2615 4.75161 18.2892 4.88978C19.2953 5.02504 19.8749 5.27871 20.2981 5.70192C20.7213 6.12513 20.975 6.70478 21.1103 7.71087C21.2484 8.73853 21.25 10.0932 21.25 12C21.25 13.9068 21.2484 15.2615 21.1103 16.2892C20.975 17.2953 20.7213 17.8749 20.2981 18.2981C19.8749 18.7213 19.2953 18.975 18.2892 19.1103C17.2615 19.2484 15.9068 19.25 14 19.25H10C8.0932 19.25 6.73853 19.2484 5.71087 19.1103C4.70478 18.975 4.12513 18.7213 3.70192 18.2981C3.27871 17.8749 3.02504 17.2953 2.88978 16.2892C2.75161 15.2615 2.75002 13.9068 2.75002 12C2.75002 10.0932 2.75161 8.73853 2.88978 7.71087C3.02504 6.70478 3.27871 6.12513 3.70192 5.70192ZM6.41995 7.37623C6.0753 7.14646 5.60965 7.23959 5.37989 7.58424C5.15012 7.92888 5.24325 8.39454 5.5879 8.6243L11.5879 12.6243C11.8398 12.7923 12.168 12.7923 12.42 12.6243L18.42 8.6243C18.7646 8.39454 18.8577 7.92888 18.628 7.58424C18.3982 7.23959 17.9325 7.14646 17.5879 7.37623L12.0039 11.0989L6.41995 7.37623Z"
+                                                                              fill="#F1592A"/>
+                                                                      </svg>
+                                                                    </span>
+                                                                        <a href="mailto:sales.cs@fitnesssuperstore.com">Send
+                                                                            E-mail</a>
+                                                                    </li>
+                                                                    <li class="mega-menu__contacts-item">
+                                                                    <span>
+                                                                      <svg
+                                                                              width="22"
+                                                                              height="22"
+                                                                              viewBox="0 0 22 22"
+                                                                              fill="none"
+                                                                              xmlns="http://www.w3.org/2000/svg"
+                                                                      >
+                                                                        <path d="M11 21C16.523 21 21 16.523 21 11C21 5.477 16.523 1 11 1C5.477 1 1 5.477 1 11C1 12.379 1.28 13.693 1.784 14.888C2.063 15.548 2.202 15.878 2.22 16.128C2.237 16.378 2.163 16.652 2.016 17.201L1 21L4.799 19.984C5.348 19.837 5.622 19.764 5.872 19.78C6.122 19.798 6.452 19.937 7.112 20.216C8.34266 20.7343 9.66465 21.0009 11 21Z"
+                                                                              stroke="#F1592A" stroke-width="1.5" stroke-linecap="round"
+                                                                              stroke-linejoin="round"/>
+                                                                        <path d="M7.58817 11.377L8.45917 10.296C8.82617 9.84 9.27917 9.416 9.31617 8.808C9.32417 8.655 9.21617 7.967 9.00117 6.59C8.91617 6.049 8.41017 6 7.97317 6C7.40317 6 7.11817 6 6.83517 6.13C6.47717 6.293 6.11017 6.752 6.02917 7.137C5.96517 7.442 6.01317 7.652 6.10817 8.072C6.51017 9.855 7.45517 11.616 8.91917 13.081C10.3842 14.545 12.1452 15.49 13.9292 15.892C14.3492 15.987 14.5582 16.035 14.8632 15.971C15.2482 15.891 15.7072 15.523 15.8712 15.165C16.0002 14.882 16.0002 14.597 16.0002 14.027C16.0002 13.589 15.9512 13.084 15.4102 12.999C14.0332 12.783 13.3452 12.676 13.1922 12.684C12.5852 12.72 12.1602 13.174 11.7042 13.541L10.6232 14.411"
+                                                                              stroke="#F1592A" stroke-width="1.5" stroke-linecap="round"
+                                                                              stroke-linejoin="round"/>
+                                                                      </svg>
+                                                                    </span>
+                                                                        <a href="https://api.whatsapp.com/send/?phone=19252152927&text&type=phone_number&app_absent=0" target="_blank" rel="nofollow">WhatsApp</a>
+                                                                    </li>
+                                                                    <li class="mega-menu__contacts-item">
+                                                                        <div class="rich-text__buttons scroll-trigger animate--slide-in"
+                                                                             data-cascade=""
+                                                                             style="--animation-order: 2;"><a
+                                                                                    href="/pages/contact"
+                                                                                    class="button button--primary">Contact
+                                                                                Us
+                                                                                <svg width="24" height="24"
+                                                                                     viewBox="0 0 24 24" fill="none"
+                                                                                     xmlns="http://www.w3.org/2000/svg">
+                                                                                    <path fill-rule="evenodd"
+                                                                                          clip-rule="evenodd"
+                                                                                          d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z"
+                                                                                          fill="white"></path>
+                                                                                </svg>
+                                                                            </a></div>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </details>
+                                    </header-menu>
+                                {%- else -%}
+                                    <a
+                                            id="HeaderMenu-{{ link.handle }}"
+                                            href="{{ link.url }}"
+                                            class="header__menu-item list-menu__item link link--text focus-inset"
+                                            {% if link.current %}
+                                                aria-current="page"
+                                            {% endif %}>
+                                        <span
+                                          {%- if link.current %}
+                                              class="header__active-menu-item"
+                                          {% endif %}
+                                        >
+                                          {{- link.title | escape -}}
+                                        </span>
+                                    </a>
+                                {%- endif -%}
+                            </li>
+                        {%- endfor -%}
+                    </ul>
+                {% endif %}
+        {% endcase %}
+    {% endfor %}
 </nav>

@@ -1,0 +1,88 @@
+<link rel="stylesheet" href="{{ 'section-remanufactured-product-photos.css' | asset_url }}">
+
+{% assign data = page.metafields.custom.remanufactured_product_data.value %}
+
+<div class="remanufactured-product-photos__wrapper">
+    <h1 class="remanufactured-product-photos__title">{{ data.title }}</h1>
+    <div class="remanufactured-product-photos__items">
+        {% for image in data.images_array.value %}
+            <div class="remanufactured-product-photos__item">
+                <img src="{{ image | image_url: width: 900, height: 1200 }}" alt="{{ image.alt }}" loading="lazy"
+                     class="remanufactured-product-photos__item-img">
+            </div>
+        {% endfor %}
+    </div>
+</div>
+<div class="scroll-buttons">
+    <button id="scroll-up" class="scroll-btn">
+        <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M23.9393 9.3534C24.5251 8.76762 25.4749 8.76762 26.0607 9.3534L38.5607 21.8534C39.1464 22.4392 39.1464 23.3889 38.5607 23.9747C37.9749 24.5605 37.0251 24.5605 36.4393 23.9747L26.5 14.0354L26.5 39.5807C26.5 40.4092 25.8284 41.0807 25 41.0807C24.1716 41.0807 23.5 40.4092 23.5 39.5807L23.5 14.0354L13.5607 23.9747C12.9749 24.5605 12.0251 24.5605 11.4393 23.9747C10.8536 23.3889 10.8536 22.4392 11.4393 21.8534L23.9393 9.3534Z"
+                  fill="white"/>
+        </svg>
+    </button>
+    <button aria-label="Scroll Button" id="scroll-down" class="scroll-btn">
+        <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M25 8.91406C25.8284 8.91406 26.5 9.58564 26.5 10.4141L26.5 35.9594L36.4393 26.0201C37.0251 25.4343 37.9749 25.4343 38.5607 26.0201C39.1464 26.6059 39.1464 27.5556 38.5607 28.1414L26.0607 40.6414C25.7794 40.9227 25.3978 41.0807 25 41.0807C24.6022 41.0807 24.2206 40.9227 23.9393 40.6414L11.4393 28.1414C10.8536 27.5556 10.8536 26.6059 11.4393 26.0201C12.0251 25.4343 12.9749 25.4343 13.5607 26.0201L23.5 35.9594L23.5 10.4141C23.5 9.58564 24.1716 8.91406 25 8.91406Z"
+                  fill="white"/>
+        </svg>
+    </button>
+</div>
+
+
+<script>
+	document.addEventListener("DOMContentLoaded", () => {
+		const scrollUpBtn = document.getElementById("scroll-up");
+		const scrollDownBtn = document.getElementById("scroll-down");
+
+		if (!scrollUpBtn || !scrollDownBtn) {
+			console.error("Buttons not found");
+			return;
+		}
+
+		const halfScroll = document.body.scrollHeight / 2;
+
+		const toggleScrollButtons = () => {
+			const scrolled = window.scrollY;
+			const isScrolledPastHalf = scrolled > halfScroll;
+			scrollUpBtn.classList.toggle("visible", isScrolledPastHalf);
+			scrollDownBtn.classList.toggle("visible", !isScrolledPastHalf);
+		};
+
+		const debouncedToggleScrollButtons = (() => {
+			let timeout;
+			return () => {
+				clearTimeout(timeout);
+				timeout = setTimeout(toggleScrollButtons, 100);
+			};
+		})();
+
+		scrollUpBtn.addEventListener("click", () => {
+			window.scrollTo({top: 0, behavior: "smooth"});
+		});
+
+		scrollDownBtn.addEventListener("click", () => {
+			window.scrollTo({top: document.body.scrollHeight, behavior: "smooth"});
+		});
+
+		window.addEventListener("scroll", debouncedToggleScrollButtons);
+		toggleScrollButtons();
+	});
+
+</script>
+
+{% schema %}
+{
+  "name": "Product Photos",
+  "tag": "section",
+  "class": "remanufactured-product-photos",
+  "settings": [
+  ],
+  "presets": [
+    {
+      "name": "Product Photos"
+    }
+  ]
+}
+{% endschema %}

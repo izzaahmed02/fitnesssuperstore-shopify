@@ -86,7 +86,6 @@ function onRemoveBtnClick(e) {
 function swymRenderWishlist(swat) {
 	// Get wishlist items
 	swat.fetch(function(products) {
-		console.log(products)
 		var wishlistContentsContainer = document.getElementById("wishlist-items-container");
 		var formattedWishlistedProducts = products.map(function(p) {
 			p = SwymUtils.formatProductPrice(p); // formats product price and adds currency to product Object

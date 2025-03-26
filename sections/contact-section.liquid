@@ -1,25 +1,25 @@
 {{ 'contact-section.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
-  #shopify-section-{{ section.id }} {
+    #shopify-section-{{ section.id }} {
     padding-top: {{ section.settings.padding_top }}px;
     padding-bottom: {{ section.settings.padding_bottom }}px;
-  }
+    }
 
-  #shopify-section-{{ section.id }} .contact__heading{
+    #shopify-section-{{ section.id }} .contact__heading{
     text-align: center;
     text-transform: uppercase;
     margin-top: 0;
     margin-bottom: 24px;
-  }
+    }
 
-  #shopify-section-{{ section.id }} p{
+    #shopify-section-{{ section.id }} p{
     text-align: center;
     margin-top: 0;
     margin-bottom: 0;
-  }
+    }
 
-  #shopify-section-{{ section.id }} .btn__link{
+    #shopify-section-{{ section.id }} .btn__link{
     font-family: "Lato";
     line-height: 24px;
     font-weight: 700;
@@ -35,104 +35,108 @@
     margin-right: auto;
     display: flex;
     width: fit-content;
-  }
-
-  #shopify-section-{{ section.id }} .contact-content .item{
-    display: flex;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-  #shopify-section-{{ section.id }} .contact-content .item img{
-    margin-right: 12px;
-  }
-
-  @media screen and (max-width: 750px) {
-    #shopify-section-{{ section.id }} {
-      padding-top: {{ section.settings.padding_top | times: 0.6 | round }}px;
-      padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round }}px;
-    }
-
-    #shopify-section-{{ section.id }} .contact__heading{
-      font-size: 24px;
-      line-height: 32px;
-      text-align: start;
-      margin-bottom: 16px;
     }
 
     #shopify-section-{{ section.id }} .contact-content .item{
-      align-items: start;
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    }
+    #shopify-section-{{ section.id }} .contact-content .item img{
+    margin-right: 12px;
+    }
+
+    @media screen and (max-width: 750px) {
+    #shopify-section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top | times: 0.6 | round }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round }}px;
+    }
+
+    #shopify-section-{{ section.id }} .contact__heading{
+    font-size: 28px;
+    line-height: 32px;
+    text-align: start;
+    margin-bottom: 16px;
+    }
+
+    #shopify-section-{{ section.id }} .contact-content .item{
+    align-items: start;
     }
 
     #shopify-section-{{ section.id }} p{
-      text-align: start;
+    text-align: start;
     }
-    
+
     #shopify-section-{{ section.id }} .btn__link{
-      display: flex;
-      justify-content: center;
-      margin-top: 16px;
-      width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+    width: 100%;
     }
-  }
+    }
+    .contact__heading + p {
+    max-width: 842px;
+    margin: 0 auto;
+    }
 {%- endstyle -%}
 
-<div class="page-width">
-  <div class="container">
-    <h2 class="contact__heading">{{ section.settings.heading }}</h2>
-    {% if section.settings.text != blank %}
-      <p>{{ section.settings.text }}</p>
-    {% endif %}
-    {% if section.settings.link != blank %}
-      <a href="{{ section.settings.href }}" class="btn__link">{{ section.settings.link }}</a>
-    {% endif %}
-  </div>
-  <div class="contact-wrapper">
-    <div class="contact-content">
-      <span class="title">Contacts</span>
-      {% for block in section.blocks %}
-        {%- case block.type -%}
-          {%- when 'info' -%}
-            <div class="item">
-              {% if block.settings.image != blank -%}
-                {{- block.settings.image | image_url: width: auto | image_tag -}}
-              {%- endif %}
-              <span class="name">{{ block.settings.name }}</span>
-
-              <div class="info_text-container">
-                <div class="text">{{ block.settings.text1 }}</div>
-                {% if block.settings.text2 != blank %}
-                  <div class="text">
-                    <div class="circle"></div>
-                    {{ block.settings.text2 }}
-                  </div>
-                {% endif %}
-              </div>
-            </div>
-          {%- when 'schedule' -%}
-            <div class="schedule">
-              <div class="title">{{ block.settings.title }}</div>
-              <div class="schedule-wrapper">
-                <div class="schedule-item">
-                  <span class="day">Mon-Fri</span>
-                  <span class="work-hours">{{ block.settings.mon }}</span>
-                </div>
-                <div class="schedule-item">
-                  <span class="day">Sat</span>
-                  <span class="work-hours">{{ block.settings.sat }}</span>
-                </div>
-                <div class="schedule-item">
-                  <span class="day">Sun</span>
-                  <span class="work-hours">{{ block.settings.sun }}</span>
-                </div>
-              </div>
-            </div>
-        {% endcase %}
-      {% endfor %}
+<div class="page-width scroll-trigger animate--slide-in">
+    <div class="container">
+        <h2 class="contact__heading">{{ section.settings.heading }}</h2>
+        {% if section.settings.text != blank %}
+            <p>{{ section.settings.text }}</p>
+        {% endif %}
+        {% if section.settings.link != blank %}
+            <a href="{{ section.settings.href }}" class="btn__link">{{ section.settings.link }}</a>
+        {% endif %}
     </div>
-    <div class="contact-image">
-      {{ section.settings.image | image_url: width: auto | image_tag }}
+    <div class="contact-wrapper">
+        <div class="contact-content">
+            <span class="title desktop">Contacts</span>
+            <span class="title mobile">Contact information</span>
+            {% for block in section.blocks %}
+                {%- case block.type -%}
+                    {%- when 'info' -%}
+                        <div class="item">
+                            {% if block.settings.image != blank -%}
+                                {{- block.settings.image | image_url: width: auto | image_tag -}}
+                            {%- endif %}
+                            <span class="name">{{ block.settings.name }}</span>
+                            <div class="info_text-container">
+                                <div class="text">{{ block.settings.text1 }}</div>
+                                {% if block.settings.text2 != blank %}
+                                    <div class="text">
+                                        <div class="circle"></div>
+                                        {{ block.settings.text2 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {%- when 'schedule' -%}
+                        <div class="schedule">
+                            <div class="title">{{ block.settings.title }}</div>
+                            <div class="schedule-wrapper">
+                                <div class="schedule-item">
+                                    <span class="day">Mon-Fri</span>
+                                    <span class="work-hours">{{ block.settings.mon }}</span>
+                                </div>
+                                <div class="schedule-item">
+                                    <span class="day">Sat</span>
+                                    <span class="work-hours">{{ block.settings.sat }}</span>
+                                </div>
+                                <div class="schedule-item">
+                                    <span class="day">Sun</span>
+                                    <span class="work-hours">{{ block.settings.sun }}</span>
+                                </div>
+                            </div>
+                        </div>
+                {% endcase %}
+            {% endfor %}
+        </div>
+        <div class="contact-image">
+            {{ section.settings.image | image_url: width: auto | image_tag }}
+        </div>
     </div>
-  </div>
 </div>
 
 {% schema %}

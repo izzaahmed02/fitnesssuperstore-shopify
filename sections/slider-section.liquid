@@ -1,80 +1,86 @@
 {{ 'slider-section.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
-  #shopify-section-{{ section.id }} {
+    #shopify-section-{{ section.id }} {
     padding-top: {{ section.settings.padding_top }}px;
     padding-bottom: {{ section.settings.padding_bottom }}px;
-  }
-
-  @media screen and (max-width: 750px) {
-    #shopify-section-{{ section.id }} {
-      padding-top: {{ section.settings.padding_top | times: 0.3 | round }}px;
-      padding-bottom: {{ section.settings.padding_bottom | times: 0.3 | round }}px;
     }
-  }
+
+    @media screen and (max-width: 750px) {
+    #shopify-section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top | times: 0.3 | round }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.3 | round }}px;
+    }
+    }
 {%- endstyle -%}
 
 <div class="page-width">
-  <h2 class="slider-section-heading">{{ section.settings.title }}</h2>
-
-  <div class="slider-section-container">
-    <div class="slider-arrow-prev arrow-prev-{{ section.id }}">
-      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="40" height="40" rx="20" fill="#616166"/>
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M17.8056 14.4697C18.0985 14.1768 18.5734 14.1768 18.8663 14.4697L23.8663 19.4697C24.1592 19.7626 24.1592 20.2374 23.8663 20.5303L18.8663 25.5303C18.5734 25.8232 18.0985 25.8232 17.8056 25.5303C17.5127 25.2374 17.5127 24.7626 17.8056 24.4697L22.2753 20L17.8056 15.5303C17.5127 15.2374 17.5127 14.7626 17.8056 14.4697Z" fill="white"/>
-      </svg>
+    <h2 class="slider-section-heading scroll-trigger animate--slide-in">{{ section.settings.title }}</h2>
+    <div class="slider-section-container">
+        <div class="slider-arrow-prev arrow-prev-{{ section.id }}">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="20" fill="#616166"/>
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                      d="M17.8056 14.4697C18.0985 14.1768 18.5734 14.1768 18.8663 14.4697L23.8663 19.4697C24.1592 19.7626 24.1592 20.2374 23.8663 20.5303L18.8663 25.5303C18.5734 25.8232 18.0985 25.8232 17.8056 25.5303C17.5127 25.2374 17.5127 24.7626 17.8056 24.4697L22.2753 20L17.8056 15.5303C17.5127 15.2374 17.5127 14.7626 17.8056 14.4697Z"
+                      fill="white"/>
+            </svg>
+        </div>
+        <div class="slider-section-{{ section.id }} scroll-trigger animate--slide-in">
+            {% for block in section.blocks %}
+                <a href="{{ block.settings.link }}" class="slider__slide">
+                    <img
+                            src="{{ block.settings.image | image_url }}"
+                            alt="{{ block.settings.image.alt | escape }}"
+                            width=""
+                            height="">
+                    <p class="slider__slide--text">{{ block.settings.text }}</p>
+                </a>
+            {% endfor %}
+        </div>
+        <div class="slider-arrow-next arrow-next-{{ section.id }}">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="20" fill="#616166"/>
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                      d="M17.8056 14.4697C18.0985 14.1768 18.5734 14.1768 18.8663 14.4697L23.8663 19.4697C24.1592 19.7626 24.1592 20.2374 23.8663 20.5303L18.8663 25.5303C18.5734 25.8232 18.0985 25.8232 17.8056 25.5303C17.5127 25.2374 17.5127 24.7626 17.8056 24.4697L22.2753 20L17.8056 15.5303C17.5127 15.2374 17.5127 14.7626 17.8056 14.4697Z"
+                      fill="white"/>
+            </svg>
+        </div>
     </div>
-
-    <div class="slider-section-{{ section.id }}">
-      {% for block in section.blocks %}
-        <a href="{{ block.settings.link }}" class="slider__slide">
-          <img
-            src="{{ block.settings.image | image_url }}"
-            alt="{{ block.settings.image.alt | escape }}"
-            width=""
-            height=""
-          >
-          <p class="slider__slide--text">{{ block.settings.text }}</p>
+    {% if section.settings.url != blank %}
+        <a href="{{ section.settings.url }}" class="slider-section-link">{{ section.settings.label }}
+            <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M9.96967 5.46967C10.2626 5.17678 10.7374 5.17678 11.0303 5.46967L17.0303 11.4697C17.3232 11.7626 17.3232 12.2374 17.0303 12.5303L11.0303 18.5303C10.7374 18.8232 10.2626 18.8232 9.96967 18.5303C9.67678 18.2374 9.67678 17.7626 9.96967 17.4697L15.4393 12L9.96967 6.53033C9.67678 6.23744 9.67678 5.76256 9.96967 5.46967Z" fill="#F1592A"/>
+            </svg>
         </a>
-      {% endfor %}
-    </div>
-
-    <div class="slider-arrow-next arrow-next-{{ section.id }}">
-      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="40" height="40" rx="20" fill="#616166"/>
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M17.8056 14.4697C18.0985 14.1768 18.5734 14.1768 18.8663 14.4697L23.8663 19.4697C24.1592 19.7626 24.1592 20.2374 23.8663 20.5303L18.8663 25.5303C18.5734 25.8232 18.0985 25.8232 17.8056 25.5303C17.5127 25.2374 17.5127 24.7626 17.8056 24.4697L22.2753 20L17.8056 15.5303C17.5127 15.2374 17.5127 14.7626 17.8056 14.4697Z" fill="white"/>
-      </svg>
-    </div>
-  </div>
+    {% endif %}
 </div>
-
 <script>
-  document.addEventListener('DOMContentLoaded', (event) => {
-    $('.slider-section-{{ section.id }}').slick({
-      prevArrow: '.arrow-prev-{{ section.id }}',
-      nextArrow: '.arrow-next-{{ section.id }}',
-      infinite: false,
-      slidesToScroll: 1,
-      slidesToShow: 5,
-      swipeToSlide: true,
-      responsive: [
-        {
-          breakpoint: 1024,
-          settings: {
-            slidesToShow: 4,
-            dots: false,
-          },
-        },
-        {
-          breakpoint: 750,
-          settings: {
-            slidesToShow: 2.2,
-            dots: true,
-          },
-        },
-      ],
-    });
-  });
+	document.addEventListener('DOMContentLoaded', () => {
+		$('.slider-section-{{ section.id }}').slick({
+			prevArrow: '.arrow-prev-{{ section.id }}',
+			nextArrow: '.arrow-next-{{ section.id }}',
+			infinite: false,
+			slidesToScroll: 1,
+			slidesToShow: 5,
+			swipeToSlide: true,
+			responsive: [
+				{
+					breakpoint: 1024,
+					settings: {
+						slidesToShow: 4,
+						dots: false,
+					},
+				},
+				{
+					breakpoint: 750,
+					settings: {
+						slidesToShow: 2.2,
+						dots: true,
+					},
+				},
+			],
+		});
+	});
 </script>
 
 {% schema %}
@@ -110,6 +116,16 @@
       "unit": "px",
       "label": "t:sections.all.padding.padding_bottom",
       "default": 80
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "Link URL"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Link Label"
     }
   ],
   "blocks": [

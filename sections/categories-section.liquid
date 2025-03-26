@@ -1,0 +1,121 @@
+{{ 'categories-section.css' | asset_url | stylesheet_tag }}
+
+<style>
+  #shopify-section-{{ section.id }}{
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+  #shopify-section-{{ section.id }} .custom-container{
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  {% if section.settings.columns == "three" %}
+    #shopify-section-{{ section.id }} .categories-wrapper {
+      column-count: 3;
+      column-gap: 80px;
+    }
+  {% else %}
+    #shopify-section-{{ section.id }} .categories-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
+  {% endif %}
+  @media (max-width: 768px) {
+    #shopify-section-{{ section.id }} {
+      padding-top: 0px;
+    }
+  }
+</style>
+
+<div class="categories-section custom-container scroll-trigger animate--slide-in">
+  <h2 class="title">{{ section.settings.title }}</h2>
+  
+  <div class="categories-wrapper">
+    {% for block in section.blocks %}
+      {%- case block.type -%}
+        {%- when 'item' -%}
+          <div class="category-item">
+            <a href="{{ block.settings.collection.url }}" class="category-header">{{ block.settings.collection.title }}</a>
+            {% for collection in block.settings.collections %}
+              <a href="{{ collection.url }}">
+                {{ collection.title }}
+              </a>
+            {% endfor %}
+          </div>
+      {% endcase %}
+    {% endfor %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Categories",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading"
+    },
+    {
+      "type": "radio",
+      "id": "columns",
+      "label": "Columns",
+      "options": [
+        {
+          "value": "three",
+          "label": "3 columns"
+        },
+        {
+          "value": "four",
+          "label": "4 columns"
+        }
+      ],
+      "default": "three"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 60
+    }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Item",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "collection_list",
+          "id": "collections",
+          "label": "List of collections"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Categories"
+    }
+  ]
+}
+{% endschema %}

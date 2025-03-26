@@ -1,20 +1,24 @@
 <link rel="stylesheet" href="{{ 'remanufactured-photos-brands.css' | asset_url }}">
 
-<section class="remanufactured-brands-section">
-    <div class="container">
-      <p class="section-description">{{ section.settings.description }}</p>
-      <div class="brand-grid">
-        {% for block in section.blocks %}
-        <div class="brand-item">
-          <img height="" width="" src="{{ block.settings.logo | image_url }}" alt="{{ block.settings.brand_name }}" />
-          <span>{{ block.settings.brand_name }}</span>
+<section class="remanufactured-brands-section scroll-trigger animate--slide-in">
+    <div class="page-width">
+        <p class="section-description2 animate--slide-in">{{ section.settings.description }}</p>
+        <div class="brand-grid">
+            {% for block in section.blocks %}
+                <div class="brand-item animate--slide-in">
+                    <a href="{{ block.settings.brand_link | default: '#' }}" target="_blank" rel="noopener">
+                        <img height="" width="" src="{{ block.settings.logo | image_url }}"
+                             alt="{{ block.settings.brand_name }}"/>
+                        <span>{{ block.settings.brand_name }}</span>
+                    </a>
+                </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-      </div>
     </div>
-  </section>
+</section>
 
-  {% schema %}
+
+{% schema %}
 {
   "name": "Remanufactured Brands",
   "settings": [
@@ -39,14 +43,20 @@
           "type": "text",
           "id": "brand_name",
           "label": "Brand Name"
+        },
+        {
+          "type": "url",
+          "id": "brand_link",
+          "label": "Brand Link"
         }
       ]
     }
   ],
   "presets": [
     {
-      "name": "Remanufactured Brands",
+      "name": "Remanufactured Brands"
     }
   ]
 }
 {% endschema %}
+  

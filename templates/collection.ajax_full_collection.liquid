@@ -1,0 +1,19 @@
+{% layout none %}
+[
+{%- paginate collection.products by 1000 -%}
+  {% for product in collection.products %}
+    { 
+      "id": {{ product.id }}, 
+      "title": "{{ product.title | escape }}", 
+      "handle": "{{ product.handle }}", 
+      "price": {{ product.price | divided_by: 100 }}, 
+      "compare_at_price": {{ product.compare_at_price | divided_by: 100 }},
+      "image": "{{ product.featured_image | img_url: '300x300' }}", 
+      "url": "{{ product.url }}",
+      "model": "{{ product.metafields.custom.model }}",
+      "brand": "{{ product.metafields.custom.brand }}"
+    }
+    {%- if forloop.last == false %},{% endif %}
+  {% endfor %}
+{% endpaginate %}
+]

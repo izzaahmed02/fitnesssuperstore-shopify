@@ -1,0 +1,474 @@
+{% comment %}
+  Renders product variant-picker
+
+  Accepts:
+  - product: {Object} product object.
+  - block: {Object} passing the block information.
+  - product_form_id: {String} Id of the product form to which the variant picker is associated.
+  Usage:
+  {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
+{% endcomment %}
+
+
+{%- unless product.has_only_default_variant -%}
+  <div class="options_heading options-title">
+    <span class="apo-title">Color Option</span>
+    <div class="option_selected-container">
+      <p class="option_selected"></p>
+      <span class="option_selected-price"></span>
+
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z" fill="black"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="color_options_container options_container">
+    <variant-selects
+      id="variant-selects-{{ section.id }}"
+      data-section="{{ section.id }}"
+      {{ block.shopify_attributes }}   >
+      {%- for option in product.options_with_values -%}
+        {%- liquid
+          assign swatch_count = option.values | map: 'swatch' | compact | size
+        -%}
+        {% if option.name == 'Weight Stack' or option.name == 'weight stack' %}
+          <fieldset hidden class="js product-form__input product-form__input--pill weight-stack">
+            <legend class="form__label">{{ option.name }}</legend>
+            {% render 'product-variant-options',
+              product: product,
+              option: option,
+              block: block,
+              picker_type: 'button'
+            %}
+          </fieldset>
+        {% endif %}
+        {% if option.name == 'Color' or option.name == 'color' %}
+          <fieldset class="js product-form__input product-form__input--swatch">
+            <div class="color-options-container">
+              {% render 'product-variant-options',
+                product: product,
+                option: option,
+                block: block,
+                picker_type: 'swatch'
+              %}
+            </div>
+          </fieldset>
+        {% endif %}
+      {%- endfor -%}
+
+      <script type="application/json" data-selected-variant>
+        {{ product.selected_or_first_available_variant | json }}
+      </script>
+    </variant-selects>
+
+    <div class="color-options"></div>
+
+    <!-- Custom Color Input Trigger -->
+
+    <div class="custom-color-select-wrapper">
+      <div class="swatch swatch--custom-trigger" id="custom-color-trigger" title="Add custom color">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 7H7M13 7H7M7 7V1M7 7V13" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div class="custom-color-input" style="display: none;">
+        <div class="custom-color-input-header">
+          <p>Custom color code</p>
+
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.46967 4.46967C4.76256 4.17678 5.23744 4.17678 5.53033 4.46967L10 8.93934L14.4697 4.46967C14.7626 4.17678 15.2374 4.17678 15.5303 4.46967C15.8232 4.76256 15.8232 5.23744 15.5303 5.53033L11.0607 10L15.5303 14.4697C15.8232 14.7626 15.8232 15.2374 15.5303 15.5303C15.2374 15.8232 14.7626 15.8232 14.4697 15.5303L10 11.0607L5.53033 15.5303C5.23744 15.8232 4.76256 15.8232 4.46967 15.5303C4.17678 15.2374 4.17678 14.7626 4.46967 14.4697L8.93934 10L4.46967 5.53033C4.17678 5.23744 4.17678 4.76256 4.46967 4.46967Z" fill="black"/>
+          </svg>
+        </div>
+
+        <div class="custom-color-input-field">
+          <div class="custom-color-wrapper">
+            <input
+              type="text"
+              id="custom-color-value"
+              placeholder="Input custom color code"
+              maxlength="7"
+              pattern="^#(?:[0-9a-fA-F]{3}){1,2}$"
+              aria-label="Custom color input"
+            >
+          </div>
+          <button type="button" id="add-custom-color">Add</button>
+        </div>
+
+        <span class="custom-color-error_message">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.00003 1.12109C5.53841 1.12109 5.20166 1.399 4.91355 1.76103C4.63174 2.11513 4.33186 2.63313 3.961 3.27374L3.94464 3.30199L1.91353 6.81027L1.89716 6.83854C1.52489 7.48153 1.22394 8.00133 1.05666 8.4233C0.885707 8.85455 0.812157 9.28615 1.04328 9.68702C1.2744 10.0879 1.68476 10.2405 2.14364 10.3086C2.59263 10.3753 3.19326 10.3752 3.93625 10.3752H3.96892H8.03113H8.06381C8.80679 10.3752 9.40742 10.3753 9.85642 10.3086C10.3153 10.2405 10.7257 10.0879 10.9568 9.68702C11.1879 9.28615 11.1143 8.85456 10.9434 8.42331C10.7761 8.00135 10.4752 7.48156 10.1029 6.8386L10.1029 6.83855L10.0865 6.81027L8.05541 3.302L8.03906 3.27374C7.6682 2.63313 7.36831 2.11513 7.08651 1.76103C6.7984 1.399 6.46165 1.12109 6.00003 1.12109ZM6.37503 4.50022C6.37503 4.29311 6.20713 4.12522 6.00003 4.12522C5.79292 4.12522 5.62503 4.29311 5.62503 4.50022V6.50022C5.62503 6.70732 5.79292 6.87522 6.00003 6.87522C6.20713 6.87522 6.37503 6.70732 6.37503 6.50022V4.50022ZM6.50003 8.00022C6.50003 8.27636 6.27617 8.50022 6.00003 8.50022C5.72388 8.50022 5.50003 8.27636 5.50003 8.00022C5.50003 7.72407 5.72388 7.50022 6.00003 7.50022C6.27617 7.50022 6.50003 7.72407 6.50003 8.00022Z" fill="#E9380D"/>
+          </svg>
+
+          This color is not in the palette, check again and enter the correct color
+        </span>
+
+        <p>Choose a color from this guide:</p>
+
+        <a href="https://drive.google.com/file/d/1FBIAQ60IYUs816WptHe1PEai8eM5nuna/view" target="blank">
+          See available colors pdf
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden input to store the custom color value -->
+  {% comment %} <input type="hidden" name="properties[Custom color]" id="custom-color-hidden" form="{{ product_form_id }}">
+  <input
+    type="hidden"
+    name="items[1][id]"
+    id="custom-color-product"
+    value="50607223603516"
+    form="{{ product_form_id }}"
+    disabled
+  >
+    <input
+      type="hidden"
+      name="items[1][quantity]"
+      id="custom-color-quantity"
+      value="1"
+      form="{{ product_form_id }}"
+      disabled
+    />
+    <input type="hidden" name="items[1][properties][Color]" id="custom-color-properties" form="{{ product_form_id }}" disabled> {% endcomment %}
+{%- endunless -%}
+
+<script>
+  const availableColors = [
+    {
+      name: 'Chocolate Brown',
+      Pantone: '476C',
+      HEX: '#4E3629',
+    },
+    {
+      name: 'Wine Red',
+      Pantone: '7428C',
+      HEX: '#6A2C3E',
+    },
+    {
+      name: 'Red Rock',
+      Pantone: '7622C',
+      HEX: '#93272C',
+    },
+    {
+      name: 'Textured Red',
+      Pantone: '7621C',
+      HEX: '#AB2328',
+    },
+    {
+      name: 'Mars Red',
+      Pantone: '485C',
+      HEX: '#DA291C',
+    },
+    {
+      name: 'Organic Orange',
+      Pantone: '166C',
+      HEX: '#E35205',
+    },
+    {
+      name: 'Evergreen',
+      Pantone: '343C',
+      HEX: '#115740',
+    },
+    {
+      name: 'Mint Green',
+      Pantone: '341C',
+      HEX: '#007A53',
+    },
+    {
+      name: 'Ruch Green',
+      Pantone: '362C',
+      HEX: '#509E2F',
+    },
+    {
+      name: 'Buttercup',
+      Pantone: '122C',
+      HEX: '#FED141',
+    },
+    {
+      name: 'Signal Yellow',
+      Pantone: '130C',
+      HEX: '#F2A900',
+    },
+    {
+      name: 'Burnt Orange',
+      Pantone: '152C',
+      HEX: '#E57200',
+    },
+    {
+      name: 'Reseda Green',
+      Pantone: '5763C',
+      HEX: '#737B4C',
+    },
+    {
+      name: 'Coffee Brown',
+      Pantone: '139C',
+      HEX: '#AF6D04',
+    },
+    {
+      name: 'Sun Gold',
+      Pantone: '871C',
+      HEX: '#84754E',
+    },
+    {
+      name: 'Olympia White',
+      Pantone: 'No Pantone match',
+      HEX: '#F1EEE6',
+    },
+    {
+      name: 'Storm Grey',
+      Pantone: 'Cool Gray 5C',
+      HEX: '#B1B3B3',
+    },
+    {
+      name: 'Platinum Sparkle',
+      Pantone: '166C',
+      HEX: '#8A8D8F',
+    },
+    {
+      name: 'Jet Black',
+      Pantone: 'Process Black C',
+      HEX: '#2D2926',
+    },
+    {
+      name: 'Textured Black',
+      Pantone: 'Process Black C',
+      HEX: '#1D1D1D',
+    },
+    {
+      name: 'Silver Vein',
+      Pantone: 'No Pantone match',
+      HEX: '#71706E',
+    },
+    {
+      name: 'Slate Grey',
+      Pantone: 'Cool Grey 11C',
+      HEX: '#53565A',
+    },
+    {
+      name: 'Ebony Chrome',
+      Pantone: 'Cool Grey 10C C22',
+      HEX: '#63666A',
+    },
+    {
+      name: 'Stone Grey',
+      Pantone: '152C',
+      HEX: '#A69F88',
+    },
+    {
+      name: 'Post Office Blue',
+      Pantone: '540C',
+      HEX: '#003057',
+    },
+    {
+      name: 'Patriot Blue',
+      Pantone: '301C',
+      HEX: '#004B87',
+    },
+    {
+      name: 'Light Blue',
+      Pantone: '7461C',
+      HEX: '#007DBA',
+    },
+    {
+      name: 'Purple Wave',
+      Pantone: '268C',
+      HEX: '#582C83',
+    },
+    {
+      name: 'Lilac',
+      Pantone: '667C',
+      HEX: '#7C6992',
+    },
+    {
+      name: 'Pink',
+      Pantone: '166C',
+      HEX: '#E35205',
+    },
+  ];
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const trigger = document.getElementById('custom-color-trigger');
+    const inputContainer = document.querySelector('.custom-color-input');
+    const colorInput = document.getElementById('custom-color-value');
+    const hiddenInput = document.getElementById('custom-color-hidden');
+    const hiddenProduct = document.getElementById('custom-color-product');
+    const hiddenProductQuantity = document.getElementById('custom-color-quantity');
+    const hiddenProductProperty = document.getElementById('custom-color-properties');
+    const swatchContainer = document.querySelector('.color-options');
+    const addButton = document.getElementById('add-custom-color');
+    const selectedColorInfo = document.querySelector('.option_selected-container');
+    const selectedColorElement = document.querySelector('.option_selected');
+    const selectedColorPriceElement = document.querySelector('.option_selected-price');
+    const closeSelectedInfoBtn = selectedColorInfo.querySelector('svg');
+    const closeIcon = document.querySelector('.custom-color-input-header svg');
+    const errorMessage = document.querySelector('.custom-color-error_message');
+    const productSwatches = document.querySelectorAll('.color-options-container input[type=radio]');
+    const priceElement = document.querySelector('.price-item price-item--regular');
+    const customPriceElement = document.querySelector('.custom-price')
+
+    // Show the input field when "+" is clicked
+    trigger.addEventListener('click', () => {
+      inputContainer.style.display = 'block';
+      errorMessage.style.display = 'none';
+      addButton.classList.remove('disabled');
+    });
+
+    // Close the input popup when clicking on the close icon
+    closeIcon.addEventListener('click', () => {
+      inputContainer.style.display = 'none';
+      colorInput.value = '';
+      errorMessage.style.display = 'none';
+      addButton.classList.remove('disabled');
+    });
+
+    // Add custom color swatch
+    addButton.addEventListener('click', () => {
+      setTimeout(() => {
+        const color = colorInput.value.trim();
+        // Validate the hex color
+        if (/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(color)) {
+          const matchedColor = availableColors.find((c) => c.HEX.toLowerCase() === color.toLowerCase());
+          if (matchedColor) {
+            const customColorAvis = document.querySelector('.custom-color-avis input');
+  
+            if (customColorAvis) {
+              customColorAvis.value = matchedColor.HEX
+              triggerInputChange(customColorAvis);
+              $('.product-form__input--swatch label[title="Custom"]').click();
+            }
+            var customColorAvisCharge = document.querySelector('.custom-color-avis .apo-title-addcharge')?.textContent;
+
+            // Display Pantone value
+            selectedColorElement.textContent = `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`;
+            selectedColorPriceElement.textContent = customColorAvisCharge;
+  
+            const updatedProductSwatches = document.querySelectorAll('.color-options-container input[type=radio]');
+            updatedProductSwatches.forEach((input) => (input.checked = false));
+  
+            errorMessage.style.display = 'none';
+            addButton.classList.remove('disabled');
+            selectedColorInfo.style.display = 'flex';
+          } else {
+            errorMessage.style.display = 'flex';
+            addButton.classList.add('disabled');
+            return;
+          }
+  
+          hiddenInput.value = color;
+          hiddenProductProperty.value = color;
+          hiddenProduct.disabled = false;
+          hiddenProductQuantity.disabled = false;
+          hiddenProductProperty.disabled = false;
+  
+          // Create the custom swatch
+          const customSwatch = document.createElement('div');
+  
+          const customSwatchesOnPage = document.querySelectorAll('.swatch--custom');
+          customSwatchesOnPage.forEach((swatch) => swatch.classList.remove('selected'));
+  
+          const updatedProductSwatches = document.querySelectorAll('.color-options-container input[type=radio]');
+          updatedProductSwatches.forEach((input) => (input.checked = false));
+  
+          customSwatch.classList.add('swatch', 'swatch--custom', 'selected');
+          customSwatch.style.backgroundColor = color;
+          customSwatch.title = matchedColor
+            ? `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`
+            : `Custom Color: ${color}`;
+
+          // Add radio input for variant logic
+          customSwatch.innerHTML = `
+            <input
+              type="radio"
+              id="custom-color-swatch-${color}"
+              name="custom-color"
+              value="${color}"
+            >
+            <label for="custom-color-swatch-${color}">
+              <span class="swatch-label" style="background: ${color};"></span>
+            </label>
+          `;
+  
+          // Ensure swatch is selectable
+          customSwatch.addEventListener('click', () => {
+            document.querySelectorAll('.swatch--custom').forEach((swatch) => swatch.classList.remove('selected'));
+            customSwatch.classList.add('selected');
+  
+            const updatedProductSwatches = document.querySelectorAll('.color-options-container input');
+            updatedProductSwatches.forEach((input) => (input.checked = false));
+  
+            if (matchedColor) {
+              selectedColorElement.textContent = `Custom color: ${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`;
+              selectedColorPriceElement.textContent = customColorAvisCharge;
+              selectedColorInfo.style.display = 'flex';
+  
+              hiddenInput.value = color;
+              hiddenProductProperty.value = color;
+              hiddenProduct.disabled = false;
+              hiddenProductQuantity.disabled = false;
+              hiddenProductProperty.disabled = false;
+            }
+          });
+  
+          swatchContainer.appendChild(customSwatch);
+  
+          // Reset input and hide container
+          colorInput.value = '';
+          inputContainer.style.display = 'none';
+          errorMessage.style.display = 'none';
+          addButton.classList.remove('disabled');
+  
+        } else {
+          errorMessage.style.display = 'flex';
+          addButton.classList.add('disabled');
+        }
+      })
+    });
+
+    closeSelectedInfoBtn.addEventListener('click', () => {
+      selectedColorInfo.style.display = 'none';
+      
+      const customColorAvis = document.querySelector('.custom-color-avis input');
+
+      if (customColorAvis) {
+        customColorAvis.value = null;
+        triggerInputChange(customColorAvis);
+        $('.product-form__input--swatch label').eq(0).click();
+      }
+    });
+
+    // Handle Shopify swatches
+    document.querySelectorAll('.color-options-container .swatch-input__label').forEach((input) => {
+      input.addEventListener('click', () => {
+        hiddenInput.value = '';
+        hiddenProductProperty.value = '';
+        hiddenProduct.disabled = true;
+        hiddenProductQuantity.disabled = true;
+        hiddenProductProperty.disabled = true;
+        const customSwatchesOnPage = document.querySelectorAll('.swatch--custom.selected');
+        customSwatchesOnPage.forEach((swatch) => swatch.classList.remove('selected'));
+      });
+    });
+
+    // Handle quantity change
+      const mainQuantityInput = document.querySelector('.quantity__input');
+      const customQuantityInput = document.getElementById('custom-color-quantity');
+  
+      mainQuantityInput.addEventListener('input', function () {
+        const mainQuantity = parseInt(mainQuantityInput.value, 10) || 1;
+        customQuantityInput.value = mainQuantity;
+      });
+  });
+
+  function triggerInputChange(input) {
+    input.value += ' ';
+    
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    input.value = input.value.slice(0, -1);
+  
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+</script>
