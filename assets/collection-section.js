@@ -1,43 +1,34 @@
 document.addEventListener("DOMContentLoaded", function () {
-
 	function addScrollArrowsIfNeeded() {
 		const wrapper = document.querySelector('.collection-hero__related-collections-wrapper');
 		const list = document.querySelector('.collection-hero__related-collections');
 		if (!wrapper || !list) return;
-
 		if (list.scrollWidth > wrapper.clientWidth) {
 			const leftArrow = document.createElement('button');
 			leftArrow.className = 'collection-nav-arrow left';
 			leftArrow.innerHTML = '<svg width="24" height="24" style="transform: rotate(-180deg)" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n' +
 				'    <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="white"></path>\n' +
 				'</svg>';
-
 			const rightArrow = document.createElement('button');
 			rightArrow.className = 'collection-nav-arrow right';
 			rightArrow.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n' +
 				'    <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="white"></path>\n' +
 				'</svg>';
-
 			leftArrow.onclick = () => {
 				const children = Array.from(list.children);
 				const firstVisible = children.find(el => el.offsetLeft + el.offsetWidth > list.scrollLeft);
 				if (firstVisible) list.scrollLeft -= firstVisible.offsetWidth;
 			};
-
 			rightArrow.onclick = () => {
 				const children = Array.from(list.children);
 				const firstVisible = children.find(el => el.offsetLeft > list.scrollLeft);
 				if (firstVisible) list.scrollLeft += firstVisible.offsetWidth;
 			};
-
 			wrapper.appendChild(leftArrow);
 			wrapper.appendChild(rightArrow);
 		}
 	}
-
 	addScrollArrowsIfNeeded();
-
-
 	const perPageSelect = document.querySelector('.sort-per-page select.num');
 	if (perPageSelect) {
 		perPageSelect.addEventListener('change', function () {
@@ -60,8 +51,14 @@ document.addEventListener("DOMContentLoaded", function () {
 				slidesToShow: 1,
 				slidesToScroll: 1,
 				lazyLoad: 'ondemand',
-				arrows: false,
+				arrows: true,
 				dots: true,
+				prevArrow: '<button type="button" class="slick-prev"><svg width="16" height="16" style="transform: rotate(-180deg)" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n' +
+					'    <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="#F1592A"></path>\n' +
+					'</svg></button>',
+				nextArrow: '<button type="button" class="slick-next"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n' +
+					'    <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="#F1592A"></path>\n' +
+					'</svg></button>',
 				responsive: [
 					{
 						breakpoint: 768,
@@ -69,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
 							slidesToShow: 1
 						}
 					}
-				],
+				]
 			});
 		}
 		images.forEach(img => {
@@ -118,12 +115,13 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 document.addEventListener('click', function (e) {
+	if (e.target.closest('.slick-arrow')) {
+		return;
+	}
+
 	const productItem = e.target.closest('.product-item');
 	if (productItem) {
 		const link = productItem.querySelector('a.title');
 		link.click();
 	}
-
-
-
 });
