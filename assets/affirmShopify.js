@@ -7,7 +7,7 @@
 	let _affirm_country;
 	let _region_public_key;
 
-	let parsedRegionPublicKeys = JSON.parse('undefined');
+	let parsedRegionPublicKeys = JSON.parse('{"US":"DDKLC4NZ9P7UTRIX","CA":null}');
 
 	if (_shopify_country === 'US') {
 		_affirm_country = 'USA';
@@ -35,7 +35,7 @@
 <!-- End Affirm -->;
 function initializePromos() { 
 
-let promosJSON = '[{"promoStatus":true,"pageType":"product","selector":null,"onChange":null,"fontSize":"12","logoType":"logo","logoColor":"blue","position":"afterend","addCents":false,"saleSelector":null,"comparePrices":false,"dataElement":null,"alaElement":".paylater-container","shopifyPageType":"product"}]';
+let promosJSON = '[{"promoStatus":true,"pageType":"product","selector":".pr_custom_price","onChange":null,"fontSize":"12","logoType":"logo","logoColor":"blue","position":"afterend","addCents":true,"saleSelector":null,"comparePrices":false,"dataElement":null,"alaElement":".paylater-container","shopifyPageType":"product"}]';
 
 let promos = JSON.parse(promosJSON);
 
