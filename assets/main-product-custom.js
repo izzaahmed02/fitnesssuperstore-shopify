@@ -405,6 +405,15 @@ try {
 				}
 			}, 500)
 
+			var affirmIntervalTrigger = setInterval(() => {
+				var affirmElement = document.querySelector('.affirm-as-low-as');
+
+				if (affirmElement) {
+					document.querySelector('.paylater-logo').innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="70" height="28" style="max-width: 110px;cursor: pointer;">`
+					clearInterval(affirmIntervalTrigger);
+				}
+			}, 500)
+
 			const targetNode = document.querySelector('.pr_custom_price');
 
 			const observerCallback = (mutationsList, observer) => {
