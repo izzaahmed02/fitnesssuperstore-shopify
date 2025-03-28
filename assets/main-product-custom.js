@@ -297,7 +297,6 @@ try {
 						} else {
 							if (customFieldvalue === 'Warranty' && window.product.title.includes('Remanufactured')) {
 								customFieldvalue = `${customFieldvalue} Remanufactured Custom Field`
-								return;
 							} else if (customFieldvalue === 'Condition' && window.product.title.includes('Remanufactured')) {
 								window.open("/pages/remanufactured-gym-equipment", "_blank");
 								return;
