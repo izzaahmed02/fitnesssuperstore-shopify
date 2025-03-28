@@ -38,11 +38,8 @@ class FacetFiltersForm extends HTMLElement {
 				}
 			});
 		})
-
-
 		const searchInput = document.getElementById("search-input");
 		const searchInputMobile = document.getElementById("search-input-mobile");
-
 		if (searchInput) {
 			searchInput.removeEventListener("input", filterProducts);
 			searchInput.addEventListener("input", debounce(filterProducts, 300));
@@ -77,7 +74,6 @@ class FacetFiltersForm extends HTMLElement {
 				.then(html => {
 					const parser = new DOMParser();
 					const doc = parser.parseFromString(html, "text/html");
-
 					const productItems = doc.querySelectorAll("#product-grid li");
 					productItems.forEach(product => {
 						const productName = product.querySelector('.product-item .title').textContent.trim().toLowerCase();
@@ -137,7 +133,6 @@ class FacetFiltersForm extends HTMLElement {
 					setTimeout(processBatch, delay);
 				}
 			}
-
 			processBatch();
 		}
 
@@ -148,7 +143,7 @@ class FacetFiltersForm extends HTMLElement {
 			};
 		}
 
-		fetchAllProducts();
+		// fetchAllProducts();
 		const applyButton = document.querySelectorAll('.button--primary.apply-filters-mobile');
 		applyButton.forEach((btn) => {
 			const form = btn.closest('form');
@@ -205,7 +200,6 @@ class FacetFiltersForm extends HTMLElement {
 
 		function initSlider(element) {
 			const images = element.querySelectorAll('img.lazy-load');
-
 			if (images.length > 1) {
 				if (!$(element).hasClass('slick-initialized')) {
 					$(element).slick({
@@ -345,6 +339,7 @@ class FacetFiltersForm extends HTMLElement {
 		container.innerHTML = count;
 		container.classList.remove('loading');
 		if (containerDesktop) {
+			console.log(containerDesktop)
 			containerDesktop.innerHTML = count;
 			containerDesktop.classList.remove('loading');
 		}
@@ -417,7 +412,6 @@ class FacetFiltersForm extends HTMLElement {
 
 	static renderActiveFacets(html) {
 		const activeFacetElementSelectors = ['.active-facets-mobile', '.active-facets-desktop'];
-
 		activeFacetElementSelectors.forEach((selector) => {
 			const activeFacetsElement = html.querySelector(selector);
 			if (!activeFacetsElement) return;
