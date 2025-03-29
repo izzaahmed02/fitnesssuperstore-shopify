@@ -40,14 +40,16 @@ document.addEventListener('DOMContentLoaded', () => {
 				lazyLoad: 'ondemand',
 				arrows: true,
 				dots: true,
+				prevArrow: '<button type="button" class="slick-prev"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>',
+				nextArrow: '<button type="button" class="slick-next"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>',
 				responsive: [
 					{
 						breakpoint: 768,
 						settings: {
-							slidesToShow: 1,
-						},
-					},
-				],
+							slidesToShow: 1
+						}
+					}
+				]
 			});
 
 			$(element)

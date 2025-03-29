@@ -1,7 +1,5 @@
 window.addEventListener('DOMContentLoaded', async () => {
-	// FAQ
 	let faqItems = document.querySelectorAll('.faq__item');
-
 	if (faqItems.length) {
 		faqItems.forEach((item) => {
 			let contentELem = item.querySelector('.faq__item-content');
@@ -21,7 +19,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 		})
 	}
 
-	// TABS SECTION
 	let tabsSections = document.querySelectorAll('[data-tabs-section]');
 
 	if (tabsSections.length) {
@@ -217,18 +214,17 @@ window.addEventListener('DOMContentLoaded', async () => {
 		}
 	});
 
-	const calculateButtons = document.querySelectorAll('.button.globo-formbuilder-open');
-	calculateButtons.forEach(btn => {
-		btn.addEventListener('click', () => {
+	document.addEventListener('click', (e) => {
+		const btn = e.target.closest('.button.globo-formbuilder-open');
+		if (btn) {
 			document.body.style.overflow = 'hidden';
-			const closeCalculateFormBtn = document.querySelector('.header.dismiss');
-			if (closeCalculateFormBtn) {
-				closeCalculateFormBtn.addEventListener('click', () => {
-					document.body.style.overflow = 'auto';
-				}, {once: true});
-			}
-		});
+		}
+		const closeBtn = e.target.closest('.header.dismiss');
+		if (closeBtn) {
+			document.body.style.overflow = 'auto';
+		}
 	});
+
 
 	const link = document.getElementById('paytomorrow-link');
 	if (link) {
@@ -274,7 +270,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 		}
 	});
 
-	// Update heights on resize for open elements
+
 	function updateHeights() {
 		document.querySelectorAll('.faq__item.opened .faq__item-content').forEach(content => {
 			content.style.height = `${content.scrollHeight}px`;
@@ -313,17 +309,17 @@ window.addEventListener('DOMContentLoaded', async () => {
 		})
 	}
 
-    if (!sessionStorage.userLoc) {
+	if (!sessionStorage.userLoc) {
 		const locationRes = await fetch("https://french-fitness-api.azurewebsites.net/api/location");
- 
+
 		if (locationRes) {
 			const userLoc = await locationRes.json();
 			sessionStorage.userLoc = JSON.stringify(userLoc);
-			if (userLoc && userLoc.country_code === 'US') {		   
+			if (userLoc && userLoc.country_code === 'US') {
 				const distanceFromBenicia = await getDistanceFromBenicia(userLoc.postal)
 				if (distanceFromBenicia <= 100) {
 					document.querySelector('.utility-bar').style.display = 'block';
-				}  
+				}
 			}
 		}
 	} else {
@@ -341,12 +337,12 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 async function getDistanceFromBenicia(postal) {
 	try {
-        const res = await fetch(`https://french-fitness-api.azurewebsites.net/api/location/distancefrombenicia/${postal}`);
-        return await res.json();
-      } catch (err) {
-        console.error(err);
-        return null;
-      }
+		const res = await fetch(`https://french-fitness-api.azurewebsites.net/api/location/distancefrombenicia/${postal}`);
+		return await res.json();
+	} catch (err) {
+		console.error(err);
+		return null;
+	}
 }
 
 function debounce(func, timeout = 250) {
@@ -359,8 +355,6 @@ function debounce(func, timeout = 250) {
 	};
 }
 
-
-// GRID INFO BLOCKS SCROLLING LOGIC
 
 const mainBlocks = document.querySelectorAll('.info-grid__item.grid__item .link-style');
 const contentSections = document.querySelectorAll('.feature-block-container.content-section');
@@ -421,7 +415,6 @@ const enableDesktopScrolling = () => {
 const initializeScrolling = () => {
 	if (mainBlocks.length && contentSections.length) {
 		if (isMobile()) {
-			// Mobile logic
 			mainBlocks.forEach((block) => {
 				block.addEventListener('click', (event) => {
 					event.preventDefault();
@@ -432,7 +425,6 @@ const initializeScrolling = () => {
 			moveSectionsToMain();
 			window.addEventListener('resize', moveSectionsToMain);
 		} else {
-			// Desktop logic
 			enableDesktopScrolling();
 		}
 	}
