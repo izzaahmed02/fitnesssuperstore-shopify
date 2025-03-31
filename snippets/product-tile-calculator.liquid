@@ -1,0 +1,127 @@
+{% comment %} Product Tile Calculator snippet — shows only if required tile variants exist. {% endcomment %}
+
+{% assign tile_size_in = product.metafields.custom.width_in.value %}
+{% assign tile_variants = '' %}
+{% assign tile_data = '' %}
+{% assign has_required_variants = false %}
+
+{% for v in product.variants %}
+  {% assign tile_type = v.metafields.custom.tile_type.value | downcase %}
+
+  {% if tile_type != blank %}
+    {% assign has_required_variants = true %}
+
+    {% capture item %}
+      "{{ tile_type }}": {
+        "id": {{ v.id | json }},
+        "price": {{ v.price | json }},
+        "available": {{ v.available | json }}
+      }
+    {% endcapture %}
+
+    {% assign tile_data = tile_data | append: item %}
+    {% unless forloop.last %}{% assign tile_data = tile_data | append: ',' %}{% endunless %}
+  {% endif %}
+{% endfor %}
+
+{% if has_required_variants %}
+  {% assign has_required_variants = true %}
+  <script id="tile-variants-json" type="application/json">
+    { {{ tile_data }} }
+  </script>
+{% endif %}
+
+{% if has_required_variants %}
+  {{ 'component-tile-calculator.css' | asset_url | stylesheet_tag }}
+  <tile-calculator class="tile-calculator" data-tile-size-in="{{ tile_size_in | default: 24 }}">
+    <details class="tile-calculator__details">
+      <summary class="tile-calculator__summary">
+        {% render 'icon-calculator' %}
+        <strong>{{ block.settings.heading | default: 'Title' }}</strong>
+      </summary>
+
+      <div class="tile-calculator__inputs">
+        <div class="tile-calculator__field">
+          <label for="calc-units" class="tile-calculator__label">
+            {{- 'sections.tile_calculator.units_label' | t -}}
+          </label>
+          <div class="tile-calculator__custom-select" id="calc-units-wrapper">
+            <button
+              type="button"
+              class="tile-calculator__select-toggle"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              id="calc-units-button"
+            >
+              <span class="tile-calculator__select-label">{{ 'sections.tile_calculator.unit_feet' | t }}</span>
+            </button>
+            <ul class="tile-calculator__select-options" role="listbox" id="calc-units-options">
+              <li role="option" data-value="feet" class="is-selected">
+                {{ 'sections.tile_calculator.unit_feet' | t }}
+              </li>
+              <li role="option" data-value="inches">{{ 'sections.tile_calculator.unit_inches' | t }}</li>
+              <li role="option" data-value="centimeters">{{ 'sections.tile_calculator.unit_cm' | t }}</li>
+              <li role="option" data-value="meters">{{ 'sections.tile_calculator.unit_m' | t }}</li>
+            </ul>
+            <input type="hidden" name="calc-units" id="calc-units" value="feet">
+          </div>
+        </div>
+
+        <div class="tile-calculator__fields-group tile-calculator__fields-group--with-button">
+          <div class="tile-calculator__field">
+            <label for="calc-length" class="tile-calculator__label">
+              {{- 'sections.tile_calculator.length_label' | t -}}
+            </label>
+            <input id="calc-length" type="number" inputmode="decimal" pattern="[0-9]*" value="0" min="0" step="0.01">
+          </div>
+
+          <div class="tile-calculator__field">
+            <label for="calc-width" class="tile-calculator__label">
+              {{- 'sections.tile_calculator.width_label' | t -}}
+            </label>
+            <input id="calc-width" type="number" inputmode="decimal" pattern="[0-9]*" value="0" min="0" step="0.01">
+          </div>
+
+          <button type="button" id="calc-button" class="tile-calculator__button button button--primary">
+            {{ block.settings.calculate_button }}
+          </button>
+        </div>
+
+        <div id="calc-spinner" class="tile-calculator__spinner" style="display: none;">
+          {{ 'sections.tile_calculator.calculating' | t }}
+        </div>
+        <p id="calc-result" class="tile-calculator__result"></p>
+      </div>
+    </details>
+
+    <div class="tile-calculator__breakdown" id="types-breakdown">
+      <p class="tile-calculator__breakdown-title">
+        <strong>{{ block.settings.breakdown_heading }}</strong>
+      </p>
+      <div class="tile-calculator__fields-group tile-calculator__fields-group--equal-cols">
+        {% for variant in product.variants %}
+          {% assign tile_type = variant.metafields.custom.tile_type.value | downcase %}
+
+          {% if tile_type != blank %}
+            <div class="tile-calculator__field">
+              <label class="tile-calculator__label">
+                {{- tile_type | capitalize }}
+                {{ block.settings.tile_type_suffix -}}
+              </label>
+              <input
+                id="{{ tile_type }}-tiles"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                type="number"
+                min="0"
+                value="0"
+              >
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </tile-calculator>
+
+  <script src="{{ 'tile-calculator.js' | asset_url }}" defer></script>
+{% endif %}
