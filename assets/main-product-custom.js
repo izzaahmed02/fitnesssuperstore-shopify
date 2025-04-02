@@ -334,7 +334,7 @@ try {
 		
 				if (metaField3rdParty) {
 					fetchProductMetaObject(metaField3rdParty.value).then((response) => {
-						if (response.data.metaobject.fields) {
+						if (response.data && response.data.metaObject && response.data.metaobject.fields) {
 							const googleMaterial = response.data.metaobject.fields.find(
 								(metaObject) => metaObject.key === "google_material"
 							);
