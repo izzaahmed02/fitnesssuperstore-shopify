@@ -1,0 +1,111 @@
+{{ 'section-collection-feature.css' | asset_url | stylesheet_tag }}
+
+{% assign section_title = section.settings.title | strip %}
+{% assign section_description = section.settings.description | strip %}
+{% assign section_image = section.settings.image %}
+
+{%- style -%}
+  .collection-feature--{{ section.id }} {
+    padding: {{ section.settings.paddingsection_mob }}
+     !important;
+  }
+
+  @media (min-width: 990px) {
+    .collection-feature--{{ section.id }} {
+      padding: {{ section.settings.paddingsection }}
+       !important;
+    }
+  }
+{%- endstyle -%}
+
+<section
+  class="collection-feature collection-feature--{{ section.id }} {% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}"
+  aria-labelledby="collection-feature__title"
+>
+  <div class="page-width">
+    <div class="collection-feature__wrap">
+      <div class="collection-feature__main">
+        <div class="collection-feature__content">
+          {% if section_title %}
+            <h2 class="collection-feature__title" id="collection-feature__title">
+              {{ section_title }}
+            </h2>
+          {% endif %}
+
+          {% if section_description %}
+            <div class="collection-feature__description">
+              {{ section_description }}
+            </div>
+          {% endif %}
+        </div>
+
+        {% if section_image %}
+          <figure class="collection-feature__image-wrapper">
+            {%- capture sizes -%}
+                (min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 | divided_by: 2 }}px,
+                (min-width: 750px) calc(100vw - 130px), calc(100vw - 50px)
+            {%- endcapture -%}
+
+            {{
+              section_image
+              | image_url: width: 1500
+              | image_tag:
+                loading: 'lazy',
+                class: 'collection-feature__image',
+                sizes: sizes,
+                widths: '375, 550, 750, 1100, 1500, 1780, 2000, 3000, 3840',
+                alt: section_image.alt | escape
+            }}
+          </figure>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "t:sections.collection-feature.name",
+  "tag": "section",
+  "class": "section collection-feature",
+  "settings": [
+    {
+      "type": "text",
+      "id": "paddingsection",
+      "label": "t:sections.collection-intro.settings.paddingsection.label",
+      "default": "t:sections.collection-intro.settings.paddingsection.default",
+      "info": "t:sections.collection-intro.settings.paddingsection.info"
+    },
+    {
+      "type": "text",
+      "id": "paddingsection_mob",
+      "label": "t:sections.collection-intro.settings.paddingsection_mob.label",
+      "default": "t:sections.collection-intro.settings.paddingsection_mob.default",
+      "info": "t:sections.collection-intro.settings.paddingsection_mob.info"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "t:sections.collection-feature.settings.title.label",
+      "default": "Customization"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "t:sections.collection-feature.settings.description.label",
+      "default": "<p>Additionally, we offer customization in terms of paint color, vinyl colors, & logos. The possibilities are without limits...</p>"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:sections.collection-feature.settings.image.label"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.collection-feature.presets.name",
+      "category": "Collection"
+    }
+  ]
+}
+{% endschema %}

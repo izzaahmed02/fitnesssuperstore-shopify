@@ -295,9 +295,8 @@ try {
 						if (customFieldvalue === 'Warranty' && brand === 'French Fitness') {
 							customFieldvalue = `${brand} ${customFieldvalue} Custom Field`
 						} else {
-							if (customFieldvalue === 'Warranty') {
-								window.open("/pages/warranty", "_blank");
-								return;
+							if (customFieldvalue === 'Warranty' && window.product.title.includes('Remanufactured')) {
+								customFieldvalue = `${customFieldvalue} Remanufactured Custom Field`
 							} else if (customFieldvalue === 'Condition' && window.product.title.includes('Remanufactured')) {
 								window.open("/pages/remanufactured-gym-equipment", "_blank");
 								return;
@@ -335,7 +334,7 @@ try {
 		
 				if (metaField3rdParty) {
 					fetchProductMetaObject(metaField3rdParty.value).then((response) => {
-						if (response.data.metaobject.fields) {
+						if (response.data && response.data.metaObject && response.data.metaobject.fields) {
 							const googleMaterial = response.data.metaobject.fields.find(
 								(metaObject) => metaObject.key === "google_material"
 							);
@@ -403,6 +402,15 @@ try {
 					  </svg>`
 					}
 				  clearInterval(afterPayIntervalTrigger)
+				}
+			}, 500)
+
+			var affirmIntervalTrigger = setInterval(() => {
+				var affirmElement = document.querySelector('.affirm-as-low-as');
+
+				if (affirmElement) {
+					document.querySelector('.paylater-logo').innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="70" height="28" style="max-width: 110px;cursor: pointer;">`
+					clearInterval(affirmIntervalTrigger);
 				}
 			}, 500)
 

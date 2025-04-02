@@ -254,18 +254,7 @@ class CartItems extends HTMLElement {
 				body,
 			});
 			const mainUpdateState = JSON.parse(await mainUpdateResponse.text());
-			const cartTitle = document.querySelector('.title-wrapper-with-link .title > span');
-			if (cartTitle) {
-				const cartDataCount = cartTitle.dataset.count
-                 
-				if (name === 'plus') {
-					const plusResult = parseInt(cartDataCount) + 1;
-					cartTitle.textContent = cartTitle.dataset.count = plusResult;
-				} else {
-					const minusResult = parseInt(cartDataCount) - 1;
-					cartTitle.textContent = cartTitle.dataset.count = minusResult;
-				}
-			}
+
 			const quantityElement =
 				document.getElementById(`Quantity-${line}`) ||
 				document.getElementById(`Drawer-quantity-${line}`);
@@ -295,6 +284,13 @@ class CartItems extends HTMLElement {
 			});
 
 			const updatedValue = mainUpdateState.items[line - 1]?.quantity;
+
+			const cartTitle = document.querySelector('.title-wrapper-with-link .title > span');
+
+			if (cartTitle) {
+				cartTitle.textContent = updatedValue;
+			}
+
 			let message = '';
 			if (items.length === mainUpdateState.items.length && updatedValue !== parseInt(quantityElement.value)) {
 				if (typeof updatedValue === 'undefined') {

@@ -288,14 +288,14 @@ function setupOptionsHandler() {
 				const inputTextValue = input.value;
 				let inputMoneyValue;
 
-				if (inputTextValue !== 'No Thanks') {
-					inputMoneyValue = input
-						?.parentElement
-						?.querySelector('.swatch-variant-title .money')
-						?.innerText.replace('(', '')
-						.replace(')', '')
-						.replace('+', '');
-				} else {
+				inputMoneyValue = input
+				?.parentElement
+				?.querySelector('.swatch-variant-title .money')
+				?.innerText.replace('(', '')
+				.replace(')', '')
+				.replace('+', '');
+
+				if (inputTextValue == 'No Thanks' && !inputMoneyValue.includes('-$')) {
 					inputMoneyValue = Shopify.currency.active === 'USD' ? '$0' : '';
 				}
 
@@ -423,14 +423,14 @@ function setupOptionsHandler() {
 		const input = element.querySelector('input');
 		const inputTextValue = input.value;
 
-		if (inputTextValue !== 'No Thanks') {
-			inputMoneyValue = input
-				?.parentElement
-				?.querySelector('.swatch-variant-title .money')
-				?.innerText.replace('(', '')
-				.replace(')', '')
-				.replace('+', '');
-		} else {
+		inputMoneyValue = input
+		?.parentElement
+		?.querySelector('.swatch-variant-title .money')
+		?.innerText.replace('(', '')
+		.replace(')', '')
+		.replace('+', '');
+
+		if (inputTextValue == 'No Thanks' && !inputMoneyValue.includes('-$')) {
 			inputMoneyValue = Shopify.currency.active === 'USD' ? '$0' : '';
 		}
 

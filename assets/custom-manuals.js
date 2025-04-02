@@ -26,18 +26,28 @@ if (!customElements.get("custom-manuals")) {
           "click",
           this.onSearch.bind(this, true)
         );
+
         this.tabs.forEach((tab) =>
           tab.addEventListener("click", this.onChangeTab)
         );
 
         // Attach search functionality
         this.searchInput = this.querySelector(".manuals-search__input");
-        if (this.searchInput) {
-          this.searchInput.addEventListener(
-            "input",
-            debounce(this.onSearch.bind(this), 150)
-          );
-        }
+        this.searchInput?.addEventListener(
+          "input",
+          debounce(this.onSearch.bind(this), 150)
+        );
+
+        // Attach search scrolling to results
+        this.searchInput?.addEventListener("keydown", async (e) => {
+          if (e.key === "Enter" && this.searchInput.value.trim()) {
+            await this.onSearch(
+              { target: { value: this.searchInput.value.trim() } },
+              false
+            );
+            this.scrollToResults();
+          }
+        });
 
         // Fetch default content for the first tab
         const defaultTab = this.tabs[0];
@@ -58,6 +68,17 @@ if (!customElements.get("custom-manuals")) {
           clearTimeout(timer);
           timer = setTimeout(() => func.apply(this, args), delay);
         };
+      }
+
+      scrollToResults() {
+        const container = this.contentContainer;
+        const offset = 100;
+
+        if (container) {
+          const top =
+            container.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top, behavior: "smooth" });
+        }
       }
 
       async fetchTabContent(tabId, url = null) {

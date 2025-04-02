@@ -139,7 +139,6 @@
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
-
   {%- style -%}
     .section-{{ section.id }}-padding {
       padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
@@ -154,8 +153,18 @@
     }
   {%- endstyle -%}
 
+  {%- assign enable_product_form_js = true -%}
+  {%- for block in section.blocks -%}
+    {%- case block.type -%}
+    {%- when 'tile_calculator' -%}
+      {%- assign enable_product_form_js = false -%}
+    {%- endcase -%}
+  {%- endfor -%}
+
   <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
+  {% if enable_product_form_js %}
   <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
+  {% endif %}
   <script src="{{ 'product-sticky.js' | asset_url }}" defer="defer"></script>
   
   {%- if product.quantity_price_breaks_configured? -%}
@@ -278,7 +287,9 @@
             <div class="main-slider">
               {% for item in product.images %}
                 <div class="item">
-                  {{ item | image_url: width: auto | image_tag }}
+                  <img 
+                    src="{{ item | img_url: 'master' }}" 
+                    alt="{{ product.title }}" /> 
                 </div>
               {% endfor %}
             </div>
@@ -365,7 +376,7 @@
                       <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
                       <div class="item__text">
                       <span class="title">Processing Time:</span>
-                        {{ product.metafields.custom.processing_time }}
+                        {{ product.metafields.custom.processing_time_long }}
                         <span class="more-info" data-customfield="Processing Time">(More Info)</span>
                       </div>
                     </div>
@@ -388,13 +399,13 @@
 
                 {% for item in product.tags %}
                   {% unless item != "Free Shipping" %}
-  <div class="free-shipping-badge">
-    <div class="shipping-icon">🚚</div>
-    <div class="shipping-text">
-      <div>This item qualifies for <span class="highlight">FREE SHIPPING</span></div>
-      <div class="subtext">to the Lower 48 States (Minimum order $200 to qualify)</div>
-    </div>
-  </div>
+                    <div class="free-shipping-badge">
+                      <div class="shipping-icon">🚚</div>
+                      <div class="shipping-text">
+                        <div>This item qualifies for <span class="highlight">FREE SHIPPING</span></div>
+                        <div class="subtext">to the Lower 48 States (Minimum order $200 to qualify)</div>
+                      </div>
+                    </div>
                   {% endunless %}
                 {% endfor %}
 
@@ -445,6 +456,11 @@
                       </span>
                     {% endif %}
                   </div>
+                </div>
+
+              {%- when 'tile_calculator' -%}
+                <div class="product__tile-calculator">
+                  {% render 'product-tile-calculator', block: block %}
                 </div>
 
               {%- when 'price_with_option' -%}
@@ -2929,6 +2945,37 @@
           "default": "t:sections.main-product.blocks.icon_with_text.settings.heading_3.default",
           "label": "t:sections.main-product.blocks.icon_with_text.settings.heading_3.label",
           "info": "t:sections.main-product.blocks.icon_with_text.settings.heading.info"
+        }
+      ]
+    },
+    {
+      "type": "tile_calculator",
+      "name": "t:sections.main-product.blocks.tile_calculator.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:sections.main-product.blocks.tile_calculator.heading.label",
+          "default": "How many tiles do I need?"
+        },
+        {
+          "type": "text",
+          "id": "calculate_button",
+          "label": "t:sections.main-product.blocks.tile_calculator.calculate_button.label",
+          "default": "Calculate"
+        },
+        {
+          "type": "text",
+          "id": "breakdown_heading",
+          "label": "t:sections.main-product.blocks.tile_calculator.breakdown_heading.label",
+          "default": "Select your amount:"
+        },
+        {
+          "type": "text",
+          "id": "tile_type_suffix",
+          "label": "t:sections.main-product.blocks.tile_calculator.tile_type_suffix.label",
+          "default": "Mats"
         }
       ]
     }
