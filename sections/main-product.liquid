@@ -140,6 +140,7 @@
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
 
+  {{ 'zoomist.min.css' | asset_url | stylesheet_tag }}
   {%- style -%}
     .section-{{ section.id }}-padding {
       padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
@@ -287,11 +288,14 @@
             </div>
             <div class="main-slider">
               {% for item in product.images %}
-                <div class="item">
-                  {{ item | image_url: width: auto | image_tag }}
+                <div class="item" data-zoomist-src="{{ item | img_url: 'master' }}">
+                  <img 
+                    src="{{ item | img_url: 'master' }}" 
+                    alt="{{ product.title }}" /> 
                 </div>
               {% endfor %}
             </div>
+            <div id="zoomTarget" style="width:500px; height:500px;"></div>
             <div class="main-slider-arrow--right" type="button">
               <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M0.803654 0.46967C1.09655 0.176777 1.57142 0.176777 1.86431 0.46967L6.86431 5.46967C7.15721 5.76256 7.15721 6.23744 6.86431 6.53033L1.86431 11.5303C1.57142 11.8232 1.09655 11.8232 0.803654 11.5303C0.510761 11.2374 0.510761 10.7626 0.803654 10.4697L5.27332 6L0.803654 1.53033C0.510761 1.23744 0.510761 0.762563 0.803654 0.46967Z" fill="white"/>
@@ -1502,6 +1506,7 @@
 <script>window.product = {{ product | json }}</script>
 <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'zoomist.min.js' | asset_url }}" defer="defer"></script>
 
 <script defer type="text/javascript">
   var sa_products_count = 3;
@@ -1519,6 +1524,24 @@
       a.parentNode.insertBefore(s, a);
     }
   })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
+</script>
+<script defer>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('.main-slider .item').forEach((element) => {
+      new Zoomist(element, {
+        fill: 'contain',
+        maxRatio: 4,
+        height: '0%',
+        slider: true,
+        zoomer: true,
+        on: {
+          ready() {
+            element.querySelector('img').remove();
+          }
+        }
+      })
+    });
+  })
 </script>
 {% comment %} <script defer>
   document.addEventListener("DOMContentLoaded", function () {
