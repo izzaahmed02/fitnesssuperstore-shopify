@@ -1,6 +1,7 @@
 {% comment %} Product Tile Calculator snippet — shows only if required tile variants exist. {% endcomment %}
 
-{% assign tile_size_in = product.metafields.custom.width_in.value %}
+{%- assign width_in = product.metafields.custom.width_in.value -%}
+{%- assign length_in = product.metafields.custom.length_in.value -%}
 {% assign tile_variants = '' %}
 {% assign tile_data = '' %}
 {% assign has_required_variants = false %}
@@ -33,7 +34,7 @@
 
 {% if has_required_variants %}
   {{ 'component-tile-calculator.css' | asset_url | stylesheet_tag }}
-  <tile-calculator class="tile-calculator" data-tile-size-in="{{ tile_size_in | default: 24 }}">
+  <tile-calculator class="tile-calculator" data-tile-width-in="{{ width_in | default: 24 }}" data-tile-length-in="{{ length_in | default: width_in | default: 24 }}">
     <details class="tile-calculator__details">
       <summary class="tile-calculator__summary">
         {% render 'icon-calculator' %}
