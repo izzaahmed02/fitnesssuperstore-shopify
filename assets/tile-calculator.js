@@ -8,8 +8,12 @@ class TileCalculator extends HTMLElement {
       ? JSON.parse(variantsScript.textContent)
       : {};
 
-    // Get tile size from data attribute or fallback to 24 inches
-    this.tileSizeIn = parseFloat(this.dataset.tileSizeIn || 24);
+    // Get width, lengt tile from data attribute or fallback to 24 inches
+    this.tileWidthIn = parseFloat(this.dataset.tileWidthIn || 24);
+    this.tileLengthIn = parseFloat(
+      this.dataset.tileLengthIn || this.tileWidthIn
+    );
+    // this.tileSizeIn = parseFloat(this.dataset.tileSizeIn || 24);
 
     // Unit conversion factors to cm
     this.unitFactors = {
@@ -42,9 +46,17 @@ class TileCalculator extends HTMLElement {
   connectedCallback() {
     // Delay initial setup to ensure DOM is stable
     requestAnimationFrame(() => {
+      const hasAvailable = Object.values(this.variants).some(
+        (v) => v.available !== false
+      );
+      if (!hasAvailable) {
+        this.style.display = "none";
+        return;
+      }
+
       this.updateQuantity(0);
-      this.updateCustomPrice({});
       this.disableAddToCartButton();
+      this.validateDimensionInputs();
 
       // Add additional setup after slight delay
       setTimeout(() => {
@@ -70,9 +82,12 @@ class TileCalculator extends HTMLElement {
 
   // Calculate required tile counts based on length and width in cm
   calculateTiles(lengthCm, widthCm) {
-    const tileCm = this.tileSizeIn * 2.54; // convert tile size to cm
-    const tilesPerRow = Math.max(Math.ceil(lengthCm / tileCm), 1);
-    const tilesPerCol = Math.max(Math.ceil(widthCm / tileCm), 1);
+    // const tileCm = this.tileSizeIn * 2.54;
+    const tileWidthCm = this.tileWidthIn * 2.54; // convert tile width to cm
+    const tileLengthCm = this.tileLengthIn * 2.54; // convert tile lengt to cm
+
+    const tilesPerRow = Math.max(Math.ceil(lengthCm / tileLengthCm), 1);
+    const tilesPerCol = Math.max(Math.ceil(widthCm / tileWidthCm), 1);
 
     const totalTiles = tilesPerRow * tilesPerCol;
     const tileTypes = Object.keys(this.variants);
@@ -177,8 +192,10 @@ class TileCalculator extends HTMLElement {
 
   // Add real-time sync for quantity edits
   enableBreakdownInputsRealtimeSync() {
-    const inputs = this.querySelectorAll('.tile-calculator__breakdown input[type="number"]');
-  
+    const inputs = this.querySelectorAll(
+      '.tile-calculator__breakdown input[type="number"]'
+    );
+
     inputs.forEach((input) => {
       input.addEventListener("input", () => {
         let newVal = parseInt(input.value || 0);
@@ -186,10 +203,10 @@ class TileCalculator extends HTMLElement {
           newVal = 0;
           input.value = 0;
         }
-  
+
         const updatedResult = {};
         let updatedTotal = 0;
-  
+
         inputs.forEach((inp) => {
           const type = inp.id.replace("-tiles", "");
           let val = parseInt(inp.value || 0);
@@ -200,14 +217,38 @@ class TileCalculator extends HTMLElement {
           updatedResult[type] = val;
           updatedTotal += val;
         });
-  
+
         updatedResult.total = updatedTotal;
         this.updateQuantity(updatedTotal);
         this.updateCustomPrice(updatedResult);
       });
     });
   }
-  
+
+  /**
+   * Validates the Length and Width input fields.
+   * Prevents negative values or empty inputs.
+   * Ensures a default value of 0 if invalid input is detected.
+   */
+  validateDimensionInputs() {
+    ["#calc-length", "#calc-width"].forEach((selector) => {
+      const input = this.querySelector(selector);
+      if (!input) return;
+
+      input.addEventListener("input", () => {
+        let val = parseFloat(input.value);
+        if (isNaN(val) || val < 0) {
+          input.value = 0;
+        }
+      });
+
+      input.addEventListener("blur", () => {
+        if (input.value === "") {
+          input.value = 0;
+        }
+      });
+    });
+  }
 
   // Sync total quantity with hidden quantity input
   updateQuantity(total) {
@@ -217,7 +258,9 @@ class TileCalculator extends HTMLElement {
 
   // Update dynamic price block based on total tile count
   updateCustomPrice(result) {
-    this.btn.disabled = false;
+    if (this.btn) {
+      this.btn.disabled = false;
+    }
 
     const priceDisplay = document.querySelector(
       ".pr_custom_price-container.apo-variant-price .pr_custom_price"
@@ -323,7 +366,7 @@ class TileCalculator extends HTMLElement {
   }
 
   disableAddToCartButton() {
-    this.btn.disabled = true;
+    if (this.btn) this.btn.disabled = true;
   }
 
   enableAddToCartButton() {
