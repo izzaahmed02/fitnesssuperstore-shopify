@@ -168,15 +168,16 @@ document.addEventListener('DOMContentLoaded', function() {
                                 //     customColorAddButton.classList.add('disabled');
                                 //     return;
                                 // }
+                                var customColorAvisCharge = document.querySelector(`.custom-color-${group}-avis .apo-title-addcharge`)?.textContent;
 
                                 const customColorAvis = document.querySelector(`.custom-color-${group}-avis input`);
 
                                 if (customColorAvis) {
                                     if (matchedColor) {
-                                        customColorAvis.value = `${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX})`
+                                        customColorAvis.value = `${matchedColor.name} (Pantone: ${matchedColor.Pantone} / ${matchedColor.HEX}) [Add ${customColorAvisCharge.replace('(', '').replace(')', '')}]`
                                     } else {
                                         if (color) {
-                                            customColorAvis.value = color.trim();
+                                            customColorAvis.value = `${color.trim()} [Add ${customColorAvisCharge.replace('(', '').replace(')', '')}]`
                                             customColorEmptyErrorMessage.style.display = 'none';
                                         } else {
                                             customColorEmptyErrorMessage.style.display = 'block';
@@ -195,8 +196,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                     triggerInputChange(customColorAvis);
                                     //$('.product-form__input--swatch label[title="Custom"]').click();
                                 }
-
-                                var customColorAvisCharge = document.querySelector(`.custom-color-${group}-avis .apo-title-addcharge`)?.textContent;
 
                                 // Display Pantone value
                                 if (matchedColor) {
