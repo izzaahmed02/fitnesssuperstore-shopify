@@ -28,6 +28,26 @@ window.addEventListener('DOMContentLoaded', async () => {
 				if (apoTitle) {
 					apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
 				}
+
+				shippingType.addEventListener('change', (event) => {
+					const selectedOption = event.target.options[event.target.selectedIndex];
+
+					if (selectedOption) {
+						const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
+						
+						if (moneyHTML) {
+							setTimeout(() => {	
+								const avisInputHidden = document.querySelector(`input[temp-name="Full Assembly & Installation"]`);
+
+								if (avisInputHidden) {
+									if (!avisInputHidden.value.includes('Add')) {
+										avisInputHidden.value = `${avisInputHidden.value} ${moneyHTML}`
+									} 
+								}
+							});
+						}
+					}
+				});
 			}
 
 			if (!window.product.available) {
@@ -325,29 +345,6 @@ try {
 				}
 			});
 		});
-
-		if (window.product) {
-			fetchProductDetailsWithMetafields(window.product.id).then((product) => {	 
-				const metaField3rdParty = product.metafields.find(
-					(metafield) => metafield.key === "3rd_party"
-				);
-		
-				if (metaField3rdParty) {
-					fetchProductMetaObject(metaField3rdParty.value).then((response) => {
-						if (response.data && response.data.metaobject && response.data.metaobject.fields) {
-							const googleMaterial = response.data.metaobject.fields.find(
-								(metaObject) => metaObject.key === "google_material"
-							);
-				
-							if (googleMaterial && googleMaterial.value && googleMaterial.value.includes('display')) {
-								document.querySelector('.showroom').style.display = 'flex';
-								document.querySelector('.showroom-text').innerHTML = 'On Display at our Northern California Warehouse Showroom'
-							}
-						}
-					});
-				}
-			});
-		}
 
 		modalWrapper.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
