@@ -328,6 +328,15 @@ function setupOptionsHandler() {
             </svg>
           </div>`;
 
+		  setTimeout(() => {	
+			const avisInputHidden = document.querySelector(`input[temp-name="${input.getAttribute('field-name')}"]`);
+
+			if (avisInputHidden && input.checked && inputMoneyValue) {
+				if (!avisInputHidden.value.includes('Add')) {
+			  		avisInputHidden.value = avisInputHidden.value + ` [Add +${inputMoneyValue}]`
+				}
+			}
+		  });
 
         const selectedOptionsContainer = wrapper.parentElement.parentElement.querySelector('.selected_options_container');
 
