@@ -8,7 +8,9 @@ window.addEventListener('DOMContentLoaded', async () => {
 		const shippingType = document.querySelector(
 			'.avp-option.ap-options__select-container:has(select[name^="Full Assembly & Installation"])'
 		);
-
+		const warranty = document.querySelector(
+			'.avp-option.ap-options__select-container:has(select[name^="Warranty"])'
+		);
 		if (shippingInfo && cityInput && zipInput) {
 			cityInput.addEventListener('input', () => {
 				localStorage.setItem('city', cityInput.value);
@@ -37,14 +39,32 @@ window.addEventListener('DOMContentLoaded', async () => {
 						
 						if (moneyHTML) {
 							setTimeout(() => {	
-								const avisInputHidden = document.querySelector(`input[temp-name="Full Assembly & Installation"]`);
+								const avisInputInstallationHidden = document.querySelector(`input[temp-name="Full Assembly & Installation"]`);
 
-								if (avisInputHidden) {
-									if (!avisInputHidden.value.includes('Add')) {
-										avisInputHidden.value = `${avisInputHidden.value} ${moneyHTML}`
+								if (avisInputInstallationHidden) {
+									if (!avisInputInstallationHidden.value.includes('Add')) {
+										avisInputInstallationHidden.value = `${avisInputInstallationHidden.value} ${moneyHTML}`
 									} 
 								}
 							});
+						}
+					}
+				});
+
+				warranty.addEventListener('change', (event) => {
+					const selectedOption = event.target.options[event.target.selectedIndex];
+
+                    if (selectedOption) {
+						const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
+					
+						if (moneyHTML) {
+							const avisInputWarrantyHidden = document.querySelector(`input[temp-name="Warranty"]`);
+	
+							if (avisInputWarrantyHidden) {
+								if (!avisInputWarrantyHidden.value.includes('Add')) {
+									avisInputWarrantyHidden.value = `${avisInputWarrantyHidden.value} ${moneyHTML}`
+								} 
+							}
 						}
 					}
 				});
@@ -364,7 +384,7 @@ try {
 						const afterPayElement = document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML;
 
                         if (afterPayElement) {
-							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong').innerHTML} / 4 interest-free payment`;
+							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong').innerHTML} / 6 interest-free payment`;
 
 							document.querySelector('.paylater-logo').innerHTML += `<svg class="afterPayLogo" onclick="document.querySelector('square-placement').shadowRoot.querySelector('button').click()" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" width="104" height="36" viewBox="0 0 104 36">
 							<path class="afterpay-logo-badge-background" fill="#b2fce4" d="m86.00173,35.9321l-68.00064,0c-9.90375,0 -17.93101,-8.02726 -17.93101,-17.93101l0,0c0,-9.90375 8.02726,-17.93101 17.93101,-17.93101l68.00064,0c9.90375,0 17.931,8.02726 17.931,17.93101l0,0c0.00652,9.89724 -8.02725,17.93101 -17.931,17.93101z"></path>
@@ -389,7 +409,7 @@ try {
 								payLaterText = `As low as ${parseFloat(payTomorrow24MosRate).toLocaleString('en-US', {
 									style: 'currency',
 									currency: 'USD',
-								  })}/mo. / 4 interest-free payment`
+								  })}/mo. / 6 interest-free payment`
 							}
 						}
 
@@ -423,7 +443,7 @@ try {
 						let payLaterText = '';
 		                const afterPayLogo = document.querySelector('.afterPayLogo');
 						if (afterPayElement) {
-							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML} / 4 interest-free payment`;
+							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML} / 6 interest-free payment`;
 							if (afterPayLogo) {
 								afterPayLogo.style.display = 'block';
 							}
@@ -438,7 +458,7 @@ try {
 								payLaterText = `As low as ${parseFloat(payTomorrow24MosRate).toLocaleString('en-US', {
 									style: 'currency',
 									currency: 'USD',
-									})}/mo. / 4 interest-free payment`
+									})}/mo. / 6 interest-free payment`
 							}
 						}
 		

@@ -329,8 +329,7 @@ function setupOptionsHandler() {
           </div>`;
 
 		  setTimeout(() => {	
-			const avisInputHidden = document.querySelector(`input[temp-name="${input.getAttribute('field-name')}"]`);
-
+			const avisInputHidden = document.querySelector(`[name=\"properties[${CSS.escape(input.getAttribute('field-name').replace('&quot;', '"'))}]\"]`);
 			if (avisInputHidden && input.checked && inputMoneyValue) {
 				if (!avisInputHidden.value.includes('Add')) {
 			  		avisInputHidden.value = avisInputHidden.value + ` [Add +${inputMoneyValue}]`
