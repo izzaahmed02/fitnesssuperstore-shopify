@@ -1,0 +1,156 @@
+{{ 'collection-section.css' | asset_url | stylesheet_tag }}
+{{ 'section-collection-product-set.css' | asset_url | stylesheet_tag }}
+
+{% assign products_per_row = 4 %}
+{% assign total_products = collection.products.size %}
+{% assign remainder = total_products | modulo: products_per_row %}
+{% assign span_class = '' %}
+
+{% if remainder == 0 %}
+  {% assign span_class = 'product-set__item--span-' | append: products_per_row %}
+{% else %}
+  {% assign empty_slots = products_per_row | minus: remainder %}
+  {% assign span_class = 'product-set__item--span-' | append: empty_slots %}
+{% endif %}
+
+{%- style -%}
+  .product-set--{{ section.id }} {
+    padding: {{ section.settings.paddingsection_mob }}
+     !important;
+  }
+
+  @media (min-width: 990px) {
+    .product-set--{{ section.id }} {
+      padding: {{ section.settings.paddingsection }}
+       !important;
+    }
+  }
+{%- endstyle -%}
+
+<section class="product-set product-set--{{ section.id }} gradient color-{{ section.settings.color_scheme }}">
+  <div class="page-width">
+    <div class="product-set__wrap">
+      <div class="product-set__header">
+        {% if section.settings.title != blank %}
+          <h2 class="product-set__title" id="product-set__title">
+            {{ section.settings.title }}
+          </h2>
+        {% endif %}
+
+        {% if section.settings.subheading != blank %}
+          <div class="product-set__subheading">
+            {{ section.settings.subheading }}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="product-set__body">
+        <ul class="product-set__list">
+          {% for product in collection.products %}
+            <li class="product-set__item">
+              {% render 'product-item'
+                , product: product %}
+            </li>
+          {% endfor %}
+
+          <li class="product-set__item {{ span_class }}">
+            {% for block in section.blocks %}
+              {% render 'collection-grid-helper-cta' with block: block %}
+            {% endfor %}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script defer src="{{ 'collection-section.js' | asset_url }}"></script>
+
+{% schema %}
+  {
+    "name": "t:sections.main-collection-product-set.name",
+    "tag": "section",
+    "class": "section product-set-section",
+    "settings": [
+      {
+        "type": "text",
+        "id": "paddingsection",
+        "label": "t:sections.collection-intro.settings.paddingsection.label",
+        "default": "t:sections.collection-intro.settings.paddingsection.default",
+        "info": "t:sections.collection-intro.settings.paddingsection.info"
+      }, {
+        "type": "text",
+        "id": "paddingsection_mob",
+        "label": "t:sections.collection-intro.settings.paddingsection_mob.label",
+        "default": "t:sections.collection-intro.settings.paddingsection_mob.default",
+        "info": "t:sections.collection-intro.settings.paddingsection_mob.info"
+      }, {
+        "type": "text",
+        "id": "title",
+        "label": "t:sections.main-collection-product-set.settings.title.label",
+        "default": "Featured Packages"
+      }, {
+        "type": "text",
+        "id": "subheading",
+        "label": "t:sections.main-collection-product-set.settings.subheading.label",
+        "default": "Choose the package that best fits your training space."
+      }
+    ],
+    "blocks": [
+      {
+        "type": "cta",
+        "name": "t:sections.main-collection-product-set.blocks.cta.name",
+        "limit": 1,
+        "settings": [
+          {
+            "type": "text",
+            "id": "cta_title",
+            "label": "t:sections.main-collection-product-set.blocks.cta.settings.cta_title.label",
+            "default": "Not sure which package to pick?"
+          },
+          {
+            "type": "textarea",
+            "id": "cta_text",
+            "label": "t:sections.main-collection-product-set.blocks.cta.settings.cta_text.label",
+            "default": "Find your perfect match. Our smart quiz cuts through the confusion and finds the package tailored just for you."
+          },
+          {
+            "type": "text",
+            "id": "cta_button_label",
+            "label": "t:sections.main-collection-product-set.blocks.cta.settings.cta_button_label.label",
+            "default": "Take a Quiz"
+          },
+          {
+            "type": "url",
+            "id": "cta_button_link",
+            "label": "t:sections.main-collection-product-set.blocks.cta.settings.cta_button_link.label"
+          }, {
+            "type": "select",
+            "id": "cta_alignment",
+            "label": "t:sections.main-collection-product-set.blocks.cta.settings.cta_alignment.label",
+            "options": [
+              {
+                "value": "left",
+                "label": "t:sections.main-collection-product-set.blocks.cta.settings.cta_alignment.options.left"
+              }, {
+                "value": "center",
+                "label": "t:sections.main-collection-product-set.blocks.cta.settings.cta_alignment.options.center"
+              }
+            ],
+            "default": "center"
+          }, {
+            "type": "image_picker",
+            "id": "cta_image",
+            "label": "t:sections.main-collection-product-set.blocks.cta.settings.cta_image.label"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.main-collection-product-set.presets.name",
+        "category": "Collection"
+      }
+    ]
+  }
+{% endschema %}

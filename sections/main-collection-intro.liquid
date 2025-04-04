@@ -1,0 +1,179 @@
+{{ 'section-collection-intro.css' | asset_url | stylesheet_tag }}
+
+{% assign section_title = section.settings.title | strip | default: collection.title %}
+{% assign section_description = section.settings.description | strip | default: collection.description %}
+{% assign section_image = section.settings.image | default: collection.image %}
+
+{%- style -%}
+  .collection-intro--{{ section.id }} {
+    padding: {{ section.settings.paddingsection_mob }}
+     !important;
+  }
+
+  @media (min-width: 990px) {
+    .collection-intro--{{ section.id }} {
+      padding: {{ section.settings.paddingsection }}
+       !important;
+    }
+  }
+{%- endstyle -%}
+
+<section class="collection-intro collection-intro--{{ section.id }} {% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}" aria-labelledby="collection-intro__title">
+  <div class="page-width">
+    <div class="collection-intro__wrap">
+      <div class="collection-intro__content">
+        {% if section_title %}
+          <h2 class="collection-intro__title" id="collection-intro__title">
+            {{ section_title }}
+          </h2>
+        {% endif %}
+
+        {% if section_description %}
+          <div class="collection-intro__description-wrapper" data-description-wrapper>
+            <div class="collection-intro__description" data-description>
+              {% assign words = section_description | strip | split: ' ' %}
+              {% assign visible_words = words | slice: 0, 43 %}
+              {% assign hidden_words = words | slice: 43, words.size %}
+
+              <div data-description-visible>
+                {{ visible_words | join: ' ' }}
+              </div>
+
+              {% if hidden_words.size > 0 %}
+                <div data-description-hidden>
+                  {{ hidden_words | join: ' ' }}
+                </div>
+              {% endif %}
+            </div>
+            <button
+              type="button"
+              class="collection-intro__read-more-btn link"
+              data-read-more-btn
+              hidden>
+              {{ 'sections.collection-intro.read_more' | t }}
+            </button>
+          </div>
+        {% endif %}
+      </div>
+      {% if section_image %}
+        <figure class="collection-intro__image-wrapper">
+            {%- capture sizes -%}
+                (min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 | divided_by: 2 }}px,
+                (min-width: 750px) calc(100vw / 2), calc(100vw / 2)
+            {%- endcapture -%}
+
+            {{
+                section_image
+              | image_url: width: 1500
+              | image_tag:
+                loading: 'lazy',
+                class: 'collection-intro__image',
+                sizes: sizes,
+                widths: '375, 550, 750, 1100, 1500, 1780, 2000, 3000, 3840',
+                alt: section_title | escape
+            }}
+        </figure>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+  const MOBILE_MEDIA = window.matchMedia('(max-width: 990px)');
+  
+  function initDescription(wrapper) {
+    const descHidden = wrapper.querySelector('[data-description-hidden]');
+    const btn = wrapper.querySelector('[data-read-more-btn]');
+  
+    if (!descHidden || !btn) return;
+  
+    let isExpanded = false;
+  
+    function setMobileState() {
+      btn.hidden = false;
+      descHidden.classList.remove('expanded');
+      descHidden.style.maxHeight = '0px';
+  
+      btn.textContent = "{{ 'sections.collection-intro.read_more' | t }}";
+      btn.onclick = () => {
+        isExpanded = !isExpanded;
+        if (isExpanded) {
+          descHidden.classList.add('expanded');
+          descHidden.style.maxHeight = descHidden.scrollHeight + 'px';
+          btn.textContent = "{{ 'sections.collection-intro.read_less' | t }}";
+        } else {
+          descHidden.classList.remove('expanded');
+          descHidden.style.maxHeight = '0px';
+          btn.textContent = "{{ 'sections.collection-intro.read_more' | t }}";
+        }
+      };
+    }
+  
+    function setDesktopState() {
+      btn.hidden = true;
+      descHidden.classList.remove('expanded');
+      descHidden.style.maxHeight = 'none';
+    }
+  
+    function applyState() {
+      if (MOBILE_MEDIA.matches) {
+        setMobileState();
+      } else {
+        setDesktopState();
+      }
+    }
+  
+    applyState();
+    MOBILE_MEDIA.addEventListener('change', applyState);
+  }
+  
+  document.querySelectorAll('[data-description-wrapper]').forEach(initDescription);
+  });
+</script>
+
+{% schema %}
+  {
+    "name": "Collection Intro",
+    "tag": "section",
+    "class": "section collection-intro",
+    "settings": [
+      {
+        "type": "text",
+        "id": "paddingsection",
+        "label": "t:sections.collection-intro.settings.paddingsection.label",
+        "default": "t:sections.collection-intro.settings.paddingsection.default",
+        "info": "t:sections.collection-intro.settings.paddingsection.info"
+      },
+      {
+        "type": "text",
+        "id": "paddingsection_mob",
+        "label": "t:sections.collection-intro.settings.paddingsection_mob.label",
+        "default": "t:sections.collection-intro.settings.paddingsection_mob.default",
+        "info": "t:sections.collection-intro.settings.paddingsection_mob.info"
+      },
+      {
+        "type": "text",
+        "id": "title",
+        "label": "t:sections.collection-intro.settings.title.label",
+        "default": "t:sections.collection-intro.settings.title.default"
+      },
+      {
+        "type": "textarea",
+        "id": "description",
+        "label": "t:sections.collection-intro.settings.description.label",
+        "default": "t:sections.collection-intro.settings.description.default"
+      }, {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:sections.collection-intro.settings.image.label"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.collection-intro.presets.name",
+        "category": "Collection"
+      }
+    ]
+  }
+{% endschema %}
