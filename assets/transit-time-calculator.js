@@ -47,16 +47,25 @@ var TransitTimeCalculator = {
       
       sessionStorage.userCityStateZip = `${userLoc.city} ${userLoc.region_code}`;
       
+      const locationForm = document.getElementById('location-form');
+
       if (userLoc.postal) {
         try {
           const locInfoRes = await fetch(`https://french-fitness-api.azurewebsites.net/api/location/locationInfo/${userLoc.postal}`);
           locationInfoResponse = await locInfoRes.json();
           if (locationInfoResponse.status && locationInfoResponse.status === 400) {
             TransitTimeCalculator.appendInvalidTransitTime();
+            if (locationForm) {
+              locationForm.style.display = 'block';
+            } 
             return;
           }
         } catch (e) {
           TransitTimeCalculator.appendInvalidTransitTime();
+          const locationForm = document.getElementById('location-form');
+          if (locationForm) {
+            locationForm.style.display = 'block';
+          } 
           return;
         }
         
@@ -86,6 +95,8 @@ var TransitTimeCalculator = {
           sessionStorage.userCityStateZip = `${userLoc.city} ${userLoc.region_code}`;
         } else {
           if (userLoc.country !== 'CA' && userLoc.country !== 'US' && userLoc.country !== 'PR') {
+            document.querySelector('.location-form #postalCode').value = userLoc.postal;
+            document.querySelector('.location-display').innerHTML = `${userLoc.city} ${userLoc.region_code}, ${userLoc.postal}` 
             TransitTimeCalculator.appendInvalidTransitTime();
             return;
           }
