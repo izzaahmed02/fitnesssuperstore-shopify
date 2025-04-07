@@ -1,36 +1,38 @@
 {{ 'section-brands.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
-  .section-{{ section.id }} {
+    .section-{{ section.id }} {
     padding-top: 0;
     padding-bottom: 24px;
-    --background-image: url({{ section.settings.image | img_url:'' }})
-  }
+    --background-image: url({{ section.settings.image | img_url: '' }})
+    }
 
-  @media screen and (max-width: 750px) {
+    @media screen and (max-width: 750px) {
     .section-{{ section.id }} .brands__list{
-      column-gap: 8px;
-      row-gap: 8px;
+    column-gap: 8px;
+    row-gap: 8px;
     }
-  }
+    }
 
-  @media screen and (min-width: 750px) {
+    @media screen and (min-width: 750px) {
     .section-{{ section.id }} {
-      padding-top: {{ section.settings.padding_top }}px;
-      padding-bottom: {{ section.settings.padding_bottom }}px;
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
     }
-  }
+    }
 {%- endstyle -%}
 
 <div class="brands section-{{ section.id }} page-width scroll-trigger animate--slide-in">
-  <ul class="brands__list">
-    {% for block in section.blocks %}
-      <li>
-        <a href="{{ block.settings.url }}">{{ block.settings.image | img_url:'' | img_tag }}</a>
-      </li>
-    {% endfor %}
-  </ul>
+    <ul class="brands__list">
+        {% for block in section.blocks %}
+            <li>
+                <a aria-label="Reviews Link" href="{{ block.settings.url }}">
+                    <img src="{{ block.settings.image | image_url }}" width="160px" height="100px" alt=""></a>
+            </li>
+        {% endfor %}
+    </ul>
 </div>
+
 
 {% schema %}
 {
@@ -38,7 +40,10 @@
   "tag": "section",
   "class": "section",
   "disabled_on": {
-    "groups": ["header", "footer"]
+    "groups": [
+      "header",
+      "footer"
+    ]
   },
   "settings": [
     {
