@@ -76,7 +76,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 			clearInterval(pollingInterval);
 		}
 
-		document.querySelector('.docapp-shipping-calculator--button')?.addEventListener('click', () => {
+		document.querySelector('.docapp-shipping-calculator--button')?.addEventListener('click', (event) => {
 			const shippingInfo = document.querySelector(
 				'.docapp-single-shipping-calculator .docapp-shipping-show-trigger'
 			);
@@ -478,6 +478,15 @@ try {
 	});
 } catch (error) {
 	console.log(error)
+}
+
+function toggleTransitTimeForm() {
+	const form = document.getElementById('location-form');
+	if (form.style.display === 'block') {
+		form.style.display = 'none';
+	} else {
+		form.style.display = 'block';
+	}
 }
 
 function computeAfterPayLoanDetails(principal, monthlyPayment, numPayments, newTerm = null) {
