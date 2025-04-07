@@ -8,7 +8,9 @@ window.addEventListener('DOMContentLoaded', async () => {
 		const shippingType = document.querySelector(
 			'.avp-option.ap-options__select-container:has(select[name^="Full Assembly & Installation"])'
 		);
-
+		const warranty = document.querySelector(
+			'.avp-option.ap-options__select-container:has(select[name^="Warranty"])'
+		);
 		if (shippingInfo && cityInput && zipInput) {
 			cityInput.addEventListener('input', () => {
 				localStorage.setItem('city', cityInput.value);
@@ -28,6 +30,44 @@ window.addEventListener('DOMContentLoaded', async () => {
 				if (apoTitle) {
 					apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
 				}
+
+				shippingType.addEventListener('change', (event) => {
+					const selectedOption = event.target.options[event.target.selectedIndex];
+
+					if (selectedOption) {
+						const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
+						
+						if (moneyHTML) {
+							setTimeout(() => {	
+								const avisInputInstallationHidden = document.querySelector(`input[temp-name="Full Assembly & Installation"]`);
+
+								if (avisInputInstallationHidden) {
+									if (!avisInputInstallationHidden.value.includes('Add')) {
+										avisInputInstallationHidden.value = `${avisInputInstallationHidden.value} ${moneyHTML}`
+									} 
+								}
+							});
+						}
+					}
+				});
+
+				warranty.addEventListener('change', (event) => {
+					const selectedOption = event.target.options[event.target.selectedIndex];
+
+                    if (selectedOption) {
+						const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
+					
+						if (moneyHTML) {
+							const avisInputWarrantyHidden = document.querySelector(`input[temp-name="Warranty"]`);
+	
+							if (avisInputWarrantyHidden) {
+								if (!avisInputWarrantyHidden.value.includes('Add')) {
+									avisInputWarrantyHidden.value = `${avisInputWarrantyHidden.value} ${moneyHTML}`
+								} 
+							}
+						}
+					}
+				});
 			}
 
 			if (!window.product.available) {
@@ -326,29 +366,6 @@ try {
 			});
 		});
 
-		if (window.product) {
-			fetchProductDetailsWithMetafields(window.product.id).then((product) => {	 
-				const metaField3rdParty = product.metafields.find(
-					(metafield) => metafield.key === "3rd_party"
-				);
-		
-				if (metaField3rdParty) {
-					fetchProductMetaObject(metaField3rdParty.value).then((response) => {
-						if (response.data && response.data.metaObject && response.data.metaobject.fields) {
-							const googleMaterial = response.data.metaobject.fields.find(
-								(metaObject) => metaObject.key === "google_material"
-							);
-				
-							if (googleMaterial && googleMaterial.value && googleMaterial.value.includes('display')) {
-								document.querySelector('.showroom').style.display = 'flex';
-								document.querySelector('.showroom-text').innerHTML = 'On Display at our Northern California Warehouse Showroom'
-							}
-						}
-					});
-				}
-			});
-		}
-
 		modalWrapper.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
 		});
@@ -367,7 +384,7 @@ try {
 						const afterPayElement = document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML;
 
                         if (afterPayElement) {
-							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong').innerHTML} / 4 interest-free payment`;
+							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong').innerHTML} / 6 interest-free payment`;
 
 							document.querySelector('.paylater-logo').innerHTML += `<svg class="afterPayLogo" onclick="document.querySelector('square-placement').shadowRoot.querySelector('button').click()" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" width="104" height="36" viewBox="0 0 104 36">
 							<path class="afterpay-logo-badge-background" fill="#b2fce4" d="m86.00173,35.9321l-68.00064,0c-9.90375,0 -17.93101,-8.02726 -17.93101,-17.93101l0,0c0,-9.90375 8.02726,-17.93101 17.93101,-17.93101l68.00064,0c9.90375,0 17.931,8.02726 17.931,17.93101l0,0c0.00652,9.89724 -8.02725,17.93101 -17.931,17.93101z"></path>
@@ -392,7 +409,7 @@ try {
 								payLaterText = `As low as ${parseFloat(payTomorrow24MosRate).toLocaleString('en-US', {
 									style: 'currency',
 									currency: 'USD',
-								  })}/mo. / 4 interest-free payment`
+								  })}/mo. / 6 interest-free payment`
 							}
 						}
 
@@ -409,7 +426,7 @@ try {
 				var affirmElement = document.querySelector('.affirm-as-low-as');
 
 				if (affirmElement) {
-					document.querySelector('.paylater-logo').innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="70" height="28" style="max-width: 110px;cursor: pointer;">`
+					document.querySelector('.paylater-logo').innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="65" height="24" style="max-width: 110px;cursor: pointer;margin-top:-13px;object-fit:contain;">`
 					clearInterval(affirmIntervalTrigger);
 				}
 			}, 500)
@@ -426,7 +443,7 @@ try {
 						let payLaterText = '';
 		                const afterPayLogo = document.querySelector('.afterPayLogo');
 						if (afterPayElement) {
-							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML} / 4 interest-free payment`;
+							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML} / 6 interest-free payment`;
 							if (afterPayLogo) {
 								afterPayLogo.style.display = 'block';
 							}
@@ -441,7 +458,7 @@ try {
 								payLaterText = `As low as ${parseFloat(payTomorrow24MosRate).toLocaleString('en-US', {
 									style: 'currency',
 									currency: 'USD',
-									})}/mo. / 4 interest-free payment`
+									})}/mo. / 6 interest-free payment`
 							}
 						}
 		

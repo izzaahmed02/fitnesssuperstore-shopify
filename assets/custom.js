@@ -311,7 +311,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 	if (!sessionStorage.userLoc) {
 		const locationRes = await fetch("https://french-fitness-api.azurewebsites.net/api/location");
-
 		if (locationRes) {
 			const userLoc = await locationRes.json();
 			sessionStorage.userLoc = JSON.stringify(userLoc);

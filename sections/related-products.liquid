@@ -32,9 +32,16 @@
             role="list"
           >
             {% for recommendation in recommendations.products %}
-              <li class="related-products__item">
-                {% render 'product-item', product: recommendation %}
-              </li>
+              {%- case recommendation.object_type -%}
+              {%- when 'product' -%}
+                {% unless recommendation.tags contains 'avisplus-product-options' or recommendation.tags contains 'avis-option' or recommendation.tags contains 'hidden' %}
+                  {% if recommendation.price > 0 %}
+                    <li class="related-products__item">
+                      {% render 'product-item', product: recommendation %}
+                    </li>
+                  {% endif %}
+                {% endunless %}
+              {%- endcase -%}
             {% endfor %}
           </ul>
 
