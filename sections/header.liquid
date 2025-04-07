@@ -408,7 +408,6 @@
                                 </div>
                             {%- endform -%}
                         </localization-form>
-
                         <localization-form class="small-hide medium-hide" data-prevent-hide>
                             {%- form 'localization', id: 'HeaderLanguageForm', class: 'localization-form' -%}
                                 <div>
@@ -456,7 +455,6 @@
             </span>
                     </a>
                 {%- endif -%}
-
                 {%- for block in section.blocks -%}
                     {%- case block.type -%}
                         {%- when '@app' -%}
@@ -494,7 +492,6 @@
                 endif
             -%}
         </div>
-
         <div class="header__navigation-container">
             {%- liquid
                 if section.settings.menu != blank
@@ -509,7 +506,6 @@
         </div>
     </header>
     </{% if section.settings.sticky_header_type != 'none' %}sticky-header{% else %}div{% endif %}>
-
     {%- if settings.cart_type == "notification" -%}
         {%- render 'cart-notification', color_scheme: section.settings.color_scheme, desktop_menu_type: section.settings.menu_type_desktop -%}
     {%- endif -%}
@@ -679,17 +675,13 @@
             pointer-events: auto;
         }
     </style>
-
     <script>
 		document.addEventListener('DOMContentLoaded', () => {
 			const parents = document.querySelectorAll('.parent');
-
 			parents.forEach((parent) => {
 				const childLinksContainer = parent.querySelector('.childlinks_container');
-
 				if (childLinksContainer) {
 					let timeout;
-
 					parent.addEventListener('mouseenter', () => {
 						clearTimeout(timeout);
 						childLinksContainer.classList.add('active');
@@ -704,7 +696,6 @@
 			});
 		});
     </script>
-
     {%- if request.page_type == 'index' -%}
         {% assign potential_action_target = request.origin | append: routes.search_url | append: "?q={search_term_string}" %}
         <script type="application/ld+json">
@@ -712,12 +703,12 @@
               "@context": "http://schema.org",
               "@type": "WebSite",
               "name": {{ shop.name | json }},
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": {{ potential_action_target | json }},
-        "query-input": "required name=search_term_string"
-      },
-      "url": {{ request.origin | append: page.url | json }}
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": {{ potential_action_target | json }},
+                "query-input": "required name=search_term_string"
+              },
+              "url": {{ request.origin | append: page.url | json }}
             }
         </script>
     {%- endif -%}

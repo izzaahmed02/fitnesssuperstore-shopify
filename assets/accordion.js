@@ -1,10 +1,8 @@
 (function () {
 	'use strict';
-
 	document.addEventListener('DOMContentLoaded', function () {
 		const accordionHeaders = document.querySelectorAll('.accordion-header');
 		if (!accordionHeaders.length) return;
-
 		accordionHeaders.forEach((header) => {
 			const content = header.nextElementSibling;
 			if (!content) return;
@@ -13,11 +11,9 @@
 			links.forEach(link => {
 				link.setAttribute('tabindex', initiallyExpanded ? '0' : '-1');
 			});
-
 			header.addEventListener('click', function () {
 				const isExpanded = this.getAttribute('aria-expanded') === 'true';
 				this.setAttribute('aria-expanded', String(!isExpanded));
-
 				if (!isExpanded) {
 					content.style.maxHeight = '100%';
 					content.setAttribute('aria-hidden', 'false');
