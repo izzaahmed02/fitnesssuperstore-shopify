@@ -117,15 +117,19 @@ var TransitTimeCalculator = {
       }
 
       let faiSelect = document.querySelector('select[name="Full Assembly & Installation"]');
-      if (faiSelect && !faiSelect.dataset.listenerAttached) {
-        faiSelect.dataset.listenerAttached = 'true';
-        faiSelect.addEventListener('change', async () => {
-          await TransitTimeCalculator.displayTransitTimes();
-        });
-        let selectedOption = faiSelect.options[faiSelect.selectedIndex];
-        if (selectedOption) {
-          let faiOptionText = selectedOption.text;
-          deliveryOptionText = faiOptionText.includes("Curbside") ? "Curbside Delivery" : faiOptionText;
+      
+      if (faiSelect) {
+        deliveryOptionText = faiSelect.value;
+        if (!faiSelect.dataset.listenerAttached) {
+          faiSelect.dataset.listenerAttached = 'true';
+          faiSelect.addEventListener('change', async () => {
+            let selectedOption = faiSelect.options[faiSelect.selectedIndex];
+            if (selectedOption) {
+              let faiOptionText = selectedOption.text;
+              deliveryOptionText = faiOptionText.includes("Curbside") ? "Curbside Delivery" : faiOptionText;
+            }
+            await TransitTimeCalculator.displayTransitTimes();
+          });
         }
       }
       
