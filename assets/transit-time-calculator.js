@@ -58,6 +58,7 @@ var TransitTimeCalculator = {
             if (locationForm) {
               locationForm.style.display = 'block';
             } 
+            setUserLocationDisplay(userLoc);
             return;
           }
         } catch (e) {
@@ -66,6 +67,7 @@ var TransitTimeCalculator = {
           if (locationForm) {
             locationForm.style.display = 'block';
           } 
+          setUserLocationDisplay(userLoc);
           return;
         }
         
@@ -96,7 +98,7 @@ var TransitTimeCalculator = {
         } else {
           if (userLoc.country !== 'CA' && userLoc.country !== 'US' && userLoc.country !== 'PR') {
             document.querySelector('.location-form #postalCode').value = userLoc.postal;
-            document.querySelector('.location-display').innerHTML = `${userLoc.city} ${userLoc.region_code}, ${userLoc.postal}` 
+            setUserLocationDisplay(userLoc);
             TransitTimeCalculator.appendInvalidTransitTime();
             return;
           }
@@ -404,6 +406,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+function setUserLocationDisplay(userLoc) {
+  document.querySelector('.location-display').innerHTML = `${userLoc.city} ${userLoc.region_code}, ${userLoc.postal}` 
+}
 
 async function fetchProductDetailsWithMetafields(productId) {
     const productUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${productId}`;

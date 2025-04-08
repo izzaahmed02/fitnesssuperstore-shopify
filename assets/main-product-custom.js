@@ -22,6 +22,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 			//getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
 
 			if (shippingType) {
+                shippingType.querySelector('.avp-option-title .apo-title').innerText = '"Assembly & Room of Choice Installation Needed?'
 				customerLocationForm.parentElement.insertAdjacentElement('afterend', shippingType);
 				shippingType.style.display = 'block';
 
