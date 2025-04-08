@@ -11,10 +11,8 @@ function removeRightSideOnSmallScreens() {
 	}
 }
 
-// Выполняем при загрузке страницы
-document.addEventListener('DOMContentLoaded', removeRightSideOnSmallScreens);
 
-// Можно также проверять при изменении размера окна, если это требуется
+document.addEventListener('DOMContentLoaded', removeRightSideOnSmallScreens);
 window.addEventListener('resize', removeRightSideOnSmallScreens);
 
 class FacetFiltersForm extends HTMLElement {
@@ -106,6 +104,7 @@ class FacetFiltersForm extends HTMLElement {
 					productGrid.appendChild(product);
 				});
 				initSlidersBatch();
+
 			} else {
 				productGrid.innerHTML = "<li>No products found.</li>";
 			}
@@ -296,6 +295,7 @@ class FacetFiltersForm extends HTMLElement {
 		});
 
 		if (updateURLHash) FacetFiltersForm.updateURLHash(searchParams);
+
 	}
 
 	static renderSectionFromFetch(url, event) {
@@ -308,6 +308,22 @@ class FacetFiltersForm extends HTMLElement {
 				FacetFiltersForm.renderProductGridContainer(html);
 				FacetFiltersForm.renderProductCount(html);
 				if (typeof initializeScrollAnimationTrigger === 'function') initializeScrollAnimationTrigger(html.innerHTML);
+				const elements = document.querySelectorAll('.product-item .title');
+				elements.forEach((elem) => {
+					if (elem.tagName === 'A') {
+						const url = new URL(elem.href, window.location.origin);
+						url.search = '';
+						elem.href = url.toString();
+					}
+					else {
+						const link = elem.querySelector('a');
+						if (link) {
+							const url = new URL(link.href, window.location.origin);
+							url.search = '';
+							link.href = url.toString();
+						}
+					}
+				});
 			});
 	}
 
@@ -317,6 +333,22 @@ class FacetFiltersForm extends HTMLElement {
 		FacetFiltersForm.renderProductGridContainer(html);
 		FacetFiltersForm.renderProductCount(html);
 		if (typeof initializeScrollAnimationTrigger === 'function') initializeScrollAnimationTrigger(html.innerHTML);
+		const elements = document.querySelectorAll('.product-item .title');
+		elements.forEach((elem) => {
+			if (elem.tagName === 'A') {
+				const url = new URL(elem.href, window.location.origin);
+				url.search = '';
+				elem.href = url.toString();
+			}
+			else {
+				const link = elem.querySelector('a');
+				if (link) {
+					const url = new URL(link.href, window.location.origin);
+					url.search = '';
+					link.href = url.toString();
+				}
+			}
+		});
 	}
 
 	static renderProductGridContainer(html) {
