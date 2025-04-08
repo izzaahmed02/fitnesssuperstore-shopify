@@ -1,29 +1,29 @@
 window.addEventListener('DOMContentLoaded', async () => {
 	function checkForElements() {
-		const shippingInfo = document.querySelector(
-			'.docapp-single-shipping-calculator .docapp-shipping-show-trigger'
-		);
-		const cityInput = document.querySelector('input[name="shipping_address[city]"]');
-		const zipInput = document.querySelector('input[name="shipping_address[zip]"]');
 		const shippingType = document.querySelector(
 			'.avp-option.ap-options__select-container:has(select[name^="Full Assembly & Installation"])'
 		);
 		const warranty = document.querySelector(
 			'.avp-option.ap-options__select-container:has(select[name^="Warranty"])'
 		);
-		if (shippingInfo && cityInput && zipInput) {
-			cityInput.addEventListener('input', () => {
-				localStorage.setItem('city', cityInput.value);
-			});
 
-			zipInput.addEventListener('input', () => {
-				localStorage.setItem('zip', zipInput.value);
-			});
+		const customerLocationForm = document.querySelector(
+			'.location-form'
+		);
 
-			getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
+			// cityInput.addEventListener('input', () => {
+			// 	localStorage.setItem('city', cityInput.value);
+			// });
+
+			// zipInput.addEventListener('input', () => {
+			// 	localStorage.setItem('zip', zipInput.value);
+			// });
+
+			//getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
 
 			if (shippingType) {
-				shippingInfo.parentElement.insertAdjacentElement('afterend', shippingType);
+                shippingType.querySelector('.avp-option-title .apo-title').innerText = '"Assembly & Room of Choice Installation Needed?'
+				customerLocationForm.parentElement.insertAdjacentElement('afterend', shippingType);
 				shippingType.style.display = 'block';
 
 				const apoTitle = shippingType.querySelector('.apo-title');
@@ -67,38 +67,29 @@ window.addEventListener('DOMContentLoaded', async () => {
 							}
 						}
 					}
-				});
-			}
+			});
 
-			if (!window.product.available) {
-				document.querySelector('.docapp-single-shipping-calculator .shipping-data').style.color = '#B3B3B3';
-			}
 			clearInterval(pollingInterval);
 		}
 
-		document.querySelector('.docapp-shipping-calculator--button')?.addEventListener('click', () => {
-			const shippingInfo = document.querySelector(
-				'.docapp-single-shipping-calculator .docapp-shipping-show-trigger'
-			);
-			const cityInput = document.querySelector('input[name="shipping_address[city]"]');
-			const zipInput = document.querySelector('input[name="shipping_address[zip]"]');
-			const shippingType = document.querySelector(
-				'.avp-option.ap-options__select-container:has(select[name^="Full Assembly & Installation"])'
-			);
+		// document.querySelector('.docapp-shipping-calculator--button')?.addEventListener('click', (event) => {
+		// 	const shippingType = document.querySelector(
+		// 		'.avp-option.ap-options__select-container:has(select[name^="Full Assembly & Installation"])'
+		// 	);
 
-			if (shippingInfo && cityInput && zipInput) {
-				getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
+		// 	if (customerLocationForm) {
+		// 		//getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
 
-				if (shippingType) {
-					shippingInfo.parentElement.insertAdjacentElement('afterend', shippingType);
+		// 		if (shippingType) {
+		// 			customerLocationForm.parentElement.insertAdjacentElement('afterend', shippingType);
 
-					const apoTitle = shippingType.querySelector('.apo-title');
-					if (apoTitle) {
-						apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
-					}
-				}
-			}
-		});
+		// 			const apoTitle = shippingType.querySelector('.apo-title');
+		// 			if (apoTitle) {
+		// 				apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
+		// 			}
+		// 		}
+		// 	}
+		// });
 	}
 
 	function getFormDataAndDisplay(cityInput, zipInput, shippingInfo) {
@@ -119,7 +110,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 		}
 	}
 
-	const pollingInterval = setInterval(checkForElements, 2000);
+	const pollingInterval = setInterval(checkForElements, 500);
 
 	let currentPageIndex = 0; 
     
@@ -478,6 +469,15 @@ try {
 	});
 } catch (error) {
 	console.log(error)
+}
+
+function toggleTransitTimeForm() {
+	const form = document.getElementById('location-form');
+	if (form.style.display === 'block') {
+		form.style.display = 'none';
+	} else {
+		form.style.display = 'block';
+	}
 }
 
 function computeAfterPayLoanDetails(principal, monthlyPayment, numPayments, newTerm = null) {

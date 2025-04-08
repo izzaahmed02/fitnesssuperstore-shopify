@@ -15,11 +15,28 @@ var TransitTimeCalculator = {
     if (!sessionStorage.userLoc)
       return;
 
+    const estimateDeliveryTimesBtn = document.querySelector('#estimate-delivery-times-btn');
+    if (estimateDeliveryTimesBtn && !estimateDeliveryTimesBtn.dataset.listenerAttached) {
+      estimateDeliveryTimesBtn.addEventListener('click', async () => {
+        estimateDeliveryTimesBtn.innerText = 'Calculating delivery times...';
+        const zipInput = document.querySelector('.location-form #postalCode');
+        if (zipInput.value) {
+          sessionStorage.userPostal = zipInput.value.replace(/\s+/g, '');
+          zipInput.style.border = '1px solid #E5E5E5';
+          await TransitTimeCalculator.displayTransitTimes();
+        } else {
+          zipInput.style.border = '1px solid red';
+        }
+        estimateDeliveryTimesBtn.innerText = 'Estimate delivery times'
+      });
+      estimateDeliveryTimesBtn.dataset.listenerAttached = 'true';
+    }
+
     try {
       //const locationRes = await fetch("https://french-fitness-api.azurewebsites.net/api/location");
       const userLoc = JSON.parse(sessionStorage.userLoc);
-      let originalZipCode = userLoc.postal;
-      
+      let locationInfoResponse;
+
       if (sessionStorage.userPostal !== 'null') {
         if (!sessionStorage.userPostal) {
           sessionStorage.userPostal = userLoc.postal;
@@ -30,17 +47,31 @@ var TransitTimeCalculator = {
       
       sessionStorage.userCityStateZip = `${userLoc.city} ${userLoc.region_code}`;
       
+      const locationForm = document.getElementById('location-form');
+
       if (userLoc.postal) {
-        let locationInfoResponse;
         try {
           const locInfoRes = await fetch(`https://french-fitness-api.azurewebsites.net/api/location/locationInfo/${userLoc.postal}`);
           locationInfoResponse = await locInfoRes.json();
+          if (locationInfoResponse.status && locationInfoResponse.status === 400) {
+            TransitTimeCalculator.appendInvalidTransitTime();
+            if (locationForm) {
+              locationForm.style.display = 'block';
+            } 
+            setUserLocationDisplay(userLoc);
+            return;
+          }
         } catch (e) {
-          //TransitTimeCalculator.appendInvalidTransitTime();
+          TransitTimeCalculator.appendInvalidTransitTime();
+          const locationForm = document.getElementById('location-form');
+          if (locationForm) {
+            locationForm.style.display = 'block';
+          } 
+          setUserLocationDisplay(userLoc);
           return;
         }
         
-        if (locationInfoResponse) {
+        if (locationInfoResponse && locationInfoResponse.status !== 400) {
           let locationInfoCountry = locationInfoResponse.country;
 
           if (locationInfoResponse.zipCodeLocationResult) {
@@ -50,11 +81,14 @@ var TransitTimeCalculator = {
             userLoc.region_code = locationInfoJSON.region_code || locationInfoJSON.state || locationInfoJSON.province;
             userLoc.city = locationInfoJSON.city;
             userLoc.country = locationInfoJSON.country_code || locationInfoCountry;
+
+            document.querySelector('.location-form #postalCode').value = userLoc.postal;
+            document.querySelector('.location-display').innerHTML = `${locationInfoJSON.city} ${userLoc.region_code}, ${userLoc.postal}` 
+
             if (locationInfoJSON.state === 'PR') {
               userLoc.country = 'PR';
             }
           }
-
 
           if (locationInfoCountry) {
             userLoc.country = locationInfoCountry;
@@ -63,6 +97,8 @@ var TransitTimeCalculator = {
           sessionStorage.userCityStateZip = `${userLoc.city} ${userLoc.region_code}`;
         } else {
           if (userLoc.country !== 'CA' && userLoc.country !== 'US' && userLoc.country !== 'PR') {
+            document.querySelector('.location-form #postalCode').value = userLoc.postal;
+            setUserLocationDisplay(userLoc);
             TransitTimeCalculator.appendInvalidTransitTime();
             return;
           }
@@ -94,15 +130,19 @@ var TransitTimeCalculator = {
       }
 
       let faiSelect = document.querySelector('select[name="Full Assembly & Installation"]');
-      if (faiSelect && !faiSelect.dataset.listenerAttached) {
-        faiSelect.dataset.listenerAttached = 'true';
-        faiSelect.addEventListener('change', async () => {
-          await TransitTimeCalculator.displayTransitTimes();
-        });
-        let selectedOption = faiSelect.options[faiSelect.selectedIndex];
-        if (selectedOption) {
-          let faiOptionText = selectedOption.text;
-          deliveryOptionText = faiOptionText.includes("Curbside") ? "Curbside Delivery" : faiOptionText;
+      
+      if (faiSelect) {
+        deliveryOptionText = faiSelect.value;
+        if (!faiSelect.dataset.listenerAttached) {
+          faiSelect.dataset.listenerAttached = 'true';
+          faiSelect.addEventListener('change', async () => {
+            let selectedOption = faiSelect.options[faiSelect.selectedIndex];
+            if (selectedOption) {
+              let faiOptionText = selectedOption.text;
+              deliveryOptionText = faiOptionText.includes("Curbside") ? "Curbside Delivery" : faiOptionText;
+            }
+            await TransitTimeCalculator.displayTransitTimes();
+          });
         }
       }
       
@@ -211,19 +251,6 @@ var TransitTimeCalculator = {
       let estimatedTimeText = ` Estimated by ${minDeliveryTimeDate} - ${maxDeliveryTimeDate}`;
       
       TransitTimeCalculator.appendTransitTime(estimatedTimeText, deliveryOptionText);
-
-      setTimeout(() => {
-        const shippingCalcBtn = document.querySelector('.docapp-shipping-calculator--button');
-        if (shippingCalcBtn && !shippingCalcBtn.dataset.listenerAttached) {
-          shippingCalcBtn.addEventListener('click', () => {
-            const zipInput = document.querySelector('.docapp-shipping-calculator--input-zip');
-            sessionStorage.userPostal = zipInput.value.replace(/\s+/g, '');
-            TransitTimeCalculator.displayTransitTimes();
-          });
-          shippingCalcBtn.dataset.listenerAttached = 'true';
-        }
-      }, 1000);
-      
     } catch (err) {
       console.error(err);
       //TransitTimeCalculator.appendInvalidTransitTime();
@@ -320,7 +347,9 @@ var TransitTimeCalculator = {
   appendInvalidTransitTime: function() {
     let finalText = `<span class="transit-time-text">The Transit Time Calculator only has info for USA & Canada Postal Codes. Please enter a valid Postal Code or Contact Us for Transit Times</span>`;
     const container = document.querySelector('.transit-times-container');
-    if (container) { container.innerHTML = finalText; }
+    if (container) { 
+      container.innerHTML = finalText; 
+    }
   },
 
   
@@ -377,6 +406,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+function setUserLocationDisplay(userLoc) {
+  document.querySelector('.location-display').innerHTML = `${userLoc.city} ${userLoc.region_code}, ${userLoc.postal}` 
+}
 
 async function fetchProductDetailsWithMetafields(productId) {
     const productUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${productId}`;

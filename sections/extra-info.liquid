@@ -40,6 +40,7 @@
           {% when 'extra' %}
             {% assign extra = product.metafields.custom.extra_info.value %}
             {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
+            {% assign attachments_metafield = product.metafields.custom.attachments_and_add_ons.value %}
 
             {% if extra != blank %}
               <h4 class="product__extra_info-title">Extra info</h4>
@@ -402,7 +403,86 @@
                 <div>{{ block.settings.warranty }}</div>
               </div>
             {% endif %}
-    
+
+            {% if attachments_metafield != blank %}
+              {% assign attachments_object = attachments_metafield %}
+              {% if attachments_object.rig_frame_pieces_customize_your_rig_for_sale != blank %}
+
+              {%- assign rig_frame_pieces_count = 0 -%}
+              {%- for media in attachments_object.rig_frame_pieces_customize_your_rig_for_sale.value -%}
+                {%- assign rig_frame_pieces_count = rig_frame_pieces_count | plus: 1 -%}
+              {%- endfor -%}         
+              <section class="rig-attachments-section">
+                  <h4 class="product__extra_info-title">Rig Frame Pieces (Customize Your Rig) for Sale ({{ rig_frame_pieces_count }})</h4>
+                  <div class="rig-product-grid">
+                    {% for product_ref in attachments_object.rig_frame_pieces_customize_your_rig_for_sale.value %}
+                      <div class="rig-product-card">
+                        <div class="rig-product-image-wrap">
+                          {% if product_ref.featured_image %}
+                            <img 
+                              src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
+                              alt="{{ product_ref.featured_image.alt | escape }}" 
+                              class="rig-product-image"
+                            >
+                          {% endif %}
+                        </div>
+                        <div class="rig-product-details">
+                          <p class="rig-product-price">
+                            {{ product_ref.price | money }}
+                          </p>
+                          <h3 class="rig-product-name">{{ product_ref.title }}</h3>
+                          <a target="_blank"
+                            class="rig-quickview-btn" 
+                            href="{{ product_ref.url }}"
+                          >
+                            Quick view 
+                            <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
+                          </a>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>            
+              </section>
+              {% endif %}
+              {% if attachments_object.rig_attachments_accessories_for_sale != blank %}
+                {%- assign rig_attachments_count = 0 -%}
+                {%- for media in attachments_object.rig_attachments_accessories_for_sale.value -%}
+                  {%- assign rig_attachments_count = rig_attachments_count | plus: 1 -%}
+                {%- endfor -%} 
+                <section class="rig-attachments-section">
+                  <h4 class="product__extra_info-title">Rig Attachments & Accessories for Sale ({{ rig_attachments_count }})</h4>
+                  <div class="rig-product-grid">
+                    {% for product_ref in attachments_object.rig_attachments_accessories_for_sale.value %}
+                      <div class="rig-product-card">
+                        <div class="rig-product-image-wrap">
+                          {% if product_ref.featured_image %}
+                            <img 
+                              src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
+                              alt="{{ product_ref.featured_image.alt | escape }}" 
+                              class="rig-product-image"
+                            >
+                          {% endif %}
+                        </div>
+                        <div class="rig-product-details">
+                          <p class="rig-product-price">
+                            {{ product_ref.price | money }}
+                          </p>
+                          <h3 class="rig-product-name">{{ product_ref.title }}</h3>
+                          <a target="_blank"
+                            class="rig-quickview-btn" 
+                            href="{{ product_ref.url }}"
+                          >
+                            Quick view 
+                            <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
+                          </a>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>            
+              </section>
+              {% endif %}
+          {% endif %}
+
           {% when 'tech' %}
             {% if block.settings.tech != blank %}
               <div class="product__extra_tech extra-info-width">
