@@ -23,7 +23,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 			if (shippingType) {
                 shippingType.querySelector('.avp-option-title .apo-title').innerText = '"Assembly & Room of Choice Installation Needed?'
-				customerLocationForm.parentElement.insertAdjacentElement('afterend', shippingType);
+				customerLocationForm.parentElement.insertAdjacentElement('beforebegin', shippingType);
 				shippingType.style.display = 'block';
 
 				const apoTitle = shippingType.querySelector('.apo-title');
