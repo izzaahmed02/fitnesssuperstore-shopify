@@ -31,16 +31,29 @@ window.addEventListener('DOMContentLoaded', async () => {
 					apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
 				}
 
+				if (shippingType.querySelector('select').options[0] && 	shippingType.querySelector('select').options[0].text.includes('Curbside')) {
+					shippingType.querySelector('select').options[0].text = 'No, Curbside Delivery Only';
+				}
+
+				const avisInputInstallationHidden = document.querySelector(`input[temp-name="Full Assembly & Installation"]`);
+
+				if (avisInputInstallationHidden) {
+					avisInputInstallationHidden.value = 'No, Curbside Delivery Only';
+				}
+
 				shippingType.addEventListener('change', (event) => {
 					const selectedOption = event.target.options[event.target.selectedIndex];
 
 					if (selectedOption) {
+						if (selectedOption.value.includes('Curbside')) {
+							avisInputInstallationHidden.value = 'No, Curbside Delivery Only';
+							return;
+						}
+
 						const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
 						
 						if (moneyHTML) {
 							setTimeout(() => {	
-								const avisInputInstallationHidden = document.querySelector(`input[temp-name="Full Assembly & Installation"]`);
-
 								if (avisInputInstallationHidden) {
 									if (!avisInputInstallationHidden.value.includes('Add')) {
 										avisInputInstallationHidden.value = `${avisInputInstallationHidden.value} ${moneyHTML}`
