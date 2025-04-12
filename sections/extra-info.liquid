@@ -36,6 +36,11 @@
                 {{ product.description }}
               </div>
             {% endif %}
+            {% if block.settings.show_tile_calculator %}
+              <div class="product__tile-calculator">
+                {% render 'product-tile-calculator', block: block %}
+              </div>
+            {% endif %}
     
           {% when 'extra' %}
             {% assign extra = product.metafields.custom.extra_info.value %}
@@ -591,6 +596,7 @@
     </div>
   </div>
 </div>
+
 {% schema %}
 {
   "name": "Extra info",
@@ -623,7 +629,40 @@
   "blocks": [
     {
       "type": "description",
-      "name": "Description"
+      "name": "Description",
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "show_tile_calculator",
+          "label": "t:sections.main-product.blocks.tile_calculator.show_tile_calculator.label",
+          "default": false,
+          "info": "t:sections.main-product.blocks.tile_calculator.show_tile_calculator.info"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:sections.main-product.blocks.tile_calculator.heading.label",
+          "default": "How many tiles do I need?"
+        },
+        {
+          "type": "text",
+          "id": "calculate_button",
+          "label": "t:sections.main-product.blocks.tile_calculator.calculate_button.label",
+          "default": "Calculate"
+        },
+        {
+          "type": "text",
+          "id": "breakdown_heading",
+          "label": "t:sections.main-product.blocks.tile_calculator.breakdown_heading.label",
+          "default": "Select your amount:"
+        },
+        {
+          "type": "text",
+          "id": "tile_type_suffix",
+          "label": "t:sections.main-product.blocks.tile_calculator.tile_type_suffix.label",
+          "default": "Mats"
+        }
+      ]
     },
     {
       "type": "extra",

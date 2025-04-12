@@ -67,11 +67,9 @@ class TileCalculator extends HTMLElement {
         this.disableAddToCartButton();
 
         this.enableBreakdownInputsRealtimeSync();
-      }, 2000);
 
-      this.updateQuantity(0);
-      this.updateCustomPrice({});
-      this.disableAddToCartButton();
+        this.initSingleVariantSync();
+      }, 2000);
     });
   }
 
@@ -235,17 +233,34 @@ class TileCalculator extends HTMLElement {
       const input = this.querySelector(selector);
       if (!input) return;
 
-      input.addEventListener("input", () => {
-        let val = parseFloat(input.value);
-        if (isNaN(val) || val < 0) {
-          input.value = 0;
-        }
-      });
+      // input.addEventListener("input", () => {
+      // let val = parseFloat(input.value);
+      // if (isNaN(val) || val < 0) {
+      //   input.value = 0;
+      // }
+      // });
 
       input.addEventListener("blur", () => {
-        if (input.value === "") {
-          input.value = 0;
-        }
+        const val = parseFloat(input.value);
+        if (isNaN(val) || val < 0) input.value = 0;
+
+        const updatedResult = {};
+        let updatedTotal = 0;
+
+        inputs.forEach((inp) => {
+          const type = inp.id.replace("-tiles", "");
+          let val = parseInt(inp.value || 0);
+          if (isNaN(val) || val < 0) {
+            val = 0;
+            inp.value = 0;
+          }
+          updatedResult[type] = val;
+          updatedTotal += val;
+        });
+
+        updatedResult.total = updatedTotal;
+        this.updateQuantity(updatedTotal);
+        this.updateCustomPrice(updatedResult);
       });
     });
   }
@@ -259,7 +274,7 @@ class TileCalculator extends HTMLElement {
   // Update dynamic price block based on total tile count
   updateCustomPrice(result) {
     if (this.btn) {
-      this.btn.disabled = false;
+      // this.btn.disabled = false;
     }
 
     const priceDisplay = document.querySelector(
@@ -327,6 +342,53 @@ class TileCalculator extends HTMLElement {
     });
   }
 
+  initSingleVariantSync() {
+    const types = Object.keys(this.variants);
+    if (types.length !== 1) return;
+
+    const type = types[0];
+    const variant = this.variants[type];
+    const quantityInput = this.quantityInput;
+    const input = this.querySelector(`#${type}-tiles`);
+
+    if (!variant || variant.available === false) {
+      // Variant is not available, disable quantity input and Add to Cart
+      input.value = 0;
+      quantityInput.value = 0;
+      quantityInput.disabled = true;
+      input.disabled = true;
+      this.disableAddToCartButton();
+      return;
+    }
+
+    // Allow quantity to be edited from main input
+    quantityInput.readOnly = false;
+    input.readOnly = false;
+
+    // Sync from quantity input to breakdown input
+    quantityInput.addEventListener("input", () => {
+      let qty = parseInt(quantityInput.value || 0);
+      if (isNaN(qty) || qty < 0) qty = 0;
+      quantityInput.value = qty;
+      input.value = qty;
+
+      const result = { [type]: qty, total: qty };
+      this.updateCustomPrice(result);
+      this.enableAddToCartButton();
+    });
+
+    // Sync from breakdown input to quantity input
+    input.addEventListener("input", () => {
+      let val = parseInt(input.value || 0);
+      if (isNaN(val) || val < 0) val = 0;
+      input.value = val;
+      quantityInput.value = val;
+
+      const result = { [type]: val, total: val };
+      this.updateCustomPrice(result);
+    });
+  }
+
   // Convert inputs when user switches units
   convertLengthOnUnitChange(oldUnit, newUnit) {
     const lengthInput = this.querySelector("#calc-length");
@@ -370,7 +432,7 @@ class TileCalculator extends HTMLElement {
   }
 
   enableAddToCartButton() {
-    this.btn.disabled = false;
+    if (this.btn) this.btn.disabled = false;
   }
 
   // Submit form manually with all calculated tile variant quantities

@@ -235,7 +235,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 			if (!document.querySelector('.merchantheader')) {
 				document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
-			}
+				document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
+			} 
 		}
       }, 500);
     }
