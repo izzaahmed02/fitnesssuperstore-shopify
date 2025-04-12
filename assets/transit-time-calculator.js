@@ -12,8 +12,13 @@ function getNthMonday(year, month, n) {
 var TransitTimeCalculator = {
   processingTime: null,
   displayTransitTimes: async function() {
-    if (!sessionStorage.userLoc)
-      return;
+    if (!sessionStorage.userLoc) {
+      const locationRes = await fetch("https://french-fitness-api.azurewebsites.net/api/location");
+      if (locationRes) {
+        const userLoc = await locationRes.json();
+        sessionStorage.userLoc = JSON.stringify(userLoc);
+      }
+    }
 
     const estimateDeliveryTimesBtn = document.querySelector('#estimate-delivery-times-btn');
     if (estimateDeliveryTimesBtn && !estimateDeliveryTimesBtn.dataset.listenerAttached) {

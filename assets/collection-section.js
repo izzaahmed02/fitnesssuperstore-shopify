@@ -76,29 +76,29 @@ document.addEventListener("DOMContentLoaded", function () {
 			img.style.visibility = 'visible';
 		});
 
-		document.querySelectorAll('.main-review-container').forEach(element => {
-			const reviewInterval = setInterval(() => {
-				const starContainer = element.querySelector('.star_container div');
-				const reviewContainer = element.querySelector('.review-container');
-				if (starContainer) {
-					const starsCount = starContainer.querySelectorAll('.on')?.length || 0;
-					const reviewCount = starContainer.querySelector('.ind_cnt_num')?.textContent || '0';
-					const reviewText = starContainer.querySelector('.ind_cnt_desc')?.textContent || '';
-					if (reviewContainer) {
-						const reviewsRatingSpan = reviewContainer.querySelector('.reviews-count');
-						const starRatingCount = reviewContainer.querySelector('.star-count');
-						if (reviewsRatingSpan) {
-							reviewsRatingSpan.textContent = `(${reviewCount} ${reviewText})`;
-						}
-						if (starRatingCount) {
-							starRatingCount.textContent = starsCount.toFixed(1);
-						}
-					}
-					element.style.display = 'block';
-					clearInterval(reviewInterval);
-				}
-			}, 100);
-		});
+		// document.querySelectorAll('.main-review-container').forEach(element => {
+		// 	const reviewInterval = setInterval(() => {
+		// 		const starContainer = element.querySelector('.star_container div');
+		// 		const reviewContainer = element.querySelector('.review-container');
+		// 		if (starContainer) {
+		// 			const starsCount = starContainer.querySelectorAll('.on')?.length || 0;
+		// 			const reviewCount = starContainer.querySelector('.ind_cnt_num')?.textContent || '0';
+		// 			const reviewText = starContainer.querySelector('.ind_cnt_desc')?.textContent || '';
+		// 			if (reviewContainer) {
+		// 				const reviewsRatingSpan = reviewContainer.querySelector('.reviews-count');
+		// 				const starRatingCount = reviewContainer.querySelector('.star-count');
+		// 				if (reviewsRatingSpan) {
+		// 					reviewsRatingSpan.textContent = `(${reviewCount} ${reviewText})`;
+		// 				}
+		// 				if (starRatingCount) {
+		// 					starRatingCount.textContent = starsCount.toFixed(1);
+		// 				}
+		// 			}
+		// 			element.style.display = 'block';
+		// 			clearInterval(reviewInterval);
+		// 		}
+		// 	}, 100);
+		// });
 	}
 
 	const sliderObserver = new IntersectionObserver((entries, observer) => {
