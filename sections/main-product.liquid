@@ -157,7 +157,9 @@
   {%- for block in section.blocks -%}
     {%- case block.type -%}
     {%- when 'tile_calculator' -%}
-      {%- assign enable_product_form_js = false -%}
+      {% if block.settings.disable_product_form_js %}
+        {%- assign enable_product_form_js = false -%}
+      {% endif %}
     {%- endcase -%}
   {%- endfor -%}
 
@@ -461,9 +463,11 @@
                 </div>
 
               {%- when 'tile_calculator' -%}
-                <div class="product__tile-calculator">
-                  {% render 'product-tile-calculator', block: block %}
-                </div>
+                {% if block.settings.show_tile_calculator %}
+                  <div class="product__tile-calculator">
+                    {% render 'product-tile-calculator', block: block %}
+                  </div>
+                {% endif %}
 
               {%- when 'price_with_option' -%}
                 <product-form
@@ -530,6 +534,8 @@
                           <quantity-input class="quantity {% unless product.available %} out-of-stock{% endunless %}" data-url="{{ product.url }}" data-section="{{ section.id }}">
                             <input
                               class="quantity__input"
+                              inputmode="numeric"
+                              pattern="[0-9]*"
                               type="number"
                               name="quantity"
                               id="Quantity-{{ section.id }}"
@@ -1040,6 +1046,8 @@
                       </button>
                       <input
                         class="quantity__input"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
                         type="number"
                         name="quantity"
                         id="Quantity-{{ section.id }}"
@@ -2967,6 +2975,18 @@
       "name": "t:sections.main-product.blocks.tile_calculator.name",
       "limit": 1,
       "settings": [
+        {
+          "type": "checkbox",
+          "id": "disable_product_form_js",
+          "label": "t:sections.main-product.blocks.tile_calculator.disable_product_form_js.label",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_tile_calculator",
+          "label": "t:sections.main-product.blocks.tile_calculator.show_tile_calculator.label",
+          "default": false
+        },
         {
           "type": "text",
           "id": "heading",
