@@ -1,0 +1,181 @@
+{{ 'package-compare-table.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: calc({{ section.settings.padding_top }}px * 0.5);
+    padding-bottom: calc({{ section.settings.padding_bottom }}px * 0.5);
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{% assign related_handles = '' %}
+{% for p in product.metafields.custom.related_packages.value %}
+  {% assign related_handles = related_handles | append: p.handle | append: ',' %}
+{% endfor %}
+{% assign related_handles = related_handles | split: ',' | compact %}
+
+{% assign current_handle = product.handle | split: ',' %}
+{% assign all_handles = current_handle | concat: related_handles %}
+
+{% if section.blocks.size > 0 %}
+  <section class="package-compare-table package-compare-table--{{ section.id }} section-{{ section.id }}-padding color-{{ section.settings.color_scheme }}">
+    <div class="page-width">
+      <div class="package-compare-table__wrap">
+        <div class="package-compare-table__header">
+          {% if section.settings.heading != blank %}
+            <h2 class="package-compare-table__heading h2">{{ section.settings.heading }}</h2>
+          {% endif %}
+        </div>
+
+        <div class="package-compare-table__wrapper">
+          <table class="package-compare-table">
+            <thead>
+              <tr>
+                <th class="compare-table-product__header"></th>
+                {% for item in all_handles %}
+                  <th class="compare-table-product__header">
+                    <div class="compare-table-product__title">{{ all_products[item].title -}}</div>
+                    <div class="compare-table-product__price">
+                      <span>From {{ all_products[item].price | money -}}</span>
+                    </div>
+                    {% if all_products[item].featured_image %}
+                      <div class="compare-table-product__image">
+                        {{
+                          all_products[item].featured_image
+                          | image_url: width: 300
+                          | image_tag: loading: 'lazy', alt: item.title
+                        }}
+                      </div>
+                    {% endif %}
+                  </th>
+                {% endfor %}
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for block in section.blocks %}
+                <tr>
+                  <td class="package-compare-table__label-row">
+                    <strong>{{ block.settings.parameter_label }}</strong>
+                  </td>
+
+                  {% assign ns_key = block.settings.metafield_key | split: '.' %}
+                  {% assign metafield_namespace = ns_key[0] %}
+                  {% assign metafield_key = ns_key[1] %}
+
+                  {% for item_handle in all_handles %}
+                    {% assign item = all_products[item_handle] %}
+                    <td class="compare-table-product__value">
+                      {{ item.metafields[metafield_namespace][metafield_key] | metafield_tag }}
+                    </td>
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+
+            <tfoot>
+              <tr>
+                <td class="compare-table-product__cta"></td>
+                {% for item_handle in all_handles %}
+                  {% assign item = all_products[item_handle] %}
+                  <td class="compare-table-product__cta">
+                    {% if item.handle == product.handle %}
+                      <span class="button button--secondary is-current compare-table-product__button">Current package</span>
+                    {% else %}
+                      <a href="{{ item.url }}" class="button compare-table-product__button">
+                        {{- section.settings.cta_label | default: 'View package' -}}
+                      </a>
+                    {% endif %}
+                  </td>
+                {% endfor %}
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Package Compare Table",
+  "tag": "section",
+  "class": "package-compare-table-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.package-compare-table.settings.heading.label",
+      "default": "Compare Packages"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "t:sections.package-compare-table.settings.cta_label.label",
+      "default": "View Package"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.package-compare-table.settings.color_scheme.label",
+      "default": "background-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 52
+    }
+  ],
+  "blocks": [
+    {
+      "type": "parameter",
+      "name": "t:sections.package-compare-table.blocks.parameter.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "parameter_label",
+          "label": "t:sections.package-compare-table.blocks.parameter.settings.parameter_label.label",
+          "default": "Parameter"
+        },
+        {
+          "type": "text",
+          "id": "metafield_key",
+          "label": "t:sections.package-compare-table.blocks.parameter.settings.metafield_key.label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Package Compare Table",
+      "blocks": [{ "type": "parameter" }, { "type": "parameter" }, { "type": "parameter" }]
+    }
+  ]
+}
+{% endschema %}
