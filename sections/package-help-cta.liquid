@@ -1,0 +1,131 @@
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: calc({{ section.settings.padding_top }}px * 0.5);
+    padding-bottom: calc({{ section.settings.padding_bottom }}px * 0.5);
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  .package-help-cta__inner {
+    padding: 4rem 2rem;
+    border-radius: 16px;
+    text-align: center;
+  }
+
+  .package-help-cta__heading {
+    font-size: 2.8rem;
+    line-height: 3.4rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #23232b;
+    margin: 0;
+    margin-bottom: 2.5rem;
+  }
+
+  .package-help-cta__button {
+    max-width: 170px;
+    margin: 0 auto;
+    justify-content: center;
+  }
+
+  @media (min-width: 990px) {
+    .package-help-cta__inner {
+      padding: 8rem 2rem;
+    }
+    .package-help-cta__heading {
+      font-size: 3.8rem;
+      line-height: 4.4rem;
+      margin-bottom: 5rem;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .package-help-cta__heading {
+      font-size: 4.8rem;
+      line-height: 6.8rem;
+    }
+  }
+{%- endstyle -%}
+
+<section class="package-help-cta section-{{ section.id }}-padding">
+  <div class="page-width">
+    <div class="package-help-cta__inner" style="background: {{ section.settings.background }}">
+      {% if section.settings.heading != blank %}
+        <h6 class="package-help-cta__heading h2">{{ section.settings.heading }}</h6>
+      {% endif %}
+
+      {% if section.settings.button_link != blank and section.settings.button_label != blank %}
+        <a href="{{ section.settings.button_link }}" class="button button--primary package-help-cta__button">
+          {{ section.settings.button_label }}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "t:sections.package-help-cta.name",
+  "tag": "section",
+  "class": "section section--package-help-cta",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.package-help-cta.settings.heading.label",
+      "default": "Not sure which package to choose?"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "t:sections.package-help-cta.settings.button_label.label",
+      "default": "Talk to an expert"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "t:sections.package-help-cta.settings.button_link.label"
+    },
+    {
+      "type": "color_background",
+      "id": "background",
+      "label": "t:sections.package-help-cta.settings.background.label",
+      "default": "#f2f3f5"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 52
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.package-help-cta.presets.name"
+    }
+  ]
+}
+{% endschema %}
