@@ -8,20 +8,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const groupColorContainer = document.querySelectorAll('.group-color-container');
 
         //hack.. for some reason avis option need to be initialize by clicking on them first otherwise it will fire on 2nd click event
-        document.querySelector('input[name="Paint Color"]')?.click();
-        document.querySelector('input[name="Vinyl Color"]')?.click();
+        const paintColorElement = document.querySelector('input[name="Paint Color"]');
+        const vinylColorElement = document.querySelector('input[name="Vinyl Color"]')
+
+        paintColorElement?.click();
+        vinylColorElement?.click();
 
         if (groupColorContainer) {
             groupColorContainer.forEach((colorGroupElement, colorGroupElementIndex) => {
                 const groupColorName = colorGroupElement.getAttribute('data-group-color-name');
                 if (groupColorName == "Paint") {
-                    const paintColorElement = document.querySelector('input[name="Paint Color"]');
                     if (!paintColorElement && !window.product.tags.includes('has_custom_paint')) {
                         colorGroupElement.classList.add('hidden');
                     }
                 }
                 else if (groupColorName == "Vinyl") {
-                    const vinylColorElement = document.querySelector('input[name="Vinyl Color"]');
                     if (!vinylColorElement && !window.product.tags.includes('has_custom_vinyl')) {
                         colorGroupElement.classList.add('hidden');
                     }
@@ -35,7 +36,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     const apoColors = document.querySelectorAll(`.ap-options__swatch-container input[field-name="${groupColorName} Color"]`);
                     const swatchContainer = colorGroupElement.querySelector('.color-options');
 
-                    document.querySelector('.custom-color-group').style.display = 'block';
+                    if (paintColorElement || window.product.tags.includes('has_custom_paint') || vinylColorElement || window.product.tags.includes('has_custom_vinyl')) {
+                        document.querySelector('.custom-color-group').style.display = 'block';
+                    }
+
                     apoColors?.forEach((color, colorIndex) => {
                         if (color.value && (!color.value.includes('Other') && !color.value.includes('Custom'))) {
                             const isDisabled = color.getAttribute('disabled') === 'disabled';
