@@ -171,7 +171,7 @@ class TileCalculator extends HTMLElement {
     if (keys.length === 1) {
       // One variant only — use a custom label
       const label = this.dataset.singleLabel || 'Number of Mats';
-      lines = `<span>${label}: <strong>${result[keys[0]]}pcs</strong></span>`;
+      lines = `<span>${label}: <strong>${result[keys[0]]}</strong></span>`;
     } else {
       // Multiple types — render each with its label
       lines = keys
