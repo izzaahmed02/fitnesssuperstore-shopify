@@ -3,7 +3,7 @@ class TileCalculator extends HTMLElement {
     super();
 
     // Parse embedded variant data from JSON <script> tag
-    const variantsScript = document.getElementById("tile-variants-json");
+    const variantsScript = document.getElementById('tile-variants-json');
     this.variants = variantsScript
       ? JSON.parse(variantsScript.textContent)
       : {};
@@ -11,7 +11,7 @@ class TileCalculator extends HTMLElement {
     // Get width, lengt tile from data attribute or fallback to 24 inches
     this.tileWidthIn = parseFloat(this.dataset.tileWidthIn || 24);
     this.tileLengthIn = parseFloat(
-      this.dataset.tileLengthIn || this.tileWidthIn
+      this.dataset.tileLengthIn || this.tileWidthIn,
     );
     // this.tileSizeIn = parseFloat(this.dataset.tileSizeIn || 24);
 
@@ -26,17 +26,17 @@ class TileCalculator extends HTMLElement {
     // Cache references to form, cart, quantity input, and add to cart button
     this.form = document.querySelector('form[data-type="add-to-cart-form"]');
     this.cart =
-      document.querySelector("cart-notification") ||
-      document.querySelector("cart-drawer");
+      document.querySelector('cart-notification') ||
+      document.querySelector('cart-drawer');
     this.quantityInput = document.querySelector('input[name="quantity"]');
     this.quantityInput.readOnly = true;
     this.btn = document.querySelector(
-      'form[data-type="add-to-cart-form"] [type="submit"]'
+      'form[data-type="add-to-cart-form"] [type="submit"]',
     );
 
     // Attach main calculate handler
-    this.querySelector("#calc-button")?.addEventListener("click", () =>
-      this.calculate()
+    this.querySelector('#calc-button')?.addEventListener('click', () =>
+      this.calculate(),
     );
 
     // Initialize the custom dropdown for unit selection
@@ -47,10 +47,10 @@ class TileCalculator extends HTMLElement {
     // Delay initial setup to ensure DOM is stable
     requestAnimationFrame(() => {
       const hasAvailable = Object.values(this.variants).some(
-        (v) => v.available !== false
+        (v) => v.available !== false,
       );
       if (!hasAvailable) {
-        this.style.display = "none";
+        this.style.display = 'none';
         return;
       }
 
@@ -63,7 +63,7 @@ class TileCalculator extends HTMLElement {
         this.updateQuantity(0);
         this.updateCustomPrice({});
 
-        this.form.addEventListener("submit", this.onSubmitHandler.bind(this));
+        this.form.addEventListener('submit', this.onSubmitHandler.bind(this));
         this.disableAddToCartButton();
 
         this.enableBreakdownInputsRealtimeSync();
@@ -93,9 +93,9 @@ class TileCalculator extends HTMLElement {
     let result = {};
 
     if (
-      tileTypes.includes("middle") &&
-      tileTypes.includes("edge") &&
-      tileTypes.includes("corner")
+      tileTypes.includes('middle') &&
+      tileTypes.includes('edge') &&
+      tileTypes.includes('corner')
     ) {
       // Standard layout with corners and edges
       const corner = Math.min(tilesPerRow, tilesPerCol) >= 2 ? 4 : 0;
@@ -105,15 +105,15 @@ class TileCalculator extends HTMLElement {
       result = { middle, edge, corner };
     } else {
       // Fallback logic for other combinations
-      if (tileTypes.length === 1 && tileTypes.includes("square")) {
-        result["square"] = totalTiles;
+      if (tileTypes.length === 1 && tileTypes.includes('square')) {
+        result['square'] = totalTiles;
       } else if (
         tileTypes.length === 2 &&
-        tileTypes.includes("square") &&
-        tileTypes.includes("border")
+        tileTypes.includes('square') &&
+        tileTypes.includes('border')
       ) {
-        result["square"] = totalTiles;
-        result["border"] = tilesPerRow * 2 + tilesPerCol * 2;
+        result['square'] = totalTiles;
+        result['border'] = tilesPerRow * 2 + tilesPerCol * 2;
       } else {
         tileTypes.forEach((type) => {
           result[type] = 0;
@@ -127,13 +127,13 @@ class TileCalculator extends HTMLElement {
 
   // Main calculate action triggered by "Calculate" button
   async calculate() {
-    const spinner = this.querySelector("#calc-spinner");
-    spinner.style.display = "block";
+    const spinner = this.querySelector('#calc-spinner');
+    spinner.style.display = 'block';
     await new Promise((r) => setTimeout(r, 300)); // simulate loading
 
-    const unit = this.querySelector("#calc-units").value;
-    const length = parseFloat(this.querySelector("#calc-length").value);
-    const width = parseFloat(this.querySelector("#calc-width").value);
+    const unit = this.querySelector('#calc-units').value;
+    const length = parseFloat(this.querySelector('#calc-length').value);
+    const width = parseFloat(this.querySelector('#calc-width').value);
 
     const lengthCm = this.convertToCm(length, unit);
     const widthCm = this.convertToCm(width, unit);
@@ -148,12 +148,12 @@ class TileCalculator extends HTMLElement {
 
     // Disable button if any required variant is out of stock
     const unavailable = Object.entries(result).some(([type, qty]) => {
-      if (type === "total") return false;
+      if (type === 'total') return false;
       const variant = this.variants[type];
       return qty > 0 && (!variant || !variant.available);
     });
 
-    spinner.style.display = "none";
+    spinner.style.display = 'none';
 
     if (unavailable) {
       this.disableAddToCartButton();
@@ -164,22 +164,33 @@ class TileCalculator extends HTMLElement {
 
   // Render tile breakdown message below the inputs
   renderResult(result) {
-    const lines = Object.entries(result)
-      .filter(([key]) => key !== "total")
-      .map(
-        ([key, val]) =>
-          `<span>${
-            key.charAt(0).toUpperCase() + key.slice(1)
-          } Mats: <strong>${val}pcs</strong></span>`
-      )
-      .join(" ");
-    this.querySelector("#calc-result").innerHTML = lines;
+    const keys = Object.keys(result).filter((key) => key !== 'total');
+
+    let lines = '';
+
+    if (keys.length === 1) {
+      // One variant only — use a custom label
+      const label = this.dataset.singleLabel || 'Number of Mats';
+      lines = `<span>${label}: <strong>${result[keys[0]]}</strong></span>`;
+    } else {
+      // Multiple types — render each with its label
+      lines = keys
+        .map(
+          (key) =>
+            `<span>${
+              key.charAt(0).toUpperCase() + key.slice(1)
+            } Mats: <strong>${result[key]}pcs</strong></span>`,
+        )
+        .join(' ');
+    }
+
+    this.querySelector('#calc-result').innerHTML = lines;
   }
 
   // Fill and activate breakdown inputs for quantity adjustment
   updateBreakdown(result) {
     Object.entries(result).forEach(([type, qty]) => {
-      if (type === "total") return;
+      if (type === 'total') return;
       const input = this.querySelector(`#${type}-tiles`);
       if (input) {
         input.value = qty;
@@ -191,11 +202,11 @@ class TileCalculator extends HTMLElement {
   // Add real-time sync for quantity edits
   enableBreakdownInputsRealtimeSync() {
     const inputs = this.querySelectorAll(
-      '.tile-calculator__breakdown input[type="number"]'
+      '.tile-calculator__breakdown input[type="number"]',
     );
 
     inputs.forEach((input) => {
-      input.addEventListener("input", () => {
+      input.addEventListener('input', () => {
         let newVal = parseInt(input.value || 0);
         if (newVal < 0 || isNaN(newVal)) {
           newVal = 0;
@@ -206,7 +217,7 @@ class TileCalculator extends HTMLElement {
         let updatedTotal = 0;
 
         inputs.forEach((inp) => {
-          const type = inp.id.replace("-tiles", "");
+          const type = inp.id.replace('-tiles', '');
           let val = parseInt(inp.value || 0);
           if (val < 0 || isNaN(val)) {
             val = 0;
@@ -229,7 +240,7 @@ class TileCalculator extends HTMLElement {
    * Ensures a default value of 0 if invalid input is detected.
    */
   validateDimensionInputs() {
-    ["#calc-length", "#calc-width"].forEach((selector) => {
+    ['#calc-length', '#calc-width'].forEach((selector) => {
       const input = this.querySelector(selector);
       if (!input) return;
 
@@ -240,7 +251,7 @@ class TileCalculator extends HTMLElement {
       // }
       // });
 
-      input.addEventListener("blur", () => {
+      input.addEventListener('blur', () => {
         const val = parseFloat(input.value);
         if (isNaN(val) || val < 0) input.value = 0;
 
@@ -248,7 +259,7 @@ class TileCalculator extends HTMLElement {
         let updatedTotal = 0;
 
         inputs.forEach((inp) => {
-          const type = inp.id.replace("-tiles", "");
+          const type = inp.id.replace('-tiles', '');
           let val = parseInt(inp.value || 0);
           if (isNaN(val) || val < 0) {
             val = 0;
@@ -278,13 +289,13 @@ class TileCalculator extends HTMLElement {
     }
 
     const priceDisplay = document.querySelector(
-      ".pr_custom_price-container.apo-variant-price .pr_custom_price"
+      '.pr_custom_price-container.apo-variant-price .pr_custom_price',
     );
     if (!priceDisplay) return;
 
     let total = 0;
     Object.entries(result).forEach(([type, qty]) => {
-      if (type === "total") return;
+      if (type === 'total') return;
       const variant = this.variants[type];
       if (variant && variant.price) {
         total += qty * variant.price;
@@ -292,9 +303,9 @@ class TileCalculator extends HTMLElement {
     });
 
     const moneyFormat = (amount) =>
-      new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: Shopify.currency.active || "USD",
+      new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: Shopify.currency.active || 'USD',
       }).format(amount / 100);
 
     priceDisplay.textContent = moneyFormat(total);
@@ -302,29 +313,29 @@ class TileCalculator extends HTMLElement {
 
   // Initialize custom dropdown select for units
   setupCustomSelect() {
-    const wrapper = this.querySelector("#calc-units-wrapper");
-    const button = wrapper?.querySelector("#calc-units-button");
-    const label = wrapper?.querySelector(".tile-calculator__select-label");
-    const list = wrapper?.querySelector("#calc-units-options");
-    const hiddenInput = wrapper?.querySelector("#calc-units");
+    const wrapper = this.querySelector('#calc-units-wrapper');
+    const button = wrapper?.querySelector('#calc-units-button');
+    const label = wrapper?.querySelector('.tile-calculator__select-label');
+    const list = wrapper?.querySelector('#calc-units-options');
+    const hiddenInput = wrapper?.querySelector('#calc-units');
 
     const closeList = () => {
-      button.setAttribute("aria-expanded", "false");
-      list.classList.remove("is-open");
+      button.setAttribute('aria-expanded', 'false');
+      list.classList.remove('is-open');
     };
 
-    button?.addEventListener("click", () => {
-      const isOpen = list.classList.contains("is-open");
-      button.setAttribute("aria-expanded", String(!isOpen));
-      list.classList.toggle("is-open");
+    button?.addEventListener('click', () => {
+      const isOpen = list.classList.contains('is-open');
+      button.setAttribute('aria-expanded', String(!isOpen));
+      list.classList.toggle('is-open');
     });
 
-    list?.querySelectorAll("li").forEach((option) => {
-      option.addEventListener("click", () => {
+    list?.querySelectorAll('li').forEach((option) => {
+      option.addEventListener('click', () => {
         list
-          .querySelectorAll("li")
-          .forEach((li) => li.classList.remove("is-selected"));
-        option.classList.add("is-selected");
+          .querySelectorAll('li')
+          .forEach((li) => li.classList.remove('is-selected'));
+        option.classList.add('is-selected');
         const oldUnit = hiddenInput.value;
         const newUnit = option.dataset.value;
 
@@ -337,7 +348,7 @@ class TileCalculator extends HTMLElement {
       });
     });
 
-    document.addEventListener("click", (e) => {
+    document.addEventListener('click', (e) => {
       if (!wrapper.contains(e.target)) closeList();
     });
   }
@@ -366,7 +377,7 @@ class TileCalculator extends HTMLElement {
     input.readOnly = false;
 
     // Sync from quantity input to breakdown input
-    quantityInput.addEventListener("input", () => {
+    quantityInput.addEventListener('input', () => {
       let qty = parseInt(quantityInput.value || 0);
       if (isNaN(qty) || qty < 0) qty = 0;
       quantityInput.value = qty;
@@ -378,7 +389,7 @@ class TileCalculator extends HTMLElement {
     });
 
     // Sync from breakdown input to quantity input
-    input.addEventListener("input", () => {
+    input.addEventListener('input', () => {
       let val = parseInt(input.value || 0);
       if (isNaN(val) || val < 0) val = 0;
       input.value = val;
@@ -391,8 +402,8 @@ class TileCalculator extends HTMLElement {
 
   // Convert inputs when user switches units
   convertLengthOnUnitChange(oldUnit, newUnit) {
-    const lengthInput = this.querySelector("#calc-length");
-    const widthInput = this.querySelector("#calc-width");
+    const lengthInput = this.querySelector('#calc-length');
+    const widthInput = this.querySelector('#calc-width');
 
     const length = parseFloat(lengthInput.value || 0);
     const width = parseFloat(widthInput.value || 0);
@@ -439,21 +450,21 @@ class TileCalculator extends HTMLElement {
   async onSubmitHandler(e) {
     e.preventDefault();
 
-    this.btn.setAttribute("aria-disabled", true);
-    this.btn.classList.add("loading");
-    this.btn.querySelector(".loading__spinner").classList.remove("hidden");
+    this.btn.setAttribute('aria-disabled', true);
+    this.btn.classList.add('loading');
+    this.btn.querySelector('.loading__spinner').classList.remove('hidden');
 
     // Wait for extra property fields from external apps
     const items = [];
     const avisEl = await new Promise((resolve) => {
       const existing = document.querySelector(
-        '.avis-input-hiddens[data-productid="default"]'
+        '.avis-input-hiddens[data-productid="default"]',
       );
       if (existing) return resolve(existing);
 
       const observer = new MutationObserver(() => {
         const found = document.querySelector(
-          '.avis-input-hiddens[data-productid="default"]'
+          '.avis-input-hiddens[data-productid="default"]',
         );
         if (found) {
           observer.disconnect();
@@ -487,10 +498,10 @@ class TileCalculator extends HTMLElement {
 
     // Submit all items to Shopify cart API
     const config = {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "X-Requested-With": "XMLHttpRequest",
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
       },
       body: JSON.stringify({ items }),
     };
@@ -499,19 +510,19 @@ class TileCalculator extends HTMLElement {
 
     if (response.ok) {
       // Update cart drawer using cart.js and published events
-      const finalCartData = await fetch("/cart.js").then((res) => res.json());
+      const finalCartData = await fetch('/cart.js').then((res) => res.json());
       publish(PUB_SUB_EVENTS.cartUpdate, {
-        source: "tile-calculator",
+        source: 'tile-calculator',
         cartData: finalCartData,
       });
 
       const sectionsResponse = await fetch(
-        window.routes.root + "?sections=cart-drawer,cart-icon-bubble"
+        window.routes.root + '?sections=cart-drawer,cart-icon-bubble',
       );
       const sectionsJson = await sectionsResponse.json();
 
       const parsedState = {
-        id: (await fetch("/cart.js").then((r) => r.json())).id,
+        id: (await fetch('/cart.js').then((r) => r.json())).id,
         sections: sectionsJson,
       };
       if (this.cart?.renderContents) {
@@ -519,21 +530,21 @@ class TileCalculator extends HTMLElement {
       }
 
       // Reset loading states
-      this.btn.classList.remove("loading");
-      if (this.cart && this.cart.classList.contains("is-empty"))
-        this.cart.classList.remove("is-empty");
-      if (!this.error) this.btn.removeAttribute("aria-disabled");
-      this.btn.querySelector(".loading__spinner").classList.add("hidden");
+      this.btn.classList.remove('loading');
+      if (this.cart && this.cart.classList.contains('is-empty'))
+        this.cart.classList.remove('is-empty');
+      if (!this.error) this.btn.removeAttribute('aria-disabled');
+      this.btn.querySelector('.loading__spinner').classList.add('hidden');
     } else {
       // Handle error
-      console.warn("❌ Add to cart failed.");
-      this.btn.classList.remove("loading");
-      if (this.cart && this.cart.classList.contains("is-empty"))
-        this.cart.classList.remove("is-empty");
-      if (!this.error) this.btn.removeAttribute("aria-disabled");
-      this.btn.querySelector(".loading__spinner").classList.add("hidden");
+      console.warn('❌ Add to cart failed.');
+      this.btn.classList.remove('loading');
+      if (this.cart && this.cart.classList.contains('is-empty'))
+        this.cart.classList.remove('is-empty');
+      if (!this.error) this.btn.removeAttribute('aria-disabled');
+      this.btn.querySelector('.loading__spinner').classList.add('hidden');
     }
   }
 }
 
-customElements.define("tile-calculator", TileCalculator);
+customElements.define('tile-calculator', TileCalculator);
