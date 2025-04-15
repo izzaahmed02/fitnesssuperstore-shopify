@@ -20,6 +20,12 @@ document.addEventListener('DOMContentLoaded', async function () {
       ],
     };
 
+    $('.main-slider').on('init', function(event, slick) {
+      if (slick.slideCount <= 1) {
+        $(this).find('.slick-dots').remove();
+      }
+    });
+
     $('.main-slider').slick(mainOptions);
 
     const thumbnailOptions = {

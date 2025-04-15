@@ -241,28 +241,32 @@
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
-                  {% endif %}               
-                  <div class="price-container">
-                    {%- render 'price',
-                      product: product,
-                      use_variant: true,
-                      show_badges: true,
-                      price_class: 'price--large'
-                    -%}
-
-                    {% if product.metafields.custom.retail_price
-                        > product.selected_or_first_available_variant.price
-                    %}
-                      <span class="you-save"
-                        >You save
-                        {{
-                          product.metafields.custom.retail_price
-                          | minus: product.selected_or_first_available_variant.price
-                          | money
-                        -}}
-                      </span>
-                    {% endif %}
-                  </div>
+                  {% endif %}            
+                  {% if product.metafields.custom.saleprice_name != blank %}
+                    {% render 'super-sale', sale_name: product.metafields.custom.saleprice_name, current_price: product.price, sale_price: product.metafields.custom.sale_price %}
+                  {% else %}
+                    <div class="price-container">
+                      {%- render 'price',
+                        product: product,
+                        use_variant: true,
+                        show_badges: true,
+                        price_class: 'price--large'
+                      -%}
+  
+                      {% if product.metafields.custom.retail_price
+                          > product.selected_or_first_available_variant.price
+                      %}
+                        <span class="you-save"
+                          >You save
+                          {{
+                            product.metafields.custom.retail_price
+                            | minus: product.selected_or_first_available_variant.price
+                            | money
+                          -}}
+                        </span>
+                      {% endif %}
+                    </div>
+                  {% endif %}   
                 </div>
             {%- endcase -%}
           {%- endfor -%}
@@ -438,28 +442,32 @@
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
-                  {% endif %}               
-                  <div class="price-container">
-                    {%- render 'price',
-                      product: product,
-                      use_variant: true,
-                      show_badges: true,
-                      price_class: 'price--large'
-                    -%}
-
-                    {% if product.metafields.custom.retail_price
-                        > product.selected_or_first_available_variant.price
-                    %}
-                      <span class="you-save"
-                        >You save
-                        {{
-                          product.metafields.custom.retail_price
-                          | minus: product.selected_or_first_available_variant.price
-                          | money
-                        -}}
-                      </span>
-                    {% endif %}
-                  </div>
+                  {% endif %}     
+                  {% if product.metafields.custom.saleprice_name != blank %}
+                    {% render 'super-sale', sale_name: product.metafields.custom.saleprice_name, current_price: product.price, sale_price: product.metafields.custom.sale_price %}
+                  {% else %}
+                    <div class="price-container">
+                      {%- render 'price',
+                        product: product,
+                        use_variant: true,
+                        show_badges: true,
+                        price_class: 'price--large'
+                      -%}
+  
+                      {% if product.metafields.custom.retail_price
+                          > product.selected_or_first_available_variant.price
+                      %}
+                        <span class="you-save"
+                          >You save
+                          {{
+                            product.metafields.custom.retail_price
+                            | minus: product.selected_or_first_available_variant.price
+                            | money
+                          -}}
+                        </span>
+                      {% endif %}
+                    </div>
+                  {% endif %}          
                 </div>
 
               {%- when 'tile_calculator' -%}
