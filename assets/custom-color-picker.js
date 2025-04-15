@@ -10,12 +10,22 @@ document.addEventListener('DOMContentLoaded', function() {
         //hack.. for some reason avis option need to be initialize by clicking on them first otherwise it will fire on 2nd click event
         document.querySelector('input[name="Paint Color"]')?.click();
         document.querySelector('input[name="Vinyl Color"]')?.click();
-        document.querySelector('input[name="Upholstery Color"]')?.click();
 
         if (groupColorContainer) {
             groupColorContainer.forEach((colorGroupElement, colorGroupElementIndex) => {
                 const groupColorName = colorGroupElement.getAttribute('data-group-color-name');
-
+                if (groupColorName == "Paint") {
+                    const paintColorElement = document.querySelector('input[name="Paint Color"]');
+                    if (!paintColorElement && !window.product.tags.includes('has_custom_paint')) {
+                        colorGroupElement.classList.add('hidden');
+                    }
+                }
+                else if (groupColorName == "Vinyl") {
+                    const vinylColorElement = document.querySelector('input[name="Vinyl Color"]');
+                    if (!vinylColorElement && !window.product.tags.includes('has_custom_vinyl')) {
+                        colorGroupElement.classList.add('hidden');
+                    }
+                }
                 if (groupColorName) {
                     const selectedColorElement = colorGroupElement.querySelector('.option_selected');
                     const selectedColorPriceElement = colorGroupElement.querySelector('.option_selected-price');
@@ -24,12 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     const colorOptionsContainer = colorGroupElement.querySelector('.color-options-container');
                     const apoColors = document.querySelectorAll(`.ap-options__swatch-container input[field-name="${groupColorName} Color"]`);
                     const swatchContainer = colorGroupElement.querySelector('.color-options');
-
-                    if (apoColors && apoColors.length > 0) {
-
-                    } else {
-                        //colorGroupElement.classList.add('hidden');
-                    }
 
                     document.querySelector('.custom-color-group').style.display = 'block';
                     apoColors?.forEach((color, colorIndex) => {
@@ -50,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             swatchDiv.dataset.title = color.value;
                             swatchDiv.classList.add('swatch');
                             swatchDiv.style.background = buildGradient(color.value);
-                            colorOptionsContainer.append(swatchDiv);
+                            colorOptionsContainer?.append(swatchDiv);
                         }
                     });
 
@@ -128,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
 
                     // Show the input field when "+" is clicked
-                    customColorTrigger.addEventListener('click', () => {
+                    customColorTrigger?.addEventListener('click', () => {
                         if (!window.product.available) {
                             return;
                         }
@@ -145,14 +149,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
 
                     // Close the input popup when clicking on the close icon
-                    customColorCloseIcon.addEventListener('click', () => {
+                    customColorCloseIcon?.addEventListener('click', () => {
                         customColorInputContainer.style.display = 'none';
                         customColorInput.value = '';
                         customColorErrorMessage.style.display = 'none';
                         customColorAddButton.classList.remove('disabled');
                     });
 
-                    customColorAddButton.addEventListener('click', (event) => {
+                    customColorAddButton?.addEventListener('click', (event) => {
                         setTimeout(() => {
                             const group = event.target.dataset.group;
                             const color = customColorInput?.value?.trim();
@@ -291,8 +295,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 visibleGroupColorContainer[0].classList.add('single-color');
                 visibleGroupColorContainer[0].querySelector('.group-color span').classList.add("options_heading", "options-title");
                 const colorOptionsContainer = document.querySelector('.custom-color-group .color_options_container');
-                colorOptionsContainer.style.marginTop = 0;
-                colorOptionsContainer.classList.add('show');
+                if (colorOptionsContainer) {
+                    colorOptionsContainer.style.marginTop = 0;
+                    colorOptionsContainer.classList.add('show');
+                }
             } else {
                 visibleGroupColorContainer.forEach(x => x.querySelector('.group-color').classList.add('multi-color'));
             }
