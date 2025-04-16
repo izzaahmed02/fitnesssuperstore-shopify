@@ -38,6 +38,22 @@
               {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}
               {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
           </title>
+
+
+        <!-- Intelligems tracking script-->
+          
+          <script>
+    window.Shopify = window.Shopify || {theme: {id: {{ theme.id }}, role: '{{ theme.role }}' } };
+    window._template = {
+        directory: "{{ template.directory }}",
+        name: "{{ template.name }}",
+        suffix: "{{ template.suffix }}"
+    };
+  </script>
+  <script type="module" blocking="render" fetchpriority="high" src="https://cdn.intelligems.io/esm/af0d62f8eb94/bundle.js" async></script>
+          <!-- Intelligems tracking script end -->
+
+            
           <script type="text/javascript">
 		      if (window.location.pathname === '/collections/' || window.location.pathname === '/collections') {
 			      window.location.replace('/collections/all');
@@ -293,7 +309,6 @@
           <noscript>
               <link rel="stylesheet" href="{{ 'base.css' | asset_url }}">
           </noscript>
-
           <link
                   rel="preload"
                   href="{{ 'swiper.min.css' | asset_url }}"
@@ -312,11 +327,10 @@
           <noscript>
               <link rel="stylesheet" href="{{ 'custom.css' | asset_url }}">
           </noscript>
-
           {{ 'base.css' | asset_url | stylesheet_tag }}
           {{ 'swiper.min.css' | asset_url | stylesheet_tag }}
-          {{ 'custom.css' | asset_url | stylesheet_tag }}
-
+{% comment %}  {{ 'custom.css' | asset_url | stylesheet_tag }} {%endcomment%}
+          {{ 'custom.min.css' | asset_url | stylesheet_tag }}
           {%- unless settings.type_body_font.system? -%}
           {% comment %}theme-check-disable AssetPreload{% endcomment %}
           <link rel="preload" as="font" href="{{ settings.type_body_font | font_url }}" type="font/woff2" crossorigin>
@@ -341,17 +355,57 @@
                   onload="this.media='all'"
           >
           {%- endif -%}
-          <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Oswald:wght@200..700&display=swap"
-                rel="stylesheet">
-          <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
-          <link rel="stylesheet" href="{{ 'slick.min.css' | asset_url }}">
-          <link rel="stylesheet" href="{{ 'slick-theme.min.css' | asset_url }}">
-          <script src="{{ 'jquery.min.js' | asset_url }}"></script>
-          <script src="{{ 'slick.min.js' | asset_url }}"></script>
           <script
                   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw"
                   defer
           ></script>
+          <link rel="preconnect" href="https://fonts.cdnfonts.com">
+          <link
+                  rel="preload"
+                  as="style"
+                  href="https://fonts.cdnfonts.com/css/sf-pro-display"
+                  onload="this.onload=null;this.rel='stylesheet';"
+          >
+          <noscript>
+              <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/sf-pro-display">
+          </noscript>
+
+          <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" 
+            rel="stylesheet">
+
+          <link
+                  rel="preload"
+                  as="style"
+                  href="{{ 'slick.min.css' | asset_url }}"
+                  onload="this.onload=null;this.rel='stylesheet';"
+          >
+          <noscript>
+              <link rel="stylesheet" href="{{ 'slick.min.css' | asset_url }}">
+          </noscript>
+
+          <link
+                  rel="preload"
+                  as="style"
+                  href="{{ 'slick-theme.min.css' | asset_url }}"
+                  onload="this.onload=null;this.rel='stylesheet';"
+          >
+          <noscript>
+              <link rel="stylesheet" href="{{ 'slick-theme.min.css' | asset_url }}">
+          </noscript>
+          <link
+                  rel="preload"
+                  as="script"
+                  href="{{ 'jquery.min.js' | asset_url }}"
+          >
+          <link
+                  rel="preload"
+                  as="script"
+                  href="{{ 'slick.min.js' | asset_url }}"
+          >
+          <script src="{{ 'jquery.min.js' | asset_url }}"></script>
+          <script src="{{ 'slick.min.js' | asset_url }}"></script>
+
+
           <script>
 		      if (Shopify.designMode) {
 			      document.documentElement.classList.add('shopify-design-mode');
@@ -374,13 +428,23 @@
           {% if request.path == '/collections' %}
           <script>window.location.href = "/collections/all"</script>
           {% endif %}
+          <script>
+            (function (h,e,a,t,m,ap) {
+              (h._heatmap_paq = []).push([ 'setTrackerUrl', (h.heatUrl = e) + a]);
+              h.hErrorLogs=h.hErrorLogs || []; ap=t.createElement('script'); 
+              ap.src=h.heatUrl+'preprocessor.min.js?sid='+m; 
+              ap.defer=true; t.head.appendChild(ap);
+              ['error', 'unhandledrejection'].forEach(function (ty) {
+                  h.addEventListener(ty, function (et) { h.hErrorLogs.push({ type: ty, event: et }); });
+              });
+            })(window,'https://dashboard.heatmap.com/','heatmap.php',document,2798);
+            </script>
       </head>
     
       <body class="gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %}">
         <a class="skip-to-content-link button visually-hidden" href="#MainContent">
           {{ 'accessibility.skip_to_text' | t }}
         </a>
-    
         {%- if settings.cart_type == 'drawer' -%}
           {%- render 'cart-drawer' -%}
         {%- endif -%}
@@ -390,7 +454,6 @@
           <div class="content layout-side-menu">
             {% render 'header-sidebar-menu' %}
         {% endif %}
-    
         <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
           {% if request.page_type == 'page' and page.metafields.layout.narrow == true %}
             <div class="page-narrow-layout">
@@ -408,7 +471,6 @@
           <li id="a11y-refresh-page-message">{{ 'accessibility.refresh_page' | t }}</li>
           <li id="a11y-new-window-message">{{ 'accessibility.link_messages.new_window' | t }}</li>
         </ul>
-    
         <script>
           window.shopUrl = '{{ request.origin }}';
           window.routes = {
@@ -442,7 +504,6 @@
             max_error: `{{- 'sections.quick_order_list.max_error' | t: max: '[max]' }}`,
             step_error: `{{- 'sections.quick_order_list.step_error' | t: step: '[step]' }}`,
           };
-    
           window.accessibilityStrings = {
             imageAvailable: `{{ 'products.product.media.image_available' | t: index: '[index]' }}`,
             shareSuccess: `{{ 'general.share.success_message' | t }}`,
