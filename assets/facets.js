@@ -75,6 +75,7 @@ class FacetFiltersForm extends HTMLElement {
 					const productItems = doc.querySelectorAll("#product-grid li");
 					productItems.forEach(product => {
 						const productName = product.querySelector('.product-item .title').textContent.trim().toLowerCase();
+						console.log(productName)
 						if (!productNames.has(productName)) {
 							productNames.add(productName);
 							allProducts.push(product.cloneNode(true));
@@ -132,6 +133,7 @@ class FacetFiltersForm extends HTMLElement {
 					setTimeout(processBatch, delay);
 				}
 			}
+
 			processBatch();
 		}
 
@@ -309,13 +311,15 @@ class FacetFiltersForm extends HTMLElement {
 				FacetFiltersForm.renderProductCount(html);
 				if (typeof initializeScrollAnimationTrigger === 'function') initializeScrollAnimationTrigger(html.innerHTML);
 				const elements = document.querySelectorAll('.product-item .title');
+				console.log(elements)
 				elements.forEach((elem) => {
+
 					if (elem.tagName === 'A') {
 						const url = new URL(elem.href, window.location.origin);
 						url.search = '';
 						elem.href = url.toString();
-					}
-					else {
+						console.log(elem)
+					} else {
 						const link = elem.querySelector('a');
 						if (link) {
 							const url = new URL(link.href, window.location.origin);
@@ -334,13 +338,13 @@ class FacetFiltersForm extends HTMLElement {
 		FacetFiltersForm.renderProductCount(html);
 		if (typeof initializeScrollAnimationTrigger === 'function') initializeScrollAnimationTrigger(html.innerHTML);
 		const elements = document.querySelectorAll('.product-item .title');
+		console.log(elements)
 		elements.forEach((elem) => {
 			if (elem.tagName === 'A') {
 				const url = new URL(elem.href, window.location.origin);
 				url.search = '';
 				elem.href = url.toString();
-			}
-			else {
+			} else {
 				const link = elem.querySelector('a');
 				if (link) {
 					const url = new URL(link.href, window.location.origin);
@@ -463,6 +467,7 @@ class FacetFiltersForm extends HTMLElement {
 
 		document.getElementById('FacetFiltersFormMobile').closest('menu-drawer').bindEvents();
 	}
+
 	static renderCounts(source, target) {
 		const targetSummary = target.querySelector('.facets__summary');
 		const sourceSummary = source.querySelector('.facets__summary');
@@ -502,6 +507,7 @@ class FacetFiltersForm extends HTMLElement {
 			history.pushState({searchParams: searchParamsStr}, '', `${window.location.pathname}?${searchParamsStr}`);
 		}
 	}
+
 	static getSections() {
 		return [
 			{
@@ -692,4 +698,20 @@ class FacetRemove extends HTMLElement {
 	}
 }
 
+const elements = document.querySelectorAll('.product-item .title');
+elements.forEach((elem) => {
+
+	if (elem.tagName === 'A') {
+		const url = new URL(elem.href, window.location.origin);
+		url.search = '';
+		elem.href = url.toString();
+	} else {
+		const link = elem.querySelector('a');
+		if (link) {
+			const url = new URL(link.href, window.location.origin);
+			url.search = '';
+			link.href = url.toString();
+		}
+	}
+})
 customElements.define('facet-remove', FacetRemove);
