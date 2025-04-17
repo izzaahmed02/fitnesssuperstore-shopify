@@ -56,20 +56,22 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
   };
 
-  function waitFor(predicate) {
-    return new Promise((resolve, reject) => {
-      const check = () => {
-        if (!predicate()) return;
-        clearInterval(interval);
-        resolve();
-        setTimeout(() => {
-          initSlick();
-        }, 150);
-      };
-      const interval = setInterval(check, 100);
-      check();
-    });
-  }
+  // function waitFor(predicate) {
+  //   return new Promise((resolve, reject) => {
+  //     const check = () => {
+  //       if (!predicate()) return;
+  //       clearInterval(interval);
+  //       resolve();
+  //       setTimeout(() => {
+  //         initSlick();
+  //       }, 150);
+  //     };
+  //     const interval = setInterval(check, 100);
+  //     check();
+  //   });
+  // }
 
-  await waitFor(() => window.$);
+  // await waitFor(() => window.$);
+
+  initSlick();
 });
