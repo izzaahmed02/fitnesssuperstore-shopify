@@ -161,7 +161,7 @@ function renderCustomAvisOptions() {
 					const optionPopupProductsHtml = await renderOptionPopupProducts(productTitleSearch);
 
 					if (!optionPopupProductsHtml) {
-						const encodedProductTitle = encodeURIComponent(productTitle);
+						const encodedProductTitle = encodeURIComponent(productTitleSearch);
 						const product = await fetchProductByTitle(encodedProductTitle);
 						if (product) {
 							optionHTML = product.body_html;
@@ -622,13 +622,13 @@ async function renderOptionPopupProducts(title) {
 
 	if (!metafields) {
 		console.error('No metafields found for the product.');
-		return null;
+		return;
 	}
 
 	const relatedProductsMetafield = metafields.find((field) => field.key === 'related_products');
 	if (!relatedProductsMetafield || !relatedProductsMetafield.value) {
 		console.error('No related products found in the metafield.');
-		return null;
+		return;
 	}
 
 	const optionProductIds = JSON.parse(relatedProductsMetafield.value).map((id) => id.split('/').pop());
