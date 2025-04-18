@@ -34,8 +34,8 @@
 
 {% if has_required_variants %}
   {{ 'component-tile-calculator.css' | asset_url | stylesheet_tag }}
-  <tile-calculator class="tile-calculator" data-tile-width-in="{{ width_in | default: 24 }}" data-tile-length-in="{{ length_in | default: width_in | default: 24 }}">
-    <details class="tile-calculator__details">
+  <tile-calculator class="tile-calculator" data-tile-width-in="{{ width_in | default: 24 }}" data-tile-length-in="{{ length_in | default: width_in | default: 24 }}" data-single-label="{{ 'sections.tile_calculator.single_variant_label' | t }}">
+    <details class="tile-calculator__details" open>
       <summary class="tile-calculator__summary">
         {% render 'icon-calculator' %}
         <strong>{{ block.settings.heading | default: 'Title' }}</strong>
@@ -95,7 +95,7 @@
       </div>
     </details>
 
-    <div class="tile-calculator__breakdown" id="types-breakdown">
+    <div class="tile-calculator__breakdown{% if product.variants.size == 1 %} hidden{% endif %}" id="types-breakdown">
       <p class="tile-calculator__breakdown-title">
         <strong>{{ block.settings.breakdown_heading }}</strong>
       </p>

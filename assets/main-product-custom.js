@@ -23,7 +23,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 			if (shippingType) {
                 shippingType.querySelector('.avp-option-title .apo-title').innerText = '"Assembly & Room of Choice Installation Needed?'
-				customerLocationForm.parentElement.insertAdjacentElement('afterend', shippingType);
+				customerLocationForm.parentElement.insertAdjacentElement('beforebegin', shippingType);
 				shippingType.style.display = 'block';
 
 				const apoTitle = shippingType.querySelector('.apo-title');
@@ -31,16 +31,29 @@ window.addEventListener('DOMContentLoaded', async () => {
 					apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
 				}
 
+				if (shippingType.querySelector('select').options[0] && 	shippingType.querySelector('select').options[0].text.includes('Curbside')) {
+					shippingType.querySelector('select').options[0].text = 'No, Curbside Delivery Only';
+				}
+
+				const avisInputInstallationHidden = document.querySelector(`input[temp-name="Full Assembly & Installation"]`);
+
+				if (avisInputInstallationHidden) {
+					avisInputInstallationHidden.value = 'No, Curbside Delivery Only';
+				}
+
 				shippingType.addEventListener('change', (event) => {
 					const selectedOption = event.target.options[event.target.selectedIndex];
 
 					if (selectedOption) {
+						if (selectedOption.value.includes('Curbside')) {
+							avisInputInstallationHidden.value = 'No, Curbside Delivery Only';
+							return;
+						}
+
 						const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
 						
 						if (moneyHTML) {
 							setTimeout(() => {	
-								const avisInputInstallationHidden = document.querySelector(`input[temp-name="Full Assembly & Installation"]`);
-
 								if (avisInputInstallationHidden) {
 									if (!avisInputInstallationHidden.value.includes('Add')) {
 										avisInputInstallationHidden.value = `${avisInputInstallationHidden.value} ${moneyHTML}`
@@ -222,7 +235,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 			if (!document.querySelector('.merchantheader')) {
 				document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
-			}
+				document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
+			} 
 		}
       }, 500);
     }

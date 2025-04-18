@@ -157,7 +157,9 @@
   {%- for block in section.blocks -%}
     {%- case block.type -%}
     {%- when 'tile_calculator' -%}
-      {%- assign enable_product_form_js = false -%}
+      {% if block.settings.disable_product_form_js %}
+        {%- assign enable_product_form_js = false -%}
+      {% endif %}
     {%- endcase -%}
   {%- endfor -%}
 
@@ -239,28 +241,32 @@
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
-                  {% endif %}               
-                  <div class="price-container">
-                    {%- render 'price',
-                      product: product,
-                      use_variant: true,
-                      show_badges: true,
-                      price_class: 'price--large'
-                    -%}
-
-                    {% if product.metafields.custom.retail_price
-                        > product.selected_or_first_available_variant.price
-                    %}
-                      <span class="you-save"
-                        >You save
-                        {{
-                          product.metafields.custom.retail_price
-                          | minus: product.selected_or_first_available_variant.price
-                          | money
-                        -}}
-                      </span>
-                    {% endif %}
-                  </div>
+                  {% endif %}            
+                  {% if product.metafields.custom.saleprice_name != blank %}
+                      {% render 'super-sale', sale_name: product.metafields.custom.saleprice_name, current_price: product.selected_or_first_available_variant.compare_at_price, sale_price: product.metafields.custom.sale_price %}
+                  {% else %}
+                    <div class="price-container">
+                      {%- render 'price',
+                        product: product,
+                        use_variant: true,
+                        show_badges: true,
+                        price_class: 'price--large'
+                      -%}
+  
+                      {% if product.metafields.custom.retail_price
+                          > product.selected_or_first_available_variant.price
+                      %}
+                        <span class="you-save"
+                          >You save
+                          {{
+                            product.metafields.custom.retail_price
+                            | minus: product.selected_or_first_available_variant.price
+                            | money
+                          -}}
+                        </span>
+                      {% endif %}
+                    </div>
+                  {% endif %}   
                 </div>
             {%- endcase -%}
           {%- endfor -%}
@@ -436,34 +442,40 @@
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
-                  {% endif %}               
-                  <div class="price-container">
-                    {%- render 'price',
-                      product: product,
-                      use_variant: true,
-                      show_badges: true,
-                      price_class: 'price--large'
-                    -%}
-
-                    {% if product.metafields.custom.retail_price
-                        > product.selected_or_first_available_variant.price
-                    %}
-                      <span class="you-save"
-                        >You save
-                        {{
-                          product.metafields.custom.retail_price
-                          | minus: product.selected_or_first_available_variant.price
-                          | money
-                        -}}
-                      </span>
-                    {% endif %}
-                  </div>
+                  {% endif %}     
+                  {% if product.metafields.custom.saleprice_name != blank %}
+                    {% render 'super-sale', sale_name: product.metafields.custom.saleprice_name, current_price: product.selected_or_first_available_variant.compare_at_price, sale_price: product.metafields.custom.sale_price %}
+                  {% else %}
+                    <div class="price-container">
+                      {%- render 'price',
+                        product: product,
+                        use_variant: true,
+                        show_badges: true,
+                        price_class: 'price--large'
+                      -%}
+  
+                      {% if product.metafields.custom.retail_price
+                          > product.selected_or_first_available_variant.price
+                      %}
+                        <span class="you-save"
+                          >You save
+                          {{
+                            product.metafields.custom.retail_price
+                            | minus: product.selected_or_first_available_variant.price
+                            | money
+                          -}}
+                        </span>
+                      {% endif %}
+                    </div>
+                  {% endif %}          
                 </div>
 
               {%- when 'tile_calculator' -%}
-                <div class="product__tile-calculator">
-                  {% render 'product-tile-calculator', block: block %}
-                </div>
+                {% if block.settings.show_tile_calculator %}
+                  <div class="product__tile-calculator">
+                    {% render 'product-tile-calculator', block: block %}
+                  </div>
+                {% endif %}
 
               {%- when 'price_with_option' -%}
                 <product-form
@@ -473,7 +485,7 @@
                 >
                   <div class="customer-location-container">
                     <div class="location-header" onclick="toggleTransitTimeForm()">
-                      <span>Customer Location:</span>
+                      <span>Transit Time Calculator:</span>
                       <span class="location-display"></span>
                     </div>
                     
@@ -483,6 +495,7 @@
                       
                       <button id="estimate-delivery-times-btn" class="button--full-width button--primary">Estimate delivery times</button>
                     </div>
+                    {% render 'transit-time-calculator', product: product %}
                   </div>
                   <div class="product-form__error-message-wrapper" role="alert" hidden>
                     <svg
@@ -498,7 +511,6 @@
                     </svg>
                     <span class="product-form__error-message"></span>
                   </div>
-                  {% render 'transit-time-calculator', product: product %}
                   <h5 class="product_price_with_options-heading">Total with options</h5>
 
                   <div class="product_price_with_options-contaniner">
@@ -530,6 +542,8 @@
                           <quantity-input class="quantity {% unless product.available %} out-of-stock{% endunless %}" data-url="{{ product.url }}" data-section="{{ section.id }}">
                             <input
                               class="quantity__input"
+                              inputmode="numeric"
+                              pattern="[0-9]*"
                               type="number"
                               name="quantity"
                               id="Quantity-{{ section.id }}"
@@ -1040,6 +1054,8 @@
                       </button>
                       <input
                         class="quantity__input"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
                         type="number"
                         name="quantity"
                         id="Quantity-{{ section.id }}"
@@ -2967,6 +2983,18 @@
       "name": "t:sections.main-product.blocks.tile_calculator.name",
       "limit": 1,
       "settings": [
+        {
+          "type": "checkbox",
+          "id": "disable_product_form_js",
+          "label": "t:sections.main-product.blocks.tile_calculator.disable_product_form_js.label",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_tile_calculator",
+          "label": "t:sections.main-product.blocks.tile_calculator.show_tile_calculator.label",
+          "default": false
+        },
         {
           "type": "text",
           "id": "heading",

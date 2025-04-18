@@ -20,6 +20,12 @@ document.addEventListener('DOMContentLoaded', async function () {
       ],
     };
 
+    $('.main-slider').on('init', function(event, slick) {
+      if (slick.slideCount <= 1) {
+        $(this).find('.slick-dots').remove();
+      }
+    });
+
     $('.main-slider').slick(mainOptions);
 
     const thumbnailOptions = {
@@ -50,20 +56,22 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
   };
 
-  function waitFor(predicate) {
-    return new Promise((resolve, reject) => {
-      const check = () => {
-        if (!predicate()) return;
-        clearInterval(interval);
-        resolve();
-        setTimeout(() => {
-          initSlick();
-        }, 150);
-      };
-      const interval = setInterval(check, 100);
-      check();
-    });
-  }
+  // function waitFor(predicate) {
+  //   return new Promise((resolve, reject) => {
+  //     const check = () => {
+  //       if (!predicate()) return;
+  //       clearInterval(interval);
+  //       resolve();
+  //       setTimeout(() => {
+  //         initSlick();
+  //       }, 150);
+  //     };
+  //     const interval = setInterval(check, 100);
+  //     check();
+  //   });
+  // }
 
-  await waitFor(() => window.$);
+  // await waitFor(() => window.$);
+
+  initSlick();
 });
