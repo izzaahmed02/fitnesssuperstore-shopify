@@ -555,7 +555,7 @@ if (urlParams.get('generateQuotes') === 'true') {
 const fsUrl = 'https://fitnesssuperstore-api.azurewebsites.net';
 
 async function downloadQuoteCSV() {
-	const gsheetQuoteBtn = document.getElementById('gsheet-quote-btn');
+	const gsheetQuoteBtn = document.getElementById('csv-quote-btn');
 	gsheetQuoteBtn.disabled = true;
 
 	const cartResponse = await fetch(`/cart.json`, {
@@ -594,7 +594,7 @@ async function downloadQuoteCSV() {
 }
 
 async function downloadQuoteGsheet() {
-	const csvQuoteBtn = document.getElementById('csv-quote-btn');
+	const csvQuoteBtn = document.getElementById('gsheet-quote-btn');
 	csvQuoteBtn.disabled = true;
 
 	const cartResponse = await fetch(`/cart.json`, {
