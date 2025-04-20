@@ -544,4 +544,78 @@ document.addEventListener('DOMContentLoaded', () => {
 			chatBtn.classList.add('active');
 		}
 	});
+
+	const urlParams = new URLSearchParams(window.location.search);
+
+if (urlParams.get('generateQuotes') === 'true') {
+	document.querySelector('.download-quote').style.display = 'flex';
+} 
 });
+
+async function downloadQuoteCSV() {
+	const cartResponse = await fetch(`/cart.json`, {
+		method: 'GET'
+	});
+
+	const cartData = await cartResponse.json();
+
+	if (cartData) {
+		const shippingElement = document.querySelector('.docapp-shipping-rate-name');
+		const shippingName = shippingElement?.querySelector('label')?.textContent;
+		const shippingValue = shippingElement?.querySelector('label input')?.value;
+
+		const generateQuoteResponse = await fetch('http://fitnesssuperstore-api.azurewebsites.net/api/quotes/csv', {
+			method: 'POST',
+			headers: {
+			  'Content-Type': 'application/json',
+			  'Accept': 'application/json'
+			},
+			body: JSON.stringify({ 
+				products: cartData.items,
+				shippingName: shippingName,
+				shippingTotal: shippingValue
+			})
+		  });
+	  
+		  if (generateQuoteResponse.ok) {
+			const quoteResponse = await generateQuoteResponse.json();
+			if (quoteResponse) {
+				window.location.href = 'http://fitnesssuperstore-api.azurewebsites.net/api/quotes/downloadcsv?fileDownloadName=' + quoteResponse;
+			}
+		  }
+	}
+}
+
+async function downloadQuoteGsheet() {
+	const cartResponse = await fetch(`/cart.json`, {
+		method: 'GET'
+	});
+
+	const cartData = await cartResponse.json();
+
+	if (cartData) {
+		const shippingElement = document.querySelector('.docapp-shipping-rate-name');
+		const shippingName = shippingElement?.querySelector('label')?.textContent;
+		const shippingValue = shippingElement?.querySelector('label input')?.value;
+
+		const generateQuoteGsheetResponse = await fetch('http://fitnesssuperstore-api.azurewebsites.net/api/quotes/gsheet', {
+			method: 'POST',
+			headers: {
+			  'Content-Type': 'application/json',
+			  'Accept': 'application/json'
+			},
+			body: JSON.stringify({ 
+				products: cartData.items,
+				shippingName: shippingName,
+				shippingTotal: shippingValue
+			})
+		  });
+
+		  if (generateQuoteGsheetResponse.ok) {
+			const quoteResponse = await generateQuoteGsheetResponse.json();
+			if (quoteResponse) {
+				window.open(quoteResponse, '_blank');
+			}
+		}
+	}
+}
