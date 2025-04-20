@@ -552,6 +552,8 @@ if (urlParams.get('generateQuotes') === 'true') {
 } 
 });
 
+const fsUrl = 'https://fitnesssuperstore-api.azurewebsites.net';
+
 async function downloadQuoteCSV() {
 	const cartResponse = await fetch(`/cart.json`, {
 		method: 'GET'
@@ -564,7 +566,7 @@ async function downloadQuoteCSV() {
 		const shippingName = shippingElement?.querySelector('label')?.textContent;
 		const shippingValue = shippingElement?.querySelector('label input')?.value;
 
-		const generateQuoteResponse = await fetch('http://fitnesssuperstore-api.azurewebsites.net/api/quotes/csv', {
+		const generateQuoteResponse = await fetch(`${fsUrl}/api/quotes/csv`, {
 			method: 'POST',
 			headers: {
 			  'Content-Type': 'application/json',
@@ -580,7 +582,7 @@ async function downloadQuoteCSV() {
 		  if (generateQuoteResponse.ok) {
 			const quoteResponse = await generateQuoteResponse.json();
 			if (quoteResponse) {
-				window.location.href = 'http://fitnesssuperstore-api.azurewebsites.net/api/quotes/downloadcsv?fileDownloadName=' + quoteResponse;
+				window.location.href = `${fsUrl}/api/quotes/downloadcsv?fileDownloadName=${quoteResponse}`;
 			}
 		  }
 	}
@@ -598,7 +600,7 @@ async function downloadQuoteGsheet() {
 		const shippingName = shippingElement?.querySelector('label')?.textContent;
 		const shippingValue = shippingElement?.querySelector('label input')?.value;
 
-		const generateQuoteGsheetResponse = await fetch('http://fitnesssuperstore-api.azurewebsites.net/api/quotes/gsheet', {
+		const generateQuoteGsheetResponse = await fetch(`${fsUrl}/api/quotes/gsheet`, {
 			method: 'POST',
 			headers: {
 			  'Content-Type': 'application/json',
