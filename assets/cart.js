@@ -555,6 +555,9 @@ if (urlParams.get('generateQuotes') === 'true') {
 const fsUrl = 'https://fitnesssuperstore-api.azurewebsites.net';
 
 async function downloadQuoteCSV() {
+	const gsheetQuoteBtn = document.getElementById('gsheet-quote-btn');
+	gsheetQuoteBtn.disabled = true;
+
 	const cartResponse = await fetch(`/cart.json`, {
 		method: 'GET'
 	});
@@ -585,10 +588,15 @@ async function downloadQuoteCSV() {
 				window.location.href = `${fsUrl}/api/quotes/downloadcsv?fileDownloadName=${quoteResponse}`;
 			}
 		  }
+
+		  gsheetQuoteBtn.disabled = false;
 	}
 }
 
 async function downloadQuoteGsheet() {
+	const csvQuoteBtn = document.getElementById('csv-quote-btn');
+	csvQuoteBtn.disabled = true;
+
 	const cartResponse = await fetch(`/cart.json`, {
 		method: 'GET'
 	});
@@ -619,5 +627,7 @@ async function downloadQuoteGsheet() {
 				window.open(quoteResponse, '_blank');
 			}
 		}
+
+		csvQuoteBtn.disabled = false;
 	}
 }
