@@ -47,6 +47,61 @@
         <!-- Intelligems tracking script-->
           
           <script>
+            <!-- put this in theme.liquid just before </head> -->
+<script>
+(function() {
+  var TRACKED = ['gclid','utm_source','utm_medium','utm_campaign','utm_term','utm_content'];
+
+  var urlParams = new URLSearchParams(window.location.search);
+  var hasNew = false;
+  TRACKED.forEach(function(key){
+    var v = urlParams.get(key);
+    if (v) {
+      sessionStorage.setItem(key, v);
+      hasNew = true;
+    }
+  });
+
+  var storedParams = {};
+  TRACKED.forEach(function(key){
+    if (!hasNew) {
+      var v = sessionStorage.getItem(key);
+      if (v) storedParams[key] = v;
+    } else if (urlParams.has(key)) {
+      storedParams[key] = urlParams.get(key);
+    }
+  });
+
+  var entries = Object.entries(storedParams);
+  if (entries.length) {
+    var links = document.querySelectorAll('a[href]');
+    links.forEach(function(a) {
+      try {
+        var href = a.getAttribute('href'),
+            isInternal = href.indexOf(location.origin) === 0 || href.charAt(0) === '/';
+        if (!isInternal) return;
+
+        var linkUrl = new URL(href, location.origin);
+        var modified = false;
+
+        entries.forEach(function([key, val]) {
+          if (!linkUrl.searchParams.has(key)) {
+            linkUrl.searchParams.set(key, val);
+            modified = true;
+          }
+        });
+
+        if (modified) {
+          a.setAttribute('href', linkUrl.toString());
+        }
+      } catch(e) {
+
+      }
+    });
+  }
+})();
+</script>
+
     window.Shopify = window.Shopify || {theme: {id: {{ theme.id }}, role: '{{ theme.role }}' } };
     window._template = {
         directory: "{{ template.directory }}",
