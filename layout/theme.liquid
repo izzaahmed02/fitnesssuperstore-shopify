@@ -62,10 +62,8 @@
 
 <script>
 ;(function(){
-  // 1) Which params to persist
   var TRACKED = ['gclid','utm_source','utm_medium','utm_campaign','utm_term','utm_content'];
 
-  // 2) On load, grab any new values from the URL
   var urlParams = new URLSearchParams(window.location.search);
   var sawNew = false;
   TRACKED.forEach(function(key){
@@ -76,14 +74,12 @@
     }
   });
 
-  // 3) Build an object of “current” values (new ones win, else fallback to storage)
   var current = {};
   TRACKED.forEach(function(key){
     var v = (sawNew ? urlParams.get(key) : sessionStorage.getItem(key));
     if (v) current[key] = v;
   });
 
-  // Helper: given any URL, append all missing tracked params
   function appendParams(href) {
     try {
       var u = new URL(href, location.origin);
@@ -94,37 +90,33 @@
       });
       return u.toString();
     } catch(e) {
-      return href; // on invalid URLs, do nothing
+      return href; 
     }
   }
 
-  // 4) On load, rewrite every internal link in the DOM
   if (Object.keys(current).length) {
     document.querySelectorAll('a[href]').forEach(function(a){
       var href = a.getAttribute('href');
-      // skip mailto, tel, JS, fragments, external
+
       if (!href.match(/^(\/|https?:\/\/)/)) return;
       if (href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
       a.setAttribute('href', appendParams(href));
     });
   }
 
-  // 5) Intercept **all** clicks on <a> to force our URL through
   document.addEventListener('click', function(e){
     var a = e.target.closest('a[href]');
     if (!a) return;
 
     var href = a.getAttribute('href');
-    // same filtering as above
+
     if (href.startsWith('#') ||
         href.startsWith('mailto:') ||
         href.startsWith('tel:') ||
         href.startsWith('javascript:')) return;
 
-    // only internal
     if (!(href.startsWith('/') || href.indexOf(location.origin) === 0)) return;
 
-    // Prevent the normal navigation, swap in our version with params
     e.preventDefault();
     window.location.href = appendParams(href);
   }, true);
