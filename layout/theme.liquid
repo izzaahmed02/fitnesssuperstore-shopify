@@ -60,59 +60,77 @@
   <script type="module" blocking="render" fetchpriority="high" src="https://cdn.intelligems.io/esm/af0d62f8eb94/bundle.js" async></script>
           <!-- Intelligems tracking script end -->
 
-                    <script>
-(function() {
+<script>
+;(function(){
+  // 1) Which params to persist
   var TRACKED = ['gclid','utm_source','utm_medium','utm_campaign','utm_term','utm_content'];
 
+  // 2) On load, grab any new values from the URL
   var urlParams = new URLSearchParams(window.location.search);
-  var hasNew = false;
+  var sawNew = false;
   TRACKED.forEach(function(key){
     var v = urlParams.get(key);
     if (v) {
       sessionStorage.setItem(key, v);
-      hasNew = true;
+      sawNew = true;
     }
   });
 
-  var storedParams = {};
+  // 3) Build an object of “current” values (new ones win, else fallback to storage)
+  var current = {};
   TRACKED.forEach(function(key){
-    if (!hasNew) {
-      var v = sessionStorage.getItem(key);
-      if (v) storedParams[key] = v;
-    } else if (urlParams.has(key)) {
-      storedParams[key] = urlParams.get(key);
-    }
+    var v = (sawNew ? urlParams.get(key) : sessionStorage.getItem(key));
+    if (v) current[key] = v;
   });
 
-  var entries = Object.entries(storedParams);
-  if (entries.length) {
-    var links = document.querySelectorAll('a[href]');
-    links.forEach(function(a) {
-      try {
-        var href = a.getAttribute('href'),
-            isInternal = href.indexOf(location.origin) === 0 || href.charAt(0) === '/';
-        if (!isInternal) return;
-
-        var linkUrl = new URL(href, location.origin);
-        var modified = false;
-
-        entries.forEach(function([key, val]) {
-          if (!linkUrl.searchParams.has(key)) {
-            linkUrl.searchParams.set(key, val);
-            modified = true;
-          }
-        });
-
-        if (modified) {
-          a.setAttribute('href', linkUrl.toString());
+  // Helper: given any URL, append all missing tracked params
+  function appendParams(href) {
+    try {
+      var u = new URL(href, location.origin);
+      Object.keys(current).forEach(function(key){
+        if (!u.searchParams.has(key)) {
+          u.searchParams.set(key, current[key]);
         }
-      } catch(e) {
+      });
+      return u.toString();
+    } catch(e) {
+      return href; // on invalid URLs, do nothing
+    }
+  }
 
-      }
+  // 4) On load, rewrite every internal link in the DOM
+  if (Object.keys(current).length) {
+    document.querySelectorAll('a[href]').forEach(function(a){
+      var href = a.getAttribute('href');
+      // skip mailto, tel, JS, fragments, external
+      if (!href.match(/^(\/|https?:\/\/)/)) return;
+      if (href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
+      a.setAttribute('href', appendParams(href));
     });
   }
+
+  // 5) Intercept **all** clicks on <a> to force our URL through
+  document.addEventListener('click', function(e){
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+
+    var href = a.getAttribute('href');
+    // same filtering as above
+    if (href.startsWith('#') ||
+        href.startsWith('mailto:') ||
+        href.startsWith('tel:') ||
+        href.startsWith('javascript:')) return;
+
+    // only internal
+    if (!(href.startsWith('/') || href.indexOf(location.origin) === 0)) return;
+
+    // Prevent the normal navigation, swap in our version with params
+    e.preventDefault();
+    window.location.href = appendParams(href);
+  }, true);
 })();
 </script>
+
 
           <script type="text/javascript">
 		      if (window.location.pathname === '/collections/' || window.location.pathname === '/collections') {
