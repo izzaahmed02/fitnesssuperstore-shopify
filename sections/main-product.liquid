@@ -325,7 +325,7 @@
         {% endif %}
       </div>
 
-      <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+      <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">     
         <section
           id="ProductInfo-{{ section.id }}"
           class="product__info-container{% if section.settings.enable_sticky_info %} product__column-sticky{% endif %}"
@@ -338,6 +338,24 @@
                 {% render block %}
 
               {% when 'product-info' %}
+                {% for item in product.tags %}
+                  {% unless item != "Free Shipping" %}
+                    <div class="free-shipping-badge">
+                      <div class="shipping-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M1.25 8C1.25 7.58579 1.58579 7.25 2 7.25H8C8.41421 7.25 8.75 7.58579 8.75 8C8.75 8.41421 8.41421 8.75 8 8.75H2C1.58579 8.75 1.25 8.41421 1.25 8ZM1.25 11C1.25 10.5858 1.58579 10.25 2 10.25H6C6.41421 10.25 6.75 10.5858 6.75 11C6.75 11.4142 6.41421 11.75 6 11.75H2C1.58579 11.75 1.25 11.4142 1.25 11ZM2 13.25C1.58579 13.25 1.25 13.5858 1.25 14C1.25 14.4142 1.58579 14.75 2 14.75H4C4.41421 14.75 4.75 14.4142 4.75 14C4.75 13.5858 4.41421 13.25 4 13.25H2Z" fill="black"/>
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M14.25 5C14.25 4.58579 14.5858 4.25 15 4.25H16.84C17.8339 4.25 18.7377 4.788 19.2286 5.63341L19.2311 5.63767L19.2311 5.63768L20.941 8.62767C21.0738 8.85979 21.0729 9.14503 20.9387 9.37633C20.8046 9.60763 20.5574 9.75 20.29 9.75H19C18.8642 9.75 18.75 9.86421 18.75 10V13C18.75 13.1358 18.8642 13.25 19 13.25H22C22.4142 13.25 22.75 13.5858 22.75 14V17C22.75 19.0742 21.0742 20.75 19 20.75H18.6465C18.32 21.9043 17.2588 22.75 16 22.75C14.7412 22.75 13.68 21.9043 13.3535 20.75H10.6465C10.32 21.9043 9.25878 22.75 8 22.75C6.74122 22.75 5.67998 21.9043 5.35352 20.75H5C2.92579 20.75 1.25 19.0742 1.25 17C1.25 16.5858 1.58579 16.25 2 16.25C2.41421 16.25 2.75 16.5858 2.75 17C2.75 18.2458 3.75421 19.25 5 19.25H5.35352C5.67998 18.0957 6.74122 17.25 8 17.25C9.25878 17.25 10.32 18.0957 10.6465 19.25H13.3535C13.68 18.0957 14.7412 17.25 16 17.25C17.2588 17.25 18.32 18.0957 18.6465 19.25H19C20.2458 19.25 21.25 18.2458 21.25 17V14.75H19C18.0358 14.75 17.25 13.9642 17.25 13V10C17.25 9.03676 18.0342 8.25159 18.9971 8.25L17.9314 6.38661L17.9303 6.38475C17.701 5.99126 17.2855 5.75 16.84 5.75H15.75V12C15.75 13.5142 14.5142 14.75 13 14.75H12C11.5858 14.75 11.25 14.4142 11.25 14C11.25 13.5858 11.5858 13.25 12 13.25H13C13.6858 13.25 14.25 12.6858 14.25 12V5ZM14.75 20C14.75 20.6904 15.3096 21.25 16 21.25C16.6904 21.25 17.25 20.6904 17.25 20C17.25 19.3142 16.6858 18.75 16 18.75C15.3142 18.75 14.75 19.3142 14.75 20ZM9.25 20C9.25 19.3142 8.68579 18.75 8 18.75C7.31421 18.75 6.75 19.3142 6.75 20C6.75 20.6904 7.30964 21.25 8 21.25C8.69036 21.25 9.25 20.6904 9.25 20Z" fill="black"/>
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M5.99989 1.25C4.21723 1.25 2.66194 2.23671 1.85479 3.68484C1.65313 4.04665 1.78295 4.50344 2.14476 4.7051C2.50657 4.90676 2.96335 4.77694 3.16501 4.41513C3.71786 3.42326 4.78255 2.75 5.99989 2.75H14.2499V12C14.2499 12.6858 13.6857 13.25 12.9999 13.25H11.9999C11.5857 13.25 11.2499 13.5858 11.2499 14C11.2499 14.4142 11.5857 14.75 11.9999 14.75H12.9999C14.5141 14.75 15.7499 13.5142 15.7499 12V2C15.7499 1.58579 15.4141 1.25 14.9999 1.25H5.99989ZM18.7501 10C18.7501 9.86421 18.8643 9.75 19.0001 9.75H19.8543L21.2501 12.1987V13.25H19.0001C18.8643 13.25 18.7501 13.1358 18.7501 13V10ZM19.0001 8.25C18.0359 8.25 17.2501 9.03579 17.2501 10V13C17.2501 13.9642 18.0359 14.75 19.0001 14.75H22.0001C22.4143 14.75 22.7501 14.4142 22.7501 14V12C22.7501 11.8698 22.7162 11.7417 22.6517 11.6286L20.9417 8.62859C20.8083 8.39452 20.5595 8.25 20.2901 8.25H19.0001Z" fill="black"/>
+                          </svg>                          
+                      </div>
+                      <div class="shipping-text">
+                        <div><b>This item qualifies for</b><span class="highlight"> FREE SHIPPING</span></div>
+                        <div class="subtext">to the Lower 48 States (Minimum order $200 to qualify)</div>
+                      </div>
+                    </div>
+                  {% endunless %}
+                {% endfor %}
+        
                 <div class="metainfo-wrapper">
                   {% if product.metafields.custom.condition_state != blank %}
                     <div class="item">
@@ -404,19 +422,6 @@
                       <span class="showroom-text">On Display at our Northern California Warehouse Showroom</span>
                   </div>  
                 {% endif %}
-
-                {% for item in product.tags %}
-                  {% unless item != "Free Shipping" %}
-                    <div class="free-shipping-badge">
-                      <div class="shipping-icon">🚚</div>
-                      <div class="shipping-text">
-                        <div>This item qualifies for <span class="highlight">FREE SHIPPING</span></div>
-                        <div class="subtext">to the Lower 48 States (Minimum order $200 to qualify)</div>
-                      </div>
-                    </div>
-                  {% endunless %}
-                {% endfor %}
-
               {%- when 'text' -%}
                 <p
                   class="product__text inline-richtext{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}"
