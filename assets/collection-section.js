@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			wrapper.appendChild(rightArrow);
 		}
 	}
-	addScrollArrowsIfNeeded();
+	// addScrollArrowsIfNeeded();
 	const perPageSelect = document.querySelector('.sort-per-page select.num');
 	if (perPageSelect) {
 		perPageSelect.addEventListener('change', function () {
@@ -38,6 +38,40 @@ document.addEventListener("DOMContentLoaded", function () {
 			window.location.replace(url.toString());
 		});
 	}
+
+	function initRelatedCollectionsDropdown() {
+		const wrapper = document.querySelector('.collection-hero__related-collections-wrapper');
+		const button = wrapper?.querySelector('.collection-hero__related-collections-toggle');
+		const list = wrapper?.querySelector('.collection-hero__related-collections');
+		// const label = button?.querySelector('.collection-hero__related-collections-toggle span');
+
+		if (!wrapper || !list || !button) return;
+
+		const closeList = () => {
+			button.setAttribute('aria-expanded', 'false');
+			list.classList.remove('is-open');
+		};
+
+		button.addEventListener('click', () => {
+			const isOpen = list.classList.contains('is-open');
+			button.setAttribute('aria-expanded', String(!isOpen));
+			list.classList.toggle('is-open');
+		});
+
+		list.querySelectorAll('li').forEach((option) => {
+			option.addEventListener('click', () => {
+				list.querySelectorAll('li').forEach((li) => li.classList.remove('is-selected'));
+				option.classList.add('is-selected');
+				closeList();
+			});
+		});
+
+		document.addEventListener('click', (e) => {
+			if (!wrapper.contains(e.target)) closeList();
+		});
+	}
+
+	initRelatedCollectionsDropdown()
 
 	/**
 	 * Initialize Slick slider if there are multiple images inside the element.
@@ -51,6 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
 				slidesToShow: 1,
 				slidesToScroll: 1,
 				lazyLoad: 'ondemand',
+				infinite: false,
 				arrows: true,
 				dots: true,
 				prevArrow: '<button type="button" class="slick-prev"><svg width="16" height="16" style="transform: rotate(-180deg)" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n' +
