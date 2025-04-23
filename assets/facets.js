@@ -207,6 +207,7 @@ class FacetFiltersForm extends HTMLElement {
 						slidesToShow: 1,
 						slidesToScroll: 1,
 						lazyLoad: 'ondemand',
+						infinite: false,
 						arrows: true,
 						dots: true,
 						prevArrow: '<button type="button" class="slick-prev"><svg width="16" height="16" style="transform: rotate(-180deg)" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n' +
