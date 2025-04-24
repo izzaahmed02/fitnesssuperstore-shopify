@@ -54,10 +54,76 @@
         suffix: "{{ template.suffix }}"
     };
   </script>
+
+        
+
   <script type="module" blocking="render" fetchpriority="high" src="https://cdn.intelligems.io/esm/af0d62f8eb94/bundle.js" async></script>
           <!-- Intelligems tracking script end -->
 
-            
+<script>
+;(function(){
+  var TRACKED = ['gclid','utm_source','utm_medium','utm_campaign','utm_term','utm_content'];
+
+  var urlParams = new URLSearchParams(window.location.search);
+  var sawNew = false;
+  TRACKED.forEach(function(key){
+    var v = urlParams.get(key);
+    if (v) {
+      sessionStorage.setItem(key, v);
+      sawNew = true;
+    }
+  });
+
+  var current = {};
+  TRACKED.forEach(function(key){
+    var v = (sawNew ? urlParams.get(key) : sessionStorage.getItem(key));
+    if (v) current[key] = v;
+  });
+
+  function appendParams(href) {
+    try {
+      var u = new URL(href, location.origin);
+      Object.keys(current).forEach(function(key){
+        if (!u.searchParams.has(key)) {
+          u.searchParams.set(key, current[key]);
+        }
+      });
+      return u.toString();
+    } catch(e) {
+      return href; 
+    }
+  }
+
+  if (Object.keys(current).length) {
+    document.querySelectorAll('a[href]').forEach(function(a){
+      var href = a.getAttribute('href');
+
+      if (!href.match(/^(\/|https?:\/\/)/)) return;
+      if (href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
+      a.setAttribute('href', appendParams(href));
+    });
+  }
+
+  document.addEventListener('click', function(e){
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+
+    var href = a.getAttribute('href');
+
+    if (href.startsWith('#') ||
+        href.startsWith('mailto:') ||
+        href.startsWith('tel:') ||
+        href.startsWith('javascript:')) return;
+
+    if (!(href.startsWith('/') || href.indexOf(location.origin) === 0)) return;
+
+    e.preventDefault();
+    window.location.href = appendParams(href);
+  }, true);
+})();
+</script>
+
+
           <script type="text/javascript">
 		      if (window.location.pathname === '/collections/' || window.location.pathname === '/collections') {
 			      window.location.replace('/collections/all');
