@@ -37,12 +37,9 @@
   <meta itemprop="availability" content="OutOfStock">
 {% endif %}
 
-{% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
-{% assign first_breadcrumb = product_breadcrumbs | split: 'Home' %}
-{% assign jp = first_breadcrumb[1] | split: '>' %}
-{% assign length = jp.size | minus: 1 %}
+{% render 'custom-breadcrumbs', with product: product %}
 
-<div class="custom-breadcrumbs">
+{% comment %} <div class="custom-breadcrumbs">
   <div class="page-width"> 
     <div class="custom-breadcrumbs__wrapper">
       <div class="custom-breadcrumbs__navigation">
@@ -74,6 +71,29 @@
     </div>
   </div>
 </div>
+
+{% assign breadcrumb_paths = product.metafields.custom.breadcrumb_paths.value %}
+
+{% for path in breadcrumb_paths %}
+  <nav class="breadcrumbs">
+    <a href="{{ routes.root_url }}">Home</a>
+
+    {% assign steps = path.steps.value %}
+    {% assign custom_titles = path.custom_titles.value %}
+
+    {% for collection in steps %}
+      <span class="separator">›</span>
+      {% assign index = forloop.index0 %}
+      <a href="{{ collection.url }}">
+        {{ custom_titles[index] | default: collection.title }}
+      </a>
+    {% endfor %}
+
+    <span class="separator">›</span>
+    <span aria-current="page">{{ product.title }}</span>
+  </nav>
+{% endfor %} {% endcomment %}
+
 {% comment %} <div class="sticky-add-to-cart" style="display: none;">
   <div class="sticky-container">
       <img src="{{ product.featured_image | img_url: 'small' }}" alt="{{ product.title }}" class="sticky-product-image" height="" width="">
