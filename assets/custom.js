@@ -249,6 +249,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 				const arrow = btn.querySelector('.arrow');
 				if (!isVisible) {
 					content.classList.add('visible');
+					btn.classList.add('active');
 					content.style.height = `${content.scrollHeight}px`;
 					if (plus && minus) {
 						plus.style.display = 'none';
@@ -258,6 +259,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 					}
 				} else {
 					content.classList.remove('visible');
+					btn.classList.remove('active');
 					content.style.height = '0';
 					if (plus && minus) {
 						plus.style.display = 'block';
