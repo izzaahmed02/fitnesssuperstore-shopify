@@ -52,7 +52,7 @@ var TransitTimeCalculator = {
       
       sessionStorage.userCityStateZip = `${userLoc.city} ${userLoc.region_code}`;
       
-      const locationForm = document.getElementById('location-form');
+      const transitTimeForm = document.querySelector('.transit-time-form');
 
       if (userLoc.postal) {
         try {
@@ -60,17 +60,17 @@ var TransitTimeCalculator = {
           locationInfoResponse = await locInfoRes.json();
           if (locationInfoResponse.status && locationInfoResponse.status === 400) {
             TransitTimeCalculator.appendInvalidTransitTime();
-            if (locationForm) {
-              locationForm.style.display = 'block';
+            if (transitTimeForm) {
+              transitTimeForm.style.display = 'block';
             } 
             setUserLocationDisplay(userLoc);
             return;
           }
         } catch (e) {
           TransitTimeCalculator.appendInvalidTransitTime();
-          const locationForm = document.getElementById('location-form');
-          if (locationForm) {
-            locationForm.style.display = 'block';
+
+          if (transitTimeForm) {
+            transitTimeForm.style.display = 'block';
           } 
           setUserLocationDisplay(userLoc);
           return;
@@ -344,13 +344,13 @@ var TransitTimeCalculator = {
   },
   
   appendTransitTimeError: function() {
-    let finalText = `<span class="transit-time-text">No Transit Times found for ${sessionStorage.userPostal} ZipCode</span>`;
+    let finalText = `<span class="transit-time-text error">No Transit Times found for ${sessionStorage.userPostal} ZipCode</span>`;
     const container = document.querySelector('.transit-times-container');
     if (container) { container.innerHTML = finalText; }
   },
   
   appendInvalidTransitTime: function() {
-    let finalText = `<span class="transit-time-text">The Transit Time Calculator only has info for USA & Canada Postal Codes. Please enter a valid Postal Code or Contact Us for Transit Times</span>`;
+    let finalText = `<span class="transit-time-text error">The Transit Time Calculator only has info for USA & Canada Postal Codes. Please enter a valid Postal Code or Contact Us for Transit Times</span>`;
     const container = document.querySelector('.transit-times-container');
     if (container) { 
       container.innerHTML = finalText; 
