@@ -8,7 +8,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 		);
 
 		const customerLocationForm = document.querySelector(
-			'.location-form'
+			'.customer-location-container'
 		);
 
 			// cityInput.addEventListener('input', () => {
@@ -486,11 +486,12 @@ try {
 }
 
 function toggleTransitTimeForm() {
-	const form = document.getElementById('location-form');
-	if (form.style.display === 'block') {
-		form.style.display = 'none';
+	const transitTimeForm = document.querySelector('.transit-time-form');
+      
+	if (transitTimeForm.style.display === 'block') {
+		transitTimeForm.style.display = 'none';
 	} else {
-		form.style.display = 'block';
+		transitTimeForm.style.display = 'block';
 	}
 }
 
