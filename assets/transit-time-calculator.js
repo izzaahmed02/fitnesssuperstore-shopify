@@ -248,8 +248,8 @@ var TransitTimeCalculator = {
         }
       }
       
-      const processingTimeMinDate = moment().add(processingTimeMin, 'days');
-      const processingTimeMaxDate = moment().add(processingTimeMax, 'days');
+      const processingTimeMinDate = moment().businessAdd(processingTimeMin, 'days');
+      const processingTimeMaxDate = moment().businessAdd(processingTimeMax, 'days');
       const minDeliveryTimeDate = moment(processingTimeMinDate).businessAdd(minDeliveryTime).format('ddd, MMM D YYYY');
       const maxDeliveryTimeDate = moment(processingTimeMaxDate).businessAdd(maxDeliveryTime).format('ddd, MMM D YYYY');
       
