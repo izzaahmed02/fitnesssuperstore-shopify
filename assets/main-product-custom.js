@@ -595,7 +595,7 @@ function generatePayLaterAggregate() {
 	<h1 class="title">BUY NOW. PAY LATER.</h1>
 	<p class="price">Purchase price: <strong>$${cleanedPrice}</strong>
 	</p>
-	<p class="description"> Select Affirm, Klarna, Afterpay or Paytomorrow as your payment method at checkout to pay in installments. </p>
+	<p class="description"> Select Affirm, Afterpay or Paytomorrow as your payment method at checkout to pay in installments. </p>
 	<div class="steps-container">
 	  <div class="step">
 		<div class="step-circle">1</div>
