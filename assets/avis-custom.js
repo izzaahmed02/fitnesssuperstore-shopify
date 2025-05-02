@@ -500,7 +500,7 @@ async function fetchProductByHandle(handle) {
 }
 
 async function fetchProductByTitle(title) {
-	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbytitle?title=${title}`;
+	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbytitle?title=${encodeURIComponent(title)}`;
 
 	try {
 		const response = await fetch(shopifyUrl, {
@@ -625,7 +625,7 @@ async function fetchProductMetaObject(metaObjectId) {
 function renderOptionPopupProducts(product) {
 	let contentHTML = `
     <div class="option-title">
-      <h2>ABOUT OPTIONS - ${product.title.replace(/\(\d+\)/g, "")}</h2>
+    <h2>ABOUT OPTIONS - ${product.title.replace(/\(\d+\)/g, "")}</h2>
     </div>
     <div class="option-products">
       <div class="product-cards">`;
