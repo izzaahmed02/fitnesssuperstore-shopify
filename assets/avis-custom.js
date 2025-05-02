@@ -512,7 +512,7 @@ async function fetchProductByTitle(title) {
 		}
 
 		const data = await response.json();
-		return data[0];
+		return data.products[0];
 	} catch (error) {
 		console.error('Error fetching product by title:', error);
 		return null;
