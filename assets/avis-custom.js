@@ -81,6 +81,12 @@ function renderCustomAvisOptions() {
 	});
 
 	document.querySelectorAll('.ap-label-tooltip').forEach((element) => {
+		const parentWithHandle = element.closest('[class^="handle-"]');
+
+		if (!parentWithHandle){
+			return;
+		}
+		
 		const style = document.createElement('style');
 		style.textContent = `.ap-label-tooltip::after { display: none !important; }`;
 		document.head.appendChild(style);
@@ -119,7 +125,6 @@ function renderCustomAvisOptions() {
 				event.preventDefault();
 				event.stopPropagation();
 
-				const parentWithHandle = element.closest('[class^="handle-"]');
 				let headingElement = parentWithHandle.previousElementSibling;
 
 				while (headingElement) {
