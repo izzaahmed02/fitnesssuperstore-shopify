@@ -321,6 +321,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 		var pdsUrl = `https://fs-child-products.azurewebsites.net/api/pdf/${product.id}/${product.variants[0].sku}`; 
 		window.open(pdsUrl, "_blank"); 
 	})
+
+	document.querySelector('.compare-products-actions a').setAttribute('href', '');
 });
 
 

@@ -81,6 +81,12 @@ function renderCustomAvisOptions() {
 	});
 
 	document.querySelectorAll('.ap-label-tooltip').forEach((element) => {
+		const parentWithHandle = element.closest('[class^="handle-"]');
+
+		if (!parentWithHandle){
+			return;
+		}
+		
 		const style = document.createElement('style');
 		style.textContent = `.ap-label-tooltip::after { display: none !important; }`;
 		document.head.appendChild(style);
@@ -119,8 +125,6 @@ function renderCustomAvisOptions() {
 				event.preventDefault();
 				event.stopPropagation();
 
-				const parentWithHandle = element.closest('[class^="handle-"]');
-
 				let headingElement = parentWithHandle.previousElementSibling;
 
 				while (headingElement) {
@@ -135,7 +139,6 @@ function renderCustomAvisOptions() {
 				if (headingElement) {
 					headingTitle = headingElement.querySelector('.avp-heading')?.innerText
 				}
-
 				const handleClass = Array.from(parentWithHandle.classList).find((cls) => cls.startsWith('handle-'));
 				let optionCategoryId;
 
@@ -148,110 +151,105 @@ function renderCustomAvisOptions() {
 				container.innerHTML = '';
 
 				const productTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
-				if (productTitle) {
-					let optionHTML = '';
-					let productTitleSearch = '';
+				let optionHTML = '';
+				
+				if (headingTitle) {
+					productTitleSearch = `${productTitle} - ${headingTitle} (${optionCategoryId})`;
+				} else {
+					productTitleSearch = `${productTitle} (${optionCategoryId})`;
+				}
 
-					if (headingTitle) {
-						productTitleSearch = `${productTitle} - ${headingTitle} (${optionCategoryId})`;
-					} else {
-						productTitleSearch = `${productTitle} (${optionCategoryId})`;
-					}
+				const encodedProductTitle = encodeURIComponent(productTitleSearch);
+				
+				const product = await fetchProductByOptionCategory(optionCategoryId, encodedProductTitle);
 
-					const optionPopupProductsHtml = await renderOptionPopupProducts(productTitleSearch);
+				if (!product) {
+					return;
+				}
 
-					if (!optionPopupProductsHtml) {
-						const encodedProductTitle = encodeURIComponent(productTitleSearch);
-						const product = await fetchProductByTitle(encodedProductTitle);
-						if (product) {
-							optionHTML = product.body_html;
-						}
-					} else {
-						optionHTML = optionPopupProductsHtml;
-					}
+				if (!product.relatedProducts || product.relatedProducts.length === 0) {
+					optionHTML = product.descriptionHtml;
+				} else {
+					var relatedProductsHtml = renderOptionPopupProducts(product);
+					optionHTML = relatedProductsHtml
+				}
 
-					if (optionHTML) {
-						const tempDiv = document.createElement('div');
-						tempDiv.innerHTML = optionHTML;
-						const mainContent = tempDiv;
-						if (mainContent) {
-							container.innerHTML =
-								mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
-							const closeModalButton = document.querySelector('.modal-close');
-							closeModalButton.addEventListener('click', () => {
-								modalWrapper.style.display = 'none';
-							});
+				if (optionHTML) {
+					const tempDiv = document.createElement('div');
+					tempDiv.innerHTML = optionHTML;
+					const mainContent = tempDiv;
+					if (mainContent) {
+						container.innerHTML =
+							mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
+						const closeModalButton = document.querySelector('.modal-close');
+						closeModalButton.addEventListener('click', () => {
+							modalWrapper.style.display = 'none';
+						});
 
-							const scripts = mainContent.querySelectorAll('script');
-							scripts.forEach((script) => {
-								const newScript = document.createElement('script');
-								if (script.src) {
-									newScript.src = script.src;
-								} else {
-									newScript.textContent = script.textContent;
-								}
-								document.body.appendChild(newScript);
-							});
-
-							const modalImgs = container.querySelectorAll('#dynamic-product-content img');
-							modalImgs.forEach((img) => {
-								const src = img.src;
-								const fileName = src.split('/').pop();
-								const newSrc = `https://cdn.shopify.com/s/files/1/0884/2012/2940/files/${fileName}`;
-								img.src = newSrc;
-							});
-
-							const productCards = document.querySelectorAll('.product-card');
-							if (productCards) {
-								productCards.forEach((p) => {
-									const productId = parseInt(p.getAttribute('data-product-id'));
-									const productObj = optionProductsPopup.find((x) => x.id === productId);
-
-									if (productObj) {
-										p.addEventListener('click', (e) => {
-											const currentP = e.currentTarget;
-											const siblingsArray = [...currentP.parentElement.children].filter(
-												(child) => child !== currentP.parentElement
-											);
-											siblingsArray.forEach((item) => item.classList.remove('active'));
-											currentP.classList.add('active');
-
-											const shortDescriptionMetafield = productObj.metafields.find(
-												(metafield) => metafield.key === 'short_description'
-											);
-											const shortDescription = shortDescriptionMetafield
-												? shortDescriptionMetafield.value
-												: 'No short description available.';
-
-											const productDetailsHTML = `
-                        <div class="product-details__product-image">
-                          <img src="${productObj.image.src}" alt="${productObj.title}">
-                        </div>
-                        <div class="product-details__product-info">
-                          <h2 class="product-details__title">${productObj.title}</h2>
-                          <p class="product-details__short_description">${shortDescription}</p>
-                        </div>`;
-
-											const productDetailsContainer = document.querySelector('.product-details-container');
-											const productDetailsDescriptionBody = document.querySelector('.product-details-description-body');
-											productDetailsContainer.style.display = 'flex';
-											productDetailsDescriptionBody.style.display = 'block';
-											productDetailsContainer.innerHTML = productDetailsHTML;
-
-											const productDetailsDescriptionBodyDiv = document.createElement('div');
-											productDetailsDescriptionBodyDiv.innerHTML =
-												productObj.body_html.replace(shortDescription, '');
-											removeEmptyElements(productDetailsDescriptionBodyDiv);
-											clearImages(productDetailsDescriptionBodyDiv);
-											productDetailsDescriptionBody.innerHTML = productDetailsDescriptionBodyDiv.innerHTML;
-										});
-									}
-								});
-								productCards[0]?.click();
+						const scripts = mainContent.querySelectorAll('script');
+						scripts.forEach((script) => {
+							const newScript = document.createElement('script');
+							if (script.src) {
+								newScript.src = script.src;
+							} else {
+								newScript.textContent = script.textContent;
 							}
-						} else {
-							console.error('MainContent not found in the fetched HTML.');
+							document.body.appendChild(newScript);
+						});
+
+						const modalImgs = container.querySelectorAll('#dynamic-product-content img');
+						modalImgs.forEach((img) => {
+							const src = img.src;
+							const fileName = src.split('/').pop();
+							const newSrc = `https://cdn.shopify.com/s/files/1/0884/2012/2940/files/${fileName}`;
+							img.src = newSrc;
+						});
+
+						const productCards = document.querySelectorAll('.product-card');
+						if (productCards) {
+							productCards.forEach((p) => {
+								const productId = p.getAttribute('data-product-id');
+								const productObj = product.relatedProducts.find((x) => x.id === productId);
+
+								if (productObj) {
+									p.addEventListener('click', (e) => {
+										const currentP = e.currentTarget;
+										const siblingsArray = [...currentP.parentElement.children].filter(
+											(child) => child !== currentP.parentElement
+										);
+										siblingsArray.forEach((item) => item.classList.remove('active'));
+										currentP.classList.add('active');
+
+										const shortDescription = productObj.shortDescription;
+
+										const productDetailsHTML = `
+					<div class="product-details__product-image">
+					  <img src="${productObj.imageUrl}" alt="${productObj.title}">
+					</div>
+					<div class="product-details__product-info">
+					  <h2 class="product-details__title">${productObj.title}</h2>
+					  <p class="product-details__short_description">${shortDescription}</p>
+					</div>`;
+
+										const productDetailsContainer = document.querySelector('.product-details-container');
+										const productDetailsDescriptionBody = document.querySelector('.product-details-description-body');
+										productDetailsContainer.style.display = 'flex';
+										productDetailsDescriptionBody.style.display = 'block';
+										productDetailsContainer.innerHTML = productDetailsHTML;
+
+										const productDetailsDescriptionBodyDiv = document.createElement('div');
+										productDetailsDescriptionBodyDiv.innerHTML =
+											productObj.descriptionHtml.replace(shortDescription, '');
+										removeEmptyElements(productDetailsDescriptionBodyDiv);
+										clearImages(productDetailsDescriptionBodyDiv);
+										productDetailsDescriptionBody.innerHTML = productDetailsDescriptionBodyDiv.innerHTML;
+									});
+								}
+							});
+							productCards[0]?.click();
 						}
+					} else {
+						console.error('MainContent not found in the fetched HTML.');
 					}
 				}
 			});
@@ -526,6 +524,26 @@ async function fetchProductByTitle(title) {
 	}
 }
 
+async function fetchProductByOptionCategory(optionCategoryId, title) {
+	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbyoptioncategory?optionCategoryId=${optionCategoryId}&title=${title}`;
+
+	try {
+		const response = await fetch(shopifyUrl, {
+			method: 'GET'
+		});
+
+		if (!response.ok) {
+			throw new Error('Failed to fetch product by title');
+		}
+
+		const data = await response.json();
+		return data[0];
+	} catch (error) {
+		console.error('Error fetching product by title:', error);
+		return null;
+	}
+}
+
 async function fetchProductMetafields(productId) {
 	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${productId}/`;
 	try {
@@ -609,49 +627,16 @@ async function fetchProductMetaObject(metaObjectId) {
 	}
 }
 
-async function renderOptionPopupProducts(title) {
-	const product = await fetchProductByTitle(title);
-
-	if (!product) {
-		console.error('No product found for the given title.');
-		return;
-	}
-
-	const productId = product.id;
-	const metafields = await fetchProductMetafields(productId);
-
-	if (!metafields) {
-		console.error('No metafields found for the product.');
-		return;
-	}
-
-	const relatedProductsMetafield = metafields.find((field) => field.key === 'related_products');
-	if (!relatedProductsMetafield || !relatedProductsMetafield.value) {
-		console.error('No related products found in the metafield.');
-		return;
-	}
-
-	const optionProductIds = JSON.parse(relatedProductsMetafield.value).map((id) => id.split('/').pop());
-	const optionProducts = await Promise.all(
-		optionProductIds.map((id) => fetchProductDetailsWithMetafields(id))
-	);
-
-	optionProductsPopup = optionProducts;
-
+function renderOptionPopupProducts(product) {
 	let contentHTML = `
     <div class="option-title">
-      <h2>ABOUT OPTIONS - ${product.title.replace(/\s?\(\d+\)/, '')}</h2>
+    <h2>ABOUT OPTIONS - ${product.title.replace(/\(\d+\)/g, "")}</h2>
     </div>
     <div class="option-products">
       <div class="product-cards">`;
 
-	optionProducts.forEach((prod) => {
-		const shortDescriptionMetafield = prod.metafields.find((metafield) => metafield.key === 'short_description');
-		const shortDescription = shortDescriptionMetafield
-			? shortDescriptionMetafield.value
-			: 'No short description available.';
-
-		const originalPrice = parseFloat(prod.variants[0].price);
+	  product.relatedProducts.forEach((prod) => {
+		const originalPrice = parseFloat(prod.price);
 		const price =
 			Shopify.country !== 'US'
 				? (originalPrice * Shopify.currency.rate).toFixed(2)
@@ -659,16 +644,16 @@ async function renderOptionPopupProducts(title) {
 		contentHTML += `
       <div class="product-card" data-product-id="${prod.id}">
         <div class="product-card__img">
-          <img src="${prod.images[0]?.src}" alt="${prod.title}" />
+          <img src="${prod.imageUrl}" alt="${prod.title}" />
         </div>
-        <h4 class="product-card__title">${prod.title}</h4>
+        <h4 class="product-card__title">${prod.title.replace(/\(\d+\)/g, "")}</h4>
         <div class="product-card__mid">
-          <span class="product-card__code">#${prod.variants[0].sku}</span>
+          <span class="product-card__code">#${prod.sku}</span>
           <span class="product-card__price">
             ${'$' + price}
           </span>
         </div>
-        <p class="product-card__description">${shortDescription.substring(0, 150)}...</p>
+        <p class="product-card__description">${prod.shortDescription.substring(0, 150)}...</p>
         <a class="read-more-btn" data-id="${prod.id}">Read more</a>
       </div>
     `;
