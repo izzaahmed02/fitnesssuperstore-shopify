@@ -13,6 +13,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
         paintColorElement?.click();
         vinylColorElement?.click();
+ 
+        const paintColorAvisEl = Array.from(
+            document.querySelectorAll('.ap-options__swatch-container .apo-title')
+          ).find(el => el.textContent.trim() === 'Paint Color');
+          
+          const vinylColorAvisEl = Array.from(
+            document.querySelectorAll('.ap-options__swatch-container .apo-title')
+          ).find(el => el.textContent.trim() === 'Vinyl Color');
+          
+          const customPaintColor = Array.from(
+            document.querySelectorAll('.group-color .apo-title')
+          ).find(el => el.textContent.trim() === 'Paint Color');
+          
+          const customVinylColor = Array.from(
+            document.querySelectorAll('.group-color .apo-title')
+          ).find(el => el.textContent.trim() === 'Vinyl Color');
+          
+          function applyHandleClass(sourceEl, targetEl) {
+            if (!sourceEl || !targetEl) {
+                targetEl.querySelector('svg').style.display = 'none';
+                return
+            };
+          
+            let parent = sourceEl;
+            while (parent && ![...parent.classList].some(cls => cls.startsWith('handle-'))) {
+              parent = parent.parentElement;
+            }
+          
+            if (parent) {
+              const handleClass = parent.className
+                .split(/\s+/)
+                .find(cls => cls.startsWith('handle-'));
+          
+              if (handleClass) {
+                targetEl.classList.add(handleClass);
+                setTimeout(setupOptionsPopup);
+              } 
+            }
+          }
+          
+          applyHandleClass(paintColorAvisEl, customPaintColor);
+          applyHandleClass(vinylColorAvisEl, customVinylColor);
+          
 
         if (groupColorContainer) {
             groupColorContainer.forEach((colorGroupElement, colorGroupElementIndex) => {
@@ -31,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const selectedColorElement = colorGroupElement.querySelector('.option_selected');
                     const selectedColorPriceElement = colorGroupElement.querySelector('.option_selected-price');
                     const selectedColorInfo = colorGroupElement.querySelector('.option_selected-container');
-                    const closeSelectedInfoBtn = colorGroupElement.querySelector('svg');
+                    const closeSelectedInfoBtn = colorGroupElement.querySelector('svg:not(.paint-color-popup-icon)');
                     const colorOptionsContainer = colorGroupElement.querySelector('.color-options-container');
                     const apoColors = document.querySelectorAll(`.ap-options__swatch-container input[field-name="${groupColorName} Color"]`);
                     const swatchContainer = colorGroupElement.querySelector('.color-options');
