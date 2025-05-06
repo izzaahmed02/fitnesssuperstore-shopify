@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 targetEl.classList.add(handleClass);
                 setTimeout(setupOptionsPopup);
               } 
+            } else {
+                targetEl.querySelector('.paint-color-popup-icon').style.display = 'none';
             }
           }
           
