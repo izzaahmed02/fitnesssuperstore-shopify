@@ -93,7 +93,7 @@ function setupOptionsPopup() {
 		let parentWithHandle = element.closest('[class^="handle-"]');
         const svgPopupIcon = element.querySelector('svg');
 
-		if (element.classList.contains('apo-title') && Array.from(element.classList).filter(cls => cls.includes('handle'))) {
+		if (element.classList.contains('apo-title') && Array.from(element.classList).filter(cls => cls.includes('handle')).length > 0) {
 			parentWithHandle = element;
 		} 
 
