@@ -432,11 +432,11 @@
                 {% comment %} {% render 'header-search', input_id: 'Search-In-Modal' %} {% endcomment %}
                 {%- if shop.customer_accounts_enabled -%}
                     <a href="{%- if customer -%}{{ routes.account_url }}{%- else -%}{{ routes.account_login_url }}{%- endif -%}"
-                       class="header__icon header__icon--account link focus-inset">
+                       class="header__icon header__icon--account link focus-inset{% if section.settings.menu != blank %} small-hide{% endif %}">
                         {%- if section.settings.enable_customer_avatar -%}
                             <account-icon>
                                 {%- if customer and customer.has_avatar? -%}
-                                    {% render 'icon-account' %}
+                                    {{ customer | avatar }}
                                 {%- else -%}
                                     {% render 'icon-account' %}
                                 {%- endif -%}
@@ -444,12 +444,12 @@
                         {%- else -%}
                             {% render 'icon-account' %}
                         {%- endif -%}
-                        <span class="">
+                        <span class="visually-hidden">
               {%- liquid
                   if customer
                       echo 'customer.account_fallback' | t
                   else
-                      echo 'customer.account_fallback' | t
+                      echo 'customer.log_in' | t
                   endif
               -%}
             </span>
@@ -461,22 +461,30 @@
                             {% render block %}
                     {%- endcase -%}
                 {%- endfor -%}
-                <a href="/pages/contact" class="header__icon link">
-                    {% render 'icon-letter' %}
-                    <span class="contact-us">{{ 'templates.contact.contact_us' | t }}</span>
-                </a>
+                {% comment %}<a href="/pages/contact" class="header__icon link">{% endcomment %}
+                    {% comment %}{% render 'icon-letter' %}{% endcomment %}
+                    {% comment %}<span class="contact-us">{{ 'templates.contact.contact_us' | t }}</span>{% endcomment %}
+                {% comment %}</a>{% endcomment %}
                 <a href="{{ routes.cart_url }}" class="header__icon header__icon--cart link focus-inset"
                    id="cart-icon-bubble">
                     {%- liquid
                         if cart == empty
-                            render 'icon-cart'
+                            render 'icon-cart-empty'
                         else
                             render 'icon-cart'
                         endif
                     -%}
                     <span class="visually-hidden">{{ 'templates.cart.cart' | t }}</span>
-                    {{ 'sections.header.cart_count' | t: count: cart.item_count }} -
-                    {{ cart.total_price | money }}
+                    {% comment %}{{ 'sections.header.cart_count' | t: count: cart.item_count }} -{% endcomment %}
+                    {% comment %}{{ cart.total_price | money }}{% endcomment %}
+                    {%- if cart != empty -%}
+                        <div class="cart-count-bubble">
+                            {%- if cart.item_count < 100 -%}
+                                <span aria-hidden="true">{{ cart.item_count }}</span>
+                            {%- endif -%}
+                            <span class="visually-hidden">{{ 'sections.header.cart_count' | t: count: cart.item_count }}</span>
+                        </div>
+                    {%- endif -%}
                 </a>
             </div>
 
