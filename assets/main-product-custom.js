@@ -456,12 +456,10 @@ function generatePayLaterText() {
 
 	const lowestRate = Math.min(payTomorrow24MosRate, afterPayRate, affirm24MosRate);
 
-	if (lowestRate) {
-		payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
-			style: 'currency',
-			currency: 'USD',
-			})}/mo. / 24 interest-free payment`
-	}
+	payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
+		style: 'currency',
+		currency: 'USD',
+		})}/mo. / 24 interest-free payment`
 
 	return payLaterText;
 }
