@@ -454,7 +454,11 @@ function generatePayLaterText() {
 		}
 	}
 
-	const lowestRate = Math.min(payTomorrow24MosRate, afterPayRate, affirm24MosRate);
+	const rates = [payTomorrow24MosRate, afterPayRate, affirm24MosRate]
+	.map(rate => parseFloat(rate))
+	.filter(rate => !isNaN(rate));
+  
+    const lowestRate = rates.length ? Math.min(...rates) : 0;  
 
 	payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
 		style: 'currency',
