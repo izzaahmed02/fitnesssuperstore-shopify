@@ -1,100 +1,146 @@
 <style>
-    .price-banner {
-        position: relative;
-        width: 557px;
-        height: 64px;
-        border-radius: 16px;
-        background-color: #FFE4DC;
-        display: flex;
-        align-items: center;
-        padding: 0 20px;
-        box-sizing: border-box;
-        overflow: hidden;
-        margin: 12px 0px;
-    }
-    
-    .price-info {
-      display: flex;
-      gap: 8px;
-      align-items: baseline;
-      z-index: 2; 
-    }
-    
-    .current-price {
-      font-family: 'Lato';
-      font-size: 32px;
-      color: #B3B3B3;
-      text-decoration: line-through;
-      margin: 0;
-    }
-    
-    .sale-price {
-      font-family: 'Lato';
-      font-size: 32px;
-      font-weight: bold;
-      color: #F15F34;  
-      margin: 0;
-    }
-    
-    .sale-section {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 565px;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        color: #fff;
-        font-weight: bold;
-        text-transform: uppercase;
-        z-index: 3;
-        background-color: #FAC3B2;
-        font-size: 30px;
-        clip-path: polygon(72% 0, 100% 0, 100% 100%, 60% 100%);
-        box-sizing: border-box;
-        padding: 0 10px;
-        font-family: 'Oswald';
-    }
+  .price-banner {
+    position: relative;
+    width: 100%;
+    min-height: 64px;
+    border-radius: 16px;
+    background-color: #fce6de;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    inline-size: 100%;
+    margin: 8px 0px 40px;
+    overflow: hidden;
+  }
 
-    .sale-section::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        right: -5px;
-        width: 686px;
-        height: 100%;
-        background-color: #F1592A;
-        clip-path: polygon(78% 0, 100% 0, 100% 100%, 68% 100%);
-        z-index: -1;
+  .price-banner__prices {
+    padding: 12px;
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    width: 55%;
+    height: auto;
+    gap: 4px;
+    white-space: nowrap;
+    font-size: clamp(2.6rem, 100cqi / 50, 3rem);
+  }
+
+  @media (min-width: 550px) {
+    .price-banner__prices {
+      flex-direction: row;
+      align-items: center;
+      width: 60%;
+      gap: 8px;
     }
-  </style>
-  <style>
-    @media (max-width: 750px) {
-      .price-banner {
-        width: auto;
-      }
-      .current-price {
-        font-size: 18px;
-      }
-      .sale-price {
-        font-size: 18px;
-      }
-      .sale-section {
-        width: 388px;
-        font-size: 19px;
-      }
-      .sale-section::before {
-        width: 472px;
-      }
+  }
+
+  @media (min-width: 990px) {
+    .price-banner__prices {
+      font-size: clamp(1.4rem, 100cqi / 50, 3rem);
     }
-  </style>
+  }
+
+  .price-banner__price {
+    font-weight: 700;
+    color: #f1592a;
+  }
+
+  .price-banner__compare {
+    color: #bfa3a3;
+    text-decoration: line-through;
+  }
+
+  .price-banner__label {
+    position: relative;
+    width: 45%;
+    max-width: 230px;
+    height: auto;
+    padding-right: 1.2rem;
+    padding-left: 4rem;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    white-space: nowrap;
+    font-weight: 700;
+    font-family: 'Oswald';
+    color: #f2f2f2;
+    font-size: clamp(1.6rem, 100cqi / 76, 2.2rem);
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 550px) {
+    .price-banner__label {
+      padding-right: 1.6rem;
+      font-size: clamp(2rem, 100cqi / 76, 2.2rem);
+    }
+  }
+
+  @media (min-width: 750px) {
+    .price-banner__label {
+      width: 40%;
+      letter-spacing: 1px;
+      font-size: clamp(2.2rem, 100cqi / 76, 2.2rem);
+    }
+  }
+
+  @media (min-width: 990px) {
+    .price-banner__label {
+      font-size: clamp(1.6rem, 100cqi / 76, 2.2rem);
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .price-banner__label {
+      padding-left: 6rem;
+      font-size: clamp(2rem, 100cqi / 76, 2.2rem);
+    }
+  }
+
+  .price-banner__label span {
+    position: relative;
+    z-index: 1;
+  }
+
+  .price-banner__label:before,
+  .price-banner__label:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+
+  .price-banner__label:before {
+    right: 10px;
+    background-color: #fac3b2;
+    clip-path: polygon(45% -45%, 100% 0, 100% 100%, 0% 100%);
+  }
+  .price-banner__label:after {
+    right: 0;
+    background-color: #f1592a;
+    clip-path: polygon(45% -45%, 100% 0, 100% 100%, 0% 100%);
+  }
+</style>
+
+{% assign sale_price_raw = sale_price | replace: ',', '' %}
+{% assign sale_price = sale_price_raw | times: 100.0 %}
+
+{% if current_price > sale_price %}
   <div class="price-banner">
-    <div class="price-info">
-      <p class="sale-price">${{ sale_price  }}</p>
-      <p class="current-price">{{ current_price | money }}</p>
+    <div class="price-banner__prices">
+      <span class="price-banner__price">
+        {{ sale_price | money | remove: '$' }}
+      </span>
+      <span class="price-banner__compare">
+        {{ current_price | money }}
+      </span>
     </div>
-    <div class="sale-section">
-      {{  sale_name }}
+    <div class="price-banner__label">
+      <span>
+        {{ sale_name }}
+      </span>
     </div>
   </div>
+{% endif %}
