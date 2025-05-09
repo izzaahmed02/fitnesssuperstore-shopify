@@ -398,7 +398,7 @@ function waitForPayLaterDependencies(callback, timeout = 10000, interval = 100) 
         const squarePlacement = document.querySelector('square-placement');
         const shadowText = squarePlacement?.shadowRoot?.querySelector('.afterpay-text2 strong');
 
-        const allReady = payTomorrowReady && container && textEl && squarePlacement && shadowText;
+        const allReady = payTomorrowReady && container && textEl;
 
         if (allReady) {
             callback();
