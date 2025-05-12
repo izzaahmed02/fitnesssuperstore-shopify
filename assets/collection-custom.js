@@ -203,28 +203,6 @@ document.addEventListener("DOMContentLoaded", function () {
 			subtree: true
 		});
 	}
-
-	// (function() {
-	// 	const origAddEventListener = EventTarget.prototype.addEventListener;
-	// 	EventTarget.prototype.addEventListener = function(type, listener, ...rest) {
-	// 		if (type.includes('globo') || type.includes('filter') || type.includes('render')) {
-	// 			console.log('[Intercepted event binding]', type);
-	// 		}
-	// 		return origAddEventListener.call(this, type, listener, ...rest);
-	// 	};
-	// })();
-	// document.addEventListener('globoFilterRenderCompleted', () => {
-	// 	console.log('[Smart Filter] Products re-rendered');
-	
-	// 	onImageWrapReady(() => {
-	// 		document.querySelectorAll('.image-wrap').forEach(imageWrap => {
-	// 			sliderObserver.observe(imageWrap);
-	// 		});
-			
-	// 		console.log('.image-wrap is ready after filtering');
-	// 		// Твій код тут
-	// 	});
-	// });
 });
 
 document.addEventListener('click', function (e) {

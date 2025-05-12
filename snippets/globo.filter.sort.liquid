@@ -60,11 +60,11 @@
     </div>
 
     <script>
-      function updateResultsRangeFromDOM() {
+      function updateFilterUI() {
+        // ===== RANGE (1–30 of 125) =====
         const totalEl = document.querySelector('.gf-summary b');
         const limitEl = document.querySelector('#setLimit');
         const currentPageEl = document.querySelector('#gf_pagination_wrap .pagination .page.current');
-
 
         const total = parseInt(totalEl?.textContent || '0');
         const perPage = parseInt(limitEl?.value || '30');
@@ -78,16 +78,30 @@
           if (total === 0 || !Number.isInteger(total)) {
             summaryEl.innerHTML = 'No products found';
           } else {
-            const from = (currentPage - 1) * perPage + 1;
-            const to = Math.min(currentPage * perPage, total);
             const newText = `<b>${from}–${to}</b> of ${total}`;
             if (summaryEl.innerHTML !== newText) {
               summaryEl.innerHTML = newText;
             }
           }
         }
-      }
 
+        // ===== ACTIVE FILTER COUNT =====
+        const filters = window.globofilter?.state?.queryParams?.filter || {};
+        let filterCount = 0;
+        for (const key in filters) {
+          const values = filters[key];
+          if (Array.isArray(values)) {
+            filterCount += values.length;
+          }
+        }
+
+        const filterCountArr = document.querySelectorAll('.filter-count');
+        if (filterCountArr.length > 0) {
+          filterCountArr.forEach(filterCountEl => {
+            filterCountEl.textContent = filterCount > 0 ? `(${filterCount})` : '';
+          });
+        }
+      }
       const productContainer = document.querySelector('#gf-controls-container');
 
       if (productContainer) {
@@ -96,7 +110,7 @@
         const observer = new MutationObserver(() => {
           clearTimeout(updateTimeout);
           updateTimeout = setTimeout(() => {
-            updateResultsRangeFromDOM();
+            updateFilterUI();
           }, 100);
         });
 
@@ -104,6 +118,8 @@
           childList: true,
           subtree: true,
         });
+
+        updateFilterUI();
       }
     </script>
 
