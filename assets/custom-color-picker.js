@@ -133,9 +133,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                     selectedColorElement.textContent = `Color: ${colorName}`;
                                     currentSwatchIndex = [...colorSwatches].indexOf(swatch);
                                     currentColorName = colorName;
-                                    const apoOptionColorSelected = Array.from(document.querySelectorAll('.ap-options__swatch-container .option_selected')).find(div => div.textContent === colorName);
-                                    if (!apoOptionColorSelected) {
-                                        apoColors[currentSwatchIndex]?.parentElement.click();
+                                    let selectedParentGroupContainer;
+                                    const selectedGroup = Array.from(document.querySelectorAll('.ap-options__swatch-container .apo-title'))
+                                    .find(el => el.textContent.trim() === `${groupColorName} Color`);
+                                    if (selectedGroup) {
+                                        selectedParentGroupContainer = selectedGroup.closest('.ap-options__swatch-container');
+                                    }
+                                    if (selectedParentGroupContainer) {
+                                        const apoOptionColorSelected = Array.from(selectedParentGroupContainer.querySelectorAll('.option_selected')).find(div => div.textContent === colorName);
+                                        if (!apoOptionColorSelected) {
+                                            apoColors[currentSwatchIndex]?.parentElement.click();
+                                        }
                                     }
                                     customColorInputContainer.style.display = 'none';
 
