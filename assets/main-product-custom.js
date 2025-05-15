@@ -1,4 +1,6 @@
 window.addEventListener('DOMContentLoaded', async () => {
+	observeModalVisibility();
+	
 	function checkForElements() {
 		const shippingType = document.querySelector(
 			'.avp-option.ap-options__select-container:has(select[name^="Full Assembly & Installation"])'
@@ -11,18 +13,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 			'.customer-location-container'
 		);
 
-			// cityInput.addEventListener('input', () => {
-			// 	localStorage.setItem('city', cityInput.value);
-			// });
-
-			// zipInput.addEventListener('input', () => {
-			// 	localStorage.setItem('zip', zipInput.value);
-			// });
-
-			//getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
-
 			if (shippingType) {
-                shippingType.querySelector('.avp-option-title .apo-title').innerText = '"Assembly & Room of Choice Installation Needed?'
+                shippingType.querySelector('.avp-option-title .apo-title').innerText = 'Assembly & Room of Choice Installation Needed?'
 				customerLocationForm.parentElement.insertAdjacentElement('beforebegin', shippingType);
 				shippingType.style.display = 'block';
 
@@ -84,25 +76,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 			clearInterval(pollingInterval);
 		}
-
-		// document.querySelector('.docapp-shipping-calculator--button')?.addEventListener('click', (event) => {
-		// 	const shippingType = document.querySelector(
-		// 		'.avp-option.ap-options__select-container:has(select[name^="Full Assembly & Installation"])'
-		// 	);
-
-		// 	if (customerLocationForm) {
-		// 		//getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
-
-		// 		if (shippingType) {
-		// 			customerLocationForm.parentElement.insertAdjacentElement('afterend', shippingType);
-
-		// 			const apoTitle = shippingType.querySelector('.apo-title');
-		// 			if (apoTitle) {
-		// 				apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
-		// 			}
-		// 		}
-		// 	}
-		// });
 	}
 
 	function getFormDataAndDisplay(cityInput, zipInput, shippingInfo) {
@@ -188,21 +161,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       const showContainer = document.createElement('div');
       showContainer.setAttribute('class', 'show-dropdown-container');
       
-    //   const showLabel = document.createElement('label');
-    //   showLabel.setAttribute('for', 'showDropdown');
-    //   showLabel.textContent = 'Show';
-    //   showLabel.classList.add('show-label'); 
-    //   showContainer.appendChild(showLabel);
-      
-    //   const showDropdown = document.createElement('select');
-    //   showDropdown.setAttribute('id', 'showDropdown');
-    //   showDropdown.innerHTML = `
-    //     <option value="all">All Ratings</option>
-    //     <option value="5">5 Stars</option>
-    //     <option value="4">4 Stars</option>
-    //   `;
-    //   showContainer.appendChild(showDropdown);
-      
       dropdownContainer.appendChild(showContainer);
        
       const writeReviewButton = document.createElement('a');
@@ -281,34 +239,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 				saLoadScript(sa_host + 'widgets/' + sa_page + '.php?siteid=' + sa_siteid + '&productid=' + productId + '&page=0&sort=' + sort + reverse + '&loadnow=1' + '&rtype=' + sa_rtype);
 				registerCustomActionEvent();
 			  });
-	
-			  
-			// if (showDropdownSelect) {
-			// 	showDropDownCurrentValue = showDropdownSelect.value;
-			// }
-	
-			//   const newShowDropdownSelect = showDropdownSelect.cloneNode(true);
-	
-			//   showDropdownSelect.parentNode.replaceChild(newShowDropdownSelect, showDropdownSelect);
-	
-			//   if (showDropDownCurrentValue) {
-			// 	newShowDropdownSelect.value = showDropDownCurrentValue;
-			//   }  
-		
-			//   newShowDropdownSelect.addEventListener('change', () => {
-			// 	if (newShowDropdownSelect.value === '5') {
-			// 		saSort.value = 'high';
-			// 	} else if (newShowDropdownSelect.value === '4') {
-			// 		saSort.value = 'low';
-			// 	} else {
-			// 		saSort.value = 'high';
-			// 	}
-	
-			// 	const changeEvent = new Event('change');
-			// 	saSort.dispatchEvent(changeEvent);
-		
-			// 	registerCustomActionEvent();
-			//   });
 			}
 		}, 1000);
     }
@@ -383,19 +313,7 @@ try {
 
 		if (Shopify.country === 'US') {
 			var afterPayIntervalTrigger = setInterval(() => {
-				var afterPayModalContainer = document.querySelector('afterpay-modal');
-				if (afterPayModalContainer) {
-					var productPrice = getProductPrice();
-					if (productPrice >= 400) {
-						let payLaterText = generatePayLaterText();
-		
-						document.querySelector('.paylater-container').style.display = 'flex';
-						document.querySelector('.paylater-text').innerHTML = `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"></path>
-					  </svg>`
-					}
-				  clearInterval(afterPayIntervalTrigger)
-				}
+				hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
 			}, 500)
 
 			var affirmIntervalTrigger = setInterval(() => {
@@ -407,16 +325,29 @@ try {
 				}
 			}, 500)
 
+			waitForPayLaterDependencies(() => { 
+				let payLaterText = generatePayLaterText();
+	
+					document.querySelector('.paylater-container').style.display = 'flex';
+					document.querySelector('.paylater-text').innerHTML = `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"></path>
+				  </svg>`
+			})
+
 			const targetNode = document.querySelector('.pr_custom_price');
 
 			const observerCallback = (mutationsList, observer) => {
 				for (const mutation of mutationsList) {
 					if (mutation.type === 'childList') {
 						let payLaterText = generatePayLaterText();
-		
-						document.querySelector('.paylater-text').innerHTML = `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"></path>
-						</svg>`
+	
+						setTimeout(() => {			
+							document.querySelector('.paylater-text').innerHTML = `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"></path>
+							</svg>`
+					
+							hideOrShowAfterPayLogo();	
+						});
 					}
 				}
 			};
@@ -437,33 +368,43 @@ function generatePayLaterText() {
 	const productPrice = getProductPrice();	
 	document.querySelector('square-placement').setAttribute('data-amount', productPrice);
 
-	const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2 strong');
-	const afterPayLogo = document.querySelector('.afterPayLogo');
-
 	const payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 9});
 	const afterPayRate = parseFloat(document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML.replace('$', '').replace('/mo.', ''));
 	const affirm24MosRate = computeAffirmLoanDetails(productPrice, 24).MonthlyPaymentAmount;
+	const rates = [payTomorrow24MosRate, afterPayRate, affirm24MosRate]
+	.map(rate => parseFloat(rate))
+	.filter(rate => !isNaN(rate));
+  
+    const lowestRate = rates.length ? Math.min(...rates) : 0;  
 
-	if (afterPayElement) {
-		if (afterPayLogo) {
-			afterPayLogo.style.display = 'block';
-		}
-	} else {
-		if (afterPayLogo) {
-			afterPayLogo.style.display = 'none';
-		}
-	}
-
-	const lowestRate = Math.min(payTomorrow24MosRate, afterPayRate, affirm24MosRate);
-
-	if (lowestRate) {
-		payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
-			style: 'currency',
-			currency: 'USD',
-			})}/mo. / 24 interest-free payment`
-	}
+	payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
+		style: 'currency',
+		currency: 'USD',
+		})}/mo. / 24 interest-free payment`
 
 	return payLaterText;
+}
+
+function waitForPayLaterDependencies(callback, timeout = 10000, interval = 100) {
+    const start = Date.now();
+
+    const checkReady = () => {
+        const payTomorrowReady = typeof PayTomorrow !== 'undefined' && typeof PayTomorrow.getMonthlyPayment === 'function';
+        const container = document.querySelector('.paylater-container');
+        const textEl = document.querySelector('.paylater-text');
+        const squarePlacement = document.querySelector('square-placement');
+        const shadowText = squarePlacement?.shadowRoot?.querySelector('.afterpay-text2 strong');
+
+        const allReady = payTomorrowReady && container && textEl;
+
+        if (allReady) {
+            callback();
+        } else if (Date.now() - start < timeout) {
+            setTimeout(checkReady, interval);
+        } 
+    };
+
+    checkReady();
 }
 
 function toggleTransitTimeForm() {
@@ -523,7 +464,6 @@ function computeAfterPayLoanDetails(principal, monthlyPayment, numPayments, newT
     };
 }
 
-
 function computePayTomorrowAPR(principal, monthlyPayment, numPayments) {
     function aprEquation(rate) {
         return (principal * rate) / (1 - Math.pow(1 + rate, -numPayments)) - monthlyPayment;
@@ -565,6 +505,7 @@ function showPayLaterModal() {
 		closeModalButton.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
 		});
+
 		document.querySelector('#dynamic-product-content').style.width = "600px";
 	}
 }
@@ -706,7 +647,7 @@ function generatePayTomorrowPaymentTerms() {
 			<p class="total">Total: ${totalFormatted}</p>
 		  </div>
 		  <a href="#" class="terms-link">
-		    <svg onclick="PayTomorrow.openMpeIframe()" class="paytomorrow-logo" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 326 48">
+		    <svg onclick="event.preventDefault(); event.stopPropagation(); PayTomorrow.openMpeIframe();" class="paytomorrow-logo" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 326 48">
 				<defs>
 					<style>.cls-1{fill:#43A8FB}.cls-2{fill:#152456}</style>
 				</defs>
@@ -722,7 +663,7 @@ function generatePayTomorrowPaymentTerms() {
 				<path class="cls-2" d="M268.88,9.54a15.39,15.39,0,0,1,5.75,1.06,14,14,0,0,1,4.64,2.94A13.52,13.52,0,0,1,282.34,18a13.91,13.91,0,0,1,1.11,5.59,13.8,13.8,0,0,1-1.11,5.53,13.52,13.52,0,0,1-3.07,4.45,14.42,14.42,0,0,1-4.64,3,15.71,15.71,0,0,1-11.5,0,14.26,14.26,0,0,1-4.63-3,13.37,13.37,0,0,1-3.07-4.45,13.63,13.63,0,0,1-1.12-5.53A13.75,13.75,0,0,1,255.43,18a13.37,13.37,0,0,1,3.07-4.45,13.87,13.87,0,0,1,4.63-2.94A15.42,15.42,0,0,1,268.88,9.54Zm0,22.73a8.2,8.2,0,0,0,3.34-.67,7.56,7.56,0,0,0,2.62-1.85,8.64,8.64,0,0,0,1.7-2.76,9.44,9.44,0,0,0,.61-3.41,9.85,9.85,0,0,0-.61-3.47,8.36,8.36,0,0,0-1.7-2.79,7.75,7.75,0,0,0-2.62-1.82,8.71,8.71,0,0,0-6.7,0,7.87,7.87,0,0,0-2.6,1.82,8.34,8.34,0,0,0-1.69,2.79,9.63,9.63,0,0,0-.61,3.47,9.23,9.23,0,0,0,.61,3.41,8.62,8.62,0,0,0,1.69,2.76,7.67,7.67,0,0,0,2.6,1.85A8.13,8.13,0,0,0,268.88,32.27Z"></path>
 				<path class="cls-2" d="M292.4,36.87q-2.59-6.09-4.26-10.33c-1.11-2.82-2-5.16-2.65-7s-1.11-3.28-1.38-4.29a10,10,0,0,1-.39-2.14,2.74,2.74,0,0,1,3-2.81,6.26,6.26,0,0,1,1.82.21,6.82,6.82,0,0,1,.88.32q.63,2.32,1.43,4.95T292.51,21c.57,1.73,1.12,3.38,1.67,4.95l1.46,4.21c.39-1.09.8-2.34,1.24-3.76s.9-2.86,1.38-4.37.94-3,1.4-4.55.89-3,1.28-4.37a4.61,4.61,0,0,1,1.19-2.1,3.56,3.56,0,0,1,2.46-.71,6,6,0,0,1,1.91.29,10.9,10.9,0,0,1,1.06.4q.69,2.38,1.48,5t1.59,5.17c.53,1.69,1.05,3.32,1.56,4.87s1,2.94,1.41,4.13c.92-2.43,1.86-5.1,2.83-8s1.86-5.8,2.68-8.69a5.58,5.58,0,0,1,1.24-2.41,3.2,3.2,0,0,1,2.36-.77,5.08,5.08,0,0,1,2.33.47,7.63,7.63,0,0,1,1,.59q-.44,1.74-1.48,4.82c-.71,2.05-1.51,4.26-2.39,6.65s-1.82,4.82-2.81,7.31-1.92,4.74-2.8,6.75h-6.26c-.28-.74-.66-1.82-1.13-3.25s-1-3-1.57-4.69-1.12-3.44-1.67-5.22-1.05-3.42-1.51-4.9c-.46,1.48-1,3.12-1.51,4.9s-1.09,3.52-1.64,5.22-1,3.26-1.51,4.69-.83,2.51-1.11,3.25Z"></path>
             </svg>
-			<span>See terms: <strong onclick="PayTomorrow.openMpeIframe()"><u>PayTomorrow</u></strong></span>
+			<span>See terms: <strong onclick="event.preventDefault(); event.stopPropagation(); PayTomorrow.openMpeIframe();"><u>PayTomorrow</u></strong></span>
 		  </a>
 		</div>
 	  `;
@@ -749,7 +690,7 @@ function generatePayTomorrowPaymentTerms() {
 							<p class="apr">monthly, ${rate.APR} APR</p>
 							<p class="total">Total: ${rate.TotalPayment}</p>
 						</div>
-						<a href="#" class="terms-link">
+						<a href="#" class="terms-link" onclick="event.preventDefault(); event.stopPropagation(); document.querySelector('.affirm-modal-trigger')?.click();">
 						<svg width="72" height="72" viewBox="0 0 36 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                            <path fill-rule="evenodd" clip-rule="evenodd" d="M14.7561 8.62608H13.2353V8.04587C13.2353 7.29121 13.6787 7.07527 14.0613 7.07527C14.4834 7.07527 14.8122 7.2574 14.8122 7.2574L15.33 6.10696C15.33 6.10696 14.8051 5.77344 13.851 5.77344C12.7784 5.77344 11.5579 6.36133 11.5579 8.20649V8.62608H9.01189V8.04587C9.01189 7.29121 9.45533 7.07527 9.83712 7.07527C10.0545 7.07527 10.347 7.12445 10.5888 7.2574L11.1066 6.10696C10.7975 5.93021 10.3011 5.77344 9.62765 5.77344C8.55501 5.77344 7.33455 6.36133 7.33455 8.20649V8.62608H6.36071V9.88488H7.33455V14.3321H9.01189V9.88488H11.5579V14.3321H13.2353V9.88488H14.7561V8.62608ZM18.8429 8.62586V14.3319H20.5218V11.583C20.5218 10.2758 21.3351 9.89234 21.9027 9.89234C22.124 9.89234 22.4228 9.95459 22.6204 10.0983L22.9263 8.58975C22.6671 8.48216 22.3959 8.45833 22.1738 8.45833C21.3106 8.45833 20.7684 8.83028 20.4103 9.58494V8.62586H18.8429ZM2.51003 13.3084C2.06896 13.3084 1.84921 13.0979 1.84921 12.7497C1.84921 12.1057 2.59065 11.8852 3.94391 11.7461C3.94391 12.6076 3.34474 13.3084 2.51003 13.3084ZM3.09338 8.45846C2.12666 8.45846 1.01371 8.90188 0.409801 9.36989L0.961535 10.4988C1.44608 10.0677 2.22942 9.69958 2.93608 9.69958C3.60717 9.69958 3.9779 9.91783 3.9779 10.3566C3.9779 10.6533 3.73206 10.8024 3.26728 10.8608C1.53303 11.0806 0.171875 11.5455 0.171875 12.8458C0.171875 13.8763 0.926755 14.5004 2.10611 14.5004C2.94715 14.5004 3.69649 14.0454 4.05299 13.4452V14.3321H5.62124V10.6164C5.62124 9.08171 4.5241 8.45846 3.09338 8.45846ZM28.8111 9.4611C29.1565 8.96926 29.8197 8.45898 30.7074 8.45898C31.78 8.45898 32.6677 9.10606 32.6677 10.3887V14.3326H30.9903V10.9043C30.9903 10.1489 30.5224 9.83536 30.079 9.83536C29.5241 9.83536 28.9692 10.3287 28.9692 11.3954V14.3326H27.2918V10.9159C27.2918 10.1374 26.8507 9.83536 26.3709 9.83536C25.8406 9.83536 25.273 10.3403 25.273 11.3954V14.3326H23.5933V8.62652H25.2114V9.48953C25.4951 8.93852 26.1093 8.45898 26.997 8.45898C27.8104 8.45898 28.4901 8.82556 28.8111 9.4611ZM17.4329 14.3324H15.7571V8.6263H17.4329V14.3324Z" fill="#060809"/>
                             <path fill-rule="evenodd" clip-rule="evenodd" d="M25.5357 0.667969C21.0049 0.667969 16.9665 3.7258 15.8203 7.65742H17.4629C18.4201 4.72946 21.6696 2.15961 25.5357 2.15961C30.235 2.15961 34.2963 5.63782 34.2963 11.0526C34.2963 12.2684 34.1343 13.3643 33.8276 14.3326H35.4211L35.4369 14.2795C35.6978 13.2805 35.8306 12.1954 35.8306 11.0526C35.8306 5.0138 31.3044 0.667969 25.5357 0.667969Z" fill="#0FA0EA"/>
@@ -786,3 +727,47 @@ function generatePayTomorrowPaymentTerms() {
 	const productPrice = parseFloat(formattedProductPrice);
 	return productPrice;
   }
+
+  function hideOrShowAfterPayLogo(callback) {
+	var afterPayModalContainer = document.querySelector('afterpay-modal');
+	if (afterPayModalContainer) {
+		const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2 strong');
+		const afterPayLogo = document.querySelector('.afterPayLogo');
+	
+		if (afterPayElement) {
+			if (afterPayLogo) {
+				afterPayLogo.style.display = 'block';
+			}
+		} else {
+			if (afterPayLogo) {
+				afterPayLogo.style.display = 'none';
+			}
+		}
+
+		if (callback) {
+			callback();
+		}
+	}
+  }
+
+  function observeModalVisibility(modalSelector = '.modal-wrapper') {
+    const observer = new MutationObserver(() => {
+        const anyModalOpen = Array.from(document.querySelectorAll(modalSelector))
+            .some(modal => {
+                const style = window.getComputedStyle(modal);
+                return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+            });
+
+        document.body.classList.toggle('modal-open', anyModalOpen);
+    });
+
+    const modals = document.querySelectorAll(modalSelector);
+
+    modals.forEach(modal => {
+        observer.observe(modal, {
+            attributes: true,
+            attributeFilter: ['style', 'class'],
+            subtree: false,
+        });
+    });
+}
