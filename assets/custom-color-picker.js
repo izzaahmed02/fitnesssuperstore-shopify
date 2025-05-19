@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const paintColorElement = document.querySelector('input[name="Paint Color"]');
         const vinylColorElement = document.querySelector('input[name="Vinyl Color"]')
 
-        paintColorElement?.click();
-        vinylColorElement?.click();
+        // paintColorElement?.click();
+        // vinylColorElement?.click();
  
         const paintColorAvisEl = Array.from(
             document.querySelectorAll('.ap-options__swatch-container .apo-title')
