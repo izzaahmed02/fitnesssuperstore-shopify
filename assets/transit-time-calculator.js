@@ -100,13 +100,18 @@ var TransitTimeCalculator = {
             userLoc.country_code = locationInfoCountry;
           }
           sessionStorage.userCityStateZip = `${userLoc.city} ${userLoc.region_code}`;
-        } else {
-          if (userLoc.country !== 'CA' && userLoc.country !== 'US' && userLoc.country !== 'PR') {
-            document.querySelector('.location-form #postalCode').value = userLoc.postal;
-            setUserLocationDisplay(userLoc);
-            TransitTimeCalculator.appendInvalidTransitTime();
-            return;
-          }
+        }
+
+        if (!userLoc.postal) {
+          TransitTimeCalculator.appendInvalidTransitTime();
+          return;
+        }
+
+        if (userLoc.country !== 'CA' && userLoc.country !== 'US' && userLoc.country !== 'PR') {
+          document.querySelector('.location-form #postalCode').value = userLoc.postal;
+          setUserLocationDisplay(userLoc);
+          TransitTimeCalculator.appendInvalidTransitTime();
+          return;
         }
       }
       
