@@ -104,6 +104,7 @@
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
+
   {%- style -%}
     .section-{{ section.id }}-padding {
       padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
@@ -133,6 +134,8 @@
   <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
   {% endif %}
   <script src="{{ 'product-sticky.js' | asset_url }}" defer="defer"></script>
+
+  <script src="{{ 'product-gallery.js' | asset_url }}" defer="defer"></script>
   
   {%- if product.quantity_price_breaks_configured? -%}
     <script src="{{ 'show-more.js' | asset_url }}" defer="defer"></script>
@@ -246,7 +249,7 @@
       </div>
 
       <div class="product-main-left-container">
-        <div class="product-main-left">
+        {% comment %} <div class="product-main-left">
           
           <div class="thumbnail-slider">
             {% for item in product.images %}
@@ -277,7 +280,122 @@
               </svg>
             </div>
           </div>
-        </div>
+        </div> {% endcomment %}
+
+        <product-gallery data-product-title="{{ product.title | escape }}">
+          <div class="custom-product-gallery">
+            <div class="custom-gallery-wrapper">
+              <!-- Thumbnails -->
+              {% assign image_media = product.media | where: "media_type", "image" %}
+              {% assign video_media = product.media | where: "media_type", "video" %}
+
+              <div class="custom-gallery-thumbnails only-desktop">
+                {%- assign image_limit = 4 -%}
+                {%- for media in image_media limit: image_limit -%}
+                  {% assign preview = media.preview_image %}
+                  {% assign is_last = forloop.last %}
+                  {% assign remaining = image_media.size | minus: image_limit %}
+
+                  <button
+                    class="thumbnail-btn{% if forloop.first %} is-active{% endif %}"
+                    data-media-id="{{ media.id }}"
+                    type="button"
+                  >
+                    <img 
+                      src="{{ preview | image_url: width: 100 }}"
+                      alt="{{ media.alt | escape }}"
+                      width="{{ preview.width }}"
+                      height="{{ preview.height }}"
+                      loading="lazy"
+                    >
+
+                    {%- if is_last and image_media.size > image_limit -%}
+                      <div class="thumbnail-overlay">+{{ remaining }}</div>
+                    {%- endif -%}
+                  </button>
+                {%- endfor -%}
+
+                {% if video_media.size > 0 %}
+                  {%- assign video = video_media.first -%}
+                  {% assign preview = video.preview_image %}
+
+                  <button
+                    class="thumbnail-btn is-video"
+                    data-media-id="{{ video.id }}"
+                    type="button"
+                  >
+                    <img 
+                      src="{{ preview | image_url: width: 100 }}"
+                      alt="Video thumbnail"
+                      width="{{ preview.width }}"
+                      height="{{ preview.height }}"
+                      loading="lazy"
+                    >
+                    <span class="thumbnail-video-icon">▶</span>
+                  </button>
+
+                  {% if video_media.size > 1 %}
+                    <div class="thumbnail-video-count">{{ video_media.size }} VIDEOS</div>
+                  {% endif %}
+                {% endif %}
+              </div>
+              
+              <!-- Main image -->
+              <div class="custom-gallery-main" data-main-media-wrapper>
+                {% assign first_media = product.media.first %}
+                {% assign preview = first_media.preview_image %}
+
+                <div 
+                  class="main-image-container" 
+                  data-media-id="{{ first_media.id }}" 
+                  data-zoom-container
+                >
+                  {% if first_media.media_type == 'image' %}
+                    <img 
+                      src="{{ preview | image_url: width: 800 }}"
+                      alt="{{ first_media.alt | escape }}"
+                      class="main-product-image"
+                      width="{{ preview.width }}"
+                      height="{{ preview.height }}"
+                      loading="eager"
+                    >
+                  {% elsif first_media.media_type == 'video' %}
+                    {{ first_media | media_tag }}
+                  {% else %}
+                    <div class="media-placeholder">Preview available in popup only.</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <template data-product-media>
+            [
+              {% for media in product.media %}
+                {
+                  "id": {{ media.id }},
+                  "media_type": "{{ media.media_type }}",
+                  "alt": {{ media.alt | json }},
+                  "preview_image": {
+                    "src": {{ media.preview_image | image_url: width: 800 | json }},
+                    "width": {{ media.preview_image.width }},
+                    "height": {{ media.preview_image.height }}
+                  }
+                  {% if media.media_type == 'video' %},
+                  "sources": [
+                    {% for source in media.sources %}
+                      {
+                        "url": {{ source.url | json }},
+                        "mime_type": {{ source.mime_type | json }}
+                      }{% unless forloop.last %},{% endunless %}
+                    {% endfor %}
+                  ]
+                  {% endif %}
+                }{% unless forloop.last %},{% endunless %}
+              {% endfor %}
+            ]
+          </template>
+        </product-gallery>
 
         {% if section.settings.accent_text != blank %}
           <div class="product__accesnt-text hidden lg:flex">
@@ -1517,6 +1635,29 @@
     </script>
   </div>
 </product-info>
+
+<div id="product-gallery-popup" class="product-popup-overlay" hidden>
+  <div class="product-popup-backdrop"></div>
+
+  <div class="product-popup" role="dialog" aria-modal="true">
+    <button class="popup-close" type="button" aria-label="Close popup">&times;</button>
+
+    <div class="popup-tabs">
+      <button class="popup-tab is-active" data-tab="images">Images</button>
+      <button class="popup-tab" data-tab="videos">Videos</button>
+    </div>
+
+    <div class="popup-content">
+      <div class="popup-media-viewer" data-popup-viewer></div>
+
+      <div class="popup-sidebar">
+        <div class="popup-product-title" data-popup-title></div>
+        <div class="popup-thumbnails" data-tab-content="images"></div>
+        <div class="popup-thumbnails hidden" data-tab-content="videos"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>window.product = {{ product | json }}</script>
 <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
