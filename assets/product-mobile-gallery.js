@@ -50,6 +50,7 @@ class MobileGallery extends HTMLElement {
         adaptiveHeight: true,
         prevArrow: '.main-slider-arrow--left',
         nextArrow: '.main-slider-arrow--right',
+        lazyLoad: 'ondemand',
       });
 
       this.attachSlideEvents();
@@ -90,51 +91,6 @@ class MobileGallery extends HTMLElement {
       $(this.slider).slick('unslick');
       this.slickInitialized = false;
     }
-
-    // if (shouldInit && !this.slickInitialized) {
-    //   $(this.slider).slick({
-    //     dots: true,
-    //     appendDots: this.dots,
-    //     arrows: true,
-    //     infinite: false,
-    //     adaptiveHeight: true,
-    //     prevArrow: '.main-slider-arrow--left',
-    //     nextArrow: '.main-slider-arrow--right',
-    //   });
-    //   this.attachSlideEvents();
-
-    //   $(this.slider).on('afterChange', (event, slick, currentSlide) => {
-    //     this.querySelectorAll('video').forEach((video) => {
-    //       try {
-    //         video.pause();
-    //         video.currentTime = 0;
-    //       } catch (e) {
-    //         console.warn('Could not pause video:', e);
-    //       }
-    //     });
-
-    //     this.querySelectorAll('iframe').forEach((iframe) => {
-    //       try {
-    //         // YouTube API
-    //         iframe.contentWindow?.postMessage(
-    //           '{"event":"command","func":"pauseVideo","args":""}',
-    //           '*',
-    //         );
-    //         // Vimeo API
-    //         iframe.contentWindow?.postMessage({ method: 'pause' }, '*');
-    //       } catch (e) {
-    //         console.warn('Could not send pause message to iframe:', e);
-    //       }
-    //     });
-    //   });
-
-    //   this.slickInitialized = true;
-    // }
-
-    // if (!shouldInit && this.slickInitialized) {
-    //   $(this.slider).slick('unslick');
-    //   this.slickInitialized = false;
-    // }
   }
 
   attachSlideEvents() {
@@ -182,21 +138,23 @@ class MobileGallery extends HTMLElement {
     this.popup.classList.add('is-active');
     document.body.style.overflow = 'hidden';
 
-    $(this.popupSlider).slick({
-      dots: true,
-      appendDots: this.popupDots,
-      arrows: false,
-      infinite: false,
-      initialSlide: index,
-      adaptiveHeight: true,
-    });
+    if (!$(this.popupSlider).hasClass('slick-initialized')) {
+      $(this.popupSlider).slick({
+        dots: true,
+        appendDots: this.popupDots,
+        arrows: false,
+        infinite: false,
+        initialSlide: index,
+        adaptiveHeight: true,
+        lazyLoad: 'ondemand',
+      });
+    }
 
     $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
       this.pauseAllMedia(this.popup);
 
       const currentSlideEl = slick.$slides[currentSlide];
 
-      // Перевірка та автозапуск YouTube
       const iframe = currentSlideEl?.querySelector('iframe');
       const overlay = currentSlideEl?.querySelector('.video-iframe-overlay');
 
@@ -212,7 +170,6 @@ class MobileGallery extends HTMLElement {
         );
       }
 
-      // Відновити всі overlay
       this.popupSlider
         .querySelectorAll('.video-iframe-overlay')
         .forEach((overlay) => {
@@ -255,29 +212,21 @@ class MobileGallery extends HTMLElement {
         closeBtn?.click();
       };
     }
-
-    // this.popup.querySelector('.mobile-popup-close').onclick = () => {
-    //   $(this.popupSlider).slick('unslick');
-    //   this.popup.hidden = true;
-    //   document.body.style.overflow = '';
-    //   this.pauseAllMedia(this.popup);
-    // };
   }
-
   renderPopupSlides(container) {
     const slides = this.querySelectorAll('.mobile-gallery-slide');
-
     container.innerHTML = '';
 
     slides.forEach((originalSlide) => {
       const clone = originalSlide.cloneNode(true);
-
       const iframe = clone.querySelector('iframe');
       const overlay = clone.querySelector('.video-iframe-overlay');
+      const img = clone.querySelector('img');
+      const video = clone.querySelector('video');
 
+      // YouTube
       if (iframe && iframe.src.includes('youtube.com')) {
         const url = new URL(iframe.src);
-        // url.searchParams.set('autoplay', '1');
         url.searchParams.set('muted', '1');
         url.searchParams.set('enablejsapi', '1');
 
@@ -302,7 +251,6 @@ class MobileGallery extends HTMLElement {
         newOverlay.addEventListener('click', () => {
           newOverlay.style.display = 'none';
           newIframe.style.pointerEvents = 'auto';
-
           newIframe.contentWindow?.postMessage(
             '{"event":"command","func":"playVideo","args":""}',
             '*',
@@ -312,8 +260,138 @@ class MobileGallery extends HTMLElement {
         clone.innerHTML = '';
         clone.appendChild(wrapper);
         container.appendChild(clone);
-      } else {
+        return;
+      }
+
+      // MP4
+      if (video) {
         container.appendChild(clone);
+        return;
+      }
+
+      // Image + zoom/pan
+      if (img) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'zoom-container';
+        wrapper.style.overflow = 'hidden';
+        wrapper.style.position = 'relative';
+
+        const zoomImg = document.createElement('img');
+        zoomImg.src = img.src;
+        zoomImg.alt = img.alt || '';
+        zoomImg.className = 'popup-zoom-image';
+        zoomImg.style.touchAction = 'none';
+        zoomImg.style.userSelect = 'none';
+
+        wrapper.appendChild(zoomImg);
+        clone.innerHTML = '';
+        clone.appendChild(wrapper);
+        container.appendChild(clone);
+
+        const highResSrc = img.src.replace(/width=\d+/, 'width=2048');
+
+        if (zoomImg.src !== highResSrc) {
+          const preload = new Image();
+          preload.src = highResSrc;
+          preload.onload = () => {
+            zoomImg.src = highResSrc;
+          };
+        }
+
+        let scale = 1;
+        let posX = 0,
+          posY = 0;
+        let lastPosX = 0,
+          lastPosY = 0;
+        let lastScale = 1;
+        let frameId = null;
+
+        const hammer = new Hammer(wrapper);
+        hammer.get('pinch').set({ enable: true });
+        hammer.get('doubletap').set({ taps: 2 });
+        hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+
+        hammer.on('pinchstart', () => {
+          lastScale = scale;
+        });
+
+        hammer.on('pinchmove', (e) => {
+          scale = Math.max(1, Math.min(lastScale * e.scale, 3));
+
+          if (scale === 1) {
+            posX = 0;
+            posY = 0;
+            lastPosX = 0;
+            lastPosY = 0;
+          }
+
+          updateTransform();
+        });
+
+        hammer.on('doubletap', () => {
+          if (scale < 1.5) {
+            scale = 1.5;
+          } else if (scale < 2) {
+            scale = 2;
+          } else if (scale < 3) {
+            scale = 3;
+          } else {
+            scale = 1;
+            posX = 0;
+            posY = 0;
+            lastPosX = 0;
+            lastPosY = 0;
+          }
+
+          updateTransform();
+        });
+
+        hammer.on('panstart', () => {
+          lastPosX = posX;
+          lastPosY = posY;
+        });
+
+        hammer.on('panmove', (e) => {
+          if (scale <= 1.01) return;
+
+          const rect = wrapper.getBoundingClientRect();
+          const imgWidth = zoomImg.naturalWidth * scale;
+          const imgHeight = zoomImg.naturalHeight * scale;
+
+          const maxX = Math.max((imgWidth - rect.width) / 2, 0);
+          const maxY = Math.max((imgHeight - rect.height) / 2, 0);
+
+          let nextX = lastPosX + e.deltaX * 1;
+          let nextY = lastPosY + e.deltaY * 1;
+
+          posX = Math.min(maxX, Math.max(-maxX, nextX));
+          posY = Math.min(maxY, Math.max(-maxY, nextY));
+
+          updateTransform();
+        });
+
+        hammer.on('panend', () => {
+          lastPosX = posX;
+          lastPosY = posY;
+        });
+
+        const updateTransform = () => {
+          if (frameId) cancelAnimationFrame(frameId);
+          frameId = requestAnimationFrame(() => {
+            zoomImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+          });
+        };
+
+        const slide = zoomImg.closest('.slick-slide');
+        if (slide) {
+          slide.addEventListener(
+            'touchmove',
+            (e) => {
+              if (scale > 1.01) e.stopPropagation();
+            },
+            { passive: false },
+          );
+        }
       }
     });
   }
