@@ -400,6 +400,19 @@ class ProductGallery extends HTMLElement {
 
         btn.appendChild(img);
         btn.addEventListener('click', () => {
+          const zoomedViewer = popup.querySelector(
+            '.popup-media-viewer.is-zoomed',
+          );
+
+          if (zoomedViewer) {
+            zoomedViewer.classList.remove('is-zoomed');
+            const inner = zoomedViewer.querySelector('.popup-media-inner');
+            if (inner) {
+              inner.style.left = '0px';
+              inner.style.top = '0px';
+            }
+          }
+
           this.renderPopupViewer(media.id, viewer);
           this.updatePopupThumbActive(media.id);
         });
@@ -429,6 +442,19 @@ class ProductGallery extends HTMLElement {
         const type = tab.dataset.tab;
         tabImages.classList.toggle('hidden', type !== 'images');
         tabVideos.classList.toggle('hidden', type !== 'videos');
+
+        const zoomedViewer = popup.querySelector(
+          '.popup-media-viewer.is-zoomed',
+        );
+
+        if (zoomedViewer) {
+          zoomedViewer.classList.remove('is-zoomed');
+          const inner = zoomedViewer.querySelector('.popup-media-inner');
+          if (inner) {
+            inner.style.left = '0px';
+            inner.style.top = '0px';
+          }
+        }
 
         let firstMedia = null;
         if (type === 'images') {
@@ -460,14 +486,89 @@ class ProductGallery extends HTMLElement {
     if (!media) return;
 
     viewer.innerHTML = '';
+    if (viewer.classList.contains('popup-media-viewer-media-zoom-img')) {
+      viewer.classList.remove('popup-media-viewer-media-zoom-img');
+    }
 
     if (media.media_type === 'image') {
+      viewer.classList.add('popup-media-viewer-media-zoom-img');
+
+      const inner = document.createElement('div');
+      inner.className = 'popup-media-inner';
+
       const img = document.createElement('img');
-      img.src = media.preview_image.src.replace(/width=\d+/, 'width=1200');
+      img.src = media.preview_image.src.replace(/width=\d+/, 'width=2048');
       img.alt = media.alt || '';
-      img.style.maxWidth = '100%';
-      img.style.maxHeight = '100%';
-      viewer.appendChild(img);
+      img.className = 'popup-media-zoom-img';
+
+      inner.appendChild(img);
+      viewer.appendChild(inner);
+
+      let isZoomed = false;
+
+      function handleMouseMove(e) {
+        if (!isZoomed) return;
+
+        const rect = viewer.getBoundingClientRect();
+
+        const x = e ? e.clientX - rect.left : rect.width / 2;
+        const y = e ? e.clientY - rect.top : rect.height / 2;
+
+        const imgWidth = img.naturalWidth;
+        const imgHeight = img.naturalHeight;
+
+        const viewWidth = rect.width;
+        const viewHeight = rect.height;
+
+        if (imgWidth <= viewWidth && imgHeight <= viewHeight) {
+          inner.style.left = '0px';
+          inner.style.top = '0px';
+          return;
+        }
+
+        const maxX = imgWidth - viewWidth;
+        const maxY = imgHeight - viewHeight;
+
+        const left = Math.max(0, Math.min((x / viewWidth) * maxX, maxX));
+        const top = Math.max(0, Math.min((y / viewHeight) * maxY, maxY));
+
+        inner.style.left = `-${left}px`;
+        inner.style.top = `-${top}px`;
+      }
+
+      viewer.addEventListener('click', () => {
+        const rect = viewer.getBoundingClientRect();
+        const viewW = rect.width;
+        const viewH = rect.height;
+        const imgW = img.naturalWidth;
+        const imgH = img.naturalHeight;
+
+        const isTooSmall = imgW <= viewW && imgH <= viewH;
+        if (isTooSmall) {
+          viewer.style.cursor = 'default';
+          // viewer.style.pointerEvents = 'none';
+          return;
+        }
+
+        isZoomed = !isZoomed;
+        viewer.classList.toggle('is-zoomed', isZoomed);
+
+        if (isZoomed) {
+          handleMouseMove();
+          viewer.addEventListener('mousemove', handleMouseMove);
+        } else {
+          viewer.removeEventListener('mousemove', handleMouseMove);
+          inner.style.left = '0px';
+          inner.style.top = '0px';
+        }
+      });
+
+      // const img = document.createElement('img');
+      // img.src = media.preview_image.src.replace(/width=\d+/, 'width=1200');
+      // img.alt = media.alt || '';
+      // img.style.maxWidth = '100%';
+      // img.style.maxHeight = '100%';
+      // viewer.appendChild(img);
       return;
     }
 
