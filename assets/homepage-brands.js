@@ -8,28 +8,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	const brandSwiper = new Swiper(brandSliderEl, {
 		slidesPerView: 'auto',
-		spaceBetween: 32,
-		speed: 600,
+		observer: true,
+		observeParents: true,
 		navigation: {
-			nextEl: '.homepage-brands__inner .homepage-brands__slider-btn.swiper-button-next',
-			prevEl: '.homepage-brands__inner .homepage-brands__slider-btn.swiper-button-prev'
+			nextEl: '.homepage-brands__inner .swiper-button-next',
+			prevEl: '.homepage-brands__inner .swiper-button-prev',
 		},
-
 		breakpoints: {
-			375: {
-				spaceBetween: 16,
+			320: {
+				spaceBetween: 10,
 				pagination: {
-					el: '.homepage-brands__inner  .swiper-pagination',
+					el: '.homepage-brands__inner .swiper-pagination',
 					clickable: true,
 				},
 			},
-			992: {
-				spaceBetween: 32,
-				pagination: false,
+			750: {
+				spaceBetween: 20,
 			},
 		},
-		observer: true,
-		observeParents: true,
 	});
 });
 

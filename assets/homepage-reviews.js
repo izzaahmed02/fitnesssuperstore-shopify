@@ -44,19 +44,19 @@ function initReviewsTabs() {
 				textElems.forEach(elem => truncateIfTooManyLines(elem, 4));
 			}
 
-			// 3) Update visible slides (hide all except first three if viewport <= 576px)
+			// 3) Update visible slides (hide all except first three if viewport <= 750px)
 			updateVisibleSlides();
 
 			// 4) Initialize or update/destroy the Swiper instance based on viewport width
-			if (window.innerWidth > 576) {
-				// If above 576px, initialize or update the Swiper
+			if (window.innerWidth > 750) {
+				// If above 750px, initialize or update the Swiper
 				if (!window.swipersReviews[targetTab]) {
 					initSwiperForTab(window.swipersReviews, targetTab, activePanel);
 				} else {
 					window.swipersReviews[targetTab].update();
 				}
 			} else {
-				// If viewport is 576px or less, destroy any existing Swiper instance for this tab
+				// If viewport is 750px or less, destroy any existing Swiper instance for this tab
 				if (window.swipersReviews[targetTab]) {
 					window.swipersReviews[targetTab].destroy(true, true);
 					window.swipersReviews[targetTab] = null;
@@ -86,21 +86,20 @@ function initSwiperForTab(swipersReviews, targetTab, activePanel) {
 	// Create a new Swiper instance with your desired configuration
 	const swiperInstance = new Swiper(swiperContainer, {
 		slidesPerView: 'auto',
-		spaceBetween: 32,
 		observer: true,
 		observeParents: true,
-		navigation: {
-			nextEl: '.homepage-reviews__swiper-controls .swiper-button-next',
-			prevEl: '.homepage-reviews__swiper-controls .swiper-button-prev',
-		},
 		breakpoints: {
-			375: {
-				spaceBetween: 16,
+			320: {
+				spaceBetween: 10,
 			},
-			992: {
-				spaceBetween: 32,
-			}
-		}
+			750: {
+				spaceBetween: 20,
+				navigation: {
+					nextEl: '.homepage-reviews__swiper-controls .swiper-button-next',
+					prevEl: '.homepage-reviews__swiper-controls .swiper-button-prev',
+				},
+			},
+		},
 	});
 
 	// Store the instance using the tab identifier as the key
@@ -170,7 +169,7 @@ function getNumberOfLines(element) {
 }
 
 /**
- * Updates the visibility of slides: if the viewport width is 576px or less,
+ * Updates the visibility of slides: if the viewport width is 750px or less,
  * only the first three slides in each tab panel will be shown.
  */
 function updateVisibleSlides() {
@@ -178,7 +177,7 @@ function updateVisibleSlides() {
 	tabPanels.forEach(panel => {
 		const slides = panel.querySelectorAll('.swiper-slide');
 		slides.forEach((slide, index) => {
-			if (window.innerWidth <= 576) {
+			if (window.innerWidth <= 750) {
 				// Only display the first three slides
 				slide.style.display = index < 3 ? '' : 'none';
 			} else {
@@ -191,11 +190,11 @@ function updateVisibleSlides() {
 
 /**
  * Handles window resize events by destroying all review Swiper instances
- * when the viewport is 576px or less and updating slide visibility.
+ * when the viewport is 750px or less and updating slide visibility.
  * If resized back to larger screens, the active tab's Swiper is reinitialized.
  */
 function handleReviewsResize() {
-	if (window.innerWidth <= 576) {
+	if (window.innerWidth <= 750) {
 		// Destroy all existing Swiper instances on small screens
 		Object.keys(window.swipersReviews).forEach((key) => {
 			const swiper = window.swipersReviews[key];
