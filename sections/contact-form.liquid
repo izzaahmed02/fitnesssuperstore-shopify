@@ -179,34 +179,47 @@ document.addEventListener(
     evt.preventDefault();
     evt.stopPropagation();
 
-    try {
-      const fd = new FormData(evt.target);
+    const fd     = new FormData(evt.target);
+    const email  = (fd.get('email') || '').trim();          
+    const isMail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); 
 
-      const res = await fetch('http://fitnesssuperstore-api.azurewebsites.net/api/email/shopifycontactformsubmit', { method: 'POST', body: fd });
+    if (!isMail) {
+      const errorBanner = document.querySelector('.message.error');
+      if (errorBanner) {
+        errorBanner.querySelector('.content').textContent =
+          'Please enter a valid e-mail address.';
+        errorBanner.style.display = 'block';
+        errorBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return; 
+    }
+
+    try {
+      const res = await fetch(
+        'https://fitnesssuperstore-api.azurewebsites.net/api/email/shopifycontactformsubmit',
+        { method: 'POST', body: fd }
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const { success } = await res.json();
       if (!success) throw new Error('API returned success:false');
 
       evt.target.reset();
-
-      Globo.FormBuilder.initialize();
-
+      Globo.FormBuilder.initialize();        
       setTimeout(() => {
-          const successBanner = document.querySelector('.message.success');
-          if (successBanner) {
-            successBanner.style.display = 'block';
-          }
+        const successBanner = document.querySelector('.message.success');
+        if (successBanner) successBanner.style.display = 'block';
       });
     } catch (err) {
-      const errorBanner   = document.querySelector('.message.error');
+      const errorBanner = document.querySelector('.message.error');
       if (errorBanner) {
-        errorBanner.querySelector('.content').innerHTML = 'Something went wrong, please try again';
+        errorBanner.querySelector('.content').textContent =
+          'Something went wrong, please try again.';
         errorBanner.style.display = 'block';
       }
     }
   },
-  true
+  true 
 );
 </script>
 
