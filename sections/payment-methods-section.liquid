@@ -60,7 +60,6 @@
 .accordion-header {
   background-color: #f5f5f5;
   padding: 15px;
-  cursor: pointer;
   font-size: 18px;
   font-weight: bold;
   display: flex;
@@ -80,17 +79,27 @@
 }
 
 .accordion-content {
-  display: none;
   padding: 15px;
   font-size: 14px;
   line-height: 1.6;
 }
 
-.accordion-content.active {
-  display: block;
+/* Desktop Styles (> 768px) */
+@media (min-width: 769px) {
+  .accordion-header {
+    cursor: default; /* Non-clickable on desktop */
+  }
+
+  .accordion-header::after {
+    content: none; /* Remove +/− indicators */
+  }
+
+  .accordion-content {
+    display: block; /* Always show content */
+  }
 }
 
-/* Responsive Design */
+/* Mobile Styles (≤ 768px) */
 @media (max-width: 768px) {
   .payment-methods-container {
     flex-direction: column;
@@ -105,6 +114,18 @@
 
   .accordion-container {
     padding: 20px 0;
+  }
+
+  .accordion-header {
+    cursor: pointer; /* Clickable on mobile */
+  }
+
+  .accordion-content {
+    display: none; /* Hidden by default on mobile */
+  }
+
+  .accordion-content.active {
+    display: block; /* Show when active */
   }
 }
 {% endstyle %}
@@ -122,7 +143,7 @@
     </ul>
   </div>
 
-  <!-- Accordion Content -->
+  <!-- Accordion/Content Section -->
   <div class="accordion-container">
     {% for block in section.blocks %}
       {% if block.type == 'accordion' %}
@@ -138,27 +159,57 @@
 </div>
 
 <script>
-// JavaScript for Accordion Functionality
-document.querySelectorAll('.accordion-header').forEach(header => {
-  header.addEventListener('click', () => {
-    const content = header.nextElementSibling;
-    const isActive = content.classList.contains('active');
+// JavaScript for Accordion Functionality on Mobile
+function initializeAccordions() {
+  const isMobile = window.innerWidth <= 768;
 
-    // Close all other accordions
-    document.querySelectorAll('.accordion-content').forEach(item => {
-      item.classList.remove('active');
-    });
-    document.querySelectorAll('.accordion-header').forEach(item => {
-      item.classList.remove('active');
-    });
-
-    // Toggle the clicked accordion
-    if (!isActive) {
-      content.classList.add('active');
-      header.classList.add('active');
-    }
+  // Remove existing event listeners by re-querying headers
+  document.querySelectorAll('.accordion-header').forEach(header => {
+    // Remove any existing click listeners (to avoid duplicates)
+    header.removeEventListener('click', toggleAccordion);
   });
-});
+
+  if (isMobile) {
+    // Apply accordion functionality only on mobile
+    document.querySelectorAll('.accordion-header').forEach(header => {
+      header.addEventListener('click', toggleAccordion);
+    });
+
+    // Ensure only one accordion is open at a time
+    function toggleAccordion() {
+      const content = this.nextElementSibling;
+      const isActive = content.classList.contains('active');
+
+      // Close all other accordions
+      document.querySelectorAll('.accordion-content').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.querySelectorAll('.accordion-header').forEach(item => {
+        item.classList.remove('active');
+      });
+
+      // Toggle the clicked accordion
+      if (!isActive) {
+        content.classList.add('active');
+        this.classList.add('active');
+      }
+    }
+  } else {
+    // On desktop, ensure all content is visible
+    document.querySelectorAll('.accordion-content').forEach(content => {
+      content.classList.add('active');
+    });
+    document.querySelectorAll('.accordion-header').forEach(header => {
+      header.classList.add('active');
+    });
+  }
+}
+
+// Initialize on page load
+initializeAccordions();
+
+// Re-initialize on window resize to handle dynamic changes
+window.addEventListener('resize', initializeAccordions);
 </script>
 
 {% schema %}
