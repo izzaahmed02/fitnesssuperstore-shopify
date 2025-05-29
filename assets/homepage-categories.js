@@ -22,32 +22,24 @@ tabButtons.forEach(btn => {
 
 			swipers[targetTab] = new Swiper(swiperContainer, {
 				slidesPerView: 'auto',
-				spaceBetween: 32,
-				loop: true,
-				autoplay: {
-					speed: 2000,
-					pauseOnMouseEnter: true,
-				},
 				observer: true,
 				observeParents: true,
+				navigation: {
+					nextEl: '.homepage-categories__swiper-controls .swiper-button-next',
+					prevEl: '.homepage-categories__swiper-controls .swiper-button-prev',
+				},
 				breakpoints: {
-					375: {
-						spaceBetween: 16,
+					320: {
+						spaceBetween: 10,
 						pagination: {
 							el: '.homepage-categories__swiper-controls .swiper-pagination',
 							clickable: true,
 						},
-						navigation: {
-							nextEl: '.homepage-categories__swiper-controls .swiper-button-next',
-							prevEl: '.homepage-categories__swiper-controls .swiper-button-prev',
-						},
-						autoplay: false,
-						loop: false,
 					},
-					992: {
-						spaceBetween: 32,
-					}
-				}
+					750: {
+						spaceBetween: 20,
+					},
+				},
 			});
 		} else {
 			swipers[targetTab].update();
