@@ -1,16 +1,19 @@
 {% style %}
 
 .sidebar li {
-  padding: 0; /* Remove padding from li to let <a> handle it */
+  padding: 0;
   border: 1px solid #E5E5E5;
   margin-bottom: 12px;
   border-radius: 4px;
   list-style: none;
 }
 
-/* Sidebar Link */
+  .sidebar li.active {
+  background-color: #e67e22;
+}
+
 .sidebar a {
-  display: block; /* Make the <a> fill the entire <li> */
+  display: block;
   text-decoration: none;
   color: #000;
   font-family: DM Sans;
@@ -18,9 +21,9 @@
   font-size: 18px;
   line-height: 24px;
   letter-spacing: 0px;
-  padding: 12px; /* Padding inside the <a> */
-  border-radius: 4px; /* Match li border-radius */
-  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+  padding: 12px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 
@@ -220,23 +223,21 @@ font-family: DM Sans;
 </div>
 
 <script>
-// JavaScript for Accordion Functionality on Mobile
-function initializeAccordions() {
+// JavaScript for Accordion and Sidebar Functionality
+function initializeAccordionsAndSidebar() {
   const isMobile = window.innerWidth <= 768;
 
-  // Remove existing event listeners by re-querying headers
+  // Remove existing event listeners from accordion headers
   document.querySelectorAll('.accordion-header').forEach(header => {
-    // Remove any existing click listeners (to avoid duplicates)
     header.removeEventListener('click', toggleAccordion);
   });
 
+  // Accordion functionality for mobile
   if (isMobile) {
-    // Apply accordion functionality only on mobile
     document.querySelectorAll('.accordion-header').forEach(header => {
       header.addEventListener('click', toggleAccordion);
     });
 
-    // Ensure only one accordion is open at a time
     function toggleAccordion() {
       const content = this.nextElementSibling.querySelector('.accordion-content-text');
       const isActive = content.classList.contains('active');
@@ -256,7 +257,7 @@ function initializeAccordions() {
       }
     }
   } else {
-    // On desktop, ensure all content is visible
+    // On desktop, ensure all accordion content is visible
     document.querySelectorAll('.accordion-content-text').forEach(content => {
       content.classList.add('active');
     });
@@ -264,13 +265,64 @@ function initializeAccordions() {
       header.classList.add('active');
     });
   }
+
+  // Sidebar link click handling
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault(); // Prevent default anchor behavior
+      const targetId = this.getAttribute('href').substring(1); // Get target ID without #
+      const targetElement = document.getElementById(targetId);
+
+      // Remove active class from all sidebar li and a elements
+      document.querySelectorAll('.sidebar li').forEach(li => {
+        li.classList.remove('active');
+      });
+      document.querySelectorAll('.sidebar a').forEach(a => {
+        a.classList.remove('active');
+      });
+
+      // Add active class to the clicked link's parent li and the link itself
+      this.parentElement.classList.add('active');
+      this.classList.add('active');
+
+      // Scroll to the target accordion section
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Highlight sidebar item based on URL hash on page load
+  const hash = window.location.hash.substring(1); // Get hash without #
+  if (hash) {
+    const targetLink = document.querySelector(`.sidebar a[href="#${hash}"]`);
+    if (targetLink) {
+      // Remove active classes from all
+      document.querySelectorAll('.sidebar li').forEach(li => {
+        li.classList.remove('active');
+      });
+      document.querySelectorAll('.sidebar a').forEach(a => {
+        a.classList.remove('active');
+      });
+
+      // Add active class to the matching link and its parent li
+      targetLink.classList.add('active');
+      targetLink.parentElement.classList.add('active');
+
+      // Scroll to the target section
+      const targetElement = document.getElementById(hash);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }
 }
 
 // Initialize on page load
-initializeAccordions();
+initializeAccordionsAndSidebar();
 
-// Re-initialize on window resize to handle dynamic changes
-window.addEventListener('resize', initializeAccordions);
+// Re-initialize on window resize
+window.addEventListener('resize', initializeAccordionsAndSidebar);
 </script>
 
 {% schema %}
