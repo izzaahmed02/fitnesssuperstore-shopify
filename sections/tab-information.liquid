@@ -1,6 +1,117 @@
 {% schema %}
-  {
-    "name": "Section name",
-    "settings": []
-  }
+{
+  "name": "Tab Information",
+  "settings": [],
+  "blocks": [
+    {
+      "type": "tab",
+      "name": "Tab",
+      "settings": [
+        {
+          "type": "text",
+          "id": "tab_title",
+          "label": "Tab Title",
+          "default": "New Tab"
+        },
+        {
+          "type": "textarea",
+          "id": "tab_content",
+          "label": "Tab Content",
+          "default": "Enter tab content here."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Tab Information",
+      "category": "Custom",
+      "blocks": [
+        {
+          "type": "tab",
+          "settings": {
+            "tab_title": "US Territories, California, Canada",
+            "tab_content": "For California buyers, sales tax will be calculated based on the combined state, county, and district rates, which ranges from 7.25% to 10.25%. 5% sales tax will be charged for Wisconsin buyers and 6.625% will be charged to New Jersey buyers upon checkout. Customers from other states in the US will not be charged a sales tax.\n\nUS Territories Buyers: No additional fees will be charged upon delivery. Our online checkout price includes door-to-door shipping to your address, which amount to 10.5% for Puerto Rico and 4% for Guam. No taxes for USVI.\n\nCanada Buyers: Ontario: 13%, Atlantic provinces (Newfoundland, Nova Scotia, New Brunswick, PEI): 15%, All other provinces (Alberta, British Columbia, Manitoba, Northwest Territories, Nunavut, Quebec, Saskatchewan, Yukon): 5%"
+          }
+        },
+        {
+          "type": "tab",
+          "settings": {
+            "tab_title": "Other Countries",
+            "tab_content": "Content for other countries goes here."
+          }
+        },
+        {
+          "type": "tab",
+          "settings": {
+            "tab_title": "Special Conditions",
+            "tab_content": "Special conditions content goes here."
+          }
+        }
+      ]
+    }
+  ]
+}
 {% endschema %}
+
+<div class="tax-info-tabs">
+  <ul class="tab-nav">
+    {% for block in section.blocks %}
+      <li class="{% if forloop.first %}active{% endif %}" data-tab="tab-{{ block.id }}">{{ block.settings.tab_title }}</li>
+    {% endfor %}
+  </ul>
+  <div class="tab-content">
+    {% for block in section.blocks %}
+      <div class="tab-pane {% if forloop.first %}active{% endif %}" id="tab-{{ block.id }}">
+        {{ block.settings.tab_content | newline_to_br }}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+.tax-info-tabs .tab-nav {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  border-bottom: 1px solid #ddd;
+}
+.tax-info-tabs .tab-nav li {
+  padding: 10px 20px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  margin-right: 5px;
+}
+.tax-info-tabs .tab-nav li.active {
+  background: #f5f5f5;
+  font-weight: bold;
+}
+.tax-info-tabs .tab-content {
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-top: none;
+}
+.tax-info-tabs .tab-pane {
+  display: none;
+}
+.tax-info-tabs .tab-pane.active {
+  display: block;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const tabs = document.querySelectorAll('.tab-nav li');
+  const panes = document.querySelectorAll('.tab-pane');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      tabs.forEach(t => t.classList.remove('active'));
+      panes.forEach(p => p.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById(this.getAttribute('data-tab')).classList.add('active');
+    });
+  });
+});
+</script>
