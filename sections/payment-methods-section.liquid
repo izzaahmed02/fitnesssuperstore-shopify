@@ -46,6 +46,20 @@
   color: #e67e22;
 }
 
+/* Logo Container */
+.logo-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.logo-image {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+}
+
 /* Accordion Section */
 .accordion-container {
   flex: 1;
@@ -150,8 +164,22 @@
       {% if block.type == 'accordion' %}
         <div class="accordion" id="{{ block.settings.accordion_id }}">
           <div class="accordion-header">{{ block.settings.accordion_title }}</div>
-          <div class="accordion-content-text">
-            {{ block.settings.accordion_content }}
+          <div class="accordion-content">
+            <!-- Logo Container -->
+            {% if block.settings.num_logos > 0 %}
+              <div class="logo-container">
+                {% for i in (1..block.settings.num_logos) %}
+                  {% assign logo_key = 'logo_' | append: i %}
+                  {% if block.settings[logo_key] %}
+                    <img src="{{ block.settings[logo_key] | img_url: '100x' }}" alt="{{ block.settings.accordion_title }} Logo {{ i }}" class="logo-image">
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+            <!-- Accordion Content Text -->
+            <div class="accordion-content-text">
+              {{ block.settings.accordion_content }}
+            </div>
           </div>
         </div>
       {% endif %}
@@ -178,7 +206,7 @@ function initializeAccordions() {
 
     // Ensure only one accordion is open at a time
     function toggleAccordion() {
-      const content = this.nextElementSibling;
+      const content = this.nextElementSibling.querySelector('.accordion-content-text');
       const isActive = content.classList.contains('active');
 
       // Close all other accordions
@@ -260,6 +288,40 @@ window.addEventListener('resize', initializeAccordions);
           "default": "accordion-id"
         },
         {
+          "type": "range",
+          "id": "num_logos",
+          "label": "Number of Logos",
+          "min": 0,
+          "max": 5,
+          "step": 1,
+          "default": 0
+        },
+        {
+          "type": "image_picker",
+          "id": "logo_1",
+          "label": "Logo 1"
+        },
+        {
+          "type": "image_picker",
+          "id": "logo_2",
+          "label": "Logo 2"
+        },
+        {
+          "type": "image_picker",
+          "id": "logo_3",
+          "label": "Logo 3"
+        },
+        {
+          "type": "image_picker",
+          "id": "logo_4",
+          "label": "Logo 4"
+        },
+        {
+          "type": "image_picker",
+          "id": "logo_5",
+          "label": "Logo 5"
+        },
+        {
           "type": "richtext",
           "id": "accordion_content",
           "label": "Accordion Content",
@@ -291,6 +353,7 @@ window.addEventListener('resize', initializeAccordions);
           "settings": {
             "accordion_title": "Credit & Debit Cards",
             "accordion_id": "credit-debit-cards",
+            "num_logos": 4,
             "accordion_content": "<p>We welcome Visa, MasterCard, Discover & American Express. Safely input your credit card information directly on the checkout page, or request an emailed invoice from us to complete your order by phone. Please note: your credit card statement will show the charge from us as \"TFG 800-523-EST.\"</p>"
           }
         },
@@ -299,7 +362,8 @@ window.addEventListener('resize', initializeAccordions);
           "settings": {
             "accordion_title": "Leasing & Financing",
             "accordion_id": "leasing-financing",
-            "accordion_content": "<p>Enjoy the convenience of installment payment offerings on our online partner checkout portal! Simply select the payment point of your choice below in the checkout to proceed!</p>"
+            "num_logos": 5,
+            "accordion_content": "<p>Enjoy the convenience of installment payment offerings of our partner online payment portals! Simply select the payment portal of your choice below the \"Proceed to Checkout\" option, and choose your installment plan.</p><p>View our comparison chart here to discover which financing option is best for you.</p><p>Explore comprehensive financing options for your commercial gym or fitness facility through the Geneva Capital. Learn more about their terms and conditions <a href=\"#\">here</a>.</p><p>View our comparison chart here to discover which financing option is best for you.</p><p>*Geneva Capital is only available for businesses, thus requiring a separate financing application process directly through their Sales Manager. The other options mentioned above are available upon online checkout.</p>"
           }
         }
       ]
