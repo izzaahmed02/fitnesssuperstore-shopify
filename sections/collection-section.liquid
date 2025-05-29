@@ -8,166 +8,115 @@
         assign results_url = '?q=' | append: terms | append: '&options%5Bprefix%5D=last&sort_by=' | append: sort_by
     endif
 -%}
+
+{%- capture contentForQuerystring -%}{{ content_for_header }}{%- endcapture -%}
+{%- assign pageUrl = contentForQuerystring | split: '"pageurl":"' | last | split: '"' | first | split: '.myshopify.com' | last | replace: '\/', '/' | replace: '%20', ' ' | replace: '\u0026', '&' -%}
+{%- assign products_per_page = 30 -%}
+
 <div class="page-width">
     <div id="ProductGridContainer" class="collection-wrapper">
+        <div class="collection-grid-top">
+            <input type="text" id="search-input" placeholder="Search within collection">
+
+            <div class="right-side">
+                <facet-filters-form class="facets facets-vertical-sort small-hide">
+                    <form class="facets-vertical-form" id="FacetSortForm">
+                        <div class="facet-filters sorting caption">
+                            <div class="facet-filters__field">
+                                <div class="select">
+                                    {%- assign sort_by = collection.sort_by | default: collection.default_sort_by -%}
+                                    <select
+                                        name="sort_by"
+                                        class="facet-filters__sort select__select caption-large"
+                                        id="SortBy"
+                                        aria-describedby="a11y-refresh-page-message"
+                                    >
+                                        {%- for option in collection.sort_options -%}
+                                            <option
+                                                value="{{ option.value | escape }}"
+                                                {% if option.value == sort_by %}
+                                                    selected="selected"
+                                                {% endif %}
+                                            >
+                                                {{ 'products.facets.sort_by_label' | t }}
+                                                {{ option.name | escape }}
+                                            </option>
+                                        {%- endfor -%}
+                                    </select>
+                                    {% render 'icon-caret' %}
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </facet-filters-form>
+                {%- for i in (1..1) -%}
+                    {%- unless pageUrl contains "?" -%}{% break %}{%- endunless -%}
+                    {%- if pageUrl contains "view=30" -%}{%- assign products_per_page = 30 -%}{%- endif -%}
+                    {%- if pageUrl contains "view=60" -%}{%- assign products_per_page = 60 -%}{%- endif -%}
+                    {%- if pageUrl contains "view=90" -%}{%- assign products_per_page = 90 -%}{%- endif -%}
+                    {%- if pageUrl contains "view=120" -%}{%- assign products_per_page = 120 -%}{%- endif -%}
+                    {%- if pageUrl contains "view=99999" -%}{%- assign products_per_page = 99999 -%}{%- endif -%}
+                {%- endfor -%}
+                <div class="sort-per-page">
+                    <span class="label">Show </span>
+                    <div class="select">
+                        <select id="sel1" class="num">
+                            <option value="/collections/{{ collection.handle }}?view=30"
+                                    {% if products_per_page == 30 %}selected="selected"{% endif %}>30
+                            </option>
+                            <option value="/collections/{{ collection.handle }}?view=60"
+                                    {% if products_per_page == 60 %}selected="selected"{% endif %}>60
+                            </option>
+                            <option value="/collections/{{ collection.handle }}?view=90"
+                                    {% if products_per_page == 90 %}selected="selected"{% endif %}>90
+                            </option>
+                            <option value="/collections/{{ collection.handle }}?view=120"
+                                    {% if products_per_page == 120 %}selected="selected"{% endif %}>120
+                            </option>
+                        </select>
+                        {% render 'icon-caret' %}
+                    </div>
+                    <span class="label"> per page</span>
+                </div>
+            </div>
+        </div>
+
         <div class="collection-filter-wrapper">
             {{ 'component-facets.css' | asset_url | stylesheet_tag }}
             <script src="{{ 'facets.js' | asset_url }}" defer="defer"></script>
             <aside
-                    aria-labelledby="verticalTitle"
-                    class="facets-wrapper{% unless section.settings.enable_filtering %} facets-wrapper--no-filters{% endunless %}"
-                    id="main-collection-filters"
-                    data-id="{{ section.id }}">
+                aria-labelledby="verticalTitle"
+                class="facets-wrapper{% unless section.settings.enable_filtering %} facets-wrapper--no-filters{% endunless %}"
+                id="main-collection-filters"
+                data-id="{{ section.id }}"
+            >
                 {% render 'facets',
-                        results: collection,
-                        enable_filtering: true,
-                        enable_sorting: true,
-                        filter_type: 'vertical',
-                        paginate: paginate
+                    results: collection,
+                    enable_filtering: true,
+                    enable_sorting: false,
+                    filter_type: 'horizontal',
+                    paginate: paginate
                 %}
             </aside>
+            {% paginate collection.products by products_per_page %}
+                {% assign current_page = paginate.current_page %}
+                {% assign current_offset = paginate.current_offset %}
+                {% assign items_count = paginate.items %}
+            {% endpaginate %}
+            {% assign current_offset = current_offset | plus: 1 %}
+            {% assign page_count = current_page | times: products_per_page %}
+            <div class="collecion-count">
+               <span>
+                   {% if current_offset != items_count %} {{ current_offset }}-{% if page_count <= items_count %}{{ page_count }}{% else %}{{ items_count }}{% endif %}{% else %}{{ current_offset }}{% endif %}
+               </span> of {{ items_count }}
+            </div>
         </div>
 
-        <div id="ProductGridContainer" class="collection-product-wrapper">
+        <div class="collection-product-wrapper">
             {%- liquid
                 assign sort_by = collection.sort_by | default: collection.default_sort_by
             -%}
-            <div class="collection-grid-top">
-                <input type="text" id="search-input" placeholder="Search within collection">
-
-                <div class="right-side">
-                    <facet-filters-form class="facets facets-vertical-sort small-hide">
-                        <form class="facets-vertical-form" id="FacetSortForm">
-                            <div class="facet-filters sorting caption">
-                                <div class="facet-filters__field">
-                                    <div class="select">
-                                        {%- assign sort_by = collection.sort_by | default: collection.default_sort_by -%}
-                                        <select
-                                                name="sort_by"
-                                                class="facet-filters__sort select__select caption-large"
-                                                id="SortBy"
-                                                aria-describedby="a11y-refresh-page-message">
-                                            {%- for option in collection.sort_options -%}
-                                                <option
-                                                        value="{{ option.value | escape }}"
-                                                        {% if option.value == sort_by %}
-                                                            selected="selected"
-                                                        {% endif %}
-                                                >
-                                                    {{ 'products.facets.sort_by_label' | t }}
-                                                    {{ option.name | escape }}
-                                                </option>
-                                            {%- endfor -%}
-                                        </select>
-                                        {% render 'icon-caret' %}
-                                    </div>
-                                </div>
-                            </div>
-
-                        </form>
-                    </facet-filters-form>
-                    {%- capture contentForQuerystring -%}{{ content_for_header }}{%- endcapture -%}
-                    {%- assign pageUrl = contentForQuerystring | split: '"pageurl":"' | last | split: '"' | first | split: '.myshopify.com' | last | replace: '\/', '/' | replace: '%20', ' ' | replace: '\u0026', '&' -%}
-                    {%- assign products_per_page = 30 -%}
-                    {%- for i in (1..1) -%}
-                        {%- unless pageUrl contains "?" -%}{% break %}{%- endunless -%}
-                        {%- if pageUrl contains "view=30" -%}{%- assign products_per_page = 30 -%}{%- endif -%}
-                        {%- if pageUrl contains "view=60" -%}{%- assign products_per_page = 60 -%}{%- endif -%}
-                        {%- if pageUrl contains "view=90" -%}{%- assign products_per_page = 90 -%}{%- endif -%}
-                        {%- if pageUrl contains "view=120" -%}{%- assign products_per_page = 120 -%}{%- endif -%}
-                        {%- if pageUrl contains "view=99999" -%}{%- assign products_per_page = 99999 -%}{%- endif -%}
-                    {%- endfor -%}
-                    <div class="sort-per-page">
-                        <span class="label">Show </span>
-                        <div class="select">
-                            <select id="sel1" class="num">
-                                <option value="/collections/{{ collection.handle }}?view=30"
-                                        {% if products_per_page == 30 %}selected="selected"{% endif %}>30
-                                </option>
-                                <option value="/collections/{{ collection.handle }}?view=60"
-                                        {% if products_per_page == 60 %}selected="selected"{% endif %}>60
-                                </option>
-                                <option value="/collections/{{ collection.handle }}?view=90"
-                                        {% if products_per_page == 90 %}selected="selected"{% endif %}>90
-                                </option>
-                                <option value="/collections/{{ collection.handle }}?view=120"
-                                        {% if products_per_page == 120 %}selected="selected"{% endif %}>120
-                                </option>
-                            </select>
-                            {% render 'icon-caret' %}
-                        </div>
-                        <span class="label"> per page</span>
-                    </div>
-                </div>
-            </div>
-            <div class="tags-wrapper">
-                {% paginate collection.products by products_per_page %}
-                    {% assign current_page = paginate.current_page %}
-                    {% assign current_offset = paginate.current_offset %}
-                    {% assign items_count = paginate.items %}
-                {% endpaginate %}
-                {% assign current_offset = current_offset | plus: 1 %}
-                {% assign page_count = current_page | times: products_per_page %}
-                <div class="collecion-count">
-               <span>
-                   {% if current_offset != items_count %} {{ current_offset }}-{% if page_count <= items_count %}{{ page_count }}{% else %}{{ items_count }}{% endif %}{% else %}{{ current_offset }}{% endif %}
-               </span> of {{ items_count }}</div>
-                <div class="active-facets active-facets-desktop">
-
-                    {%- for filter in collection.filters -%}
-                        {%- for value in filter.active_values -%}
-                            <facet-remove>
-                                <a href="{{ value.url_to_remove }}"
-                                   class="active-facets__button active-facets__button--light">
-                                    <span class="active-facets__button-inner button button--tertiary">
-                                    <span>{{ filter.label | escape }}: </span> {{ value.label | escape }}
-                                        {% render 'icon-close-small' %}
-                                    <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
-                                    </span>
-                                </a>
-                            </facet-remove>
-                        {%- endfor -%}
-                        {% if filter.type == 'price_range' %}
-                            {% assign min = filter.min_value.value %}
-                            {% assign max = filter.max_value.value %}
-                            {%- if min != null and max != null and min != 0 -%}
-                                <facet-remove>
-                                    <a href="{{ filter.url_to_remove }}"
-                                       class="active-facets__button active-facets__button--light">
-                          <span class="active-facets__button-inner button button--tertiary">
-                            {{ min | default: 0 | money }} - {{ max | default: filter.range_max | money }}
-                              {% render 'icon-close-small' %}
-                            <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
-                          </span>
-                                    </a>
-                                </facet-remove>
-                            {%- endif -%}
-                        {% endif %}
-                    {%- endfor -%}
-                    <div class="active-facets-vertical-filter">
-                        {% assign tagsCount = 0 %}
-                        {%- for filter in collection.filters -%}
-                            {%- for value in filter.active_values -%}
-                                {% assign tagsCount = tagsCount | plus: 1 %}
-                            {% endfor %}
-                        {% endfor %}
-                        {% if tagsCount > 0 %}
-                            <facet-remove class="active-facets__button-wrapper">
-                                <a href="{{ results_url }}" class="active-facets__button-remove underlined-link">
-                      <span>
-                        Clear all
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path fill-rule="evenodd" clip-rule="evenodd"
-      d="M5.46967 5.46967C5.76256 5.17678 6.23744 5.17678 6.53033 5.46967L12 10.9393L17.4697 5.46967C17.7626 5.17678 18.2374 5.17678 18.5303 5.46967C18.8232 5.76256 18.8232 6.23744 18.5303 6.53033L13.0607 12L18.5303 17.4697C18.8232 17.7626 18.8232 18.2374 18.5303 18.5303C18.2374 18.8232 17.7626 18.8232 17.4697 18.5303L12 13.0607L6.53033 18.5303C6.23744 18.8232 5.76256 18.8232 5.46967 18.5303C5.17678 18.2374 5.17678 17.7626 5.46967 17.4697L10.9393 12L5.46967 6.53033C5.17678 6.23744 5.17678 5.76256 5.46967 5.46967Z"
-      fill="#E9380D"/>
-</svg>
-                      </span>
-                                </a>
-                            </facet-remove>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
 
             {% paginate collection.products by products_per_page %}
                 <ul
