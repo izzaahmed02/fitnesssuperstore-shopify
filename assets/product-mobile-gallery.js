@@ -164,8 +164,8 @@ class MobileGallery extends HTMLElement {
     }
 
     if (shouldInit) {
-      this.popupSlider.innerHTML = ''; // 💥 перенесли сюди очистку
-      this.renderPopupSlides(this.popupSlider); // 💥 і рендер тільки тут
+      this.popupSlider.innerHTML = '';
+      this.renderPopupSlides(this.popupSlider);
 
       $(this.popupSlider).off().slick({
         dots: true,
