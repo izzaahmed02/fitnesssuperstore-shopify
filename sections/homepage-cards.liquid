@@ -1,16 +1,36 @@
 {{ 'homepage-cards.css' | asset_url | stylesheet_tag }}
-<div class="page-width">
-    <div class="homepage-cards__wrapper">
-        {% for block in section.blocks %}
-            <div class="homepage-cards__card">
-                <h2 class="homepage-cards__card-title">{{ block.settings.title }}</h2>
-                <div class="homepage-cards__card-copy">
-                    {{ block.settings.copy }}
+
+<div class="homepage-cards__wrapper">
+    <div class="homepage-cards__slider swiper">
+        <div class="swiper-wrapper">
+            {% for block in section.blocks %}
+                <div class="homepage-cards__slide swiper-slide">
+                    <div class="homepage-cards__card">
+                        <h2 class="homepage-cards__card-title">{{ block.settings.title }}</h2>
+                        <div class="homepage-cards__card-copy">
+                            {{ block.settings.copy }}
+                        </div>
+                    </div>
                 </div>
-            </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="swiper-controls homepage-cards__slider-controls">
+        {% comment %}
+        <a aria-label="Slider Prev Button" href="#" class="swiper-button-prev">
+            {% render 'chevron-button-prev' %}
+        </a>
+        {% endcomment %}
+        <div class="swiper-pagination"></div>
+        {% comment %}
+        <a aria-label="Slider Next Button" href="#" class="swiper-button-next">
+            {% render 'chevron-button-next' %}
+        </a>
+        {% endcomment %}
     </div>
 </div>
+
+<script src="{{ 'homepage-cards.js' | asset_url }}"></script>
 
 {% schema %}
 {
