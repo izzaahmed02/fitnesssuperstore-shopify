@@ -64,18 +64,32 @@
 <div class="tax-info-tabs">
   <div class="tab-nav tabs__buttons">
     {% for block in section.blocks %}
-      <button class="tab-btn {% if forloop.first %}active{% endif %}" data-tab="tab-{{ block.id }}">{{ block.settings.tab_title }}</button>
+      <button class="tab-btn {% if forloop.first %}active{% endif %}" 
+              data-tab="tab-{{ block.id }}"
+              aria-controls="tab-{{ block.id }}"
+              aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+        {{ block.settings.tab_title }}
+      </button>
     {% endfor %}
   </div>
   <div class="accordion-container">
     {% for block in section.blocks %}
       <div class="accordion-item">
-        <button class="accordion-header-info {% if forloop.first %}active{% endif %}" data-tab="tab-{{ block.id }}">{{ block.settings.tab_title }}</button>
-        <div class="accordion-content-info tab-pane {% if forloop.first %}active{% endif %}" id="tab-{{ block.id }}">
+        <button class="accordion-header-info {% if forloop.first %}active{% endif %}" 
+                data-tab="tab-{{ block.id }}"
+                aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                aria-controls="tab-{{ block.id }}">
+          {{ block.settings.tab_title }}
+        </button>
+        <div class="accordion-content-info tab-pane {% if forloop.first %}active{% endif %}" 
+             id="tab-{{ block.id }}"
+             role="region"
+             aria-labelledby="tab-{{ block.id }}-header">
           <div class="paraDiv">{{ block.settings.tab_content | newline_to_br }}</div>
           {% if block.settings.tab_image %}
             <div class="tab-image">
-              <img src="{{ block.settings.tab_image | img_url: 'medium' }}" alt="{{ block.settings.tab_title }} Image" />
+              <img src="{{ block.settings.tab_image | img_url: 'medium' }}" 
+                   alt="{{ block.settings.tab_title | strip_html }} Image" />
             </div>
           {% endif %}
         </div>
@@ -155,6 +169,7 @@
 
 .tab-information .tab-image img {
   width: 100%;
+  height: auto;
 }
 
 .tab-information .paraDiv {
@@ -196,6 +211,7 @@
   background: #F5F5F5;
 }
 
+/* Mobile Styles (Accordion) */
 @media screen and (max-width: 768px) {
   .tab-information .tax-info-tabs {
     padding: 16px;
@@ -228,7 +244,7 @@
     font-family: DM Sans;
     background: transparent;
     border: none;
-    padding: 0px;
+    padding: 15px 0;
     text-align: left;
     cursor: pointer;
     position: relative;
@@ -239,12 +255,14 @@
     position: absolute;
     right: 15px;
     font-size: 20px;
-    top: 15px;
+    top: 50%;
+    transform: translateY(-50%);
     transition: transform 0.3s ease;
   }
 
   .tab-information .tax-info-tabs .accordion-header-info.active::after {
     content: '−';
+    transform: translateY(-50%) rotate(0deg);
   }
 
   .tab-information .tax-info-tabs .accordion-content-info {
@@ -254,11 +272,10 @@
     padding: 0;
     background: transparent;
     border: none;
-    border-top: none;
   }
 
   .tab-information .tax-info-tabs .accordion-content-info.active {
-    max-height: 1000px; /* Adjust based on content; large enough to accommodate */
+    max-height: 1000px; /* Fallback for initial render */
     padding: 15px 0;
   }
 
@@ -286,9 +303,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
   tabs.forEach(tab => {
     tab.addEventListener('click', function() {
-      tabs.forEach(t => t.classList.remove('active'));
+      tabs.forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
       panes.forEach(p => p.classList.remove('active'));
       this.classList.add('active');
+      this.setAttribute('aria-selected', 'true');
       document.getElementById(this.getAttribute('data-tab')).classList.add('active');
     });
   });
@@ -302,7 +323,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const isActive = this.classList.contains('active');
 
       // Close all accordions
-      accordionHeaders.forEach(h => h.classList.remove('active'));
+      accordionHeaders.forEach(h => {
+        h.classList.remove('active');
+        h.setAttribute('aria-expanded', 'false');
+      });
       document.querySelectorAll('.tab-information .accordion-content-info').forEach(c => {
         c.classList.remove('active');
         c.style.maxHeight = '0';
@@ -311,14 +335,14 @@ document.addEventListener('DOMContentLoaded', function() {
       // Open the clicked accordion if it wasn't already active
       if (!isActive) {
         this.classList.add('active');
+        this.setAttribute('aria-expanded', 'true');
         content.classList.add('active');
-        // Set max-height dynamically based on content height
         content.style.maxHeight = content.scrollHeight + 'px';
       }
     });
   });
 
-  // Recalculate heights on window resize or image load
+  // Recalculate heights on window resize
   window.addEventListener('resize', function() {
     document.querySelectorAll('.tab-information .accordion-content-info.active').forEach(content => {
       content.style.maxHeight = content.scrollHeight + 'px';
