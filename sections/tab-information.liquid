@@ -303,12 +303,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Close all accordions
       accordionHeaders.forEach(h => h.classList.remove('active'));
-      document.querySelectorAll('.tab-information .accordion-content-info').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab-information .accordion-content-info').forEach(c => {
+        c.classList.remove('active');
+        c.style.maxHeight = '0';
+      });
 
       // Open the clicked accordion if it wasn't already active
       if (!isActive) {
         this.classList.add('active');
         content.classList.add('active');
+        // Set max-height dynamically based on content height
+        content.style.maxHeight = content.scrollHeight + 'px';
+      }
+    });
+  });
+
+  // Recalculate heights on window resize or image load
+  window.addEventListener('resize', function() {
+    document.querySelectorAll('.tab-information .accordion-content-info.active').forEach(content => {
+      content.style.maxHeight = content.scrollHeight + 'px';
+    });
+  });
+
+  // Handle image load to adjust height
+  document.querySelectorAll('.tab-information .tab-image img').forEach(img => {
+    img.addEventListener('load', function() {
+      const content = img.closest('.accordion-content-info');
+      if (content.classList.contains('active')) {
+        content.style.maxHeight = content.scrollHeight + 'px';
       }
     });
   });
