@@ -1,7 +1,7 @@
 {% schema %}
 {
   "name": "Tab Information",
-  "class": "tab-information",
+   "class": "tab-information",
   "settings": [],
   "blocks": [
     {
@@ -20,7 +20,7 @@
           "label": "Tab Content",
           "default": "<p>Enter tab content here.</p>"
         },
-        {
+         {
           "type": "image_picker",
           "id": "tab_image",
           "label": "Tab Image",
@@ -62,215 +62,166 @@
 {% endschema %}
 
 <div class="tax-info-tabs">
-  <div class="tab-nav tabs__buttons">
+  <ul class="tab-nav tabs__buttons">
     {% for block in section.blocks %}
       <button class="tab-btn {% if forloop.first %}active{% endif %}" data-tab="tab-{{ block.id }}">{{ block.settings.tab_title }}</button>
     {% endfor %}
-  </div>
+  </ul>
   <div class="tab-content">
     {% for block in section.blocks %}
       <div class="tab-pane {% if forloop.first %}active{% endif %}" id="tab-{{ block.id }}">
-        <div class="accordion-header">{{ block.settings.tab_title }}</div>
-        <div class="accordion-content">
-          <div class="paraDiv">{{ block.settings.tab_content | newline_to_br }}</div>
-          {% if block.settings.tab_image %}
-            <div class="tab-image">
-              <img src="{{ block.settings.tab_image | img_url: 'medium' }}" alt="{{ block.settings.tab_title }} Image" />
-            </div>
-          {% endif %}
-        </div>
+        <div class="paraDiv">{{ block.settings.tab_content | newline_to_br }} </div>
+       {% if block.settings.tab_image %}
+          <div class="tab-image">
+            <img src="{{ block.settings.tab_image | img_url: 'medium' }}" alt="{{ block.settings.tab_title }} Image" />
+          </div>
+        {% endif %}
       </div>
     {% endfor %}
   </div>
 </div>
 
 <style>
-.tax-info-tabs {
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 20px;
-}
 
-.tab-nav {
+.tab-information .tax-info-tabs{
+  max-width: 1320px;
+    margin: 0 auto;
+    padding: 20px;
+}
+  
+.tab-information .tax-info-tabs .tab-nav {
   display: flex;
   list-style: none;
   padding: 0;
   border-bottom: 1px solid #ddd;
 }
-
-.tab-nav button {
-  width: 50%;
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 500;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: transparent;
-  border: none;
+.tab-information .tax-info-tabs .tab-nav li {
   padding: 10px 20px;
-  position: relative;
-  font-family: DM Sans;
   cursor: pointer;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  margin-right: 5px;
 }
-
-.tab-nav button::after {
-  content: '';
-  display: block;
-  width: 100%;
-  height: 4px;
-  position: absolute;
-  background: #e5e5e5;
-  border-radius: 6px;
-  bottom: -4px;
-  transition: all 0.3s ease;
+.tab-information .tax-info-tabs .tab-nav li.active {
+  background: #f5f5f5;
+  font-weight: bold;
 }
-
-.tab-nav button.active::after {
-  background: #f1592a;
-}
-
-.tab-content {
+.tab-information .tax-info-tabs .tab-content {
   padding-bottom: 60px;
-  padding-top: 40px;
-}
+    padding-top: 40px;
 
-.tab-pane {
+}
+.tab-information .tax-info-tabs .tab-pane {
   display: none;
 }
-
-.tab-pane.active {
+.tab-information .tax-info-tabs .tab-pane.active {
   display: flex;
   align-items: center;
 }
 
-.paraDiv, .tab-image {
-  flex: 1;
-}
-
-.tab-image img {
-  width: 100%;
-}
-
-.paraDiv strong {
-  font-family: DM Sans;
-  font-weight: 700;
-  font-size: 24px;
-  line-height: 32px;
-  letter-spacing: 0px;
-}
-
-.paraDiv {
-  margin-right: 40px;
-}
-
-.paraDiv p {
-  font-family: DM Sans;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 24px;
-  letter-spacing: 0px;
-}
-
-.paraDiv li:before {
-  content: "";
-  border: 4px #FE8425 solid;
-  border-radius: 50px;
-  margin-top: 8px;
-  margin-left: -20px;
-  position: absolute;
-}
-
-.paraDiv ul {
-  margin-left: 20px;
-}
-
-.paraDiv li {
-  margin-bottom: 12px;
-}
-
-.tab-information {
-  background: #F5F5F5;
-}
-
-.accordion-header {
-  display: none;
-  font-family: DM Sans;
-  font-weight: 500;
-  font-size: 16px;
-  padding: 15px;
-  background: #f5f5f5;
-  border-bottom: 1px solid #ddd;
-  cursor: pointer;
-  position: relative;
-}
-
-.accordion-header::after {
-  content: '+';
-  position: absolute;
-  right: 15px;
-  font-size: 20px;
-}
-
-.accordion-header.active::after {
-  content: '−';
-}
-
-.accordion-content {
-  display: block;
-}
-
-/* Mobile styles */
-@media (max-width: 767px) {
-  .tab-nav {
-    display: none;
+  .tab-information .paraDiv, .tab-information .tab-image{
+    flex: 1;
   }
 
-  .tab-content {
-    padding: 0;
-  }
-
-  .tab-pane {
-    display: block;
-    border-bottom: 1px solid #ddd;
-  }
-
-  .tab-pane.active .accordion-content {
-    display: block;
-  }
-
-  .accordion-header {
-    display: block;
-  }
-
-  .accordion-content {
-    display: none;
-    padding: 15px;
-  }
-
-  .tab-pane.active {
-    display: block;
-    flex-direction: column;
-  }
-
-  .paraDiv {
-    margin-right: 0;
-    margin-bottom: 20px;
-  }
-
-  .tab-image {
+  .tab-information .tab-image img{
     width: 100%;
   }
+
+  /* TABS SECTION */
+.tab-information .tabs__buttons {
+    display: flex;
 }
+
+.tab-information .mail-link:after {
+    display: none;
+}
+
+.tab-information .tabs__buttons button {
+    width: 50%;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    border: none;
+    padding: 0px;
+    position: relative;
+    font-family: DM Sans;
+    cursor: pointer;
+}
+
+.tab-information .tabs__buttons button::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 4px;
+    position: absolute;
+    background: #e5e5e5;
+    border-radius: 6px;
+    bottom: -4px;
+    transition: all 0.3s ease;
+}
+
+.tab-information .tabs__buttons button.active::after {
+    background: #f1592a;
+}
+
+  .tab-information .paraDiv strong{
+    font-family: DM Sans;
+font-weight: 700;
+font-size: 24px;
+line-height: 32px;
+letter-spacing: 0px;
+font-variant-numeric-figure: lining-nums;
+font-variant-numeric-spacing: proportional-nums;
+
+  }
+
+  .paraDiv{
+  margin-right: 40px;
+  }
+
+  .paraDiv p{ 
+font-family: DM Sans;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+letter-spacing: 0px;
+font-variant-numeric-figure: lining-nums;
+font-variant-numeric-spacing: proportional-nums;
+  }
+
+
+  .paraDiv li:before {
+    content: "";
+    border: 4px #FE8425 solid !important;
+    border-radius: 50px;
+    margin-top: 8px;
+    margin-left: -20px;
+    position: absolute;
+}
+
+  .paraDiv ul {
+    margin-left: 20px;
+}
+
+  .paraDiv li{
+    margin-bottom: 12px;
+  }
+
+  .tab-information{
+    background: #F5F5F5;
+  }
+
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const tabs = document.querySelectorAll('.tab-nav button');
   const panes = document.querySelectorAll('.tab-pane');
-  const accordionHeaders = document.querySelectorAll('.accordion-header');
 
-  // Tab functionality for desktop
   tabs.forEach(tab => {
     tab.addEventListener('click', function() {
       tabs.forEach(t => t.classList.remove('active'));
@@ -279,37 +230,5 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById(this.getAttribute('data-tab')).classList.add('active');
     });
   });
-
-  // Accordion functionality for mobile
-  accordionHeaders.forEach(header => {
-    header.addEventListener('click', function() {
-      const content = this.nextElementSibling;
-      const parentPane = this.parentElement;
-      const isActive = parentPane.classList.contains('active');
-
-      // Close all other accordions
-      panes.forEach(pane => {
-        pane.classList.remove('active');
-        pane.querySelector('.accordion-content').style.display = 'none';
-        pane.querySelector('.accordion-header').classList.remove('active');
-      });
-
-      // Toggle current accordion
-      if (!isActive) {
-        parentPane.classList.add('active');
-        content.style.display = 'block';
-        this.classList.add('active');
-      }
-    });
-  });
-
-  // Open first accordion by default on mobile
-  if (window.innerWidth <= 767) {
-    const firstPane = document.querySelector('.tab-pane.active');
-    if (firstPane) {
-      firstPane.querySelector('.accordion-content').style.display = 'block';
-      firstPane.querySelector('.accordion-header').classList.add('active');
-    }
-  }
 });
 </script>
