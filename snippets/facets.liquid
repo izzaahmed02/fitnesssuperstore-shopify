@@ -26,6 +26,23 @@
     assign terms = results.terms | escape
     assign results_url = '?q=' | append: terms | append: '&options%5Bprefix%5D=last&sort_by=' | append: sort_by
   endif
+
+  assign tagsCount = 0
+  for filter in results.filters
+    for value in filter.active_values
+      assign tagsCount = tagsCount | plus: 1
+    endfor
+  endfor
+
+  assign selected_filters_count = 0
+  for filter in collection.filters
+    for value in filter.values
+      if value.active
+        assign selected_filters_count = selected_filters_count | plus: 1
+      endif
+    endfor
+  endfor
+
 -%}
 
 <div class="facets-container{% if filter_type == 'drawer' %} facets-container-drawer{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
@@ -61,14 +78,6 @@
               <div class="active-facets active-facets-desktop">
                 <div class="active-facets-vertical-filter">
                   {%- unless results.filters == empty -%}
-                    {% assign selected_filters_count = 0 %}
-                    {% for filter in collection.filters %}
-                      {% for value in filter.values %}
-                        {% if value.active %}
-                          {% assign selected_filters_count = selected_filters_count | plus: 1 %}
-                        {% endif %}
-                      {% endfor %}
-                    {% endfor %}
                     <h2
                       class="facets__heading facets__heading--vertical caption-large text-body"
                       id="verticalTitle"
@@ -277,7 +286,7 @@
                             type="button"
                           >
                             <span class="label-show-more label-text">
-                              {{- 'products.facets.show_more' | t -}}
+                                Show {{ filter.values.size | minus: show_more_number }} more
                               <span aria-hidden="true">{% render 'icon-caret' %}</span>
                             </span>
                             <span class="label-show-less label-text hidden">
@@ -370,12 +379,6 @@
                 {% endif %}
               {%- endfor -%}
 
-              {% assign tagsCount = 0 %}
-              {%- for filter in results.filters -%}
-                {%- for value in filter.active_values -%}
-                  {% assign tagsCount = tagsCount | plus: 1 %}
-                {% endfor %}
-              {% endfor %}
               {% if tagsCount > 0 %}
                 <facet-remove class="active-facets__button-wrapper">
                   <a href="{{ results_url }}" class="active-facets__button-remove underlined-link">
@@ -424,6 +427,7 @@
                           selected="selected"
                         {% endif %}
                       >
+                        {{ 'products.facets.sort_by_label' | t }}
                         {{ option.name | escape }}
                       </option>
                     {%- endfor -%}
@@ -506,6 +510,9 @@
                   {%- elsif enable_sorting -%}
                     {{ 'products.facets.sort_button' | t }}
                   {%- endif -%}
+                  {% unless selected_filters_count == 0 %}
+                    <span>({{ selected_filters_count }})</span>
+                  {%- endunless -%}
                 </h2>
                 <h2 class="mobile-facets__heading small-hide">
                   {%- if enable_filtering -%}
@@ -715,7 +722,7 @@
                                 type="button"
                               >
                                 <span class="label-show-more label-text">
-                                  {{- 'products.facets.show_more' | t -}}
+                                  Show {{ filter.values.size | minus: show_more_number }} more
                                   <span aria-hidden="true">{% render 'icon-caret' %}</span>
                                 </span>
                                 <span class="label-show-less label-text hidden">
@@ -880,6 +887,7 @@
                     selected="selected"
                   {% endif %}
                 >
+                  {{ 'products.facets.sort_by_label' | t }}
                   {{ option.name | escape }}
                 </option>
               {%- endfor -%}

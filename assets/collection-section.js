@@ -103,6 +103,8 @@ document.addEventListener("DOMContentLoaded", function () {
 					}
 				]
 			});
+		} else {
+			$(element).addClass('slick-initialized');
 		}
 		images.forEach(img => {
 			img.src = img.dataset.src;

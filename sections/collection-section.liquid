@@ -13,6 +13,8 @@
 {%- assign pageUrl = contentForQuerystring | split: '"pageurl":"' | last | split: '"' | first | split: '.myshopify.com' | last | replace: '\/', '/' | replace: '%20', ' ' | replace: '\u0026', '&' -%}
 {%- assign products_per_page = 30 -%}
 
+{%- assign sort_by = collection.sort_by | default: collection.default_sort_by -%}
+
 <div class="page-width">
     <div id="ProductGridContainer" class="collection-wrapper">
         <div class="collection-grid-top">
@@ -24,11 +26,9 @@
                         <div class="facet-filters sorting caption">
                             <div class="facet-filters__field">
                                 <div class="select">
-                                    {%- assign sort_by = collection.sort_by | default: collection.default_sort_by -%}
                                     <select
                                         name="sort_by"
                                         class="facet-filters__sort select__select caption-large"
-                                        id="SortBy"
                                         aria-describedby="a11y-refresh-page-message"
                                     >
                                         {%- for option in collection.sort_options -%}
@@ -47,7 +47,6 @@
                                 </div>
                             </div>
                         </div>
-
                     </form>
                 </facet-filters-form>
                 {%- for i in (1..1) -%}
@@ -114,10 +113,6 @@
         </div>
 
         <div class="collection-product-wrapper">
-            {%- liquid
-                assign sort_by = collection.sort_by | default: collection.default_sort_by
-            -%}
-
             {% paginate collection.products by products_per_page %}
                 <ul
                         class="collection" id="product-grid" data-id="{{ section.id }}">

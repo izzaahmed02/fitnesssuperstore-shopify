@@ -31,7 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!slides.length) {
 			slides = $(element).children();
 		}
-		if (slides.length <= 1) return;
+		if (slides.length <= 1) {
+			$(element).addClass('slick-initialized');
+			return;
+		}
 
 		if (!$(element).hasClass('slick-initialized')) {
 			$(element).slick({

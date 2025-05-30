@@ -11,6 +11,16 @@
         {% endfor %}
     </div>
     <div class="tags-wrapper">
+        {%- if product.available != false -%}
+            {% unless  product.metafields.custom.processing_time  == blank %}
+                <div class="ship-wrapper">
+                    {% comment %}
+                    {% render 'icon-ship' %}
+                    {% endcomment %}
+                    {{ product.metafields.custom.processing_time | replace: "from our Warehouse", "" | replace: "leave our Warehouse", "" | replace: "from Manufacturer's Warehouse", "" }}
+                </div>
+            {% endunless %}
+        {% endif %}
         {% if product.metafields.custom.condition_state contains "New" %}
             <div class="condition-tag">
                 {% render 'icon-new' %}
@@ -37,8 +47,8 @@
                 {%- if product.compare_at_price > product.price and product.available -%}
                     <span id="Badge-{{ section_id }}-{{ product.id }}"
                           class="badge badge--bottom-left color-{{ settings.sale_badge_color_scheme }}">
-            {{- 'products.product.on_sale' | t -}}
-          </span>
+                        {{- 'products.product.on_sale' | t -}}
+                    </span>
                 {%- endif -%}
             </div>
         {% endif %}
@@ -52,19 +62,11 @@
         >
         <label for="add-to-comparable-checkbox_{{ product.handle }}">Compare</label>
     </div>
-    {%- if product.available != false -%}
-        {% unless  product.metafields.custom.processing_time  == blank %}
-        <div class="ship-wrapper">
-            {% render 'icon-ship' %}
-            {{ product.metafields.custom.processing_time | replace: "from our Warehouse", "" | replace: "leave our Warehouse", "" | replace: "from Manufacturer's Warehouse", "" }}
-        </div>
-        {% endunless %}
-    {% endif %}
     {%- if product.available == false -%}
         <span class="soldout">
-  {% render 'icon-sold-out' %}
-            {{- 'products.product.sold_out' | t -}}
-          </span>
+          {% render 'icon-sold-out' %}
+          {{- 'products.product.sold_out' | t -}}
+      </span>
     {% endif %}
     <a class="title" href="{{ product.url | within: collection }}">
         {{ product.title | replace: "(Remanufactured)", "" | replace: "(New)", "" }}
