@@ -539,8 +539,8 @@ document.addEventListener('DOMContentLoaded', function() {
         teal: "#008080",
         maroon: "#800000",
         burgundy: "#800020",
-        metallicsilver: "#aaa9ad",
-        stormgrey: "#747880"
+        metallic: "#aaa9ad",
+        storm: "#747880"
     };
 
     function getHexFromName(name) {
