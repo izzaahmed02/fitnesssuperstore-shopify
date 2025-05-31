@@ -1,6 +1,8 @@
 class MobileGallery extends HTMLElement {
   constructor() {
     super();
+
+    this.hammerInstances = [];
   }
 
   connectedCallback() {
@@ -30,7 +32,14 @@ class MobileGallery extends HTMLElement {
     const isDesktop = () => window.matchMedia('(min-width: 990px)').matches;
     this.checkAndInit(isDesktop);
 
-    window.addEventListener('resize', () => this.checkAndInit(isDesktop));
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        this.checkAndInit(isDesktop);
+        this.checkAndInitPopup(isDesktop);
+      }, 150);
+    });
   }
 
   checkAndInit(isDesktop) {
@@ -65,17 +74,7 @@ class MobileGallery extends HTMLElement {
           }
         });
 
-        this.querySelectorAll('iframe').forEach((iframe) => {
-          try {
-            iframe.contentWindow?.postMessage(
-              '{"event":"command","func":"pauseVideo","args":""}',
-              '*',
-            );
-            iframe.contentWindow?.postMessage({ method: 'pause' }, '*');
-          } catch (e) {
-            console.warn('Could not send pause message to iframe:', e);
-          }
-        });
+        this.pauseIframeMedia(this);
       });
 
       this.slickInitialized = true;
@@ -90,6 +89,27 @@ class MobileGallery extends HTMLElement {
     if (!shouldInit && this.slickInitialized) {
       $(this.slider).slick('unslick');
       this.slickInitialized = false;
+    }
+  }
+
+  checkAndInitPopup(isDesktop) {
+    if (!this.popupSlider) return;
+    const shouldInit = !isDesktop();
+
+    if (shouldInit && !$(this.popupSlider).hasClass('slick-initialized')) {
+      this.popupSlider.innerHTML = '';
+      $(this.popupSlider).off().slick({
+        dots: true,
+        appendDots: this.popupDots,
+        arrows: false,
+        infinite: false,
+        adaptiveHeight: true,
+        lazyLoad: 'ondemand',
+      });
+    }
+
+    if (!shouldInit && $(this.popupSlider).hasClass('slick-initialized')) {
+      $(this.popupSlider).slick('unslick');
     }
   }
 
@@ -133,13 +153,21 @@ class MobileGallery extends HTMLElement {
   openPopup(index) {
     if (!this.popup || !this.popupSlider) return;
 
-    this.renderPopupSlides(this.popupSlider);
-    // this.popup.hidden = false;
     this.popup.classList.add('is-active');
     document.body.style.overflow = 'hidden';
 
-    if (!$(this.popupSlider).hasClass('slick-initialized')) {
-      $(this.popupSlider).slick({
+    const isDesktop = () => window.matchMedia('(min-width: 990px)').matches;
+    const shouldInit = !isDesktop();
+
+    if ($(this.popupSlider).hasClass('slick-initialized')) {
+      $(this.popupSlider).slick('unslick');
+    }
+
+    if (shouldInit) {
+      this.popupSlider.innerHTML = '';
+      this.renderPopupSlides(this.popupSlider);
+
+      $(this.popupSlider).off().slick({
         dots: true,
         appendDots: this.popupDots,
         arrows: false,
@@ -148,60 +176,60 @@ class MobileGallery extends HTMLElement {
         adaptiveHeight: true,
         lazyLoad: 'ondemand',
       });
-    }
 
-    $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
-      this.pauseAllMedia(this.popup);
+      $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
+        this.pauseAllMedia(this.popup);
 
-      const currentSlideEl = slick.$slides[currentSlide];
+        const currentSlideEl = slick.$slides[currentSlide];
+        const iframe = currentSlideEl?.querySelector('iframe');
+        const overlay = currentSlideEl?.querySelector('.video-iframe-overlay');
 
-      const iframe = currentSlideEl?.querySelector('iframe');
-      const overlay = currentSlideEl?.querySelector('.video-iframe-overlay');
+        if (
+          iframe &&
+          iframe.src.includes('youtube.com') &&
+          overlay &&
+          overlay.style.display === 'none'
+        ) {
+          iframe.contentWindow?.postMessage(
+            '{"event":"command","func":"playVideo","args":""}',
+            '*',
+          );
+        }
 
-      if (
-        iframe &&
-        iframe.src.includes('youtube.com') &&
-        overlay &&
-        overlay.style.display === 'none'
-      ) {
-        iframe.contentWindow?.postMessage(
-          '{"event":"command","func":"playVideo","args":""}',
-          '*',
-        );
-      }
+        this.popupSlider
+          .querySelectorAll('.video-iframe-overlay')
+          .forEach((overlay) => {
+            overlay.style.display = 'block';
+            const iframe = overlay.nextElementSibling;
+            if (iframe) iframe.style.pointerEvents = 'none';
+          });
+      });
 
       this.popupSlider
         .querySelectorAll('.video-iframe-overlay')
         .forEach((overlay) => {
-          overlay.style.display = 'block';
-          const iframe = overlay.nextElementSibling;
-          if (iframe) iframe.style.pointerEvents = 'none';
+          overlay.addEventListener('click', () => {
+            overlay.style.display = 'none';
+            const iframe = overlay.nextElementSibling;
+            if (iframe) {
+              iframe.style.pointerEvents = 'auto';
+            }
+          });
         });
-    });
-
-    this.popupSlider
-      .querySelectorAll('.video-iframe-overlay')
-      .forEach((overlay) => {
-        overlay.addEventListener('click', () => {
-          overlay.style.display = 'none';
-          const iframe = overlay.nextElementSibling;
-          if (iframe) {
-            iframe.style.pointerEvents = 'auto';
-          }
-        });
-      });
+    }
 
     const closeBtn = this.popup.querySelector('.mobile-popup-close');
     const backdrop = this.popup.querySelector('.mobile-popup-backdrop');
 
     if (closeBtn) {
       closeBtn.onclick = () => {
-        $(this.popupSlider).slick('unslick');
-        // this.popup.hidden = true;
+        this.hammerInstances.forEach((h) => h.destroy());
+        this.hammerInstances = [];
+
+        if ($(this.popupSlider).hasClass('slick-initialized')) {
+          $(this.popupSlider).slick('unslick');
+        }
         this.popup.classList.remove('is-active');
-        // setTimeout(() => {
-        //   this.popup.hidden = true;
-        // }, 300);
         document.body.style.overflow = '';
         this.pauseAllMedia(this.popup);
       };
@@ -213,6 +241,7 @@ class MobileGallery extends HTMLElement {
       };
     }
   }
+
   renderPopupSlides(container) {
     const slides = this.querySelectorAll('.mobile-gallery-slide');
     container.innerHTML = '';
@@ -279,6 +308,7 @@ class MobileGallery extends HTMLElement {
         const zoomImg = document.createElement('img');
         zoomImg.src = img.src;
         zoomImg.alt = img.alt || '';
+        zoomImg.loading = 'lazy';
         zoomImg.className = 'popup-zoom-image';
         zoomImg.style.touchAction = 'none';
         zoomImg.style.userSelect = 'none';
@@ -307,6 +337,7 @@ class MobileGallery extends HTMLElement {
         let frameId = null;
 
         const hammer = new Hammer(wrapper);
+        this.hammerInstances.push(hammer);
         hammer.get('pinch').set({ enable: true });
         hammer.get('doubletap').set({ taps: 2 });
         hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
@@ -341,6 +372,19 @@ class MobileGallery extends HTMLElement {
             posY = 0;
             lastPosX = 0;
             lastPosY = 0;
+          }
+
+          if (zoomImg.src !== highResSrc) {
+            const preload = new Image();
+            preload.src = highResSrc;
+            preload.onload = () => {
+              zoomImg.src = highResSrc;
+              zoomImg.style.opacity = '0';
+              requestAnimationFrame(() => {
+                zoomImg.style.transition = 'opacity 0.2s ease-in-out';
+                zoomImg.style.opacity = '1';
+              });
+            };
           }
 
           updateTransform();
@@ -402,7 +446,12 @@ class MobileGallery extends HTMLElement {
       video.currentTime = 0;
     });
 
-    scope.querySelectorAll('iframe').forEach((iframe) => {
+    this.pauseIframeMedia(scope);
+  }
+
+  pauseIframeMedia(scope) {
+    const iframes = scope.querySelectorAll('iframe');
+    iframes.forEach((iframe) => {
       try {
         iframe.contentWindow?.postMessage(
           '{"event":"command","func":"pauseVideo","args":""}',
@@ -437,6 +486,6 @@ class MobileGallery extends HTMLElement {
   }
 }
 
-if (window.matchMedia('(max-width: 989px)').matches) {
+if (!customElements.get('mobile-gallery')) {
   customElements.define('mobile-gallery', MobileGallery);
 }
