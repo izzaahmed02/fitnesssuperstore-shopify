@@ -347,7 +347,7 @@ function setupOptionsHandler() {
 			const avisInputHidden = document.querySelector(`[name=\"properties[${CSS.escape(input.getAttribute('field-name').replace('&quot;', '"'))}]\"]`);
 			if (avisInputHidden && input.checked && inputMoneyValue) {
 				if (!avisInputHidden.value.includes('Add')) {
-			  		//avisInputHidden.value = avisInputHidden.value + ` [Subtract ${inputMoneyValue}]`
+			  		avisInputHidden.value = avisInputHidden.value + ` [${inputMoneyValue}]`
 				}
 			}
 		  });
