@@ -346,8 +346,10 @@ function setupOptionsHandler() {
 		  setTimeout(() => {	
 			const avisInputHidden = document.querySelector(`[name=\"properties[${CSS.escape(input.getAttribute('field-name').replace('&quot;', '"'))}]\"]`);
 			if (avisInputHidden && input.checked && inputMoneyValue) {
-				if (!avisInputHidden.value.includes('Add')) {
+				if (inputMoneyValue.value.includes('-$')) {
 					avisInputHidden.value = avisInputHidden.value + ` [Subtract ${inputMoneyValue}]`
+				} else {
+					avisInputHidden.value = avisInputHidden.value + ` [Add ${inputMoneyValue}]`
 				}
 			}
 		  });
