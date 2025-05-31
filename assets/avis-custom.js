@@ -346,10 +346,14 @@ function setupOptionsHandler() {
 		  setTimeout(() => {	
 			const avisInputHidden = document.querySelector(`[name=\"properties[${CSS.escape(input.getAttribute('field-name').replace('&quot;', '"'))}]\"]`);
 			if (avisInputHidden && input.checked && inputMoneyValue) {
-				if (inputMoneyValue.includes('-$')) {
-					avisInputHidden.value = avisInputHidden.value + ` [Subtract ${inputMoneyValue}]`
+				if (inputMoneyValue.value.includes('-$')) {
+					if (!avisInputHidden.value.includes('Subtract')) {
+					  avisInputHidden.value = avisInputHidden.value + ` [Subtract ${inputMoneyValue}]`
+					}
 				} else {
-					avisInputHidden.value = avisInputHidden.value + ` [Add ${inputMoneyValue}]`
+					if (!avisInputHidden.value.includes('Add')) {
+					  avisInputHidden.value = avisInputHidden.value + ` [Add ${inputMoneyValue}]`	
+					}
 				}
 			}
 		  });
