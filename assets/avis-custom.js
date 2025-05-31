@@ -352,7 +352,7 @@ function setupOptionsHandler() {
 					}
 				} else {
 					if (!avisInputHidden.value.includes('Add')) {
-					  avisInputHidden.value = avisInputHidden.value + ` [Add ${inputMoneyValue}]`	
+					  avisInputHidden.value = avisInputHidden.value + ` [Add +${inputMoneyValue}]`	
 					}
 				}
 			}
