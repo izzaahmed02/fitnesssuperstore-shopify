@@ -1,6 +1,189 @@
 {% schema %}
-  {
-    "name": "Section name",
-    "settings": []
-  }
+{
+  "name": "Video Carousel",
+  "settings": [],
+  "blocks": [
+    {
+      "type": "video",
+      "name": "Video",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "thumbnail",
+          "label": "Video Thumbnail"
+        },
+        {
+          "type": "url",
+          "id": "video_url",
+          "label": "YouTube or Video URL"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Video Carousel"
+    }
+  ]
+}
 {% endschema %}
+
+
+<div class="video-carousel-section">
+  <div class="carousel-wrapper">
+    <div class="carousel" id="videoCarousel">
+      {% for block in section.blocks %}
+        <div class="carousel-item">
+          <div class="video-thumbnail" data-video-url="{{ block.settings.video_url }}">
+            <img src="{{ block.settings.thumbnail | image_url: width: 400 }}" alt="Video Thumbnail">
+            <div class="play-button">&#9658;</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="carousel-dots" id="carouselDots"></div>
+    <button class="carousel-nav prev" onclick="prevSlide()">&#10094;</button>
+    <button class="carousel-nav next" onclick="nextSlide()">&#10095;</button>
+  </div>
+
+  <div class="video-modal" id="videoModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal()">&times;</span>
+      <div id="modalVideoContainer"></div>
+    </div>
+  </div>
+</div>
+
+
+<style>
+  .video-carousel-section {
+  text-align: center;
+  position: relative;
+}
+.carousel-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+.carousel {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+.carousel-item {
+  min-width: 100%;
+  padding: 20px;
+}
+.video-thumbnail {
+  position: relative;
+  cursor: pointer;
+}
+.video-thumbnail img {
+  border-radius: 12px;
+  width: 100%;
+}
+.play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10px 20px;
+  border-radius: 50%;
+}
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 24px;
+  background: none;
+  border: none;
+  color: #333;
+  cursor: pointer;
+}
+.carousel-nav.prev {
+  left: 10px;
+}
+.carousel-nav.next {
+  right: 10px;
+}
+.video-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.8);
+}
+.modal-content {
+  position: relative;
+  width: 80%;
+  max-width: 900px;
+  margin: 60px auto;
+  background: #fff;
+  padding: 20px;
+}
+.modal-content iframe,
+.modal-content video {
+  width: 100%;
+  height: 500px;
+}
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+</style>
+
+<script>
+  let currentSlide = 0;
+
+function updateCarousel() {
+  const carousel = document.getElementById('videoCarousel');
+  const items = carousel.querySelectorAll('.carousel-item');
+  carousel.style.transform = `translateX(-${currentSlide * 100}%)`;
+}
+
+function prevSlide() {
+  const total = document.querySelectorAll('.carousel-item').length;
+  currentSlide = (currentSlide - 1 + total) % total;
+  updateCarousel();
+}
+
+function nextSlide() {
+  const total = document.querySelectorAll('.carousel-item').length;
+  currentSlide = (currentSlide + 1) % total;
+  updateCarousel();
+}
+
+function closeModal() {
+  const modal = document.getElementById('videoModal');
+  const container = document.getElementById('modalVideoContainer');
+  container.innerHTML = '';
+  modal.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.video-thumbnail').forEach(thumbnail => {
+    thumbnail.addEventListener('click', () => {
+      const videoUrl = thumbnail.getAttribute('data-video-url');
+      const modal = document.getElementById('videoModal');
+      const container = document.getElementById('modalVideoContainer');
+
+      let embed;
+      if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+        const id = videoUrl.split(/v=|\/([^\/\?]+)$/).filter(Boolean).pop();
+        embed = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      } else {
+        embed = `<video controls autoplay src="${videoUrl}"></video>`;
+      }
+
+      container.innerHTML = embed;
+      modal.style.display = 'block';
+    });
+  });
+});
+
+</script>
