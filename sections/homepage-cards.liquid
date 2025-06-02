@@ -1,5 +1,7 @@
 {{ 'homepage-cards.css' | asset_url | stylesheet_tag }}
 
+{% assign size = section.blocks | size %}
+
 <div class="homepage-cards__wrapper">
     <div class="homepage-cards__slider swiper">
         <div class="swiper-wrapper">
@@ -15,19 +17,21 @@
             {% endfor %}
         </div>
     </div>
-    <div class="swiper-controls homepage-cards__slider-controls">
-        {% comment %}
-        <a aria-label="Slider Prev Button" href="#" class="swiper-button-prev">
-            {% render 'chevron-button-prev' %}
-        </a>
-        {% endcomment %}
-        <div class="swiper-pagination"></div>
-        {% comment %}
-        <a aria-label="Slider Next Button" href="#" class="swiper-button-next">
-            {% render 'chevron-button-next' %}
-        </a>
-        {% endcomment %}
-    </div>
+    {% if size > 1 %}
+        <div class="swiper-controls homepage-cards__slider-controls">
+            {% comment %}
+            <a aria-label="Slider Prev Button" href="#" class="swiper-button-prev">
+                {% render 'chevron-button-prev' %}
+            </a>
+            {% endcomment %}
+            <div class="swiper-pagination"></div>
+            {% comment %}
+            <a aria-label="Slider Next Button" href="#" class="swiper-button-next">
+                {% render 'chevron-button-next' %}
+            </a>
+            {% endcomment %}
+        </div>
+    {% endif %}
 </div>
 
 <script src="{{ 'homepage-cards.js' | asset_url }}"></script>

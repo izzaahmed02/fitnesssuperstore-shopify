@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!cardsSliderEl) return;
 
     const slides = cardsSliderEl.querySelectorAll('.swiper-slide');
-    if (!slides.length) return;
+    if (!slides.length || slides.length < 2) return;
 
     const cardsSwiper = new Swiper(cardsSliderEl, {
         slidesPerView: 'auto',
