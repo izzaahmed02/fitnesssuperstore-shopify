@@ -1,25 +1,41 @@
 {% schema %}
 {
   "name": "Video Carousel",
-  "settings": [],
+  "settings": [
+    {
+      "type": "select",
+      "id": "videos_per_row",
+      "label": "Videos per row",
+      "default": "3",
+      "options": [
+        { "label": "1", "value": "1" },
+        { "label": "2", "value": "2" },
+        { "label": "3", "value": "3" },
+        { "label": "4", "value": "4" },
+        { "label": "5", "value": "5" }
+      ]
+    }
+  ],
   "blocks": [
     {
-      "type": "video",
+      "type": "video_block",
       "name": "Video",
       "settings": [
         {
           "type": "image_picker",
           "id": "thumbnail",
-          "label": "Video Thumbnail"
+          "label": "Thumbnail Image"
         },
         {
           "type": "url",
           "id": "video_url",
-          "label": "YouTube or Video URL"
+          "label": "Video URL (YouTube or uploaded file URL)",
+          "info": "Paste a YouTube link or a video file URL uploaded via Shopify Admin > Content > Files"
         }
       ]
     }
   ],
+  "max_blocks": 10,
   "presets": [
     {
       "name": "Video Carousel"
@@ -28,20 +44,19 @@
 }
 {% endschema %}
 
-
-<div class="video-carousel-section">
+<div class="video-carousel-section videos-per-{{ section.settings.videos_per_row }}">
   <div class="carousel-wrapper">
     <div class="carousel" id="videoCarousel">
       {% for block in section.blocks %}
+        {% assign video_url = block.settings.video_url %}
         <div class="carousel-item">
-          <div class="video-thumbnail" data-video-url="{{ block.settings.video_url }}">
+          <div class="video-thumbnail" data-video-url="{{ video_url }}">
             <img src="{{ block.settings.thumbnail | image_url: width: 400 }}" alt="Video Thumbnail">
             <div class="play-button">&#9658;</div>
           </div>
         </div>
       {% endfor %}
     </div>
-    <div class="carousel-dots" id="carouselDots"></div>
     <button class="carousel-nav prev" onclick="prevSlide()">&#10094;</button>
     <button class="carousel-nav next" onclick="nextSlide()">&#10095;</button>
   </div>
@@ -54,23 +69,23 @@
   </div>
 </div>
 
-
 <style>
-  .video-carousel-section {
+.video-carousel-section {
   text-align: center;
-  position: relative;
+  padding: 20px;
 }
 .carousel-wrapper {
   position: relative;
-  overflow: hidden;
 }
 .carousel {
   display: flex;
+  overflow: hidden;
+  gap: 20px;
   transition: transform 0.5s ease;
 }
 .carousel-item {
-  min-width: 100%;
-  padding: 20px;
+  flex: 0 0 auto;
+  width: calc(100% / var(--videos-per-row) - 20px);
 }
 .video-thumbnail {
   position: relative;
@@ -87,25 +102,9 @@
   transform: translate(-50%, -50%);
   font-size: 48px;
   color: white;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   padding: 10px 20px;
   border-radius: 50%;
-}
-.carousel-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 24px;
-  background: none;
-  border: none;
-  color: #333;
-  cursor: pointer;
-}
-.carousel-nav.prev {
-  left: 10px;
-}
-.carousel-nav.next {
-  right: 10px;
 }
 .video-modal {
   display: none;
@@ -135,26 +134,35 @@
   cursor: pointer;
 }
 
+/* Dynamic grid support */
+.video-carousel-section.videos-per-1 { --videos-per-row: 1; }
+.video-carousel-section.videos-per-2 { --videos-per-row: 2; }
+.video-carousel-section.videos-per-3 { --videos-per-row: 3; }
+.video-carousel-section.videos-per-4 { --videos-per-row: 4; }
+.video-carousel-section.videos-per-5 { --videos-per-row: 5; }
 </style>
 
 <script>
-  let currentSlide = 0;
+let currentSlide = 0;
 
 function updateCarousel() {
   const carousel = document.getElementById('videoCarousel');
   const items = carousel.querySelectorAll('.carousel-item');
-  carousel.style.transform = `translateX(-${currentSlide * 100}%)`;
+  const itemWidth = items[0].offsetWidth + 20; // includes gap
+  carousel.style.transform = `translateX(-${currentSlide * itemWidth}px)`;
 }
 
 function prevSlide() {
-  const total = document.querySelectorAll('.carousel-item').length;
-  currentSlide = (currentSlide - 1 + total) % total;
+  const items = document.querySelectorAll('.carousel-item');
+  currentSlide = Math.max(currentSlide - 1, 0);
   updateCarousel();
 }
 
 function nextSlide() {
-  const total = document.querySelectorAll('.carousel-item').length;
-  currentSlide = (currentSlide + 1) % total;
+  const items = document.querySelectorAll('.carousel-item');
+  const visibleCount = parseInt(getComputedStyle(document.querySelector('.video-carousel-section')).getPropertyValue('--videos-per-row'));
+  const maxSlide = items.length - visibleCount;
+  currentSlide = Math.min(currentSlide + 1, maxSlide);
   updateCarousel();
 }
 
@@ -185,5 +193,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
-
 </script>
