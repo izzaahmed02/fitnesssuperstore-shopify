@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     function getHexFromName(name) {
-        const normalized = (name || "").trim().toLowerCase().replace(' ', '');
+        const normalized = (name || "").toLowerCase().replace(' ', '').replace(/\s*\([^()]*\)/g, '').trim();
         return colorMap[normalized] || "#000000";
     }
 
