@@ -337,13 +337,16 @@
                     data-media-id="{{ media.id }}"
                     type="button"
                   >
-                    <img 
-                      src="{{ preview | image_url: width: 100 }}"
-                      alt="{{ media.alt | escape }}"
-                      width="{{ preview.width }}"
-                      height="{{ preview.height }}"
-                      loading="lazy"
-                    >
+                    <div class="image-skeleton-wrapper">
+                      <img 
+                        src="{{ preview | image_url: width: 100 }}"
+                        alt="{{ media.alt | escape }}"
+                        width="{{ preview.width }}"
+                        height="{{ preview.height }}"
+                        loading="lazy"
+                        onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                      >
+                    </div>
 
                     {%- if is_last and image_media.size > image_limit -%}
                       <div class="thumbnail-overlay">+{{ remaining }}</div>
@@ -397,14 +400,17 @@
                   data-zoom-container
                 >
                   {% if first_media.media_type == 'image' %}
-                    <img 
-                      src="{{ preview | image_url: width: 800 }}"
-                      alt="{{ first_media.alt | escape }}"
-                      class="main-product-image"
-                      width="{{ preview.width }}"
-                      height="{{ preview.height }}"
-                      loading="eager"
-                    >
+                    <div class="image-skeleton-wrapper">
+                      <img 
+                        src="{{ preview | image_url: width: 800 }}"
+                        alt="{{ first_media.alt | escape }}"
+                        class="main-product-image"
+                        width="{{ preview.width }}"
+                        height="{{ preview.height }}"
+                        loading="eager"
+                        onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                      >
+                    </div>
                   {% elsif first_media.media_type == 'video' %}
                     {{ first_media | media_tag }}
                   {% else %}
@@ -424,6 +430,8 @@
                   "alt": {{ media.alt | json }},
                   "preview_image": {
                     "src": {{ media.preview_image | image_url: width: 800 | json }},
+                    "srcset": "{{ media.preview_image | image_url: width: 800 }} 800w, {{ media.preview_image | image_url: width: 1200 }} 1200w, {{ media.preview_image | image_url: width: 1600 }} 1600w, {{ media.preview_image | image_url: width: 2048 }} 2048w",
+                    "sizes": "(min-width: 990px) 800px, 100vw",
                     "width": {{ media.preview_image.width | json }},
                     "height": {{ media.preview_image.height | json }}
                   }
@@ -454,45 +462,54 @@
               </svg>
             </div>
 
-            <div class="mobile-gallery-slider">
+            <div class="mobile-gallery-slider image-skeleton-wrapper">
               {% for media in product.media %}
                 {% case media.media_type %}
                   {% when 'image' %}
-                    <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
-                      {% assign isFirst = forloop.first %}
+                    <div class="mobile-gallery-slide-wrap">
+                      <div class="image-skeleton-wrapper">
+                        <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
+                          {% assign isFirst = forloop.first %}
 
-                      <img
-                        src="{{ media.preview_image | image_url: width: 480 }}"
-                        srcset="
-                          {{ media.preview_image | image_url: width: 320 }} 320w,
-                          {{ media.preview_image | image_url: width: 480 }} 480w,
-                          {{ media.preview_image | image_url: width: 800 }} 800w
-                        "
-                        sizes="(max-width: 768px) 100vw, 800px"
-                        alt="{{ media.alt | escape }}"
-                        {% unless isFirst %}loading="lazy"{% endunless %}
-                        width="{{ media.preview_image.width }}"
-                        height="{{ media.preview_image.height }}"
-                      >
+                          <img
+                            src="{{ media.preview_image | image_url: width: 480 }}"
+                            srcset="
+                              {{ media.preview_image | image_url: width: 320 }} 320w,
+                              {{ media.preview_image | image_url: width: 480 }} 480w,
+                              {{ media.preview_image | image_url: width: 800 }} 800w
+                            "
+                            sizes="(max-width: 768px) 100vw, 800px"
+                            alt="{{ media.alt | escape }}"
+                            {% unless isFirst %}loading="lazy"{% endunless %}
+                            width="{{ media.preview_image.width }}"
+                            height="{{ media.preview_image.height }}"
+                            onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                          >
+                        </div>
+                      </div>
                     </div>
 
                   {% when 'video' %}
-                    <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
-                      <video
-                        src="{{ media.sources[1].url }}"
-                        controls
-                        muted
-                        playsinline
-                        preload="metadata"
-                        poster="{{ media.preview_image | image_url: width: 800 }}"
-                      ></video>
+                    <div class="mobile-gallery-slide-wrap">
+                      <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
+                        <video
+                          src="{{ media.sources[1].url }}"
+                          controls
+                          muted
+                          playsinline
+                          preload="metadata"
+                          poster="{{ media.preview_image | image_url: width: 800 }}"
+                        ></video>
+                      </div>
                     </div>
 
                   {% when 'external_video' %}
-                    <div class="mobile-gallery-slide external-video" data-media-id="{{ media.id }}">
-                      <div class="video-wrapper">
-                        <div class="video-iframe-overlay" aria-hidden="true"></div>
-                        {{ media | external_video_tag: autoplay: false, muted: true, loop: false }}
+                    <div class="mobile-gallery-slide-wrap">
+                      <div class="mobile-gallery-slide external-video" data-media-id="{{ media.id }}">
+                        <div class="video-wrapper">
+                          <div class="video-iframe-overlay" aria-hidden="true"></div>
+                          {{ media | external_video_tag: autoplay: false, muted: true, loop: false }}
+                        </div>
                       </div>
                     </div>
                 {% endcase %}

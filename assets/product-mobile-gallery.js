@@ -38,6 +38,16 @@ class MobileGallery extends HTMLElement {
       resizeTimeout = setTimeout(() => {
         this.checkAndInit(isDesktop);
         this.checkAndInitPopup(isDesktop);
+
+        if (window.matchMedia('(min-width: 990px)').matches) {
+          const closeBtn = this.popup.querySelector('.mobile-popup-close');
+
+          if (closeBtn) {
+            this.popup.classList.remove('is-active');
+            document.body.style.overflow = '';
+            this.pauseAllMedia(this.popup);
+          }
+        }
       }, 150);
     });
   }
@@ -60,6 +70,12 @@ class MobileGallery extends HTMLElement {
         prevArrow: '.main-slider-arrow--left',
         nextArrow: '.main-slider-arrow--right',
         lazyLoad: 'ondemand',
+
+        speed: 250,
+        cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
+        swipeToSlide: true,
+        touchThreshold: 8,
+        waitForAnimate: false,
       });
 
       this.attachSlideEvents();
@@ -74,7 +90,9 @@ class MobileGallery extends HTMLElement {
           }
         });
 
-        this.pauseIframeMedia(this);
+        setTimeout(() => {
+          this.pauseIframeMedia(this);
+        }, 100);
       });
 
       this.slickInitialized = true;
@@ -105,6 +123,12 @@ class MobileGallery extends HTMLElement {
         infinite: false,
         adaptiveHeight: true,
         lazyLoad: 'ondemand',
+
+        speed: 250,
+        cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
+        swipeToSlide: true,
+        touchThreshold: 8,
+        waitForAnimate: false,
       });
     }
 
@@ -175,6 +199,12 @@ class MobileGallery extends HTMLElement {
         initialSlide: index,
         adaptiveHeight: true,
         lazyLoad: 'ondemand',
+
+        speed: 250,
+        cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
+        swipeToSlide: true,
+        touchThreshold: 8,
+        waitForAnimate: false,
       });
 
       $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
@@ -243,7 +273,7 @@ class MobileGallery extends HTMLElement {
   }
 
   renderPopupSlides(container) {
-    const slides = this.querySelectorAll('.mobile-gallery-slide');
+    const slides = this.querySelectorAll('.mobile-gallery-slide-wrap');
     container.innerHTML = '';
 
     slides.forEach((originalSlide) => {
@@ -251,6 +281,7 @@ class MobileGallery extends HTMLElement {
       const iframe = clone.querySelector('iframe');
       const overlay = clone.querySelector('.video-iframe-overlay');
       const img = clone.querySelector('img');
+      const originalImg = originalSlide.querySelector('img');
       const video = clone.querySelector('video');
 
       // YouTube
@@ -269,8 +300,11 @@ class MobileGallery extends HTMLElement {
         newIframe.style.pointerEvents = 'none';
 
         const wrapper = document.createElement('div');
-        wrapper.className = 'video-wrapper';
-        wrapper.appendChild(newIframe);
+        const videoWrapper = document.createElement('div');
+        wrapper.className = 'mobile-gallery-slide external-video';
+        videoWrapper.className = 'video-wrapper';
+        wrapper.appendChild(videoWrapper);
+        videoWrapper.appendChild(newIframe);
 
         const newOverlay = document.createElement('div');
         newOverlay.className = 'video-iframe-overlay';
@@ -301,24 +335,36 @@ class MobileGallery extends HTMLElement {
       // Image + zoom/pan
       if (img) {
         const wrapper = document.createElement('div');
-        wrapper.className = 'zoom-container';
-        wrapper.style.overflow = 'hidden';
-        wrapper.style.position = 'relative';
+        const zoomWrapper = document.createElement('div');
+        const skeletonWrapper = document.createElement('div');
+
+        wrapper.className = 'mobile-gallery-slide';
+        zoomWrapper.className = 'zoom-container';
+        skeletonWrapper.className = 'image-skeleton-wrapper';
+
+        zoomWrapper.style.overflow = 'hidden';
 
         const zoomImg = document.createElement('img');
-        zoomImg.src = img.src;
+        // originalImg?.getAttribute('src') ||
+        zoomImg.src = img.src.replace(/width=\d+/, 'width=600');
+        // zoomImg.srcset = originalImg?.getAttribute('srcset') || '';
+        zoomImg.sizes = originalImg?.getAttribute('sizes') || '';
+        zoomImg.width = originalImg?.getAttribute('width') || '';
+        zoomImg.height = originalImg?.getAttribute('height') || '';
         zoomImg.alt = img.alt || '';
-        zoomImg.loading = 'lazy';
+        zoomImg.loading = 'eager';
         zoomImg.className = 'popup-zoom-image';
         zoomImg.style.touchAction = 'none';
         zoomImg.style.userSelect = 'none';
 
-        wrapper.appendChild(zoomImg);
+        skeletonWrapper.appendChild(zoomImg);
+        zoomWrapper.appendChild(skeletonWrapper);
+        wrapper.appendChild(zoomWrapper);
         clone.innerHTML = '';
         clone.appendChild(wrapper);
         container.appendChild(clone);
 
-        const highResSrc = img.src.replace(/width=\d+/, 'width=2048');
+        const highResSrc = img.src.replace(/width=\d+/, ''); //width=2048
 
         if (zoomImg.src !== highResSrc) {
           const preload = new Image();
@@ -336,94 +382,105 @@ class MobileGallery extends HTMLElement {
         let lastScale = 1;
         let frameId = null;
 
-        const hammer = new Hammer(wrapper);
-        this.hammerInstances.push(hammer);
-        hammer.get('pinch').set({ enable: true });
-        hammer.get('doubletap').set({ taps: 2 });
-        hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
-
-        hammer.on('pinchstart', () => {
-          lastScale = scale;
-        });
-
-        hammer.on('pinchmove', (e) => {
-          scale = Math.max(1, Math.min(lastScale * e.scale, 3));
-
-          if (scale === 1) {
-            posX = 0;
-            posY = 0;
-            lastPosX = 0;
-            lastPosY = 0;
-          }
-
-          updateTransform();
-        });
-
-        hammer.on('doubletap', () => {
-          if (scale < 1.5) {
-            scale = 1.5;
-          } else if (scale < 2) {
-            scale = 2;
-          } else if (scale < 3) {
-            scale = 3;
-          } else {
-            scale = 1;
-            posX = 0;
-            posY = 0;
-            lastPosX = 0;
-            lastPosY = 0;
-          }
-
-          if (zoomImg.src !== highResSrc) {
-            const preload = new Image();
-            preload.src = highResSrc;
-            preload.onload = () => {
-              zoomImg.src = highResSrc;
-              zoomImg.style.opacity = '0';
-              requestAnimationFrame(() => {
-                zoomImg.style.transition = 'opacity 0.2s ease-in-out';
-                zoomImg.style.opacity = '1';
-              });
-            };
-          }
-
-          updateTransform();
-        });
-
-        hammer.on('panstart', () => {
-          lastPosX = posX;
-          lastPosY = posY;
-        });
-
-        hammer.on('panmove', (e) => {
-          if (scale <= 1.01) return;
-
-          const rect = wrapper.getBoundingClientRect();
-          const imgWidth = zoomImg.naturalWidth * scale;
-          const imgHeight = zoomImg.naturalHeight * scale;
-
-          const maxX = Math.max((imgWidth - rect.width) / 2, 0);
-          const maxY = Math.max((imgHeight - rect.height) / 2, 0);
-
-          let nextX = lastPosX + e.deltaX * 1;
-          let nextY = lastPosY + e.deltaY * 1;
-
-          posX = Math.min(maxX, Math.max(-maxX, nextX));
-          posY = Math.min(maxY, Math.max(-maxY, nextY));
-
-          updateTransform();
-        });
-
-        hammer.on('panend', () => {
-          lastPosX = posX;
-          lastPosY = posY;
-        });
-
         const updateTransform = () => {
           if (frameId) cancelAnimationFrame(frameId);
           frameId = requestAnimationFrame(() => {
             zoomImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
           });
+        };
+
+        zoomImg.onload = () => {
+          skeletonWrapper.classList.add('loaded');
+          const allowZoom = zoomImg.naturalWidth > 500;
+
+          if (!allowZoom) {
+            wrapper.classList.add('zoom-disabled');
+          }
+
+          const hammer = new Hammer(wrapper);
+          this.hammerInstances.push(hammer);
+
+          hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+
+          if (allowZoom) {
+            hammer.get('pinch').set({ enable: true });
+            hammer.get('doubletap').set({ taps: 2 });
+
+            hammer.on('pinchstart', () => {
+              lastScale = scale;
+            });
+
+            hammer.on('pinchmove', (e) => {
+              scale = Math.max(1, Math.min(lastScale * e.scale, 3));
+              if (scale === 1) {
+                posX = 0;
+                posY = 0;
+                lastPosX = 0;
+                lastPosY = 0;
+              }
+              updateTransform();
+            });
+
+            hammer.on('doubletap', () => {
+              if (zoomImg.src !== highResSrc) {
+                const preload = new Image();
+                preload.src = highResSrc;
+                preload.onload = () => {
+                  zoomImg.src = highResSrc;
+                  zoomImg.style.opacity = '0';
+                  requestAnimationFrame(() => {
+                    zoomImg.style.transition = 'opacity 0.2s ease-in-out';
+                    zoomImg.style.opacity = '1';
+                  });
+                };
+              }
+
+              if (scale < 1.5) {
+                scale = 1.5;
+              } else if (scale < 2) {
+                scale = 2;
+              } else if (scale < 3) {
+                scale = 3;
+              } else {
+                scale = 1;
+                posX = 0;
+                posY = 0;
+                lastPosX = 0;
+                lastPosY = 0;
+              }
+
+              updateTransform();
+            });
+
+            hammer.on('panstart', () => {
+              lastPosX = posX;
+              lastPosY = posY;
+            });
+
+            hammer.on('panmove', (e) => {
+              if (scale <= 1.01) return;
+
+              const rect = wrapper.getBoundingClientRect();
+              const imgWidth = zoomImg.naturalWidth * scale;
+              const imgHeight = zoomImg.naturalHeight * scale;
+
+              const maxX = Math.max((imgWidth - rect.width) / 2, 0);
+              const maxY = Math.max((imgHeight - rect.height) / 2, 0);
+
+              let nextX = lastPosX + e.deltaX;
+              let nextY = lastPosY + e.deltaY;
+
+              posX = Math.min(maxX, Math.max(-maxX, nextX));
+              posY = Math.min(maxY, Math.max(-maxY, nextY));
+
+              updateTransform();
+            });
+
+            hammer.on('panend', () => {
+              lastPosX = posX;
+              lastPosY = posY;
+            });
+          }
         };
 
         const slide = zoomImg.closest('.slick-slide');
@@ -450,13 +507,25 @@ class MobileGallery extends HTMLElement {
   }
 
   pauseIframeMedia(scope) {
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
     const iframes = scope.querySelectorAll('iframe');
     iframes.forEach((iframe) => {
       try {
-        iframe.contentWindow?.postMessage(
-          '{"event":"command","func":"pauseVideo","args":""}',
-          '*',
-        );
+        if (iframe.src.includes('youtube.com') && iframe.contentWindow) {
+          if (isSafari) {
+            const src = iframe.src;
+            iframe.src = '';
+            iframe.src = src;
+          } else {
+            iframe.contentWindow.postMessage(
+              '{"event":"command","func":"pauseVideo","args":""}',
+              '*',
+            );
+          }
+        }
+
+        // Vimeo, etc.
         iframe.contentWindow?.postMessage({ method: 'pause' }, '*');
       } catch (e) {
         console.warn('Could not send pause message to iframe:', e);
