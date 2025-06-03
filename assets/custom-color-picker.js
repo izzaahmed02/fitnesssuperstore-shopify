@@ -540,7 +540,7 @@ document.addEventListener('DOMContentLoaded', function() {
         maroon: "#800000",
         burgundy: "#800020",
         metallicsilver: "#aaa9ad",
-        stormgray: "#747880"
+        stormgray: "#747880" 
     };
 
     function getHexFromName(name) {

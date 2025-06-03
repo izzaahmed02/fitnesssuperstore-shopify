@@ -1,0 +1,268 @@
+{% schema %}
+{
+  "name": "Video Carousel",
+  "settings": [
+    {
+      "type": "select",
+      "id": "videos_per_row",
+      "label": "Videos per row",
+      "default": "3",
+      "options": [
+        { "label": "1", "value": "1" },
+        { "label": "2", "value": "2" },
+        { "label": "3", "value": "3" },
+        { "label": "4", "value": "4" },
+        { "label": "5", "value": "5" }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "video_block",
+      "name": "Video",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "thumbnail",
+          "label": "Thumbnail Image"
+        },
+        {
+          "type": "url",
+          "id": "video_url",
+          "label": "Video URL (YouTube or uploaded file URL)",
+          "info": "Paste a YouTube link or a video file URL uploaded via Content > Files"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 10,
+  "presets": [
+    {
+      "name": "Video Carousel"
+    }
+  ]
+}
+{% endschema %}
+
+
+<div class="video-carousel-section">
+  <div
+    class="video-carousel slick-carousel"
+    data-videos-per-row="{{ section.settings.videos_per_row }}"
+  >
+    {% for block in section.blocks %}
+      {% assign video_url = block.settings.video_url %}
+      <div class="carousel-item">
+        <div class="video-thumbnail" data-video-url="{{ video_url }}">
+          <img src="{{ block.settings.thumbnail | image_url: width: 600 }}" alt="Video Thumbnail" />
+          <div class="play-button">&#9658;</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="video-modal" id="videoModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal()">&times;</span>
+      <div id="modalVideoContainer"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+
+  .slick-prev, .slick-next {
+    height: 44px;
+    width: 44px;
+    border-radius: 100px;
+    font-size: 0;
+    line-height: 0;
+    position: absolute;
+    top: 50%;
+    display: block;
+    z-index: 999;
+    padding: 0;
+    -webkit-transform: translate(0, -50%);
+    -ms-transform: translate(0,-50%);
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: transparent;
+    border: none;
+    outline: none;
+    background: #616166;
+}
+
+  button.slick-next.slick-arrow {
+        position: absolute;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        top: 50%;
+        justify-content: center;
+        align-items: center;
+        right: 0;
+        
+        z-index: 999;
+    }
+
+  button.slick-prev.slick-arrow {
+        position: absolute;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        right: 55px;
+        
+        z-index: 999;
+    }
+
+    .slick-next:before {
+content: ''!important;
+    background-image: url('{{ 'arrow-left.svg' | asset_url }}') !important;
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 24px; /* Adjust size as needed */
+    height: 24px; /* Adjust size as needed */
+}
+
+.slick-prev:before {
+content: ''!important;
+    background-image: url('{{ 'arrow-right.svg' | asset_url }}') !important;
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 24px; /* Adjust size as needed */
+    height: 24px; /* Adjust size as needed */
+}
+
+  .slick-dots{
+    display: none!important;
+  }
+
+  .slick-next:focus, .slick-next:hover, .slick-prev:focus, .slick-prev:hover{
+     background: #616166;
+  }
+  
+.slick-slide {
+    margin: 0 18px;
+}
+
+.slick-list {
+    margin: 0 -18px;
+}
+.video-carousel-section{
+  max-width: 1320px;
+  padding: 20px;
+  margin: 0 auto;
+}
+  
+.video-thumbnail {
+  position: relative;
+  cursor: pointer;
+}
+.video-thumbnail img {
+  border-radius: 12px;
+  width: 100%;
+}
+.play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  color: white;
+  backdrop-filter: blur(6px);
+  background: #23232B4D;
+  padding: 12px 16px;
+  border-radius: 50%;
+}
+.video-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.8);
+}
+.modal-content {
+  position: relative;
+  width: 80%;
+  max-width: 900px;
+  margin: 60px auto;
+  background: #fff;
+  padding: 20px;
+}
+.modal-content iframe,
+.modal-content video {
+  width: 100%;
+  height: 500px;
+}
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 28px;
+  cursor: pointer;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+ 
+
+  $('.slick-carousel').slick({
+    slidesToShow: 3,
+    slidesToScroll: 1,
+    arrows: true,
+    dots: true,
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 2
+        }
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1
+        }
+      }
+    ]
+  });
+
+  // Modal functionality
+  document.querySelectorAll('.video-thumbnail').forEach(thumbnail => {
+    thumbnail.addEventListener('click', () => {
+      const videoUrl = thumbnail.getAttribute('data-video-url');
+      const modal = document.getElementById('videoModal');
+      const container = document.getElementById('modalVideoContainer');
+
+      let embed;
+      if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+        const id = videoUrl.split(/v=|\/([^\/\?]+)$/).filter(Boolean).pop();
+        embed = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      } else {
+        embed = `<video controls autoplay src="${videoUrl}"></video>`;
+      }
+
+      container.innerHTML = embed;
+      modal.style.display = 'block';
+    });
+  });
+
+  window.closeModal = function () {
+    const modal = document.getElementById('videoModal');
+    const container = document.getElementById('modalVideoContainer');
+    container.innerHTML = '';
+    modal.style.display = 'none';
+  };
+});
+</script>

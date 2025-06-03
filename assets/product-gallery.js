@@ -124,22 +124,31 @@ class ProductGallery extends HTMLElement {
 
     if (media.media_type === 'image') {
       const img = document.createElement('img');
-      img.src =
-        'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+      const skeletonWrapper = document.createElement('div');
+      // img.src =
+      //   'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
       img.alt = media.alt || '';
       img.className = 'main-product-image';
+      skeletonWrapper.className = 'image-skeleton-wrapper';
+      // img.srcset = media.preview_image.srcset || '';
+      img.src = media.preview_image.src;
+      img.sizes = media.preview_image.sizes || '';
+      img.width = media.preview_image.width || '';
+      img.height = media.preview_image.height || '';
+      img.alt = media.alt || '';
       img.loading = 'eager';
-      img.width = media.preview_image.width;
-      img.height = media.preview_image.height;
 
-      container.appendChild(img);
+      container.appendChild(skeletonWrapper);
+      skeletonWrapper.appendChild(img);
 
-      const preload = new Image();
-      preload.src = media.preview_image.src;
-      this.main.appendChild(container);
+      // const preload = new Image();
+      // preload.src = media.preview_image.src;
 
-      preload.onload = () => {
-        img.src = preload.src;
+      // this.main.appendChild(container);
+
+      img.onload = () => {
+        skeletonWrapper.classList.add('loaded');
+        // img.src = preload.src;
 
         const tryInitZoom = () => {
           if (
@@ -392,13 +401,21 @@ class ProductGallery extends HTMLElement {
         btn.type = 'button';
         btn.setAttribute('data-media-id', media.id);
 
+        const skeletonWrapper = document.createElement('div');
         const img = document.createElement('img');
         img.src = media.preview_image.src;
         img.alt = media.alt || '';
         img.width = media.preview_image.width;
         img.height = media.preview_image.height;
+        skeletonWrapper.className = 'image-skeleton-wrapper';
 
-        btn.appendChild(img);
+        btn.appendChild(skeletonWrapper);
+        skeletonWrapper.appendChild(img);
+
+        img.onload = () => {
+          skeletonWrapper.classList.add('loaded');
+        };
+
         btn.addEventListener('click', () => {
           const zoomedViewer = popup.querySelector(
             '.popup-media-viewer.is-zoomed',
@@ -496,13 +513,28 @@ class ProductGallery extends HTMLElement {
       const inner = document.createElement('div');
       inner.className = 'popup-media-inner';
 
+      const skeletonWrapper = document.createElement('div');
+      skeletonWrapper.className = 'image-skeleton-wrapper';
+
       const img = document.createElement('img');
-      img.src = media.preview_image.src.replace(/width=\d+/, 'width=2048');
+      // img.src = media.preview_image.src.replace(/width=\d+/, 'width=800');
+      img.src = media.preview_image.src.replace(/width=\d+/, '');
+
+      // img.srcset = media.preview_image.srcset || '';
+      img.sizes = media.preview_image.sizes || '';
+      img.width = media.preview_image.width || '';
+      img.height = media.preview_image.height || '';
       img.alt = media.alt || '';
+      img.loading = 'eager';
       img.className = 'popup-media-zoom-img';
 
-      inner.appendChild(img);
+      skeletonWrapper.appendChild(img);
+      inner.appendChild(skeletonWrapper);
       viewer.appendChild(inner);
+
+      img.onload = () => {
+        skeletonWrapper.classList.add('loaded');
+      };
 
       let isZoomed = false;
 
@@ -521,8 +553,8 @@ class ProductGallery extends HTMLElement {
         const viewHeight = rect.height;
 
         if (imgWidth <= viewWidth && imgHeight <= viewHeight) {
-          inner.style.left = '0px';
-          inner.style.top = '0px';
+          skeletonWrapper.style.left = '0px';
+          skeletonWrapper.style.top = '0px';
           return;
         }
 
@@ -532,8 +564,8 @@ class ProductGallery extends HTMLElement {
         const left = Math.max(0, Math.min((x / viewWidth) * maxX, maxX));
         const top = Math.max(0, Math.min((y / viewHeight) * maxY, maxY));
 
-        inner.style.left = `-${left}px`;
-        inner.style.top = `-${top}px`;
+        skeletonWrapper.style.left = `-${left}px`;
+        skeletonWrapper.style.top = `-${top}px`;
       }
 
       viewer.addEventListener('click', () => {
@@ -554,12 +586,16 @@ class ProductGallery extends HTMLElement {
         viewer.classList.toggle('is-zoomed', isZoomed);
 
         if (isZoomed) {
-          handleMouseMove();
+          if (img.complete && img.naturalWidth > 0) {
+            requestAnimationFrame(() => {
+              handleMouseMove(); 
+            });
+          }
           viewer.addEventListener('mousemove', handleMouseMove);
         } else {
           viewer.removeEventListener('mousemove', handleMouseMove);
-          inner.style.left = '0px';
-          inner.style.top = '0px';
+          skeletonWrapper.style.left = '0px';
+          skeletonWrapper.style.top = '0px';
         }
       });
 
@@ -674,6 +710,7 @@ class ProductGallery extends HTMLElement {
     const viewer = popup.querySelector('[data-popup-viewer]');
 
     if (viewer) viewer.innerHTML = '';
+    viewer.classList.remove('is-zoomed');
 
     popup.hidden = true;
     document.body.style.overflow = '';
