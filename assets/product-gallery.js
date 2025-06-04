@@ -65,7 +65,6 @@ class ProductGallery extends HTMLElement {
     requestAnimationFrame(() => {
       if (this.isDesktop()) {
         if (img.complete) {
-          console.log(this.isDesktop(), container, media);
           this.initZoom(container, media);
         } else {
           img.onload = () => {
