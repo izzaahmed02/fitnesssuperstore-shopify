@@ -56,10 +56,24 @@ class ProductGallery extends HTMLElement {
     const oldLens = container.querySelector('.zoom-lens');
     if (oldResult) oldResult.remove();
     if (oldLens) oldLens.remove();
+    container.dataset.zoomInitialized = 'false';
 
-    if (this.isDesktop()) {
-      this.initZoom(container, media);
-    }
+    const img = container.querySelector('img');
+    if (!img) return;
+    img.onload = null;
+
+    requestAnimationFrame(() => {
+      if (this.isDesktop()) {
+        if (img.complete) {
+          console.log(this.isDesktop(), container, media);
+          this.initZoom(container, media);
+        } else {
+          img.onload = () => {
+            this.initZoom(container, media);
+          };
+        }
+      }
+    });
   }
 
   initThumbnails() {
@@ -228,6 +242,7 @@ class ProductGallery extends HTMLElement {
   isDesktop() {
     return window.matchMedia('(min-width: 990px)').matches;
   }
+
   initZoom(container, media, forceStart = false) {
     if (!this.isDesktop()) return;
 
@@ -246,7 +261,7 @@ class ProductGallery extends HTMLElement {
     container.appendChild(lens);
 
     const zoomImg = new Image();
-    zoomImg.src = media.preview_image.src.replace(/width=\d+/, 'width=2048');
+    zoomImg.src = media.preview_image.src.replace(/width=\d+/, '');
     zoomResult.appendChild(zoomImg);
 
     zoomImg.onload = () => {
@@ -262,13 +277,64 @@ class ProductGallery extends HTMLElement {
       const scaleX = zoomImg.naturalWidth / img.clientWidth;
       const scaleY = zoomImg.naturalHeight / img.clientHeight;
 
-      requestAnimationFrame(() => {
-        const zoomW = zoomResult.clientWidth || 400;
-        const zoomH = zoomResult.clientHeight || 400;
-        const lensScale = 1.2;
+      // requestAnimationFrame(() => {
+      //   const zoomW = zoomResult.clientWidth || 400;
+      //   const zoomH = zoomResult.clientHeight || 400;
+      //   const lensScale = 1.2;
 
-        lens.style.width = `${(zoomW / scaleX) * lensScale}px`;
-        lens.style.height = `${(zoomH / scaleY) * lensScale}px`;
+      //   lens.style.width = `${(zoomW / scaleX) * lensScale}px`;
+      //   lens.style.height = `${(zoomH / scaleY) * lensScale}px`;
+      // });
+
+      requestAnimationFrame(() => {
+        const prevDisplay = zoomResult.style.display;
+        const prevVisibility = zoomResult.style.visibility;
+
+        zoomResult.style.visibility = 'hidden';
+        zoomResult.style.display = 'block';
+
+        const zoomW = zoomResult.offsetWidth;
+        const zoomH = zoomResult.offsetHeight;
+
+        zoomResult.style.display = prevDisplay;
+        zoomResult.style.visibility = prevVisibility;
+
+        if (!zoomW || !zoomH) {
+          console.warn('zoomResult still has no dimensions');
+          return;
+        }
+
+        const maxLensW = img.clientWidth;
+        const maxLensH = img.clientHeight;
+
+        // const lensScale = 1.2;
+        const lensW = zoomW / scaleX;
+        const lensH = zoomH / scaleY;
+
+        lens.style.width = `${Math.min(lensW, maxLensW)}px`;
+        lens.style.height = `${Math.min(lensH, maxLensH)}px`;
+
+        const announcementBarSection = document.querySelector(
+          '.announcement-bar-section',
+        );
+        const headerWrapper = document.querySelector('.header-wrapper');
+
+        const updateZoomTop = () => {
+          const threshold =
+            announcementBarSection.offsetHeight + headerWrapper.offsetHeight;
+          document.documentElement.style.setProperty('--header-height', `${threshold}px`);
+
+          if (window.scrollY <= threshold) {
+            zoomResult.style.top = '';
+            zoomResult.style.height = '';
+          } else {
+            zoomResult.style.top = '20px';
+            zoomResult.style.height = `calc(98vh - 20px)`;
+          }
+        };
+
+        updateZoomTop();
+        window.addEventListener('scroll', updateZoomTop, { passive: true });
       });
 
       let frameId;
@@ -588,7 +654,7 @@ class ProductGallery extends HTMLElement {
         if (isZoomed) {
           if (img.complete && img.naturalWidth > 0) {
             requestAnimationFrame(() => {
-              handleMouseMove(); 
+              handleMouseMove();
             });
           }
           viewer.addEventListener('mousemove', handleMouseMove);

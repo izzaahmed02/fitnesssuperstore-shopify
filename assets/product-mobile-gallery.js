@@ -64,11 +64,11 @@ class MobileGallery extends HTMLElement {
       $(this.slider).slick({
         dots: true,
         appendDots: this.dots,
-        arrows: true,
+        arrows: false,
         infinite: false,
         adaptiveHeight: true,
-        prevArrow: '.main-slider-arrow--left',
-        nextArrow: '.main-slider-arrow--right',
+        // prevArrow: '.main-slider-arrow--left',
+        // nextArrow: '.main-slider-arrow--right',
         lazyLoad: 'ondemand',
 
         speed: 250,
