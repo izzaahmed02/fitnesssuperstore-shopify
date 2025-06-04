@@ -1,0 +1,464 @@
+<section
+  class="payments-plan-section"
+  style="background: {{ section.settings.bg_color | default: '#f8f8f8' }}">
+  <div class="affirm-wrap">
+    <h2 class="title">{{ section.settings.provider_title }}</h2>
+    <p class="affirm-subtitle">{{ section.settings.provider_subtitle }}</p>
+
+    {% assign card_count = section.blocks | where: 'type', 'feature_card' | size %}
+
+    <div class="affirm-cards-wrap cards-{{ card_count }}">
+      {% for block in section.blocks %}
+        {% if block.type == 'feature_card' %}
+          <div class="affirm-card">
+            {% if block.settings.icon != blank %}
+              <img src="{{ block.settings.icon | img_url: '100x100' }}" alt="">
+            {% endif %}
+            <div class="heading-with-text">
+              <h3>{{ block.settings.heading }}</h3>
+              <p>{{ block.settings.text }}</p>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="affirm-tabs">
+      {% assign first_tab = true %}
+      {% for block in section.blocks %}
+        {% if block.type == 'tab' %}
+          <button class="affirm-tab{% if first_tab %} active{% endif %}" data-tab="pane-{{ block.id }}">
+            {{ block.settings.tab_title }}
+          </button>
+          {% assign first_tab = false %}
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% assign first_pane = true %}
+    {% for block in section.blocks %}
+      {% if block.type == 'tab' %}
+        <div class="affirm-pane{% if first_pane %} active{% endif %}" id="pane-{{ block.id }}">
+          <div class="affirm-pane-grid{% if block.settings.image_position == 'right' %} image-right{% endif %}">
+            <div class="affirm-image">
+              {% if block.settings.image != blank %}
+                <img src="{{ block.settings.image | img_url: '800x' }}" alt="">
+              {% endif %}
+            </div>
+            <div class="affirm-list-wrap">
+              <h4>{{ block.settings.tab_title }}</h4>
+              {{ block.settings.body }}
+            </div>
+          </div>
+        </div>
+        {% assign first_pane = false %}
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+<style>
+.payments-plan-section {
+  font-family: 'DM Sans';
+  padding: 50px 0;
+  background: #f8f8f8;
+  text-align: center;
+}
+
+.payments-plan-section .affirm-wrap {
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 5rem;
+}
+
+
+.payments-plan-section .title {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    margin: 0 0 16px;
+    text-transform: uppercase;
+}
+
+.payments-plan-section .affirm-subtitle {
+  font-size: 16px;
+  line-height: 24px;
+  color: #000;
+  margin: 0 0 56px;
+  font-weight: 400;
+  text-align: center !important;
+}
+
+.payments-plan-section .affirm-cards-wrap {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 32px;
+  margin-bottom: 56px;
+}
+
+.payments-plan-section .affirm-card {
+  background: #fff;
+  border: 1px solid #e7e7e7;
+  border-radius: 6px;
+  padding: 35px 24px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, .04);
+  display: grid;
+  gap: 0;
+  place-items: center;
+}
+
+.payments-plan-section .affirm-card h3 {
+  font-size: 20px;
+  margin: 25px 0 15px 0;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.payments-plan-section .affirm-card p {
+  font-size: 16px;
+  color: #000;
+  margin: 0;
+  font-weight: 400;
+  line-height: 24px;
+}
+.payments-plan-section .affirm-card img {
+  width: 80px;
+  height: 80px;
+}
+.payments-plan-section .affirm-tabs {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.payments-plan-section .affirm-tab {
+  font-size: 14px;
+  font-weight: 500;
+  padding: 24px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #000;
+  width: 50%;
+  border-bottom: 3px solid #E5E5E5;
+}
+
+.payments-plan-section .affirm-tab.active {
+  color: #000;
+  border-bottom: 3px solid #DF633A !important;
+  width: 50%;
+}
+
+.payments-plan-section .affirm-pane {
+  display: none;
+}
+
+.payments-plan-section .affirm-pane.active {
+  display: block;
+}
+
+.payments-plan-section .affirm-pane-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center !important;
+  text-align: left;
+  grid-template-areas: "image text";
+}
+
+.payments-plan-section .affirm-pane-grid.image-right {
+  grid-template-areas: "text image";
+}
+
+.payments-plan-section .affirm-image {
+  grid-area: image;
+}
+
+.payments-plan-section .affirm-list-wrap {
+  grid-area: text;
+}
+
+.payments-plan-section .affirm-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+}
+
+.payments-plan-section .affirm-list-wrap h4 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 24px;
+  line-height: 32px;
+}
+
+.payments-plan-section .affirm-list-wrap li {
+  font-size: 14px;
+  line-height: 1.7;
+  position: relative;
+  padding-left: 34px !important;
+  margin-bottom: 15px !important;
+}
+
+.payments-plan-section .affirm-list-wrap li::before {
+  content: url("https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Union.png?v=1748452791");
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+}
+
+.payments-plan-section .affirm-list-wrap ul {
+  padding: 0 !important;
+}
+
+@media (min-width: 768px) {
+  .payments-plan-section .affirm-cards-wrap {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 32px !important;
+    justify-content: center !important;
+  }
+  .payments-plan-section .affirm-card {
+    flex: 0 1 calc((100% - 64px) / 3) !important;
+    max-width: 380px !important;
+  }
+  .payments-plan-section .affirm-cards-wrap.cards-4 .affirm-card {
+    flex: 0 1 calc((100% - 96px) / 4) !important;
+  }
+  .payments-plan-section .affirm-cards-wrap.cards-5 {
+    flex-wrap: wrap !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .payments-plan-section .affirm-pane-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    grid-template-areas:
+      "image"
+      "text" !important;
+  }
+  .payments-plan-section .affirm-tabs {
+    flex-direction: column;
+    border-bottom: none;
+    padding: 0;
+  }
+  .payments-plan-section .affirm-tab {
+    width: 100%;
+    text-align: left;
+    padding: 20px 0;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    color: #000;
+    position: relative;
+  }
+  .payments-plan-section .affirm-tab::after {
+    content: url("https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Chevron_-_Down.png?v=1748537808");
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform .25s;
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+  }
+  .payments-plan-section .affirm-tab.active::after {
+    transform: translateY(-50%) rotate(180deg);
+  }
+  .payments-plan-section .affirm-pane {
+    padding: 0;
+  }
+  .payments-plan-section .affirm-card {
+    padding: 32px 16px;
+  }
+  .payments-plan-section .affirm-card img {
+    width: 60px;
+    height: 60px;
+}
+  .payments-plan-section .affirm-tab.active {
+    border: none;
+    margin-bottom: 20px;
+    width: 100%;
+  }
+  .payments-plan-section .affirm-subtitle {
+    text-align: start !important;
+    font-size: 14px;
+  }
+  .payments-plan-section .affirm-subtitle br {
+    display: none;
+  }
+  .payments-plan-section .title {
+    text-align: start;
+    margin-bottom: 15px;
+    font-size: 22px;
+  }
+  .payments-plan-section .affirm-card {
+    padding: 32px 16px;
+    display: flex !important;
+    gap: 20px;
+  }
+  .payments-plan-section .affirm-card h3 {
+    text-align: start;
+    margin-bottom: 10px !important;
+    font-size: 20px !important;
+  }
+  .payments-plan-section .affirm-card p {
+    text-align: start;
+    font-size: 14px !important;
+  }
+  .payments-plan-section .affirm-wrap {
+    padding: 0 20px !important;
+  }
+}
+</style>
+
+<script>
+(()=>{
+const isMob=()=>matchMedia('(max-width:768px)').matches;
+const secOf=e=>e.closest('.payments-plan-section');
+const setActive=b=>{
+  const s=secOf(b),p=document.getElementById(b.dataset.tab);
+  s.querySelectorAll('.affirm-tab').forEach(t=>t.classList.remove('active'));
+  s.querySelectorAll('.affirm-pane').forEach(t=>t.classList.remove('active'));
+  b.classList.add('active');p.classList.add('active');
+};
+const click=e=>{
+  e.preventDefault();
+  const b=e.currentTarget;
+  if(isMob()){
+    if(b.classList.contains('active')){
+      b.classList.remove('active');
+      document.getElementById(b.dataset.tab).classList.remove('active');
+    }else{
+      setActive(b);
+      b.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  }else{
+    setActive(b);
+  }
+};
+const layout=()=>{
+  document.querySelectorAll('.payments-plan-section').forEach(s=>{
+    const bar=s.querySelector('.affirm-tabs');
+    s.querySelectorAll('.affirm-tab').forEach(b=>{
+      const p=document.getElementById(b.dataset.tab);
+      if(isMob()){
+        if(p.previousElementSibling!==b)b.after(p);
+      }else{
+        if(bar.nextElementSibling!==p)bar.after(p);
+      }
+    });
+  });
+  if(isMob()){
+    document.querySelectorAll('.affirm-tab.active').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.affirm-pane.active').forEach(p=>p.classList.remove('active'));
+  }else{
+    document.querySelectorAll('.payments-plan-section').forEach(s=>{
+      const f=s.querySelector('.affirm-tab');
+      if(!f)return;
+      const p=document.getElementById(f.dataset.tab);
+      f.classList.add('active');p.classList.add('active');
+    });
+  }
+};
+const init=()=>{
+  document.querySelectorAll('.affirm-tab').forEach(b=>b.addEventListener('click',click,{passive:true}));
+  layout();
+  addEventListener('resize',layout,{passive:true});
+  addEventListener('orientationchange',layout,{passive:true});
+};
+document.readyState==='loading'?addEventListener('DOMContentLoaded',init):init();
+})();
+</script>
+
+
+{% schema %}
+{
+  "name": "Financing plan section",
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#f8f8f8"
+    },
+    {
+      "type": "text",
+      "id": "provider_title",
+      "label": "Provider title",
+      "default": "AFFIRM"
+    },
+    {
+      "type": "textarea",
+      "id": "provider_subtitle",
+      "label": "Provider subtitle",
+      "default": "Straight payments or installment options may be done via Affirm upon online check out.<br>Ideal for individuals purchasing for personal use."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "feature_card",
+      "name": "Feature card",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading"
+        },
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Text"
+        }
+      ]
+    },
+    {
+      "type": "tab",
+      "name": "Tab pane",
+      "settings": [
+        {
+          "type": "text",
+          "id": "tab_title",
+          "label": "Tab title"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "richtext",
+          "id": "body",
+          "label": "Content"
+        },
+        {
+          "type": "select",
+          "id": "image_position",
+          "label": "Image position",
+          "default": "left",
+          "options": [
+            { "value": "left", "label": "Left" },
+            { "value": "right", "label": "Right" }
+          ]
+        }
+      ]
+    }
+  ],
+  "max_blocks": 50,
+  "presets": [
+    {
+      "name": "Financing plan section"
+    }
+  ]
+}
+{% endschema %}

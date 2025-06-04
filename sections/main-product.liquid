@@ -1,4 +1,4 @@
-{% style %}
+{% style %} 
   #shopify-section-{{ section.id }} .product-main-container{
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -37,7 +37,45 @@
   <meta itemprop="availability" content="OutOfStock">
 {% endif %}
 
-{% render 'custom-breadcrumbs', with product: product %}
+{% comment %} {% render 'custom-breadcrumbs', with product: product %} {% endcomment %}
+
+{% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
+{% assign first_breadcrumb = product_breadcrumbs | split: 'Home' %}
+{% assign jp = first_breadcrumb[1] | split: '>' %}
+{% assign length = jp.size | minus: 1 %}
+
+<div class="custom-breadcrumbs">
+  <div class="page-width"> 
+    <div class="custom-breadcrumbs__wrapper">
+      <div class="custom-breadcrumbs__navigation">
+        {% for i in (0..length) %}
+          {% assign col = jp[i] | handleize %}
+
+          {% if forloop.first %}
+            <a href="/">Home</a>
+          {% else %}
+            <a href="{{ collections[col].url }}">{{- jp[i] }}</a>
+          {% endif %}
+          {% unless forloop.last %}
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M6.31051 3.64645C6.50577 3.45118 6.82235 3.45118 7.01762 3.64645L11.0176 7.64645C11.2129 7.84171 11.2129 8.15829 11.0176 8.35355L7.01762 12.3536C6.82235 12.5488 6.50577 12.5488 6.31051 12.3536C6.11525 12.1583 6.11525 11.8417 6.31051 11.6464L9.95696 8L6.31051 4.35355C6.11525 4.15829 6.11525 3.84171 6.31051 3.64645Z"
+                fill="#DCDFE5" />
+            </svg>
+          {% endunless %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
 
 {% comment %} <div class="sticky-add-to-cart" style="display: none;">
   <div class="sticky-container">
@@ -200,13 +238,13 @@
                   </div>
                 </div>
               {% when 'price' %}
-                <div class="campaign-sale-container mobile">
+                {% comment %} <div class="campaign-sale-container mobile">
                   {% if product.title contains "French Fitness" %}
                     <p>Memorial Day Sale: 10% OFF. Use coupon 'MDSALE'</p>
                   {% elsif product.title contains "Remanufactured" %}
                     <p>Memorial Day Sale: 5% OFF. Use coupon 'MDSALE'</p>
                   {% endif %}
-                </div> 
+                </div>  {% endcomment %}
                 <div>
                   {% if product.metafields.custom.retail_price
                       > product.selected_or_first_available_variant.price
@@ -624,13 +662,13 @@
                   </a>
                 </div>
               {% when 'price' %}
-                <div class="campaign-sale-container">
+          {% comment %} <div class="campaign-sale-container hide-on-mobile">
                   {% if product.title contains "French Fitness" %}
                     <p>Memorial Day Sale: 10% OFF. Use coupon code 'MDSALE'</p>
                   {% elsif product.title contains "Remanufactured" %}
                     <p>Memorial Day Sale: 5% OFF. Use coupon code 'MDSALE'</p>
                   {% endif %}
-                </div>                
+              </div>                 {% endcomment %}
                 <div class="product__prices hidden lg:block">
                   {% if product.metafields.custom.retail_price
                       > product.selected_or_first_available_variant.price

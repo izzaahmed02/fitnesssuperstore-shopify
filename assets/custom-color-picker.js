@@ -520,7 +520,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
     ];
 
-    const colorMap = {
+   const colorMap = {
         black: "#000000",
         white: "#FFFFFF",
         red: "#660F0A",
@@ -538,11 +538,13 @@ document.addEventListener('DOMContentLoaded', function() {
         navy: "#000080",
         teal: "#008080",
         maroon: "#800000",
-        burgundy: "#800020"
+        burgundy: "#800020",
+        metallicsilver: "#aaa9ad",
+        stormgray: "#747880" 
     };
 
     function getHexFromName(name) {
-        const normalized = (name || "").trim().toLowerCase();
+        const normalized = (name || "").toLowerCase().replace(' ', '').replace(/\s*\([^()]*\)/g, '').trim();
         return colorMap[normalized] || "#000000";
     }
 
