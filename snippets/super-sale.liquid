@@ -127,19 +127,11 @@
 {% assign sale_price_raw = sale_price | replace: ',', '' %}
 {% assign sale_price = sale_price_raw | times: 100.0 %}
 
-{%- assign price = sale_price | money -%}
-
-
 {% if current_price > sale_price %}
   <div class="price-banner">
     <div class="price-banner__prices">
       <span class="price-banner__price">
-
-{%- if price contains '$' -%}
-  {{ price | remove: '$' }}        
-{%- else -%}
-  {{ price | prepend: '$' }}        
-{%- endif -%}
+          ${{ sale_price | money_without_currency }}
       </span>
       <span class="price-banner__compare">
         {{ current_price | money }}
