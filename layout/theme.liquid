@@ -1,18 +1,18 @@
   <!doctype html>
     <html class="js" lang="{{ request.locale.iso_code }}">
       <head>
-<!-- Start of Shoplift scripts -->
-{% render 'shoplift' %}
-<!-- End of Shoplift scripts -->
-
           <meta charset="utf-8">
           <meta http-equiv="X-UA-Compatible" content="IE=edge">
           <meta name="viewport" content="width=device-width,initial-scale=1">
           <meta name="theme-color" content="">
           <link rel="canonical" href="{{ canonical_url }}">
+          {% if template == 'search' %}
+            <meta name="robots" content="noindex,nofollow"/>
+          {%- endif -%}
           {%- if settings.favicon != blank -%}
           <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
           {%- endif -%}
+           <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
 
           <script>
 		      eval(function (e, t, n, a, r, o) {
@@ -61,6 +61,19 @@
           <!-- Intelligems tracking script end -->
 
 <script>
+
+    {% if template == 'product' %}
+      (function(w, c, r, s){
+      var t = c.createElement('script');
+      t.async = true;
+      t.src = 'https://' + r + '/surveyrun';
+      var h = c.getElementsByTagName('head')[0];
+      h.appendChild(t);
+      w.CRSSurveyID = s;
+      })(window, document, 'stageserver.conversionrate.store', '37')
+    {% endif %}
+
+  
 ;(function(){
   var TRACKED = ['gclid','_gl','utm_id','utm_source','utm_medium','utm_campaign','utm_term','utm_content', 'srsltid', 'gclsrc', 'gbraid', 'wbraid'];
 
@@ -324,6 +337,8 @@
           --variant-pills-shadow-horizontal-offset: {{ settings.variant_pills_shadow_horizontal_offset }}px;
           --variant-pills-shadow-vertical-offset: {{ settings.variant_pills_shadow_vertical_offset }}px;
           --variant-pills-shadow-blur-radius: {{ settings.variant_pills_shadow_blur }}px;
+
+          --zoom-lens-shader: url({{ 'zoom-lens-shader.gif' | asset_url }});
           }
 
           *,
@@ -386,10 +401,20 @@
           <noscript>
               <link rel="stylesheet" href="{{ 'custom.css' | asset_url }}">
           </noscript>
+          <link
+                  rel="preload"
+                  href="{{ 'globo-search-custom.css' | asset_url }}"
+                  as="style"
+                  onload="this.onload=null;this.rel='stylesheet'"
+          >
+          <noscript>
+              <link rel="stylesheet" href="{{ 'globo-search-custom.css' | asset_url }}">
+          </noscript>
           {{ 'base.css' | asset_url | stylesheet_tag }}
           {{ 'swiper.min.css' | asset_url | stylesheet_tag }}
-{% comment %}  {{ 'custom.css' | asset_url | stylesheet_tag }} {%endcomment%}
+          {% comment %} {{ 'custom.css' | asset_url | stylesheet_tag }} {% endcomment %}
           {{ 'custom.min.css' | asset_url | stylesheet_tag }}
+          {{ 'globo-search-custom.css' | asset_url | stylesheet_tag }}
           {%- unless settings.type_body_font.system? -%}
           {% comment %}theme-check-disable AssetPreload{% endcomment %}
           <link rel="preload" as="font" href="{{ settings.type_body_font | font_url }}" type="font/woff2" crossorigin>
@@ -470,7 +495,7 @@
 			      document.documentElement.classList.add('shopify-design-mode');
 		      }
           </script>
-          {% render 'rapid-search-settings' %}
+          {% comment %} {% render 'rapid-search-settings' %} {% endcomment %}
           <script type="text/javascript" defer>
 		      function saLoadScript(src) {
 			      var js = window.document.createElement('script');
@@ -500,7 +525,7 @@
             </script>
       </head>
     
-      <body class="gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %}">
+      <body class="gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %} {% if template contains 'page'      %} page-{{ page.handle }}{% endif %}">
         <a class="skip-to-content-link button visually-hidden" href="#MainContent">
           {{ 'accessibility.skip_to_text' | t }}
         </a>
@@ -650,7 +675,12 @@
         {%- endif -%}
        
         <div class="modal-wrapper"><div id="dynamic-product-content" class="scroll-trigger animate--slide-in"></div></div>
+        {%- capture searchTemplate -%}{% render 'globo.filter.search' %}{%- endcapture -%}{%- unless searchTemplate contains 'Liquid error' -%}<script id="gspfSearchResult" type="template/html">{{- searchTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
+        {%- capture productTemplate -%}{% render 'globo.filter.product', themeTranslation: shop.metafields.globoFilter.themeTranslation.value[request.locale.iso_code] %}{%- endcapture -%}{%- unless productTemplate contains 'Liquid error' -%}<script id="gspfProduct" type="template/html">{{- productTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%} 
+        {%- capture treeTemplate -%}{% render 'globo.filter.tree' %}{%- endcapture -%}{%- unless treeTemplate contains 'Liquid error' -%}<script id="gspfFilterTree" type="template/html">{{- treeTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
+        {%- capture sortTemplate -%}{% render 'globo.filter.sort' %}{%- endcapture -%}{%- unless sortTemplate contains 'Liquid error' -%}<script id="gspfFilterSort" type="template/html">{{- sortTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
+        
+        <script defer id="ze-snippet" src="https://static.zdassets.com/ekr/snippet.js?key=cb8b520e-4aff-4fa3-968a-8956d8b9f31a"></script>
+        <script defer>(function () { var s = document.createElement('script'), e = !document.body ? document.querySelector('head') : document.body; s.src = 'https://s3.us-west-1.amazonaws.com/fitnesssuperstore.info/js/ada.js'; s.async = true; s.onload = function () { acsbJS.init({ statementLink: '', footerHtml: '', hideMobile: false, hideTrigger: false, language: 'en', position: 'left', leadColor: '#f1592a', triggerColor: '#f1592a', triggerRadius: '50%', triggerPositionX: 'left', triggerPositionY: 'bottom', triggerIcon: 'people', triggerSize: 'small', triggerOffsetX: 20, triggerOffsetY: 22, mobile: { triggerSize: 'small', triggerPositionX: 'left', triggerPositionY: 'bottom', triggerOffsetX: 10, triggerOffsetY: 20, triggerRadius: '50%' } }); }; e.appendChild(s); }()); </script>
       </body>
     </html>
-    <script defer id="ze-snippet" src="https://static.zdassets.com/ekr/snippet.js?key=cb8b520e-4aff-4fa3-968a-8956d8b9f31a"></script>
-    <script defer>(function () { var s = document.createElement('script'), e = !document.body ? document.querySelector('head') : document.body; s.src = 'https://s3.us-west-1.amazonaws.com/fitnesssuperstore.info/js/ada.js'; s.async = true; s.onload = function () { acsbJS.init({ statementLink: '', footerHtml: '', hideMobile: false, hideTrigger: false, language: 'en', position: 'left', leadColor: '#f1592a', triggerColor: '#f1592a', triggerRadius: '50%', triggerPositionX: 'left', triggerPositionY: 'bottom', triggerIcon: 'people', triggerSize: 'small', triggerOffsetX: 20, triggerOffsetY: 22, mobile: { triggerSize: 'small', triggerPositionX: 'left', triggerPositionY: 'bottom', triggerOffsetX: 10, triggerOffsetY: 20, triggerRadius: '50%' } }); }; e.appendChild(s); }()); </script>
