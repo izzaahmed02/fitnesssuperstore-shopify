@@ -53,8 +53,8 @@
                                                 </div>
                                                 {{ childlink.title | escape }}
                                             </a>
-
-                                            {%- if childlink.links != blank -%}
+                                            {% comment %}
+                                              {%- if childlink.links != blank -%}
                                                 <ul class="list-unstyled" role="list">
                                                   {%- for grandchildlink in childlink.links -%}
                                                     <li>
@@ -71,17 +71,21 @@
                                                     </li>
                                                   {%- endfor -%}
                                                 </ul>
-                                            {%- endif -%}
-
+                                              {%- endif -%}
+                                            {% endcomment %}
                                         </li>
                                     {%- endfor -%}
-                                    {% if link.title == "Strength Equipment" %}
                                     <li>
-                                        <a href="/collections/strength-training-equipment" class="mega-menu__link mega-menu__link--level-2 link">
-                                            <div class="mega-menu__link--level-2-image shop-link">Shop all</div>
-                                        </a>
+                                        {% if link.title == "Strength Equipment" %}
+                                            <a href="/collections/strength-training-equipment" class="mega-menu__link mega-menu__link--level-2 link">
+                                                <div class="mega-menu__link--level-2-image shop-link">Shop all</div>
+                                            </a>
+                                        {% else %}
+                                            <a href="/collections/all" class="mega-menu__link mega-menu__link--level-2 link">
+                                                <div class="mega-menu__link--level-2-image shop-link">Shop all</div>
+                                            </a>
+                                        {% endif %}
                                     </li>
-                                    {% endif %}
                                 </ul>
                             </div>
                         </details>
@@ -106,14 +110,12 @@
                 {%- endif -%}
             </li>
         {%- endfor -%}
-        <li class="corner-outer"></li>
     </ul>
     {% for block in section.blocks %}
         {% case block.type %}
             {% when 'menu' %}
                 {% if block.settings.additional_menu != blank %}
                     <ul class="list-menu list-menu--inline desktop" role="list">
-                        <li class="corner-outer"></li>
                         {%- for link in block.settings.additional_menu.links -%}
                             <li>
                                 {%- if link.links != blank -%}
