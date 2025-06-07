@@ -1,4 +1,4 @@
-{% style %}
+{% style %} 
   #shopify-section-{{ section.id }} .product-main-container{
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -37,6 +37,8 @@
   <meta itemprop="availability" content="OutOfStock">
 {% endif %}
 
+{% comment %} {% render 'custom-breadcrumbs', with product: product %} {% endcomment %}
+
 {% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
 {% assign first_breadcrumb = product_breadcrumbs | split: 'Home' %}
 {% assign jp = first_breadcrumb[1] | split: '>' %}
@@ -74,6 +76,7 @@
     </div>
   </div>
 </div>
+
 {% comment %} <div class="sticky-add-to-cart" style="display: none;">
   <div class="sticky-container">
       <img src="{{ product.featured_image | img_url: 'small' }}" alt="{{ product.title }}" class="sticky-product-image" height="" width="">
@@ -137,8 +140,10 @@
 
   {{ 'avis-custom.css' | asset_url | stylesheet_tag }}
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
+  {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
+
   {%- style -%}
     .section-{{ section.id }}-padding {
       padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
@@ -157,7 +162,9 @@
   {%- for block in section.blocks -%}
     {%- case block.type -%}
     {%- when 'tile_calculator' -%}
-      {%- assign enable_product_form_js = false -%}
+      {% if block.settings.disable_product_form_js %}
+        {%- assign enable_product_form_js = false -%}
+      {% endif %}
     {%- endcase -%}
   {%- endfor -%}
 
@@ -231,6 +238,13 @@
                   </div>
                 </div>
               {% when 'price' %}
+                {% comment %} <div class="campaign-sale-container mobile">
+                  {% if product.title contains "French Fitness" %}
+                    <p>Memorial Day Sale: 10% OFF. Use coupon 'MDSALE'</p>
+                  {% elsif product.title contains "Remanufactured" %}
+                    <p>Memorial Day Sale: 5% OFF. Use coupon 'MDSALE'</p>
+                  {% endif %}
+                </div>  {% endcomment %}
                 <div>
                   {% if product.metafields.custom.retail_price
                       > product.selected_or_first_available_variant.price
@@ -239,28 +253,32 @@
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
-                  {% endif %}               
-                  <div class="price-container">
-                    {%- render 'price',
-                      product: product,
-                      use_variant: true,
-                      show_badges: true,
-                      price_class: 'price--large'
-                    -%}
-
-                    {% if product.metafields.custom.retail_price
-                        > product.selected_or_first_available_variant.price
-                    %}
-                      <span class="you-save"
-                        >You save
-                        {{
-                          product.metafields.custom.retail_price
-                          | minus: product.selected_or_first_available_variant.price
-                          | money
-                        -}}
-                      </span>
-                    {% endif %}
-                  </div>
+                  {% endif %}            
+                  {% if product.metafields.custom.saleprice_name != blank %}
+                      {% render 'super-sale', sale_name: product.metafields.custom.saleprice_name, current_price: product.selected_or_first_available_variant.compare_at_price, sale_price: product.metafields.custom.sale_price %}
+                  {% else %}
+                    <div class="price-container">
+                      {%- render 'price',
+                        product: product,
+                        use_variant: true,
+                        show_badges: true,
+                        price_class: 'price--large'
+                      -%}
+  
+                      {% if product.metafields.custom.retail_price
+                          > product.selected_or_first_available_variant.price
+                      %}
+                        <span class="you-save"
+                          >You save
+                          {{
+                            product.metafields.custom.retail_price
+                            | minus: product.selected_or_first_available_variant.price
+                            | money
+                          -}}
+                        </span>
+                      {% endif %}
+                    </div>
+                  {% endif %}   
                 </div>
             {%- endcase -%}
           {%- endfor -%}
@@ -268,7 +286,7 @@
       </div>
 
       <div class="product-main-left-container">
-        <div class="product-main-left">
+        {% comment %} <div class="product-main-left">
           
           <div class="thumbnail-slider">
             {% for item in product.images %}
@@ -299,7 +317,214 @@
               </svg>
             </div>
           </div>
-        </div>
+        </div> {% endcomment %}
+
+        <product-gallery data-product-title="{{ product.title | escape }}">
+          <div class="custom-product-gallery">
+            <div class="custom-gallery-wrapper">
+              <!-- Thumbnails -->
+              {%- assign image_media = product.media | where: "media_type", "image" -%}
+
+              <div class="custom-gallery-thumbnails only-desktop">
+                {%- assign image_limit = 4 -%}
+                {%- for media in image_media limit: image_limit -%}
+                  {% assign preview = media.preview_image %}
+                  {% assign is_last = forloop.last %}
+                  {% assign remaining = image_media.size | minus: image_limit %}
+
+                  <button
+                    class="thumbnail-btn{% if forloop.first %} is-active{% endif %}"
+                    data-media-id="{{ media.id }}"
+                    type="button"
+                  >
+                    <div class="image-skeleton-wrapper">
+                      <img 
+                        src="{{ preview | image_url: width: 100 }}"
+                        alt="{{ media.alt | escape }}"
+                        width="{{ preview.width }}"
+                        height="{{ preview.height }}"
+                        loading="lazy"
+                        onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                      >
+                    </div>
+
+                    {%- if is_last and image_media.size > image_limit -%}
+                      <div class="thumbnail-overlay">+{{ remaining }}</div>
+                    {%- endif -%}
+                  </button>
+                {%- endfor -%}
+
+                {% assign video_count = 0 %}
+                {% for media in product.media %}
+                  {% if media.media_type == 'video' or media.media_type == 'external_video' %}
+                    {% assign video_count = video_count | plus: 1 %}
+
+                    {% if video_count == 1 %}
+                      <button
+                        class="thumbnail-btn is-video"
+                        data-media-id="{{ media.id }}"
+                        data-popup-open="video"
+                        type="button"
+                      >
+                        <div class="thumbnail-btn__warp">
+                          <img
+                            src="{{ media.preview_image | image_url: width: 100 }}"
+                            alt="{{ media.alt | escape }}"
+                            width="{{ media.preview_image.width }}"
+                            height="{{ media.preview_image.height }}"
+                            loading="lazy"
+                          >
+                        </div>
+
+                        {%- assign shopify_video_count = product.media | where: "media_type", "video" | size -%}
+                        {%- assign external_video_count = product.media | where: "media_type", "external_video" | size -%}
+                        {%- assign video_count = shopify_video_count | plus: external_video_count -%}
+
+                        {% if video_count > 1 %}
+                          <span class="thumbnail-video-count">{{ video_count }} videos</span>
+                        {% endif %}
+                      </button>
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              </div>
+              
+              <!-- Main image -->
+              <div class="custom-gallery-main" data-main-media-wrapper>
+                {% assign first_media = product.media.first %}
+                {% assign preview = first_media.preview_image %}
+
+                <div 
+                  class="main-image-container" 
+                  data-media-id="{{ first_media.id }}" 
+                  data-zoom-container
+                >
+                  {% if first_media.media_type == 'image' %}
+                    <div class="image-skeleton-wrapper">
+                      <img 
+                        src="{{ preview | image_url: width: 800 }}"
+                        alt="{{ first_media.alt | escape }}"
+                        class="main-product-image"
+                        width="{{ preview.width }}"
+                        height="{{ preview.height }}"
+                        loading="eager"
+                        onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                      >
+                    </div>
+                  {% elsif first_media.media_type == 'video' %}
+                    {{ first_media | media_tag }}
+                  {% else %}
+                    <div class="media-placeholder">Preview available in popup only.</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <script type="application/json" data-product-media>
+            [
+              {% for media in product.media %}
+                {
+                  "id": {{ media.id | json }},
+                  "media_type": {{ media.media_type | json }},
+                  "alt": {{ media.alt | json }},
+                  "preview_image": {
+                    "src": {{ media.preview_image | image_url: width: 800 | json }},
+                    "srcset": "{{ media.preview_image | image_url: width: 800 }} 800w, {{ media.preview_image | image_url: width: 1200 }} 1200w, {{ media.preview_image | image_url: width: 1600 }} 1600w, {{ media.preview_image | image_url: width: 2048 }} 2048w",
+                    "sizes": "(min-width: 990px) 800px, 100vw",
+                    "width": {{ media.preview_image.width | json }},
+                    "height": {{ media.preview_image.height | json }}
+                  }
+                  {% if media.media_type == 'video' %}
+                    , "sources": [
+                      {% for source in media.sources %}
+                        {
+                          "url": {{ source.url | json }},
+                          "mime_type": {{ source.mime_type | json }}
+                        }{% unless forloop.last %},{% endunless %}
+                      {% endfor %}
+                    ]
+                  {% elsif media.media_type == 'external_video' %}
+                    , "host": {{ media.host | json }},
+                      "external_id": {{ media.external_id | json }}
+                  {% endif %}
+                }{% unless forloop.last %},{% endunless %}
+              {% endfor %}
+            ]
+          </script>
+        </product-gallery>
+
+        <mobile-gallery>
+          <div class="mobile-gallery-wrapper only-mobile">
+            {% comment %} <div class="main-slider-arrow--left" type="button">
+              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M7.19635 0.46967C7.48924 0.762563 7.48924 1.23744 7.19635 1.53033L2.72668 6L7.19635 10.4697C7.48924 10.7626 7.48924 11.2374 7.19635 11.5303C6.90345 11.8232 6.42858 11.8232 6.13569 11.5303L1.13569 6.53033C0.995033 6.38968 0.916016 6.19891 0.916016 6C0.916016 5.80109 0.995033 5.61032 1.13569 5.46967L6.13569 0.46967C6.42858 0.176777 6.90345 0.176777 7.19635 0.46967Z" fill="white"/>
+              </svg>
+            </div> {% endcomment %}
+
+            <div class="mobile-gallery-slider image-skeleton-wrapper">
+              {% for media in product.media %}
+                {% case media.media_type %}
+                  {% when 'image' %}
+                    <div class="mobile-gallery-slide-wrap">
+                      <div class="image-skeleton-wrapper">
+                        <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
+                          {% assign isFirst = forloop.first %}
+
+                          <img
+                            src="{{ media.preview_image | image_url: width: 480 }}"
+                            srcset="
+                              {{ media.preview_image | image_url: width: 320 }} 320w,
+                              {{ media.preview_image | image_url: width: 480 }} 480w,
+                              {{ media.preview_image | image_url: width: 800 }} 800w
+                            "
+                            sizes="(max-width: 768px) 100vw, 800px"
+                            alt="{{ media.alt | escape }}"
+                            {% unless isFirst %}loading="lazy"{% endunless %}
+                            width="{{ media.preview_image.width }}"
+                            height="{{ media.preview_image.height }}"
+                            onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                          >
+                        </div>
+                      </div>
+                    </div>
+
+                  {% when 'video' %}
+                    <div class="mobile-gallery-slide-wrap">
+                      <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
+                        <video
+                          src="{{ media.sources[1].url }}"
+                          controls
+                          muted
+                          playsinline
+                          preload="metadata"
+                          poster="{{ media.preview_image | image_url: width: 800 }}"
+                        ></video>
+                      </div>
+                    </div>
+
+                  {% when 'external_video' %}
+                    <div class="mobile-gallery-slide-wrap">
+                      <div class="mobile-gallery-slide external-video" data-media-id="{{ media.id }}">
+                        <div class="video-wrapper">
+                          <div class="video-iframe-overlay" aria-hidden="true"></div>
+                          {{ media | external_video_tag: autoplay: false, muted: true, loop: false }}
+                        </div>
+                      </div>
+                    </div>
+                {% endcase %}
+              {% endfor %}
+            </div>
+
+            {% comment %} <div class="main-slider-arrow--right" type="button">
+              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M0.803654 0.46967C1.09655 0.176777 1.57142 0.176777 1.86431 0.46967L6.86431 5.46967C7.15721 5.76256 7.15721 6.23744 6.86431 6.53033L1.86431 11.5303C1.57142 11.8232 1.09655 11.8232 0.803654 11.5303C0.510761 11.2374 0.510761 10.7626 0.803654 10.4697L5.27332 6L0.803654 1.53033C0.510761 1.23744 0.510761 0.762563 0.803654 0.46967Z" fill="white"/>
+              </svg>
+            </div> {% endcomment %}
+
+            <div class="mobile-gallery-dots"></div>
+          </div>
+        </mobile-gallery>
 
         {% if section.settings.accent_text != blank %}
           <div class="product__accesnt-text hidden lg:flex">
@@ -319,7 +544,7 @@
         {% endif %}
       </div>
 
-      <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+      <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">     
         <section
           id="ProductInfo-{{ section.id }}"
           class="product__info-container{% if section.settings.enable_sticky_info %} product__column-sticky{% endif %}"
@@ -332,6 +557,28 @@
                 {% render block %}
 
               {% when 'product-info' %}
+                {% for item in product.tags %}
+                  {% unless item != "Free Shipping" %}
+                    <div class="free-shipping-badge">
+                      <div class="shipping-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M1.25 8C1.25 7.58579 1.58579 7.25 2 7.25H8C8.41421 7.25 8.75 7.58579 8.75 8C8.75 8.41421 8.41421 8.75 8 8.75H2C1.58579 8.75 1.25 8.41421 1.25 8ZM1.25 11C1.25 10.5858 1.58579 10.25 2 10.25H6C6.41421 10.25 6.75 10.5858 6.75 11C6.75 11.4142 6.41421 11.75 6 11.75H2C1.58579 11.75 1.25 11.4142 1.25 11ZM2 13.25C1.58579 13.25 1.25 13.5858 1.25 14C1.25 14.4142 1.58579 14.75 2 14.75H4C4.41421 14.75 4.75 14.4142 4.75 14C4.75 13.5858 4.41421 13.25 4 13.25H2Z" fill="black"/>
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M14.25 5C14.25 4.58579 14.5858 4.25 15 4.25H16.84C17.8339 4.25 18.7377 4.788 19.2286 5.63341L19.2311 5.63767L19.2311 5.63768L20.941 8.62767C21.0738 8.85979 21.0729 9.14503 20.9387 9.37633C20.8046 9.60763 20.5574 9.75 20.29 9.75H19C18.8642 9.75 18.75 9.86421 18.75 10V13C18.75 13.1358 18.8642 13.25 19 13.25H22C22.4142 13.25 22.75 13.5858 22.75 14V17C22.75 19.0742 21.0742 20.75 19 20.75H18.6465C18.32 21.9043 17.2588 22.75 16 22.75C14.7412 22.75 13.68 21.9043 13.3535 20.75H10.6465C10.32 21.9043 9.25878 22.75 8 22.75C6.74122 22.75 5.67998 21.9043 5.35352 20.75H5C2.92579 20.75 1.25 19.0742 1.25 17C1.25 16.5858 1.58579 16.25 2 16.25C2.41421 16.25 2.75 16.5858 2.75 17C2.75 18.2458 3.75421 19.25 5 19.25H5.35352C5.67998 18.0957 6.74122 17.25 8 17.25C9.25878 17.25 10.32 18.0957 10.6465 19.25H13.3535C13.68 18.0957 14.7412 17.25 16 17.25C17.2588 17.25 18.32 18.0957 18.6465 19.25H19C20.2458 19.25 21.25 18.2458 21.25 17V14.75H19C18.0358 14.75 17.25 13.9642 17.25 13V10C17.25 9.03676 18.0342 8.25159 18.9971 8.25L17.9314 6.38661L17.9303 6.38475C17.701 5.99126 17.2855 5.75 16.84 5.75H15.75V12C15.75 13.5142 14.5142 14.75 13 14.75H12C11.5858 14.75 11.25 14.4142 11.25 14C11.25 13.5858 11.5858 13.25 12 13.25H13C13.6858 13.25 14.25 12.6858 14.25 12V5ZM14.75 20C14.75 20.6904 15.3096 21.25 16 21.25C16.6904 21.25 17.25 20.6904 17.25 20C17.25 19.3142 16.6858 18.75 16 18.75C15.3142 18.75 14.75 19.3142 14.75 20ZM9.25 20C9.25 19.3142 8.68579 18.75 8 18.75C7.31421 18.75 6.75 19.3142 6.75 20C6.75 20.6904 7.30964 21.25 8 21.25C8.69036 21.25 9.25 20.6904 9.25 20Z" fill="black"/>
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M5.99989 1.25C4.21723 1.25 2.66194 2.23671 1.85479 3.68484C1.65313 4.04665 1.78295 4.50344 2.14476 4.7051C2.50657 4.90676 2.96335 4.77694 3.16501 4.41513C3.71786 3.42326 4.78255 2.75 5.99989 2.75H14.2499V12C14.2499 12.6858 13.6857 13.25 12.9999 13.25H11.9999C11.5857 13.25 11.2499 13.5858 11.2499 14C11.2499 14.4142 11.5857 14.75 11.9999 14.75H12.9999C14.5141 14.75 15.7499 13.5142 15.7499 12V2C15.7499 1.58579 15.4141 1.25 14.9999 1.25H5.99989ZM18.7501 10C18.7501 9.86421 18.8643 9.75 19.0001 9.75H19.8543L21.2501 12.1987V13.25H19.0001C18.8643 13.25 18.7501 13.1358 18.7501 13V10ZM19.0001 8.25C18.0359 8.25 17.2501 9.03579 17.2501 10V13C17.2501 13.9642 18.0359 14.75 19.0001 14.75H22.0001C22.4143 14.75 22.7501 14.4142 22.7501 14V12C22.7501 11.8698 22.7162 11.7417 22.6517 11.6286L20.9417 8.62859C20.8083 8.39452 20.5595 8.25 20.2901 8.25H19.0001Z" fill="black"/>
+                          </svg>                          
+                      </div>
+                      <div class="shipping-text">
+                        <div><b>This item qualifies for</b><span class="highlight"> FREE SHIPPING</span></div>
+                        <div class="subtext">to the Lower 48 States 
+                          {% if product.price < 2000 %}
+                            (Minimum order $200 to qualify)
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  {% endunless %}
+                {% endfor %}
+        
                 <div class="metainfo-wrapper">
                   {% if product.metafields.custom.condition_state != blank %}
                     <div class="item">
@@ -398,19 +645,6 @@
                       <span class="showroom-text">On Display at our Northern California Warehouse Showroom</span>
                   </div>  
                 {% endif %}
-
-                {% for item in product.tags %}
-                  {% unless item != "Free Shipping" %}
-                    <div class="free-shipping-badge">
-                      <div class="shipping-icon">🚚</div>
-                      <div class="shipping-text">
-                        <div>This item qualifies for <span class="highlight">FREE SHIPPING</span></div>
-                        <div class="subtext">to the Lower 48 States (Minimum order $200 to qualify)</div>
-                      </div>
-                    </div>
-                  {% endunless %}
-                {% endfor %}
-
               {%- when 'text' -%}
                 <p
                   class="product__text inline-richtext{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}"
@@ -428,6 +662,13 @@
                   </a>
                 </div>
               {% when 'price' %}
+          {% comment %} <div class="campaign-sale-container hide-on-mobile">
+                  {% if product.title contains "French Fitness" %}
+                    <p>Memorial Day Sale: 10% OFF. Use coupon code 'MDSALE'</p>
+                  {% elsif product.title contains "Remanufactured" %}
+                    <p>Memorial Day Sale: 5% OFF. Use coupon code 'MDSALE'</p>
+                  {% endif %}
+              </div>                 {% endcomment %}
                 <div class="product__prices hidden lg:block">
                   {% if product.metafields.custom.retail_price
                       > product.selected_or_first_available_variant.price
@@ -436,34 +677,40 @@
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
-                  {% endif %}               
-                  <div class="price-container">
-                    {%- render 'price',
-                      product: product,
-                      use_variant: true,
-                      show_badges: true,
-                      price_class: 'price--large'
-                    -%}
-
-                    {% if product.metafields.custom.retail_price
-                        > product.selected_or_first_available_variant.price
-                    %}
-                      <span class="you-save"
-                        >You save
-                        {{
-                          product.metafields.custom.retail_price
-                          | minus: product.selected_or_first_available_variant.price
-                          | money
-                        -}}
-                      </span>
-                    {% endif %}
-                  </div>
+                  {% endif %}     
+                  {% if product.metafields.custom.saleprice_name != blank %}
+                    {% render 'super-sale', sale_name: product.metafields.custom.saleprice_name, current_price: product.selected_or_first_available_variant.compare_at_price, sale_price: product.metafields.custom.sale_price %}
+                  {% else %}
+                    <div class="price-container">
+                      {%- render 'price',
+                        product: product,
+                        use_variant: true,
+                        show_badges: true,
+                        price_class: 'price--large'
+                      -%}
+  
+                      {% if product.metafields.custom.retail_price
+                          > product.selected_or_first_available_variant.price
+                      %}
+                        <span class="you-save"
+                          >You save
+                          {{
+                            product.metafields.custom.retail_price
+                            | minus: product.selected_or_first_available_variant.price
+                            | money
+                          -}}
+                        </span>
+                      {% endif %}
+                    </div>
+                  {% endif %}          
                 </div>
 
               {%- when 'tile_calculator' -%}
-                <div class="product__tile-calculator">
-                  {% render 'product-tile-calculator', block: block %}
-                </div>
+                {% if block.settings.show_tile_calculator %}
+                  <div class="product__tile-calculator">
+                    {% render 'product-tile-calculator', block: block %}
+                  </div>
+                {% endif %}
 
               {%- when 'price_with_option' -%}
                 <product-form
@@ -471,19 +718,7 @@
                   data-hide-errors="{{ gift_card_recipient_feature_active }}"
                   data-section-id="{{ section.id }}"
                 >
-                  <div class="customer-location-container">
-                    <div class="location-header" onclick="toggleTransitTimeForm()">
-                      <span>Customer Location:</span>
-                      <span class="location-display"></span>
-                    </div>
-                    
-                    <div class="location-form" id="location-form">              
-                      <label for="postalCode">Postal Code</label>
-                      <input type="text" id="postalCode" value="1100" />
-                      
-                      <button id="estimate-delivery-times-btn" class="button--full-width button--primary">Estimate delivery times</button>
-                    </div>
-                  </div>
+                  {% render 'transit-time-calculator', product: product %}
                   <div class="product-form__error-message-wrapper" role="alert" hidden>
                     <svg
                       aria-hidden="true"
@@ -498,7 +733,6 @@
                     </svg>
                     <span class="product-form__error-message"></span>
                   </div>
-                  {% render 'transit-time-calculator', product: product %}
                   <h5 class="product_price_with_options-heading">Total with options</h5>
 
                   <div class="product_price_with_options-contaniner">
@@ -530,6 +764,8 @@
                           <quantity-input class="quantity {% unless product.available %} out-of-stock{% endunless %}" data-url="{{ product.url }}" data-section="{{ section.id }}">
                             <input
                               class="quantity__input"
+                              inputmode="numeric"
+                              pattern="[0-9]*"
                               type="number"
                               name="quantity"
                               id="Quantity-{{ section.id }}"
@@ -877,6 +1113,19 @@
                           <path class="cls-2" d="M268.88,9.54a15.39,15.39,0,0,1,5.75,1.06,14,14,0,0,1,4.64,2.94A13.52,13.52,0,0,1,282.34,18a13.91,13.91,0,0,1,1.11,5.59,13.8,13.8,0,0,1-1.11,5.53,13.52,13.52,0,0,1-3.07,4.45,14.42,14.42,0,0,1-4.64,3,15.71,15.71,0,0,1-11.5,0,14.26,14.26,0,0,1-4.63-3,13.37,13.37,0,0,1-3.07-4.45,13.63,13.63,0,0,1-1.12-5.53A13.75,13.75,0,0,1,255.43,18a13.37,13.37,0,0,1,3.07-4.45,13.87,13.87,0,0,1,4.63-2.94A15.42,15.42,0,0,1,268.88,9.54Zm0,22.73a8.2,8.2,0,0,0,3.34-.67,7.56,7.56,0,0,0,2.62-1.85,8.64,8.64,0,0,0,1.7-2.76,9.44,9.44,0,0,0,.61-3.41,9.85,9.85,0,0,0-.61-3.47,8.36,8.36,0,0,0-1.7-2.79,7.75,7.75,0,0,0-2.62-1.82,8.71,8.71,0,0,0-6.7,0,7.87,7.87,0,0,0-2.6,1.82,8.34,8.34,0,0,0-1.69,2.79,9.63,9.63,0,0,0-.61,3.47,9.23,9.23,0,0,0,.61,3.41,8.62,8.62,0,0,0,1.69,2.76,7.67,7.67,0,0,0,2.6,1.85A8.13,8.13,0,0,0,268.88,32.27Z"></path>
                           <path class="cls-2" d="M292.4,36.87q-2.59-6.09-4.26-10.33c-1.11-2.82-2-5.16-2.65-7s-1.11-3.28-1.38-4.29a10,10,0,0,1-.39-2.14,2.74,2.74,0,0,1,3-2.81,6.26,6.26,0,0,1,1.82.21,6.82,6.82,0,0,1,.88.32q.63,2.32,1.43,4.95T292.51,21c.57,1.73,1.12,3.38,1.67,4.95l1.46,4.21c.39-1.09.8-2.34,1.24-3.76s.9-2.86,1.38-4.37.94-3,1.4-4.55.89-3,1.28-4.37a4.61,4.61,0,0,1,1.19-2.1,3.56,3.56,0,0,1,2.46-.71,6,6,0,0,1,1.91.29,10.9,10.9,0,0,1,1.06.4q.69,2.38,1.48,5t1.59,5.17c.53,1.69,1.05,3.32,1.56,4.87s1,2.94,1.41,4.13c.92-2.43,1.86-5.1,2.83-8s1.86-5.8,2.68-8.69a5.58,5.58,0,0,1,1.24-2.41,3.2,3.2,0,0,1,2.36-.77,5.08,5.08,0,0,1,2.33.47,7.63,7.63,0,0,1,1,.59q-.44,1.74-1.48,4.82c-.71,2.05-1.51,4.26-2.39,6.65s-1.82,4.82-2.81,7.31-1.92,4.74-2.8,6.75h-6.26c-.28-.74-.66-1.82-1.13-3.25s-1-3-1.57-4.69-1.12-3.44-1.67-5.22-1.05-3.42-1.51-4.9c-.46,1.48-1,3.12-1.51,4.9s-1.09,3.52-1.64,5.22-1,3.26-1.51,4.69-.83,2.51-1.11,3.25Z"></path>
                       </svg>
+                      <svg class="afterPayLogo" onclick="document.querySelector('square-placement').shadowRoot.querySelector('button').click()" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" width="104" height="36" viewBox="0 0 104 36">
+                        <path class="afterpay-logo-badge-background" fill="#b2fce4" d="m86.00173,35.9321l-68.00064,0c-9.90375,0 -17.93101,-8.02726 -17.93101,-17.93101l0,0c0,-9.90375 8.02726,-17.93101 17.93101,-17.93101l68.00064,0c9.90375,0 17.931,8.02726 17.931,17.93101l0,0c0.00652,9.89724 -8.02725,17.93101 -17.931,17.93101z"></path>
+                        <g class="afterpay-logo-badge-lockup">
+                          <path d="m88.23074,13.52071l-2.25928,-1.29288l-2.29193,-1.31247c-1.51489,-0.86845 -3.40851,0.22201 -3.40851,1.97197l0,0.29384c0,0.16324 0.08489,0.31342 0.22854,0.39178l1.06435,0.60726c0.29383,0.16978 0.6595,-0.0457 0.6595,-0.38525l0,-0.69868c0,-0.34607 0.37219,-0.56155 0.67256,-0.39178l2.0895,1.20147l2.08298,1.19493c0.30037,0.16977 0.30037,0.60727 0,0.77704l-2.08298,1.19494l-2.0895,1.20146c-0.30037,0.16978 -0.67256,-0.0457 -0.67256,-0.39178l0,-0.34607c0,-1.74997 -1.89362,-2.84696 -3.40851,-1.97198l-2.29193,1.31247l-2.25928,1.29289c-1.52142,0.87498 -1.52142,3.07549 0,3.95047l2.25928,1.29289l2.29193,1.31247c1.51489,0.86845 3.40851,-0.22201 3.40851,-1.97198l0,-0.29383c0,-0.16325 -0.08489,-0.31343 -0.22854,-0.39179l-1.06435,-0.60726c-0.29383,-0.16977 -0.6595,0.04571 -0.6595,0.38525l0,0.69868c0,0.34608 -0.37219,0.56156 -0.67256,0.39179l-2.0895,-1.20147l-2.08298,-1.19494c-0.30037,-0.16977 -0.30037,-0.60726 0,-0.77703l2.08298,-1.19494l2.0895,-1.20147c0.30037,-0.16977 0.67256,0.04571 0.67256,0.39179l0,0.34607c0,1.74996 1.89362,2.84695 3.40851,1.97197l2.29193,-1.31247l2.25928,-1.29288c1.52142,-0.88151 1.52142,-3.0755 0,-3.95048z"></path>
+                          <path d="m73.4083,13.95167l-5.28907,10.92421l-2.19398,0l1.9785,-4.08107l-3.11467,-6.84314l2.25275,0l1.99809,4.58386l2.18092,-4.58386l2.18746,0z"></path>
+                          <path d="m20.52416,17.83032c0,-1.30594 -0.9468,-2.2201 -2.10909,-2.2201s-2.1091,0.93375 -2.1091,2.2201c0,1.2733 0.94681,2.2201 2.1091,2.2201s2.10909,-0.91416 2.10909,-2.2201m0.01959,3.87865l0,-1.00558c-0.57461,0.69868 -1.43,1.12964 -2.44864,1.12964c-2.12869,0 -3.74152,-1.70425 -3.74152,-4.00271c0,-2.27887 1.67813,-4.01577 3.78723,-4.01577c0.99251,0 1.82832,0.43749 2.40293,1.11658l0,-0.97946l1.90668,0l0,7.7573l-1.90668,0z"></path>
+                          <path d="m31.72262,19.98513c-0.66603,0 -0.85539,-0.24813 -0.85539,-0.9011l0,-3.44116l1.22758,0l0,-1.6912l-1.22758,0l0,-1.89361l-1.95239,0l0,1.89361l-2.52047,0l0,-0.7705c0,-0.65297 0.24813,-0.9011 0.93375,-0.9011l0.43096,0l0,-1.50184l-0.94027,0c-1.61284,0 -2.37682,0.52891 -2.37682,2.14175l0,1.03822l-1.08393,0l0,1.68467l1.08393,0l0,6.0661l1.95238,0l0,-6.0661l2.52047,0l0,3.80029c0,1.58019 0.60727,2.26581 2.18746,2.26581l1.00557,0l0,-1.72384l-0.38525,0z"></path>
+                          <path d="m38.73553,17.13164c-0.13713,-1.00557 -0.95987,-1.61284 -1.92627,-1.61284c-0.95986,0 -1.75649,0.58768 -1.95238,1.61284l3.87865,0zm-3.89824,1.208c0.13712,1.14923 0.95987,1.8022 2.00462,1.8022c0.82275,0 1.45613,-0.38525 1.82832,-1.00558l2.00462,0c-0.46361,1.64549 -1.93932,2.69677 -3.87865,2.69677c-2.34416,0 -3.98965,-1.64548 -3.98965,-3.98965c0,-2.34417 1.7369,-4.03536 4.03536,-4.03536c2.31152,0 3.98965,1.70425 3.98965,4.03536c0,0.16977 -0.01305,0.33955 -0.0457,0.49626l-5.94857,0z"></path>
+                          <path d="m53.26414,17.83032c0,-1.2537 -0.94681,-2.2201 -2.1091,-2.2201c-1.16229,0 -2.1091,0.93375 -2.1091,2.2201c0,1.2733 0.94681,2.2201 2.1091,2.2201c1.16229,0 2.1091,-0.95986 2.1091,-2.2201m-6.14446,7.04556l0,-10.92421l1.90667,0l0,1.00558c0.57462,-0.71174 1.43001,-1.14923 2.44865,-1.14923c2.09603,0 3.74152,1.72384 3.74152,4.00271s-1.67814,4.01578 -3.78723,4.01578c-0.97946,0 -1.78261,-0.38526 -2.34417,-1.03823l0,4.08107l-1.96544,0l0,0.00653z"></path>
+                          <path d="m62.09231,17.83032c0,-1.30594 -0.94681,-2.2201 -2.1091,-2.2201c-1.16229,0 -2.1091,0.93375 -2.1091,2.2201c0,1.2733 0.94681,2.2201 2.1091,2.2201c1.16229,0 2.1091,-0.91416 2.1091,-2.2201m0.01959,3.87865l0,-1.00558c-0.57462,0.69868 -1.43001,1.12964 -2.44865,1.12964c-2.12868,0 -3.74152,-1.70425 -3.74152,-4.00271c0,-2.27887 1.67813,-4.01577 3.78723,-4.01577c0.99252,0 1.82832,0.43749 2.40294,1.11658l0,-0.97946l1.90667,0l0,7.7573l-1.90667,0z"></path>
+                          <path d="m43.67852,14.70912s0.4832,-0.9011 1.67814,-0.9011c0.50931,0 0.8358,0.1763 0.8358,0.1763l0,1.97851s-0.71827,-0.44402 -1.37777,-0.35261c-0.6595,0.09142 -1.0774,0.69215 -1.0774,1.50184l0,4.59038l-1.97197,0l0,-7.75076l1.90667,0l0,0.75744l0.00653,0z"></path>
+                        </g>
+                        </svg>
                     </div>
                 </div>
                 <square-placement style="display: none;"
@@ -1040,6 +1289,8 @@
                       </button>
                       <input
                         class="quantity__input"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
                         type="number"
                         name="quantity"
                         id="Quantity-{{ section.id }}"
@@ -1488,10 +1739,14 @@
     {%- endfor -%}
 
     {%- if product.media.size > 0 -%}
-      <script src="{{ 'product-modal.js' | asset_url }}" defer="defer"></script>
+      {% comment %} <script src="{{ 'product-modal.js' | asset_url }}" defer="defer"></script>
       <script src="{{ 'media-gallery.js' | asset_url }}" defer="defer"></script>
 
-      <script src="{{ 'product-media-slider.js' | asset_url }}" defer="defer"></script>
+      <script src="{{ 'product-media-slider.js' | asset_url }}" defer="defer"></script> {% endcomment %}
+
+      <script src="{{ 'product-gallery.js' | asset_url }}" defer="defer"></script>
+      <script src="{{ 'product-mobile-gallery.js' | asset_url }}" defer="defer"></script>
+      <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js" defer="defer"></script>
     {%- endif -%}
 
     {%- if first_3d_model -%}
@@ -1513,6 +1768,46 @@
     </script>
   </div>
 </product-info>
+
+<div id="product-gallery-popup" class="product-popup-overlay" hidden>
+  <div class="product-popup-backdrop"></div>
+
+  <div class="product-popup" role="dialog" aria-modal="true">
+    <button class="popup-close" type="button" aria-label="Close popup">&times;</button>
+
+    <div class="popup-tabs">
+      <button class="popup-tab is-active" data-tab="images">Images</button>
+
+      {%- assign has_videos = false -%}
+      {%- for media in product.media -%}
+        {%- if media.media_type == 'video' or media.media_type == 'external_video' -%}
+          {%- assign has_videos = true -%}
+          {%- break -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if has_videos -%}
+        <button class="popup-tab" data-tab="videos">Videos</button>
+      {%- endif -%}
+    </div>
+
+    <div class="popup-content">
+      <div class="popup-media-viewer" data-popup-viewer></div>
+
+      <div class="popup-sidebar">
+        <div class="popup-product-title" data-popup-title></div>
+        <div class="popup-thumbnails" data-tab-content="images"></div>
+        <div class="popup-thumbnails hidden" data-tab-content="videos"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="mobile-gallery-popup" class="mobile-popup-overlay" >
+  <div class="mobile-popup-backdrop"></div>
+  <button class="mobile-popup-close" aria-label="Close">&times;</button>
+  <div class="mobile-popup-slider"></div>
+  <div class="mobile-popup-dots"></div>
+</div>
 
 <script>window.product = {{ product | json }}</script>
 <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
@@ -2967,6 +3262,18 @@
       "name": "t:sections.main-product.blocks.tile_calculator.name",
       "limit": 1,
       "settings": [
+        {
+          "type": "checkbox",
+          "id": "disable_product_form_js",
+          "label": "t:sections.main-product.blocks.tile_calculator.disable_product_form_js.label",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_tile_calculator",
+          "label": "t:sections.main-product.blocks.tile_calculator.show_tile_calculator.label",
+          "default": false
+        },
         {
           "type": "text",
           "id": "heading",

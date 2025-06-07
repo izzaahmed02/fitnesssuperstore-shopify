@@ -18,6 +18,11 @@
                 <span class="visually-hidden">{{ 'sections.collection_template.title' | t }}: </span>
                 {{- collection.title | escape -}}
             </h1>
+            {% if section.settings.show_collection_description %}
+                <div class="collection-hero__description">
+                    {{ collection.description }}
+                </div>
+            {% endif %}
             {% if collection.metafields.custom.related_collections != blank %}
                 {% assign current_url = collection.url %}
                 {% assign match_found = false %}
@@ -27,6 +32,12 @@
                     {% endif %}
                 {% endfor %}
                 <div class="collection-hero__related-collections-wrapper">
+                    <button class="collection-hero__related-collections-toggle" aria-expanded="false">
+                        <span>{{ section.settings.related_collections_toggle | default: "Browse subcategories" }}</span>
+                        <svg class="icon icon-caret" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="#B3B3B3"></path>
+                        </svg>
+                    </button>
                     <ul class="collection-hero__related-collections">
                         {% for related in collection.metafields.custom.related_collections.value %}
                             {% assign active_class = '' %}
@@ -94,6 +105,13 @@
       "default": false,
       "label": "t:sections.main-collection-banner.settings.show_collection_image.label",
       "info": "t:sections.main-collection-banner.settings.show_collection_image.info"
+    },
+    {
+        "type": "text",
+        "id": "related_collections_toggle",
+        "label": "t:sections.main-collection-banner.settings.related_collections_toggle.label",
+        "default": "Browse subcategories",
+        "info": "t:sections.main-collection-banner.settings.related_collections_toggle.info"
     },
     {
       "type": "color_scheme",

@@ -80,37 +80,62 @@ function renderCustomAvisOptions() {
 		});
 	});
 
-	document.querySelectorAll('.ap-label-tooltip').forEach((element) => {
+	setupOptionsPopup();	
+	setupOptionsHandler();
+}
+
+function setupOptionsPopup() {
+	document.querySelectorAll('.ap-label-tooltip, .group-color .apo-title').forEach((element) => {
+		if (element.dataset.initialized) {
+			return;
+		}
+
+		let parentWithHandle = element.closest('[class^="handle-"]');
+        const svgPopupIcon = element.querySelector('svg');
+
+		if (element.classList.contains('apo-title') && Array.from(element.classList).filter(cls => cls.includes('handle')).length > 0) {
+			parentWithHandle = element;
+		} 
+
+		if (!parentWithHandle){
+			return;
+		}
+
+		element.dataset.initialized = true;
+
 		const style = document.createElement('style');
 		style.textContent = `.ap-label-tooltip::after { display: none !important; }`;
 		document.head.appendChild(style);
 
-		if (window.location.pathname.includes('products')) {
-			if (window.product.available) {
-				element.innerHTML += `
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
-               xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd"
-                  d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z"
-                  fill="#F1592A"/>
-          </svg>`;
+		if (!svgPopupIcon) {
+			if (window.location.pathname.includes('products')) {
+				if (window.product.available) {
+	
+					element.innerHTML += `
+			  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+				   xmlns="http://www.w3.org/2000/svg">
+				<path fill-rule="evenodd" clip-rule="evenodd"
+					  d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z"
+					  fill="#F1592A"/>
+			  </svg>`;
+				} else {
+					element.innerHTML += `
+			  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+				   xmlns="http://www.w3.org/2000/svg">
+				<path fill-rule="evenodd" clip-rule="evenodd"
+					  d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z"
+					  fill="#B3B3B3"/>
+			  </svg>`;
+				}
 			} else {
 				element.innerHTML += `
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
-               xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd"
-                  d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z"
-                  fill="#B3B3B3"/>
-          </svg>`;
-			}
-		} else {
-			element.innerHTML += `
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
-             xmlns="http://www.w3.org/2000/svg">
-          <path fill-rule="evenodd" clip-rule="evenodd"
-                d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z"
-                fill="#F1592A"/>
-        </svg>`;
+			<svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+				 xmlns="http://www.w3.org/2000/svg">
+			  <path fill-rule="evenodd" clip-rule="evenodd"
+					d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z"
+					fill="#F1592A"/>
+			</svg>`;
+			}			
 		}
 
 		const toolTip = element.querySelector('svg');
@@ -118,8 +143,6 @@ function renderCustomAvisOptions() {
 			toolTip.addEventListener('click', async (event) => {
 				event.preventDefault();
 				event.stopPropagation();
-
-				const parentWithHandle = element.closest('[class^="handle-"]');
 
 				let headingElement = parentWithHandle.previousElementSibling;
 
@@ -135,7 +158,6 @@ function renderCustomAvisOptions() {
 				if (headingElement) {
 					headingTitle = headingElement.querySelector('.avp-heading')?.innerText
 				}
-
 				const handleClass = Array.from(parentWithHandle.classList).find((cls) => cls.startsWith('handle-'));
 				let optionCategoryId;
 
@@ -148,117 +170,110 @@ function renderCustomAvisOptions() {
 				container.innerHTML = '';
 
 				const productTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
-				if (productTitle) {
-					let optionHTML = '';
-					let productTitleSearch = '';
+				let optionHTML = '';
+				
+				if (headingTitle) {
+					productTitleSearch = `${productTitle} - ${headingTitle} (${optionCategoryId})`;
+				} else {
+					productTitleSearch = `${productTitle} (${optionCategoryId})`;
+				}
 
-					if (headingTitle) {
-						productTitleSearch = `${productTitle} - ${headingTitle} (${optionCategoryId})`;
-					} else {
-						productTitleSearch = `${productTitle} (${optionCategoryId})`;
-					}
+				const encodedProductTitle = encodeURIComponent(productTitleSearch);
+				
+				const product = await fetchProductByOptionCategory(optionCategoryId, encodedProductTitle);
 
-					const optionPopupProductsHtml = await renderOptionPopupProducts(productTitleSearch);
+				if (!product) {
+					return;
+				}
 
-					if (!optionPopupProductsHtml) {
-						const encodedProductTitle = encodeURIComponent(productTitle);
-						const product = await fetchProductByTitle(encodedProductTitle);
-						if (product) {
-							optionHTML = product.body_html;
-						}
-					} else {
-						optionHTML = optionPopupProductsHtml;
-					}
+				if (!product.relatedProducts || product.relatedProducts.length === 0) {
+					optionHTML = product.descriptionHtml;
+				} else {
+					var relatedProductsHtml = renderOptionPopupProducts(product);
+					optionHTML = relatedProductsHtml
+				}
 
-					if (optionHTML) {
-						const tempDiv = document.createElement('div');
-						tempDiv.innerHTML = optionHTML;
-						const mainContent = tempDiv;
-						if (mainContent) {
-							container.innerHTML =
-								mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
-							const closeModalButton = document.querySelector('.modal-close');
-							closeModalButton.addEventListener('click', () => {
-								modalWrapper.style.display = 'none';
-							});
+				if (optionHTML) {
+					const tempDiv = document.createElement('div');
+					tempDiv.innerHTML = optionHTML;
+					const mainContent = tempDiv;
+					if (mainContent) {
+						container.innerHTML =
+							mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
+						const closeModalButton = document.querySelector('.modal-close');
+						closeModalButton.addEventListener('click', () => {
+							modalWrapper.style.display = 'none';
+						});
 
-							const scripts = mainContent.querySelectorAll('script');
-							scripts.forEach((script) => {
-								const newScript = document.createElement('script');
-								if (script.src) {
-									newScript.src = script.src;
-								} else {
-									newScript.textContent = script.textContent;
-								}
-								document.body.appendChild(newScript);
-							});
-
-							const modalImgs = container.querySelectorAll('#dynamic-product-content img');
-							modalImgs.forEach((img) => {
-								const src = img.src;
-								const fileName = src.split('/').pop();
-								const newSrc = `https://cdn.shopify.com/s/files/1/0884/2012/2940/files/${fileName}`;
-								img.src = newSrc;
-							});
-
-							const productCards = document.querySelectorAll('.product-card');
-							if (productCards) {
-								productCards.forEach((p) => {
-									const productId = parseInt(p.getAttribute('data-product-id'));
-									const productObj = optionProductsPopup.find((x) => x.id === productId);
-
-									if (productObj) {
-										p.addEventListener('click', (e) => {
-											const currentP = e.currentTarget;
-											const siblingsArray = [...currentP.parentElement.children].filter(
-												(child) => child !== currentP.parentElement
-											);
-											siblingsArray.forEach((item) => item.classList.remove('active'));
-											currentP.classList.add('active');
-
-											const shortDescriptionMetafield = productObj.metafields.find(
-												(metafield) => metafield.key === 'short_description'
-											);
-											const shortDescription = shortDescriptionMetafield
-												? shortDescriptionMetafield.value
-												: 'No short description available.';
-
-											const productDetailsHTML = `
-                        <div class="product-details__product-image">
-                          <img src="${productObj.image.src}" alt="${productObj.title}">
-                        </div>
-                        <div class="product-details__product-info">
-                          <h2 class="product-details__title">${productObj.title}</h2>
-                          <p class="product-details__short_description">${shortDescription}</p>
-                        </div>`;
-
-											const productDetailsContainer = document.querySelector('.product-details-container');
-											const productDetailsDescriptionBody = document.querySelector('.product-details-description-body');
-											productDetailsContainer.style.display = 'flex';
-											productDetailsDescriptionBody.style.display = 'block';
-											productDetailsContainer.innerHTML = productDetailsHTML;
-
-											const productDetailsDescriptionBodyDiv = document.createElement('div');
-											productDetailsDescriptionBodyDiv.innerHTML =
-												productObj.body_html.replace(shortDescription, '');
-											removeEmptyElements(productDetailsDescriptionBodyDiv);
-											clearImages(productDetailsDescriptionBodyDiv);
-											productDetailsDescriptionBody.innerHTML = productDetailsDescriptionBodyDiv.innerHTML;
-										});
-									}
-								});
-								productCards[0]?.click();
+						const scripts = mainContent.querySelectorAll('script');
+						scripts.forEach((script) => {
+							const newScript = document.createElement('script');
+							if (script.src) {
+								newScript.src = script.src;
+							} else {
+								newScript.textContent = script.textContent;
 							}
-						} else {
-							console.error('MainContent not found in the fetched HTML.');
+							document.body.appendChild(newScript);
+						});
+
+						const modalImgs = container.querySelectorAll('#dynamic-product-content img');
+						modalImgs.forEach((img) => {
+							const src = img.src;
+							const fileName = src.split('/').pop();
+							const newSrc = `https://cdn.shopify.com/s/files/1/0884/2012/2940/files/${fileName}`;
+							img.src = newSrc;
+						});
+
+						const productCards = document.querySelectorAll('.product-card');
+						if (productCards) {
+							productCards.forEach((p) => {
+								const productId = p.getAttribute('data-product-id');
+								const productObj = product.relatedProducts.find((x) => x.id === productId);
+
+								if (productObj) {
+									p.addEventListener('click', (e) => {
+										const currentP = e.currentTarget;
+										const siblingsArray = [...currentP.parentElement.children].filter(
+											(child) => child !== currentP.parentElement
+										);
+										siblingsArray.forEach((item) => item.classList.remove('active'));
+										currentP.classList.add('active');
+
+										const shortDescription = productObj.shortDescription;
+
+										const productDetailsHTML = `
+					<div class="product-details__product-image">
+					  <img src="${productObj.imageUrl}" alt="${productObj.title}">
+					</div>
+					<div class="product-details__product-info">
+					  <h2 class="product-details__title">${productObj.title}</h2>
+					  <p class="product-details__short_description">${shortDescription}</p>
+					</div>`;
+
+										const productDetailsContainer = document.querySelector('.product-details-container');
+										const productDetailsDescriptionBody = document.querySelector('.product-details-description-body');
+										productDetailsContainer.style.display = 'flex';
+										productDetailsDescriptionBody.style.display = 'block';
+										productDetailsContainer.innerHTML = productDetailsHTML;
+
+										const productDetailsDescriptionBodyDiv = document.createElement('div');
+										productDetailsDescriptionBodyDiv.innerHTML =
+											productObj.descriptionHtml.replace(shortDescription, '');
+										removeEmptyElements(productDetailsDescriptionBodyDiv);
+										clearImages(productDetailsDescriptionBodyDiv);
+										productDetailsDescriptionBody.innerHTML = productDetailsDescriptionBodyDiv.innerHTML;
+									});
+								}
+							});
+							productCards[0]?.click();
 						}
+					} else {
+						console.error('MainContent not found in the fetched HTML.');
 					}
 				}
 			});
 		}
 	});
-
-	setupOptionsHandler();
 }
 
 
@@ -331,8 +346,14 @@ function setupOptionsHandler() {
 		  setTimeout(() => {	
 			const avisInputHidden = document.querySelector(`[name=\"properties[${CSS.escape(input.getAttribute('field-name').replace('&quot;', '"'))}]\"]`);
 			if (avisInputHidden && input.checked && inputMoneyValue) {
-				if (!avisInputHidden.value.includes('Add')) {
-			  		avisInputHidden.value = avisInputHidden.value + ` [Add +${inputMoneyValue}]`
+				if (inputMoneyValue.includes('-$')) {
+					if (!avisInputHidden.value.includes('Subtract')) {
+					  avisInputHidden.value = avisInputHidden.value + ` [Subtract ${inputMoneyValue}]`
+					}
+				} else {
+					if (!avisInputHidden.value.includes('Add')) {
+					  avisInputHidden.value = avisInputHidden.value + ` [Add +${inputMoneyValue}]`	
+					}
 				}
 			}
 		  });
@@ -507,7 +528,7 @@ async function fetchProductByHandle(handle) {
 }
 
 async function fetchProductByTitle(title) {
-	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbytitle?title=${title}`;
+	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbytitle?title=${encodeURIComponent(title)}`;
 
 	try {
 		const response = await fetch(shopifyUrl, {
@@ -520,6 +541,26 @@ async function fetchProductByTitle(title) {
 
 		const data = await response.json();
 		return data.products[0];
+	} catch (error) {
+		console.error('Error fetching product by title:', error);
+		return null;
+	}
+}
+
+async function fetchProductByOptionCategory(optionCategoryId, title) {
+	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbyoptioncategory?optionCategoryId=${optionCategoryId}&title=${title}`;
+
+	try {
+		const response = await fetch(shopifyUrl, {
+			method: 'GET'
+		});
+
+		if (!response.ok) {
+			throw new Error('Failed to fetch product by title');
+		}
+
+		const data = await response.json();
+		return data[0];
 	} catch (error) {
 		console.error('Error fetching product by title:', error);
 		return null;
@@ -609,49 +650,16 @@ async function fetchProductMetaObject(metaObjectId) {
 	}
 }
 
-async function renderOptionPopupProducts(title) {
-	const product = await fetchProductByTitle(title);
-
-	if (!product) {
-		console.error('No product found for the given title.');
-		return;
-	}
-
-	const productId = product.id;
-	const metafields = await fetchProductMetafields(productId);
-
-	if (!metafields) {
-		console.error('No metafields found for the product.');
-		return null;
-	}
-
-	const relatedProductsMetafield = metafields.find((field) => field.key === 'related_products');
-	if (!relatedProductsMetafield || !relatedProductsMetafield.value) {
-		console.error('No related products found in the metafield.');
-		return null;
-	}
-
-	const optionProductIds = JSON.parse(relatedProductsMetafield.value).map((id) => id.split('/').pop());
-	const optionProducts = await Promise.all(
-		optionProductIds.map((id) => fetchProductDetailsWithMetafields(id))
-	);
-
-	optionProductsPopup = optionProducts;
-
+function renderOptionPopupProducts(product) {
 	let contentHTML = `
     <div class="option-title">
-      <h2>ABOUT OPTIONS - ${product.title}</h2>
+    <h2>ABOUT OPTIONS - ${product.title.replace(/\(\d+\)/g, "")}</h2>
     </div>
     <div class="option-products">
       <div class="product-cards">`;
 
-	optionProducts.forEach((prod) => {
-		const shortDescriptionMetafield = prod.metafields.find((metafield) => metafield.key === 'short_description');
-		const shortDescription = shortDescriptionMetafield
-			? shortDescriptionMetafield.value
-			: 'No short description available.';
-
-		const originalPrice = parseFloat(prod.variants[0].price);
+	  product.relatedProducts.forEach((prod) => {
+		const originalPrice = parseFloat(prod.price);
 		const price =
 			Shopify.country !== 'US'
 				? (originalPrice * Shopify.currency.rate).toFixed(2)
@@ -659,16 +667,16 @@ async function renderOptionPopupProducts(title) {
 		contentHTML += `
       <div class="product-card" data-product-id="${prod.id}">
         <div class="product-card__img">
-          <img src="${prod.images[0]?.src}" alt="${prod.title}" />
+          <img src="${prod.imageUrl}" alt="${prod.title}" />
         </div>
-        <h4 class="product-card__title">${prod.title}</h4>
+        <h4 class="product-card__title">${prod.title.replace(/\(\d+\)/g, "")}</h4>
         <div class="product-card__mid">
-          <span class="product-card__code">#${prod.variants[0].sku}</span>
+          <span class="product-card__code">#${prod.sku}</span>
           <span class="product-card__price">
             ${'$' + price}
           </span>
         </div>
-        <p class="product-card__description">${shortDescription.substring(0, 150)}...</p>
+        <p class="product-card__description">${prod.shortDescription.substring(0, 150)}...</p>
         <a class="read-more-btn" data-id="${prod.id}">Read more</a>
       </div>
     `;
