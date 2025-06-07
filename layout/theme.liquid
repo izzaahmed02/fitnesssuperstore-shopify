@@ -1,18 +1,18 @@
   <!doctype html>
     <html class="js" lang="{{ request.locale.iso_code }}">
       <head>
+<!-- Start of Shoplift scripts -->
+{% render 'shoplift' %}
+<!-- End of Shoplift scripts -->
+
           <meta charset="utf-8">
           <meta http-equiv="X-UA-Compatible" content="IE=edge">
           <meta name="viewport" content="width=device-width,initial-scale=1">
           <meta name="theme-color" content="">
           <link rel="canonical" href="{{ canonical_url }}">
-          {% if template == 'search' %}
-            <meta name="robots" content="noindex,nofollow"/>
-          {%- endif -%}
           {%- if settings.favicon != blank -%}
           <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
           {%- endif -%}
-           <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
 
           <script>
 		      eval(function (e, t, n, a, r, o) {
@@ -61,19 +61,6 @@
           <!-- Intelligems tracking script end -->
 
 <script>
-
-    {% if template == 'product' %}
-      (function(w, c, r, s){
-      var t = c.createElement('script');
-      t.async = true;
-      t.src = 'https://' + r + '/surveyrun';
-      var h = c.getElementsByTagName('head')[0];
-      h.appendChild(t);
-      w.CRSSurveyID = s;
-      })(window, document, 'stageserver.conversionrate.store', '37')
-    {% endif %}
-
-  
 ;(function(){
   var TRACKED = ['gclid','_gl','utm_id','utm_source','utm_medium','utm_campaign','utm_term','utm_content', 'srsltid', 'gclsrc', 'gbraid', 'wbraid'];
 
@@ -337,8 +324,6 @@
           --variant-pills-shadow-horizontal-offset: {{ settings.variant_pills_shadow_horizontal_offset }}px;
           --variant-pills-shadow-vertical-offset: {{ settings.variant_pills_shadow_vertical_offset }}px;
           --variant-pills-shadow-blur-radius: {{ settings.variant_pills_shadow_blur }}px;
-
-          --zoom-lens-shader: url({{ 'zoom-lens-shader.gif' | asset_url }});
           }
 
           *,
@@ -401,20 +386,10 @@
           <noscript>
               <link rel="stylesheet" href="{{ 'custom.css' | asset_url }}">
           </noscript>
-          <link
-                  rel="preload"
-                  href="{{ 'globo-search-custom.css' | asset_url }}"
-                  as="style"
-                  onload="this.onload=null;this.rel='stylesheet'"
-          >
-          <noscript>
-              <link rel="stylesheet" href="{{ 'globo-search-custom.css' | asset_url }}">
-          </noscript>
           {{ 'base.css' | asset_url | stylesheet_tag }}
           {{ 'swiper.min.css' | asset_url | stylesheet_tag }}
-          {% comment %} {{ 'custom.css' | asset_url | stylesheet_tag }} {% endcomment %}
+{% comment %}  {{ 'custom.css' | asset_url | stylesheet_tag }} {%endcomment%}
           {{ 'custom.min.css' | asset_url | stylesheet_tag }}
-          {{ 'globo-search-custom.css' | asset_url | stylesheet_tag }}
           {%- unless settings.type_body_font.system? -%}
           {% comment %}theme-check-disable AssetPreload{% endcomment %}
           <link rel="preload" as="font" href="{{ settings.type_body_font | font_url }}" type="font/woff2" crossorigin>
@@ -495,7 +470,7 @@
 			      document.documentElement.classList.add('shopify-design-mode');
 		      }
           </script>
-          {% comment %} {% render 'rapid-search-settings' %} {% endcomment %}
+          {% render 'rapid-search-settings' %}
           <script type="text/javascript" defer>
 		      function saLoadScript(src) {
 			      var js = window.document.createElement('script');
@@ -525,7 +500,7 @@
             </script>
       </head>
     
-      <body class="gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %} {% if template contains 'page'      %} page-{{ page.handle }}{% endif %}">
+      <body class="gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %}">
         <a class="skip-to-content-link button visually-hidden" href="#MainContent">
           {{ 'accessibility.skip_to_text' | t }}
         </a>
@@ -542,6 +517,77 @@
           {% if request.page_type == 'page' and page.metafields.layout.narrow == true %}
             <div class="page-narrow-layout">
               {{ content_for_layout }}
+            </div>
+          {% elsif request.page_type == 'index' or request.page_type == 'collection' or request.page_type == 'product' or request.page_type == 'search' %}
+            <div class="grid-container page-width {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %}">
+                  <div class="sidebarmenu">
+                          <div class="submenu">
+                                  <a href="/collections/all" class="submenu-title">CARDIO EQUIPMENT</a>
+                                  <ul>
+                                          <li><a href="/collections/ellipticals" class="submenu-item">Ellipticals</a></li>
+                                          <li><a href="/collections/exercise-bikes" class="submenu-item">Exercise Bikes</a></li>
+                                          <li><a href="/collections/flooring" class="submenu-item">Flooring</a></li>
+                                          <li><a href="/collections/rowing-ski-machines" class="submenu-item">Rowing Machines</a></li>
+                                          <li><a href="/collections/saunas-cold-plunges" class="submenu-item">Saunas</a></li>
+                                          <li><a href="/collections/stair-climbers-steppers" class="submenu-item">Stair Climbers / Steppers</a></li>
+                                          <li><a href="/collections/strength-training-equipment" class="submenu-item">Strength Training Equipment</a></li>
+                                          <li><a href="/collections/treadclimbers" class="submenu-item">Treadclimbers</a></li>
+                                          <li><a href="/collections/treadmills" class="submenu-item">Treadmills</a></li>
+                                          <li><a href="/collections/vibration-platforms" class="submenu-item">Vibration Platforms</a></li>
+                                  </ul>
+                          </div>
+                          <div class="submenu">
+                                  <a href="/collections/strength-training-equipment" class="submenu-title">STRENGTH EQUIPMENT</a>
+                                  <ul>
+                                          <li><a href="/collections/benches" class="submenu-item">Benches</a></li>
+                                          <li><a href="/collections/free-weights" class="submenu-item">Free Weights</a></li>
+                                          <li><a href="/collections/gym-accessories" class="submenu-item">Gym Accessories</a></li>
+                                          <li><a href="/collections/plate-loaded" class="submenu-item">Plate Loaded</a></li>
+                                          <li><a href="/collections/cages-racks-rigs" class="submenu-item">Cages, Racks, & Rigs</a></li>
+                                          <li><a href="/collections/selectorized-pin-loaded" class="submenu-item">Selectorized (Pin Loaded)</a></li>
+                                          <li><a href="/collections/storage-racks" class="submenu-item">Storage Racks</a></li>
+                                          <li><a href="/collections/gym-systems" class="submenu-item">Gym Systems</a></li>
+                                  </ul>
+                          </div>
+                          <div class="submenu">
+                                  <a href="/pages/brands" class="submenu-title">SHOP BY BRAND</a>
+                                  <ul>
+                                          <li><a href="/collections/body-solid" class="submenu-item">Body-Solid</a></li>
+                                          <li><a href="/collections/bowflex" class="submenu-item">Bowflex</a></li>
+                                          <li><a href="/collections/cybex" class="submenu-item">Cybex</a></li>
+                                          <li><a href="/collections/dynamic-cold-therapy" class="submenu-item">Dynamic Cold Therapy</a></li>
+                                          <li><a href="/collections/dynamic-fitness" class="submenu-item">Dynamic Fitness</a></li>
+                                          <li><a href="/collections/expresso-fitness" class="submenu-item">Expresso Fitness</a></li>
+                                          <li><a href="/collections/freemotion" class="submenu-item">FreeMotion</a></li>
+                                          <li><a href="/collections/french-fitness" class="submenu-item">French Fitness</a></li>
+                                          <li><a href="/collections/hammer-strength" class="submenu-item">Hammer Strength</a></li>
+                                          <li><a href="/collections/jacobs-ladder" class="submenu-item">Jacobs Ladder</a></li>
+                                          <li><a href="/collections/life-fitness" class="submenu-item">Life Fitness</a></li>
+                                          <li><a href="/collections/marpo-kinetics" class="submenu-item">Marpo Kinetics</a></li>
+                                          <li><a href="/collections/matrix" class="submenu-item">Matrix</a></li>
+                                          <li><a href="/collections/monark" class="submenu-item">Monark</a></li>
+                                          <li><a href="/collections/nautilus" class="submenu-item">Nautilus</a></li>
+                                          <li><a href="/collections/nustep" class="submenu-item">Nustep</a></li>
+                                          <li><a href="/collections/octane-fitness" class="submenu-item">Octane Fitness</a></li>
+                                          <li><a href="/collections/power-plate" class="submenu-item">Power Plate</a></li>
+                                          <li><a href="/collections/powerblock" class="submenu-item">PowerBlock</a></li>
+                                          <li><a href="/collections/precor" class="submenu-item">Precor</a></li>
+                                          <li><a href="/collections/schwinn" class="submenu-item">Schwinn</a></li>
+                                          <li><a href="/collections/scifit" class="submenu-item">SciFit</a></li>
+                                          <li><a href="/collections/sportsart" class="submenu-item">SportsArt</a></li>
+                                          <li><a href="/collections/stairmaster" class="submenu-item">Stairmaster</a></li>
+                                          <li><a href="/collections/star-trac" class="submenu-item">Star Trac</a></li>
+                                          <li><a href="/collections/technogym" class="submenu-item">Technogym</a></li>
+                                          <li><a href="/collections/throwdown" class="submenu-item">Throwdown</a></li>
+                                          <li><a href="/collections/true-fitness" class="submenu-item">True Fitness</a></li>
+                                          <li><a href="/collections/versaclimber" class="submenu-item">Versaclimber</a></li>
+                                          <li><a href="/collections/woodway-usa" class="submenu-item">Woodway USA</a></li>
+                                  </ul>
+                          </div>
+                  </div>
+                  <div class="inner-container">
+                          {{ content_for_layout }}
+                  </div>
             </div>
           {% else %}
             {{ content_for_layout }}
@@ -604,12 +650,7 @@
         {%- endif -%}
        
         <div class="modal-wrapper"><div id="dynamic-product-content" class="scroll-trigger animate--slide-in"></div></div>
-        {%- capture searchTemplate -%}{% render 'globo.filter.search' %}{%- endcapture -%}{%- unless searchTemplate contains 'Liquid error' -%}<script id="gspfSearchResult" type="template/html">{{- searchTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
-        {%- capture productTemplate -%}{% render 'globo.filter.product', themeTranslation: shop.metafields.globoFilter.themeTranslation.value[request.locale.iso_code] %}{%- endcapture -%}{%- unless productTemplate contains 'Liquid error' -%}<script id="gspfProduct" type="template/html">{{- productTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%} 
-        {%- capture treeTemplate -%}{% render 'globo.filter.tree' %}{%- endcapture -%}{%- unless treeTemplate contains 'Liquid error' -%}<script id="gspfFilterTree" type="template/html">{{- treeTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
-        {%- capture sortTemplate -%}{% render 'globo.filter.sort' %}{%- endcapture -%}{%- unless sortTemplate contains 'Liquid error' -%}<script id="gspfFilterSort" type="template/html">{{- sortTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
-        
-        <script defer id="ze-snippet" src="https://static.zdassets.com/ekr/snippet.js?key=cb8b520e-4aff-4fa3-968a-8956d8b9f31a"></script>
-        <script defer>(function () { var s = document.createElement('script'), e = !document.body ? document.querySelector('head') : document.body; s.src = 'https://s3.us-west-1.amazonaws.com/fitnesssuperstore.info/js/ada.js'; s.async = true; s.onload = function () { acsbJS.init({ statementLink: '', footerHtml: '', hideMobile: false, hideTrigger: false, language: 'en', position: 'left', leadColor: '#f1592a', triggerColor: '#f1592a', triggerRadius: '50%', triggerPositionX: 'left', triggerPositionY: 'bottom', triggerIcon: 'people', triggerSize: 'small', triggerOffsetX: 20, triggerOffsetY: 22, mobile: { triggerSize: 'small', triggerPositionX: 'left', triggerPositionY: 'bottom', triggerOffsetX: 10, triggerOffsetY: 20, triggerRadius: '50%' } }); }; e.appendChild(s); }()); </script>
       </body>
     </html>
+    <script defer id="ze-snippet" src="https://static.zdassets.com/ekr/snippet.js?key=cb8b520e-4aff-4fa3-968a-8956d8b9f31a"></script>
+    <script defer>(function () { var s = document.createElement('script'), e = !document.body ? document.querySelector('head') : document.body; s.src = 'https://s3.us-west-1.amazonaws.com/fitnesssuperstore.info/js/ada.js'; s.async = true; s.onload = function () { acsbJS.init({ statementLink: '', footerHtml: '', hideMobile: false, hideTrigger: false, language: 'en', position: 'left', leadColor: '#f1592a', triggerColor: '#f1592a', triggerRadius: '50%', triggerPositionX: 'left', triggerPositionY: 'bottom', triggerIcon: 'people', triggerSize: 'small', triggerOffsetX: 20, triggerOffsetY: 22, mobile: { triggerSize: 'small', triggerPositionX: 'left', triggerPositionY: 'bottom', triggerOffsetX: 10, triggerOffsetY: 20, triggerRadius: '50%' } }); }; e.appendChild(s); }()); </script>

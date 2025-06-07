@@ -170,58 +170,6 @@
     });
   });
 </script> {% endcomment %}
-<script>
-document.addEventListener(
-  'submit',
-  async (evt) => {
-    if (!evt.target.matches('form.g-container[data-id="62733"]')) return;
-
-    evt.preventDefault();
-    evt.stopPropagation();
-
-    const fd     = new FormData(evt.target);
-    const email  = (fd.get('email') || '').trim();          
-    const isMail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); 
-
-    if (!isMail) {
-      const errorBanner = document.querySelector('.message.error');
-      if (errorBanner) {
-        errorBanner.querySelector('.content').textContent =
-          'Please enter a valid e-mail address.';
-        errorBanner.style.display = 'block';
-        errorBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return; 
-    }
-
-    try {
-      const res = await fetch(
-        'https://fitnesssuperstore-api.azurewebsites.net/api/email/shopifycontactformsubmit',
-        { method: 'POST', body: fd }
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const { success } = await res.json();
-      if (!success) throw new Error('API returned success:false');
-
-      evt.target.reset();
-      Globo.FormBuilder.initialize();        
-      setTimeout(() => {
-        const successBanner = document.querySelector('.message.success');
-        if (successBanner) successBanner.style.display = 'block';
-      });
-    } catch (err) {
-      const errorBanner = document.querySelector('.message.error');
-      if (errorBanner) {
-        errorBanner.querySelector('.content').textContent =
-          'Something went wrong, please try again.';
-        errorBanner.style.display = 'block';
-      }
-    }
-  },
-  true 
-);
-</script>
 
 {% schema %}
 {

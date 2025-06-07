@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const paintColorElement = document.querySelector('input[name="Paint Color"]');
         const vinylColorElement = document.querySelector('input[name="Vinyl Color"]')
 
-        // paintColorElement?.click();
-        // vinylColorElement?.click();
+        paintColorElement?.click();
+        vinylColorElement?.click();
  
         const paintColorAvisEl = Array.from(
             document.querySelectorAll('.ap-options__swatch-container .apo-title')
@@ -50,8 +50,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 targetEl.classList.add(handleClass);
                 setTimeout(setupOptionsPopup);
               } 
-            } else {
-                targetEl.querySelector('.paint-color-popup-icon').style.display = 'none';
             }
           }
           
@@ -133,17 +131,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                     selectedColorElement.textContent = `Color: ${colorName}`;
                                     currentSwatchIndex = [...colorSwatches].indexOf(swatch);
                                     currentColorName = colorName;
-                                    let selectedParentGroupContainer;
-                                    const selectedGroup = Array.from(document.querySelectorAll('.ap-options__swatch-container .apo-title'))
-                                    .find(el => el.textContent.trim() === `${groupColorName} Color`);
-                                    if (selectedGroup) {
-                                        selectedParentGroupContainer = selectedGroup.closest('.ap-options__swatch-container');
-                                    }
-                                    if (selectedParentGroupContainer) {
-                                        const apoOptionColorSelected = Array.from(selectedParentGroupContainer.querySelectorAll('.option_selected')).find(div => div.textContent === colorName);
-                                        if (!apoOptionColorSelected) {
-                                            apoColors[currentSwatchIndex]?.parentElement.click();
-                                        }
+                                    const apoOptionColorSelected = Array.from(document.querySelectorAll('.ap-options__swatch-container .option_selected')).find(div => div.textContent === colorName);
+                                    if (!apoOptionColorSelected) {
+                                        apoColors[currentSwatchIndex]?.parentElement.click();
                                     }
                                     customColorInputContainer.style.display = 'none';
 
@@ -520,7 +510,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
     ];
 
-   const colorMap = {
+    const colorMap = {
         black: "#000000",
         white: "#FFFFFF",
         red: "#660F0A",
@@ -538,13 +528,11 @@ document.addEventListener('DOMContentLoaded', function() {
         navy: "#000080",
         teal: "#008080",
         maroon: "#800000",
-        burgundy: "#800020",
-        metallicsilver: "#aaa9ad",
-        stormgray: "#747880" 
+        burgundy: "#800020"
     };
 
     function getHexFromName(name) {
-        const normalized = (name || "").toLowerCase().replace(' ', '').replace(/\s*\([^()]*\)/g, '').trim();
+        const normalized = (name || "").trim().toLowerCase();
         return colorMap[normalized] || "#000000";
     }
 

@@ -100,18 +100,13 @@ var TransitTimeCalculator = {
             userLoc.country_code = locationInfoCountry;
           }
           sessionStorage.userCityStateZip = `${userLoc.city} ${userLoc.region_code}`;
-        }
-
-        if (!userLoc.postal) {
-          TransitTimeCalculator.appendInvalidTransitTime();
-          return;
-        }
-
-        if (userLoc.country !== 'CA' && userLoc.country !== 'US' && userLoc.country !== 'PR') {
-          document.querySelector('.location-form #postalCode').value = userLoc.postal;
-          setUserLocationDisplay(userLoc);
-          TransitTimeCalculator.appendInvalidTransitTime();
-          return;
+        } else {
+          if (userLoc.country !== 'CA' && userLoc.country !== 'US' && userLoc.country !== 'PR') {
+            document.querySelector('.location-form #postalCode').value = userLoc.postal;
+            setUserLocationDisplay(userLoc);
+            TransitTimeCalculator.appendInvalidTransitTime();
+            return;
+          }
         }
       }
       
@@ -157,16 +152,13 @@ var TransitTimeCalculator = {
       }
       
       let state = userLoc.region_code;
-      let addInstallationTime = true;    
       let deliveryOption = deliveryOptionText.toLocaleLowerCase();
       
       if (userLoc.country === 'US' && state === "CA") {
         if (distanceFromBenicia != null) {
           if (distanceFromBenicia <= 150 && productWeight >= 30) {
-            addInstallationTime = false;
           } else if (distanceFromBenicia <= 150 && productWeight < 30) {
             minDeliveryTime += 1; maxDeliveryTime += 1;
-            addInstallationTime = false;
           } else if (distanceFromBenicia > 150 && productWeight >= 30 && (deliveryOption.includes('curbside') || deliveryOption.includes('garage'))) {
             minDeliveryTime += 1; maxDeliveryTime += 4;
           } else if (distanceFromBenicia > 150 && productWeight < 30 && deliveryOption.includes('curbside')) {
@@ -238,7 +230,7 @@ var TransitTimeCalculator = {
         }
       }
       
-      if (addInstallationTime && deliveryOptionText) {
+      if (deliveryOptionText) {
         if (deliveryOptionText.toLowerCase().includes("room") ||
             deliveryOptionText.toLowerCase().includes("process") ||
             deliveryOptionText.toLowerCase().includes("custom")) {
