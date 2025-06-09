@@ -409,11 +409,13 @@ function waitForPayLaterDependencies(callback, timeout = 10000, interval = 100) 
 
 function toggleTransitTimeForm() {
 	const transitTimeForm = document.querySelector('.transit-time-form');
-      
+	const locationDisplayHeader = document.querySelector('.location-header .location-display');
 	if (transitTimeForm.style.display === 'block') {
 		transitTimeForm.style.display = 'none';
+		locationDisplayHeader.style.color = '#57200F'
 	} else {
 		transitTimeForm.style.display = 'block';
+		locationDisplayHeader.style.color = '#F1592A'
 	}
 }
 
