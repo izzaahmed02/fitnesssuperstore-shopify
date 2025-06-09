@@ -1,7 +1,6 @@
 class MobileGallery extends HTMLElement {
   constructor() {
     super();
-
     this.hammerInstances = [];
   }
 
@@ -26,6 +25,7 @@ class MobileGallery extends HTMLElement {
 
     this.popupSlider = this.popup?.querySelector('.mobile-popup-slider');
     this.popupDots = this.popup?.querySelector('.mobile-popup-dots');
+    this.thumbnailContainer = this.popup?.querySelector('.mobile-popup-thumbnails');
 
     this.slickInitialized = false;
 
@@ -41,7 +41,6 @@ class MobileGallery extends HTMLElement {
 
         if (window.matchMedia('(min-width: 990px)').matches) {
           const closeBtn = this.popup.querySelector('.mobile-popup-close');
-
           if (closeBtn) {
             this.popup.classList.remove('is-active');
             document.body.style.overflow = '';
@@ -54,7 +53,6 @@ class MobileGallery extends HTMLElement {
 
   checkAndInit(isDesktop) {
     if (!this.slider) return;
-    // if (!this.slider || typeof jQuery === 'undefined' || !$.fn.slick) return;
 
     const shouldInit = !isDesktop();
 
@@ -67,10 +65,7 @@ class MobileGallery extends HTMLElement {
         arrows: false,
         infinite: false,
         adaptiveHeight: true,
-        // prevArrow: '.main-slider-arrow--left',
-        // nextArrow: '.main-slider-arrow--right',
         lazyLoad: 'ondemand',
-
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
         swipeToSlide: true,
@@ -79,7 +74,7 @@ class MobileGallery extends HTMLElement {
       });
 
       this.attachSlideEvents();
-
+      
       $(this.slider).on('afterChange', (event, slick, currentSlide) => {
         this.querySelectorAll('video').forEach((video) => {
           try {
@@ -123,7 +118,6 @@ class MobileGallery extends HTMLElement {
         infinite: false,
         adaptiveHeight: true,
         lazyLoad: 'ondemand',
-
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
         swipeToSlide: true,
@@ -139,7 +133,6 @@ class MobileGallery extends HTMLElement {
 
   attachSlideEvents() {
     const slides = this.querySelectorAll('.mobile-gallery-slide');
-
     slides.forEach((slide, index) => {
       slide.addEventListener('click', (e) => {
         const mediaId = slide.getAttribute('data-media-id');
@@ -158,12 +151,10 @@ class MobileGallery extends HTMLElement {
         ) {
           overlay.style.display = 'none';
           iframe.style.pointerEvents = 'auto';
-
           iframe.contentWindow?.postMessage(
             '{"event":"command","func":"playVideo","args":""}',
             '*',
           );
-
           return;
         }
 
@@ -190,6 +181,11 @@ class MobileGallery extends HTMLElement {
     if (shouldInit) {
       this.popupSlider.innerHTML = '';
       this.renderPopupSlides(this.popupSlider);
+      
+      // Render thumbnails
+      if (this.thumbnailContainer) {
+        this.renderThumbnails(this.thumbnailContainer, index);
+      }
 
       $(this.popupSlider).off().slick({
         dots: true,
@@ -199,7 +195,6 @@ class MobileGallery extends HTMLElement {
         initialSlide: index,
         adaptiveHeight: true,
         lazyLoad: 'ondemand',
-
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
         swipeToSlide: true,
@@ -209,7 +204,6 @@ class MobileGallery extends HTMLElement {
 
       $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
         this.pauseAllMedia(this.popup);
-
         const currentSlideEl = slick.$slides[currentSlide];
         const iframe = currentSlideEl?.querySelector('iframe');
         const overlay = currentSlideEl?.querySelector('.video-iframe-overlay');
@@ -233,6 +227,13 @@ class MobileGallery extends HTMLElement {
             const iframe = overlay.nextElementSibling;
             if (iframe) iframe.style.pointerEvents = 'none';
           });
+
+        // Update active thumbnail
+        if (this.thumbnailContainer) {
+          this.thumbnailContainer.querySelectorAll('.thumbnail').forEach((thumb, idx) => {
+            thumb.classList.toggle('active', idx === currentSlide);
+          });
+        }
       });
 
       this.popupSlider
@@ -270,6 +271,29 @@ class MobileGallery extends HTMLElement {
         closeBtn?.click();
       };
     }
+  }
+
+  renderThumbnails(container, activeIndex) {
+    container.innerHTML = '';
+    this.mediaData.forEach((media, index) => {
+      if (media.media_type === 'image') {
+        const thumbnail = document.createElement('div');
+        thumbnail.className = `thumbnail ${index === activeIndex ? 'active' : ''}`;
+        thumbnail.style.cursor = 'pointer';
+        
+        const img = document.createElement('img');
+        img.src = media.src.replace(/width=\d+/, 'width=100'); // Use smaller image for thumbnail
+        img.alt = media.alt || '';
+        img.loading = 'lazy';
+        
+        thumbnail.appendChild(img);
+        container.appendChild(thumbnail);
+
+        thumbnail.addEventListener('click', () => {
+          $(this.popupSlider).slick('slickGoTo', index);
+        });
+      }
+    });
   }
 
   renderPopupSlides(container) {
@@ -345,9 +369,7 @@ class MobileGallery extends HTMLElement {
         zoomWrapper.style.overflow = 'hidden';
 
         const zoomImg = document.createElement('img');
-        // originalImg?.getAttribute('src') ||
         zoomImg.src = img.src.replace(/width=\d+/, 'width=600');
-        // zoomImg.srcset = originalImg?.getAttribute('srcset') || '';
         zoomImg.sizes = originalImg?.getAttribute('sizes') || '';
         zoomImg.width = originalImg?.getAttribute('width') || '';
         zoomImg.height = originalImg?.getAttribute('height') || '';
@@ -364,7 +386,7 @@ class MobileGallery extends HTMLElement {
         clone.appendChild(wrapper);
         container.appendChild(clone);
 
-        const highResSrc = img.src.replace(/width=\d+/, ''); //width=2048
+        const highResSrc = img.src.replace(/width=\d+/, '');
 
         if (zoomImg.src !== highResSrc) {
           const preload = new Image();
@@ -375,10 +397,8 @@ class MobileGallery extends HTMLElement {
         }
 
         let scale = 1;
-        let posX = 0,
-          posY = 0;
-        let lastPosX = 0,
-          lastPosY = 0;
+        let posX = 0, posY = 0;
+        let lastPosX = 0, lastPosY = 0;
         let lastScale = 1;
         let frameId = null;
 
@@ -524,8 +544,6 @@ class MobileGallery extends HTMLElement {
             );
           }
         }
-
-        // Vimeo, etc.
         iframe.contentWindow?.postMessage({ method: 'pause' }, '*');
       } catch (e) {
         console.warn('Could not send pause message to iframe:', e);
