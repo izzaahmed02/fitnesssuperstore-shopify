@@ -280,20 +280,41 @@ class MobileGallery extends HTMLElement {
         const thumbnail = document.createElement('div');
         thumbnail.className = `thumbnail ${index === activeIndex ? 'active' : ''}`;
         thumbnail.style.cursor = 'pointer';
+        thumbnail.style.display = 'inline-block';
+        thumbnail.style.margin = '0 5px';
+        thumbnail.style.padding = '2px';
+        thumbnail.style.border = index === activeIndex ? '2px solid #000' : '2px solid transparent';
+        thumbnail.style.borderRadius = '4px';
+        thumbnail.style.transition = 'border-color 0.2s ease-in-out';
         
         const img = document.createElement('img');
-        img.src = media.src.replace(/width=\d+/, 'width=100'); // Use smaller image for thumbnail
+        img.src = media.src.replace(/width=\d+/, 'width=100');
         img.alt = media.alt || '';
         img.loading = 'lazy';
+        img.style.width = '60px';
+        img.style.height = '60px';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '2px';
         
         thumbnail.appendChild(img);
         container.appendChild(thumbnail);
 
         thumbnail.addEventListener('click', () => {
           $(this.popupSlider).slick('slickGoTo', index);
+          container.querySelectorAll('.thumbnail').forEach((thumb, idx) => {
+            thumb.classList.toggle('active', idx === index);
+            thumb.style.border = idx === index ? '2px solid #000' : '2px solid transparent';
+          });
         });
       }
     });
+
+    // Style the thumbnail container for horizontal scrolling
+    container.style.display = 'flex';
+    container.style.overflowX = 'auto';
+    container.style.padding = '10px 0';
+    container.style.whiteSpace = 'nowrap';
+    container.style.scrollbarWidth = 'thin';
   }
 
   renderPopupSlides(container) {
