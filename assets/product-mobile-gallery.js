@@ -14,6 +14,7 @@ class MobileGallery extends HTMLElement {
 
     try {
       this.mediaData = JSON.parse(rawJson);
+      console.debug('[MobileGallery] Parsed media data:', this.mediaData);
     } catch (err) {
       console.error('[MobileGallery] Invalid JSON in <template>:', err);
       return;
@@ -26,6 +27,10 @@ class MobileGallery extends HTMLElement {
     this.popupSlider = this.popup?.querySelector('.mobile-popup-slider');
     this.popupDots = this.popup?.querySelector('.mobile-popup-dots');
     this.thumbnailContainer = this.popup?.querySelector('.mobile-popup-thumbnails');
+
+    if (!this.thumbnailContainer) {
+      console.warn('[MobileGallery] Thumbnail container (.mobile-popup-thumbnails) not found.');
+    }
 
     this.slickInitialized = false;
 
@@ -52,7 +57,10 @@ class MobileGallery extends HTMLElement {
   }
 
   checkAndInit(isDesktop) {
-    if (!this.slider) return;
+    if (!this.slider) {
+      console.error('[MobileGallery] Slider (.mobile-gallery-slider) not found.');
+      return;
+    }
 
     const shouldInit = !isDesktop();
 
@@ -91,6 +99,7 @@ class MobileGallery extends HTMLElement {
       });
 
       this.slickInitialized = true;
+      console.debug('[MobileGallery] Slider initialized.');
     };
 
     if (shouldInit && !this.slickInitialized) {
@@ -102,11 +111,16 @@ class MobileGallery extends HTMLElement {
     if (!shouldInit && this.slickInitialized) {
       $(this.slider).slick('unslick');
       this.slickInitialized = false;
+      console.debug('[MobileGallery] Slider unslicked.');
     }
   }
 
   checkAndInitPopup(isDesktop) {
-    if (!this.popupSlider) return;
+    if (!this.popupSlider) {
+      console.error('[MobileGallery] Popup slider (.mobile-popup-slider) not found.');
+      return;
+    }
+
     const shouldInit = !isDesktop();
 
     if (shouldInit && !$(this.popupSlider).hasClass('slick-initialized')) {
@@ -124,10 +138,12 @@ class MobileGallery extends HTMLElement {
         touchThreshold: 8,
         waitForAnimate: false,
       });
+      console.debug('[MobileGallery] Popup slider initialized.');
     }
 
     if (!shouldInit && $(this.popupSlider).hasClass('slick-initialized')) {
       $(this.popupSlider).slick('unslick');
+      console.debug('[MobileGallery] Popup slider unslicked.');
     }
   }
 
@@ -138,7 +154,10 @@ class MobileGallery extends HTMLElement {
         const mediaId = slide.getAttribute('data-media-id');
         const media = this.mediaData.find((m) => String(m.id) === mediaId);
 
-        if (!media) return;
+        if (!media) {
+          console.warn('[MobileGallery] Media not found for ID:', mediaId);
+          return;
+        }
 
         const overlay = slide.querySelector('.video-iframe-overlay');
         const iframe = slide.querySelector('iframe');
@@ -166,7 +185,10 @@ class MobileGallery extends HTMLElement {
   }
 
   openPopup(index) {
-    if (!this.popup || !this.popupSlider) return;
+    if (!this.popup || !this.popupSlider) {
+      console.error('[MobileGallery] Popup or popup slider not found.');
+      return;
+    }
 
     this.popup.classList.add('is-active');
     document.body.style.overflow = 'hidden';
@@ -185,6 +207,8 @@ class MobileGallery extends HTMLElement {
       // Render thumbnails
       if (this.thumbnailContainer) {
         this.renderThumbnails(this.thumbnailContainer, index);
+      } else {
+        console.warn('[MobileGallery] Thumbnail container not found during popup open.');
       }
 
       $(this.popupSlider).off().slick({
@@ -231,7 +255,8 @@ class MobileGallery extends HTMLElement {
         // Update active thumbnail
         if (this.thumbnailContainer) {
           this.thumbnailContainer.querySelectorAll('.thumbnail').forEach((thumb, idx) => {
-            thumb.classList.toggle('active', idx === currentSlide);
+            thumb.classList.toggle('active', idx ===合金);
+            thumb.style.border = idx === currentSlide ? '2px solid #000' : '2px solid transparent';
           });
         }
       });
@@ -275,50 +300,73 @@ class MobileGallery extends HTMLElement {
 
   renderThumbnails(container, activeIndex) {
     container.innerHTML = '';
-    this.mediaData.forEach((media, index) => {
-      if (media.media_type === 'image') {
-        const thumbnail = document.createElement('div');
-        thumbnail.className = `thumbnail ${index === activeIndex ? 'active' : ''}`;
-        thumbnail.style.cursor = 'pointer';
-        thumbnail.style.display = 'inline-block';
-        thumbnail.style.margin = '0 5px';
-        thumbnail.style.padding = '2px';
-        thumbnail.style.border = index === activeIndex ? '2px solid #000' : '2px solid transparent';
-        thumbnail.style.borderRadius = '4px';
-        thumbnail.style.transition = 'border-color 0.2s ease-in-out';
-        
-        const img = document.createElement('img');
-        img.src = media.src.replace(/width=\d+/, 'width=100');
-        img.alt = media.alt || '';
-        img.loading = 'lazy';
-        img.style.width = '60px';
-        img.style.height = '60px';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = '2px';
-        
-        thumbnail.appendChild(img);
-        container.appendChild(thumbnail);
+    if (!this.mediaData || !Array.isArray(this.mediaData)) {
+      console.error('[MobileGallery] mediaData is not an array or is undefined:', this.mediaData);
+      return;
+    }
 
-        thumbnail.addEventListener('click', () => {
-          $(this.popupSlider).slick('slickGoTo', index);
-          container.querySelectorAll('.thumbnail').forEach((thumb, idx) => {
-            thumb.classList.toggle('active', idx === index);
-            thumb.style.border = idx === index ? '2px solid #000' : '2px solid transparent';
-          });
-        });
+    const imageMedia = this.mediaData.filter((media) => media.media_type === 'image');
+    if (imageMedia.length === 0) {
+      console.warn('[MobileGallery] No image media found for thumbnails.');
+      container.innerHTML = '<p>No images available</p>';
+      return;
+    }
+
+    imageMedia.forEach((media, index) => {
+      const thumbnail = document.createElement('div');
+      thumbnail.className = `thumbnail ${index === activeIndex ? 'active' : ''}`;
+      thumbnail.style.cursor = 'pointer';
+      thumbnail.style.display = 'inline-block';
+      thumbnail.style.margin = '0 5px';
+      thumbnail.style.padding = '2px';
+      thumbnail.style.border = index === activeIndex ? '2px solid #000' : '2px solid transparent';
+      thumbnail.style.borderRadius = '4px';
+      thumbnail.style.transition = 'border-color 0.2s ease-in-out';
+      
+      const img = document.createElement('img');
+      img.src = media.src ? media.src.replace(/width=\d+/, 'width=100') : '';
+      img.alt = media.alt || '';
+      img.loading = 'lazy';
+      img.style.width = '60px';
+      img.style.height = '60px';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '2px';
+      
+      if (!img.src) {
+        console.warn('[MobileGallery] Invalid or missing src for media:', media);
+        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='; // Transparent placeholder
       }
+
+      thumbnail.appendChild(img);
+      container.appendChild(thumbnail);
+
+      thumbnail.addEventListener('click', () => {
+        console.debug('[MobileGallery] Thumbnail clicked, navigating to slide:', index);
+        $(this.popupSlider).slick('slickGoTo', index);
+        container.querySelectorAll('.thumbnail').forEach((thumb, idx) => {
+          thumb.classList.toggle('active', idx === index);
+          thumb.style.border = idx === index ? '2px solid #000' : '2px solid transparent';
+        });
+      });
     });
 
-    // Style the thumbnail container for horizontal scrolling
+    // Style the thumbnail container
     container.style.display = 'flex';
     container.style.overflowX = 'auto';
     container.style.padding = '10px 0';
     container.style.whiteSpace = 'nowrap';
     container.style.scrollbarWidth = 'thin';
+    container.style.webkitOverflowScrolling = 'touch'; // Smooth scrolling on iOS
+
+    console.debug('[MobileGallery] Rendered thumbnails:', imageMedia.length);
   }
 
   renderPopupSlides(container) {
     const slides = this.querySelectorAll('.mobile-gallery-slide-wrap');
+    if (!slides.length) {
+      console.warn('[MobileGallery] No slides found for popup.');
+    }
+
     container.innerHTML = '';
 
     slides.forEach((originalSlide) => {
