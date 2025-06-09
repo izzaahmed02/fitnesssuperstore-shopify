@@ -412,10 +412,10 @@ function toggleTransitTimeForm() {
 	const locationDisplayHeader = document.querySelector('.location-header .location-display');
 	if (transitTimeForm.style.display === 'block') {
 		transitTimeForm.style.display = 'none';
-		locationDisplayHeader.style.color = '#57200F'
+		locationDisplayHeader.style.color = '#F1592A'
 	} else {
 		transitTimeForm.style.display = 'block';
-		locationDisplayHeader.style.color = '#F1592A'
+		locationDisplayHeader.style.color = '#57200F'
 	}
 }
 
