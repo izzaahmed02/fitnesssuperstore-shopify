@@ -483,8 +483,7 @@
                             {% unless isFirst %}loading="lazy"{% endunless %}
                             width="{{ media.preview_image.width }}"
                             height="{{ media.preview_image.height }}"
-                           
-                            onload="this.closest('.image-skeleton-wrapper')?.classList.add('loaded')"
+                            onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
                           >
                         </div>
                       </div>
@@ -1803,60 +1802,12 @@
   </div>
 </div>
 
-<div id="mobile-gallery-popupp" class="mobile-popup-overlay" >
+<div id="mobile-gallery-popup" class="mobile-popup-overlay" >
   <div class="mobile-popup-backdrop"></div>
   <button class="mobile-popup-close" aria-label="Close">&times;</button>
   <div class="mobile-popup-slider"></div>
   <div class="mobile-popup-dots"></div>
 </div>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const popup = document.getElementById('mobile-gallery-popupp');
-  const closeBtn = popup.querySelector('.mobile-popup-close');
-  const sliderContainer = popup.querySelector('.mobile-popup-slider');
-  const dotsContainer = popup.querySelector('.mobile-popup-dots');
-
-  // Handle image click
-  document.querySelectorAll('.mobile-gallery-slide img').forEach((img, index) => {
-    img.addEventListener('click', function () {
-      const slidesHtml = [...document.querySelectorAll('.mobile-gallery-slide')].map(slide => {
-        const cloned = slide.cloneNode(true);
-        return `<div>${cloned.innerHTML}</div>`;
-      }).join('');
-
-      // Inject slides
-      sliderContainer.innerHTML = slidesHtml;
-      dotsContainer.innerHTML = ''; // reset
-
-      // Show popup
-      popup.style.display = 'block';
-
-      // Initialize Slick
-      $(sliderContainer).slick({
-        dots: true,
-        appendDots: dotsContainer,
-        arrows: true,
-        initialSlide: index
-      });
-    });
-  });
-
-  // Close popup
-  closeBtn.addEventListener('click', () => {
-    $(sliderContainer).slick('unslick'); // destroy Slick
-    sliderContainer.innerHTML = '';
-    popup.style.display = 'none';
-  });
-
-  // Close on backdrop click
-  popup.querySelector('.mobile-popup-backdrop').addEventListener('click', () => {
-    closeBtn.click();
-  });
-});
-</script>
-
 
 <script>window.product = {{ product | json }}</script>
 <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
