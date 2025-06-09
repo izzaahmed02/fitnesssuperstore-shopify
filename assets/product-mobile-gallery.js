@@ -255,7 +255,7 @@ class MobileGallery extends HTMLElement {
         // Update active thumbnail
         if (this.thumbnailContainer) {
           this.thumbnailContainer.querySelectorAll('.thumbnail').forEach((thumb, idx) => {
-            thumb.classList.toggle('active', idx ===合金);
+            thumb.classList.toggle('active', idx === currentSlide);
             thumb.style.border = idx === currentSlide ? '2px solid #000' : '2px solid transparent';
           });
         }
@@ -302,6 +302,7 @@ class MobileGallery extends HTMLElement {
     container.innerHTML = '';
     if (!this.mediaData || !Array.isArray(this.mediaData)) {
       console.error('[MobileGallery] mediaData is not an array or is undefined:', this.mediaData);
+      container.innerHTML = '<p>No images available</p>';
       return;
     }
 
@@ -322,19 +323,23 @@ class MobileGallery extends HTMLElement {
       thumbnail.style.border = index === activeIndex ? '2px solid #000' : '2px solid transparent';
       thumbnail.style.borderRadius = '4px';
       thumbnail.style.transition = 'border-color 0.2s ease-in-out';
+      thumbnail.setAttribute('data-media-id', media.id || index); // Add media ID for reference
       
       const img = document.createElement('img');
-      img.src = media.src ? media.src.replace(/width=\d+/, 'width=100') : '';
-      img.alt = media.alt || '';
+      const placeholder = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+      img.src = media.src && typeof media.src === 'string' && media.src.trim() !== '' 
+        ? media.src.replace(/width=\d+/, 'width=100') 
+        : placeholder;
+      img.alt = media.alt || 'Thumbnail';
       img.loading = 'lazy';
       img.style.width = '60px';
       img.style.height = '60px';
       img.style.objectFit = 'cover';
       img.style.borderRadius = '2px';
+      img.style.backgroundColor = '#f0f0f0'; // Background for placeholder visibility
       
-      if (!img.src) {
-        console.warn('[MobileGallery] Invalid or missing src for media:', media);
-        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='; // Transparent placeholder
+      if (!media.src) {
+        console.warn('[MobileGallery] Missing or invalid src for media at index', index, ':', media);
       }
 
       thumbnail.appendChild(img);
@@ -356,7 +361,7 @@ class MobileGallery extends HTMLElement {
     container.style.padding = '10px 0';
     container.style.whiteSpace = 'nowrap';
     container.style.scrollbarWidth = 'thin';
-    container.style.webkitOverflowScrolling = 'touch'; // Smooth scrolling on iOS
+    container.style.webkitOverflowScrolling = 'touch';
 
     console.debug('[MobileGallery] Rendered thumbnails:', imageMedia.length);
   }
