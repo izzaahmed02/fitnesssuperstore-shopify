@@ -167,41 +167,41 @@ class MobileGallery extends HTMLElement {
 }
 
   attachSlideEvents() {
-    const slides = this.querySelectorAll('.mobile-gallery-slide');
+  const slides = this.querySelectorAll('.mobile-gallery-slide');
+  slides.forEach((slide, index) => {
+    slide.addEventListener('click', (e) => {
+      const mediaId = slide.getAttribute('data-media-id');
+      const media = this.mediaData.find((m) => String(m.id) === mediaId);
+      if (!media) {
+        console.error(`[MobileGallery] No media found for ID: ${mediaId}`);
+        return;
+      }
 
-    slides.forEach((slide, index) => {
-      slide.addEventListener('click', (e) => {
-        const mediaId = slide.getAttribute('data-media-id');
-        const media = this.mediaData.find((m) => String(m.id) === mediaId);
+      // Handle external video overlay click
+      const overlay = slide.querySelector('.video-iframe-overlay');
+      const iframe = slide.querySelector('iframe');
+      if (
+        media.media_type === 'external_video' &&
+        overlay &&
+        e.target === overlay &&
+        iframe
+      ) {
+        overlay.style.display = 'none';
+        iframe.style.pointerEvents = 'auto';
+        iframe.contentWindow?.postMessage(
+          '{"event":"command","func":"playVideo","args":""}',
+          '*',
+        );
+        return;
+      }
 
-        if (!media) return;
-
-        const overlay = slide.querySelector('.video-iframe-overlay');
-        const iframe = slide.querySelector('iframe');
-
-        if (
-          media.media_type === 'external_video' &&
-          overlay &&
-          e.target === overlay &&
-          iframe
-        ) {
-          overlay.style.display = 'none';
-          iframe.style.pointerEvents = 'auto';
-
-          iframe.contentWindow?.postMessage(
-            '{"event":"command","func":"playVideo","args":""}',
-            '*',
-          );
-
-          return;
-        }
-
-        if (media.media_type === 'video') return;
-
+      // Open popup for images and videos (align with desktop gallery)
+      if (media.media_type === 'image' || media.media_type === 'video' || media.media_type === 'external_video') {
         this.openPopup(index);
-      });
+      }
     });
-  }
+  });
+}
 
   openPopup(index) {
   if (!this.popup || !this.popupSlider || !this.popupThumbnails) return;
