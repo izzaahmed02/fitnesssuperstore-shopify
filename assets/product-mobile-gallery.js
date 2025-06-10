@@ -322,7 +322,7 @@ class MobileGallery extends HTMLElement {
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
         initialSlide: index,
         variableWidth: false,
-        centerMode: false,
+        centerMode: true,
       });
 
       $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
