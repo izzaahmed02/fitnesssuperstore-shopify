@@ -141,7 +141,7 @@ class MobileGallery extends HTMLElement {
       $(this.popupThumbnails).slick({
         slidesToShow: 4, // Adjust based on design
         slidesToScroll: 1,
-        arrows: true,
+        arrows: false,
         infinite: false,
         focusOnSelect: true,
         asNavFor: this.popupSlider, // Sync with main slider
