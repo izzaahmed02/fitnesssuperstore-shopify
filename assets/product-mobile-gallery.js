@@ -200,7 +200,7 @@ class MobileGallery extends HTMLElement {
       $(this.popupThumbnails).slick({
         slidesToShow: 4,
         slidesToScroll: 1,
-        arrows: true,
+        arrows: false,
         infinite: false,
         focusOnSelect: true,
         asNavFor: this.popupSlider,
