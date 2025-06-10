@@ -29,8 +29,12 @@ class MobileGallery extends HTMLElement {
 
     this.slickInitialized = false;
 
+    
     const isDesktop = () => window.matchMedia('(min-width: 990px)').matches;
+    this.popupThumbnails = this.popup?.querySelector('.mobile-popup-thumbnails'); // Add reference to thumbnail container
+
     this.checkAndInit(isDesktop);
+   
 
     let resizeTimeout;
     window.addEventListener('resize', () => {
@@ -111,11 +115,14 @@ class MobileGallery extends HTMLElement {
   }
 
   checkAndInitPopup(isDesktop) {
-    if (!this.popupSlider) return;
+    if (!this.popupSlider || !this.popupThumbnails) return;
     const shouldInit = !isDesktop();
 
     if (shouldInit && !$(this.popupSlider).hasClass('slick-initialized')) {
       this.popupSlider.innerHTML = '';
+      this.popupThumbnails.innerHTML = ''; // Clear thumbnails
+      this.renderPopupSlides(this.popupSlider, this.popupThumbnails);
+
       $(this.popupSlider).off().slick({
         dots: true,
         appendDots: this.popupDots,
@@ -123,17 +130,61 @@ class MobileGallery extends HTMLElement {
         infinite: false,
         adaptiveHeight: true,
         lazyLoad: 'ondemand',
-
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
         swipeToSlide: true,
         touchThreshold: 8,
         waitForAnimate: false,
       });
+
+      // Initialize thumbnail slider
+      $(this.popupThumbnails).slick({
+        slidesToShow: 4, // Adjust based on design
+        slidesToScroll: 1,
+        arrows: true,
+        infinite: false,
+        focusOnSelect: true,
+        asNavFor: this.popupSlider, // Sync with main slider
+        lazyLoad: 'ondemand',
+        speed: 250,
+        cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
+      });
+
+      $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
+        this.pauseAllMedia(this.popup);
+        const currentSlideEl = slick.$slides[currentSlide];
+        const iframe = currentSlideEl?.querySelector('iframe');
+        const overlay = currentSlideEl?.querySelector('.video-iframe-overlay');
+
+        if (iframe && iframe.src.includes('youtube.com') && overlay && overlay.style.display === 'none') {
+          iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+        }
+
+        this.popupSlider.querySelectorAll('.video-iframe-overlay').forEach((overlay) => {
+          overlay.style.display = 'block';
+          const iframe = overlay.nextElementSibling;
+          if (iframe) iframe.style.pointerEvents = 'none';
+        });
+
+        // Sync thumbnail slider
+        $(this.popupThumbnails).slick('slickGoTo', currentSlide);
+      });
+
+      this.popupSlider.querySelectorAll('.video-iframe-overlay').forEach((overlay) => {
+        overlay.addEventListener('click', () => {
+          overlay.style.display = 'none';
+          const iframe = overlay.nextElementSibling;
+          if (iframe) {
+            iframe.style.pointerEvents = 'auto';
+            iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+          }
+        });
+      });
     }
 
     if (!shouldInit && $(this.popupSlider).hasClass('slick-initialized')) {
       $(this.popupSlider).slick('unslick');
+      $(this.popupThumbnails).slick('unslick');
     }
   }
 
@@ -175,7 +226,7 @@ class MobileGallery extends HTMLElement {
   }
 
   openPopup(index) {
-    if (!this.popup || !this.popupSlider) return;
+    if (!this.popup || !this.popupSlider || !this.popupThumbnails) return;
 
     this.popup.classList.add('is-active');
     document.body.style.overflow = 'hidden';
@@ -185,11 +236,13 @@ class MobileGallery extends HTMLElement {
 
     if ($(this.popupSlider).hasClass('slick-initialized')) {
       $(this.popupSlider).slick('unslick');
+      $(this.popupThumbnails).slick('unslick');
     }
 
     if (shouldInit) {
       this.popupSlider.innerHTML = '';
-      this.renderPopupSlides(this.popupSlider);
+      this.popupThumbnails.innerHTML = '';
+      this.renderPopupSlides(this.popupSlider, this.popupThumbnails);
 
       $(this.popupSlider).off().slick({
         dots: true,
@@ -199,12 +252,24 @@ class MobileGallery extends HTMLElement {
         initialSlide: index,
         adaptiveHeight: true,
         lazyLoad: 'ondemand',
-
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
         swipeToSlide: true,
         touchThreshold: 8,
         waitForAnimate: false,
+      });
+
+      $(this.popupThumbnails).off().slick({
+        slidesToShow: 4,
+        slidesToScroll: 1,
+        arrows: true,
+        infinite: false,
+        focusOnSelect: true,
+        asNavFor: this.popupSlider,
+        lazyLoad: 'ondemand',
+        speed: 250,
+        cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
+        initialSlide: index,
       });
 
       $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
@@ -272,230 +337,271 @@ class MobileGallery extends HTMLElement {
     }
   }
 
-  renderPopupSlides(container) {
-    const slides = this.querySelectorAll('.mobile-gallery-slide-wrap');
-    container.innerHTML = '';
+  renderPopupSlides(container, thumbnailContainer) {
+  const slides = this.querySelectorAll('.mobile-gallery-slide-wrap');
+  container.innerHTML = '';
+  thumbnailContainer.innerHTML = '';
 
-    slides.forEach((originalSlide) => {
-      const clone = originalSlide.cloneNode(true);
-      const iframe = clone.querySelector('iframe');
-      const overlay = clone.querySelector('.video-iframe-overlay');
-      const img = clone.querySelector('img');
-      const originalImg = originalSlide.querySelector('img');
-      const video = clone.querySelector('video');
+  slides.forEach((originalSlide, index) => {
+    const clone = originalSlide.cloneNode(true);
+    const iframe = clone.querySelector('iframe');
+    const overlay = clone.querySelector('.video-iframe-overlay');
+    const img = clone.querySelector('img');
+    const originalImg = originalSlide.querySelector('img');
+    const video = clone.querySelector('video');
+    const media = this.mediaData[index];
 
-      // YouTube
-      if (iframe && iframe.src.includes('youtube.com')) {
-        const url = new URL(iframe.src);
-        url.searchParams.set('muted', '1');
-        url.searchParams.set('enablejsapi', '1');
+    // Handle YouTube videos
+    if (iframe && iframe.src.includes('youtube.com')) {
+      const url = new URL(iframe.src);
+      url.searchParams.set('muted', '1');
+      url.searchParams.set('enablejsapi', '1');
 
-        const newIframe = document.createElement('iframe');
-        newIframe.src = url.toString();
-        newIframe.setAttribute('allow', 'autoplay; encrypted-media');
-        newIframe.setAttribute('frameborder', '0');
-        newIframe.setAttribute('allowfullscreen', 'true');
-        newIframe.width = iframe.width;
-        newIframe.height = iframe.height;
-        newIframe.style.pointerEvents = 'none';
+      const newIframe = document.createElement('iframe');
+      newIframe.src = url.toString();
+      newIframe.setAttribute('allow', 'autoplay; encrypted-media');
+      newIframe.setAttribute('frameborder', '0');
+      newIframe.setAttribute('allowfullscreen', 'true');
+      newIframe.width = iframe.width;
+      newIframe.height = iframe.height;
+      newIframe.style.pointerEvents = 'none';
 
-        const wrapper = document.createElement('div');
-        const videoWrapper = document.createElement('div');
-        wrapper.className = 'mobile-gallery-slide external-video';
-        videoWrapper.className = 'video-wrapper';
-        wrapper.appendChild(videoWrapper);
-        videoWrapper.appendChild(newIframe);
+      const wrapper = document.createElement('div');
+      const videoWrapper = document.createElement('div');
+      wrapper.className = 'mobile-gallery-slide external-video';
+      videoWrapper.className = 'video-wrapper';
+      wrapper.appendChild(videoWrapper);
+      videoWrapper.appendChild(newIframe);
 
-        const newOverlay = document.createElement('div');
-        newOverlay.className = 'video-iframe-overlay';
-        newOverlay.setAttribute('aria-hidden', 'true');
-        wrapper.appendChild(newOverlay);
+      const newOverlay = document.createElement('div');
+      newOverlay.className = 'video-iframe-overlay';
+      newOverlay.setAttribute('aria-hidden', 'true');
+      wrapper.appendChild(newOverlay);
 
-        newOverlay.addEventListener('click', () => {
-          newOverlay.style.display = 'none';
-          newIframe.style.pointerEvents = 'auto';
-          newIframe.contentWindow?.postMessage(
-            '{"event":"command","func":"playVideo","args":""}',
-            '*',
-          );
+      clone.innerHTML = '';
+      clone.appendChild(wrapper);
+      container.appendChild(clone);
+    }
+    // Handle Vimeo videos
+    else if (iframe && iframe.src.includes('vimeo.com')) {
+      const url = new URL(iframe.src);
+      url.searchParams.set('muted', '1');
+
+      const newIframe = document.createElement('iframe');
+      newIframe.src = url.toString();
+      newIframe.setAttribute('allow', 'autoplay; encrypted-media');
+      newIframe.setAttribute('frameborder', '0');
+      newIframe.setAttribute('allowfullscreen', 'true');
+      newIframe.width = iframe.width;
+      newIframe.height = iframe.height;
+      newIframe.style.pointerEvents = 'none';
+
+      const wrapper = document.createElement('div');
+      const videoWrapper = document.createElement('div');
+      wrapper.className = 'mobile-gallery-slide external-video';
+      videoWrapper.className = 'video-wrapper';
+      wrapper.appendChild(videoWrapper);
+      videoWrapper.appendChild(newIframe);
+
+      const newOverlay = document.createElement('div');
+      newOverlay.className = 'video-iframe-overlay';
+      newOverlay.setAttribute('aria-hidden', 'true');
+      wrapper.appendChild(newOverlay);
+
+      clone.innerHTML = '';
+      clone.appendChild(wrapper);
+      container.appendChild(clone);
+    }
+    // Handle MP4 videos
+    else if (video) {
+      container.appendChild(clone);
+    }
+    // Handle images with zoom/pan
+    else if (img) {
+      const wrapper = document.createElement('div');
+      const zoomWrapper = document.createElement('div');
+      const skeletonWrapper = document.createElement('div');
+
+      wrapper.className = 'mobile-gallery-slide';
+      zoomWrapper.className = 'zoom-container';
+      skeletonWrapper.className = 'image-skeleton-wrapper';
+
+      zoomWrapper.style.overflow = 'hidden';
+
+      const zoomImg = document.createElement('img');
+      zoomImg.src = img.src.replace(/width=\d+/, 'width=600');
+      zoomImg.sizes = originalImg?.getAttribute('sizes') || '';
+      zoomImg.width = originalImg?.getAttribute('width') || '';
+      zoomImg.height = originalImg?.getAttribute('height') || '';
+      zoomImg.alt = img.alt || '';
+      zoomImg.loading = 'eager';
+      zoomImg.className = 'popup-zoom-image';
+      zoomImg.style.touchAction = 'none';
+      zoomImg.style.userSelect = 'none';
+
+      skeletonWrapper.appendChild(zoomImg);
+      zoomWrapper.appendChild(skeletonWrapper);
+      wrapper.appendChild(zoomWrapper);
+      clone.innerHTML = '';
+      clone.appendChild(wrapper);
+      container.appendChild(clone);
+
+      const highResSrc = img.src.replace(/width=\d+/, '');
+      if (zoomImg.src !== highResSrc) {
+        const preload = new Image();
+        preload.src = highResSrc;
+        preload.onload = () => {
+          zoomImg.src = highResSrc;
+        };
+      }
+
+      let scale = 1;
+      let posX = 0, posY = 0;
+      let lastPosX = 0, lastPosY = 0;
+      let lastScale = 1;
+      let frameId = null;
+
+      const updateTransform = () => {
+        if (frameId) cancelAnimationFrame(frameId);
+        frameId = requestAnimationFrame(() => {
+          zoomImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
         });
+      };
 
-        clone.innerHTML = '';
-        clone.appendChild(wrapper);
-        container.appendChild(clone);
-        return;
-      }
+      zoomImg.onload = () => {
+        skeletonWrapper.classList.add('loaded');
+        const allowZoom = zoomImg.naturalWidth > 500;
 
-      // MP4
-      if (video) {
-        container.appendChild(clone);
-        return;
-      }
-
-      // Image + zoom/pan
-      if (img) {
-        const wrapper = document.createElement('div');
-        const zoomWrapper = document.createElement('div');
-        const skeletonWrapper = document.createElement('div');
-
-        wrapper.className = 'mobile-gallery-slide';
-        zoomWrapper.className = 'zoom-container';
-        skeletonWrapper.className = 'image-skeleton-wrapper';
-
-        zoomWrapper.style.overflow = 'hidden';
-
-        const zoomImg = document.createElement('img');
-        // originalImg?.getAttribute('src') ||
-        zoomImg.src = img.src.replace(/width=\d+/, 'width=600');
-        // zoomImg.srcset = originalImg?.getAttribute('srcset') || '';
-        zoomImg.sizes = originalImg?.getAttribute('sizes') || '';
-        zoomImg.width = originalImg?.getAttribute('width') || '';
-        zoomImg.height = originalImg?.getAttribute('height') || '';
-        zoomImg.alt = img.alt || '';
-        zoomImg.loading = 'eager';
-        zoomImg.className = 'popup-zoom-image';
-        zoomImg.style.touchAction = 'none';
-        zoomImg.style.userSelect = 'none';
-
-        skeletonWrapper.appendChild(zoomImg);
-        zoomWrapper.appendChild(skeletonWrapper);
-        wrapper.appendChild(zoomWrapper);
-        clone.innerHTML = '';
-        clone.appendChild(wrapper);
-        container.appendChild(clone);
-
-        const highResSrc = img.src.replace(/width=\d+/, ''); //width=2048
-
-        if (zoomImg.src !== highResSrc) {
-          const preload = new Image();
-          preload.src = highResSrc;
-          preload.onload = () => {
-            zoomImg.src = highResSrc;
-          };
+        if (!allowZoom) {
+          wrapper.classList.add('zoom-disabled');
         }
 
-        let scale = 1;
-        let posX = 0,
-          posY = 0;
-        let lastPosX = 0,
-          lastPosY = 0;
-        let lastScale = 1;
-        let frameId = null;
+        const hammer = new Hammer(wrapper);
+        this.hammerInstances.push(hammer);
 
-        const updateTransform = () => {
-          if (frameId) cancelAnimationFrame(frameId);
-          frameId = requestAnimationFrame(() => {
-            zoomImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+        hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+
+        if (allowZoom) {
+          hammer.get('pinch').set({ enable: true });
+          hammer.get('doubletap').set({ taps: 2 });
+
+          hammer.on('pinchstart', () => {
+            lastScale = scale;
           });
-        };
 
-        zoomImg.onload = () => {
-          skeletonWrapper.classList.add('loaded');
-          const allowZoom = zoomImg.naturalWidth > 500;
+          hammer.on('pinchmove', (e) => {
+            scale = Math.max(1, Math.min(lastScale * e.scale, 3));
+            if (scale === 1) {
+              posX = 0;
+              posY = 0;
+              lastPosX = 0;
+              lastPosY = 0;
+            }
+            updateTransform();
+          });
 
-          if (!allowZoom) {
-            wrapper.classList.add('zoom-disabled');
-          }
+          hammer.on('doubletap', () => {
+            if (zoomImg.src !== highResSrc) {
+              const preload = new Image();
+              preload.src = highResSrc;
+              preload.onload = () => {
+                zoomImg.src = highResSrc;
+                zoomImg.style.opacity = '0';
+                requestAnimationFrame(() => {
+                  zoomImg.style.transition = 'opacity 0.2s ease-in-out';
+                  zoomImg.style.opacity = '1';
+                });
+              };
+            }
 
-          const hammer = new Hammer(wrapper);
-          this.hammerInstances.push(hammer);
+            if (scale < 1.5) {
+              scale = 1.5;
+            } else if (scale < 2) {
+              scale = 2;
+            } else if (scale < 3) {
+              scale = 3;
+            } else {
+              scale = 1;
+              posX = 0;
+              posY = 0;
+              lastPosX = 0;
+              lastPosY = 0;
+            }
 
-          hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+            updateTransform();
+          });
 
-          if (allowZoom) {
-            hammer.get('pinch').set({ enable: true });
-            hammer.get('doubletap').set({ taps: 2 });
+          hammer.on('panstart', () => {
+            lastPosX = posX;
+            lastPosY = posY;
+          });
 
-            hammer.on('pinchstart', () => {
-              lastScale = scale;
-            });
+          hammer.on('panmove', (e) => {
+            if (scale <= 1.01) return;
 
-            hammer.on('pinchmove', (e) => {
-              scale = Math.max(1, Math.min(lastScale * e.scale, 3));
-              if (scale === 1) {
-                posX = 0;
-                posY = 0;
-                lastPosX = 0;
-                lastPosY = 0;
-              }
-              updateTransform();
-            });
+            const rect = wrapper.getBoundingClientRect();
+            const imgWidth = zoomImg.naturalWidth * scale;
+            const imgHeight = zoomImg.naturalHeight * scale;
 
-            hammer.on('doubletap', () => {
-              if (zoomImg.src !== highResSrc) {
-                const preload = new Image();
-                preload.src = highResSrc;
-                preload.onload = () => {
-                  zoomImg.src = highResSrc;
-                  zoomImg.style.opacity = '0';
-                  requestAnimationFrame(() => {
-                    zoomImg.style.transition = 'opacity 0.2s ease-in-out';
-                    zoomImg.style.opacity = '1';
-                  });
-                };
-              }
+            const maxX = Math.max((imgWidth - rect.width) / 2, 0);
+            const maxY = Math.max((imgHeight - rect.height) / 2, 0);
 
-              if (scale < 1.5) {
-                scale = 1.5;
-              } else if (scale < 2) {
-                scale = 2;
-              } else if (scale < 3) {
-                scale = 3;
-              } else {
-                scale = 1;
-                posX = 0;
-                posY = 0;
-                lastPosX = 0;
-                lastPosY = 0;
-              }
+            let nextX = lastPosX + e.deltaX;
+            let nextY = lastPosY + e.deltaY;
 
-              updateTransform();
-            });
+            posX = Math.min(maxX, Math.max(-maxX, nextX));
+            posY = Math.min(maxY, Math.max(-maxY, nextY));
 
-            hammer.on('panstart', () => {
-              lastPosX = posX;
-              lastPosY = posY;
-            });
+            updateTransform();
+          });
 
-            hammer.on('panmove', (e) => {
-              if (scale <= 1.01) return;
-
-              const rect = wrapper.getBoundingClientRect();
-              const imgWidth = zoomImg.naturalWidth * scale;
-              const imgHeight = zoomImg.naturalHeight * scale;
-
-              const maxX = Math.max((imgWidth - rect.width) / 2, 0);
-              const maxY = Math.max((imgHeight - rect.height) / 2, 0);
-
-              let nextX = lastPosX + e.deltaX;
-              let nextY = lastPosY + e.deltaY;
-
-              posX = Math.min(maxX, Math.max(-maxX, nextX));
-              posY = Math.min(maxY, Math.max(-maxY, nextY));
-
-              updateTransform();
-            });
-
-            hammer.on('panend', () => {
-              lastPosX = posX;
-              lastPosY = posY;
-            });
-          }
-        };
-
-        const slide = zoomImg.closest('.slick-slide');
-        if (slide) {
-          slide.addEventListener(
-            'touchmove',
-            (e) => {
-              if (scale > 1.01) e.stopPropagation();
-            },
-            { passive: false },
-          );
+          hammer.on('panend', () => {
+            lastPosX = posX;
+            lastPosY = posY;
+          });
         }
+      };
+
+      const slide = zoomImg.closest('.slick-slide');
+      if (slide) {
+        slide.addEventListener(
+          'touchmove',
+          (e) => {
+            if (scale > 1.01) e.stopPropagation();
+          },
+          { passive: false }
+        );
       }
+    }
+
+    // Render thumbnail
+    const thumbWrapper = document.createElement('div');
+    thumbWrapper.className = 'mobile-popup-thumb';
+    thumbWrapper.setAttribute('data-media-id', media.id);
+
+    const thumbSkeleton = document.createElement('div');
+    thumbSkeleton.className = 'image-skeleton-wrapper';
+
+    const thumbImg = document.createElement('img');
+    thumbImg.src = media.preview_image.src.replace(/width=\d+/, 'width=100');
+    thumbImg.alt = media.alt || '';
+    thumbImg.width = 100;
+    thumbImg.height = 100;
+    thumbImg.loading = 'lazy';
+
+    thumbSkeleton.appendChild(thumbImg);
+    thumbWrapper.appendChild(thumbSkeleton);
+    thumbnailContainer.appendChild(thumbWrapper);
+
+    thumbImg.onload = () => {
+      thumbSkeleton.classList.add('loaded');
+    };
+
+    thumbWrapper.addEventListener('click', () => {
+      $(this.popupSlider).slick('slickGoTo', index);
     });
-  }
+  });
+}
 
   pauseAllMedia(scope) {
     scope.querySelectorAll('video').forEach((video) => {
