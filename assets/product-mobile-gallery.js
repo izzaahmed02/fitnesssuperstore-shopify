@@ -202,8 +202,6 @@ class MobileGallery extends HTMLElement {
         slidesToScroll: 1,
         arrows: false,
         infinite: false,
-        focusOnSelect: true,
-        asNavFor: this.popupSlider,
         lazyLoad: 'ondemand',
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
@@ -226,8 +224,6 @@ class MobileGallery extends HTMLElement {
           const iframe = overlay.nextElementSibling;
           if (iframe) iframe.style.pointerEvents = 'none';
         });
-
-        $(this.popupThumbnails).slick('slickGoTo', currentSlide);
       });
 
       this.popupSlider.querySelectorAll('.video-iframe-overlay').forEach((overlay) => {
@@ -315,8 +311,6 @@ class MobileGallery extends HTMLElement {
         slidesToScroll: 1,
         arrows: false,
         infinite: false,
-        focusOnSelect: true,
-        asNavFor: this.popupSlider,
         lazyLoad: 'ondemand',
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
@@ -341,7 +335,10 @@ class MobileGallery extends HTMLElement {
           if (iframe) iframe.style.pointerEvents = 'none';
         });
 
-        $(this.popupThumbnails).slick('slickGoTo', currentSlide);
+        // Highlight active thumbnail
+        this.popupThumbnails.querySelectorAll('.mobile-popup-thumb').forEach((thumb, idx) => {
+          thumb.classList.toggle('active', idx === currentSlide);
+        });
       });
 
       this.popupSlider.querySelectorAll('.video-iframe-overlay').forEach((overlay) => {
