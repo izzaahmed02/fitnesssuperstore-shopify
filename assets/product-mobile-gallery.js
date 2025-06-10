@@ -203,8 +203,15 @@ class MobileGallery extends HTMLElement {
   });
 }
 
-  openPopup(index) {
-  if (!this.popup || !this.popupSlider || !this.popupThumbnails) return;
+openPopup(index) {
+  if (!this.popup || !this.popupSlider || !this.popupThumbnails) {
+    console.error('[MobileGallery] Popup elements missing:', {
+      popup: !!this.popup,
+      popupSlider: !!this.popupSlider,
+      popupThumbnails: !!this.popupThumbnails,
+    });
+    return;
+  }
 
   this.popup.classList.add('is-active');
   document.body.style.overflow = 'hidden';
@@ -298,6 +305,10 @@ class MobileGallery extends HTMLElement {
           const iframe = overlay.nextElementSibling;
           if (iframe) {
             iframe.style.pointerEvents = 'auto';
+            iframe.contentWindow?.postMessage(
+              '{"event":"command","func":"playVideo","args":""}',
+              '*',
+            );
           }
         });
       });
