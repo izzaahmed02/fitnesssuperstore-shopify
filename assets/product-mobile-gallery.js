@@ -337,7 +337,7 @@ class MobileGallery extends HTMLElement {
     }
   }
 
-  renderPopupSlides(container, thumbnailContainer) {
+renderPopupSlides(container, thumbnailContainer) {
   const slides = this.querySelectorAll('.mobile-gallery-slide-wrap');
   container.innerHTML = '';
   thumbnailContainer.innerHTML = '';
@@ -417,7 +417,7 @@ class MobileGallery extends HTMLElement {
       container.appendChild(clone);
     }
     // Handle images with zoom/pan
-    else if (img) {
+    else if (img && media && media.preview_image) {
       const wrapper = document.createElement('div');
       const zoomWrapper = document.createElement('div');
       const skeletonWrapper = document.createElement('div');
@@ -429,11 +429,11 @@ class MobileGallery extends HTMLElement {
       zoomWrapper.style.overflow = 'hidden';
 
       const zoomImg = document.createElement('img');
-      zoomImg.src = img.src.replace(/width=\d+/, 'width=600');
-      zoomImg.sizes = originalImg?.getAttribute('sizes') || '';
-      zoomImg.width = originalImg?.getAttribute('width') || '';
-      zoomImg.height = originalImg?.getAttribute('height') || '';
-      zoomImg.alt = img.alt || '';
+      zoomImg.src = media.preview_image.src.replace(/width=\d+/, 'width=600');
+      zoomImg.sizes = originalImg?.getAttribute('sizes') || '100vw';
+      zoomImg.width = originalImg?.getAttribute('width') || media.preview_image.width || '';
+      zoomImg.height = originalImg?.getAttribute('height') || media.preview_image.height || '';
+      zoomImg.alt = media.alt || '';
       zoomImg.loading = 'eager';
       zoomImg.className = 'popup-zoom-image';
       zoomImg.style.touchAction = 'none';
@@ -446,7 +446,7 @@ class MobileGallery extends HTMLElement {
       clone.appendChild(wrapper);
       container.appendChild(clone);
 
-      const highResSrc = img.src.replace(/width=\d+/, '');
+      const highResSrc = media.preview_image.src.replace(/width=\d+/, '');
       if (zoomImg.src !== highResSrc) {
         const preload = new Image();
         preload.src = highResSrc;
@@ -469,7 +469,9 @@ class MobileGallery extends HTMLElement {
       };
 
       zoomImg.onload = () => {
-        skeletonWrapper.classList.add('loaded');
+        if (skeletonWrapper && skeletonWrapper.classList) {
+          skeletonWrapper.classList.add('loaded');
+        }
         const allowZoom = zoomImg.naturalWidth > 500;
 
         if (!allowZoom) {
@@ -575,31 +577,37 @@ class MobileGallery extends HTMLElement {
     }
 
     // Render thumbnail
-    const thumbWrapper = document.createElement('div');
-    thumbWrapper.className = 'mobile-popup-thumb';
-    thumbWrapper.setAttribute('data-media-id', media.id);
+    if (media && media.preview_image) {
+      const thumbWrapper = document.createElement('div');
+      thumbWrapper.className = 'mobile-popup-thumb';
+      thumbWrapper.setAttribute('data-media-id', media.id);
 
-    const thumbSkeleton = document.createElement('div');
-    thumbSkeleton.className = 'image-skeleton-wrapper';
+      const thumbSkeleton = document.createElement('div');
+      thumbSkeleton.className = 'image-skeleton-wrapper';
 
-    const thumbImg = document.createElement('img');
-    thumbImg.src = media.preview_image.src.replace(/width=\d+/, 'width=100');
-    thumbImg.alt = media.alt || '';
-    thumbImg.width = 100;
-    thumbImg.height = 100;
-    thumbImg.loading = 'lazy';
+      const thumbImg = document.createElement('img');
+      thumbImg.src = media.preview_image.src.replace(/width=\d+/, 'width=100');
+      thumbImg.alt = media.alt || '';
+      thumbImg.width = 100;
+      thumbImg.height = 100;
+      thumbImg.loading = 'lazy';
+      thumbImg.style.objectFit = 'cover'; // Ensure consistent thumbnail appearance
+      thumbImg.style.aspectRatio = '1/1'; // Enforce square aspect ratio
 
-    thumbSkeleton.appendChild(thumbImg);
-    thumbWrapper.appendChild(thumbSkeleton);
-    thumbnailContainer.appendChild(thumbWrapper);
+      thumbSkeleton.appendChild(thumbImg);
+      thumbWrapper.appendChild(thumbSkeleton);
+      thumbnailContainer.appendChild(thumbWrapper);
 
-    thumbImg.onload = () => {
-      thumbSkeleton.classList.add('loaded');
-    };
+      thumbImg.onload = () => {
+        if (thumbSkeleton && thumbSkeleton.classList) {
+          thumbSkeleton.classList.add('loaded');
+        }
+      };
 
-    thumbWrapper.addEventListener('click', () => {
-      $(this.popupSlider).slick('slickGoTo', index);
-    });
+      thumbWrapper.addEventListener('click', () => {
+        $(this.popupSlider).slick('slickGoTo', index);
+      });
+    }
   });
 }
 
