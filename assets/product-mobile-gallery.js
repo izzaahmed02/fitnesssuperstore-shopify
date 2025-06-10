@@ -202,7 +202,7 @@ class MobileGallery extends HTMLElement {
         
         arrows: false,
         swipeToSlide: true,
-        infinite: true,
+        infinite: false,
         lazyLoad: 'ondemand',
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
@@ -313,7 +313,7 @@ class MobileGallery extends HTMLElement {
         arrows: false,
         
         swipeToSlide: true,
-        infinite: true,
+        infinite: false,
         lazyLoad: 'ondemand',
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
