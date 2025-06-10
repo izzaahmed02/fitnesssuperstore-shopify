@@ -226,116 +226,117 @@ class MobileGallery extends HTMLElement {
   }
 
   openPopup(index) {
-    if (!this.popup || !this.popupSlider || !this.popupThumbnails) return;
+  if (!this.popup || !this.popupSlider || !this.popupThumbnails) return;
 
-    this.popup.classList.add('is-active');
-    document.body.style.overflow = 'hidden';
+  // Clear previous Hammer instances
+  this.hammerInstances.forEach((h) => h.destroy());
+  this.hammerInstances = [];
 
-    const isDesktop = () => window.matchMedia('(min-width: 990px)').matches;
-    const shouldInit = !isDesktop();
-
-    if ($(this.popupSlider).hasClass('slick-initialized')) {
-      $(this.popupSlider).slick('unslick');
-      $(this.popupThumbnails).slick('unslick');
-    }
-
-    if (shouldInit) {
-      this.popupSlider.innerHTML = '';
-      this.popupThumbnails.innerHTML = '';
-      this.renderPopupSlides(this.popupSlider, this.popupThumbnails);
-
-      $(this.popupSlider).off().slick({
-        dots: true,
-        appendDots: this.popupDots,
-        arrows: false,
-        infinite: false,
-        initialSlide: index,
-        adaptiveHeight: true,
-        lazyLoad: 'ondemand',
-        speed: 250,
-        cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
-        swipeToSlide: true,
-        touchThreshold: 8,
-        waitForAnimate: false,
-      });
-
-      $(this.popupThumbnails).off().slick({
-        slidesToShow: 4,
-        slidesToScroll: 1,
-        arrows: false,
-        infinite: false,
-        focusOnSelect: true,
-        asNavFor: this.popupSlider,
-        lazyLoad: 'ondemand',
-        speed: 250,
-        cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
-        initialSlide: index,
-      });
-
-      $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
-        this.pauseAllMedia(this.popup);
-
-        const currentSlideEl = slick.$slides[currentSlide];
-        const iframe = currentSlideEl?.querySelector('iframe');
-        const overlay = currentSlideEl?.querySelector('.video-iframe-overlay');
-
-        if (
-          iframe &&
-          iframe.src.includes('youtube.com') &&
-          overlay &&
-          overlay.style.display === 'none'
-        ) {
-          iframe.contentWindow?.postMessage(
-            '{"event":"command","func":"playVideo","args":""}',
-            '*',
-          );
-        }
-
-        this.popupSlider
-          .querySelectorAll('.video-iframe-overlay')
-          .forEach((overlay) => {
-            overlay.style.display = 'block';
-            const iframe = overlay.nextElementSibling;
-            if (iframe) iframe.style.pointerEvents = 'none';
-          });
-      });
-
-      this.popupSlider
-        .querySelectorAll('.video-iframe-overlay')
-        .forEach((overlay) => {
-          overlay.addEventListener('click', () => {
-            overlay.style.display = 'none';
-            const iframe = overlay.nextElementSibling;
-            if (iframe) {
-              iframe.style.pointerEvents = 'auto';
-            }
-          });
-        });
-    }
-
-    const closeBtn = this.popup.querySelector('.mobile-popup-close');
-    const backdrop = this.popup.querySelector('.mobile-popup-backdrop');
-
-    if (closeBtn) {
-      closeBtn.onclick = () => {
-        this.hammerInstances.forEach((h) => h.destroy());
-        this.hammerInstances = [];
-
-        if ($(this.popupSlider).hasClass('slick-initialized')) {
-          $(this.popupSlider).slick('unslick');
-        }
-        this.popup.classList.remove('is-active');
-        document.body.style.overflow = '';
-        this.pauseAllMedia(this.popup);
-      };
-    }
-
-    if (backdrop) {
-      backdrop.onclick = () => {
-        closeBtn?.click();
-      };
-    }
+  // Destroy existing sliders
+  if ($(this.popupSlider).hasClass('slick-initialized')) {
+    $(this.popupSlider).slick('unslick');
   }
+  if ($(this.popupThumbnails).hasClass('slick-initialized')) {
+    $(this.popupThumbnails).slick('unslick');
+  }
+
+  this.popup.classList.add('is-active');
+  document.body.style.overflow = 'hidden';
+
+  const isDesktop = () => window.matchMedia('(min-width: 990px)').matches;
+  const shouldInit = !isDesktop();
+
+  if (shouldInit) {
+    this.popupSlider.innerHTML = '';
+    this.popupThumbnails.innerHTML = '';
+    this.renderPopupSlides(this.popupSlider, this.popupThumbnails);
+
+    $(this.popupSlider).off().slick({
+      dots: true,
+      appendDots: this.popupDots,
+      arrows: false,
+      infinite: false,
+      initialSlide: index,
+      adaptiveHeight: true,
+      lazyLoad: 'ondemand',
+      speed: 250,
+      cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
+      swipeToSlide: true,
+      touchThreshold: 8,
+      waitForAnimate: false,
+    });
+
+    $(this.popupThumbnails).off().slick({
+      slidesToShow: 4,
+      slidesToScroll: 1,
+      arrows: true,
+      infinite: false,
+      focusOnSelect: true,
+      asNavFor: this.popupSlider,
+      lazyLoad: 'ondemand',
+      speed: 250,
+      cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
+      initialSlide: index,
+      variableWidth: false, // Ensure consistent width
+      centerMode: false, // Prevent wrapping
+    });
+
+    $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
+      this.pauseAllMedia(this.popup);
+      const currentSlideEl = slick.$slides[currentSlide];
+      const iframe = currentSlideEl?.querySelector('iframe');
+      const overlay = currentSlideEl?.querySelector('.video-iframe-overlay');
+
+      if (iframe && iframe.src.includes('youtube.com') && overlay && overlay.style.display === 'none') {
+        iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+      }
+
+      this.popupSlider.querySelectorAll('.video-iframe-overlay').forEach((overlay) => {
+        overlay.style.display = 'block';
+        const iframe = overlay.nextElementSibling;
+        if (iframe) iframe.style.pointerEvents = 'none';
+      });
+
+      $(this.popupThumbnails).slick('slickGoTo', currentSlide);
+    });
+
+    this.popupSlider.querySelectorAll('.video-iframe-overlay').forEach((overlay) => {
+      overlay.addEventListener('click', () => {
+        overlay.style.display = 'none';
+        const iframe = overlay.nextElementSibling;
+        if (iframe) {
+          iframe.style.pointerEvents = 'auto';
+          iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+        }
+      });
+    });
+  }
+
+  const closeBtn = this.popup.querySelector('.mobile-popup-close');
+  const backdrop = this.popup.querySelector('.mobile-popup-backdrop');
+
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      this.hammerInstances.forEach((h) => h.destroy());
+      this.hammerInstances = [];
+      if ($(this.popupSlider).hasClass('slick-initialized')) {
+        $(this.popupSlider).slick('unslick');
+      }
+      if ($(this.popupThumbnails).hasClass('slick-initialized')) {
+        $(this.popupThumbnails).slick('unslick');
+      }
+      this.popup.classList.remove('is-active');
+      document.body.style.overflow = '';
+      this.pauseAllMedia(this.popup);
+    };
+  }
+
+  if (backdrop) {
+    backdrop.onclick = () => {
+      closeBtn?.click();
+    };
+  }
+}
 
 renderPopupSlides(container, thumbnailContainer) {
   const slides = this.querySelectorAll('.mobile-gallery-slide-wrap');
