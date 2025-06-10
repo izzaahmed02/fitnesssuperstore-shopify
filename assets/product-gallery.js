@@ -260,14 +260,15 @@ class ProductGallery extends HTMLElement {
     container.appendChild(lens);
 
     const zoomImg = new Image();
-    zoomImg.src = media.preview_image.src.replace(/width=\d+/, '');
+    zoomImg.src = media.preview_image.src.replace(/width=\d+/, 'width=750');
+
     zoomResult.appendChild(zoomImg);
 
     zoomImg.onload = () => {
       const minZoomRatio = 1.2;
       const zoomRatio = zoomImg.naturalWidth / img.clientWidth;
 
-      if (zoomRatio < minZoomRatio) {
+      if (zoomImg.naturalWidth < 750 || zoomRatio < minZoomRatio) {
         zoomResult.remove();
         lens.remove();
         return;
