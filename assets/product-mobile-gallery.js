@@ -208,7 +208,7 @@ class MobileGallery extends HTMLElement {
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
         variableWidth: false,
-        centerMode: false,
+        centerMode: true,
       });
 
       $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
@@ -313,7 +313,7 @@ class MobileGallery extends HTMLElement {
       $(this.popupThumbnails).slick({
         slidesToShow: 4,
         slidesToScroll: 1,
-        arrows: true,
+        arrows: false,
         infinite: false,
         focusOnSelect: true,
         asNavFor: this.popupSlider,
