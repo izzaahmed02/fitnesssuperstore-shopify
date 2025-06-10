@@ -389,13 +389,20 @@ class MobileGallery extends HTMLElement {
       // Thumbnail for YouTube
       const mediaId = originalSlide.querySelector('.mobile-gallery-slide').getAttribute('data-media-id');
       const media = this.mediaData.find((m) => String(m.id) === mediaId);
-      thumbnailContent = `<img src="${media.preview_image.src | image_url: width: 100}" alt="${media.alt || 'Video thumbnail'}">`;
+      // Use raw URL with width parameter (adjust based on your image service)
+      const thumbnailUrl = media.preview_image.src.includes('?')
+        ? `${media.preview_image.src}&width=100`
+        : `${media.preview_image.src}?width=100`;
+      thumbnailContent = `<img src="${thumbnailUrl}" alt="${media.alt || 'Video thumbnail'}">`;
     }
     // MP4
     else if (video) {
       container.appendChild(clone);
       // Thumbnail for video
-      thumbnailContent = `<img src="${video.poster}" alt="Video thumbnail">`;
+      const thumbnailUrl = video.poster.includes('?')
+        ? `${video.poster}&width=100`
+        : `${video.poster}?width=100`;
+      thumbnailContent = `<img src="${thumbnailUrl}" alt="Video thumbnail">`;
     }
     // Image
     else if (img) {
@@ -428,7 +435,8 @@ class MobileGallery extends HTMLElement {
       container.appendChild(clone);
 
       // Thumbnail for image
-      thumbnailContent = `<img src="${img.src.replace(/width=\d+/, 'width=100')}" alt="${img.alt || 'Image thumbnail'}">`;
+      const thumbnailUrl = img.src.replace(/width=\d+/, 'width=100');
+      thumbnailContent = `<img src="${thumbnailUrl}" alt="${img.alt || 'Image thumbnail'}">`;
 
       const highResSrc = img.src.replace(/width=\d+/, '');
       if (zoomImg.src !== highResSrc) {
