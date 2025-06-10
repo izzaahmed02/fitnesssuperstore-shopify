@@ -199,7 +199,7 @@ class MobileGallery extends HTMLElement {
 
       $(this.popupThumbnails).slick({
         slidesToShow: 4,
-        slidesToScroll: 1,
+        
         arrows: false,
         swipeToSlide: true,
         infinite: true,
@@ -309,7 +309,7 @@ class MobileGallery extends HTMLElement {
 
       $(this.popupThumbnails).slick({
         slidesToShow: 4,
-        slidesToScroll: 1,
+        
         arrows: false,
         
         swipeToSlide: true,
