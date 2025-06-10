@@ -225,12 +225,28 @@ class MobileGallery extends HTMLElement {
     });
   }
 
-  openPopup(index) {
-  if (!this.popup || !this.popupSlider || !this.popupThumbnails) return;
+ openPopup(index) {
+  if (!this.popup || !this.popupSlider || !this.popupThumbnails || !this.popupDots) return;
 
-  // Clear previous Hammer instances
+  // Prevent immediate closure from click propagation
+  const preventPropagation = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+  };
+
+  // Clean up existing resources
   this.hammerInstances.forEach((h) => h.destroy());
   this.hammerInstances = [];
+
+  // Remove existing event listeners to prevent duplicates
+  const closeBtn = this.popup.querySelector('.mobile-popup-close');
+  const backdrop = this.popup.querySelector('.mobile-popup-backdrop');
+  if (closeBtn) {
+    closeBtn.removeEventListener('click', this.closePopupHandler);
+  }
+  if (backdrop) {
+    backdrop.removeEventListener('click', this.closePopupHandler);
+  }
 
   // Destroy existing sliders
   if ($(this.popupSlider).hasClass('slick-initialized')) {
@@ -240,6 +256,14 @@ class MobileGallery extends HTMLElement {
     $(this.popupThumbnails).slick('unslick');
   }
 
+  // Clear DOM content
+  this.popupSlider.innerHTML = '';
+  this.popupThumbnails.innerHTML = '';
+  this.popupDots.innerHTML = '';
+
+  // Render new slides
+  this.renderPopupSlides(this.popupSlider, this.popupThumbnails);
+
   this.popup.classList.add('is-active');
   document.body.style.overflow = 'hidden';
 
@@ -247,11 +271,8 @@ class MobileGallery extends HTMLElement {
   const shouldInit = !isDesktop();
 
   if (shouldInit) {
-    this.popupSlider.innerHTML = '';
-    this.popupThumbnails.innerHTML = '';
-    this.renderPopupSlides(this.popupSlider, this.popupThumbnails);
-
-    $(this.popupSlider).off().slick({
+    // Initialize main slider
+    $(this.popupSlider).slick({
       dots: true,
       appendDots: this.popupDots,
       arrows: false,
@@ -266,10 +287,11 @@ class MobileGallery extends HTMLElement {
       waitForAnimate: false,
     });
 
-    $(this.popupThumbnails).off().slick({
+    // Initialize thumbnail slider
+    $(this.popupThumbnails).slick({
       slidesToShow: 4,
       slidesToScroll: 1,
-      arrows: false,
+      arrows: true,
       infinite: false,
       focusOnSelect: true,
       asNavFor: this.popupSlider,
@@ -277,10 +299,11 @@ class MobileGallery extends HTMLElement {
       speed: 250,
       cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
       initialSlide: index,
-      variableWidth: false, // Ensure consistent width
-      centerMode: false, // Prevent wrapping
+      variableWidth: false,
+      centerMode: false,
     });
 
+    // Handle slide change
     $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
       this.pauseAllMedia(this.popup);
       const currentSlideEl = slick.$slides[currentSlide];
@@ -300,42 +323,47 @@ class MobileGallery extends HTMLElement {
       $(this.popupThumbnails).slick('slickGoTo', currentSlide);
     });
 
+    // Attach overlay click handlers
     this.popupSlider.querySelectorAll('.video-iframe-overlay').forEach((overlay) => {
-      overlay.addEventListener('click', () => {
+      overlay.addEventListener('click', (e) => {
+        preventPropagation(e);
         overlay.style.display = 'none';
         const iframe = overlay.nextElementSibling;
         if (iframe) {
           iframe.style.pointerEvents = 'auto';
           iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
         }
-      });
+      }, { once: true });
     });
   }
 
-  const closeBtn = this.popup.querySelector('.mobile-popup-close');
-  const backdrop = this.popup.querySelector('.mobile-popup-backdrop');
+  // Define close handler
+  this.closePopupHandler = (e) => {
+    preventPropagation(e);
+    this.hammerInstances.forEach((h) => h.destroy());
+    this.hammerInstances = [];
+    if ($(this.popupSlider).hasClass('slick-initialized')) {
+      $(this.popupSlider).slick('unslick');
+    }
+    if ($(this.popupThumbnails).hasClass('slick-initialized')) {
+      $(this.popupThumbnails).slick('unslick');
+    }
+    this.popup.classList.remove('is-active');
+    document.body.style.overflow = '';
+    this.pauseAllMedia(this.popup);
+  };
 
+  // Attach close handlers
   if (closeBtn) {
-    closeBtn.onclick = () => {
-      this.hammerInstances.forEach((h) => h.destroy());
-      this.hammerInstances = [];
-      if ($(this.popupSlider).hasClass('slick-initialized')) {
-        $(this.popupSlider).slick('unslick');
-      }
-      if ($(this.popupThumbnails).hasClass('slick-initialized')) {
-        $(this.popupThumbnails).slick('unslick');
-      }
-      this.popup.classList.remove('is-active');
-      document.body.style.overflow = '';
-      this.pauseAllMedia(this.popup);
-    };
+    closeBtn.addEventListener('click', this.closePopupHandler);
+  }
+  if (backdrop) {
+    backdrop.addEventListener('click', this.closePopupHandler);
   }
 
-  if (backdrop) {
-    backdrop.onclick = () => {
-      closeBtn?.click();
-    };
-  }
+  // Prevent initial click propagation
+  document.addEventListener('click', preventPropagation, { capture: true, once: true });
+  document.addEventListener('touchstart', preventPropagation, { capture: true, once: true });
 }
 
 renderPopupSlides(container, thumbnailContainer) {
