@@ -391,8 +391,8 @@ renderPopupSlides(container, thumbnailContainer) {
       newIframe.setAttribute('allow', 'autoplay; encrypted-media');
       newIframe.setAttribute('frameborder', '0');
       newIframe.setAttribute('allowfullscreen', 'true');
-      newIframe.width = iframe.width;
-      newIframe.height = iframe.height;
+      newIframe.width = iframe.width || '100%';
+      newIframe.height = iframe.height || 'auto';
       newIframe.style.pointerEvents = 'none';
 
       const wrapper = document.createElement('div');
@@ -421,8 +421,8 @@ renderPopupSlides(container, thumbnailContainer) {
       newIframe.setAttribute('allow', 'autoplay; encrypted-media');
       newIframe.setAttribute('frameborder', '0');
       newIframe.setAttribute('allowfullscreen', 'true');
-      newIframe.width = iframe.width;
-      newIframe.height = iframe.height;
+      newIframe.width = iframe.width || '100%';
+      newIframe.height = iframe.height || 'auto';
       newIframe.style.pointerEvents = 'none';
 
       const wrapper = document.createElement('div');
@@ -442,7 +442,7 @@ renderPopupSlides(container, thumbnailContainer) {
       container.appendChild(clone);
     }
     // Handle MP4 videos
-    else if (video) {
+    else if (video && media) {
       container.appendChild(clone);
     }
     // Handle images with zoom/pan
@@ -480,7 +480,9 @@ renderPopupSlides(container, thumbnailContainer) {
         const preload = new Image();
         preload.src = highResSrc;
         preload.onload = () => {
-          zoomImg.src = highResSrc;
+          if (zoomImg.parentElement) {
+            zoomImg.src = highResSrc;
+          }
         };
       }
 
@@ -493,12 +495,14 @@ renderPopupSlides(container, thumbnailContainer) {
       const updateTransform = () => {
         if (frameId) cancelAnimationFrame(frameId);
         frameId = requestAnimationFrame(() => {
-          zoomImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+          if (zoomImg.parentElement) {
+            zoomImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+          }
         });
       };
 
       zoomImg.onload = () => {
-        if (skeletonWrapper && skeletonWrapper.classList) {
+        if (skeletonWrapper && skeletonWrapper.parentElement && skeletonWrapper.classList) {
           skeletonWrapper.classList.add('loaded');
         }
         const allowZoom = zoomImg.naturalWidth > 500;
@@ -536,12 +540,14 @@ renderPopupSlides(container, thumbnailContainer) {
               const preload = new Image();
               preload.src = highResSrc;
               preload.onload = () => {
-                zoomImg.src = highResSrc;
-                zoomImg.style.opacity = '0';
-                requestAnimationFrame(() => {
-                  zoomImg.style.transition = 'opacity 0.2s ease-in-out';
-                  zoomImg.style.opacity = '1';
-                });
+                if (zoomImg.parentElement) {
+                  zoomImg.src = highResSrc;
+                  zoomImg.style.opacity = '0';
+                  requestAnimationFrame(() => {
+                    zoomImg.style.transition = 'opacity 0.2s ease-in-out';
+                    zoomImg.style.opacity = '1';
+                  });
+                }
               };
             }
 
@@ -620,20 +626,21 @@ renderPopupSlides(container, thumbnailContainer) {
       thumbImg.width = 100;
       thumbImg.height = 100;
       thumbImg.loading = 'lazy';
-      thumbImg.style.objectFit = 'cover'; // Ensure consistent thumbnail appearance
-      thumbImg.style.aspectRatio = '1/1'; // Enforce square aspect ratio
+      thumbImg.style.objectFit = 'cover';
+      thumbImg.style.aspectRatio = '1/1';
 
       thumbSkeleton.appendChild(thumbImg);
       thumbWrapper.appendChild(thumbSkeleton);
       thumbnailContainer.appendChild(thumbWrapper);
 
       thumbImg.onload = () => {
-        if (thumbSkeleton && thumbSkeleton.classList) {
+        if (thumbSkeleton && thumbSkeleton.parentElement && thumbSkeleton.classList) {
           thumbSkeleton.classList.add('loaded');
         }
       };
 
-      thumbWrapper.addEventListener('click', () => {
+      thumbWrapper.addEventListener('click', (e) => {
+        e.stopPropagation();
         $(this.popupSlider).slick('slickGoTo', index);
       });
     }
