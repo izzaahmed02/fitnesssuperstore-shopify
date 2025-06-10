@@ -10,6 +10,7 @@ class MobileGallery extends HTMLElement {
     this.dots = null;
     this.mediaData = null;
     this.slickInitialized = false;
+    this.observer = null;
   }
 
   connectedCallback() {
@@ -30,9 +31,14 @@ class MobileGallery extends HTMLElement {
     this.popup = document.getElementById('mobile-gallery-popup');
     this.slider = this.querySelector('.mobile-gallery-slider');
     this.dots = this.querySelector('.mobile-gallery-dots');
-    this.popupSlider = this.popup?.querySelector('.mobile-popup-slider');
-    this.popupThumbnails = this.popup?.querySelector('.mobile-popup-thumbnails');
-    this.popupDots = this.popup?.querySelector('.mobile-popup-dots');
+
+    // Ensure popup exists
+    if (!this.popup) {
+      console.warn('[MobileGallery] #mobile-gallery-popup not found, creating dynamically');
+      this.createPopup();
+    }
+
+    this.updatePopupReferences();
 
     const isDesktop = () => window.matchMedia('(min-width: 990px)').matches;
     this.checkAndInit(isDesktop);
@@ -43,18 +49,14 @@ class MobileGallery extends HTMLElement {
       resizeTimeout = setTimeout(() => {
         this.checkAndInit(isDesktop);
         this.checkAndInitPopup(isDesktop);
-
         if (isDesktop()) {
           this.closePopup();
         }
       }, 150);
     });
 
-    // Ensure popup exists
-    if (!this.popup) {
-      console.warn('[MobileGallery] #mobile-gallery-popup not found, creating dynamically');
-      this.createPopup();
-    }
+    // Setup MutationObserver to detect popup removal
+    this.observePopup();
 
     // Attach click handlers to open popup
     this.querySelectorAll('.mobile-gallery-slide-wrap').forEach((slide, index) => {
@@ -65,10 +67,27 @@ class MobileGallery extends HTMLElement {
     });
   }
 
+  updatePopupReferences() {
+    this.popup = document.getElementById('mobile-gallery-popup');
+    if (this.popup) {
+      this.popupSlider = this.popup.querySelector('.mobile-popup-slider');
+      this.popupThumbnails = this.popup.querySelector('.mobile-popup-thumbnails');
+      this.popupDots = this.popup.querySelector('.mobile-popup-dots');
+    }
+  }
+
   createPopup() {
-    const popup = document.createElement('div');
+    let popup = document.getElementById('mobile-gallery-popup');
+    if (popup) {
+      console.warn('[MobileGallery] #mobile-gallery-popup already exists, reusing');
+      this.updatePopupReferences();
+      return;
+    }
+
+    popup = document.createElement('div');
     popup.id = 'mobile-gallery-popup';
     popup.className = 'mobile-popup-overlay';
+    popup.setAttribute('data-mobile-gallery-popup', 'true'); // Unique marker
     popup.hidden = true;
     popup.innerHTML = `
       <div class="mobile-popup-backdrop"></div>
@@ -78,10 +97,52 @@ class MobileGallery extends HTMLElement {
       <div class="mobile-popup-dots"></div>
     `;
     document.body.appendChild(popup);
-    this.popup = popup;
-    this.popupSlider = popup.querySelector('.mobile-popup-slider');
-    this.popupThumbnails = popup.querySelector('.mobile-popup-thumbnails');
-    this.popupDots = popup.querySelector('.mobile-popup-dots');
+    this.updatePopupReferences();
+    console.log('[MobileGallery] Created #mobile-gallery-popup');
+  }
+
+  observePopup() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+
+    const parent = document.body;
+    this.observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.removedNodes.length) {
+          for (const node of mutation.removedNodes) {
+            if (node.id === 'mobile-gallery-popup' || node.querySelector('#mobile-gallery-popup')) {
+              console.warn('[MobileGallery] Detected removal of #mobile-gallery-popup at', new Date().toISOString());
+              console.trace();
+              this.createPopup();
+              if (this.popup.classList.contains('is-active')) {
+                this.openPopup(0); // Reopen if it was active
+              }
+              break;
+            }
+          }
+        }
+      }
+    });
+
+    this.observer.observe(parent, { childList: true, subtree: true });
+  }
+
+  disconnectedCallback() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+    this.hammerInstances.forEach((h) => h.destroy());
+    this.hammerInstances = [];
+    if (this.popupSlider && $(this.popupSlider).hasClass('slick-initialized')) {
+      $(this.popupSlider).slick('unslick');
+    }
+    if (this.popupThumbnails && $(this.popupThumbnails).hasClass('slick-initialized')) {
+      $(this.popupThumbnails).slick('unslick');
+    }
+    if (this.slider && $(this.slider).hasClass('slick-initialized')) {
+      $(this.slider).slick('unslick');
+    }
   }
 
   checkAndInit(isDesktop) {
@@ -111,7 +172,10 @@ class MobileGallery extends HTMLElement {
   }
 
   checkAndInitPopup(isDesktop) {
-    if (!this.popupSlider || !this.popupThumbnails || !this.popupDots) return;
+    if (!this.popupSlider || !this.popupThumbnails || !this.popupDots) {
+      this.createPopup();
+      if (!this.popupSlider || !this.popupThumbnails || !this.popupDots) return;
+    }
     const shouldInit = !isDesktop();
 
     if (shouldInit && !$(this.popupSlider).hasClass('slick-initialized')) {
@@ -313,10 +377,10 @@ class MobileGallery extends HTMLElement {
     this.hammerInstances.forEach((h) => h.destroy());
     this.hammerInstances = [];
 
-    if ($(this.popupSlider).hasClass('slick-initialized')) {
+    if (this.popupSlider && $(this.popupSlider).hasClass('slick-initialized')) {
       $(this.popupSlider).slick('unslick');
     }
-    if ($(this.popupThumbnails).hasClass('slick-initialized')) {
+    if (this.popupThumbnails && $(this.popupThumbnails).hasClass('slick-initialized')) {
       $(this.popupThumbnails).slick('unslick');
     }
 
@@ -332,6 +396,7 @@ class MobileGallery extends HTMLElement {
     if (this.popup) {
       this.popup.hidden = true;
       this.popup.classList.remove('is-active');
+      console.log('[MobileGallery] Closed popup at', new Date().toISOString());
     }
     document.body.style.overflow = '';
     this.pauseAllMedia(this.popup);
