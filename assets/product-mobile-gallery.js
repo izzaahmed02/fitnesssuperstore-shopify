@@ -202,13 +202,13 @@ class MobileGallery extends HTMLElement {
         slidesToScroll: 1,
         arrows: false,
         infinite: false,
-        focusOnSelect: false,
-    //    asNavFor: this.popupSlider,
+        focusOnSelect: true,
+        asNavFor: this.popupSlider,
         lazyLoad: 'ondemand',
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
         variableWidth: false,
-        centerMode: false,
+        centerMode: true,
       });
 
       $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
@@ -315,14 +315,14 @@ class MobileGallery extends HTMLElement {
         slidesToScroll: 1,
         arrows: false,
         infinite: false,
-        focusOnSelect: false,
-      //  asNavFor: this.popupSlider,
+        focusOnSelect: true,
+        asNavFor: this.popupSlider,
         lazyLoad: 'ondemand',
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
         initialSlide: index,
         variableWidth: false,
-        centerMode: false,
+        centerMode: true,
       });
 
       $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
