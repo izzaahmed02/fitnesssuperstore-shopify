@@ -346,7 +346,7 @@ class MobileGallery extends HTMLElement {
     thumbnail.className = 'mobile-gallery-thumbnail';
     let thumbnailContent = '';
 
-    // YouTube
+    // YouTube (external_video)
     if (iframe && iframe.src.includes('youtube.com')) {
       const url = new URL(iframe.src);
       url.searchParams.set('muted', '1');
@@ -389,13 +389,12 @@ class MobileGallery extends HTMLElement {
       // Thumbnail for YouTube
       const mediaId = originalSlide.querySelector('.mobile-gallery-slide').getAttribute('data-media-id');
       const media = this.mediaData.find((m) => String(m.id) === mediaId);
-      // Use raw URL with width parameter (adjust based on your image service)
       const thumbnailUrl = media.preview_image.src.includes('?')
         ? `${media.preview_image.src}&width=100`
         : `${media.preview_image.src}?width=100`;
       thumbnailContent = `<img src="${thumbnailUrl}" alt="${media.alt || 'Video thumbnail'}">`;
     }
-    // MP4
+    // MP4 (video)
     else if (video) {
       container.appendChild(clone);
       // Thumbnail for video
