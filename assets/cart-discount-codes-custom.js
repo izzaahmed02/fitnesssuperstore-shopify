@@ -42,7 +42,34 @@
 					cartDrawerItems.updateQuantity(1, currentQty);
 					return;
 				} else {
-					cartDrawerItems.onCartUpdate();
+					// Completely re-render cart drawer items
+					try {
+						const cartResponse =  fetch(`${routes.cart_url}?section_id=cart-drawer`);
+						const cartResponseText =  cartResponse.text();
+						const cartHtml = new DOMParser().parseFromString(cartResponseText, 'text/html');
+
+						// Replace the entire cart-drawer-items content
+						const sourceElement = cartHtml.querySelector('cart-drawer-items');
+						if (sourceElement && cartDrawerItems) {
+							cartDrawerItems.innerHTML = sourceElement.innerHTML;
+						}
+
+						// Also update the cart drawer footer if it exists
+						const footerElement = document.querySelector('.cart-drawer__footer');
+						const sourceFooter = cartHtml.querySelector('.cart-drawer__footer');
+						if (footerElement && sourceFooter) {
+							footerElement.innerHTML = sourceFooter.innerHTML;
+						}
+
+						document.dispatchEvent(new CustomEvent('cart:updated', {
+							bubbles: true,
+							detail: {source: 'drawer'}
+						}));
+					} catch (e) {
+						console.error('Error updating cart drawer:', e);
+						// Fallback to the original method
+						cartDrawerItems.onCartUpdate();
+					}
 					return;
 				}
 			}
@@ -57,7 +84,27 @@
 					cartItems.updateQuantity(1, currentQty);
 					return;
 				} else {
-					cartItems.onCartUpdate();
+					// Completely re-render main cart items
+					try {
+						const cartResponse =  fetch(`${routes.cart_url}?section_id=main-cart-items`);
+						const cartResponseText =  cartResponse.text();
+						const cartHtml = new DOMParser().parseFromString(cartResponseText, 'text/html');
+
+						// Replace the entire cart-items content
+						const sourceElement = cartHtml.querySelector('cart-items');
+						if (sourceElement && cartItems) {
+							cartItems.innerHTML = sourceElement.innerHTML;
+						}
+
+						document.dispatchEvent(new CustomEvent('cart-items:updated', {
+							bubbles: true,
+							detail: {source: 'main-cart'}
+						}));
+					} catch (e) {
+						console.error('Error updating main cart:', e);
+						// Fallback to the original method
+						cartItems.onCartUpdate();
+					}
 					return;
 				}
 			}
@@ -151,4 +198,3 @@
 		});
 	}
 })();
-

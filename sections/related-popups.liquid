@@ -1,0 +1,41 @@
+{% assign options = product.metafields.options.product_options.value %}
+
+
+
+{% assign options = product.metafields.options.product_options.value %}
+{% assign processed_product_titles = '' %}
+
+{% for category in options %}
+    {% for product_option in category.product_options.value %}
+        {% if product_option.product_option_variants.value %}
+            {% for variant in product_option.product_option_variants.value %}
+                {% assign product_title = variant.product.title | strip | downcase %}
+                {% unless processed_product_titles contains product_title %}
+                    {% render 'related-products-popup',
+                            product_item: variant.product,
+                            title: product_option.product_option_title %}
+                    {% assign processed_product_titles = processed_product_titles | append: ',' | append: product_title %}
+                {% endunless %}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+
+
+
+{% schema %}
+{
+  "name": "Related Popups",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+  ]
+}
+{% endschema %}

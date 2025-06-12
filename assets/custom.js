@@ -487,3 +487,5 @@ const pricingRefenceModalContent = `<div class="pricing-reference">
     </ul>
   </div>
 </div>`
+
+
