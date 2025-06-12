@@ -49,10 +49,10 @@ function renderCustomAvisOptions() {
 		const warrantyParentContainer = warrantySelect.closest('.ap-options__select-container');
 		if (warrantyParentContainer) {
 			const selectOptions = warrantyParentContainer.querySelector('select').options.length;
-      if (selectOptions > 1) {
-        warrantyParentContainer.style.display = 'block';
-        warrantyParentContainer.querySelector('.ap-label-tooltip').classList.add('ap-options__heading');
-      }
+			if (selectOptions > 1) {
+				warrantyParentContainer.style.display = 'block';
+				warrantyParentContainer.querySelector('.ap-label-tooltip').classList.add('ap-options__heading');
+			}
 		}
 	}
 
@@ -274,11 +274,11 @@ function setupOptionsPopup() {
 			});
 		}
 	});
+
+	// setupOptionsHandler();
 }
 
 
-function setupOptionsHandler() {
-	const optionsContainer = document.querySelectorAll('.avp-option');
 
 	optionsContainer.forEach((optionContainer) => {
 		const optionLabel = optionContainer.querySelector('.ap-label-tooltip');
@@ -573,11 +573,9 @@ async function fetchProductMetafields(productId) {
 		const response = await fetch(shopifyUrl, {
 			method: 'GET'
 		});
-
 		if (!response.ok) {
 			throw new Error('Failed to fetch product metafields');
 		}
-
 		const data = await response.json();
 		return data.metafields;
 	} catch (error) {
@@ -730,7 +728,7 @@ function clearImages(element) {
 	});
 }
 
-document.addEventListener('click', function(event) {
+document.addEventListener('click', function (event) {
 	if (event.target.classList.contains('read-more-btn')) {
 		const button = event.target;
 		const productCard = button.closest('.product-card');
@@ -790,30 +788,30 @@ function setupPopupHeaderCloseDelegate() {
 }
 
 function updateCustomPrice() {
-  setTimeout(() => {
-    const priceEl = document.querySelector('.pr_custom_price');
-    if (!priceEl) return;
-  
-    const formattedProductPrice = priceEl.innerText.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]  
-    .replace(/,/g, '') 
-    .replace(/(\.\d*?[1-9])0+$/, '$1') 
-    .replace(/\.0+$/, ''); 
-  
-    const productPrice = parseFloat(formattedProductPrice);
+	setTimeout(() => {
+		const priceEl = document.querySelector('.pr_custom_price');
+		if (!priceEl) return;
 
-	const totalAmountToSubtract = selectedNegativePrices.reduce((total, obj) => total + (obj.value || 0), 0);
-  
-	const newPrice = productPrice - totalAmountToSubtract;
-  
-	const formattedPrice = newPrice.toLocaleString('en-US', {
-	  style: 'currency',
-	  currency: 'USD'
-	});
+		const formattedProductPrice = priceEl.innerText.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]
+			.replace(/,/g, '')
+			.replace(/(\.\d*?[1-9])0+$/, '$1')
+			.replace(/\.0+$/, '');
 
-	document.querySelectorAll('.pr_custom_price').forEach((element) => {
-		element.innerText = formattedPrice  
-	});
-  }, 100);
+		const productPrice = parseFloat(formattedProductPrice);
+
+		const totalAmountToSubtract = selectedNegativePrices.reduce((total, obj) => total + (obj.value || 0), 0);
+
+		const newPrice = productPrice - totalAmountToSubtract;
+
+		const formattedPrice = newPrice.toLocaleString('en-US', {
+			style: 'currency',
+			currency: 'USD'
+		});
+
+		document.querySelectorAll('.pr_custom_price').forEach((element) => {
+			element.innerText = formattedPrice
+		});
+	}, 100);
 }
 
 setupPopupHeaderCloseDelegate();

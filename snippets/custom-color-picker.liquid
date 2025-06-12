@@ -1,253 +1,324 @@
 <style>
-    .custom-color-single {
+  .custom-color-single {
+    display: none;
+  }
+
+  .custom-color-group {
+      display: none;
+      margin-top: 20px;
+  }
+
+  .color_options_container {
+      margin-left: 0px;
+      gap: 10px;
+  }
+  .color-option-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+    }
+    
+    .swatch {
+      position: relative; 
+      width: 40px;       
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid #E5E5E5; 
+      box-sizing: border-box;
+      cursor: pointer;
+      display: flex;     
+      align-items: center;
+      justify-content: center;
+      font-family: sans-serif;
+      transition: border-color 0.2s;
+    }
+    
+    .swatch:hover {
+      border-color: #ff6600;
+    }
+   
+    .swatch::after {
+      content: attr(data-tool-tip);
+      position: absolute;
+      white-space: nowrap;
+      top: 180%;
+      left: 130%; 
+      transform: translateY(-50%);
+      background-color: #fff;
+      color: #333;
+      padding: 12px 18px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      font-size: 14px;
+      font-family: 'Lato';
+      color: #393940;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 9999;
+    }
+    
+    @media (min-width: 750px) {
+        .swatch:hover::after {
+          opacity: 1;
+        }
+        
+        .swatch:hover::before {
+          opacity: 1;
+        }
+    }
+
+    .options_heading span:first-child {
+      font-weight: 400;
+    }
+
+    .custom-color-group .color-options-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    .custom-color-group .group-color-container {
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+      padding-bottom: 20px;
+      border-top: 1px solid #E5E5E5 !important;
+    }
+
+    .custom-color-group .group-color-container.hidden {
       display: none;
     }
 
-    .custom-color-group {
-        display: none;
-        margin-top: 20px;
+    .custom-color-group .group-color-container.last-visible {
+      border-bottom: 1px solid #E5E5E5 !important;
     }
 
-    .color_options_container {
-        margin-left: 0px;
-        gap: 10px;
+    .custom-color-group .group-color-container.last-visible {
+      border-bottom: 1px solid #E5E5E5 !important;
     }
-    .color-option-container {
-        display: inline-flex;
-        align-items: center;
-        gap: 1rem;
-        position: relative;
-      }
-      
-      .swatch {
-        position: relative; 
-        width: 40px;       
-        height: 40px;
-        border-radius: 50%;
-        border: 1px solid #E5E5E5; 
-        box-sizing: border-box;
-        cursor: pointer;
-        display: flex;     
-        align-items: center;
-        justify-content: center;
-        font-family: sans-serif;
-        transition: border-color 0.2s;
-      }
-      
-      .swatch:hover {
-        border-color: #ff6600;
-      }
-     
-      .swatch::after {
-        content: attr(data-tool-tip);
-        position: absolute;
-        white-space: nowrap;
-        top: 180%;
-        left: 130%; 
-        transform: translateY(-50%);
-        background-color: #fff;
-        color: #333;
-        padding: 12px 18px;
-        border-radius: 8px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        font-size: 14px;
-        font-family: 'Lato';
-        color: #393940;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s;
-        z-index: 9999;
-      }
-      
-      @media (min-width: 750px) {
-          .swatch:hover::after {
-            opacity: 1;
-          }
-          
-          .swatch:hover::before {
-            opacity: 1;
-          }
-      }
 
-      .options_heading span:first-child {
-        font-weight: 400;
-      }
+    .custom-color-group .group-color-container.single-color {
+      border-top: none !important;
+      border-bottom: none !important;
+      padding-top: 0px;
+      padding-bottom: 0px;
+    }
 
-      .custom-color-group .color-options-container {
-        display: flex;
-        gap: 10px;
-      }
+    .custom-color-group .group-color-container.single-color .group-color:before {
+      background-image: none;
+    }
 
-      .custom-color-group .group-color-container {
-        display: flex;
-        flex-direction: column;
-        padding-top: 20px;
-        padding-bottom: 20px;
-        border-top: 1px solid #E5E5E5 !important;
-      }
+    .custom-color-group .single-color .color_options_container {
+      padding-top: 5px;
+      margin-left: 1px;
+    }
 
-      .custom-color-group .group-color-container.hidden {
-        display: none;
-      }
+    .custom-color-group .color_options_container {
+      padding-top: 20px;
+      display: none;
+    }
 
-      .custom-color-group .group-color-container.last-visible {
-        border-bottom: 1px solid #E5E5E5 !important;
-      }
+    .custom-color-group .color_options_container .color-selected  {
+      outline: 1px solid var(--primary-orange);
+      outline-offset: 3px;
+    }
 
-      .custom-color-group .group-color-container.last-visible {
-        border-bottom: 1px solid #E5E5E5 !important;
-      }
+    .custom-color-group .group-color-container .group-color {
+      display: flex;
+      align-items: baseline;
+      position: relative;
+      cursor: pointer;
+    }
 
-      .custom-color-group .group-color-container.single-color {
-        border-top: none !important;
-        border-bottom: none !important;
-        padding-top: 0px;
-        padding-bottom: 0px;
-      }
+    .custom-color-group .group-color-container .group-color .apo-title {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
 
-      .custom-color-group .group-color-container.single-color .group-color:before {
-        background-image: none;
-      }
+    .custom-color-group .group-color-container .group-color-single {
+      display: flex;
+      align-items: baseline;
+      position: relative;
+      cursor: pointer;
+    }
 
-      .custom-color-group .single-color .color_options_container {
-        padding-top: 5px;
-        margin-left: 1px;
-      }
+    .custom-color-group .color_options_container.show {
+      display: flex !important;
+    }
 
-      .custom-color-group .color_options_container {
-        padding-top: 20px;
-        display: none;
-      }
+    .color_options_container .options_container.show {
+      display: flex !important; 
+    }
 
-      .custom-color-group .color_options_container .color-selected  {
-        outline: 1px solid var(--primary-orange);
-        outline-offset: 3px;
-      }
+    .custom-color-group .group-color-container .group-color:before {
+      content: "";
+      position: absolute;
+      right: 10px;
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M11.4697 8.46967C11.7626 8.17678 12.2374 8.17678 12.5303 8.46967L18.5303 14.4697C18.8232 14.7626 18.8232 15.2374 18.5303 15.5303C18.2374 15.8232 17.7626 15.8232 17.4697 15.5303L12 10.0607L6.53033 15.5303C6.23744 15.8232 5.76256 15.8232 5.46967 15.5303C5.17678 15.2374 5.17678 14.7626 5.46967 14.4697L11.4697 8.46967Z' fill='black'/%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      transition: transform 0.3s ease;
+      margin-left: 8px;
+      transform: rotate(180deg);
+    }
 
-      .custom-color-group .group-color-container .group-color {
-        display: flex;
-        align-items: baseline;
-        position: relative;
-        cursor: pointer;
-      }
+    .custom-color-group .group-color-container .group-color.open:before {
+      transform: rotate(0deg) !important;
+    }
 
-      .custom-color-group .group-color-container .group-color .apo-title {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-      }
-
-      .custom-color-group .group-color-container .group-color-single {
-        display: flex;
-        align-items: baseline;
-        position: relative;
-        cursor: pointer;
-      }
-
-      .custom-color-group .color_options_container.show {
-        display: flex !important;
-      }
-
-      .color_options_container .options_container.show {
-        display: flex !important; 
-      }
-
-      .custom-color-group .group-color-container .group-color:before {
-        content: "";
-        position: absolute;
-        right: 10px;
-        display: inline-block;
-        width: 24px;
-        height: 24px;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M11.4697 8.46967C11.7626 8.17678 12.2374 8.17678 12.5303 8.46967L18.5303 14.4697C18.8232 14.7626 18.8232 15.2374 18.5303 15.5303C18.2374 15.8232 17.7626 15.8232 17.4697 15.5303L12 10.0607L6.53033 15.5303C6.23744 15.8232 5.76256 15.8232 5.46967 15.5303C5.17678 15.2374 5.17678 14.7626 5.46967 14.4697L11.4697 8.46967Z' fill='black'/%3E%3C/svg%3E");
-        background-size: contain;
-        background-repeat: no-repeat;
-        transition: transform 0.3s ease;
-        margin-left: 8px;
-        transform: rotate(180deg);
-      }
-
-      .custom-color-group .group-color-container .group-color.open:before {
-        transform: rotate(0deg) !important;
-      }
-
-      .custom-color-group .group-color-container .option_selected-container {
-        margin-top: 0px;
-        margin-left: 10px !important;
-      }
+    .custom-color-group .group-color-container .option_selected-container {
+      margin-top: 0px;
+      margin-left: 10px !important;
+    }
 </style>
 <div class="custom-color-group">
-  <div class="options_heading ap-options__heading">
-    <h3>Colors</h3>
+<div class="options_heading ap-options__heading">
+  <h3>Colors</h3>
+</div>
+  <div class="group-color-container" data-group-color-name="Paint">
+    <div class="group-color">
+      <span class="apo-title">Paint Color 
+        <svg class="paint-color-popup-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"></path>
+        </svg>
+     </span>
+      <div class="option_selected-container" style="display: none;">
+        <p class="option_selected"></p>
+        <span class="option_selected-price"></span>
+    
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+             xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
+                fill="black"/>
+        </svg>
+      </div>
+    </div>
+    <div class="color_options_container options_container">
+      <div class="color-options-container"></div>
+      {% render 'custom-color-wrapper', group: 'paint', product: product  %}  
+    </div>
   </div>
-    <div class="group-color-container" data-group-color-name="Paint">
-      <div class="group-color">
-        <span class="apo-title">Paint Color 
-          <svg class="paint-color-popup-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"></path>
-          </svg>
-       </span>
-        <div class="option_selected-container" style="display: none;">
-          <p class="option_selected"></p>
-          <span class="option_selected-price"></span>
-      
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-               xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd"
-                  d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
-                  fill="black"/>
-          </svg>
-        </div>
-      </div>
-      <div class="color_options_container options_container">
-        <div class="color-options-container"></div>
-        {% render 'custom-color-wrapper', group: 'paint', product: product  %}  
+  <div class="group-color-container" data-group-color-name="Vinyl">
+    <div class="group-color">
+      <span class="apo-title">Vinyl Color
+        <svg class="paint-color-popup-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"></path>
+        </svg>
+      </span>
+      <div class="option_selected-container" style="display: none;">
+        <p class="option_selected"></p>
+        <span class="option_selected-price"></span>
+    
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+             xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
+                fill="black"/>
+        </svg>
       </div>
     </div>
-    <div class="group-color-container" data-group-color-name="Vinyl">
-      <div class="group-color">
-        <span class="apo-title">Vinyl Color
-          <svg class="paint-color-popup-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"></path>
-          </svg>
-        </span>
-        <div class="option_selected-container" style="display: none;">
-          <p class="option_selected"></p>
-          <span class="option_selected-price"></span>
-      
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-               xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd"
-                  d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
-                  fill="black"/>
-          </svg>
-        </div>
-      </div>
-      <div class="color_options_container options_container">
-        <div class="color-options-container"></div>
-        {% render 'custom-color-wrapper', group: 'vinyl', product: product  %}  
+    <div class="color_options_container options_container">
+      <div class="color-options-container"></div>
+      {% render 'custom-color-wrapper', group: 'vinyl', product: product  %}  
+    </div>
+  </div>
+  {% comment %} <div class="group-color-container" data-group-color-name="Upholstery">
+    <div class="group-color">
+      <span class="apo-title">Upholstery Color</span>
+      <div class="option_selected-container" style="display: none;">
+        <p class="option_selected"></p>
+        <span class="option_selected-price"></span>
+    
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+             xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
+                fill="black"/>
+        </svg>
       </div>
     </div>
-    {% comment %} <div class="group-color-container" data-group-color-name="Upholstery">
-      <div class="group-color">
-        <span class="apo-title">Upholstery Color</span>
-        <div class="option_selected-container" style="display: none;">
-          <p class="option_selected"></p>
-          <span class="option_selected-price"></span>
-      
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-               xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd"
-                  d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
-                  fill="black"/>
-          </svg>
-        </div>
-      </div>
-      
-      <div class="color_options_container options_container">
-        <div class="color-options-container"></div>
-        {% render 'custom-color-wrapper', group: 'upholstery', product: product   %}  
-      </div>
-    </div> {% endcomment %}
+    
+    <div class="color_options_container options_container">
+      <div class="color-options-container"></div>
+      {% render 'custom-color-wrapper', group: 'upholstery', product: product   %}  
+    </div>
+  </div> {% endcomment %}
 </div>
 <script src="{{ 'custom-color-picker.js' | asset_url }}" defer="defer"></script>
+
+{% comment %}
+<div id="{{ products.product_title | handleize }}" class="custom-color-group">
+    {% comment %}{{ products.product_option_variants.value | json }}{% endcomment %}
+    {% assign has_custom_color_paint = false %}
+    {% assign has_custom_color_vinyl = false %}
+
+    {% if products.product_option_variants.value %}
+        {% if products.product_option_title contains 'Paint' %}
+            {% assign has_custom_color_paint = true %}
+        {% endif %}
+        {% if products.product_option_title contains 'Vinyl' %}
+            {% assign has_custom_color_vinyl = true %}
+        {% endif %}
+
+    {% endif %}
+
+
+    {% if products.product_option_title contains 'Paint' or has_custom_color_paint %}
+        <div class="group-color-container" data-group-color-name="Paint">
+            <div class="group-color">
+                <span class="apo-title">Paint Color</span>
+                <div class="option_selected-container" style="display: none;">
+                    <p class="option_selected"></p>
+                    <span class="option_selected-price"></span>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                              d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
+                              fill="black"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="color_options_container options_container">
+                {% render 'custom-color-wrapper', group: 'paint',
+                        products: products.product_option_variants.value,
+                        title: products.product_option_title,
+                        default: default
+                %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if products.product_option_title contains 'Vinyl' or has_custom_color_vinyl %}
+        <div class="group-color-container" data-group-color-name="Vinyl">
+            <div class="group-color">
+                <span class="apo-title">Vinyl Color</span>
+                <div class="option_selected-container" style="display: none;">
+                    <p class="option_selected"></p>
+                    <span class="option_selected-price"></span>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                              d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
+                              fill="black"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="color_options_container options_container">
+                {% render 'custom-color-wrapper', group: 'vinyl',
+                        products: products.product_option_variants.value,
+                        title: products.product_option_title,
+                        default: default
+                %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endcomment %}

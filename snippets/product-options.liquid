@@ -1,0 +1,72 @@
+
+{% assign options = product.metafields.options.product_options.value %}
+<div data-product-id="{{ product.selected_or_first_available_variant.id }}" class="product-options" id="product-options"
+     data-product="default">
+    {% for category in options %}
+        <h2 class="product-options__category-title"><span>{{ forloop.index }}</span>{{ category.title }}
+            {% assign has_related_products = false %}
+            {% for product_option in category.product_options.value %}
+                {% if product_option.product_option_variants.value %}
+                    {% if product_option.product_option_title contains 'Color' %}
+                        {% assign has_related_products = true %}
+                    {% endif %}
+                    {% for variant in product_option.product_option_variants.value %}
+                        {% if variant.product.description %}
+                            {% assign first_variant_with_related = variant.product.id %}
+                        {% else %}
+                            {% assign has_related_products = false %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            {% if has_related_products %}
+                {% render 'related-products-button', product_id: first_variant_with_related %}
+            {% endif %}
+        </h2>
+        {% for product_option in category.product_options.value %}
+
+            {% assign title = product_option.product_option_title | downcase %}
+            {% if title == 'paint color' or title == 'paint colors' or title == 'color' %}
+                {% if product_option.product_option_sets_default.value.id %}
+                    {% assign default = product_option.product_option_sets_default.value.id %}
+                {% endif %}
+                {% render 'custom-color-picker',
+                        product: product_option.product_option_variants.value,
+                        products: product_option,
+                        default:  default,
+                        color_type: 'paint',
+                        title: category.title %}
+            {% endif %}
+            {% if title == 'vinyl color' %}
+                {% if product_option.product_option_sets_default.value.id %}
+                    {% assign default = product_option.product_option_sets_default.value.id %}
+                {% endif %}
+                {% render 'custom-color-picker',
+                        product: product_option.product_option_variants.value,
+                        products: product_option,
+                        default:  default,
+                        color_type: 'vinyl',
+                        title: category.title %}
+            {% endif %}
+            {% if title != 'paint color' and title != 'vinyl color' and title != 'paint colors'  and title != 'vinyl colors'%}
+                {% if product_option.product_option_sets_default.value.id %}
+                    {% assign default = product_option.product_option_sets_default.value.id %}
+                {% endif %}
+                {% render 'product-option-accordion',
+                        category: category,
+                        default:  default,
+                        product_option: product_option,
+                        forloop_index: forloop.index,
+                         product_id : product.id
+                %}
+
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+
+    <div id="product-options-total-add" class="product-options__total-add product-options__total-add--hide">
+        Selection will add <span id="product-options-totalpriceadd"
+                                 class="product-options__total-price-add">$0.00</span> to the price
+    </div>
+    <input type="hidden" value="0" class="product-options__total-addcharge">
+</div>

@@ -1,0 +1,93 @@
+<div class="cart-item__custom-options">
+    <h5 class="cart-item__custom-options-title">Add accessories</h5>
+    <p class="cart-item__custom-options-copy">Enhance your training
+        versatility with premium accessories designed for
+        the {{ product.title }}</p>
+    {% assign product_options = product.metafields.options.product_options.value %}
+    <div class="cart-item__custom-options-items">
+        <div class="cart-item__custom-options-buttons-container">
+            <div class="cart-item__custom-options-buttons-wrapper">
+                <div class="cart-item__custom-options-buttons">
+                    {% for opt in product_options %}
+                        {% for products in opt.product_options.value %}
+                            {% unless products.product_option_title contains 'Color' %}
+                                <button>{{ products.product_option_title }}</button>
+                            {% endunless %}
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% for opt in product_options %}
+            {% for products in opt.product_options.value %}
+                {% unless products.product_option_title contains 'Color' %}
+                    <div class="cart-item__custom-options-content">
+                        {% for variant in products.product_option_variants.value limit: 3 %}
+                            {% unless variant.title == 'No Thanks' %}
+                                <div class="cart-item__custom-options-option {% if variant.available == false %}unviable{% endif %}">
+                                    {% render 'product-option-question', var_id: variant.id %}
+                                    {% if variant.featured_image %}
+                                        <img src="{{ variant.featured_image | image_url: width: 300, height: 300 }}"
+                                             alt=""
+                                             class="cart-item__custom-options-option-image">
+                                    {% elsif variant.product.featured_image   %}
+                                        <img src="{{ variant.product.featured_image | image_url: width: 300, height: 300 }}"
+                                             alt=""
+                                             class="cart-item__custom-options-option-image">
+                                      {% else %}
+                                        {{ 'product-1' | placeholder_svg_tag }}
+                                    {% endif %}
+                                    <span class="cart-item__custom-options-option-price">(+{{ variant.price | money }})</span>
+                                    {% assign cleaned_title = variant.title%}
+
+                                    {% if product_title contains "($" or product_title contains "(+$" %}
+                                        {% assign parts = product_title | split: ")" %}
+                                        {% if parts.size > 1 %}
+                                            {% assign first_part = parts | first | append: ")" %}
+                                            {% if first_part contains "$" %}
+                                                {% assign cleaned_title = product_title | remove_first: first_part | strip %}
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+
+                                    {% if cleaned_title contains "($" or cleaned_title contains "(+$" %}
+                                        {% assign last_bracket_index = cleaned_title | split: "(" | size | minus: 1 %}
+                                        {% if last_bracket_index > 0 %}
+                                            {% assign parts = cleaned_title | split: "(" %}
+                                            {% assign last_part = "(" | append: parts[last_bracket_index] %}
+                                            {% if last_part contains "$" and last_part contains ")" %}
+                                                {% assign cleaned_title = cleaned_title | remove: last_part | strip %}
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+
+
+
+                                    <h5 class="cart-item__custom-options-option-title">{{ cleaned_title }}</h5>
+
+                                    <button data-variant="{{ variant.id }}"
+                                            data-key="{{ item_key }}"
+                                            data-group="{{ group }}"
+                                            class="button button--tertiary">
+                                        {% render 'icon-cart-checkmark' %}
+                                        {% if variant.available == false %}
+                                            <span>Sold Out</span>
+                                        {% else %}
+                                            <span>Add</span>
+                                        {% endif %}
+                                    </button>
+
+                                </div>
+                            {% endunless %}
+                        {% endfor %}
+                        <div class="cart-item__custom-options-trigger"
+                             data-key="{{ item_key }}">
+                            {% render 'custom-options-icon' %}
+                            <p>See all Accessories</p>
+                        </div>
+                    </div>
+                {% endunless %}
+            {% endfor %}
+        {% endfor %}
+    </div>
+</div>

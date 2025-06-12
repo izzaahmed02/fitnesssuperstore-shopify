@@ -12,6 +12,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 		const customerLocationForm = document.querySelector(
 			'.customer-location-container'
 		);
+		if (shippingType) {
+			shippingType.querySelector('.avp-option-title .apo-title').innerText = '"Assembly & Room of Choice Installation Needed?'
+			customerLocationForm.parentElement.insertAdjacentElement('beforebegin', shippingType);
+			shippingType.style.display = 'block';
 
 			if (shippingType) {
                 shippingType.querySelector('.avp-option-title .apo-title').innerText = 'Assembly & Room of Choice Installation Needed?'
@@ -54,26 +58,33 @@ window.addEventListener('DOMContentLoaded', async () => {
 							});
 						}
 					}
-				});
+					const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
+					if (moneyHTML) {
+						setTimeout(() => {
+							if (avisInputInstallationHidden) {
+								if (!avisInputInstallationHidden.value.includes('Add')) {
+									avisInputInstallationHidden.value = `${avisInputInstallationHidden.value} ${moneyHTML}`
+								}
+							}
+						});
+					}
+				}
+			});
 
-				warranty.addEventListener('change', (event) => {
-					const selectedOption = event.target.options[event.target.selectedIndex];
-
-                    if (selectedOption) {
-						const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
-					
-						if (moneyHTML) {
-							const avisInputWarrantyHidden = document.querySelector(`input[temp-name="Warranty"]`);
-	
-							if (avisInputWarrantyHidden) {
-								if (!avisInputWarrantyHidden.value.includes('Add')) {
-									avisInputWarrantyHidden.value = `${avisInputWarrantyHidden.value} ${moneyHTML}`
-								} 
+			warranty.addEventListener('change', (event) => {
+				const selectedOption = event.target.options[event.target.selectedIndex];
+				if (selectedOption) {
+					const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
+					if (moneyHTML) {
+						const avisInputWarrantyHidden = document.querySelector(`input[temp-name="Warranty"]`);
+						if (avisInputWarrantyHidden) {
+							if (!avisInputWarrantyHidden.value.includes('Add')) {
+								avisInputWarrantyHidden.value = `${avisInputWarrantyHidden.value} ${moneyHTML}`
 							}
 						}
 					}
+				}
 			});
-
 			clearInterval(pollingInterval);
 		}
 	}
@@ -83,73 +94,68 @@ window.addEventListener('DOMContentLoaded', async () => {
 		const zip = zipInput.value || localStorage.getItem('zip') || 'Not entered';
 		const shippingData = document.querySelector('.shipping-data');
 		const resultText = `${city}, ${zip}`;
-
 		if (shippingData) {
 			shippingData.innerHTML = resultText;
 			shippingInfo.appendChild(shippingData);
 		} else {
 			const shippingData = document.createElement('span');
 			shippingData.classList.add('shipping-data');
-
 			shippingData.innerHTML = resultText;
 			shippingInfo.appendChild(shippingData);
 		}
 	}
 
 	const pollingInterval = setInterval(checkForElements, 500);
+	let currentPageIndex = 0;
 
-	let currentPageIndex = 0; 
-    
-    function attachArrowHandlers() {
-      document.querySelector('.next-arrow').addEventListener('click', () => {
-		var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
-		currentPageIndex = activeIndex; 
-        saOpenPage(currentPageIndex, sa_start_sort); 
-      });
+	function attachArrowHandlers() {
+		document.querySelector('.next-arrow').addEventListener('click', () => {
+			var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
+			currentPageIndex = activeIndex;
+			saOpenPage(currentPageIndex, sa_start_sort);
+		});
 
-      document.querySelector('.prev-arrow').addEventListener('click', () => {
-		var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
-		currentPageIndex = activeIndex - 2; 
-		saOpenPage(currentPageIndex, sa_start_sort);
-      });
-    }
+		document.querySelector('.prev-arrow').addEventListener('click', () => {
+			var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
+			currentPageIndex = activeIndex - 2;
+			saOpenPage(currentPageIndex, sa_start_sort);
+		});
+	}
 
-    function addPaginationArrows() {
-      const paginationContainer = document.getElementById("sa_review_paging");
-  
-      if (paginationContainer) {
-        if (!paginationContainer.querySelector(".prev-arrow") && !paginationContainer.querySelector(".next-arrow")) {
-          const prevArrow = document.createElement("button");
-          prevArrow.className = "arrow custom prev-arrow";
-          prevArrow.innerHTML = `
+	function addPaginationArrows() {
+		const paginationContainer = document.getElementById("sa_review_paging");
+
+		if (paginationContainer) {
+			if (!paginationContainer.querySelector(".prev-arrow") && !paginationContainer.querySelector(".next-arrow")) {
+				const prevArrow = document.createElement("button");
+				prevArrow.className = "arrow custom prev-arrow";
+				prevArrow.innerHTML = `
             <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M7.53033 0.46967C7.82322 0.762563 7.82322 1.23744 7.53033 1.53033L2.06066 7L7.53033 12.4697C7.82322 12.7626 7.82322 13.2374 7.53033 13.5303C7.23744 13.8232 6.76256 13.8232 6.46967 13.5303L0.46967 7.53033C0.176777 7.23744 0.176777 6.76256 0.46967 6.46967L6.46967 0.46967C6.76256 0.176777 7.23744 0.176777 7.53033 0.46967Z" fill="#CCCCCC"/>
             </svg>
           `;
-  
-          const nextArrow = document.createElement("button");
-          nextArrow.className = "arrow custom next-arrow";
-          nextArrow.innerHTML = `
+
+				const nextArrow = document.createElement("button");
+				nextArrow.className = "arrow custom next-arrow";
+				nextArrow.innerHTML = `
             <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.23744 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#F1592A"/>
             </svg>
           `;
-  
-          paginationContainer.prepend(prevArrow); 
-          paginationContainer.appendChild(nextArrow);
+				paginationContainer.prepend(prevArrow);
+				paginationContainer.appendChild(nextArrow);
+				attachArrowHandlers();
+			}
+		}
+	}
 
-          attachArrowHandlers();
-        }
-      }
-    }
+	function addCustomActions() {
+		const dropdownContainer = document.createElement('div');
+		dropdownContainer.classList.add('sa-reviews-dropdown-container');
 
-    function addCustomActions() {
-      const dropdownContainer = document.createElement('div');
-      dropdownContainer.classList.add('sa-reviews-dropdown-container');
-
-      const sortByDropdown = document.createElement('select');
-      sortByDropdown.setAttribute('id', 'sortByDropdown');
-      sortByDropdown.innerHTML = `
+		const sortByDropdown = document.createElement('select');
+		sortByDropdown.setAttribute('id', 'sortByDropdown');
+		sortByDropdown.innerHTML = `
         <option value="high">Sort by: Highest to Lowest</option>
         <option value="low">Sort by: Lowest to Highest</option>
         <option value="new">Sort by: Newest to Oldest</option>
@@ -187,47 +193,59 @@ window.addEventListener('DOMContentLoaded', async () => {
 		if (reviewSection) {
 			addCustomActions();
 
-			if (Object.keys(sa_product_reviews.high).length > sa_products_count) {
-				addPaginationArrows();
-			}
-
-			if (!document.querySelector('.merchantheader')) {
-				document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
-				document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
-			} 
+		const showContainer = document.createElement('div');
+		showContainer.setAttribute('class', 'show-dropdown-container');
+		dropdownContainer.appendChild(showContainer);
+		const writeReviewButton = document.createElement('a');
+		writeReviewButton.setAttribute('id', 'writeReviewButton');
+		writeReviewButton.setAttribute('href', 'https://www.shopperapproved.com/reviews/fitnesssuperstore.com#reviews');
+		writeReviewButton.setAttribute('target', '_blank');
+		writeReviewButton.setAttribute('rel', 'noopener noreferrer');
+		writeReviewButton.textContent = 'Write a Review';
+		writeReviewButton.classList.add('write-review-btn');
+		dropdownContainer.appendChild(writeReviewButton);
+		const productPage = document.querySelector('#product_page');
+		const reviewHeader = document.querySelector('#review_header');
+		const existingDropdownContainer = document.querySelector('.sa-reviews-dropdown-container');
+		if (productPage && reviewHeader && !existingDropdownContainer) {
+			productPage.parentNode.insertBefore(dropdownContainer, productPage);
 		}
-      }, 500);
-    }
+	}
 
-    function registerCustomActionEvent() {
+	function registerSAReviewsPolling() {
+		const interval = setInterval(function () {
+			const reviewSection = document.querySelector("#sa_review_paging");
+			if (reviewSection) {
+				addCustomActions();
+				if (Object.keys(sa_product_reviews.high).length > sa_products_count) {
+					addPaginationArrows();
+				}
+				if (!document.querySelector('.merchantheader')) {
+					document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
+					document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
+				}
+			}
+		}, 500);
+	}
+
+	function registerCustomActionEvent() {
 		setTimeout(() => {
 			let sortByDropDownCurrentValue = '';
 			let showDropDownCurrentValue = '';
-	
 			const sortByDropdown = document.getElementById('sortByDropdown');
 			const saSort = document.getElementById('sa_sort');
 			var showDropdownSelect = document.getElementById('showDropdown');
-	
+
 			if (sortByDropdown) {
 				sortByDropDownCurrentValue = sortByDropdown.value;
 			}
-	
+
 			if (sortByDropdown && saSort) {
-			  const newSortByDropdown = sortByDropdown.cloneNode(true);
-	
-			  sortByDropdown.value = saSort.value;
-
-			  sortByDropdown.parentNode.replaceChild(newSortByDropdown, sortByDropdown);
-		
-			  if (sortByDropDownCurrentValue) {
-				newSortByDropdown.value = sortByDropDownCurrentValue;
-			  }
-
-			  newSortByDropdown.addEventListener('change', () => {
-				if (saJQ('#review_header').length > 0) {
-					saJQ('html, body').animate({
-						scrollTop: saJQ('#review_header').offset().top
-					});
+				const newSortByDropdown = sortByDropdown.cloneNode(true);
+				sortByDropdown.value = saSort.value;
+				sortByDropdown.parentNode.replaceChild(newSortByDropdown, sortByDropdown);
+				if (sortByDropDownCurrentValue) {
+					newSortByDropdown.value = sortByDropDownCurrentValue;
 				}
 				saJQ('#product_page').toggleClass('sa_loading_bg', true);
 				saJQ('#sa_review_section').animate({
@@ -241,15 +259,14 @@ window.addEventListener('DOMContentLoaded', async () => {
 			  });
 			}
 		}, 1000);
-    }
-    
-    registerSAReviewsPolling();
-	registerCustomActionEvent(); 
+	}
 
+	registerSAReviewsPolling();
+	registerCustomActionEvent();
 	document.querySelector('#download-pds').addEventListener('click', () => {
 		const product = window.product;
-		var pdsUrl = `https://fs-child-products.azurewebsites.net/api/pdf/${product.id}/${product.variants[0].sku}`; 
-		window.open(pdsUrl, "_blank"); 
+		var pdsUrl = `https://fs-child-products.azurewebsites.net/api/pdf/${product.id}/${product.variants[0].sku}`;
+		window.open(pdsUrl, "_blank");
 	})
 
 	document.querySelector('.compare-products-actions a').setAttribute('href', '');
@@ -257,15 +274,14 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 
 try {
-	document.addEventListener('DOMContentLoaded', (event) => {	
+	document.addEventListener('DOMContentLoaded', (event) => {
 		document.querySelectorAll('.metainfo-wrapper .more-info').forEach(element => {
 			element.addEventListener('click', async (event) => {
 				event.preventDefault();
 				event.stopPropagation();
 				var currentProduct = window.product;
-
 				if (currentProduct) {
-					var customFieldvalue = element.dataset.customfield;	
+					var customFieldvalue = element.dataset.customfield;
 					var brand = currentProduct.vendor
 
 					if (customFieldvalue) {			
@@ -277,12 +293,10 @@ try {
 							} else if (customFieldvalue === 'Condition' && window.product.title.includes('Remanufactured')) {
 								window.open("/pages/remanufactured-gym-equipment", "_blank");
 								return;
-							} 
-							else {
+							} else {
 								customFieldvalue += ' Custom Field';
 							}
 						}
-						
 						var product = await fetchProductByTitle(customFieldvalue);
 						if (product) {
 							document.querySelector('#dynamic-product-content').style.width = "auto";
@@ -291,14 +305,12 @@ try {
 							tempDiv.innerHTML = product.body_html;
 							const mainContent = tempDiv;
 							container.innerHTML = mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
-	
 							const closeModalButton = container.querySelector('.modal-close');
-	
 							closeModalButton.addEventListener('click', () => {
 								modalWrapper.style.display = 'none';
                               $('#dynamic-product-content').empty();
 							});
-						};
+						}
 					}
 				}
 			});
@@ -307,7 +319,6 @@ try {
 		modalWrapper.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
 		});
-
 		container.addEventListener('click', (event) => {
 			event.stopPropagation();
 		});
@@ -319,7 +330,6 @@ try {
 
 			var affirmIntervalTrigger = setInterval(() => {
 				var affirmElement = document.querySelector('.affirm-as-low-as');
-
 				if (affirmElement) {
 					document.querySelector('.paylater-logo').innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="65" height="24" style="max-width: 110px;cursor: pointer;margin-top:-13px;object-fit:contain;">`
 					clearInterval(affirmIntervalTrigger);
@@ -336,7 +346,6 @@ try {
 			})
 
 			const targetNode = document.querySelector('.pr_custom_price');
-
 			const observerCallback = (mutationsList, observer) => {
 				for (const mutation of mutationsList) {
 					if (mutation.type === 'childList') {
@@ -352,11 +361,8 @@ try {
 					}
 				}
 			};
-		
 			const observer = new MutationObserver(observerCallback);
-	
-			const config = { childList: true, characterData: true, subtree: true };
-		
+			const config = {childList: true, characterData: true, subtree: true};
 			observer.observe(targetNode, config);
 		}
 	});
@@ -422,89 +428,87 @@ function toggleTransitTimeForm() {
 
 function computeAfterPayLoanDetails(principal, monthlyPayment, numPayments, newTerm = null) {
 	function aprEquation(rate) {
-        return (principal * rate) / (1 - Math.pow(1 + rate, -numPayments)) - monthlyPayment;
-    }
+		return (principal * rate) / (1 - Math.pow(1 + rate, -numPayments)) - monthlyPayment;
+	}
 
-    function solveAPR() {
-        let lower = 0.0001,
-            upper = 1, 
-            guess;
+	function solveAPR() {
+		let lower = 0.0001,
+			upper = 1,
+			guess;
 
-        while ((upper - lower) > 1e-6) { 
-            guess = (lower + upper) / 2;
-            if (aprEquation(guess) > 0) {
-                upper = guess;
-            } else {
-                lower = guess;
-            }
-        }
-        return guess;
-    }
+		while ((upper - lower) > 1e-6) {
+			guess = (lower + upper) / 2;
+			if (aprEquation(guess) > 0) {
+				upper = guess;
+			} else {
+				lower = guess;
+			}
+		}
+		return guess;
+	}
 
-    let monthlyRate = solveAPR();
-    let apr = (monthlyRate * 12 * 100).toFixed(2); 
+	let monthlyRate = solveAPR();
+	let apr = (monthlyRate * 12 * 100).toFixed(2);
+	let newMonthlyPayment = null;
+	let totalPaymentsOriginal = (monthlyPayment * numPayments);
+	let totalPaymentsNewTerm = null;
 
-    let newMonthlyPayment = null;
-    let totalPaymentsOriginal = (monthlyPayment * numPayments);
-    let totalPaymentsNewTerm = null;
+	if (newTerm) {
+		newMonthlyPayment = ((principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -newTerm))).toFixed(2);
+		// Format with commas as thousands separators
+		newMonthlyPayment = newMonthlyPayment.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+		totalPaymentsNewTerm = (parseFloat(newMonthlyPayment.replace(',', '')) * newTerm);
+	}
 
-    if (newTerm) {
-        newMonthlyPayment = ((principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -newTerm))).toFixed(2);
-        totalPaymentsNewTerm = (newMonthlyPayment * newTerm);
-    }
-
-    return {
-        APR: apr + "%",
-        MonthlyPaymentForNewTerm: newTerm ? `$${newMonthlyPayment}` : "N/A",
-        TotalPaymentsOriginalTerm: `${parseFloat(totalPaymentsOriginal).toLocaleString('en-US', {
+	return {
+		APR: apr + "%",
+		MonthlyPaymentForNewTerm: newTerm ? `$${newMonthlyPayment}` : "N/A",
+		TotalPaymentsOriginalTerm: `${parseFloat(totalPaymentsOriginal).toLocaleString('en-US', {
 			style: 'currency',
 			currency: 'USD',
-		  })}`,
-        TotalPaymentsNewTerm: newTerm ? `${parseFloat(totalPaymentsOriginal).toLocaleString('en-US', {
+		})}`,
+		TotalPaymentsNewTerm: newTerm ? `${parseFloat(totalPaymentsOriginal).toLocaleString('en-US', {
 			style: 'currency',
 			currency: 'USD',
-		  })}` : "N/A"
-    };
+		})}` : "N/A"
+	};
 }
 
 function computePayTomorrowAPR(principal, monthlyPayment, numPayments) {
-    function aprEquation(rate) {
-        return (principal * rate) / (1 - Math.pow(1 + rate, -numPayments)) - monthlyPayment;
-    }
+	function aprEquation(rate) {
+		return (principal * rate) / (1 - Math.pow(1 + rate, -numPayments)) - monthlyPayment;
+	}
 
-    function solveAPR() {
-        let lower = 0.0001, 
-            upper = 1, 
-            guess;
+	function solveAPR() {
+		let lower = 0.0001,
+			upper = 1,
+			guess;
 
-        while ((upper - lower) > 1e-6) { 
-            guess = (lower + upper) / 2;
-            if (aprEquation(guess) > 0) {
-                upper = guess;
-            } else {
-                lower = guess;
-            }
-        }
-        return guess;
-    }
+		while ((upper - lower) > 1e-6) {
+			guess = (lower + upper) / 2;
+			if (aprEquation(guess) > 0) {
+				upper = guess;
+			} else {
+				lower = guess;
+			}
+		}
+		return guess;
+	}
 
-    let monthlyRate = solveAPR();
-    let apr = monthlyRate * 12 * 100; 
-    return apr.toFixed(2); 
+	let monthlyRate = solveAPR();
+	let apr = monthlyRate * 12 * 100;
+	return apr.toFixed(2);
 }
 
 function showPayLaterModal() {
 	const payLaterAggregateHTML = generatePayLaterAggregate();
-
 	if (generatePayLaterAggregate) {
 		modalWrapper.style.display = 'flex';
 		const tempDiv = document.createElement('div');
 		tempDiv.innerHTML = payLaterAggregateHTML;
 		const mainContent = tempDiv;
 		container.innerHTML = mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
-
 		const closeModalButton = container.querySelector('.modal-close');
-
 		closeModalButton.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
 		});
@@ -543,15 +547,12 @@ function generatePayLaterAggregate() {
 	  </div>
 	</div>
 	<div class="options">${combinedPayLater()}</div>
-
   </div>`
-
-  return buyNowPayLaterHTML;
+	return buyNowPayLaterHTML;
 }
 
 function combinedPayLater() {
 	let payLaterOptions = '';
-
 	payLaterOptions += generateAfterPayPaymentTerms();
 	payLaterOptions += generatePayTomorrowPaymentTerms();
 	payLaterOptions += generateAffirmPaymentTerms();
@@ -708,7 +709,7 @@ function generatePayTomorrowPaymentTerms() {
 
 		return affirmTermsHTML;
 	}
-  }
+}
 
   function computeAffirmLoanDetails(productPrice, months) {
 	const monthly = (productPrice / months).toFixed(2);
@@ -720,13 +721,12 @@ function generatePayTomorrowPaymentTerms() {
 	};
   }
 
-  function getProductPrice() {
-    const priceElement = document.querySelector('.pr_custom_price').innerText;
-
-	const formattedProductPrice = priceElement.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]  
-	.replace(/,/g, '') 
-	.replace(/(\.\d*?[1-9])0+$/, '$1') 
-	.replace(/\.0+$/, ''); 
+function getProductPrice() {
+	const priceElement = document.querySelector('.pr_custom_price').innerText;
+	const formattedProductPrice = priceElement.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]
+		.replace(/,/g, '')
+		.replace(/(\.\d*?[1-9])0+$/, '$1')
+		.replace(/\.0+$/, '');
 	const productPrice = parseFloat(formattedProductPrice);
 	return productPrice;
   }

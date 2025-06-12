@@ -1,0 +1,77 @@
+<div class="rp-modal" id="related-products-popup-{{ product_item.id }}">
+    <div class="rp-modal__content">
+        <div class="rp-modal__header">
+            <h2 class="rp-modal__title">ABOUT OPTIONS - {{ title }}</h2>
+            <button class="rp-modal__close-btn">
+                {% render 'rp-modal-close' %}
+            </button>
+        </div>
+        {% if product_item.metafields.custom.related_products.value %}
+            <div class="rp-modal__body">
+                <div class="rp-modal__cards" id="related-products-container-{{ product_item.id }}">
+                    {% if product_item.metafields.custom.related_products.value %}
+                        {% for related_product in product_item.metafields.custom.related_products.value %}
+                            <div class="rp-card {% if forloop.index == 1 %}
+                        active
+                        {% endif %}" data-product-id="{{ related_product.id }}">
+                                <div class="rp-card__img-wrapper">
+                                    <img src="{{ related_product.featured_image | image_url: width: 300 }}"
+                                         alt="{{ related_product.title }}" class="rp-card__img">
+                                </div>
+                                <h3 class="rp-card__title">{{ related_product.title }}</h3>
+                                {% if related_product.metafields.custom.product_code %}
+                                    <span class="rp-card__code">{{ related_product.metafields.custom.product_code }}</span>
+                                {% endif %}
+                                <div class="rp-card__price">{{ related_product.price | money }}</div>
+                                <button class="rp-card__btn" data-product-id="{{ related_product.id }}">Read more
+                                </button>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="rp-modal__no-products">No related products found.</div>
+                    {% endif %}
+                </div>
+                <div class="rp-modal__details" id="related-product-details-{{ product_item.id }}">
+                    {% if product_item.metafields.custom.related_products.value %}
+                        {% for related_product in product_item.metafields.custom.related_products.value %}
+                            <div class="rp-detail-item {% if forloop.index == 1 %}active{% endif %}"
+                                 data-product-id="{{ related_product.id }}">
+                                <div class="rp-detail-item__wrapper">
+                                    <div class="rp-detail-item__img-wrapper">
+                                        <img src="{{ related_product.featured_image | image_url: width: 500 }}" alt=""
+                                             class="rp-detail-item__img">
+                                    </div>
+                                    <div class="rp-modal__detail-description">
+                                        <h3 class="rp-modal__detail-description-title">{{ related_product.title }}</h3>
+                                        <div class="rp-modal__detail-description-text">
+
+                                            {% if related_product.metafields.custom.short_description  %}
+                                                {{ related_product.metafields.custom.short_description }}
+                                            {% endif %}
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                                {% comment %}
+                                     {% if related_product.description %}
+                                    {{ related_product.description  }}
+                                {% else %}
+
+                                {% endif %}
+                                {% endcomment %}
+
+
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="rp-modal__body">
+                {{ product_item.description | strip }}
+            </div>
+        {% endif %}
+
+    </div>
+</div>
