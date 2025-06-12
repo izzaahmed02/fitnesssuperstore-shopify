@@ -584,8 +584,8 @@ class ProductGallery extends HTMLElement {
       skeletonWrapper.className = 'image-skeleton-wrapper';
 
       const img = document.createElement('img');
-      // img.src = media.preview_image.src.replace(/width=\d+/, 'width=800');
-      img.src = media.preview_image.src.replace(/width=\d+/, '');
+      img.src = media.preview_image.src.replace(/width=\d+/, 'width=750');
+      //img.src = media.preview_image.src.replace(/width=\d+/, '');
 
       // img.srcset = media.preview_image.srcset || '';
       img.sizes = media.preview_image.sizes || '';
