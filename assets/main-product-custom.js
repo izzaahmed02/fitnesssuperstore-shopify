@@ -10,99 +10,60 @@ window.addEventListener('DOMContentLoaded', async () => {
 		const customerLocationForm = document.querySelector(
 			'.location-form'
 		);
+		if (shippingType) {
+			shippingType.querySelector('.avp-option-title .apo-title').innerText = '"Assembly & Room of Choice Installation Needed?'
+			customerLocationForm.parentElement.insertAdjacentElement('beforebegin', shippingType);
+			shippingType.style.display = 'block';
 
-			// cityInput.addEventListener('input', () => {
-			// 	localStorage.setItem('city', cityInput.value);
-			// });
+			const apoTitle = shippingType.querySelector('.apo-title');
+			if (apoTitle) {
+				apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
+			}
+			if (shippingType.querySelector('select').options[0] && shippingType.querySelector('select').options[0].text.includes('Curbside')) {
+				shippingType.querySelector('select').options[0].text = 'No, Curbside Delivery Only';
+			}
+			const avisInputInstallationHidden = document.querySelector(`input[temp-name="Full Assembly & Installation"]`);
 
-			// zipInput.addEventListener('input', () => {
-			// 	localStorage.setItem('zip', zipInput.value);
-			// });
+			if (avisInputInstallationHidden) {
+				avisInputInstallationHidden.value = 'No, Curbside Delivery Only';
+			}
 
-			//getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
-
-			if (shippingType) {
-                shippingType.querySelector('.avp-option-title .apo-title').innerText = '"Assembly & Room of Choice Installation Needed?'
-				customerLocationForm.parentElement.insertAdjacentElement('beforebegin', shippingType);
-				shippingType.style.display = 'block';
-
-				const apoTitle = shippingType.querySelector('.apo-title');
-				if (apoTitle) {
-					apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
-				}
-
-				if (shippingType.querySelector('select').options[0] && 	shippingType.querySelector('select').options[0].text.includes('Curbside')) {
-					shippingType.querySelector('select').options[0].text = 'No, Curbside Delivery Only';
-				}
-
-				const avisInputInstallationHidden = document.querySelector(`input[temp-name="Full Assembly & Installation"]`);
-
-				if (avisInputInstallationHidden) {
-					avisInputInstallationHidden.value = 'No, Curbside Delivery Only';
-				}
-
-				shippingType.addEventListener('change', (event) => {
-					const selectedOption = event.target.options[event.target.selectedIndex];
-
-					if (selectedOption) {
-						if (selectedOption.value.includes('Curbside')) {
-							avisInputInstallationHidden.value = 'No, Curbside Delivery Only';
-							return;
-						}
-
-						const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
-						
-						if (moneyHTML) {
-							setTimeout(() => {	
-								if (avisInputInstallationHidden) {
-									if (!avisInputInstallationHidden.value.includes('Add')) {
-										avisInputInstallationHidden.value = `${avisInputInstallationHidden.value} ${moneyHTML}`
-									} 
-								}
-							});
-						}
+			shippingType.addEventListener('change', (event) => {
+				const selectedOption = event.target.options[event.target.selectedIndex];
+				if (selectedOption) {
+					if (selectedOption.value.includes('Curbside')) {
+						avisInputInstallationHidden.value = 'No, Curbside Delivery Only';
+						return;
 					}
-				});
+					const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
+					if (moneyHTML) {
+						setTimeout(() => {
+							if (avisInputInstallationHidden) {
+								if (!avisInputInstallationHidden.value.includes('Add')) {
+									avisInputInstallationHidden.value = `${avisInputInstallationHidden.value} ${moneyHTML}`
+								}
+							}
+						});
+					}
+				}
+			});
 
-				warranty.addEventListener('change', (event) => {
-					const selectedOption = event.target.options[event.target.selectedIndex];
-
-                    if (selectedOption) {
-						const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
-					
-						if (moneyHTML) {
-							const avisInputWarrantyHidden = document.querySelector(`input[temp-name="Warranty"]`);
-	
-							if (avisInputWarrantyHidden) {
-								if (!avisInputWarrantyHidden.value.includes('Add')) {
-									avisInputWarrantyHidden.value = `${avisInputWarrantyHidden.value} ${moneyHTML}`
-								} 
+			warranty.addEventListener('change', (event) => {
+				const selectedOption = event.target.options[event.target.selectedIndex];
+				if (selectedOption) {
+					const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
+					if (moneyHTML) {
+						const avisInputWarrantyHidden = document.querySelector(`input[temp-name="Warranty"]`);
+						if (avisInputWarrantyHidden) {
+							if (!avisInputWarrantyHidden.value.includes('Add')) {
+								avisInputWarrantyHidden.value = `${avisInputWarrantyHidden.value} ${moneyHTML}`
 							}
 						}
 					}
+				}
 			});
-
 			clearInterval(pollingInterval);
 		}
-
-		// document.querySelector('.docapp-shipping-calculator--button')?.addEventListener('click', (event) => {
-		// 	const shippingType = document.querySelector(
-		// 		'.avp-option.ap-options__select-container:has(select[name^="Full Assembly & Installation"])'
-		// 	);
-
-		// 	if (customerLocationForm) {
-		// 		//getFormDataAndDisplay(cityInput, zipInput, shippingInfo);
-
-		// 		if (shippingType) {
-		// 			customerLocationForm.parentElement.insertAdjacentElement('afterend', shippingType);
-
-		// 			const apoTitle = shippingType.querySelector('.apo-title');
-		// 			if (apoTitle) {
-		// 				apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
-		// 			}
-		// 		}
-		// 	}
-		// });
 	}
 
 	function getFormDataAndDisplay(cityInput, zipInput, shippingInfo) {
@@ -110,233 +71,171 @@ window.addEventListener('DOMContentLoaded', async () => {
 		const zip = zipInput.value || localStorage.getItem('zip') || 'Not entered';
 		const shippingData = document.querySelector('.shipping-data');
 		const resultText = `${city}, ${zip}`;
-
 		if (shippingData) {
 			shippingData.innerHTML = resultText;
 			shippingInfo.appendChild(shippingData);
 		} else {
 			const shippingData = document.createElement('span');
 			shippingData.classList.add('shipping-data');
-
 			shippingData.innerHTML = resultText;
 			shippingInfo.appendChild(shippingData);
 		}
 	}
 
 	const pollingInterval = setInterval(checkForElements, 500);
+	let currentPageIndex = 0;
 
-	let currentPageIndex = 0; 
-    
-    function attachArrowHandlers() {
-      document.querySelector('.next-arrow').addEventListener('click', () => {
-		var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
-		currentPageIndex = activeIndex; 
-        saOpenPage(currentPageIndex, sa_start_sort); 
-      });
+	function attachArrowHandlers() {
+		document.querySelector('.next-arrow').addEventListener('click', () => {
+			var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
+			currentPageIndex = activeIndex;
+			saOpenPage(currentPageIndex, sa_start_sort);
+		});
 
-      document.querySelector('.prev-arrow').addEventListener('click', () => {
-		var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
-		currentPageIndex = activeIndex - 2; 
-		saOpenPage(currentPageIndex, sa_start_sort);
-      });
-    }
+		document.querySelector('.prev-arrow').addEventListener('click', () => {
+			var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
+			currentPageIndex = activeIndex - 2;
+			saOpenPage(currentPageIndex, sa_start_sort);
+		});
+	}
 
-    function addPaginationArrows() {
-      const paginationContainer = document.getElementById("sa_review_paging");
-  
-      if (paginationContainer) {
-        if (!paginationContainer.querySelector(".prev-arrow") && !paginationContainer.querySelector(".next-arrow")) {
-          const prevArrow = document.createElement("button");
-          prevArrow.className = "arrow custom prev-arrow";
-          prevArrow.innerHTML = `
+	function addPaginationArrows() {
+		const paginationContainer = document.getElementById("sa_review_paging");
+
+		if (paginationContainer) {
+			if (!paginationContainer.querySelector(".prev-arrow") && !paginationContainer.querySelector(".next-arrow")) {
+				const prevArrow = document.createElement("button");
+				prevArrow.className = "arrow custom prev-arrow";
+				prevArrow.innerHTML = `
             <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M7.53033 0.46967C7.82322 0.762563 7.82322 1.23744 7.53033 1.53033L2.06066 7L7.53033 12.4697C7.82322 12.7626 7.82322 13.2374 7.53033 13.5303C7.23744 13.8232 6.76256 13.8232 6.46967 13.5303L0.46967 7.53033C0.176777 7.23744 0.176777 6.76256 0.46967 6.46967L6.46967 0.46967C6.76256 0.176777 7.23744 0.176777 7.53033 0.46967Z" fill="#CCCCCC"/>
             </svg>
           `;
-  
-          const nextArrow = document.createElement("button");
-          nextArrow.className = "arrow custom next-arrow";
-          nextArrow.innerHTML = `
+
+				const nextArrow = document.createElement("button");
+				nextArrow.className = "arrow custom next-arrow";
+				nextArrow.innerHTML = `
             <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.23744 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#F1592A"/>
             </svg>
           `;
-  
-          paginationContainer.prepend(prevArrow); 
-          paginationContainer.appendChild(nextArrow);
+				paginationContainer.prepend(prevArrow);
+				paginationContainer.appendChild(nextArrow);
+				attachArrowHandlers();
+			}
+		}
+	}
 
-          attachArrowHandlers();
-        }
-      }
-    }
+	function addCustomActions() {
+		const dropdownContainer = document.createElement('div');
+		dropdownContainer.classList.add('sa-reviews-dropdown-container');
 
-    function addCustomActions() {
-      const dropdownContainer = document.createElement('div');
-      dropdownContainer.classList.add('sa-reviews-dropdown-container');
-
-      const sortByDropdown = document.createElement('select');
-      sortByDropdown.setAttribute('id', 'sortByDropdown');
-      sortByDropdown.innerHTML = `
+		const sortByDropdown = document.createElement('select');
+		sortByDropdown.setAttribute('id', 'sortByDropdown');
+		sortByDropdown.innerHTML = `
         <option value="high">Sort by: Highest to Lowest</option>
         <option value="low">Sort by: Lowest to Highest</option>
         <option value="new">Sort by: Newest to Oldest</option>
         <option value="old">Sort by: Oldest to Newest</option>
         <option value="featured">Sort by: Favorite Reviews</option>
       `;
-      dropdownContainer.appendChild(sortByDropdown);
-      
-      const showContainer = document.createElement('div');
-      showContainer.setAttribute('class', 'show-dropdown-container');
-      
-    //   const showLabel = document.createElement('label');
-    //   showLabel.setAttribute('for', 'showDropdown');
-    //   showLabel.textContent = 'Show';
-    //   showLabel.classList.add('show-label'); 
-    //   showContainer.appendChild(showLabel);
-      
-    //   const showDropdown = document.createElement('select');
-    //   showDropdown.setAttribute('id', 'showDropdown');
-    //   showDropdown.innerHTML = `
-    //     <option value="all">All Ratings</option>
-    //     <option value="5">5 Stars</option>
-    //     <option value="4">4 Stars</option>
-    //   `;
-    //   showContainer.appendChild(showDropdown);
-      
-      dropdownContainer.appendChild(showContainer);
-       
-      const writeReviewButton = document.createElement('a');
-      writeReviewButton.setAttribute('id', 'writeReviewButton');
-      writeReviewButton.setAttribute('href', 'https://www.shopperapproved.com/reviews/fitnesssuperstore.com#reviews');
-      writeReviewButton.setAttribute('target', '_blank'); 
-      writeReviewButton.setAttribute('rel', 'noopener noreferrer'); 
-      writeReviewButton.textContent = 'Write a Review';
-      writeReviewButton.classList.add('write-review-btn');
-      dropdownContainer.appendChild(writeReviewButton); 
-     
-	  const productPage = document.querySelector('#product_page');
-	  const reviewHeader = document.querySelector('#review_header');
-	  const existingDropdownContainer = document.querySelector('.sa-reviews-dropdown-container');
-	  
-	  if (productPage && reviewHeader && !existingDropdownContainer) {
-		productPage.parentNode.insertBefore(dropdownContainer, productPage);
-	  }
-    }
-  
-    function registerSAReviewsPolling() {
-      const interval = setInterval(function () {
-        const reviewSection = document.querySelector("#sa_review_paging");
-		if (reviewSection) {
-			addCustomActions();
+		dropdownContainer.appendChild(sortByDropdown);
 
-			if (Object.keys(sa_product_reviews.high).length > sa_products_count) {
-				addPaginationArrows();
-			}
-
-			if (!document.querySelector('.merchantheader')) {
-				document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
-				document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
-			} 
+		const showContainer = document.createElement('div');
+		showContainer.setAttribute('class', 'show-dropdown-container');
+		dropdownContainer.appendChild(showContainer);
+		const writeReviewButton = document.createElement('a');
+		writeReviewButton.setAttribute('id', 'writeReviewButton');
+		writeReviewButton.setAttribute('href', 'https://www.shopperapproved.com/reviews/fitnesssuperstore.com#reviews');
+		writeReviewButton.setAttribute('target', '_blank');
+		writeReviewButton.setAttribute('rel', 'noopener noreferrer');
+		writeReviewButton.textContent = 'Write a Review';
+		writeReviewButton.classList.add('write-review-btn');
+		dropdownContainer.appendChild(writeReviewButton);
+		const productPage = document.querySelector('#product_page');
+		const reviewHeader = document.querySelector('#review_header');
+		const existingDropdownContainer = document.querySelector('.sa-reviews-dropdown-container');
+		if (productPage && reviewHeader && !existingDropdownContainer) {
+			productPage.parentNode.insertBefore(dropdownContainer, productPage);
 		}
-      }, 500);
-    }
+	}
 
-    function registerCustomActionEvent() {
+	function registerSAReviewsPolling() {
+		const interval = setInterval(function () {
+			const reviewSection = document.querySelector("#sa_review_paging");
+			if (reviewSection) {
+				addCustomActions();
+				if (Object.keys(sa_product_reviews.high).length > sa_products_count) {
+					addPaginationArrows();
+				}
+				if (!document.querySelector('.merchantheader')) {
+					document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
+					document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
+				}
+			}
+		}, 500);
+	}
+
+	function registerCustomActionEvent() {
 		setTimeout(() => {
 			let sortByDropDownCurrentValue = '';
 			let showDropDownCurrentValue = '';
-	
 			const sortByDropdown = document.getElementById('sortByDropdown');
 			const saSort = document.getElementById('sa_sort');
 			var showDropdownSelect = document.getElementById('showDropdown');
-	
+
 			if (sortByDropdown) {
 				sortByDropDownCurrentValue = sortByDropdown.value;
 			}
-	
+
 			if (sortByDropdown && saSort) {
-			  const newSortByDropdown = sortByDropdown.cloneNode(true);
-	
-			  sortByDropdown.value = saSort.value;
-
-			  sortByDropdown.parentNode.replaceChild(newSortByDropdown, sortByDropdown);
-		
-			  if (sortByDropDownCurrentValue) {
-				newSortByDropdown.value = sortByDropDownCurrentValue;
-			  }
-
-			  newSortByDropdown.addEventListener('change', () => {
-				if (saJQ('#review_header').length > 0) {
-					saJQ('html, body').animate({
-						scrollTop: saJQ('#review_header').offset().top
-					});
+				const newSortByDropdown = sortByDropdown.cloneNode(true);
+				sortByDropdown.value = saSort.value;
+				sortByDropdown.parentNode.replaceChild(newSortByDropdown, sortByDropdown);
+				if (sortByDropDownCurrentValue) {
+					newSortByDropdown.value = sortByDropDownCurrentValue;
 				}
-				saJQ('#product_page').toggleClass('sa_loading_bg', true);
-				saJQ('#sa_review_section').animate({
-					opacity: 0
-				}, 300);
-				sort = newSortByDropdown.value;
-				var reverse = (typeof (sa_productreverse) == 'undefined') ? '' : '&reverse=' + sa_productreverse;
-				var productId = (typeof (sa_product) != 'undefined') ? sa_product : sa_productid;
-				saLoadScript(sa_host + 'widgets/' + sa_page + '.php?siteid=' + sa_siteid + '&productid=' + productId + '&page=0&sort=' + sort + reverse + '&loadnow=1' + '&rtype=' + sa_rtype);
-				registerCustomActionEvent();
-			  });
-	
-			  
-			// if (showDropdownSelect) {
-			// 	showDropDownCurrentValue = showDropdownSelect.value;
-			// }
-	
-			//   const newShowDropdownSelect = showDropdownSelect.cloneNode(true);
-	
-			//   showDropdownSelect.parentNode.replaceChild(newShowDropdownSelect, showDropdownSelect);
-	
-			//   if (showDropDownCurrentValue) {
-			// 	newShowDropdownSelect.value = showDropDownCurrentValue;
-			//   }  
-		
-			//   newShowDropdownSelect.addEventListener('change', () => {
-			// 	if (newShowDropdownSelect.value === '5') {
-			// 		saSort.value = 'high';
-			// 	} else if (newShowDropdownSelect.value === '4') {
-			// 		saSort.value = 'low';
-			// 	} else {
-			// 		saSort.value = 'high';
-			// 	}
-	
-			// 	const changeEvent = new Event('change');
-			// 	saSort.dispatchEvent(changeEvent);
-		
-			// 	registerCustomActionEvent();
-			//   });
+				newSortByDropdown.addEventListener('change', () => {
+					if (saJQ('#review_header').length > 0) {
+						saJQ('html, body').animate({
+							scrollTop: saJQ('#review_header').offset().top
+						});
+					}
+					saJQ('#product_page').toggleClass('sa_loading_bg', true);
+					saJQ('#sa_review_section').animate({
+						opacity: 0
+					}, 300);
+					sort = newSortByDropdown.value;
+					var reverse = (typeof (sa_productreverse) == 'undefined') ? '' : '&reverse=' + sa_productreverse;
+					var productId = (typeof (sa_product) != 'undefined') ? sa_product : sa_productid;
+					saLoadScript(sa_host + 'widgets/' + sa_page + '.php?siteid=' + sa_siteid + '&productid=' + productId + '&page=0&sort=' + sort + reverse + '&loadnow=1' + '&rtype=' + sa_rtype);
+					registerCustomActionEvent();
+				});
 			}
 		}, 1000);
-    }
-    
-    registerSAReviewsPolling();
-	registerCustomActionEvent(); 
+	}
 
+	registerSAReviewsPolling();
+	registerCustomActionEvent();
 	document.querySelector('#download-pds').addEventListener('click', () => {
 		const product = window.product;
-		var pdsUrl = `https://fs-child-products.azurewebsites.net/api/pdf/${product.id}/${product.variants[0].sku}`; 
-		window.open(pdsUrl, "_blank"); 
+		var pdsUrl = `https://fs-child-products.azurewebsites.net/api/pdf/${product.id}/${product.variants[0].sku}`;
+		window.open(pdsUrl, "_blank");
 	})
 });
 
 
 try {
-	document.addEventListener('DOMContentLoaded', (event) => {	
+	document.addEventListener('DOMContentLoaded', (event) => {
 		document.querySelectorAll('.metainfo-wrapper .more-info').forEach(element => {
 			element.addEventListener('click', async (event) => {
 				event.preventDefault();
 				event.stopPropagation();
 				var currentProduct = window.product;
-
 				if (currentProduct) {
-					var customFieldvalue = element.dataset.customfield;	
+					var customFieldvalue = element.dataset.customfield;
 					var brand = currentProduct.vendor
-
-					if (customFieldvalue) {			
+					if (customFieldvalue) {
 						if (customFieldvalue === 'Warranty' && brand === 'French Fitness') {
 							customFieldvalue = `${brand} ${customFieldvalue} Custom Field`
 						} else {
@@ -345,12 +244,10 @@ try {
 							} else if (customFieldvalue === 'Condition' && window.product.title.includes('Remanufactured')) {
 								window.open("/pages/remanufactured-gym-equipment", "_blank");
 								return;
-							} 
-							else {
+							} else {
 								customFieldvalue += ' Custom Field';
 							}
 						}
-						
 						var product = await fetchProductByTitle(customFieldvalue);
 						if (product) {
 							document.querySelector('#dynamic-product-content').style.width = "auto";
@@ -359,13 +256,11 @@ try {
 							tempDiv.innerHTML = product.body_html;
 							const mainContent = tempDiv;
 							container.innerHTML = mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
-	
 							const closeModalButton = container.querySelector('.modal-close');
-	
 							closeModalButton.addEventListener('click', () => {
 								modalWrapper.style.display = 'none';
 							});
-						};
+						}
 					}
 				}
 			});
@@ -374,7 +269,6 @@ try {
 		modalWrapper.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
 		});
-
 		container.addEventListener('click', (event) => {
 			event.stopPropagation();
 		});
@@ -387,10 +281,8 @@ try {
 					if (productPrice >= 400) {
 						let payLaterText = '';
 						const afterPayElement = document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML;
-
-                        if (afterPayElement) {
+						if (afterPayElement) {
 							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong').innerHTML} / 6 interest-free payment`;
-
 							document.querySelector('.paylater-logo').innerHTML += `<svg class="afterPayLogo" onclick="document.querySelector('square-placement').shadowRoot.querySelector('button').click()" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" width="104" height="36" viewBox="0 0 104 36">
 							<path class="afterpay-logo-badge-background" fill="#b2fce4" d="m86.00173,35.9321l-68.00064,0c-9.90375,0 -17.93101,-8.02726 -17.93101,-17.93101l0,0c0,-9.90375 8.02726,-17.93101 17.93101,-17.93101l68.00064,0c9.90375,0 17.931,8.02726 17.931,17.93101l0,0c0.00652,9.89724 -8.02725,17.93101 -17.931,17.93101z"></path>
 							<g class="afterpay-logo-badge-lockup">
@@ -404,17 +296,17 @@ try {
 							  <path d="m43.67852,14.70912s0.4832,-0.9011 1.67814,-0.9011c0.50931,0 0.8358,0.1763 0.8358,0.1763l0,1.97851s-0.71827,-0.44402 -1.37777,-0.35261c-0.6595,0.09142 -1.0774,0.69215 -1.0774,1.50184l0,4.59038l-1.97197,0l0,-7.75076l1.90667,0l0,0.75744l0.00653,0z"></path>
 							</g>
 						  </svg>`
-					
 						} else {
-							const productPrice = getProductPrice();	
-
-							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 9});
-
+							const productPrice = getProductPrice();
+							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {
+								displayPrimeOffers: true,
+								primeApr: 9
+							});
 							if (payTomorrow24MosRate) {
 								payLaterText = `As low as ${parseFloat(payTomorrow24MosRate).toLocaleString('en-US', {
 									style: 'currency',
 									currency: 'USD',
-								  })}/mo. / 6 interest-free payment`
+								})}/mo. / 6 interest-free payment`
 							}
 						}
 
@@ -423,13 +315,12 @@ try {
 						<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"></path>
 					  </svg>`
 					}
-				  clearInterval(afterPayIntervalTrigger)
+					clearInterval(afterPayIntervalTrigger)
 				}
 			}, 500)
 
 			var affirmIntervalTrigger = setInterval(() => {
 				var affirmElement = document.querySelector('.affirm-as-low-as');
-
 				if (affirmElement) {
 					document.querySelector('.paylater-logo').innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="65" height="24" style="max-width: 110px;cursor: pointer;margin-top:-13px;object-fit:contain;">`
 					clearInterval(affirmIntervalTrigger);
@@ -437,16 +328,14 @@ try {
 			}, 500)
 
 			const targetNode = document.querySelector('.pr_custom_price');
-
 			const observerCallback = (mutationsList, observer) => {
 				for (const mutation of mutationsList) {
 					if (mutation.type === 'childList') {
-						const productPrice = getProductPrice();	
+						const productPrice = getProductPrice();
 						document.querySelector('square-placement').setAttribute('data-amount', productPrice);
-
 						const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2 strong');
 						let payLaterText = '';
-		                const afterPayLogo = document.querySelector('.afterPayLogo');
+						const afterPayLogo = document.querySelector('.afterPayLogo');
 						if (afterPayElement) {
 							payLaterText = `As low as ${document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML} / 6 interest-free payment`;
 							if (afterPayLogo) {
@@ -456,28 +345,25 @@ try {
 							if (afterPayLogo) {
 								afterPayLogo.style.display = 'none';
 							}
-		
-							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 9});
-		
+							let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {
+								displayPrimeOffers: true,
+								primeApr: 9
+							});
 							if (payTomorrow24MosRate) {
 								payLaterText = `As low as ${parseFloat(payTomorrow24MosRate).toLocaleString('en-US', {
 									style: 'currency',
 									currency: 'USD',
-									})}/mo. / 6 interest-free payment`
+								})}/mo. / 6 interest-free payment`
 							}
 						}
-		
 						document.querySelector('.paylater-text').innerHTML = `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
 							<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#F1592A"></path>
 						</svg>`
 					}
 				}
 			};
-		
 			const observer = new MutationObserver(observerCallback);
-	
-			const config = { childList: true, characterData: true, subtree: true };
-		
+			const config = {childList: true, characterData: true, subtree: true};
 			observer.observe(targetNode, config);
 		}
 	});
@@ -496,90 +382,88 @@ function toggleTransitTimeForm() {
 
 function computeAfterPayLoanDetails(principal, monthlyPayment, numPayments, newTerm = null) {
 	function aprEquation(rate) {
-        return (principal * rate) / (1 - Math.pow(1 + rate, -numPayments)) - monthlyPayment;
-    }
+		return (principal * rate) / (1 - Math.pow(1 + rate, -numPayments)) - monthlyPayment;
+	}
 
-    function solveAPR() {
-        let lower = 0.0001,
-            upper = 1, 
-            guess;
+	function solveAPR() {
+		let lower = 0.0001,
+			upper = 1,
+			guess;
 
-        while ((upper - lower) > 1e-6) { 
-            guess = (lower + upper) / 2;
-            if (aprEquation(guess) > 0) {
-                upper = guess;
-            } else {
-                lower = guess;
-            }
-        }
-        return guess;
-    }
+		while ((upper - lower) > 1e-6) {
+			guess = (lower + upper) / 2;
+			if (aprEquation(guess) > 0) {
+				upper = guess;
+			} else {
+				lower = guess;
+			}
+		}
+		return guess;
+	}
 
-    let monthlyRate = solveAPR();
-    let apr = (monthlyRate * 12 * 100).toFixed(2); 
+	let monthlyRate = solveAPR();
+	let apr = (monthlyRate * 12 * 100).toFixed(2);
+	let newMonthlyPayment = null;
+	let totalPaymentsOriginal = (monthlyPayment * numPayments);
+	let totalPaymentsNewTerm = null;
 
-    let newMonthlyPayment = null;
-    let totalPaymentsOriginal = (monthlyPayment * numPayments);
-    let totalPaymentsNewTerm = null;
+	if (newTerm) {
+		newMonthlyPayment = ((principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -newTerm))).toFixed(2);
+		// Format with commas as thousands separators
+		newMonthlyPayment = newMonthlyPayment.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+		totalPaymentsNewTerm = (parseFloat(newMonthlyPayment.replace(',', '')) * newTerm);
+	}
 
-    if (newTerm) {
-        newMonthlyPayment = ((principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -newTerm))).toFixed(2);
-        totalPaymentsNewTerm = (newMonthlyPayment * newTerm);
-    }
-
-    return {
-        APR: apr + "%",
-        MonthlyPaymentForNewTerm: newTerm ? `$${newMonthlyPayment}` : "N/A",
-        TotalPaymentsOriginalTerm: `${parseFloat(totalPaymentsOriginal).toLocaleString('en-US', {
+	return {
+		APR: apr + "%",
+		MonthlyPaymentForNewTerm: newTerm ? `$${newMonthlyPayment}` : "N/A",
+		TotalPaymentsOriginalTerm: `${parseFloat(totalPaymentsOriginal).toLocaleString('en-US', {
 			style: 'currency',
 			currency: 'USD',
-		  })}`,
-        TotalPaymentsNewTerm: newTerm ? `${parseFloat(totalPaymentsOriginal).toLocaleString('en-US', {
+		})}`,
+		TotalPaymentsNewTerm: newTerm ? `${parseFloat(totalPaymentsOriginal).toLocaleString('en-US', {
 			style: 'currency',
 			currency: 'USD',
-		  })}` : "N/A"
-    };
+		})}` : "N/A"
+	};
 }
 
 
 function computePayTomorrowAPR(principal, monthlyPayment, numPayments) {
-    function aprEquation(rate) {
-        return (principal * rate) / (1 - Math.pow(1 + rate, -numPayments)) - monthlyPayment;
-    }
+	function aprEquation(rate) {
+		return (principal * rate) / (1 - Math.pow(1 + rate, -numPayments)) - monthlyPayment;
+	}
 
-    function solveAPR() {
-        let lower = 0.0001, 
-            upper = 1, 
-            guess;
+	function solveAPR() {
+		let lower = 0.0001,
+			upper = 1,
+			guess;
 
-        while ((upper - lower) > 1e-6) { 
-            guess = (lower + upper) / 2;
-            if (aprEquation(guess) > 0) {
-                upper = guess;
-            } else {
-                lower = guess;
-            }
-        }
-        return guess;
-    }
+		while ((upper - lower) > 1e-6) {
+			guess = (lower + upper) / 2;
+			if (aprEquation(guess) > 0) {
+				upper = guess;
+			} else {
+				lower = guess;
+			}
+		}
+		return guess;
+	}
 
-    let monthlyRate = solveAPR();
-    let apr = monthlyRate * 12 * 100; 
-    return apr.toFixed(2); 
+	let monthlyRate = solveAPR();
+	let apr = monthlyRate * 12 * 100;
+	return apr.toFixed(2);
 }
 
 function showPayLaterModal() {
 	const payLaterAggregateHTML = generatePayLaterAggregate();
-
 	if (generatePayLaterAggregate) {
 		modalWrapper.style.display = 'flex';
 		const tempDiv = document.createElement('div');
 		tempDiv.innerHTML = payLaterAggregateHTML;
 		const mainContent = tempDiv;
 		container.innerHTML = mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
-
 		const closeModalButton = container.querySelector('.modal-close');
-
 		closeModalButton.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
 		});
@@ -592,8 +476,7 @@ function generatePayLaterAggregate() {
 	const cleanedPrice = priceElement.textContent.replace(/[^\d,\.]/g, '');
 	let buyNowPayLaterHTML = `<div class="buy-now-pay-later">
 	<h1 class="title">BUY NOW. PAY LATER.</h1>
-	<p class="price">Purchase price: <strong>$${cleanedPrice}</strong>
-	</p>
+	<p class="price">Purchase price: <strong>$${cleanedPrice}</strong></p>
 	<p class="description"> Select Affirm, Klarna, Afterpay or Paytomorrow as your payment method at checkout to pay in installments. </p>
 	<div class="steps-container">
 	  <div class="step">
@@ -617,35 +500,28 @@ function generatePayLaterAggregate() {
 	  </div>
 	</div>
 	<div class="options">${combinedPayLater()}</div>
-
   </div>`
-
-  return buyNowPayLaterHTML;
+	return buyNowPayLaterHTML;
 }
 
 function combinedPayLater() {
 	let payLaterOptions = '';
-
 	payLaterOptions += generateAfterPayPaymentTerms();
 	payLaterOptions += generatePayTomorrowPaymentTerms();
-
 	return payLaterOptions;
 }
 
 function generateAfterPayPaymentTerms() {
 	const afterPayRateElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2')?.innerHTML;
-
-    if (afterPayRateElement) {
-        let matchPrice = afterPayRateElement.match(/[\d,]+(\.\d{1,2})?/);
-        let currentPrice = matchPrice ? parseFloat(matchPrice[0]) : null;
-
+	if (afterPayRateElement) {
+		let matchPrice = afterPayRateElement.match(/[\d,]+(\.\d{1,2})?/);
+		let currentPrice = matchPrice ? parseFloat(matchPrice[0]) : null;
 		if (currentPrice) {
-		  let afterPayTermsHTML = ``       
-		  let productPrice = getProductPrice();
-		  let afterPay12MosRate = computeAfterPayLoanDetails(productPrice, currentPrice, 12, 12)
-
-          if (afterPay12MosRate) {
-			afterPayTermsHTML += `<div class="option">
+			let afterPayTermsHTML = ``
+			let productPrice = getProductPrice();
+			let afterPay12MosRate = computeAfterPayLoanDetails(productPrice, currentPrice, 12, 12)
+			if (afterPay12MosRate) {
+				afterPayTermsHTML += `<div class="option">
 			<div class="option-details">
 			  <p class="payment-info">
 				<strong>12 payments of ${afterPay12MosRate.MonthlyPaymentForNewTerm}</strong>
@@ -667,16 +543,13 @@ function generateAfterPayPaymentTerms() {
                       <path d="m43.67852,14.70912s0.4832,-0.9011 1.67814,-0.9011c0.50931,0 0.8358,0.1763 0.8358,0.1763l0,1.97851s-0.71827,-0.44402 -1.37777,-0.35261c-0.6595,0.09142 -1.0774,0.69215 -1.0774,1.50184l0,4.59038l-1.97197,0l0,-7.75076l1.90667,0l0,0.75744l0.00653,0z"></path>
                     </g>
                 </svg>
-			  <span>See terms: <strong onclick="document.querySelector('square-placement').shadowRoot.querySelector('button').click()"><u>Afterpay</u></strong>
-			  </span>
+			  <span>See terms: <strong onclick="document.querySelector('square-placement').shadowRoot.querySelector('button').click()"><u>Afterpay</u></strong></span>
 			</a>
 		  </div>`
-		  }
-
-		  let afterPay6MosRate = computeAfterPayLoanDetails(productPrice, currentPrice, 12, 6)
-
-		  if (afterPay6MosRate) {
-			afterPayTermsHTML += `<div class="option">
+			}
+			let afterPay6MosRate = computeAfterPayLoanDetails(productPrice, currentPrice, 12, 6)
+			if (afterPay6MosRate) {
+				afterPayTermsHTML += `<div class="option">
 			<div class="option-details">
 			  <p class="payment-info">
 				<strong>6 payments of ${afterPay6MosRate.MonthlyPaymentForNewTerm}</strong>
@@ -702,34 +575,35 @@ function generateAfterPayPaymentTerms() {
 			  </span>
 			</a>
 		  </div>`
-		  }
-
-		  return afterPayTermsHTML;
+			}
+			return afterPayTermsHTML;
 		}
 	}
-  }
+}
 
-  function generatePayTomorrowPaymentTerms() {
+function generatePayTomorrowPaymentTerms() {
 	let payTomorrowTermsHTML = ``
-
 	if (PayTomorrow) {
-		let productPrice = getProductPrice();  
-		let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 9});
-		
+		let productPrice = getProductPrice();
+		let payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {
+			displayPrimeOffers: true,
+			primeApr: 9
+		});
+
 		if (payTomorrow24MosRate) {
 			payTomorrowTermsHTML += `<div class="option">
 			<div class="option-details">
 			  <p class="payment-info">
 				<strong>24 payments of ${parseFloat(payTomorrow24MosRate).toLocaleString('en-US', {
-					style: 'currency',
-					currency: 'USD',
-				  })}</strong>
+				style: 'currency',
+				currency: 'USD',
+			})}</strong>
 			  </p>
 			  <p class="apr">monthly, 9% APR</p>
 			  <p class="total">Total: ${parseFloat(payTomorrow24MosRate * 24).toLocaleString('en-US', {
 				style: 'currency',
 				currency: 'USD',
-			  })}</p>
+			})}</p>
 			</div>
 			<a href="#" class="terms-link">
 		        <svg onclick="PayTomorrow.openMpeIframe()" class="paytomorrow-logo" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 326 48">
@@ -754,22 +628,24 @@ function generateAfterPayPaymentTerms() {
 		  </div>`
 		}
 
-		let payTomorrow12MosRate = PayTomorrow.getMonthlyPayment(productPrice, 12, {displayPrimeOffers: true, primeApr: 7});
-
+		let payTomorrow12MosRate = PayTomorrow.getMonthlyPayment(productPrice, 12, {
+			displayPrimeOffers: true,
+			primeApr: 7
+		});
 		if (payTomorrow12MosRate) {
 			payTomorrowTermsHTML += `<div class="option">
 			<div class="option-details">
 			  <p class="payment-info">
 				<strong>12 payments of ${parseFloat(payTomorrow12MosRate).toLocaleString('en-US', {
-					style: 'currency',
-					currency: 'USD',
-				  })}</strong>
+				style: 'currency',
+				currency: 'USD',
+			})}</strong>
 			  </p>
 			  <p class="apr">monthly, 7% APR</p>
 			  <p class="total">Total: ${parseFloat(payTomorrow12MosRate * 12).toLocaleString('en-US', {
 				style: 'currency',
 				currency: 'USD',
-			  })}</p>
+			})}</p>
 			</div>
 			<a href="#" class="terms-link">
 		        <svg onclick="PayTomorrow.openMpeIframe()" class="paytomorrow-logo" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 326 48">
@@ -794,22 +670,24 @@ function generateAfterPayPaymentTerms() {
 		  </div>`
 		}
 
-		let payTomorrow6MosRate = PayTomorrow.getMonthlyPayment(productPrice, 6, {displayPrimeOffers: true, primeApr: 5});
-
+		let payTomorrow6MosRate = PayTomorrow.getMonthlyPayment(productPrice, 6, {
+			displayPrimeOffers: true,
+			primeApr: 5
+		});
 		if (payTomorrow6MosRate) {
 			payTomorrowTermsHTML += `<div class="option">
 			<div class="option-details">
 			  <p class="payment-info">
 				<strong>6 payments of ${parseFloat(payTomorrow6MosRate).toLocaleString('en-US', {
-					style: 'currency',
-					currency: 'USD',
-				  })}</strong>
+				style: 'currency',
+				currency: 'USD',
+			})}</strong>
 			  </p>
 			  <p class="apr">monthly, 5% APR</p>
 			  <p class="total">Total: ${parseFloat(payTomorrow6MosRate * 6).toLocaleString('en-US', {
 				style: 'currency',
 				currency: 'USD',
-			  })}</p>
+			})}</p>
 			</div>
 			<a href="#" class="terms-link">
 		        <svg onclick="PayTomorrow.openMpeIframe()" class="paytomorrow-logo" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 326 48">
@@ -834,17 +712,15 @@ function generateAfterPayPaymentTerms() {
 		  </div>`
 		}
 	}
-
 	return payTomorrowTermsHTML;
-  }
+}
 
-  function getProductPrice() {
-    const priceElement = document.querySelector('.pr_custom_price').innerText;
-
-	const formattedProductPrice = priceElement.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]  
-	.replace(/,/g, '') 
-	.replace(/(\.\d*?[1-9])0+$/, '$1') 
-	.replace(/\.0+$/, ''); 
+function getProductPrice() {
+	const priceElement = document.querySelector('.pr_custom_price').innerText;
+	const formattedProductPrice = priceElement.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]
+		.replace(/,/g, '')
+		.replace(/(\.\d*?[1-9])0+$/, '$1')
+		.replace(/\.0+$/, '');
 	const productPrice = parseFloat(formattedProductPrice);
 	return productPrice;
-  }
+}

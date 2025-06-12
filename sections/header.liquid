@@ -1,9 +1,9 @@
 <link rel="stylesheet" href="{{ 'component-list-menu.css' | asset_url }}" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="{{ 'component-search.css' | asset_url }}" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="{{ 'component-menu-drawer.css' | asset_url }}" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="{{ 'component-cart-notification.css' | asset_url }}" media="print"
-      onload="this.media='all'">
+<link rel="stylesheet" href="{{ 'component-cart-notification.css' | asset_url }}" media="print">
 <link rel="stylesheet" href="{{ 'component-cart-items.css' | asset_url }}" media="print" onload="this.media='all'">
+
 {%- if settings.predictive_search_enabled -%}
     <link rel="stylesheet" href="{{ 'component-price.css' | asset_url }}" media="print" onload="this.media='all'">
 {%- endif -%}
@@ -36,9 +36,10 @@
         <link rel="stylesheet" href="{{ 'component-totals.css' | asset_url }}">
         <link rel="stylesheet" href="{{ 'component-price.css' | asset_url }}">
         <link rel="stylesheet" href="{{ 'component-discounts.css' | asset_url }}">
+
     </noscript>
 {%- endif -%}
-
+<link rel="stylesheet" href="{{ 'cart-header.css' | asset_url }}">
 {%- style -%}
     .header {
     padding-top: 8px;
@@ -119,7 +120,52 @@
     }
     }
 {%- endstyle -%}
-
+{% if template == 'cart' %}
+    <div class="cart__header">
+        <div class="cart__header-wrapper">
+            <a href="{{ routes.root_url }}" class="header__heading-link link link--text focus-inset">
+                <div class="header__heading-logo-wrapper">
+                    {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
+                    {%- assign logo_height = settings.logo_width | divided_by: settings.logo.aspect_ratio -%}
+                    {% capture sizes %}(max-width: {{ settings.logo_width | times: 2 }}px) 50vw, {{ settings.logo_width }}px{% endcapture %}
+                    {% capture widths %}{{ settings.logo_width }}, {{ settings.logo_width | times: 1.5 | round }}, {{ settings.logo_width | times: 2 }}{% endcapture %}
+                    {{ settings.logo | image_url: width: 600 | image_tag:
+                    class: 'header__heading-logo motion-reduce',
+                    widths: widths,
+                    loading: 'eager',
+                    height: logo_height,
+                    width: settings.logo_width,
+                    alt: logo_alt,
+                    sizes: sizes,
+                    preload: true }}
+                </div>
+            </a>
+            <a href="/pages/reviews" class="cart__header-reviews">
+                <p class="cart__header-reviews-count">
+                    4.9/5
+                </p>
+                <div class="cart__header-reviews-stars">
+                    <svg width="83" height="16" viewBox="0 0 83 16" fill="none" xmlns="http://www.w3.org/2000/svg"
+                         xmlns:xlink="http://www.w3.org/1999/xlink">
+                        <rect width="82" height="15" transform="translate(0.5 0.36499)" fill="url(#pattern0_2_365)"/>
+                        <defs>
+                            <pattern id="pattern0_2_365" patternContentUnits="objectBoundingBox" width="1" height="1">
+                                <use xlink:href="#image0_2_365" transform="scale(0.002 0.0108696)"/>
+                            </pattern>
+                            <image id="image0_2_365" width="500" height="92" preserveAspectRatio="none"
+                                   xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAABcCAYAAACY7ke9AAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw1AUhU/TilIqDnZQcchQneyiIo61CkWoEGqFVh1MXvoHTRqSFBdHwbXg4M9i1cHFWVcHV0EQ/AFxdnBSdJES70sKLWK88Hgf591zeO8+QGhWmWaFEoCm22YmlRRz+VWx9xUBhBDGMEIys4w5SUrDt77uqZvqLs6z/Pv+rH61YDEgIBInmGHaxBvEM5u2wXmfOMrKskp8Tjxh0gWJH7muePzGueSywDOjZjYzTxwlFktdrHQxK5sa8TRxTNV0yhdyHquctzhr1Tpr35O/MFLQV5a5TmsUKSxiCRJEKKijgipsxGnXSbGQofOkj3/E9UvkUshVASPHAmrQILt+8D/4PVurODXpJUWSQM+L43yMAb27QKvhON/HjtM6AYLPwJXe8deawOwn6Y2OFjsCBraBi+uOpuwBlzvA0JMhm7IrBWkJxSLwfkbflAcGb4Hwmje39jlOH4AszSp9AxwcAuMlyl73eXdf99z+7WnP7wcLoXJ9U2PSkwAAAAZiS0dEANkAPwAn95uxkQAAEpZJREFUeNrtndl3E1e2xr8qDVWSR4xtoJ2RJzMH0r3W7bvu033s/wWDwem7knXXChkuhIQp5H/pp046U9OskEA7hOHJDCoPkmUs2bIkW9N9UMrIRkNVqYZTpe+3Fi8kYHG29vn23meffST87YMaiLv85aLU8f+hXWgXQrvQLsQEMpeAEEIIoaATQgghhIJOCCGEEAo6IYQQQijohBBCCAWdEEIIIRR0QgghhFDQCSGEEEJBJ4QQQijohBBCCKGgE0IIIYSCTgghhBAKOiGEEEJBJ4QQQggFnRBCCCEU9B0k332P1hOQ+RPnuAj0F2KQpVO0i4gsnpzB3OQUBd0Nnh05g5GRAX7rBGNucgpjY0NcCAEZGRnAsyNnuBCCMTgYw8I757kQgtHfr6KvT6Ggu0FfXwzhcAiJY9P85gllFxWRSJh2EQzt+DTC4RD6+lQuhkA8OTQFVVVoFwGJx1Vf2sWXgt7fr24LCKFdSOcAmHYRMwCWJNpFNBbeOQ9ZlhCPK5ibPE1Bd5Knh89AUSI7BIR4z9zkFGKxKO0iqHAAgKpG8fQwy+6i2SUUktl7IlRiUg+AJUlCPO6vvUz2qxMAQCQSxvOjZ/kNFMIuCiRJol0EI3FsGpFIqKn/EC8D4NPbAXDdLjEuiiDE44pv/cV3gr47+9OjKSJOoEW7iGsXCro4dtED4Gb7GvGG+RPnEQrJOxIVP5XdfSXo9SaSKDcoAbONxqiWdhFX0GOxKJ4cmuLCCGaXUEiGdpxld9ESRkmSEIv5p9td9vNiA0A0GsazIyzvekk8vjPb0O3Csru3PD96FtFouKOYEO8DYNpFzECrle5Q0G1Z7JhhoSfeBlrcoMTcnGgXEQJg5ZUAmPuY98yfOLej3N6YsFDQbaZZuZ0blDgbFAMt/wRasZjiyylYwQm0micmnK0hZgAsy5Jvhv/IflrsJkEtAEBRIpyC5RFLp95rmm0AQDQa4XGIRzw7chbRaKTpf6vffVa4SIIFwAyCxRR0P9lFDsJiM0sX1y7coES1C28heMHiyRnIssR9TDC04+cQDod8bxdfCHrj0JLWC84NSrRsgxuUd3QKpGKxqO+mYPVCoFWf4cCyu2h2kWUZ8yfEL7vL/lhspWVZV0dVI5yC5TJLp9pnG4B+HMKyu5s0TlNshR+nYAVDODofdbCqJZ6g+8UuclAWm9kg7ULMbTwUDnepzwiX6S+CsXuaop/tIrygt7qzSUfwHqMZHoVDzEDLj49P9EKgxRkOYvqLH2buCy/ozYaWtIJTsNyjU3NPI7yF4B7trnfuxm9TsHolAGZyImag5Qe7CC/oZheQjiCeE9Aubtol5qgdiTV2zwinv4jB86NnEYmEKejuRbXmMghuUOJlG3VH4C0EEQNgNsaJGQCzqiVmABwOh4SeuS+0oJsp6+qoqsKyu5B24S0EpzFTbt/eAGQJiydnuHiCBVrM0mmXwAm6lWxbkph1iOgE3KDcsYsk0S6ioR0/Z6rc/tIurGo5SX2aYtj0nxO5Ciy0oJstt/thwYMhHLRLsAItNsaJlpgArGqJaheRZ+6Hrf7BpVMzHYdXdEMoFDJ0Z7MZsVgUq39+39GFy+WKeP3+daGMOTc55ahNAEBRwpbtoqpRLJ6cQbVac/AT1jAxe004R0scm3Y8oOk0TbFlVC/LWPuv/0WlUnHssxWLJRy4d0U4uzw9fAaDg3FLlQ3jwmE90x4dHXR0LyuVKhj/+XPh7PLk0BSGhvoctUs3FZC9ewcctUu5XMXYncvuCfr+u1fw4j/ex549/cJ9GSRJwvCwM5+rWq0hnc4KJ+YAcPDxTSTffQ+jo0Omz7jdYv/+PY793ZVKFalURsh/9+v3r2Pp1AzGxoYsB0ROMjDgXHk3m90QUswB4K2HX2L+xDmMjw+3neXtFU4eh+RyRayubghpl7cf3UTi2DT27Rs21YXuFrGY4tiVz0JhE5mMtX2sq51l5PYlLCy8QLlcQS+wuVmCpqWx75cvhP2M+375ApqWxuZmCb1EPr+JRGIZf/j3VWE/4/67V5BIpFEsbvWETSqVKhYXX2D41kWhP+fE7DVoWhobG8WesEutVkM6vYaBHz7Bwcc3hf2cr9+/Dk1LY3290CN2AVZXc4h/+zHefmTNLuHuneEqnhyawvj4sOUzbz+QzW4IvzHpvPngBvAAwlZQ7N6cVlbWLZWnvMoI8TD4tikUNpFMZixvTF5khHgEpP74V4yODhoeZuXHpCSZzNT3CB9w8PFXACB0dcsOSqUykslM15Vf2S5n6PvuY6TTa6jVaoFaaL9kGb1YQdnaKkPTVnwj5r1gGzuyDC8Z//lzaFoaW1vlQCYl6jcXfCPmjQS5urW+XoCmpW05xrU13Bm7cxnz8ysolYLhDIWC+GXcTkzMXg1kOXFtLQ/l6w/xxm/XfW+bfH4zMFnG/HwaI7cv+frf8cZvN6B8/SGy2Y1A2MXPSUkjbz38ErF/fITV1Vwg7FKt1pBMZjD446fblQihBB2on3tE/+5vZ/B7lrGbtx/dRP/3nyCVyvi+gqJvTkP//L9AOHVQqlt2ZhmiMHzrIpaWVlGtVn2dlGha2tdJyW6CUN2q92MtY/9de/uxZCedIZn0nzMEJctoht8b5oK4Oen4tbrlRJYhEgfu+bPU25iUvPXwy8DZxc/VrZdHH/bbxdH7APvvXsHTw2ewb9+w6ZGUXmUZ6XQ2kBuTzhu/1c/PVv/8vmNX++zfnGp48SKH0Z8+Q5B5/f514D6Q+c8PMDTU54ssI5lcdWRjEgm/NTKWyxUkkxm89uu1QNtFb2Rc/tP/YO/eAeEbGfVrtU4mJLIbziD6uUfQs4xm7PlXvWxVqYhdQalXTFYCL+aN+KHU62SWISojty9hfj6NUkncUm8uV0QikQ68mDfih+qWW9dqZTedYWFhRbhzD6fOMvzAxOxVJBLLwpatgnguaxRRS71BabCyymu/XoemLSOXE+tudLVaQyqVEf5uuVOI2rul3/nv+86dfixXR/BMzF7Dk0NTGBsbEuJBCD/dLXcKEctW1WoVy8trPRlkNSJaqTef30QqlQlEo2g3HHz8FfAYSL77HsbGhjz3Gb/dLXeS4VsXsXhyBuPj3t9Zt+tuuZAZeqOA9H//CZaXs5519fZ6ltGMsTuXhbh/WyhsIZFI97yYN+J1dcvtLMMv6E2mW1veNZn6+W65U4hQ3fKquuhZCOPVAIeNjaLv75Y7hZf3b1925X4UyK7cbvFqPKnew+DH4T3u+cwF132GSUl7vOrd8rofS/beGdwRED3L6P/+E2YZHdCbstxqmCuVKlhYWAnkVUE7cXueQC/3MIjsM0EYeOUWbla3ikXv+7GEGIy7tpZnliEYB+5dceXlsvX1PDRtuae6crtl3y9fOPoEbS/e+rDLZ5zstA7awCu3mJi95vjsjWx2A7F/eH/rQ4h36bp5L9hIlhH0u+VO4dTzgLpoLC9neVZugfkT5xAKOROLF4slpFKrPXUdzS6eHJpybN6GFw1WQcKph8PK5QpSqQwmZsVISIQQdCc63ikYYtqFoiGuXXjrQ8zEhElJdyydmnHkJsLGRhHLy1mhqiWeC/qzI2cRjdr7MSgY3ZM4No1IJGTr31mrAZlMjmflggm6aFkG7cKkRGS7iPxks+eC3t9v72JnMjns+RcFQzS79Mo4SqfRjp9DOGxfoCViluFH7C6398pYXTeIx+3by7a26kcfor7y6Lmg2xU9UTDstot95UOWDMXzF/3Wx/jPn3NRbbKLXVXd1VVWsexi8eQMZNkew2SzeQzfEvuVR08F/enhM1CUiC1ZRiqVbTry8PnRs1CUyPavUEhG9O8f8pveBrvK7dVqDel0Fvt++eIVu6tqBKoahaJEIEkS1G8ucOFdEvR2WYbuk/ovVY0gkUhzNoALdmn3eMfc5BQUJYJYLLptm2Qyg4lZXl1z2i7tjj7mJk8jGtV9JYpYLIp02rspl54KerdlXf0sQ7/H3mwzajb+7/nRaWFLJkFxAn0cZaVSwfyJ8zs2omYd2s+OnOW0KxcCrfX1wvaUxmabUTPbiDCmWWTmJqcQi3VXbtfH6lYq1R120X816zOy+1gsmHtZd93thcIWUqnMdkCbODa9nYiIaJewt4tt/R9eLleQzW5AliUcODDSUiicCCSCTrfrU6lUUSpVcODAiGEBomg4u0a1Wg3ZbB6VSgXj40NQlKhh29BfOouG1S7qWg3I5QooFrewd+8AFCVquEmYPtOehXfOdzXPPZcrolDYxJ49/Sj+9wVEoxFDxyrxuIK5ydO9NSmuXna1FtWurxewsPAC8biKkZEBxOOKqXu53KBa8/zoNCIRa3FeuVzB5mYJoZCM/n7VVDbJzcm5760+H1+SgL17B9HfHzNlG1WN4unhMzSAzd/d+sCrNDY3SxgdHcLAQNzUjZ9QSIZ2/BwNYLNdyuUK5udXkM8XMTo6iMHB+O9Hg8b+vCRJjt17F1bQrSx2tVpFMrmKwR8/xZsPbiD+7UdYWVmH2SmYkUgYz4+e5TfeRtGoz8hPQ/3G2lxrVY1QNNoGWmdNB1qN8/HffHCjq/GkXm1QojM3edrS2jSO1a2/523tnXUmJ/ZqjL6Pvfbrta4e3/EqQfGNoL98hevKjt8f/ekzLCyYdwZmhPasS+OMfL0pUReOarVq8mdTNFpv3OZuHZTLzefjH7h3BZqWRqGwZfLn01+aBzqqqXJ7q7G6r9+39s4697HmmJ2m2GwfA6w/vmPnVTnhBf3JIeNNJEZe4XrtV/POQEdongWaKfltbpaQSKSbDliw8oQhbWLP2jRmGc146+GXiH/7EdLpNcPVrVhMwZNDUzREF4FOp8c7Dj7+CgM/fIpUKmN4Vn84HIJ2fJqGeMVfjAfAW1tlaFq67aAYs9UtWZaweHKmNwTd6ObUKsuwwxkUJYJnR1h2t5oFGnmH2ewThqqqYG6SorEbo9MUW2UZrRi7c9lUdYsBV/NAx6i/GH28Qy/1Gn1QxM6ZEb0WaK2t5aF8/SHe+K3zDRuz1S0v/EUWdbE7ZRl2OAM3KPPrYeUd5pHblwyV4CWJZXer/mIky2iGmeoW/WUnRoaW6EmJ2Rn5bz64AfWbC4aCYdplJ9rxzuX2SqWKpaVVDP3T3KAYM9UtL/Yy1wV9brL9iESzWUY7Z+h07sFzQXNZYD3IsvYOs9ESPDcn82tiJstohtHqVizGCoqZ/WNjowhNS3c1I7/+nveLtqXeSCSExDGW3Y3apVDYgqalceDeFcs/w0h1S5ZlLLxzPtiCXh+RKNmaZbRi+NZFLC62dgZFYWe1ESdoDLK6mfltpASv3+EkddpNU7SaZbSiU3WLFZTd31XVUX/RmZi9ikRiGfn8JgPhLgJgI/1YZjBS3XLbLq4Leivh6DbLaMUf/t3eGegI7e1id5DVKeuQJMnRd9iDYhc7soxmdKpu0V/q1IeWSC38ZcX2l7jefnQTfd99/Hupt2Y6K+0VEsemmz5eZKYfywydqluBFvS5ydOvdLfrZ7J2ZRmdnYGOsJtnR84gGn01C8xmNxwJsvSsQ9Oal+ApGo1rEXM0y2hFq+oWKyj6vvFqI9r6euF3f3FurHT9zvoKSqXyjt/nbI3W+3kuZ60fywytqluhkIz5E+4N/3FV0Hff2dSzDCtnstadYee5B6dgvbo5WWl8s0KrEjzLunX0R2yczjJa0ay65eUULLECrZdr0Hi33A3qd9bTWF8vMBBukwzoRx8DP1jvxzJDq+qWm7cQXBV0PXpyK8to7Qw7zz16XUAanSCf37Tc+GaVegl+ZTsblGUZ8yfOo9dptIsbWUYzmpV6e/2aVOOM8PrAq2XXX9c6+PgrDP74KZLJl7dHer3aWH+8qN7Y225GhtPsrm65aRdXBT0WU1zPMlo5Q+O5Ry9vUHrTlR7N9n33sS2NPGaZmL22IxtktlFfA7ezjFY0lnoZAKueJiWN7L/78vZINNrbszX0PcPIjAynaaxuuTlz3zVBXzo183v2536W0Qr93EOWpZ6dgtXfrzrWyGM1G1xZWe950XhyaAqyLHmWZTRDL/VubBQ9mYIlCooS8TwpaaTx6KqX/UZVo64cFZrdz9LpNdfs4pqgF4slz7OMZujnHr1KpVJ1vJHHLKM/fYZUKoNnR3q7t8HrLKMZenXL6BSzoDE3eRoLCy+ESUoaGbl9CblcsWf9JZlcdfWo0Chjdy4jm8278rMk/O2DGoi7/OVi59ccaBfahdAutAsRMUMnhBBCCAWdEEIIIRR0QgghhIJOCCGEEAo6IYQQQijohBBCCKGgE0IIIRR0QgghhFDQCSGEEEJBJ4QQQggFnRBCCKGgE0IIIYSCTgghhBA3+X/EUizURxe2ywAAAABJRU5ErkJggg=="/>
+                        </defs>
+                    </svg>
+                </div>
+                <p class="cart__header-reviews-label">By 3,000+ happy customers</p>
+            </a>
+            <a href="tel:+1-925-215-2927" class="cart__header-link">
+                {% render 'icon-header-phone' %}
+                +1-925-215-2927
+            </a>
+        </div>
+    </div>
+{% else %}
 <script src="{{ 'details-disclosure.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'details-modal.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'cart-notification.js' | asset_url }}" defer="defer"></script>
@@ -127,14 +173,12 @@
 {%- if settings.cart_type == "drawer" -%}
     <script src="{{ 'cart-drawer.js' | asset_url }}" defer="defer"></script>
 {%- endif -%}
-
 <svg xmlns="http://www.w3.org/2000/svg" class="hidden">
     <symbol id="icon-search" viewbox="0 0 18 19" fill="none">
         <path fill-rule="evenodd" clip-rule="evenodd"
               d="M11.03 11.68A5.784 5.784 0 112.85 3.5a5.784 5.784 0 018.18 8.18zm.26 1.12a6.78 6.78 0 11.72-.7l5.4 5.4a.5.5 0 11-.71.7l-5.41-5.4z"
               fill="currentColor"/>
     </symbol>
-
     <symbol id="icon-reset" class="icon icon-close" fill="none" viewBox="0 0 18 18" stroke="currentColor">
         <circle r="8.5" cy="9" cx="9" stroke-opacity="0.2"/>
         <path d="M6.82972 6.82915L1.17193 1.17097" stroke-linecap="round" stroke-linejoin="round"
@@ -142,7 +186,6 @@
         <path d="M1.22896 6.88502L6.77288 1.11523" stroke-linecap="round" stroke-linejoin="round"
               transform="translate(5 5)"/>
     </symbol>
-
     <symbol id="icon-close" class="icon icon-close" fill="none" viewBox="0 0 18 17">
         <path d="M.865 15.978a.5.5 0 00.707.707l7.433-7.431 7.579 7.282a.501.501 0 00.846-.37.5.5 0 00-.153-.351L9.712 8.546l7.417-7.416a.5.5 0 10-.707-.708L8.991 7.853 1.413.573a.5.5 0 10-.693.72l7.563 7.268-7.418 7.417z"
               fill="currentColor">
@@ -333,7 +376,7 @@
                             {{ settings.logo | image_url: width: 600 | image_tag:
                             class: 'header__heading-logo motion-reduce',
                             widths: widths,
-                                loading: 'eager',
+                            loading: 'eager',
                             height: logo_height,
                             width: settings.logo_width,
                             alt: logo_alt,
@@ -461,7 +504,7 @@
                             {% render block %}
                     {%- endcase -%}
                 {%- endfor -%}
-                <a href="{{ routes.cart_url }}" class="header__icon header__icon--cart link focus-inset"
+                <a href="#" class="header__icon header__icon--cart link focus-inset"
                    id="cart-icon-bubble">
                     {%- liquid
                         if cart == empty
@@ -481,7 +524,6 @@
                     {%- endif -%}
                 </a>
             </div>
-
             {%- liquid
                 if section.settings.menu != blank
                     render 'header-drawer'
@@ -510,141 +552,122 @@
         {%- render 'cart-notification', color_scheme: section.settings.color_scheme, desktop_menu_type: section.settings.menu_type_desktop -%}
     {%- endif -%}
 
-    {% javascript %}
-    class StickyHeader extends HTMLElement {
-    constructor() {
-    super();
-    }
+    <script>
 
-    connectedCallback() {
-    this.header = document.querySelector('.section-header');
-    this.headerIsAlwaysSticky = this.getAttribute('data-sticky-type') === 'always' ||
-    this.getAttribute('data-sticky-type') === 'reduce-logo-size';
-    this.headerBounds = {};
 
-    this.setHeaderHeight();
+		class StickyHeader extends HTMLElement {
+			constructor() {
+				super();
+			}
 
-    window.matchMedia('(max-width: 990px)').addEventListener('change', this.setHeaderHeight.bind(this));
+			connectedCallback() {
+				this.header = document.querySelector('.section-header');
+				this.headerIsAlwaysSticky = this.getAttribute('data-sticky-type') === 'always' ||
+					this.getAttribute('data-sticky-type') === 'reduce-logo-size';
+				this.headerBounds = {};
 
-    if (this.headerIsAlwaysSticky) {
-    this.header.classList.add('shopify-section-header-sticky');
-    };
+				this.setHeaderHeight();
 
-    this.currentScrollTop = 0;
-    this.preventReveal = false;
-    this.predictiveSearch = this.querySelector('predictive-search');
+				window.matchMedia('(max-width: 990px)').addEventListener('change', this.setHeaderHeight.bind(this));
 
-    this.onScrollHandler = this.onScroll.bind(this);
-    this.hideHeaderOnScrollUp = () => this.preventReveal = true;
+				if (this.headerIsAlwaysSticky) {
+					this.header.classList.add('shopify-section-header-sticky');
+				}
+				;
 
-    this.addEventListener('preventHeaderReveal', this.hideHeaderOnScrollUp);
-    window.addEventListener('scroll', this.onScrollHandler, false);
+				this.currentScrollTop = 0;
+				this.preventReveal = false;
+				this.predictiveSearch = this.querySelector('predictive-search');
 
-    this.createObserver();
-    }
+				this.onScrollHandler = this.onScroll.bind(this);
+				this.hideHeaderOnScrollUp = () => this.preventReveal = true;
 
-    setHeaderHeight() {
-    document.documentElement.style.setProperty('--header-height', `${this.header.offsetHeight}px`);
-    }
+				this.addEventListener('preventHeaderReveal', this.hideHeaderOnScrollUp);
+				window.addEventListener('scroll', this.onScrollHandler, false);
 
-    disconnectedCallback() {
-    this.removeEventListener('preventHeaderReveal', this.hideHeaderOnScrollUp);
-    window.removeEventListener('scroll', this.onScrollHandler);
-    }
+				this.createObserver();
+			}
 
-    createObserver() {
-    let observer = new IntersectionObserver((entries, observer) => {
-    this.headerBounds = entries[0].intersectionRect;
-    observer.disconnect();
-    });
+			setHeaderHeight() {
+				document.documentElement.style.setProperty('--header-height', `${this.header.offsetHeight}px`);
+			}
 
-    observer.observe(this.header);
-    }
+			disconnectedCallback() {
+				this.removeEventListener('preventHeaderReveal', this.hideHeaderOnScrollUp);
+				window.removeEventListener('scroll', this.onScrollHandler);
+			}
 
-    onScroll() {
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+			createObserver() {
+				let observer = new IntersectionObserver((entries, observer) => {
+					this.headerBounds = entries[0].intersectionRect;
+					observer.disconnect();
+				});
 
-    if (this.predictiveSearch && this.predictiveSearch.isOpen) return;
+				observer.observe(this.header);
+			}
 
-    if (scrollTop > this.currentScrollTop && scrollTop > this.headerBounds.bottom) {
-    this.header.classList.add('scrolled-past-header');
-    if (this.preventHide) return;
-    requestAnimationFrame(this.hide.bind(this));
-    } else if (scrollTop < this.currentScrollTop && scrollTop > this.headerBounds.bottom) {
-    this.header.classList.add('scrolled-past-header');
-    if (!this.preventReveal) {
-    requestAnimationFrame(this.reveal.bind(this));
-    } else {
-    window.clearTimeout(this.isScrolling);
+			onScroll() {
+				const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-    this.isScrolling = setTimeout(() => {
-    this.preventReveal = false;
-    }, 66);
+				if (this.predictiveSearch && this.predictiveSearch.isOpen) return;
 
-    requestAnimationFrame(this.hide.bind(this));
-    }
-    } else if (scrollTop <= this.headerBounds.top) {
-    this.header.classList.remove('scrolled-past-header');
-    requestAnimationFrame(this.reset.bind(this));
-    }
+				if (scrollTop > this.currentScrollTop && scrollTop > this.headerBounds.bottom) {
+					this.header.classList.add('scrolled-past-header');
+					if (this.preventHide) return;
+					requestAnimationFrame(this.hide.bind(this));
+				} else if (scrollTop < this.currentScrollTop && scrollTop > this.headerBounds.bottom) {
+					this.header.classList.add('scrolled-past-header');
+					if (!this.preventReveal) {
+						requestAnimationFrame(this.reveal.bind(this));
+					} else {
+						window.clearTimeout(this.isScrolling);
 
-    this.currentScrollTop = scrollTop;
-    }
+						this.isScrolling = setTimeout(() => {
+							this.preventReveal = false;
+						}, 66);
 
-    hide() {
-    if (this.headerIsAlwaysSticky) return;
-    this.header.classList.add('shopify-section-header-hidden', 'shopify-section-header-sticky');
-    this.closeMenuDisclosure();
-    this.closeSearchModal();
-    }
+						requestAnimationFrame(this.hide.bind(this));
+					}
+				} else if (scrollTop <= this.headerBounds.top) {
+					this.header.classList.remove('scrolled-past-header');
+					requestAnimationFrame(this.reset.bind(this));
+				}
 
-    reveal() {
-    if (this.headerIsAlwaysSticky) return;
-    this.header.classList.add('shopify-section-header-sticky', 'animate');
-    this.header.classList.remove('shopify-section-header-hidden');
-    }
+				this.currentScrollTop = scrollTop;
+			}
 
-    reset() {
-    if (this.headerIsAlwaysSticky) return;
-    this.header.classList.remove('shopify-section-header-hidden', 'shopify-section-header-sticky', 'animate');
-    }
+			hide() {
+				if (this.headerIsAlwaysSticky) return;
+				this.header.classList.add('shopify-section-header-hidden', 'shopify-section-header-sticky');
+				this.closeMenuDisclosure();
+				this.closeSearchModal();
+			}
 
-    closeMenuDisclosure() {
-    this.disclosures = this.disclosures || this.header.querySelectorAll('header-menu');
-    this.disclosures.forEach(disclosure => disclosure.close());
-    }
+			reveal() {
+				if (this.headerIsAlwaysSticky) return;
+				this.header.classList.add('shopify-section-header-sticky', 'animate');
+				this.header.classList.remove('shopify-section-header-hidden');
+			}
 
-    closeSearchModal() {
-    this.searchModal = this.searchModal || this.header.querySelector('details-modal');
-    this.searchModal.close(false);
-    }
-    }
+			reset() {
+				if (this.headerIsAlwaysSticky) return;
+				this.header.classList.remove('shopify-section-header-hidden', 'shopify-section-header-sticky', 'animate');
+			}
 
-    customElements.define('sticky-header', StickyHeader);
-    {% endjavascript %}
+			closeMenuDisclosure() {
+				this.disclosures = this.disclosures || this.header.querySelectorAll('header-menu');
+				this.disclosures.forEach(disclosure => disclosure.close());
+			}
 
-    <script type="application/ld+json">
-        {
-          "@context": "http://schema.org",
-          "@type": "Organization",
-          "name": {{ shop.name | json }},
-        {% if settings.logo %}
-      "logo": {{ settings.logo | image_url: width: 500 | prepend: "https:" | json }},
-    {% endif %}
-        "sameAs": [
-        {{ settings.social_twitter_link | json }}
-      {{ settings.social_facebook_link | json }}
-      {{ settings.social_pinterest_link | json }}
-      {{ settings.social_instagram_link | json }}
-      {{ settings.social_tiktok_link | json }}
-      {{ settings.social_tumblr_link | json }}
-      {{ settings.social_snapchat_link | json }}
-      {{ settings.social_youtube_link | json }}
-      {{ settings.social_vimeo_link | json }}
-        ],
-        "url": {{ request.origin | append: page.url | json }}
-        }
+			closeSearchModal() {
+				this.searchModal = this.searchModal || this.header.querySelector('details-modal');
+				this.searchModal.close(false);
+			}
+		}
+
+		customElements.define('sticky-header', StickyHeader);
     </script>
+
 
     <style>
         .childlinks_container {
@@ -712,6 +735,8 @@
             }
         </script>
     {%- endif -%}
+
+    {% endif %}
 
     {% schema %}
     {

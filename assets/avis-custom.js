@@ -49,10 +49,10 @@ function renderCustomAvisOptions() {
 		const warrantyParentContainer = warrantySelect.closest('.ap-options__select-container');
 		if (warrantyParentContainer) {
 			const selectOptions = warrantyParentContainer.querySelector('select').options.length;
-      if (selectOptions > 1) {
-        warrantyParentContainer.style.display = 'block';
-        warrantyParentContainer.querySelector('.ap-label-tooltip').classList.add('ap-options__heading');
-      }
+			if (selectOptions > 1) {
+				warrantyParentContainer.style.display = 'block';
+				warrantyParentContainer.querySelector('.ap-label-tooltip').classList.add('ap-options__heading');
+			}
 		}
 	}
 
@@ -258,233 +258,11 @@ function renderCustomAvisOptions() {
 		}
 	});
 
-	setupOptionsHandler();
+	// setupOptionsHandler();
 }
 
 
-function setupOptionsHandler() {
-	const optionsContainer = document.querySelectorAll('.avp-option');
 
-	optionsContainer.forEach((optionContainer) => {
-		const optionLabel = optionContainer.querySelector('.ap-label-tooltip');
-		if (optionLabel) {
-			const selectedOptionsContainerNew = document.createElement('div');
-			selectedOptionsContainerNew.classList.add('selected_options_container');
-			optionLabel.append(selectedOptionsContainerNew);
-		}
-
-		const swatchContainer = optionContainer.querySelector('.ap-options__swatch');
-
-		optionContainer.querySelectorAll('.avp-productoptionswatchwrapper').forEach((wrapper) => {
-			const input = wrapper.querySelector('input[type="radio"]');
-			wrapper.addEventListener('click', (event) => {
-				if (window.location.pathname.includes('products') && !window.product.available) {
-					event.preventDefault();
-					return;
-				}
-
-				const allInputs = Array.from(swatchContainer?.querySelectorAll('input[type="radio"]'));
-				const inputIndex = allInputs.indexOf(input);
-				const inputTextValue = input.value;
-				let inputMoneyValue;
-
-				inputMoneyValue = input
-				?.parentElement
-				?.querySelector('.swatch-variant-title .money')
-				?.innerText.replace('(', '')
-				.replace(')', '')
-				.replace('+', '');
-
-				if (inputTextValue == 'No Thanks' && !inputMoneyValue.includes('-$')) {
-					inputMoneyValue = Shopify.currency.active === 'USD' ? '$0' : '';
-				}
-
-				if (input.getAttribute('field-name') === 'Weight Stack') {
-					const weightStackField = document.querySelector('fieldset.weight-stack');
-					if (weightStackField) {
-						const wrapperIndex = [...optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')].indexOf(
-							wrapper
-						);
-						const weightStackTarget = weightStackField.querySelectorAll('label')[wrapperIndex];
-						if (weightStackTarget) {
-							weightStackTarget.click();
-						}
-					}
-				}
-
-				const selectedOptionHTML = `
-          <div class="option_selected-container">
-            <p class="option_selected">${inputTextValue}</p>
-            ${
-					inputMoneyValue
-						? `<span class="option_selected-price">${inputMoneyValue}</span>`
-						: ''
-				}
-            <svg class="remove-icon" data-group-name="${input.name}" data-value="${inputIndex}" width="16" height="16" fill="none"
-                 xmlns="http://www.w3.org/2000/svg">
-              <path fill-rule="evenodd" clip-rule="evenodd"
-                    d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
-                    fill="black"/>
-            </svg>
-          </div>`;
-
-		  setTimeout(() => {	
-			const avisInputHidden = document.querySelector(`[name=\"properties[${CSS.escape(input.getAttribute('field-name').replace('&quot;', '"'))}]\"]`);
-			if (avisInputHidden && input.checked && inputMoneyValue) {
-				if (!avisInputHidden.value.includes('Add')) {
-			  		avisInputHidden.value = avisInputHidden.value + ` [Add +${inputMoneyValue}]`
-				}
-			}
-		  });
-
-        const selectedOptionsContainer = wrapper.parentElement.parentElement.querySelector('.selected_options_container');
-
-        if (input.checked) {
-          if (!selectedOptionsContainer?.querySelector(`[data-value="${inputIndex}"]`)) {
-            selectedOptionsContainer.innerHTML = selectedOptionHTML;
-          }
-
-          Array.from(selectedOptionsContainer.children).forEach((option) => {
-            option.style.display = 'flex';
-          });
-
-          optionContainer.querySelectorAll('.avp-productoptionswatchwrapper').forEach((wrap) => {
-            wrap.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
-          });
-
-          wrapper.setAttribute('style', 'border: 1px solid #F1592A !important;');
-
-          optionContainer.querySelectorAll('.remove-icon').forEach((icon) => {
-            icon.addEventListener('click', (event) => {
-              event.stopPropagation();
-              const optionSelectedContainer = event.target.closest('.option_selected-container');
-              if (optionSelectedContainer) {
-                const value = parseInt(icon.getAttribute('data-value'));
-                const relatedInput =
-                  optionContainer.querySelectorAll('.avp-productoptionswatchwrapper input[type="radio"]')[value];
-
-                if (relatedInput) {
-                  relatedInput.checked = false;
-                  relatedInput.dispatchEvent(
-                    new Event('change', {
-                      bubbles: true
-                    })
-                  );
-                  optionSelectedContainer.remove();
-                  wrapper.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
-                }
-
-				const optionGroupName = icon.dataset.groupName;
-
-				if (optionGroupName) {
-					selectedNegativePrices = selectedNegativePrices.filter(x => x.target !== optionGroupName);
-					updateCustomPrice();
-				}
-              }
-            });
-          });
-        } else {
-          const optionToRemove = selectedOptionsContainer.querySelector(`[data-value="${inputIndex}"]`);
-          if (optionToRemove) {
-            optionToRemove.closest('.option_selected-container').remove();
-          }
-          wrapper.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
-        }
-      });
-    });
-  });
-
-//   document.querySelectorAll('.avp-productoptionbackground').forEach(element => {
-// 	element.addEventListener('change', (radioInput) => {
-// 		const inputTextValue = radioInput.target.value;
-// 		if (inputTextValue !== 'No Thanks') {
-// 			inputMoneyValue = radioInput.target
-// 				?.parentElement
-// 				?.querySelector('.swatch-variant-title .money')
-// 				?.innerText.replace('(', '')
-// 				.replace(')', '')
-// 				.replace('+', '');
-// 		} else {
-// 			inputMoneyValue = Shopify.currency.active === 'USD' ? '$0' : '';
-// 		}
-
-// 		if (selectedNegativePrices && inputMoneyValue.includes('-$')) {
-// 			const inputMoney = parseFloat(inputMoneyValue.replace('-$', ''));
-
-// 			if (selectedNegativePrices.findIndex(x => x.target == radioInput.target.name) === -1) {
-// 				selectedNegativePrices.push({ target: radioInput.target.name, value: inputMoney });
-// 			} else {
-// 				selectedNegativePrices.forEach(item => {
-// 					if (item.target === radioInput.target.name) {
-// 						item.value = inputMoney;
-// 					}
-// 				});
-// 			}
-// 		}
-		
-// 		updateCustomPrice();
-// 	})
-//   });
-
-  document.querySelectorAll('.avp-productoptionswatchwrapper').forEach((element) => {
-	element.addEventListener('click', (event) => {
-		const input = element.querySelector('input');
-		const inputTextValue = input.value;
-
-		inputMoneyValue = input
-		?.parentElement
-		?.querySelector('.swatch-variant-title .money')
-		?.innerText.replace('(', '')
-		.replace(')', '')
-		.replace('+', '');
-
-		if (inputTextValue == 'No Thanks' && !inputMoneyValue.includes('-$')) {
-			inputMoneyValue = Shopify.currency.active === 'USD' ? '$0' : '';
-		}
-
-		const isChecked = input.checked;
-
-		if (!isChecked) {
-			const inputName = input.name;
-
-			selectedNegativePrices = selectedNegativePrices.filter(x => x.target !== inputName);
-		} else {
-			if (selectedNegativePrices && inputMoneyValue && inputMoneyValue.includes('-$')) {
-				const inputMoney = parseFloat(inputMoneyValue.replace('-$', ''));
-	
-				if (selectedNegativePrices.findIndex(x => x.target == input.name) === -1) {
-					selectedNegativePrices.push({ target: input.name, value: inputMoney });
-				} else {
-					selectedNegativePrices.forEach(item => {
-						if (item.target === input.name) {
-							item.value = inputMoney;
-						}
-					});
-				}
-			}
-			
-			updateCustomPrice();
-		}
-	});
-
-    const optionValueDes = element.querySelector('.option-value-des');
-
-    if (optionValueDes) {
-      const apoValueHelpText = optionValueDes.querySelector('.apo-value-help-text');
-      if (apoValueHelpText && apoValueHelpText.innerText.includes('-$')) {
-        const apoMoney = optionValueDes.querySelector('.apo-money');
-        if (apoMoney) {
-          const apoMoneyText = apoMoney.innerText;
-          if (apoMoneyText) {
-            const subtractText = apoValueHelpText.innerText.replace('Subtract ', '');
-            apoMoney.innerText = subtractText;
-            apoValueHelpText.style.display = 'none';
-          }
-        }
-      }
-    }
-  });
-}
 
 async function fetchProductByHandle(handle) {
 	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/option/${handle}`;
@@ -532,11 +310,9 @@ async function fetchProductMetafields(productId) {
 		const response = await fetch(shopifyUrl, {
 			method: 'GET'
 		});
-
 		if (!response.ok) {
 			throw new Error('Failed to fetch product metafields');
 		}
-
 		const data = await response.json();
 		return data.metafields;
 	} catch (error) {
@@ -722,7 +498,7 @@ function clearImages(element) {
 	});
 }
 
-document.addEventListener('click', function(event) {
+document.addEventListener('click', function (event) {
 	if (event.target.classList.contains('read-more-btn')) {
 		const button = event.target;
 		const productCard = button.closest('.product-card');
@@ -782,30 +558,30 @@ function setupPopupHeaderCloseDelegate() {
 }
 
 function updateCustomPrice() {
-  setTimeout(() => {
-    const priceEl = document.querySelector('.pr_custom_price');
-    if (!priceEl) return;
-  
-    const formattedProductPrice = priceEl.innerText.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]  
-    .replace(/,/g, '') 
-    .replace(/(\.\d*?[1-9])0+$/, '$1') 
-    .replace(/\.0+$/, ''); 
-  
-    const productPrice = parseFloat(formattedProductPrice);
+	setTimeout(() => {
+		const priceEl = document.querySelector('.pr_custom_price');
+		if (!priceEl) return;
 
-	const totalAmountToSubtract = selectedNegativePrices.reduce((total, obj) => total + (obj.value || 0), 0);
-  
-	const newPrice = productPrice - totalAmountToSubtract;
-  
-	const formattedPrice = newPrice.toLocaleString('en-US', {
-	  style: 'currency',
-	  currency: 'USD'
-	});
+		const formattedProductPrice = priceEl.innerText.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]
+			.replace(/,/g, '')
+			.replace(/(\.\d*?[1-9])0+$/, '$1')
+			.replace(/\.0+$/, '');
 
-	document.querySelectorAll('.pr_custom_price').forEach((element) => {
-		element.innerText = formattedPrice  
-	});
-  }, 100);
+		const productPrice = parseFloat(formattedProductPrice);
+
+		const totalAmountToSubtract = selectedNegativePrices.reduce((total, obj) => total + (obj.value || 0), 0);
+
+		const newPrice = productPrice - totalAmountToSubtract;
+
+		const formattedPrice = newPrice.toLocaleString('en-US', {
+			style: 'currency',
+			currency: 'USD'
+		});
+
+		document.querySelectorAll('.pr_custom_price').forEach((element) => {
+			element.innerText = formattedPrice
+		});
+	}, 100);
 }
 
 setupPopupHeaderCloseDelegate();

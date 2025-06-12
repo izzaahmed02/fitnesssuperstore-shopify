@@ -4,12 +4,12 @@
 
 <script src="{{ 'cart.js' | asset_url }}" defer></script>
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer></script>
+
 <style>
     .drawer {
         visibility: hidden;
     }
 </style>
-
 <cart-drawer class="drawer{% if cart == empty %} is-empty{% endif %}">
     <div id="CartDrawer" class="cart-drawer">
         <div id="CartDrawer-Overlay" class="cart-drawer__overlay"></div>
@@ -18,8 +18,7 @@
                 role="dialog"
                 aria-modal="true"
                 aria-label="{{ 'sections.cart.title' | t }}"
-                tabindex="-1"
-        >
+                tabindex="-1">
             {% if cart == empty %}
                 <div class="drawer__inner-empty">
                     <div class="cart-drawer__warnings center{% if settings.cart_drawer_collection != blank %} cart-drawer__warnings--has-collection{% endif %}">
@@ -33,8 +32,7 @@
                                         class="drawer__close"
                                         type="button"
                                         onclick="this.closest('cart-drawer').close()"
-                                        aria-label="{{ 'accessibility.close' | t }}"
-                                >
+                                        aria-label="{{ 'accessibility.close' | t }}">
                                     {% render 'drawer-close' %}
                                 </button>
                             </div>
@@ -57,12 +55,16 @@
                 <h2 class="drawer__heading">
                     Cart preview (<span data-count="{{ cart.item_count }}">{{ cart.item_count }}</span>)
                 </h2>
+                <div class="cart-drawer__actions">
+                    <button id="drawer-clear-cart-btn" class="button button--tertiary" onclick="clearCart()">Clear
+                        Cart
+                    </button>
+                </div>
                 <button
                         class="drawer__close"
                         type="button"
                         onclick="this.closest('cart-drawer').close()"
-                        aria-label="{{ 'accessibility.close' | t }}"
-                >
+                        aria-label="{{ 'accessibility.close' | t }}">
                     {% render 'drawer-close' %}
                 </button>
             </div>
@@ -74,26 +76,27 @@
                         action="{{ routes.cart_url }}"
                         id="CartDrawer-Form"
                         class="cart__contents cart-drawer__form"
-                        method="post"
-                >
+                        method="post">
                     <div id="CartDrawer-CartItems" class="drawer__contents js-contents">
                         {% if cart != empty %}
                             <div class="drawer__cart-items-wrapper">
                                 <table class="cart-items" role="table">
                                     <div role="rowgroup">
                                         {% for item in cart.items %}
-                                            {% if item.product.title != 'Warranty' and item.product.title != 'Full Assembly & Installation' and item.product.title != 'Color' and item.product.title != 'Custom Color' and item.product.title != 'Custom Paint Color' and item.product.title != 'Custom Vinyl Color' and item.product.title != 'Custom Upholstery Color' %}
-                                                <tr
-                                                        id="CartDrawer-Item-{{ forloop.index }}"
-                                                        class="cart-item
-                                                {% if item.product.tags contains 'avisplus-product-options' %}
+                                            {% if item.product.title != 'Warranty' and item.product.title != 'Full Assembly & Installation' or item.properties._is_color_option %}
+                                                <tr id="CartDrawer-Item-{{ forloop.index }}" class="cart-item
+                                                {% if item.properties._parent_product_id != blank or item.properties._option_title != blank %}
                                                   extra-option-item
                                                 {% else %}
                                                   cart-item-new
-                                                {% endif %}  apo-cart-item-mini"
-                                                        data-key="{{ item.key }}"
-                                                        role="row"
-                                                >
+                                                {% endif %}
+                                                 {% if item.variant.title contains 'Custom Color' or item.variant.title contains 'Color' or item.variant.title contains 'color' %}
+                                                 color-option-item
+                                                 {% endif %}
+                                                 apo-cart-item-mini"
+                                                    data-key="{{ item.key }}"
+                                                    data-index="{{ forloop.index }}"
+                                                    role="row">
                                                     <!-- Product Image -->
                                                     <td class="cart-item__media" role="cell">
                                                         {% if item.image %}
@@ -106,17 +109,45 @@
                                                                         alt="{{ item.image.alt | escape }}"
                                                                         loading="lazy"
                                                                         width="150"
-                                                                        height="{{ 150 | divided_by: item.image.aspect_ratio | ceil }}"
-                                                                >
+                                                                        height="{{ 150 | divided_by: item.image.aspect_ratio | ceil }}">
+                                                            </div>
+                                                        {% else %}
+                                                            <a href="{{ item.url }}" class="cart-item__link"
+                                                               tabindex="-1" aria-hidden="true"></a>
+                                                            <div>
+                                                                {{ 'product-1' | placeholder_svg_tag }}
                                                             </div>
                                                         {% endif %}
                                                     </td>
-                                                    <!-- Product details -->
                                                     <td class="cart-item__details" role="cell">
                                                         <div class="cart-title">
-                                                            {% if item.product.tags contains 'avisplus-product-options' %}
+
+
+                                                            {% if item.properties._parent_product_id != blank or item.properties._option_title != blank %}
                                                                 <span class="cart-item__name extra-option-title h4 break">
-                                                                    {{ item.variant.title | escape }}
+                                                                     {% assign cleaned_title = item.variant.title %}
+
+                                                                    {% if product_title contains "($" or product_title contains "(+$" %}
+                                                                        {% assign parts = product_title | split: ")" %}
+                                                                        {% if parts.size > 1 %}
+                                                                            {% assign first_part = parts | first | append: ")" %}
+                                                                            {% if first_part contains "$" %}
+                                                                                {% assign cleaned_title = product_title | remove_first: first_part | strip %}
+                                                                            {% endif %}
+                                                                        {% endif %}
+                                                                    {% endif %}
+
+                                                                    {% if cleaned_title contains "($" or cleaned_title contains "(+$" %}
+                                                                        {% assign last_bracket_index = cleaned_title | split: "(" | size | minus: 1 %}
+                                                                        {% if last_bracket_index > 0 %}
+                                                                            {% assign parts = cleaned_title | split: "(" %}
+                                                                            {% assign last_part = "(" | append: parts[last_bracket_index] %}
+                                                                            {% if last_part contains "$" and last_part contains ")" %}
+                                                                                {% assign cleaned_title = cleaned_title | remove: last_part | strip %}
+                                                                            {% endif %}
+                                                                        {% endif %}
+                                                                    {% endif %}
+                                                                    {{ cleaned_title | escape }}
                                                                 </span>
                                                             {% else %}
                                                                 <a href="{{ item.url }}"
@@ -129,90 +160,107 @@
                                                                         type="button"
                                                                         class="cart-remove-button"
                                                                         data-key="{{ item.key }}"
-                                                                        aria-label="Remove {{ item.product.title }}"
-                                                                >
+                                                                        aria-label="Remove {{ item.product.title }}">
                                                                     {% render 'icon-remove' %}
                                                                 </button>
                                                             </cart-remove-button>
                                                         </div>
-                                                        {% assign extra_props = "" %}
-                                                        {% for prop in item.properties %}
-                                                            {% assign p_name = prop.first %}
-                                                            {% assign p_value = prop.last %}
-                                                            {% assign first_char = p_name | slice: 0, 1 %}
-                                                            {% if p_name == blank or p_value == blank or first_char == '_' %}
-                                                                {% continue %}
-                                                            {% endif %}
-                                                            {% if p_name contains "Warranty"
-                                                            or p_name contains "Processing Time"
-                                                            or p_name contains "Full Assembly & Installation"
-                                                            or p_name contains "Color"
-                                                            or p_name contains "Paint Color"
-                                                            or p_name contains "Weight Stack"
-                                                            or p_name contains "Vinyl Color" 
-                                                            or p_name contains "Upholstery Color" %}
-                                                                {%- capture extra_props -%}
-                                                                    {{ extra_props }}
-                                                                    <div class="product-option">
-                                                                        <dt>{{ p_name }}:</dt>
-                                                                        <dd>{{ p_value }}</dd>
-                                                                    </div>
-                                                                {%- endcapture -%}
-                                                            {% endif %}
-                                                        {% endfor %}
                                                         {% if extra_props != "" %}
                                                             <dl>
-                                                                {%- for option in item.options_with_values -%}
-                                                                    {% unless option.name == "Title" %}
-                                                                        <div class="product-option">
-                                                                            <dt>{{ option.name }}:</dt>
-                                                                            <dd>{{ option.value }}</dd>
-                                                                        </div>
-                                                                    {% endunless %}
+                                                                {%- if item.product.has_only_default_variant == false -%}
+                                                                    {%- for option in item.options_with_values -%}
+                                                                        {% unless item.properties._parent_product_id != blank or item.properties._option_title %}
+                                                                            <div class="product-option">
+
+                                                                                <dt>{{ option.name }}:</dt>
+                                                                                <dd>
+                                                                                    {{ option.value -}}
+                                                                                    {%- unless forloop.last %}, {% endunless %}
+                                                                                </dd>
+                                                                            </div>
+                                                                        {% endunless %}
+                                                                    {%- endfor -%}
+                                                                {%- endif -%}
+                                                                {%- for property in item.properties -%}
+                                                                    {%- assign property_first_char = property.first | slice: 0 -%}
+                                                                    {%- if property.last != blank and property_first_char != '_' -%}
+                                                                        {% if property.first contains 'Color' and item.properties._parent_product_id != blank %}
+                                                                            {% assign last =  property.last | split: ':' | last | strip %}
+                                                                            {% unless item.variant.title == last %}
+                                                                            <div class="product-option">
+                                                                                {{ property.last | split: ':' | last | strip }}
+                                                                            </div>
+                                                                            {% endunless %}
+                                                                        {% else %}
+                                                                            <div class="product-option">
+
+                                                                                    <dt>{{ property.first }}:</dt>
+
+                                                                                <dd>
+                                                                                    {%- if property.last contains '/uploads/' -%}
+                                                                                        <a
+                                                                                                href="{{ property.last }}"
+                                                                                                class="link"
+                                                                                                target="_blank"
+                                                                                                aria-describedby="a11y-new-window-message"
+                                                                                        >
+                                                                                            {{ property.last | split: '/' | last }}
+                                                                                        </a>
+                                                                                    {%- else -%}
+                                                                                    {% if property.last contains 'Custom' %}
+
+                                                                                        {{ property.last | split: ':' | last | strip }}
+                                                                                        {% else %}
+                                                                                        {{ property.last }}
+                                                                                        {% endif %}
+                                                                                    {%- endif -%}
+                                                                                </dd>
+                                                                            </div>
+                                                                        {% endif %}
+                                                                    {%- endif -%}
                                                                 {%- endfor -%}
-                                                                {{ extra_props }}
                                                             </dl>
+
                                                         {% endif %}
                                                         <quantity-popover class="cart-quantity-price">
                                                             <div class="cart-item__quantity-wrapper quantity-popover-wrapper">
-                                                                <a
-                                                                        type="button"
-                                                                        class="quantity-btn quantity-btn--minus"
-                                                                        data-key="{{ item.key }}"
-                                                                        data-variantId={{ item.variant.id }}
-                                                                        {% if item.quantity == 1 %}
-                                                                            disabled="disabled"
-                                                                        {% endif %}
-                                                                >
-                                                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                                                         fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                        <rect x="0.5" y="0.5" width="23" height="23"
-                                                                              rx="11.5" fill="white"/>
-                                                                        <rect x="0.5" y="0.5" width="23" height="23"
-                                                                              rx="11.5" stroke="#D3D9E5"/>
-                                                                        <path fill-rule="evenodd" clip-rule="evenodd"
-                                                                              d="M7.25 12C7.25 11.5858 7.58579 11.25 8 11.25H12H16C16.4142 11.25 16.75 11.5858 16.75 12C16.75 12.4142 16.4142 12.75 16 12.75H12H8C7.58579 12.75 7.25 12.4142 7.25 12Z"
-                                                                              fill="black"/>
-                                                                    </svg>
-                                                                </a>
-                                                                <span class="quantity-text">{{ item.quantity }}</span>
-                                                                <a
-                                                                        type="button"
-                                                                        class="quantity-btn quantity-btn--plus"
-                                                                        data-key="{{ item.key }}"
-                                                                        data-variantId={{ item.variant.id }}
-                                                                >
-                                                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                                                         fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                        <rect x="0.5" y="0.5" width="23" height="23"
-                                                                              rx="11.5" fill="white"/>
-                                                                        <rect x="0.5" y="0.5" width="23" height="23"
-                                                                              rx="11.5" stroke="#D3D9E5"/>
-                                                                        <path fill-rule="evenodd" clip-rule="evenodd"
-                                                                              d="M12.0004 7.39844C12.3318 7.39844 12.6004 7.66707 12.6004 7.99844V11.3984H16.0004C16.3318 11.3984 16.6004 11.6671 16.6004 11.9984C16.6004 12.3298 16.3318 12.5984 16.0004 12.5984H12.6004V15.9984C12.6004 16.3298 12.3318 16.5984 12.0004 16.5984C11.669 16.5984 11.4004 16.3298 11.4004 15.9984V12.5984H8.00039C7.66902 12.5984 7.40039 12.3298 7.40039 11.9984C7.40039 11.6671 7.66902 11.3984 8.00039 11.3984H11.4004V7.99844C11.4004 7.66707 11.669 7.39844 12.0004 7.39844Z"
-                                                                              fill="#23232B"/>
-                                                                    </svg>
-                                                                </a>
+                                                                <quantity-input class="quantity cart-quantity">
+                                                                    <button class="quantity__button" name="minus"
+                                                                            type="button"
+                                                                    {% if item.quantity == 1 %}
+                                                                        disabled="disabled"
+                                                                            {% endif %}>
+                                                                      <span class="visually-hidden">
+                                                                        {{- 'products.product.quantity.decrease' | t: product: item.product.title | escape -}}
+                                                                      </span>
+                                                                        {% render 'icon-minus' %}
+                                                                    </button>
+                                                                    <input
+                                                                            class="quantity__input"
+                                                                            data-quantity-variant-id="{{ item.variant.id }}"
+                                                                            type="number"
+                                                                            name="updates[]"
+                                                                            value="{{ item.quantity }}"
+                                                                            {% # theme-check-disable                                                                 %}
+                                                                            data-cart-quantity="{{ cart | item_count_for_variant: item.variant.id }}"
+                                                                            min="0"
+                                                                            data-min="{{ item.variant.quantity_rule.min }}"
+                                                                            {% if item.variant.quantity_rule.max != null %}
+                                                                                max="{{ item.variant.quantity_rule.max }}"
+                                                                            {% endif %}
+                                                                            step="{{ item.variant.quantity_rule.increment }}"
+                                                                            {% # theme-check-enable                                                                 %}
+                                                                            aria-label="{{ 'products.product.quantity.input_label' | t: product: item.product.title | escape }}"
+                                                                            id="Quantity-{{ item.index | plus: 1 }}"
+                                                                            data-index="{{ item.index | plus: 1 }}">
+                                                                    <button class="quantity__button" name="plus"
+                                                                            type="button">
+                                                                  <span class="visually-hidden">
+                                                                    {{- 'products.product.quantity.increase' | t: product: item.product.title | escape -}}
+                                                                  </span>
+                                                                        {% render 'icon-plus' %}
+                                                                    </button>
+                                                                </quantity-input>
                                                             </div>
                                                             {% if item.original_price != item.final_price %}
                                                                 <div class="cart-item__discounted-prices">
@@ -224,11 +272,9 @@
                                                                     </strong>
                                                                 </div>
                                                             {% else %}
-                                                                {% unless item.product.tags contains 'avisplus-product-options' %}
-                                                                    <div class="extra-price product-option">
-                                                                        {{ item.original_price | money }}
-                                                                    </div>
-                                                                {% endunless %}
+                                                                <div class="extra-price product-option">
+                                                                    {{ item.final_line_price | money }}
+                                                                </div>
                                                             {% endif %}
                                                         </quantity-popover>
                                                     </td>
@@ -284,7 +330,6 @@ TODO: delete the script below, if it is no longer needed
 			});
 		});
 
-		// Iterate through each cart item and update its details
 		cartItems.forEach(cartItem => {
 			let count = 0;
 			let totalSum = 0;
@@ -306,30 +351,27 @@ TODO: delete the script below, if it is no longer needed
 				nextElement = nextElement.nextElementSibling;
 			}
 
-			// Update quantity display if the element exists
 			const quantityDisplay = cartItem.querySelector('.extra-quantity .value');
 			if (quantityDisplay) {
 				quantityDisplay.textContent = count;
 			}
 
-			// Update price display if the element exists
 			const priceDisplay = cartItem.querySelector('.options-price');
 			if (priceDisplay) {
-				priceDisplay.textContent = `$${totalSum.toFixed(2)}`;
+				// Format with commas as thousands separators
+				const formatted = totalSum.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+				priceDisplay.textContent = `$${formatted}`;
 			}
 
-			// Show or hide the "show-extra" button based on extra content availability
 			const showExtraButton = cartItem.querySelector('.show-extra');
 			if (showExtraButton) {
 				showExtraButton.style.display = hasExtraContent ? 'flex' : 'none';
 			}
 		});
 
-		// Update total cart count in the UI
 		updateCartCount(totalContentCount);
 	});
 
-	// Function to update the cart count in the drawer and header
 	function updateCartCount(totalContentCount) {
 		const drawerHeadingSpan = document.querySelector('.drawer__heading span');
 		const drawerSubHeadingSpan = document.querySelector('.cart-drawer__subheading span');
@@ -337,13 +379,12 @@ TODO: delete the script below, if it is no longer needed
 
 		if (drawerHeadingSpan && drawerSubHeadingSpan && cartCount) {
 			const initialCount = parseInt(drawerHeadingSpan.getAttribute('data-count'), 10) || 0;
-			const newCount = Math.max(0, initialCount - totalContentCount); // Prevent negative values
+			const newCount = Math.max(0, initialCount - totalContentCount);
 			drawerHeadingSpan.textContent = newCount;
 			drawerSubHeadingSpan.textContent = newCount;
 			cartCount.textContent = newCount;
 
-			cartCount.style.display = newCount > 0 ? "flex" : "none"; // Hide if cart is empty
+			cartCount.style.display = newCount > 0 ? "flex" : "none";
 		}
 	}
 </script>
-
