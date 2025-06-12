@@ -23,7 +23,7 @@ var TransitTimeCalculator = {
     const estimateDeliveryTimesBtn = document.querySelector('#estimate-delivery-times-btn');
     if (estimateDeliveryTimesBtn && !estimateDeliveryTimesBtn.dataset.listenerAttached) {
       estimateDeliveryTimesBtn.addEventListener('click', async () => {
-        estimateDeliveryTimesBtn.innerText = 'Calculating delivery times...';
+        estimateDeliveryTimesBtn.innerText = 'Calculating...';
         const zipInput = document.querySelector('.location-form #postalCode');
         if (zipInput.value) {
           sessionStorage.userPostal = zipInput.value.replace(/\s+/g, '');
