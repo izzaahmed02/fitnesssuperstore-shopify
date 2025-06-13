@@ -495,172 +495,171 @@ class MobileGallery extends HTMLElement {
       else if (video && media) {
         container.appendChild(clone);
       }
- 
-  // Handle images with zoom/pan
-  else if (img && media && media.preview_image) {
-    const wrapper = document.createElement('div');
-    const zoomWrapper = document.createElement('div');
-    const skeletonWrapper = document.createElement('div');
+      // Handle images with zoom/pan
+      else if (img && media && media.preview_image) {
+        const wrapper = document.createElement('div');
+        const zoomWrapper = document.createElement('div');
+        const skeletonWrapper = document.createElement('div');
 
-    wrapper.className = 'mobile-gallery-slide';
-    zoomWrapper.className = 'zoom-container';
-    skeletonWrapper.className = 'image-skeleton-wrapper';
+        wrapper.className = 'mobile-gallery-slide';
+        zoomWrapper.className = 'zoom-container';
+        skeletonWrapper.className = 'image-skeleton-wrapper';
 
-    zoomWrapper.style.overflow = 'hidden';
+        zoomWrapper.style.overflow = 'hidden';
 
-    const zoomImg = document.createElement('img');
-    zoomImg.src = media.preview_image.src.replace(/width=\d+/, 'width=600');
-    zoomImg.sizes = originalImg?.getAttribute('sizes') || '100vw';
-    zoomImg.width = originalImg?.getAttribute('width') || media.preview_image.width || '';
-    zoomImg.height = originalImg?.getAttribute('height') || media.preview_image.height || '';
-    zoomImg.alt = media.alt || '';
-    zoomImg.loading = 'eager';
-    zoomImg.className = 'popup-zoom-image';
-    zoomImg.style.touchAction = 'none';
-    zoomImg.style.userSelect = 'none';
+        const zoomImg = document.createElement('img');
+        zoomImg.src = media.preview_image.src.replace(/width=\d+/, 'width=600');
+        zoomImg.sizes = originalImg?.getAttribute('sizes') || '100vw';
+        zoomImg.width = originalImg?.getAttribute('width') || media.preview_image.width || '';
+        zoomImg.height = originalImg?.getAttribute('height') || media.preview_image.height || '';
+        zoomImg.alt = media.alt || '';
+        zoomImg.loading = 'eager';
+        zoomImg.className = 'popup-zoom-image';
+        zoomImg.style.touchAction = 'none';
+        zoomImg.style.userSelect = 'none';
 
-    skeletonWrapper.appendChild(zoomImg);
-    zoomWrapper.appendChild(skeletonWrapper);
-    wrapper.appendChild(zoomWrapper);
-    clone.innerHTML = '';
-    clone.appendChild(wrapper);
-    container.appendChild(clone);
+        skeletonWrapper.appendChild(zoomImg);
+        zoomWrapper.appendChild(skeletonWrapper);
+        wrapper.appendChild(zoomWrapper);
+        clone.innerHTML = '';
+        clone.appendChild(wrapper);
+        container.appendChild(clone);
 
-    // Load image at 750px to limit resolution
-    const highResSrc = media.preview_image.src.replace(/width=\d+/, 'width=750');
-    if (zoomImg.src !== highResSrc) {
-      const preload = new Image();
-      preload.src = highResSrc;
-      preload.onload = () => {
-        if (zoomImg.parentElement) {
-          zoomImg.src = highResSrc;
+        const highResSrc = media.preview_image.src.replace(/width=\d+/, '');
+        if (zoomImg.src !== highResSrc) {
+          const preload = new Image();
+          preload.src = highResSrc;
+          preload.onload = () => {
+            if (zoomImg.parentElement) {
+              zoomImg.src = highResSrc;
+            }
+          };
         }
-      };
-    }
 
-    let scale = 1;
-    let posX = 0, posY = 0;
-    let lastPosX = 0, lastPosY = 0;
-    let lastScale = 1;
-    let frameId = null;
+        let scale = 1;
+        let posX = 0, posY = 0;
+        let lastPosX = 0, lastPosY = 0;
+        let lastScale = 1;
+        let frameId = null;
 
-    const updateTransform = () => {
-      if (frameId) cancelAnimationFrame(frameId);
-      frameId = requestAnimationFrame(() => {
-        if (zoomImg.parentElement) {
-          zoomImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-        }
-      });
-    };
+        const updateTransform = () => {
+          if (frameId) cancelAnimationFrame(frameId);
+          frameId = requestAnimationFrame(() => {
+            if (zoomImg.parentElement) {
+              zoomImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+            }
+          });
+        };
 
-    zoomImg.onload = () => {
-      if (skeletonWrapper && skeletonWrapper.parentElement && skeletonWrapper.classList) {
-        skeletonWrapper.classList.add('loaded');
-      }
-      const allowZoom = zoomImg.naturalWidth > 500;
-
-      if (!allowZoom) {
-        wrapper.className += ' zoom-disabled';
-      }
-
-      const hammer = new Hammer(wrapper);
-      this.hammerInstances.push(hammer);
-
-      hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
-
-      if (allowZoom) {
-        hammer.get('pinch').set({ enable: true });
-        hammer.get('doubletap').set({ taps: 2 });
-
-        hammer.on('pinchstart', () => {
-          lastScale = scale;
-        });
-
-        hammer.on('pinchmove', (e) => {
-          // Cap zoom at 1.3
-          scale = Math.max(1, Math.min(lastScale * e.scale, 1.3));
-          if (scale === 1) {
-            posX = 0;
-            posY = 0;
-            lastPosX = 0;
-            lastPosY = 0;
+        zoomImg.onload = () => {
+          if (skeletonWrapper && skeletonWrapper.parentElement && skeletonWrapper.classList) {
+            skeletonWrapper.classList.add('loaded');
           }
-          updateTransform();
-        });
+          const allowZoom = zoomImg.naturalWidth > 500;
 
-        hammer.on('doubletap', () => {
-          if (zoomImg.src !== highResSrc) {
-            const preload = new Image();
-            preload.src = highResSrc;
-            preload.onload = () => {
-              if (zoomImg.parentElement) {
-                zoomImg.src = highResSrc;
-                zoomImg.style.opacity = '0';
-                requestAnimationFrame(() => {
-                  zoomImg.style.transition = 'opacity 0.2s ease-in-out';
-                  zoomImg.style.opacity = '1';
-                });
+          if (!allowZoom) {
+            wrapper.className += ' zoom-disabled';
+          }
+
+          const hammer = new Hammer(wrapper);
+          this.hammerInstances.push(hammer);
+
+          hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+
+          if (allowZoom) {
+            hammer.get('pinch').set({ enable: true });
+            hammer.get('doubletap').set({ taps: 2 });
+
+            hammer.on('pinchstart', () => {
+              lastScale = scale;
+            });
+
+            hammer.on('pinchmove', (e) => {
+              scale = Math.max(1, Math.min(lastScale * e.scale, 3));
+              if (scale === 1) {
+                posX = 0;
+                posY = 0;
+                lastPosX = 0;
+                lastPosY = 0;
               }
-            };
+              updateTransform();
+            });
+
+            hammer.on('doubletap', () => {
+              if (zoomImg.src !== highResSrc) {
+                const preload = new Image();
+                preload.src = highResSrc;
+                preload.onload = () => {
+                  if (zoomImg.parentElement) {
+                    zoomImg.src = highResSrc;
+                    zoomImg.style.opacity = '0';
+                    requestAnimationFrame(() => {
+                      zoomImg.style.transition = 'opacity 0.2s ease-in-out';
+                      zoomImg.style.opacity = '1';
+                    });
+                  }
+                };
+              }
+
+              if (scale < 1.5) {
+                scale = 1.5;
+              } else if (scale < 2) {
+                scale = 2;
+              } else if (scale < 3) {
+                scale = 3;
+              } else {
+                scale = 1;
+                posX = 0;
+                posY = 0;
+                lastPosX = 0;
+                lastPosY = 0;
+              }
+
+              updateTransform();
+            });
+
+            hammer.on('panstart', () => {
+              lastPosX = posX;
+              lastPosY = posY;
+            });
+
+            hammer.on('panmove', (e) => {
+              if (scale <= 1.01) return;
+
+              const rect = wrapper.getBoundingClientRect();
+              const imgWidth = zoomImg.naturalWidth * scale;
+              const imgHeight = zoomImg.naturalHeight * scale;
+
+              const maxX = Math.max((imgWidth - rect.width) / 2, 0);
+              const maxY = Math.max((imgHeight - rect.height) / 2, 0);
+
+              let nextX = lastPosX + e.deltaX;
+              let nextY = lastPosY + e.deltaY;
+
+              posX = Math.min(maxX, Math.max(-maxX, nextX));
+              posY = Math.min(maxY, Math.max(-maxY, nextY));
+
+              updateTransform();
+            });
+
+            hammer.on('panend', () => {
+              lastPosX = posX;
+              lastPosY = posY;
+            });
           }
+        };
 
-          // Adjust double-tap to toggle between 1 and 1.3
-          if (scale < 1.3) {
-            scale = 1.3;
-          } else {
-            scale = 1;
-            posX = 0;
-            posY = 0;
-            lastPosX = 0;
-            lastPosY = 0;
-          }
-
-          updateTransform();
-        });
-
-        hammer.on('panstart', () => {
-          lastPosX = posX;
-          lastPosY = posY;
-        });
-
-        hammer.on('panmove', (e) => {
-          if (scale <= 1.01) return;
-
-          const rect = wrapper.getBoundingClientRect();
-          const imgWidth = zoomImg.naturalWidth * scale;
-          const imgHeight = zoomImg.naturalHeight * scale;
-
-          const maxX = Math.max((imgWidth - rect.width) / 2, 0);
-          const maxY = Math.max((imgHeight - rect.height) / 2, 0);
-
-          let nextX = lastPosX + e.deltaX;
-          let nextY = lastPosY + e.deltaY;
-
-          posX = Math.min(maxX, Math.max(-maxX, nextX));
-          posY = Math.min(maxY, Math.max(-maxY, nextY));
-
-          updateTransform();
-        });
-
-        hammer.on('panend', () => {
-          lastPosX = posX;
-          lastPosY = posY;
-        });
+        const slide = zoomImg.closest('.slick-slide');
+        if (slide) {
+          slide.addEventListener(
+            'touchmove',
+            (e) => {
+              if (scale > 1.01) e.stopPropagation();
+            },
+            { passive: false }
+          );
+        }
       }
-    };
-
-    const slide = zoomImg.closest('.slick-slide');
-    if (slide) {
-      slide.addEventListener(
-        'touchmove',
-        (e) => {
-          if (scale > 1.01) e.stopPropagation();
-        },
-        { passive: false }
-      );
-    }
-  }
-
 
       // Render thumbnail
       if (media && media.preview_image) {
