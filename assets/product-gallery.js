@@ -264,7 +264,7 @@ class ProductGallery extends HTMLElement {
     zoomImg.src = media.preview_image.src.replace(/height=\d+/, 'height=750');
 
     zoomResult.appendChild(zoomImg);
-     zoomImg.style.transform = 'scale(0.666)';
+     zoomImg.style.transform = 'scale(0.8)';
     zoomImg.style.transformOrigin = 'top center';
 
 
