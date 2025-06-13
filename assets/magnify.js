@@ -60,4 +60,4 @@ function enableZoomOnHover(zoomRatio) {
   });
 }
 
-enableZoomOnHover(2);
+enableZoomOnHover(1.5);
