@@ -416,294 +416,296 @@ class MobileGallery extends HTMLElement {
     });
   }
 
-  renderPopupSlides(container, thumbnailContainer) {
-    const slides = this.querySelectorAll('.mobile-gallery-slide-wrap');
-    container.innerHTML = '';
-    thumbnailContainer.innerHTML = '';
+ renderPopupSlides(container, thumbnailContainer) {
+  const slides = this.querySelectorAll('.mobile-gallery-slide-wrap');
+  container.innerHTML = '';
+  thumbnailContainer.innerHTML = '';
 
-    slides.forEach((originalSlide, index) => {
-      const clone = originalSlide.cloneNode(true);
-      const iframe = clone.querySelector('iframe');
-      const overlay = clone.querySelector('.video-iframe-overlay');
-      const img = clone.querySelector('img');
-      const originalImg = originalSlide.querySelector('img');
-      const video = clone.querySelector('video');
-      const media = this.mediaData[index];
+  slides.forEach((originalSlide, index) => {
+    const clone = originalSlide.cloneNode(true);
+    const iframe = clone.querySelector('iframe');
+    const overlay = clone.querySelector('.video-iframe-overlay');
+    const img = clone.querySelector('img');
+    const originalImg = originalSlide.querySelector('img');
+    const video = clone.querySelector('video');
+    const media = this.mediaData[index];
 
-      // Handle YouTube videos
-      if (iframe && iframe.src.includes('youtube.com')) {
-        const url = new URL(iframe.src);
-        url.searchParams.set('muted', '1');
-        url.searchParams.set('enablejsapi', '1');
+    // Handle YouTube videos
+    if (iframe && iframe.src.includes('youtube.com')) {
+      const url = new URL(iframe.src);
+      url.searchParams.set('muted', '1');
+      url.searchParams.set('enablejsapi', '1');
 
-        const newIframe = document.createElement('iframe');
-        newIframe.src = url.toString();
-        newIframe.setAttribute('allow', 'autoplay; encrypted-media');
-        newIframe.setAttribute('frameborder', '0');
-        newIframe.setAttribute('allowfullscreen', 'true');
-        newIframe.width = iframe.width || '100%';
-        newIframe.height = iframe.height || 'auto';
-        newIframe.style.pointerEvents = 'none';
+      const newIframe = document.createElement('iframe');
+      newIframe.src = url.toString();
+      newIframe.setAttribute('allow', 'autoplay; encrypted-media');
+      newIframe.setAttribute('frameborder', '0');
+      newIframe.setAttribute('allowfullscreen', 'true');
+      newIframe.width = iframe.width || '100%';
+      newIframe.height = iframe.height || 'auto';
+      newIframe.style.pointerEvents = 'none';
 
-        const wrapper = document.createElement('div');
-        const videoWrapper = document.createElement('div');
-        wrapper.className = 'mobile-gallery-slide external-video';
-        videoWrapper.className = 'video-wrapper';
-        wrapper.appendChild(videoWrapper);
-        videoWrapper.appendChild(newIframe);
+      const wrapper = document.createElement('div');
+      const videoWrapper = document.createElement('div');
+      wrapper.className = 'mobile-gallery-slide external-video';
+      videoWrapper.className = 'video-wrapper';
+      wrapper.appendChild(videoWrapper);
+      videoWrapper.appendChild(newIframe);
 
-        const newOverlay = document.createElement('div');
-        newOverlay.className = 'video-iframe-overlay';
-        newOverlay.setAttribute('aria-hidden', 'true');
-        wrapper.appendChild(newOverlay);
+      const newOverlay = document.createElement('div');
+      newOverlay.className = 'video-iframe-overlay';
+      newOverlay.setAttribute('aria-hidden', 'true');
+      wrapper.appendChild(newOverlay);
 
-        clone.innerHTML = '';
-        clone.appendChild(wrapper);
-        container.appendChild(clone);
-      }
-      // Handle Vimeo videos
-      else if (iframe && iframe.src.includes('vimeo.com')) {
-        const url = new URL(iframe.src);
-        url.searchParams.set('muted', '1');
-
-        const newIframe = document.createElement('iframe');
-        newIframe.src = url.toString();
-        newIframe.setAttribute('allow', 'autoplay; encrypted-media');
-        newIframe.setAttribute('frameborder', '0');
-        newIframe.setAttribute('allowfullscreen', 'true');
-        newIframe.width = iframe.width || '100%';
-        newIframe.height = iframe.height || 'auto';
-        newIframe.style.pointerEvents = 'none';
-
-        const wrapper = document.createElement('div');
-        const videoWrapper = document.createElement('div');
-        wrapper.className = 'mobile-gallery-slide external-video';
-        videoWrapper.className = 'video-wrapper';
-        wrapper.appendChild(videoWrapper);
-        videoWrapper.appendChild(newIframe);
-
-        const newOverlay = document.createElement('div');
-        newOverlay.className = 'video-iframe-overlay';
-        newOverlay.setAttribute('aria-hidden', 'true');
-        wrapper.appendChild(newOverlay);
-
-        clone.innerHTML = '';
-        clone.appendChild(wrapper);
-        container.appendChild(clone);
-      }
-      // Handle MP4 videos
-      else if (video && media) {
-        container.appendChild(clone);
-      }
-      // Handle images with zoom/pan
-else if (img && media && media.preview_image) {
-  const wrapper = document.createElement('div');
-  const zoomWrapper = document.createElement('div');
-  const skeletonWrapper = document.createElement('div');
-
-  wrapper.className = 'mobile-gallery-slide';
-  zoomWrapper.className = 'zoom-container';
-  skeletonWrapper.className = 'image-skeleton-wrapper';
-
-  zoomWrapper.style.overflow = 'hidden';
-
-  const zoomImg = document.createElement('img');
-  zoomImg.src = media.preview_image.src.replace(/width=\d+/, 'width=750'); // Load at 750px initially
-  zoomImg.sizes = originalImg?.getAttribute('sizes') || '100vw';
-  zoomImg.width = originalImg?.getAttribute('width') || media.preview_image.width || '';
-  zoomImg.height = originalImg?.getAttribute('height') || media.preview_image.height || '';
-  zoomImg.alt = media.alt || '';
-  zoomImg.loading = 'eager';
-  zoomImg.className = 'popup-zoom-image';
-  zoomImg.style.touchAction = 'none';
-  zoomImg.style.userSelect = 'none';
-
-  skeletonWrapper.appendChild(zoomImg);
-  zoomWrapper.appendChild(skeletonWrapper);
-  wrapper.appendChild(zoomWrapper);
-  clone.innerHTML = '';
-  clone.appendChild(wrapper);
-  container.appendChild(clone);
-
-  const highResSrc = media.preview_image.src.replace(/width=\d+/, 'width=750'); // Limit to 750px
-  if (zoomImg.src !== highResSrc) {
-    const preload = new Image();
-    preload.src = highResSrc;
-    preload.onload = () => {
-      if (zoomImg.parentElement) {
-        zoomImg.src = highResSrc;
-      }
-    };
-  }
-
-  let scale = 1;
-  let posX = 0, posY = 0;
-  let lastPosX = 0, lastPosY = 0;
-  let lastScale = 1;
-  let frameId = null;
-
-  const updateTransform = () => {
-    if (frameId) cancelAnimationFrame(frameId);
-    frameId = requestAnimationFrame(() => {
-      if (zoomImg.parentElement) {
-        zoomImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-      }
-    });
-  };
-
-  zoomImg.onload = () => {
-    if (skeletonWrapper && skeletonWrapper.parentElement && skeletonWrapper.classList) {
-      skeletonWrapper.classList.add('loaded');
+      clone.innerHTML = '';
+      clone.appendChild(wrapper);
+      container.appendChild(clone);
     }
-    const allowZoom = zoomImg.naturalWidth > 500;
+    // Handle Vimeo videos
+    else if (iframe && iframe.src.includes('vimeo.com')) {
+      const url = new URL(iframe.src);
+      url.searchParams.set('muted', '1');
 
-    if (!allowZoom) {
-      wrapper.className += ' zoom-disabled';
+      const newIframe = document.createElement('iframe');
+      newIframe.src = url.toString();
+      newIframe.setAttribute('allow', 'autoplay; encrypted-media');
+      newIframe.setAttribute('frameborder', '0');
+      newIframe.setAttribute('allowfullscreen', 'true');
+      newIframe.width = iframe.width || '100%';
+      newIframe.height = iframe.height || 'auto';
+      newIframe.style.pointerEvents = 'none';
+
+      const wrapper = document.createElement('div');
+      const videoWrapper = document.createElement('div');
+      wrapper.className = 'mobile-gallery-slide external-video';
+      videoWrapper.className = 'video-wrapper';
+      wrapper.appendChild(videoWrapper);
+      videoWrapper.appendChild(newIframe);
+
+      const newOverlay = document.createElement('div');
+      newOverlay.className = 'video-iframe-overlay';
+      newOverlay.setAttribute('aria-hidden', 'true');
+      wrapper.appendChild(newOverlay);
+
+      clone.innerHTML = '';
+      clone.appendChild(wrapper);
+      container.appendChild(clone);
     }
-
-    const hammer = new Hammer(wrapper);
-    this.hammerInstances.push(hammer);
-
-    hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
-
-    if (allowZoom) {
-      // Calculate max scale to ensure zoomed image doesn't exceed 750px
-      const maxScale = Math.min(
-        750 / zoomImg.naturalWidth,
-        750 / zoomImg.naturalHeight,
-        3 // Keep an upper bound for usability
-      );
-
-      hammer.get('pinch').set({ enable: true });
-      hammer.get('doubletap').set({ taps: 2 });
-
-      hammer.on('pinchstart', () => {
-        lastScale = scale;
-      });
-
-      hammer.on('pinchmove', (e) => {
-        scale = Math.max(1, Math.min(lastScale * e.scale, maxScale));
-        if (scale === 1) {
-          posX = 0;
-          posY = 0;
-          lastPosX = 0;
-          lastPosY = 0;
-        }
-        updateTransform();
-      });
-
-      hammer.on('doubletap', () => {
-        if (zoomImg.src !== highResSrc) {
-          const preload = new Image();
-          preload.src = highResSrc;
-          preload.onload = () => {
-            if (zoomImg.parentElement) {
-              zoomImg.src = highResSrc;
-              zoomImg.style.opacity = '0';
-              requestAnimationFrame(() => {
-                zoomImg.style.transition = 'opacity 0.2s ease-in-out';
-                zoomImg.style.opacity = '1';
-              });
-            }
-          };
-        }
-
-        // Adjust double-tap zoom levels based on maxScale
-        if (scale < 1.5 && 1.5 <= maxScale) {
-          scale = 1.5;
-        } else if (scale < 2 && 2 <= maxScale) {
-          scale = 2;
-        } else if (scale < maxScale) {
-          scale = maxScale;
-        } else {
-          scale = 1;
-          posX = 0;
-          posY = 0;
-          lastPosX = 0;
-          lastPosY = 0;
-        }
-
-        updateTransform();
-      });
-
-      hammer.on('panstart', () => {
-        lastPosX = posX;
-        lastPosY = posY;
-      });
-
-      hammer.on('panmove', (e) => {
-        if (scale <= 1.01) return;
-
-        const rect = wrapper.getBoundingClientRect();
-        const imgWidth = zoomImg.naturalWidth * scale;
-        const imgHeight = zoomImg.naturalHeight * scale;
-
-        const maxX = Math.max((imgWidth - rect.width) / 2, 0);
-        const maxY = Math.max((imgHeight - rect.height) / 2, 0);
-
-        let nextX = lastPosX + e.deltaX;
-        let nextY = lastPosY + e.deltaY;
-
-        posX = Math.min(maxX, Math.max(-maxX, nextX));
-        posY = Math.min(maxY, Math.max(-maxY, nextY));
-
-        updateTransform();
-      });
-
-      hammer.on('panend', () => {
-        lastPosX = posX;
-        lastPosY = posY;
-      });
+    // Handle MP4 videos
+    else if (video && media) {
+      container.appendChild(clone);
     }
-  };
+    // Handle images with zoom/pan
+    else if (img && media && media.preview_image) {
+      const wrapper = document.createElement('div');
+      const zoomWrapper = document.createElement('div');
+      const skeletonWrapper = document.createElement('div');
 
-  const slide = zoomImg.closest('.slick-slide');
-  if (slide) {
-    slide.addEventListener(
-      'touchmove',
-      (e) => {
-        if (scale > 1.01) e.stopPropagation();
-      },
-      { passive: false }
-    );
-  }
-}
+      wrapper.className = 'mobile-gallery-slide';
+      zoomWrapper.className = 'zoom-container';
+      skeletonWrapper.className = 'image-skeleton-wrapper';
 
-      // Render thumbnail
-      if (media && media.preview_image) {
-        const thumbWrapper = document.createElement('div');
-        thumbWrapper.className = 'mobile-popup-thumb';
-        thumbWrapper.setAttribute('data-media-id', media.id);
+      zoomWrapper.style.overflow = 'hidden';
 
-        const thumbSkeleton = document.createElement('div');
-        thumbSkeleton.className = 'image-skeleton-wrapper';
+      const zoomImg = document.createElement('img');
+      zoomImg.src = media.preview_image.src.replace(/width=\d+/, 'width=750');
+      zoomImg.sizes = originalImg?.getAttribute('sizes') || '100vw';
+      zoomImg.width = originalImg?.getAttribute('width') || media.preview_image.width || '';
+      zoomImg.height = originalImg?.getAttribute('height') || media.preview_image.height || '';
+      zoomImg.alt = media.alt || '';
+      zoomImg.loading = 'eager';
+      zoomImg.className = 'popup-zoom-image';
+      zoomImg.style.touchAction = 'pinch-zoom pan-x pan-y';
+      zoomImg.style.userSelect = 'none';
 
-        const thumbImg = document.createElement('img');
-        thumbImg.src = media.preview_image.src.replace(/width=\d+/, 'width=100');
-        thumbImg.alt = media.alt || '';
-        thumbImg.width = 100;
-        thumbImg.height = 100;
-        thumbImg.loading = 'lazy';
-        thumbImg.style.objectFit = 'cover';
-        thumbImg.style.aspectRatio = '1/1';
+      skeletonWrapper.appendChild(zoomImg);
+      zoomWrapper.appendChild(skeletonWrapper);
+      wrapper.appendChild(zoomWrapper);
+      clone.innerHTML = '';
+      clone.appendChild(wrapper);
+      container.appendChild(clone);
 
-        thumbSkeleton.appendChild(thumbImg);
-        thumbWrapper.appendChild(thumbSkeleton);
-        thumbnailContainer.appendChild(thumbWrapper);
-
-        thumbImg.onload = () => {
-          if (thumbSkeleton && thumbSkeleton.parentElement && thumbSkeleton.classList) {
-            thumbSkeleton.classList.add('loaded');
+      const highResSrc = media.preview_image.src.replace(/width=\d+/, 'width=750');
+      if (zoomImg.src !== highResSrc) {
+        const preload = new Image();
+        preload.src = highResSrc;
+        preload.onload = () => {
+          if (zoomImg.parentElement) {
+            zoomImg.src = highResSrc;
           }
         };
-
-        thumbWrapper.addEventListener('click', (e) => {
-          e.stopPropagation();
-          $(this.popupSlider).slick('slickGoTo', index);
-        });
       }
-    });
-  }
+
+      let scale = 1;
+      let posX = 0, posY = 0;
+      let lastPosX = 0, lastPosY = 0;
+      let lastScale = 1;
+      let frameId = null;
+
+      const updateTransform = () => {
+        if (frameId) cancelAnimationFrame(frameId);
+        frameId = requestAnimationFrame(() => {
+          if (zoomImg.parentElement) {
+            zoomImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+          }
+        });
+      };
+
+      zoomImg.onload = () => {
+        if (skeletonWrapper && skeletonWrapper.parentElement && skeletonWrapper.classList) {
+          skeletonWrapper.classList.add('loaded');
+        }
+        const allowZoom = zoomImg.naturalWidth > 300;
+        console.log('Image loaded:', { naturalWidth: zoomImg.naturalWidth, naturalHeight: zoomImg.naturalHeight, allowZoom });
+
+        if (!allowZoom) {
+          wrapper.className += ' zoom-disabled';
+        }
+
+        const hammer = new Hammer(wrapper);
+        this.hammerInstances.push(hammer);
+
+        hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+
+        if (allowZoom) {
+          const maxScale = Math.min(
+            Math.max(750 / zoomImg.naturalWidth, 1.5),
+            Math.max(750 / zoomImg.naturalHeight, 1.5),
+            3
+          );
+          console.log('maxScale:', maxScale);
+
+          hammer.get('pinch').set({ enable: true });
+          hammer.get('doubletap').set({ taps: 2 });
+
+          hammer.on('pinchstart', () => {
+            lastScale = scale;
+          });
+
+          hammer.on('pinchmove', (e) => {
+            console.log('Pinchmove:', e.scale);
+            scale = Math.max(1, Math.min(lastScale * e.scale, maxScale));
+            if (scale === 1) {
+              posX = 0;
+              posY = 0;
+              lastPosX = 0;
+              lastPosY = 0;
+            }
+            updateTransform();
+          });
+
+          hammer.on('doubletap', () => {
+            console.log('Doubletap triggered');
+            if (zoomImg.src !== highResSrc) {
+              const preload = new Image();
+              preload.src = highResSrc;
+              preload.onload = () => {
+                if (zoomImg.parentElement) {
+                  zoomImg.src = highResSrc;
+                  zoomImg.style.opacity = '0';
+                  requestAnimationFrame(() => {
+                    zoomImg.style.transition = 'opacity 0.2s ease-in-out';
+                    zoomImg.style.opacity = '1';
+                  });
+                }
+              };
+            }
+
+            if (scale < 1.5 && 1.5 <= maxScale) {
+              scale = 1.5;
+            } else if (scale < 2 && 2 <= maxScale) {
+              scale = 2;
+            } else if (scale < maxScale) {
+              scale = maxScale;
+            } else {
+              scale = 1;
+              posX = 0;
+              posY = 0;
+              lastPosX = 0;
+              lastPosY = 0;
+            }
+
+            updateTransform();
+          });
+
+          hammer.on('panstart', () => {
+            lastPosX = posX;
+            lastPosY = posY;
+          });
+
+          hammer.on('panmove', (e) => {
+            if (scale <= 1.01) return;
+
+            const rect = wrapper.getBoundingClientRect();
+            const imgWidth = zoomImg.naturalWidth * scale;
+            const imgHeight = zoomImg.naturalHeight * scale;
+
+            const maxX = Math.max((imgWidth - rect.width) / 2, 0);
+            const maxY = Math.max((imgHeight - rect.height) / 2, 0);
+
+            let nextX = lastPosX + e.deltaX;
+            let nextY = lastPosY + e.deltaY;
+
+            posX = Math.min(maxX, Math.max(-maxX, nextX));
+            posY = Math.min(maxY, Math.max(-maxY, nextY));
+
+            updateTransform();
+          });
+
+          hammer.on('panend', () => {
+            lastPosX = posX;
+            lastPosY = posY;
+          });
+        }
+      };
+
+      const slide = zoomImg.closest('.slick-slide');
+      if (slide) {
+        slide.addEventListener(
+          'touchmove',
+          (e) => {
+            if (scale > 1.01) e.stopPropagation();
+          },
+          { passive: false }
+        );
+      }
+    }
+
+    // Render thumbnail
+    if (media && media.preview_image) {
+      const thumbWrapper = document.createElement('div');
+      thumbWrapper.className = 'mobile-popup-thumb';
+      thumbWrapper.setAttribute('data-media-id', media.id);
+
+      const thumbSkeleton = document.createElement('div');
+      thumbSkeleton.className = 'image-skeleton-wrapper';
+
+      const thumbImg = document.createElement('img');
+      thumbImg.src = media.preview_image.src.replace(/width=\d+/, 'width=100');
+      thumbImg.alt = media.alt || '';
+      thumbImg.width = 100;
+      thumbImg.height = 100;
+      thumbImg.loading = 'lazy';
+      thumbImg.style.objectFit = 'cover';
+      thumbImg.style.aspectRatio = '1/1';
+
+      thumbSkeleton.appendChild(thumbImg);
+      thumbWrapper.appendChild(thumbSkeleton);
+      thumbnailContainer.appendChild(thumbWrapper);
+
+      thumbImg.onload = () => {
+        if (thumbSkeleton && thumbSkeleton.parentElement && thumbSkeleton.classList) {
+          thumbSkeleton.classList.add('loaded');
+        }
+      };
+
+      thumbWrapper.addEventListener('click', (e) => {
+        e.stopPropagation();
+        $(this.popupSlider).slick('slickGoTo', index);
+      });
+    }
+  });
+}
 
   pauseAllMedia(scope) {
     if (!scope) return;
