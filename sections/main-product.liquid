@@ -647,23 +647,22 @@
                             <script>
   var attachClickHandler = setInterval(function () {
     var $target = $('.custom_shipping_container');
-    var $modalClose = $('.modal-close');
-
     if ($target.length > 0) {
       var $clickTarget = $target.parent().parent();
 
-      $clickTarget.on('click', function () {
+      $clickTarget.off('click.clearContent').on('click.clearContent', function () {
         $('#dynamic-product-content').empty();
       });
 
-      $modalClose.on('click', function () {
-        $('#dynamic-product-content').empty();
-      });
-
-      clearInterval(attachClickHandler);
+      clearInterval(attachClickHandler); 
     }
   }, 200);
+
+  $(document).on('click', '.modal-close', function () {
+    $('#dynamic-product-content').empty();
+  });
 </script>
+
 
                           {% endif %}
                         {% endfor %}
