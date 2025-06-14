@@ -4,94 +4,33 @@
 <div class="comparison-scroll-area">
   <table class="comparison-table">
     <thead>
-      <tr>
-        {% for header in page.metafields.custom.comparison_table.headers %}
-          <th class="{% if forloop.first %}sticky-col param-col{% endif %}" style="text-align: center;">
-            {{ header }}
-          </th>
-        {% endfor %}
-      </tr>
-      <tr>
-        <th class="sticky-col param-col" style="text-align: center;">Model</th>
-        {% for model in page.metafields.custom.comparison_table.models %}
-          <th style="text-align: center;">
-            <div class="model-block">
-              <h3 style="text-align: center;">
-                <a href="{{ model.url }}" data-acsb-clickable="true" data-acsb-navigable="true">{{ model.name }}</a>
-              </h3>
-              {% if model.image %}
-                <img src="{{ model.image | img_url: '160x160' }}" style="margin-bottom: 16px; display: block; margin-left: auto; margin-right: auto;" alt="{{ model.name }}">
-              {% endif %}
+      <tr style="height: 186.5px;">
+        <th class="sticky-col param-col" style="width: 4.78228%; height: 186.5px;">Model</th>
+        {% for product in page.metafields.custom.comparison_chart.value.products %}
+          <th style="width: 7.24893%; height: 186.5px;">
+            <div class="model-block" style="text-align: center;">
+              <h3><a href="{{ product.url }}">{{ product.title }}</a></h3>
+              <p><img src="{{ product.featured_image | img_url: '160x160' }}" style="margin-bottom: 16px; display: block; margin-left: auto; margin-right: auto;"></p>
             </div>
           </th>
         {% endfor %}
       </tr>
     </thead>
     <tbody>
-      {% for header in page.metafields.custom.comparison_table.headers %}
-        {% unless forloop.first %}
-          <tr style="text-align: center;">
-            <th class="sticky-col param-col">{{ header }}</th>
-            {% for model in page.metafields.custom.comparison_table.models %}
-              {% assign attribute_value = '' %}
-              {% for attr in model.attributes %}
-                {% if attr contains header %}
-                  {% assign parts = attr | split: ': ' %}
-                  {% if parts.size > 1 %}
-                    {% assign attribute_value = parts[1] %}
-                  {% endif %}
-                {% endif %}
-              {% endfor %}
-              <td>{{ attribute_value }}</td>
-            {% endfor %}
-          </tr>
-        {% endunless %}
+      {% for row in page.metafields.custom.comparison_chart.value.rows %}
+        <tr style="height: 63.1042px; text-align: center;">
+          <th class="sticky-col param-col" style="width: 4.78228%; height: 63.1042px;">{{ row.row_title }}</th>
+          {% for value in row.values %}
+            <td style="width: 7.24893%; height: 63.1042px;">{{ value }}</td>
+          {% endfor %}
+        </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 
-<style>
-.comparison-scroll-area {
-  overflow-x: auto;
-  max-width: 100%;
-}
-
-.comparison-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.comparison-table th, .comparison-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  vertical-align: middle;
-}
-
-.sticky-col {
-  position: sticky;
-  left: 0;
-  background: #f8f8f8;
-  z-index: 1;
-}
-
-.param-col {
-  font-weight: bold;
-}
-
-.model-block img {
-  max-width: 160px;
-  height: auto;
-}
-</style>
-
-
-
-
 
 {% comment %}
-
-
 
 <div class="page-width">
     <div class="comparison-main__wrapper">
@@ -101,9 +40,6 @@
         {{ page.content }}
     </div>
 </div>
-
-
-
 
 
 <script>
