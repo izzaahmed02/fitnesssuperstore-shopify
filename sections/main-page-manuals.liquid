@@ -1,0 +1,78 @@
+{{ 'custom-manuals.css' | asset_url | stylesheet_tag }}
+
+<custom-manuals class="manuals">
+  <div class="manuals-header">
+    <div class="page-width">
+      <h2 class="manuals-title">{{ section.settings.title | default: page.title }}</h2>
+      <form class="manuals-search" role="search" onsubmit="return false;">
+        <div class="manuals-search__wrapper">
+          <div class="manuals-search__container">
+            <div class="manuals-search-icon">{% render 'icon-search-manuals' %}</div>
+            <input
+              type="search"
+              class="manuals-search__input"
+              placeholder="Search by brand name"
+              aria-label="Search brands"
+            >
+            <button type="reset" class="manuals-search__reset-btn" aria-label="Reset search">
+              {% render 'icon-close-manual' %}
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div class="manuals-filters">
+        <div class="manuals-filters-list" style="grid-template-rows: repeat(11, auto);">
+          {% assign brands = shop.metaobjects.brand_manuals.values %}
+          {% for brand in brands %}
+            {% if brand.brand_page %}
+              <a
+                href="{{ brand.brand_page.value.url }}"
+                class="manuals-filter-collection"
+                data-title="{{- brand.brand_name -}}"
+                data-handle="{{- brand.brand_name | handle -}}"
+              >
+                {% if brand.brand_logo != blank %}
+                  <img
+                    src="{{ brand.brand_logo | img_url: '300x' }}"
+                    alt="{{ brand.brand_name }}"
+                    loading="lazy"
+                    width="{{ brand.brand_name.width }}"
+                    height=""
+                    class="manuals-filter-collection__img"
+                  >
+                {% endif %}
+                <p href="{{ brand.brand_page.value.url }}" class="manuals-filter-collection__title">
+                  {{- brand.brand_name -}}
+                </p>
+              </a>
+            {% endif %}
+          {% endfor %}
+          <p class="manuals-empty-message" hidden>No brands found. Please check your spelling.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</custom-manuals>
+
+<script src="{{ 'page-custom-manuals.js' | asset_url }}" defer="defer"></script>
+
+
+{% schema %}
+{
+  "name": "Manuals Section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "Title"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Manuals Section"
+    }
+  ]
+}
+{% endschema %}

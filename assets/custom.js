@@ -314,7 +314,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 		if (locationRes) {
 			const userLoc = await locationRes.json();
 			sessionStorage.userLoc = JSON.stringify(userLoc);
-			if (userLoc && userLoc.country_code === 'US') {
+			if (userLoc && userLoc.postal && userLoc.country_code === 'US') {
 				const distanceFromBenicia = await getDistanceFromBenicia(userLoc.postal)
 				if (distanceFromBenicia <= 100) {
 					document.querySelector('.utility-bar').style.display = 'block';
@@ -324,7 +324,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 	} else {
 		const userLocFromSessionStorage = JSON.parse(sessionStorage.userLoc);
 
-		if (userLocFromSessionStorage && userLocFromSessionStorage.country_code === 'US') {
+		if (userLocFromSessionStorage && userLocFromSessionStorage.postal && userLocFromSessionStorage.country_code === 'US') {
 			const distanceFromBenicia = await getDistanceFromBenicia(userLocFromSessionStorage.postal);
 
 			if (distanceFromBenicia <= 100) {

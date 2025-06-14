@@ -124,7 +124,7 @@
 				await fetch(checkoutUrl, {method: 'GET', mode: 'no-cors'});
 				setTimeout(() => {
 					window.location.reload();
-				}, 2000)
+				}, 500)
 			} catch (err) {
 				// Если ошибка происходит, можно залогировать её, если нужно.
 				console.error(err);
