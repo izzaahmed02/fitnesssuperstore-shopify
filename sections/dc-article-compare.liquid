@@ -3,9 +3,9 @@
 
 
   <table class="comparison-table">
-    <thead>
-      <tr>
-         {% for product_entry in page.metafields.custom.comparison_rows.value %}
+  <thead>
+    <tr>
+      {% for product_entry in page.metafields.custom.comparison_rows.value %}
         {% assign product = product_entry.product.value %}
         <th>
           {% if product.featured_image %}
@@ -16,20 +16,20 @@
           <div style="margin-top: 5px;"><a href="{{ product.url }}" target="_blank">View Product</a></div>
         </th>
       {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for row_entry in page.metafields.custom.comparison_rows.value %}
+      <tr>
+        <td>{{ row_entry.row_label }}</td>
+        {% for i in (1..4) %}
+          {% assign column_key = 'column_' | append: i %}
+          <td>{{ row_entry[column_key] }}</td>
+        {% endfor %}
       </tr>
-    </thead>
-    <tbody>
-      {% for row in page.metafields.custom.comparison_rows.value %}
-        <tr>
-          <td>{{ row.row_label }}</td>
-          <td>{{ row.column_1 }}</td>
-          <td>{{ row.column_2 }}</td>
-          <td>{{ row.column_3 }}</td>
-          <td>{{ row.column_4 }}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    {% endfor %}
+  </tbody>
+</table>
 
 
 
