@@ -1,33 +1,33 @@
 {{ 'main-article-compare.css' | asset_url | stylesheet_tag }}
 
 
-{% assign chart = page.metafields.custom.chart_data | parse_json %}
+{% assign comparison_rows = page.metafields.custom.comparison_rows %}
 
-{% if chart and chart.columns and chart.rows %}
-  <div class="comparison-wrapper">
-    <table class="comparison-table">
-      <thead>
+{% if comparison_rows.size > 0 %}
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Life Fitness 9500HR</th>
+        <th>Life Fitness 9500HR</th>
+        <th>Life Fitness 9500HR</th>
+        <th>Life Fitness 9500HR</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in comparison_rows %}
         <tr>
-          <th></th>
-          {% for col in chart.columns %}
-            <th>{{ col }}</th>
-          {% endfor %}
+          <td>{{ row.label }}</td>
+          <td>{{ row.column_1 }}</td>
+          <td>{{ row.column_2 }}</td>
+          <td>{{ row.column_3 }}</td>
+          <td>{{ row.column_4 }}</td>
         </tr>
-      </thead>
-      <tbody>
-        {% for row in chart.rows %}
-          <tr>
-            <td>{{ row.label }}</td>
-            {% for val in row.values %}
-              <td>{{ val }}</td>
-            {% endfor %}
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+      {% endfor %}
+    </tbody>
+  </table>
 {% else %}
-  <p style="text-align: center;">Comparison chart is not available for this page.</p>
+  <p>No comparison data available for this page.</p>
 {% endif %}
 
 
