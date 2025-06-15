@@ -296,6 +296,7 @@ try {
 	
 							closeModalButton.addEventListener('click', () => {
 								modalWrapper.style.display = 'none';
+                              $('#dynamic-product-content').empty();
 							});
 						};
 					}
