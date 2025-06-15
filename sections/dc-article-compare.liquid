@@ -1,35 +1,51 @@
 {{ 'main-article-compare.css' | asset_url | stylesheet_tag }}
 
 
+{% assign rows = page.metafields.custom.comparison_rows.value %}
 
-  <table class="comparison-table">
+{% if rows.size > 0 %}
+  {% assign first_row = rows.first %}
+  {% assign products = "" | split: "" %}
+
+  {%- for i in (1..4) -%}
+    {% assign product_field = "product_" | append: i %}
+    {% assign product_ref = first_row[product_field] %}
+    {% if product_ref %}
+      {% assign products = products | push: product_ref.value %}
+    {% endif %}
+  {%- endfor -%}
+
+  <table class="comparison-table" style="width:100%; border-collapse: collapse; text-align: left;">
     <thead>
       <tr>
-         {% for product_entry in page.metafields.custom.comparison_rows.value %}
-        {% assign product = product_entry.product.value %}
-        <th>
-          {% if product.featured_image %}
-            <img src="{{ product.featured_image | image_url: width: 120 }}" alt="{{ product.title }}" style="max-width:100px;">
-          {% endif %}
-          <div style="margin-top: 5px;">{{ product.title }}</div>
-          <div style="font-weight: bold; margin-top: 5px;">{{ product.price | money }}</div>
-          <div style="margin-top: 5px;"><a href="{{ product.url }}" target="_blank">View Product</a></div>
-        </th>
-      {% endfor %}
+        <th style="border: 1px solid #ddd; padding: 10px;">Feature</th>
+        {% for product in products %}
+          <th style="border: 1px solid #ddd; padding: 10px;">
+            {% if product.featured_image %}
+              <img src="{{ product.featured_image | image_url: width: 120 }}" alt="{{ product.title }}" style="max-width: 100px; height: auto;"><br>
+            {% endif %}
+            <div style="margin-top: 5px; font-weight: bold;">{{ product.title }}</div>
+            <div style="margin-top: 5px;">{{ product.price | money }}</div>
+            <div style="margin-top: 5px;"><a href="{{ product.url }}" target="_blank">View Product</a></div>
+          </th>
+        {% endfor %}
       </tr>
     </thead>
     <tbody>
-      {% for row in page.metafields.custom.comparison_rows.value %}
+      {% for row in rows %}
         <tr>
-          <td>{{ row.row_label }}</td>
-          <td>{{ row.column_1 }}</td>
-          <td>{{ row.column_2 }}</td>
-          <td>{{ row.column_3 }}</td>
-          <td>{{ row.column_4 }}</td>
+          <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">{{ row.row_label }}</td>
+          {% for i in (1..products.size) %}
+            {% assign column_key = "column_" | append: i %}
+            <td style="border: 1px solid #ddd; padding: 10px;">{{ row[column_key] | default: '—' }}</td>
+          {% endfor %}
         </tr>
       {% endfor %}
     </tbody>
   </table>
+{% else %}
+  <p>No comparison data available.</p>
+{% endif %}
 
 
 
