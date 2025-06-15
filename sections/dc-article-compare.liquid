@@ -1,81 +1,6 @@
 {{ 'main-article-compare.css' | asset_url | stylesheet_tag }}
 
 
-<table class="comparison-table">
-  <thead>
-    <tr>
-      <th>Features</th>
-      {% assign products_grouped = page.metafields.custom.comparison_table.value | map: 'product.value' | group_by: 'id' %}
-      {% for product_group in page.metafields.custom.comparison_table.value %}
-        {% assign product = page.metafields.custom.comparison_table.value.items.first %}
-        <th>
-          {% if product.featured_image %}
-            <img src="{{ product.featured_image | image_url: width: 120 }}" alt="{{ product.title }}" style="max-width:100px;">
-          {% endif %}
-          <div style="margin-top: 5px;">{{ product.title }}</div>
-          <div style="font-weight: bold; margin-top: 5px;">{{ product.price | money }}</div>
-          <div style="margin-top: 5px;"><a href="{{ product.url }}" target="_blank">View Product</a></div>
-        </th>
-      {% endfor %}
-    </tr>
-  </thead>
-  <tbody>
-    {% assign all_entries = page.metafields.custom.comparison_table.value %}
-    {% for product_group in products_grouped %}
-      {% assign product = product_group.items.first %}
-      {% assign product_id = product.id %}
-      {% for item in all_entries %}
-        {% if item.product.value.id == product_id %}
-          <tr>
-            {% if forloop.first %}
-              <td rowspan="{{ all_entries | where_exp: 'entry', 'entry.product.value.id == product_id' | size }}">{{ item.features }}</td>
-            {% endif %}
-            <td>{{ item.values | default: '-' }}</td>
-          </tr>
-        {% endif %}
-      {% endfor %}
-    {% endfor %}
-  </tbody>
-</table>
-
-
-
-<style>
-  .comparison-wrapper {
-  overflow-x: auto;
-  margin: 2rem 0;
-}
-
-.comparison-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-}
-
-.comparison-table thead th {
-  background-color: #f4f4f4;
-  padding: 12px;
-  border: 1px solid #ddd;
-  font-weight: bold;
-}
-
-.comparison-table td {
-  padding: 12px;
-  border: 1px solid #ddd;
-  vertical-align: top;
-}
-
-.comparison-table tr:nth-child(even) {
-  background-color: #fafafa;
-}
-
-</style>
-
-
-{% comment %}
-
 <div class="page-width">
     <div class="comparison-main__wrapper">
         <h1 class="comparison-main__title">
@@ -84,8 +9,6 @@
         {{ page.content }}
     </div>
 </div>
-
-
 <script>
 	document.addEventListener('DOMContentLoaded', () => {
 		const scrollArea = document.querySelector('.comparison-scroll-area');
@@ -134,8 +57,6 @@
 		});
 	});
 </script>
-
-{% endcomment %}
 
 
 {% schema %}
