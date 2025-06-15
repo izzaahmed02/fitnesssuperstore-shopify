@@ -1,80 +1,35 @@
 {{ 'main-article-compare.css' | asset_url | stylesheet_tag }}
 
 
-{% assign rows = page.metafields.custom.comparison_rows.value %}
 
-
-  {% assign first_row = rows.first %}
-
-  {% assign product_1 = first_row.product_1.value %}
-  {% assign product_2 = first_row.product_2.value %}
-  {% assign product_3 = first_row.product_3.value %}
-  {% assign product_4 = first_row.product_4.value %}
-
-  <table class="comparison-table" style="width:100%; border-collapse: collapse; text-align: left;">
+  <table class="comparison-table">
     <thead>
       <tr>
-        <th style="border: 1px solid #ddd; padding: 10px;">Feature</th>
-
-        {% if product_1 %}
-          <th style="border: 1px solid #ddd; padding: 10px;">
-            {% if product_1.featured_image %}
-              <img src="{{ product_1.featured_image | image_url: width: 120 }}" alt="{{ product_1.title }}" style="max-width: 100px;"><br>
-            {% endif %}
-            <div style="font-weight: bold;">{{ product_1.title }}</div>
-            <div>{{ product_1.price | money }}</div>
-            <div><a href="{{ product_1.url }}" target="_blank">View Product</a></div>
-          </th>
-        {% endif %}
-
-        {% if product_2 %}
-          <th style="border: 1px solid #ddd; padding: 10px;">
-            {% if product_2.featured_image %}
-              <img src="{{ product_2.featured_image | image_url: width: 120 }}" alt="{{ product_2.title }}" style="max-width: 100px;"><br>
-            {% endif %}
-            <div style="font-weight: bold;">{{ product_2.title }}</div>
-            <div>{{ product_2.price | money }}</div>
-            <div><a href="{{ product_2.url }}" target="_blank">View Product</a></div>
-          </th>
-        {% endif %}
-
-        {% if product_3 %}
-          <th style="border: 1px solid #ddd; padding: 10px;">
-            {% if product_3.featured_image %}
-              <img src="{{ product_3.featured_image | image_url: width: 120 }}" alt="{{ product_3.title }}" style="max-width: 100px;"><br>
-            {% endif %}
-            <div style="font-weight: bold;">{{ product_3.title }}</div>
-            <div>{{ product_3.price | money }}</div>
-            <div><a href="{{ product_3.url }}" target="_blank">View Product</a></div>
-          </th>
-        {% endif %}
-
-        {% if product_4 %}
-          <th style="border: 1px solid #ddd; padding: 10px;">
-            {% if product_4.featured_image %}
-              <img src="{{ product_4.featured_image | image_url: width: 120 }}" alt="{{ product_4.title }}" style="max-width: 100px;"><br>
-            {% endif %}
-            <div style="font-weight: bold;">{{ product_4.title }}</div>
-            <div>{{ product_4.price | money }}</div>
-            <div><a href="{{ product_4.url }}" target="_blank">View Product</a></div>
-          </th>
-        {% endif %}
+         {% for product_entry in page.metafields.custom.comparison_rows.value %}
+        {% assign product = product_entry.product.value %}
+        <th>
+          {% if product.featured_image %}
+            <img src="{{ product.featured_image | image_url: width: 120 }}" alt="{{ product.title }}" style="max-width:100px;">
+          {% endif %}
+          <div style="margin-top: 5px;">{{ product.title }}</div>
+          <div style="font-weight: bold; margin-top: 5px;">{{ product.price | money }}</div>
+          <div style="margin-top: 5px;"><a href="{{ product.url }}" target="_blank">View Product</a></div>
+        </th>
+      {% endfor %}
       </tr>
     </thead>
-
     <tbody>
-      {% for row in rows %}
+      {% for row in page.metafields.custom.comparison_rows.value %}
         <tr>
-          <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">{{ row.row_label }}</td>
-          {% if product_1 %}<td style="border: 1px solid #ddd; padding: 10px;">{{ row.column_1 }}</td>{% endif %}
-          {% if product_2 %}<td style="border: 1px solid #ddd; padding: 10px;">{{ row.column_2 }}</td>{% endif %}
-          {% if product_3 %}<td style="border: 1px solid #ddd; padding: 10px;">{{ row.column_3 }}</td>{% endif %}
-          {% if product_4 %}<td style="border: 1px solid #ddd; padding: 10px;">{{ row.column_4 }}</td>{% endif %}
+          <td>{{ row.row_label }}</td>
+          <td>{{ row.column_1 }}</td>
+          <td>{{ row.column_2 }}</td>
+          <td>{{ row.column_3 }}</td>
+          <td>{{ row.column_4 }}</td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
-
 
 
 
