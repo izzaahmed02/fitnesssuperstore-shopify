@@ -1,33 +1,68 @@
 {{ 'main-article-compare.css' | asset_url | stylesheet_tag }}
 
 
-<div class="comparison-scroll-area">
-  <table class="comparison-table">
-    <thead>
-      <tr style="height: 186.5px;">
-        <th class="sticky-col param-col" style="width: 4.78228%; height: 186.5px;">Model</th>
-        {% for product in page.metafields.custom.comparison_chart.value.products %}
-          <th style="width: 7.24893%; height: 186.5px;">
-            <div class="model-block" style="text-align: center;">
-              <h3><a href="{{ product.url }}">{{ product.title }}</a></h3>
-              <p><img src="{{ product.featured_image | img_url: '160x160' }}" style="margin-bottom: 16px; display: block; margin-left: auto; margin-right: auto;"></p>
-            </div>
-          </th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in page.metafields.custom.comparison_chart.value.rows %}
-        <tr style="height: 63.1042px; text-align: center;">
-          <th class="sticky-col param-col" style="width: 4.78228%; height: 63.1042px;">{{ row.row_title }}</th>
-          {% for value in row.values %}
-            <td style="width: 7.24893%; height: 63.1042px;">{{ value }}</td>
+{% assign chart = page.metafields.custom.chart_data | parse_json %}
+
+{% if chart and chart.columns and chart.rows %}
+  <div class="comparison-wrapper">
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th></th>
+          {% for col in chart.columns %}
+            <th>{{ col }}</th>
           {% endfor %}
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+      </thead>
+      <tbody>
+        {% for row in chart.rows %}
+          <tr>
+            <td>{{ row.label }}</td>
+            {% for val in row.values %}
+              <td>{{ val }}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p style="text-align: center;">Comparison chart is not available for this page.</p>
+{% endif %}
+
+
+<style>
+  .comparison-wrapper {
+  overflow-x: auto;
+  margin: 2rem 0;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+.comparison-table thead th {
+  background-color: #f4f4f4;
+  padding: 12px;
+  border: 1px solid #ddd;
+  font-weight: bold;
+}
+
+.comparison-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  vertical-align: top;
+}
+
+.comparison-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+</style>
 
 
 {% comment %}
