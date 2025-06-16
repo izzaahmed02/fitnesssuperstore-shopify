@@ -269,7 +269,7 @@ try {
 					var brand = currentProduct.vendor
 
 					if (customFieldvalue) {			
-						if (customFieldvalue === 'Warranty' && brand === 'French Fitness') {
+						if (customFieldvalue === 'Warranty' || customFieldvalue == 'Shipping' && brand === 'French Fitness') {
 							customFieldvalue = `${brand} ${customFieldvalue} Custom Field`
 						} else {
 							if (customFieldvalue === 'Warranty' && window.product.title.includes('Remanufactured')) {
@@ -296,6 +296,7 @@ try {
 	
 							closeModalButton.addEventListener('click', () => {
 								modalWrapper.style.display = 'none';
+                              $('#dynamic-product-content').empty();
 							});
 						};
 					}
