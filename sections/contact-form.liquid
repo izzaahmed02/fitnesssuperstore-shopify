@@ -176,6 +176,24 @@ document.addEventListener(
   async (evt) => {
     if (!evt.target.matches('form.g-container[data-id="62733"]')) return;
 
+    let gclid, wbraid
+
+    const urlParams = new URLSearchParams(window.location.search); 
+    const gclidParam = urlParams.get('gclid');
+    const wbraidParam = urlParams.get('wbraid');
+
+    if (gclidParam) {
+      gclid = gclidParam
+    } else {
+      gclid = sessionStorage.getItem('gclid');
+    }
+
+    if (wbraidParam) {
+      wbraid = wbraidParam
+    } else {
+      wbraid = sessionStorage.getItem('wbraid');
+    }
+
     evt.preventDefault();
     evt.stopPropagation();
 
@@ -205,7 +223,17 @@ document.addEventListener(
       if (!success) throw new Error('API returned success:false');
 
       evt.target.reset();
-      Globo.FormBuilder.initialize();        
+      Globo.FormBuilder.initialize();    
+      let googleSheetData = {
+        datetime: new Date(),
+        gclid: gclid,
+        wbraid: wbraid,
+        name: fd.get('text-1'),
+        phone: fd.get('phone-1')
+        email: email,
+        message: fd.get('textarea')
+      }
+      postToGoogleSheet(googleSheetData);
       setTimeout(() => {
         const successBanner = document.querySelector('.message.success');
         if (successBanner) successBanner.style.display = 'block';
@@ -221,6 +249,13 @@ document.addEventListener(
   },
   true 
 );
+
+function postToGoogleSheet(data) {
+  const res = await fetch(
+    'https://script.google.com/macros/s/AKfycbxBUc8G1rq-5pYsYk3KlJhYo_al0CJ0aZq654vD3P0isoijnjIz2oldyvnuGjMhL965DQ/exec',
+    { method: 'POST', body: data }
+  );
+}
 </script>
 
 {% schema %}
