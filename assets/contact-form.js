@@ -52,10 +52,10 @@ document.addEventListener(
       googleSheetFormData.append('datettime', new Date());
       googleSheetFormData.append('gclid', gclid);
       googleSheetFormData.append('wbraid', wbraid);
-      googleSheetFormData.append('name', name);
-      googleSheetFormData.append('phone', phone);
-      googleSheetFormData.append('email', email);
-      googleSheetFormData.append('message', message);     
+      googleSheetFormData.append('name', fd.get('text-1'));
+      googleSheetFormData.append('phone', fd.get('phone-1'));
+      googleSheetFormData.append('email', fd.get('email'));
+      googleSheetFormData.append('message', fd.get('textarea'));     
       await postToGoogleSheet(googleSheetFormData);
       evt.target.reset(); 
       Globo.FormBuilder.initialize();   
