@@ -1,6 +1,7 @@
 {{ 'section-contact-form1.css' | asset_url | stylesheet_tag }}
 {{ 'section-custom-form.css' | asset_url | stylesheet_tag }}
 {{ 'section-address.css' | asset_url | stylesheet_tag }}
+{{ 'contact-form.js' | asset_url | stylesheet_tag }}
 
 {%- style -%}
     .section-{{ section.id }}-padding {
@@ -124,104 +125,6 @@
         </div>
     </div>
 </div>
-{% comment %} <script
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw"
-  defer
-></script>
-<script defer>
-  window.addEventListener('load', function () {
-    const map = new google.maps.Map(document.getElementById('address-map-{{ section.id }}'), {
-      center: { lat: 38.0764, lng: -122.1241 },
-      zoom: 15,
-    });
-
-    const locations = [
-      {
-        position: { lat: 38.07726, lng: -122.12476 },
-        title: 'Fitness Superstore, Inc.',
-        address: '537 Stone Rd Suite F, Benicia, CA 94510, USA',
-      },
-      {
-        position: { lat: 38.0755, lng: -122.1235 },
-        title: 'French Fitness HQ',
-        address: '457 Industrial Way, Benicia, CA 94510',
-      },
-    ];
-
-    locations.forEach((location) => {
-      const marker = new google.maps.Marker({
-        position: location.position,
-        map: map,
-        title: location.title,
-      });
-
-      const content = `
-              <div style="display:flex; flex-direction: column;">
-                  <strong>${location.title}</strong><br>
-                  ${location.address}
-              </div>`;
-      const infoWindow = new google.maps.InfoWindow({
-        content: content,
-      });
-
-      marker.addListener('click', () => {
-        infoWindow.open(map, marker);
-      });
-    });
-  });
-</script> {% endcomment %}
-<script>
-document.addEventListener(
-  'submit',
-  async (evt) => {
-    if (!evt.target.matches('form.g-container[data-id="62733"]')) return;
-
-    evt.preventDefault();
-    evt.stopPropagation();
-
-    const fd     = new FormData(evt.target);
-    const email  = (fd.get('email') || '').trim();          
-    const isMail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); 
-
-    if (!isMail) {
-      const errorBanner = document.querySelector('.message.error');
-      if (errorBanner) {
-        errorBanner.querySelector('.content').textContent =
-          'Please enter a valid e-mail address.';
-        errorBanner.style.display = 'block';
-        errorBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return; 
-    }
-
-    try {
-      const res = await fetch(
-        'https://fitnesssuperstore-api.azurewebsites.net/api/email/shopifycontactformsubmit',
-        { method: 'POST', body: fd }
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const { success } = await res.json();
-      if (!success) throw new Error('API returned success:false');
-
-      evt.target.reset();
-      Globo.FormBuilder.initialize();        
-      setTimeout(() => {
-        const successBanner = document.querySelector('.message.success');
-        if (successBanner) successBanner.style.display = 'block';
-      });
-    } catch (err) {
-      const errorBanner = document.querySelector('.message.error');
-      if (errorBanner) {
-        errorBanner.querySelector('.content').textContent =
-          'Something went wrong, please try again.';
-        errorBanner.style.display = 'block';
-      }
-    }
-  },
-  true 
-);
-</script>
 
 {% schema %}
 {
