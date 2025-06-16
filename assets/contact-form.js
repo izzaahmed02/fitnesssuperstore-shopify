@@ -48,17 +48,15 @@ document.addEventListener(
 
       const { success } = await res.json();
       if (!success) throw new Error('API returned success:false');
-      let googleSheetData = {
-        datetime: new Date(),
-        gclid: gclid,
-        wbraid: wbraid,
-        name: fd.get('text-1'),
-        phone: fd.get('phone-1'),
-        email: fd.get('email'),
-        message: fd.get('textarea')
-      }
-
-      await postToGoogleSheet(googleSheetData);
+      const googleSheetFormData = new FormData();
+      googleSheetFormData.append('datettime', datetime);
+      googleSheetFormData.append('gclid', gclid);
+      googleSheetFormData.append('wbraid', wbraid);
+      googleSheetFormData.append('name', name);
+      googleSheetFormData.append('phone', phone);
+      googleSheetFormData.append('email', email);
+      googleSheetFormData.append('message', message);     
+      await postToGoogleSheet(googleSheetFormData);
       evt.target.reset(); 
       Globo.FormBuilder.initialize();   
       setTimeout(() => {
@@ -80,6 +78,10 @@ document.addEventListener(
 async function postToGoogleSheet(data) {
   return fetch(
     'https://script.google.com/macros/s/AKfycbxBUc8G1rq-5pYsYk3KlJhYo_al0CJ0aZq654vD3P0isoijnjIz2oldyvnuGjMhL965DQ/exec',
-    { method: 'POST', body: data }
+    { 
+        method: 'POST', 
+        headers: new Headers({'content-type': 'application/x-www-form-urlencoded'}),
+        body: data 
+    }
   );
 }
