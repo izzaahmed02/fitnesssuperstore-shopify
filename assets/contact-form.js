@@ -56,8 +56,7 @@ document.addEventListener(
         phone: fd.get('phone-1'),
         email: fd.get('email'),
         message: fd.get('textarea')
-      }
-
+      }  
       await postToGoogleSheet(googleSheetData);
       evt.target.reset(); 
       Globo.FormBuilder.initialize();   
@@ -80,6 +79,11 @@ document.addEventListener(
 async function postToGoogleSheet(data) {
   return fetch(
     'https://script.google.com/macros/s/AKfycbxBUc8G1rq-5pYsYk3KlJhYo_al0CJ0aZq654vD3P0isoijnjIz2oldyvnuGjMhL965DQ/exec',
-    { method: 'POST', body: data }
+    { 
+        method: 'POST', 
+        redirect: "follow",
+        headers: new Headers({'content-type': 'text/plain;charset=utf-8'}),
+        body: JSON.stringify(data) 
+    }
   );
 }
