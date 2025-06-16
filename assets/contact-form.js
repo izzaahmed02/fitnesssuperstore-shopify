@@ -49,7 +49,7 @@ document.addEventListener(
       const { success } = await res.json();
       if (!success) throw new Error('API returned success:false');
       const googleSheetFormData = new FormData();
-      googleSheetFormData.append('datettime', datetime);
+      googleSheetFormData.append('datettime', new Date());
       googleSheetFormData.append('gclid', gclid);
       googleSheetFormData.append('wbraid', wbraid);
       googleSheetFormData.append('name', name);
