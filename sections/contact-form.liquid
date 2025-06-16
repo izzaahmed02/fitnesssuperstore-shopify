@@ -227,11 +227,11 @@ document.addEventListener(
         wbraid: wbraid,
         name: fd.get('text-1'),
         phone: fd.get('phone-1')
-        email: email,
+        email: fd.get('email'),
         message: fd.get('textarea')
       }
       console.log(googlesheet)
-      postToGoogleSheet(googleSheetData);
+      await postToGoogleSheet(googleSheetData);
       evt.target.reset(); 
       Globo.FormBuilder.initialize();   
       setTimeout(() => {
@@ -250,8 +250,8 @@ document.addEventListener(
   true 
 );
 
-function postToGoogleSheet(data) {
-  const res = await fetch(
+async function postToGoogleSheet(data) {
+  return fetch(
     'https://script.google.com/macros/s/AKfycbxBUc8G1rq-5pYsYk3KlJhYo_al0CJ0aZq654vD3P0isoijnjIz2oldyvnuGjMhL965DQ/exec',
     { method: 'POST', body: data }
   );
