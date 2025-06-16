@@ -221,8 +221,6 @@ document.addEventListener(
 
       const { success } = await res.json();
       if (!success) throw new Error('API returned success:false');
-
-      evt.target.reset(); 
       let googleSheetData = {
         datetime: new Date(),
         gclid: gclid,
@@ -232,7 +230,9 @@ document.addEventListener(
         email: email,
         message: fd.get('textarea')
       }
+      console.log(googlesheet)
       postToGoogleSheet(googleSheetData);
+      evt.target.reset(); 
       Globo.FormBuilder.initialize();   
       setTimeout(() => {
         const successBanner = document.querySelector('.message.success');
