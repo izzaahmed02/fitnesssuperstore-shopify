@@ -3,12 +3,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const section = document.querySelector(".homepage-categories__tabs");
     if (!section) return;
 
-    /* ---------- shared controls (ONE set) ---------- */
-    const controls = section.querySelector(".homepage-categories__swiper-controls");
-    const nextEl = controls.querySelector(".swiper-button-next");
-    const prevEl = controls.querySelector(".swiper-button-prev");
-    const pagination = controls.querySelector(".swiper-pagination");
-
     /* ---------- tabs & panels ---------- */
     const tabButtons = section.querySelectorAll(".homepage-categories__tab-btn");
     const tabPanels = section.querySelectorAll(".homepage-categories__tab");
@@ -20,6 +14,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const tabName = panel.dataset.tab;
         const swiperEl = panel.querySelector(".swiper");
         if (!swiperEl) return;
+
+        // Get controls specific to this panel
+        const controls = panel.querySelector(".homepage-categories__swiper-controls");
+        const nextEl = controls.querySelector(".swiper-button-next");
+        const prevEl = controls.querySelector(".swiper-button-prev");
+        const pagination = controls.querySelector(".swiper-pagination");
 
         swipers[tabName] = new Swiper(swiperEl, {
             slidesPerView: 4,
@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tabButtons.forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tabName));
         tabPanels.forEach(panel => panel.classList.toggle("homepage-categories__tab-active", panel.dataset.tab === tabName));
 
-        // Refresh shared controls for the newly-visible slider
+        // Refresh Swiper for the newly visible tab
         swipers[tabName].update();
         swipers[tabName].slideTo(0, 0); // Jump to first slide
     }
