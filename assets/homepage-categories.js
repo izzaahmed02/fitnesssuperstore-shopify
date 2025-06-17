@@ -21,7 +21,7 @@ tabButtons.forEach(btn => {
 			if (!swiperContainer) return;
 
 			swipers[targetTab] = new Swiper(swiperContainer, {
-				slidesPerView: 'auto',
+				slidesPerView: '4',
 				spaceBetween: 32,
 				loop: true,
 				autoplay: {
