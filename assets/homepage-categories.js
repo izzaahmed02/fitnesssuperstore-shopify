@@ -48,7 +48,7 @@ tabButtons.forEach(btn => {
 						spaceBetween: 32,
                       slidesPerView: '3',
 					},
-                  1100: {
+                  1200: {
 						spaceBetween: 32,
                       slidesPerView: '4',
 					}
