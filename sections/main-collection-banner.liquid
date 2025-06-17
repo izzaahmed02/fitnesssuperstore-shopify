@@ -31,7 +31,12 @@
                         {% assign match_found = true %}
                     {% endif %}
                 {% endfor %}
-                <div class="collection-hero__related-collections-wrapper">
+                {%- assign subCategoriesCount = 0 -%}
+                {%- for subCategory in collection.metafields.custom.related_collections.value -%}
+                {%- assign subCategoriesCount = subCategoriesCount | plus: 1 -%}
+                {%- endfor -%}
+                {% if subCategoriesCount > 1 %}
+                   <div class="collection-hero__related-collections-wrapper">
                     <button class="collection-hero__related-collections-toggle" aria-expanded="false">
                         <span>{{ section.settings.related_collections_toggle | default: "Browse subcategories" }}</span>
                         <svg class="icon icon-caret" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -62,6 +67,7 @@
                         {% endfor %}
                     </ul>
                 </div>
+                {% endif %}
             {% endif %}
         </div>
         {%- if section.settings.show_collection_image and collection.image -%}
