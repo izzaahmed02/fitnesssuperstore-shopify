@@ -1,5 +1,3 @@
-
-
 <div class="page-width">
     <div class="homepage-categories__wrapper">
         <div class="homepage-categories__header">
@@ -7,10 +5,8 @@
                 {{ section.settings.title }}
             </h2>
             <div class="homepage-categories__tabs-header">
-                <button class="homepage-categories__tab-btn active" data-tab="tab1"
-                        type="button">{{ section.settings.tab_title_1 }}</button>
-                <button class="homepage-categories__tab-btn" data-tab="tab2"
-                        type="button">{{ section.settings.tab_title_2 }}</button>
+                <button class="homepage-categories__tab-btn active" data-tab="tab1" type="button">{{ section.settings.tab_title_1 }}</button>
+                <button class="homepage-categories__tab-btn" data-tab="tab2" type="button">{{ section.settings.tab_title_2 }}</button>
             </div>
         </div>
         <div class="homepage-categories__tabs">
@@ -21,27 +17,17 @@
                             <div class="swiper-slide homepage-categories__item">
                                 <div class="homepage-categories__item-img-wrapper">
                                     <img src="{{ block.settings.img | image_url: width: 500, height: 500 }}"
-                                        alt="{{ block.settings.img }}"
-                                        loading="lazy"
-                                        class="homepage-categories__item-img">
+                                         alt="{{ block.settings.img }}"
+                                         loading="lazy"
+                                         class="homepage-categories__item-img">
                                 </div>
                                 <a href="{{ block.settings.url }}"
                                    class="homepage-categories__item-link">{{ block.settings.title }}</a>
                             </div>
                         {% endfor %}
                     </div>
-                    <div class="homepage-categories__swiper-controls">
-                        <div class="swiper-button-prev">
-                            {% render 'chevron-button-prev' %}
-                        </div>
-                        <div class="swiper-pagination"></div>
-                        <div class="swiper-button-next">
-                            {% render 'chevron-button-next' %}
-                        </div>
-                    </div>
                 </div>
             </div>
-
             <div class="homepage-categories__tab" data-tab="tab2">
                 <div class="swiper homepage-categories__swiper-2">
                     <div class="swiper-wrapper">
@@ -49,23 +35,14 @@
                             <div class="swiper-slide homepage-categories__item">
                                 <div class="homepage-categories__item-img-wrapper">
                                     <img src="{{ block.settings.img | image_url: width: 500, height: 500 }}"
-                                        alt="{{ block.settings.img }}"
-                                        loading="lazy"
-                                        class="homepage-categories__item-img">
+                                         alt="{{ block.settings.img }}"
+                                         loading="lazy"
+                                         class="homepage-categories__item-img">
                                 </div>
                                 <a href="{{ block.settings.url }}"
                                    class="homepage-categories__item-link">{{ block.settings.title }}</a>
                             </div>
                         {% endfor %}
-                    </div>
-                    <div class="homepage-categories__swiper-controls">
-                        <div class="swiper-button-prev">
-                            {% render 'chevron-button-prev' %}
-                        </div>
-                        <div class="swiper-pagination"></div>
-                        <div class="swiper-button-next">
-                            {% render 'chevron-button-next' %}
-                        </div>
                     </div>
                 </div>
             </div>
@@ -73,15 +50,58 @@
     </div>
 </div>
 
+<style>
+    .homepage-categories__tab {
+        display: none;
+    }
+    .homepage-categories__tab-active {
+        display: block;
+    }
+    .homepage-categories__tab-btn {
+        cursor: pointer;
+        padding: 10px 20px;
+        border: none;
+        background: #f0f0f0;
+        transition: background 0.3s;
+    }
+    .homepage-categories__tab-btn.active {
+        background: #007bff;
+        color: #fff;
+    }
+</style>
+
 <script>
-  $('.swiper-wrapper').slick({
-  infinite: true,
-  slidesToShow: 4,
-  slidesToScroll: 1
-});
+    $(document).ready(function() {
+        // Initialize Slick sliders for each tab
+        $('.homepage-categories__swiper-1 .swiper-wrapper').slick({
+            infinite: true,
+            slidesToShow: 4,
+            slidesToScroll: 1
+        });
+        $('.homepage-categories__swiper-2 .swiper-wrapper').slick({
+            infinite: true,
+            slidesToShow: 4,
+            slidesToScroll: 1
+        });
+
+        // Tab switching logic
+        $('.homepage-categories__tab-btn').on('click', function() {
+            // Remove active class from all buttons and tabs
+            $('.homepage-categories__tab-btn').removeClass('active');
+            $('.homepage-categories__tab').removeClass('homepage-categories__tab-active');
+
+            // Add active class to clicked button
+            $(this).addClass('active');
+
+            // Show corresponding tab content
+            const tabId = $(this).data('tab');
+            $(`.homepage-categories__tab[data-tab="${tabId}"]`).addClass('homepage-categories__tab-active');
+
+            // Refresh Slick slider for the active tab to ensure proper rendering
+            $(`.homepage-categories__tab[data-tab="${tabId}"] .swiper-wrapper`).slick('refresh');
+        });
+    });
 </script>
-
-
 
 {% schema %}
 {
