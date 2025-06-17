@@ -1,4 +1,4 @@
-{% style %} 
+{% style %}
   #shopify-section-{{ section.id }} .product-main-container{
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -40,79 +40,82 @@
 {% comment %} {% render 'custom-breadcrumbs', with product: product %} {% endcomment %}
 {% render 'metaobjects-breadcrumbs', with product: product %}
 
-{% comment %} {% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
-{% assign first_breadcrumb = product_breadcrumbs | split: 'Home' %}
-{% assign jp = first_breadcrumb[1] | split: '>' %}
-{% assign length = jp.size | minus: 1 %}
+{% comment %}
+  {% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
+  {% assign first_breadcrumb = product_breadcrumbs | split: 'Home' %}
+  {% assign jp = first_breadcrumb[1] | split: '>' %}
+  {% assign length = jp.size | minus: 1 %}
 
-<div class="custom-breadcrumbs">
-  <div class="page-width"> 
-    <div class="custom-breadcrumbs__wrapper">
-      <div class="custom-breadcrumbs__navigation">
-        {% for i in (0..length) %}
-          {% assign col = jp[i] | handleize %}
+  <div class="custom-breadcrumbs">
+    <div class="page-width">
+      <div class="custom-breadcrumbs__wrapper">
+        <div class="custom-breadcrumbs__navigation">
+          {% for i in (0..length) %}
+            {% assign col = jp[i] | handleize %}
 
-          {% if forloop.first %}
-            <a href="/">Home</a>
-          {% else %}
-            <a href="{{ collections[col].url }}">{{- jp[i] }}</a>
-          {% endif %}
-          {% unless forloop.last %}
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fill-rule="evenodd"
-                clip-rule="evenodd"
-                d="M6.31051 3.64645C6.50577 3.45118 6.82235 3.45118 7.01762 3.64645L11.0176 7.64645C11.2129 7.84171 11.2129 8.15829 11.0176 8.35355L7.01762 12.3536C6.82235 12.5488 6.50577 12.5488 6.31051 12.3536C6.11525 12.1583 6.11525 11.8417 6.31051 11.6464L9.95696 8L6.31051 4.35355C6.11525 4.15829 6.11525 3.84171 6.31051 3.64645Z"
-                fill="#DCDFE5" />
-            </svg>
-          {% endunless %}
-        {% endfor %}
+            {% if forloop.first %}
+              <a href="/">Home</a>
+            {% else %}
+              <a href="{{ collections[col].url }}">{{- jp[i] }}</a>
+            {% endif %}
+            {% unless forloop.last %}
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M6.31051 3.64645C6.50577 3.45118 6.82235 3.45118 7.01762 3.64645L11.0176 7.64645C11.2129 7.84171 11.2129 8.15829 11.0176 8.35355L7.01762 12.3536C6.82235 12.5488 6.50577 12.5488 6.31051 12.3536C6.11525 12.1583 6.11525 11.8417 6.31051 11.6464L9.95696 8L6.31051 4.35355C6.11525 4.15829 6.11525 3.84171 6.31051 3.64645Z"
+                  fill="#DCDFE5" />
+              </svg>
+            {% endunless %}
+          {% endfor %}
+        </div>
       </div>
     </div>
   </div>
-</div> 
 {% endcomment %}
 
-{% comment %} <div class="sticky-add-to-cart" style="display: none;">
-  <div class="sticky-container">
-      <img src="{{ product.featured_image | img_url: 'small' }}" alt="{{ product.title }}" class="sticky-product-image" height="" width="">
-      <div class="sticky-product-info">
-          <p class="sticky-product-title">{{ product.title }}</p>
-      </div>
-      <p class="sticky-product-price">{{ product.price | money }}</p>
-      <div class="sticky-product-actions">
-        <div class="sticky-quantity-container">
-            <select name="quantity" class="sticky-quantity">
-                {% for i in (1..10) %}
-                <option value="{{ i }}">{{ i }}</option>
-                {% endfor %}
-            </select>
-            <div class="sticky-arrow">
-                <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                </svg>
+{% comment %}
+  <div class="sticky-add-to-cart" style="display: none;">
+    <div class="sticky-container">
+        <img src="{{ product.featured_image | img_url: 'small' }}" alt="{{ product.title }}" class="sticky-product-image" height="" width="">
+        <div class="sticky-product-info">
+            <p class="sticky-product-title">{{ product.title }}</p>
+        </div>
+        <p class="sticky-product-price">{{ product.price | money }}</p>
+        <div class="sticky-product-actions">
+          <div class="sticky-quantity-container">
+              <select name="quantity" class="sticky-quantity">
+                  {% for i in (1..10) %}
+                  <option value="{{ i }}">{{ i }}</option>
+                  {% endfor %}
+              </select>
+              <div class="sticky-arrow">
+                  <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                  </svg>
+              </div>
             </div>
-          </div>      
-          <button onclick="addToCart()" type="submit" name="add" class="button button--full-width button--primary sticky-add-to-cart-btn" aria-haspopup="dialog">
-            <svg class="icon icon-cart" aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M1.50007 3.75001H1.49998L1.00009 3.75007C0.585878 3.75012 0.250051 3.41437 0.25 3.00016C0.249949 2.58595 0.585695 2.25012 0.999908 2.25007L1.49991 2.25001L1.5 3.00001L1.50002 2.25001L1.54594 2.25L1.54594 2.25C1.88371 2.24996 2.1157 2.24993 2.33265 2.27521C3.58768 2.42143 4.68471 3.18983 5.25099 4.31935C5.34888 4.5146 5.42813 4.73264 5.54352 5.05009L5.5592 5.09324L5.61623 5.25007H17.0336L17.0773 5.25007C17.9753 5.25005 18.7102 5.25004 19.2878 5.31247C19.8799 5.37648 20.4293 5.51592 20.876 5.88873C21.2574 6.20703 21.5455 6.62269 21.7096 7.09156C21.9018 7.64074 21.8395 8.20414 21.6915 8.78104C21.5471 9.34375 21.2891 10.0319 20.9738 10.8726L20.9738 10.8726L20.9584 10.9136L20.9478 10.942C20.7035 11.5934 20.5046 12.1239 20.3055 12.5475C20.0986 12.9878 19.8706 13.3601 19.5454 13.6787C19.2426 13.9754 18.8917 14.2186 18.5075 14.3979C18.095 14.5905 17.6665 14.6733 17.1815 14.7124C16.7151 14.7501 16.1485 14.7501 15.4529 14.7501H15.4529H15.4529H15.4224H12.2026H12.1594C12.0647 14.7501 11.9717 14.7501 11.8804 14.75H6C5.30964 14.75 4.75 15.3097 4.75 16C4.75 16.6904 5.30964 17.25 6 17.25H9H17H21C21.4142 17.25 21.75 17.5858 21.75 18C21.75 18.4142 21.4142 18.75 21 18.75H19.4501C19.6419 19.125 19.75 19.5499 19.75 20C19.75 21.5188 18.5188 22.75 17 22.75C15.4812 22.75 14.25 21.5188 14.25 20C14.25 19.5499 14.3581 19.125 14.5499 18.75H11.4501C11.6419 19.125 11.75 19.5499 11.75 20C11.75 21.5188 10.5188 22.75 9 22.75C7.48122 22.75 6.25 21.5188 6.25 20C6.25 19.5499 6.35814 19.125 6.54985 18.75H6C4.48122 18.75 3.25 17.5188 3.25 16C3.25 14.4812 4.48122 13.25 6 13.25H7.14691C7.00916 13.0505 6.8859 12.8335 6.76987 12.5996C6.48068 12.0166 6.20831 11.2676 5.87372 10.3474L5.85896 10.3068L4.14951 5.60586C4.01249 5.22905 3.96389 5.09896 3.91007 4.99161C3.5703 4.3139 2.91209 3.85286 2.15907 3.76513C2.03981 3.75124 1.90095 3.75002 1.50009 3.75001H1.50007ZM14.0097 13.2501C14.0064 13.25 14.0032 13.25 14 13.25H11.9452C11.0494 13.2494 10.4099 13.2437 9.90375 13.1869C9.36922 13.1269 9.05809 13.0164 8.81046 12.843C8.56284 12.6695 8.35265 12.4149 8.11362 11.933C7.86618 11.4342 7.62158 10.7648 7.26865 9.79422L6.16168 6.75007H17.0336C17.986 6.75007 18.6393 6.75111 19.1266 6.80378C19.6087 6.8559 19.8051 6.9487 19.9149 7.04037C20.0883 7.18505 20.2192 7.37399 20.2938 7.58711C20.3411 7.72215 20.359 7.93864 20.2385 8.40835C20.1167 8.88312 19.8883 9.49514 19.5539 10.3869C19.2964 11.0736 19.1182 11.5472 18.948 11.9095C18.7826 12.2612 18.6461 12.4598 18.4957 12.6072C18.314 12.7852 18.1034 12.9312 17.8729 13.0388C17.6821 13.1279 17.4482 13.186 17.0608 13.2173C16.6618 13.2495 16.1558 13.2501 15.4224 13.2501H14.0097ZM9 18.75C8.30964 18.75 7.75 19.3097 7.75 20C7.75 20.6904 8.30964 21.25 9 21.25C9.69036 21.25 10.25 20.6904 10.25 20C10.25 19.3097 9.69036 18.75 9 18.75ZM17 18.75C16.3096 18.75 15.75 19.3097 15.75 20C15.75 20.6904 16.3096 21.25 17 21.25C17.6904 21.25 18.25 20.6904 18.25 20C18.25 19.3097 17.6904 18.75 17 18.75Z" fill="#EDEFF3"></path>
-            </svg>
-            <span>Add to Cart</span>
-            <div class="loading__spinner hidden">
-                <svg aria-hidden="true" focusable="false" class="spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
-                  <circle class="path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle>
-                </svg>
-            </div>
-          </button>
-      </div>
+            <button onclick="addToCart()" type="submit" name="add" class="button button--full-width button--primary sticky-add-to-cart-btn" aria-haspopup="dialog">
+              <svg class="icon icon-cart" aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.50007 3.75001H1.49998L1.00009 3.75007C0.585878 3.75012 0.250051 3.41437 0.25 3.00016C0.249949 2.58595 0.585695 2.25012 0.999908 2.25007L1.49991 2.25001L1.5 3.00001L1.50002 2.25001L1.54594 2.25L1.54594 2.25C1.88371 2.24996 2.1157 2.24993 2.33265 2.27521C3.58768 2.42143 4.68471 3.18983 5.25099 4.31935C5.34888 4.5146 5.42813 4.73264 5.54352 5.05009L5.5592 5.09324L5.61623 5.25007H17.0336L17.0773 5.25007C17.9753 5.25005 18.7102 5.25004 19.2878 5.31247C19.8799 5.37648 20.4293 5.51592 20.876 5.88873C21.2574 6.20703 21.5455 6.62269 21.7096 7.09156C21.9018 7.64074 21.8395 8.20414 21.6915 8.78104C21.5471 9.34375 21.2891 10.0319 20.9738 10.8726L20.9738 10.8726L20.9584 10.9136L20.9478 10.942C20.7035 11.5934 20.5046 12.1239 20.3055 12.5475C20.0986 12.9878 19.8706 13.3601 19.5454 13.6787C19.2426 13.9754 18.8917 14.2186 18.5075 14.3979C18.095 14.5905 17.6665 14.6733 17.1815 14.7124C16.7151 14.7501 16.1485 14.7501 15.4529 14.7501H15.4529H15.4529H15.4224H12.2026H12.1594C12.0647 14.7501 11.9717 14.7501 11.8804 14.75H6C5.30964 14.75 4.75 15.3097 4.75 16C4.75 16.6904 5.30964 17.25 6 17.25H9H17H21C21.4142 17.25 21.75 17.5858 21.75 18C21.75 18.4142 21.4142 18.75 21 18.75H19.4501C19.6419 19.125 19.75 19.5499 19.75 20C19.75 21.5188 18.5188 22.75 17 22.75C15.4812 22.75 14.25 21.5188 14.25 20C14.25 19.5499 14.3581 19.125 14.5499 18.75H11.4501C11.6419 19.125 11.75 19.5499 11.75 20C11.75 21.5188 10.5188 22.75 9 22.75C7.48122 22.75 6.25 21.5188 6.25 20C6.25 19.5499 6.35814 19.125 6.54985 18.75H6C4.48122 18.75 3.25 17.5188 3.25 16C3.25 14.4812 4.48122 13.25 6 13.25H7.14691C7.00916 13.0505 6.8859 12.8335 6.76987 12.5996C6.48068 12.0166 6.20831 11.2676 5.87372 10.3474L5.85896 10.3068L4.14951 5.60586C4.01249 5.22905 3.96389 5.09896 3.91007 4.99161C3.5703 4.3139 2.91209 3.85286 2.15907 3.76513C2.03981 3.75124 1.90095 3.75002 1.50009 3.75001H1.50007ZM14.0097 13.2501C14.0064 13.25 14.0032 13.25 14 13.25H11.9452C11.0494 13.2494 10.4099 13.2437 9.90375 13.1869C9.36922 13.1269 9.05809 13.0164 8.81046 12.843C8.56284 12.6695 8.35265 12.4149 8.11362 11.933C7.86618 11.4342 7.62158 10.7648 7.26865 9.79422L6.16168 6.75007H17.0336C17.986 6.75007 18.6393 6.75111 19.1266 6.80378C19.6087 6.8559 19.8051 6.9487 19.9149 7.04037C20.0883 7.18505 20.2192 7.37399 20.2938 7.58711C20.3411 7.72215 20.359 7.93864 20.2385 8.40835C20.1167 8.88312 19.8883 9.49514 19.5539 10.3869C19.2964 11.0736 19.1182 11.5472 18.948 11.9095C18.7826 12.2612 18.6461 12.4598 18.4957 12.6072C18.314 12.7852 18.1034 12.9312 17.8729 13.0388C17.6821 13.1279 17.4482 13.186 17.0608 13.2173C16.6618 13.2495 16.1558 13.2501 15.4224 13.2501H14.0097ZM9 18.75C8.30964 18.75 7.75 19.3097 7.75 20C7.75 20.6904 8.30964 21.25 9 21.25C9.69036 21.25 10.25 20.6904 10.25 20C10.25 19.3097 9.69036 18.75 9 18.75ZM17 18.75C16.3096 18.75 15.75 19.3097 15.75 20C15.75 20.6904 16.3096 21.25 17 21.25C17.6904 21.25 18.25 20.6904 18.25 20C18.25 19.3097 17.6904 18.75 17 18.75Z" fill="#EDEFF3"></path>
+              </svg>
+              <span>Add to Cart</span>
+              <div class="loading__spinner hidden">
+                  <svg aria-hidden="true" focusable="false" class="spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+                    <circle class="path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle>
+                  </svg>
+              </div>
+            </button>
+        </div>
+    </div>
   </div>
-</div> {% endcomment %}
+{% endcomment %}
 <product-info
   id="MainProduct-{{ section.id }}"
   class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }}"
@@ -163,19 +166,19 @@
   {%- assign enable_product_form_js = true -%}
   {%- for block in section.blocks -%}
     {%- case block.type -%}
-    {%- when 'tile_calculator' -%}
-      {% if block.settings.disable_product_form_js %}
-        {%- assign enable_product_form_js = false -%}
-      {% endif %}
+      {%- when 'tile_calculator' -%}
+        {% if block.settings.disable_product_form_js %}
+          {%- assign enable_product_form_js = false -%}
+        {% endif %}
     {%- endcase -%}
   {%- endfor -%}
 
   <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
   {% if enable_product_form_js %}
-  <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
   {% endif %}
   <script src="{{ 'product-sticky.js' | asset_url }}" defer="defer"></script>
-  
+
   {%- if product.quantity_price_breaks_configured? -%}
     <script src="{{ 'show-more.js' | asset_url }}" defer="defer"></script>
     <script src="{{ 'price-per-item.js' | asset_url }}" defer="defer"></script>
@@ -207,8 +210,9 @@
     >
   {%- endif -%}
   {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
-  
-  <div class="page-width"> {% comment %} pdp-page-width main-container {% endcomment %}
+
+  <div class="page-width">
+    {% comment %} pdp-page-width main-container {% endcomment %}
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
       <div class="product__info-wrapper--mobile">
         <div class="product__info-container--mobile">
@@ -240,24 +244,28 @@
                   </div>
                 </div>
               {% when 'price' %}
-                {% comment %} <div class="campaign-sale-container mobile">
-                  {% if product.title contains "French Fitness" %}
-                    <p>Memorial Day Sale: 10% OFF. Use coupon 'MDSALE'</p>
-                  {% elsif product.title contains "Remanufactured" %}
-                    <p>Memorial Day Sale: 5% OFF. Use coupon 'MDSALE'</p>
-                  {% endif %}
-                </div>  {% endcomment %}
+                {% comment %}
+                  <div class="campaign-sale-container mobile">
+                    {% if product.title contains "French Fitness" %}
+                      <p>Memorial Day Sale: 10% OFF. Use coupon 'MDSALE'</p>
+                    {% elsif product.title contains "Remanufactured" %}
+                      <p>Memorial Day Sale: 5% OFF. Use coupon 'MDSALE'</p>
+                    {% endif %}
+                  </div>
+                {% endcomment %}
                 <div>
-                  {% if product.metafields.custom.retail_price
-                      > product.selected_or_first_available_variant.price
-                  %}
+                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                     <span class="pr_custom_compare_price"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
-                  {% endif %}            
+                  {% endif %}
                   {% if product.metafields.custom.saleprice_name != blank %}
-                      {% render 'super-sale', sale_name: product.metafields.custom.saleprice_name, current_price: product.selected_or_first_available_variant.compare_at_price, sale_price: product.metafields.custom.sale_price %}
+                    {% render 'super-sale',
+                      sale_name: product.metafields.custom.saleprice_name,
+                      current_price: product.selected_or_first_available_variant.compare_at_price,
+                      sale_price: product.metafields.custom.sale_price
+                    %}
                   {% else %}
                     <div class="price-container">
                       {%- render 'price',
@@ -266,9 +274,8 @@
                         show_badges: true,
                         price_class: 'price--large'
                       -%}
-  
-                      {% if product.metafields.custom.retail_price
-                          > product.selected_or_first_available_variant.price
+
+                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
                       %}
                         <span class="you-save"
                           >You save
@@ -280,7 +287,7 @@
                         </span>
                       {% endif %}
                     </div>
-                  {% endif %}   
+                  {% endif %}
                 </div>
             {%- endcase -%}
           {%- endfor -%}
@@ -288,44 +295,47 @@
       </div>
 
       <div class="product-main-left-container">
-        {% comment %} <div class="product-main-left">
-          
-          <div class="thumbnail-slider">
-            {% for item in product.images %}
-              <div class="item">
-                {{ item | image_url: width: 100 | image_tag }}
-              </div>
-            {% endfor %}
-          </div>
         
-          <div class="main-slider-wrapper">
-            <div class="main-slider-arrow--left" type="button">
-              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M7.19635 0.46967C7.48924 0.762563 7.48924 1.23744 7.19635 1.53033L2.72668 6L7.19635 10.4697C7.48924 10.7626 7.48924 11.2374 7.19635 11.5303C6.90345 11.8232 6.42858 11.8232 6.13569 11.5303L1.13569 6.53033C0.995033 6.38968 0.916016 6.19891 0.916016 6C0.916016 5.80109 0.995033 5.61032 1.13569 5.46967L6.13569 0.46967C6.42858 0.176777 6.90345 0.176777 7.19635 0.46967Z" fill="white"/>
-              </svg>
-            </div>
-            <div class="main-slider">
+        {% comment %}
+          <div class="product-main-left">
+
+            <div class="thumbnail-slider">
               {% for item in product.images %}
                 <div class="item">
-                  <img 
-                    src="{{ item | img_url: 'master' }}" 
-                    alt="{{ product.title }}" /> 
+                  {{ item | image_url: width: 100 | image_tag }}
                 </div>
               {% endfor %}
             </div>
-            <div class="main-slider-arrow--right" type="button">
-              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M0.803654 0.46967C1.09655 0.176777 1.57142 0.176777 1.86431 0.46967L6.86431 5.46967C7.15721 5.76256 7.15721 6.23744 6.86431 6.53033L1.86431 11.5303C1.57142 11.8232 1.09655 11.8232 0.803654 11.5303C0.510761 11.2374 0.510761 10.7626 0.803654 10.4697L5.27332 6L0.803654 1.53033C0.510761 1.23744 0.510761 0.762563 0.803654 0.46967Z" fill="white"/>
-              </svg>
+
+            <div class="main-slider-wrapper">
+              <div class="main-slider-arrow--left" type="button">
+                <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M7.19635 0.46967C7.48924 0.762563 7.48924 1.23744 7.19635 1.53033L2.72668 6L7.19635 10.4697C7.48924 10.7626 7.48924 11.2374 7.19635 11.5303C6.90345 11.8232 6.42858 11.8232 6.13569 11.5303L1.13569 6.53033C0.995033 6.38968 0.916016 6.19891 0.916016 6C0.916016 5.80109 0.995033 5.61032 1.13569 5.46967L6.13569 0.46967C6.42858 0.176777 6.90345 0.176777 7.19635 0.46967Z" fill="white"/>
+                </svg>
+              </div>
+              <div class="main-slider">
+                {% for item in product.images %}
+                  <div class="item">
+                    <img
+                      src="{{ item | img_url: 'master' }}"
+                      alt="{{ product.title }}" />
+                  </div>
+                {% endfor %}
+              </div>
+              <div class="main-slider-arrow--right" type="button">
+                <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M0.803654 0.46967C1.09655 0.176777 1.57142 0.176777 1.86431 0.46967L6.86431 5.46967C7.15721 5.76256 7.15721 6.23744 6.86431 6.53033L1.86431 11.5303C1.57142 11.8232 1.09655 11.8232 0.803654 11.5303C0.510761 11.2374 0.510761 10.7626 0.803654 10.4697L5.27332 6L0.803654 1.53033C0.510761 1.23744 0.510761 0.762563 0.803654 0.46967Z" fill="white"/>
+                </svg>
+              </div>
             </div>
           </div>
-        </div> {% endcomment %}
+        {% endcomment %}
 
         <product-gallery data-product-title="{{ product.title | escape }}">
           <div class="custom-product-gallery">
             <div class="custom-gallery-wrapper">
               <!-- Thumbnails -->
-              {%- assign image_media = product.media | where: "media_type", "image" -%}
+              {%- assign image_media = product.media | where: 'media_type', 'image' -%}
 
               <div class="custom-gallery-thumbnails only-desktop">
                 {%- assign image_limit = 4 -%}
@@ -340,7 +350,7 @@
                     type="button"
                   >
                     <div class="image-skeleton-wrapper">
-                      <img 
+                      <img
                         src="{{ preview | image_url: width: 100 }}"
                         alt="{{ media.alt | escape }}"
                         width="{{ preview.width }}"
@@ -378,8 +388,11 @@
                           >
                         </div>
 
-                        {%- assign shopify_video_count = product.media | where: "media_type", "video" | size -%}
-                        {%- assign external_video_count = product.media | where: "media_type", "external_video" | size -%}
+                        {%- assign shopify_video_count = product.media | where: 'media_type', 'video' | size -%}
+                        {%- assign external_video_count = product.media
+                          | where: 'media_type', 'external_video'
+                          | size
+                        -%}
                         {%- assign video_count = shopify_video_count | plus: external_video_count -%}
 
                         {% if video_count > 1 %}
@@ -390,20 +403,20 @@
                   {% endif %}
                 {% endfor %}
               </div>
-              
+
               <!-- Main image -->
               <div class="custom-gallery-main" data-main-media-wrapper>
                 {% assign first_media = product.media.first %}
                 {% assign preview = first_media.preview_image %}
 
-                <div 
-                  class="main-image-container" 
-                  data-media-id="{{ first_media.id }}" 
+                <div
+                  class="main-image-container"
+                  data-media-id="{{ first_media.id }}"
                   data-zoom-container
                 >
                   {% if first_media.media_type == 'image' %}
                     <div class="image-skeleton-wrapper">
-                      <img 
+                      <img
                         src="{{ preview | image_url: width: 800 }}"
                         alt="{{ first_media.alt | escape }}"
                         class="main-product-image"
@@ -482,7 +495,9 @@
                             "
                             sizes="(max-width: 768px) 100vw, 800px"
                             alt="{{ media.alt | escape }}"
-                            {% unless isFirst %}loading="lazy"{% endunless %}
+                            {% unless isFirst %}
+                              loading="lazy"
+                            {% endunless %}
                             width="{{ media.preview_image.width }}"
                             height="{{ media.preview_image.height }}"
                             onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
@@ -542,11 +557,11 @@
 
               {{ section.settings.button_text }}
             </a>
-          </div> 
+          </div>
         {% endif %}
       </div>
 
-      <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">     
+      <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
         <section
           id="ProductInfo-{{ section.id }}"
           class="product__info-container{% if section.settings.enable_sticky_info %} product__column-sticky{% endif %}"
@@ -560,18 +575,19 @@
 
               {% when 'product-info' %}
                 {% for item in product.tags %}
-                  {% unless item != "Free Shipping" %}
+                  {% unless item != 'Free Shipping' %}
                     <div class="free-shipping-badge">
                       <div class="shipping-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path fill-rule="evenodd" clip-rule="evenodd" d="M1.25 8C1.25 7.58579 1.58579 7.25 2 7.25H8C8.41421 7.25 8.75 7.58579 8.75 8C8.75 8.41421 8.41421 8.75 8 8.75H2C1.58579 8.75 1.25 8.41421 1.25 8ZM1.25 11C1.25 10.5858 1.58579 10.25 2 10.25H6C6.41421 10.25 6.75 10.5858 6.75 11C6.75 11.4142 6.41421 11.75 6 11.75H2C1.58579 11.75 1.25 11.4142 1.25 11ZM2 13.25C1.58579 13.25 1.25 13.5858 1.25 14C1.25 14.4142 1.58579 14.75 2 14.75H4C4.41421 14.75 4.75 14.4142 4.75 14C4.75 13.5858 4.41421 13.25 4 13.25H2Z" fill="black"/>
                           <path fill-rule="evenodd" clip-rule="evenodd" d="M14.25 5C14.25 4.58579 14.5858 4.25 15 4.25H16.84C17.8339 4.25 18.7377 4.788 19.2286 5.63341L19.2311 5.63767L19.2311 5.63768L20.941 8.62767C21.0738 8.85979 21.0729 9.14503 20.9387 9.37633C20.8046 9.60763 20.5574 9.75 20.29 9.75H19C18.8642 9.75 18.75 9.86421 18.75 10V13C18.75 13.1358 18.8642 13.25 19 13.25H22C22.4142 13.25 22.75 13.5858 22.75 14V17C22.75 19.0742 21.0742 20.75 19 20.75H18.6465C18.32 21.9043 17.2588 22.75 16 22.75C14.7412 22.75 13.68 21.9043 13.3535 20.75H10.6465C10.32 21.9043 9.25878 22.75 8 22.75C6.74122 22.75 5.67998 21.9043 5.35352 20.75H5C2.92579 20.75 1.25 19.0742 1.25 17C1.25 16.5858 1.58579 16.25 2 16.25C2.41421 16.25 2.75 16.5858 2.75 17C2.75 18.2458 3.75421 19.25 5 19.25H5.35352C5.67998 18.0957 6.74122 17.25 8 17.25C9.25878 17.25 10.32 18.0957 10.6465 19.25H13.3535C13.68 18.0957 14.7412 17.25 16 17.25C17.2588 17.25 18.32 18.0957 18.6465 19.25H19C20.2458 19.25 21.25 18.2458 21.25 17V14.75H19C18.0358 14.75 17.25 13.9642 17.25 13V10C17.25 9.03676 18.0342 8.25159 18.9971 8.25L17.9314 6.38661L17.9303 6.38475C17.701 5.99126 17.2855 5.75 16.84 5.75H15.75V12C15.75 13.5142 14.5142 14.75 13 14.75H12C11.5858 14.75 11.25 14.4142 11.25 14C11.25 13.5858 11.5858 13.25 12 13.25H13C13.6858 13.25 14.25 12.6858 14.25 12V5ZM14.75 20C14.75 20.6904 15.3096 21.25 16 21.25C16.6904 21.25 17.25 20.6904 17.25 20C17.25 19.3142 16.6858 18.75 16 18.75C15.3142 18.75 14.75 19.3142 14.75 20ZM9.25 20C9.25 19.3142 8.68579 18.75 8 18.75C7.31421 18.75 6.75 19.3142 6.75 20C6.75 20.6904 7.30964 21.25 8 21.25C8.69036 21.25 9.25 20.6904 9.25 20Z" fill="black"/>
                           <path fill-rule="evenodd" clip-rule="evenodd" d="M5.99989 1.25C4.21723 1.25 2.66194 2.23671 1.85479 3.68484C1.65313 4.04665 1.78295 4.50344 2.14476 4.7051C2.50657 4.90676 2.96335 4.77694 3.16501 4.41513C3.71786 3.42326 4.78255 2.75 5.99989 2.75H14.2499V12C14.2499 12.6858 13.6857 13.25 12.9999 13.25H11.9999C11.5857 13.25 11.2499 13.5858 11.2499 14C11.2499 14.4142 11.5857 14.75 11.9999 14.75H12.9999C14.5141 14.75 15.7499 13.5142 15.7499 12V2C15.7499 1.58579 15.4141 1.25 14.9999 1.25H5.99989ZM18.7501 10C18.7501 9.86421 18.8643 9.75 19.0001 9.75H19.8543L21.2501 12.1987V13.25H19.0001C18.8643 13.25 18.7501 13.1358 18.7501 13V10ZM19.0001 8.25C18.0359 8.25 17.2501 9.03579 17.2501 10V13C17.2501 13.9642 18.0359 14.75 19.0001 14.75H22.0001C22.4143 14.75 22.7501 14.4142 22.7501 14V12C22.7501 11.8698 22.7162 11.7417 22.6517 11.6286L20.9417 8.62859C20.8083 8.39452 20.5595 8.25 20.2901 8.25H19.0001Z" fill="black"/>
-                          </svg>                          
+                        </svg>
                       </div>
                       <div class="shipping-text">
                         <div><b>This item qualifies for</b><span class="highlight"> FREE SHIPPING</span></div>
-                        <div class="subtext">to the Lower 48 States 
+                        <div class="subtext">
+                          to the Lower 48 States
                           {% if product.price < 2000 %}
                             (Minimum order $200 to qualify)
                           {% endif %}
@@ -580,14 +596,19 @@
                     </div>
                   {% endunless %}
                 {% endfor %}
-        
+
                 <div class="metainfo-wrapper">
                   {% if product.metafields.custom.condition_state != blank %}
                     <div class="item">
                       <div class="item__icon-wrap">{% render 'icon-star' %}</div>
                       <div class="item__text">
                         <span class="title">Condition:</span>
-                        {{ product.metafields.custom.condition_state | strip_html | replace: " (See Description for Details)", ""  | replace: "(What Does this Mean?)", ""  }}
+                        {{
+                          product.metafields.custom.condition_state
+                          | strip_html
+                          | replace: ' (See Description for Details)', ''
+                          | replace: '(What Does this Mean?)', ''
+                        }}
                       </div>
                     </div>
                   {% endif %}
@@ -595,7 +616,7 @@
                     <div class="item">
                       <div class="item__icon-wrap">{% render 'icon-chart' %}</div>
                       <div class="item__text">
-                      <span class="title">Grade:</span>
+                        <span class="title">Grade:</span>
                         {{ product.metafields.custom.grade }}
                         <span class="more-info" data-customfield="Grade">(More Info)</span>
                       </div>
@@ -606,7 +627,11 @@
                       <div class="item__icon-wrap">{% render 'icon-verified' %}</div>
                       <div class="item__text">
                         <span class="title">Warranty:</span>
-                        {{ product.metafields.custom.warranty | strip_html | replace: " (See Description for Details)", ""  }}
+                        {{
+                          product.metafields.custom.warranty
+                          | strip_html
+                          | replace: ' (See Description for Details)', ''
+                        }}
                         <span class="more-info" data-customfield="Warranty">(More Info)</span>
                       </div>
                     </div>
@@ -617,6 +642,27 @@
                       <div class="item__text">
                         <span class="title">Ships:</span>
                         {{ product.metafields.custom.ships }}
+                        {% for collection in product.collections %}
+                          {% if collection.handle contains 'shop-by-strength-product-line' %}
+                            <span class="more-info" data-customfield="Shipping">(More Info)</span>
+                            <script>
+  var attachClickHandler = setInterval(function () {
+    var $target = $('.custom_shipping_container');
+    if ($target.length > 0) {
+      var $clickTarget = $target.parent().parent();
+
+      $clickTarget.off('click.clearContent').on('click.clearContent', function () {
+        $('#dynamic-product-content').empty();
+      });
+
+      clearInterval(attachClickHandler); 
+    }
+  }, 200);
+</script>
+
+
+                          {% endif %}
+                        {% endfor %}
                       </div>
                     </div>
                   {% endif %}
@@ -624,7 +670,7 @@
                     <div class="item">
                       <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
                       <div class="item__text">
-                      <span class="title">Processing Time:</span>
+                        <span class="title">Processing Time:</span>
                         {{ product.metafields.custom.processing_time_long }}
                         <span class="more-info" data-customfield="Processing Time">(More Info)</span>
                       </div>
@@ -640,12 +686,12 @@
                     </div>
                   {% endif %}
                 </div>
-                {% assign metaObject3rdParty = product.metafields.custom["3rd_party"].value %}
-                {% if metaObject3rdParty != blank and metaObject3rdParty.google_material contains "display" %}
+                {% assign metaObject3rdParty = product.metafields.custom['3rd_party'].value %}
+                {% if metaObject3rdParty != blank and metaObject3rdParty.google_material contains 'display' %}
                   <div class="showroom">
                     <div class="img-wrap">{% render 'icon-bigcheck' %}</div>
-                      <span class="showroom-text">On Display at our Northern California Warehouse Showroom</span>
-                  </div>  
+                    <span class="showroom-text">On Display at our Northern California Warehouse Showroom</span>
+                  </div>
                 {% endif %}
               {%- when 'text' -%}
                 <p
@@ -664,24 +710,28 @@
                   </a>
                 </div>
               {% when 'price' %}
-          {% comment %} <div class="campaign-sale-container hide-on-mobile">
-                  {% if product.title contains "French Fitness" %}
-                    <p>Memorial Day Sale: 10% OFF. Use coupon code 'MDSALE'</p>
-                  {% elsif product.title contains "Remanufactured" %}
-                    <p>Memorial Day Sale: 5% OFF. Use coupon code 'MDSALE'</p>
-                  {% endif %}
-              </div>                 {% endcomment %}
+                {% comment %}
+                  <div class="campaign-sale-container hide-on-mobile">
+                      {% if product.title contains "French Fitness" %}
+                        <p>Memorial Day Sale: 10% OFF. Use coupon code 'MDSALE'</p>
+                      {% elsif product.title contains "Remanufactured" %}
+                        <p>Memorial Day Sale: 5% OFF. Use coupon code 'MDSALE'</p>
+                      {% endif %}
+                  </div>
+                {% endcomment %}
                 <div class="product__prices hidden lg:block">
-                  {% if product.metafields.custom.retail_price
-                      > product.selected_or_first_available_variant.price
-                  %}
+                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                     <span class="pr_custom_compare_price"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
-                  {% endif %}     
+                  {% endif %}
                   {% if product.metafields.custom.saleprice_name != blank %}
-                    {% render 'super-sale', sale_name: product.metafields.custom.saleprice_name, current_price: product.selected_or_first_available_variant.compare_at_price, sale_price: product.metafields.custom.sale_price %}
+                    {% render 'super-sale',
+                      sale_name: product.metafields.custom.saleprice_name,
+                      current_price: product.selected_or_first_available_variant.compare_at_price,
+                      sale_price: product.metafields.custom.sale_price
+                    %}
                   {% else %}
                     <div class="price-container">
                       {%- render 'price',
@@ -690,9 +740,8 @@
                         show_badges: true,
                         price_class: 'price--large'
                       -%}
-  
-                      {% if product.metafields.custom.retail_price
-                          > product.selected_or_first_available_variant.price
+
+                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
                       %}
                         <span class="you-save"
                           >You save
@@ -704,7 +753,7 @@
                         </span>
                       {% endif %}
                     </div>
-                  {% endif %}          
+                  {% endif %}
                 </div>
 
               {%- when 'tile_calculator' -%}
@@ -744,9 +793,8 @@
                           <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}">
                             {{ product.selected_or_first_available_variant.price | money }}
                           </p>
-                        </div>   
+                        </div>
                       </div>
-                      
                     </div>
 
                     <div class="product_price_with_options_atc">
@@ -763,7 +811,11 @@
                         {% # theme-check-enable %}
 
                         <div class="price-per-item__container">
-                          <quantity-input class="quantity {% unless product.available %} out-of-stock{% endunless %}" data-url="{{ product.url }}" data-section="{{ section.id }}">
+                          <quantity-input
+                            class="quantity {% unless product.available %} out-of-stock{% endunless %}"
+                            data-url="{{ product.url }}"
+                            data-section="{{ section.id }}"
+                          >
                             <input
                               class="quantity__input"
                               inputmode="numeric"
@@ -781,7 +833,9 @@
                               step="{{ product.selected_or_first_available_variant.quantity_rule.increment }}"
                               value="{{ product.selected_or_first_available_variant.quantity_rule.min }}"
                               form="{{ product_form_id }}"
-                              {% unless product.available %} disabled {% endunless %}
+                              {% unless product.available %}
+                                disabled
+                              {% endunless %}
                             >
                           </quantity-input>
                           {%- liquid
@@ -956,77 +1010,89 @@
                               assign show_dynamic_checkout = true
                             endif
                           -%}
-                          {% if product.available == true %} 
-                          {%- form 'product',
-                            product,
-                            id: product_form_id,
-                            class: 'form',
-                            novalidate: 'novalidate',
-                            data-type: 'add-to-cart-form'
-                          -%}
-                            <input
-                              type="hidden"
-                              name="id"
-                              value="{{ product.selected_or_first_available_variant.id }}"
-                              {% if product.selected_or_first_available_variant.available == false
-                                or quantity_rule_soldout
-                                or product.selected_or_first_available_variant == null
-                              %}
-                                disabled
-                              {% endif %}
-                              class="product-variant-id"
-                            >
-
-                            {%- if gift_card_recipient_feature_active -%}
-                              {%- render 'gift-card-recipient-form', product: product, form: form, section: section -%}
-                            {%- endif -%}
-
-                            <div class="product-form__buttons">
-                              {%- liquid
-                                assign check_against_inventory = true
-                                if product.selected_or_first_available_variant.inventory_management != 'shopify' or product.selected_or_first_available_variant.inventory_policy == 'continue'
-                                  assign check_against_inventory = false
-                                endif
-                                if product.selected_or_first_available_variant.quantity_rule.min > product.selected_or_first_available_variant.inventory_quantity and check_against_inventory
-                                  assign quantity_rule_soldout = true
-                                endif
-                              -%}
-                            <button
-                              id="ProductSubmitButton-{{ section.id }}"
-                              type="submit"
-                              name="add"
-                              class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}">
-                              {% render 'icon-cart' %}
-                              <span>
-                                {%- if product.selected_or_first_available_variant == null -%}
-                                  {{ 'products.product.unavailable' | t }}
-                                {%- elsif product.selected_or_first_available_variant.available == false
+                          {% if product.available == true %}
+                            {%- form 'product',
+                              product,
+                              id: product_form_id,
+                              class: 'form',
+                              novalidate: 'novalidate',
+                              data-type: 'add-to-cart-form'
+                            -%}
+                              <input
+                                type="hidden"
+                                name="id"
+                                value="{{ product.selected_or_first_available_variant.id }}"
+                                {% if product.selected_or_first_available_variant.available == false
                                   or quantity_rule_soldout
+                                  or product.selected_or_first_available_variant == null
+                                %}
+                                  disabled
+                                {% endif %}
+                                class="product-variant-id"
+                              >
+
+                              {%- if gift_card_recipient_feature_active -%}
+                                {%- render 'gift-card-recipient-form',
+                                  product: product,
+                                  form: form,
+                                  section: section
                                 -%}
-                                  {{ 'products.product.sold_out' | t }}
-                                {%- else -%}
+                              {%- endif -%}
+
+                              <div class="product-form__buttons">
+                                {%- liquid
+                                  assign check_against_inventory = true
+                                  if product.selected_or_first_available_variant.inventory_management != 'shopify' or product.selected_or_first_available_variant.inventory_policy == 'continue'
+                                    assign check_against_inventory = false
+                                  endif
+                                  if product.selected_or_first_available_variant.quantity_rule.min > product.selected_or_first_available_variant.inventory_quantity and check_against_inventory
+                                    assign quantity_rule_soldout = true
+                                  endif
+                                -%}
+                                <button
+                                  id="ProductSubmitButton-{{ section.id }}"
+                                  type="submit"
+                                  name="add"
+                                  class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
+                                >
+                                  {% render 'icon-cart' %}
+                                  <span>
+                                    {%- if product.selected_or_first_available_variant == null -%}
+                                      {{ 'products.product.unavailable' | t }}
+                                    {%- elsif product.selected_or_first_available_variant.available == false
+                                      or quantity_rule_soldout
+                                    -%}
+                                      {{ 'products.product.sold_out' | t }}
+                                    {%- else -%}
+                                      {{ 'products.product.add_to_cart' | t }}
+                                    {%- endif -%}
+                                  </span>
+                                  {%- render 'loading-spinner' -%}
+                                </button>
+                              </div>
+                            {%- endform -%}
+                          {%- else -%}
+                            <div class="product-form__buttons form">
+                              <button
+                                name="add"
+                                class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %} out-of-stock"
+                                disabled
+                              >
+                                <svg
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path fill-rule="evenodd" clip-rule="evenodd" d="M1.50007 3.75001H1.49998L1.00009 3.75007C0.585878 3.75012 0.250051 3.41437 0.25 3.00016C0.249949 2.58595 0.585695 2.25012 0.999908 2.25007L1.49991 2.25001L1.5 3.00001L1.50002 2.25001L1.54594 2.25L1.54594 2.25C1.88371 2.24996 2.1157 2.24993 2.33265 2.27521C3.58768 2.42143 4.68471 3.18983 5.25099 4.31935C5.34888 4.5146 5.42813 4.73264 5.54352 5.05009L5.5592 5.09324L5.61623 5.25007H17.0336L17.0773 5.25007C17.9753 5.25005 18.7102 5.25004 19.2878 5.31247C19.8799 5.37648 20.4293 5.51592 20.876 5.88873C21.2574 6.20703 21.5455 6.62269 21.7096 7.09156C21.9018 7.64074 21.8395 8.20414 21.6915 8.78104C21.5471 9.34375 21.2891 10.0319 20.9738 10.8726L20.9738 10.8726L20.9584 10.9136L20.9478 10.942C20.7035 11.5934 20.5046 12.1239 20.3055 12.5475C20.0986 12.9878 19.8706 13.3601 19.5454 13.6787C19.2426 13.9754 18.8917 14.2186 18.5075 14.3979C18.095 14.5905 17.6665 14.6733 17.1815 14.7124C16.7151 14.7501 16.1485 14.7501 15.4529 14.7501H15.4529H15.4529H15.4224H12.2026H12.1594C12.0647 14.7501 11.9717 14.7501 11.8804 14.75H6C5.30964 14.75 4.75 15.3097 4.75 16C4.75 16.6904 5.30964 17.25 6 17.25H9H17H21C21.4142 17.25 21.75 17.5858 21.75 18C21.75 18.4142 21.4142 18.75 21 18.75H19.4501C19.6419 19.125 19.75 19.5499 19.75 20C19.75 21.5188 18.5188 22.75 17 22.75C15.4812 22.75 14.25 21.5188 14.25 20C14.25 19.5499 14.3581 19.125 14.5499 18.75H11.4501C11.6419 19.125 11.75 19.5499 11.75 20C11.75 21.5188 10.5188 22.75 9 22.75C7.48122 22.75 6.25 21.5188 6.25 20C6.25 19.5499 6.35814 19.125 6.54985 18.75H6C4.48122 18.75 3.25 17.5188 3.25 16C3.25 14.4812 4.48122 13.25 6 13.25H7.14691C7.00916 13.0505 6.8859 12.8335 6.76987 12.5996C6.48068 12.0166 6.20831 11.2676 5.87372 10.3474L5.85896 10.3068L4.14951 5.60586C4.01249 5.22905 3.96389 5.09896 3.91007 4.99161C3.5703 4.3139 2.91209 3.85286 2.15907 3.76513C2.03981 3.75124 1.90095 3.75002 1.50009 3.75001H1.50007ZM14.0097 13.2501C14.0064 13.25 14.0032 13.25 14 13.25H11.9452C11.0494 13.2494 10.4099 13.2437 9.90375 13.1869C9.36922 13.1269 9.05809 13.0164 8.81046 12.843C8.56284 12.6695 8.35265 12.4149 8.11362 11.933C7.86618 11.4342 7.62158 10.7648 7.26865 9.79422L6.16168 6.75007H17.0336C17.986 6.75007 18.6393 6.75111 19.1266 6.80378C19.6087 6.8559 19.8051 6.9487 19.9149 7.04037C20.0883 7.18505 20.2192 7.37399 20.2938 7.58711C20.3411 7.72215 20.359 7.93864 20.2385 8.40835C20.1167 8.88312 19.8883 9.49514 19.5539 10.3869C19.2964 11.0736 19.1182 11.5472 18.948 11.9095C18.7826 12.2612 18.6461 12.4598 18.4957 12.6072C18.314 12.7852 18.1034 12.9312 17.8729 13.0388C17.6821 13.1279 17.4482 13.186 17.0608 13.2173C16.6618 13.2495 16.1558 13.2501 15.4224 13.2501H14.0097ZM9 18.75C8.30964 18.75 7.75 19.3097 7.75 20C7.75 20.6904 8.30964 21.25 9 21.25C9.69036 21.25 10.25 20.6904 10.25 20C10.25 19.3097 9.69036 18.75 9 18.75ZM17 18.75C16.3096 18.75 15.75 19.3097 15.75 20C15.75 20.6904 16.3096 21.25 17 21.25C17.6904 21.25 18.25 20.6904 18.25 20C18.25 19.3097 17.6904 18.75 17 18.75Z" fill="#B3B3B3"/>
+                                </svg>
+                                <span>
                                   {{ 'products.product.add_to_cart' | t }}
-                                {%- endif -%}
-                              </span>
-                              {%- render 'loading-spinner' -%}
-                            </button>
+                                </span>
+                              </button>
                             </div>
-                          {%- endform -%}
-                        {%- else -%}
-                        <div class="product-form__buttons form">
-                          <button
-                            name="add"
-                            class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %} out-of-stock"
-                          disabled>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                               <path fill-rule="evenodd" clip-rule="evenodd" d="M1.50007 3.75001H1.49998L1.00009 3.75007C0.585878 3.75012 0.250051 3.41437 0.25 3.00016C0.249949 2.58595 0.585695 2.25012 0.999908 2.25007L1.49991 2.25001L1.5 3.00001L1.50002 2.25001L1.54594 2.25L1.54594 2.25C1.88371 2.24996 2.1157 2.24993 2.33265 2.27521C3.58768 2.42143 4.68471 3.18983 5.25099 4.31935C5.34888 4.5146 5.42813 4.73264 5.54352 5.05009L5.5592 5.09324L5.61623 5.25007H17.0336L17.0773 5.25007C17.9753 5.25005 18.7102 5.25004 19.2878 5.31247C19.8799 5.37648 20.4293 5.51592 20.876 5.88873C21.2574 6.20703 21.5455 6.62269 21.7096 7.09156C21.9018 7.64074 21.8395 8.20414 21.6915 8.78104C21.5471 9.34375 21.2891 10.0319 20.9738 10.8726L20.9738 10.8726L20.9584 10.9136L20.9478 10.942C20.7035 11.5934 20.5046 12.1239 20.3055 12.5475C20.0986 12.9878 19.8706 13.3601 19.5454 13.6787C19.2426 13.9754 18.8917 14.2186 18.5075 14.3979C18.095 14.5905 17.6665 14.6733 17.1815 14.7124C16.7151 14.7501 16.1485 14.7501 15.4529 14.7501H15.4529H15.4529H15.4224H12.2026H12.1594C12.0647 14.7501 11.9717 14.7501 11.8804 14.75H6C5.30964 14.75 4.75 15.3097 4.75 16C4.75 16.6904 5.30964 17.25 6 17.25H9H17H21C21.4142 17.25 21.75 17.5858 21.75 18C21.75 18.4142 21.4142 18.75 21 18.75H19.4501C19.6419 19.125 19.75 19.5499 19.75 20C19.75 21.5188 18.5188 22.75 17 22.75C15.4812 22.75 14.25 21.5188 14.25 20C14.25 19.5499 14.3581 19.125 14.5499 18.75H11.4501C11.6419 19.125 11.75 19.5499 11.75 20C11.75 21.5188 10.5188 22.75 9 22.75C7.48122 22.75 6.25 21.5188 6.25 20C6.25 19.5499 6.35814 19.125 6.54985 18.75H6C4.48122 18.75 3.25 17.5188 3.25 16C3.25 14.4812 4.48122 13.25 6 13.25H7.14691C7.00916 13.0505 6.8859 12.8335 6.76987 12.5996C6.48068 12.0166 6.20831 11.2676 5.87372 10.3474L5.85896 10.3068L4.14951 5.60586C4.01249 5.22905 3.96389 5.09896 3.91007 4.99161C3.5703 4.3139 2.91209 3.85286 2.15907 3.76513C2.03981 3.75124 1.90095 3.75002 1.50009 3.75001H1.50007ZM14.0097 13.2501C14.0064 13.25 14.0032 13.25 14 13.25H11.9452C11.0494 13.2494 10.4099 13.2437 9.90375 13.1869C9.36922 13.1269 9.05809 13.0164 8.81046 12.843C8.56284 12.6695 8.35265 12.4149 8.11362 11.933C7.86618 11.4342 7.62158 10.7648 7.26865 9.79422L6.16168 6.75007H17.0336C17.986 6.75007 18.6393 6.75111 19.1266 6.80378C19.6087 6.8559 19.8051 6.9487 19.9149 7.04037C20.0883 7.18505 20.2192 7.37399 20.2938 7.58711C20.3411 7.72215 20.359 7.93864 20.2385 8.40835C20.1167 8.88312 19.8883 9.49514 19.5539 10.3869C19.2964 11.0736 19.1182 11.5472 18.948 11.9095C18.7826 12.2612 18.6461 12.4598 18.4957 12.6072C18.314 12.7852 18.1034 12.9312 17.8729 13.0388C17.6821 13.1279 17.4482 13.186 17.0608 13.2173C16.6618 13.2495 16.1558 13.2501 15.4224 13.2501H14.0097ZM9 18.75C8.30964 18.75 7.75 19.3097 7.75 20C7.75 20.6904 8.30964 21.25 9 21.25C9.69036 21.25 10.25 20.6904 10.25 20C10.25 19.3097 9.69036 18.75 9 18.75ZM17 18.75C16.3096 18.75 15.75 19.3097 15.75 20C15.75 20.6904 16.3096 21.25 17 21.25C17.6904 21.25 18.25 20.6904 18.25 20C18.25 19.3097 17.6904 18.75 17 18.75Z" fill="#B3B3B3"/>
-                            </svg>                            
-                            <span>
-                              {{ 'products.product.add_to_cart' | t }}
-                            </span>
-                          </button>
-                        </div>
-                        {% endif %}
+                          {% endif %}
                         {%- else -%}
                           <div class="product-form">
                             <div class="product-form__buttons form">
@@ -1083,13 +1149,17 @@
                     or product.selected_or_first_available_variant == null
                   %}
                     <div class="restock-rocket-button-container">
-                      <button onclick="event.preventDefault();_RestockRocket.openModal()" class="sticky-restock-button restock-rocket-button restock-rocket-button-product restock-rocket-button-hover" style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;">
+                      <button
+                        onclick="event.preventDefault();_RestockRocket.openModal()"
+                        class="sticky-restock-button restock-rocket-button restock-rocket-button-product restock-rocket-button-hover"
+                        style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;"
+                      >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path fill-rule="evenodd" clip-rule="evenodd" d="M11.9982 2.25C8.19221 2.25 4.98184 5.08406 4.50977 8.86064L3.52085 16.772C3.32319 18.3533 4.55618 19.75 6.14978 19.75H7.51075L7.56309 19.8678C8.34206 21.6205 10.0802 22.75 11.9982 22.75C13.9161 22.75 15.6542 21.6205 16.4332 19.8678L16.4856 19.75H17.8466C19.4402 19.75 20.6732 18.3533 20.4755 16.772L19.4866 8.86064C19.0145 5.08406 15.8042 2.25 11.9982 2.25ZM16.0153 18.25C16.0041 18.2498 15.993 18.2498 15.9819 18.25H8.01445C8.00333 18.2498 7.99219 18.2498 7.98104 18.25H6.14978C5.45843 18.25 4.92351 17.6441 5.00927 16.958L5.99818 9.04669C6.37643 6.02075 8.9487 3.75 11.9982 3.75C15.0477 3.75 17.6199 6.02075 17.9982 9.04669L18.9871 16.958C19.0729 17.6441 18.5379 18.25 17.8466 18.25H16.0153ZM9.20336 19.75H14.793C14.1788 20.6765 13.1341 21.25 11.9982 21.25C10.8622 21.25 9.81755 20.6765 9.20336 19.75Z" fill="white"/>
                         </svg>
                         <span>Notify availability</span>
-                    </button>
-                  </div>
+                      </button>
+                    </div>
                   {% endif %}
                   <div class="paylater-container">
                     <div class="paylater-text">
@@ -1099,23 +1169,38 @@
                       </svg>
                     </div>
                     <div class="paylater-logo">
-                        <svg onclick="PayTomorrow.openMpeIframe()" class="paytomorrow-logo" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 326 48">
-                          <defs>
-                              <style>.cls-1{fill:#43A8FB}.cls-2{fill:#152456}</style>
-                          </defs>
-                          <path class="cls-1" d="M0,4A3,3,0,0,1,.8,1.54a4.49,4.49,0,0,1,2.06-1C3.43.42,4.45.31,5.94.18S9.54,0,12.3,0q8.47,0,12.61,3.34A10.86,10.86,0,0,1,29,12.24a13.14,13.14,0,0,1-.88,4.85A9.68,9.68,0,0,1,25.38,21a13.44,13.44,0,0,1-5,2.57,26.06,26.06,0,0,1-7.47.93c-.74,0-1.49,0-2.25-.08l-2.09-.16c-.64,0-1.19-.11-1.65-.19A7.64,7.64,0,0,0,6.1,24V36.87H0ZM6.1,18.6l2.06.29a32.1,32.1,0,0,0,4.35.24,19.15,19.15,0,0,0,4.87-.53,8.08,8.08,0,0,0,3.1-1.49,5.35,5.35,0,0,0,1.62-2.2,7.35,7.35,0,0,0,.47-2.67,8,8,0,0,0-.42-2.57,4.84,4.84,0,0,0-1.59-2.2,8.84,8.84,0,0,0-3.2-1.54,19.8,19.8,0,0,0-5.22-.58c-1.7,0-3.06,0-4.08.11a14.92,14.92,0,0,0-2,.21Z"></path>
-                          <path class="cls-1" d="M54.73,36.77c-.35.07-.91.15-1.67.24s-1.65.17-2.67.26-2.17.17-3.45.24-2.59.11-4,.11a26.1,26.1,0,0,1-6.75-.72A11.39,11.39,0,0,1,32.08,35,6.13,6.13,0,0,1,30,32.24,9.51,9.51,0,0,1,29.46,29a10.13,10.13,0,0,1,.66-3.81,6.39,6.39,0,0,1,2.18-2.76,10.69,10.69,0,0,1,3.94-1.67,27.29,27.29,0,0,1,5.94-.55c1.34,0,2.61,0,3.81.13s2.1.17,2.7.24a6.77,6.77,0,0,0-.61-3.07,4.7,4.7,0,0,0-1.66-1.91,6.74,6.74,0,0,0-2.55-1,18.36,18.36,0,0,0-3.28-.27,14,14,0,0,0-4.85.69,10.1,10.1,0,0,0-2.41,1.16,6.8,6.8,0,0,1-.88-1A3.05,3.05,0,0,1,32.3,12a3.38,3.38,0,0,1,1.4-1.27,9.38,9.38,0,0,1,2.7-.88,24.2,24.2,0,0,1,4.29-.31,25.06,25.06,0,0,1,5.7.6,12.56,12.56,0,0,1,4.42,1.94,8.87,8.87,0,0,1,2.89,3.5,12.09,12.09,0,0,1,1,5.24ZM48.75,25c-.36-.07-1-.18-2-.32a33.34,33.34,0,0,0-4.37-.21,9.84,9.84,0,0,0-5.25,1.08A3.83,3.83,0,0,0,35.5,29a4.18,4.18,0,0,0,.35,1.75A3,3,0,0,0,37,32.08a6.64,6.64,0,0,0,2.3.85,19.29,19.29,0,0,0,3.63.29A30.18,30.18,0,0,0,46.84,33c.95-.12,1.59-.22,1.91-.29Z"></path>
-                          <path class="cls-1" d="M58.81,13.09A2.55,2.55,0,0,1,59.66,11,3.58,3.58,0,0,1,62,10.28a6.33,6.33,0,0,1,1.78.24c.54.16.91.27,1.08.34V25a7.19,7.19,0,0,0,1.67,5c1.11,1.23,2.84,1.85,5.17,1.85A6.82,6.82,0,0,0,76.77,30a7.56,7.56,0,0,0,1.86-5.54V13.09A2.55,2.55,0,0,1,79.48,11a3.58,3.58,0,0,1,2.33-.69,6.31,6.31,0,0,1,1.77.24c.55.16.91.27,1.09.34V34.07a17.87,17.87,0,0,1-1,6.38,10.77,10.77,0,0,1-7.31,6.78,20.42,20.42,0,0,1-5.78.77,30.14,30.14,0,0,1-4-.24c-1.2-.16-2.27-.34-3.2-.55s-1.71-.42-2.31-.61-1-.35-1.27-.45c.28-.75.55-1.5.79-2.25s.5-1.52.75-2.26c.24.11.63.25,1.16.43s1.17.34,1.91.5,1.58.29,2.51.4a28.31,28.31,0,0,0,3,.16,14.07,14.07,0,0,0,3.71-.45,6.33,6.33,0,0,0,2.78-1.57,7.23,7.23,0,0,0,1.75-2.94,14.8,14.8,0,0,0,.61-4.58,7.11,7.11,0,0,1-3.32,2.46,12.84,12.84,0,0,1-5,.93,14.86,14.86,0,0,1-4.71-.72A10.37,10.37,0,0,1,62.1,34.2a9.28,9.28,0,0,1-2.41-3.36,11.38,11.38,0,0,1-.88-4.61Z"></path>
-                          <path class="cls-2" d="M88.91,5.56a2.55,2.55,0,0,1,.84-2.14,3.74,3.74,0,0,1,2.34-.67A6.31,6.31,0,0,1,93.86,3c.55.16.91.28,1.09.35v6.94h7.68a3.44,3.44,0,0,1,2.46.71,2.85,2.85,0,0,1,.72,2.1,4.94,4.94,0,0,1-.27,1.66,7.88,7.88,0,0,1-.42,1.09H95V27.65a5.8,5.8,0,0,0,.37,2.26,3.44,3.44,0,0,0,1,1.4,3.74,3.74,0,0,0,1.54.74,7.28,7.28,0,0,0,1.83.22,8.38,8.38,0,0,0,2.86-.48,8.29,8.29,0,0,0,1.9-.9l2.44,4c-.28.22-.68.48-1.19.8a10.67,10.67,0,0,1-1.88.9,16.44,16.44,0,0,1-2.49.71,14.25,14.25,0,0,1-3,.3c-3.11,0-5.46-.81-7-2.41a8.62,8.62,0,0,1-2.38-6.34Z"></path>
-                          <path class="cls-2" d="M121.44,9.54a15.37,15.37,0,0,1,5.74,1.06,13.91,13.91,0,0,1,4.64,2.94A13.37,13.37,0,0,1,134.89,18,13.75,13.75,0,0,1,136,23.58a13.63,13.63,0,0,1-1.12,5.53,13.37,13.37,0,0,1-3.07,4.45,14.31,14.31,0,0,1-4.64,3,15.68,15.68,0,0,1-11.49,0,14.31,14.31,0,0,1-4.64-3A13.37,13.37,0,0,1,108,29.11a13.8,13.8,0,0,1-1.11-5.53A13.91,13.91,0,0,1,108,18a13.37,13.37,0,0,1,3.07-4.45,13.91,13.91,0,0,1,4.64-2.94A15.39,15.39,0,0,1,121.44,9.54Zm0,22.73a8.15,8.15,0,0,0,3.33-.67,7.6,7.6,0,0,0,2.63-1.85A8.62,8.62,0,0,0,129.09,27a9.23,9.23,0,0,0,.61-3.41,9.63,9.63,0,0,0-.61-3.47,8.34,8.34,0,0,0-1.69-2.79,7.79,7.79,0,0,0-2.63-1.82,8.71,8.71,0,0,0-6.7,0,7.73,7.73,0,0,0-2.59,1.82,8.36,8.36,0,0,0-1.7,2.79,9.63,9.63,0,0,0-.61,3.47,9.23,9.23,0,0,0,.61,3.41,8.64,8.64,0,0,0,1.7,2.76,7.53,7.53,0,0,0,2.59,1.85A8.18,8.18,0,0,0,121.44,32.27Z"></path>
-                          <path class="cls-2" d="M139,19.76a10.34,10.34,0,0,1,.9-4.45,8.93,8.93,0,0,1,2.47-3.18A10.85,10.85,0,0,1,146,10.2a15.42,15.42,0,0,1,4.61-.66,13.71,13.71,0,0,1,5.88,1.21,9.78,9.78,0,0,1,4.13,3.61,10,10,0,0,1,4.08-3.61,13.25,13.25,0,0,1,5.78-1.21,15.88,15.88,0,0,1,4.55.63,10.37,10.37,0,0,1,3.66,1.91,9.2,9.2,0,0,1,2.44,3.18,10.31,10.31,0,0,1,.9,4.45V36.87h-6V21.77q0-3.64-1.65-5.21A6.14,6.14,0,0,0,169.91,15a6.33,6.33,0,0,0-4.53,1.75q-1.81,1.76-1.82,5.67V36.87h-6V22.41q0-3.91-1.83-5.67A6.33,6.33,0,0,0,151.16,15a6.24,6.24,0,0,0-4.45,1.59Q145,18.17,145,21.83v15h-6Z"></path>
-                          <path class="cls-2" d="M199.58,9.54a15.39,15.39,0,0,1,5.75,1.06A13.91,13.91,0,0,1,210,13.54,13.52,13.52,0,0,1,213,18a13.91,13.91,0,0,1,1.11,5.59A13.8,13.8,0,0,1,213,29.11,13.52,13.52,0,0,1,210,33.56a14.31,14.31,0,0,1-4.64,3,15.68,15.68,0,0,1-11.49,0,14.31,14.31,0,0,1-4.64-3,13.37,13.37,0,0,1-3.07-4.45A13.63,13.63,0,0,1,185,23.58,13.75,13.75,0,0,1,186.13,18a13.37,13.37,0,0,1,3.07-4.45,13.91,13.91,0,0,1,4.64-2.94A15.33,15.33,0,0,1,199.58,9.54Zm0,22.73a8.2,8.2,0,0,0,3.34-.67,7.46,7.46,0,0,0,2.62-1.85,8.64,8.64,0,0,0,1.7-2.76,9.23,9.23,0,0,0,.61-3.41,9.63,9.63,0,0,0-.61-3.47,8.36,8.36,0,0,0-1.7-2.79,7.66,7.66,0,0,0-2.62-1.82,8.71,8.71,0,0,0-6.7,0,7.87,7.87,0,0,0-2.6,1.82,8.34,8.34,0,0,0-1.69,2.79,9.63,9.63,0,0,0-.61,3.47,9.23,9.23,0,0,0,.61,3.41,8.62,8.62,0,0,0,1.69,2.76,7.67,7.67,0,0,0,2.6,1.85A8.16,8.16,0,0,0,199.58,32.27Z"></path>
-                          <path class="cls-2" d="M217.12,19.76a9.63,9.63,0,0,1,3-7.55c2-1.78,4.76-2.67,8.3-2.67a13.71,13.71,0,0,1,5.43.92,3,3,0,0,1,2.09,2.84,3.45,3.45,0,0,1-.5,1.75,3.66,3.66,0,0,1-.83,1.06,13.94,13.94,0,0,0-2.22-.8,11.1,11.1,0,0,0-3-.37q-6.2,0-6.2,6.57V36.87h-6Z"></path>
-                          <path class="cls-2" d="M236,19.76a9.63,9.63,0,0,1,3-7.55c2-1.78,4.76-2.67,8.3-2.67a13.71,13.71,0,0,1,5.43.92,3,3,0,0,1,2.09,2.84,3.45,3.45,0,0,1-.5,1.75,3.87,3.87,0,0,1-.82,1.06,14.46,14.46,0,0,0-2.23-.8,11.1,11.1,0,0,0-3-.37q-6.19,0-6.2,6.57V36.87h-6Z"></path>
-                          <path class="cls-2" d="M268.88,9.54a15.39,15.39,0,0,1,5.75,1.06,14,14,0,0,1,4.64,2.94A13.52,13.52,0,0,1,282.34,18a13.91,13.91,0,0,1,1.11,5.59,13.8,13.8,0,0,1-1.11,5.53,13.52,13.52,0,0,1-3.07,4.45,14.42,14.42,0,0,1-4.64,3,15.71,15.71,0,0,1-11.5,0,14.26,14.26,0,0,1-4.63-3,13.37,13.37,0,0,1-3.07-4.45,13.63,13.63,0,0,1-1.12-5.53A13.75,13.75,0,0,1,255.43,18a13.37,13.37,0,0,1,3.07-4.45,13.87,13.87,0,0,1,4.63-2.94A15.42,15.42,0,0,1,268.88,9.54Zm0,22.73a8.2,8.2,0,0,0,3.34-.67,7.56,7.56,0,0,0,2.62-1.85,8.64,8.64,0,0,0,1.7-2.76,9.44,9.44,0,0,0,.61-3.41,9.85,9.85,0,0,0-.61-3.47,8.36,8.36,0,0,0-1.7-2.79,7.75,7.75,0,0,0-2.62-1.82,8.71,8.71,0,0,0-6.7,0,7.87,7.87,0,0,0-2.6,1.82,8.34,8.34,0,0,0-1.69,2.79,9.63,9.63,0,0,0-.61,3.47,9.23,9.23,0,0,0,.61,3.41,8.62,8.62,0,0,0,1.69,2.76,7.67,7.67,0,0,0,2.6,1.85A8.13,8.13,0,0,0,268.88,32.27Z"></path>
-                          <path class="cls-2" d="M292.4,36.87q-2.59-6.09-4.26-10.33c-1.11-2.82-2-5.16-2.65-7s-1.11-3.28-1.38-4.29a10,10,0,0,1-.39-2.14,2.74,2.74,0,0,1,3-2.81,6.26,6.26,0,0,1,1.82.21,6.82,6.82,0,0,1,.88.32q.63,2.32,1.43,4.95T292.51,21c.57,1.73,1.12,3.38,1.67,4.95l1.46,4.21c.39-1.09.8-2.34,1.24-3.76s.9-2.86,1.38-4.37.94-3,1.4-4.55.89-3,1.28-4.37a4.61,4.61,0,0,1,1.19-2.1,3.56,3.56,0,0,1,2.46-.71,6,6,0,0,1,1.91.29,10.9,10.9,0,0,1,1.06.4q.69,2.38,1.48,5t1.59,5.17c.53,1.69,1.05,3.32,1.56,4.87s1,2.94,1.41,4.13c.92-2.43,1.86-5.1,2.83-8s1.86-5.8,2.68-8.69a5.58,5.58,0,0,1,1.24-2.41,3.2,3.2,0,0,1,2.36-.77,5.08,5.08,0,0,1,2.33.47,7.63,7.63,0,0,1,1,.59q-.44,1.74-1.48,4.82c-.71,2.05-1.51,4.26-2.39,6.65s-1.82,4.82-2.81,7.31-1.92,4.74-2.8,6.75h-6.26c-.28-.74-.66-1.82-1.13-3.25s-1-3-1.57-4.69-1.12-3.44-1.67-5.22-1.05-3.42-1.51-4.9c-.46,1.48-1,3.12-1.51,4.9s-1.09,3.52-1.64,5.22-1,3.26-1.51,4.69-.83,2.51-1.11,3.25Z"></path>
+                      <svg
+                        onclick="PayTomorrow.openMpeIframe()"
+                        class="paytomorrow-logo"
+                        id="Layer_1"
+                        data-name="Layer 1"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 326 48"
+                      >
+                        <defs>
+                            <style>.cls-1{fill:#43A8FB}.cls-2{fill:#152456}</style>
+                        </defs>
+                        <path class="cls-1" d="M0,4A3,3,0,0,1,.8,1.54a4.49,4.49,0,0,1,2.06-1C3.43.42,4.45.31,5.94.18S9.54,0,12.3,0q8.47,0,12.61,3.34A10.86,10.86,0,0,1,29,12.24a13.14,13.14,0,0,1-.88,4.85A9.68,9.68,0,0,1,25.38,21a13.44,13.44,0,0,1-5,2.57,26.06,26.06,0,0,1-7.47.93c-.74,0-1.49,0-2.25-.08l-2.09-.16c-.64,0-1.19-.11-1.65-.19A7.64,7.64,0,0,0,6.1,24V36.87H0ZM6.1,18.6l2.06.29a32.1,32.1,0,0,0,4.35.24,19.15,19.15,0,0,0,4.87-.53,8.08,8.08,0,0,0,3.1-1.49,5.35,5.35,0,0,0,1.62-2.2,7.35,7.35,0,0,0,.47-2.67,8,8,0,0,0-.42-2.57,4.84,4.84,0,0,0-1.59-2.2,8.84,8.84,0,0,0-3.2-1.54,19.8,19.8,0,0,0-5.22-.58c-1.7,0-3.06,0-4.08.11a14.92,14.92,0,0,0-2,.21Z"></path>
+                        <path class="cls-1" d="M54.73,36.77c-.35.07-.91.15-1.67.24s-1.65.17-2.67.26-2.17.17-3.45.24-2.59.11-4,.11a26.1,26.1,0,0,1-6.75-.72A11.39,11.39,0,0,1,32.08,35,6.13,6.13,0,0,1,30,32.24,9.51,9.51,0,0,1,29.46,29a10.13,10.13,0,0,1,.66-3.81,6.39,6.39,0,0,1,2.18-2.76,10.69,10.69,0,0,1,3.94-1.67,27.29,27.29,0,0,1,5.94-.55c1.34,0,2.61,0,3.81.13s2.1.17,2.7.24a6.77,6.77,0,0,0-.61-3.07,4.7,4.7,0,0,0-1.66-1.91,6.74,6.74,0,0,0-2.55-1,18.36,18.36,0,0,0-3.28-.27,14,14,0,0,0-4.85.69,10.1,10.1,0,0,0-2.41,1.16,6.8,6.8,0,0,1-.88-1A3.05,3.05,0,0,1,32.3,12a3.38,3.38,0,0,1,1.4-1.27,9.38,9.38,0,0,1,2.7-.88,24.2,24.2,0,0,1,4.29-.31,25.06,25.06,0,0,1,5.7.6,12.56,12.56,0,0,1,4.42,1.94,8.87,8.87,0,0,1,2.89,3.5,12.09,12.09,0,0,1,1,5.24ZM48.75,25c-.36-.07-1-.18-2-.32a33.34,33.34,0,0,0-4.37-.21,9.84,9.84,0,0,0-5.25,1.08A3.83,3.83,0,0,0,35.5,29a4.18,4.18,0,0,0,.35,1.75A3,3,0,0,0,37,32.08a6.64,6.64,0,0,0,2.3.85,19.29,19.29,0,0,0,3.63.29A30.18,30.18,0,0,0,46.84,33c.95-.12,1.59-.22,1.91-.29Z"></path>
+                        <path class="cls-1" d="M58.81,13.09A2.55,2.55,0,0,1,59.66,11,3.58,3.58,0,0,1,62,10.28a6.33,6.33,0,0,1,1.78.24c.54.16.91.27,1.08.34V25a7.19,7.19,0,0,0,1.67,5c1.11,1.23,2.84,1.85,5.17,1.85A6.82,6.82,0,0,0,76.77,30a7.56,7.56,0,0,0,1.86-5.54V13.09A2.55,2.55,0,0,1,79.48,11a3.58,3.58,0,0,1,2.33-.69,6.31,6.31,0,0,1,1.77.24c.55.16.91.27,1.09.34V34.07a17.87,17.87,0,0,1-1,6.38,10.77,10.77,0,0,1-7.31,6.78,20.42,20.42,0,0,1-5.78.77,30.14,30.14,0,0,1-4-.24c-1.2-.16-2.27-.34-3.2-.55s-1.71-.42-2.31-.61-1-.35-1.27-.45c.28-.75.55-1.5.79-2.25s.5-1.52.75-2.26c.24.11.63.25,1.16.43s1.17.34,1.91.5,1.58.29,2.51.4a28.31,28.31,0,0,0,3,.16,14.07,14.07,0,0,0,3.71-.45,6.33,6.33,0,0,0,2.78-1.57,7.23,7.23,0,0,0,1.75-2.94,14.8,14.8,0,0,0,.61-4.58,7.11,7.11,0,0,1-3.32,2.46,12.84,12.84,0,0,1-5,.93,14.86,14.86,0,0,1-4.71-.72A10.37,10.37,0,0,1,62.1,34.2a9.28,9.28,0,0,1-2.41-3.36,11.38,11.38,0,0,1-.88-4.61Z"></path>
+                        <path class="cls-2" d="M88.91,5.56a2.55,2.55,0,0,1,.84-2.14,3.74,3.74,0,0,1,2.34-.67A6.31,6.31,0,0,1,93.86,3c.55.16.91.28,1.09.35v6.94h7.68a3.44,3.44,0,0,1,2.46.71,2.85,2.85,0,0,1,.72,2.1,4.94,4.94,0,0,1-.27,1.66,7.88,7.88,0,0,1-.42,1.09H95V27.65a5.8,5.8,0,0,0,.37,2.26,3.44,3.44,0,0,0,1,1.4,3.74,3.74,0,0,0,1.54.74,7.28,7.28,0,0,0,1.83.22,8.38,8.38,0,0,0,2.86-.48,8.29,8.29,0,0,0,1.9-.9l2.44,4c-.28.22-.68.48-1.19.8a10.67,10.67,0,0,1-1.88.9,16.44,16.44,0,0,1-2.49.71,14.25,14.25,0,0,1-3,.3c-3.11,0-5.46-.81-7-2.41a8.62,8.62,0,0,1-2.38-6.34Z"></path>
+                        <path class="cls-2" d="M121.44,9.54a15.37,15.37,0,0,1,5.74,1.06,13.91,13.91,0,0,1,4.64,2.94A13.37,13.37,0,0,1,134.89,18,13.75,13.75,0,0,1,136,23.58a13.63,13.63,0,0,1-1.12,5.53,13.37,13.37,0,0,1-3.07,4.45,14.31,14.31,0,0,1-4.64,3,15.68,15.68,0,0,1-11.49,0,14.31,14.31,0,0,1-4.64-3A13.37,13.37,0,0,1,108,29.11a13.8,13.8,0,0,1-1.11-5.53A13.91,13.91,0,0,1,108,18a13.37,13.37,0,0,1,3.07-4.45,13.91,13.91,0,0,1,4.64-2.94A15.39,15.39,0,0,1,121.44,9.54Zm0,22.73a8.15,8.15,0,0,0,3.33-.67,7.6,7.6,0,0,0,2.63-1.85A8.62,8.62,0,0,0,129.09,27a9.23,9.23,0,0,0,.61-3.41,9.63,9.63,0,0,0-.61-3.47,8.34,8.34,0,0,0-1.69-2.79,7.79,7.79,0,0,0-2.63-1.82,8.71,8.71,0,0,0-6.7,0,7.73,7.73,0,0,0-2.59,1.82,8.36,8.36,0,0,0-1.7,2.79,9.63,9.63,0,0,0-.61,3.47,9.23,9.23,0,0,0,.61,3.41,8.64,8.64,0,0,0,1.7,2.76,7.53,7.53,0,0,0,2.59,1.85A8.18,8.18,0,0,0,121.44,32.27Z"></path>
+                        <path class="cls-2" d="M139,19.76a10.34,10.34,0,0,1,.9-4.45,8.93,8.93,0,0,1,2.47-3.18A10.85,10.85,0,0,1,146,10.2a15.42,15.42,0,0,1,4.61-.66,13.71,13.71,0,0,1,5.88,1.21,9.78,9.78,0,0,1,4.13,3.61,10,10,0,0,1,4.08-3.61,13.25,13.25,0,0,1,5.78-1.21,15.88,15.88,0,0,1,4.55.63,10.37,10.37,0,0,1,3.66,1.91,9.2,9.2,0,0,1,2.44,3.18,10.31,10.31,0,0,1,.9,4.45V36.87h-6V21.77q0-3.64-1.65-5.21A6.14,6.14,0,0,0,169.91,15a6.33,6.33,0,0,0-4.53,1.75q-1.81,1.76-1.82,5.67V36.87h-6V22.41q0-3.91-1.83-5.67A6.33,6.33,0,0,0,151.16,15a6.24,6.24,0,0,0-4.45,1.59Q145,18.17,145,21.83v15h-6Z"></path>
+                        <path class="cls-2" d="M199.58,9.54a15.39,15.39,0,0,1,5.75,1.06A13.91,13.91,0,0,1,210,13.54,13.52,13.52,0,0,1,213,18a13.91,13.91,0,0,1,1.11,5.59A13.8,13.8,0,0,1,213,29.11,13.52,13.52,0,0,1,210,33.56a14.31,14.31,0,0,1-4.64,3,15.68,15.68,0,0,1-11.49,0,14.31,14.31,0,0,1-4.64-3,13.37,13.37,0,0,1-3.07-4.45A13.63,13.63,0,0,1,185,23.58,13.75,13.75,0,0,1,186.13,18a13.37,13.37,0,0,1,3.07-4.45,13.91,13.91,0,0,1,4.64-2.94A15.33,15.33,0,0,1,199.58,9.54Zm0,22.73a8.2,8.2,0,0,0,3.34-.67,7.46,7.46,0,0,0,2.62-1.85,8.64,8.64,0,0,0,1.7-2.76,9.23,9.23,0,0,0,.61-3.41,9.63,9.63,0,0,0-.61-3.47,8.36,8.36,0,0,0-1.7-2.79,7.66,7.66,0,0,0-2.62-1.82,8.71,8.71,0,0,0-6.7,0,7.87,7.87,0,0,0-2.6,1.82,8.34,8.34,0,0,0-1.69,2.79,9.63,9.63,0,0,0-.61,3.47,9.23,9.23,0,0,0,.61,3.41,8.62,8.62,0,0,0,1.69,2.76,7.67,7.67,0,0,0,2.6,1.85A8.16,8.16,0,0,0,199.58,32.27Z"></path>
+                        <path class="cls-2" d="M217.12,19.76a9.63,9.63,0,0,1,3-7.55c2-1.78,4.76-2.67,8.3-2.67a13.71,13.71,0,0,1,5.43.92,3,3,0,0,1,2.09,2.84,3.45,3.45,0,0,1-.5,1.75,3.66,3.66,0,0,1-.83,1.06,13.94,13.94,0,0,0-2.22-.8,11.1,11.1,0,0,0-3-.37q-6.2,0-6.2,6.57V36.87h-6Z"></path>
+                        <path class="cls-2" d="M236,19.76a9.63,9.63,0,0,1,3-7.55c2-1.78,4.76-2.67,8.3-2.67a13.71,13.71,0,0,1,5.43.92,3,3,0,0,1,2.09,2.84,3.45,3.45,0,0,1-.5,1.75,3.87,3.87,0,0,1-.82,1.06,14.46,14.46,0,0,0-2.23-.8,11.1,11.1,0,0,0-3-.37q-6.19,0-6.2,6.57V36.87h-6Z"></path>
+                        <path class="cls-2" d="M268.88,9.54a15.39,15.39,0,0,1,5.75,1.06,14,14,0,0,1,4.64,2.94A13.52,13.52,0,0,1,282.34,18a13.91,13.91,0,0,1,1.11,5.59,13.8,13.8,0,0,1-1.11,5.53,13.52,13.52,0,0,1-3.07,4.45,14.42,14.42,0,0,1-4.64,3,15.71,15.71,0,0,1-11.5,0,14.26,14.26,0,0,1-4.63-3,13.37,13.37,0,0,1-3.07-4.45,13.63,13.63,0,0,1-1.12-5.53A13.75,13.75,0,0,1,255.43,18a13.37,13.37,0,0,1,3.07-4.45,13.87,13.87,0,0,1,4.63-2.94A15.42,15.42,0,0,1,268.88,9.54Zm0,22.73a8.2,8.2,0,0,0,3.34-.67,7.56,7.56,0,0,0,2.62-1.85,8.64,8.64,0,0,0,1.7-2.76,9.44,9.44,0,0,0,.61-3.41,9.85,9.85,0,0,0-.61-3.47,8.36,8.36,0,0,0-1.7-2.79,7.75,7.75,0,0,0-2.62-1.82,8.71,8.71,0,0,0-6.7,0,7.87,7.87,0,0,0-2.6,1.82,8.34,8.34,0,0,0-1.69,2.79,9.63,9.63,0,0,0-.61,3.47,9.23,9.23,0,0,0,.61,3.41,8.62,8.62,0,0,0,1.69,2.76,7.67,7.67,0,0,0,2.6,1.85A8.13,8.13,0,0,0,268.88,32.27Z"></path>
+                        <path class="cls-2" d="M292.4,36.87q-2.59-6.09-4.26-10.33c-1.11-2.82-2-5.16-2.65-7s-1.11-3.28-1.38-4.29a10,10,0,0,1-.39-2.14,2.74,2.74,0,0,1,3-2.81,6.26,6.26,0,0,1,1.82.21,6.82,6.82,0,0,1,.88.32q.63,2.32,1.43,4.95T292.51,21c.57,1.73,1.12,3.38,1.67,4.95l1.46,4.21c.39-1.09.8-2.34,1.24-3.76s.9-2.86,1.38-4.37.94-3,1.4-4.55.89-3,1.28-4.37a4.61,4.61,0,0,1,1.19-2.1,3.56,3.56,0,0,1,2.46-.71,6,6,0,0,1,1.91.29,10.9,10.9,0,0,1,1.06.4q.69,2.38,1.48,5t1.59,5.17c.53,1.69,1.05,3.32,1.56,4.87s1,2.94,1.41,4.13c.92-2.43,1.86-5.1,2.83-8s1.86-5.8,2.68-8.69a5.58,5.58,0,0,1,1.24-2.41,3.2,3.2,0,0,1,2.36-.77,5.08,5.08,0,0,1,2.33.47,7.63,7.63,0,0,1,1,.59q-.44,1.74-1.48,4.82c-.71,2.05-1.51,4.26-2.39,6.65s-1.82,4.82-2.81,7.31-1.92,4.74-2.8,6.75h-6.26c-.28-.74-.66-1.82-1.13-3.25s-1-3-1.57-4.69-1.12-3.44-1.67-5.22-1.05-3.42-1.51-4.9c-.46,1.48-1,3.12-1.51,4.9s-1.09,3.52-1.64,5.22-1,3.26-1.51,4.69-.83,2.51-1.11,3.25Z"></path>
                       </svg>
-                      <svg class="afterPayLogo" onclick="document.querySelector('square-placement').shadowRoot.querySelector('button').click()" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" width="104" height="36" viewBox="0 0 104 36">
+                      <svg
+                        class="afterPayLogo"
+                        onclick="document.querySelector('square-placement').shadowRoot.querySelector('button').click()"
+                        xmlns="http://www.w3.org/2000/svg"
+                        preserveAspectRatio="xMidYMid meet"
+                        width="104"
+                        height="36"
+                        viewBox="0 0 104 36"
+                      >
                         <path class="afterpay-logo-badge-background" fill="#b2fce4" d="m86.00173,35.9321l-68.00064,0c-9.90375,0 -17.93101,-8.02726 -17.93101,-17.93101l0,0c0,-9.90375 8.02726,-17.93101 17.93101,-17.93101l68.00064,0c9.90375,0 17.931,8.02726 17.931,17.93101l0,0c0.00652,9.89724 -8.02725,17.93101 -17.931,17.93101z"></path>
                         <g class="afterpay-logo-badge-lockup">
                           <path d="m88.23074,13.52071l-2.25928,-1.29288l-2.29193,-1.31247c-1.51489,-0.86845 -3.40851,0.22201 -3.40851,1.97197l0,0.29384c0,0.16324 0.08489,0.31342 0.22854,0.39178l1.06435,0.60726c0.29383,0.16978 0.6595,-0.0457 0.6595,-0.38525l0,-0.69868c0,-0.34607 0.37219,-0.56155 0.67256,-0.39178l2.0895,1.20147l2.08298,1.19493c0.30037,0.16977 0.30037,0.60727 0,0.77704l-2.08298,1.19494l-2.0895,1.20146c-0.30037,0.16978 -0.67256,-0.0457 -0.67256,-0.39178l0,-0.34607c0,-1.74997 -1.89362,-2.84696 -3.40851,-1.97198l-2.29193,1.31247l-2.25928,1.29289c-1.52142,0.87498 -1.52142,3.07549 0,3.95047l2.25928,1.29289l2.29193,1.31247c1.51489,0.86845 3.40851,-0.22201 3.40851,-1.97198l0,-0.29383c0,-0.16325 -0.08489,-0.31343 -0.22854,-0.39179l-1.06435,-0.60726c-0.29383,-0.16977 -0.6595,0.04571 -0.6595,0.38525l0,0.69868c0,0.34608 -0.37219,0.56156 -0.67256,0.39179l-2.0895,-1.20147l-2.08298,-1.19494c-0.30037,-0.16977 -0.30037,-0.60726 0,-0.77703l2.08298,-1.19494l2.0895,-1.20147c0.30037,-0.16977 0.67256,0.04571 0.67256,0.39179l0,0.34607c0,1.74996 1.89362,2.84695 3.40851,1.97197l2.29193,-1.31247l2.25928,-1.29288c1.52142,-0.88151 1.52142,-3.0755 0,-3.95048z"></path>
@@ -1127,19 +1212,20 @@
                           <path d="m62.09231,17.83032c0,-1.30594 -0.94681,-2.2201 -2.1091,-2.2201c-1.16229,0 -2.1091,0.93375 -2.1091,2.2201c0,1.2733 0.94681,2.2201 2.1091,2.2201c1.16229,0 2.1091,-0.91416 2.1091,-2.2201m0.01959,3.87865l0,-1.00558c-0.57462,0.69868 -1.43001,1.12964 -2.44865,1.12964c-2.12868,0 -3.74152,-1.70425 -3.74152,-4.00271c0,-2.27887 1.67813,-4.01577 3.78723,-4.01577c0.99252,0 1.82832,0.43749 2.40294,1.11658l0,-0.97946l1.90667,0l0,7.7573l-1.90667,0z"></path>
                           <path d="m43.67852,14.70912s0.4832,-0.9011 1.67814,-0.9011c0.50931,0 0.8358,0.1763 0.8358,0.1763l0,1.97851s-0.71827,-0.44402 -1.37777,-0.35261c-0.6595,0.09142 -1.0774,0.69215 -1.0774,1.50184l0,4.59038l-1.97197,0l0,-7.75076l1.90667,0l0,0.75744l0.00653,0z"></path>
                         </g>
-                        </svg>
+                      </svg>
                     </div>
-                </div>
-                <square-placement style="display: none;"
-                  data-mpid="fc566f23-8b2f-4261-9078-db1ff31db733"
-                  data-placement-id="1f2d2a02-0587-4f4b-a78f-3bdf0dbc938f"
-                  data-page-type="product"
-                  data-amount="{{ product.price | money_without_currency }}"
-                  data-currency="USD"
-                  data-item-skus="{{ product.selected_or_first_available_variant.sku }}"
-                  data-is-eligible="true"
-                >
-                </square-placement>
+                  </div>
+                  <square-placement
+                    style="display: none;"
+                    data-mpid="fc566f23-8b2f-4261-9078-db1ff31db733"
+                    data-placement-id="1f2d2a02-0587-4f4b-a78f-3bdf0dbc938f"
+                    data-page-type="product"
+                    data-amount="{{ product.price | money_without_currency }}"
+                    data-currency="USD"
+                    data-item-skus="{{ product.selected_or_first_available_variant.sku }}"
+                    data-is-eligible="true"
+                  >
+                  </square-placement>
                 </product-form>
               {%- when 'inventory' -%}
                 <p
@@ -1236,9 +1322,7 @@
               {% when 'color_picker' %}
                 <div></div>
 
-                {% render 'custom-color-picker',
-                  product: product,
-                %}
+                {% render 'custom-color-picker', product: product %}
 
               {%- when 'collapsible_tab' -%}
                 <div class="product__accordion accordion quick-add-hidden" {{ block.shopify_attributes }}>
@@ -1282,7 +1366,11 @@
                     </span>
                   </label>
                   <div class="price-per-item__container">
-                    <quantity-input class="quantity {% unless product.available %} out-of-stock{% endunless %}" data-url="{{ product.url }}" data-section="{{ section.id }}">
+                    <quantity-input
+                      class="quantity {% unless product.available %} out-of-stock{% endunless %}"
+                      data-url="{{ product.url }}"
+                      data-section="{{ section.id }}"
+                    >
                       <button class="quantity__button" name="minus" type="button">
                         <span class="visually-hidden">
                           {{- 'products.product.quantity.decrease' | t: product: product.title | escape -}}
@@ -1704,10 +1792,10 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M5.45958 2.25002L5.52495 2.25005L5.58515 2.25003C5.91729 2.24988 6.17563 2.24977 6.41432 2.29189C7.31374 2.45061 8.07568 3.04551 8.4478 3.87958C8.54655 4.10093 8.6091 4.35157 8.68951 4.67382L8.68951 4.67383L8.68951 4.67384L8.7041 4.73225L9.11772 6.38672L9.12677 6.42291L9.12677 6.42293C9.26686 6.98319 9.38575 7.4587 9.44293 7.86157C9.5038 8.29046 9.50557 8.70021 9.36866 9.12073C9.23175 9.54125 8.9891 9.87142 8.68738 10.1823C8.40398 10.4743 8.02792 10.7886 7.58483 11.1591L7.55622 11.183L5.94399 12.5308C7.2473 14.8902 9.10778 16.7507 11.4672 18.054L12.815 16.4418L12.839 16.4132C13.2094 15.9701 13.5238 15.594 13.8157 15.3106C14.1266 15.0089 14.4568 14.7663 14.8773 14.6294C15.2978 14.4924 15.7075 14.4942 16.1364 14.5551C16.5393 14.6123 17.0148 14.7311 17.575 14.8712L17.5751 14.8712L17.5751 14.8713L17.6113 14.8803L19.2658 15.2939L19.3242 15.3085L19.3242 15.3085C19.6464 15.3889 19.8971 15.4515 20.1184 15.5502C20.9525 15.9223 21.5474 16.6843 21.7061 17.5837C21.7482 17.8224 21.7481 18.0807 21.748 18.4129L21.748 18.4731L21.748 18.5384C21.7482 18.9214 21.7484 19.2237 21.6818 19.5215C21.4397 20.6055 20.4364 21.5157 19.334 21.6514C19.0316 21.6886 18.7718 21.6632 18.4486 21.6315L18.4485 21.6315L18.4485 21.6315L18.4017 21.6269C15.7621 21.3694 13.3864 20.7099 11.3171 19.6702C8.24296 18.1256 5.87243 15.755 4.32781 12.6809C3.28809 10.6116 2.62865 8.23596 2.37111 5.5963L2.36653 5.54952C2.33484 5.22628 2.30937 4.96642 2.3466 4.66401C2.48232 3.56164 3.39252 2.55831 4.4765 2.31618C4.77435 2.24965 5.07657 2.24982 5.45958 2.25002ZM12.8556 18.7319C14.5361 19.452 16.4378 19.9282 18.5474 20.134C18.9338 20.1717 19.0296 20.1776 19.1507 20.1627C19.6235 20.1044 20.1141 19.6594 20.2179 19.1945C20.2438 19.0784 20.248 18.9515 20.248 18.4731C20.248 18.0524 20.2452 17.9363 20.2289 17.8444C20.1568 17.4355 19.8864 17.0892 19.5073 16.9201C19.422 16.882 19.31 16.8511 18.902 16.7491L17.2475 16.3355C16.6413 16.184 16.2419 16.0851 15.9257 16.0402C15.6268 15.9978 15.4677 16.0146 15.3416 16.0557C15.2156 16.0967 15.0771 16.1768 14.8605 16.387C14.6313 16.6095 14.3666 16.9245 13.9658 17.4039L12.8556 18.7319ZM5.26615 11.1424L6.59411 10.0322C7.07351 9.63137 7.38855 9.36676 7.61102 9.13755C7.82126 8.92094 7.90131 8.78242 7.94235 8.65637C7.98339 8.53032 8.00023 8.37122 7.95781 8.07235C7.91293 7.75611 7.81406 7.35674 7.6625 6.75052L7.24889 5.09605C7.14687 4.68797 7.11601 4.57604 7.07795 4.49074C6.90881 4.11162 6.56247 3.84121 6.15365 3.76907C6.06166 3.75283 5.94559 3.75005 5.52495 3.75005C5.04653 3.75005 4.91959 3.75418 4.80349 3.78011C4.3386 3.88395 3.89356 4.37452 3.83536 4.8473C3.82044 4.96843 3.82631 5.06417 3.86402 5.45064C4.06984 7.56018 4.54599 9.46194 5.26615 11.1424ZM13.2478 6.99999C13.2478 6.58578 13.5836 6.24999 13.9978 6.24999C15.0244 6.24999 15.9319 6.8889 16.5454 7.54437C16.8889 7.91141 17.18 8.32423 17.3888 8.73048C17.59 9.12199 17.7478 9.57165 17.7478 9.99999C17.7478 10.4142 17.412 10.75 16.9978 10.75C16.5836 10.75 16.2478 10.4142 16.2478 9.99999C16.2478 9.91004 16.2042 9.70708 16.0547 9.41609C15.9127 9.13983 15.7038 8.84025 15.4503 8.56942C14.954 8.03924 14.4164 7.74999 13.9978 7.74999C13.5836 7.74999 13.2478 7.41421 13.2478 6.99999ZM13.9978 3.24999C13.5836 3.24999 13.2478 3.58578 13.2478 3.99999C13.2478 4.41421 13.5836 4.74999 13.9978 4.74999C16.8973 4.74999 19.2478 7.1005 19.2478 9.99999C19.2478 10.4142 19.5836 10.75 19.9978 10.75C20.412 10.75 20.7478 10.4142 20.7478 9.99999C20.7478 6.27207 17.7258 3.24999 13.9978 3.24999Z" fill="white"/>
             </svg>
-            
+
             {{ section.settings.button_text }}
           </a>
-        </div> 
+        </div>
       {% endif %}
     </div>
     {% render 'product-media-modal', variant_images: variant_images %}
@@ -1741,10 +1829,12 @@
     {%- endfor -%}
 
     {%- if product.media.size > 0 -%}
-      {% comment %} <script src="{{ 'product-modal.js' | asset_url }}" defer="defer"></script>
-      <script src="{{ 'media-gallery.js' | asset_url }}" defer="defer"></script>
+      {% comment %}
+        <script src="{{ 'product-modal.js' | asset_url }}" defer="defer"></script>
+        <script src="{{ 'media-gallery.js' | asset_url }}" defer="defer"></script>
 
-      <script src="{{ 'product-media-slider.js' | asset_url }}" defer="defer"></script> {% endcomment %}
+        <script src="{{ 'product-media-slider.js' | asset_url }}" defer="defer"></script>
+      {% endcomment %}
 
       <script src="{{ 'product-gallery.js' | asset_url }}" defer="defer"></script>
       <script src="{{ 'product-mobile-gallery.js' | asset_url }}" defer="defer"></script>
@@ -1812,9 +1902,13 @@
   <div class="mobile-popup-dots"></div>
 </div>
 
+<style>
+  #dynamic-product-content iframe{max-width:100% !important;}
+</style>
 
-
-<script>window.product = {{ product | json }}</script>
+<script>
+  window.product = {{ product | json }}
+</script>
 <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
 
@@ -1835,64 +1929,66 @@
     }
   })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
 </script>
-{% comment %} <script defer>
-  document.addEventListener("DOMContentLoaded", function () {
-    let scrollTimeout;
+{% comment %}
+  <script defer>
+    document.addEventListener("DOMContentLoaded", function () {
+      let scrollTimeout;
 
-    window.addEventListener('scroll', function () {
-        if (scrollTimeout) {
-            clearTimeout(scrollTimeout);
-        }
-    
-        scrollTimeout = setTimeout(() => {
-            const stickyAddToCart = document.querySelector('.sticky-add-to-cart');
-            const headerWrapper = document.querySelector('.header-wrapper');
-            const headerBottom = headerWrapper.getBoundingClientRect().bottom;
-          
-            if (headerBottom <= 0) {
-                stickyAddToCart.style.display = 'block';
-            } else {
-                stickyAddToCart.style.display = 'none';
-            }
-        }, 50); 
-    });
+      window.addEventListener('scroll', function () {
+          if (scrollTimeout) {
+              clearTimeout(scrollTimeout);
+          }
 
-    const stickyQuantity = document.querySelector('.sticky-quantity');
-    const formQuantityInput = document.querySelector('.quantity__input');
+          scrollTimeout = setTimeout(() => {
+              const stickyAddToCart = document.querySelector('.sticky-add-to-cart');
+              const headerWrapper = document.querySelector('.header-wrapper');
+              const headerBottom = headerWrapper.getBoundingClientRect().bottom;
 
-    if (stickyQuantity) {
-      stickyQuantity.addEventListener('change', () => {
-        if (formQuantityInput) {
-            formQuantityInput.value = stickyQuantity.value;
-        }   
+              if (headerBottom <= 0) {
+                  stickyAddToCart.style.display = 'block';
+              } else {
+                  stickyAddToCart.style.display = 'none';
+              }
+          }, 50);
       });
-    }
 
-    formQuantityInput.addEventListener('change', () => {
-      var formQuantityValue = formQuantityInput.value;
+      const stickyQuantity = document.querySelector('.sticky-quantity');
+      const formQuantityInput = document.querySelector('.quantity__input');
 
-      if (formQuantityInput) {
-        stickyQuantity.value = formQuantityInput.value;
+      if (stickyQuantity) {
+        stickyQuantity.addEventListener('change', () => {
+          if (formQuantityInput) {
+              formQuantityInput.value = stickyQuantity.value;
+          }
+        });
+      }
+
+      formQuantityInput.addEventListener('change', () => {
+        var formQuantityValue = formQuantityInput.value;
+
+        if (formQuantityInput) {
+          stickyQuantity.value = formQuantityInput.value;
+        }
+      });
+
+      if (!window.product.available) {
+        const stickyProductActions = document.querySelector('.sticky-product-actions');
+
+        if (stickyProductActions) {
+          stickyProductActions.innerHTML = `<div class="restock-rocket-button-container"><button onclick="_RestockRocket.openModal()" class="sticky-restock-button restock-rocket-button restock-rocket-button-product restock-rocket-button-hover" style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;">Notify me when available</button></div>`
+        }
       }
     });
 
-    if (!window.product.available) {
-      const stickyProductActions = document.querySelector('.sticky-product-actions');
+    function addToCart() {
+      const addToCartMainButton = document.querySelector('.product-form__submit');
 
-      if (stickyProductActions) {
-        stickyProductActions.innerHTML = `<div class="restock-rocket-button-container"><button onclick="_RestockRocket.openModal()" class="sticky-restock-button restock-rocket-button restock-rocket-button-product restock-rocket-button-hover" style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;">Notify me when available</button></div>`
+      if (addToCartMainButton) {
+        addToCartMainButton.click();
       }
     }
-  });
-
-  function addToCart() {
-    const addToCartMainButton = document.querySelector('.product-form__submit');
-
-    if (addToCartMainButton) {
-      addToCartMainButton.click();
-    }
-  }  
-</script> {% endcomment %}
+  </script>
+{% endcomment %}
 {% schema %}
 {
   "name": "t:sections.main-product.name",
