@@ -18,6 +18,10 @@ document.addEventListener("DOMContentLoaded", function () {
 			slidesPerView: 'auto',
 			spaceBetween: 32,
 			loop: true,
+          autoplay: {
+					speed: 2000,
+					pauseOnMouseEnter: true,
+				},
 			navigation: {
 				nextEl: nextEl,
 				prevEl: prevEl,
