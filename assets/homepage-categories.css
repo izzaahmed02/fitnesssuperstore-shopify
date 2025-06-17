@@ -1,6 +1,8 @@
 .homepage-categories {
   padding: 60px 0;
   background-color: #FAF9F9;
+  overflow-x: hidden; /* prevent horizontal overflow */
+  position: relative;
 }
 
 .homepage-categories__header {
@@ -52,14 +54,25 @@
 
 .homepage-categories__tab {
   display: none;
+  padding: 0 48px; /* make room for arrows */
+  position: relative;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .homepage-categories__tab.homepage-categories__tab-active {
   display: block;
 }
 
-.homepage-categories .swiper,
+.homepage-categories .swiper {
+  width: 100%;
+  overflow: visible;
+  box-sizing: border-box;
+}
+
 .homepage-categories .swiper-wrapper {
+  display: flex;
+  align-items: stretch;
   overflow: visible;
 }
 
@@ -118,6 +131,7 @@
   pointer-events: none;
 }
 
+/* Swiper Navigation Arrows */
 .homepage-categories .swiper-button-prev,
 .homepage-categories .swiper-button-next {
   pointer-events: auto;
@@ -134,14 +148,18 @@
   z-index: 10;
 }
 
+/* Position arrows just outside swiper bounds */
 .homepage-categories .swiper-button-prev {
-  left: -24px;
+  left: 0;
+  transform: translate(-50%, -50%);
 }
 
 .homepage-categories .swiper-button-next {
-  right: -24px;
+  right: 0;
+  transform: translate(50%, -50%);
 }
 
+/* Responsive */
 @media (max-width: 992px) {
   .homepage-categories__item-img {
     width: 100px;
@@ -165,21 +183,27 @@
     row-gap: 20px;
   }
 
-  .homepage-categories__title {
+  .homepage-categories__title,
+  .homepage-categories__tabs-header {
     width: 100%;
   }
 
   .homepage-categories__tabs-header {
-    width: 100%;
     justify-content: center;
   }
 
+  .homepage-categories__tab {
+    padding: 0 24px;
+  }
+
   .homepage-categories .swiper-button-prev {
-    left: -16px;
+    left: 0;
+    transform: translate(-50%, -50%);
   }
 
   .homepage-categories .swiper-button-next {
-    right: -16px;
+    right: 0;
+    transform: translate(50%, -50%);
   }
 }
 
@@ -218,8 +242,8 @@
     padding: 24px 0;
   }
 
-  .homepage-categories .page-width {
-    padding-right: 0;
+  .homepage-categories__tab {
+    padding: 0 16px;
   }
 }
 
@@ -230,7 +254,7 @@
   }
 }
 
-/* Optional: hide bullets if not using them */
+/* Optional: hide bullets */
 .homepage-categories .swiper-pagination-bullets {
   display: none;
 }
