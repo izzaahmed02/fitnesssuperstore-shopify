@@ -33,6 +33,7 @@ tabButtons.forEach(btn => {
 				breakpoints: {
 					375: {
 						spaceBetween: 16,
+                      slidesPerView: '2',
 						pagination: {
 							el: '.homepage-categories__swiper-controls .swiper-pagination',
 							clickable: true,
@@ -46,6 +47,7 @@ tabButtons.forEach(btn => {
 					},
 					992: {
 						spaceBetween: 32,
+                      slidesPerView: '3',
 					}
 				}
 			});
