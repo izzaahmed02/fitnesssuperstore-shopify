@@ -1,4 +1,3 @@
-/*
 document.addEventListener("DOMContentLoaded", function () {
 	const tabButtons = document.querySelectorAll(".homepage-categories__tab-btn");
 	const tabPanels = document.querySelectorAll(".homepage-categories__tab");
@@ -72,9 +71,9 @@ document.addEventListener("DOMContentLoaded", function () {
 	});
 });
 
-*/
 
 
+/*
 const tabButtons = document.querySelectorAll(".homepage-categories__tab-btn");
 const tabPanels = document.querySelectorAll(".homepage-categories__tab");
 
@@ -136,4 +135,4 @@ const firstTabBtn = document.querySelector(".homepage-categories__tab-btn.active
 if (firstTabBtn) {
 	firstTabBtn.click();
 }
-
+*/
