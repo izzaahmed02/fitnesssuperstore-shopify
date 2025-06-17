@@ -20,39 +20,7 @@ tabButtons.forEach(btn => {
 			const swiperContainer = activePanel.querySelector(".swiper");
 			if (!swiperContainer) return;
 
-          swipers[targetTab] = new Swiper(swiperContainer, {
-  slidesPerView: 'auto',
-  spaceBetween: 32,
-  loop: true,
-  autoplay: {
-    speed: 2000,
-    pauseOnMouseEnter: true,
-  },
-  pagination: {
-  el: swiperContainer.querySelector('.swiper-pagination'),
-  clickable: true,
-},
-navigation: {
-  nextEl: swiperContainer.querySelector('.swiper-button-next'),
-  prevEl: swiperContainer.querySelector('.swiper-button-prev'),
-},
-
-  observer: true,
-  observeParents: true,
-  breakpoints: {
-    375: {
-      spaceBetween: 16,
-      autoplay: false,
-      loop: false,
-    },
-    992: {
-      spaceBetween: 32,
-    }
-  }
-});
-
-
-		/*	swipers[targetTab] = new Swiper(swiperContainer, {
+			swipers[targetTab] = new Swiper(swiperContainer, {
 				slidesPerView: 'auto',
 				spaceBetween: 32,
 				loop: true,
@@ -80,7 +48,7 @@ navigation: {
 						spaceBetween: 32,
 					}
 				}
-			}); */
+			});
 		} else {
 			swipers[targetTab].update();
 		}
