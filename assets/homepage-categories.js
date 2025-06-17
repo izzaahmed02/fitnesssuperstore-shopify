@@ -28,14 +28,15 @@ tabButtons.forEach(btn => {
     speed: 2000,
     pauseOnMouseEnter: true,
   },
-  navigation: {
-    nextEl: swiperContainer.querySelector('.swiper-button-next'),
-    prevEl: swiperContainer.querySelector('.swiper-button-prev'),
-  },
   pagination: {
-    el: swiperContainer.querySelector('.swiper-pagination'),
-    clickable: true,
-  },
+  el: swiperContainer.querySelector('.swiper-pagination'),
+  clickable: true,
+},
+navigation: {
+  nextEl: swiperContainer.querySelector('.swiper-button-next'),
+  prevEl: swiperContainer.querySelector('.swiper-button-prev'),
+},
+
   observer: true,
   observeParents: true,
   breakpoints: {
