@@ -21,7 +21,7 @@ tabButtons.forEach(btn => {
 			if (!swiperContainer) return;
 
 			swipers[targetTab] = new Swiper(swiperContainer, {
-				slidesPerView: '4',
+				slidesPerView: 'auto',
 				spaceBetween: 32,
 				loop: true,
 				autoplay: {
@@ -33,7 +33,6 @@ tabButtons.forEach(btn => {
 				breakpoints: {
 					375: {
 						spaceBetween: 16,
-                      slidesPerView: '2',
 						pagination: {
 							el: '.homepage-categories__swiper-controls .swiper-pagination',
 							clickable: true,
@@ -47,7 +46,6 @@ tabButtons.forEach(btn => {
 					},
 					992: {
 						spaceBetween: 32,
-                      slidesPerView: '4',
 					}
 				}
 			});
