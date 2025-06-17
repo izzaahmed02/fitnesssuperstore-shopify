@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		const prevEl = swiperContainer.querySelector('.swiper-button-prev');
 
 		swipers[tabName] = new Swiper(swiperContainer, {
-			slidesPerView: '5',
+			slidesPerView: '4',
 			spaceBetween: 32,
 			loop: true,
           autoplay: {
