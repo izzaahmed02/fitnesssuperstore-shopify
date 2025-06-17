@@ -47,7 +47,7 @@ tabButtons.forEach(btn => {
 					},
 					992: {
 						spaceBetween: 32,
-                      slidesPerView: '3',
+                      slidesPerView: '4',
 					}
 				}
 			});
