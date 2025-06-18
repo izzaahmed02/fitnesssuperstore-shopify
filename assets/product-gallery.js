@@ -577,16 +577,15 @@ class ProductGallery extends HTMLElement {
       const skeletonWrapper = document.createElement('div');
       skeletonWrapper.className = 'image-skeleton-wrapper';
 
-
       const img = document.createElement('img');
-      img.src = media.preview_image.src.replace(/width=\d+/, 'width=750');
-      img.sizes = media.preview_image.sizes || '';
+      img.src = media.preview_image.src.replace(/width=\d+/, 'width=1600'); // Use higher res
       img.alt = media.alt || '';
       img.loading = 'eager';
       img.className = 'popup-media-zoom-img';
 
-      // Let the image load at its natural size
-      img.style.transition = 'transform 0.3s ease';
+      // Set initial transform styles
+      img.style.transition = 'transform 0.3s ease, transform-origin 0.1s ease';
+      img.style.transform = 'scale(1)';
       img.style.transformOrigin = 'center center';
 
       skeletonWrapper.appendChild(img);
@@ -595,72 +594,30 @@ class ProductGallery extends HTMLElement {
 
       img.onload = () => {
         skeletonWrapper.classList.add('loaded');
-
-
       };
 
       let isZoomed = false;
-      let lastMouseEvent = null;
 
       function handleMouseMove(e) {
         if (!isZoomed) return;
-        let zoomLevel;
-        const isLandscape = img.naturalWidth > img.naturalHeight;
-        debugger;
-        if (isLandscape) {
-          zoomLevel = 1.5;
-        } else {
-          zoomLevel = 1;
-        }
 
         const rect = viewer.getBoundingClientRect();
-        const x = e ? e.clientX - rect.left : rect.width / 2;
-        const y = e ? e.clientY - rect.top : rect.height / 2;
+        const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+        const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
 
-        const scaledWidth = img.naturalWidth * zoomLevel;
-        const scaledHeight = img.naturalHeight * zoomLevel;
-        const viewWidth = rect.width;
-        const viewHeight = rect.height;
-
-        const maxX = scaledWidth - viewWidth;
-        const maxY = scaledHeight - viewHeight;
-
-        const left = Math.max(0, Math.min((x / viewWidth) * maxX, maxX));
-        const top = Math.max(0, Math.min((y / viewHeight) * maxY, maxY));
-
-        skeletonWrapper.style.left = `-${left}px`;
-        skeletonWrapper.style.top = `-${top}px`;
+        img.style.transformOrigin = `${xPercent}% ${yPercent}%`;
       }
 
-      viewer.addEventListener('mousemove', (e) => {
-        lastMouseEvent = e;
-        if (isZoomed) handleMouseMove(e);
-      });
+      viewer.addEventListener('mousemove', handleMouseMove);
 
       viewer.addEventListener('click', () => {
         isZoomed = !isZoomed;
         viewer.classList.toggle('is-zoomed-simple', isZoomed);
-        let zoomLevel;
-        debugger;
-        const isLandscape = img.naturalWidth > img.naturalHeight;
-        if (isLandscape) {
-          zoomLevel = 1.5;
-        } else {
-          zoomLevel = 1.2;
-        }
 
+        const isLandscape = img.naturalWidth > img.naturalHeight;
+        const zoomLevel = isLandscape ? 1.5 : 1.2;
 
         img.style.transform = isZoomed ? `scale(${zoomLevel})` : 'scale(1)';
-        if (isZoomed) {
-          requestAnimationFrame(() => {
-            if (lastMouseEvent) {
-              handleMouseMove(lastMouseEvent);
-            }
-          });
-        } else {
-          skeletonWrapper.style.left = '0px';
-          skeletonWrapper.style.top = '0px';
-        }
       });
 
       return;
@@ -705,7 +662,7 @@ class ProductGallery extends HTMLElement {
       video.style.maxHeight = '100%';
 
       const validSource = (media.sources || []).find((s) =>
-          s.mime_type?.includes('mp4'),
+          s.mime_type?.includes('mp4')
       );
 
       if (validSource) {
@@ -724,6 +681,7 @@ class ProductGallery extends HTMLElement {
     // --- Fallback ---
     viewer.innerHTML = '<p>Unsupported media type.</p>';
   }
+
 
 
   renderVideoThumbItem(media) {
