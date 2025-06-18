@@ -28,16 +28,22 @@
   <div class="page-width">
     <div class="product__extra_info-wrap">
     {% if product.metafields.custom.gym_package_inclusions and product.metafields.custom.gym_package_inclusions.value != blank%}
-          <h2>Package Inclusions</h2>
+          <h4 class="product__extra_info-title">Package Inclusions</h4>
         {% for package in product.metafields.custom.gym_package_inclusions.value %}
           <div class="package-group">
-            <h4>{{ package.display_name }}</h4>
+            <h5 class="product__extra_info-title">{{ package.display_name }}</h5>
 
             {% if package.inclusions %}
               <ul>
                 {% for inclusion in package.inclusions.value %}
                   <li>
-                    <strong>{{ inclusion.quantity }} - <a href="{{ inclusion.product.value.url }}">{{ inclusion.title }}</a></strong>
+                      <strong>{{ inclusion.quantity }} - <a href="{{ inclusion.product.value.url }}">
+                        {% if inclusion.display_name != blank %}
+                            {{ inclusion.display_name }}
+                          {% else %}
+                            {{  inclusion.product.value.title }}
+                        {% endif %}
+                      </a></strong>
                   </li>
                 {% endfor %}
               </ul>
