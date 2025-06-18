@@ -53,8 +53,8 @@ document.addEventListener(
         gclid: gclid,
         wbraid: wbraid,
         name: fd.get('text-1'),
-        phone: fd.get('phone-1'),
         email: fd.get('email'),
+        phone: fd.get('phone-1'),
         message: fd.get('textarea')
       }  
       await postToGoogleSheet(googleSheetData);
