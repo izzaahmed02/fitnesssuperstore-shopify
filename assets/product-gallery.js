@@ -150,6 +150,7 @@ class ProductGallery extends HTMLElement {
       img.height = media.preview_image.height || '';
       img.alt = media.alt || '';
       img.loading = 'eager';
+      img.marginTop = '5px'
 
       container.appendChild(skeletonWrapper);
       skeletonWrapper.appendChild(img);
@@ -165,8 +166,8 @@ class ProductGallery extends HTMLElement {
 
         const tryInitZoom = () => {
           if (
-            !container.querySelector('img') ||
-            container.dataset.zoomInitialized === 'true'
+              !container.querySelector('img') ||
+              container.dataset.zoomInitialized === 'true'
           )
             return;
 
@@ -180,10 +181,10 @@ class ProductGallery extends HTMLElement {
 
           const rect = container.getBoundingClientRect();
           const cursorInBounds =
-            this.lastMouseX >= rect.left &&
-            this.lastMouseX <= rect.right &&
-            this.lastMouseY >= rect.top &&
-            this.lastMouseY <= rect.bottom;
+              this.lastMouseX >= rect.left &&
+              this.lastMouseX <= rect.right &&
+              this.lastMouseY >= rect.top &&
+              this.lastMouseY <= rect.bottom;
 
           if (cursorInBounds) {
             const event = new MouseEvent('mouseenter', {
@@ -198,21 +199,21 @@ class ProductGallery extends HTMLElement {
         setTimeout(tryInitZoom, 50);
 
         container.addEventListener(
-          'mousemove',
-          () => {
-            if (container.dataset.zoomInitialized !== 'true') {
-              const readyImg = container.querySelector('img');
-              if (readyImg?.complete && readyImg.naturalWidth > 0) {
-                this.initZoom(container, media);
+            'mousemove',
+            () => {
+              if (container.dataset.zoomInitialized !== 'true') {
+                const readyImg = container.querySelector('img');
+                if (readyImg?.complete && readyImg.naturalWidth > 0) {
+                  this.initZoom(container, media);
+                }
               }
-            }
-          },
-          { once: true },
+            },
+            { once: true },
         );
       };
     } else if (
-      media.media_type === 'video' ||
-      media.media_type === 'external_video'
+        media.media_type === 'video' ||
+        media.media_type === 'external_video'
     ) {
       const img = document.createElement('img');
       img.src = media.preview_image.src;
@@ -232,8 +233,8 @@ class ProductGallery extends HTMLElement {
     const allThumbs = this.querySelectorAll('.thumbnail-btn');
     allThumbs.forEach((thumb) => {
       thumb.classList.toggle(
-        'is-active',
-        thumb.getAttribute('data-media-id') === String(id),
+          'is-active',
+          thumb.getAttribute('data-media-id') === String(id),
       );
     });
   }
@@ -241,6 +242,8 @@ class ProductGallery extends HTMLElement {
   isDesktop() {
     return window.matchMedia('(min-width: 990px)').matches;
   }
+
+
 
   initZoom(container, media, forceStart = false) {
     if (!this.isDesktop()) return;
@@ -257,11 +260,22 @@ class ProductGallery extends HTMLElement {
 
     const lens = document.createElement('div');
     lens.className = 'zoom-lens';
+    lens.style.zIndex = '100';
     container.appendChild(lens);
 
     const zoomImg = new Image();
-    zoomImg.src = media.preview_image.src.replace(/width=\d+/, 'width=750');
-    zoomImg.src = media.preview_image.src.replace(/height=\d+/, 'height=750');
+
+    // ✅ Maintain original aspect ratio when requesting zoom image
+    const imgAspect = media.preview_image.width / media.preview_image.height;
+    const zoomWidth = 1000;
+    const zoomHeight = Math.round(zoomWidth / imgAspect);
+
+    zoomImg.src = media.preview_image.src
+        .replace(/width=\d+/, `width=${zoomWidth}`)
+        .replace(/height=\d+/, `height=${zoomHeight}`);
+
+    zoomImg.style.transform = 'scale(0.7)';
+    zoomImg.style.transformOrigin = 'center';
 
     zoomResult.appendChild(zoomImg);
 
@@ -277,15 +291,6 @@ class ProductGallery extends HTMLElement {
 
       const scaleX = zoomImg.naturalWidth / img.clientWidth;
       const scaleY = zoomImg.naturalHeight / img.clientHeight;
-
-      // requestAnimationFrame(() => {
-      //   const zoomW = zoomResult.clientWidth || 400;
-      //   const zoomH = zoomResult.clientHeight || 400;
-      //   const lensScale = 1.2;
-
-      //   lens.style.width = `${(zoomW / scaleX) * lensScale}px`;
-      //   lens.style.height = `${(zoomH / scaleY) * lensScale}px`;
-      // });
 
       requestAnimationFrame(() => {
         const prevDisplay = zoomResult.style.display;
@@ -308,23 +313,19 @@ class ProductGallery extends HTMLElement {
         const maxLensW = img.clientWidth;
         const maxLensH = img.clientHeight;
 
-        // const lensScale = 1.2;
         const lensW = zoomW / scaleX;
         const lensH = zoomH / scaleY;
 
         lens.style.width = `${Math.min(lensW, maxLensW)}px`;
         lens.style.height = `${Math.min(lensH, maxLensH)}px`;
 
-        const announcementBarSection = document.querySelector(
-          '.announcement-bar-section',
-        );
+        const announcementBarSection = document.querySelector('.announcement-bar-section');
         const headerWrapper = document.querySelector('.header-wrapper');
 
         const updateZoomTop = () => {
           const threshold =
-            announcementBarSection.offsetHeight + headerWrapper.offsetHeight;
+              announcementBarSection.offsetHeight + headerWrapper.offsetHeight;
           document.documentElement.style.setProperty('--header-height', `${threshold}px`);
-
           if (window.scrollY <= threshold) {
             zoomResult.style.top = '';
             zoomResult.style.height = '';
@@ -354,14 +355,8 @@ class ProductGallery extends HTMLElement {
           let left = x - lensHalfW;
           let top = y - lensHalfH;
 
-          left = Math.max(
-            0,
-            Math.min(left, img.clientWidth - lens.offsetWidth),
-          );
-          top = Math.max(
-            0,
-            Math.min(top, img.clientHeight - lens.offsetHeight),
-          );
+          left = Math.max(0, Math.min(left, img.clientWidth - lens.offsetWidth));
+          top = Math.max(0, Math.min(top, img.clientHeight - lens.offsetHeight));
 
           lens.style.left = `${left}px`;
           lens.style.top = `${top}px`;
@@ -370,9 +365,9 @@ class ProductGallery extends HTMLElement {
           const scaleY = zoomImg.naturalHeight / img.clientHeight;
 
           zoomResult.scrollLeft =
-            (left + lensHalfW) * scaleX - zoomResult.clientWidth / 2;
+              (left + lensHalfW) * scaleX - zoomResult.clientWidth / 2;
           zoomResult.scrollTop =
-            (top + lensHalfH) * scaleY - zoomResult.clientHeight / 2;
+              (top + lensHalfH) * scaleY - zoomResult.clientHeight / 2;
         });
       };
 
@@ -389,20 +384,20 @@ class ProductGallery extends HTMLElement {
       if (forceStart && this.lastMouseX && this.lastMouseY) {
         const rect = img.getBoundingClientRect();
         const inside =
-          this.lastMouseX > rect.left &&
-          this.lastMouseX < rect.right &&
-          this.lastMouseY > rect.top &&
-          this.lastMouseY < rect.bottom;
+            this.lastMouseX > rect.left &&
+            this.lastMouseX < rect.right &&
+            this.lastMouseY > rect.top &&
+            this.lastMouseY < rect.bottom;
 
         if (inside) {
           zoomResult.style.display = 'block';
           lens.style.display = 'block';
-
           moveLens({ clientX: this.lastMouseX, clientY: this.lastMouseY });
         }
       }
     };
   }
+
 
   renderPopup() {
     if (document.getElementById('product-gallery-popup')) return;
@@ -441,15 +436,15 @@ class ProductGallery extends HTMLElement {
 
     if (titleContainer) {
       titleContainer.textContent =
-        this.getAttribute('data-product-title') || '';
+          this.getAttribute('data-product-title') || '';
     }
 
     const clickedMedia = this.mediaData.find((m) => m.id == mediaId);
     const defaultTab =
-      clickedMedia?.media_type === 'video' ||
-      clickedMedia?.media_type === 'external_video'
-        ? 'videos'
-        : 'images';
+        clickedMedia?.media_type === 'video' ||
+        clickedMedia?.media_type === 'external_video'
+            ? 'videos'
+            : 'images';
 
     popup.hidden = false;
     document.body.style.overflow = 'hidden';
@@ -485,7 +480,7 @@ class ProductGallery extends HTMLElement {
 
         btn.addEventListener('click', () => {
           const zoomedViewer = popup.querySelector(
-            '.popup-media-viewer.is-zoomed',
+              '.popup-media-viewer.is-zoomed',
           );
 
           if (zoomedViewer) {
@@ -503,8 +498,8 @@ class ProductGallery extends HTMLElement {
 
         tabImages.appendChild(btn);
       } else if (
-        media.media_type === 'video' ||
-        media.media_type === 'external_video'
+          media.media_type === 'video' ||
+          media.media_type === 'external_video'
       ) {
         btn = this.renderVideoThumbItem(media);
         tabVideos.appendChild(btn);
@@ -528,7 +523,7 @@ class ProductGallery extends HTMLElement {
         tabVideos.classList.toggle('hidden', type !== 'videos');
 
         const zoomedViewer = popup.querySelector(
-          '.popup-media-viewer.is-zoomed',
+            '.popup-media-viewer.is-zoomed',
         );
 
         if (zoomedViewer) {
@@ -545,8 +540,8 @@ class ProductGallery extends HTMLElement {
           firstMedia = this.mediaData.find((m) => m.media_type === 'image');
         } else if (type === 'videos') {
           firstMedia = this.mediaData.find(
-            (m) =>
-              m.media_type === 'video' || m.media_type === 'external_video',
+              (m) =>
+                  m.media_type === 'video' || m.media_type === 'external_video',
           );
         }
 
@@ -561,7 +556,7 @@ class ProductGallery extends HTMLElement {
 
     popup.querySelector('.popup-close').onclick = this.closePopup.bind(this);
     popup.querySelector('.product-popup-backdrop').onclick =
-      this.closePopup.bind(this);
+        this.closePopup.bind(this);
     document.addEventListener('keydown', this.handleEscClose);
   }
 
@@ -570,9 +565,7 @@ class ProductGallery extends HTMLElement {
     if (!media) return;
 
     viewer.innerHTML = '';
-    if (viewer.classList.contains('popup-media-viewer-media-zoom-img')) {
-      viewer.classList.remove('popup-media-viewer-media-zoom-img');
-    }
+    viewer.classList.remove('popup-media-viewer-media-zoom-img');
 
     if (media.media_type === 'image') {
       viewer.classList.add('popup-media-viewer-media-zoom-img');
@@ -584,16 +577,15 @@ class ProductGallery extends HTMLElement {
       skeletonWrapper.className = 'image-skeleton-wrapper';
 
       const img = document.createElement('img');
-      img.src = media.preview_image.src.replace(/width=\d+/, 'width=750');
-      //img.src = media.preview_image.src.replace(/width=\d+/, '');
-
-      // img.srcset = media.preview_image.srcset || '';
-      img.sizes = media.preview_image.sizes || '';
-      img.width = media.preview_image.width || '';
-      img.height = media.preview_image.height || '';
+      img.src = media.preview_image.src.replace(/width=\d+/, 'width=1600'); // Use higher res
       img.alt = media.alt || '';
       img.loading = 'eager';
       img.className = 'popup-media-zoom-img';
+
+      // Set initial transform styles
+      img.style.transition = 'transform 0.3s ease, transform-origin 0.1s ease';
+      img.style.transform = 'scale(1)';
+      img.style.transformOrigin = 'center center';
 
       skeletonWrapper.appendChild(img);
       inner.appendChild(skeletonWrapper);
@@ -609,76 +601,32 @@ class ProductGallery extends HTMLElement {
         if (!isZoomed) return;
 
         const rect = viewer.getBoundingClientRect();
+        const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+        const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
 
-        const x = e ? e.clientX - rect.left : rect.width / 2;
-        const y = e ? e.clientY - rect.top : rect.height / 2;
-
-        const imgWidth = img.naturalWidth;
-        const imgHeight = img.naturalHeight;
-
-        const viewWidth = rect.width;
-        const viewHeight = rect.height;
-
-        if (imgWidth <= viewWidth && imgHeight <= viewHeight) {
-          skeletonWrapper.style.left = '0px';
-          skeletonWrapper.style.top = '0px';
-          return;
-        }
-
-        const maxX = imgWidth - viewWidth;
-        const maxY = imgHeight - viewHeight;
-
-        const left = Math.max(0, Math.min((x / viewWidth) * maxX, maxX));
-        const top = Math.max(0, Math.min((y / viewHeight) * maxY, maxY));
-
-        skeletonWrapper.style.left = `-${left}px`;
-        skeletonWrapper.style.top = `-${top}px`;
+        img.style.transformOrigin = `${xPercent}% ${yPercent}%`;
       }
 
+      viewer.addEventListener('mousemove', handleMouseMove);
+
       viewer.addEventListener('click', () => {
-        const rect = viewer.getBoundingClientRect();
-        const viewW = rect.width;
-        const viewH = rect.height;
-        const imgW = img.naturalWidth;
-        const imgH = img.naturalHeight;
-
-        const isTooSmall = imgW <= viewW && imgH <= viewH;
-        if (isTooSmall) {
-          viewer.style.cursor = 'default';
-          // viewer.style.pointerEvents = 'none';
-          return;
-        }
-
         isZoomed = !isZoomed;
-        viewer.classList.toggle('is-zoomed', isZoomed);
+        viewer.classList.toggle('is-zoomed-simple', isZoomed);
 
-        if (isZoomed) {
-          if (img.complete && img.naturalWidth > 0) {
-            requestAnimationFrame(() => {
-              handleMouseMove();
-            });
-          }
-          viewer.addEventListener('mousemove', handleMouseMove);
-        } else {
-          viewer.removeEventListener('mousemove', handleMouseMove);
-          skeletonWrapper.style.left = '0px';
-          skeletonWrapper.style.top = '0px';
-        }
+        const isLandscape = img.naturalWidth > img.naturalHeight;
+        const zoomLevel = isLandscape ? 1.5 : 1.2;
+
+        img.style.transform = isZoomed ? `scale(${zoomLevel})` : 'scale(1)';
       });
 
-      // const img = document.createElement('img');
-      // img.src = media.preview_image.src.replace(/width=\d+/, 'width=1200');
-      // img.alt = media.alt || '';
-      // img.style.maxWidth = '100%';
-      // img.style.maxHeight = '100%';
-      // viewer.appendChild(img);
       return;
     }
 
+    // --- External Video ---
     if (
-      media.media_type === 'external_video' &&
-      media.external_id &&
-      media.host
+        media.media_type === 'external_video' &&
+        media.external_id &&
+        media.host
     ) {
       let embedUrl = '';
       if (media.host === 'youtube') {
@@ -691,7 +639,7 @@ class ProductGallery extends HTMLElement {
         const iframe = document.createElement('iframe');
         iframe.src = embedUrl + '?autoplay=1&rel=0';
         iframe.allow =
-          'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
+            'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
         iframe.allowFullscreen = true;
         iframe.frameBorder = '0';
         iframe.style.width = '100%';
@@ -701,6 +649,7 @@ class ProductGallery extends HTMLElement {
       }
     }
 
+    // --- Video ---
     if (media.media_type === 'video') {
       const video = document.createElement('video');
       video.controls = true;
@@ -712,7 +661,7 @@ class ProductGallery extends HTMLElement {
       video.style.maxHeight = '100%';
 
       const validSource = (media.sources || []).find((s) =>
-        s.mime_type?.includes('mp4'),
+          s.mime_type?.includes('mp4')
       );
 
       if (validSource) {
@@ -728,9 +677,11 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
-    // fallback
+    // --- Fallback ---
     viewer.innerHTML = '<p>Unsupported media type.</p>';
   }
+
+
 
   renderVideoThumbItem(media) {
     const btn = document.createElement('button');
@@ -753,8 +704,8 @@ class ProductGallery extends HTMLElement {
 
     btn.addEventListener('click', () => {
       this.renderPopupViewer(
-        media.id,
-        document.querySelector('[data-popup-viewer]'),
+          media.id,
+          document.querySelector('[data-popup-viewer]'),
       );
       this.updatePopupThumbActive(media.id);
     });
