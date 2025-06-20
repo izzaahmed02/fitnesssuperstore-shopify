@@ -166,7 +166,7 @@
 
       {% if terms %}{% assign relevance = 'relevance,' %}{% endif %}
 
-      {% assign allSorts = 'stock-descending,best-selling,title-ascending,title-descending,price-ascending,price-descending,created-descending,created-ascending,sale-descending' %}
+      {% assign allSorts = 'stock-descending,best-selling,title-ascending,title-descending,price-ascending,price-descending' %}
       {% assign allSorts = allSorts
         | prepend: relevance
         | append: ','
@@ -182,8 +182,10 @@
         {{-translation.sort.best_selling | default: "Best Selling"-}}
         {%- elsif sort_by == 'manual' or sort_by == 'featured' -%}
         {{-translation.sort.manually | default: "Featured"-}}
+    {% comment %}
         {%- elsif sort_by == 'relevance' -%}
         {{-translation.sort.relevance | default: "Relevance"-}}
+    {% endcomment %}    
         {%- elsif sort_by == 'stock-descending' -%}
         {{-translation.sort.availability_in_stock_first | default: "Availability"-}}
         {%- elsif sort_by == 'title-ascending' -%}
@@ -241,10 +243,12 @@
                   <span data-sort="stock-descending" onclick="changeSortBy('stock-descending');">
                     {{- translation.sort.availability_in_stock_first | default: 'Availability' -}}
                   </span>
+                {% comment %}
                 {% when 'relevance' %}
                   <span data-sort="relevance" onclick="changeSortBy('relevance');">
                     {{- translation.sort.relevance | default: 'Relevance' -}}
                   </span>
+                {% endcomment %}
                 {% when 'title-ascending' %}
                   <span data-sort="title-ascending" onclick="changeSortBy('title-ascending');">
                     {{- translation.sort.alphabetically_a_z | default: 'Alphabetically, A-Z' -}}
