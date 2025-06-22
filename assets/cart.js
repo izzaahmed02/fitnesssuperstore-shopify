@@ -78,7 +78,6 @@ class CartItems extends HTMLElement {
 		}, ON_CHANGE_DEBOUNCE_TIMER);
 
 		this.addEventListener('change', debouncedOnChange.bind(this));
-		setCartAttributeZipCode();
 	}
 
 	cartUpdateUnsubscriber = undefined;
@@ -631,27 +630,4 @@ async function downloadQuoteGsheet() {
 
 		csvQuoteBtn.disabled = false;
 	}
-}
-
-function setCartAttributeZipCode() {
-fetch('/cart/update.js', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  },
-  body: JSON.stringify({
-    attributes: {
-      zipCode: '94510'
-    }
-  })
-})
-.then(response => response.json())
-.then(cart => {
-  console.log('Cart updated:', cart);
-})
-.catch(error => {
-  console.error('Error updating cart attribute:', error);
-});
-
 }
