@@ -78,7 +78,6 @@ class CartItems extends HTMLElement {
 		}, ON_CHANGE_DEBOUNCE_TIMER);
 
 		this.addEventListener('change', debouncedOnChange.bind(this));
-		//setCartAttributeZipCode();
 	}
 
 	cartUpdateUnsubscriber = undefined;
@@ -471,8 +470,6 @@ if (!customElements.get('cart-note')) {
 
 // Change Edit Options Button
 document.addEventListener("DOMContentLoaded", () => {
-
-
 	const updateText = (element) => {
 		if (!element) return;
 
@@ -529,6 +526,20 @@ document.addEventListener("DOMContentLoaded", () => {
 		}, 200)
 	);
 	observerCartBlock.observe(document.body);
+
+	const drShippingPoll = setInterval(() => {
+		const drShippingZipCodeElement = document.querySelector('.docapp-shipping-calculator--input-zip');
+		if (drShippingZipCodeElement) {
+			drShippingZipCodeElement.addEventListener('change', (event) => {
+				const targetElement = event.target;
+				const value = targetElement.value;
+				if (value) {
+					setCartAttributeZipCode(value);
+				}
+			});
+			clearInterval(drShippingPoll);
+		}
+	}, 100);
 });
 
 
@@ -633,7 +644,7 @@ async function downloadQuoteGsheet() {
 	}
 }
 
-function setCartAttributeZipCode() {
+function setCartAttributeZipCode(zip) {
 fetch('/cart/update.js', {
   method: 'POST',
   headers: {
@@ -642,13 +653,9 @@ fetch('/cart/update.js', {
   },
   body: JSON.stringify({
     attributes: {
-      zipCode: '94510'
+      zipCode: zip
     }
   })
-})
-.then(response => response.json())
-.then(cart => {
-  console.log('Cart updated:', cart);
 })
 .catch(error => {
   console.error('Error updating cart attribute:', error);
