@@ -527,19 +527,19 @@ document.addEventListener("DOMContentLoaded", () => {
 	);
 	observerCartBlock.observe(document.body);
 
-	const drShippingPoll = setInterval(() => {
-		const drShippingZipCodeElement = document.querySelector('.docapp-shipping-calculator--input-zip');
-		if (drShippingZipCodeElement) {
-			drShippingZipCodeElement.addEventListener('change', (event) => {
-				const targetElement = event.target;
-				const value = targetElement.value;
-				if (value) {
-					setCartAttributeZipCode(value);
-				}
-			});
-			clearInterval(drShippingPoll);
-		}
-	}, 100);
+	// const drShippingPoll = setInterval(() => {
+	// 	const drShippingZipCodeElement = document.querySelector('.docapp-shipping-calculator--input-zip');
+	// 	if (drShippingZipCodeElement) {
+	// 		drShippingZipCodeElement.addEventListener('change', (event) => {
+	// 			const targetElement = event.target;
+	// 			const value = targetElement.value;
+	// 			if (value) {
+	// 				setCartAttributeZipCode(value);
+	// 			}
+	// 		});
+	// 		clearInterval(drShippingPoll);
+	// 	}
+	// }, 100);
 });
 
 
