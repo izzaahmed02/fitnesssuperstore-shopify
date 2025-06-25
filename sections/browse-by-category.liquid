@@ -1,20 +1,20 @@
 {% stylesheet %}
-.browse-by-category {
+.browse-category .browse-by-category {
   padding: 40px 0;
 }
-.category-tabs {
+.browse-category .category-tabs {
   display: flex;
   gap: 24px;
   margin-bottom: 0px;
   flex-wrap: wrap;
 }
 
-  .category-tabs button.active{
+  .browse-category .category-tabs button.active{
     font-weight: 700;
   }
 
 
-.category-tabs button {
+.browse-category .category-tabs button {
   position: relative;
   padding-bottom: 8px; 
   background: transparent;
@@ -29,7 +29,7 @@
   cursor: pointer;
 }
 
-.category-tabs button.active::after {
+.browse-category .category-tabs button.active::after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -42,13 +42,13 @@
 }
 
   
-.category-tab-content {
+.browse-category .category-tab-content {
   display: none;
 }
-.category-tab-content.active {
+.browse-category .category-tab-content.active {
   display: block;
 }
-.category-card {
+.browse-category .category-card {
   text-align: center;
   background: #f6f7fb;
   padding: 24px 34px;
@@ -56,7 +56,7 @@
   border-radius: 20px;
   margin: 8px;
 }
-.category-card img {
+.browse-category .category-card img {
   width: 120px;
   height: 120px;
   object-fit: contain;
@@ -65,7 +65,7 @@
   margin: 0 auto 10px;
 }
 
-.category-card p {
+.browse-category .category-card p {
   font-family: Lato;
 font-weight: 700;
 font-size: 20px;
@@ -77,13 +77,13 @@ vertical-align: middle;
 
 }
 
-.tab-header{
+.browse-category .tab-header{
   display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-  .slick-prev {
+  .browse-category .slick-prev {
     left: 25px!important;
     z-index: 999;
     background: #616166!important;
@@ -92,7 +92,7 @@ vertical-align: middle;
     border-radius: 34px;
 }
 
-  .slick-next {
+  .browse-category .slick-next {
     right: 25px!important;
      z-index: 999;
     background: #616166!important;
@@ -101,17 +101,17 @@ vertical-align: middle;
     border-radius: 34px;
 }
 
-  .tab-header h2{
+  .browse-category .tab-header h2{
     margin-left: 8px;
   }
 
   @media (max-width: 1050px) {
 
-    .tab-header{
+    .browse-category .tab-header{
       display: block;
     }
 
-    .tab-header h2 {
+    .browse-category .tab-header h2 {
     margin-left: auto;
     margin-bottom: 20px;
 }
@@ -178,8 +178,8 @@ vertical-align: middle;
 
 {% javascript %}
  document.addEventListener("DOMContentLoaded", function () {
-  const firstTab = document.querySelector('.category-tab-content.active');
-  const firstSlider = firstTab.querySelector('[class*="slider-tab-"]');
+  const firstTab = document.querySelector('.browse-category .category-tab-content.active');
+  const firstSlider = firstTab.querySelector('.browse-category [class*="slider-tab-"]');
 
   $(firstSlider).on('setPosition', function () {
     setEqualCardHeights(firstTab);
@@ -198,7 +198,7 @@ vertical-align: middle;
   });
 
   function setEqualCardHeights(container) {
-    const cards = container.querySelectorAll('.category-card');
+    const cards = container.querySelectorAll('.browse-category .category-card');
     let maxHeight = 0;
     cards.forEach(card => card.style.minHeight = 'auto');
     cards.forEach(card => {
@@ -208,18 +208,18 @@ vertical-align: middle;
     cards.forEach(card => card.style.minHeight = `${maxHeight}px`);
   }
 
-  document.querySelectorAll(".category-tabs button").forEach(button => {
+  document.querySelectorAll(".browse-category .category-tabs button").forEach(button => {
     button.addEventListener("click", function () {
       const tabId = this.getAttribute("data-tab");
 
-      document.querySelectorAll(".category-tabs button").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".browse-category .category-tabs button").forEach(btn => btn.classList.remove("active"));
       this.classList.add("active");
 
-      document.querySelectorAll(".category-tab-content").forEach(tab => tab.classList.remove("active"));
+      document.querySelectorAll(".browse-category .category-tab-content").forEach(tab => tab.classList.remove("active"));
       const targetTab = document.getElementById(tabId);
       targetTab.classList.add("active");
 
-      const targetSlider = targetTab.querySelector('[class*="slider-tab-"]');
+      const targetSlider = targetTab.querySelector('.browse-category [class*="slider-tab-"]');
       if ($(targetSlider).hasClass('slick-initialized')) {
         $(targetSlider).slick('unslick');
       }
@@ -249,7 +249,7 @@ vertical-align: middle;
 {% schema %}
 {
   "name": "Browse by Category",
-  "class": "browse-by-category",
+  "class": "browse-category",
   "settings": [
     {
       "type": "text",
