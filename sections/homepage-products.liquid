@@ -1,708 +1,340 @@
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-
-    function initSlider(element) {
-      if (!$(element).hasClass('slick-initialized')) {
-        $(element).slick({
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          lazyLoad: 'ondemand',
-          arrows: true,
-          prevArrow: '<button type="button" class="slick-prev"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" fill="black"/></svg></button>',
-          nextArrow: '<button type="button" class="slick-next"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="black"/></svg></button>',
-          dots: true,
-          responsive: [
-            {
-              breakpoint: 768,
-              settings: {
-                slidesToShow: 1,
-              },
-            },
-          ],
-        });
-
-        $(element)
-          .find('.image-item')
-          .each(function () {
-          });
-        $(element)
-          .find('img.lazy-load')
-          .each(function () {
-            const img = $(this);
-            if (img) {
-              img.attr('src', img.data('src'));
-              img.removeClass('lazy-load');
-              img.css({
-                opacity: '1',
-                visibility: 'visible',
-              });
-            }
-          });
-      }
+  <style>
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(241px, 1fr));
+      gap: 32px 48px;
+      padding: 0 16px;
     }
 
-    const observer = new IntersectionObserver(
-      (entries, observer) => {
+    .product-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 0;
+      gap: 8px;
+      isolation: isolate;
+      width: 241px;
+      height: 447px;
+      flex: none;
+      order: 0;
+      flex-grow: 1;
+    }
+
+    .image-wrap {
+      position: relative;
+      width: 241px;
+      height: 283px;
+      background: #FFFFFF;
+      box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      flex: none;
+      order: 0;
+      align-self: stretch;
+      flex-grow: 0;
+      z-index: 0;
+    }
+
+    .image-item {
+      position: absolute;
+      width: 217px;
+      height: 215px;
+      left: calc(50% - 217px/2 + 1px);
+      top: calc(50% - 215px/2 + 10px);
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 34px;
+      transition: opacity 0.3s ease-in-out;
+    }
+
+    .image-wrap .slick-dots {
+      position: absolute;
+      width: 72px;
+      height: 8px;
+      left: calc(50% - 72px/2 + 0.5px);
+      bottom: 12px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0;
+      gap: 8px;
+    }
+
+    .image-wrap .slick-dots li {
+      width: 8px;
+      height: 8px;
+      background: #D3D9E5;
+      border-radius: 50%;
+      flex: none;
+      order: 0;
+      flex-grow: 0;
+    }
+
+    .image-wrap .slick-dots li.slick-active {
+      background: #23232B;
+    }
+
+    .tags-wrapper {
+      position: absolute;
+      width: 138px;
+      height: 68px;
+      left: 16px;
+      top: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 0;
+      gap: 12px;
+      flex: none;
+      order: 3;
+      flex-grow: 0;
+      z-index: 3;
+    }
+
+    .condition-tag, .sale-tag {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      padding: 4px 0px;
+      gap: 4px;
+      width: 77px;
+      height: 28px;
+      background: #FFFFFF;
+      border-radius: 43px;
+      font-family: 'Lato', sans-serif;
+      font-style: normal;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 20px;
+      color: #F1592A;
+      flex: none;
+      order: 0;
+      flex-grow: 0;
+    }
+
+    .condition-tag.blue {
+      color: #3E77AA;
+    }
+
+    .sale-tag {
+      background: #FEEAE8;
+      color: #F52419;
+    }
+
+    .ship-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      width: 114px;
+      height: 20px;
+      font-family: 'Lato', sans-serif;
+      font-style: normal;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 20px;
+      color: #00A344;
+      margin-top: 8px;
+    }
+
+    .title {
+      width: 241px;
+      height: 72px;
+      font-family: 'Lato', sans-serif;
+      font-style: normal;
+      font-weight: 700;
+      font-size: 18px;
+      line-height: 24px;
+      color: #393940;
+      text-decoration: none;
+      margin: 0;
+      flex: none;
+      order: 1;
+      align-self: stretch;
+      flex-grow: 0;
+    }
+
+    .product-item__price-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 0;
+      gap: 4px;
+      width: 241px;
+      height: 72px;
+      flex: none;
+      order: 2;
+      align-self: stretch;
+      flex-grow: 0;
+    }
+
+    .old-price-wrapper {
+      width: 241px;
+      height: 24px;
+      font-family: 'Lato', sans-serif;
+      font-style: normal;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 24px;
+      text-decoration-line: line-through;
+      color: #393940;
+      flex: none;
+      order: 0;
+      align-self: stretch;
+      flex-grow: 0;
+    }
+
+    .price-wrapper {
+      width: 241px;
+      height: 24px;
+      font-family: 'Lato', sans-serif;
+      font-style: normal;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 24px;
+      color: #F1592A;
+      flex: none;
+      order: 1;
+      align-self: stretch;
+      flex-grow: 0;
+    }
+
+    .price-title {
+      font-weight: 400;
+      color: #000000;
+      margin-right: 5px;
+    }
+
+    .price-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #F1592A;
+    }
+
+    .availability {
+      width: 241px;
+      height: 24px;
+      font-family: 'Lato', sans-serif;
+      font-style: normal;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 24px;
+      color: #00A344;
+      flex: none;
+      order: 2;
+      align-self: stretch;
+      flex-grow: 0;
+    }
+
+    .custom-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 60px 0;
+      background-color: #F5F5F5;
+    }
+
+    .featured_products_header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      padding: 0 16px;
+    }
+
+    .featured_products_header h3 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #393940;
+    }
+
+    .featured_products_link {
+      font-size: 16px;
+      color: #F1592A;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+  </style>
+
+  <div class="custom-container">
+    <div class="featured_products_header">
+      <h3>Featured Products</h3>
+      <a href="#" class="featured_products_link">View All <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.8017 4.46967C8.09459 4.17678 8.56947 4.17678 8.86236 4.46967L13.8624 9.46967C14.1553 9.76256 14.1553 10.2374 13.8624 10.5303L8.86236 15.5303C8.56947 15.8232 8.09459 15.8232 7.8017 15.5303C7.50881 15.2374 7.50881 14.7626 7.8017 14.4697L12.2714 10L7.8017 5.53033C7.50881 5.23744 7.50881 4.76256 7.8017 4.46967Z" fill="#F1592A"/></svg></a>
+    </div>
+    <div class="featured_products_container product-grid">
+      {% for product in section.settings.products %}
+        <div class="product-item card__inner" data-product-id="{{ product.id }}">
+          <div class="image-wrap">
+            {% for image in product.images limit: 5 %}
+              <div class="image-item">
+                <img class="lazy-load" data-src="{{ image | image_url }}" alt="{{ product.title }}">
+              </div>
+            {% endfor %}
+          </div>
+          <div class="tags-wrapper">
+            {% if product.metafields.custom.condition_state contains "New" %}
+              <div class="condition-tag">{% render 'icon-new' %} New</div>
+            {% else %}
+              <div class="condition-tag blue">{% render 'icon-remanufactured' %} Remanufactured</div>
+            {% endif %}
+            {% if product.compare_at_price > product.price %}
+              <div class="sale-tag">{% render 'icon-sale' %} Sale</div>
+            {% endif %}
+          </div>
+          <div class="ship-wrapper">{% render 'icon-ship' %} Ships in {{ product.metafields.custom.processing_time }}</div>
+          <a class="title" href="{{ product.url }}">{{ product.title | replace: "(Remanufactured)", "" | replace: "(New)", "" }}</a>
+          <div class="product-item__price-container">
+            {% if product.metafields.custom.retail_price != blank %}
+              <div class="old-price-wrapper">As high as: {{ product.metafields.custom.retail_price | money }}</div>
+            {% endif %}
+            <div class="price-wrapper">
+              <span class="price-title">Price USD:</span>
+              <span class="price-value">{{ product.price | money }}</span>
+            </div>
+            <div class="availability">Available to Order</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      function initSlider(element) {
+        if (!$(element).hasClass('slick-initialized')) {
+          $(element).slick({
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            lazyLoad: 'ondemand',
+            arrows: true,
+            prevArrow: '<button class="slick-prev"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" fill="black"/></svg></button>',
+            nextArrow: '<button class="slick-next"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="black"/></svg></button>',
+            dots: true,
+          });
+          $(element).find('img.lazy-load').each(function () {
+            const img = $(this);
+            img.attr('src', img.data('src')).removeClass('lazy-load').css({ opacity: 1, visibility: 'visible' });
+          });
+        }
+      }
+
+      const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             initSlider(entry.target);
             observer.unobserve(entry.target);
           }
         });
-      },
-      { threshold: 0.8 }
-    );
+      }, { threshold: 0.8 });
 
-    $('.image-wrap').each(function () {
-      if ($(this).length > 0) {
+      $('.image-wrap').each(function () {
         observer.observe(this);
-      }
+      });
     });
-  });
-</script>
-
-{% style %}
-  .container {
-    max-width: 1280px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .collection-wrapper {
-    display: flex;
-    justify-content: space-between;
-    padding-bottom: 40px;
-  }
-  .collection-product-wrapper {
-    max-width: 952px;
-    width: 100%;
-    gap: 20px;
-  }
-  .group-stars {
-    display: flex;
-    align-items: center;
-  }
-  .condition-tag.blue {
-    background: #fff;
-    color: #3e77aa;
-  }
-  .condition-tag svg {
-    margin-right: 4px;
-  }
-  .group-stars .on {
-    background-repeat: no-repeat;
-    background-position-y: center;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M11.2736 2.57493C11.5595 1.95503 12.4405 1.95503 12.7264 2.57493L14.9159 7.32176C15.0325 7.5744 15.2719 7.74836 15.5482 7.78112L20.7393 8.3966C21.4172 8.47698 21.6895 9.31489 21.1883 9.77838L17.3503 13.3276C17.1461 13.5165 17.0546 13.7979 17.1089 14.0708L18.1276 19.198C18.2607 19.8676 17.5479 20.3855 16.9522 20.052L12.3908 17.4987C12.148 17.3628 11.852 17.3628 11.6092 17.4987L7.04779 20.052C6.4521 20.3855 5.73933 19.8676 5.87238 19.198L6.89115 14.0708C6.94537 13.7979 6.85392 13.5165 6.64965 13.3276L2.81174 9.77839C2.31054 9.31489 2.5828 8.47698 3.26071 8.3966L8.4518 7.78112C8.72809 7.74836 8.96752 7.5744 9.08406 7.32176L11.2736 2.57493Z" fill="%23FFC107"/></svg>');
-    background-size: contain;
-    min-width: 24px;
-    height: 24px;
-  }
-
-  .group-stars .ind_cnt {
-    text-align: left;
-    margin-left: 4px;
-    font-size: 16px;
-    color: #b3b3b3;
-  }
-
-  .product-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    column-gap: 32px;
-    row-gap: 48px;
-  }
-
-  #verticalTitle {
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 36px;
-    color: #393940;
-    text-transform: none;
-    margin-bottom: 12px;
-  }
-  .heading-filter-count {
-    color: #f3744c;
-  }
-  .facets__summary-label {
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 24px;
-    color: #393940;
-  }
-  .facets__summary .icon-caret {
-    width: 12px;
-  }
-  .facets__selected {
-    display: none;
-  }
-  .facets-wrap-vertical {
-    margin-right: 0;
-    padding: 0;
-  }
-  .filterSearchInput {
-    width: 248px;
-    height: 48px;
-    border-radius: 8px;
-    border: 1.5px solid #e5e5e5;
-    background: #ffffff;
-    margin-bottom: 12px;
-    background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath fill-rule="evenodd" clip-rule="evenodd" d="M3.75 11C3.75 6.99594 6.99594 3.75 11 3.75C15.0041 3.75 18.25 6.99594 18.25 11C18.25 15.0041 15.0041 18.25 11 18.25C6.99594 18.25 3.75 15.0041 3.75 11ZM11 2.25C6.16751 2.25 2.25 6.16751 2.25 11C2.25 15.8325 6.16751 19.75 11 19.75C13.1462 19.75 15.112 18.9773 16.6342 17.6949L19.4697 20.5303C19.7626 20.8232 20.2374 20.8232 20.5303 20.5303C20.8232 20.2374 20.8232 19.7626 20.5303 19.4697L17.6949 16.6342C18.9773 15.112 19.75 13.1462 19.75 11C19.75 6.16751 15.8325 2.25 11 2.25Z" fill="%23B3B3B3"/%3E%3C/svg%3E');
-    background-repeat: no-repeat;
-    background-position: 12px center;
-    padding-left: 44px;
-  }
-  #search-input {
-    width: 248px;
-    height: 48px;
-    border-radius: 8px;
-    border: 1.5px solid #e5e5e5;
-    background: #ffffff;
-    background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath fill-rule="evenodd" clip-rule="evenodd" d="M3.75 11C3.75 6.99594 6.99594 3.75 11 3.75C15.0041 3.75 18.25 6.99594 18.25 11C18.25 15.0041 15.0041 18.25 11 18.25C6.99594 18.25 3.75 15.0041 3.75 11ZM11 2.25C6.16751 2.25 2.25 6.16751 2.25 11C2.25 15.8325 6.16751 19.75 11 19.75C13.1462 19.75 15.112 18.9773 16.6342 17.6949L19.4697 20.5303C19.7626 20.8232 20.2374 20.8232 20.5303 20.5303C20.8232 20.2374 20.8232 19.7626 20.5303 19.4697L17.6949 16.6342C18.9773 15.112 19.75 13.1462 19.75 11C19.75 6.16751 15.8325 2.25 11 2.25Z" fill="%23B3B3B3"/%3E%3C/svg%3E');
-    background-repeat: no-repeat;
-    background-position: 12px center;
-    padding-left: 44px;
-  }
-  .facet-checkbox__text-label {
-    font-size: 16px;
-    line-height: 24px;
-    color: #393940;
-  }
-  #Filter-Price-LTE {
-    width: 248px;
-    height: 48px;
-    border-radius: 8px;
-    background: #f2f2f2;
-    border: 1.5px solid #e5e5e5;
-    padding: 12px;
-  }
-  #sel1 {
-    width: 76px;
-    height: 48px;
-    border-radius: 8px;
-    border: 1.5px solid #e5e5e5;
-    padding: 12px;
-    background: #ffffff;
-  }
-  #sel1:focus-visible {
-    box-shadow: none;
-    outline: none;
-  }
-  .collection-grid-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .facets-vertical-sort {
-    margin-right: 32px;
-  }
-  .facet-filters__sort {
-    width: 212px;
-    height: 48px;
-    border-radius: 8px;
-    background: #ffffff;
-    border: 1.5px solid #e5e5e5;
-    padding-right: 16px;
-  }
-  .facet-filters__sort + svg {
-    margin-right: 16px;
-  }
-  .facet-filters__sort:focus-visible {
-    box-shadow: none !important;
-    outline: none !important;
-  }
-  .sort-per-page .label {
-    font-size: 16px;
-    line-height: 24px;
-    color: #393940;
-  }
-  .collection-grid-top .right-side {
-    display: flex;
-  }
-  .sort-per-page .select {
-    width: auto !important;
-    margin-left: 8px;
-    margin-right: 8px;
-  }
-  .sort-per-page .select select {
-    appearance: none;
-  }
-  .sort-per-page .select:after {
-    display: none;
-  }
-  .sort-per-page {
-    display: flex;
-    align-items: center;
-  }
-  .active-facets__button-remove span {
-    display: flex;
-    align-items: center;
-  }
-  .collecion-count {
-    margin-top: 32px;
-    color: #393940;
-  }
-  .collecion-count span {
-    font-weight: 700;
-  }
-  .active-facets__button-remove span {
-    font-size: 16px;
-    font-weight: 700;
-    color: #e9380d;
-    line-height: 24px;
-  }
-  .active-facets__button-remove span svg {
-    margin-left: 4px;
-  }
-  .related-products__body {
-    position: relative;
-  }
-  .pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 48px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .pagination a {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 48px;
-    height: 48px;
-    background: transparent;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 24px;
-    color: #393940;
-  }
-  .pagination .current {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 48px;
-    height: 48px;
-    background: #f1592a;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 24px;
-    color: #fff;
-  }
-  .pagination a:first-child {
-    margin-right: 24px;
-  }
-  .pagination a:last-child {
-    margin-left: 24px;
-  }
-  .product-item .image-wrap {
-    max-width: 296px;
-    height: 283px;
-    margin-bottom: 16px;
-  }
-  .image-item {
-    background: transparent;
-    border-radius: 12px;
-    height: 288px;
-  }
-  .product-item .image-wrap img {
-    max-width: 100%;
-    width: 100%;
-    padding: 45px;
-    height: 100%;
-    max-height: 283px;
-    object-fit: contain;
-  }
-
-  @media (max-width: 749px) {
-    .product-item .image-wrap img {
-      padding: 24px;
-    }
-  }
-
-  .ship-wrapper {
-    display: flex;
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 20px;
-    color: #00a344;
-    margin-bottom: 8px;
-  }
-  .ship-wrapper svg {
-    margin-right: 4px;
-    min-width: 20px;
-  }
-  .product-item {
-    position: relative;
-  }
-  .product-item .title {
-    display: block;
-    margin-bottom: 12px;
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 26px;
-    color: #23232b;
-    margin-top: 0;
-    text-decoration: uppercase;
-  }
-  .image-wrap {
-    position: relative;
-    border-radius: 12px;
-  }
-  .product-item .tags-wrapper {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    display: flex;
-    align-items: center;
-  }
-  .condition-tag {
-    margin-right: 8px;
-    padding: 5px 8px;
-    display: flex;
-    align-items: center;
-    background: #ffffff;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 18px;
-    color: #f1592a;
-    border-radius: 100px;
-  }
-  .sale-tag {
-    padding: 5px 8px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: #feeae8;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 18px;
-    color: #f52419;
-    border-radius: 100px;
-  }
-  .review-container {
-    display: flex;
-    margin-bottom: 12px;
-    align-items: center;
-    gap: 5px;
-  }
-  .main-review-container {
-    display: none;
-  }
-  .old-price-wrapper {
-    font-size: 16px;
-    line-height: 24px;
-    color: #b3b3b3;
-    text-decoration: line-through;
-  }
-  .old-price-wrapper.retail-price-blank {
-    height: 20px;
-  }
-  .price-wrapper {
-    font-size: 16px;
-    line-height: 24px;
-    color: #000000;
-  }
-  .price-wrapper .price-title {
-    font-weight: 400;
-    font-family: 'Lato';
-    font-size: 16px;
-  }
-  .price-wrapper .price-value {
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 36px;
-    color: #f1592a;
-    margin-top: 4px;
-    margin-left: 5px;
-  }
-  .image-wrap img {
-    transition: opacity 0.3s ease-in-out;
-    width: 100%;
-    height: auto;
-  }
-  .product-item .slick-dots {
-    bottom: 12px;
-  }
-  .product-item .slick-dots li button:before {
-    display: none;
-  }
-  .product-item .slick-dots {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-  }
-  .product-item .slick-dots li {
-    width: 8px;
-    height: 8px;
-    border-radius: 50px;
-    background: #d3d9e5;
-    margin: 0;
-  }
-  .product-item .slick-dots li button {
-    display: none;
-  }
-  .product-item .slick-dots li.slick-active {
-    background: #23232b;
-  }
-  .card__badge span {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.21437 1.54706L8.0026 2C8.21437 1.54706 8.21458 1.54716 8.2148 1.54726L8.21535 1.54752L8.21675 1.54818L8.22084 1.55012L8.234 1.55644C8.24496 1.56175 8.26024 1.56925 8.27955 1.57895C8.31817 1.59836 8.37296 1.62662 8.44161 1.66388C8.57884 1.73835 8.77189 1.849 9.00215 1.99703C9.46184 2.29254 10.0745 2.74001 10.6883 3.34984C11.9163 4.56985 13.1693 6.46277 13.1693 9.09091C13.1693 12.0713 10.8786 14.5 8.0026 14.5C5.12661 14.5 2.83594 12.0713 2.83594 9.09091C2.83594 7.60221 3.38191 6.40198 3.91738 5.58255C4.18567 5.17199 4.45419 4.85242 4.65722 4.63401C4.75891 4.52462 4.84465 4.44009 4.90641 4.38167C4.93731 4.35244 4.96225 4.32971 4.98024 4.31362L5.00191 4.29449L5.00862 4.28869L5.0109 4.28673L5.01177 4.28599L5.01213 4.28568C5.01229 4.28555 5.01245 4.28541 5.33594 4.66667L5.01245 4.28541C5.16099 4.15937 5.36922 4.13109 5.546 4.21294C5.72279 4.29478 5.83594 4.47186 5.83594 4.66667C5.83594 5.69788 5.8406 6.44629 5.98337 6.94597C6.05073 7.18174 6.13522 7.30688 6.21853 7.37631C6.29511 7.44012 6.4222 7.5 6.66927 7.5C6.91624 7.5 7.10476 7.38108 7.27011 7.03464C7.44667 6.6647 7.54636 6.11764 7.58691 5.46881C7.62679 4.83081 7.60715 4.14498 7.57614 3.52497C7.56625 3.32704 7.55487 3.13173 7.54408 2.94629C7.52215 2.56986 7.5026 2.23415 7.5026 2C7.5026 1.82905 7.58994 1.66995 7.73417 1.57817C7.87839 1.48639 8.05951 1.47466 8.21437 1.54706ZM4.85378 5.98226C4.82081 6.02972 4.78765 6.07883 4.7545 6.12957C4.28997 6.84044 3.83594 7.85234 3.83594 9.09091C3.83594 11.5651 5.72394 13.5 8.0026 13.5C10.2813 13.5 12.1693 11.5651 12.1693 9.09091C12.1693 6.80996 11.0889 5.15743 9.98354 4.05925C9.46603 3.54511 8.94752 3.15753 8.5427 2.89109C8.55313 3.06978 8.56439 3.26496 8.5749 3.47503C8.6064 4.10502 8.62842 4.83586 8.58496 5.53119C8.54218 6.2157 8.43354 6.91863 8.1726 7.46537C7.90045 8.03558 7.4223 8.5 6.66927 8.5C6.24968 8.5 5.87677 8.39321 5.57835 8.14453C5.28666 7.90146 5.12115 7.56827 5.02184 7.2207C4.92113 6.86819 4.87494 6.4455 4.85378 5.98226Z" fill="%23F52419"/></svg>');
-    background-color: #feeae8;
-    background-repeat: no-repeat;
-    background-position: 6px center;
-    background-size: 16px;
-    font-weight: 700;
-    color: #f52419;
-    padding: 5px 8px !important;
-    padding-left: 28px !important;
-    width: fit-content;
-    height: 28px;
-    display: flex;
-    justify-content: end;
-    align-items: center;
-  }
-  .comparable-custom-action {
-    width: 85px;
-    height: 26px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    background: #ffffff;
-    border-radius: 50px;
-    margin-top: 0;
-    margin-bottom: 0;
-    z-index: 1;
-  }
-  .comparable-custom-action input {
-  }
-  .comparable-custom-action label {
-    display: flex !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    line-height: 18px !important;
-    color: #f1592a !important;
-    padding-left: 0 !important;
-  }
-  .comparable-custom-action label:before {
-    display: block !important;
-    position: static !important;
-    margin-right: 4px;
-    width: 16px !important;
-    height: 16pximportant;
-    border-radius: 4px !important;
-    border: 1px solid #e5e5e5 !important;
-  }
-  .compare_mode-collection .comparable-products:before {
-    display: none !important;
-  }
-  .review-container {
-    display: flex;
-    margin-bottom: 12px;
-    align-items: center;
-    gap: 5px;
-  }
-  .review-container svg {
-    margin-right: 2px;
-  }
-  .reviews-rating {
-    display: flex;
-    gap: 4px;
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 24px;
-    color: #000000;
-  }
-  .reviews-rating span {
-    font-weight: 400;
-    color: #808080;
-  }
-  #ProductGridContainer .active-facets {
-    margin-top: 24px;
-  }
-
-    #shopify-section-{{ section.id }}{
-    padding-top: {{ section.settings.padding_top }}px;
-    padding-bottom: {{ section.settings.padding_bottom }}px;
-    background-color: {{ section.settings.bg }};
-  }
-  .comparable-custom-action{
-    display: none;
-  }
-{% endstyle %}
-
-
-<div class="custom-container">
-  {{ customer.first_name }}
-  <div class="featured_products_header">
-    {% if section.settings.heading != blank %}
-      <h3>{{ section.settings.heading }}</h3>
-    {% endif %}
-
-    {% if section.settings.link != blank %}
-      <a href="{{ section.settings.url }}" class="featured_products_link">
-        {{ section.settings.link }}
-
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M7.8017 4.46967C8.09459 4.17678 8.56947 4.17678 8.86236 4.46967L13.8624 9.46967C14.1553 9.76256 14.1553 10.2374 13.8624 10.5303L8.86236 15.5303C8.56947 15.8232 8.09459 15.8232 7.8017 15.5303C7.50881 15.2374 7.50881 14.7626 7.8017 14.4697L12.2714 10L7.8017 5.53033C7.50881 5.23744 7.50881 4.76256 7.8017 4.46967Z" fill="#fff"/>
-        </svg>
-      </a>
-    {% endif %}
-  </div>
-
-  <div class="featured_products_container">
-    {% for product in section.settings.products %}
-      {% assign product = product %}
-<div class="product-item card__inner" data-product-id="{{ product.id }}">
-    <div class="image-wrap">
-        {% assign images = product.images %}
-        {% for item in images limit: 5 %}
-            {% if item != '' %}
-                <div class="image-item">
-                    {{ item | image_url: width: auto | image_tag: class: 'lazy-load' }}
-                </div>
-            {% endif %}
-        {% endfor %}
-    </div>
-    <div class="tags-wrapper">
-        {% if product.metafields.custom.condition_state contains "New" %}
-            <div class="condition-tag">
-                {% render 'icon-new' %}
-                New
-            </div>
-        {% else %}
-            <div class="condition-tag blue">
-                {% render 'icon-remanufactured' %}
-                Remanufactured
-            </div>
-        {% endif %}
-        {% if product.compare_at_price != blank %}
-            <div class="sale-tag">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd"
-                          d="M8.21437 1.54706L8.0026 2C8.21437 1.54706 8.21458 1.54716 8.2148 1.54726L8.21535 1.54752L8.21675 1.54818L8.22084 1.55012L8.234 1.55644C8.24496 1.56175 8.26024 1.56925 8.27955 1.57895C8.31817 1.59836 8.37296 1.62662 8.44161 1.66388C8.57884 1.73835 8.77189 1.849 9.00215 1.99703C9.46184 2.29254 10.0745 2.74001 10.6883 3.34984C11.9163 4.56985 13.1693 6.46277 13.1693 9.09091C13.1693 12.0713 10.8786 14.5 8.0026 14.5C5.12661 14.5 2.83594 12.0713 2.83594 9.09091C2.83594 7.60221 3.38191 6.40198 3.91738 5.58255C4.18567 5.17199 4.45419 4.85242 4.65722 4.63401C4.75891 4.52462 4.84465 4.44009 4.90641 4.38167C4.93731 4.35244 4.96225 4.32971 4.98024 4.31362L5.00191 4.29449L5.00862 4.28869L5.0109 4.28673L5.01177 4.28599L5.01213 4.28568C5.01229 4.28555 5.01245 4.28541 5.33594 4.66667L5.01245 4.28541C5.16099 4.15937 5.36922 4.13109 5.546 4.21294C5.72279 4.29478 5.83594 4.47186 5.83594 4.66667C5.83594 5.69788 5.8406 6.44629 5.98337 6.94597C6.05073 7.18174 6.13522 7.30688 6.21853 7.37631C6.29511 7.44012 6.4222 7.5 6.66927 7.5C6.91624 7.5 7.10476 7.38108 7.27011 7.03464C7.44667 6.6647 7.54636 6.11764 7.58691 5.46881C7.62679 4.83081 7.60715 4.14498 7.57614 3.52497C7.56625 3.32704 7.55487 3.13173 7.54408 2.94629C7.52215 2.56986 7.5026 2.23415 7.5026 2C7.5026 1.82905 7.58994 1.66995 7.73417 1.57817C7.87839 1.48639 8.05951 1.47466 8.21437 1.54706ZM4.85378 5.98226C4.82081 6.02972 4.78765 6.07883 4.7545 6.12957C4.28997 6.84044 3.83594 7.85234 3.83594 9.09091C3.83594 11.5651 5.72394 13.5 8.0026 13.5C10.2813 13.5 12.1693 11.5651 12.1693 9.09091C12.1693 6.80996 11.0889 5.15743 9.98354 4.05925C9.46603 3.54511 8.94752 3.15753 8.5427 2.89109C8.55313 3.06978 8.56439 3.26496 8.5749 3.47503C8.6064 4.10502 8.62842 4.83586 8.58496 5.53119C8.54218 6.2157 8.43354 6.91863 8.1726 7.46537C7.90045 8.03558 7.4223 8.5 6.66927 8.5C6.24968 8.5 5.87677 8.39321 5.57835 8.14453C5.28666 7.90146 5.12115 7.56827 5.02184 7.2207C4.92113 6.86819 4.87494 6.4455 4.85378 5.98226Z"
-                          fill="#F52419"/>
-                </svg>
-                Sale
-            </div>
-        {% endif %}
-        {% if product.compare_at_price == blank %}
-            <div class="card__badge {{ settings.badge_position }}">
-                {%- if product.compare_at_price > product.price and product.available -%}
-                    <span id="Badge-{{ section_id }}-{{ product.id }}"
-                          class="badge badge--bottom-left color-{{ settings.sale_badge_color_scheme }}">
-            {{- 'products.product.on_sale' | t -}}
-          </span>
-                {%- endif -%}
-            </div>
-        {% endif %}
-    </div>
-    <div class="comparable-custom-action">
-        <input
-                class="add-to-comparable"
-                type="checkbox"
-                id="add-to-comparable-checkbox_{{ product.handle }}"
-                data-product="{{ product.handle }}"
-        >
-        <label for="add-to-comparable-checkbox_{{ product.handle }}">Compare</label>
-    </div>
-    {%- if product.available != false -%}
-        {% unless  product.metafields.custom.processing_time  == blank %}
-        <div class="ship-wrapper">
-            {% render 'icon-ship' %}
-            {{ product.metafields.custom.processing_time | replace: "from our Warehouse", "" | replace: "leave our Warehouse", "" | replace: "from Manufacturer's Warehouse", "" }}
-        </div>
-        {% endunless %}
-    {% endif %}
-    {%- if product.available == false -%}
-        <span class="soldout">
-  {% render 'icon-sold-out' %}
-            {{- 'products.product.sold_out' | t -}}
-          </span>
-    {% endif %}
-    <a class="title" href="{{ product.url }}">
-        {{ product.title | replace: "(Remanufactured)", "" | replace: "(New)", "" }}
-    </a>
-    <div class="product-item__price-container">
-        {%- if product.available != false -%}
-            {% if product.metafields.custom.retail_price != blank %}
-                <div class="old-price-wrapper {% unless product.metafields.custom.retail_price != blank %}retail-price-blank{% endunless %}">
-                    {% if product.metafields.custom.retail_price != blank %}
-                        <span>As high as:</span> {{ product.metafields.custom.retail_price | money }}
-                    {% endif %}
-                </div>
-            {% endif %}
-            <div class="price-wrapper">
-                <span class="price-title">Price USD:</span>
-                <span class="price-value">{{ product.price | money }}</span>
-            </div>
-        {% endif %}
-    </div>
-</div>
-
-    {% endfor %}
-  </div>
-</div>
-
-{% schema %}
-{
-  "name": "Homepage Products",
-  "class": "homepage-products",
-  "settings": [
-    {
-      "type": "color",
-      "id": "bg",
-      "label": "Background color",
-      "default": "#F5F5F5"
-    },
-    {
-      "type": "text",
-      "id": "heading",
-      "label": "Heading"
-    },
-    {
-      "type": "text",
-      "id": "link",
-      "label": "Link text"
-    },
-    {
-      "type": "url",
-      "id": "url",
-      "label": "Link url"
-    },
-    {
-      "type": "product_list",
-      "id": "products",
-      "label": "Choose Products"
-    },
-    {
-      "type": "range",
-      "id": "padding_top",
-      "min": 0,
-      "max": 200,
-      "step": 4,
-      "unit": "px",
-      "label": "t:sections.all.padding.padding_top",
-      "default": 60
-    },
-    {
-      "type": "range",
-      "id": "padding_bottom",
-      "min": 0,
-      "max": 200,
-      "step": 4,
-      "unit": "px",
-      "label": "t:sections.all.padding.padding_bottom",
-      "default": 60
-    }
-  ],
-  "presets": [
-    {
-      "name": "Homepage products"
-    }
-  ]
-}
-{% endschema %}
+  </script>
