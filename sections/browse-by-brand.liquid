@@ -135,98 +135,56 @@ vertical-align: middle;
   </div>
 </div>
   
-  {% for tab in tab_list %}
-    {% assign parts = tab | split: "::" %}
-    {% assign handle = parts[0] %}
-    <div class="category-tab-content {% if forloop.first %}active{% endif %}" id="tab-{{ handle }}">
-      <div class="slider-tab-{{ handle }}">
-        {% for block in section.blocks %}
-          {% assign card_handle = block.settings.tab_handle | handleize %}
-          {% if card_handle == handle %}
+ 
+    <div class="category-tab-content">     
+        {% for block in section.blocks %}         
             <div class="category-card">
               <a href="{{ block.settings.link }}">
                 {% if block.settings.image != blank %}
                   <img src="{{ block.settings.image | image_url: width: 150 }}" alt="{{ block.settings.title }}">
                 {% endif %}
-                {% if block.settings.title != blank %}
-                  <p>{{ block.settings.title }}</p>
+                {% if block.settings.logo != blank %}
+                 <img src="{{ block.settings.logo | image_url: 'original' }}" alt="{{ block.settings.title }}">
                 {% endif %}
               </a>
             </div>
-          {% endif %}
+        
         {% endfor %}
       </div>
-    </div>
-  {% endfor %}
 </div>
 
 {% javascript %}
- document.addEventListener("DOMContentLoaded", function () {
-  const firstTab = document.querySelector('.category-tab-content.active');
-  const firstSlider = firstTab.querySelector('[class*="slider-tab-"]');
-
-  $(firstSlider).on('setPosition', function () {
-    setEqualCardHeights(firstTab);
-  });
-
-  $(firstSlider).slick({
-    slidesToShow: 5,
-    slidesToScroll: 1,
-    arrows: true,
-    infinite: false,
-    responsive: [
-      { breakpoint: 1300, settings: { slidesToShow: 4 }},
-      { breakpoint: 1024, settings: { slidesToShow: 3 }},
-      { breakpoint: 989,  settings: { slidesToShow: 2 }}
-    ]
-  });
-
-  function setEqualCardHeights(container) {
-    const cards = container.querySelectorAll('.category-card');
-    let maxHeight = 0;
-    cards.forEach(card => card.style.minHeight = 'auto');
-    cards.forEach(card => {
-      const height = card.offsetHeight;
-      if (height > maxHeight) maxHeight = height;
-    });
-    cards.forEach(card => card.style.minHeight = `${maxHeight}px`);
-  }
-
-  document.querySelectorAll(".category-tabs button").forEach(button => {
-    button.addEventListener("click", function () {
-      const tabId = this.getAttribute("data-tab");
-
-      document.querySelectorAll(".category-tabs button").forEach(btn => btn.classList.remove("active"));
-      this.classList.add("active");
-
-      document.querySelectorAll(".category-tab-content").forEach(tab => tab.classList.remove("active"));
-      const targetTab = document.getElementById(tabId);
-      targetTab.classList.add("active");
-
-      const targetSlider = targetTab.querySelector('[class*="slider-tab-"]');
-      if ($(targetSlider).hasClass('slick-initialized')) {
-        $(targetSlider).slick('unslick');
+$('.category-tab-content').slick({
+  dots: false,
+  infinite: false,
+  slidesToShow: 5,
+  slidesToScroll: 1,
+  responsive: [
+    {
+      breakpoint: 1024,
+      settings: {
+        slidesToShow: 4,
+        infinite: true,
+        dots: true
       }
-
-      $(targetSlider).on('setPosition', function () {
-        setEqualCardHeights(targetTab);
-      });
-
-      $(targetSlider).slick({
-        slidesToShow: 5,
-        slidesToScroll: 1,
-        arrows: true,
-        infinite: false,
-        responsive: [
-          { breakpoint: 1300, settings: { slidesToShow: 4 }},
-          { breakpoint: 1024, settings: { slidesToShow: 3 }},
-          { breakpoint: 989,  settings: { slidesToShow: 2 }}
-        ]
-      });
-    });
-  });
+    },
+    {
+      breakpoint: 600,
+      settings: {
+        slidesToShow: 2,
+        slidesToScroll: 2
+      }
+    },
+    {
+      breakpoint: 480,
+      settings: {
+        slidesToShow: 1,
+        slidesToScroll: 1
+      }
+    }
+  ]
 });
-
+	
 {% endjavascript %}
 
 
