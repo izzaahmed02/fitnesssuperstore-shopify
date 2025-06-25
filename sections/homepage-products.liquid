@@ -105,15 +105,22 @@ img.lazy-load {
   flex: none;
   align-self: stretch;
   z-index: 0;
+  overflow: hidden;
+}
+
+.product-item .image-wrap .slider-container {
+  width: 100%;
+  height: 100%;
 }
 
 .product-item .image-wrap img {
-  position: absolute;
   width: 217px;
   height: 215px;
-  left: calc(50% - 217px/2);
-  top: calc(50% - 215px/2 + 10px);
   object-fit: contain;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .product-item .slick-dots {
@@ -126,6 +133,7 @@ img.lazy-load {
   height: 8px;
   left: calc(50% - 72px/2);
   bottom: 12px;
+  z-index: 2;
 }
 
 .product-item .slick-dots li {
@@ -221,7 +229,7 @@ img.lazy-load {
   height: auto;
   left: 16px;
   top: 16px;
-  z-index: 1;
+  z-index: 3;
 }
 
 .product-item .condition-tag {
@@ -277,7 +285,7 @@ img.lazy-load {
   height: 28px;
   background: #FFFFFF;
   border-radius: 43px;
-  z-index: 1;
+  z-index: 3;
 }
 
 .product-item .comparable-custom-action input {
@@ -316,7 +324,8 @@ img.lazy-load {
   }
   .product-item .image-wrap img {
     width: 90%;
-    left: 5%;
+    height: auto;
+    max-height: 215px;
   }
   .product-item .title,
   .product-item .old-price-wrapper,
@@ -337,7 +346,7 @@ img.lazy-load {
 document.addEventListener('DOMContentLoaded', function () {
   function initSlider(element) {
     if (!$(element).hasClass('slick-initialized')) {
-      $(element).slick({
+      $(element).find('.slider-container').slick({
         slidesToShow: 1,
         slidesToScroll: 1,
         lazyLoad: 'ondemand',
@@ -357,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       $(element).find('img.lazy-load').each(function () {
         const img = $(this);
-        if (img) {
+        if (img.data('src')) {
           img.attr('src', img.data('src'));
           img.removeClass('lazy-load');
           img.css({
@@ -408,14 +417,16 @@ document.addEventListener('DOMContentLoaded', function () {
     {% for product in section.settings.products %}
       <div class="product-item card__inner" data-product-id="{{ product.id }}">
         <div class="image-wrap">
-          {% assign images = product.images %}
-          {% for item in images limit: 5 %}
-            {% if item != '' %}
-              <div class="image-item">
-                {{ item | image_url: width: 217 | image_tag: class: 'lazy-load' }}
-              </div>
-            {% endif %}
-          {% endfor %}
+          <div class="slider-container">
+            {% assign images = product.images %}
+            {% for item in images limit: 5 %}
+              {% if item != '' %}
+                <div class="image-item">
+                  {{ item | image_url: width: 217 | image_tag: class: 'lazy-load', loading: 'lazy' }}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
           <div class="tags-wrapper">
             {% if product.metafields.custom.condition_state contains "New" %}
               <div class="condition-tag">
