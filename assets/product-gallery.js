@@ -358,7 +358,6 @@ class ProductGallery extends HTMLElement {
           left = Math.max(0, Math.min(left, img.clientWidth - lens.offsetWidth));
           top = Math.max(0, Math.min(top, img.clientHeight - lens.offsetHeight));
 
-          debugger;
           lens.style.left = `${left}px`;
           lens.style.top = `${top}px`;
 
