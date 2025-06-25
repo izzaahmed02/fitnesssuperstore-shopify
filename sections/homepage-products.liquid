@@ -1,343 +1,105 @@
-  <style>
-    .product-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(241px, 1fr));
-      gap: 32px 48px;
-      padding: 0 16px;
-    }
+{{ 'section-featured-products.css' | asset_url | stylesheet_tag }}
 
-    .product-item {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 0;
-      gap: 8px;
-      isolation: isolate;
-      width: 241px;
-      height: 447px;
-      flex: none;
-      order: 0;
-      flex-grow: 1;
-    }
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
 
-    .image-wrap {
-      position: relative;
-      width: 241px;
-      height: 283px;
-      background: #FFFFFF;
-      box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.1);
-      border-radius: 12px;
-      flex: none;
-      order: 0;
-      align-self: stretch;
-      flex-grow: 0;
-      z-index: 0;
-    }
+    function initSlider(element) {
+      if (!$(element).hasClass('slick-initialized')) {
+        $(element).slick({
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          lazyLoad: 'ondemand',
+          arrows: true,
+          prevArrow: '<button type="button" class="slick-prev"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" fill="black"/></svg></button>',
+          nextArrow: '<button type="button" class="slick-next"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="black"/></svg></button>',
+          dots: true,
+          responsive: [
+            {
+              breakpoint: 768,
+              settings: {
+                slidesToShow: 1,
+              },
+            },
+          ],
+        });
 
-    .image-item {
-      position: absolute;
-      width: 217px;
-      height: 215px;
-      left: calc(50% - 217px/2 + 1px);
-      top: calc(50% - 215px/2 + 10px);
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-    }
-
-    .image-wrap img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      padding: 34px;
-      transition: opacity 0.3s ease-in-out;
-    }
-
-    .image-wrap .slick-dots {
-      position: absolute;
-      width: 72px;
-      height: 8px;
-      left: calc(50% - 72px/2 + 0.5px);
-      bottom: 12px;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      padding: 0;
-      gap: 8px;
-    }
-
-    .image-wrap .slick-dots li {
-      width: 8px;
-      height: 8px;
-      background: #D3D9E5;
-      border-radius: 50%;
-      flex: none;
-      order: 0;
-      flex-grow: 0;
-    }
-
-    .image-wrap .slick-dots li.slick-active {
-      background: #23232B;
-    }
-
-    .tags-wrapper {
-      position: absolute;
-      width: 138px;
-      height: 68px;
-      left: 16px;
-      top: 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 0;
-      gap: 12px;
-      flex: none;
-      order: 3;
-      flex-grow: 0;
-      z-index: 3;
-    }
-
-    .condition-tag, .sale-tag {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: center;
-      padding: 4px 0px;
-      gap: 4px;
-      width: 77px;
-      height: 28px;
-      background: #FFFFFF;
-      border-radius: 43px;
-      font-family: 'Lato', sans-serif;
-      font-style: normal;
-      font-weight: 700;
-      font-size: 14px;
-      line-height: 20px;
-      color: #F1592A;
-      flex: none;
-      order: 0;
-      flex-grow: 0;
-    }
-
-    .condition-tag.blue {
-      color: #3E77AA;
-    }
-
-    .sale-tag {
-      background: #FEEAE8;
-      color: #F52419;
-    }
-
-    .ship-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      width: 114px;
-      height: 20px;
-      font-family: 'Lato', sans-serif;
-      font-style: normal;
-      font-weight: 700;
-      font-size: 14px;
-      line-height: 20px;
-      color: #00A344;
-      margin-top: 8px;
-    }
-
-    .title {
-      width: 241px;
-      height: 72px;
-      font-family: 'Lato', sans-serif;
-      font-style: normal;
-      font-weight: 700;
-      font-size: 18px;
-      line-height: 24px;
-      color: #393940;
-      text-decoration: none;
-      margin: 0;
-      flex: none;
-      order: 1;
-      align-self: stretch;
-      flex-grow: 0;
-    }
-
-    .product-item__price-container {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 0;
-      gap: 4px;
-      width: 241px;
-      height: 72px;
-      flex: none;
-      order: 2;
-      align-self: stretch;
-      flex-grow: 0;
-    }
-
-    .old-price-wrapper {
-      width: 241px;
-      height: 24px;
-      font-family: 'Lato', sans-serif;
-      font-style: normal;
-      font-weight: 400;
-      font-size: 16px;
-      line-height: 24px;
-      text-decoration-line: line-through;
-      color: #393940;
-      flex: none;
-      order: 0;
-      align-self: stretch;
-      flex-grow: 0;
-    }
-
-    .price-wrapper {
-      width: 241px;
-      height: 24px;
-      font-family: 'Lato', sans-serif;
-      font-style: normal;
-      font-weight: 700;
-      font-size: 16px;
-      line-height: 24px;
-      color: #F1592A;
-      flex: none;
-      order: 1;
-      align-self: stretch;
-      flex-grow: 0;
-    }
-
-    .price-title {
-      font-weight: 400;
-      color: #000000;
-      margin-right: 5px;
-    }
-
-    .price-value {
-      font-size: 16px;
-      font-weight: 700;
-      color: #F1592A;
-    }
-
-    .availability {
-      width: 241px;
-      height: 24px;
-      font-family: 'Lato', sans-serif;
-      font-style: normal;
-      font-weight: 700;
-      font-size: 16px;
-      line-height: 24px;
-      color: #00A344;
-      flex: none;
-      order: 2;
-      align-self: stretch;
-      flex-grow: 0;
-    }
-
-    .custom-container {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 60px 0;
-      background-color: #F5F5F5;
-    }
-
-    .featured_products_header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 32px;
-      padding: 0 16px;
-    }
-
-    .featured_products_header h3 {
-      font-size: 28px;
-      font-weight: 700;
-      color: #393940;
-    }
-
-    .featured_products_link {
-      font-size: 16px;
-      color: #F1592A;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-    }
-  </style>
-
-  <div class="custom-container">
-    <div class="featured_products_header">
-      <h3>Featured Products</h3>
-      <a href="#" class="featured_products_link">View All <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.8017 4.46967C8.09459 4.17678 8.56947 4.17678 8.86236 4.46967L13.8624 9.46967C14.1553 9.76256 14.1553 10.2374 13.8624 10.5303L8.86236 15.5303C8.56947 15.8232 8.09459 15.8232 7.8017 15.5303C7.50881 15.2374 7.50881 14.7626 7.8017 14.4697L12.2714 10L7.8017 5.53033C7.50881 5.23744 7.50881 4.76256 7.8017 4.46967Z" fill="#F1592A"/></svg></a>
-    </div>
-    <div class="featured_products_container product-grid">
-      {% for product in section.settings.products %}
-        <div class="product-item card__inner" data-product-id="{{ product.id }}">
-          <div class="image-wrap">
-            {% for image in product.images limit: 5 %}
-              <div class="image-item">
-                <img class="lazy-load" data-src="{{ image | image_url }}" alt="{{ product.title }}">
-              </div>
-            {% endfor %}
-          </div>
-          <div class="tags-wrapper">
-            {% if product.metafields.custom.condition_state contains "New" %}
-              <div class="condition-tag">{% render 'icon-new' %} New</div>
-            {% else %}
-              <div class="condition-tag blue">{% render 'icon-remanufactured' %} Remanufactured</div>
-            {% endif %}
-            {% if product.compare_at_price > product.price %}
-              <div class="sale-tag">{% render 'icon-sale' %} Sale</div>
-            {% endif %}
-          </div>
-          <div class="ship-wrapper">{% render 'icon-ship' %} Ships in {{ product.metafields.custom.processing_time }}</div>
-          <a class="title" href="{{ product.url }}">{{ product.title | replace: "(Remanufactured)", "" | replace: "(New)", "" }}</a>
-          <div class="product-item__price-container">
-            {% if product.metafields.custom.retail_price != blank %}
-              <div class="old-price-wrapper">As high as: {{ product.metafields.custom.retail_price | money }}</div>
-            {% endif %}
-            <div class="price-wrapper">
-              <span class="price-title">Price USD:</span>
-              <span class="price-value">{{ product.price | money }}</span>
-            </div>
-            <div class="availability">Available to Order</div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-  </div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      function initSlider(element) {
-        if (!$(element).hasClass('slick-initialized')) {
-          $(element).slick({
-            slidesToShow: 1,
-            slidesToScroll: 1,
-            lazyLoad: 'ondemand',
-            arrows: true,
-            prevArrow: '<button class="slick-prev"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" fill="black"/></svg></button>',
-            nextArrow: '<button class="slick-next"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="black"/></svg></button>',
-            dots: true,
+        $(element)
+          .find('.image-item')
+          .each(function () {
           });
-          $(element).find('img.lazy-load').each(function () {
+        $(element)
+          .find('img.lazy-load')
+          .each(function () {
             const img = $(this);
-            img.attr('src', img.data('src')).removeClass('lazy-load').css({ opacity: 1, visibility: 'visible' });
+            if (img) {
+              img.attr('src', img.data('src'));
+              img.removeClass('lazy-load');
+              img.css({
+                opacity: '1',
+                visibility: 'visible',
+              });
+            }
           });
-        }
       }
+    }
 
-      const observer = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver(
+      (entries, observer) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             initSlider(entry.target);
             observer.unobserve(entry.target);
           }
         });
-      }, { threshold: 0.8 });
+      },
+      { threshold: 0.8 }
+    );
 
-      $('.homepage-products .image-wrap').each(function () {
+    $('.image-wrap').each(function () {
+      if ($(this).length > 0) {
         observer.observe(this);
-      });
+      }
     });
-  </script>
+  });
+</script>
+
+{% render 'collection-section-style' %}
+
+<style>
+  #shopify-section-{{ section.id }}{
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    background-color: {{ section.settings.bg }};
+  }
+  .comparable-custom-action{
+    display: none;
+  }
+</style>
+
+<div class="custom-container">
+  {{ customer.first_name }}
+  <div class="featured_products_header">
+    {% if section.settings.heading != blank %}
+      <h3>{{ section.settings.heading }}</h3>
+    {% endif %}
+
+    {% if section.settings.link != blank %}
+      <a href="{{ section.settings.url }}" class="featured_products_link">
+        {{ section.settings.link }}
+
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M7.8017 4.46967C8.09459 4.17678 8.56947 4.17678 8.86236 4.46967L13.8624 9.46967C14.1553 9.76256 14.1553 10.2374 13.8624 10.5303L8.86236 15.5303C8.56947 15.8232 8.09459 15.8232 7.8017 15.5303C7.50881 15.2374 7.50881 14.7626 7.8017 14.4697L12.2714 10L7.8017 5.53033C7.50881 5.23744 7.50881 4.76256 7.8017 4.46967Z" fill="#fff"/>
+        </svg>
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="featured_products_container">
+    {% for product in section.settings.products %}
+      {% render 'product-item', product: product %}
+    {% endfor %}
+  </div>
+</div>
 
         {% schema %}
 {
