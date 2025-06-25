@@ -111,16 +111,15 @@ img.lazy-load {
 .product-item .image-wrap .slider-container {
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .product-item .image-wrap img {
   width: 217px;
   height: 215px;
   object-fit: contain;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
 }
 
 .product-item .slick-dots {
@@ -217,6 +216,7 @@ img.lazy-load {
   color: #00A344;
   flex: none;
   align-self: stretch;
+  gap: 4px;
 }
 
 .product-item .tags-wrapper {
@@ -272,37 +272,6 @@ img.lazy-load {
   font-size: 16px;
   line-height: 20px;
   color: #F52419;
-}
-
-.product-item .comparable-custom-action {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 85px;
-  height: 28px;
-  background: #FFFFFF;
-  border-radius: 43px;
-  z-index: 3;
-}
-
-.product-item .comparable-custom-action input {
-  width: 16px;
-  height: 16px;
-  background: #FFFFFF;
-  border: 0.67px solid #E5E5E5;
-  border-radius: 2.67px;
-  margin-right: 4px;
-}
-
-.product-item .comparable-custom-action label {
-  font-family: 'Lato', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 20px;
-  color: #F1592A;
 }
 
 @media (max-width: 768px) {
@@ -448,15 +417,6 @@ document.addEventListener('DOMContentLoaded', function () {
               </div>
             {% endif %}
           </div>
-          <div class="comparable-custom-action">
-            <input
-              class="add-to-comparable"
-              type="checkbox"
-              id="add-to-comparable-checkbox_{{ product.handle }}"
-              data-product="{{ product.handle }}"
-            >
-            <label for="add-to-comparable-checkbox_{{ product.handle }}">Compare</label>
-          </div>
         </div>
         <div class="description">
           {% if product.available == false %}
@@ -465,12 +425,15 @@ document.addEventListener('DOMContentLoaded', function () {
               {{- 'products.product.sold_out' | t -}}
             </span>
           {% else %}
-            {% unless product.metafields.custom.processing_time == blank %}
-              <div class="ship-wrapper">
-                {% render 'icon-ship' %}
-                {{ product.metafields.custom.processing_time | replace: "from our Warehouse", "" | replace: "leave our Warehouse", "" | replace: "from Manufacturer's Warehouse", "" }}
-              </div>
-            {% endunless %}
+            <div class="ship-wrapper">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.03906 6.66797C1.03906 6.32279 1.31888 6.04297 1.66406 6.04297H6.66406C7.00924 6.04297 7.28906 6.32279 7.28906 6.66797C7.28906 7.01315 7.00924 7.29297 6.66406 7.29297H1.66406C1.31888 7.29297 1.03906 7.01315 1.03906 6.66797ZM1.03906 9.16797C1.03906 8.82279 1.31888 8.54297 1.66406 8.54297H4.9974C5.34257 8.54297 5.6224 8.82279 5.6224 9.16797C5.6224 9.51315 5.34257 9.79297 4.9974 9.79297H1.66406C1.31888 9.79297 1.03906 9.51315 1.03906 9.16797ZM1.66406 11.043C1.31888 11.043 1.03906 11.3228 1.03906 11.668C1.03906 12.0131 1.31888 12.293 1.66406 12.293H3.33073C3.67591 12.293 3.95573 12.0131 3.95573 11.668C3.95573 11.3228 3.67591 11.043 3.33073 11.043H1.66406Z" fill="#00A344"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M11.8724 4.16797C11.8724 3.82279 12.1522 3.54297 12.4974 3.54297H14.0308C14.859 3.54297 15.6122 3.9913 16.0212 4.69581L16.0233 4.69936L16.0233 4.69937L17.4483 7.19102C17.5589 7.38446 17.5581 7.62216 17.4463 7.81491C17.3345 8.00766 17.1285 8.1263 16.9057 8.1263H15.8307C15.7176 8.1263 15.6224 8.22148 15.6224 8.33464V10.8346C15.6224 10.9478 15.7176 11.043 15.8307 11.043H18.3307C18.6759 11.043 18.9557 11.3228 18.9557 11.668V14.168C18.9557 15.8965 17.5592 17.293 15.8307 17.293H15.5361C15.2641 18.2548 14.3797 18.9596 13.3307 18.9596C12.2817 18.9596 11.3974 18.2548 11.1253 17.293H8.86947C8.59741 18.2548 7.71304 18.9596 6.66406 18.9596C5.61508 18.9596 4.73071 18.2548 4.45866 17.293H4.16406C2.43555 17.293 1.03906 15.8965 1.03906 14.168C1.03906 13.8228 1.31888 13.543 1.66406 13.543C2.00924 13.543 2.28906 13.8228 2.28906 14.168C2.28906 15.2061 3.12591 16.043 4.16406 16.043H4.45866C4.73071 15.0811 5.61508 14.3763 6.66406 14.3763C7.71304 14.3763 8.59741 15.0811 8.86947 16.043H11.1253C11.3974 15.0811 12.2817 14.3763 13.3307 14.3763C14.3797 14.3763 15.2641 15.0811 15.5361 16.043H15.8307C16.8689 16.043 17.7057 15.2061 17.7057 14.168V12.293H15.8307C15.0272 12.293 14.3724 11.6381 14.3724 10.8346V8.33464C14.3724 7.53194 15.0259 6.87763 15.8283 6.8763L14.9403 5.32348L14.9393 5.32185C14.7482 4.99399 14.4019 4.79297 14.0308 4.79297H13.1224V10.0013C13.1224 11.2631 12.0926 12.293 10.8307 12.293H9.9974C9.65222 12.293 9.3724 12.0131 9.3724 11.668C9.3724 11.3228 9.65222 11.043 9.9974 11.043H10.8307C11.4022 11.043 11.8724 10.5728 11.8724 10.0013V4.16797ZM12.2891 16.668C12.2891 17.2433 12.7554 17.7096 13.3307 17.7096C13.906 17.7096 14.3724 17.2433 14.3724 16.668C14.3724 16.6646 14.3724 16.6613 14.3723 16.6579C14.3669 16.091 13.8989 15.6263 13.3307 15.6263C12.7592 15.6263 12.2891 16.0965 12.2891 16.668ZM7.70573 16.668C7.70573 16.0965 7.23555 15.6263 6.66406 15.6263C6.09593 15.6263 5.62792 16.091 5.62244 16.6579L5.6224 16.668C5.6224 17.2433 6.08877 17.7096 6.66406 17.7096C7.23936 17.7096 7.70573 17.2433 7.70573 16.668Z" fill="#00A344"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.00219 1.04297C3.51664 1.04297 2.22057 1.86523 1.54794 3.07201C1.37988 3.37351 1.48807 3.75416 1.78958 3.92222C2.09108 4.09027 2.47174 3.98208 2.63979 3.68058C3.10049 2.85402 3.98774 2.29297 5.00219 2.29297H11.8772V10.0013C11.8772 10.5728 11.407 11.043 10.8355 11.043H10.0022C9.65701 11.043 9.37719 11.3228 9.37719 11.668C9.37719 12.0131 9.65701 12.293 10.0022 12.293H10.8355C12.0974 12.293 13.1272 11.2631 13.1272 10.0013V1.66797C13.1272 1.32279 12.8474 1.04297 12.5022 1.04297H5.00219ZM15.629 8.33464C15.629 8.22148 15.7242 8.1263 15.8374 8.1263H16.5492L17.7124 10.1669V11.043H15.8374C15.7242 11.043 15.629 10.9478 15.629 10.8346V8.33464ZM15.8374 6.8763C15.0338 6.8763 14.379 7.53112 14.379 8.33464V10.8346C14.379 11.6381 15.0338 12.293 15.8374 12.293H18.3374C18.6825 12.293 18.9624 12.0131 18.9624 11.668 Warner Bros. Discovery, Inc. or its subsidiaries and affiliates. All rights reserved.
+V10.0013C18.9624 9. 89276 18.9341 9.78609 18.8803 9.6918L17.4553 7.1918C17.3441 6.99674 17.1369 6.8763 16.9123 6.8763H15.8374Z" fill="#00A344"/>
+              </svg>
+              Ships in 2 Weeks
+            </div>
           {% endif %}
           <a class="title" href="{{ product.url }}">
             {{ product.title | replace: "(Remanufactured)", "" | replace: "(New)", "" }}
