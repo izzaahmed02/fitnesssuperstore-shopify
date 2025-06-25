@@ -122,16 +122,30 @@ text-transform: uppercase;
 
   <div class="category-tab-content">     
     {% for block in section.blocks %}
-      <div class="category-card">
-        <a href="{{ block.settings.link }}">
-          <div class="card-image-wrapper" style="background-image: url({{ block.settings.image | image_url: width: 800 }});">
-            <img src="{{ block.settings.image | image_url: width: 800 }}" alt="{{ block.settings.title }}">
-            <div class="image-title">
-              <p>{{ block.settings.title }}</p>
-            </div>
-          </div>
-        </a>
+      {% assign desktop_image = block.settings.image %}
+{% assign mobile_image = block.settings.mobile_image %}
+<div class="category-card">
+  <a href="{{ block.settings.link }}">
+    <div 
+      class="card-image-wrapper"
+      style="background-image: url({{ desktop_image | image_url: width: 800 }});"
+    >
+      <picture>
+        {% if mobile_image != blank %}
+          <source media="(max-width: 768px)" srcset="{{ mobile_image | image_url: width: 600 }}">
+        {% endif %}
+        <img 
+          src="{{ desktop_image | image_url: width: 800 }}" 
+          alt="{{ block.settings.title }}"
+        >
+      </picture>
+      <div class="image-title">
+        <p>{{ block.settings.title }}</p>
       </div>
+    </div>
+  </a>
+</div>
+
     {% endfor %}
   </div>
 </div>
@@ -160,6 +174,11 @@ text-transform: uppercase;
           "type": "image_picker",
           "id": "image",
           "label": "Card Image"
+        },
+        {
+          "type": "image_picker",
+          "id": "mobile_image",
+          "label": "Mobile Image (optional)"
         },
         {
           "type": "text",
