@@ -470,8 +470,6 @@ if (!customElements.get('cart-note')) {
 
 // Change Edit Options Button
 document.addEventListener("DOMContentLoaded", () => {
-
-
 	const updateText = (element) => {
 		if (!element) return;
 
@@ -528,6 +526,20 @@ document.addEventListener("DOMContentLoaded", () => {
 		}, 200)
 	);
 	observerCartBlock.observe(document.body);
+
+	// const drShippingPoll = setInterval(() => {
+	// 	const drShippingZipCodeElement = document.querySelector('.docapp-shipping-calculator--input-zip');
+	// 	if (drShippingZipCodeElement) {
+	// 		drShippingZipCodeElement.addEventListener('change', (event) => {
+	// 			const targetElement = event.target;
+	// 			const value = targetElement.value;
+	// 			if (value) {
+	// 				setCartAttributeZipCode(value);
+	// 			}
+	// 		});
+	// 		clearInterval(drShippingPoll);
+	// 	}
+	// }, 100);
 });
 
 
@@ -630,4 +642,23 @@ async function downloadQuoteGsheet() {
 
 		csvQuoteBtn.disabled = false;
 	}
+}
+
+function setCartAttributeZipCode(zip) {
+fetch('/cart/update.js', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  body: JSON.stringify({
+    attributes: {
+      zipCode: zip
+    }
+  })
+})
+.catch(error => {
+  console.error('Error updating cart attribute:', error);
+});
+
 }
