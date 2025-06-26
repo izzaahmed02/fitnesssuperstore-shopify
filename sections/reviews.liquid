@@ -1,5 +1,30 @@
 {% stylesheet %}
 
+  .reviewsHome .read-more-text {
+  display: block;
+  max-height: 3.6em; /* approx 2 lines */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  line-height: 1.8em;
+  transition: max-height 0.3s ease;
+}
+
+.reviewsHome .read-more-text.expanded {
+  max-height: none;
+}
+
+.reviewsHome .homepage-reviews__item-copy-btn {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #F1592A;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+
   .reviewsHome{
 background-color: #FAF9F9;
   }
@@ -290,6 +315,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
+
+  reviewsSection.querySelectorAll(".homepage-reviews__item-copy-btn").forEach(function (btn) {
+  btn.addEventListener("click", function (e) {
+    e.preventDefault();
+    const text = this.previousElementSibling;
+    const expanded = text.classList.toggle("expanded");
+    this.textContent = expanded ? "Read Less" : "Read More";
+  });
+});
+
 {% endjavascript %}
 
 
