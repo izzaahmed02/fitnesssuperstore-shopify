@@ -317,61 +317,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-document.addEventListener('DOMContentLoaded', function() {
-  initTextTruncation('.homepage-reviews__item-copy', 4);
-});
-
-/**
- * Initializes truncation and "Read More" toggling for all matching elements.
- * @param {string} selector - CSS selector for text blocks.
- * @param {number} maxLines - Number of lines to truncate to.
- */
-function initTextTruncation(selector, maxLines = 4) {
-  const textElems = document.querySelectorAll(selector);
-  if (!textElems.length) return;
-
-  textElems.forEach(elem => {
-    truncateIfTooManyLines(elem, maxLines);
-  });
-}
-
-/**
- * Truncates a text element to the given line count, adds toggle if needed.
- */
-function truncateIfTooManyLines(element, maxLines) {
-  if (!element) return;
-
-  const lineCount = getNumberOfLines(element);
-  if (lineCount <= maxLines) return;
-
-  element.classList.add('hide');
-
-  const btn = element.nextElementSibling;
-  if (!btn) return;
-
-  btn.classList.add('active');
-  btn.addEventListener('click', function(e) {
-    e.preventDefault();
-    const expanded = element.classList.toggle('hide');
-    this.textContent = expanded ? 'Read More' : 'Read Less';
-  });
-}
-
-/**
- * Estimates how many lines of text the element spans.
- */
-function getNumberOfLines(element) {
-  const style = window.getComputedStyle(element);
-  let lineHeight = parseFloat(style.lineHeight);
-  if (isNaN(lineHeight)) {
-    const fontSize = parseFloat(style.fontSize) || 16;
-    lineHeight = fontSize * 1.2;
-  }
-  const elementHeight = element.offsetHeight;
-  return Math.round(elementHeight / lineHeight);
-}
-
-
 {% endjavascript %}
 
 
