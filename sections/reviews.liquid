@@ -1,29 +1,27 @@
 {% stylesheet %}
 
- .reviewsHome .read-more-text {
+.homepage-reviews__item-copy.hide {
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* Show only 2 lines */
-   line-clamp: 2;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  transition: all 0.3s ease;
 }
 
-.reviewsHome .read-more-text.expanded {
-  -webkit-line-clamp: unset;
-  overflow: visible;
-}
-
-.reviewsHome .homepage-reviews__item-copy-btn {
-  display: inline-block;
-  margin-top: 8px;
+.homepage-reviews__item-copy-btn {
+  display: none;
+  color: #F1592A;
   font-size: 14px;
   font-weight: 600;
-  color: #F1592A;
-  cursor: pointer;
   text-decoration: underline;
+  cursor: pointer;
 }
+
+.homepage-reviews__item-copy-btn.active {
+  display: inline-block;
+}
+
+  
+
 
 
   .reviewsHome{
@@ -223,12 +221,13 @@ vertical-align: middle;
                   <p>{{ block.settings.title }}</p>
                 {% endif %}
 
-                      {% if block.settings.copy != blank %}
-                                    <p class="homepage-reviews__item-copy">
-                                        {{ block.settings.copy }}
-                                    </p>
-                                    <a href="#" class="homepage-reviews__item-copy-btn">Read More</a>
-                                {% endif %}
+                          {% if block.settings.copy != blank %}
+                            <p class="homepage-reviews__item-copy">
+                              {{ block.settings.copy }}
+                            </p>
+                            <a href="#" class="homepage-reviews__item-copy-btn">Read More</a>
+                          {% endif %}
+
 
                <span class="homepage-reviews__item-author">{{ block.settings.author }}</span>
               
@@ -318,14 +317,59 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
- reviewsSection.querySelectorAll(".homepage-reviews__item-copy-btn").forEach(function (btn) {
-  btn.addEventListener("click", function (e) {
-    e.preventDefault();
-    const text = this.previousElementSibling;
-    const expanded = text.classList.toggle("expanded");
-    this.textContent = expanded ? "Read Less" : "Read More";
-  });
+document.addEventListener('DOMContentLoaded', function() {
+  initTextTruncation('.homepage-reviews__item-copy', 4);
 });
+
+/**
+ * Initializes truncation and "Read More" toggling for all matching elements.
+ * @param {string} selector - CSS selector for text blocks.
+ * @param {number} maxLines - Number of lines to truncate to.
+ */
+function initTextTruncation(selector, maxLines = 4) {
+  const textElems = document.querySelectorAll(selector);
+  if (!textElems.length) return;
+
+  textElems.forEach(elem => {
+    truncateIfTooManyLines(elem, maxLines);
+  });
+}
+
+/**
+ * Truncates a text element to the given line count, adds toggle if needed.
+ */
+function truncateIfTooManyLines(element, maxLines) {
+  if (!element) return;
+
+  const lineCount = getNumberOfLines(element);
+  if (lineCount <= maxLines) return;
+
+  element.classList.add('hide');
+
+  const btn = element.nextElementSibling;
+  if (!btn) return;
+
+  btn.classList.add('active');
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    const expanded = element.classList.toggle('hide');
+    this.textContent = expanded ? 'Read More' : 'Read Less';
+  });
+}
+
+/**
+ * Estimates how many lines of text the element spans.
+ */
+function getNumberOfLines(element) {
+  const style = window.getComputedStyle(element);
+  let lineHeight = parseFloat(style.lineHeight);
+  if (isNaN(lineHeight)) {
+    const fontSize = parseFloat(style.fontSize) || 16;
+    lineHeight = fontSize * 1.2;
+  }
+  const elementHeight = element.offsetHeight;
+  return Math.round(elementHeight / lineHeight);
+}
 
 
 {% endjavascript %}
