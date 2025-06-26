@@ -319,7 +319,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 				if (distanceFromBenicia <= 100) {
 					document.querySelector('.utility-bar').style.display = 'block';
 				}
-				//document.querySelector('.california-discount-offer').style.display = 'block';
 			}
 		}
 	} else {
@@ -331,7 +330,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 			if (distanceFromBenicia <= 100) {
 				document.querySelector('.utility-bar').style.display = 'block';
 			}
-			//document.querySelector('.california-discount-offer').style.display = 'block';
 		}
 	}
 });
