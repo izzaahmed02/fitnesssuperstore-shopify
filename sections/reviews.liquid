@@ -186,11 +186,14 @@ vertical-align: middle;
 </div>
 
 {% javascript %}
- document.addEventListener("DOMContentLoaded", function () {
-  const firstTab = document.querySelector('.category-tab-content.active');
+document.addEventListener("DOMContentLoaded", function () {
+  const reviewsSection = document.querySelector(".reviewsHome");
+  if (!reviewsSection) return;
+
+  const firstTab = reviewsSection.querySelector(".category-tab-content.active");
   const firstSlider = firstTab.querySelector('[class*="slider-tab-"]');
 
-  $(firstSlider).on('setPosition', function () {
+  $(firstSlider).on("setPosition", function () {
     setEqualCardHeights(firstTab);
   });
 
@@ -207,9 +210,9 @@ vertical-align: middle;
   });
 
   function setEqualCardHeights(container) {
-    const cards = container.querySelectorAll('.category-card');
+    const cards = container.querySelectorAll(".category-card");
     let maxHeight = 0;
-    cards.forEach(card => card.style.minHeight = 'auto');
+    cards.forEach(card => card.style.minHeight = "auto");
     cards.forEach(card => {
       const height = card.offsetHeight;
       if (height > maxHeight) maxHeight = height;
@@ -217,23 +220,23 @@ vertical-align: middle;
     cards.forEach(card => card.style.minHeight = `${maxHeight}px`);
   }
 
-  document.querySelectorAll(".category-tabs button").forEach(button => {
+  reviewsSection.querySelectorAll(".category-tabs button").forEach(button => {
     button.addEventListener("click", function () {
       const tabId = this.getAttribute("data-tab");
 
-      document.querySelectorAll(".category-tabs button").forEach(btn => btn.classList.remove("active"));
+      reviewsSection.querySelectorAll(".category-tabs button").forEach(btn => btn.classList.remove("active"));
       this.classList.add("active");
 
-      document.querySelectorAll(".category-tab-content").forEach(tab => tab.classList.remove("active"));
-      const targetTab = document.getElementById(tabId);
+      reviewsSection.querySelectorAll(".category-tab-content").forEach(tab => tab.classList.remove("active"));
+      const targetTab = reviewsSection.querySelector(`#${tabId}`);
       targetTab.classList.add("active");
 
       const targetSlider = targetTab.querySelector('[class*="slider-tab-"]');
-      if ($(targetSlider).hasClass('slick-initialized')) {
-        $(targetSlider).slick('unslick');
+      if ($(targetSlider).hasClass("slick-initialized")) {
+        $(targetSlider).slick("unslick");
       }
 
-      $(targetSlider).on('setPosition', function () {
+      $(targetSlider).on("setPosition", function () {
         setEqualCardHeights(targetTab);
       });
 
@@ -251,8 +254,8 @@ vertical-align: middle;
     });
   });
 });
-
 {% endjavascript %}
+
 
 
 {% schema %}
