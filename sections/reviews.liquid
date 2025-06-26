@@ -334,6 +334,43 @@ reviewsSection.querySelectorAll('.homepage-reviews__item-copy-btn').forEach(butt
 });
 
 });
+
+
+
+  function shouldShowReadMore(copyEl, buttonEl) {
+  // Clone the element to measure full height without truncation
+  const clone = copyEl.cloneNode(true);
+  clone.style.position = 'absolute';
+  clone.style.visibility = 'hidden';
+  clone.style.webkitLineClamp = 'unset';
+  clone.style.display = '-webkit-box';
+  clone.style.webkitBoxOrient = 'vertical';
+  clone.style.width = copyEl.offsetWidth + 'px';
+  clone.style.maxHeight = 'none';
+
+  document.body.appendChild(clone);
+
+  const fullHeight = clone.offsetHeight;
+  const lineHeight = parseFloat(getComputedStyle(copyEl).lineHeight);
+  const threeLineHeight = lineHeight * 3;
+
+  document.body.removeChild(clone);
+
+  if (fullHeight > threeLineHeight) {
+    buttonEl.style.display = 'inline-block';
+  } else {
+    buttonEl.style.display = 'none';
+  }
+}
+
+reviewsSection.querySelectorAll('.category-card').forEach(card => {
+  const copy = card.querySelector('.homepage-reviews__item-copy');
+  const button = card.querySelector('.homepage-reviews__item-copy-btn');
+  if (copy && button) {
+    shouldShowReadMore(copy, button);
+  }
+});
+
 {% endjavascript %}
 
 
