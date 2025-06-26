@@ -184,9 +184,15 @@ vertical-align: middle;
           {% if card_handle == handle %}
             <div class="category-card">
               <a href="{{ block.settings.link }}">
-                {% if block.settings.image != blank %}
-                  <img src="{{ block.settings.image | image_url: width: 150 }}" alt="{{ block.settings.title }}">
-                {% endif %}
+                {% assign star_count = block.settings.stars %}
+                                {% if star_count > 5 %}
+                                    {% assign star_count = 5 %}
+                                {% endif %}
+                                <div class="homepage-reviews__item-rating">
+                                    {% for i in (1..star_count) %}
+                                        {% render 'review-star' %}
+                                    {% endfor %}
+                                </div>
                 {% if block.settings.title != blank %}
                   <p>{{ block.settings.title }}</p>
                 {% endif %}
