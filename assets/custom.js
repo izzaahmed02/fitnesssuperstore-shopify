@@ -315,25 +315,21 @@ window.addEventListener('DOMContentLoaded', async () => {
 			const userLoc = await locationRes.json();
 			sessionStorage.userLoc = JSON.stringify(userLoc);
 			if (userLoc && userLoc.postal && userLoc.country_code === 'US' && userLoc.region_code === 'CA') {
-				// const distanceFromBenicia = await getDistanceFromBenicia(userLoc.postal)
-				// if (distanceFromBenicia <= 100) {
-				
-				// }
-				document.querySelector('.utility-bar').style.display = 'block';
-				document.querySelector('.california-discount-offer').style.display = 'block';
+				const distanceFromBenicia = await getDistanceFromBenicia(userLoc.postal)
+				if (distanceFromBenicia <= 100) {
+					document.querySelector('.utility-bar').style.display = 'block';
+				}
 			}
 		}
 	} else {
 		const userLocFromSessionStorage = JSON.parse(sessionStorage.userLoc);
 
 		if (userLocFromSessionStorage && userLocFromSessionStorage.postal && userLocFromSessionStorage.country_code === 'US'  && userLocFromSessionStorage.region_code === 'CA') {
-			// const distanceFromBenicia = await getDistanceFromBenicia(userLocFromSessionStorage.postal);
+			const distanceFromBenicia = await getDistanceFromBenicia(userLocFromSessionStorage.postal);
 
-			// if (distanceFromBenicia <= 100) {
-	
-			// }
-			document.querySelector('.utility-bar').style.display = 'block';
-			document.querySelector('.california-discount-offer').style.display = 'block';
+			if (distanceFromBenicia <= 100) {
+				document.querySelector('.utility-bar').style.display = 'block';
+			}
 		}
 	}
 });
