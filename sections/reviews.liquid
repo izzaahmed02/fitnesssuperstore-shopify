@@ -313,65 +313,69 @@ document.addEventListener("DOMContentLoaded", function () {
           { breakpoint: 989,  settings: { slidesToShow: 2 }}
         ]
       });
+
+      // Recalculate Read More visibility for the new tab
+      targetTab.querySelectorAll('.category-card').forEach(card => {
+        const copy = card.querySelector('.homepage-reviews__item-copy');
+        const button = card.querySelector('.homepage-reviews__item-copy-btn');
+        if (copy && button) {
+          shouldShowReadMore(copy, button);
+        }
+      });
     });
   });
 
+  // Read More / Read Less toggle
+  reviewsSection.querySelectorAll('.homepage-reviews__item-copy-btn').forEach(button => {
+    button.addEventListener('click', function (e) {
+      e.preventDefault();
+      const copy = this.previousElementSibling;
+      if (copy.classList.contains('expanded')) {
+        copy.classList.remove('expanded');
+        this.textContent = 'Read More';
+      } else {
+        copy.classList.add('expanded');
+        this.textContent = 'Read Less';
+      }
+    });
+  });
 
-  // Read More / Read Less functionality
-reviewsSection.querySelectorAll('.homepage-reviews__item-copy-btn').forEach(button => {
-  button.addEventListener('click', function (e) {
-    e.preventDefault();
-    const copy = this.previousElementSibling;
+  // Show/Hide "Read More" buttons only if content exceeds 3 lines
+  function shouldShowReadMore(copyEl, buttonEl) {
+    const clone = copyEl.cloneNode(true);
+    clone.style.position = 'absolute';
+    clone.style.visibility = 'hidden';
+    clone.style.webkitLineClamp = 'unset';
+    clone.style.display = '-webkit-box';
+    clone.style.webkitBoxOrient = 'vertical';
+    clone.style.width = copyEl.offsetWidth + 'px';
+    clone.style.maxHeight = 'none';
+    document.body.appendChild(clone);
 
-    if (copy.classList.contains('expanded')) {
-      copy.classList.remove('expanded');
-      this.textContent = 'Read More';
+    const fullHeight = clone.offsetHeight;
+    const lineHeight = parseFloat(getComputedStyle(copyEl).lineHeight);
+    const threeLineHeight = lineHeight * 3;
+    document.body.removeChild(clone);
+
+    if (fullHeight > threeLineHeight) {
+      buttonEl.style.display = 'inline-block';
     } else {
-      copy.classList.add('expanded');
-      this.textContent = 'Read Less';
+      buttonEl.style.display = 'none';
+    }
+  }
+
+  // Initial run for visible cards
+  reviewsSection.querySelectorAll('.category-tab-content.active .category-card').forEach(card => {
+    const copy = card.querySelector('.homepage-reviews__item-copy');
+    const button = card.querySelector('.homepage-reviews__item-copy-btn');
+    if (copy && button) {
+      shouldShowReadMore(copy, button);
     }
   });
-});
 
 });
-
-
-
-  function shouldShowReadMore(copyEl, buttonEl) {
-  // Clone the element to measure full height without truncation
-  const clone = copyEl.cloneNode(true);
-  clone.style.position = 'absolute';
-  clone.style.visibility = 'hidden';
-  clone.style.webkitLineClamp = 'unset';
-  clone.style.display = '-webkit-box';
-  clone.style.webkitBoxOrient = 'vertical';
-  clone.style.width = copyEl.offsetWidth + 'px';
-  clone.style.maxHeight = 'none';
-
-  document.body.appendChild(clone);
-
-  const fullHeight = clone.offsetHeight;
-  const lineHeight = parseFloat(getComputedStyle(copyEl).lineHeight);
-  const threeLineHeight = lineHeight * 3;
-
-  document.body.removeChild(clone);
-
-  if (fullHeight > threeLineHeight) {
-    buttonEl.style.display = 'inline-block';
-  } else {
-    buttonEl.style.display = 'none';
-  }
-}
-
-reviewsSection.querySelectorAll('.category-card').forEach(card => {
-  const copy = card.querySelector('.homepage-reviews__item-copy');
-  const button = card.querySelector('.homepage-reviews__item-copy-btn');
-  if (copy && button) {
-    shouldShowReadMore(copy, button);
-  }
-});
-
 {% endjavascript %}
+
 
 
 
