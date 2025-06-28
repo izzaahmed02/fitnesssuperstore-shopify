@@ -752,20 +752,52 @@ min-height: auto;
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+ document.addEventListener('DOMContentLoaded', function () {
+  function initSlider(element) {
+    if (!$(element).hasClass('slick-initialized')) {
+      const $images = $(element).find('img.lazy-load');
+      let loadedImages = 0;
+      const totalImages = $images.length;
 
-    function initSlider(element) {
-  if (!$(element).hasClass('slick-initialized')) {
-    const $images = $(element).find('img.lazy-load');
-    let loadedImages = 0;
-    const totalImages = $images.length;
+      if (totalImages === 0) {
+        $(element).slick({
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          lazyLoad: 'ondemand',
+          arrows: false,
+          dots: true,
+          responsive: [
+            {
+              breakpoint: 768,
+              settings: { slidesToShow: 1 }
+            }
+          ]
+        });
+      } else {
+        $images.each(function () {
+          const img = $(this);
+          if (img[0].complete) {
+            loadedImages++;
+            if (loadedImages === totalImages) {
+              initializeSlick(element);
+            }
+          } else {
+            img.on('load', function () {
+              loadedImages++;
+              if (loadedImages === totalImages) {
+                initializeSlick(element);
+              }
+            });
+          }
+        });
+      }
+    }
 
-    if (totalImages === 0) {
-      // No images to load, initialize slider immediately
+    function initializeSlick(element) {
       $(element).slick({
         slidesToShow: 1,
         slidesToScroll: 1,
-        lazyLoad: 'progressive',
+        lazyLoad: 'ondemand',
         arrows: false,
         dots: true,
         responsive: [
@@ -775,114 +807,81 @@ min-height: auto;
           }
         ]
       });
-    } else {
-      // Wait for all images to load
-      $images.each(function () {
-        const img = $(this);
-        if (img[0].complete) {
-          loadedImages++;
-          if (loadedImages === totalImages) {
-            initializeSlick(element);
+
+      $(element)
+        .find('img.lazy-load')
+        .each(function () {
+          const img = $(this);
+          if (img) {
+            img.attr('src', img.data('src'));
+            img.removeClass('lazy-load');
+            img.css({
+              opacity: '1',
+              visibility: 'visible'
+            });
           }
-        } else {
-          img.on('load', function () {
-            loadedImages++;
-            if (loadedImages === totalImages) {
-              initializeSlick(element);
-            }
-          });
-        }
-      });
+        });
     }
   }
 
-  function initializeSlick(element) {
-    $(element).slick({
-      slidesToShow: 1,
-      slidesToScroll: 1,
-      lazyLoad: 'progressive',
-      arrows: false,
-      dots: true,
-      responsive: [
-        {
-          breakpoint: 768,
-          settings: { slidesToShow: 1 }
-        }
-      ]
-    });
-
-    $(element)
-      .find('img.lazy-load')
-      .each(function () {
-        const img = $(this);
-        if (img) {
-          img.attr('src', img.data('src'));
-          img.removeClass('lazy-load');
-          img.css({
-            opacity: '1',
-            visibility: 'visible'
-          });
+  const observer = new IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          initSlider(entry.target);
+          observer.unobserve(entry.target);
         }
       });
-  }
-}
+    },
+    { threshold: 0.3 }
+  );
 
-    const observer = new IntersectionObserver(
-      (entries, observer) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            initSlider(entry.target);
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.8 }
-    );
-
-    $('.image-wrap').each(function () {
-      if ($(this).length > 0) {
-        observer.observe(this);
-      }
-    });
-
-
-
-    $('.home-products .featured_products_container').slick({
-  dots: false,
-  arrows: true,
-  infinite: false,
-  autoplay: false,
-  draggable: false,
-  slidesToShow: 4,
-  slidesToScroll: 1,
-  waitForAnimate: true, 
-  lazyLoad: 'ondemand',
-  responsive: [
-            {
-              breakpoint: 1300,
-              settings: {
-                slidesToShow: 4,
-              },
-            },
-            {
-              breakpoint: 1024,
-              settings: {
-                slidesToShow: 3,
-              },
-            },
-            {
-              breakpoint: 989,
-              settings: {
-                slidesToShow: 2,
-                dots: true,
-              },
-            },
-          ]
-});
-
-
-    
+  $('.image-wrap').each(function () {
+    if ($(this).length > 0) {
+      observer.observe(this);
+    }
   });
+
+  $('.home-products .featured_products_container').slick({
+    dots: false,
+    arrows: true,
+    infinite: false,
+    autoplay: false,
+    draggable: false,
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    waitForAnimate: true,
+    lazyLoad: 'ondemand',
+    speed: 500,
+    cssEase: 'ease-in-out',
+    responsive: [
+      {
+        breakpoint: 1300,
+        settings: { slidesToShow: 4 }
+      },
+      {
+        breakpoint: 1024,
+        settings: { slidesToShow: 3 }
+      },
+      {
+        breakpoint: 989,
+        settings: { slidesToShow: 2, dots: true }
+      }
+    ],
+    beforeChange: function (slick, currentSlide, nextSlide) {
+      const $nextSlides = $(slick.$slides).slice(nextSlide, nextSlide + slick.options.slidesToShow);
+      $nextSlides.find('img.lazy-load').each(function () {
+        const img = $(this);
+        img.attr('src', img.data('src'));
+        img.removeClass('lazy-load');
+        img.css({
+          opacity: '1',
+          visibility: 'visible'
+        });
+      });
+    }
+  });
+});
 </script>
 
 
