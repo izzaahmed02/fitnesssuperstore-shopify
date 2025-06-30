@@ -15,6 +15,12 @@
   }
 {%- endstyle -%}
 
+{%  liquid 
+    assign faq_heading_tag = 'h3'
+    if section.settings.heading == blank
+      assign faq_heading_tag = 'h2'
+    endif
+%}
 <div class="color-{{ section.settings.color_scheme }} gradient">
   <div class="collapsible-content collapsible-{{ section.settings.layout }}-layout isolate{% if section.settings.layout == 'section' %} page-width{% elsif section.settings.layout == 'none' %} content-container content-container--full-width{% endif %}">
     <div class="collapsible-content__wrapper section-{{ section.id }}-padding{% if section.settings.layout == 'section' %} content-container color-{{ section.settings.container_color_scheme }} gradient{% endif %}">
@@ -33,8 +39,10 @@
               {{ section.settings.heading }}
             </h2>
           {%- else -%}
-            <h2 class="visually-hidden">{{ 'accessibility.collapsible_content_title' | t }}</h2>
-          {% endif %}
+        {% endif %}
+        {% comment %} 
+        <h2 class="visually-hidden">{{ 'accessibility.collapsible_content_title' | t }}</h2> 
+        {% endcomment %}
         </div>
         <div class="grid grid--1-col grid--2-col-tablet collapsible-content__grid{% if section.settings.desktop_layout == 'image_second' %} collapsible-content__grid--reverse{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
           {%- if section.settings.image != blank -%}
@@ -76,16 +84,23 @@
               >
                 <details
                   id="Details-{{ block.id }}-{{ section.id }}"
-                  {% if section.settings.open_first_collapsible_row and forloop.first %}
+                  {% if section.settings.open_collapsible_row %}
+                    open
+                  {% endif %}
+                  class="accordion__details{% if block.settings.disable_accordion %} accordion__details--disabled{% endif %}"
+                  {% if block.settings.disable_accordion %}
+                    disabled
                     open
                   {% endif %}
                 >
                   <summary id="Summary-{{ block.id }}-{{ section.id }}">
-                    {% render 'icon-accordion', icon: block.settings.icon %}
-                    <h3 class="accordion__title inline-richtext h4">
+                    <{{ faq_heading_tag }} class="accordion__title inline-richtext h4">
+                      {% render 'icon-accordion', icon: block.settings.icon %}
                       {{ block.settings.heading | default: block.settings.page.title | escape }}
-                    </h3>
+                    </{{ faq_heading_tag }}>
+                    {% unless block.settings.disable_accordion %}
                     {% render 'icon-caret' %}
+                    {% endunless %}
                   </summary>
                   <div
                     class="accordion__content rte"
@@ -105,6 +120,27 @@
     </div>
   </div>
 </div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for block in section.blocks %}
+      {% if block.type == 'collapsible_row' %}
+        {
+          "@type": "Question",
+          "name": {{ block.settings.heading | json }},
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": {{ block.settings.row_content | strip_html | json }}
+          }
+        }{% unless forloop.last %},{% endunless %}
+      {% endif %}
+    {% endfor %}
+  ]
+}
+</script>
 
 {% schema %}
 {
@@ -206,12 +242,6 @@
       "label": "t:sections.collapsible_content.settings.container_color_scheme.label",
       "info": "t:sections.collapsible_content.settings.container_color_scheme.info",
       "default": "scheme-2"
-    },
-    {
-      "type": "checkbox",
-      "id": "open_first_collapsible_row",
-      "default": false,
-      "label": "t:sections.collapsible_content.settings.open_first_collapsible_row.label"
     },
     {
       "type": "header",
@@ -489,6 +519,19 @@
           "type": "page",
           "id": "page",
           "label": "t:sections.collapsible_content.blocks.collapsible_row.settings.page.label"
+        },
+        {
+          "type": "checkbox",
+          "id": "disable_accordion",
+          "default": true,
+          "label": "t:sections.collapsible_content.blocks.collapsible_row.settings.disable_accordion.label",
+          "info": "t:sections.collapsible_content.blocks.collapsible_row.settings.disable_accordion.info"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_collapsible_row",
+          "default": false,
+          "label": "t:sections.collapsible_content.settings.open_collapsible_row.label"
         }
       ]
     }
