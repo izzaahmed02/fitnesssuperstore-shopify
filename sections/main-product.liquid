@@ -37,85 +37,8 @@
   <meta itemprop="availability" content="OutOfStock">
 {% endif %}
 
-{% comment %} {% render 'custom-breadcrumbs', with product: product %} {% endcomment %}
 {% render 'metaobjects-breadcrumbs', with product: product %}
 
-{% comment %}
-  {% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
-  {% assign first_breadcrumb = product_breadcrumbs | split: 'Home' %}
-  {% assign jp = first_breadcrumb[1] | split: '>' %}
-  {% assign length = jp.size | minus: 1 %}
-
-  <div class="custom-breadcrumbs">
-    <div class="page-width">
-      <div class="custom-breadcrumbs__wrapper">
-        <div class="custom-breadcrumbs__navigation">
-          {% for i in (0..length) %}
-            {% assign col = jp[i] | handleize %}
-
-            {% if forloop.first %}
-              <a href="/">Home</a>
-            {% else %}
-              <a href="{{ collections[col].url }}">{{- jp[i] }}</a>
-            {% endif %}
-            {% unless forloop.last %}
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M6.31051 3.64645C6.50577 3.45118 6.82235 3.45118 7.01762 3.64645L11.0176 7.64645C11.2129 7.84171 11.2129 8.15829 11.0176 8.35355L7.01762 12.3536C6.82235 12.5488 6.50577 12.5488 6.31051 12.3536C6.11525 12.1583 6.11525 11.8417 6.31051 11.6464L9.95696 8L6.31051 4.35355C6.11525 4.15829 6.11525 3.84171 6.31051 3.64645Z"
-                  fill="#DCDFE5" />
-              </svg>
-            {% endunless %}
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </div>
-{% endcomment %}
-
-{% comment %}
-  <div class="sticky-add-to-cart" style="display: none;">
-    <div class="sticky-container">
-        <img src="{{ product.featured_image | img_url: 'small' }}" alt="{{ product.title }}" class="sticky-product-image" height="" width="">
-        <div class="sticky-product-info">
-            <p class="sticky-product-title">{{ product.title }}</p>
-        </div>
-        <p class="sticky-product-price">{{ product.price | money }}</p>
-        <div class="sticky-product-actions">
-          <div class="sticky-quantity-container">
-              <select name="quantity" class="sticky-quantity">
-                  {% for i in (1..10) %}
-                  <option value="{{ i }}">{{ i }}</option>
-                  {% endfor %}
-              </select>
-              <div class="sticky-arrow">
-                  <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                  </svg>
-              </div>
-            </div>
-            <button onclick="addToCart()" type="submit" name="add" class="button button--full-width button--primary sticky-add-to-cart-btn" aria-haspopup="dialog">
-              <svg class="icon icon-cart" aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.50007 3.75001H1.49998L1.00009 3.75007C0.585878 3.75012 0.250051 3.41437 0.25 3.00016C0.249949 2.58595 0.585695 2.25012 0.999908 2.25007L1.49991 2.25001L1.5 3.00001L1.50002 2.25001L1.54594 2.25L1.54594 2.25C1.88371 2.24996 2.1157 2.24993 2.33265 2.27521C3.58768 2.42143 4.68471 3.18983 5.25099 4.31935C5.34888 4.5146 5.42813 4.73264 5.54352 5.05009L5.5592 5.09324L5.61623 5.25007H17.0336L17.0773 5.25007C17.9753 5.25005 18.7102 5.25004 19.2878 5.31247C19.8799 5.37648 20.4293 5.51592 20.876 5.88873C21.2574 6.20703 21.5455 6.62269 21.7096 7.09156C21.9018 7.64074 21.8395 8.20414 21.6915 8.78104C21.5471 9.34375 21.2891 10.0319 20.9738 10.8726L20.9738 10.8726L20.9584 10.9136L20.9478 10.942C20.7035 11.5934 20.5046 12.1239 20.3055 12.5475C20.0986 12.9878 19.8706 13.3601 19.5454 13.6787C19.2426 13.9754 18.8917 14.2186 18.5075 14.3979C18.095 14.5905 17.6665 14.6733 17.1815 14.7124C16.7151 14.7501 16.1485 14.7501 15.4529 14.7501H15.4529H15.4529H15.4224H12.2026H12.1594C12.0647 14.7501 11.9717 14.7501 11.8804 14.75H6C5.30964 14.75 4.75 15.3097 4.75 16C4.75 16.6904 5.30964 17.25 6 17.25H9H17H21C21.4142 17.25 21.75 17.5858 21.75 18C21.75 18.4142 21.4142 18.75 21 18.75H19.4501C19.6419 19.125 19.75 19.5499 19.75 20C19.75 21.5188 18.5188 22.75 17 22.75C15.4812 22.75 14.25 21.5188 14.25 20C14.25 19.5499 14.3581 19.125 14.5499 18.75H11.4501C11.6419 19.125 11.75 19.5499 11.75 20C11.75 21.5188 10.5188 22.75 9 22.75C7.48122 22.75 6.25 21.5188 6.25 20C6.25 19.5499 6.35814 19.125 6.54985 18.75H6C4.48122 18.75 3.25 17.5188 3.25 16C3.25 14.4812 4.48122 13.25 6 13.25H7.14691C7.00916 13.0505 6.8859 12.8335 6.76987 12.5996C6.48068 12.0166 6.20831 11.2676 5.87372 10.3474L5.85896 10.3068L4.14951 5.60586C4.01249 5.22905 3.96389 5.09896 3.91007 4.99161C3.5703 4.3139 2.91209 3.85286 2.15907 3.76513C2.03981 3.75124 1.90095 3.75002 1.50009 3.75001H1.50007ZM14.0097 13.2501C14.0064 13.25 14.0032 13.25 14 13.25H11.9452C11.0494 13.2494 10.4099 13.2437 9.90375 13.1869C9.36922 13.1269 9.05809 13.0164 8.81046 12.843C8.56284 12.6695 8.35265 12.4149 8.11362 11.933C7.86618 11.4342 7.62158 10.7648 7.26865 9.79422L6.16168 6.75007H17.0336C17.986 6.75007 18.6393 6.75111 19.1266 6.80378C19.6087 6.8559 19.8051 6.9487 19.9149 7.04037C20.0883 7.18505 20.2192 7.37399 20.2938 7.58711C20.3411 7.72215 20.359 7.93864 20.2385 8.40835C20.1167 8.88312 19.8883 9.49514 19.5539 10.3869C19.2964 11.0736 19.1182 11.5472 18.948 11.9095C18.7826 12.2612 18.6461 12.4598 18.4957 12.6072C18.314 12.7852 18.1034 12.9312 17.8729 13.0388C17.6821 13.1279 17.4482 13.186 17.0608 13.2173C16.6618 13.2495 16.1558 13.2501 15.4224 13.2501H14.0097ZM9 18.75C8.30964 18.75 7.75 19.3097 7.75 20C7.75 20.6904 8.30964 21.25 9 21.25C9.69036 21.25 10.25 20.6904 10.25 20C10.25 19.3097 9.69036 18.75 9 18.75ZM17 18.75C16.3096 18.75 15.75 19.3097 15.75 20C15.75 20.6904 16.3096 21.25 17 21.25C17.6904 21.25 18.25 20.6904 18.25 20C18.25 19.3097 17.6904 18.75 17 18.75Z" fill="#EDEFF3"></path>
-              </svg>
-              <span>Add to Cart</span>
-              <div class="loading__spinner hidden">
-                  <svg aria-hidden="true" focusable="false" class="spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
-                    <circle class="path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle>
-                  </svg>
-              </div>
-            </button>
-        </div>
-    </div>
-  </div>
-{% endcomment %}
 <product-info
   id="MainProduct-{{ section.id }}"
   class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }}"
@@ -295,42 +218,6 @@
       </div>
 
       <div class="product-main-left-container">
-        
-        {% comment %}
-          <div class="product-main-left">
-
-            <div class="thumbnail-slider">
-              {% for item in product.images %}
-                <div class="item">
-                  {{ item | image_url: width: 100 | image_tag }}
-                </div>
-              {% endfor %}
-            </div>
-
-            <div class="main-slider-wrapper">
-              <div class="main-slider-arrow--left" type="button">
-                <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M7.19635 0.46967C7.48924 0.762563 7.48924 1.23744 7.19635 1.53033L2.72668 6L7.19635 10.4697C7.48924 10.7626 7.48924 11.2374 7.19635 11.5303C6.90345 11.8232 6.42858 11.8232 6.13569 11.5303L1.13569 6.53033C0.995033 6.38968 0.916016 6.19891 0.916016 6C0.916016 5.80109 0.995033 5.61032 1.13569 5.46967L6.13569 0.46967C6.42858 0.176777 6.90345 0.176777 7.19635 0.46967Z" fill="white"/>
-                </svg>
-              </div>
-              <div class="main-slider">
-                {% for item in product.images %}
-                  <div class="item">
-                    <img
-                      src="{{ item | img_url: 'master' }}"
-                      alt="{{ product.title }}" />
-                  </div>
-                {% endfor %}
-              </div>
-              <div class="main-slider-arrow--right" type="button">
-                <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M0.803654 0.46967C1.09655 0.176777 1.57142 0.176777 1.86431 0.46967L6.86431 5.46967C7.15721 5.76256 7.15721 6.23744 6.86431 6.53033L1.86431 11.5303C1.57142 11.8232 1.09655 11.8232 0.803654 11.5303C0.510761 11.2374 0.510761 10.7626 0.803654 10.4697L5.27332 6L0.803654 1.53033C0.510761 1.23744 0.510761 0.762563 0.803654 0.46967Z" fill="white"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-        {% endcomment %}
-
         <product-gallery data-product-title="{{ product.title | escape }}">
           <div class="custom-product-gallery">
             <div class="custom-gallery-wrapper">
@@ -646,21 +533,19 @@
                           {% if collection.handle contains 'shop-by-strength-product-line' %}
                             <span class="more-info" data-customfield="Shipping">(More Info)</span>
                             <script>
-  var attachClickHandler = setInterval(function () {
-    var $target = $('.custom_shipping_container');
-    if ($target.length > 0) {
-      var $clickTarget = $target.parent().parent();
-
-      $clickTarget.off('click.clearContent').on('click.clearContent', function () {
-        $('#dynamic-product-content').empty();
-      });
-
-      clearInterval(attachClickHandler); 
-    }
-  }, 200);
-</script>
-
-
+                                var attachClickHandler = setInterval(function () {
+                                  var $target = $('.custom_shipping_container');
+                                  if ($target.length > 0) {
+                                    var $clickTarget = $target.parent().parent();
+                              
+                                    $clickTarget.off('click.clearContent').on('click.clearContent', function () {
+                                      $('#dynamic-product-content').empty();
+                                    });
+                              
+                                    clearInterval(attachClickHandler); 
+                                  }
+                                }, 200);
+                              </script>
                           {% endif %}
                         {% endfor %}
                       </div>
@@ -1829,13 +1714,6 @@
     {%- endfor -%}
 
     {%- if product.media.size > 0 -%}
-      {% comment %}
-        <script src="{{ 'product-modal.js' | asset_url }}" defer="defer"></script>
-        <script src="{{ 'media-gallery.js' | asset_url }}" defer="defer"></script>
-
-        <script src="{{ 'product-media-slider.js' | asset_url }}" defer="defer"></script>
-      {% endcomment %}
-
       <script src="{{ 'product-gallery.js' | asset_url }}" defer="defer"></script>
       <script src="{{ 'product-mobile-gallery.js' | asset_url }}" defer="defer"></script>
       <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js" defer="defer"></script>
@@ -1929,66 +1807,7 @@
     }
   })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
 </script>
-{% comment %}
-  <script defer>
-    document.addEventListener("DOMContentLoaded", function () {
-      let scrollTimeout;
 
-      window.addEventListener('scroll', function () {
-          if (scrollTimeout) {
-              clearTimeout(scrollTimeout);
-          }
-
-          scrollTimeout = setTimeout(() => {
-              const stickyAddToCart = document.querySelector('.sticky-add-to-cart');
-              const headerWrapper = document.querySelector('.header-wrapper');
-              const headerBottom = headerWrapper.getBoundingClientRect().bottom;
-
-              if (headerBottom <= 0) {
-                  stickyAddToCart.style.display = 'block';
-              } else {
-                  stickyAddToCart.style.display = 'none';
-              }
-          }, 50);
-      });
-
-      const stickyQuantity = document.querySelector('.sticky-quantity');
-      const formQuantityInput = document.querySelector('.quantity__input');
-
-      if (stickyQuantity) {
-        stickyQuantity.addEventListener('change', () => {
-          if (formQuantityInput) {
-              formQuantityInput.value = stickyQuantity.value;
-          }
-        });
-      }
-
-      formQuantityInput.addEventListener('change', () => {
-        var formQuantityValue = formQuantityInput.value;
-
-        if (formQuantityInput) {
-          stickyQuantity.value = formQuantityInput.value;
-        }
-      });
-
-      if (!window.product.available) {
-        const stickyProductActions = document.querySelector('.sticky-product-actions');
-
-        if (stickyProductActions) {
-          stickyProductActions.innerHTML = `<div class="restock-rocket-button-container"><button onclick="_RestockRocket.openModal()" class="sticky-restock-button restock-rocket-button restock-rocket-button-product restock-rocket-button-hover" style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;">Notify me when available</button></div>`
-        }
-      }
-    });
-
-    function addToCart() {
-      const addToCartMainButton = document.querySelector('.product-form__submit');
-
-      if (addToCartMainButton) {
-        addToCartMainButton.click();
-      }
-    }
-  </script>
-{% endcomment %}
 {% schema %}
 {
   "name": "t:sections.main-product.name",
