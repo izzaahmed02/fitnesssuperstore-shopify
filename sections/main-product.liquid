@@ -1002,6 +1002,25 @@
 
 
 
+                                    <div class="product-review">
+                                      <div class="product-review__wrap">
+                                        <div id="shopper_review_page">
+                                          <h2 class="review-title">Reviews</h2>
+                                          <div id="review_header"></div>
+                                          <div id="product_page"></div>
+                                          <div id="review_image">
+                                            <a
+                                              href="https://www.shopperapproved.com/reviews/fitnesssuperstore.com"
+                                              onclick="var nonwin=navigator.appName!='Microsoft Internet Explorer'?'yes':'no'; var certheight=screen.availHeight-90; window.open(this.href,'shopperapproved','location='+nonwin+',scrollbars=yes,width=620,height='+certheight+',menubar=no,toolbar=no'); return false;"
+                                              target="_blank"
+                                              rel="nofollow"
+                                            >
+                                              See Reviews
+                                            </a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
 
 
 
@@ -2504,6 +2523,41 @@
 			],
 		});
 	});
+</script>
+
+
+                <script>
+  document.addEventListener('DOMContentLoaded', async function () {
+    const initReviewHeader = () => {
+      const reviewValue = document.querySelector('#review_header .overall .numbers');
+      const reviewValueInner = reviewValue.innerHTML;
+      const reviewContainer = document.querySelectorAll('.review_header');
+
+      if (reviewContainer.length > 0) {
+        reviewContainer.forEach((el) => {
+          el.innerHTML = reviewValueInner;
+        });
+      }
+    };
+
+    function waitFor(predicate) {
+      return new Promise((resolve, reject) => {
+        const check = () => {
+          if (!predicate()) return;
+          clearInterval(interval);
+          resolve();
+
+          setTimeout(() => {
+            initReviewHeader();
+          }, 150);
+        };
+        const interval = setInterval(check, 100);
+        check();
+      });
+    }
+
+    await waitFor(() => document.querySelector('#review_header .overall .numbers') !== null);
+  });
 </script>
 
 {% schema %}
