@@ -274,6 +274,342 @@ class ProductGallery extends HTMLElement {
       }
     };
   }
+  renderPopup() {
+    if (document.getElementById('product-gallery-popup')) return;
+
+    const popupHTML = document.createElement('div');
+    popupHTML.innerHTML = `
+      <div id="product-gallery-popup" class="product-popup-overlay" hidden>
+        <div class="product-popup-backdrop"></div>
+        <div class="product-popup" role="dialog" aria-modal="true">
+          <button class="popup-close" type="button" aria-label="Close popup">&times;</button>
+          <div class="popup-content">
+            <div class="popup-media-viewer" data-popup-viewer></div>
+            <div class="popup-sidebar">
+              <div class="popup-tabs">
+                <button class="popup-tab is-active" data-tab="images">Images</button>
+                <button class="popup-tab" data-tab="videos">Videos</button>
+              </div>
+              <div class="popup-thumbnails" data-tab-content="images"></div>
+              <div class="popup-thumbnails hidden" data-tab-content="videos"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(popupHTML.firstElementChild);
+  }
+
+  openPopup(mediaId) {
+    const popup = document.getElementById('product-gallery-popup');
+    const viewer = popup.querySelector('[data-popup-viewer]');
+    const tabImages = popup.querySelector('[data-tab-content="images"]');
+    const tabVideos = popup.querySelector('[data-tab-content="videos"]');
+    const tabs = popup.querySelectorAll('.popup-tab');
+    if (tabs.length === 0) return;
+    const titleContainer = popup.querySelector('[data-popup-title]');
+
+    if (titleContainer) {
+      titleContainer.textContent =
+          this.getAttribute('data-product-title') || '';
+    }
+
+    const clickedMedia = this.mediaData.find((m) => m.id == mediaId);
+    const defaultTab =
+        clickedMedia?.media_type === 'video' ||
+        clickedMedia?.media_type === 'external_video'
+            ? 'videos'
+            : 'images';
+
+    popup.hidden = false;
+    document.body.style.overflow = 'hidden';
+
+    this.renderPopupViewer(mediaId, viewer);
+
+    tabImages.innerHTML = '';
+    tabVideos.innerHTML = '';
+
+    this.mediaData.forEach((media) => {
+      let btn;
+
+      if (media.media_type === 'image') {
+        btn = document.createElement('button');
+        btn.className = 'popup-thumb';
+        btn.type = 'button';
+        btn.setAttribute('data-media-id', media.id);
+
+        const skeletonWrapper = document.createElement('div');
+        const img = document.createElement('img');
+        img.src = media.preview_image.src;
+        img.alt = media.alt || '';
+        img.width = media.preview_image.width;
+        img.height = media.preview_image.height;
+        skeletonWrapper.className = 'image-skeleton-wrapper';
+
+        btn.appendChild(skeletonWrapper);
+        skeletonWrapper.appendChild(img);
+
+        img.onload = () => {
+          skeletonWrapper.classList.add('loaded');
+        };
+
+        btn.addEventListener('click', () => {
+          const zoomedViewer = popup.querySelector(
+              '.popup-media-viewer.is-zoomed',
+          );
+
+          if (zoomedViewer) {
+            zoomedViewer.classList.remove('is-zoomed');
+            const inner = zoomedViewer.querySelector('.popup-media-inner');
+            if (inner) {
+              inner.style.left = '0px';
+              inner.style.top = '0px';
+            }
+          }
+
+          this.renderPopupViewer(media.id, viewer);
+          this.updatePopupThumbActive(media.id);
+        });
+
+        tabImages.appendChild(btn);
+      } else if (
+          media.media_type === 'video' ||
+          media.media_type === 'external_video'
+      ) {
+        btn = this.renderVideoThumbItem(media);
+        tabVideos.appendChild(btn);
+      }
+    });
+
+    tabs.forEach((tab) => {
+      const isMatch = tab.dataset.tab === defaultTab;
+      tab.classList.toggle('is-active', isMatch);
+    });
+    tabImages.classList.toggle('hidden', defaultTab !== 'images');
+    tabVideos.classList.toggle('hidden', defaultTab !== 'videos');
+
+    tabs.forEach((tab) => {
+      tab.onclick = () => {
+        tabs.forEach((t) => t.classList.remove('is-active'));
+        tab.classList.add('is-active');
+
+        const type = tab.dataset.tab;
+        tabImages.classList.toggle('hidden', type !== 'images');
+        tabVideos.classList.toggle('hidden', type !== 'videos');
+
+        const zoomedViewer = popup.querySelector(
+            '.popup-media-viewer.is-zoomed',
+        );
+
+        if (zoomedViewer) {
+          zoomedViewer.classList.remove('is-zoomed');
+          const inner = zoomedViewer.querySelector('.popup-media-inner');
+          if (inner) {
+            inner.style.left = '0px';
+            inner.style.top = '0px';
+          }
+        }
+
+        let firstMedia = null;
+        if (type === 'images') {
+          firstMedia = this.mediaData.find((m) => m.media_type === 'image');
+        } else if (type === 'videos') {
+          firstMedia = this.mediaData.find(
+              (m) =>
+                  m.media_type === 'video' || m.media_type === 'external_video',
+          );
+        }
+
+        if (firstMedia) {
+          this.renderPopupViewer(firstMedia.id, viewer);
+          this.updatePopupThumbActive(firstMedia.id);
+        }
+      };
+    });
+
+    this.updatePopupThumbActive(mediaId);
+
+    popup.querySelector('.popup-close').onclick = this.closePopup.bind(this);
+    popup.querySelector('.product-popup-backdrop').onclick =
+        this.closePopup.bind(this);
+    document.addEventListener('keydown', this.handleEscClose);
+  }
+
+  renderPopupViewer(mediaId, viewer) {
+    const media = this.mediaData.find((m) => m.id == mediaId);
+    if (!media) return;
+
+    viewer.innerHTML = '';
+    viewer.classList.remove('popup-media-viewer-media-zoom-img');
+
+    if (media.media_type === 'image') {
+      viewer.classList.add('popup-media-viewer-media-zoom-img');
+
+      const inner = document.createElement('div');
+      inner.className = 'popup-media-inner';
+
+      const skeletonWrapper = document.createElement('div');
+      skeletonWrapper.className = 'image-skeleton-wrapper';
+
+      const img = document.createElement('img');
+      img.src = media.preview_image.src.replace(/width=\d+/, 'width=1600'); // Use higher res
+      img.alt = media.alt || '';
+      img.loading = 'eager';
+      img.className = 'popup-media-zoom-img';
+
+      // Set initial transform styles
+      img.style.transition = 'transform 0.3s ease, transform-origin 0.1s ease';
+      img.style.transform = 'scale(1)';
+      img.style.transformOrigin = 'center center';
+
+      skeletonWrapper.appendChild(img);
+      inner.appendChild(skeletonWrapper);
+      viewer.appendChild(inner);
+
+      img.onload = () => {
+        skeletonWrapper.classList.add('loaded');
+      };
+
+      let isZoomed = false;
+
+      function handleMouseMove(e) {
+        if (!isZoomed) return;
+
+        const rect = viewer.getBoundingClientRect();
+        const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+        const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+
+        img.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+      }
+
+      viewer.addEventListener('mousemove', handleMouseMove);
+
+      viewer.addEventListener('click', () => {
+        isZoomed = !isZoomed;
+        viewer.classList.toggle('is-zoomed-simple', isZoomed);
+
+        const isLandscape = img.naturalWidth > img.naturalHeight;
+        const zoomLevel = isLandscape ? 1.5 : 1.2;
+
+        img.style.transform = isZoomed ? `scale(${zoomLevel})` : 'scale(1)';
+      });
+
+      return;
+    }
+
+    // --- External Video ---
+    if (
+        media.media_type === 'external_video' &&
+        media.external_id &&
+        media.host
+    ) {
+      let embedUrl = '';
+      if (media.host === 'youtube') {
+        embedUrl = `https://www.youtube.com/embed/${media.external_id}`;
+      } else if (media.host === 'vimeo') {
+        embedUrl = `https://player.vimeo.com/video/${media.external_id}`;
+      }
+
+      if (embedUrl) {
+        const iframe = document.createElement('iframe');
+        iframe.src = embedUrl + '?autoplay=1&rel=0';
+        iframe.allow =
+            'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
+        iframe.allowFullscreen = true;
+        iframe.frameBorder = '0';
+        iframe.style.width = '100%';
+        iframe.style.aspectRatio = '16/9';
+        viewer.appendChild(iframe);
+        return;
+      }
+    }
+
+    // --- Video ---
+    if (media.media_type === 'video') {
+      const video = document.createElement('video');
+      video.controls = true;
+      video.autoplay = true;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.style.maxWidth = '100%';
+      video.style.maxHeight = '100%';
+
+      const validSource = (media.sources || []).find((s) =>
+          s.mime_type?.includes('mp4')
+      );
+
+      if (validSource) {
+        const source = document.createElement('source');
+        source.src = validSource.url;
+        source.type = validSource.mime_type;
+        video.appendChild(source);
+        viewer.appendChild(video);
+      } else {
+        viewer.innerHTML = '<p>Video format not supported.</p>';
+      }
+
+      return;
+    }
+
+    // --- Fallback ---
+    viewer.innerHTML = '<p>Unsupported media type.</p>';
+  }
+
+
+
+  renderVideoThumbItem(media) {
+    const btn = document.createElement('button');
+    btn.className = 'video-thumb-item';
+    btn.type = 'button';
+    btn.setAttribute('data-media-id', media.id);
+
+    const thumbnailSrc = media.preview_image?.src || '';
+    const videoTitle = media.alt || 'Untitled video';
+    // const duration = media.duration || '0:00';
+
+    btn.innerHTML = `
+      <div class="video-thumb-image">
+        <img src="${thumbnailSrc}" width="130" height="80" loading="lazy" />
+      </div>
+      <div class="video-thumb-meta">
+        <p class="video-title">${videoTitle}</p>
+      </div>
+    `;
+
+    btn.addEventListener('click', () => {
+      this.renderPopupViewer(
+          media.id,
+          document.querySelector('[data-popup-viewer]'),
+      );
+      this.updatePopupThumbActive(media.id);
+    });
+
+    return btn;
+  }
+
+  updatePopupThumbActive(mediaId) {
+    const popup = document.getElementById('product-gallery-popup');
+    const thumbs = popup.querySelectorAll('[data-media-id]');
+
+    thumbs.forEach((thumb) => {
+      const thumbId = thumb.getAttribute('data-media-id');
+      thumb.classList.toggle('is-active', thumbId === String(mediaId));
+    });
+  }
+
+  closePopup() {
+    const popup = document.getElementById('product-gallery-popup');
+    const viewer = popup.querySelector('[data-popup-viewer]');
+
+    if (viewer) viewer.innerHTML = '';
+    viewer.classList.remove('is-zoomed');
+
+    popup.hidden = true;
+    document.body.style.overflow = '';
+
+    document.removeEventListener('keydown', this.handleEscClose);
+  }
 
   // other methods remain unchanged...
 }
