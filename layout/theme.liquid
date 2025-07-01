@@ -130,6 +130,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 		      if (window.location.pathname === '/collections/' || window.location.pathname === '/collections') {
 			      window.location.replace('/collections/all');
 		      }
+          if (window.location.href.includes('/collections/gym-packages')) {
+            location.href = '/pages/gym-packages';
+          }
           </script>
           {% if page_description %}
           <meta name="description" content="{{ page_description | escape }}">
@@ -512,6 +515,16 @@ content: ''!important;
               });
             })(window,'https://dashboard.heatmap.com/','heatmap.php',document,2798);
             </script>
+        
+          {% if page.handle == 'all-manuals' %}
+
+              <style>
+                  .inner-container {
+                      width: 100%;
+                  }
+
+              </style>
+          {% endif %}
       </head>
     
       <body class="{% if template == 'index' %}page-width-desktop page-width-index{% else %}page-width{% endif %} gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %} {% if template contains 'page'      %} page-{{ page.handle }}{% endif %}">
@@ -528,6 +541,12 @@ content: ''!important;
             {% render 'header-sidebar-menu' %}
         {% endif %}
         <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
+          {% if request.page_type == 'cart' %}
+            <div class="california-discount-offer">
+              <p class="desktop-text">Free shipping + 50% off installation for local customers within 100 miles of Benicia for orders $1000+ minimum, CA. Enter your zip code to check eligibility.</p>
+              <p class="mobile-text">Free shipping in California for orders $1000+ minumum. Enter your zip code to check eligibility.</p>
+            </div>
+          {% endif  %}
           {% if request.page_type == 'page' and page.metafields.layout.narrow == true %}
             <div class="page-narrow-layout">
               {{ content_for_layout }}

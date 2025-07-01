@@ -60,7 +60,19 @@ function renderCustomAvisOptions() {
 	dropdownContainers.forEach((container) => {
 		const title = container.querySelector('.ap-label-tooltip');
 		const content = container.querySelector('.ap-options__swatch');
+		let headingElement = container.previousElementSibling;
 
+		while (headingElement) {
+			if (headingElement.classList.contains('ap-options__heading-container')) {
+				break;
+			}
+			headingElement = headingElement.previousElementSibling;
+		}
+
+		if (headingElement) {
+			container.classList.add(toSlug(headingElement.querySelector('.avp-heading')?.innerText));
+		}
+		
 		if (title && content) {
 			title.addEventListener('click', () => {
 				content.classList.toggle('show');
@@ -814,6 +826,14 @@ function updateCustomPrice() {
 		element.innerText = formattedPrice  
 	});
   }, 100);
+}
+
+function toSlug(str) {
+  return str
+    .toLowerCase()               
+    .trim()                      
+    .replace(/[^a-z0-9]+/g, '-') 
+    .replace(/^-+|-+$/g, '');  
 }
 
 setupPopupHeaderCloseDelegate();

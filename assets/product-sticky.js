@@ -11,25 +11,17 @@ document.addEventListener("DOMContentLoaded", function () {
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
+  let scrollListenerAttached = false;
+
   function checkScroll() {
-    const announcementBarSection = document.querySelector(
-      ".announcement-bar-section"
-    );
+    const announcementBarSection = document.querySelector(".announcement-bar-section");
     const headerWrapper = document.querySelector(".header-wrapper");
     const productContainer = document.querySelector(".product");
     const productInfo = document.querySelector(".product__info-wrapper");
-    const leftContainer = document.querySelector(
-      ".product-main-left-container"
-    );
+    const leftContainer = document.querySelector(".product-main-left-container");
     const productExtraInfo = document.querySelector(".product__extra_info");
 
-    if (
-      !productContainer ||
-      !productInfo ||
-      !leftContainer ||
-      !productExtraInfo
-    )
-      return;
+    if (!productContainer || !productInfo || !leftContainer || !productExtraInfo) return;
 
     const productContainerRect = productContainer.getBoundingClientRect();
     const productInfoRect = productInfo.getBoundingClientRect();
@@ -42,7 +34,8 @@ document.addEventListener("DOMContentLoaded", function () {
     productContainer.style.minHeight = `${productInfoHeight}px`;
 
     if (window.scrollY <= announcementBarSection.offsetHeight + headerWrapper.offsetHeight) {
-      productInfo.classList.remove("fixed");
+      productInfo.classList.remove("fixed", "absolute");
+      productInfo.style.top = "";
       return;
     }
 
@@ -54,10 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
       productInfo.classList.remove("fixed");
     }
 
-    if (
-      extraInfoRect.top <= windowHeight &&
-      extraInfoRect.bottom > windowHeight
-    ) {
+    if (extraInfoRect.top <= windowHeight && extraInfoRect.bottom > windowHeight) {
       productInfo.classList.add("fixed");
       productInfo.classList.remove("absolute");
       productInfo.style.top = "";
@@ -67,16 +57,11 @@ document.addEventListener("DOMContentLoaded", function () {
       productInfo.classList.remove("fixed");
       productInfo.classList.add("absolute");
       productInfo.style.top = `${
-        extraInfoHeight +
-        announcementBarSection.offsetHeight +
-        headerWrapper.offsetHeight
+        extraInfoHeight + announcementBarSection.offsetHeight + headerWrapper.offsetHeight
       }px`;
     }
 
-    if (
-      extraInfoRect.bottom >= windowHeight &&
-      extraInfoRect.top <= windowHeight
-    ) {
+    if (extraInfoRect.bottom >= windowHeight && extraInfoRect.top <= windowHeight) {
       productInfo.classList.add("fixed");
       productInfo.classList.remove("absolute");
       productInfo.style.top = "";
@@ -84,18 +69,32 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function setupScrollListener() {
+    const productInfo = document.querySelector(".product__info-wrapper");
+
     if (window.matchMedia("screen and (min-width: 990px)").matches) {
-      window.addEventListener("scroll", checkScroll);
+      if (!scrollListenerAttached) {
+        window.addEventListener("scroll", checkScroll);
+        scrollListenerAttached = true;
+      }
       checkScroll();
     } else {
-      window.removeEventListener("scroll", checkScroll);
-      const productInfo = document.querySelector(".product__info-wrapper");
+      if (scrollListenerAttached) {
+        window.removeEventListener("scroll", checkScroll);
+        scrollListenerAttached = false;
+      }
+
       if (productInfo) {
-        productInfo.classList.remove("fixed");
+        productInfo.classList.remove("fixed", "absolute");
+        productInfo.style.top = "";
       }
     }
   }
 
+  let resizeTimeout;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(setupScrollListener, 100);
+  });
+
   waitForElement(".avpoptions-container__v2", setupScrollListener);
-  window.addEventListener("resize", setupScrollListener);
 });

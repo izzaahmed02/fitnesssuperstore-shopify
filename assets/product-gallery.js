@@ -1,3 +1,4 @@
+// Updated ProductGallery class with landscape-specific zoom layout handling
 class ProductGallery extends HTMLElement {
   constructor() {
     super();
@@ -5,7 +6,6 @@ class ProductGallery extends HTMLElement {
     this.wrapper = null;
     this.main = null;
     this.zoomEnabled = false;
-
     this.lastMouseX = 0;
     this.lastMouseY = 0;
 
@@ -77,28 +77,22 @@ class ProductGallery extends HTMLElement {
 
   initThumbnails() {
     const buttons = this.querySelectorAll('.thumbnail-btn');
-
     buttons.forEach((btn) => {
       const mediaId = btn.getAttribute('data-media-id');
       const isVideoThumb = btn.classList.contains('is-video');
 
       btn.addEventListener('click', (e) => {
         const isOverlay = e.target.classList.contains('thumbnail-overlay');
-
         if (isOverlay || isVideoThumb) {
           this.openPopup(mediaId);
-        } else {
-          if (this.activeMediaId !== mediaId) {
-            this.setActiveMedia(mediaId);
-          }
+        } else if (this.activeMediaId !== mediaId) {
+          this.setActiveMedia(mediaId);
         }
       });
 
       let hoverTimer;
-
       btn.addEventListener('mouseenter', () => {
         if (this.activeMediaId === mediaId) return;
-
         hoverTimer = setTimeout(() => {
           this.setActiveMedia(mediaId);
         }, 150);
@@ -113,145 +107,48 @@ class ProductGallery extends HTMLElement {
   setActiveMedia(id) {
     if (this.activeMediaId === id) return;
     this.activeMediaId = id;
-
     const media = this.mediaData.find((m) => m.id == id);
     if (!media || !this.main) return;
 
     this.main.innerHTML = '';
-
     const container = document.createElement('div');
     container.className = 'main-image-container';
     container.setAttribute('data-media-id', id);
     container.setAttribute('data-zoom-container', '');
-
     if (media.media_type === 'video' || media.media_type === 'external_video') {
       container.classList.add('is-video-preview');
     }
-
     this.main.appendChild(container);
-    if (media.media_type === 'image') {
-      setTimeout(() => {
-        this.initZoom(container, media, true);
-      }, 50);
-    }
 
     if (media.media_type === 'image') {
       const img = document.createElement('img');
       const skeletonWrapper = document.createElement('div');
-      // img.src =
-      //   'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
       img.alt = media.alt || '';
       img.className = 'main-product-image';
       skeletonWrapper.className = 'image-skeleton-wrapper';
-      // img.srcset = media.preview_image.srcset || '';
       img.src = media.preview_image.src;
       img.sizes = media.preview_image.sizes || '';
       img.width = media.preview_image.width || '';
       img.height = media.preview_image.height || '';
-      img.alt = media.alt || '';
       img.loading = 'eager';
-      img.marginTop = '5px'
-
       container.appendChild(skeletonWrapper);
       skeletonWrapper.appendChild(img);
 
-      // const preload = new Image();
-      // preload.src = media.preview_image.src;
-
-      // this.main.appendChild(container);
-
       img.onload = () => {
         skeletonWrapper.classList.add('loaded');
-        // img.src = preload.src;
-
-        const tryInitZoom = () => {
-          if (
-              !container.querySelector('img') ||
-              container.dataset.zoomInitialized === 'true'
-          )
-            return;
-
-          const readyImg = container.querySelector('img');
-          if (!readyImg.complete || readyImg.naturalWidth === 0) {
-            setTimeout(tryInitZoom, 50);
-            return;
-          }
-
-          this.initZoom(container, media);
-
-          const rect = container.getBoundingClientRect();
-          const cursorInBounds =
-              this.lastMouseX >= rect.left &&
-              this.lastMouseX <= rect.right &&
-              this.lastMouseY >= rect.top &&
-              this.lastMouseY <= rect.bottom;
-
-          if (cursorInBounds) {
-            const event = new MouseEvent('mouseenter', {
-              clientX: this.lastMouseX,
-              clientY: this.lastMouseY,
-              bubbles: true,
-            });
-            container.dispatchEvent(event);
-          }
-        };
-
-        setTimeout(tryInitZoom, 50);
-
-        container.addEventListener(
-            'mousemove',
-            () => {
-              if (container.dataset.zoomInitialized !== 'true') {
-                const readyImg = container.querySelector('img');
-                if (readyImg?.complete && readyImg.naturalWidth > 0) {
-                  this.initZoom(container, media);
-                }
-              }
-            },
-            { once: true },
-        );
+        this.initZoom(container, media, true);
       };
-    } else if (
-        media.media_type === 'video' ||
-        media.media_type === 'external_video'
-    ) {
-      const img = document.createElement('img');
-      img.src = media.preview_image.src;
-      img.alt = media.alt || '';
-      img.className = 'video-preview';
-      img.width = media.preview_image.width;
-      img.height = media.preview_image.height;
-
-      container.appendChild(img);
-    } else {
-      const msg = document.createElement('p');
-      msg.textContent = 'Preview available in popup only.';
-      container.appendChild(msg);
-      this.main.appendChild(container);
     }
-
-    const allThumbs = this.querySelectorAll('.thumbnail-btn');
-    allThumbs.forEach((thumb) => {
-      thumb.classList.toggle(
-          'is-active',
-          thumb.getAttribute('data-media-id') === String(id),
-      );
-    });
   }
 
   isDesktop() {
     return window.matchMedia('(min-width: 990px)').matches;
   }
 
-
-
   initZoom(container, media, forceStart = false) {
     if (!this.isDesktop()) return;
-
     const img = container.querySelector('img');
-    if (!img || !media.preview_image) return;
-
-    if (container.dataset.zoomInitialized === 'true') return;
+    if (!img || !media.preview_image || container.dataset.zoomInitialized === 'true') return;
     container.dataset.zoomInitialized = 'true';
 
     const zoomResult = document.createElement('div');
@@ -264,38 +161,30 @@ class ProductGallery extends HTMLElement {
     container.appendChild(lens);
 
     const zoomImg = new Image();
-
-    // ✅ Maintain original aspect ratio when requesting zoom image
     const imgAspect = media.preview_image.width / media.preview_image.height;
     const zoomWidth = 1000;
     const zoomHeight = Math.round(zoomWidth / imgAspect);
-
-    zoomImg.src = media.preview_image.src
-        .replace(/width=\d+/, `width=${zoomWidth}`)
-        .replace(/height=\d+/, `height=${zoomHeight}`);
-
+    zoomImg.src = media.preview_image.src.replace(/width=\d+/, `width=${zoomWidth}`).replace(/height=\d+/, `height=${zoomHeight}`);
     zoomImg.style.transform = 'scale(0.7)';
     zoomImg.style.transformOrigin = 'center';
-
     zoomResult.appendChild(zoomImg);
 
     zoomImg.onload = () => {
       const minZoomRatio = 1.2;
       const zoomRatio = zoomImg.naturalWidth / img.clientWidth;
-
       if (zoomImg.naturalWidth < 750 || zoomRatio < minZoomRatio) {
         zoomResult.remove();
         lens.remove();
         return;
       }
 
+      const isLandscape = media.preview_image.width > media.preview_image.height;
       const scaleX = zoomImg.naturalWidth / img.clientWidth;
       const scaleY = zoomImg.naturalHeight / img.clientHeight;
 
       requestAnimationFrame(() => {
         const prevDisplay = zoomResult.style.display;
         const prevVisibility = zoomResult.style.visibility;
-
         zoomResult.style.visibility = 'hidden';
         zoomResult.style.display = 'block';
 
@@ -305,33 +194,27 @@ class ProductGallery extends HTMLElement {
         zoomResult.style.display = prevDisplay;
         zoomResult.style.visibility = prevVisibility;
 
-        if (!zoomW || !zoomH) {
-          console.warn('zoomResult still has no dimensions');
-          return;
-        }
-
-        const maxLensW = img.clientWidth;
-        const maxLensH = img.clientHeight;
+        if (!zoomW || !zoomH) return;
 
         const lensW = zoomW / scaleX;
         const lensH = zoomH / scaleY;
 
-        lens.style.width = `${Math.min(lensW, maxLensW)}px`;
-        lens.style.height = `${Math.min(lensH, maxLensH)}px`;
+        lens.style.width = `${Math.min(lensW, img.clientWidth)}px`;
+        lens.style.height = `${Math.min(lensH, img.clientHeight)}px`;
 
         const announcementBarSection = document.querySelector('.announcement-bar-section');
         const headerWrapper = document.querySelector('.header-wrapper');
 
         const updateZoomTop = () => {
-          const threshold =
-              announcementBarSection.offsetHeight + headerWrapper.offsetHeight;
+          const threshold = (announcementBarSection?.offsetHeight || 0) + (headerWrapper?.offsetHeight || 0);
           document.documentElement.style.setProperty('--header-height', `${threshold}px`);
-          if (window.scrollY <= threshold) {
+
+          if (!isLandscape) {
+            zoomResult.style.top = '0px';
+            zoomResult.style.height = `calc(98vh - ${threshold}px)`;
+          } else {
             zoomResult.style.top = '';
             zoomResult.style.height = '';
-          } else {
-            zoomResult.style.top = '20px';
-            zoomResult.style.height = `calc(98vh - 20px)`;
           }
         };
 
@@ -342,33 +225,26 @@ class ProductGallery extends HTMLElement {
       let frameId;
       const moveLens = (e) => {
         if (frameId) cancelAnimationFrame(frameId);
-
         frameId = requestAnimationFrame(() => {
           const rect = img.getBoundingClientRect();
-          // const zoomRect = zoomResult.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
-
           const lensHalfW = lens.offsetWidth / 2;
           const lensHalfH = lens.offsetHeight / 2;
-
           let left = x - lensHalfW;
           let top = y - lensHalfH;
 
           left = Math.max(0, Math.min(left, img.clientWidth - lens.offsetWidth));
           top = Math.max(0, Math.min(top, img.clientHeight - lens.offsetHeight));
 
-          debugger;
           lens.style.left = `${left}px`;
           lens.style.top = `${top}px`;
 
           const scaleX = zoomImg.naturalWidth / img.clientWidth;
           const scaleY = zoomImg.naturalHeight / img.clientHeight;
 
-          zoomResult.scrollLeft =
-              (left + lensHalfW) * scaleX - zoomResult.clientWidth / 2;
-          zoomResult.scrollTop =
-              (top + lensHalfH) * scaleY - zoomResult.clientHeight / 2;
+          zoomResult.scrollLeft = (left + lensHalfW) * scaleX - zoomResult.clientWidth / 2;
+          zoomResult.scrollTop = (top + lensHalfH) * scaleY - zoomResult.clientHeight / 2;
         });
       };
 
@@ -384,12 +260,7 @@ class ProductGallery extends HTMLElement {
 
       if (forceStart && this.lastMouseX && this.lastMouseY) {
         const rect = img.getBoundingClientRect();
-        const inside =
-            this.lastMouseX > rect.left &&
-            this.lastMouseX < rect.right &&
-            this.lastMouseY > rect.top &&
-            this.lastMouseY < rect.bottom;
-
+        const inside = this.lastMouseX > rect.left && this.lastMouseX < rect.right && this.lastMouseY > rect.top && this.lastMouseY < rect.bottom;
         if (inside) {
           zoomResult.style.display = 'block';
           lens.style.display = 'block';
@@ -398,8 +269,6 @@ class ProductGallery extends HTMLElement {
       }
     };
   }
-
-
   renderPopup() {
     if (document.getElementById('product-gallery-popup')) return;
 
@@ -740,6 +609,7 @@ class ProductGallery extends HTMLElement {
   handleEscClose = (e) => {
     if (e.key === 'Escape') this.closePopup();
   };
+
 }
 
 customElements.define('product-gallery', ProductGallery);
