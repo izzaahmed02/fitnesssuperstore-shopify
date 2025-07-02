@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-	var avisOptionsPolling = setInterval(() => {
+    var avisOptionsPolling = setInterval(() => {
         if (!document.querySelector('.avpoptions-container__v2'))
             return;
 
@@ -365,13 +365,6 @@ document.addEventListener('DOMContentLoaded', function() {
                visibleContainers[visibleContainers.length - 1].classList.add('last-visible');
             }
         }
-
-		if (document.querySelector('product-form')) {
-			const colorSwatches = document.querySelectorAll('.group-color-container .color_options_container');
-			colorSwatches.forEach((item) => {
-				item.querySelectorAll('.swatch:not(.swatch--custom-trigger)')[0].classList.add('color-selected');
-			});
-		}	
 
     }, 300);
 
