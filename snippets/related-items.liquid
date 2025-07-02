@@ -39,10 +39,19 @@
         <label for="add-to-comparable-checkbox_{{ product.handle }}">Compare</label>
     </div> 
     {% endcomment %}
-    {%- if product.available != false -%}
+       {%- if product.available != false -%}
         {% unless  product.metafields.custom.processing_time  == blank %}
-        
+        <div class="ship-wrapper">
+            {% render 'icon-ship' %}
+            {{ product.metafields.custom.processing_time | replace: "from our Warehouse", "" | replace: "leave our Warehouse", "" | replace: "from Manufacturer's Warehouse", "" }}
+        </div>
         {% endunless %}
+    {% endif %}
+    {%- if product.available == false -%}
+        <span class="soldout">
+  {% render 'icon-sold-out' %}
+            {{- 'products.product.sold_out' | t -}}
+          </span>
     {% endif %}
                   <div class="prodInfo">  
     <a class="title" href="{{ product.url }}">
