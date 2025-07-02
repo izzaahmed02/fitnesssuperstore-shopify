@@ -60,7 +60,7 @@
 
 
 
-    $('.related-products .featured_products_container').slick({
+    $('.related-products .related-products-carousel').slick({
   dots: false,
   arrows: true,
   infinite: false,
