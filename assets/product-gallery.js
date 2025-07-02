@@ -210,7 +210,7 @@ class ProductGallery extends HTMLElement {
           document.documentElement.style.setProperty('--header-height', `${threshold}px`);
 
           if (!isLandscape) {
-            zoomResult.style.top = '15px';
+            zoomResult.style.top = '12px';
             zoomResult.style.height = `calc(98vh - ${threshold}px)`;
           } else {
             zoomResult.style.top = '';
