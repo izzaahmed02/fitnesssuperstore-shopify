@@ -165,7 +165,7 @@ class ProductGallery extends HTMLElement {
     const zoomWidth = 1000;
     const zoomHeight = Math.round(zoomWidth / imgAspect);
     zoomImg.src = media.preview_image.src.replace(/width=\d+/, `width=${zoomWidth}`).replace(/height=\d+/, `height=${zoomHeight}`);
-    zoomImg.style.transform = 'scale(0.6)';
+    zoomImg.style.transform = 'scale(0.7)';
     zoomImg.style.transformOrigin = 'center';
     zoomResult.appendChild(zoomImg);
 
