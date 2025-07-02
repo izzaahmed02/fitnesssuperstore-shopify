@@ -611,7 +611,10 @@ class ProductGallery extends HTMLElement {
     document.removeEventListener('keydown', this.handleEscClose);
   }
 
-  // other methods remain unchanged...
+  handleEscClose = (e) => {
+    if (e.key === 'Escape') this.closePopup();
+  };
+
 }
 
 customElements.define('product-gallery', ProductGallery);
