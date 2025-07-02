@@ -7,14 +7,11 @@
   }
 {% endstyle %}
 
-{% comment %} {% render 'collection-section-style' %} {% endcomment %}
-
-{% comment %}
 <div class="product-recommendations"></div>
 
 <product-recommendations
   class="related-products section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
-  data-url="{{ routes.product_recommendations_url }}?limit=16"
+  data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&limit=16"
   data-section-id="{{ section.id }}"
   data-product-id="{{ product.id }}"
 >
@@ -28,18 +25,15 @@
 
       <div class="related-products__body">
         {% if recommendations.performed and recommendations.products_count > 0 %}
-           <div class="featured_products_container">
+          <div class="featured_products_container">
             {% for recommendation in recommendations.products %}
-              {%- case recommendation.object_type -%}
-              {%- when 'product' -%}
+              {% if recommendation.object_type == 'product' %}
                 {% unless recommendation.tags contains 'avisplus-product-options' or recommendation.tags contains 'avis-option' or recommendation.tags contains 'hidden' %}
                   {% if recommendation.price > 0 %}
-                   
-                      {% render 'related-items', product: recommendation %}
-                    
+                    {% render 'related-items', product: recommendation %}
                   {% endif %}
                 {% endunless %}
-              {%- endcase -%}
+              {% endif %}
             {% endfor %}
           </div>
         {% endif %}
@@ -47,35 +41,7 @@
     </div>
   </div>
 </product-recommendations>
-{% endcomment %}
 
-
-<div class="custom-container">
-  {{ customer.first_name }}
-  <div class="featured_products_header">
-    {% if section.settings.heading != blank %}
-      <h2>{{ section.settings.heading }}</h2>
-    {% endif %}
-
-    {% if section.settings.link != blank %}
-      <a href="{{ section.settings.url }}" class="featured_products_link">
-        {{ section.settings.link }}
-
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M7.8017 4.46967C8.09459 4.17678 8.56947 4.17678 8.86236 4.46967L13.8624 9.46967C14.1553 9.76256 14.1553 10.2374 13.8624 10.5303L8.86236 15.5303C8.56947 15.8232 8.09459 15.8232 7.8017 15.5303C7.50881 15.2374 7.50881 14.7626 7.8017 14.4697L12.2714 10L7.8017 5.53033C7.50881 5.23744 7.50881 4.76256 7.8017 4.46967Z" fill="#fff"/>
-        </svg>
-      </a>
-    {% endif %}
-  </div>
-
-  <div class="featured_products_container">
-    {% if recommendations.products_count > 0 %}
-  {% for recommendation in recommendations.products %}
-    {% render 'related-items', product: recommendation %}
-  {% endfor %}
-{% endif %}
-  </div>
-</div>
 
 
 <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
