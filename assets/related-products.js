@@ -60,39 +60,44 @@
 
 
 
+document.addEventListener('shopify:section:load', function (event) {
+  if (event.target.querySelector('.related-products .featured_products_container')) {
     $('.related-products .featured_products_container').slick({
-  dots: false,
-  arrows: true,
-  infinite: false,
-  autoplay: false,
-  draggable: false,
-  slidesToShow: 4,
-  slidesToScroll: 1,
-  responsive: [
-            {
-              breakpoint: 1300,
-              settings: {
-                slidesToShow: 4,
-              },
-            },
-            {
-              breakpoint: 1024,
-              settings: {
-                slidesToShow: 3,
-              },
-            },
-            {
-              breakpoint: 989,
-              settings: {
-                slidesToShow: 2,
-                dots: true,
-                draggable: false,
-                swipe: false,
-                touchMove: false,
-              },
-            },
-          ]
+      dots: false,
+      arrows: true,
+      infinite: false,
+      autoplay: false,
+      draggable: false,
+      slidesToShow: 4,
+      slidesToScroll: 1,
+      responsive: [
+        {
+          breakpoint: 1300,
+          settings: {
+            slidesToShow: 4,
+          },
+        },
+        {
+          breakpoint: 1024,
+          settings: {
+            slidesToShow: 3,
+          },
+        },
+        {
+          breakpoint: 989,
+          settings: {
+            slidesToShow: 2,
+            dots: true,
+            draggable: false,
+            swipe: false,
+            touchMove: false,
+          },
+        },
+      ],
+    });
+  }
 });
+
 
 
     
