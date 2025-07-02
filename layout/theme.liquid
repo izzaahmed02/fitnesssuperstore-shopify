@@ -1,757 +1,840 @@
-  <!doctype html>
-    <html class="js" lang="{{ request.locale.iso_code }}">
-      <head>
-          <meta charset="utf-8">
-          <meta http-equiv="X-UA-Compatible" content="IE=edge">
-          <meta name="viewport" content="width=device-width,initial-scale=1">
-          <meta name="theme-color" content="">
-          {% if collection %}
-            <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
-          {% else %}
-            <link rel="canonical" href="{{ canonical_url }}">
+<!doctype html>
+<html class="js" lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="">
+    {% if collection %}
+      <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
+    {% else %}
+      <link rel="canonical" href="{{ canonical_url }}">
+    {% endif %}
+    {% if template == 'search' %}
+      <meta name="robots" content="noindex,nofollow">
+    {%- endif -%}
+    {%- if settings.favicon != blank -%}
+      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
+    {%- endif -%}
+    {% comment %}
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    {% endcomment %}
+
+    {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}
+      <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
+    {%- endunless -%}
+    {% comment %}
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    {% endcomment %}
+    <title>
+      {{ page_title }}
+      {%- if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif -%}
+      {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}
+      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
+    </title>
+
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true;
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-PFW6SMSL');
+    </script>
+    <!-- End Google Tag Manager -->
+
+    <!-- Intelligems tracking script -->
+
+    <script>
+      window.Shopify = window.Shopify || {theme: {id: {{ theme.id }}, role: '{{ theme.role }}' } };
+      window._template = {
+          directory: "{{ template.directory }}",
+          name: "{{ template.name }}",
+          suffix: "{{ template.suffix }}"
+      };
+    </script>
+
+    <script
+      type="module"
+      fetchpriority="high"
+      src="https://cdn.intelligems.io/esm/af0d62f8eb94/bundle.js"
+      async
+    ></script>
+    <!-- Intelligems tracking script end -->
+
+    <script>
+          {% if template == 'product' %}
+            (function(w, c, r, s){
+            var t = c.createElement('script');
+            t.async = true;
+            t.src = 'https://' + r + '/surveyrun';
+            var h = c.getElementsByTagName('head')[0];
+            h.appendChild(t);
+            w.CRSSurveyID = s;
+            })(window, document, 'stageserver.conversionrate.store', '37')
           {% endif %}
-          {% if template == 'search' %}
-            <meta name="robots" content="noindex,nofollow"/>
-          {%- endif -%}
-          {%- if settings.favicon != blank -%}
-          <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
-          {%- endif -%}
-          {% comment %}
-           <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
-          {% endcomment %}
-         
-  
-          {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}
-          <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
-          {%- endunless -%}
-          {% comment %}
-          <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          {% endcomment %}
-          <title>
-              {{ page_title }}
-              {%- if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif -%}
-              {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}
-              {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
-          </title>
 
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-PFW6SMSL');</script>
-<!-- End Google Tag Manager -->
-        
-        <!-- Intelligems tracking script-->
-          
-          <script>
-    window.Shopify = window.Shopify || {theme: {id: {{ theme.id }}, role: '{{ theme.role }}' } };
-    window._template = {
-        directory: "{{ template.directory }}",
-        name: "{{ template.name }}",
-        suffix: "{{ template.suffix }}"
-    };
-  </script>
 
-        
+      ;(function(){
+        var TRACKED = ['gclid','_gl','utm_id','utm_source','utm_medium','utm_campaign','utm_term','utm_content', 'srsltid', 'gclsrc', 'gbraid', 'wbraid'];
 
-  <script type="module" fetchpriority="high" src="https://cdn.intelligems.io/esm/af0d62f8eb94/bundle.js" async></script>
-          <!-- Intelligems tracking script end -->
+        var urlParams = new URLSearchParams(window.location.search);
+        var sawNew = false;
+        TRACKED.forEach(function(key){
+          var v = urlParams.get(key);
+          if (v) {
+            sessionStorage.setItem(key, v);
+            sawNew = true;
+          }
+        });
 
-<script>
+        var current = {};
+        TRACKED.forEach(function(key){
+          var v = (sawNew ? urlParams.get(key) : sessionStorage.getItem(key));
+          if (v) current[key] = v;
+        });
 
-    {% if template == 'product' %}
-      (function(w, c, r, s){
-      var t = c.createElement('script');
-      t.async = true;
-      t.src = 'https://' + r + '/surveyrun';
-      var h = c.getElementsByTagName('head')[0];
-      h.appendChild(t);
-      w.CRSSurveyID = s;
-      })(window, document, 'stageserver.conversionrate.store', '37')
+        function appendParams(href) {
+          try {
+            var u = new URL(href, location.origin);
+            Object.keys(current).forEach(function(key){
+              if (!u.searchParams.has(key)) {
+                u.searchParams.set(key, current[key]);
+              }
+            });
+            return u.toString();
+          } catch(e) {
+            return href;
+          }
+        }
+
+        if (Object.keys(current).length) {
+          document.querySelectorAll('a[href]').forEach(function(a){
+            var href = a.getAttribute('href');
+
+            if (!href.match(/^(\/|https?:\/\/)/)) return;
+            if (href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
+            a.setAttribute('href', appendParams(href));
+          });
+        }
+
+        document.addEventListener('click', function(e){
+          var a = e.target.closest('a[href]');
+          if (!a) return;
+
+          var href = a.getAttribute('href');
+
+          if (href.startsWith('#') ||
+              href.startsWith('mailto:') ||
+              href.startsWith('tel:') ||
+              href.startsWith('javascript:')) return;
+
+          if (!(href.startsWith('/') || href.indexOf(location.origin) === 0)) return;
+
+          e.preventDefault();
+          window.location.href = appendParams(href);
+        }, true);
+      })();
+    </script>
+
+    <script type="text/javascript">
+      if (window.location.pathname === '/collections/' || window.location.pathname === '/collections') {
+        window.location.replace('/collections/all');
+      }
+      if (window.location.href.includes('/collections/gym-packages')) {
+        location.href = '/pages/gym-packages';
+      }
+    </script>
+    {% if page_description %}
+      <meta name="description" content="{{ page_description | escape }}">
     {% endif %}
 
-  
-;(function(){
-  var TRACKED = ['gclid','_gl','utm_id','utm_source','utm_medium','utm_campaign','utm_term','utm_content', 'srsltid', 'gclsrc', 'gbraid', 'wbraid'];
+    {% render 'meta-tags' %}
+    {% if request.page_type == 'index' %}
+      <script src="{{ 'swiper-bundle.min.js' | asset_url }}" defer></script>
+    {% endif %}
+    <script src="{{ 'constants.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'pubsub.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'global.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'custom.js' | asset_url }}" defer="defer"></script>
 
-  var urlParams = new URLSearchParams(window.location.search);
-  var sawNew = false;
-  TRACKED.forEach(function(key){
-    var v = urlParams.get(key);
-    if (v) {
-      sessionStorage.setItem(key, v);
-      sawNew = true;
-    }
-  });
+    {%- if settings.animations_reveal_on_scroll -%}
+      <script src="{{ 'animations.js' | asset_url }}" defer="defer"></script>
+    {%- endif -%}
 
-  var current = {};
-  TRACKED.forEach(function(key){
-    var v = (sawNew ? urlParams.get(key) : sessionStorage.getItem(key));
-    if (v) current[key] = v;
-  });
+    {{ content_for_header }}
+    {%- liquid
+      assign body_font_bold = settings.type_body_font | font_modify: 'weight', 'bold'
+      assign body_font_italic = settings.type_body_font | font_modify: 'style', 'italic'
+      assign body_font_bold_italic = body_font_bold | font_modify: 'style', 'italic'
+    %}
+    {% style %}
+      {{ settings.type_body_font | font_face: font_display: 'swap' }}
+      {{ body_font_bold | font_face: font_display: 'swap' }}
+      {{ body_font_italic | font_face: font_display: 'swap' }}
+      {{ body_font_bold_italic | font_face: font_display: 'swap' }}
+      {{ settings.type_header_font | font_face: font_display: 'swap' }}
 
-  function appendParams(href) {
-    try {
-      var u = new URL(href, location.origin);
-      Object.keys(current).forEach(function(key){
-        if (!u.searchParams.has(key)) {
-          u.searchParams.set(key, current[key]);
+      {% for scheme in settings.color_schemes -%}
+      {% assign scheme_classes = scheme_classes | append: ', .color-' | append: scheme.id %}
+      {% if forloop.index == 1 -%}
+      :root,
+      {%- endif %}
+      .color-{{ scheme.id }} {
+      --color-background: {{ scheme.settings.background.red }},{{ scheme.settings.background.green }},{{ scheme.settings.background.blue }};
+      {% if scheme.settings.background_gradient != empty %}
+      --gradient-background: {{ scheme.settings.background_gradient }};
+      {% else %}
+      --gradient-background: {{ scheme.settings.background }};
+      {% endif %}
+
+      {% liquid
+          assign background_color = scheme.settings.background
+          assign background_color_brightness = background_color | color_brightness
+          if background_color_brightness <= 26
+              assign background_color_contrast = background_color | color_lighten: 50
+          elsif background_color_brightness <= 65
+              assign background_color_contrast = background_color | color_lighten: 5
+          else
+              assign background_color_contrast = background_color | color_darken: 25
+          endif
+      %}
+
+      --color-foreground: {{ scheme.settings.text.red }},{{ scheme.settings.text.green }},{{ scheme.settings.text.blue }};
+      --color-background-contrast: {{ background_color_contrast.red }},{{ background_color_contrast.green }},{{ background_color_contrast.blue }};
+      --color-shadow: {{ scheme.settings.shadow.red }},{{ scheme.settings.shadow.green }},{{ scheme.settings.shadow.blue }};
+      --color-button: {{ scheme.settings.button.red }},{{ scheme.settings.button.green }},{{ scheme.settings.button.blue }};
+      --color-button-text: {{ scheme.settings.button_label.red }},{{ scheme.settings.button_label.green }},{{ scheme.settings.button_label.blue }};
+      --color-secondary-button: {{ scheme.settings.background.red }},{{ scheme.settings.background.green }},{{ scheme.settings.background.blue }};
+      --color-secondary-button-text: {{ scheme.settings.secondary_button_label.red }},{{ scheme.settings.secondary_button_label.green }},{{ scheme.settings.secondary_button_label.blue }};
+      --color-link: {{ scheme.settings.secondary_button_label.red }},{{ scheme.settings.secondary_button_label.green }},{{ scheme.settings.secondary_button_label.blue }};
+      --color-badge-foreground: {{ scheme.settings.text.red }},{{ scheme.settings.text.green }},{{ scheme.settings.text.blue }};
+      --color-badge-background: {{ scheme.settings.background.red }},{{ scheme.settings.background.green }},{{ scheme.settings.background.blue }};
+      --color-badge-border: {{ scheme.settings.text.red }},{{ scheme.settings.text.green }},{{ scheme.settings.text.blue }};
+      --payment-terms-background-color: rgb({{ scheme.settings.background.rgb }});
+      }
+      {% endfor %}
+
+      {{ scheme_classes | prepend: 'body' }} {
+      color: rgba(var(--color-foreground));
+      background-color: rgb(var(--color-background));
+      line-height:24px;
+      }
+
+      :root {
+      --font-body-family: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
+      --font-body-style: {{ settings.type_body_font.style }};
+      --font-body-weight: {{ settings.type_body_font.weight }};
+      --font-body-weight-bold: {{ settings.type_body_font.weight | plus: 300 | at_most: 1000 }};
+
+      --font-heading-family: {{ settings.type_header_font.family }}, {{ settings.type_header_font.fallback_families }};
+      --font-heading-style: {{ settings.type_header_font.style }};
+      --font-heading-weight: {{ settings.type_header_font.weight }};
+
+      --font-body-scale: {{ settings.body_scale | divided_by: 100.0 }};
+      --font-heading-scale: {{ settings.heading_scale | times: 1.0 | divided_by: settings.body_scale }};
+
+      --media-padding: {{ settings.media_padding }}px;
+      --media-border-opacity: {{ settings.media_border_opacity | divided_by: 100.0 }};
+      --media-border-width: {{ settings.media_border_thickness }}px;
+      --media-radius: {{ settings.media_radius }}px;
+      --media-shadow-opacity: {{ settings.media_shadow_opacity | divided_by: 100.0 }};
+      --media-shadow-horizontal-offset: {{ settings.media_shadow_horizontal_offset }}px;
+      --media-shadow-vertical-offset: {{ settings.media_shadow_vertical_offset }}px;
+      --media-shadow-blur-radius: {{ settings.media_shadow_blur }}px;
+      --media-shadow-visible: {% if settings.media_shadow_opacity > 0 %}1{% else %}0{% endif %};
+
+      --page-width: {{ settings.page_width | divided_by: 10 }}rem;
+      --page-width-margin: {% if settings.page_width == '1600' %}2{% else %}0{% endif %}rem;
+
+      --product-card-image-padding: {{ settings.card_image_padding | divided_by: 10.0 }}rem;
+      --product-card-corner-radius: {{ settings.card_corner_radius | divided_by: 10.0 }}rem;
+      --product-card-text-alignment: {{ settings.card_text_alignment }};
+      --product-card-border-width: {{ settings.card_border_thickness | divided_by: 10.0 }}rem;
+      --product-card-border-opacity: {{ settings.card_border_opacity | divided_by: 100.0 }};
+      --product-card-shadow-opacity: {{ settings.card_shadow_opacity | divided_by: 100.0 }};
+      --product-card-shadow-visible: {% if settings.card_shadow_opacity > 0 %}1{% else %}0{% endif %};
+      --product-card-shadow-horizontal-offset: {{ settings.card_shadow_horizontal_offset | divided_by: 10.0 }}rem;
+      --product-card-shadow-vertical-offset: {{ settings.card_shadow_vertical_offset | divided_by: 10.0 }}rem;
+      --product-card-shadow-blur-radius: {{ settings.card_shadow_blur | divided_by: 10.0 }}rem;
+
+      --collection-card-image-padding: {{ settings.collection_card_image_padding | divided_by: 10.0 }}rem;
+      --collection-card-corner-radius: {{ settings.collection_card_corner_radius | divided_by: 10.0 }}rem;
+      --collection-card-text-alignment: {{ settings.collection_card_text_alignment }};
+      --collection-card-border-width: {{ settings.collection_card_border_thickness | divided_by: 10.0 }}rem;
+      --collection-card-border-opacity: {{ settings.collection_card_border_opacity | divided_by: 100.0 }};
+      --collection-card-shadow-opacity: {{ settings.collection_card_shadow_opacity | divided_by: 100.0 }};
+      --collection-card-shadow-visible: {% if settings.collection_card_shadow_opacity > 0 %}1{% else %}0{% endif %};
+      --collection-card-shadow-horizontal-offset: {{ settings.collection_card_shadow_horizontal_offset | divided_by: 10.0 }}rem;
+      --collection-card-shadow-vertical-offset: {{ settings.collection_card_shadow_vertical_offset | divided_by: 10.0 }}rem;
+      --collection-card-shadow-blur-radius: {{ settings.collection_card_shadow_blur | divided_by: 10.0 }}rem;
+
+      --blog-card-image-padding: {{ settings.blog_card_image_padding | divided_by: 10.0 }}rem;
+      --blog-card-corner-radius: {{ settings.blog_card_corner_radius | divided_by: 10.0 }}rem;
+      --blog-card-text-alignment: {{ settings.blog_card_text_alignment }};
+      --blog-card-border-width: {{ settings.blog_card_border_thickness | divided_by: 10.0 }}rem;
+      --blog-card-border-opacity: {{ settings.blog_card_border_opacity | divided_by: 100.0 }};
+      --blog-card-shadow-opacity: {{ settings.blog_card_shadow_opacity | divided_by: 100.0 }};
+      --blog-card-shadow-visible: {% if settings.blog_card_shadow_opacity > 0 %}1{% else %}0{% endif %};
+      --blog-card-shadow-horizontal-offset: {{ settings.blog_card_shadow_horizontal_offset | divided_by: 10.0 }}rem;
+      --blog-card-shadow-vertical-offset: {{ settings.blog_card_shadow_vertical_offset | divided_by: 10.0 }}rem;
+      --blog-card-shadow-blur-radius: {{ settings.blog_card_shadow_blur | divided_by: 10.0 }}rem;
+
+      --badge-corner-radius: {{ settings.badge_corner_radius | divided_by: 10.0 }}rem;
+
+      --popup-border-width: {{ settings.popup_border_thickness }}px;
+      --popup-border-opacity: {{ settings.popup_border_opacity | divided_by: 100.0 }};
+      --popup-corner-radius: {{ settings.popup_corner_radius }}px;
+      --popup-shadow-opacity: {{ settings.popup_shadow_opacity | divided_by: 100.0 }};
+      --popup-shadow-horizontal-offset: {{ settings.popup_shadow_horizontal_offset }}px;
+      --popup-shadow-vertical-offset: {{ settings.popup_shadow_vertical_offset }}px;
+      --popup-shadow-blur-radius: {{ settings.popup_shadow_blur }}px;
+
+      --drawer-border-width: {{ settings.drawer_border_thickness }}px;
+      --drawer-border-opacity: {{ settings.drawer_border_opacity | divided_by: 100.0 }};
+      --drawer-shadow-opacity: {{ settings.drawer_shadow_opacity | divided_by: 100.0 }};
+      --drawer-shadow-horizontal-offset: {{ settings.drawer_shadow_horizontal_offset }}px;
+      --drawer-shadow-vertical-offset: {{ settings.drawer_shadow_vertical_offset }}px;
+      --drawer-shadow-blur-radius: {{ settings.drawer_shadow_blur }}px;
+
+      --spacing-sections-desktop: {{ settings.spacing_sections }}px;
+      --spacing-sections-mobile: {% if settings.spacing_sections < 24 %}{{ settings.spacing_sections }}{% else %}{{ settings.spacing_sections | times: 0.7 | round | at_least: 20 }}{% endif %}px;
+
+      --grid-desktop-vertical-spacing: {{ settings.spacing_grid_vertical }}px;
+      --grid-desktop-horizontal-spacing: {{ settings.spacing_grid_horizontal }}px;
+      --grid-mobile-vertical-spacing: {{ settings.spacing_grid_vertical | divided_by: 2 }}px;
+      --grid-mobile-horizontal-spacing: {{ settings.spacing_grid_horizontal | divided_by: 2 }}px;
+
+      --text-boxes-border-opacity: {{ settings.text_boxes_border_opacity | divided_by: 100.0 }};
+      --text-boxes-border-width: {{ settings.text_boxes_border_thickness }}px;
+      --text-boxes-radius: {{ settings.text_boxes_radius }}px;
+      --text-boxes-shadow-opacity: {{ settings.text_boxes_shadow_opacity | divided_by: 100.0 }};
+      --text-boxes-shadow-visible: {% if settings.text_boxes_shadow_opacity > 0 %}1{% else %}0{% endif %};
+      --text-boxes-shadow-horizontal-offset: {{ settings.text_boxes_shadow_horizontal_offset }}px;
+      --text-boxes-shadow-vertical-offset: {{ settings.text_boxes_shadow_vertical_offset }}px;
+      --text-boxes-shadow-blur-radius: {{ settings.text_boxes_shadow_blur }}px;
+
+      --buttons-radius: {{ settings.buttons_radius }}px;
+      --buttons-radius-outset: {% if settings.buttons_radius > 0 %}{{ settings.buttons_radius | plus: settings.buttons_border_thickness }}{% else %}0{% endif %}px;
+      --buttons-border-width: {% if settings.buttons_border_opacity > 0 %}{{ settings.buttons_border_thickness }}{% else %}0{% endif %}px;
+      --buttons-border-opacity: {{ settings.buttons_border_opacity | divided_by: 100.0 }};
+      --buttons-shadow-opacity: {{ settings.buttons_shadow_opacity | divided_by: 100.0 }};
+      --buttons-shadow-visible: {% if settings.buttons_shadow_opacity > 0 %}1{% else %}0{% endif %};
+      --buttons-shadow-horizontal-offset: {{ settings.buttons_shadow_horizontal_offset }}px;
+      --buttons-shadow-vertical-offset: {{ settings.buttons_shadow_vertical_offset }}px;
+      --buttons-shadow-blur-radius: {{ settings.buttons_shadow_blur }}px;
+      --buttons-border-offset: {% if settings.buttons_radius > 0 or settings.buttons_shadow_opacity > 0 %}0.3{% else %}0{% endif %}px;
+
+      --inputs-radius: {{ settings.inputs_radius }}px;
+      --inputs-border-width: {{ settings.inputs_border_thickness }}px;
+      --inputs-border-opacity: {{ settings.inputs_border_opacity | divided_by: 100.0 }};
+      --inputs-shadow-opacity: {{ settings.inputs_shadow_opacity | divided_by: 100.0 }};
+      --inputs-shadow-horizontal-offset: {{ settings.inputs_shadow_horizontal_offset }}px;
+      --inputs-margin-offset: {% if settings.inputs_shadow_vertical_offset != 0 and settings.inputs_shadow_opacity > 0 %}{{ settings.inputs_shadow_vertical_offset | abs }}{% else %}0{% endif %}px;
+      --inputs-shadow-vertical-offset: {{ settings.inputs_shadow_vertical_offset }}px;
+      --inputs-shadow-blur-radius: {{ settings.inputs_shadow_blur }}px;
+      --inputs-radius-outset: {% if settings.inputs_radius > 0 %}{{ settings.inputs_radius | plus: settings.inputs_border_thickness }}{% else %}0{% endif %}px;
+
+      --variant-pills-radius: {{ settings.variant_pills_radius }}px;
+      --variant-pills-border-width: {{ settings.variant_pills_border_thickness }}px;
+      --variant-pills-border-opacity: {{ settings.variant_pills_border_opacity | divided_by: 100.0 }};
+      --variant-pills-shadow-opacity: {{ settings.variant_pills_shadow_opacity | divided_by: 100.0 }};
+      --variant-pills-shadow-horizontal-offset: {{ settings.variant_pills_shadow_horizontal_offset }}px;
+      --variant-pills-shadow-vertical-offset: {{ settings.variant_pills_shadow_vertical_offset }}px;
+      --variant-pills-shadow-blur-radius: {{ settings.variant_pills_shadow_blur }}px;
+
+      --zoom-lens-shader: url({{ 'zoom-lens-shader.gif' | asset_url }});
+      }
+
+      *,
+      *::before,
+      *::after {
+      box-sizing: inherit;
+      }
+
+      html {
+      box-sizing: border-box;
+      font-size: calc(var(--font-body-scale) * 62.5%);
+      height: 100%;
+      }
+
+      body {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      grid-template-columns: 100%;
+      min-height: 100%;
+      margin: 0;
+      font-size: 1.6rem;
+      letter-spacing: 0.06rem;
+      line-height: 24px;
+      font-family: var(--font-body-family);
+      font-style: var(--font-body-style);
+      font-weight: var(--font-body-weight);
+      letter-spacing: normal;
+      }
+
+      h1, h2, h3, h4, h5, .h0, .h1, .h2, .h3, .h4, .h5 {
+        font-family: var(--font-heading-family);
+        font-style: var(--font-heading-style);
+        font-weight: 600;
+      }
+
+      @media screen and (min-width: 750px) {
+      body {
+      font-size: 1.6rem;
+      }
+      }
+    {% endstyle %}
+    {% if template == 'index' %}
+      <style>
+        @media (max-width: 990px) {
+          .grid-container.page-width {
+            padding: 0px !important;
         }
-      });
-      return u.toString();
-    } catch(e) {
-      return href; 
-    }
-  }
+      </style>
+    {% endif %}
+    {% comment %}
+      <link
+              rel="preload"
+              href="{{ 'base.css' | asset_url }}"
+              as="style"
+              onload="this.onload=null;this.rel='stylesheet'"
+      >
+      <noscript>
+          <link rel="stylesheet" href="{{ 'base.css' | asset_url }}">
+      </noscript>
+      <link
+              rel="preload"
+              href="{{ 'swiper.min.css' | asset_url }}"
+              as="style"
+              onload="this.onload=null;this.rel='stylesheet'"
+      >
+      <noscript>
+          <link rel="stylesheet" href="{{ 'swiper.min.css' | asset_url }}">
+      </noscript>
+    {% endcomment %}
+    <link
+      rel="preload"
+      href="{{ 'custom.css' | asset_url }}"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
+    >
+    <noscript>
+      <link rel="stylesheet" href="{{ 'custom.css' | asset_url }}">
+    </noscript>
+    <link
+      rel="preload"
+      href="{{ 'globo-search-custom.css' | asset_url }}"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
+    >
+    <noscript>
+      <link rel="stylesheet" href="{{ 'globo-search-custom.css' | asset_url }}">
+    </noscript>
+    {{ 'base.css' | asset_url | stylesheet_tag }}
+    {% if request.page_type == 'index' %}
+      {{ 'swiper.min.css' | asset_url | stylesheet_tag }}
+    {% endif %}
+    {% comment %} {{ 'custom.css' | asset_url | stylesheet_tag }} {% endcomment %}
+    {% comment %} {{ 'custom.min.css' | asset_url | stylesheet_tag }} {% endcomment %}
+    {{ 'globo-search-custom.css' | asset_url | stylesheet_tag }}
+    {%- unless settings.type_body_font.system? -%}
+      {% comment %}theme-check-disable AssetPreload{% endcomment %}
+      <link rel="preload" as="font" href="{{ settings.type_body_font | font_url }}" type="font/woff2" crossorigin>
+      {% comment %}theme-check-enable AssetPreload{% endcomment %}
+    {%- endunless -%}
+    {%- unless settings.type_header_font.system? -%}
+      {% comment %}theme-check-disable AssetPreload{% endcomment %}
+      <link rel="preload" as="font" href="{{ settings.type_header_font | font_url }}" type="font/woff2" crossorigin>
+      {% comment %}theme-check-enable AssetPreload{% endcomment %}
+    {%- endunless -%}
 
-  if (Object.keys(current).length) {
-    document.querySelectorAll('a[href]').forEach(function(a){
-      var href = a.getAttribute('href');
+    {%- if localization.available_countries.size > 1 or localization.available_languages.size > 1 -%}
+      {{ 'component-localization-form.css' | asset_url | stylesheet_tag: preload: true }}
+      <script src="{{ 'localization-form.js' | asset_url }}" defer="defer"></script>
+    {%- endif -%}
 
-      if (!href.match(/^(\/|https?:\/\/)/)) return;
-      if (href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
-      a.setAttribute('href', appendParams(href));
-    });
-  }
+    {%- if settings.predictive_search_enabled -%}
+      <link
+        rel="stylesheet"
+        href="{{ 'component-predictive-search.css' | asset_url }}"
+        media="print"
+        onload="this.media='all'"
+      >
+    {%- endif -%}
+    {% if template == 'page.about-us' or template == 'page.warehouse-page' %}
+      <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw"
+        defer
+      ></script>
+    {% endif %}
+    {% comment %}
+      <link rel="preconnect" href="https://fonts.cdnfonts.com">
+      <link
+              rel="preload"
+              as="style"
+              href="https://fonts.cdnfonts.com/css/sf-pro-display"
+              onload="this.onload=null;this.rel='stylesheet';"
+      >
+      <noscript>
+          <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/sf-pro-display">
+      </noscript>
 
-  document.addEventListener('click', function(e){
-    var a = e.target.closest('a[href]');
-    if (!a) return;
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+        rel="stylesheet">
+    {% endcomment %}
+    {% unless request.page_type == 'index' %}
+      <link
+        rel="preload"
+        as="style"
+        href="{{ 'slick.min.css' | asset_url }}"
+        onload="this.onload=null;this.rel='stylesheet';"
+      >
+      <noscript>
+        <link rel="stylesheet" href="{{ 'slick.min.css' | asset_url }}">
+      </noscript>
 
-    var href = a.getAttribute('href');
+      <link
+        rel="preload"
+        as="style"
+        href="{{ 'slick-theme.min.css' | asset_url }}"
+        onload="this.onload=null;this.rel='stylesheet';"
+      >
+      <noscript>
+        <link rel="stylesheet" href="{{ 'slick-theme.min.css' | asset_url }}">
+      </noscript>
+      {% comment %}
+        <link
+                rel="preload"
+                as="script"
+                href="{{ 'jquery.min.js' | asset_url }}"
+        >
+        <link
+                rel="preload"
+                as="script"
+                href="{{ 'slick.min.js' | asset_url }}"
+        >
+      {% endcomment %}
+      <script src="{{ 'jquery.min.js' | asset_url }}"></script>
+      <script src="{{ 'slick.min.js' | asset_url }}"></script>
+    {% endunless %}
 
-    if (href.startsWith('#') ||
-        href.startsWith('mailto:') ||
-        href.startsWith('tel:') ||
-        href.startsWith('javascript:')) return;
+    <script>
+      if (Shopify.designMode) {
+        document.documentElement.classList.add('shopify-design-mode');
+      }
+    </script>
+    {% comment %} {% render 'rapid-search-settings' %} {% endcomment %}
+    <script type="text/javascript" defer>
+      function saLoadScript(src) {
+        var js = window.document.createElement('script');
+        js.src = src;
+        js.type = 'text/javascript';
+        document.getElementsByTagName('head')[0].appendChild(js);
+      }
 
-    if (!(href.startsWith('/') || href.indexOf(location.origin) === 0)) return;
+      saLoadScript('https://www.shopperapproved.com/widgets/group2.0/34099.js');
+    </script>
+    {% comment %}
+      {% render 'fonts' %}
+    {% endcomment %}
+    <script src="https://js.squarecdn.com/square-marketplace.js" async></script>
+    {% if request.path == '/collections' %}
+      <script>
+        window.location.href = '/collections/all';
+      </script>
+    {% endif %}
+    <script>
+      (function (h, e, a, t, m, ap) {
+        (h._heatmap_paq = []).push(['setTrackerUrl', (h.heatUrl = e) + a]);
+        h.hErrorLogs = h.hErrorLogs || [];
+        ap = t.createElement('script');
+        ap.src = h.heatUrl + 'preprocessor.min.js?sid=' + m;
+        ap.defer = true;
+        t.head.appendChild(ap);
+        ['error', 'unhandledrejection'].forEach(function (ty) {
+          h.addEventListener(ty, function (et) {
+            h.hErrorLogs.push({ type: ty, event: et });
+          });
+        });
+      })(window, 'https://dashboard.heatmap.com/', 'heatmap.php', document, 2798);
+    </script>
 
-    e.preventDefault();
-    window.location.href = appendParams(href);
-  }, true);
-})();
-</script>
+    {% if page.handle == 'all-manuals' %}
+      <style>
+        .inner-container {
+          width: 100%;
+        }
+      </style>
+    {% endif %}
+  </head>
 
+  <body class="gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %} {% if template contains 'page'      %} page-{{ page.handle }}{% endif %}">
+    <a class="skip-to-content-link button visually-hidden" href="#MainContent">
+      {{ 'accessibility.skip_to_text' | t }}
+    </a>
+    {%- if settings.cart_type == 'drawer' -%}
+      {%- render 'cart-drawer' -%}
+    {%- endif -%}
 
-          <script type="text/javascript">
-		      if (window.location.pathname === '/collections/' || window.location.pathname === '/collections') {
-			      window.location.replace('/collections/all');
-		      }
-              if (window.location.href.includes('/collections/gym-packages')) {
-                  location.href = '/pages/gym-packages';
-              }
-          </script>
-          {% if page_description %}
-          <meta name="description" content="{{ page_description | escape }}">
-          {% endif %}
-
-          {% render 'meta-tags' %}
-          {% if request.page_type == 'index' %}
-            <script src="{{ 'swiper-bundle.min.js' | asset_url }}" defer></script>
-          {% endif %}
-          <script src="{{ 'constants.js' | asset_url }}" defer="defer"></script>
-          <script src="{{ 'pubsub.js' | asset_url }}" defer="defer"></script>
-          <script src="{{ 'global.js' | asset_url }}" defer="defer"></script>
-          <script src="{{ 'custom.js' | asset_url }}" defer="defer"></script>
-
-          {%- if settings.animations_reveal_on_scroll -%}
-          <script src="{{ 'animations.js' | asset_url }}" defer="defer"></script>
-          {%- endif -%}
-
-          {{ content_for_header }}
-          {%- liquid
-              assign body_font_bold = settings.type_body_font | font_modify: 'weight', 'bold'
-              assign body_font_italic = settings.type_body_font | font_modify: 'style', 'italic'
-              assign body_font_bold_italic = body_font_bold | font_modify: 'style', 'italic'
-          %}
-          {% style %}
-          {{ settings.type_body_font | font_face: font_display: 'swap' }}
-          {{ body_font_bold | font_face: font_display: 'swap' }}
-          {{ body_font_italic | font_face: font_display: 'swap' }}
-          {{ body_font_bold_italic | font_face: font_display: 'swap' }}
-          {{ settings.type_header_font | font_face: font_display: 'swap' }}
-
-          {% for scheme in settings.color_schemes -%}
-          {% assign scheme_classes = scheme_classes | append: ', .color-' | append: scheme.id %}
-          {% if forloop.index == 1 -%}
-          :root,
-          {%- endif %}
-          .color-{{ scheme.id }} {
-          --color-background: {{ scheme.settings.background.red }},{{ scheme.settings.background.green }},{{ scheme.settings.background.blue }};
-          {% if scheme.settings.background_gradient != empty %}
-          --gradient-background: {{ scheme.settings.background_gradient }};
-          {% else %}
-          --gradient-background: {{ scheme.settings.background }};
-          {% endif %}
-
-          {% liquid
-              assign background_color = scheme.settings.background
-              assign background_color_brightness = background_color | color_brightness
-              if background_color_brightness <= 26
-                  assign background_color_contrast = background_color | color_lighten: 50
-              elsif background_color_brightness <= 65
-                  assign background_color_contrast = background_color | color_lighten: 5
-              else
-                  assign background_color_contrast = background_color | color_darken: 25
-              endif
-          %}
-
-          --color-foreground: {{ scheme.settings.text.red }},{{ scheme.settings.text.green }},{{ scheme.settings.text.blue }};
-          --color-background-contrast: {{ background_color_contrast.red }},{{ background_color_contrast.green }},{{ background_color_contrast.blue }};
-          --color-shadow: {{ scheme.settings.shadow.red }},{{ scheme.settings.shadow.green }},{{ scheme.settings.shadow.blue }};
-          --color-button: {{ scheme.settings.button.red }},{{ scheme.settings.button.green }},{{ scheme.settings.button.blue }};
-          --color-button-text: {{ scheme.settings.button_label.red }},{{ scheme.settings.button_label.green }},{{ scheme.settings.button_label.blue }};
-          --color-secondary-button: {{ scheme.settings.background.red }},{{ scheme.settings.background.green }},{{ scheme.settings.background.blue }};
-          --color-secondary-button-text: {{ scheme.settings.secondary_button_label.red }},{{ scheme.settings.secondary_button_label.green }},{{ scheme.settings.secondary_button_label.blue }};
-          --color-link: {{ scheme.settings.secondary_button_label.red }},{{ scheme.settings.secondary_button_label.green }},{{ scheme.settings.secondary_button_label.blue }};
-          --color-badge-foreground: {{ scheme.settings.text.red }},{{ scheme.settings.text.green }},{{ scheme.settings.text.blue }};
-          --color-badge-background: {{ scheme.settings.background.red }},{{ scheme.settings.background.green }},{{ scheme.settings.background.blue }};
-          --color-badge-border: {{ scheme.settings.text.red }},{{ scheme.settings.text.green }},{{ scheme.settings.text.blue }};
-          --payment-terms-background-color: rgb({{ scheme.settings.background.rgb }});
-          }
-          {% endfor %}
-
-          {{ scheme_classes | prepend: 'body' }} {
-          color: rgba(var(--color-foreground));
-          background-color: rgb(var(--color-background));
-          line-height:24px;
-          }
-
-          :root {
-          --font-body-family: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
-          --font-body-style: {{ settings.type_body_font.style }};
-          --font-body-weight: {{ settings.type_body_font.weight }};
-          --font-body-weight-bold: {{ settings.type_body_font.weight | plus: 300 | at_most: 1000 }};
-
-          --font-heading-family: {{ settings.type_header_font.family }}, {{ settings.type_header_font.fallback_families }};
-          --font-heading-style: {{ settings.type_header_font.style }};
-          --font-heading-weight: {{ settings.type_header_font.weight }};
-
-          --font-body-scale: {{ settings.body_scale | divided_by: 100.0 }};
-          --font-heading-scale: {{ settings.heading_scale | times: 1.0 | divided_by: settings.body_scale }};
-
-          --media-padding: {{ settings.media_padding }}px;
-          --media-border-opacity: {{ settings.media_border_opacity | divided_by: 100.0 }};
-          --media-border-width: {{ settings.media_border_thickness }}px;
-          --media-radius: {{ settings.media_radius }}px;
-          --media-shadow-opacity: {{ settings.media_shadow_opacity | divided_by: 100.0 }};
-          --media-shadow-horizontal-offset: {{ settings.media_shadow_horizontal_offset }}px;
-          --media-shadow-vertical-offset: {{ settings.media_shadow_vertical_offset }}px;
-          --media-shadow-blur-radius: {{ settings.media_shadow_blur }}px;
-          --media-shadow-visible: {% if settings.media_shadow_opacity > 0 %}1{% else %}0{% endif %};
-
-          --page-width: {{ settings.page_width | divided_by: 10 }}rem;
-          --page-width-margin: {% if settings.page_width == '1600' %}2{% else %}0{% endif %}rem;
-
-          --product-card-image-padding: {{ settings.card_image_padding | divided_by: 10.0 }}rem;
-          --product-card-corner-radius: {{ settings.card_corner_radius | divided_by: 10.0 }}rem;
-          --product-card-text-alignment: {{ settings.card_text_alignment }};
-          --product-card-border-width: {{ settings.card_border_thickness | divided_by: 10.0 }}rem;
-          --product-card-border-opacity: {{ settings.card_border_opacity | divided_by: 100.0 }};
-          --product-card-shadow-opacity: {{ settings.card_shadow_opacity | divided_by: 100.0 }};
-          --product-card-shadow-visible: {% if settings.card_shadow_opacity > 0 %}1{% else %}0{% endif %};
-          --product-card-shadow-horizontal-offset: {{ settings.card_shadow_horizontal_offset | divided_by: 10.0 }}rem;
-          --product-card-shadow-vertical-offset: {{ settings.card_shadow_vertical_offset | divided_by: 10.0 }}rem;
-          --product-card-shadow-blur-radius: {{ settings.card_shadow_blur | divided_by: 10.0 }}rem;
-
-          --collection-card-image-padding: {{ settings.collection_card_image_padding | divided_by: 10.0 }}rem;
-          --collection-card-corner-radius: {{ settings.collection_card_corner_radius | divided_by: 10.0 }}rem;
-          --collection-card-text-alignment: {{ settings.collection_card_text_alignment }};
-          --collection-card-border-width: {{ settings.collection_card_border_thickness | divided_by: 10.0 }}rem;
-          --collection-card-border-opacity: {{ settings.collection_card_border_opacity | divided_by: 100.0 }};
-          --collection-card-shadow-opacity: {{ settings.collection_card_shadow_opacity | divided_by: 100.0 }};
-          --collection-card-shadow-visible: {% if settings.collection_card_shadow_opacity > 0 %}1{% else %}0{% endif %};
-          --collection-card-shadow-horizontal-offset: {{ settings.collection_card_shadow_horizontal_offset | divided_by: 10.0 }}rem;
-          --collection-card-shadow-vertical-offset: {{ settings.collection_card_shadow_vertical_offset | divided_by: 10.0 }}rem;
-          --collection-card-shadow-blur-radius: {{ settings.collection_card_shadow_blur | divided_by: 10.0 }}rem;
-
-          --blog-card-image-padding: {{ settings.blog_card_image_padding | divided_by: 10.0 }}rem;
-          --blog-card-corner-radius: {{ settings.blog_card_corner_radius | divided_by: 10.0 }}rem;
-          --blog-card-text-alignment: {{ settings.blog_card_text_alignment }};
-          --blog-card-border-width: {{ settings.blog_card_border_thickness | divided_by: 10.0 }}rem;
-          --blog-card-border-opacity: {{ settings.blog_card_border_opacity | divided_by: 100.0 }};
-          --blog-card-shadow-opacity: {{ settings.blog_card_shadow_opacity | divided_by: 100.0 }};
-          --blog-card-shadow-visible: {% if settings.blog_card_shadow_opacity > 0 %}1{% else %}0{% endif %};
-          --blog-card-shadow-horizontal-offset: {{ settings.blog_card_shadow_horizontal_offset | divided_by: 10.0 }}rem;
-          --blog-card-shadow-vertical-offset: {{ settings.blog_card_shadow_vertical_offset | divided_by: 10.0 }}rem;
-          --blog-card-shadow-blur-radius: {{ settings.blog_card_shadow_blur | divided_by: 10.0 }}rem;
-
-          --badge-corner-radius: {{ settings.badge_corner_radius | divided_by: 10.0 }}rem;
-
-          --popup-border-width: {{ settings.popup_border_thickness }}px;
-          --popup-border-opacity: {{ settings.popup_border_opacity | divided_by: 100.0 }};
-          --popup-corner-radius: {{ settings.popup_corner_radius }}px;
-          --popup-shadow-opacity: {{ settings.popup_shadow_opacity | divided_by: 100.0 }};
-          --popup-shadow-horizontal-offset: {{ settings.popup_shadow_horizontal_offset }}px;
-          --popup-shadow-vertical-offset: {{ settings.popup_shadow_vertical_offset }}px;
-          --popup-shadow-blur-radius: {{ settings.popup_shadow_blur }}px;
-
-          --drawer-border-width: {{ settings.drawer_border_thickness }}px;
-          --drawer-border-opacity: {{ settings.drawer_border_opacity | divided_by: 100.0 }};
-          --drawer-shadow-opacity: {{ settings.drawer_shadow_opacity | divided_by: 100.0 }};
-          --drawer-shadow-horizontal-offset: {{ settings.drawer_shadow_horizontal_offset }}px;
-          --drawer-shadow-vertical-offset: {{ settings.drawer_shadow_vertical_offset }}px;
-          --drawer-shadow-blur-radius: {{ settings.drawer_shadow_blur }}px;
-
-          --spacing-sections-desktop: {{ settings.spacing_sections }}px;
-          --spacing-sections-mobile: {% if settings.spacing_sections < 24 %}{{ settings.spacing_sections }}{% else %}{{ settings.spacing_sections | times: 0.7 | round | at_least: 20 }}{% endif %}px;
-
-          --grid-desktop-vertical-spacing: {{ settings.spacing_grid_vertical }}px;
-          --grid-desktop-horizontal-spacing: {{ settings.spacing_grid_horizontal }}px;
-          --grid-mobile-vertical-spacing: {{ settings.spacing_grid_vertical | divided_by: 2 }}px;
-          --grid-mobile-horizontal-spacing: {{ settings.spacing_grid_horizontal | divided_by: 2 }}px;
-
-          --text-boxes-border-opacity: {{ settings.text_boxes_border_opacity | divided_by: 100.0 }};
-          --text-boxes-border-width: {{ settings.text_boxes_border_thickness }}px;
-          --text-boxes-radius: {{ settings.text_boxes_radius }}px;
-          --text-boxes-shadow-opacity: {{ settings.text_boxes_shadow_opacity | divided_by: 100.0 }};
-          --text-boxes-shadow-visible: {% if settings.text_boxes_shadow_opacity > 0 %}1{% else %}0{% endif %};
-          --text-boxes-shadow-horizontal-offset: {{ settings.text_boxes_shadow_horizontal_offset }}px;
-          --text-boxes-shadow-vertical-offset: {{ settings.text_boxes_shadow_vertical_offset }}px;
-          --text-boxes-shadow-blur-radius: {{ settings.text_boxes_shadow_blur }}px;
-
-          --buttons-radius: {{ settings.buttons_radius }}px;
-          --buttons-radius-outset: {% if settings.buttons_radius > 0 %}{{ settings.buttons_radius | plus: settings.buttons_border_thickness }}{% else %}0{% endif %}px;
-          --buttons-border-width: {% if settings.buttons_border_opacity > 0 %}{{ settings.buttons_border_thickness }}{% else %}0{% endif %}px;
-          --buttons-border-opacity: {{ settings.buttons_border_opacity | divided_by: 100.0 }};
-          --buttons-shadow-opacity: {{ settings.buttons_shadow_opacity | divided_by: 100.0 }};
-          --buttons-shadow-visible: {% if settings.buttons_shadow_opacity > 0 %}1{% else %}0{% endif %};
-          --buttons-shadow-horizontal-offset: {{ settings.buttons_shadow_horizontal_offset }}px;
-          --buttons-shadow-vertical-offset: {{ settings.buttons_shadow_vertical_offset }}px;
-          --buttons-shadow-blur-radius: {{ settings.buttons_shadow_blur }}px;
-          --buttons-border-offset: {% if settings.buttons_radius > 0 or settings.buttons_shadow_opacity > 0 %}0.3{% else %}0{% endif %}px;
-
-          --inputs-radius: {{ settings.inputs_radius }}px;
-          --inputs-border-width: {{ settings.inputs_border_thickness }}px;
-          --inputs-border-opacity: {{ settings.inputs_border_opacity | divided_by: 100.0 }};
-          --inputs-shadow-opacity: {{ settings.inputs_shadow_opacity | divided_by: 100.0 }};
-          --inputs-shadow-horizontal-offset: {{ settings.inputs_shadow_horizontal_offset }}px;
-          --inputs-margin-offset: {% if settings.inputs_shadow_vertical_offset != 0 and settings.inputs_shadow_opacity > 0 %}{{ settings.inputs_shadow_vertical_offset | abs }}{% else %}0{% endif %}px;
-          --inputs-shadow-vertical-offset: {{ settings.inputs_shadow_vertical_offset }}px;
-          --inputs-shadow-blur-radius: {{ settings.inputs_shadow_blur }}px;
-          --inputs-radius-outset: {% if settings.inputs_radius > 0 %}{{ settings.inputs_radius | plus: settings.inputs_border_thickness }}{% else %}0{% endif %}px;
-
-          --variant-pills-radius: {{ settings.variant_pills_radius }}px;
-          --variant-pills-border-width: {{ settings.variant_pills_border_thickness }}px;
-          --variant-pills-border-opacity: {{ settings.variant_pills_border_opacity | divided_by: 100.0 }};
-          --variant-pills-shadow-opacity: {{ settings.variant_pills_shadow_opacity | divided_by: 100.0 }};
-          --variant-pills-shadow-horizontal-offset: {{ settings.variant_pills_shadow_horizontal_offset }}px;
-          --variant-pills-shadow-vertical-offset: {{ settings.variant_pills_shadow_vertical_offset }}px;
-          --variant-pills-shadow-blur-radius: {{ settings.variant_pills_shadow_blur }}px;
-
-          --zoom-lens-shader: url({{ 'zoom-lens-shader.gif' | asset_url }});
-          }
-
-          *,
-          *::before,
-          *::after {
-          box-sizing: inherit;
-          }
-
-          html {
-          box-sizing: border-box;
-          font-size: calc(var(--font-body-scale) * 62.5%);
-          height: 100%;
-          }
-
-          body {
-          display: grid;
-          grid-template-rows: auto auto 1fr auto;
-          grid-template-columns: 100%;
-          min-height: 100%;
-          margin: 0;
-          font-size: 1.6rem;
-          letter-spacing: 0.06rem;
-          line-height: 24px;
-          font-family: var(--font-body-family);
-          font-style: var(--font-body-style);
-          font-weight: var(--font-body-weight);
-          letter-spacing: normal;
-          }
-
-          h1, h2, h3, h4, h5, .h0, .h1, .h2, .h3, .h4, .h5 {
-            font-family: var(--font-heading-family);
-            font-style: var(--font-heading-style);
-            font-weight: 600;
-          }
-
-          @media screen and (min-width: 750px) {
-          body {
-          font-size: 1.6rem;
-          }
-          }
-          {% endstyle %}
-          {% if template == 'index' %}
-  <style>
-    @media (max-width: 990px) {
-      .grid-container.page-width {
-        padding: 0px !important;
-    }
-  </style>
-{% endif %}
-        {% comment %}
-          <link
-                  rel="preload"
-                  href="{{ 'base.css' | asset_url }}"
-                  as="style"
-                  onload="this.onload=null;this.rel='stylesheet'"
-          >
-          <noscript>
-              <link rel="stylesheet" href="{{ 'base.css' | asset_url }}">
-          </noscript>
-          <link
-                  rel="preload"
-                  href="{{ 'swiper.min.css' | asset_url }}"
-                  as="style"
-                  onload="this.onload=null;this.rel='stylesheet'"
-          >
-          <noscript>
-              <link rel="stylesheet" href="{{ 'swiper.min.css' | asset_url }}">
-          </noscript>
-        {% endcomment %}
-          <link
-                  rel="preload"
-                  href="{{ 'custom.css' | asset_url }}"
-                  as="style"
-                  onload="this.onload=null;this.rel='stylesheet'"
-          >
-          <noscript>
-              <link rel="stylesheet" href="{{ 'custom.css' | asset_url }}">
-          </noscript>
-          <link
-                  rel="preload"
-                  href="{{ 'globo-search-custom.css' | asset_url }}"
-                  as="style"
-                  onload="this.onload=null;this.rel='stylesheet'"
-          >
-          <noscript>
-              <link rel="stylesheet" href="{{ 'globo-search-custom.css' | asset_url }}">
-          </noscript>
-          {{ 'base.css' | asset_url | stylesheet_tag }}
-          {% if request.page_type == 'index' %}
-            {{ 'swiper.min.css' | asset_url | stylesheet_tag }}
-          {% endif %}
-          {% comment %} {{ 'custom.css' | asset_url | stylesheet_tag }} {% endcomment %}
-          {% comment %} {{ 'custom.min.css' | asset_url | stylesheet_tag }} {% endcomment %}
-          {{ 'globo-search-custom.css' | asset_url | stylesheet_tag }}
-          {%- unless settings.type_body_font.system? -%}
-          {% comment %}theme-check-disable AssetPreload{% endcomment %}
-          <link rel="preload" as="font" href="{{ settings.type_body_font | font_url }}" type="font/woff2" crossorigin>
-          {% comment %}theme-check-enable AssetPreload{% endcomment %}
-          {%- endunless -%}
-          {%- unless settings.type_header_font.system? -%}
-          {% comment %}theme-check-disable AssetPreload{% endcomment %}
-          <link rel="preload" as="font" href="{{ settings.type_header_font | font_url }}" type="font/woff2" crossorigin>
-          {% comment %}theme-check-enable AssetPreload{% endcomment %}
-          {%- endunless -%}
-
-          {%- if localization.available_countries.size > 1 or localization.available_languages.size > 1 -%}
-          {{ 'component-localization-form.css' | asset_url | stylesheet_tag: preload: true }}
-          <script src="{{ 'localization-form.js' | asset_url }}" defer="defer"></script>
-          {%- endif -%}
-
-          {%- if settings.predictive_search_enabled -%}
-          <link
-                  rel="stylesheet"
-                  href="{{ 'component-predictive-search.css' | asset_url }}"
-                  media="print"
-                  onload="this.media='all'"
-          >
-          {%- endif -%}
-          {% if template == 'page.about-us' or template == 'page.warehouse-page' %}
-          <script
-                  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw"
-                  defer
-          ></script>
-        {% endif %}
-        {% comment %}
-          <link rel="preconnect" href="https://fonts.cdnfonts.com">
-          <link
-                  rel="preload"
-                  as="style"
-                  href="https://fonts.cdnfonts.com/css/sf-pro-display"
-                  onload="this.onload=null;this.rel='stylesheet';"
-          >
-          <noscript>
-              <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/sf-pro-display">
-          </noscript>
-
-          <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" 
-            rel="stylesheet">
-        {% endcomment %}
-        {% unless request.page_type == 'index' %}
-          <link
-                  rel="preload"
-                  as="style"
-                  href="{{ 'slick.min.css' | asset_url }}"
-                  onload="this.onload=null;this.rel='stylesheet';"
-          >
-          <noscript>
-              <link rel="stylesheet" href="{{ 'slick.min.css' | asset_url }}">
-          </noscript>
-
-          <link
-                  rel="preload"
-                  as="style"
-                  href="{{ 'slick-theme.min.css' | asset_url }}"
-                  onload="this.onload=null;this.rel='stylesheet';"
-          >
-          <noscript>
-              <link rel="stylesheet" href="{{ 'slick-theme.min.css' | asset_url }}">
-          </noscript>
-          {% comment %}
-          <link
-                  rel="preload"
-                  as="script"
-                  href="{{ 'jquery.min.js' | asset_url }}"
-          >
-          <link
-                  rel="preload"
-                  as="script"
-                  href="{{ 'slick.min.js' | asset_url }}"
-          >
-          {% endcomment %}
-          <script src="{{ 'jquery.min.js' | asset_url }}"></script>
-          <script src="{{ 'slick.min.js' | asset_url }}"></script>
-        {% endunless %}
-
-          <script>
-		      if (Shopify.designMode) {
-			      document.documentElement.classList.add('shopify-design-mode');
-		      }
-          </script>
-          {% comment %} {% render 'rapid-search-settings' %} {% endcomment %}
-          <script type="text/javascript" defer>
-		      function saLoadScript(src) {
-			      var js = window.document.createElement('script');
-			      js.src = src;
-			      js.type = 'text/javascript';
-			      document.getElementsByTagName('head')[0].appendChild(js);
-		      }
-
-		      saLoadScript('https://www.shopperapproved.com/widgets/group2.0/34099.js');
-          </script>
-          {% comment %}
-          {% render 'fonts' %}
-          {% endcomment %}
-          <script src="https://js.squarecdn.com/square-marketplace.js" async></script>
-          {% if request.path == '/collections' %}
-          <script>window.location.href = "/collections/all"</script>
-          {% endif %}
-          <script>
-            (function (h,e,a,t,m,ap) {
-              (h._heatmap_paq = []).push([ 'setTrackerUrl', (h.heatUrl = e) + a]);
-              h.hErrorLogs=h.hErrorLogs || []; ap=t.createElement('script'); 
-              ap.src=h.heatUrl+'preprocessor.min.js?sid='+m; 
-              ap.defer=true; t.head.appendChild(ap);
-              ['error', 'unhandledrejection'].forEach(function (ty) {
-                  h.addEventListener(ty, function (et) { h.hErrorLogs.push({ type: ty, event: et }); });
-              });
-            })(window,'https://dashboard.heatmap.com/','heatmap.php',document,2798);
-            </script>
-        
-          {% if page.handle == 'all-manuals' %}
-
-              <style>
-                  .inner-container {
-                      width: 100%;
-                  }
-
-              </style>
-          {% endif %}
-      </head>
-    
-      <body class="gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %} {% if template contains 'page'      %} page-{{ page.handle }}{% endif %}">
-        <a class="skip-to-content-link button visually-hidden" href="#MainContent">
-          {{ 'accessibility.skip_to_text' | t }}
-        </a>
-        {%- if settings.cart_type == 'drawer' -%}
-          {%- render 'cart-drawer' -%}
-        {%- endif -%}
-    
-        {% sections 'header-group' %}
-        {% if settings.show_sidebar_menu %}
-          <div class="content layout-side-menu">
-            {% render 'header-sidebar-menu' %}
-        {% endif %}
-        <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
-          {% if request.page_type == 'cart' %}
-            <div class="california-discount-offer">
-              <p class="desktop-text">Free shipping + 50% off installation for local customers within 100 miles of Benicia for orders $1000+ minimum, CA. Enter your zip code to check eligibility.</p>
-              <p class="mobile-text">Free shipping in California for orders $1000+ minumum. Enter your zip code to check eligibility.</p>
-            </div>
-          {% endif  %}
-          {% if request.page_type == 'page' and page.metafields.layout.narrow == true %}
-            <div class="page-narrow-layout">
-              {{ content_for_layout }}
-            </div>
-          {% elsif request.page_type == 'page' or request.page_type == 'index' or request.page_type == 'collection' or request.page_type == 'product' or request.page_type == 'search' %}
-            <style>
-              @media only screen and (min-width: 990px) {
-                .side-bar-comtainer {
-                  position: relative;
-                }
-                .side-bar-comtainer .inner-container {
-                  padding-left: 24.4rem;
-                  width: 100%;
-                }
-                .side-bar-comtainer .sidebarmenu {
-                  position: absolute; 
-                  top: 0; 
-                  left: 0; 
-                  margin-left: 5rem;
-                }
-                .inner-container {
-                  min-height: 2230px;
-                }
-              }
-            </style>
-            <div class="grid-container page-width {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %} side-bar-comtainer">
-              <div class="inner-container">
-                {{ content_for_layout }}
-              </div>
-              <div class="sidebarmenu">
-                          <div class="submenu">
-                                  <a href="/collections/all" class="submenu-title">CARDIO EQUIPMENT</a>
-                                  <ul>
-                                          <li><a href="/collections/ellipticals" class="submenu-item">Ellipticals</a></li>
-                                          <li><a href="/collections/exercise-bikes" class="submenu-item">Exercise Bikes</a></li>
-                                          <li><a href="/collections/flooring" class="submenu-item">Flooring</a></li>
-                                          <li><a href="/collections/rowing-ski-machines" class="submenu-item">Rowing Machines</a></li>
-                                          <li><a href="/collections/saunas-cold-plunges" class="submenu-item">Saunas</a></li>
-                                          <li><a href="/collections/stair-climbers-steppers" class="submenu-item">Stair Climbers / Steppers</a></li>
-                                          <li><a href="/collections/strength-training-equipment" class="submenu-item">Strength Training Equipment</a></li>
-                                          <li><a href="/collections/treadclimbers" class="submenu-item">Treadclimbers</a></li>
-                                          <li><a href="/collections/treadmills" class="submenu-item">Treadmills</a></li>
-                                          <li><a href="/collections/vibration-platforms" class="submenu-item">Vibration Platforms</a></li>
-                                  </ul>
-                          </div>
-                          <div class="submenu">
-                                  <a href="/collections/strength-training-equipment" class="submenu-title">STRENGTH EQUIPMENT</a>
-                                  <ul>
-                                          <li><a href="/collections/benches" class="submenu-item">Benches</a></li>
-                                          <li><a href="/collections/free-weights" class="submenu-item">Free Weights</a></li>
-                                          <li><a href="/collections/gym-accessories" class="submenu-item">Gym Accessories</a></li>
-                                          <li><a href="/collections/plate-loaded" class="submenu-item">Plate Loaded</a></li>
-                                          <li><a href="/collections/cages-racks-rigs" class="submenu-item">Cages, Racks, & Rigs</a></li>
-                                          <li><a href="/collections/selectorized-pin-loaded" class="submenu-item">Selectorized (Pin Loaded)</a></li>
-                                          <li><a href="/collections/storage-racks" class="submenu-item">Storage Racks</a></li>
-                                          <li><a href="/collections/gym-systems" class="submenu-item">Gym Systems</a></li>
-                                  </ul>
-                          </div>
-                          <div class="submenu">
-                                  <a href="/pages/brands" class="submenu-title">SHOP BY BRAND</a>
-                                  <ul>
-                                          <li><a href="/collections/body-solid" class="submenu-item">Body-Solid</a></li>
-                                          <li><a href="/collections/bowflex" class="submenu-item">Bowflex</a></li>
-                                          <li><a href="/collections/cybex" class="submenu-item">Cybex</a></li>
-                                          <li><a href="/collections/dynamic-cold-therapy" class="submenu-item">Dynamic Cold Therapy</a></li>
-                                          <li><a href="/collections/dynamic-fitness" class="submenu-item">Dynamic Fitness</a></li>
-                                          <li><a href="/collections/expresso-fitness" class="submenu-item">Expresso Fitness</a></li>
-                                          <li><a href="/collections/freemotion" class="submenu-item">FreeMotion</a></li>
-                                          <li><a href="/collections/french-fitness" class="submenu-item">French Fitness</a></li>
-                                          <li><a href="/collections/hammer-strength" class="submenu-item">Hammer Strength</a></li>
-                                          <li><a href="/collections/jacobs-ladder" class="submenu-item">Jacobs Ladder</a></li>
-                                          <li><a href="/collections/life-fitness" class="submenu-item">Life Fitness</a></li>
-                                          <li><a href="/collections/marpo-kinetics" class="submenu-item">Marpo Kinetics</a></li>
-                                          <li><a href="/collections/matrix" class="submenu-item">Matrix</a></li>
-                                          <li><a href="/collections/monark" class="submenu-item">Monark</a></li>
-                                          <li><a href="/collections/nautilus" class="submenu-item">Nautilus</a></li>
-                                          <li><a href="/collections/nustep" class="submenu-item">Nustep</a></li>
-                                          <li><a href="/collections/octane-fitness" class="submenu-item">Octane Fitness</a></li>
-                                          <li><a href="/collections/power-plate" class="submenu-item">Power Plate</a></li>
-                                          <li><a href="/collections/powerblock" class="submenu-item">PowerBlock</a></li>
-                                          <li><a href="/collections/precor" class="submenu-item">Precor</a></li>
-                                          <li><a href="/collections/schwinn" class="submenu-item">Schwinn</a></li>
-                                          <li><a href="/collections/scifit" class="submenu-item">SciFit</a></li>
-                                          <li><a href="/collections/sportsart" class="submenu-item">SportsArt</a></li>
-                                          <li><a href="/collections/stairmaster" class="submenu-item">Stairmaster</a></li>
-                                          <li><a href="/collections/star-trac" class="submenu-item">Star Trac</a></li>
-                                          <li><a href="/collections/technogym" class="submenu-item">Technogym</a></li>
-                                          <li><a href="/collections/throwdown" class="submenu-item">Throwdown</a></li>
-                                          <li><a href="/collections/true-fitness" class="submenu-item">True Fitness</a></li>
-                                          <li><a href="/collections/versaclimber" class="submenu-item">Versaclimber</a></li>
-                                          <li><a href="/collections/woodway-usa" class="submenu-item">Woodway USA</a></li>
-                                  </ul>
-                          </div>
-                  </div>
-            </div>
-          {% else %}
-            {{ content_for_layout }}
-          {% endif %}
-        </main>
-        {% if settings.show_sidebar_menu %}
-          </div>
-        {% endif %}
-        {% sections 'footer-group' %}
-        <ul hidden>
-          <li id="a11y-refresh-page-message">{{ 'accessibility.refresh_page' | t }}</li>
-          <li id="a11y-new-window-message">{{ 'accessibility.link_messages.new_window' | t }}</li>
-        </ul>
-        <script>
-          window.shopUrl = '{{ request.origin }}';
-          window.routes = {
-            cart_add_url: '{{ routes.cart_add_url }}',
-            cart_change_url: '{{ routes.cart_change_url }}',
-            cart_update_url: '{{ routes.cart_update_url }}',
-            cart_url: '{{ routes.cart_url }}',
-            predictive_search_url: '{{ routes.predictive_search_url }}',
-          };
-    
-          window.cartStrings = {
-            error: `{{ 'sections.cart.cart_error' | t }}`,
-            quantityError: `{{ 'sections.cart.cart_quantity_error_html' | t: quantity: '[quantity]' }}`,
-          };
-    
-          window.variantStrings = {
-            addToCart: `{{ 'products.product.add_to_cart' | t }}`,
-            soldOut: `{{ 'products.product.sold_out' | t }}`,
-            unavailable: `{{ 'products.product.unavailable' | t }}`,
-            unavailable_with_option: `{{ 'products.product.value_unavailable' | t: option_value: '[value]' }}`,
-          };
-    
-          window.quickOrderListStrings = {
-            itemsAdded: `{{ 'sections.quick_order_list.items_added.other' | t: quantity: '[quantity]' }}`,
-            itemAdded: `{{ 'sections.quick_order_list.items_added.one' | t: quantity: '[quantity]' }}`,
-            itemsRemoved: `{{ 'sections.quick_order_list.items_removed.other' | t: quantity: '[quantity]' }}`,
-            itemRemoved: `{{ 'sections.quick_order_list.items_removed.one' | t: quantity: '[quantity]' }}`,
-            viewCart: `{{- 'sections.quick_order_list.view_cart' | t -}}`,
-            each: `{{- 'sections.quick_order_list.each' | t: money: '[money]' }}`,
-            min_error: `{{- 'sections.quick_order_list.min_error' | t: min: '[min]' }}`,
-            max_error: `{{- 'sections.quick_order_list.max_error' | t: max: '[max]' }}`,
-            step_error: `{{- 'sections.quick_order_list.step_error' | t: step: '[step]' }}`,
-          };
-          window.accessibilityStrings = {
-            imageAvailable: `{{ 'products.product.media.image_available' | t: index: '[index]' }}`,
-            shareSuccess: `{{ 'general.share.success_message' | t }}`,
-            pauseSlideshow: `{{ 'sections.slideshow.pause_slideshow' | t }}`,
-            playSlideshow: `{{ 'sections.slideshow.play_slideshow' | t }}`,
-            recipientFormExpanded: `{{ 'recipient.form.expanded' | t }}`,
-            recipientFormCollapsed: `{{ 'recipient.form.collapsed' | t }}`,
-            countrySelectorSearchCount: `{{ 'localization.country_results_count' | t: count: '[count]' }}`,
-          };
-        </script>
-
+    {% sections 'header-group' %}
+    {% if settings.show_sidebar_menu %}
+      <div class="content layout-side-menu">
+        {% render 'header-sidebar-menu' %}
+    {% endif %}
+    <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
+      {% if request.page_type == 'cart' %}
+        <div class="california-discount-offer">
+          <p class="desktop-text">
+            Free shipping + 50% off installation for local customers within 100 miles of Benicia for orders $1000+
+            minimum, CA. Enter your zip code to check eligibility.
+          </p>
+          <p class="mobile-text">
+            Free shipping in California for orders $1000+ minumum. Enter your zip code to check eligibility.
+          </p>
+        </div>
+      {% endif %}
+      {% if request.page_type == 'page' and page.metafields.layout.narrow == true %}
+        <div class="page-narrow-layout">
+          {{ content_for_layout }}
+        </div>
+      {% elsif request.page_type == 'page'
+        or request.page_type == 'index'
+        or request.page_type == 'collection'
+        or request.page_type == 'product'
+        or request.page_type == 'search'
+      %}
         <style>
-          .drawer {
-              visibility: hidden;
+          @media only screen and (min-width: 990px) {
+            .side-bar-comtainer {
+              position: relative;
+            }
+            .side-bar-comtainer .inner-container {
+              padding-left: 24.4rem;
+              width: 100%;
+            }
+            .side-bar-comtainer .sidebarmenu {
+              position: absolute;
+              top: 0;
+              left: 0;
+              margin-left: 5rem;
+            }
+            .inner-container {
+              min-height: 2230px;
+            }
           }
         </style>
-          
-        {%- if settings.predictive_search_enabled -%}
-          <script src="{{ 'predictive-search.js' | asset_url }}" defer="defer"></script>
-        {%- endif -%}
-       
-        <div class="modal-wrapper"><div id="dynamic-product-content" class="scroll-trigger animate--slide-in"></div></div>
-        {%- capture searchTemplate -%}{% render 'globo.filter.search' %}{%- endcapture -%}{%- unless searchTemplate contains 'Liquid error' -%}<script id="gspfSearchResult" type="template/html">{{- searchTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
-        {%- capture productTemplate -%}{% render 'globo.filter.product', themeTranslation: shop.metafields.globoFilter.themeTranslation.value[request.locale.iso_code] %}{%- endcapture -%}{%- unless productTemplate contains 'Liquid error' -%}<script id="gspfProduct" type="template/html">{{- productTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%} 
-        {%- capture treeTemplate -%}{% render 'globo.filter.tree' %}{%- endcapture -%}{%- unless treeTemplate contains 'Liquid error' -%}<script id="gspfFilterTree" type="template/html">{{- treeTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
-        {%- capture sortTemplate -%}{% render 'globo.filter.sort' %}{%- endcapture -%}{%- unless sortTemplate contains 'Liquid error' -%}<script id="gspfFilterSort" type="template/html">{{- sortTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
-        
-        <script defer id="ze-snippet" src="https://static.zdassets.com/ekr/snippet.js?key=cb8b520e-4aff-4fa3-968a-8956d8b9f31a"></script>
-        <script defer>(function () { var s = document.createElement('script'), e = !document.body ? document.querySelector('head') : document.body; s.src = 'https://s3.us-west-1.amazonaws.com/fitnesssuperstore.info/js/ada.js'; s.async = true; s.onload = function () { acsbJS.init({ statementLink: '', footerHtml: '', hideMobile: false, hideTrigger: false, language: 'en', position: 'left', leadColor: '#f1592a', triggerColor: '#f1592a', triggerRadius: '50%', triggerPositionX: 'left', triggerPositionY: 'bottom', triggerIcon: 'people', triggerSize: 'small', triggerOffsetX: 20, triggerOffsetY: 22, mobile: { triggerSize: 'small', triggerPositionX: 'left', triggerPositionY: 'bottom', triggerOffsetX: 10, triggerOffsetY: 20, triggerRadius: '50%' } }); }; e.appendChild(s); }()); </script>
-      </body>
-    </html>
+        <div class="grid-container page-width {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %} side-bar-comtainer">
+          <div class="inner-container">
+            {{ content_for_layout }}
+          </div>
+          <div class="sidebarmenu">
+            <div class="submenu">
+              <a href="/collections/all" class="submenu-title">CARDIO EQUIPMENT</a>
+              <ul>
+                <li><a href="/collections/ellipticals" class="submenu-item">Ellipticals</a></li>
+                <li><a href="/collections/exercise-bikes" class="submenu-item">Exercise Bikes</a></li>
+                <li><a href="/collections/flooring" class="submenu-item">Flooring</a></li>
+                <li><a href="/collections/rowing-ski-machines" class="submenu-item">Rowing Machines</a></li>
+                <li><a href="/collections/saunas-cold-plunges" class="submenu-item">Saunas</a></li>
+                <li>
+                  <a href="/collections/stair-climbers-steppers" class="submenu-item">Stair Climbers / Steppers</a>
+                </li>
+                <li>
+                  <a href="/collections/strength-training-equipment" class="submenu-item"
+                    >Strength Training Equipment</a
+                  >
+                </li>
+                <li><a href="/collections/treadclimbers" class="submenu-item">Treadclimbers</a></li>
+                <li><a href="/collections/treadmills" class="submenu-item">Treadmills</a></li>
+                <li><a href="/collections/vibration-platforms" class="submenu-item">Vibration Platforms</a></li>
+              </ul>
+            </div>
+            <div class="submenu">
+              <a href="/collections/strength-training-equipment" class="submenu-title">STRENGTH EQUIPMENT</a>
+              <ul>
+                <li><a href="/collections/benches" class="submenu-item">Benches</a></li>
+                <li><a href="/collections/free-weights" class="submenu-item">Free Weights</a></li>
+                <li><a href="/collections/gym-accessories" class="submenu-item">Gym Accessories</a></li>
+                <li><a href="/collections/plate-loaded" class="submenu-item">Plate Loaded</a></li>
+                <li><a href="/collections/cages-racks-rigs" class="submenu-item">Cages, Racks, & Rigs</a></li>
+                <li>
+                  <a href="/collections/selectorized-pin-loaded" class="submenu-item">Selectorized (Pin Loaded)</a>
+                </li>
+                <li><a href="/collections/storage-racks" class="submenu-item">Storage Racks</a></li>
+                <li><a href="/collections/gym-systems" class="submenu-item">Gym Systems</a></li>
+              </ul>
+            </div>
+            <div class="submenu">
+              <a href="/pages/brands" class="submenu-title">SHOP BY BRAND</a>
+              <ul>
+                <li><a href="/collections/body-solid" class="submenu-item">Body-Solid</a></li>
+                <li><a href="/collections/bowflex" class="submenu-item">Bowflex</a></li>
+                <li><a href="/collections/cybex" class="submenu-item">Cybex</a></li>
+                <li><a href="/collections/dynamic-cold-therapy" class="submenu-item">Dynamic Cold Therapy</a></li>
+                <li><a href="/collections/dynamic-fitness" class="submenu-item">Dynamic Fitness</a></li>
+                <li><a href="/collections/expresso-fitness" class="submenu-item">Expresso Fitness</a></li>
+                <li><a href="/collections/freemotion" class="submenu-item">FreeMotion</a></li>
+                <li><a href="/collections/french-fitness" class="submenu-item">French Fitness</a></li>
+                <li><a href="/collections/hammer-strength" class="submenu-item">Hammer Strength</a></li>
+                <li><a href="/collections/jacobs-ladder" class="submenu-item">Jacobs Ladder</a></li>
+                <li><a href="/collections/life-fitness" class="submenu-item">Life Fitness</a></li>
+                <li><a href="/collections/marpo-kinetics" class="submenu-item">Marpo Kinetics</a></li>
+                <li><a href="/collections/matrix" class="submenu-item">Matrix</a></li>
+                <li><a href="/collections/monark" class="submenu-item">Monark</a></li>
+                <li><a href="/collections/nautilus" class="submenu-item">Nautilus</a></li>
+                <li><a href="/collections/nustep" class="submenu-item">Nustep</a></li>
+                <li><a href="/collections/octane-fitness" class="submenu-item">Octane Fitness</a></li>
+                <li><a href="/collections/power-plate" class="submenu-item">Power Plate</a></li>
+                <li><a href="/collections/powerblock" class="submenu-item">PowerBlock</a></li>
+                <li><a href="/collections/precor" class="submenu-item">Precor</a></li>
+                <li><a href="/collections/schwinn" class="submenu-item">Schwinn</a></li>
+                <li><a href="/collections/scifit" class="submenu-item">SciFit</a></li>
+                <li><a href="/collections/sportsart" class="submenu-item">SportsArt</a></li>
+                <li><a href="/collections/stairmaster" class="submenu-item">Stairmaster</a></li>
+                <li><a href="/collections/star-trac" class="submenu-item">Star Trac</a></li>
+                <li><a href="/collections/technogym" class="submenu-item">Technogym</a></li>
+                <li><a href="/collections/throwdown" class="submenu-item">Throwdown</a></li>
+                <li><a href="/collections/true-fitness" class="submenu-item">True Fitness</a></li>
+                <li><a href="/collections/versaclimber" class="submenu-item">Versaclimber</a></li>
+                <li><a href="/collections/woodway-usa" class="submenu-item">Woodway USA</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        {{ content_for_layout }}
+      {% endif %}
+    </main>
+    {% if settings.show_sidebar_menu %}
+      </div>
+    {% endif %}
+    {% sections 'footer-group' %}
+    <ul hidden>
+      <li id="a11y-refresh-page-message">{{ 'accessibility.refresh_page' | t }}</li>
+      <li id="a11y-new-window-message">{{ 'accessibility.link_messages.new_window' | t }}</li>
+    </ul>
+    <script>
+      window.shopUrl = '{{ request.origin }}';
+      window.routes = {
+        cart_add_url: '{{ routes.cart_add_url }}',
+        cart_change_url: '{{ routes.cart_change_url }}',
+        cart_update_url: '{{ routes.cart_update_url }}',
+        cart_url: '{{ routes.cart_url }}',
+        predictive_search_url: '{{ routes.predictive_search_url }}',
+      };
+
+      window.cartStrings = {
+        error: `{{ 'sections.cart.cart_error' | t }}`,
+        quantityError: `{{ 'sections.cart.cart_quantity_error_html' | t: quantity: '[quantity]' }}`,
+      };
+
+      window.variantStrings = {
+        addToCart: `{{ 'products.product.add_to_cart' | t }}`,
+        soldOut: `{{ 'products.product.sold_out' | t }}`,
+        unavailable: `{{ 'products.product.unavailable' | t }}`,
+        unavailable_with_option: `{{ 'products.product.value_unavailable' | t: option_value: '[value]' }}`,
+      };
+
+      window.quickOrderListStrings = {
+        itemsAdded: `{{ 'sections.quick_order_list.items_added.other' | t: quantity: '[quantity]' }}`,
+        itemAdded: `{{ 'sections.quick_order_list.items_added.one' | t: quantity: '[quantity]' }}`,
+        itemsRemoved: `{{ 'sections.quick_order_list.items_removed.other' | t: quantity: '[quantity]' }}`,
+        itemRemoved: `{{ 'sections.quick_order_list.items_removed.one' | t: quantity: '[quantity]' }}`,
+        viewCart: `{{- 'sections.quick_order_list.view_cart' | t -}}`,
+        each: `{{- 'sections.quick_order_list.each' | t: money: '[money]' }}`,
+        min_error: `{{- 'sections.quick_order_list.min_error' | t: min: '[min]' }}`,
+        max_error: `{{- 'sections.quick_order_list.max_error' | t: max: '[max]' }}`,
+        step_error: `{{- 'sections.quick_order_list.step_error' | t: step: '[step]' }}`,
+      };
+      window.accessibilityStrings = {
+        imageAvailable: `{{ 'products.product.media.image_available' | t: index: '[index]' }}`,
+        shareSuccess: `{{ 'general.share.success_message' | t }}`,
+        pauseSlideshow: `{{ 'sections.slideshow.pause_slideshow' | t }}`,
+        playSlideshow: `{{ 'sections.slideshow.play_slideshow' | t }}`,
+        recipientFormExpanded: `{{ 'recipient.form.expanded' | t }}`,
+        recipientFormCollapsed: `{{ 'recipient.form.collapsed' | t }}`,
+        countrySelectorSearchCount: `{{ 'localization.country_results_count' | t: count: '[count]' }}`,
+      };
+    </script>
+
+    <style>
+      .drawer {
+        visibility: hidden;
+      }
+    </style>
+
+    {%- if settings.predictive_search_enabled -%}
+      <script src="{{ 'predictive-search.js' | asset_url }}" defer="defer"></script>
+    {%- endif -%}
+
+    <div class="modal-wrapper"><div id="dynamic-product-content" class="scroll-trigger animate--slide-in"></div></div>
+    {% comment %} {%- capture searchTemplate -%}{% render 'globo.filter.search' %}{%- endcapture -%}{%- unless searchTemplate contains 'Liquid error' -%}<script id="gspfSearchResult" type="template/html">{{- searchTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%} {% endcomment %}
+    {%- capture productTemplate -%}{% render 'globo.filter.product', themeTranslation: shop.metafields.globoFilter.themeTranslation.value[request.locale.iso_code] %}{%- endcapture -%}
+    {%- unless productTemplate contains 'Liquid error' -%}
+      <script id="gspfProduct" type="template/html">
+        {{- productTemplate | replace: "script>", "scripttag>" -}}
+      </script>
+    {%- endunless -%}
+    {%- capture treeTemplate -%}{% render 'globo.filter.tree' %}{%- endcapture -%}
+    {%- unless treeTemplate contains 'Liquid error' -%}
+      <script id="gspfFilterTree" type="template/html">
+        {{- treeTemplate | replace: "script>", "scripttag>" -}}
+      </script>
+    {%- endunless -%}
+    {%- capture sortTemplate -%}{% render 'globo.filter.sort' %}{%- endcapture -%}
+    {%- unless sortTemplate contains 'Liquid error' -%}
+      <script id="gspfFilterSort" type="template/html">
+        {{- sortTemplate | replace: "script>", "scripttag>" -}}
+      </script>
+    {%- endunless -%}
+
+    <script
+      defer
+      id="ze-snippet"
+      src="https://static.zdassets.com/ekr/snippet.js?key=cb8b520e-4aff-4fa3-968a-8956d8b9f31a"
+    ></script>
+    <script defer>
+      (function () {
+        var s = document.createElement('script'),
+          e = !document.body ? document.querySelector('head') : document.body;
+        s.src = 'https://s3.us-west-1.amazonaws.com/fitnesssuperstore.info/js/ada.js';
+        s.async = true;
+        s.onload = function () {
+          acsbJS.init({
+            statementLink: '',
+            footerHtml: '',
+            hideMobile: false,
+            hideTrigger: false,
+            language: 'en',
+            position: 'left',
+            leadColor: '#f1592a',
+            triggerColor: '#f1592a',
+            triggerRadius: '50%',
+            triggerPositionX: 'left',
+            triggerPositionY: 'bottom',
+            triggerIcon: 'people',
+            triggerSize: 'small',
+            triggerOffsetX: 20,
+            triggerOffsetY: 22,
+            mobile: {
+              triggerSize: 'small',
+              triggerPositionX: 'left',
+              triggerPositionY: 'bottom',
+              triggerOffsetX: 10,
+              triggerOffsetY: 20,
+              triggerRadius: '50%',
+            },
+          });
+        };
+        e.appendChild(s);
+      })();
+    </script>
+  </body>
+</html>
