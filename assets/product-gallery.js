@@ -210,7 +210,7 @@ class ProductGallery extends HTMLElement {
           document.documentElement.style.setProperty('--header-height', `${threshold}px`);
 
           if (!isLandscape) {
-            zoomResult.style.top = '0px';
+            zoomResult.style.top = '14px';
             zoomResult.style.height = `calc(98vh - ${threshold}px)`;
           } else {
             zoomResult.style.top = '';
@@ -254,6 +254,11 @@ class ProductGallery extends HTMLElement {
         lens.style.display = 'block';
       });
       container.addEventListener('mouseleave', () => {
+        zoomResult.style.display = 'none';
+        lens.style.display = 'none';
+      });
+
+      zoomResult.addEventListener('mouseenter', () => {
         zoomResult.style.display = 'none';
         lens.style.display = 'none';
       });
