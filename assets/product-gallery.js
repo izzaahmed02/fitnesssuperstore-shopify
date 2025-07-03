@@ -32,7 +32,7 @@ class ProductGallery extends HTMLElement {
     this.initThumbnails();
 
     if (this.mediaData.length > 0) {
-      this.setActiveMedia(this.mediaData[0].id);
+      // this.setActiveMedia(this.mediaData[0].id);
     }
 
     window.addEventListener('resize', this.handleResize.bind(this));
@@ -40,7 +40,10 @@ class ProductGallery extends HTMLElement {
     this.main.addEventListener('click', (e) => {
       const container = e.target.closest('.main-image-container');
       if (container) {
-        this.openPopup(this.activeMediaId);
+        const media = this.mediaData.find((m) => m.id == this.activeMediaId);
+        if (media.media_type != 'model') {
+          this.openPopup(this.activeMediaId);
+        }
       }
     });
   }
@@ -114,30 +117,42 @@ class ProductGallery extends HTMLElement {
     const container = document.createElement('div');
     container.className = 'main-image-container';
     container.setAttribute('data-media-id', id);
-    container.setAttribute('data-zoom-container', '');
-    if (media.media_type === 'video' || media.media_type === 'external_video') {
-      container.classList.add('is-video-preview');
+    if (media.media_type == 'image' || media.media_type === 'video' || media.media_type === 'external_video') {
+      container.setAttribute('data-zoom-container', '');
+      if (media.media_type === 'video' || media.media_type === 'external_video') {
+        container.classList.add('is-video-preview');
+      }
+      this.main.appendChild(container);
+
+      if (media.media_type === 'image') {
+        const img = document.createElement('img');
+        const skeletonWrapper = document.createElement('div');
+        img.alt = media.alt || '';
+        img.className = 'main-product-image';
+        skeletonWrapper.className = 'image-skeleton-wrapper';
+        img.src = media.preview_image.src;
+        img.sizes = media.preview_image.sizes || '';
+        img.width = media.preview_image.width || '';
+        img.height = media.preview_image.height || '';
+        img.loading = 'eager';
+        container.appendChild(skeletonWrapper);
+        skeletonWrapper.appendChild(img);
+
+        img.onload = () => {
+          skeletonWrapper.classList.add('loaded');
+          this.initZoom(container, media, true);
+        };
+      }
     }
-    this.main.appendChild(container);
-
-    if (media.media_type === 'image') {
-      const img = document.createElement('img');
-      const skeletonWrapper = document.createElement('div');
-      img.alt = media.alt || '';
-      img.className = 'main-product-image';
-      skeletonWrapper.className = 'image-skeleton-wrapper';
-      img.src = media.preview_image.src;
-      img.sizes = media.preview_image.sizes || '';
-      img.width = media.preview_image.width || '';
-      img.height = media.preview_image.height || '';
-      img.loading = 'eager';
-      container.appendChild(skeletonWrapper);
-      skeletonWrapper.appendChild(img);
-
-      img.onload = () => {
-        skeletonWrapper.classList.add('loaded');
-        this.initZoom(container, media, true);
-      };
+    else if (media.media_type == 'model') {
+      this.main.appendChild(container);
+      const model = document.createElement('model-viewer');
+      model.src = media.url;
+      model.setAttribute('alt', media.alt);
+      model.setAttribute('camera-controls', 'true');
+      model.setAttribute('camera-orbit', '0deg 75deg 2m');
+      model.setAttribute('data-shopify-feature', '1.12');
+      container.appendChild(model);
     }
   }
 
