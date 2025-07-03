@@ -55,7 +55,7 @@
 </style>
 
 
-<div class="steps-section section-padding scroll-trigger animate--slide-in" id="step-section">
+<div host="{{ request.host }}" class="steps-section section-padding scroll-trigger animate--slide-in" id="step-section">
     <div class="page-width">
         {% if section.settings.title != blank %}
             {% if section.settings.use_h1 %}
@@ -115,7 +115,7 @@
                                     allowfullscreen
                                     title="{{ section.settings.description | escape }}"
                             ></iframe>
-                        {%- else -%}
+                        {%- else -%} 
                             <iframe
                                     src="https://player.vimeo.com/video/{{ video_id }}?autoplay=1{{ loop }}"
                                     class="js-vimeo"
@@ -161,6 +161,43 @@
         </div>
     </div>
 </div>
+
+{%- assign video_file = section.settings.video -%}
+{%- assign video_sources = video_file.sources -%}
+{%- assign video_m3u8 = video_sources | where: "format", "m3u8" | first -%}
+{%- assign video_mp4 = video_sources | where: "format", "mp4" | first -%}
+
+{%- assign video_title = section.settings.video.alt | default: section.settings.description | escape -%}
+{%- assign video_description = section.settings.title | append: ' — ' | append: section.settings.text | strip_html | escape -%}
+{%- assign video_thumbnail = section.settings.cover_image | default: video_file.preview_image | image_url: width: 1200 -%}
+{%- assign upload_date = 'now' | date: "%Y-%m-%d" -%}
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoObject",
+  "name": "{{ video_title }}",
+  "description": "{{ video_description }}",
+  "thumbnailUrl": ["{{ video_thumbnail | prepend: 'https:' }}"],
+  "uploadDate": "{{ upload_date }}",
+  "duration": "PT1M57S",
+  "contentUrl": "{{ video_m3u8.url | default: video_file.sources[0].url | prepend: 'https:' }}",
+  "embedUrl": "{{ video_mp4.url | default: video_file.sources[0].url | prepend: 'https:' }}",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Fitness Superstore",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ request.host | prepend: 'https://' }}/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500"
+    }
+  }
+}
+</script>
+
+
+
 
 {% schema %}
 {

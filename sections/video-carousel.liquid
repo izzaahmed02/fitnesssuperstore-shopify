@@ -23,25 +23,30 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "type": "video_block",
-      "name": "Video",
-      "settings": [
-        {
-          "type": "image_picker",
-          "id": "thumbnail",
-          "label": "Thumbnail Image"
-        },
-        {
-          "type": "url",
-          "id": "video_url",
-          "label": "Video URL (YouTube or uploaded file URL)",
-          "info": "Paste a YouTube link or a video file URL uploaded via Content > Files"
-        }
-      ]
-    }
-  ],
+"blocks": [
+  {
+    "type": "video_block",
+    "name": "Video",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "thumbnail",
+        "label": "Thumbnail Image"
+      },
+      {
+        "type": "url",
+        "id": "video_url",
+        "label": "Video URL (YouTube or uploaded file URL)",
+        "info": "Paste a YouTube link or a video file URL uploaded via Content > Files"
+      },
+      {
+        "type": "video",
+        "id": "shopify_video",
+        "label": "Video File"
+      }
+    ]
+  }
+],
   "max_blocks": 10,
   "presets": [
     {
@@ -59,14 +64,68 @@
     data-videos-per-row="{{ section.settings.videos_per_row }}"
   >
     {% for block in section.blocks %}
-      {% assign video_url = block.settings.video_url %}
-      <div class="carousel-item">
-        <div class="video-thumbnail" data-video-url="{{ video_url }}">
-          <img src="{{ block.settings.thumbnail | image_url: width: 600 }}" alt="Video Thumbnail" />
-          <div class="play-button">&#9658;</div>
-        </div>
-      </div>
-    {% endfor %}
+  {% assign video_url = block.settings.video_url %}
+  {% assign shopify_video = block.settings.shopify_video %}
+  {% assign fallback_thumb = block.settings.thumbnail | image_url: width: 1200 %}
+  <div class="carousel-item">
+    <div class="video-thumbnail" data-video-url="{{ video_url }}">
+      <img src="{{ fallback_thumb }}" alt="{{ block.settings.thumbnail.alt | escape }}" />
+      <div class="play-button">&#9658;</div>
+    </div>
+
+    {% if shopify_video != blank and shopify_video.sources != blank %}
+  {% assign video_src = shopify_video.sources[0].url %}
+  {% assign video_embed = shopify_video.sources | where: "format", "mp4" | first %}
+  {% assign video_thumb = shopify_video.preview_image | image_url: width: 1200 %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "name": "{{ block.settings.thumbnail.alt | escape }}",
+    "description": "Video about {{ section.settings.hdg | strip_html | escape }} — {{ block.settings.thumbnail.alt | escape }}",
+    "thumbnailUrl": "{{ video_thumb | prepend: 'https:' }}",
+    "uploadDate": "{{ 'now' | date: "%Y-%m-%d" }}",
+    "duration": "PT1M57S",
+    "contentUrl": "{{ video_src }}",
+    "embedUrl": "{{ video_embed.url | default: video_src }}",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Fitness Superstore",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ request.host | prepend: 'https://' }}/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500"
+      }
+    }
+  }
+  </script>
+{% elsif video_url != blank %}
+  {% assign fallback_thumb = block.settings.thumbnail | image_url: width: 1200 %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "name": "{{ block.settings.thumbnail.alt | escape }}",
+    "description": "Video about {{ section.settings.hdg | strip_html | escape }} — {{ block.settings.thumbnail.alt | escape }}",
+    "thumbnailUrl": "{{ fallback_thumb | prepend: 'https:' }}",
+    "uploadDate": "{{ 'now' | date: "%Y-%m-%d" }}",
+    "duration": "PT1M57S",
+    "contentUrl": "{{ video_url }}",
+    "embedUrl": "{{ video_url }}",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Fitness Superstore",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ request.host  | prepend: 'https://' }}/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500"
+      }
+    }
+  }
+  </script>
+{% endif %}
+
+  </div>
+{% endfor %}
+
   </div>
 
   <div class="video-modal" id="videoModal">
