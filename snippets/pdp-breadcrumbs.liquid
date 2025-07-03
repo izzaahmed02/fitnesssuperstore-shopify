@@ -1,0 +1,40 @@
+<style>
+  .pdp-breadcrumbs__item {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 14px;
+  }
+  .pdp-breadcrumbs__item a,
+  .pdp-breadcrumbs__item span {
+    color: #f1592a;
+    margin-right: 5px;
+  }
+  .pdp-breadcrumbs__item .divider {
+    color: #000;
+  }
+</style>
+<div class="pdp-breadcrumbs">
+  <p><strong>Browse for more gym equipment in the same category as this item:</strong></p>
+  {% for i in (1..10) %}
+    {% for item in product.metafields.custom.breadcrumb_paths.value %}
+      {% if item.priority == i %}
+        <div class="pdp-breadcrumbs__item">
+          {% assign size = item.custom_titles.value | size | minus: 1 %}
+          {% for title in item.custom_titles.value %}
+            {% assign index = forloop.index0 %}
+            {% assign found = false %}
+            {% for step in item.steps.value %}
+              {% if index == forloop.index0 %}
+                <a href="{{ step.url }}">{{ title }}</a>{% if index < size %}<span class="divider">></span>{% endif %}
+                {% assign found = true %}
+              {% endif %}
+            {% endfor %}
+            {% if found == false %}
+              <span>{{ title }}</span>{% if index < size %}<span class="divider">></span>{% endif %}
+              {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+</div>
