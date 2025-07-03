@@ -338,6 +338,28 @@
               {%- assign image_media = product.media | where: 'media_type', 'image' -%}
 
               <div class="custom-gallery-thumbnails only-desktop">
+                {% assign model = product.media | where: 'media_type', 'model' | first %}
+                {%- if model -%}
+                  {% assign preview = model.preview_image %}
+
+                  <button
+                    class="thumbnail-btn is-active"
+                    data-media-id="{{ model.id }}"
+                    type="button"
+                  >
+                    <div class="image-skeleton-wrapper">
+                      <img
+                        src="{{ preview | image_url: width: 100 }}"
+                        alt="{{ model.alt | escape }}"
+                        width="{{ preview.width }}"
+                        height="{{ preview.height }}"
+                        loading="lazy"
+                        onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                      >
+                    </div>
+                  </button>
+
+                {%- endif -%}
                 {%- assign image_limit = 4 -%}
                 {%- for media in image_media limit: image_limit -%}
                   {% assign preview = media.preview_image %}
@@ -345,7 +367,7 @@
                   {% assign remaining = image_media.size | minus: image_limit %}
 
                   <button
-                    class="thumbnail-btn{% if forloop.first %} is-active{% endif %}"
+                    class="thumbnail-btn{% if model %}{% else %}{% if forloop.first %} is-active{% endif %}{% endif %}"
                     data-media-id="{{ media.id }}"
                     type="button"
                   >
@@ -406,38 +428,63 @@
 
               <!-- Main image -->
               <div class="custom-gallery-main" data-main-media-wrapper>
-                {% assign first_media = product.media.first %}
-                {% assign preview = first_media.preview_image %}
+                {% if model %}
+                  <div
+                    class="main-image-container"
+                    data-media-id="{{ model.id }}"
+                  >
+                    <model-viewer alt="{{ model.alt | json }}" src="{% for source in model.sources %}{% if source.format == 'glb' %}{{ source.url }}{% endif %}{% endfor %}" camera-controls="true" camera-orbit="0deg 75deg 4m" data-shopify-feature="1.12" data-js-focus-visible="" ar-status="not-presenting"></model-viewer>
+                  </div>
+                {% else %}
+                  {% assign first_media = product.media.first %}
+                  {% assign preview = first_media.preview_image %}
 
-                <div
-                  class="main-image-container"
-                  data-media-id="{{ first_media.id }}"
-                  data-zoom-container
-                >
-                  {% if first_media.media_type == 'image' %}
-                    <div class="image-skeleton-wrapper">
-                      <img
-                        src="{{ preview | image_url: width: 800 }}"
-                        alt="{{ first_media.alt | escape }}"
-                        class="main-product-image"
-                        width="{{ preview.width }}"
-                        height="{{ preview.height }}"
-                        loading="eager"
-                        onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
-                      >
-                    </div>
-                  {% elsif first_media.media_type == 'video' %}
-                    {{ first_media | media_tag }}
-                  {% else %}
-                    <div class="media-placeholder">Preview available in popup only.</div>
-                  {% endif %}
-                </div>
+                  <div
+                    class="main-image-container"
+                    data-media-id="{{ first_media.id }}"
+                    data-zoom-container
+                  >
+                    {% if first_media.media_type == 'image' %}
+                      <div class="image-skeleton-wrapper">
+                        <img
+                          src="{{ preview | image_url: width: 800 }}"
+                          alt="{{ first_media.alt | escape }}"
+                          class="main-product-image"
+                          width="{{ preview.width }}"
+                          height="{{ preview.height }}"
+                          loading="eager"
+                          onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                        >
+                      </div>
+                    {% elsif first_media.media_type == 'video' %}
+                      {{ first_media | media_tag }}
+                    {% else %}
+                      <div class="media-placeholder">Preview available in popup only.</div>
+                    {% endif %}
+                  </div>
+                {% endif %}
               </div>
             </div>
           </div>
 
           <script type="application/json" data-product-media>
             [
+              {% assign model = product.media | where: 'media_type', 'model' | first %}
+              {% if model %}
+                {
+                  "id": {{ model.id | json }},
+                  "media_type": {{ model.media_type | json }},
+                  "alt": {{ model.alt | json }},
+                  "preview_image": {
+                    "src": {{ model.preview_image | image_url: width: 800 | json }},
+                    "srcset": "{{ model.preview_image | image_url: width: 800 }} 800w, {{ model.preview_image | image_url: width: 1200 }} 1200w, {{ model.preview_image | image_url: width: 1600 }} 1600w, {{ model.preview_image | image_url: width: 2048 }} 2048w",
+                    "sizes": "(min-width: 990px) 800px, 100vw",
+                    "width": {{ model.preview_image.width | json }},
+                    "height": {{ model.preview_image.height | json }}
+                  },
+                  "url": {% for source in model.sources %}{% if source.format == 'glb' %}"{{ source.url }}"{% endif %}{% endfor %}
+                },
+              {% endif %}
               {% for media in product.media %}
                 {
                   "id": {{ media.id | json }},
