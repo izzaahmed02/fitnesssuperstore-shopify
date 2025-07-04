@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				const price = el.textContent.replace(/[()+]/g, '').trim();
 
 				if (el.parentElement && el.parentElement.tagName.toLowerCase() === 'option') {
-					el.textContent = `[${price}]`;
+					el.textContent = `[Add ${price}]`;
 				} else {
 					el.textContent = price;
 				}
@@ -35,13 +35,60 @@ document.addEventListener('DOMContentLoaded', () => {
 		document.querySelectorAll('.ap-options__swatch-container').forEach(container => {
 			const titleElement = container.querySelector('.ap-label-tooltip .apo-title');
 			if (titleElement && titleElement.textContent.trim() === 'Paint Color' || titleElement && titleElement.textContent.trim() === 'Vinyl Color' || titleElement && titleElement.textContent.trim() === 'Upholstery Color') {
-				container.style.display = 'none';
+        if (!window.location.pathname.includes('cart')) {
+          container.style.display = 'none';
+        }
 			}
 		});
 
 		clearInterval(avisOptionsPolling);
 	}, 100);
 });
+
+function createAssemblySelect() {
+	if (document.getElementById('double-assembly-input')) {
+		return
+	}
+	if (document.querySelector('select[field-name="Full Assembly & Installation"]')) {
+		return
+	}
+	const assembly = document.querySelectorAll(".handle-491, .installation-needed")[0];
+	const options = assembly.querySelectorAll('.ap-options__swatch label');
+	let header = document.createElement('div');
+	header.innerHTML='<h3 id="double-assembly-header" class="avp-heading">Assembly &amp; Room of Choice Installation Needed?</h3>'
+	document.querySelectorAll('product-form')[0].before(header);
+	let doubledSelect = document.createElement('select');
+	doubledSelect.setAttribute('id', "double-assembly-input");
+	document.querySelectorAll('product-form')[0].before(doubledSelect);
+
+	const customCulorGroup = document.querySelectorAll(".custom-color-group")[0];
+	if (customCulorGroup) {
+		assembly.after(customCulorGroup);
+	}
+	const warrantySelect = document.querySelector('select[name="Warranty"]');
+	if (warrantySelect) {
+		const warrantyContainer = warrantySelect.closest('.ap-options__select-container');
+		if (warrantyContainer) {
+			assembly.after(warrantyContainer);
+		}
+	}
+	if (doubledSelect) {
+		options.forEach((option) => {
+			const optionValue = option.querySelector('.swatch-variant-title').innerHTML;
+			const optionInputName = option.querySelector('input').getAttribute("value");
+			const optionTag = doubledSelect.appendChild(document.createElement("option"));
+			optionTag.innerHTML = optionValue;
+			optionTag.setAttribute("name", optionInputName);
+			option.addEventListener("change", (e) => {
+				doubledSelect.querySelectorAll(`option[name="${e.target.value}"]`)[0].selected = true;
+			});
+		});
+
+		doubledSelect.addEventListener("change", (e) => {
+			assembly.querySelectorAll("input")[e.target.selectedIndex].parentElement.click();
+		});
+	}
+}
 
 function renderCustomAvisOptions() {
 	const warrantySelect = document.querySelector('select[name="Warranty"]');
@@ -94,6 +141,154 @@ function renderCustomAvisOptions() {
 
 	setupOptionsPopup();	
 	setupOptionsHandler();
+	setupOptions();
+  const avisPopupBox = document.querySelector('.avis-cartOptionsPopup .avis-popupBox');
+  if (avisPopupBox) {
+    avisPopupBox.style.display = 'flex';
+  }
+  if (window.location.pathname.includes('products')) {
+	createAssemblySelect();
+    document.querySelectorAll('input').forEach((item) => {
+      if (item.checked) {
+        item.setAttribute("data-checked", 1);
+        item.parentElement.setAttribute('style', 'border: 1px solid #F1592A !important;');
+      } else {
+        item.setAttribute("data-checked", 0);
+      }
+    })
+  }
+}
+
+function selectedOptionHTML(swatchContainer, input) {
+
+  const allInputs = Array.from(swatchContainer?.querySelectorAll('input[type="radio"]'));
+  const inputIndex = allInputs.indexOf(input);
+  const inputTextValue = input.value;
+  let inputMoneyValue;
+
+  inputMoneyValue = input
+  ?.parentElement
+  ?.querySelector('.swatch-variant-title .money')
+  ?.innerText.replace('(', '')
+  .replace(')', '')
+  .replace('+', '');
+
+  if (inputTextValue == 'No Thanks' && !inputMoneyValue.includes('-$')) {
+    inputMoneyValue = Shopify.currency.active === 'USD' ? '$0' : '';
+  }
+
+  if (input.getAttribute('field-name') === 'Weight Stack') {
+    const weightStackField = document.querySelector('fieldset.weight-stack');
+    if (weightStackField) {
+      const wrapperIndex = [...optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')].indexOf(
+        wrapper
+      );
+      const weightStackTarget = weightStackField.querySelectorAll('label')[wrapperIndex];
+      if (weightStackTarget) {
+        weightStackTarget.click();
+      }
+    }
+  }
+
+  return `<div class="option_selected-container">
+    <p class="option_selected">${inputTextValue}</p>
+    ${
+  inputMoneyValue
+    ? `<span class="option_selected-price">${inputMoneyValue}</span>`
+    : ''
+  }
+    <svg class="remove-icon" data-group-name="${input.name}" data-value="${inputIndex}" width="16" height="16" fill="none"
+        xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
+            fill="black"/>
+    </svg>
+  </div>`;
+}
+
+function updateOption(selectedOptionHTML, optionContainer, input) {
+
+  const selectedOptionsContainer = optionContainer.querySelector('.selected_options_container');
+  const wrapper = input.parentElement;
+
+  selectedOptionsContainer.innerHTML = selectedOptionHTML;
+
+  Array.from(selectedOptionsContainer.children).forEach((option) => {
+    option.style.display = 'flex';
+  });
+
+  optionContainer.querySelectorAll('.ap-options__swatch .avp-productoptionswatchwrapper').forEach((wrap) => {
+    wrap.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
+  });
+
+  wrapper.setAttribute('style', 'border: 1px solid #F1592A !important;');
+
+  optionContainer.querySelectorAll('.remove-icon').forEach((icon) => {
+    icon.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const optionSelectedContainer = event.target.closest('.option_selected-container');
+      if (optionSelectedContainer) {
+        const value = parseInt(icon.getAttribute('data-value'));
+        const relatedInput =
+          optionContainer.querySelectorAll('.avp-productoptionswatchwrapper input[type="radio"]')[value];
+
+        if (relatedInput) {
+          relatedInput.checked = false;
+          relatedInput.dispatchEvent(
+            new Event('change', {
+              bubbles: true
+            })
+          );
+          optionSelectedContainer.remove();
+          wrapper.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
+        }
+
+        const optionGroupName = icon.dataset.groupName;
+
+        if (optionGroupName) {
+          selectedNegativePrices = selectedNegativePrices.filter(x => x.target !== optionGroupName);
+          updateCustomPrice();
+        }
+      }
+    });
+  });
+}
+
+function setupOptions() {
+	const options = document.querySelectorAll(`#cart #${window.avisModifyButton} .cart-product__details div.product-option`);
+	const avisOpionConteiner = document.querySelector('.avis-cartOptionsPopup');
+	options.forEach((option) => {
+		const optionFieldName = option.getAttribute('data-name');
+		if (optionFieldName && !optionFieldName.toLowerCase().includes("warranty") && !optionFieldName.toLowerCase().includes("processing time")) {
+			const optionFullName = option.querySelector('dd').innerText;
+			const pricePosition = optionFullName.indexOf('[Add ');
+			let optionName = optionFullName;
+			if (pricePosition != -1) {
+				optionName = optionFullName.substring(0, pricePosition).trimEnd();
+			}
+      /*if (optionFieldName.toLowerCase().includes("full assembly & installation")) {
+        const indexChr = optionFullName.lastIndexOf('[');
+        if (indexChr !== -1) {
+          const selectedOption = optionFullName.substring(0, indexChr).trimEnd();
+          avisOpionConteiner.querySelectorAll(`select[field-name='${optionFieldName}']`)[0].value = selectedOption;
+          }
+      } else {*/
+        const checkedInput = avisOpionConteiner.querySelectorAll(`input[field-name='${optionFieldName}']`);
+			  checkedInput.forEach((item) => {
+         const currentItem = item.getAttribute('value');
+          if (optionName === currentItem) {
+            if (item.checked) {
+              const inputs = item.parentNode.parentNode;
+              const OptionHTML = selectedOptionHTML(inputs, item);
+              updateOption(OptionHTML, inputs.parentElement, item);
+            } else {
+              item.parentNode.click();
+            }
+          }
+  			});
+      //}
+    }
+	});
 }
 
 function setupOptionsPopup() {
@@ -156,7 +351,7 @@ function setupOptionsPopup() {
 				event.preventDefault();
 				event.stopPropagation();
 
-				let headingElement = parentWithHandle.previousElementSibling;
+        let headingElement = parentWithHandle.previousElementSibling;
 
 				while (headingElement) {
 					if (headingElement.classList.contains('ap-options__heading-container')) {
@@ -292,7 +487,7 @@ function setupOptionsPopup() {
 function setupOptionsHandler() {
 	const optionsContainer = document.querySelectorAll('.avp-option');
 
-	optionsContainer.forEach((optionContainer) => {
+  optionsContainer.forEach((optionContainer) => {
 		const optionLabel = optionContainer.querySelector('.ap-label-tooltip');
 		if (optionLabel) {
 			const selectedOptionsContainerNew = document.createElement('div');
@@ -326,7 +521,7 @@ function setupOptionsHandler() {
 					inputMoneyValue = Shopify.currency.active === 'USD' ? '$0' : '';
 				}
 
-				if (input.getAttribute('field-name') === 'Weight Stack') {
+        if (input.getAttribute('field-name') === 'Weight Stack') {
 					const weightStackField = document.querySelector('fieldset.weight-stack');
 					if (weightStackField) {
 						const wrapperIndex = [...optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')].indexOf(
@@ -357,7 +552,7 @@ function setupOptionsHandler() {
 
 		  setTimeout(() => {	
 			const avisInputHidden = document.querySelector(`[name=\"properties[${CSS.escape(input.getAttribute('field-name').replace('&quot;', '"'))}]\"]`);
-			if (avisInputHidden && input.checked && inputMoneyValue) {
+      if (avisInputHidden && input.checked && inputMoneyValue) {
 				if (inputMoneyValue.includes('-$')) {
 					if (!avisInputHidden.value.includes('Subtract')) {
 					  avisInputHidden.value = avisInputHidden.value + ` [Subtract ${inputMoneyValue}]`
@@ -405,7 +600,10 @@ function setupOptionsHandler() {
                   );
                   optionSelectedContainer.remove();
                   wrapper.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
-                }
+				  if (icon.getAttribute("data-group-name") === "Full Assembly & Installation") {
+					document.querySelectorAll(".handle-491, .installation-needed")[0].querySelectorAll('.ap-options__swatch label')[0].click();
+				  }
+				}
 
 				const optionGroupName = icon.dataset.groupName;
 
@@ -421,6 +619,7 @@ function setupOptionsHandler() {
           if (optionToRemove) {
             optionToRemove.closest('.option_selected-container').remove();
           }
+
           wrapper.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
         }
       });
@@ -454,7 +653,7 @@ function setupOptionsHandler() {
 // 				});
 // 			}
 // 		}
-		
+
 // 		updateCustomPrice();
 // 	})
 //   });
@@ -477,7 +676,7 @@ function setupOptionsHandler() {
 
 		const isChecked = input.checked;
 
-		if (!isChecked) {
+    if (!isChecked) {
 			const inputName = input.name;
 
 			selectedNegativePrices = selectedNegativePrices.filter(x => x.target !== inputName);
@@ -721,8 +920,8 @@ function removeEmptyElements(element) {
 		}
 	});
 
-	const brElements = element.querySelectorAll('br');
-	brElements.forEach((br) => br.remove());
+	//const brElements = element.querySelectorAll('br');
+	//brElements.forEach((br) => br.remove());
 
 	const h5Elements = element.querySelectorAll('h5');
 	h5Elements.forEach((h5) => h5.remove());
@@ -772,11 +971,19 @@ if (window.location.pathname === '/cart') {
 			'.avis-cartOptionsPopup .ap-options__select-container'
 		);
 
-		if (avisCartOptionsPopupContainer && avisCartOptionsPopupContainer.style.display !== 'none') {
+    if (avisCartOptionsPopupContainer && avisCartOptionsPopupContainer.style.display !== 'none') {
 			if (!isPopupOpen) {
 				isPopupOpen = true;
 				document.querySelector('html').style.overflowY = 'hidden';
 				renderCustomAvisOptions();
+        document.querySelectorAll('.money.apo-money').forEach((el) => {
+          const price = el.textContent.replace(/[()+]/g, '').trim();
+          if (el.parentElement && el.parentElement.tagName.toLowerCase() === 'option') {
+            el.textContent = `[Add ${price}]`;
+          } else {
+            el.textContent = price;
+          }
+        });          
 			}
 		} else {
 			isPopupOpen = false;
