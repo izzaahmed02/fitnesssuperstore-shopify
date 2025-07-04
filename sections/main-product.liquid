@@ -1,22 +1,63 @@
 {% style %}
-
-.product__info-wrapper.grid__item {
-  transition: all 0.3s ease; /* Smooth transition for sticky effect */
+/* Prevent default page scrolling initially */
+body.no-scroll {
+  overflow: hidden!important;
 }
 
-.product__info-wrapper.grid__item.is-sticky {
-  position: sticky;
-  top: 20px; /* Adjust as needed for spacing from the top */
-  z-index: 10; /* Ensure it stays above other content */
-}
-
-/* Ensure the parent container supports sticky positioning */
+/* Ensure the product container supports the layout */
 .product {
-  position: relative;
-  min-height: 100vh; /* Ensure the container is tall enough */
+  position: relative!important;
+  display: grid!important;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))!important;
+  min-height: 100vh!important; /* Ensure sufficient height for scrolling */
+  max-height: 100vh!important; /* Limit height to viewport initially */
 }
 
+/* Fix the left container initially */
+.product-main-left-container {
+  position: fixed!important;
+  top: var(--header-height, 0px)!important; /* Adjust for header heights */
+  left: 0!important;
+  height: calc(100vh - var(--header-height, 0px))!important;
+  overflow: hidden!important; /* Prevent scrolling initially */
+  width: 50%!important; /* Adjust based on grid layout */
+  z-index: 5!important;
+}
 
+/* Make left container scrollable when info wrapper is sticky */
+.product-main-left-container.scrollable {
+  position: static!important;
+  overflow-y: auto!important;
+  height: auto!important;
+}
+
+/* Custom scrollable area for product info wrapper */
+.product__info-wrapper.grid__item {
+  max-height: calc(100vh - var(--header-height, 0px))!important; /* Limit height to viewport minus headers */
+  overflow-y: auto!important; /* Enable scrolling */
+  position: relative!important;
+  transition: all 0.3s ease!important; /* Smooth transition for sticky effect */
+}
+
+/* Sticky state for product info wrapper */
+.product__info-wrapper.grid__item.is-sticky {
+  position: sticky!important;
+  top: var(--sticky-top, 20px)!important; /* Dynamic top offset */
+  max-height: calc(100vh - var(--sticky-top, 20px))!important; /* Adjust height when sticky */
+  overflow-y: auto!important; /* Maintain scrolling if content overflows */
+  z-index: 10!important;
+}
+
+/* Ensure product-info has a defined height for boundary detection */
+product-info {
+  position: relative!important;
+}
+
+/* Allow page scrolling when left container scrolls */
+.product.scrollable {
+  max-height: none!important; /* Remove height restriction */
+  overflow-y: auto!important;
+}
 
   
   #shopify-section-{{ section.id }} .product-main-container{
@@ -3191,38 +3232,79 @@
 
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
+  const body = document.body;
   const productInfo = document.querySelector('product-info');
   const infoWrapper = document.querySelector('.product__info-wrapper.grid__item');
+  const leftContainer = document.querySelector('.product-main-left-container');
+  const productContainer = document.querySelector('.product');
+  const header = document.querySelector('.section-header');
+  const announcementBar = document.querySelector('.announcement-bar-section');
 
-  if (productInfo && infoWrapper) {
+  if (productInfo && infoWrapper && leftContainer && productContainer) {
+    // Calculate header heights for top offset
+    let headerHeight = 0;
+    let stickyTop = 20; // Default margin
+    if (header) {
+      headerHeight += header.offsetHeight;
+    }
+    if (announcementBar) {
+      headerHeight += announcementBar.offsetHeight;
+    }
+    stickyTop += headerHeight;
+
+    // Set CSS custom properties
+    document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+    document.documentElement.style.setProperty('--sticky-top', `${stickyTop}px`);
+
+    // Prevent default page scrolling initially
+    body.classList.add('no-scroll');
+
+    // Create a sentinel div at the bottom of product__info-wrapper to observe
+    const sentinel = document.createElement('div');
+    sentinel.style.height = '1px';
+    sentinel.id = 'info-wrapper-bottom-sentinel';
+    infoWrapper.appendChild(sentinel);
+
+    // Intersection Observer to detect when bottom of infoWrapper is reached
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          // Check if the bottom of the product-info element is in view
           if (!entry.isIntersecting) {
-            // Bottom of product-info is above the viewport, make infoWrapper sticky
+            // Bottom of infoWrapper is above the viewport, make it sticky and allow left container to scroll
             infoWrapper.classList.add('is-sticky');
+            leftContainer.classList.add('scrollable');
+            productContainer.classList.add('scrollable');
+            body.classList.remove('no-scroll');
           } else {
-            // Bottom of product-info is in view, remove sticky
+            // Bottom of infoWrapper is in view, revert to initial state
             infoWrapper.classList.remove('is-sticky');
+            leftContainer.classList.remove('scrollable');
+            productContainer.classList.remove('scrollable');
+            body.classList.add('no-scroll');
           }
         });
       },
       {
-        root: null, // Use the viewport as the root
-        rootMargin: '0px', // Trigger when the bottom is at the top of the viewport
-        threshold: 0 // Trigger as soon as any part of the bottom is in/out of view
+        root: infoWrapper, // Observe within the infoWrapper's scrollable area
+        rootMargin: `-${stickyTop}px 0px 0px 0px`, // Adjust for header heights
+        threshold: 0 // Trigger when sentinel crosses the viewport
       }
     );
 
-    // Create a sentinel div at the bottom of product-info to observe
-    const sentinel = document.createElement('div');
-    sentinel.style.height = '1px'; // Minimal height to mark the bottom
-    productInfo.appendChild(sentinel);
-
-    // Observe the sentinel div
+    // Observe the sentinel
     observer.observe(sentinel);
+
+    // Recalculate header heights on resize
+    window.addEventListener('resize', () => {
+      let headerHeight = 0;
+      let stickyTop = 20;
+      if (header) headerHeight += header.offsetHeight;
+      if (announcementBar) headerHeight += announcementBar.offsetHeight;
+      stickyTop += headerHeight;
+      document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+      document.documentElement.style.setProperty('--sticky-top', `${stickyTop}px`);
+    });
   }
 });
 </script>
