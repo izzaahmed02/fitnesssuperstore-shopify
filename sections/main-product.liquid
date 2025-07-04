@@ -1,4 +1,24 @@
 {% style %}
+
+.product__info-wrapper.grid__item {
+  transition: all 0.3s ease; /* Smooth transition for sticky effect */
+}
+
+.product__info-wrapper.grid__item.is-sticky {
+  position: sticky;
+  top: 20px; /* Adjust as needed for spacing from the top */
+  z-index: 10; /* Ensure it stays above other content */
+}
+
+/* Ensure the parent container supports sticky positioning */
+.product {
+  position: relative;
+  min-height: 100vh; /* Ensure the container is tall enough */
+}
+
+
+
+  
   #shopify-section-{{ section.id }} .product-main-container{
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -3166,6 +3186,47 @@
 </script>
 
 
+
+
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+  const productInfo = document.querySelector('product-info');
+  const infoWrapper = document.querySelector('.product__info-wrapper.grid__item');
+
+  if (productInfo && infoWrapper) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Check if the bottom of the product-info element is in view
+          if (!entry.isIntersecting) {
+            // Bottom of product-info is above the viewport, make infoWrapper sticky
+            infoWrapper.classList.add('is-sticky');
+          } else {
+            // Bottom of product-info is in view, remove sticky
+            infoWrapper.classList.remove('is-sticky');
+          }
+        });
+      },
+      {
+        root: null, // Use the viewport as the root
+        rootMargin: '0px', // Trigger when the bottom is at the top of the viewport
+        threshold: 0 // Trigger as soon as any part of the bottom is in/out of view
+      }
+    );
+
+    // Create a sentinel div at the bottom of product-info to observe
+    const sentinel = document.createElement('div');
+    sentinel.style.height = '1px'; // Minimal height to mark the bottom
+    productInfo.appendChild(sentinel);
+
+    // Observe the sentinel div
+    observer.observe(sentinel);
+  }
+});
+</script>
+                                      
 
 {% schema %}
 {
