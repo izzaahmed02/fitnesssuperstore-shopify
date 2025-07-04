@@ -45,11 +45,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	}, 100);
 });
 
-function createAssemplySelect() {
+function createAssemblySelect() {
 	if (document.getElementById('double-assembly-input')) {
 		return
 	}
-	const assembly = document.querySelectorAll(".installation-needed")[0];
+	if (document.querySelector('select[field-name="Full Assembly & Installation"]')) {
+		return
+	}
+	const assembly = document.querySelectorAll(".handle-491, .installation-needed")[0];
 	const options = assembly.querySelectorAll('.ap-options__swatch label');
 	let header = document.createElement('div');
 	header.innerHTML='<h3 id="double-assembly-header" class="avp-heading">Assembly &amp; Room of Choice Installation Needed?</h3>'
@@ -57,9 +60,21 @@ function createAssemplySelect() {
 	let doubledSelect = document.createElement('select');
 	doubledSelect.setAttribute('id', "double-assembly-input");
 	document.querySelectorAll('product-form')[0].before(doubledSelect);
+
+	const customCulorGroup = document.querySelectorAll(".custom-color-group")[0];
+	if (customCulorGroup) {
+		assembly.after(customCulorGroup);
+	}
+	const warrantySelect = document.querySelector('select[name="Warranty"]');
+	if (warrantySelect) {
+		const warrantyContainer = warrantySelect.closest('.ap-options__select-container');
+		if (warrantyContainer) {
+			assembly.after(warrantyContainer);
+		}
+	}
 	if (doubledSelect) {
 		options.forEach((option) => {
-			const optionValue = option.querySelector('.swatch-variant-title').innerText;
+			const optionValue = option.querySelector('.swatch-variant-title').innerHTML;
 			const optionInputName = option.querySelector('input').getAttribute("value");
 			const optionTag = doubledSelect.appendChild(document.createElement("option"));
 			optionTag.innerHTML = optionValue;
@@ -132,7 +147,7 @@ function renderCustomAvisOptions() {
     avisPopupBox.style.display = 'flex';
   }
   if (window.location.pathname.includes('products')) {
-	createAssemplySelect();
+	createAssemblySelect();
     document.querySelectorAll('input').forEach((item) => {
       if (item.checked) {
         item.setAttribute("data-checked", 1);
@@ -585,7 +600,10 @@ function setupOptionsHandler() {
                   );
                   optionSelectedContainer.remove();
                   wrapper.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
-                }
+				  if (icon.getAttribute("data-group-name") === "Full Assembly & Installation") {
+					document.querySelectorAll(".handle-491, .installation-needed")[0].querySelectorAll('.ap-options__swatch label')[0].click();
+				  }
+				}
 
 				const optionGroupName = icon.dataset.groupName;
 

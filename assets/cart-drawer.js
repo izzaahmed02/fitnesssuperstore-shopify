@@ -140,6 +140,7 @@ class CartDrawer extends HTMLElement {
               showExtraButton.style.display = 'flex';
           }
       });
+debugger;
 
       const drawerHeadingSpan = document.querySelector('.drawer__heading span');
       const drawerSubHeadingSpan = document.querySelector('.cart-drawer__subheading span');
