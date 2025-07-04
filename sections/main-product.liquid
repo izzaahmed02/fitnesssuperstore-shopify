@@ -1,54 +1,94 @@
 {% style %}
-  /* Ensure the product-main-container is a grid layout */
-  #shopify-section-{{ section.id }} .product-main-container {
-    display: grid!important;
-    grid-template-columns: 1fr 1fr!important;
-    gap: 54px!important;
-    position: relative!important;
-    min-height: 100vh!important; /* Ensure the container takes at least full viewport height */
-  }
+/* Ensure the product-main-container is a grid layout */
+#shopify-section-{{ section.id }} .product-main-container {
+  display: grid!important;
+  grid-template-columns: 1fr 1fr!important;
+  gap: 54px!important;
+  position: relative!important;
+  min-height: 100vh!important; /* Ensure the container spans the viewport height */
+}
 
-  /* Left container for media */
+/* Left container for product gallery */
+#shopify-section-{{ section.id }} .product-main-left-container {
+  position: relative!important;
+  width: 100%!important;
+  max-width: 100%!important;
+}
+
+/* Product gallery sticky behavior */
+#shopify-section-{{ section.id }} product-gallery {
+  position: sticky!important;
+  top: calc(var(--header-height, 0px) + var(--announcement-height, 0px) + 16px)!important;
+  z-index: 2!important;
+  height: fit-content!important;
+}
+
+/* Remove sticky behavior when gallery should scroll */
+#shopify-section-{{ section.id }} product-gallery.not-sticky {
+  position: static!important;
+}
+
+/* Right container for product info */
+#shopify-section-{{ section.id }} .product__info-wrapper {
+  position: relative!important;
+  width: 100%!important;
+  height: auto!important;
+  min-height: calc(100vh - var(--header-height, 0px) - var(--announcement-height, 0px))!important;
+  background: #FAF9F9!important;
+  padding: 36px 24px!important;
+  overflow-y: auto!important; /* Allow independent scrolling */
+}
+
+/* Sticky behavior for product info wrapper */
+#shopify-section-{{ section.id }} .product__info-wrapper.sticky {
+  position: sticky!important;
+  top: calc(var(--header-height, 0px) + var(--announcement-height, 0px) + 16px)!important;
+  max-height: calc(100vh - var(--header-height, 0px) - var(--announcement-height, 0px) - 16px)!important;
+}
+
+/* Align to bottom when section ends */
+#shopify-section-{{ section.id }} .product__info-wrapper.sticky-bottom {
+  position: absolute!important;
+  bottom: 0!important;
+  top: auto!important;
+}
+
+/* Adjust for larger screens */
+@media screen and (min-width: 990px) {
   #shopify-section-{{ section.id }} .product-main-left-container {
-    position: relative!important;
-    width: 100%!important;
+    width: calc(100% - 462px)!important;
     max-width: 100%!important;
   }
 
-  /* Right container for product info */
   #shopify-section-{{ section.id }} .product__info-wrapper {
-    position: relative!important;
-    width: 100%!important;
-    height: auto!important;
-    min-height: calc(100vh - var(--header-height, 0px) - var(--announcement-height, 0px))!important;
-    background: #FAF9F9!important;
-    padding: 36px 24px!important;
+    max-width: 430px!important;
+    margin-right: -4px!important;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  #shopify-section-{{ section.id }} .product-main-left-container {
+    width: calc(100% - 462px)!important;
+    max-width: 100%!important;
   }
 
-  /* Sticky behavior for larger screens */
-  @media screen and (min-width: 990px) {
-    #shopify-section-{{ section.id }} .product__info-wrapper {
-      position: sticky!important;
-      top: calc(var(--header-height, 0px) + var(--announcement-height, 0px) + 16px)!important;
-      max-height: calc(100vh - var(--header-height, 0px) - var(--announcement-height, 0px) - 16px)!important;
-      overflow-y: auto!important; /* Allow scrolling within the sticky container if content overflows */
-    }
+  #shopify-section-{{ section.id }} .product__info-wrapper {
+    max-width: 430px!important;
+  }
+}
+
+/* Ensure mobile behavior is non-sticky */
+@media screen and (max-width: 989px) {
+  #shopify-section-{{ section.id }} product-gallery {
+    position: static!important;
   }
 
-  /* Ensure the sticky container doesn't overlap with footer or other sections */
-  #shopify-section-{{ section.id }} .product__info-wrapper.sticky-bottom {
-    position: absolute!important;
-    bottom: 0!important;
-    top: auto!important;
+  #shopify-section-{{ section.id }} .product__info-wrapper {
+    position: static!important;
+    min-height: auto!important;
+    overflow-y: visible!important;
   }
-
-  /* Adjust padding and layout for larger screens */
-  @media screen and (min-width: 1200px) {
-    #shopify-section-{{ section.id }} .product__info-wrapper {
-      max-width: 430px!important;
-      margin-right: -4px!important;
-    }
-  }
+}
 {% endstyle %}
 
 
@@ -3224,7 +3264,8 @@
 
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
+  const productGallery = document.querySelector('product-gallery');
   const productInfoWrapper = document.querySelector('.product__info-wrapper');
   const productMainContainer = document.querySelector('.product-main-container');
   const sectionHeader = document.querySelector('.section-header');
@@ -3242,16 +3283,33 @@
 
   // Function to handle sticky behavior
   function handleStickyBehavior() {
-    if (!productInfoWrapper || !productMainContainer) return;
+    if (!productGallery || !productInfoWrapper || !productMainContainer) return;
 
-    const rect = productMainContainer.getBoundingClientRect();
-    const wrapperRect = productInfoWrapper.getBoundingClientRect();
+    const rectContainer = productMainContainer.getBoundingClientRect();
+    const rectGallery = productGallery.getBoundingClientRect();
+    const rectInfoWrapper = productInfoWrapper.getBoundingClientRect();
     const headerHeight = sectionHeader ? sectionHeader.offsetHeight : 0;
     const announcementHeight = announcementBar ? announcementBar.offsetHeight : 0;
     const totalHeaderHeight = headerHeight + announcementHeight;
 
-    // Check if the bottom of the product-main-container is above the viewport
-    if (rect.bottom <= totalHeaderHeight + wrapperRect.height) {
+    // Calculate the scroll position and heights
+    const infoWrapperBottom = rectInfoWrapper.bottom;
+    const viewportHeight = window.innerHeight;
+    const containerBottom = rectContainer.bottom;
+
+    // Check if the bottom of product__info-wrapper is in view
+    if (infoWrapperBottom <= viewportHeight) {
+      // Make product-gallery non-sticky and product__info-wrapper sticky
+      productGallery.classList.add('not-sticky');
+      productInfoWrapper.classList.add('sticky');
+    } else {
+      // Keep product-gallery sticky and product__info-wrapper non-sticky
+      productGallery.classList.remove('not-sticky');
+      productInfoWrapper.classList.remove('sticky');
+    }
+
+    // Check if the section is about to end
+    if (containerBottom <= totalHeaderHeight + rectInfoWrapper.height) {
       productInfoWrapper.classList.add('sticky-bottom');
     } else {
       productInfoWrapper.classList.remove('sticky-bottom');
@@ -3262,7 +3320,7 @@
   setHeaderHeights();
   handleStickyBehavior();
 
-  // Update on resize (header heights may change)
+  // Update on resize
   window.addEventListener('resize', () => {
     setHeaderHeights();
     handleStickyBehavior();
