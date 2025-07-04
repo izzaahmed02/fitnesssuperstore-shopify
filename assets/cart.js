@@ -483,7 +483,12 @@ document.addEventListener("DOMContentLoaded", () => {
 		mutations.forEach((mutation) => {
 			mutation.addedNodes.forEach((node) => {
 				if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('avis-edit-options')) {
+					node.setAttribute('data-cart-item', node.parentElement.getAttribute('data-cart-item'));
 					updateText(node);
+					node.addEventListener('click', (event) => {
+						window.avisModifyButton = node.getAttribute('data-cart-item');
+					});
+
 				}
 			});
 		});
