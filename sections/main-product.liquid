@@ -3196,20 +3196,19 @@
 
 
 
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const leftSticky = document.querySelector(".product-main-left-container");
   const rightSticky = document.querySelector(".product__info-wrapper");
-  const trigger = document.getElementById("sticky-trigger-marker");
 
-  if (!leftSticky || !rightSticky || !trigger) return;
+  if (!leftSticky || !rightSticky) return;
 
   const stickyOffset = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sticky-offset")) || 120;
 
   const observer = new IntersectionObserver(
     ([entry]) => {
-      if (!entry.isIntersecting) {
+      // Bottom of leftSticky has exited top of viewport
+      if (entry.boundingClientRect.bottom <= stickyOffset) {
         rightSticky.classList.add("sticky");
       } else {
         rightSticky.classList.remove("sticky");
@@ -3217,15 +3216,14 @@ document.addEventListener("DOMContentLoaded", function () {
     },
     {
       root: null,
-      rootMargin: `-${stickyOffset}px 0px 0px 0px`,
-      threshold: 0
+      threshold: 0,
     }
   );
 
-  observer.observe(trigger);
+  observer.observe(leftSticky);
 });
 </script>
-                           
+              
                                       
 
 {% schema %}
