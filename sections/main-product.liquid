@@ -3210,34 +3210,39 @@ document.addEventListener("DOMContentLoaded", function () {
   let isRightSticky = false;
 
   const updateStickyStates = () => {
-    const leftStickyRect = leftSticky.getBoundingClientRect();
-    const extraInfoRect = extraInfo.getBoundingClientRect();
+    const scrollY = window.scrollY;
 
-    // --- Handle LEFT Container ---
-    if (leftStickyRect.bottom + buffer >= extraInfoRect.top) {
+    const leftStickyTop = leftSticky.offsetTop;
+    const leftStickyHeight = leftSticky.offsetHeight;
+    const extraInfoTopAbs = extraInfo.offsetTop;
+
+    // ---- 1. LEFT CONTAINER: unstick right before overlapping extra info ----
+    const leftBottomAbs = leftStickyTop + leftStickyHeight;
+    if (scrollY + stickyOffset + leftStickyHeight + buffer >= extraInfoTopAbs) {
       leftSticky.classList.remove("sticky");
     } else {
       leftSticky.classList.add("sticky");
     }
 
-    // --- Handle RIGHT Container ---
-    if (extraInfoRect.top <= stickyOffset && !isRightSticky) {
+    // ---- 2. RIGHT CONTAINER: sticky starts when extraInfo hits top of viewport ----
+    const extraInfoTopViewport = extraInfo.getBoundingClientRect().top;
+
+    if (extraInfoTopViewport <= stickyOffset && !isRightSticky) {
       const currentTop = rightSticky.getBoundingClientRect().top;
       const offset = currentTop - stickyOffset;
       rightSticky.style.top = `${offset}px`;
       rightSticky.classList.add("sticky");
       isRightSticky = true;
-    } else if (extraInfoRect.top > stickyOffset && isRightSticky) {
-      rightSticky.classList.remove("sticky");
-      rightSticky.style.top = ""; // reset to CSS default
-      isRightSticky = false;
     }
+
+    // DO NOT remove the sticky class once it's added (unless you want it to unstick later)
   };
 
   window.addEventListener("scroll", updateStickyStates);
   window.addEventListener("resize", updateStickyStates);
   updateStickyStates();
 });
+
 </script>
 
     
