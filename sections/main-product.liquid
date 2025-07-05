@@ -3181,37 +3181,32 @@
 
 
 
-
-
-
-
 <script>
+document.addEventListener("DOMContentLoaded", function () {
+  const leftSticky = document.querySelector(".product-main-left-container");
+  const rightSticky = document.querySelector(".product__info-wrapper");
+  const trigger = document.getElementById("sticky-trigger-marker");
 
+  if (!leftSticky || !rightSticky || !trigger) return;
 
-
-document.addEventListener('DOMContentLoaded', function () {
-  const trigger = document.getElementById('sticky-trigger-marker');
-  const infoWrapper = document.querySelector('.product--large:not(.product--no-media) .product__info-wrapper');
-
-  if (!trigger || !infoWrapper) return;
+  const stickyOffset = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sticky-offset")) || 120;
 
   const observer = new IntersectionObserver(
     ([entry]) => {
       if (!entry.isIntersecting) {
-        infoWrapper.classList.add('sticky');
+        rightSticky.classList.add("sticky");
       } else {
-        infoWrapper.classList.remove('sticky');
+        rightSticky.classList.remove("sticky");
       }
     },
     {
-      root: null,
+      rootMargin: `-${stickyOffset}px 0px 0px 0px`,
       threshold: 0,
     }
   );
 
   observer.observe(trigger);
 });
-
 </script>
 
                                       
