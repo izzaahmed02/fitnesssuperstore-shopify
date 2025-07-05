@@ -3200,30 +3200,39 @@
 document.addEventListener("DOMContentLoaded", function () {
   const leftSticky = document.querySelector(".product-main-left-container");
   const rightSticky = document.querySelector(".product__info-wrapper");
+  const extraInfo = document.querySelector(".product__extra_info.desktop");
 
-  if (!leftSticky || !rightSticky) return;
+  if (!leftSticky || !rightSticky || !extraInfo) return;
 
   const stickyOffset = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sticky-offset")) || 120;
 
-  const observer = new IntersectionObserver(
-    ([entry]) => {
-      // Bottom of leftSticky has exited top of viewport
-      if (entry.boundingClientRect.bottom <= stickyOffset) {
-        rightSticky.classList.add("sticky");
-      } else {
-        rightSticky.classList.remove("sticky");
-      }
-    },
-    {
-      root: null,
-      threshold: 0,
-    }
-  );
+  const updateStickyStates = () => {
+    const extraInfoTop = extraInfo.getBoundingClientRect().top;
+    const extraInfoBottom = extraInfo.getBoundingClientRect().bottom;
 
-  observer.observe(leftSticky);
+    // Get scroll position of top of extraInfo relative to viewport
+    if (extraInfoTop <= stickyOffset) {
+      // Show right sticky
+      rightSticky.classList.add("sticky");
+    } else {
+      rightSticky.classList.remove("sticky");
+    }
+
+    if (extraInfoTop <= stickyOffset) {
+      // Stop left sticky
+      leftSticky.classList.remove("sticky");
+    } else {
+      // Keep left sticky
+      leftSticky.classList.add("sticky");
+    }
+  };
+
+  window.addEventListener("scroll", updateStickyStates);
+  window.addEventListener("resize", updateStickyStates);
+  updateStickyStates(); // Initial trigger
 });
 </script>
-              
+    
                                       
 
 {% schema %}
