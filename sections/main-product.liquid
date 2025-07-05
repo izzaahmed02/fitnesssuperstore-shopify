@@ -3171,6 +3171,44 @@
 
 
 
+
+
+
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const infoWrapper = document.querySelector('.product__info-wrapper');
+    const mainLeft = document.querySelector('.product-main-left-container');
+
+    const header = document.querySelector('.section-header');
+    const announcement = document.querySelector('.announcement-bar-section');
+
+    const offsetTop = (announcement?.offsetHeight || 0) + (header?.offsetHeight || 0);
+    document.documentElement.style.setProperty('--announcement-height', `${announcement?.offsetHeight || 0}px`);
+    document.documentElement.style.setProperty('--header-height', `${header?.offsetHeight || 0}px`);
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          infoWrapper.classList.add('sticky');
+        } else {
+          infoWrapper.classList.remove('sticky');
+        }
+      },
+      {
+        rootMargin: `-${offsetTop}px 0px 0px 0px`,
+        threshold: 0
+      }
+    );
+
+    if (mainLeft) {
+      observer.observe(mainLeft);
+    }
+  });
+</script>
+
+                                      
                                       
 
 {% schema %}
