@@ -236,654 +236,7 @@
 
 
 
-
-<div id="sticky-trigger-marker"></div>
-
-                        <div class="product__extra_info desktop">               
-                    <div class="product__extra_info-wrap">
-                    {% if product.metafields.custom.gym_package_inclusions and product.metafields.custom.gym_package_inclusions.value != blank%}
-                          <h4 class="product__extra_info-title">Package Inclusions</h4>
-                        {% for package in product.metafields.custom.gym_package_inclusions.value %}
-                          <div class="package-group">
-                            <h5 class="product__extra_info-title">{{ package.display_name }}</h5>
-                
-                            {% if package.inclusions %}
-                              <ul>
-                                {% for inclusion in package.inclusions.value %}
-                                  <li>
-                                      <strong>{{ inclusion.quantity }} - <a href="{{ inclusion.product.value.url }}">
-                                        {% if inclusion.display_name != blank %}
-                                            {{ inclusion.display_name }}
-                                          {% else %}
-                                            {{  inclusion.product.value.title }}
-                                        {% endif %}
-                                      </a></strong>
-                                  </li>
-                                {% endfor %}
-                              </ul>
-                            {% endif %}
-                          </div>
-                        {% endfor %}
-                      {% endif %}
-                      {% for block in section.blocks %}
-                        {% case block.type %}
-                          {% when 'description' %}
-                            {% if product.content != blank %}
-                              <div class="extra-info-width">
-                                <h4 class="product__extra_info-title">Description</h4>
-                                {{ product.description }}
-                              </div>
-                            {% endif %}
-                            {% if block.settings.show_tile_calculator %}
-                              <div class="product__tile-calculator">
-                                {% render 'product-tile-calculator', block: block %}
-                              </div>
-                            {% endif %}
-                    
-                          {% when 'extra' %}
-                            {% assign extra = product.metafields.custom.extra_info.value %}
-                            {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
-                            {% assign attachments_metafield = product.metafields.custom.attachments_and_add_ons.value %}
-                            {% assign otherRigRackSystems = product.metafields.custom.recommended_products.value %}
-                
-                            {% if extra != blank %}
-                              <h4 class="product__extra_info-title">Extra info</h4>
-                    
-                              <div class="extra-info-width">
-                                {% if extra.other_french_fitness_rig_rack_systems != blank %}
-                                  <div class="extra-info-accordion">
-                                    <span class="accordion-item">
-                                      <h4 class="product__extra_info-title">Other French Fitness Rig & Rack Systems</h4>
-                    
-                                      <svg
-                                        class="arrow"
-                                        width="14"
-                                        height="8"
-                                        viewBox="0 0 14 8"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                      >
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                      </svg>
-                                    </span>
-                    
-                                    <div class="extra-info-accordion-content">
-                                      <ul class="menu--second-level">
-                                        {% for link in extra.other_french_fitness_rig_rack_systems.value %}
-                                          <li class="">
-                                            <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
-                    
-                                            <svg
-                                              class="arrow"
-                                              width="8"
-                                              height="14"
-                                              viewBox="0 0 8 14"
-                                              fill="none"
-                                              xmlns="http://www.w3.org/2000/svg"
-                                            >
-                                              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                            </svg>
-                                          </li>
-                                        {% endfor %}
-                                      </ul>
-                                    </div>
-                                  </div>
-                                {% endif %}
-                
-                                {% if extra.manuals != blank %}
-                                  <div class="extra-info-accordion">
-                                    <span class="accordion-item">
-                                      <h4 class="product__extra_info-title">Manuals</h4>
-                    
-                                      <svg
-                                        class="arrow"
-                                        width="14"
-                                        height="8"
-                                        viewBox="0 0 14 8"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                      >
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                      </svg>
-                                    </span>
-                    
-                                    <div class="extra-info-accordion-content">
-                                      <ul class="menu--second-level">
-                                        {% for link in extra.manuals.value %}
-                                          <li class="">
-                                            <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
-                    
-                                            <svg
-                                              class="arrow"
-                                              width="8"
-                                              height="14"
-                                              viewBox="0 0 8 14"
-                                              fill="none"
-                                              xmlns="http://www.w3.org/2000/svg"
-                                            >
-                                              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                            </svg>
-                                          </li>
-                                        {% endfor %}
-                                      </ul>
-                                    </div>
-                                  </div>
-                                {% endif %}
-                    
-                                {% if extra.photos != blank %}
-                                  <div class="extra-info-accordion">
-                                    <span class="accordion-item">
-                                      <h4 class="product__extra_info-title">Photos</h4>
-                    
-                                      <svg
-                                        class="arrow"
-                                        width="14"
-                                        height="8"
-                                        viewBox="0 0 14 8"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                      >
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                      </svg>
-                                    </span>
-                    
-                                    <div class="extra-info-accordion-content">
-                                      <ul class="menu--second-level">
-                                        {% for link in extra.photos.value %}
-                                          <li class="">
-                                            <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
-                    
-                                            <svg
-                                              class="arrow"
-                                              width="8"
-                                              height="14"
-                                              viewBox="0 0 8 14"
-                                              fill="none"
-                                              xmlns="http://www.w3.org/2000/svg"
-                                            >
-                                              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                            </svg>
-                                          </li>
-                                        {% endfor %}
-                                      </ul>
-                                    </div>
-                                  </div>
-                                {% endif %}
-                    
-                                {% if extra.instructional_video_url != blank %}
-                                  <div class="extra-info-accordion">
-                                    <span class="accordion-item">
-                                      <h4 class="product__extra_info-title">Instructional video</h4>
-                    
-                                      <svg
-                                        class="arrow"
-                                        width="14"
-                                        height="8"
-                                        viewBox="0 0 14 8"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                      >
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                      </svg>
-                                    </span>
-                    
-                                    <div class="extra-info-accordion-content">
-                                      <iframe
-                                        width="560"
-                                        height="315"
-                                        loading="lazy"
-                                        src="{{ extra.instructional_video_url.value }}"
-                                        title="YouTube video player"
-                                        frameborder="0"
-                                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowfullscreen
-                                      >
-                                      </iframe>
-                    
-                                      {% if extra.instructional_text != blank %}
-                                        <div>
-                                          {{ extra.instructional_text }}
-                                        </div>
-                                      {% endif %}
-                                    </div>
-                                  </div>
-                                {% endif %}
-                
-                                {% if extra.other_videos != blank %}
-                                  <div class="extra-info-accordion">
-                                    <span class="accordion-item">
-                                      <h4 class="product__extra_info-title">Other Videos</h4>
-                    
-                                      <svg
-                                        class="arrow"
-                                        width="14"
-                                        height="8"
-                                        viewBox="0 0 14 8"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                      >
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                      </svg>
-                                    </span>
-                    
-                                    <div class="extra-info-accordion-content">
-                                      <ul class="menu--second-level">
-                                        {% for link in extra.other_videos.value %}
-                                          <li class="">
-                                            <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
-                    
-                                            <svg
-                                              class="arrow"
-                                              width="8"
-                                              height="14"
-                                              viewBox="0 0 8 14"
-                                              fill="none"
-                                              xmlns="http://www.w3.org/2000/svg"
-                                            >
-                                              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                            </svg>
-                                          </li>
-                                        {% endfor %}
-                                      </ul>
-                                    </div>
-                                  </div>
-                                {% endif %}
-                    
-                                {% if extra.comparisons != blank %}
-                                  <div class="extra-info-accordion">
-                                    <span class="accordion-item">
-                                      <h4 class="product__extra_info-title">Comparisons</h4>
-                    
-                                      <svg
-                                        class="arrow"
-                                        width="14"
-                                        height="8"
-                                        viewBox="0 0 14 8"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                      >
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                      </svg>
-                                    </span>
-                    
-                                    <div class="extra-info-accordion-content">
-                                      <div class="menu--second-level">
-                                        <span class="accordion-item--second-level">
-                                          <ul class="">
-                                            {% for link in extra.comparisons.value %}
-                                              <li>
-                                                <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
-                                              </li>
-                                            {% endfor %}
-                                          </ul>
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                {% endif %}
-                              </div>
-                            {% endif %}
-                    
-                          {% when 'all_in_one_overview' %}
-                            {% if block.settings.overview != blank %}
-                              <div class="product__extra_overview extra-info-width">
-                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
-                                <div class="product__extra_overview-list">{{ block.settings.overview }}</div>
-                              </div>
-                            {% endif %}
-                    
-                          {% when 'features' %}
-                            {% if block.settings.features != blank %}
-                              <div class="product__extra_features extra-info-width">
-                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
-                                <div>{{ block.settings.features }}</div>
-                              </div>
-                            {% endif %}
-                 
-                            {% assign otherFeatures = product.metafields.custom.features_specs.value.other_features.value %}
-                
-                          {% if otherFeatures != blank %}
-                              <div class="product__extra_tech extra-info-width">
-                                <div>{{ otherFeatures }}</div>
-                              </div>
-                          {% endif %}
-                
-                          {% if addMoreSections != blank %}
-                            <h4 class="product__extra_info-title">Add more sections</h4>
-                            {% if addMoreSections["2_sections"] != blank %}
-                              <div class="extra-info-accordion">
-                                <span class="accordion-item">
-                                  <h4 class="product__extra_info-title">2 sections</h4>
-                  
-                                  <svg
-                                    class="arrow"
-                                    width="14"
-                                    height="8"
-                                    viewBox="0 0 14 8"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                  </svg>
-                                </span>
-                  
-                                <div class="extra-info-accordion-content">
-                                  {{ addMoreSections["2_sections"] }}
-                                </div>
-                              </div>
-                            {% endif %}
-                            {% if addMoreSections["3_sections"] != blank %}
-                              <div class="extra-info-accordion">
-                                <span class="accordion-item">
-                                  <h4 class="product__extra_info-title">3 sections</h4>
-                  
-                                  <svg
-                                    class="arrow"
-                                    width="14"
-                                    height="8"
-                                    viewBox="0 0 14 8"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                  </svg>
-                                </span>
-                  
-                                <div class="extra-info-accordion-content">
-                                  {{ addMoreSections["3_sections"] }}
-                                </div>
-                              </div>
-                            {% endif %}
-                            {% if addMoreSections["4_sections"] != blank %}
-                              <div class="extra-info-accordion">
-                                <span class="accordion-item">
-                                  <h4 class="product__extra_info-title">4 sections</h4>
-                  
-                                  <svg
-                                    class="arrow"
-                                    width="14"
-                                    height="8"
-                                    viewBox="0 0 14 8"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                  </svg>
-                                </span>
-                  
-                                <div class="extra-info-accordion-content">
-                                  {{ addMoreSections["4_sections"] }}
-                                </div>
-                              </div>
-                            {% endif %}
-                            {% if addMoreSections["5_sections"] != blank %}
-                              <div class="extra-info-accordion">
-                                <span class="accordion-item">
-                                  <h4 class="product__extra_info-title">5 sections</h4>
-                  
-                                  <svg
-                                    class="arrow"
-                                    width="14"
-                                    height="8"
-                                    viewBox="0 0 14 8"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                                  </svg>
-                                </span>
-                  
-                                <div class="extra-info-accordion-content">
-                                  {{ addMoreSections["5_sections"] }}
-                                </div>
-                              </div>
-                            {% endif %}
-                          {% endif %}
-                
-                          {% when 'warranty' %}
-                            {% if block.settings.warranty != blank %}
-                              <div class="product__extra_warranty extra-info-width">
-                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
-                                <div>{{ block.settings.warranty }}</div>
-                              </div>
-                            {% endif %}
-                
-                            {% if attachments_metafield != blank %}
-                              {% assign attachments_object = attachments_metafield %}
-                              {% if attachments_object.rig_frame_pieces_customize_your_rig_for_sale != blank %}
-                
-                              {%- assign rig_frame_pieces_count = 0 -%}
-                              {%- for media in attachments_object.rig_frame_pieces_customize_your_rig_for_sale.value -%}
-                                {%- assign rig_frame_pieces_count = rig_frame_pieces_count | plus: 1 -%}
-                              {%- endfor -%}         
-                              <section class="rig-attachments-section">
-                                  <h4 class="product__extra_info-title">Rig Frame Pieces (Customize Your Rig) for Sale ({{ rig_frame_pieces_count }})</h4>
-                                  <div class="rig-product-grid">
-                                    {% for product_ref in attachments_object.rig_frame_pieces_customize_your_rig_for_sale.value %}
-                                      <div class="rig-product-card">
-                                        <div class="rig-product-image-wrap">
-                                          {% if product_ref.featured_image %}
-                                            <img 
-                                              src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
-                                              alt="{{ product_ref.featured_image.alt | escape }}" 
-                                              class="rig-product-image"
-                                            >
-                                          {% endif %}
-                                        </div>
-                                        <div class="rig-product-details">
-                                          <p class="rig-product-price">
-                                            {{ product_ref.price | money }}
-                                          </p>
-                                          <h3 class="rig-product-name">{{ product_ref.title }}</h3>
-                                          <a target="_blank"
-                                            class="rig-quickview-btn" 
-                                            href="{{ product_ref.url }}"
-                                          >
-                                            Quick view 
-                                            <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
-                                          </a>
-                                        </div>
-                                      </div>
-                                    {% endfor %}
-                                  </div>            
-                              </section>
-                              {% endif %}
-                              {% if attachments_object.rig_attachments_accessories_for_sale != blank %}
-                                {%- assign rig_attachments_count = 0 -%}
-                                {%- for media in attachments_object.rig_attachments_accessories_for_sale.value -%}
-                                  {%- assign rig_attachments_count = rig_attachments_count | plus: 1 -%}
-                                {%- endfor -%} 
-                                <section class="rig-attachments-section">
-                                  <h4 class="product__extra_info-title">Rig Attachments & Accessories for Sale ({{ rig_attachments_count }})</h4>
-                                  <div class="rig-product-grid">
-                                    {% for product_ref in attachments_object.rig_attachments_accessories_for_sale.value %}
-                                      <div class="rig-product-card">
-                                        <div class="rig-product-image-wrap">
-                                          {% if product_ref.featured_image %}
-                                            <img 
-                                              src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
-                                              alt="{{ product_ref.featured_image.alt | escape }}" 
-                                              class="rig-product-image"
-                                            >
-                                          {% endif %}
-                                        </div>
-                                        <div class="rig-product-details">
-                                          <p class="rig-product-price">
-                                            {{ product_ref.price | money }}
-                                          </p>
-                                          <h3 class="rig-product-name">{{ product_ref.title }}</h3>
-                                          <a target="_blank"
-                                            class="rig-quickview-btn" 
-                                            href="{{ product_ref.url }}"
-                                          >
-                                            Quick view 
-                                            <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
-                                          </a>
-                                        </div>
-                                      </div>
-                                    {% endfor %}
-                                  </div>            
-                              </section>
-                              {% endif %}
-                          {% endif %}
-                
-                          {% if otherRigRackSystems != blank %}
-                            <section class="other-rig-rack-systems-section">
-                              <h4 class="product__extra_info-title">Other French Fitness Rig & Rack Systems</h4>
-                              <div class="other-rig-rack-systems-cards">
-                                {% for product_ref in otherRigRackSystems.other_french_fitness_rig_rack_systems.value %}
-                                  <div class="rig-product-card">
-                                    <div class="rig-product-image-wrap">
-                                      {% if product_ref.featured_image %}
-                                        <img 
-                                          src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
-                                          alt="{{ product_ref.featured_image.alt | escape }}" 
-                                          class="rig-product-image"
-                                        >
-                                      {% endif %}
-                                    </div>
-                                    <div class="rig-product-details">
-                                      <h3 class="rig-product-name">{{ product_ref.title }}</h3>
-                                      <div class="rig-lower-details">
-                                        <div class="rig-product-price">
-                                          {% if product_ref.metafields.custom.retail_price != blank %}
-                                            <s>MSRP: {{ product_ref.metafields.custom.retail_price | money -}}</s>
-                                          {% endif %}
-                                          <p>{{ product_ref.price | money }}</p>
-                                        </div>
-                                        <a target="_blank"
-                                          class="rig-quickview-btn" 
-                                          href="{{ product_ref.url }}"
-                                        >
-                                          View details 
-                                          <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
-                                        </a>
-                                      </div>
-                                    </div>
-                                  </div>
-                                {% endfor %}            
-                              </div>
-                            </section>
-                          {% endif %}
-                
-                          {% when 'tech' %}
-                            {% if block.settings.tech != blank %}
-                              <div class="product__extra_tech extra-info-width">
-                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
-                                <div>{{ block.settings.tech }}</div>
-                              </div>
-                            {% endif %}
-                
-                            {% assign otherTechSpecs = product.metafields.custom.features_specs.value.other_tech_specs.value %}
-                
-                          {% if otherTechSpecs != blank %}
-                              <div class="product__extra_tech extra-info-width">
-                                <div>{{ otherTechSpecs }}</div>
-                              </div>
-                          {% endif %}
-                
-                          {% when 'shippingdimsweight' %}
-                            {% if block.settings.shippingdimsweight != blank %}
-                              <div class="product__extra_smith extra-info-width">
-                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
-                                <div>{{ product.metafields.custom.features_specs.value.shipping_dims_weight_2.value }}</div>
-                              </div>
-                            {% endif %}
-                            
-                          {% when 'weightstacks' %}
-                            {% if block.settings.weightstacks != blank %}
-                              <div class="product__extra_smith extra-info-width">
-                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
-                                <div>{{ block.settings.weightstacks }}</div>
-                              </div>
-                            {% endif %}
-                
-                          {% when 'setincludes' %}
-                            {% assign setIncludes = product.metafields.custom.features_specs.value.set_includes.value %}
-                    
-                            {% if setIncludes != blank %}
-                              <div class="product__extra_accessories extra-info-width">
-                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
-                                <div class="product__extra_accessories-container">
-                                  {% for item in setIncludes %}
-                                    <div class="product__extra_accessories-item">
-                                      {% if item.set_image != blank %}
-                                        <img src="{{ item.set_image | image_url }}" alt="{{ item.set_image }}" width="60" height="40">
-                                      {% endif %}
-                                      <span>{{ item.set_name }}</span>
-                                    </div>
-                                  {% endfor %}
-                                </div>
-                              </div>
-                            {% endif %}
-                    
-                          {% when 'smith' %}
-                            {% if block.settings.smith != blank %}
-                              <div class="product__extra_smith extra-info-width">
-                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
-                                <div>{{ block.settings.smith }}</div>
-                              </div>
-                            {% endif %}
-                    
-                          {% when 'accessories' %}
-                            {% assign accessories = product.metafields.custom.features_specs.value.accessories_included.value %}
-                    
-                            {% if accessories != blank %}
-                              <div class="product__extra_accessories extra-info-width">
-                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
-                                <div class="product__extra_accessories-container">
-                                  {% for item in accessories %}
-                                    <div class="product__extra_accessories-item">
-                                      {% if item.image != blank %}
-                                        <img src="{{ item.image | image_url }}" alt="{{ item.title }}" width="150" height="100">
-                                      {% endif %}
-                                      <span>{{ item.title }}</span>
-                                    </div>
-                                  {% endfor %}
-                                </div>
-                              </div>
-                            {% endif %}
-                    
-                          {% when 'accessory-feature' %}
-                            {% if block.settings['accessory-feature'] != blank %}
-                              <div class="product__extra_accessory-feature">
-                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
-                                <div>{{ block.settings['accessory-feature'] }}</div>
-                              </div>
-                            {% endif %}
-                    
-                          {% when 'list' %}
-                            {% if block.settings.list != blank %}
-                              <div class="product__extra_list">
-                                <div>{{ block.settings.list }}</div>
-                              </div>
-                            {% endif %}
-                    
-                          {% when 'text' %}
-                            {% if block.settings.text != blank %}
-                              <div class="product__extra_warning_text">
-                                {% render 'icon-alert' %}
-                                <div>{{ block.settings.text }}</div>
-                              </div>
-                            {% endif %}
-                        {% endcase %}
-                      {% endfor %}
-                    
-                      {% render 'prop65' %}
-                      <a id="download-pds" style="cursor:pointer;">Download Product Data Sheet</a>
-                    </div>
-                </div>
-
-
-
-
-
-
-
-
-
-
-
+                      
 
 
 
@@ -1132,6 +485,11 @@
           </div>
         {% endif %}
       </div>
+
+                  
+
+
+<div id="sticky-trigger-marker"></div>
 
       <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
         <div
@@ -2346,6 +1704,664 @@
           </a>
         </div>
       </div>
+
+
+
+
+
+
+
+
+
+
+  <div class="product__extra_info desktop">               
+                    <div class="product__extra_info-wrap">
+                    {% if product.metafields.custom.gym_package_inclusions and product.metafields.custom.gym_package_inclusions.value != blank%}
+                          <h4 class="product__extra_info-title">Package Inclusions</h4>
+                        {% for package in product.metafields.custom.gym_package_inclusions.value %}
+                          <div class="package-group">
+                            <h5 class="product__extra_info-title">{{ package.display_name }}</h5>
+                
+                            {% if package.inclusions %}
+                              <ul>
+                                {% for inclusion in package.inclusions.value %}
+                                  <li>
+                                      <strong>{{ inclusion.quantity }} - <a href="{{ inclusion.product.value.url }}">
+                                        {% if inclusion.display_name != blank %}
+                                            {{ inclusion.display_name }}
+                                          {% else %}
+                                            {{  inclusion.product.value.title }}
+                                        {% endif %}
+                                      </a></strong>
+                                  </li>
+                                {% endfor %}
+                              </ul>
+                            {% endif %}
+                          </div>
+                        {% endfor %}
+                      {% endif %}
+                      {% for block in section.blocks %}
+                        {% case block.type %}
+                          {% when 'description' %}
+                            {% if product.content != blank %}
+                              <div class="extra-info-width">
+                                <h4 class="product__extra_info-title">Description</h4>
+                                {{ product.description }}
+                              </div>
+                            {% endif %}
+                            {% if block.settings.show_tile_calculator %}
+                              <div class="product__tile-calculator">
+                                {% render 'product-tile-calculator', block: block %}
+                              </div>
+                            {% endif %}
+                    
+                          {% when 'extra' %}
+                            {% assign extra = product.metafields.custom.extra_info.value %}
+                            {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
+                            {% assign attachments_metafield = product.metafields.custom.attachments_and_add_ons.value %}
+                            {% assign otherRigRackSystems = product.metafields.custom.recommended_products.value %}
+                
+                            {% if extra != blank %}
+                              <h4 class="product__extra_info-title">Extra info</h4>
+                    
+                              <div class="extra-info-width">
+                                {% if extra.other_french_fitness_rig_rack_systems != blank %}
+                                  <div class="extra-info-accordion">
+                                    <span class="accordion-item">
+                                      <h4 class="product__extra_info-title">Other French Fitness Rig & Rack Systems</h4>
+                    
+                                      <svg
+                                        class="arrow"
+                                        width="14"
+                                        height="8"
+                                        viewBox="0 0 14 8"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                      </svg>
+                                    </span>
+                    
+                                    <div class="extra-info-accordion-content">
+                                      <ul class="menu--second-level">
+                                        {% for link in extra.other_french_fitness_rig_rack_systems.value %}
+                                          <li class="">
+                                            <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
+                    
+                                            <svg
+                                              class="arrow"
+                                              width="8"
+                                              height="14"
+                                              viewBox="0 0 8 14"
+                                              fill="none"
+                                              xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                            </svg>
+                                          </li>
+                                        {% endfor %}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                {% endif %}
+                
+                                {% if extra.manuals != blank %}
+                                  <div class="extra-info-accordion">
+                                    <span class="accordion-item">
+                                      <h4 class="product__extra_info-title">Manuals</h4>
+                    
+                                      <svg
+                                        class="arrow"
+                                        width="14"
+                                        height="8"
+                                        viewBox="0 0 14 8"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                      </svg>
+                                    </span>
+                    
+                                    <div class="extra-info-accordion-content">
+                                      <ul class="menu--second-level">
+                                        {% for link in extra.manuals.value %}
+                                          <li class="">
+                                            <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
+                    
+                                            <svg
+                                              class="arrow"
+                                              width="8"
+                                              height="14"
+                                              viewBox="0 0 8 14"
+                                              fill="none"
+                                              xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                            </svg>
+                                          </li>
+                                        {% endfor %}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                {% endif %}
+                    
+                                {% if extra.photos != blank %}
+                                  <div class="extra-info-accordion">
+                                    <span class="accordion-item">
+                                      <h4 class="product__extra_info-title">Photos</h4>
+                    
+                                      <svg
+                                        class="arrow"
+                                        width="14"
+                                        height="8"
+                                        viewBox="0 0 14 8"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                      </svg>
+                                    </span>
+                    
+                                    <div class="extra-info-accordion-content">
+                                      <ul class="menu--second-level">
+                                        {% for link in extra.photos.value %}
+                                          <li class="">
+                                            <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
+                    
+                                            <svg
+                                              class="arrow"
+                                              width="8"
+                                              height="14"
+                                              viewBox="0 0 8 14"
+                                              fill="none"
+                                              xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                            </svg>
+                                          </li>
+                                        {% endfor %}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                {% endif %}
+                    
+                                {% if extra.instructional_video_url != blank %}
+                                  <div class="extra-info-accordion">
+                                    <span class="accordion-item">
+                                      <h4 class="product__extra_info-title">Instructional video</h4>
+                    
+                                      <svg
+                                        class="arrow"
+                                        width="14"
+                                        height="8"
+                                        viewBox="0 0 14 8"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                      </svg>
+                                    </span>
+                    
+                                    <div class="extra-info-accordion-content">
+                                      <iframe
+                                        width="560"
+                                        height="315"
+                                        loading="lazy"
+                                        src="{{ extra.instructional_video_url.value }}"
+                                        title="YouTube video player"
+                                        frameborder="0"
+                                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowfullscreen
+                                      >
+                                      </iframe>
+                    
+                                      {% if extra.instructional_text != blank %}
+                                        <div>
+                                          {{ extra.instructional_text }}
+                                        </div>
+                                      {% endif %}
+                                    </div>
+                                  </div>
+                                {% endif %}
+                
+                                {% if extra.other_videos != blank %}
+                                  <div class="extra-info-accordion">
+                                    <span class="accordion-item">
+                                      <h4 class="product__extra_info-title">Other Videos</h4>
+                    
+                                      <svg
+                                        class="arrow"
+                                        width="14"
+                                        height="8"
+                                        viewBox="0 0 14 8"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                      </svg>
+                                    </span>
+                    
+                                    <div class="extra-info-accordion-content">
+                                      <ul class="menu--second-level">
+                                        {% for link in extra.other_videos.value %}
+                                          <li class="">
+                                            <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
+                    
+                                            <svg
+                                              class="arrow"
+                                              width="8"
+                                              height="14"
+                                              viewBox="0 0 8 14"
+                                              fill="none"
+                                              xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.2374 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                            </svg>
+                                          </li>
+                                        {% endfor %}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                {% endif %}
+                    
+                                {% if extra.comparisons != blank %}
+                                  <div class="extra-info-accordion">
+                                    <span class="accordion-item">
+                                      <h4 class="product__extra_info-title">Comparisons</h4>
+                    
+                                      <svg
+                                        class="arrow"
+                                        width="14"
+                                        height="8"
+                                        viewBox="0 0 14 8"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                      </svg>
+                                    </span>
+                    
+                                    <div class="extra-info-accordion-content">
+                                      <div class="menu--second-level">
+                                        <span class="accordion-item--second-level">
+                                          <ul class="">
+                                            {% for link in extra.comparisons.value %}
+                                              <li>
+                                                <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
+                                              </li>
+                                            {% endfor %}
+                                          </ul>
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                {% endif %}
+                              </div>
+                            {% endif %}
+                    
+                          {% when 'all_in_one_overview' %}
+                            {% if block.settings.overview != blank %}
+                              <div class="product__extra_overview extra-info-width">
+                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                                <div class="product__extra_overview-list">{{ block.settings.overview }}</div>
+                              </div>
+                            {% endif %}
+                    
+                          {% when 'features' %}
+                            {% if block.settings.features != blank %}
+                              <div class="product__extra_features extra-info-width">
+                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                                <div>{{ block.settings.features }}</div>
+                              </div>
+                            {% endif %}
+                 
+                            {% assign otherFeatures = product.metafields.custom.features_specs.value.other_features.value %}
+                
+                          {% if otherFeatures != blank %}
+                              <div class="product__extra_tech extra-info-width">
+                                <div>{{ otherFeatures }}</div>
+                              </div>
+                          {% endif %}
+                
+                          {% if addMoreSections != blank %}
+                            <h4 class="product__extra_info-title">Add more sections</h4>
+                            {% if addMoreSections["2_sections"] != blank %}
+                              <div class="extra-info-accordion">
+                                <span class="accordion-item">
+                                  <h4 class="product__extra_info-title">2 sections</h4>
+                  
+                                  <svg
+                                    class="arrow"
+                                    width="14"
+                                    height="8"
+                                    viewBox="0 0 14 8"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                  </svg>
+                                </span>
+                  
+                                <div class="extra-info-accordion-content">
+                                  {{ addMoreSections["2_sections"] }}
+                                </div>
+                              </div>
+                            {% endif %}
+                            {% if addMoreSections["3_sections"] != blank %}
+                              <div class="extra-info-accordion">
+                                <span class="accordion-item">
+                                  <h4 class="product__extra_info-title">3 sections</h4>
+                  
+                                  <svg
+                                    class="arrow"
+                                    width="14"
+                                    height="8"
+                                    viewBox="0 0 14 8"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                  </svg>
+                                </span>
+                  
+                                <div class="extra-info-accordion-content">
+                                  {{ addMoreSections["3_sections"] }}
+                                </div>
+                              </div>
+                            {% endif %}
+                            {% if addMoreSections["4_sections"] != blank %}
+                              <div class="extra-info-accordion">
+                                <span class="accordion-item">
+                                  <h4 class="product__extra_info-title">4 sections</h4>
+                  
+                                  <svg
+                                    class="arrow"
+                                    width="14"
+                                    height="8"
+                                    viewBox="0 0 14 8"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                  </svg>
+                                </span>
+                  
+                                <div class="extra-info-accordion-content">
+                                  {{ addMoreSections["4_sections"] }}
+                                </div>
+                              </div>
+                            {% endif %}
+                            {% if addMoreSections["5_sections"] != blank %}
+                              <div class="extra-info-accordion">
+                                <span class="accordion-item">
+                                  <h4 class="product__extra_info-title">5 sections</h4>
+                  
+                                  <svg
+                                    class="arrow"
+                                    width="14"
+                                    height="8"
+                                    viewBox="0 0 14 8"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                                  </svg>
+                                </span>
+                  
+                                <div class="extra-info-accordion-content">
+                                  {{ addMoreSections["5_sections"] }}
+                                </div>
+                              </div>
+                            {% endif %}
+                          {% endif %}
+                
+                          {% when 'warranty' %}
+                            {% if block.settings.warranty != blank %}
+                              <div class="product__extra_warranty extra-info-width">
+                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                                <div>{{ block.settings.warranty }}</div>
+                              </div>
+                            {% endif %}
+                
+                            {% if attachments_metafield != blank %}
+                              {% assign attachments_object = attachments_metafield %}
+                              {% if attachments_object.rig_frame_pieces_customize_your_rig_for_sale != blank %}
+                
+                              {%- assign rig_frame_pieces_count = 0 -%}
+                              {%- for media in attachments_object.rig_frame_pieces_customize_your_rig_for_sale.value -%}
+                                {%- assign rig_frame_pieces_count = rig_frame_pieces_count | plus: 1 -%}
+                              {%- endfor -%}         
+                              <section class="rig-attachments-section">
+                                  <h4 class="product__extra_info-title">Rig Frame Pieces (Customize Your Rig) for Sale ({{ rig_frame_pieces_count }})</h4>
+                                  <div class="rig-product-grid">
+                                    {% for product_ref in attachments_object.rig_frame_pieces_customize_your_rig_for_sale.value %}
+                                      <div class="rig-product-card">
+                                        <div class="rig-product-image-wrap">
+                                          {% if product_ref.featured_image %}
+                                            <img 
+                                              src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
+                                              alt="{{ product_ref.featured_image.alt | escape }}" 
+                                              class="rig-product-image"
+                                            >
+                                          {% endif %}
+                                        </div>
+                                        <div class="rig-product-details">
+                                          <p class="rig-product-price">
+                                            {{ product_ref.price | money }}
+                                          </p>
+                                          <h3 class="rig-product-name">{{ product_ref.title }}</h3>
+                                          <a target="_blank"
+                                            class="rig-quickview-btn" 
+                                            href="{{ product_ref.url }}"
+                                          >
+                                            Quick view 
+                                            <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
+                                          </a>
+                                        </div>
+                                      </div>
+                                    {% endfor %}
+                                  </div>            
+                              </section>
+                              {% endif %}
+                              {% if attachments_object.rig_attachments_accessories_for_sale != blank %}
+                                {%- assign rig_attachments_count = 0 -%}
+                                {%- for media in attachments_object.rig_attachments_accessories_for_sale.value -%}
+                                  {%- assign rig_attachments_count = rig_attachments_count | plus: 1 -%}
+                                {%- endfor -%} 
+                                <section class="rig-attachments-section">
+                                  <h4 class="product__extra_info-title">Rig Attachments & Accessories for Sale ({{ rig_attachments_count }})</h4>
+                                  <div class="rig-product-grid">
+                                    {% for product_ref in attachments_object.rig_attachments_accessories_for_sale.value %}
+                                      <div class="rig-product-card">
+                                        <div class="rig-product-image-wrap">
+                                          {% if product_ref.featured_image %}
+                                            <img 
+                                              src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
+                                              alt="{{ product_ref.featured_image.alt | escape }}" 
+                                              class="rig-product-image"
+                                            >
+                                          {% endif %}
+                                        </div>
+                                        <div class="rig-product-details">
+                                          <p class="rig-product-price">
+                                            {{ product_ref.price | money }}
+                                          </p>
+                                          <h3 class="rig-product-name">{{ product_ref.title }}</h3>
+                                          <a target="_blank"
+                                            class="rig-quickview-btn" 
+                                            href="{{ product_ref.url }}"
+                                          >
+                                            Quick view 
+                                            <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
+                                          </a>
+                                        </div>
+                                      </div>
+                                    {% endfor %}
+                                  </div>            
+                              </section>
+                              {% endif %}
+                          {% endif %}
+                
+                          {% if otherRigRackSystems != blank %}
+                            <section class="other-rig-rack-systems-section">
+                              <h4 class="product__extra_info-title">Other French Fitness Rig & Rack Systems</h4>
+                              <div class="other-rig-rack-systems-cards">
+                                {% for product_ref in otherRigRackSystems.other_french_fitness_rig_rack_systems.value %}
+                                  <div class="rig-product-card">
+                                    <div class="rig-product-image-wrap">
+                                      {% if product_ref.featured_image %}
+                                        <img 
+                                          src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
+                                          alt="{{ product_ref.featured_image.alt | escape }}" 
+                                          class="rig-product-image"
+                                        >
+                                      {% endif %}
+                                    </div>
+                                    <div class="rig-product-details">
+                                      <h3 class="rig-product-name">{{ product_ref.title }}</h3>
+                                      <div class="rig-lower-details">
+                                        <div class="rig-product-price">
+                                          {% if product_ref.metafields.custom.retail_price != blank %}
+                                            <s>MSRP: {{ product_ref.metafields.custom.retail_price | money -}}</s>
+                                          {% endif %}
+                                          <p>{{ product_ref.price | money }}</p>
+                                        </div>
+                                        <a target="_blank"
+                                          class="rig-quickview-btn" 
+                                          href="{{ product_ref.url }}"
+                                        >
+                                          View details 
+                                          <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
+                                        </a>
+                                      </div>
+                                    </div>
+                                  </div>
+                                {% endfor %}            
+                              </div>
+                            </section>
+                          {% endif %}
+                
+                          {% when 'tech' %}
+                            {% if block.settings.tech != blank %}
+                              <div class="product__extra_tech extra-info-width">
+                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                                <div>{{ block.settings.tech }}</div>
+                              </div>
+                            {% endif %}
+                
+                            {% assign otherTechSpecs = product.metafields.custom.features_specs.value.other_tech_specs.value %}
+                
+                          {% if otherTechSpecs != blank %}
+                              <div class="product__extra_tech extra-info-width">
+                                <div>{{ otherTechSpecs }}</div>
+                              </div>
+                          {% endif %}
+                
+                          {% when 'shippingdimsweight' %}
+                            {% if block.settings.shippingdimsweight != blank %}
+                              <div class="product__extra_smith extra-info-width">
+                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                                <div>{{ product.metafields.custom.features_specs.value.shipping_dims_weight_2.value }}</div>
+                              </div>
+                            {% endif %}
+                            
+                          {% when 'weightstacks' %}
+                            {% if block.settings.weightstacks != blank %}
+                              <div class="product__extra_smith extra-info-width">
+                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                                <div>{{ block.settings.weightstacks }}</div>
+                              </div>
+                            {% endif %}
+                
+                          {% when 'setincludes' %}
+                            {% assign setIncludes = product.metafields.custom.features_specs.value.set_includes.value %}
+                    
+                            {% if setIncludes != blank %}
+                              <div class="product__extra_accessories extra-info-width">
+                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                                <div class="product__extra_accessories-container">
+                                  {% for item in setIncludes %}
+                                    <div class="product__extra_accessories-item">
+                                      {% if item.set_image != blank %}
+                                        <img src="{{ item.set_image | image_url }}" alt="{{ item.set_image }}" width="60" height="40">
+                                      {% endif %}
+                                      <span>{{ item.set_name }}</span>
+                                    </div>
+                                  {% endfor %}
+                                </div>
+                              </div>
+                            {% endif %}
+                    
+                          {% when 'smith' %}
+                            {% if block.settings.smith != blank %}
+                              <div class="product__extra_smith extra-info-width">
+                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                                <div>{{ block.settings.smith }}</div>
+                              </div>
+                            {% endif %}
+                    
+                          {% when 'accessories' %}
+                            {% assign accessories = product.metafields.custom.features_specs.value.accessories_included.value %}
+                    
+                            {% if accessories != blank %}
+                              <div class="product__extra_accessories extra-info-width">
+                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                                <div class="product__extra_accessories-container">
+                                  {% for item in accessories %}
+                                    <div class="product__extra_accessories-item">
+                                      {% if item.image != blank %}
+                                        <img src="{{ item.image | image_url }}" alt="{{ item.title }}" width="150" height="100">
+                                      {% endif %}
+                                      <span>{{ item.title }}</span>
+                                    </div>
+                                  {% endfor %}
+                                </div>
+                              </div>
+                            {% endif %}
+                    
+                          {% when 'accessory-feature' %}
+                            {% if block.settings['accessory-feature'] != blank %}
+                              <div class="product__extra_accessory-feature">
+                                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                                <div>{{ block.settings['accessory-feature'] }}</div>
+                              </div>
+                            {% endif %}
+                    
+                          {% when 'list' %}
+                            {% if block.settings.list != blank %}
+                              <div class="product__extra_list">
+                                <div>{{ block.settings.list }}</div>
+                              </div>
+                            {% endif %}
+                    
+                          {% when 'text' %}
+                            {% if block.settings.text != blank %}
+                              <div class="product__extra_warning_text">
+                                {% render 'icon-alert' %}
+                                <div>{{ block.settings.text }}</div>
+                              </div>
+                            {% endif %}
+                        {% endcase %}
+                      {% endfor %}
+                    
+                      {% render 'prop65' %}
+                      <a id="download-pds" style="cursor:pointer;">Download Product Data Sheet</a>
+                    </div>
+                </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                            
 
       {% if section.settings.accent_text != blank %}
         <div class="product__accesnt-text product__accesnt-text--mobile">
