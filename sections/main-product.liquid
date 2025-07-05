@@ -3205,33 +3205,41 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!leftSticky || !rightSticky || !extraInfo) return;
 
   const stickyOffset = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sticky-offset")) || 120;
+  const buffer = 10;
+
+  let isRightSticky = false;
 
   const updateStickyStates = () => {
-    const extraInfoTop = extraInfo.getBoundingClientRect().top;
-    const extraInfoBottom = extraInfo.getBoundingClientRect().bottom;
+    const leftStickyRect = leftSticky.getBoundingClientRect();
+    const extraInfoRect = extraInfo.getBoundingClientRect();
 
-    // Get scroll position of top of extraInfo relative to viewport
-    if (extraInfoTop <= stickyOffset) {
-      // Show right sticky
-      rightSticky.classList.add("sticky");
-    } else {
-      rightSticky.classList.remove("sticky");
-    }
-
-    if (extraInfoTop <= stickyOffset) {
-      // Stop left sticky
+    // --- Handle LEFT Container ---
+    if (leftStickyRect.bottom + buffer >= extraInfoRect.top) {
       leftSticky.classList.remove("sticky");
     } else {
-      // Keep left sticky
       leftSticky.classList.add("sticky");
+    }
+
+    // --- Handle RIGHT Container ---
+    if (extraInfoRect.top <= stickyOffset && !isRightSticky) {
+      const currentTop = rightSticky.getBoundingClientRect().top;
+      const offset = currentTop - stickyOffset;
+      rightSticky.style.top = `${offset}px`;
+      rightSticky.classList.add("sticky");
+      isRightSticky = true;
+    } else if (extraInfoRect.top > stickyOffset && isRightSticky) {
+      rightSticky.classList.remove("sticky");
+      rightSticky.style.top = ""; // reset to CSS default
+      isRightSticky = false;
     }
   };
 
   window.addEventListener("scroll", updateStickyStates);
   window.addEventListener("resize", updateStickyStates);
-  updateStickyStates(); // Initial trigger
+  updateStickyStates();
 });
 </script>
+
     
                                       
 
