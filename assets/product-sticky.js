@@ -25,46 +25,52 @@ document.addEventListener("DOMContentLoaded", function () {
       const marginRight = (windowWidth - containerWidth) / 2;
       productInfo.style.right = `${marginRight}px`;
     } else {
-      productInfo.style.right = ""; // reset if not fixed
+      productInfo.style.right = "";
     }
   }
 
   function checkScroll() {
-    const announcementBarSection = document.querySelector(".announcement-bar-section");
-    const headerWrapper = document.querySelector(".header-wrapper");
-    const productContainer = document.querySelector(".product");
+    const announcementBar = document.querySelector(".announcement-bar-section");
+    const header = document.querySelector(".header-wrapper");
+    const product = document.querySelector(".product");
     const productInfo = document.querySelector(".product__info-wrapper");
     const leftContainer = document.querySelector(".product-main-left-container");
-    const productExtraInfo = document.querySelector(".product__extra_info");
+    const extraInfo = document.querySelector(".product__extra_info");
 
-    if (!productContainer || !productInfo || !leftContainer || !productExtraInfo) return;
+    if (!announcementBar || !header || !product || !productInfo || !leftContainer || !extraInfo) return;
 
-    const productInfoHeight = productInfo.offsetHeight;
-    const extraInfoRect = productExtraInfo.getBoundingClientRect();
-    const offsetThreshold = announcementBarSection.offsetHeight + headerWrapper.offsetHeight;
+    const offsetThreshold = announcementBar.offsetHeight + header.offsetHeight;
 
-    productContainer.style.minHeight = `${productInfoHeight}px`;
+    const leftRect = leftContainer.getBoundingClientRect();
+    const extraRect = extraInfo.getBoundingClientRect();
+    const infoHeight = productInfo.offsetHeight;
+    const windowHeight = window.innerHeight;
 
-    if (window.scrollY <= offsetThreshold) {
+    // Ensure enough space is allocated
+    product.style.minHeight = `${infoHeight}px`;
+
+    // Default: remove fixed/absolute
+    if (leftRect.bottom > offsetThreshold) {
       productInfo.classList.remove("fixed", "absolute");
       productInfo.style.top = "";
       productInfo.style.right = "";
       return;
     }
 
-    if (extraInfoRect.bottom <= window.innerHeight) {
+    // Stop fixing if extra info hits bottom
+    if (extraRect.bottom <= windowHeight) {
       productInfo.classList.remove("fixed");
       productInfo.classList.add("absolute");
-      productInfo.style.top = `${
-        productExtraInfo.offsetHeight + offsetThreshold
-      }px`;
+      productInfo.style.top = `${extraInfo.offsetHeight + offsetThreshold}px`;
       productInfo.style.right = "";
-    } else {
-      productInfo.classList.add("fixed");
-      productInfo.classList.remove("absolute");
-      productInfo.style.top = "";
-      updateProductInfoRight(); // update right only when fixed
+      return;
     }
+
+    // Activate sticky fixed
+    productInfo.classList.add("fixed");
+    productInfo.classList.remove("absolute");
+    productInfo.style.top = "";
+    updateProductInfoRight(); // Only update right here
   }
 
   function setupScrollListener() {
@@ -95,7 +101,7 @@ document.addEventListener("DOMContentLoaded", function () {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
       setupScrollListener();
-      updateProductInfoRight(); // reevaluate on resize
+      updateProductInfoRight();
     }, 100);
   });
 
