@@ -45,25 +45,3 @@ function checkScroll() {
   }
 }
 
-
-function setupScrollListener() {
-  const productInfo = document.querySelector(".product__info-wrapper");
-
-  if (window.matchMedia("screen and (min-width: 990px)").matches) {
-    if (!scrollListenerAttached) {
-      window.addEventListener("scroll", checkScroll);
-      scrollListenerAttached = true;
-    }
-    checkScroll();
-  } else {
-    if (scrollListenerAttached) {
-      window.removeEventListener("scroll", checkScroll);
-      scrollListenerAttached = false;
-    }
-
-    if (productInfo) {
-      productInfo.classList.remove("fixed", "absolute");
-      productInfo.style.top = "";
-    }
-  }
-}
