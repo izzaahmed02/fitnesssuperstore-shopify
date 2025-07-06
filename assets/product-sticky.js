@@ -36,13 +36,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const offsetTop = announce.offsetHeight + header.offsetHeight;
     const windowHeight = window.innerHeight;
-
-    const leftRect = left.getBoundingClientRect();
-    const extraRect = extra.getBoundingClientRect();
     const infoHeight = info.offsetHeight;
 
-    // Keep container height stable
-    container.style.minHeight = `${infoHeight}px`;
+    // Keep container height stable to prevent layout shifts
+    container.style.minHeight = `${extra.offsetTop + extra.offsetHeight}px`;
 
     const triggerPoint = left.offsetTop + left.offsetHeight;
     const scrollY = window.scrollY;
@@ -56,24 +53,24 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // CASE 2: Reached end of right container — switch to absolute and anchor to bottom
-    if (scrollY + offsetTop + infoHeight >= extra.offsetTop + extra.offsetHeight) {
-      info.classList.remove("fixed");
-      info.classList.add("absolute");
-      const absoluteBottom = container.offsetHeight - infoHeight;
-      info.style.bottom = `${absoluteBottom}px`;
-      info.style.top = ""; // Clear top to let bottom take effect
+    // CASE 2: Between trigger point and bottom — fixed
+    if (scrollY + offsetTop < extra.offsetTop + extra.offsetHeight - infoHeight) {
+      if (!info.classList.contains("fixed")) {
+        const currentTop = info.getBoundingClientRect().top;
+        info.classList.add("fixed");
+        info.classList.remove("absolute");
+        info.style.top = `${currentTop}px`; // Lock visually
+        updateProductInfoRight();
+      }
       return;
     }
 
-    // CASE 3: Between trigger point and bottom — fixed
-    if (!info.classList.contains("fixed")) {
-      const currentTop = info.getBoundingClientRect().top;
-      info.classList.add("fixed");
-      info.classList.remove("absolute");
-      info.style.top = `${currentTop}px`; // lock visually
-      updateProductInfoRight();
-    }
+    // CASE 3: Reached or past the bottom — switch to fixed at bottom
+    info.classList.add("fixed");
+    info.classList.remove("absolute");
+    info.style.top = `${extra.offsetTop + extra.offsetHeight - infoHeight - offsetTop}px`;
+    info.style.right = "";
+    info.style.bottom = "";
   }
 
   function setupScrollListener() {
