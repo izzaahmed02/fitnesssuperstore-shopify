@@ -13,6 +13,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let scrollListenerAttached = false;
 
+  function updateProductInfoRight() {
+    const pageWidthContainer = document.querySelector('.page-width-desktop.page-width-index');
+    const productInfo = document.querySelector('.product__info-wrapper');
+
+    if (!pageWidthContainer || !productInfo) return;
+
+    const windowWidth = window.innerWidth;
+    const containerWidth = pageWidthContainer.getBoundingClientRect().width;
+    const marginRight = (windowWidth - containerWidth) / 2;
+
+    productInfo.style.right = `${marginRight}px`;
+  }
+
   function checkScroll() {
     const announcementBarSection = document.querySelector(".announcement-bar-section");
     const headerWrapper = document.querySelector(".header-wrapper");
@@ -23,45 +36,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!productContainer || !productInfo || !leftContainer || !productExtraInfo) return;
 
-    const productContainerRect = productContainer.getBoundingClientRect();
-    const productInfoRect = productInfo.getBoundingClientRect();
-    const extraInfoRect = productExtraInfo.getBoundingClientRect();
-
-    const windowHeight = window.innerHeight;
     const productInfoHeight = productInfo.offsetHeight;
-    const extraInfoHeight = productExtraInfo.offsetHeight;
+    const extraInfoRect = productExtraInfo.getBoundingClientRect();
 
     productContainer.style.minHeight = `${productInfoHeight}px`;
 
-    if (window.scrollY <= announcementBarSection.offsetHeight + headerWrapper.offsetHeight) {
+    const offsetThreshold = announcementBarSection.offsetHeight + headerWrapper.offsetHeight;
+
+    if (window.scrollY <= offsetThreshold) {
       productInfo.classList.remove("fixed", "absolute");
       productInfo.style.top = "";
       return;
     }
 
-    if (extraInfoRect.top <= windowHeight - productInfoHeight) {
-      productInfo.classList.add("fixed");
-      productInfo.classList.remove("absolute");
-      productInfo.style.top = "";
-    } else {
-      productInfo.classList.remove("fixed");
-    }
-
-    if (extraInfoRect.top <= windowHeight && extraInfoRect.bottom > windowHeight) {
-      productInfo.classList.add("fixed");
-      productInfo.classList.remove("absolute");
-      productInfo.style.top = "";
-    }
-
-    if (extraInfoRect.bottom <= windowHeight) {
+    if (extraInfoRect.bottom <= window.innerHeight) {
       productInfo.classList.remove("fixed");
       productInfo.classList.add("absolute");
       productInfo.style.top = `${
-        extraInfoHeight + announcementBarSection.offsetHeight + headerWrapper.offsetHeight
+        productExtraInfo.offsetHeight + offsetThreshold
       }px`;
-    }
-
-    if (extraInfoRect.bottom >= windowHeight && extraInfoRect.top <= windowHeight) {
+    } else {
       productInfo.classList.add("fixed");
       productInfo.classList.remove("absolute");
       productInfo.style.top = "";
@@ -70,6 +64,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function setupScrollListener() {
     const productInfo = document.querySelector(".product__info-wrapper");
+
+    updateProductInfoRight(); // ← set correct right value based on margin
 
     if (window.matchMedia("screen and (min-width: 990px)").matches) {
       if (!scrollListenerAttached) {
@@ -86,6 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (productInfo) {
         productInfo.classList.remove("fixed", "absolute");
         productInfo.style.top = "";
+        productInfo.style.right = ""; // Reset right on smaller screens
       }
     }
   }
@@ -93,8 +90,14 @@ document.addEventListener("DOMContentLoaded", function () {
   let resizeTimeout;
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(setupScrollListener, 100);
+    resizeTimeout = setTimeout(() => {
+      updateProductInfoRight();
+      setupScrollListener();
+    }, 100);
   });
 
-  waitForElement(".avpoptions-container__v2", setupScrollListener);
+  waitForElement(".avpoptions-container__v2", () => {
+    updateProductInfoRight();
+    setupScrollListener();
+  });
 });
