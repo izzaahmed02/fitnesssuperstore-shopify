@@ -19,11 +19,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!pageWidthContainer || !productInfo) return;
 
-    const windowWidth = window.innerWidth;
-    const containerWidth = pageWidthContainer.getBoundingClientRect().width;
-    const marginRight = (windowWidth - containerWidth) / 2;
-
-    productInfo.style.right = `${marginRight}px`;
+    if (productInfo.classList.contains("fixed")) {
+      const windowWidth = window.innerWidth;
+      const containerWidth = pageWidthContainer.getBoundingClientRect().width;
+      const marginRight = (windowWidth - containerWidth) / 2;
+      productInfo.style.right = `${marginRight}px`;
+    } else {
+      productInfo.style.right = ""; // reset if not fixed
+    }
   }
 
   function checkScroll() {
@@ -38,14 +41,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const productInfoHeight = productInfo.offsetHeight;
     const extraInfoRect = productExtraInfo.getBoundingClientRect();
+    const offsetThreshold = announcementBarSection.offsetHeight + headerWrapper.offsetHeight;
 
     productContainer.style.minHeight = `${productInfoHeight}px`;
-
-    const offsetThreshold = announcementBarSection.offsetHeight + headerWrapper.offsetHeight;
 
     if (window.scrollY <= offsetThreshold) {
       productInfo.classList.remove("fixed", "absolute");
       productInfo.style.top = "";
+      productInfo.style.right = "";
       return;
     }
 
@@ -55,17 +58,17 @@ document.addEventListener("DOMContentLoaded", function () {
       productInfo.style.top = `${
         productExtraInfo.offsetHeight + offsetThreshold
       }px`;
+      productInfo.style.right = "";
     } else {
       productInfo.classList.add("fixed");
       productInfo.classList.remove("absolute");
       productInfo.style.top = "";
+      updateProductInfoRight(); // update right only when fixed
     }
   }
 
   function setupScrollListener() {
     const productInfo = document.querySelector(".product__info-wrapper");
-
-    updateProductInfoRight(); // ← set correct right value based on margin
 
     if (window.matchMedia("screen and (min-width: 990px)").matches) {
       if (!scrollListenerAttached) {
@@ -82,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (productInfo) {
         productInfo.classList.remove("fixed", "absolute");
         productInfo.style.top = "";
-        productInfo.style.right = ""; // Reset right on smaller screens
+        productInfo.style.right = "";
       }
     }
   }
@@ -91,13 +94,13 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
-      updateProductInfoRight();
       setupScrollListener();
+      updateProductInfoRight(); // reevaluate on resize
     }, 100);
   });
 
   waitForElement(".avpoptions-container__v2", () => {
-    updateProductInfoRight();
     setupScrollListener();
+    updateProductInfoRight();
   });
 });
