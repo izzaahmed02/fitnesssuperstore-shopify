@@ -41,13 +41,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const extraHeight = extra.offsetHeight;
     const extraBottom = extraTop + extraHeight;
 
-    // Set a reasonable minHeight based on initial extra height to prevent layout shifts
+    // Set initial minHeight to prevent layout shifts
     if (!container.style.minHeight) {
       container.style.minHeight = `${extraHeight}px`;
     }
 
     const triggerPoint = left.offsetTop + left.offsetHeight;
     const scrollY = window.scrollY;
+
+    console.log("ScrollY:", scrollY + offsetTop, "TriggerPoint:", triggerPoint, "ExtraBottom:", extraBottom);
 
     // CASE 1: Not yet at trigger point (static positioning)
     if (scrollY + offsetTop < triggerPoint) {
@@ -64,8 +66,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const currentTop = info.getBoundingClientRect().top;
         info.classList.add("fixed");
         info.classList.remove("absolute");
-        info.style.top = `${currentTop}px`; // Lock visually
+        info.style.top = `${currentTop - offsetTop}px`; // Adjust for offset
         updateProductInfoRight();
+        console.log("Applied fixed at:", currentTop - offsetTop);
       }
       return;
     }
@@ -77,6 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
     info.style.top = `${absoluteTop}px`;
     info.style.right = "";
     info.style.bottom = "";
+    console.log("Applied absolute at:", absoluteTop);
   }
 
   function setupScrollListener() {
