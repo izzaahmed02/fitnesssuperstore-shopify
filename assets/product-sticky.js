@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 👇 this part sticks it to the right edge of the container
   if (fixedContainer && productInfo.classList.contains("fixed")) {
-    const containerRightOffset = window.innerWidth - fixedContainer.getBoundingClientRect().right + 5;
+    const containerRightOffset = window.innerWidth - fixedContainer.getBoundingClientRect().right;
 
     productInfo.style.right = containerRightOffset + "px";
     productInfo.style.left = "auto";
