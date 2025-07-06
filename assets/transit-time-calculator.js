@@ -348,7 +348,10 @@ var TransitTimeCalculator = {
   appendTransitTime: function(estimatedTimeText, installMethodText) {
     let finalText = `<span class="transit-time-text">${estimatedTimeText}</span>`;
     const container = document.querySelector('.transit-times-container');
-    if (container) { container.innerHTML = finalText; }
+    if (container) { 
+      container.innerHTML = finalText; 
+      transitTimeForm = document.querySelector('.transit-time-form').style.display = 'none';
+    }
   },
   
   appendTransitTimeError: function() {
