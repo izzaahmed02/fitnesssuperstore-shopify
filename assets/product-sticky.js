@@ -1,100 +1,76 @@
-document.addEventListener("DOMContentLoaded", function () {
-  function waitForElement(selector, callback) {
-    const observer = new MutationObserver((mutationsList, observer) => {
-      const element = document.querySelector(selector);
-      if (element) {
-        observer.disconnect();
-        callback(element);
-      }
-    });
+document.addEventListener('DOMContentLoaded', function () {
+  const productInfo = document.querySelector('.product__info-wrapper');
+  const rightWrapper = document.querySelector('.product-main-right-wrapper');
+  const leftContainer = document.querySelector('.product-main-left-container');
+  const extraInfo = document.querySelector('.product__extra_info.desktop');
+  const announcementBar = document.querySelector('.announcement-bar-section');
+  const header = document.querySelector('.header-wrapper');
 
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
-
+  const offsetTop = (announcementBar?.offsetHeight || 0) + (header?.offsetHeight || 0);
   let scrollListenerAttached = false;
 
-  function checkScroll() {
-    const announcementBarSection = document.querySelector(".announcement-bar-section");
-    const headerWrapper = document.querySelector(".header-wrapper");
-    const productContainer = document.querySelector(".product");
-    const productInfo = document.querySelector(".product__info-wrapper");
-    const leftContainer = document.querySelector(".product-main-left-container");
-    const productExtraInfo = document.querySelector(".product__extra_info");
+  function updateInfoWrapperState() {
+    if (!productInfo || !rightWrapper || !leftContainer || !extraInfo) return;
 
-    if (!productContainer || !productInfo || !leftContainer || !productExtraInfo) return;
+    const scrollY = window.scrollY;
+    const leftRect = leftContainer.getBoundingClientRect();
+    const extraRect = extraInfo.getBoundingClientRect();
+    const rightRect = rightWrapper.getBoundingClientRect();
 
-    const productContainerRect = productContainer.getBoundingClientRect();
-    const productInfoRect = productInfo.getBoundingClientRect();
-    const extraInfoRect = productExtraInfo.getBoundingClientRect();
+    // Remove all classes
+    productInfo.classList.remove('fixed', 'absolute');
+    productInfo.style.left = '';
+    productInfo.style.width = '';
 
-    const windowHeight = window.innerHeight;
-    const productInfoHeight = productInfo.offsetHeight;
-    const extraInfoHeight = productExtraInfo.offsetHeight;
+    const leftBottom = leftContainer.offsetTop + leftContainer.offsetHeight;
+    const extraTop = extraInfo.offsetTop;
+    const extraBottom = extraTop + extraInfo.offsetHeight;
+    const infoHeight = productInfo.offsetHeight;
 
-    productContainer.style.minHeight = `${productInfoHeight}px`;
-
-    if (window.scrollY <= announcementBarSection.offsetHeight + headerWrapper.offsetHeight) {
-      productInfo.classList.remove("fixed", "absolute");
-      productInfo.style.top = "";
+    // PHASE 1: Normal flow inside first section
+    if (scrollY + offsetTop < leftBottom) {
+      // Don't stick yet
       return;
     }
 
-    if (extraInfoRect.top <= windowHeight - productInfoHeight) {
-      productInfo.classList.add("fixed");
-      productInfo.classList.remove("absolute");
-      productInfo.style.top = "";
-    } else {
-      productInfo.classList.remove("fixed");
+    // PHASE 2: Fixed inside second section
+    if (scrollY + offsetTop >= leftBottom && scrollY + offsetTop + infoHeight < extraBottom) {
+      productInfo.classList.add('fixed');
+      productInfo.style.left = `${rightRect.left}px`;
+      productInfo.style.width = `${rightRect.width}px`;
+      return;
     }
 
-    if (extraInfoRect.top <= windowHeight && extraInfoRect.bottom > windowHeight) {
-      productInfo.classList.add("fixed");
-      productInfo.classList.remove("absolute");
-      productInfo.style.top = "";
-    }
-
-    if (extraInfoRect.bottom <= windowHeight) {
-      productInfo.classList.remove("fixed");
-      productInfo.classList.add("absolute");
-      productInfo.style.top = `${
-        extraInfoHeight + announcementBarSection.offsetHeight + headerWrapper.offsetHeight
-      }px`;
-    }
-
-    if (extraInfoRect.bottom >= windowHeight && extraInfoRect.top <= windowHeight) {
-      productInfo.classList.add("fixed");
-      productInfo.classList.remove("absolute");
-      productInfo.style.top = "";
+    // PHASE 3: Absolute when scrolled past
+    if (scrollY + offsetTop + infoHeight >= extraBottom) {
+      productInfo.classList.add('absolute');
     }
   }
 
-  function setupScrollListener() {
-    const productInfo = document.querySelector(".product__info-wrapper");
-
-    if (window.matchMedia("screen and (min-width: 990px)").matches) {
+  function handleResponsiveStickiness() {
+    if (window.innerWidth >= 990) {
       if (!scrollListenerAttached) {
-        window.addEventListener("scroll", checkScroll);
+        window.addEventListener('scroll', updateInfoWrapperState);
+        window.addEventListener('resize', updateInfoWrapperState);
         scrollListenerAttached = true;
       }
-      checkScroll();
+      updateInfoWrapperState();
     } else {
       if (scrollListenerAttached) {
-        window.removeEventListener("scroll", checkScroll);
+        window.removeEventListener('scroll', updateInfoWrapperState);
+        window.removeEventListener('resize', updateInfoWrapperState);
         scrollListenerAttached = false;
       }
 
+      // Reset styles for mobile
       if (productInfo) {
-        productInfo.classList.remove("fixed", "absolute");
-        productInfo.style.top = "";
+        productInfo.classList.remove('fixed', 'absolute');
+        productInfo.style.left = '';
+        productInfo.style.width = '';
       }
     }
   }
 
-  let resizeTimeout;
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(setupScrollListener, 100);
-  });
-
-  waitForElement(".avpoptions-container__v2", setupScrollListener);
+  handleResponsiveStickiness();
+  window.addEventListener('resize', handleResponsiveStickiness);
 });
