@@ -21,7 +21,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const windowWidth = window.innerWidth;
     const containerWidth = container.getBoundingClientRect().width;
     const marginRight = (windowWidth - containerWidth) / 2;
-
     info.style.right = `${marginRight}px`;
   }
 
@@ -36,45 +35,43 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!info || !left || !extra || !header || !announce || !container) return;
 
     const offsetTop = announce.offsetHeight + header.offsetHeight;
+    const windowHeight = window.innerHeight;
 
     const leftRect = left.getBoundingClientRect();
     const extraRect = extra.getBoundingClientRect();
-    const infoRect = info.getBoundingClientRect();
     const infoHeight = info.offsetHeight;
-    const windowHeight = window.innerHeight;
 
+    // Keep container height stable
     container.style.minHeight = `${infoHeight}px`;
 
-    // CASE 1: BEFORE sticky point — remove fixed/absolute
-    if (leftRect.bottom > offsetTop) {
+    const triggerPoint = left.offsetTop + left.offsetHeight;
+    const scrollY = window.scrollY;
+
+    // CASE 1: Not yet at trigger point (bottom of left container not reached)
+    if (scrollY + offsetTop < triggerPoint) {
       info.classList.remove("fixed", "absolute");
       info.style.top = "";
       info.style.right = "";
       return;
     }
 
-    // CASE 2: Reached bottom — keep fixed but prevent overlap
-    const extraBottomReached = extraRect.top + extra.offsetHeight <= infoHeight + offsetTop;
+    // CASE 2: Reached end of right container — switch to absolute
+    const absoluteTop = extra.offsetTop + extra.offsetHeight - infoHeight;
 
-    if (extraBottomReached) {
-      // lock the info wrapper at the bottom as absolute
-      const topFromDocument = extra.offsetTop + extra.offsetHeight - infoHeight;
+    if (scrollY + offsetTop + infoHeight >= extra.offsetTop + extra.offsetHeight) {
       info.classList.remove("fixed");
       info.classList.add("absolute");
-      info.style.top = `${topFromDocument}px`;
-      info.style.right = "";
+      info.style.top = `${absoluteTop}px`;
+      // right stays as is (don’t clear it)
       return;
     }
 
-    // CASE 3: In sticky zone — apply fixed (no shift)
+    // CASE 3: Between trigger point and bottom — fixed
     if (!info.classList.contains("fixed")) {
-      const topOffset = info.getBoundingClientRect().top;
-      const scrollTop = window.scrollY;
-      const absoluteTop = scrollTop + topOffset;
-
+      const currentTop = info.getBoundingClientRect().top;
       info.classList.add("fixed");
       info.classList.remove("absolute");
-      info.style.top = `${topOffset}px`; // preserve visual position
+      info.style.top = `${currentTop}px`; // lock visually
       updateProductInfoRight();
     }
   }
