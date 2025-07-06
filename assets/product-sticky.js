@@ -16,17 +16,12 @@ document.addEventListener("DOMContentLoaded", function () {
   function updateProductInfoRight() {
     const pageWidthContainer = document.querySelector('.page-width-desktop.page-width-index');
     const productInfo = document.querySelector('.product__info-wrapper');
+    if (!pageWidthContainer || !productInfo || !productInfo.classList.contains("fixed")) return;
 
-    if (!pageWidthContainer || !productInfo) return;
-
-    if (productInfo.classList.contains("fixed")) {
-      const windowWidth = window.innerWidth;
-      const containerWidth = pageWidthContainer.getBoundingClientRect().width;
-      const marginRight = (windowWidth - containerWidth) / 2;
-      productInfo.style.right = `${marginRight}px`;
-    } else {
-      productInfo.style.right = "";
-    }
+    const windowWidth = window.innerWidth;
+    const containerWidth = pageWidthContainer.getBoundingClientRect().width;
+    const marginRight = (windowWidth - containerWidth) / 2;
+    productInfo.style.right = `${marginRight}px`;
   }
 
   function checkScroll() {
@@ -40,16 +35,15 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!announcementBar || !header || !product || !productInfo || !leftContainer || !extraInfo) return;
 
     const offsetThreshold = announcementBar.offsetHeight + header.offsetHeight;
-
     const leftRect = leftContainer.getBoundingClientRect();
     const extraRect = extraInfo.getBoundingClientRect();
-    const infoHeight = productInfo.offsetHeight;
     const windowHeight = window.innerHeight;
+    const infoHeight = productInfo.offsetHeight;
 
-    // Ensure enough space is allocated
+    // Keep height consistent to prevent jump of container
     product.style.minHeight = `${infoHeight}px`;
 
-    // Default: remove fixed/absolute
+    // Reset everything if still above sticky trigger
     if (leftRect.bottom > offsetThreshold) {
       productInfo.classList.remove("fixed", "absolute");
       productInfo.style.top = "";
@@ -57,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Stop fixing if extra info hits bottom
+    // Handle switch to absolute when bottom is reached
     if (extraRect.bottom <= windowHeight) {
       productInfo.classList.remove("fixed");
       productInfo.classList.add("absolute");
@@ -66,11 +60,16 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Activate sticky fixed
-    productInfo.classList.add("fixed");
-    productInfo.classList.remove("absolute");
-    productInfo.style.top = "";
-    updateProductInfoRight(); // Only update right here
+    // 🧠 Preserve top position before fixing to avoid jump
+    if (!productInfo.classList.contains("fixed")) {
+      const rect = productInfo.getBoundingClientRect();
+      const topOffset = rect.top;
+
+      productInfo.classList.add("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = `${topOffset}px`; // lock it in
+      updateProductInfoRight();
+    }
   }
 
   function setupScrollListener() {
