@@ -38,10 +38,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const windowHeight = window.innerHeight;
     const infoHeight = info.offsetHeight;
     const extraTop = extra.offsetTop;
-    const extraBottom = extraTop + extra.offsetHeight;
+    const extraHeight = extra.offsetHeight;
+    const extraBottom = extraTop + extraHeight;
 
-    // Keep container height stable to prevent layout shifts
-    container.style.minHeight = `${extraBottom}px`;
+    // Set a reasonable minHeight based on initial extra height to prevent layout shifts
+    if (!container.style.minHeight) {
+      container.style.minHeight = `${extraHeight}px`;
+    }
 
     const triggerPoint = left.offsetTop + left.offsetHeight;
     const scrollY = window.scrollY;
