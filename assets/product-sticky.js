@@ -52,17 +52,17 @@ document.addEventListener("DOMContentLoaded", function () {
       info.classList.remove("fixed", "absolute");
       info.style.top = "";
       info.style.right = "";
+      info.style.bottom = "";
       return;
     }
 
-    // CASE 2: Reached end of right container — switch to absolute
-    const absoluteTop = extra.offsetTop + extra.offsetHeight - infoHeight;
-
+    // CASE 2: Reached end of right container — switch to absolute and anchor to bottom
     if (scrollY + offsetTop + infoHeight >= extra.offsetTop + extra.offsetHeight) {
       info.classList.remove("fixed");
       info.classList.add("absolute");
-      info.style.top = `${absoluteTop}px`;
-      // right stays as is (don’t clear it)
+      const absoluteBottom = container.offsetHeight - infoHeight;
+      info.style.bottom = `${absoluteBottom}px`;
+      info.style.top = ""; // Clear top to let bottom take effect
       return;
     }
 
@@ -95,6 +95,7 @@ document.addEventListener("DOMContentLoaded", function () {
         info.classList.remove("fixed", "absolute");
         info.style.top = "";
         info.style.right = "";
+        info.style.bottom = "";
       }
     }
   }
