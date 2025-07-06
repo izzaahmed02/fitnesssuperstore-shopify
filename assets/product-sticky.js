@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", function () {
         callback(element);
       }
     });
-
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
@@ -19,53 +18,43 @@ document.addEventListener("DOMContentLoaded", function () {
     const productContainer = document.querySelector(".product");
     const productInfo = document.querySelector(".product__info-wrapper");
     const leftContainer = document.querySelector(".product-main-left-container");
-    const productExtraInfo = document.querySelector(".product__extra_info");
+    const productExtraInfo = document.querySelector(".product__extra_info.desktop");
+    const container = document.querySelector(".page-width-desktop.page-width-index");
 
-    if (!productContainer || !productInfo || !leftContainer || !productExtraInfo) return;
+    if (!productContainer || !productInfo || !leftContainer || !productExtraInfo || !container)
+      return;
 
-    const productContainerRect = productContainer.getBoundingClientRect();
-    const productInfoRect = productInfo.getBoundingClientRect();
-    const extraInfoRect = productExtraInfo.getBoundingClientRect();
+    const offsetTop =
+      (announcementBarSection?.offsetHeight || 0) +
+      (headerWrapper?.offsetHeight || 0);
 
-    const windowHeight = window.innerHeight;
-    const productInfoHeight = productInfo.offsetHeight;
-    const extraInfoHeight = productExtraInfo.offsetHeight;
+    const scrollY = window.scrollY;
+    const leftBottom = leftContainer.offsetTop + leftContainer.offsetHeight;
+    const extraTop = productExtraInfo.offsetTop;
+    const extraBottom = extraTop + productExtraInfo.offsetHeight;
+    const infoHeight = productInfo.offsetHeight;
 
-    productContainer.style.minHeight = `${productInfoHeight}px`;
+    const containerRect = container.getBoundingClientRect();
+    const rightOffset = window.innerWidth - (containerRect.left + containerRect.width);
 
-    if (window.scrollY <= announcementBarSection.offsetHeight + headerWrapper.offsetHeight) {
-      productInfo.classList.remove("fixed", "absolute");
-      productInfo.style.top = "";
+    productInfo.classList.remove("fixed", "absolute");
+    productInfo.style.left = "";
+    productInfo.style.right = "";
+    productInfo.style.width = "";
+
+    if (scrollY + offsetTop < leftBottom) {
+      return; // Scroll normally
+    }
+
+    if (scrollY + offsetTop + infoHeight < extraBottom) {
+      productInfo.classList.add("fixed");
+      productInfo.style.width = `${productInfo.offsetWidth}px`;
+      productInfo.style.right = `${rightOffset}px`;
       return;
     }
 
-    if (extraInfoRect.top <= windowHeight - productInfoHeight) {
-      productInfo.classList.add("fixed");
-      productInfo.classList.remove("absolute");
-      productInfo.style.top = "";
-    } else {
-      productInfo.classList.remove("fixed");
-    }
-
-    if (extraInfoRect.top <= windowHeight && extraInfoRect.bottom > windowHeight) {
-      productInfo.classList.add("fixed");
-      productInfo.classList.remove("absolute");
-      productInfo.style.top = "";
-    }
-
-    if (extraInfoRect.bottom <= windowHeight) {
-      productInfo.classList.remove("fixed");
-      productInfo.classList.add("absolute");
-      productInfo.style.top = `${
-        extraInfoHeight + announcementBarSection.offsetHeight + headerWrapper.offsetHeight
-      }px`;
-    }
-
-    if (extraInfoRect.bottom >= windowHeight && extraInfoRect.top <= windowHeight) {
-      productInfo.classList.add("fixed");
-      productInfo.classList.remove("absolute");
-      productInfo.style.top = "";
-    }
+    // Lock to bottom
+    productInfo.classList.add("absolute");
   }
 
   function setupScrollListener() {
@@ -85,7 +74,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (productInfo) {
         productInfo.classList.remove("fixed", "absolute");
-        productInfo.style.top = "";
+        productInfo.style.right = "";
+        productInfo.style.width = "";
       }
     }
   }
