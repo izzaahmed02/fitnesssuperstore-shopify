@@ -37,14 +37,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const offsetTop = announce.offsetHeight + header.offsetHeight;
     const windowHeight = window.innerHeight;
     const infoHeight = info.offsetHeight;
+    const extraTop = extra.offsetTop;
+    const extraBottom = extraTop + extra.offsetHeight;
 
     // Keep container height stable to prevent layout shifts
-    container.style.minHeight = `${extra.offsetTop + extra.offsetHeight}px`;
+    container.style.minHeight = `${extraBottom}px`;
 
     const triggerPoint = left.offsetTop + left.offsetHeight;
     const scrollY = window.scrollY;
 
-    // CASE 1: Not yet at trigger point (bottom of left container not reached)
+    // CASE 1: Not yet at trigger point (static positioning)
     if (scrollY + offsetTop < triggerPoint) {
       info.classList.remove("fixed", "absolute");
       info.style.top = "";
@@ -53,8 +55,8 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // CASE 2: Between trigger point and bottom — fixed
-    if (scrollY + offsetTop < extra.offsetTop + extra.offsetHeight - infoHeight) {
+    // CASE 2: Between trigger point and bottom of extra — fixed
+    if (scrollY + offsetTop < extraBottom - infoHeight) {
       if (!info.classList.contains("fixed")) {
         const currentTop = info.getBoundingClientRect().top;
         info.classList.add("fixed");
@@ -65,10 +67,11 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // CASE 3: Reached or past the bottom — switch to fixed at bottom
-    info.classList.add("fixed");
-    info.classList.remove("absolute");
-    info.style.top = `${extra.offsetTop + extra.offsetHeight - infoHeight - offsetTop}px`;
+    // CASE 3: Reached or past the bottom of extra — absolute
+    info.classList.remove("fixed");
+    info.classList.add("absolute");
+    const absoluteTop = extraBottom - infoHeight;
+    info.style.top = `${absoluteTop}px`;
     info.style.right = "";
     info.style.bottom = "";
   }
