@@ -1,8 +1,10 @@
 {% assign chart = page.metafields.custom.comparison_chart.value %}
 {% if chart %}
   <div class="comparison-chart">
-    {% for product in chart.products.value %}
+    {% for linked_product in chart.products.value %}
+      {% assign product = all_products[linked_product.handle] %}
       {% assign comparison_product = product.metafields.custom.comparison_features.value %}
+
       <div class="comparison-column">
 
         <!-- Metaobject title -->
@@ -21,12 +23,10 @@
 
         <!-- Metaobject product URL -->
         {% if comparison_product.product_url %}
-          <p>
-            <a href="{{ comparison_product.product_url }}">View Product</a>
-          </p>
+          <p><a href="{{ comparison_product.product_url }}">View Product</a></p>
         {% endif %}
 
-        <!-- Feature List -->
+        <!-- Features -->
         <ul class="comparison-features">
           {% if comparison_product.features %}
             {% for feature in comparison_product.features %}
