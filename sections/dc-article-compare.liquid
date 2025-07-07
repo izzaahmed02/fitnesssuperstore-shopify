@@ -1,36 +1,40 @@
-
 {% assign chart = page.metafields.custom.comparison_chart.value %}
 {% if chart %}
   <div class="comparison-chart">
-    {% for product in chart.products.value %}
-      <div class="comparison-column">
-        <h3>{{ product.title }}</h3>
-
-        {% if product.featured_image %}
-          <img src="{{ product.featured_image }}" alt="{{ product.title }}">
-        {% elsif product.images[0] %}
-          <img src="{{ product.images[0] }}" alt="{{ product.title }}">
-        {% endif %}
-
-        <p>
-          <a href="/products/{{ product.handle }}">View Product</a>
-        </p>
-
-        <ul class="comparison-features">
-          {% assign features = product.metafields.custom.comparison_features.value %}
-          {% if features %}
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          {% for product in chart.products.value %}
+            <th>{{ product.title }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in chart.products.value %}
+          {% assign features = product.metafields.custom.comparison_features.value | default: product.features %}
+          {% if forloop.first %}
             {% for feature in features %}
-              <li><strong>{{ feature.name }}:</strong> {{ feature.value }}</li>
+              <tr>
+                <td><strong>{{ feature.name }}</strong></td>
+                {% for prod in chart.products.value %}
+                  <td>
+                    {% assign prod_features = prod.metafields.custom.comparison_features.value | default: prod.features %}
+                    {% for f in prod_features %}
+                      {% if f.name == feature.name %}
+                        {{ f.value }}
+                      {% endif %}
+                    {% endfor %}
+                  </td>
+                {% endfor %}
+              </tr>
             {% endfor %}
-          {% else %}
-            <li>No features listed</li>
           {% endif %}
-        </ul>
-      </div>
-    {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 {% endif %}
-
 
 {% comment %}
 {{ 'main-article-compare.css' | asset_url | stylesheet_tag }}
