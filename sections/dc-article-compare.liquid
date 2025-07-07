@@ -4,36 +4,32 @@
     {% for product in chart.products.value %}
       <div class="comparison-column">
         
-        {% assign comparison_features = product.metafields.custom.comparison_features.value %}
+        <!-- Product Title (can replace with metaobject title if needed) -->
+        <h3>{{ product.title }}</h3>
 
-        {% if comparison_features.size > 0 %}
-          {% assign first_metaobject = comparison_features[0] %}
-
-          <!-- Use the metaobject title -->
-          <h3>{{ first_metaobject.title }}</h3>
-
-          <!-- Use the metaobject image -->
-          {% if first_metaobject.image %}
-            <img src="{{ first_metaobject.image | image_url: width: 400 }}" alt="{{ first_metaobject.title }}">
-          {% endif %}
-        {% else %}
-          <h3>{{ product.title }}</h3> <!-- Fallback title -->
+        <!-- Product Image -->
+        {% if product.featured_image %}
+          <img src="{{ product.featured_image | image_url: width: 400 }}" alt="{{ product.title }}">
+        {% elsif product.images.size > 0 %}
+          <img src="{{ product.images[0] | image_url: width: 400 }}" alt="{{ product.title }}">
         {% endif %}
 
+        <!-- View Product Button -->
         <p>
           <a href="/products/{{ product.handle }}">View Product</a>
         </p>
 
+        <!-- Feature List from comparison_features metafield -->
         <ul class="comparison-features">
-          {% if comparison_features.size > 0 %}
-            {% for feature in comparison_features %}
+          {% assign features = product.metafields.custom.comparison_features.value %}
+          {% if features and features.size > 0 %}
+            {% for feature in features %}
               <li><strong>{{ feature.name }}:</strong> {{ feature.value }}</li>
             {% endfor %}
           {% else %}
             <li>No features listed</li>
           {% endif %}
         </ul>
-
       </div>
     {% endfor %}
   </div>
