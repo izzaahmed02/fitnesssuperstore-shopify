@@ -2,34 +2,41 @@
 {% if chart %}
   <div class="comparison-chart">
     {% for product in chart.products.value %}
+      {% assign comparison_product = product.metafields.custom.comparison_features.value %}
       <div class="comparison-column">
-        
-        <!-- Product Title (can replace with metaobject title if needed) -->
-        <h3>{{ product.title }}</h3>
 
-        <!-- Product Image -->
-        {% if product.featured_image %}
-          <img src="{{ product.featured_image | image_url: width: 400 }}" alt="{{ product.title }}">
-        {% elsif product.images.size > 0 %}
-          <img src="{{ product.images[0] | image_url: width: 400 }}" alt="{{ product.title }}">
+        <!-- Metaobject title -->
+        <h3>
+          {% if comparison_product.title %}
+            {{ comparison_product.title }}
+          {% else %}
+            {{ product.title }}
+          {% endif %}
+        </h3>
+
+        <!-- Metaobject image -->
+        {% if comparison_product.image %}
+          <img src="{{ comparison_product.image | image_url: width: 400 }}" alt="{{ comparison_product.title }}">
         {% endif %}
 
-        <!-- View Product Button -->
-        <p>
-          <a href="/products/{{ product.handle }}">View Product</a>
-        </p>
+        <!-- Metaobject product URL -->
+        {% if comparison_product.product_url %}
+          <p>
+            <a href="{{ comparison_product.product_url }}">View Product</a>
+          </p>
+        {% endif %}
 
-        <!-- Feature List from comparison_features metafield -->
-            <ul class="comparison-features">
-          {% assign features = product.metafields.custom.comparison_features.value %}
-          {% if features %}
-            {% for feature in features %}
+        <!-- Feature List -->
+        <ul class="comparison-features">
+          {% if comparison_product.features %}
+            {% for feature in comparison_product.features %}
               <li><strong>{{ feature.name }}:</strong> {{ feature.value }}</li>
             {% endfor %}
           {% else %}
             <li>No features listed</li>
           {% endif %}
         </ul>
+
       </div>
     {% endfor %}
   </div>
