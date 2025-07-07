@@ -1,22 +1,22 @@
 {% assign chart = page.metafields.custom.comparison_chart.value %}
 {% if chart %}
   <div class="comparison-chart">
-    {% for product in chart.products %}
-      {% assign product_obj = all_products[product.handle] %}
+    {% for product_ref in chart.products.value %}
+      {% assign product = product_ref.value %}
       <div class="comparison-column">
-        <h3>{{ product_obj.title }}</h3>
+        <h3>{{ product.title }}</h3>
 
-        {% if product_obj.featured_image %}
-          <img src="{{ product_obj.featured_image | image_url: width: 400 }}" alt="{{ product_obj.title }}">
+        {% if product.featured_image %}
+          <img src="{{ product.featured_image | image_url: width: 400 }}" alt="{{ product.title }}">
         {% endif %}
 
         <p>
-          <a href="{{ product_obj.url }}">View Product</a>
+          <a href="{{ product.url }}">View Product</a>
         </p>
 
         <ul class="comparison-features">
-          {% assign features = product_obj.metafields.custom.comparison_features.value %}
-          {% if features %}
+          {% assign features = product.metafields.custom.comparison_features.value %}
+          {% if features and features.size > 0 %}
             {% for feature in features %}
               <li><strong>{{ feature.name }}:</strong> {{ feature.value }}</li>
             {% endfor %}
