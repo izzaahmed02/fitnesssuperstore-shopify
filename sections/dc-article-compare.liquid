@@ -1,39 +1,49 @@
 {% assign chart = product.metafields.custom.comparison_chart.value %}
-{% assign products = chart.products.value %}
-{% assign all_features = shop.metaobjects.comparison_feature.values %}
+{% if chart %}
+  <p>✅ Chart found: {{ chart.id }}</p>
 
-<div class="comparison-chart">
-  {% for product in products %}
-    {% assign handle = product.product_url | split: '/' | last %}
-    {% assign matching_features = all_features | where: "product_name", handle %}
+  {% assign products = chart.products.value %}
+  <p>Found {{ products.size }} comparison products</p>
 
-    <div class="comparison-column">
-      <!-- Title -->
-      <h3>{{ product.title }}</h3>
+  {% assign all_features = shop.metaobjects.comparison_feature.values %}
+  <p>Found {{ all_features.size }} total features</p>
 
-      <!-- Image -->
-      {% if product.image %}
-        <img src="{{ product.image | image_url: width: 400 }}" alt="{{ product.title }}">
-      {% endif %}
+  <div class="comparison-chart">
+    {% for product in products %}
+      <div class="comparison-column">
+        <h3>{{ product.title }}</h3>
 
-      <!-- Link -->
-      {% if product.product_url %}
+        <p><code>Raw URL:</code> {{ product.product_url }}</p>
+
+        {% assign handle = product.product_url | split: '/' | last %}
+        <p><code>Parsed Handle:</code> {{ handle }}</p>
+
+        {% assign matching_features = all_features | where: "product_name", handle %}
+        <p><code>Features Found:</code> {{ matching_features.size }}</p>
+
+        {% if product.image %}
+          <img src="{{ product.image | image_url: width: 400 }}" alt="{{ product.title }}">
+        {% else %}
+          <p>No image found</p>
+        {% endif %}
+
         <p><a href="{{ product.product_url }}">View Product</a></p>
-      {% endif %}
 
-      <!-- Features -->
-      <ul class="comparison-features">
-        {% if matching_features.size > 0 %}
+        <ul class="comparison-features">
           {% for feature in matching_features %}
             <li><strong>{{ feature.name }}:</strong> {{ feature.value }}</li>
           {% endfor %}
-        {% else %}
-          <li>No features listed</li>
-        {% endif %}
-      </ul>
-    </div>
-  {% endfor %}
-</div>
+          {% if matching_features.size == 0 %}
+            <li>No features listed</li>
+          {% endif %}
+        </ul>
+      </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <p>❌ No comparison chart metafield linked on this product.</p>
+{% endif %}
 
 
 
