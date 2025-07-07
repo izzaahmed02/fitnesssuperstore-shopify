@@ -1,5 +1,6 @@
 {{ 'section-related-products.css' | asset_url | stylesheet_tag }}
-
+{% assign featured_products = product.metafields.custom.related_products.value %}
+{% if featured_products %}
 <div class="custom-container">
   {{ customer.first_name }}
   <div class="featured_products_header">
@@ -9,7 +10,7 @@
   </div>
 
    <div class="featured_products_container">
-  {% assign featured_products = product.metafields.custom.related_products.value %}
+  
   {% for product in featured_products %}
     {% render 'related-items', product: product %}
   {% endfor %}
@@ -18,6 +19,7 @@
 </div>
 
 <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
+{% endif %}
 
 {% schema %}
 {
