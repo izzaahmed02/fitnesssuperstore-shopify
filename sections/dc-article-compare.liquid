@@ -6,23 +6,23 @@
       <thead>
         <tr>
           <th>Feature</th>
-          {% for product in chart.products.value %}
+          {% for product in chart.products %}
             <!-- Debug: product = {{ product | json }} -->
-            <th>{{ product.metafields.custom.comparison_product.title | default: product.title }}</th>
+            <th>{{ product.value.title }}</th>
           {% endfor %}
         </tr>
       </thead>
       <tbody>
-        {% for product in chart.products.value %}
-          {% assign features = product.metafields.custom.comparison_features.value | default: product.features %}
+        {% for product in chart.products %}
+          {% assign features = product.value.features %}
           <!-- Debug: features for product = {{ features | json }} -->
-          {% if forloop.first %}
+          {% if forloop.first and features %}
             {% for feature in features %}
               <!-- Debug: feature = {{ feature | json }} -->
               <tr>
                 <td><strong>{{ feature.name }}</strong></td>
-                {% for prod in chart.products.value %}
-                  {% assign prod_features = prod.metafields.custom.comparison_features.value | default: prod.features %}
+                {% for prod in chart.products %}
+                  {% assign prod_features = prod.value.features %}
                   <!-- Debug: prod_features = {{ prod_features | json }} -->
                   <td>
                     {% for f in prod_features %}
@@ -40,12 +40,12 @@
       </tbody>
     </table>
     <div class="comparison-images">
-      {% for product in chart.products.value %}
+      {% for product in chart.products %}
         <!-- Debug: product for image = {{ product | json }} -->
         <div class="comparison-image">
-          {% if product.metafields.custom.comparison_product.image %}
-            <!-- Debug: image = {{ product.metafields.custom.comparison_product.image | json }} -->
-            <img src="{{ product.metafields.custom.comparison_product.image | img_url: 'medium' }}" alt="{{ product.metafields.custom.comparison_product.title | default: product.title }}">
+          {% if product.value.image %}
+            <!-- Debug: image = {{ product.value.image | json }} -->
+            <img src="{{ product.value.image | img_url: 'medium' }}" alt="{{ product.value.title }}">
           {% else %}
             <!-- Debug: No image found for product -->
           {% endif %}
