@@ -1,73 +1,34 @@
 {% assign chart = page.metafields.custom.comparison_chart.value %}
 {% if chart %}
-  {% for product in chart.products.value %}
-    <div style="border: 1px solid #ccc; margin: 1rem 0; padding: 1rem;">
-      <p><strong>Raw Product Object:</strong></p>
-      <pre>{{ product | json }}</pre>
-    </div>
-  {% endfor %}
-{% endif %}
+  <div class="comparison-chart">
+    {% for product in chart.products.value %}
+      <div class="comparison-column">
+        <h3>{{ product.title }}</h3>
 
+        {% if product.featured_image %}
+          <img src="{{ product.featured_image }}" alt="{{ product.title }}">
+        {% elsif product.images[0] %}
+          <img src="{{ product.images[0] }}" alt="{{ product.title }}">
+        {% endif %}
 
-{%- comment -%}
-Step 1: Get all unique feature names across all products
-{%- endcomment -%}
-{% assign all_keys_string = "" %}
-{% assign all_keys = "" | split: "," %}
-{% for product in products %}
-  {% for feature in product.features %}
-    {% assign key = feature.name | strip %}
-    {% unless all_keys_string contains key %}
-      {% assign all_keys = all_keys | join: '|' | append: '|' | append: key | split: '|' %}
-      {% assign all_keys_string = all_keys_string | append: key | append: "|" %}
-    {% endunless %}
-  {% endfor %}
-{% endfor %}
+        <p>
+          <a href="/products/{{ product.handle }}">View Product</a>
+        </p>
 
-<div class="comparison-wrapper">
-  <div class="comparison-scroll-area">
-    <table class="comparison-table">
-      <thead>
-        <tr>
-          <th class="sticky-col param-col"></th>
-          {% for product in products %}
-            <th>
-              <h4 style="text-align: center;">
-                {% if product.product_url %}
-                  <a href="{{ product.product_url }}" target="_blank">{{ product.title }}</a>
-                {% else %}
-                  {{ product.title }}
-                {% endif %}
-              </h4>
-              {% if product.image %}
-                <p>
-                  <img src="{{ product.image | image_url: width: 160 }}" alt="{{ product.title }}" style="margin: auto; margin-bottom: 16px;">
-                </p>
-              {% endif %}
-            </th>
-          {% endfor %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for key in all_keys %}
-          <tr>
-            <th class="sticky-col param-col">{{ key }}</th>
-            {% for product in products %}
-              {% assign value = '' %}
-              {% for feature in product.features %}
-                {% if feature.name == key %}
-                  {% assign value = feature.value %}
-                  {% break %}
-                {% endif %}
-              {% endfor %}
-              <td>{{ value }}</td>
+        <ul class="comparison-features">
+          {% assign features = product.metafields.custom.comparison_features.value %}
+          {% if features %}
+            {% for feature in features %}
+              <li><strong>{{ feature.name }}:</strong> {{ feature.value }}</li>
             {% endfor %}
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+          {% else %}
+            <li>No features listed</li>
+          {% endif %}
+        </ul>
+      </div>
+    {% endfor %}
   </div>
-</div>
+{% endif %}
 
 
 
