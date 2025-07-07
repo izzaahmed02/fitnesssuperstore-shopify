@@ -1,23 +1,28 @@
 {% assign chart = page.metafields.custom.comparison_chart.value %}
 {% if chart %}
   <div class="comparison-chart">
-    {% for product in chart.products.value %}
+    {% for entry in chart.product_comparisons.value %}
+      {% assign product = entry.product.value %}
       <div class="comparison-column">
-        <h3>{{ product.title }}</h3>
+        <!-- Custom metaobject title -->
+        <h3>{{ entry.custom_title }}</h3>
 
-        {% if product.featured_image %}
-          <img src="{{ product.featured_image }}" alt="{{ product.title }}">
-        {% elsif product.images[0] %}
-          <img src="{{ product.images[0] }}" alt="{{ product.title }}">
+        <!-- Custom metaobject image -->
+        {% if entry.custom_image %}
+          <img src="{{ entry.custom_image | image_url: width: 400 }}" alt="{{ entry.custom_title }}">
+        {% elsif product.featured_image %}
+          <img src="{{ product.featured_image | image_url: width: 400 }}" alt="{{ product.title }}">
         {% endif %}
 
+        <!-- Product link -->
         <p>
-          <a href="/products/{{ product.handle }}">View Product</a>
+          <a href="{{ product.url }}">View Product</a>
         </p>
 
+        <!-- Feature list from product metafield -->
         <ul class="comparison-features">
           {% assign features = product.metafields.custom.comparison_features.value %}
-          {% if features %}
+          {% if features and features.size > 0 %}
             {% for feature in features %}
               <li><strong>{{ feature.name }}:</strong> {{ feature.value }}</li>
             {% endfor %}
@@ -28,8 +33,9 @@
       </div>
     {% endfor %}
   </div>
+{% else %}
+  <p>❌ No comparison chart metafield linked on this page.</p>
 {% endif %}
-
 
 
 
