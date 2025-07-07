@@ -1,3 +1,68 @@
+{% assign chart = page.metafields.custom.comparison_chart.value %}
+{% assign products = chart.products %}
+
+{%- comment -%}
+1. Collect all unique feature names across all products
+{%- endcomment -%}
+{% assign all_keys = "" | split: "," %}
+{% for product in products %}
+  {% for comparison_feature in product.features %}
+    {% unless all_keys contains comparison_feature.name %}
+      {% assign all_keys = all_keys | push: comparison_feature.name %}
+    {% endunless %}
+  {% endfor %}
+{% endfor %}
+
+<div class="comparison-wrapper">
+  <div class="comparison-scroll-area">
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th class="sticky-col param-col"></th>
+          {% for product in products %}
+            <th>
+              <h4 style="text-align: center;">
+                {% if product.product_url %}
+                  <a href="{{ product.product_url }}" target="_blank">{{ product.title }}</a>
+                {% else %}
+                  {{ product.title }}
+                {% endif %}
+              </h4>
+              {% if product.image %}
+                <p>
+                  <img src="{{ product.image | image_url: width: 160 }}" alt="{{ product.title }}" style="margin: auto; margin-bottom: 16px;">
+                </p>
+              {% endif %}
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for key in all_keys %}
+          <tr>
+            <th class="sticky-col param-col">{{ key }}</th>
+            {% for product in products %}
+              {% assign value = '' %}
+              {% for comparison_feature in product.features %}
+                {% if comparison_feature.name == key %}
+                  {% assign value = comparison_feature.value %}
+                {% endif %}
+              {% endfor %}
+              <td>{{ value }}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+
+
+
+{% comment %}
 {{ 'main-article-compare.css' | asset_url | stylesheet_tag }}
 
 
@@ -9,6 +74,8 @@
         {{ page.content }}
     </div>
 </div>
+
+
 <script>
 	document.addEventListener('DOMContentLoaded', () => {
 		const scrollArea = document.querySelector('.comparison-scroll-area');
@@ -57,7 +124,7 @@
 		});
 	});
 </script>
-
+{% endcomment %}
 
 {% schema %}
 {
