@@ -1,29 +1,11 @@
-
-
-{% assign chart = page.metafields.custom.comparison_chart.value %}
-{% assign products = chart.products %}
-
-
 {% assign chart = page.metafields.custom.comparison_chart.value %}
 {% if chart %}
-  <div>
-    <h2>Comparison Chart Loaded</h2>
-    {% for product in chart.products.value %}
-      <div>
-        <h3>{{ product.title.value }}</h3>
-        <img src="{{ product.image | image_url: width: 200 }}" alt="{{ product.title.value }}">
-        <p><a href="{{ product.product_url.value }}">View Product</a></p>
-
-        <ul>
-          {% for feature in product.features.value %}
-            <li><strong>{{ feature.name.value }}:</strong> {{ feature.value.value }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% endfor %}
-  </div>
-{% else %}
-  <p>No chart found.</p>
+  {% for product in chart.products.value %}
+    <div style="border: 1px solid #ccc; margin: 1rem 0; padding: 1rem;">
+      <p><strong>Raw Product Object:</strong></p>
+      <pre>{{ product | json }}</pre>
+    </div>
+  {% endfor %}
 {% endif %}
 
 
