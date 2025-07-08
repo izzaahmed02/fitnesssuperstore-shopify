@@ -1,3 +1,63 @@
+{% assign chart = page.metafields.custom.comparison_chart.value %}
+<!-- Debug: chart = {{ chart | json }} -->
+{% if chart %}
+  <div class="comparison-chart">
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          {% for product in chart.product %}
+            <!-- Debug: product = {{ product | json }} -->
+            <th>{{ product.value.title }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in chart.products %}
+          {% assign features = product.value.features %}
+          <!-- Debug: features for product = {{ features | json }} -->
+          {% if forloop.first and features %}
+            {% for feature in features %}
+              <!-- Debug: feature = {{ feature | json }} -->
+              <tr>
+                <td><strong>{{ feature.name }}</strong></td>
+                {% for prod in chart.products %}
+                  {% assign prod_features = prod.value.features %}
+                  <!-- Debug: prod_features = {{ prod_features | json }} -->
+                  <td>
+                    {% for f in prod_features %}
+                      <!-- Debug: f = {{ f | json }} -->
+                      {% if f.name == feature.name %}
+                        {{ f.value }}
+                      {% endif %}
+                    {% endfor %}
+                  </td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="comparison-images">
+      {% for product in chart.product %}
+        <!-- Debug: product for image = {{ product | json }} -->
+        <div class="comparison-image">
+          {% if product.value.image %}
+            <!-- Debug: image = {{ product.value.image | json }} -->
+            <img src="{{ product.value.image | img_url: 'medium' }}" alt="{{ product.value.title }}">
+          {% else %}
+            <!-- Debug: No image found for product -->
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% else %}
+  <!-- Debug: No chart data found -->
+{% endif %}
+
+{% comment %}
 {{ 'main-article-compare.css' | asset_url | stylesheet_tag }}
 
 
@@ -9,6 +69,8 @@
         {{ page.content }}
     </div>
 </div>
+
+
 <script>
 	document.addEventListener('DOMContentLoaded', () => {
 		const scrollArea = document.querySelector('.comparison-scroll-area');
@@ -57,7 +119,7 @@
 		});
 	});
 </script>
-
+{% endcomment %}
 
 {% schema %}
 {
