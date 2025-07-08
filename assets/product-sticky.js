@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", function () {
   let scrollListenerAttached = false;
 
  function checkScroll() {
-  const announcementBarSection = document.querySelector(".announcement-bar-section");
   const headerWrapper = document.querySelector(".header-wrapper");
   const productContainer = document.querySelector(".product");
   const productInfo = document.querySelector(".product__info-wrapper");
@@ -34,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   productContainer.style.minHeight = `${productInfoHeight}px`;
 
-  if (window.scrollY <= announcementBarSection.offsetHeight + headerWrapper.offsetHeight) {
+  if (window.scrollY <= headerWrapper.offsetHeight) {
     productInfo.classList.remove("fixed", "absolute");
     productInfo.style.top = "";
     productInfo.style.right = ""; // Reset positioning
@@ -59,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
     productInfo.classList.remove("fixed");
     productInfo.classList.add("absolute");
     productInfo.style.top = `${
-      extraInfoHeight + announcementBarSection.offsetHeight + headerWrapper.offsetHeight
+      extraInfoHeight + headerWrapper.offsetHeight
     }px`;
     productInfo.style.right = ""; // reset for absolute
     return;
