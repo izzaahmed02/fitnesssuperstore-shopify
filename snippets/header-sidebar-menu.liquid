@@ -1,16 +1,65 @@
-                            {% for link in linklists[settings.sidebarMenu].links %}
-                                <div class="submenu">
-                                   {% if link.links.size > 0 %}
-                                    <a href="/collections/all" class="submenu-title">{{ link.title }}</a>
-                                    <ul>  
-                                      {% for childlink in link.links %}
-                                      <li>
-                                        
-                                             <a class="submenu-item" href="{{ childlink.url }}">{{ childlink.title }}</a>
-                                      
-                                      </li>   
-                                           {% endfor %}
-                                    </ul>
-                                  {% endif %}
-                                </div>
-                             {% endfor %}
+<style>
+  aside.sidebar {
+    min-width: 315px;
+    width: 251px;
+    padding: 32px;
+    background-color: #fff;
+  }
+
+  nav.sidebar_nav {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .sidebar_nav_block {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-radius: 12px;
+    background-color: #f8f8fa;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    padding-bottom: 24px;
+  }
+
+  .sidebar_nav_block h3 {
+    width: 100%;
+    border-radius: 12px 12px 0 0;
+    padding-block: 16px;
+    padding-inline: 24px;
+    margin: 0;
+    font-family: 'Lato';
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 24px;
+    background-color: #EDEFF3;
+  }
+
+  .sidebar_nav_block a {
+    padding-inline: 24px;
+  }
+
+  @media (max-width: 750px) {
+    aside.sidebar {
+      display: none;
+    }
+  }
+</style>
+
+<aside class="sidebar">
+  <nav class="sidebar_nav">
+    {% for link in linklists['header-menu-main'].links %}
+      <div class="sidebar_nav_block">
+        <h3>{{ link.title }}</h3>
+
+        {% if link.links.size > 0 %}
+          {% for childlink in link.links %}
+            <a href="{{ childlink.url }}">{{ childlink.title }}</a>
+          {% endfor %}
+        {% endif %}
+      </div>
+    {% endfor %}
+  </nav>
+</aside>

@@ -18,11 +18,6 @@
                 <span class="visually-hidden">{{ 'sections.collection_template.title' | t }}: </span>
                 {{- collection.title | escape -}}
             </h1>
-            {% if section.settings.show_collection_description %}
-                <div class="collection-hero__description">
-                    {{ collection.description }}
-                </div>
-            {% endif %}
             {% if collection.metafields.custom.related_collections != blank %}
                 {% assign current_url = collection.url %}
                 {% assign match_found = false %}
@@ -31,12 +26,7 @@
                         {% assign match_found = true %}
                     {% endif %}
                 {% endfor %}
-                {%- assign subCategoriesCount = 0 -%}
-                {%- for subCategory in collection.metafields.custom.related_collections.value -%}
-                {%- assign subCategoriesCount = subCategoriesCount | plus: 1 -%}
-                {%- endfor -%}
-                {% if subCategoriesCount > 1 %}
-                   <div class="collection-hero__related-collections-wrapper">
+                <div class="collection-hero__related-collections-wrapper">
                     <button class="collection-hero__related-collections-toggle" aria-expanded="false">
                         <span>{{ section.settings.related_collections_toggle | default: "Browse subcategories" }}</span>
                         <svg class="icon icon-caret" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -67,7 +57,6 @@
                         {% endfor %}
                     </ul>
                 </div>
-                {% endif %}
             {% endif %}
         </div>
         {%- if section.settings.show_collection_image and collection.image -%}
@@ -93,7 +82,7 @@
 {% schema %}
 {
   "name": "t:sections.main-collection-banner.name",
-  "class": "section collnBanner",
+  "class": "section",
   "settings": [
     {
       "type": "paragraph",

@@ -25,32 +25,8 @@
 {%- endstyle -%}
 
 <div class="product__extra_info">
-  
+  <div class="page-width">
     <div class="product__extra_info-wrap">
-    {% if product.metafields.custom.gym_package_inclusions and product.metafields.custom.gym_package_inclusions.value != blank%}
-          <h4 class="product__extra_info-title">Package Inclusions</h4>
-        {% for package in product.metafields.custom.gym_package_inclusions.value %}
-          <div class="package-group">
-            <h5 class="product__extra_info-title">{{ package.display_name }}</h5>
-
-            {% if package.inclusions %}
-              <ul>
-                {% for inclusion in package.inclusions.value %}
-                  <li>
-                      <strong>{{ inclusion.quantity }} - <a href="{{ inclusion.product.value.url }}">
-                        {% if inclusion.display_name != blank %}
-                            {{ inclusion.display_name }}
-                          {% else %}
-                            {{  inclusion.product.value.title }}
-                        {% endif %}
-                      </a></strong>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% endif %}
-          </div>
-        {% endfor %}
-      {% endif %}
       {% for block in section.blocks %}
         {% case block.type %}
           {% when 'description' %}
@@ -221,7 +197,7 @@
                         src="{{ extra.instructional_video_url.value }}"
                         title="YouTube video player"
                         frameborder="0"
-                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowfullscreen
                       >
                       </iframe>
@@ -572,7 +548,7 @@
             {% if block.settings.shippingdimsweight != blank %}
               <div class="product__extra_smith extra-info-width">
                 <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
-                <div>{{ product.metafields.custom.features_specs.value.shipping_dims_weight_2.value }}</div>
+                <div>{{ block.settings.shippingdimsweight }}</div>
               </div>
             {% endif %}
             
@@ -658,13 +634,12 @@
       {% render 'prop65' %}
       <a id="download-pds" style="cursor:pointer;">Download Product Data Sheet</a>
     </div>
- 
+  </div>
 </div>
 
 {% schema %}
 {
   "name": "Extra info",
-  "class": "extraInfo",
   "settings": [
     {
       "type": "header",

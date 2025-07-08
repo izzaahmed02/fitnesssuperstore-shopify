@@ -55,7 +55,7 @@ class TileCalculator extends HTMLElement {
       }
 
       this.updateQuantity(0);
-      //this.disableAddToCartButton();
+      this.disableAddToCartButton();
       this.validateDimensionInputs();
 
       // Add additional setup after slight delay
@@ -156,7 +156,7 @@ class TileCalculator extends HTMLElement {
     spinner.style.display = 'none';
 
     if (unavailable) {
-     this.disableAddToCartButton();
+      this.disableAddToCartButton();
     } else {
       this.enableAddToCartButton();
     }
@@ -230,7 +230,6 @@ class TileCalculator extends HTMLElement {
         updatedResult.total = updatedTotal;
         this.updateQuantity(updatedTotal);
         this.updateCustomPrice(updatedResult);
-        this.enableAddToCartButton();
       });
     });
   }

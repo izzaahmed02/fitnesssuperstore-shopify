@@ -314,56 +314,24 @@ window.addEventListener('DOMContentLoaded', async () => {
 		if (locationRes) {
 			const userLoc = await locationRes.json();
 			sessionStorage.userLoc = JSON.stringify(userLoc);
-			if (userLoc && userLoc.postal && userLoc.country_code === 'US' && userLoc.region_code === 'CA') {
+			if (userLoc && userLoc.country_code === 'US') {
 				const distanceFromBenicia = await getDistanceFromBenicia(userLoc.postal)
 				if (distanceFromBenicia <= 100) {
 					document.querySelector('.utility-bar').style.display = 'block';
-					document.querySelector('.california-discount-offer ').style.display = 'block';
 				}
 			}
 		}
-	} 
-	else {
+	} else {
 		const userLocFromSessionStorage = JSON.parse(sessionStorage.userLoc);
 
-		if (userLocFromSessionStorage && userLocFromSessionStorage.postal && userLocFromSessionStorage.country_code === 'US'  && userLocFromSessionStorage.region_code === 'CA') {
+		if (userLocFromSessionStorage && userLocFromSessionStorage.country_code === 'US') {
 			const distanceFromBenicia = await getDistanceFromBenicia(userLocFromSessionStorage.postal);
 
 			if (distanceFromBenicia <= 100) {
 				document.querySelector('.utility-bar').style.display = 'block';
-				document.querySelector('.california-discount-offer ').style.display = 'block';
 			}
 		}
 	}
-
-	const search = document.querySelector('.custom-header-search--input');  
-
-	function hidePopup (popup) {
-		popup.style.display = 'none';         
-		document.removeEventListener('click', outsideClose);
-	}
-
-	function outsideClose (e) {
-		const globoPopup  = document.getElementById('ui-id-1');
-		if (!globoPopup.contains(e.target) && !search.contains(e.target)) {
-			hidePopup(globoPopup);
-		}
-	}
-
-	setTimeout(() => {
-		document.addEventListener('click', outsideClose);
-		
-		search.addEventListener('input', (event) => {
-			const globoPopup  = document.getElementById('ui-id-1');
-			if (!search.value.trim()) {
-				setTimeout(() => {
-				 	hidePopup(globoPopup);
-				 	search.blur(); 
-				 	document.body.focus(); 
-				}, 100);
-			};
-		});
-	});
 });
 
 async function getDistanceFromBenicia(postal) {
@@ -519,3 +487,5 @@ const pricingRefenceModalContent = `<div class="pricing-reference">
     </ul>
   </div>
 </div>`
+
+

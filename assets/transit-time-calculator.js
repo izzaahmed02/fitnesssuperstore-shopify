@@ -23,7 +23,7 @@ var TransitTimeCalculator = {
     const estimateDeliveryTimesBtn = document.querySelector('#estimate-delivery-times-btn');
     if (estimateDeliveryTimesBtn && !estimateDeliveryTimesBtn.dataset.listenerAttached) {
       estimateDeliveryTimesBtn.addEventListener('click', async () => {
-        estimateDeliveryTimesBtn.innerText = 'Calculating...';
+        estimateDeliveryTimesBtn.innerText = 'Calculating delivery times...';
         const zipInput = document.querySelector('.location-form #postalCode');
         if (zipInput.value) {
           sessionStorage.userPostal = zipInput.value.replace(/\s+/g, '');
@@ -52,7 +52,7 @@ var TransitTimeCalculator = {
       
       sessionStorage.userCityStateZip = `${userLoc.city} ${userLoc.region_code}`;
       
-      const transitTimeForm = document.querySelector('.transit-time-form');
+      const locationForm = document.getElementById('location-form');
 
       if (userLoc.postal) {
         try {
@@ -60,17 +60,17 @@ var TransitTimeCalculator = {
           locationInfoResponse = await locInfoRes.json();
           if (locationInfoResponse.status && locationInfoResponse.status === 400) {
             TransitTimeCalculator.appendInvalidTransitTime();
-            if (transitTimeForm) {
-              transitTimeForm.style.display = 'block';
+            if (locationForm) {
+              locationForm.style.display = 'block';
             } 
             setUserLocationDisplay(userLoc);
             return;
           }
         } catch (e) {
           TransitTimeCalculator.appendInvalidTransitTime();
-
-          if (transitTimeForm) {
-            transitTimeForm.style.display = 'block';
+          const locationForm = document.getElementById('location-form');
+          if (locationForm) {
+            locationForm.style.display = 'block';
           } 
           setUserLocationDisplay(userLoc);
           return;
@@ -100,18 +100,13 @@ var TransitTimeCalculator = {
             userLoc.country_code = locationInfoCountry;
           }
           sessionStorage.userCityStateZip = `${userLoc.city} ${userLoc.region_code}`;
-        }
-
-        if (!userLoc.postal) {
-          TransitTimeCalculator.appendInvalidTransitTime();
-          return;
-        }
-
-        if (userLoc.country !== 'CA' && userLoc.country !== 'US' && userLoc.country !== 'PR') {
-          document.querySelector('.location-form #postalCode').value = userLoc.postal;
-          setUserLocationDisplay(userLoc);
-          TransitTimeCalculator.appendInvalidTransitTime();
-          return;
+        } else {
+          if (userLoc.country !== 'CA' && userLoc.country !== 'US' && userLoc.country !== 'PR') {
+            document.querySelector('.location-form #postalCode').value = userLoc.postal;
+            setUserLocationDisplay(userLoc);
+            TransitTimeCalculator.appendInvalidTransitTime();
+            return;
+          }
         }
       }
       
@@ -157,16 +152,13 @@ var TransitTimeCalculator = {
       }
       
       let state = userLoc.region_code;
-      let addInstallationTime = true;    
       let deliveryOption = deliveryOptionText.toLocaleLowerCase();
       
       if (userLoc.country === 'US' && state === "CA") {
         if (distanceFromBenicia != null) {
           if (distanceFromBenicia <= 150 && productWeight >= 30) {
-            addInstallationTime = false;
           } else if (distanceFromBenicia <= 150 && productWeight < 30) {
             minDeliveryTime += 1; maxDeliveryTime += 1;
-            addInstallationTime = false;
           } else if (distanceFromBenicia > 150 && productWeight >= 30 && (deliveryOption.includes('curbside') || deliveryOption.includes('garage'))) {
             minDeliveryTime += 1; maxDeliveryTime += 4;
           } else if (distanceFromBenicia > 150 && productWeight < 30 && deliveryOption.includes('curbside')) {
@@ -238,7 +230,7 @@ var TransitTimeCalculator = {
         }
       }
       
-      if (addInstallationTime && deliveryOptionText) {
+      if (deliveryOptionText) {
         if (deliveryOptionText.toLowerCase().includes("room") ||
             deliveryOptionText.toLowerCase().includes("process") ||
             deliveryOptionText.toLowerCase().includes("custom")) {
@@ -256,8 +248,8 @@ var TransitTimeCalculator = {
         }
       }
       
-      const processingTimeMinDate = moment().businessAdd(processingTimeMin, 'days');
-      const processingTimeMaxDate = moment().businessAdd(processingTimeMax, 'days');
+      const processingTimeMinDate = moment().add(processingTimeMin, 'days');
+      const processingTimeMaxDate = moment().add(processingTimeMax, 'days');
       const minDeliveryTimeDate = moment(processingTimeMinDate).businessAdd(minDeliveryTime).format('ddd, MMM D YYYY');
       const maxDeliveryTimeDate = moment(processingTimeMaxDate).businessAdd(maxDeliveryTime).format('ddd, MMM D YYYY');
       
@@ -348,20 +340,17 @@ var TransitTimeCalculator = {
   appendTransitTime: function(estimatedTimeText, installMethodText) {
     let finalText = `<span class="transit-time-text">${estimatedTimeText}</span>`;
     const container = document.querySelector('.transit-times-container');
-    if (container) { 
-      container.innerHTML = finalText; 
-      transitTimeForm = document.querySelector('.transit-time-form').style.display = 'none';
-    }
+    if (container) { container.innerHTML = finalText; }
   },
   
   appendTransitTimeError: function() {
-    let finalText = `<span class="transit-time-text error">No Transit Times found for ${sessionStorage.userPostal} ZipCode</span>`;
+    let finalText = `<span class="transit-time-text">No Transit Times found for ${sessionStorage.userPostal} ZipCode</span>`;
     const container = document.querySelector('.transit-times-container');
     if (container) { container.innerHTML = finalText; }
   },
   
   appendInvalidTransitTime: function() {
-    let finalText = `<span class="transit-time-text error">The Transit Time Calculator only has info for USA & Canada Postal Codes. Please enter a valid Postal Code or Contact Us for Transit Times</span>`;
+    let finalText = `<span class="transit-time-text">The Transit Time Calculator only has info for USA & Canada Postal Codes. Please enter a valid Postal Code or Contact Us for Transit Times</span>`;
     const container = document.querySelector('.transit-times-container');
     if (container) { 
       container.innerHTML = finalText; 

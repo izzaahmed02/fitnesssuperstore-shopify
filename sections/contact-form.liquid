@@ -124,8 +124,52 @@
         </div>
     </div>
 </div>
+{% comment %} <script
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw"
+  defer
+></script>
+<script defer>
+  window.addEventListener('load', function () {
+    const map = new google.maps.Map(document.getElementById('address-map-{{ section.id }}'), {
+      center: { lat: 38.0764, lng: -122.1241 },
+      zoom: 15,
+    });
 
-<script src="{{ 'contact-form.js' | asset_url }}" defer="defer"></script>
+    const locations = [
+      {
+        position: { lat: 38.07726, lng: -122.12476 },
+        title: 'Fitness Superstore, Inc.',
+        address: '537 Stone Rd Suite F, Benicia, CA 94510, USA',
+      },
+      {
+        position: { lat: 38.0755, lng: -122.1235 },
+        title: 'French Fitness HQ',
+        address: '457 Industrial Way, Benicia, CA 94510',
+      },
+    ];
+
+    locations.forEach((location) => {
+      const marker = new google.maps.Marker({
+        position: location.position,
+        map: map,
+        title: location.title,
+      });
+
+      const content = `
+              <div style="display:flex; flex-direction: column;">
+                  <strong>${location.title}</strong><br>
+                  ${location.address}
+              </div>`;
+      const infoWindow = new google.maps.InfoWindow({
+        content: content,
+      });
+
+      marker.addListener('click', () => {
+        infoWindow.open(map, marker);
+      });
+    });
+  });
+</script> {% endcomment %}
 
 {% schema %}
 {
