@@ -314,25 +314,25 @@ window.addEventListener('DOMContentLoaded', async () => {
 		if (locationRes) {
 			const userLoc = await locationRes.json();
 			sessionStorage.userLoc = JSON.stringify(userLoc);
-			// if (userLoc && userLoc.postal && userLoc.country_code === 'US' && userLoc.region_code === 'CA') {
-			// 	const distanceFromBenicia = await getDistanceFromBenicia(userLoc.postal)
-			// 	if (distanceFromBenicia <= 100) {
-			// 		document.querySelector('.utility-bar').style.display = 'block';
-			// 	}
-			// }
+			if (userLoc && userLoc.postal && userLoc.country_code === 'US' && userLoc.region_code === 'CA') {
+				const distanceFromBenicia = await getDistanceFromBenicia(userLoc.postal)
+				if (distanceFromBenicia <= 100) {
+					document.querySelector('.utility-bar').style.display = 'block';
+				}
+			}
 		}
 	} 
-	// else {
-	// 	const userLocFromSessionStorage = JSON.parse(sessionStorage.userLoc);
+	else {
+		const userLocFromSessionStorage = JSON.parse(sessionStorage.userLoc);
 
-	// 	if (userLocFromSessionStorage && userLocFromSessionStorage.postal && userLocFromSessionStorage.country_code === 'US'  && userLocFromSessionStorage.region_code === 'CA') {
-	// 		const distanceFromBenicia = await getDistanceFromBenicia(userLocFromSessionStorage.postal);
+		if (userLocFromSessionStorage && userLocFromSessionStorage.postal && userLocFromSessionStorage.country_code === 'US'  && userLocFromSessionStorage.region_code === 'CA') {
+			const distanceFromBenicia = await getDistanceFromBenicia(userLocFromSessionStorage.postal);
 
-	// 		if (distanceFromBenicia <= 100) {
-	// 			document.querySelector('.utility-bar').style.display = 'block';
-	// 		}
-	// 	}
-	// }
+			if (distanceFromBenicia <= 100) {
+				document.querySelector('.utility-bar').style.display = 'block';
+			}
+		}
+	}
 
 	const search = document.querySelector('.custom-header-search--input');  
 
