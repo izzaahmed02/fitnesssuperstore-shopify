@@ -538,15 +538,25 @@ content: ''!important;
         {% endif %}
         <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
        {% if request.page_type == 'cart' %}
-        <div class="california-discount-offer">
-          <p class="desktop-text">
-            Free shipping + 50% off installation for local customers within 100 miles of Benicia for orders $1000+
-            minimum, CA. Enter your zip code to check eligibility.
-          </p>
-          <p class="mobile-text">
-            Free shipping + 50% OFF Installation in CA. 1000+ minumum. Enter your zip code to check eligibility.
-          </p>
-        </div>
+{% assign show_offer =
+     settings.ca_offer_desktop  != blank
+  or settings.ca_offer_mobile   != blank %}
+
+{% if show_offer %}
+  <div class="california-discount-offer">
+    {% if settings.ca_offer_desktop != blank %}
+      <p class="desktop-text">
+        {{ settings.ca_offer_desktop | escape }}
+      </p>
+    {% endif %}
+
+    {% if settings.ca_offer_mobile != blank %}
+      <p class="mobile-text">
+        {{ settings.ca_offer_mobile | escape }}
+      </p>
+    {% endif %}
+  </div>
+{% endif %}
       {% endif %}
           {% if request.page_type == 'page' and page.metafields.layout.narrow == true %}
             <div class="page-narrow-layout">
