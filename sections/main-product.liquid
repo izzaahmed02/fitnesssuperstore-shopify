@@ -244,15 +244,23 @@
                   </div>
                 </div>
               {% when 'price' %}
-                  {% comment %} <div class="campaign-sale-container mobile">
-                    {% if product.title contains "French Fitness" %}
-                      <p>July 4th Sale: 10% OFF. Use coupon 'JULY4'</p>
-                    {% elsif product.title contains "Remanufactured" %}
-                      <p>July 4th Sale: 5% OFF. Use coupon 'JULY4'</p>
-                    {% else %}
-                      <p>July 4th Sale: Call for Coupon Code</p>
-                    {% endif %}
-                  </div> {% endcomment %}
+{% comment %} 
+{% assign campaign_text = '' %}
+
+{% if product.title contains 'French Fitness' %}
+  {% assign campaign_text = settings.sale_promo_ff %}
+{% elsif product.title contains 'Remanufactured' %}
+  {% assign campaign_text = settings.sale_promo_reman %}
+{% else %}
+  {% assign campaign_text = settings.sale_promo_default %}
+{% endif %}
+
+{% unless campaign_text == blank %}
+  <div class="campaign-sale-container hide-on-mobile">
+    <p>{{ campaign_text | escape }}</p>
+  </div>
+{% endunless %} {% endcomment %}
+
                 <div>
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                     <span class="pr_custom_compare_price"
@@ -757,15 +765,22 @@
                   </a>
                 </div>
               {% when 'price' %}
-                  {% comment %} <div class="campaign-sale-container hide-on-mobile">
-                      {% if product.title contains "French Fitness" %}
-                        <p>July 4th Sale: 10% OFF. Use coupon code 'JULY4'</p>
-                      {% elsif product.title contains "Remanufactured" %}
-                        <p>July 4th Sale: 5% OFF. Use coupon code 'JULY4'</p>
-                      {% else %}
-                        <p>July 4th Sale: Call for Coupon Code</p>
-                      {% endif %}
-                  </div> {% endcomment %}
+{% comment %} 
+{% assign campaign_text = '' %}
+
+{% if product.title contains 'French Fitness' %}
+  {% assign campaign_text = settings.sale_promo_ff %}
+{% elsif product.title contains 'Remanufactured' %}
+  {% assign campaign_text = settings.sale_promo_reman %}
+{% else %}
+  {% assign campaign_text = settings.sale_promo_default %}
+{% endif %}
+
+{% unless campaign_text == blank %}
+  <div class="campaign-sale-container hide-on-mobile">
+    <p>{{ campaign_text | escape }}</p>
+  </div>
+{% endunless %} {% endcomment %}
                 <div class="product__prices hidden lg:block">
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                     <span class="pr_custom_compare_price"
