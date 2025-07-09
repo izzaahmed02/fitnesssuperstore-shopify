@@ -1,22 +1,40 @@
 {{ 'section-related-products.css' | asset_url | stylesheet_tag }}
-{% assign featured_products = product.metafields.custom.related_products.value %}
-{% if featured_products %}
-<div class="custom-container">
-  {{ customer.first_name }}
-  <div class="featured_products_header">
-    {% if section.settings.title != blank %}
-      <h2>{{ section.settings.title }}</h2>
-    {% endif %}
+{% assign related_products = product.metafields.custom.related_products.value %}
+
+{% assign fallback_count = 4 %}
+{% assign offset = "now" | date: "%S" | modulo: 10 | times: 1 %}
+
+{% if related_products and related_products.size > 0 %}
+  {% assign available_products = related_products | where: 'available', true %}
+  {% assign products_to_display = available_products | slice: offset, fallback_count %}
+  {% if products_to_display.size == 0 %}
+    {% assign products_to_display = available_products | slice: 0, fallback_count %}
+  {% endif %}
+{% else %}
+  {% assign in_stock_products = collections.all.products | where: 'available', true %}
+  {% assign products_to_display = in_stock_products | slice: offset, fallback_count %}
+  {% if products_to_display.size == 0 %}
+    {% assign products_to_display = in_stock_products | slice: 0, fallback_count %}
+  {% endif %}
+{% endif %}
+
+{% if products_to_display.size > 0 %}
+  <div class="custom-container">
+    {{ customer.first_name }}
+    <div class="featured_products_header">
+      {% if section.settings.title != blank %}
+        <h2>{{ section.settings.title }}</h2>
+      {% endif %}
+    </div>
+
+    <div class="featured_products_container">
+      {% for product in products_to_display %}
+        {% render 'related-items', product: product %}
+      {% endfor %}
+    </div>
   </div>
 
-   <div class="featured_products_container">
-  
-  {% for product in featured_products %}
-    {% render 'related-items', product: product %}
-  {% endfor %}
-</div>
 
-</div>
 
 <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
 {% endif %}
