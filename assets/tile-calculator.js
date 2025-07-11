@@ -516,7 +516,7 @@ class TileCalculator extends HTMLElement {
         source: 'tile-calculator',
         cartData: finalCartData,
       });
-
+      
       const sectionsResponse = await fetch(
         window.routes.root + '?sections=cart-drawer,cart-icon-bubble',
       );
