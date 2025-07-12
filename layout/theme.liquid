@@ -69,66 +69,69 @@
           {% endif %}
 
 
-      ;(function(){
-        var TRACKED = ['gclid','_gl','utm_id','utm_source','utm_medium','utm_campaign','utm_term','utm_content', 'srsltid', 'gclsrc', 'gbraid', 'wbraid'];
 
-        var urlParams = new URLSearchParams(window.location.search);
-        var sawNew = false;
-        TRACKED.forEach(function(key){
-          var v = urlParams.get(key);
-          if (v) {
-            sessionStorage.setItem(key, v);
-            sawNew = true;
-          }
-        });
+   ;(function(){
+  var TRACKED = ['gclid','_gl','utm_id','utm_source','utm_medium','utm_campaign','utm_term','utm_content','srsltid','gclsrc','gbraid','wbraid'];
 
-        var current = {};
-        TRACKED.forEach(function(key){
-          var v = (sawNew ? urlParams.get(key) : sessionStorage.getItem(key));
-          if (v) current[key] = v;
-        });
+  var urlParams = new URLSearchParams(window.location.search);
+  var sawNew = false;
+  TRACKED.forEach(function(key){
+    var v = urlParams.get(key);
+    if (v) {
+      sessionStorage.setItem(key, v);
+      sawNew = true;
+    }
+  });
 
-        function appendParams(href) {
-          try {
-            var u = new URL(href, location.origin);
-            Object.keys(current).forEach(function(key){
-              if (!u.searchParams.has(key)) {
-                u.searchParams.set(key, current[key]);
-              }
-            });
-            return u.toString();
-          } catch(e) {
-            return href;
-          }
+  var current = {};
+  TRACKED.forEach(function(key){
+    var v = (sawNew ? urlParams.get(key) : sessionStorage.getItem(key));
+    if (v) current[key] = v;
+  });
+
+  function appendParams(href) {
+    try {
+      var u = new URL(href, location.origin);
+      Object.keys(current).forEach(function(key){
+        if (!u.searchParams.has(key)) {
+          u.searchParams.set(key, current[key]);
         }
+      });
+      return u.toString();
+    } catch(e) {
+      return href;
+    }
+  }
 
-        if (Object.keys(current).length) {
-          document.querySelectorAll('a[href]').forEach(function(a){
-            var href = a.getAttribute('href');
+  if (Object.keys(current).length) {
+    document.querySelectorAll('a[href]').forEach(function(a){
+      if (a.getAttribute('target') === '_blank') return;
 
-            if (!href.match(/^(\/|https?:\/\/)/)) return;
-            if (href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
-            a.setAttribute('href', appendParams(href));
-          });
-        }
+      var href = a.getAttribute('href');
+      if (!href.match(/^(\/|https?:\/\/)/)) return;
+      if (href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
 
-        document.addEventListener('click', function(e){
-          var a = e.target.closest('a[href]');
-          if (!a) return;
+      a.setAttribute('href', appendParams(href));
+    });
+  }
 
-          var href = a.getAttribute('href');
+  document.addEventListener('click', function(e){
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    if (a.getAttribute('target') === '_blank') return;
 
-          if (href.startsWith('#') ||
-              href.startsWith('mailto:') ||
-              href.startsWith('tel:') ||
-              href.startsWith('javascript:')) return;
+    var href = a.getAttribute('href');
+    if (href.startsWith('#') ||
+        href.startsWith('mailto:') ||
+        href.startsWith('tel:') ||
+        href.startsWith('javascript:')) return;
 
-          if (!(href.startsWith('/') || href.indexOf(location.origin) === 0)) return;
+    if (!(href.startsWith('/') || href.indexOf(location.origin) === 0)) return;
 
-          e.preventDefault();
-          window.location.href = appendParams(href);
-        }, true);
-      })();
+    e.preventDefault();
+    window.location.href = appendParams(href);
+  }, true);
+})();
     </script>
 
           {% if page_description %}

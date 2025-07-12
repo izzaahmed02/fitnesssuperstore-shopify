@@ -85,7 +85,8 @@ class CartDrawer extends HTMLElement {
       this.open();
       
     });
-     setTimeout(()=> {
+
+    setTimeout(()=> {
       document.querySelectorAll('.cart-item-new .show-extra').forEach(button => {
           button.addEventListener('click', () => {
               let currentItem = button.parentElement;
@@ -134,17 +135,19 @@ class CartDrawer extends HTMLElement {
   
           const showExtraButton = cartItem.querySelector('.show-extra');
         
-          if (showExtraButton && !hasExtraContent) {
+          if (showExtraButton) {
+            if (!hasExtraContent) {
               showExtraButton.style.display = 'none';
           } else {
               showExtraButton.style.display = 'flex';
           }
+        }
       });
 
       const drawerHeadingSpan = document.querySelector('.drawer__heading span');
       const drawerSubHeadingSpan = document.querySelector('.cart-drawer__subheading span');
       const cartCount = document.querySelector('.cart-count-bubble span');
-      
+      document.querySelector('.cart-count-bubble span').innerHTML = drawerHeadingSpan.innerHTML;
       
       if (drawerHeadingSpan && drawerSubHeadingSpan && cartCount ) {
           const initialCount = parseInt(drawerHeadingSpan.getAttribute('data-count'), 10);
