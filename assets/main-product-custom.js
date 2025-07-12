@@ -182,7 +182,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   
     function registerSAReviewsPolling() {
-      const interval = setInterval(function () {
+      const interval = setInterval(async function () {
         const reviewSection = document.querySelector("#sa_review_paging");
 		if (reviewSection) {
 			addCustomActions();
@@ -198,6 +198,28 @@ window.addEventListener('DOMContentLoaded', async () => {
 		}
       }, 500);
     }
+
+	function registerProductReviewsPolling() {
+		const interval = setInterval(async function() {
+			const reviewSection = document.querySelector('.product_review');
+
+			if (reviewSection) {			
+				clearInterval(interval);
+				const productInfoContainer = document.querySelector('.product__info-container');
+
+				const starsReview =  productInfoContainer.querySelector('#product_just_stars .on');
+
+				if (!starsReview) {
+					var saTotalStars = await getShopperApprovedTotalReviewsCount();
+
+					if (saTotalStars) {
+						productInfoContainer.querySelector('#product_just_stars').innerHTML = `<span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="ind_cnt med"><a class="sa_jump_to_reviews" href="#review_header">${saTotalStars} <span class="ind_cnt_desc">reviews</span></a></span>`
+						productInfoContainer.querySelector('.sa-reviews').style.display = 'flex';
+					}
+				}
+			}
+		});
+	}
 
     function registerCustomActionEvent() {
 		setTimeout(() => {
@@ -245,6 +267,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     
     registerSAReviewsPolling();
 	registerCustomActionEvent(); 
+	registerProductReviewsPolling();
 
 	document.querySelector('#download-pds').addEventListener('click', () => {
 		const product = window.product;
@@ -773,4 +796,24 @@ function generatePayTomorrowPaymentTerms() {
             subtree: false,
         });
     });
+}
+
+async function getShopperApprovedTotalReviewsCount() {
+	const apiUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/reviews/reviewscount`;
+
+	try {
+		const response = await fetch(apiUrl, {
+			method: 'GET'
+		});
+
+		if (!response.ok) {
+			throw new Error('Failed to fetch API fetchShopperApprovedTotalReviews');
+		}
+
+        const data = await response.json();
+		return data;
+	} catch (error) {
+		console.error('Error fetching API fetchShopperApprovedTotalReviews', error);
+		return null;
+	}
 }
