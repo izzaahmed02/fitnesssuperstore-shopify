@@ -1,0 +1,86 @@
+{% assign product = product %}
+<div class="product-item card__inner" data-product-id="{{ product.id }}">
+  <div class="image-container">
+<div class="image-wrap">
+  {% assign images = product.images %}
+  {% for item in images limit: 5 %}
+    {% if item != '' %}
+      <a href="{{ product.url }}">
+        <div class="image-item">
+          <img
+            srcset="{{ item | image_url: width: 320 }} 320w,
+                    {{ item | image_url: width: 640 }} 640w,
+                    {{ item | image_url: width: 960 }} 960w"
+            src="{{ item | image_url: width: 640 }}"
+            sizes="(max-width: 767px) 100vw, 33vw"
+            alt="{{ item.alt | escape }}"
+            width="318"
+            height="283"
+            loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+            fetchpriority="{% if forloop.first %}high{% else %}low{% endif %}"
+            style="object-fit: contain;"
+          >
+        </div>
+      </a>
+    {% endif %}
+  {% endfor %}
+</div>
+  </div>
+
+  <div class="tags-wrapper">
+    <span class="ship-tag">
+      {{ product.metafields.custom.processing_time
+      | replace: "from our Warehouse", ""
+      | replace: "leave our Warehouse", ""
+      | replace: "from Manufacturer's Warehouse", ""
+    }}
+    </span>
+  </div>
+
+  {% comment %}
+  <div class="comparable-custom-action">
+    <input
+      class="add-to-comparable"
+      type="checkbox"
+      id="add-to-comparable-checkbox_{{ product.handle }}"
+      data-product="{{ product.handle }}"
+    >
+    <label for="add-to-comparable-checkbox_{{ product.handle }}">Compare</label>
+  </div> {% endcomment %}
+
+  <div class="prodBottom">
+    <a href="{{ product.url }}">
+      <div class="prodInfo">
+        <div class="title">
+          {{ product.title
+            | replace: "(Remanufactured)", ""
+            | replace: "(New)", ""
+          }}
+        </div>
+
+        <div class="product-item__price-container">
+          {% if product.metafields.custom.retail_price != blank %}
+            <div class="old-price-wrapper">
+              <span>Retail Price:</span> {{ product.metafields.custom.retail_price | money }}
+            </div>
+          {% endif %}
+
+          <div class="price-wrapper">
+            <span class="price-title">Price:</span>
+            <span class="price-value">{{ product.price | money }}</span>
+          </div>
+
+          {% if product.available == false %}
+            <div class="non-aval">
+              <p>Out of Stock</p>
+            </div>
+          {% else %}
+            <div class="availability">
+              <p>Available to Order</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
