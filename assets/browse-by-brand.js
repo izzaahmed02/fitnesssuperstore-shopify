@@ -2,6 +2,7 @@ $('.browse-brand .category-tab-content').slick({
   dots: true,
   infinite: false,
   draggable: true,
+  cssEase: 'linear',
   slidesToShow: 5,
   slidesToScroll: 1,
    responsive: [
