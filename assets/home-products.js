@@ -71,7 +71,7 @@
   arrows: true,
   infinite: false,
   autoplay: false,
-  draggable: true,
+  draggable: false,
   cssEase: 'linear',
   slidesToShow: 4,
   slidesToScroll: 1,
