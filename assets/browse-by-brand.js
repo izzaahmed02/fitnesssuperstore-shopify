@@ -1,6 +1,6 @@
 $('.browse-brand .category-tab-content').slick({
   dots: true,
-  infinite: false,
+  infinite: true,
   draggable: true,
   cssEase: 'linear',
   slidesToShow: 5,
