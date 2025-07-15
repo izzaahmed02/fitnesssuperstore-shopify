@@ -1,3 +1,273 @@
+{%  if page.metafields.custom.comparison_products.value %}
+<style>
+.comparison-chart-outer{
+    padding: 32px 16px;
+  }
+
+  .feature-col{
+    width: 193px;
+  }
+
+  .product-header{
+    width: 163.6px;
+  }
+
+  thead, .even-class{
+    background: #EDEFF3;
+
+  }
+.comparison-chart-outer {
+  width: 100%;
+  overflow-y: visible;
+  position: relative;
+}
+
+.comparison-chart-wrapper {
+ overflow-x: auto;
+  width: 100%;
+  border-radius: 12px;
+
+}
+
+.comparison-table {
+  width: max-content;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.comparison-table th{
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  text-align: center;
+  vertical-align: top;
+
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.comparison-table td {
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  text-align: left;
+  vertical-align: top;
+
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.feature-col {
+  font-weight: 600;
+  text-align: left;
+  position: sticky;
+    left: 0;
+    z-index: 1;
+
+}
+
+   .comparison-table thead th.feature-col {
+    z-index: 1;
+     background: #EDEFF3;
+  }
+
+.feature-label {
+  text-align: left;
+color: #000;
+  font-family: Lato;
+font-weight: 700;
+font-style: Bold;
+font-size: 16px;
+line-height: 24px;
+letter-spacing: 0;
+vertical-align: middle;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+}
+
+  .even-class .feature-label {
+       background-color: #EDEFF3;
+  }
+
+  .odd-class .feature-label {
+    background-color: #fff;
+  }
+
+.feature-value {
+  color: #000;
+  font-family: Lato;
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0px;
+  vertical-align: middle;
+}
+
+.product-header {
+  text-align: center;
+}
+
+.product-title {
+  font-family: Lato;
+font-weight: 700;
+font-style: Bold;
+font-size: 18px;
+line-height: 24px;
+letter-spacing: 0px;
+text-align: center;
+  color: #000;
+  margin-bottom: 24px;
+
+}
+
+.product-header-image img {
+  max-width: 100px;
+  width: 91px;
+    height: 120px;
+
+}
+
+.right_arrow svg {
+  width: 20px;
+  animation: move 1s linear infinite;
+  transform-origin: center;
+}
+
+  .right_arrow{
+    text-align: right;
+    margin-right: 10px;
+  }
+
+@keyframes move {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+  @media (max-width: 768px) {
+  .feature-col {
+    width: 165px;
+}
+}
+
+@media (max-width: 768px) {
+  .product-header-image img {
+    max-width: 80px;
+  }
+
+  .feature-col {
+    width: 100px;
+}
+
+.product-header {
+    width: 155px;
+}
+}
+
+
+  @media (max-width: 500px) {
+
+  .feature-col {
+    width: 80px;
+}
+
+.product-header {
+    width: 124px;
+}
+}
+
+
+
+
+
+
+
+
+
+
+</style>
+
+<div class="comparison-chart-outer">
+  <div class="right_arrow">
+    <svg width="16" height="10" viewBox="0 0 16 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M1 5H15M15 5L11 9M15 5L11 1" stroke="#202A39" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </div>
+
+  <div class="comparison-chart-wrapper">
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th class="feature-col"></th>
+          {% assign products = page.metafields.custom.comparison_products.value %}
+          {% assign feature_names = '' %}
+          {% assign product_features_map = '' %}
+          {% for product in products %}
+            {% assign feature_map = '' %}
+            {% for feature in product.features.value %}
+              {% assign fname = feature.name %}
+              {% assign fvalue = feature.value %}
+              {% unless feature_names contains fname %}
+                {% assign feature_names = feature_names | append: fname | append: '||' %}
+              {% endunless %}
+              {% assign feature_map = feature_map | append: fname | append: '::' | append: fvalue | append: '||' %}
+            {% endfor %}
+            {% assign product_features_map = product_features_map | append: feature_map | append: '##' %}
+          {% endfor %}
+          {% assign feature_names = feature_names | split: '||' | uniq %}
+          {% assign product_feature_blocks = product_features_map | split: '##' | reject: '' %}
+
+          {% for product in products %}
+            <th class="product-header">
+              <div class="product-title">{{ product.custom_title }}</div>
+              {% if product.image %}
+                <div class="product-header-image">
+                  <img
+                    src="{{ product.image | image_url: width: 200 }}"
+                    alt="{{ product.custom_title | escape }}"
+                    loading="lazy"
+                  >
+                </div>
+              {% endif %}
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+     <tbody>
+  {% for fname in feature_names %}
+    {% unless fname == blank %}
+      {% assign mod = forloop.index | modulo: 2 %}
+      <tr class="{% if mod == 0 %}even-class{% else %}odd-class{% endif %}">
+        <td class="feature-label">{{ fname }}</td>
+        {% for product in products %}
+          {% assign match = '—' %}
+          {% for feature in product.features.value %}
+            {% if feature.name == fname %}
+              {% assign match = feature.value %}
+              {% break %}
+            {% endif %}
+          {% endfor %}
+          <td class="feature-value">{{ match }}</td>
+        {% endfor %}
+      </tr>
+    {% endunless %}
+  {% endfor %}
+</tbody>
+
+    </table>
+  </div>
+</div>
+
+
+{% else %}
+
+
 {{ 'main-article-compare.css' | asset_url | stylesheet_tag }}
 
 
@@ -59,6 +329,8 @@
 		});
 	});
 </script>
+
+  {% endif %}
 
 
 {% schema %}
