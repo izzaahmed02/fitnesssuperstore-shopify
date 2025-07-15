@@ -11,10 +11,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   $(firstSlider).slick({
     slidesToShow: 5,
+
+    infinite: true,
+    draggable: true,
+    cssEase: 'linear',
+    
     slidesToScroll: 1,
     arrows: true,
     dots: true,
-    infinite: false,
     responsive: [
       { breakpoint: 1300, settings: { slidesToShow: 4 }},
       { breakpoint: 1024, settings: { slidesToShow: 3 }},
@@ -58,7 +62,9 @@ document.addEventListener("DOMContentLoaded", function () {
         slidesToScroll: 1,
         arrows: true,
         dots: true,
-        infinite: false,
+        infinite: true,
+        draggable: true,
+        cssEase: 'linear',
         responsive: [
           { breakpoint: 1300, settings: { slidesToShow: 4 }},
           { breakpoint: 1024, settings: { slidesToShow: 3 }},
