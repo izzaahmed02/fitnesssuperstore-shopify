@@ -87,6 +87,9 @@ function createAssemblySelect() {
 		doubledSelect.addEventListener("change", (e) => {
 			assembly.querySelectorAll("input")[e.target.selectedIndex].parentElement.click();
 		});
+	
+        document.querySelector('.installation-group').prepend(doubledSelect);
+		document.querySelector('.installation-group').prepend(header);	
 	}
 }
 
