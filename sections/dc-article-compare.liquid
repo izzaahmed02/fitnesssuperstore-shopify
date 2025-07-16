@@ -290,16 +290,21 @@ text-transform: uppercase;
 <h1 class="main-page-title page-title customTitle{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
     {{ page.title | escape }}
   </h1>
-
   <div class="customContent">{{ page.content }}</div>
   </div>
-
-
 
   <div class="comparison-chart-outer">
   <div class="scroll-container">
     <div class="comparison-chart-wrapper" id="scrollableContent">
        <table class="comparison-table">
+  <colgroup>
+  <col class="col-feature">
+  {% assign products = page.metafields.custom.comparison_products.value %}
+  {% for product in products %}
+    <col class="col-product">
+  {% endfor %}
+</colgroup>
+
       <thead>
         <tr>
           <th class="feature-col"></th>
@@ -321,8 +326,7 @@ text-transform: uppercase;
           {% assign feature_names = feature_names | split: '||' | uniq %}
           {% assign product_feature_blocks = product_features_map | split: '##' | reject: '' %}
 
-          {% for product in products %}
-           
+          {% for product in products %}          
             <th class="product-header">
                <a href="{{ product.url }}">
               <div class="product-title">{{ product.custom_title }}</div>
@@ -336,8 +340,7 @@ text-transform: uppercase;
                 </div>
               {% endif %}
                </a>
-            </th>
-              
+            </th>           
           {% endfor %}
         </tr>
       </thead>
@@ -365,17 +368,12 @@ text-transform: uppercase;
     </table>
     </div>
 
-    <!-- Always visible custom scrollbars -->
     <div class="custom-scrollbar horizontal"></div>
     <div class="custom-scrollbar vertical"></div>
   </div>
 </div>
 
-
-
-
-
-
+  
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const content = document.getElementById("scrollableContent");
@@ -401,7 +399,6 @@ document.addEventListener("DOMContentLoaded", function () {
       hBar.style.display = "none";
     }
 
-    // Vertical scrollbar
     if (scrollHeight > clientHeight) {
       const vRatio = clientHeight / scrollHeight;
       const vThumbHeight = vRatio * clientHeight;
@@ -418,7 +415,6 @@ document.addEventListener("DOMContentLoaded", function () {
   content.addEventListener("scroll", updateCustomScrollbars);
   window.addEventListener("resize", updateCustomScrollbars);
 
-  // Initial call
   updateCustomScrollbars();
 });
 </script>
