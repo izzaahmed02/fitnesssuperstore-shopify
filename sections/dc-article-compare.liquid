@@ -2,9 +2,9 @@
 
 <style>
 
-.compareChart .scroll-arrows {
+  .compareChart .scroll-arrows {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   margin: 12px 0;
   gap: 8px;
 }
@@ -13,12 +13,14 @@
   background-color: #000;
   color: #fff;
   border: none;
-  padding: 8px 12px;
-  font-size: 16px;
+  padding: 8px 16px;
+  font-size: 20px;
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.3s;
+  z-index: 10;
 }
+
+
 
 .compareChart .scroll-btn:hover {
   background-color: #444;
@@ -328,17 +330,20 @@ text-transform: uppercase;
   <div class="customContent">{{ page.content }}</div>
   </div>
 
-  <div class="comparison-chart-outer">
 
-<div class="scroll-arrows">
+
+
+
+
+<div class="comparison-chart-outer compareChart">
+  <div class="scroll-arrows">
     <button class="scroll-btn left" aria-label="Scroll left">&larr;</button>
     <button class="scroll-btn right" aria-label="Scroll right">&rarr;</button>
   </div>
 
-    
   <div class="scroll-container">
     <div class="comparison-chart-wrapper" id="scrollableContent">
-       <table class="comparison-table">
+             <table class="comparison-table">
   <colgroup>
   <col class="col-feature">
   {% assign products = page.metafields.custom.comparison_products.value %}
@@ -409,57 +414,32 @@ text-transform: uppercase;
 
     </table>
     </div>
-
-    <div class="custom-scrollbar horizontal"></div>
-    <div class="custom-scrollbar vertical"></div>
   </div>
 </div>
 
-  
+
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const content = document.getElementById("scrollableContent");
-  const hBar = document.querySelector(".custom-scrollbar.horizontal");
-  const vBar = document.querySelector(".custom-scrollbar.vertical");
+  const scrollableContent = document.getElementById("scrollableContent");
 
-  function updateCustomScrollbars() {
-    const scrollWidth = content.scrollWidth;
-    const clientWidth = content.clientWidth;
-    const scrollHeight = content.scrollHeight;
-    const clientHeight = content.clientHeight;
+  const leftBtn = document.querySelector(".scroll-btn.left");
+  const rightBtn = document.querySelector(".scroll-btn.right");
 
-    // Horizontal scrollbar
-    if (scrollWidth > clientWidth) {
-      const hRatio = clientWidth / scrollWidth;
-      const hThumbWidth = hRatio * clientWidth;
-      const hThumbLeft = (content.scrollLeft / scrollWidth) * clientWidth;
+  if (scrollableContent && leftBtn && rightBtn) {
+    leftBtn.addEventListener("click", function () {
+      scrollableContent.scrollBy({ left: -200, behavior: 'smooth' });
+    });
 
-      hBar.style.width = hThumbWidth + "px";
-      hBar.style.transform = `translateX(${hThumbLeft}px)`;
-      hBar.style.display = "block";
-    } else {
-      hBar.style.display = "none";
-    }
-
-    if (scrollHeight > clientHeight) {
-      const vRatio = clientHeight / scrollHeight;
-      const vThumbHeight = vRatio * clientHeight;
-      const vThumbTop = (content.scrollTop / scrollHeight) * clientHeight;
-
-      vBar.style.height = vThumbHeight + "px";
-      vBar.style.transform = `translateY(${vThumbTop}px)`;
-      vBar.style.display = "block";
-    } else {
-      vBar.style.display = "none";
-    }
+    rightBtn.addEventListener("click", function () {
+      scrollableContent.scrollBy({ left: 200, behavior: 'smooth' });
+    });
+  } else {
+    console.error("Scroll buttons or scrollable content not found.");
   }
-
-  content.addEventListener("scroll", updateCustomScrollbars);
-  window.addEventListener("resize", updateCustomScrollbars);
-
-  updateCustomScrollbars();
 });
 </script>
+
 
 
 
