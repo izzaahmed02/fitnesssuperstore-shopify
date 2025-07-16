@@ -420,37 +420,43 @@ text-transform: uppercase;
     </table>
     </div>
   </div>
+  <div class="scroll-arrows bottom-arrows">
+    <button class="scroll-btn left bottom" aria-label="Scroll left">&larr;</button>
+    <button class="scroll-btn right bottom" aria-label="Scroll right">&rarr;</button>
+  </div>
 </div>
-
 
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const scrollableContent = document.getElementById("scrollableContent");
-  const leftBtn = document.querySelector(".scroll-btn.left");
-  const rightBtn = document.querySelector(".scroll-btn.right");
+
+  const leftBtns = document.querySelectorAll(".scroll-btn.left");
+  const rightBtns = document.querySelectorAll(".scroll-btn.right");
 
   function updateArrowStates() {
     const scrollLeft = scrollableContent.scrollLeft;
     const maxScrollLeft = scrollableContent.scrollWidth - scrollableContent.clientWidth;
 
-    // Disable left arrow if at far left
-    if (scrollLeft <= 0) {
-      leftBtn.disabled = true;
-      leftBtn.classList.add("disabled");
-    } else {
-      leftBtn.disabled = false;
-      leftBtn.classList.remove("disabled");
-    }
+    leftBtns.forEach(btn => {
+      if (scrollLeft <= 0) {
+        btn.disabled = true;
+        btn.classList.add("disabled");
+      } else {
+        btn.disabled = false;
+        btn.classList.remove("disabled");
+      }
+    });
 
-    // Disable right arrow if at far right
-    if (scrollLeft >= maxScrollLeft - 1) {
-      rightBtn.disabled = true;
-      rightBtn.classList.add("disabled");
-    } else {
-      rightBtn.disabled = false;
-      rightBtn.classList.remove("disabled");
-    }
+    rightBtns.forEach(btn => {
+      if (scrollLeft >= maxScrollLeft - 1) {
+        btn.disabled = true;
+        btn.classList.add("disabled");
+      } else {
+        btn.disabled = false;
+        btn.classList.remove("disabled");
+      }
+    });
   }
 
   function scrollContentBy(amount) {
@@ -460,18 +466,18 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  if (scrollableContent && leftBtn && rightBtn) {
-    leftBtn.addEventListener("click", () => scrollContentBy(-200));
-    rightBtn.addEventListener("click", () => scrollContentBy(200));
+  leftBtns.forEach(btn => {
+    btn.addEventListener("click", () => scrollContentBy(-200));
+  });
 
-    scrollableContent.addEventListener("scroll", updateArrowStates);
-    window.addEventListener("resize", updateArrowStates);
+  rightBtns.forEach(btn => {
+    btn.addEventListener("click", () => scrollContentBy(200));
+  });
 
-    // Initial check
-    updateArrowStates();
-  } else {
-    console.error("Scroll buttons or scrollable content not found");
-  }
+  scrollableContent.addEventListener("scroll", updateArrowStates);
+  window.addEventListener("resize", updateArrowStates);
+
+  updateArrowStates(); // Initial call
 });
 </script>
 
