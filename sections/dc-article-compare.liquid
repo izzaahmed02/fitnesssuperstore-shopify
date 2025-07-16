@@ -2,6 +2,19 @@
 
 <style>
 
+
+  .compareChart .scroll-btn.disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
+.compareChart .scroll-btn:not(.disabled):hover {
+  background-color: #444;
+}
+
+
   .compareChart .scroll-arrows {
   display: flex;
   justify-content: center;
@@ -15,6 +28,7 @@
   border: none;
   padding: 8px 16px;
   font-size: 20px;
+  transition: background-color 0.3s ease;
   border-radius: 4px;
   cursor: pointer;
   z-index: 10;
@@ -80,11 +94,12 @@
 }
 
 .compareChart .comparison-chart-wrapper {
-  overflow: scroll;
   max-height: 100%;
   height: 100%;
   width: 100%;  
   border-radius: 12px;
+    overflow: auto;
+  scroll-behavior: smooth; 
 }
 
 .compareChart .custom-scrollbar {
@@ -416,23 +431,54 @@ text-transform: uppercase;
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const scrollableContent = document.getElementById("scrollableContent");
-
   const leftBtn = document.querySelector(".scroll-btn.left");
   const rightBtn = document.querySelector(".scroll-btn.right");
 
-  if (scrollableContent && leftBtn && rightBtn) {
-    leftBtn.addEventListener("click", function () {
-      scrollableContent.scrollBy({ left: -200, behavior: 'smooth' });
-    });
+  function updateArrowStates() {
+    const scrollLeft = scrollableContent.scrollLeft;
+    const maxScrollLeft = scrollableContent.scrollWidth - scrollableContent.clientWidth;
 
-    rightBtn.addEventListener("click", function () {
-      scrollableContent.scrollBy({ left: 200, behavior: 'smooth' });
+    // Disable left arrow if at far left
+    if (scrollLeft <= 0) {
+      leftBtn.disabled = true;
+      leftBtn.classList.add("disabled");
+    } else {
+      leftBtn.disabled = false;
+      leftBtn.classList.remove("disabled");
+    }
+
+    // Disable right arrow if at far right
+    if (scrollLeft >= maxScrollLeft - 1) {
+      rightBtn.disabled = true;
+      rightBtn.classList.add("disabled");
+    } else {
+      rightBtn.disabled = false;
+      rightBtn.classList.remove("disabled");
+    }
+  }
+
+  function scrollContentBy(amount) {
+    scrollableContent.scrollBy({
+      left: amount,
+      behavior: "smooth"
     });
+  }
+
+  if (scrollableContent && leftBtn && rightBtn) {
+    leftBtn.addEventListener("click", () => scrollContentBy(-200));
+    rightBtn.addEventListener("click", () => scrollContentBy(200));
+
+    scrollableContent.addEventListener("scroll", updateArrowStates);
+    window.addEventListener("resize", updateArrowStates);
+
+    // Initial check
+    updateArrowStates();
   } else {
-    console.error("Scroll buttons or scrollable content not found.");
+    console.error("Scroll buttons or scrollable content not found");
   }
 });
 </script>
+
 
 
 
