@@ -139,7 +139,7 @@ var TransitTimeCalculator = {
         processingTimeMax = monthTransitTimes.maxDays;
       }
 
-      let faiSelect = document.querySelector('select[name="Full Assembly & Installation"]');
+      let faiSelect = document.querySelector('#double-assembly-input');
       
       if (faiSelect) {
         deliveryOptionText = faiSelect.value;
