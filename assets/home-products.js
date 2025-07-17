@@ -69,7 +69,7 @@
   arrows: true,
   infinite: false,
   autoplay: false,
-  draggable: false,
+  draggable: true,
   slidesToShow: 4,
   slidesToScroll: 1,
   responsive: [
@@ -90,9 +90,9 @@
               settings: {
                 slidesToShow: 2,
                 dots: true,
-                draggable: false,
-                swipe: false,
-                touchMove: false,
+                draggable: true,
+                swipe: true,
+                touchMove: true,
               },
             },
           ]
