@@ -15,7 +15,7 @@
 					'</svg></button>',
           dots: true,
           swipeToSlide: true,   
-          touchThreshold: 4,  
+          touchThreshold: 8,  
            draggable: false,
                 swipe: false,
                 touchMove: false,
@@ -79,7 +79,7 @@
   autoplay: false,
   draggable: true,
   swipeToSlide: true,   
-  touchThreshold: 4,   
+  touchThreshold: 8,   
   slidesToShow: 4,
   slidesToScroll: 1,
   responsive: [
