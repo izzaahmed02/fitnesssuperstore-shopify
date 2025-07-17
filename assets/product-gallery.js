@@ -119,8 +119,8 @@ class ProductGallery extends HTMLElement {
     });
   }
 
- setActiveMedia(id) {
-  if (this.activeMediaId === id) return;
+setActiveMedia(id, force = false) {
+  if (!force && this.activeMediaId === id) return;
 
   this.activeMediaId = id;
   this.activeMediaData = this.mediaData.find((media) => media.id == id);
@@ -133,9 +133,9 @@ class ProductGallery extends HTMLElement {
   // Update main media view
   this.productMainContainer.innerHTML = this.renderMainMedia(this.activeMediaData);
 
-  // ✅ Wait until DOM is updated before calling zoom
+  // Wait until DOM updates to initialize zoom
   requestAnimationFrame(() => {
-    this.initZoom(); // Ensures .zoom-container setup
+    this.initZoom();
   });
 
   // Update active thumbnail styles
@@ -145,6 +145,7 @@ class ProductGallery extends HTMLElement {
     btn.classList.toggle('is-active', isActive);
   });
 }
+
 
 
   isDesktop() {
