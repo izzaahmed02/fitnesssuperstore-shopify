@@ -343,12 +343,18 @@ window.addEventListener('DOMContentLoaded', async () => {
 		document.removeEventListener('click', outsideClose);
 	}
 
-	function outsideClose (e) {
-		const globoPopup  = document.getElementById('ui-id-1');
-		if (!globoPopup.contains(e.target) && !search.contains(e.target)) {
-			hidePopup(globoPopup);
-		}
-	}
+	function outsideClose(e) {
+  const globoPopup = document.getElementById('ui-id-1');
+  const search = document.getElementById('search-element-id'); // Assuming 'search' is another element, replace 'search-element-id' with its actual ID if needed. If not, remove it.
+
+  // IMPORTANT: Check if globoPopup exists before calling .contains()
+  if (globoPopup) { // Only proceed if globoPopup is found
+    // Also, ensure 'search' exists if you're checking its contains method
+    if (!globoPopup.contains(e.target) && (!search || !search.contains(e.target))) {
+      hidePopup(globoPopup);
+    }
+  }
+}
 
 	setTimeout(() => {
 		document.addEventListener('click', outsideClose);
