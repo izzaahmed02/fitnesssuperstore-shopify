@@ -53,10 +53,11 @@ class ProductGallery extends HTMLElement {
   });
 
   // ✅ Force set first image and trigger zoom
-  if (this.mediaData.length > 0) {
-    this.activeMediaId = null; // force re-render even if first media matches
-    this.setActiveMedia(this.mediaData[0].id);
-  }
+
+    if (this.mediaData.length > 0) {
+  this.setActiveMedia(this.mediaData[0].id, true); // Force re-render and zoom setup
+}
+
 }
 
 
