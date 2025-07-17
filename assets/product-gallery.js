@@ -381,11 +381,11 @@ openPopup(mediaId) {
     this.renderPopupViewer(mediaId, viewer);
   } */
 
-/*  if (popup.hidden) {
+  if (popup.hidden) {
     console.log('Showing popup');
     popup.hidden = false;
     document.body.style.overflow = 'hidden';
-  } */
+  } 
 
   tabImages.innerHTML = '';
   tabVideos.innerHTML = '';
