@@ -354,7 +354,7 @@ buttons.forEach((btn) => {
     popup.hidden = false;
     document.body.style.overflow = 'hidden';
 
-    this.renderPopupViewer(mediaId, viewer);
+  //  this.renderPopupViewer(mediaId, viewer);
 
     // Then skip calling it again in the tab logic unless tab is clicked by user
 let defaultRendered = false;
