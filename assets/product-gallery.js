@@ -48,17 +48,6 @@ connectedCallback() {
     }
   });
 
-  this.main.addEventListener('click', (e) => {
-    console.log('Main image clicked, mediaId: ${this.activeMediaId}');
-    e.stopPropagation();
-    const container = e.target.closest('.main-image-container');
-    if (container) {
-      const media = this.mediaData.find((m) => m.id == this.activeMediaId);
-      if (media.media_type != 'model') {
-        this.openPopup(this.activeMediaId);
-      }
-    }
-  });
 }
 
   handleResize() {
@@ -346,10 +335,16 @@ renderPopup() {
   document.body.appendChild(popupHTML.firstElementChild);
 }
 
- openPopup(mediaId) {
-  console.log('Opening popup for media: ${mediaId}');
+openPopup(mediaId) {
+
+  console.log("Opening popup for media:", ${mediaId}, ${new Date().toISOString()});
   const popup = document.getElementById('product-gallery-popup');
-  if (!popup) this.renderPopup();
+  if (!popup) {
+    console.log('Rendering new popup');
+    this.renderPopup();
+  } else {
+    console.log('Using existing popup');
+  }
 
   const viewer = popup.querySelector('[data-popup-viewer]');
   const tabImages = popup.querySelector('[data-tab-content="images"]');
@@ -358,27 +353,39 @@ renderPopup() {
   if (tabs.length === 0) return;
 
   const clickedMedia = this.mediaData.find((m) => m.id == mediaId);
-  const defaultTab = clickedMedia?.media_type === 'video' || clickedMedia?.media_type === 'external_video' ? 'videos' : 'images';
+  if (!clickedMedia) {
+    console.error(`Media not found for ID: ${mediaId}`);
+    return;
+  }
 
-  this.activeMediaId = mediaId; // Update active media
-  this.updateMainThumbActive(mediaId); // Sync main gallery thumbnails
+  const defaultTab = clickedMedia.media_type === 'video' || clickedMedia.media_type === 'external_video' ? 'videos' : 'images';
 
-  if (clickedMedia?.media_type === 'image') {
+  this.activeMediaId = mediaId;
+  this.updateMainThumbActive(mediaId);
+
+  // Preload and render viewer
+  if (clickedMedia.media_type === 'image') {
+    console.log(`Preloading image for media: ${mediaId}`);
     const preloadImg = new Image();
     preloadImg.src = clickedMedia.preview_image.src.replace(/width=\d+/, 'width=1600');
     preloadImg.onload = () => {
+      console.log(`Image preloaded for media: ${mediaId}`);
       this.renderPopupViewer(mediaId, viewer);
     };
-    preloadImg.onerror = () => {
-      console.error(`Failed to preload image for media: ${mediaId}`);
-      this.renderPopupViewer(mediaId, viewer);
+    preloadImg.onerror = (e) => {
+      console.error(`Preload failed for media ${mediaId}:`, e);
+      this.renderPopupViewer(mediaId, viewer); // Fallback to render without preload
     };
   } else {
+    console.log(`Rendering non-image media: ${mediaId}`);
     this.renderPopupViewer(mediaId, viewer);
   }
 
-  popup.hidden = false;
-  document.body.style.overflow = 'hidden';
+  if (popup.hidden) {
+    console.log('Showing popup');
+    popup.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
 
   tabImages.innerHTML = '';
   tabVideos.innerHTML = '';
@@ -401,39 +408,26 @@ renderPopup() {
       skeletonWrapper.appendChild(img);
       btn.appendChild(skeletonWrapper);
 
-      img.onload = () => {
-        skeletonWrapper.classList.add('loaded');
-      };
+      img.onload = () => skeletonWrapper.classList.add('loaded');
 
       btn.addEventListener('click', () => {
-        const zoomedViewer = popup.querySelector('.popup-media-viewer.is-zoomed');
-        if (zoomedViewer) {
-          zoomedViewer.classList.remove('is-zoomed');
-          const inner = zoomedViewer.querySelector('.popup-media-inner');
-          if (inner) {
-            inner.style.left = '0px';
-            inner.style.top = '0px';
-          }
-        }
-        this.activeMediaId = media.id; // Update active media
+        this.activeMediaId = media.id;
         this.renderPopupViewer(media.id, viewer);
         this.updatePopupThumbActive(media.id);
-        this.updateMainThumbActive(media.id); // Sync main gallery thumbnails
+        this.updateMainThumbActive(media.id);
       });
 
       let hoverTimer;
       btn.addEventListener('mouseenter', () => {
         if (this.activeMediaId === media.id) return;
         hoverTimer = setTimeout(() => {
-          this.activeMediaId = media.id; // Update active media
+          this.activeMediaId = media.id;
           this.renderPopupViewer(media.id, viewer);
           this.updatePopupThumbActive(media.id);
-          this.updateMainThumbActive(media.id); // Sync main gallery thumbnails
+          this.updateMainThumbActive(media.id);
         }, 150);
       });
-      btn.addEventListener('mouseleave', () => {
-        clearTimeout(hoverTimer);
-      });
+      btn.addEventListener('mouseleave', () => clearTimeout(hoverTimer));
 
       tabImages.appendChild(btn);
     } else if (media.media_type === 'video' || media.media_type === 'external_video') {
@@ -451,7 +445,6 @@ renderPopup() {
     tab.onclick = () => {
       tabs.forEach((t) => t.classList.remove('is-active'));
       tab.classList.add('is-active');
-
       const type = tab.dataset.tab;
       tabImages.classList.toggle('hidden', type !== 'images');
       tabVideos.classList.toggle('hidden', type !== 'videos');
@@ -467,17 +460,14 @@ renderPopup() {
       }
 
       let firstMedia = null;
-      if (type === 'images') {
-        firstMedia = this.mediaData.find((m) => m.media_type === 'image');
-      } else if (type === 'videos') {
-        firstMedia = this.mediaData.find((m) => m.media_type === 'video' || m.media_type === 'external_video');
-      }
+      if (type === 'images') firstMedia = this.mediaData.find((m) => m.media_type === 'image');
+      else if (type === 'videos') firstMedia = this.mediaData.find((m) => m.media_type === 'video' || m.media_type === 'external_video');
 
       if (firstMedia) {
-        this.activeMediaId = firstMedia.id; // Update active media
+        this.activeMediaId = firstMedia.id;
         this.renderPopupViewer(firstMedia.id, viewer);
         this.updatePopupThumbActive(firstMedia.id);
-        this.updateMainThumbActive(firstMedia.id); // Sync main gallery thumbnails
+        this.updateMainThumbActive(firstMedia.id);
       }
     };
   });
