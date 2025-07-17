@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
     .on('mousemove touchmove', function () {
       isDragging = true;
     })
-    .on('click', '.product-card a', function (e) {
+    .on('click', '.image-wrap a', function (e) {
       if (isDragging) {
         e.preventDefault();
         e.stopImmediatePropagation();
