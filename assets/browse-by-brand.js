@@ -4,7 +4,7 @@ $('.browse-brand .category-tab-content').slick({
   draggable: true,
   cssEase: 'linear',
   swipeToSlide: true,   
-  touchThreshold: 4,  
+  touchThreshold: 8,  
   slidesToShow: 5,
   slidesToScroll: 1,
    responsive: [
