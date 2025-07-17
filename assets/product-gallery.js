@@ -8,8 +8,6 @@ class ProductGallery extends HTMLElement {
     this.lastMouseX = 0;
     this.lastMouseY = 0;
 
-    // Use a throttled or debounced mousemove listener if performance is a concern
-    // For now, keeping it as is, but be aware of frequent updates.
     document.addEventListener('mousemove', (e) => {
       this.lastMouseX = e.clientX;
       this.lastMouseY = e.clientY;
@@ -46,11 +44,9 @@ class ProductGallery extends HTMLElement {
     const currentActiveThumbnail = this.querySelector('.thumbnail-btn.is-active');
 
     if (!currentActiveThumbnail && this.mediaData.length > 0) {
-      // If no thumbnail is active (e.g., first load), set the first one as active in JavaScript.
       console.log('ConnectedCallback: No active thumbnail found, setting first media as active.');
       this.setActiveMedia(this.mediaData[0].id);
     } else if (currentActiveThumbnail) {
-      // If one is already active from Liquid, ensure JS knows which one it is.
       this.activeMediaId = currentActiveThumbnail.getAttribute('data-media-id');
       console.log('ConnectedCallback: Active thumbnail found from Liquid:', this.activeMediaId);
 
@@ -80,7 +76,7 @@ class ProductGallery extends HTMLElement {
       const container = e.target.closest('.main-image-container');
       if (container) {
         const media = this.mediaData.find((m) => m.id == this.activeMediaId);
-        const popup = document.getElementById('product-gallery-popup'); // Get popup reference here
+        const popup = document.getElementById('product-gallery-popup');
         if (media && media.media_type !== 'model' && popup && popup.hidden) {
           console.log('Main image click: Opening popup for mediaId:', this.activeMediaId);
           this.openPopup(this.activeMediaId);
@@ -106,20 +102,17 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
-    // Remove existing zoom elements if they exist
     const oldResult = container.querySelector('.zoom-result');
     const oldLens = container.querySelector('.zoom-lens');
     if (oldResult) oldResult.remove();
     if (oldLens) oldLens.remove();
 
-    // Reset the zoomInitialized state for the container
     container.dataset.zoomInitialized = 'false';
     console.log('handleResize: Removed old zoom elements and reset zoomInitialized.');
 
     const img = container.querySelector('img');
     if (!img) return;
 
-    // Clear any previous onload handler to prevent multiple calls
     img.onload = null;
     console.log('handleResize: Cleared img.onload.');
 
@@ -152,9 +145,6 @@ class ProductGallery extends HTMLElement {
 
       btn.addEventListener('click', (e) => {
         console.log(`Thumbnail click event for mediaId: ${mediaId}`);
-        // If it's a video thumbnail or if the current thumbnail is already active,
-        // or if it's explicitly an overlay click (though overlay isn't in this HTML),
-        // open the popup. Otherwise, just set the active media.
         if (isVideoThumb || this.activeMediaId === mediaId) {
           console.log(`Thumbnail click: Opening popup for ${mediaId}.`);
           this.openPopup(mediaId);
@@ -186,7 +176,7 @@ class ProductGallery extends HTMLElement {
 
   setActiveMedia(id) {
     console.log(`setActiveMedia: Attempting to set active media to ID: ${id}`);
-    if (this.activeMediaId == id) { // Use == for comparison as ID might be string/number
+    if (this.activeMediaId == id) {
       console.log(`setActiveMedia: Media ${id} is already active, skipping.`);
       return;
     }
@@ -197,9 +187,8 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
-    this.main.innerHTML = ''; // Clear previous main media content
+    this.main.innerHTML = '';
 
-    // Reset zoom initialized state for the main container when changing media
     const existingMainContainer = this.main.querySelector('.main-image-container');
     if (existingMainContainer) {
       existingMainContainer.dataset.zoomInitialized = 'false';
@@ -227,7 +216,7 @@ class ProductGallery extends HTMLElement {
         img.sizes = media.preview_image.sizes || '';
         img.width = media.preview_image.width || '';
         img.height = media.preview_image.height || '';
-        img.loading = 'lazy'; // Changed to lazy for performance
+        img.loading = 'lazy';
         container.appendChild(skeletonWrapper);
         skeletonWrapper.appendChild(img);
         console.log(`setActiveMedia: Image element created for ID: ${id}`);
@@ -235,7 +224,7 @@ class ProductGallery extends HTMLElement {
         img.onload = () => {
           console.log(`setActiveMedia: Image for ID ${id} loaded. Initializing zoom.`);
           skeletonWrapper.classList.add('loaded');
-          this.initZoom(container, media, true); // <--- Pass true for forceStart
+          this.initZoom(container, media, true);
         };
       }
     } else if (media.media_type == 'model') {
@@ -253,7 +242,7 @@ class ProductGallery extends HTMLElement {
     const buttons = this.querySelectorAll('.thumbnail-btn');
     buttons.forEach((btn) => {
       const btnId = btn.getAttribute('data-media-id');
-      const isActive = btnId == String(id); // Ensure ID comparison is consistent
+      const isActive = btnId == String(id);
       btn.classList.toggle('is-active', isActive);
       if (isActive) {
         console.log(`setActiveMedia: Thumbnail ${btnId} set to active.`);
@@ -278,7 +267,6 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
-    // Ensure we're not re-initializing if already active
     if (this.activeMediaId != media.id) {
         console.log('initZoom: Active media ID mismatch, not initializing zoom.');
         return;
@@ -297,12 +285,11 @@ class ProductGallery extends HTMLElement {
     container.appendChild(lens);
 
     const zoomImg = new Image();
-    // Safely access preview_image properties
     const imgWidth = media.preview_image.width || img.naturalWidth;
     const imgHeight = media.preview_image.height || img.naturalHeight;
 
     const imgAspect = imgWidth / imgHeight;
-    const zoomWidth = 1600; // Use a high-res for zoom image
+    const zoomWidth = 1600;
     const zoomHeight = Math.round(zoomWidth / imgAspect);
     zoomImg.src = media.preview_image.src.replace(/width=\d+/, `width=${zoomWidth}`).replace(/height=\d+/, `height=${zoomHeight}`);
     zoomImg.style.transform = 'scale(0.7)';
@@ -359,14 +346,12 @@ class ProductGallery extends HTMLElement {
             zoomResult.style.top = '14px';
             zoomResult.style.height = `calc(98vh - ${threshold}px)`;
           } else {
-            zoomResult.style.top = ''; // Reset to default
-            zoomResult.style.height = ''; // Reset to default
+            zoomResult.style.top = '';
+            zoomResult.style.height = '';
           }
           console.log('initZoom: Zoom top position updated.');
         };
 
-        updateZoomTop();
-        // Remove existing listener before adding to prevent duplicates
         window.removeEventListener('scroll', updateZoomTop);
         window.addEventListener('scroll', updateZoomTop, { passive: true });
       });
@@ -397,33 +382,32 @@ class ProductGallery extends HTMLElement {
         });
       };
 
-      // Ensure listeners are only added once
       container.removeEventListener('mousemove', moveLens);
       container.addEventListener('mousemove', moveLens);
 
       container.removeEventListener('mouseenter', this._handleZoomMouseEnter);
-      this.containerMouseEnterHandler = () => {
+      this._handleZoomMouseEnter = () => {
         console.log('initZoom: Mouseenter on main image container. Showing zoom.');
         zoomResult.style.display = 'block';
         lens.style.display = 'block';
       };
-      container.addEventListener('mouseenter', this.containerMouseEnterHandler);
+      container.addEventListener('mouseenter', this._handleZoomMouseEnter);
 
       container.removeEventListener('mouseleave', this._handleZoomMouseLeave);
-      this.containerMouseLeaveHandler = () => {
+      this._handleZoomMouseLeave = () => {
         console.log('initZoom: Mouseleave on main image container. Hiding zoom.');
         zoomResult.style.display = 'none';
         lens.style.display = 'none';
       };
-      container.addEventListener('mouseleave', this.containerMouseLeaveHandler);
+      container.addEventListener('mouseleave', this._handleZoomMouseLeave);
 
       zoomResult.removeEventListener('mouseenter', this._handleZoomResultMouseEnter);
-      this.zoomResultMouseEnterHandler = () => {
+      this._handleZoomResultMouseEnter = () => {
         console.log('initZoom: Mouseenter on zoom result. Hiding zoom.');
         zoomResult.style.display = 'none';
         lens.style.display = 'none';
       };
-      zoomResult.addEventListener('mouseenter', this.zoomResultMouseEnterHandler);
+      zoomResult.addEventListener('mouseenter', this._handleZoomResultMouseEnter);
 
       if (forceStart && this.lastMouseX && this.lastMouseY) {
         console.log('initZoom: forceStart is true. Attempting to start zoom at last mouse position.');
@@ -474,7 +458,6 @@ class ProductGallery extends HTMLElement {
 
   openPopup(mediaId) {
     console.log(`openPopup: Attempting to open popup for mediaId: ${mediaId}`);
-    // Only render the popup structure if it doesn't exist
     this.renderPopup();
     const popup = document.getElementById('product-gallery-popup');
     const viewer = popup.querySelector('[data-popup-viewer]');
@@ -487,7 +470,7 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
-    const titleContainer = popup.querySelector('[data-popup-title]'); // Assuming you might have this element
+    const titleContainer = popup.querySelector('[data-popup-title]');
     if (titleContainer) {
       titleContainer.textContent = this.getAttribute('data-product-title') || '';
     }
@@ -510,7 +493,6 @@ class ProductGallery extends HTMLElement {
     this.renderPopupViewer(mediaId, viewer);
     console.log(`openPopup: Initial call to renderPopupViewer for mediaId: ${mediaId}`);
 
-    // Clear and re-populate thumbnails each time, in case media data changes (unlikely for product gallery)
     tabImages.innerHTML = '';
     tabVideos.innerHTML = '';
     console.log('openPopup: Cleared popup tab contents.');
@@ -579,7 +561,6 @@ class ProductGallery extends HTMLElement {
     });
     console.log('openPopup: Populated popup thumbnails.');
 
-    // Set active tab based on defaultTab
     tabs.forEach((tab) => {
       const isMatch = tab.dataset.tab === defaultTab;
       tab.classList.toggle('is-active', isMatch);
@@ -589,9 +570,8 @@ class ProductGallery extends HTMLElement {
     console.log(`openPopup: Set active tab to ${defaultTab}.`);
 
     tabs.forEach((tab) => {
-      // Remove existing click listener to prevent duplicates if openPopup is called multiple times
       tab.removeEventListener('click', this._handlePopupTabClick);
-      this._handlePopupTabClick = () => { // Store handler for removal
+      this._handlePopupTabClick = () => {
         console.log(`Popup tab click: ${tab.dataset.tab} tab clicked.`);
         tabs.forEach((t) => t.classList.remove('is-active'));
         tab.classList.add('is-active');
@@ -653,7 +633,27 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
-    viewer.innerHTML = ''; // Clear previous content
+    // --- Stop any currently playing media before rendering new one ---
+    const currentMediaElement = viewer.firstElementChild;
+    if (currentMediaElement) {
+        if (currentMediaElement.tagName === 'VIDEO') {
+            currentMediaElement.pause();
+            currentMediaElement.currentTime = 0;
+        } else if (currentMediaElement.tagName === 'IFRAME') {
+            // Attempt to stop YouTube/Vimeo iframes, though not always reliable
+            // This sends a postMessage to try and stop playback.
+            try {
+                currentMediaElement.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                currentMediaElement.contentWindow.postMessage('{ "method": "pause" }', '*');
+            } catch (e) {
+                console.warn("Failed to send pause message to iframe:", e);
+            }
+        } else if (currentMediaElement.tagName === 'MODEL-VIEWER') {
+            currentMediaElement.pause(); // Model-viewer can be paused
+        }
+        currentMediaElement.remove(); // Remove the old media element
+    }
+
     viewer.classList.remove('popup-media-viewer-media-zoom-img');
     viewer.classList.remove('is-zoomed-simple');
 
@@ -668,7 +668,6 @@ class ProductGallery extends HTMLElement {
       skeletonWrapper.className = 'image-skeleton-wrapper';
 
       const img = document.createElement('img');
-      // Use higher resolution if available, otherwise fallback to preview_image.src
       img.src = media.preview_image?.src ? media.preview_image.src.replace(/width=\d+/, 'width=1600') : '';
       img.alt = media.alt || '';
       img.loading = 'eager';
@@ -690,9 +689,8 @@ class ProductGallery extends HTMLElement {
 
       let isZoomed = false;
 
-      // Ensure previous event listeners are removed before adding new ones
       viewer.removeEventListener('mousemove', this._handlePopupMouseMove);
-      this._handlePopupMouseMove = (e) => { // Store handler for removal
+      this._handlePopupMouseMove = (e) => {
         if (!isZoomed) return;
 
         const rect = viewer.getBoundingClientRect();
@@ -704,12 +702,11 @@ class ProductGallery extends HTMLElement {
       viewer.addEventListener('mousemove', this._handlePopupMouseMove);
 
       viewer.removeEventListener('click', this._handlePopupClick);
-      this._handlePopupClick = () => { // Store handler for removal
+      this._handlePopupClick = () => {
         isZoomed = !isZoomed;
         viewer.classList.toggle('is-zoomed-simple', isZoomed);
         console.log(`renderPopupViewer: Viewer clicked, isZoomed: ${isZoomed}`);
 
-        // Safely check for naturalWidth/Height before calculating aspect ratio
         const isLandscape = img.naturalWidth && img.naturalHeight ? img.naturalWidth > img.naturalHeight : true;
         const zoomLevel = isLandscape ? 1.5 : 1.2;
 
@@ -720,7 +717,6 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
-    // --- External Video ---
     if (
       media.media_type === 'external_video' &&
       media.external_id &&
@@ -749,7 +745,6 @@ class ProductGallery extends HTMLElement {
       }
     }
 
-    // --- Video ---
     if (media.media_type === 'video') {
       console.log('renderPopupViewer: Media type is native video.');
       const video = document.createElement('video');
@@ -780,7 +775,6 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
-    // --- Model ---
     if (media.media_type === 'model') {
       console.log('renderPopupViewer: Media type is 3D model.');
       const model = document.createElement('model-viewer');
@@ -788,7 +782,7 @@ class ProductGallery extends HTMLElement {
       model.setAttribute('alt', media.alt || '3D model');
       model.setAttribute('camera-controls', 'true');
       model.setAttribute('camera-orbit', '0deg 75deg 2m');
-      model.setAttribute('data-shopify-feature', '1.12'); // Or relevant feature tag
+      model.setAttribute('data-shopify-feature', '1.12');
       model.style.width = '100%';
       model.style.height = '100%';
       viewer.appendChild(model);
@@ -796,7 +790,6 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
-    // --- Fallback ---
     viewer.innerHTML = '<p>Unsupported media type.</p>';
     console.warn(`renderPopupViewer: Unsupported media type for ID: ${media.id}`);
   }
@@ -804,11 +797,10 @@ class ProductGallery extends HTMLElement {
   renderVideoThumbItem(media) {
     console.log(`renderVideoThumbItem: Creating video thumbnail for media ID: ${media.id}`);
     const btn = document.createElement('button');
-    btn.className = 'popup-thumb video-thumb-item'; // Added popup-thumb class for consistency
+    btn.className = 'popup-thumb video-thumb-item';
     btn.type = 'button';
     btn.setAttribute('data-media-id', media.id);
 
-    // Safely access preview_image properties
     const thumbnailSrc = media.preview_image?.src || '';
     const videoTitle = media.alt || 'Untitled video';
 
@@ -835,10 +827,9 @@ class ProductGallery extends HTMLElement {
 
     thumbs.forEach((thumb) => {
       const thumbId = thumb.getAttribute('data-media-id');
-      const isActive = thumbId == String(mediaId); // Ensure mediaId is compared as a string
+      const isActive = thumbId == String(mediaId);
       thumb.classList.toggle('is-active', isActive);
       if (isActive) {
-        // Scroll active thumbnail into view if necessary
         thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         console.log(`updatePopupThumbActive: Popup thumbnail ${thumbId} set to active.`);
       }
@@ -851,22 +842,38 @@ class ProductGallery extends HTMLElement {
     const viewer = popup?.querySelector('[data-popup-viewer]');
 
     if (viewer) {
-      viewer.innerHTML = ''; // Clear media content
+        // Stop and remove current media when closing
+        const currentMediaElement = viewer.firstElementChild;
+        if (currentMediaElement) {
+            if (currentMediaElement.tagName === 'VIDEO') {
+                currentMediaElement.pause();
+                currentMediaElement.currentTime = 0;
+            } else if (currentMediaElement.tagName === 'IFRAME') {
+                try {
+                    currentMediaElement.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                    currentMediaElement.contentWindow.postMessage('{ "method": "pause" }', '*');
+                } catch (e) {
+                    console.warn("Failed to send pause message to iframe on close:", e);
+                }
+            } else if (currentMediaElement.tagName === 'MODEL-VIEWER') {
+                currentMediaElement.pause();
+            }
+            currentMediaElement.remove();
+        }
+
       viewer.classList.remove('is-zoomed-simple');
       viewer.classList.remove('popup-media-viewer-media-zoom-img');
-      // Remove specific event listeners attached to the viewer for zoom
       viewer.removeEventListener('mousemove', this._handlePopupMouseMove);
       viewer.removeEventListener('click', this._handlePopupClick);
     }
 
     if (popup) popup.hidden = true;
-    document.body.style.overflow = ''; // Reset overflow
+    document.body.style.overflow = '';
     console.log('closePopup: Popup hidden, body overflow reset.');
 
     document.removeEventListener('keydown', this.handleEscClose);
   }
 
-  // Use an arrow function for handleEscClose to maintain 'this' context
   handleEscClose = (e) => {
     if (e.key === 'Escape') {
       console.log('handleEscClose: Escape key pressed.');
