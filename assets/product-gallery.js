@@ -455,18 +455,20 @@ buttons.forEach((btn) => {
         );
       }
 
-      if (firstMedia) {
-        this.renderPopupViewer(firstMedia.id, viewer);
-        this.updatePopupThumbActive(firstMedia.id);
-      }
+      if (firstMedia && firstMedia.id !== viewer.dataset.currentMediaId) {
+  this.renderPopupViewer(firstMedia.id, viewer);
+  this.updatePopupThumbActive(firstMedia.id);
+}
     };
   });
 
   // Defer renderPopupViewer to ensure DOM is ready and avoid double rendering
-  requestAnimationFrame(() => {
-    this.renderPopupViewer(mediaId, viewer);
-    this.updatePopupThumbActive(mediaId);
-  });
+  // Only render once if not already rendered via tab logic
+if (!defaultRendered) {
+  this.renderPopupViewer(mediaId, viewer);
+  this.updatePopupThumbActive(mediaId);
+}
+
 
   popup.querySelector('.popup-close').onclick = this.closePopup.bind(this);
   popup.querySelector('.product-popup-backdrop').onclick = this.closePopup.bind(this);
