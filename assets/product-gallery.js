@@ -16,39 +16,49 @@ class ProductGallery extends HTMLElement {
   }
 
   connectedCallback() {
-    const raw = this.querySelector('[data-product-media]');
-    if (!raw) return;
-
-    try {
-      this.mediaData = JSON.parse(raw.innerHTML.trim());
-    } catch (err) {
-      console.error('Invalid JSON in <template>', err);
-      return;
-    }
-
-    this.wrapper = this.querySelector('.custom-product-gallery');
-    this.main = this.querySelector('[data-main-media-wrapper]');
-
-    this.initThumbnails();
-
-    if (this.mediaData.length > 0) {
-      this.activeMediaId = null; // Force reset
-      this.setActiveMedia(this.mediaData[0].id);
-
-    }
-
-    window.addEventListener('resize', this.handleResize.bind(this));
-
-    this.main.addEventListener('click', (e) => {
-      const container = e.target.closest('.main-image-container');
-      if (container) {
-        const media = this.mediaData.find((m) => m.id == this.activeMediaId);
-        if (media.media_type != 'model') {
-          this.openPopup(this.activeMediaId);
-        }
-      }
-    });
+  const mediaEl = document.querySelector('[data-product-media]');
+  if (!mediaEl) {
+    console.error('[MobileGallery] <template data-product-media> not found.');
+    return;
   }
+
+  const rawJson = mediaEl.innerHTML.trim();
+
+  try {
+    this.mediaData = JSON.parse(rawJson);
+  } catch (error) {
+    console.error('[MobileGallery] Error parsing product media JSON:', error);
+    return;
+  }
+
+  this.productMainContainer = this.querySelector('[data-product-media-main]');
+  this.productThumbsContainer = this.querySelector('[data-product-media-thumbs]');
+
+  if (!this.productMainContainer || !this.productThumbsContainer) {
+    console.error('[MobileGallery] Missing media containers.');
+    return;
+  }
+
+  // Render thumbnails
+  this.productThumbsContainer.innerHTML = this.renderThumbnails();
+
+  // Attach thumbnail click listeners
+  const thumbBtns = this.productThumbsContainer.querySelectorAll('.thumbnail-btn');
+  thumbBtns.forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      const id = btn.getAttribute('data-media-id');
+      this.setActiveMedia(id);
+    });
+  });
+
+  // ✅ Force set first image and trigger zoom
+  if (this.mediaData.length > 0) {
+    this.activeMediaId = null; // force re-render even if first media matches
+    this.setActiveMedia(this.mediaData[0].id);
+  }
+}
+
 
   handleResize() {
     const activeId = this.activeMediaId;
