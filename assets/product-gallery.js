@@ -364,7 +364,7 @@ openPopup(mediaId) {
   this.updateMainThumbActive(mediaId);
 
   // Preload and render viewer
-/*  if (clickedMedia.media_type === 'image') {
+  if (clickedMedia.media_type === 'image') {
     console.log(`Preloading image for media: ${mediaId}`);
     const preloadImg = new Image();
     preloadImg.src = clickedMedia.preview_image.src.replace(/width=\d+/, 'width=1600');
@@ -379,13 +379,13 @@ openPopup(mediaId) {
   } else {
     console.log(`Rendering non-image media: ${mediaId}`);
     this.renderPopupViewer(mediaId, viewer);
-  } */
+  } 
 
   if (popup.hidden) {
     console.log('Showing popup');
     popup.hidden = false;
     document.body.style.overflow = 'hidden';
-  } 
+  }
 
   tabImages.innerHTML = '';
   tabVideos.innerHTML = '';
