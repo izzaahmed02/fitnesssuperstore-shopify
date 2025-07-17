@@ -15,7 +15,9 @@ document.addEventListener("DOMContentLoaded", function () {
     infinite: true,
     draggable: true,
     cssEase: 'linear',
-    
+    swipeToSlide: true,   
+  touchThreshold: 4,  
+ 
     slidesToScroll: 1,
     arrows: true,
     dots: true,
@@ -61,6 +63,8 @@ document.addEventListener("DOMContentLoaded", function () {
         slidesToShow: 5,
         slidesToScroll: 1,
         arrows: true,
+        swipeToSlide: true,   
+        touchThreshold: 4,  
         dots: true,
         infinite: true,
         draggable: true,
