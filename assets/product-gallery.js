@@ -106,6 +106,13 @@ connectedCallback() {
         clearTimeout(hoverTimer);
       });
     });
+
+    // Highlight first thumbnail as active initially
+if (this.mediaData.length > 0) {
+  const firstBtn = this.querySelector(`.thumbnail-btn[data-media-id="${this.mediaData[0].id}"]`);
+  if (firstBtn) firstBtn.classList.add('is-active');
+}
+
   }
 
   setActiveMedia(id) {
