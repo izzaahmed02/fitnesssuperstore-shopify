@@ -521,9 +521,9 @@ const pricingRefenceModalContent = `<div class="pricing-reference">
 </div>`
 
 document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('.video-popup').forEach(popup => {
-    popup.addEventListener('click', () => {
-      const videoUrl = popup.getAttribute('data-video-url');
+  document.querySelectorAll('.video-thumbnail').forEach(thumbnail => {
+    thumbnail.addEventListener('click', () => {
+      const videoUrl = thumbnail.getAttribute('data-video-url');
       const modal = document.getElementById('videoModal');
       const container = document.getElementById('modalVideoContainer');
 
