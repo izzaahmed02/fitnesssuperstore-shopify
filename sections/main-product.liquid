@@ -1900,8 +1900,23 @@
         <script src="{{ 'product-media-slider.js' | asset_url }}" defer="defer"></script>
       {% endcomment %}
 
-      <script src="{{ 'product-gallery.js' | asset_url }}" defer="defer"></script>
-      <script src="{{ 'product-mobile-gallery.js' | asset_url }}" defer="defer"></script>
+      {% comment %}<script src="{{ 'product-gallery.js' | asset_url }}" defer="defer"></script>
+      <script src="{{ 'product-mobile-gallery.js' | asset_url }}" defer="defer"></script> {% endcomment %}
+      <script>
+  const loadScript = (src) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.defer = true;
+    document.head.appendChild(script);
+  };
+
+  if (window.innerWidth <= 989) {
+    loadScript("{{ 'product-mobile-gallery.js' | asset_url }}");
+  } else {
+    loadScript("{{ 'product-gallery.js' | asset_url }}");
+  }
+</script>
+
       <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js" defer="defer"></script>
     {%- endif -%}
 
