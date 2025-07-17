@@ -108,6 +108,7 @@ class ProductGallery extends HTMLElement {
   }
 
  setActiveMedia(id) {
+   console.log('Setting active media: ${id}');
   if (this.activeMediaId === id) return;
   this.activeMediaId = id;
   const media = this.mediaData.find((m) => m.id == id);
@@ -140,10 +141,13 @@ class ProductGallery extends HTMLElement {
 
       // Check if image is already loaded (e.g., cached)
       if (img.complete) {
+        console.log('Image ${id} is cached, initializing zoom immediately');
         skeletonWrapper.classList.add('loaded');
         this.initZoom(container, media, true);
       } else {
+        console.log('Image ${id} is not cached, waiting for onload');
         img.onload = () => {
+          console.log('Image ${id} loaded, initializing zoom');
           skeletonWrapper.classList.add('loaded');
           this.initZoom(container, media, true);
         };
@@ -166,6 +170,7 @@ class ProductGallery extends HTMLElement {
   }
 
   initZoom(container, media, forceStart = false) {
+    console.log('Initializing zoom for media: ${media.id}, forceStart: ${forceStart}');
   if (!this.isDesktop()) return;
   const img = container.querySelector('img');
   if (!img || !media.preview_image || container.dataset.zoomInitialized === 'true') return;
