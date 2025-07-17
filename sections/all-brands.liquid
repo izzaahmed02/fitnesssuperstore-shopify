@@ -1,0 +1,130 @@
+{%- style -%}
+  .container_all_brands_{{ section.id }}{
+    padding: 30px 0;
+  }
+  .container_all_brands_{{ section.id }} .all-brand-page-title{
+    text-align: center;
+    text-transform: uppercase;
+  }
+  .container_all_brands_{{ section.id }} .all_brands_wrapper{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.3rem;
+  }
+  .container_all_brands_{{ section.id }} .all_brands__list{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    padding: 30px 10px;
+    background-color: #fff;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+  }
+  .container_all_brands_{{ section.id }} .brand-logos{
+    width: 40px;
+    height: 35px;
+    object-fit: contain;
+  }
+  .container_all_brands_{{ section.id }} .brand-title{
+    color: #3e77aa;
+    font-family: Lato, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  @media(max-width:1200px){
+    .container_all_brands_{{ section.id }} .all_brands__list{
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+   @media(max-width:768px){
+    .container_all_brands_{{ section.id }} .all_brands__list{
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px 20px;
+      align-items: flex-start;
+      padding: 25px 20px;
+    }
+    .container_all_brands_{{ section.id }} .all_brands_wrapper{
+      flex-direction: column;
+      align-items: self-start;
+    }
+    .container_all_brands_{{ section.id }} .brand-logos{
+      width: 45px;
+      height: 33px;
+      object-fit: contain;
+    }
+    .container_all_brands_{{ section.id }} .all-brand-page-title{
+      text-align:left;
+    }
+  }
+{%- endstyle -%}
+
+<div class="container_all_brands container_all_brands_{{ section.id }}">
+  <h1 class="all-brand-page-title">{{ page.title }}</h1>
+  <div class="all_brands__list">
+    {% for block in section.blocks %}
+      {% if block.settings.url != blank %}
+        <a href="{{ block.settings.url }}">
+          <div class="all_brands_wrapper">
+            {% if block.settings.image != blank %}
+              <img
+                class="brand-logos"
+                src="{{ block.settings.image | img_url: '45x40' }}"
+                width="{{ '40' }}"
+                height="{{ '35' }}"
+                alt="{{ block.settings.image.alt }}"
+              >
+            {% endif %}
+            <div class="brand-title">{{ block.settings.name }}</div>
+          </div>
+        </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "All Brands",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    
+  ],
+  "blocks": [
+    {
+      "type": "brand",
+      "name": "Brand",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Brand Image"
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Brand Name"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "URL"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "All Brands"
+    }
+  ]
+}
+{% endschema %}
