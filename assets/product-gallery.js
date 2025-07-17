@@ -38,7 +38,8 @@ connectedCallback() {
   window.addEventListener('resize', this.handleResize.bind(this));
 
   this.main.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent event bubbling
+    console.log(`Main image clicked, mediaId: ${this.activeMediaId}, target: ${e.target.tagName}`);
+    e.stopPropagation();
     const container = e.target.closest('.main-image-container');
     if (container) {
       const media = this.mediaData.find((m) => m.id == this.activeMediaId);
@@ -47,7 +48,6 @@ connectedCallback() {
       }
     }
   });
-
 }
 
   handleResize() {
@@ -336,8 +336,7 @@ renderPopup() {
 }
 
 openPopup(mediaId) {
-
-
+  console.log(`Opening popup for media: ${mediaId} at ${new Date().toISOString()}`);
   const popup = document.getElementById('product-gallery-popup');
   if (!popup) {
     console.log('Rendering new popup');
@@ -363,6 +362,67 @@ openPopup(mediaId) {
   this.activeMediaId = mediaId;
   this.updateMainThumbActive(mediaId);
 
+  // Check if thumbnails need rebuilding
+  const shouldRebuildThumbnails = !tabImages.hasChildNodes() || !tabVideos.hasChildNodes();
+  if (shouldRebuildThumbnails) {
+    console.log('Rebuilding thumbnails');
+    tabImages.innerHTML = '';
+    tabVideos.innerHTML = '';
+
+    this.mediaData.forEach((media) => {
+      let btn;
+      if (media.media_type === 'image') {
+        btn = document.createElement('button');
+        btn.className = 'popup-thumb';
+        btn.type = 'button';
+        btn.setAttribute('data-media-id', media.id);
+
+        const skeletonWrapper = document.createElement('div');
+        skeletonWrapper.className = 'image-skeleton-wrapper';
+        const img = document.createElement('img');
+        img.src = media.preview_image.src;
+        img.alt = media.alt || '';
+        img.width = media.preview_image.width;
+        img.height = media.preview_image.height;
+        skeletonWrapper.appendChild(img);
+        btn.appendChild(skeletonWrapper);
+
+        img.onload = () => skeletonWrapper.classList.add('loaded');
+
+        btn.addEventListener('click', () => {
+          this.activeMediaId = media.id;
+          this.renderPopupViewer(media.id, viewer);
+          this.updatePopupThumbActive(media.id);
+          this.updateMainThumbActive(media.id);
+        });
+
+        let hoverTimer;
+        btn.addEventListener('mouseenter', () => {
+          if (this.activeMediaId === media.id) {
+            btn.classList.add('is-active');
+            return;
+          }
+          hoverTimer = setTimeout(() => {
+            this.activeMediaId = media.id;
+            this.renderPopupViewer(media.id, viewer);
+            this.updatePopupThumbActive(media.id);
+            this.updateMainThumbActive(media.id);
+            btn.classList.add('is-active');
+          }, 150);
+        });
+        btn.addEventListener('mouseleave', () => {
+          clearTimeout(hoverTimer);
+          if (this.activeMediaId !== media.id) btn.classList.remove('is-active');
+        });
+
+        tabImages.appendChild(btn);
+      } else if (media.media_type === 'video' || media.media_type === 'external_video') {
+        btn = this.renderVideoThumbItem(media);
+        tabVideos.appendChild(btn);
+      }
+    });
+  }
+
   // Preload and render viewer
   if (clickedMedia.media_type === 'image') {
     console.log(`Preloading image for media: ${mediaId}`);
@@ -374,67 +434,18 @@ openPopup(mediaId) {
     };
     preloadImg.onerror = (e) => {
       console.error(`Preload failed for media ${mediaId}:`, e);
-      this.renderPopupViewer(mediaId, viewer); // Fallback to render without preload
+      this.renderPopupViewer(mediaId, viewer);
     };
   } else {
     console.log(`Rendering non-image media: ${mediaId}`);
     this.renderPopupViewer(mediaId, viewer);
-  } 
+  }
 
   if (popup.hidden) {
     console.log('Showing popup');
     popup.hidden = false;
     document.body.style.overflow = 'hidden';
   }
-
-  tabImages.innerHTML = '';
-  tabVideos.innerHTML = '';
-
-  this.mediaData.forEach((media) => {
-    let btn;
-    if (media.media_type === 'image') {
-      btn = document.createElement('button');
-      btn.className = 'popup-thumb';
-      btn.type = 'button';
-      btn.setAttribute('data-media-id', media.id);
-
-      const skeletonWrapper = document.createElement('div');
-      skeletonWrapper.className = 'image-skeleton-wrapper';
-      const img = document.createElement('img');
-      img.src = media.preview_image.src;
-      img.alt = media.alt || '';
-      img.width = media.preview_image.width;
-      img.height = media.preview_image.height;
-      skeletonWrapper.appendChild(img);
-      btn.appendChild(skeletonWrapper);
-
-      img.onload = () => skeletonWrapper.classList.add('loaded');
-
-      btn.addEventListener('click', () => {
-        this.activeMediaId = media.id;
-        this.renderPopupViewer(media.id, viewer);
-        this.updatePopupThumbActive(media.id);
-        this.updateMainThumbActive(media.id);
-      });
-
-      let hoverTimer;
-      btn.addEventListener('mouseenter', () => {
-        if (this.activeMediaId === media.id) return;
-        hoverTimer = setTimeout(() => {
-          this.activeMediaId = media.id;
-          this.renderPopupViewer(media.id, viewer);
-          this.updatePopupThumbActive(media.id);
-          this.updateMainThumbActive(media.id);
-        }, 150);
-      });
-      btn.addEventListener('mouseleave', () => clearTimeout(hoverTimer));
-
-      tabImages.appendChild(btn);
-    } else if (media.media_type === 'video' || media.media_type === 'external_video') {
-      btn = this.renderVideoThumbItem(media);
-      tabVideos.appendChild(btn);
-    }
-  });
 
   tabs.forEach((tab) => {
     const isMatch = tab.dataset.tab === defaultTab;
@@ -480,16 +491,21 @@ openPopup(mediaId) {
 }
 
 renderPopupViewer(mediaId, viewer) {
-  console.log('Rendering popup viewer for media: ${mediaId}');
+
+  console.log(`Rendering popup viewer for media: ${mediaId}`);
   const media = this.mediaData.find((m) => m.id == mediaId);
   if (!media) return;
 
-  // Clear only if necessary (e.g., different media type)
+  const currentMediaId = viewer.dataset.currentMediaId;
+  if (currentMediaId === mediaId) return; // Skip if already rendering the same media
+
+  // Clear only if necessary (e.g., different media type or ID)
   const currentMediaType = viewer.dataset.currentMediaType;
-  if (currentMediaType !== media.media_type) {
+  if (currentMediaType !== media.media_type || currentMediaId !== mediaId) {
     viewer.innerHTML = '';
     viewer.classList.remove('popup-media-viewer-media-zoom-img');
     viewer.dataset.currentMediaType = media.media_type;
+    viewer.dataset.currentMediaId = mediaId;
   }
 
   if (media.media_type === 'image') {
