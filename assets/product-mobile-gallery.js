@@ -155,7 +155,7 @@ class MobileGallery extends HTMLElement {
         dots: true,
         appendDots: this.dots,
         arrows: true,
-        infinite: false,
+        infinite: true,
         adaptiveHeight: true,
         lazyLoad: 'ondemand',
         speed: 250,
