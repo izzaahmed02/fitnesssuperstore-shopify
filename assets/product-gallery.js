@@ -15,7 +15,8 @@ class ProductGallery extends HTMLElement {
     });
   }
 
-// Inside ProductGallery class
+// Inside your ProductGallery class
+
 connectedCallback() {
   const raw = this.querySelector('[data-product-media]');
   if (!raw) return;
@@ -32,22 +33,28 @@ connectedCallback() {
 
   this.initThumbnails();
 
-  // Check if any thumbnail is already active from the server render
+  // Check if any thumbnail is already active from the server render (Liquid)
   const currentActiveThumbnail = this.querySelector('.thumbnail-btn.is-active');
+
   if (!currentActiveThumbnail && this.mediaData.length > 0) {
-    // If no thumbnail is active, set the first one as active in JS
+    // If no thumbnail is active (e.g., first load without a 3D model),
+    // set the first one as active in JavaScript.
     this.setActiveMedia(this.mediaData[0].id);
   } else if (currentActiveThumbnail) {
-    // If one is already active, ensure JS knows which one it is
+    // If one is already active from Liquid, ensure JS knows which one it is.
     this.activeMediaId = currentActiveThumbnail.getAttribute('data-media-id');
-    // Re-run initZoom in case the main image was already loaded by Liquid but not initialized for zoom
+
+    // Re-run initZoom in case the main image was already loaded by Liquid but not initialized for zoom.
     const firstMedia = this.mediaData.find(m => m.id == this.activeMediaId);
     const mainImageContainer = this.main?.querySelector('[data-zoom-container]');
+
     if (mainImageContainer && firstMedia && firstMedia.media_type === 'image') {
       const img = mainImageContainer.querySelector('img');
       if (img && img.complete) {
+        // If the image is already loaded (e.g., from cache), initialize zoom immediately.
         this.initZoom(mainImageContainer, firstMedia, true);
       } else if (img) {
+        // Otherwise, set onload to initialize zoom once the image loads.
         img.onload = () => {
           mainImageContainer.querySelector('.image-skeleton-wrapper')?.classList.add('loaded');
           this.initZoom(mainImageContainer, firstMedia, true);
@@ -58,16 +65,21 @@ connectedCallback() {
 
   window.addEventListener('resize', this.handleResize.bind(this));
 
+  // Main image click listener:
+  // Only open the popup if it's not a model and the popup is currently hidden.
   this.main.addEventListener('click', (e) => {
     const container = e.target.closest('.main-image-container');
     if (container) {
       const media = this.mediaData.find((m) => m.id == this.activeMediaId);
-      if (media && media.media_type != 'model') {
+      const popup = document.getElementById('product-gallery-popup'); // Get popup reference here
+      if (media && media.media_type !== 'model' && popup && popup.hidden) {
         this.openPopup(this.activeMediaId);
       }
     }
   });
 }
+
+
 
   handleResize() {
     const activeId = this.activeMediaId;
@@ -99,34 +111,42 @@ connectedCallback() {
     });
   }
 
-  initThumbnails() {
-    const buttons = this.querySelectorAll('.thumbnail-btn');
-    buttons.forEach((btn) => {
-      const mediaId = btn.getAttribute('data-media-id');
-      const isVideoThumb = btn.classList.contains('is-video');
+initThumbnails() {
+  const buttons = this.querySelectorAll('.thumbnail-btn');
+  buttons.forEach((btn) => {
+    const mediaId = btn.getAttribute('data-media-id');
+    const isVideoThumb = btn.classList.contains('is-video');
 
-      btn.addEventListener('click', (e) => {
-        const isOverlay = e.target.classList.contains('thumbnail-overlay');
-        if (isOverlay || isVideoThumb) {
-          this.openPopup(mediaId);
-        } else if (this.activeMediaId !== mediaId) {
-          this.setActiveMedia(mediaId);
-        }
-      });
+    btn.addEventListener('click', (e) => {
+      const isOverlay = e.target.classList.contains('thumbnail-overlay');
 
-      let hoverTimer;
-      btn.addEventListener('mouseenter', () => {
-        if (this.activeMediaId === mediaId) return;
-        hoverTimer = setTimeout(() => {
-          this.setActiveMedia(mediaId);
-        }, 150);
-      });
-
-      btn.addEventListener('mouseleave', () => {
-        clearTimeout(hoverTimer);
-      });
+      // Decide whether to open the popup or just change the main media
+      // Open popup if:
+      //   - It's an overlay (like "+N more")
+      //   - It's a video thumbnail
+      //   - Or, if the clicked thumbnail is already the active one in the main view (implies "view larger")
+      if (isOverlay || isVideoThumb || this.activeMediaId === mediaId) {
+        this.openPopup(mediaId);
+      } else {
+        // Otherwise, if a different thumbnail (image) is clicked, just switch the main media
+        this.setActiveMedia(mediaId);
+      }
     });
-  }
+
+    let hoverTimer;
+    btn.addEventListener('mouseenter', () => {
+      // Only change active media on hover if it's not already the active one
+      if (this.activeMediaId === mediaId) return;
+      hoverTimer = setTimeout(() => {
+        this.setActiveMedia(mediaId);
+      }, 150);
+    });
+
+    btn.addEventListener('mouseleave', () => {
+      clearTimeout(hoverTimer);
+    });
+  });
+}
 
   setActiveMedia(id) {
     if (this.activeMediaId === id) return;
