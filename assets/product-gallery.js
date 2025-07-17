@@ -160,9 +160,9 @@ connectedCallback() {
         skeletonWrapper.appendChild(img);
 
         img.onload = () => {
-          skeletonWrapper.classList.add('loaded');
-          this.initZoom(container, media, true);
-        };
+    skeletonWrapper.classList.add('loaded');
+    this.initZoom(container, media, true); // <--- Pass true for forceStart
+  };
       }
     }
     else if (media.media_type == 'model') {
