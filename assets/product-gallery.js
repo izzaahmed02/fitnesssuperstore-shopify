@@ -629,19 +629,17 @@ class ProductGallery extends HTMLElement {
     const media = this.mediaData.find((m) => m.id == mediaId);
     if (!media) {
       console.error(`renderPopupViewer: Media not found for ID: ${mediaId}`);
-      viewer.innerHTML = '<p>Media not found.</p>';
+      //viewer.innerHTML = '<p>Media not found.</p>'; // Remove or comment out this line
       return;
     }
 
-    // --- Stop any currently playing media before rendering new one ---
+    // Stop and remove current media before adding new one
     const currentMediaElement = viewer.firstElementChild;
     if (currentMediaElement) {
         if (currentMediaElement.tagName === 'VIDEO') {
             currentMediaElement.pause();
             currentMediaElement.currentTime = 0;
         } else if (currentMediaElement.tagName === 'IFRAME') {
-            // Attempt to stop YouTube/Vimeo iframes, though not always reliable
-            // This sends a postMessage to try and stop playback.
             try {
                 currentMediaElement.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
                 currentMediaElement.contentWindow.postMessage('{ "method": "pause" }', '*');
@@ -649,13 +647,15 @@ class ProductGallery extends HTMLElement {
                 console.warn("Failed to send pause message to iframe:", e);
             }
         } else if (currentMediaElement.tagName === 'MODEL-VIEWER') {
-            currentMediaElement.pause(); // Model-viewer can be paused
+            currentMediaElement.pause();
         }
-        currentMediaElement.remove(); // Remove the old media element
+        currentMediaElement.remove(); // This is the crucial change: only remove the media element
     }
 
     viewer.classList.remove('popup-media-viewer-media-zoom-img');
     viewer.classList.remove('is-zoomed-simple');
+
+    let newMediaElement; // Declare a variable to hold the new media element
 
     if (media.media_type === 'image') {
       console.log('renderPopupViewer: Media type is image.');
@@ -679,8 +679,8 @@ class ProductGallery extends HTMLElement {
 
       skeletonWrapper.appendChild(img);
       inner.appendChild(skeletonWrapper);
-      viewer.appendChild(inner);
-      console.log('renderPopupViewer: Image elements appended to viewer.');
+      newMediaElement = inner; // Assign the new image container to newMediaElement
+      console.log('renderPopupViewer: Image elements prepared for viewer.');
 
       img.onload = () => {
         skeletonWrapper.classList.add('loaded');
@@ -714,10 +714,7 @@ class ProductGallery extends HTMLElement {
       };
       viewer.addEventListener('click', this._handlePopupClick);
 
-      return;
-    }
-
-    if (
+    } else if (
       media.media_type === 'external_video' &&
       media.external_id &&
       media.host
@@ -739,13 +736,10 @@ class ProductGallery extends HTMLElement {
         iframe.frameBorder = '0';
         iframe.style.width = '100%';
         iframe.style.aspectRatio = '16/9';
-        viewer.appendChild(iframe);
-        console.log(`renderPopupViewer: External video iframe appended for ID: ${media.id}`);
-        return;
+        newMediaElement = iframe; // Assign the new iframe to newMediaElement
+        console.log(`renderPopupViewer: External video iframe prepared for ID: ${media.id}`);
       }
-    }
-
-    if (media.media_type === 'video') {
+    } else if (media.media_type === 'video') {
       console.log('renderPopupViewer: Media type is native video.');
       const video = document.createElement('video');
       video.controls = true;
@@ -765,17 +759,14 @@ class ProductGallery extends HTMLElement {
         source.src = validSource.url;
         source.type = validSource.mime_type;
         video.appendChild(source);
-        viewer.appendChild(video);
-        console.log(`renderPopupViewer: Native video appended for ID: ${media.id}`);
+        newMediaElement = video; // Assign the new video to newMediaElement
+        console.log(`renderPopupViewer: Native video prepared for ID: ${media.id}`);
       } else {
-        viewer.innerHTML = '<p>Video format not supported or no valid source found.</p>';
+        newMediaElement = document.createElement('p');
+        newMediaElement.textContent = 'Video format not supported or no valid source found.';
         console.warn(`renderPopupViewer: No valid video source found for ID: ${media.id}`);
       }
-
-      return;
-    }
-
-    if (media.media_type === 'model') {
+    } else if (media.media_type === 'model') {
       console.log('renderPopupViewer: Media type is 3D model.');
       const model = document.createElement('model-viewer');
       model.src = media.url;
@@ -785,13 +776,18 @@ class ProductGallery extends HTMLElement {
       model.setAttribute('data-shopify-feature', '1.12');
       model.style.width = '100%';
       model.style.height = '100%';
-      viewer.appendChild(model);
-      console.log(`renderPopupViewer: 3D model appended for ID: ${media.id}`);
-      return;
+      newMediaElement = model; // Assign the new model-viewer to newMediaElement
+      console.log(`renderPopupViewer: 3D model prepared for ID: ${media.id}`);
+    } else {
+      newMediaElement = document.createElement('p');
+      newMediaElement.textContent = 'Unsupported media type.';
+      console.warn(`renderPopupViewer: Unsupported media type for ID: ${media.id}`);
     }
 
-    viewer.innerHTML = '<p>Unsupported media type.</p>';
-    console.warn(`renderPopupViewer: Unsupported media type for ID: ${media.id}`);
+    if (newMediaElement) {
+        viewer.appendChild(newMediaElement); // Append the newly created media element
+        console.log(`renderPopupViewer: New media element appended for ID: ${media.id}`);
+    }
   }
 
   renderVideoThumbItem(media) {
