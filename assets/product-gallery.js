@@ -1,4 +1,3 @@
-// Updated ProductGallery class with landscape-specific zoom layout handling
 class ProductGallery extends HTMLElement {
   constructor() {
     super();
@@ -9,13 +8,13 @@ class ProductGallery extends HTMLElement {
     this.lastMouseX = 0;
     this.lastMouseY = 0;
 
+    // Use a throttled or debounced mousemove listener if performance is a concern
+    // For now, keeping it as is, but be aware of frequent updates.
     document.addEventListener('mousemove', (e) => {
       this.lastMouseX = e.clientX;
       this.lastMouseY = e.clientY;
     });
   }
-
-  // Inside your ProductGallery class
 
   connectedCallback() {
     console.log('ConnectedCallback: ProductGallery component initialized.');
@@ -29,23 +28,25 @@ class ProductGallery extends HTMLElement {
       this.mediaData = JSON.parse(raw.innerHTML.trim());
       console.log('ConnectedCallback: Media data parsed successfully.', this.mediaData);
     } catch (err) {
-      console.error('ConnectedCallback: Invalid JSON in <template>', err);
+      console.error('ConnectedCallback: Invalid JSON in [data-product-media] element.', err);
       return;
     }
 
     this.wrapper = this.querySelector('.custom-product-gallery');
     this.main = this.querySelector('[data-main-media-wrapper]');
+    if (!this.wrapper || !this.main) {
+      console.error('ConnectedCallback: Missing .custom-product-gallery or [data-main-media-wrapper]. Exiting.');
+      return;
+    }
     console.log('ConnectedCallback: Wrapper and Main elements assigned.');
 
     this.initThumbnails();
     console.log('ConnectedCallback: initThumbnails called.');
 
-    // Check if any thumbnail is already active from the server render (Liquid)
     const currentActiveThumbnail = this.querySelector('.thumbnail-btn.is-active');
 
     if (!currentActiveThumbnail && this.mediaData.length > 0) {
-      // If no thumbnail is active (e.g., first load without a 3D model),
-      // set the first one as active in JavaScript.
+      // If no thumbnail is active (e.g., first load), set the first one as active in JavaScript.
       console.log('ConnectedCallback: No active thumbnail found, setting first media as active.');
       this.setActiveMedia(this.mediaData[0].id);
     } else if (currentActiveThumbnail) {
@@ -53,11 +54,10 @@ class ProductGallery extends HTMLElement {
       this.activeMediaId = currentActiveThumbnail.getAttribute('data-media-id');
       console.log('ConnectedCallback: Active thumbnail found from Liquid:', this.activeMediaId);
 
-      // Re-run initZoom in case the main image was already loaded by Liquid but not initialized for zoom.
       const firstMedia = this.mediaData.find(m => m.id == this.activeMediaId);
       const mainImageContainer = this.main?.querySelector('[data-zoom-container]');
 
-      if (mainImageContainer && firstMedia && firstMedia.media_type === 'image') {
+      if (mainImageContainer && firstMedia && firstMedia.media_type === 'image' && firstMedia.preview_image) {
         const img = mainImageContainer.querySelector('img');
         if (img && img.complete) {
           console.log('ConnectedCallback: Main image complete, initializing zoom.');
@@ -75,8 +75,6 @@ class ProductGallery extends HTMLElement {
     window.addEventListener('resize', this.handleResize.bind(this));
     console.log('ConnectedCallback: Resize listener added.');
 
-    // Main image click listener:
-    // Only open the popup if it's not a model and the popup is currently hidden.
     this.main.addEventListener('click', (e) => {
       console.log('Main image click event detected.');
       const container = e.target.closest('.main-image-container');
@@ -103,30 +101,35 @@ class ProductGallery extends HTMLElement {
     const container = this.main?.querySelector('[data-zoom-container]');
     const media = this.mediaData.find((m) => m.id == activeId);
 
-    if (!container || !media || media.media_type !== 'image') {
-      console.log('handleResize: Not an image or container not found. Exiting.');
+    if (!container || !media || media.media_type !== 'image' || !media.preview_image) {
+      console.log('handleResize: Not an image, container not found, or preview_image missing. Exiting.');
       return;
     }
 
+    // Remove existing zoom elements if they exist
     const oldResult = container.querySelector('.zoom-result');
     const oldLens = container.querySelector('.zoom-lens');
     if (oldResult) oldResult.remove();
     if (oldLens) oldLens.remove();
+
+    // Reset the zoomInitialized state for the container
     container.dataset.zoomInitialized = 'false';
     console.log('handleResize: Removed old zoom elements and reset zoomInitialized.');
 
     const img = container.querySelector('img');
     if (!img) return;
+
+    // Clear any previous onload handler to prevent multiple calls
     img.onload = null;
-    console.log('handleResize: Removed img.onload.');
+    console.log('handleResize: Cleared img.onload.');
 
     requestAnimationFrame(() => {
       if (this.isDesktop()) {
         if (img.complete) {
-          console.log('handleResize: Desktop and image complete, initializing zoom.');
+          console.log('handleResize: Desktop and image complete, re-initializing zoom.');
           this.initZoom(container, media);
         } else {
-          console.log('handleResize: Desktop and image not complete, setting onload for zoom.');
+          console.log('handleResize: Desktop and image not complete, setting onload for re-initialization of zoom.');
           img.onload = () => {
             this.initZoom(container, media);
           };
@@ -142,24 +145,21 @@ class ProductGallery extends HTMLElement {
     const buttons = this.querySelectorAll('.thumbnail-btn');
     buttons.forEach((btn) => {
       const mediaId = btn.getAttribute('data-media-id');
-      const isVideoThumb = btn.classList.contains('is-video');
+      const media = this.mediaData.find(m => m.id == mediaId);
+      const isVideoThumb = media && (media.media_type === 'video' || media.media_type === 'external_video');
+
       console.log(`initThumbnails: Processing thumbnail for mediaId: ${mediaId}`);
 
       btn.addEventListener('click', (e) => {
         console.log(`Thumbnail click event for mediaId: ${mediaId}`);
-        const isOverlay = e.target.classList.contains('thumbnail-overlay');
-
-        if (isOverlay) {
-          console.log(`Thumbnail click: Overlay detected for ${mediaId}, opening popup.`);
-          this.openPopup(mediaId);
-        } else if (isVideoThumb) {
-          console.log(`Thumbnail click: Video thumbnail detected for ${mediaId}, opening popup.`);
-          this.openPopup(mediaId);
-        } else if (this.activeMediaId === mediaId) {
-          console.log(`Thumbnail click: Active thumbnail clicked for ${mediaId}, opening popup.`);
+        // If it's a video thumbnail or if the current thumbnail is already active,
+        // or if it's explicitly an overlay click (though overlay isn't in this HTML),
+        // open the popup. Otherwise, just set the active media.
+        if (isVideoThumb || this.activeMediaId === mediaId) {
+          console.log(`Thumbnail click: Opening popup for ${mediaId}.`);
           this.openPopup(mediaId);
         } else {
-          console.log(`Thumbnail click: Different image thumbnail clicked for ${mediaId}, setting active media.`);
+          console.log(`Thumbnail click: Setting active media for ${mediaId}.`);
           this.setActiveMedia(mediaId);
         }
       });
@@ -186,7 +186,7 @@ class ProductGallery extends HTMLElement {
 
   setActiveMedia(id) {
     console.log(`setActiveMedia: Attempting to set active media to ID: ${id}`);
-    if (this.activeMediaId === id) {
+    if (this.activeMediaId == id) { // Use == for comparison as ID might be string/number
       console.log(`setActiveMedia: Media ${id} is already active, skipping.`);
       return;
     }
@@ -197,10 +197,18 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
-    this.main.innerHTML = '';
+    this.main.innerHTML = ''; // Clear previous main media content
+
+    // Reset zoom initialized state for the main container when changing media
+    const existingMainContainer = this.main.querySelector('.main-image-container');
+    if (existingMainContainer) {
+      existingMainContainer.dataset.zoomInitialized = 'false';
+    }
+
     const container = document.createElement('div');
     container.className = 'main-image-container';
     container.setAttribute('data-media-id', id);
+
     if (media.media_type == 'image' || media.media_type === 'video' || media.media_type === 'external_video') {
       container.setAttribute('data-zoom-container', '');
       if (media.media_type === 'video' || media.media_type === 'external_video') {
@@ -209,7 +217,7 @@ class ProductGallery extends HTMLElement {
       this.main.appendChild(container);
       console.log(`setActiveMedia: Appended main container for media type: ${media.media_type}`);
 
-      if (media.media_type === 'image') {
+      if (media.media_type === 'image' && media.preview_image) {
         const img = document.createElement('img');
         const skeletonWrapper = document.createElement('div');
         img.alt = media.alt || '';
@@ -219,7 +227,7 @@ class ProductGallery extends HTMLElement {
         img.sizes = media.preview_image.sizes || '';
         img.width = media.preview_image.width || '';
         img.height = media.preview_image.height || '';
-        img.loading = 'eager';
+        img.loading = 'lazy'; // Changed to lazy for performance
         container.appendChild(skeletonWrapper);
         skeletonWrapper.appendChild(img);
         console.log(`setActiveMedia: Image element created for ID: ${id}`);
@@ -245,7 +253,7 @@ class ProductGallery extends HTMLElement {
     const buttons = this.querySelectorAll('.thumbnail-btn');
     buttons.forEach((btn) => {
       const btnId = btn.getAttribute('data-media-id');
-      const isActive = btnId === String(id);
+      const isActive = btnId == String(id); // Ensure ID comparison is consistent
       btn.classList.toggle('is-active', isActive);
       if (isActive) {
         console.log(`setActiveMedia: Thumbnail ${btnId} set to active.`);
@@ -266,9 +274,16 @@ class ProductGallery extends HTMLElement {
     }
     const img = container.querySelector('img');
     if (!img || !media.preview_image || container.dataset.zoomInitialized === 'true') {
-      console.log('initZoom: Conditions not met to initialize zoom (img/media missing or already initialized).');
+      console.log('initZoom: Conditions not met to initialize zoom (img/media missing or already initialized, or preview_image missing).');
       return;
     }
+
+    // Ensure we're not re-initializing if already active
+    if (this.activeMediaId != media.id) {
+        console.log('initZoom: Active media ID mismatch, not initializing zoom.');
+        return;
+    }
+
     container.dataset.zoomInitialized = 'true';
     console.log('initZoom: Zoom initialized for container.');
 
@@ -282,8 +297,12 @@ class ProductGallery extends HTMLElement {
     container.appendChild(lens);
 
     const zoomImg = new Image();
-    const imgAspect = media.preview_image.width / media.preview_image.height;
-    const zoomWidth = 1000;
+    // Safely access preview_image properties
+    const imgWidth = media.preview_image.width || img.naturalWidth;
+    const imgHeight = media.preview_image.height || img.naturalHeight;
+
+    const imgAspect = imgWidth / imgHeight;
+    const zoomWidth = 1600; // Use a high-res for zoom image
     const zoomHeight = Math.round(zoomWidth / imgAspect);
     zoomImg.src = media.preview_image.src.replace(/width=\d+/, `width=${zoomWidth}`).replace(/height=\d+/, `height=${zoomHeight}`);
     zoomImg.style.transform = 'scale(0.7)';
@@ -301,7 +320,7 @@ class ProductGallery extends HTMLElement {
         return;
       }
 
-      const isLandscape = media.preview_image.width > media.preview_image.height;
+      const isLandscape = imgWidth > imgHeight;
       const scaleX = zoomImg.naturalWidth / img.clientWidth;
       const scaleY = zoomImg.naturalHeight / img.clientHeight;
 
@@ -340,13 +359,15 @@ class ProductGallery extends HTMLElement {
             zoomResult.style.top = '14px';
             zoomResult.style.height = `calc(98vh - ${threshold}px)`;
           } else {
-            zoomResult.style.top = '';
-            zoomResult.style.height = '';
+            zoomResult.style.top = ''; // Reset to default
+            zoomResult.style.height = ''; // Reset to default
           }
           console.log('initZoom: Zoom top position updated.');
         };
 
         updateZoomTop();
+        // Remove existing listener before adding to prevent duplicates
+        window.removeEventListener('scroll', updateZoomTop);
         window.addEventListener('scroll', updateZoomTop, { passive: true });
       });
 
@@ -376,23 +397,33 @@ class ProductGallery extends HTMLElement {
         });
       };
 
+      // Ensure listeners are only added once
+      container.removeEventListener('mousemove', moveLens);
       container.addEventListener('mousemove', moveLens);
-      container.addEventListener('mouseenter', () => {
+
+      container.removeEventListener('mouseenter', this._handleZoomMouseEnter);
+      this.containerMouseEnterHandler = () => {
         console.log('initZoom: Mouseenter on main image container. Showing zoom.');
         zoomResult.style.display = 'block';
         lens.style.display = 'block';
-      });
-      container.addEventListener('mouseleave', () => {
+      };
+      container.addEventListener('mouseenter', this.containerMouseEnterHandler);
+
+      container.removeEventListener('mouseleave', this._handleZoomMouseLeave);
+      this.containerMouseLeaveHandler = () => {
         console.log('initZoom: Mouseleave on main image container. Hiding zoom.');
         zoomResult.style.display = 'none';
         lens.style.display = 'none';
-      });
+      };
+      container.addEventListener('mouseleave', this.containerMouseLeaveHandler);
 
-      zoomResult.addEventListener('mouseenter', () => {
+      zoomResult.removeEventListener('mouseenter', this._handleZoomResultMouseEnter);
+      this.zoomResultMouseEnterHandler = () => {
         console.log('initZoom: Mouseenter on zoom result. Hiding zoom.');
         zoomResult.style.display = 'none';
         lens.style.display = 'none';
-      });
+      };
+      zoomResult.addEventListener('mouseenter', this.zoomResultMouseEnterHandler);
 
       if (forceStart && this.lastMouseX && this.lastMouseY) {
         console.log('initZoom: forceStart is true. Attempting to start zoom at last mouse position.');
@@ -443,32 +474,33 @@ class ProductGallery extends HTMLElement {
 
   openPopup(mediaId) {
     console.log(`openPopup: Attempting to open popup for mediaId: ${mediaId}`);
-    this.renderPopup(); // Ensure popup HTML structure exists
+    // Only render the popup structure if it doesn't exist
+    this.renderPopup();
     const popup = document.getElementById('product-gallery-popup');
     const viewer = popup.querySelector('[data-popup-viewer]');
     const tabImages = popup.querySelector('[data-tab-content="images"]');
     const tabVideos = popup.querySelector('[data-tab-content="videos"]');
     const tabs = popup.querySelectorAll('.popup-tab');
-    if (tabs.length === 0) {
-      console.warn('openPopup: No tabs found in popup, cannot proceed.');
+
+    if (!popup || !viewer || tabs.length === 0) {
+      console.warn('openPopup: Required popup elements not found, cannot proceed.');
       return;
     }
-    const titleContainer = popup.querySelector('[data-popup-title]'); // Assuming you might have this element
 
+    const titleContainer = popup.querySelector('[data-popup-title]'); // Assuming you might have this element
     if (titleContainer) {
       titleContainer.textContent = this.getAttribute('data-product-title') || '';
     }
 
     const clickedMedia = this.mediaData.find((m) => m.id == mediaId);
-    const defaultTab = clickedMedia?.media_type === 'video' || clickedMedia?.media_type === 'external_video' ? 'videos' : 'images';
+    const defaultTab = clickedMedia && (clickedMedia.media_type === 'video' || clickedMedia.media_type === 'external_video') ? 'videos' : 'images';
     console.log(`openPopup: Determined default tab: ${defaultTab} for mediaId: ${mediaId}`);
 
-    // If popup is already visible, return early to prevent re-rendering its content unnecessarily
     if (!popup.hidden) {
-        console.log(`openPopup: Popup already visible, but calling renderPopupViewer for ${mediaId}.`);
-        this.renderPopupViewer(mediaId, viewer); // Still render the specific media in case it changed
-        this.updatePopupThumbActive(mediaId); // Ensure active thumbnail is set
-        return;
+      console.log(`openPopup: Popup already visible, rendering and updating active thumbnail for ${mediaId}.`);
+      this.renderPopupViewer(mediaId, viewer);
+      this.updatePopupThumbActive(mediaId);
+      return;
     }
 
     popup.hidden = false;
@@ -476,17 +508,17 @@ class ProductGallery extends HTMLElement {
     console.log('openPopup: Popup visibility set to true, body overflow hidden.');
 
     this.renderPopupViewer(mediaId, viewer);
-    console.log(`openPopup: First call to renderPopupViewer for mediaId: ${mediaId}`);
+    console.log(`openPopup: Initial call to renderPopupViewer for mediaId: ${mediaId}`);
 
+    // Clear and re-populate thumbnails each time, in case media data changes (unlikely for product gallery)
     tabImages.innerHTML = '';
     tabVideos.innerHTML = '';
     console.log('openPopup: Cleared popup tab contents.');
 
-
     this.mediaData.forEach((media) => {
       let btn;
 
-      if (media.media_type === 'image') {
+      if (media.media_type === 'image' && media.preview_image) {
         btn = document.createElement('button');
         btn.className = 'popup-thumb';
         btn.type = 'button';
@@ -510,7 +542,7 @@ class ProductGallery extends HTMLElement {
         btn.addEventListener('click', () => {
           console.log(`Popup thumbnail click for mediaId: ${media.id}`);
           const zoomedViewer = popup.querySelector(
-            '.popup-media-viewer.is-zoomed-simple', // Note: Corrected to is-zoomed-simple
+            '.popup-media-viewer.is-zoomed-simple',
           );
 
           if (zoomedViewer) {
@@ -534,19 +566,20 @@ class ProductGallery extends HTMLElement {
         media.media_type === 'external_video'
       ) {
         btn = this.renderVideoThumbItem(media);
-        btn.addEventListener('click', () => { // Add listener directly here if not already in renderVideoThumbItem
-             console.log(`Popup video thumbnail click for mediaId: ${media.id}`);
-             this.renderPopupViewer(
-                 media.id,
-                 document.querySelector('[data-popup-viewer]')
-             );
-             this.updatePopupThumbActive(media.id);
+        btn.addEventListener('click', () => {
+          console.log(`Popup video thumbnail click for mediaId: ${media.id}`);
+          this.renderPopupViewer(
+            media.id,
+            document.querySelector('[data-popup-viewer]')
+          );
+          this.updatePopupThumbActive(media.id);
         });
         tabVideos.appendChild(btn);
       }
     });
     console.log('openPopup: Populated popup thumbnails.');
 
+    // Set active tab based on defaultTab
     tabs.forEach((tab) => {
       const isMatch = tab.dataset.tab === defaultTab;
       tab.classList.toggle('is-active', isMatch);
@@ -556,7 +589,9 @@ class ProductGallery extends HTMLElement {
     console.log(`openPopup: Set active tab to ${defaultTab}.`);
 
     tabs.forEach((tab) => {
-      tab.onclick = () => {
+      // Remove existing click listener to prevent duplicates if openPopup is called multiple times
+      tab.removeEventListener('click', this._handlePopupTabClick);
+      this._handlePopupTabClick = () => { // Store handler for removal
         console.log(`Popup tab click: ${tab.dataset.tab} tab clicked.`);
         tabs.forEach((t) => t.classList.remove('is-active'));
         tab.classList.add('is-active');
@@ -566,7 +601,7 @@ class ProductGallery extends HTMLElement {
         tabVideos.classList.toggle('hidden', type !== 'videos');
 
         const zoomedViewer = popup.querySelector(
-          '.popup-media-viewer.is-zoomed-simple', // Note: Corrected to is-zoomed-simple
+          '.popup-media-viewer.is-zoomed-simple',
         );
 
         if (zoomedViewer) {
@@ -594,9 +629,10 @@ class ProductGallery extends HTMLElement {
           this.renderPopupViewer(firstMedia.id, viewer);
           this.updatePopupThumbActive(firstMedia.id);
         } else {
-            console.log(`Popup tab click: No media found for ${type} tab.`);
+          console.log(`Popup tab click: No media found for ${type} tab.`);
         }
       };
+      tab.addEventListener('click', this._handlePopupTabClick);
     });
 
     this.updatePopupThumbActive(mediaId);
@@ -613,12 +649,13 @@ class ProductGallery extends HTMLElement {
     const media = this.mediaData.find((m) => m.id == mediaId);
     if (!media) {
       console.error(`renderPopupViewer: Media not found for ID: ${mediaId}`);
+      viewer.innerHTML = '<p>Media not found.</p>';
       return;
     }
 
-    viewer.innerHTML = '';
+    viewer.innerHTML = ''; // Clear previous content
     viewer.classList.remove('popup-media-viewer-media-zoom-img');
-    viewer.classList.remove('is-zoomed-simple'); // Ensure this is also reset
+    viewer.classList.remove('is-zoomed-simple');
 
     if (media.media_type === 'image') {
       console.log('renderPopupViewer: Media type is image.');
@@ -631,12 +668,12 @@ class ProductGallery extends HTMLElement {
       skeletonWrapper.className = 'image-skeleton-wrapper';
 
       const img = document.createElement('img');
-      img.src = media.preview_image.src.replace(/width=\d+/, 'width=1600'); // Use higher res
+      // Use higher resolution if available, otherwise fallback to preview_image.src
+      img.src = media.preview_image?.src ? media.preview_image.src.replace(/width=\d+/, 'width=1600') : '';
       img.alt = media.alt || '';
       img.loading = 'eager';
       img.className = 'popup-media-zoom-img';
 
-      // Set initial transform styles
       img.style.transition = 'transform 0.3s ease, transform-origin 0.1s ease';
       img.style.transform = 'scale(1)';
       img.style.transformOrigin = 'center center';
@@ -653,7 +690,9 @@ class ProductGallery extends HTMLElement {
 
       let isZoomed = false;
 
-      function handleMouseMove(e) {
+      // Ensure previous event listeners are removed before adding new ones
+      viewer.removeEventListener('mousemove', this._handlePopupMouseMove);
+      this._handlePopupMouseMove = (e) => { // Store handler for removal
         if (!isZoomed) return;
 
         const rect = viewer.getBoundingClientRect();
@@ -661,20 +700,22 @@ class ProductGallery extends HTMLElement {
         const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
 
         img.style.transformOrigin = `${xPercent}% ${yPercent}%`;
-      }
+      };
+      viewer.addEventListener('mousemove', this._handlePopupMouseMove);
 
-      viewer.addEventListener('mousemove', handleMouseMove);
-
-      viewer.addEventListener('click', () => {
+      viewer.removeEventListener('click', this._handlePopupClick);
+      this._handlePopupClick = () => { // Store handler for removal
         isZoomed = !isZoomed;
         viewer.classList.toggle('is-zoomed-simple', isZoomed);
         console.log(`renderPopupViewer: Viewer clicked, isZoomed: ${isZoomed}`);
 
-        const isLandscape = img.naturalWidth > img.naturalHeight;
+        // Safely check for naturalWidth/Height before calculating aspect ratio
+        const isLandscape = img.naturalWidth && img.naturalHeight ? img.naturalWidth > img.naturalHeight : true;
         const zoomLevel = isLandscape ? 1.5 : 1.2;
 
         img.style.transform = isZoomed ? `scale(${zoomLevel})` : 'scale(1)';
-      });
+      };
+      viewer.addEventListener('click', this._handlePopupClick);
 
       return;
     }
@@ -732,10 +773,26 @@ class ProductGallery extends HTMLElement {
         viewer.appendChild(video);
         console.log(`renderPopupViewer: Native video appended for ID: ${media.id}`);
       } else {
-        viewer.innerHTML = '<p>Video format not supported.</p>';
+        viewer.innerHTML = '<p>Video format not supported or no valid source found.</p>';
         console.warn(`renderPopupViewer: No valid video source found for ID: ${media.id}`);
       }
 
+      return;
+    }
+
+    // --- Model ---
+    if (media.media_type === 'model') {
+      console.log('renderPopupViewer: Media type is 3D model.');
+      const model = document.createElement('model-viewer');
+      model.src = media.url;
+      model.setAttribute('alt', media.alt || '3D model');
+      model.setAttribute('camera-controls', 'true');
+      model.setAttribute('camera-orbit', '0deg 75deg 2m');
+      model.setAttribute('data-shopify-feature', '1.12'); // Or relevant feature tag
+      model.style.width = '100%';
+      model.style.height = '100%';
+      viewer.appendChild(model);
+      console.log(`renderPopupViewer: 3D model appended for ID: ${media.id}`);
       return;
     }
 
@@ -747,73 +804,69 @@ class ProductGallery extends HTMLElement {
   renderVideoThumbItem(media) {
     console.log(`renderVideoThumbItem: Creating video thumbnail for media ID: ${media.id}`);
     const btn = document.createElement('button');
-    btn.className = 'video-thumb-item';
+    btn.className = 'popup-thumb video-thumb-item'; // Added popup-thumb class for consistency
     btn.type = 'button';
     btn.setAttribute('data-media-id', media.id);
 
+    // Safely access preview_image properties
     const thumbnailSrc = media.preview_image?.src || '';
     const videoTitle = media.alt || 'Untitled video';
 
     btn.innerHTML = `
       <div class="video-thumb-image">
-        <img src="${thumbnailSrc}" width="130" height="80" loading="lazy" />
+        <img src="${thumbnailSrc}" width="130" height="80" loading="lazy" alt="${videoTitle}" />
       </div>
       <div class="video-thumb-meta">
         <p class="video-title">${videoTitle}</p>
       </div>
     `;
 
-    // It's crucial to ensure this click listener isn't duplicated if already in openPopup
-    // For now, I'm duplicating it in openPopup's loop for clarity in debugging
-    // But typically you'd only define it once.
-    // If you uncomment the listener in openPopup, you can remove this one.
-    // btn.addEventListener('click', () => {
-    //   console.log(`renderVideoThumbItem: Clicked video thumbnail for mediaId: ${media.id}`);
-    //   this.renderPopupViewer(
-    //     media.id,
-    //     document.querySelector('[data-popup-viewer]'),
-    //   );
-    //   this.updatePopupThumbActive(media.id);
-    // });
-
     return btn;
   }
 
   updatePopupThumbActive(mediaId) {
-  console.log(`updatePopupThumbActive: Setting active thumbnail in popup to ${mediaId}`);
-  const popup = document.getElementById('product-gallery-popup');
-  if (!popup) {
-    console.warn('updatePopupThumbActive: Popup not found.');
-    return;
-  }
-  const thumbs = popup.querySelectorAll('[data-media-id]');
-
-  thumbs.forEach((thumb) => {
-    const thumbId = thumb.getAttribute('data-media-id');
-    const isActive = thumbId === String(mediaId); // Ensure mediaId is compared as a string
-    thumb.classList.toggle('is-active', isActive);
-    if (isActive) {
-      console.log(`updatePopupThumbActive: Popup thumbnail ${thumbId} set to active.`);
+    console.log(`updatePopupThumbActive: Setting active thumbnail in popup to ${mediaId}`);
+    const popup = document.getElementById('product-gallery-popup');
+    if (!popup) {
+      console.warn('updatePopupThumbActive: Popup not found.');
+      return;
     }
-  });
-}
+    const thumbs = popup.querySelectorAll('[data-media-id]');
+
+    thumbs.forEach((thumb) => {
+      const thumbId = thumb.getAttribute('data-media-id');
+      const isActive = thumbId == String(mediaId); // Ensure mediaId is compared as a string
+      thumb.classList.toggle('is-active', isActive);
+      if (isActive) {
+        // Scroll active thumbnail into view if necessary
+        thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        console.log(`updatePopupThumbActive: Popup thumbnail ${thumbId} set to active.`);
+      }
+    });
+  }
 
   closePopup() {
     console.log('closePopup: Closing popup.');
     const popup = document.getElementById('product-gallery-popup');
-    const viewer = popup.querySelector('[data-popup-viewer]');
+    const viewer = popup?.querySelector('[data-popup-viewer]');
 
-    if (viewer) viewer.innerHTML = '';
-    viewer.classList.remove('is-zoomed-simple'); // Corrected class name
-    viewer.classList.remove('popup-media-viewer-media-zoom-img'); // Also remove this class on close
+    if (viewer) {
+      viewer.innerHTML = ''; // Clear media content
+      viewer.classList.remove('is-zoomed-simple');
+      viewer.classList.remove('popup-media-viewer-media-zoom-img');
+      // Remove specific event listeners attached to the viewer for zoom
+      viewer.removeEventListener('mousemove', this._handlePopupMouseMove);
+      viewer.removeEventListener('click', this._handlePopupClick);
+    }
 
-    popup.hidden = true;
-    document.body.style.overflow = '';
+    if (popup) popup.hidden = true;
+    document.body.style.overflow = ''; // Reset overflow
     console.log('closePopup: Popup hidden, body overflow reset.');
 
     document.removeEventListener('keydown', this.handleEscClose);
   }
 
+  // Use an arrow function for handleEscClose to maintain 'this' context
   handleEscClose = (e) => {
     if (e.key === 'Escape') {
       console.log('handleEscClose: Escape key pressed.');
