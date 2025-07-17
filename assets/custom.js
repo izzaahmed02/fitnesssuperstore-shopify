@@ -336,24 +336,25 @@ window.addEventListener('DOMContentLoaded', async () => {
 		}
 	}
 
-	const search = document.querySelector('.custom-header-search--input');  
+	const search = document.querySelector('.custom-header-search--input');
 
-	function hidePopup (popup) {
-		popup.style.display = 'none';         
-		document.removeEventListener('click', outsideClose);
-	}
+function hidePopup(popup) {
+  popup.style.display = 'none';
+  document.removeEventListener('click', outsideClose);
+}
 
-	function outsideClose(e) {
+function outsideClose(e) {
   const globoPopup = document.getElementById('ui-id-1');
-  const search = document.getElementById('search-element-id'); // Assuming 'search' is another element, replace 'search-element-id' with its actual ID if needed. If not, remove it.
 
-  // IMPORTANT: Check if globoPopup exists before calling .contains()
-  if (globoPopup) { // Only proceed if globoPopup is found
-    // Also, ensure 'search' exists if you're checking its contains method
+  // Check if globoPopup exists before trying to use it
+  if (globoPopup) {
+    // Check if search exists before trying to use it
     if (!globoPopup.contains(e.target) && (!search || !search.contains(e.target))) {
       hidePopup(globoPopup);
     }
   }
+  // If globoPopup doesn't exist, the function simply does nothing,
+  // avoiding the error.
 }
 
 	setTimeout(() => {
