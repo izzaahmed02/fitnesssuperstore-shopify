@@ -453,7 +453,7 @@ renderPopup() {
 }
 
   renderPopupViewer(mediaId, viewer) {
-    console.log('Rendering popup viewer for media:' ${mediaId});
+    console.log('Rendering popup viewer for media: ${mediaId}');
     const media = this.mediaData.find((m) => m.id == mediaId);
     if (!media) return;
 
