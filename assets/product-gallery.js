@@ -780,23 +780,23 @@ class ProductGallery extends HTMLElement {
   }
 
   updatePopupThumbActive(mediaId) {
-    console.log(`updatePopupThumbActive: Setting active thumbnail in popup to ${mediaId}`);
-    const popup = document.getElementById('product-gallery-popup');
-    if (!popup) {
-      console.warn('updatePopupThumbActive: Popup not found.');
-      return;
-    }
-    const thumbs = popup.querySelectorAll('[data-media-id]');
-
-    thumbs.forEach((thumb) => {
-      const thumbId = thumb.getAttribute('data-media-id');
-      const isActive = thumbId === String(mediaId);
-      thumb.classList.toggle('is-active', isActive);
-      if (isActive) {
-        console.log(`updatePopupThumbActive: Popup thumbnail ${thumbId} set to active.`);
-      }
-    });
+  console.log(`updatePopupThumbActive: Setting active thumbnail in popup to ${mediaId}`);
+  const popup = document.getElementById('product-gallery-popup');
+  if (!popup) {
+    console.warn('updatePopupThumbActive: Popup not found.');
+    return;
   }
+  const thumbs = popup.querySelectorAll('[data-media-id]');
+
+  thumbs.forEach((thumb) => {
+    const thumbId = thumb.getAttribute('data-media-id');
+    const isActive = thumbId === String(mediaId); // Ensure mediaId is compared as a string
+    thumb.classList.toggle('is-active', isActive);
+    if (isActive) {
+      console.log(`updatePopupThumbActive: Popup thumbnail ${thumbId} set to active.`);
+    }
+  });
+}
 
   closePopup() {
     console.log('closePopup: Closing popup.');
