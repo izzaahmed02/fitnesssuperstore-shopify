@@ -425,40 +425,45 @@ class ProductGallery extends HTMLElement {
     };
   }
 
+  // --- Start of modified renderPopup ---
   renderPopup() {
-    console.log('renderPopup: Checking if popup exists.');
-    if (document.getElementById('product-gallery-popup')) {
-      console.log('renderPopup: Popup already exists. Skipping creation.');
-      return;
-    }
-
-    const popupHTML = document.createElement('div');
-    popupHTML.innerHTML = `
-      <div id="product-gallery-popup" class="product-popup-overlay" hidden>
-        <div class="product-popup-backdrop"></div>
-        <div class="product-popup" role="dialog" aria-modal="true">
-          <button class="popup-close" type="button" aria-label="Close popup">×</button>
-          <div class="popup-content">
-            <div class="popup-media-viewer" data-popup-viewer></div>
-            <div class="popup-sidebar">
-              <div class="popup-tabs">
-                <button class="popup-tab is-active" data-tab="images">Images</button>
-                <button class="popup-tab" data-tab="videos">Videos</button>
+    // Only append the popup HTML if it doesn't already exist in the DOM
+    if (!document.getElementById('product-gallery-popup')) {
+      console.log('renderPopup: Popup does not exist. Appending HTML.');
+      const popupHTML = document.createElement('div');
+      popupHTML.innerHTML = `
+        <div id="product-gallery-popup" class="product-popup-overlay" hidden>
+          <div class="product-popup-backdrop"></div>
+          <div class="product-popup" role="dialog" aria-modal="true">
+            <button class="popup-close" type="button" aria-label="Close popup">×</button>
+            <div class="popup-content">
+              <div class="popup-media-viewer" data-popup-viewer></div>
+              <div class="popup-sidebar">
+                <div class="popup-tabs">
+                  <button class="popup-tab is-active" data-tab="images">Images</button>
+                  <button class="popup-tab" data-tab="videos">Videos</button>
+                </div>
+                <div class="popup-thumbnails" data-tab-content="images"></div>
+                <div class="popup-thumbnails hidden" data-tab-content="videos"></div>
               </div>
-              <div class="popup-thumbnails" data-tab-content="images"></div>
-              <div class="popup-thumbnails hidden" data-tab-content="videos"></div>
             </div>
           </div>
         </div>
-      </div>
-    `;
-    document.body.appendChild(popupHTML.firstElementChild);
-    console.log('renderPopup: Popup HTML appended to body.');
+      `;
+      document.body.appendChild(popupHTML.firstElementChild);
+      console.log('renderPopup: Popup HTML appended to body.');
+    } else {
+      console.log('renderPopup: Popup already exists. Skipping HTML creation.');
+    }
   }
+  // --- End of modified renderPopup ---
 
+  // --- Start of modified openPopup ---
   openPopup(mediaId) {
     console.log(`openPopup: Attempting to open popup for mediaId: ${mediaId}`);
+    // Ensure the popup HTML structure is in the DOM
     this.renderPopup();
+    
     const popup = document.getElementById('product-gallery-popup');
     const viewer = popup.querySelector('[data-popup-viewer]');
     const tabImages = popup.querySelector('[data-tab-content="images"]');
@@ -479,6 +484,7 @@ class ProductGallery extends HTMLElement {
     const defaultTab = clickedMedia && (clickedMedia.media_type === 'video' || clickedMedia.media_type === 'external_video') ? 'videos' : 'images';
     console.log(`openPopup: Determined default tab: ${defaultTab} for mediaId: ${mediaId}`);
 
+    // If popup is already open, just update its content and return
     if (!popup.hidden) {
       console.log(`openPopup: Popup already visible, rendering and updating active thumbnail for ${mediaId}.`);
       this.renderPopupViewer(mediaId, viewer);
@@ -486,49 +492,101 @@ class ProductGallery extends HTMLElement {
       return;
     }
 
+    // First, make the popup visible
     popup.hidden = false;
     document.body.style.overflow = 'hidden';
     console.log('openPopup: Popup visibility set to true, body overflow hidden.');
 
+    // Then, render the initial viewer content
     this.renderPopupViewer(mediaId, viewer);
     console.log(`openPopup: Initial call to renderPopupViewer for mediaId: ${mediaId}`);
 
-    tabImages.innerHTML = '';
-    tabVideos.innerHTML = '';
-    console.log('openPopup: Cleared popup tab contents.');
+    // Populate thumbnails and set up tabs only once when opening for the first time
+    // or if they were cleared/not populated (e.g., if popup was removed from DOM)
+    if (tabImages.innerHTML === '' && tabVideos.innerHTML === '') {
+      console.log('openPopup: Populating popup thumbnails and setting up tab listeners.');
+      this.mediaData.forEach((media) => {
+        let btn;
 
-    this.mediaData.forEach((media) => {
-      let btn;
+        if (media.media_type === 'image' && media.preview_image) {
+          btn = document.createElement('button');
+          btn.className = 'popup-thumb';
+          btn.type = 'button';
+          btn.setAttribute('data-media-id', media.id);
 
-      if (media.media_type === 'image' && media.preview_image) {
-        btn = document.createElement('button');
-        btn.className = 'popup-thumb';
-        btn.type = 'button';
-        btn.setAttribute('data-media-id', media.id);
+          const skeletonWrapper = document.createElement('div');
+          const img = document.createElement('img');
+          img.src = media.preview_image.src;
+          img.alt = media.alt || '';
+          img.width = media.preview_image.width;
+          img.height = media.preview_image.height;
+          skeletonWrapper.className = 'image-skeleton-wrapper';
 
-        const skeletonWrapper = document.createElement('div');
-        const img = document.createElement('img');
-        img.src = media.preview_image.src;
-        img.alt = media.alt || '';
-        img.width = media.preview_image.width;
-        img.height = media.preview_image.height;
-        skeletonWrapper.className = 'image-skeleton-wrapper';
+          btn.appendChild(skeletonWrapper);
+          skeletonWrapper.appendChild(img);
 
-        btn.appendChild(skeletonWrapper);
-        skeletonWrapper.appendChild(img);
+          img.onload = () => {
+            skeletonWrapper.classList.add('loaded');
+          };
 
-        img.onload = () => {
-          skeletonWrapper.classList.add('loaded');
-        };
+          btn.addEventListener('click', () => {
+            console.log(`Popup thumbnail click for mediaId: ${media.id}`);
+            const zoomedViewer = popup.querySelector(
+              '.popup-media-viewer.is-zoomed-simple',
+            );
 
-        btn.addEventListener('click', () => {
-          console.log(`Popup thumbnail click for mediaId: ${media.id}`);
+            if (zoomedViewer) {
+              console.log('Popup thumbnail click: Zoomed viewer detected, resetting zoom.');
+              zoomedViewer.classList.remove('is-zoomed-simple');
+              const inner = zoomedViewer.querySelector('.popup-media-inner');
+              if (inner) {
+                inner.style.left = '0px';
+                inner.style.top = '0px';
+              }
+            }
+
+            this.renderPopupViewer(media.id, viewer);
+            this.updatePopupThumbActive(media.id);
+            console.log(`Popup thumbnail click: renderPopupViewer called for ${media.id}`);
+          });
+
+          tabImages.appendChild(btn);
+        } else if (
+          media.media_type === 'video' ||
+          media.media_type === 'external_video'
+        ) {
+          btn = this.renderVideoThumbItem(media);
+          btn.addEventListener('click', () => {
+            console.log(`Popup video thumbnail click for mediaId: ${media.id}`);
+            this.renderPopupViewer(
+              media.id,
+              document.querySelector('[data-popup-viewer]')
+            );
+            this.updatePopupThumbActive(media.id);
+          });
+          tabVideos.appendChild(btn);
+        }
+      });
+      console.log('openPopup: Populated popup thumbnails.');
+
+      // Setup tab listeners
+      tabs.forEach((tab) => {
+        tab.removeEventListener('click', this._handlePopupTabClick); // Ensure no duplicate listeners
+        this._handlePopupTabClick = () => {
+          console.log(`Popup tab click: ${tab.dataset.tab} tab clicked.`);
+          tabs.forEach((t) => t.classList.remove('is-active'));
+          tab.classList.add('is-active');
+
+          const type = tab.dataset.tab;
+          tabImages.classList.toggle('hidden', type !== 'images');
+          tabVideos.classList.toggle('hidden', type !== 'videos');
+
           const zoomedViewer = popup.querySelector(
             '.popup-media-viewer.is-zoomed-simple',
           );
 
           if (zoomedViewer) {
-            console.log('Popup thumbnail click: Zoomed viewer detected, resetting zoom.');
+            console.log('Popup tab click: Zoomed viewer detected, resetting zoom.');
             zoomedViewer.classList.remove('is-zoomed-simple');
             const inner = zoomedViewer.querySelector('.popup-media-inner');
             if (inner) {
@@ -537,30 +595,29 @@ class ProductGallery extends HTMLElement {
             }
           }
 
-          this.renderPopupViewer(media.id, viewer);
-          this.updatePopupThumbActive(media.id);
-          console.log(`Popup thumbnail click: renderPopupViewer called for ${media.id}`);
-        });
+          let firstMedia = null;
+          if (type === 'images') {
+            firstMedia = this.mediaData.find((m) => m.media_type === 'image');
+          } else if (type === 'videos') {
+            firstMedia = this.mediaData.find(
+              (m) =>
+                m.media_type === 'video' || m.media_type === 'external_video',
+            );
+          }
 
-        tabImages.appendChild(btn);
-      } else if (
-        media.media_type === 'video' ||
-        media.media_type === 'external_video'
-      ) {
-        btn = this.renderVideoThumbItem(media);
-        btn.addEventListener('click', () => {
-          console.log(`Popup video thumbnail click for mediaId: ${media.id}`);
-          this.renderPopupViewer(
-            media.id,
-            document.querySelector('[data-popup-viewer]')
-          );
-          this.updatePopupThumbActive(media.id);
-        });
-        tabVideos.appendChild(btn);
-      }
-    });
-    console.log('openPopup: Populated popup thumbnails.');
+          if (firstMedia) {
+            console.log(`Popup tab click: Rendering viewer for first media in ${type} tab: ${firstMedia.id}`);
+            this.renderPopupViewer(firstMedia.id, viewer);
+            this.updatePopupThumbActive(firstMedia.id);
+          } else {
+            console.log(`Popup tab click: No media found for ${type} tab.`);
+          }
+        };
+        tab.addEventListener('click', this._handlePopupTabClick);
+      });
+    }
 
+    // Set active tab based on clicked media
     tabs.forEach((tab) => {
       const isMatch = tab.dataset.tab === defaultTab;
       tab.classList.toggle('is-active', isMatch);
@@ -568,52 +625,6 @@ class ProductGallery extends HTMLElement {
     tabImages.classList.toggle('hidden', defaultTab !== 'images');
     tabVideos.classList.toggle('hidden', defaultTab !== 'videos');
     console.log(`openPopup: Set active tab to ${defaultTab}.`);
-
-    tabs.forEach((tab) => {
-      tab.removeEventListener('click', this._handlePopupTabClick);
-      this._handlePopupTabClick = () => {
-        console.log(`Popup tab click: ${tab.dataset.tab} tab clicked.`);
-        tabs.forEach((t) => t.classList.remove('is-active'));
-        tab.classList.add('is-active');
-
-        const type = tab.dataset.tab;
-        tabImages.classList.toggle('hidden', type !== 'images');
-        tabVideos.classList.toggle('hidden', type !== 'videos');
-
-        const zoomedViewer = popup.querySelector(
-          '.popup-media-viewer.is-zoomed-simple',
-        );
-
-        if (zoomedViewer) {
-          console.log('Popup tab click: Zoomed viewer detected, resetting zoom.');
-          zoomedViewer.classList.remove('is-zoomed-simple');
-          const inner = zoomedViewer.querySelector('.popup-media-inner');
-          if (inner) {
-            inner.style.left = '0px';
-            inner.style.top = '0px';
-          }
-        }
-
-        let firstMedia = null;
-        if (type === 'images') {
-          firstMedia = this.mediaData.find((m) => m.media_type === 'image');
-        } else if (type === 'videos') {
-          firstMedia = this.mediaData.find(
-            (m) =>
-              m.media_type === 'video' || m.media_type === 'external_video',
-          );
-        }
-
-        if (firstMedia) {
-          console.log(`Popup tab click: Rendering viewer for first media in ${type} tab: ${firstMedia.id}`);
-          this.renderPopupViewer(firstMedia.id, viewer);
-          this.updatePopupThumbActive(firstMedia.id);
-        } else {
-          console.log(`Popup tab click: No media found for ${type} tab.`);
-        }
-      };
-      tab.addEventListener('click', this._handlePopupTabClick);
-    });
 
     this.updatePopupThumbActive(mediaId);
     console.log(`openPopup: Initial active popup thumbnail set to ${mediaId}.`);
@@ -623,13 +634,14 @@ class ProductGallery extends HTMLElement {
     document.addEventListener('keydown', this.handleEscClose);
     console.log('openPopup: Close listeners added.');
   }
+  // --- End of modified openPopup ---
+
 
   renderPopupViewer(mediaId, viewer) {
     console.log(`renderPopupViewer: Rendering viewer for mediaId: ${mediaId}`);
     const media = this.mediaData.find((m) => m.id == mediaId);
     if (!media) {
       console.error(`renderPopupViewer: Media not found for ID: ${mediaId}`);
-      //viewer.innerHTML = '<p>Media not found.</p>'; // Remove or comment out this line
       return;
     }
 
