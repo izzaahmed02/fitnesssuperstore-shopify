@@ -32,7 +32,9 @@ class ProductGallery extends HTMLElement {
     this.initThumbnails();
 
     if (this.mediaData.length > 0) {
+      this.activeMediaId = null; // Force reset
       this.setActiveMedia(this.mediaData[0].id);
+
     }
 
     window.addEventListener('resize', this.handleResize.bind(this));
