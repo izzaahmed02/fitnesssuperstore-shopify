@@ -354,15 +354,9 @@ buttons.forEach((btn) => {
   popup.hidden = false;
   document.body.style.overflow = 'hidden';
 
-  // Handle tab active state and default render
-  let defaultRendered = false;
+  // Clear tabs and mark active
   tabs.forEach((tab) => {
-    const isMatch = tab.dataset.tab === defaultTab;
-    tab.classList.toggle('is-active', isMatch);
-
-    if (isMatch && !defaultRendered) {
-      defaultRendered = true;
-    }
+    tab.classList.toggle('is-active', tab.dataset.tab === defaultTab);
   });
 
   tabImages.innerHTML = '';
@@ -405,7 +399,7 @@ buttons.forEach((btn) => {
 
         this.renderPopupViewer(media.id, viewer);
         this.updatePopupThumbActive(media.id);
-        viewer.dataset.currentMediaId = media.id; // Track current image
+        viewer.dataset.currentMediaId = media.id;
       });
 
       tabImages.appendChild(btn);
@@ -413,10 +407,6 @@ buttons.forEach((btn) => {
       btn = this.renderVideoThumbItem(media);
       tabVideos.appendChild(btn);
     }
-  });
-
-  tabs.forEach((tab) => {
-    tab.classList.toggle('is-active', tab.dataset.tab === defaultTab);
   });
 
   tabImages.classList.toggle('hidden', defaultTab !== 'images');
@@ -445,10 +435,12 @@ buttons.forEach((btn) => {
       if (type === 'images') {
         firstMedia = this.mediaData.find((m) => m.media_type === 'image');
       } else if (type === 'videos') {
-        firstMedia = this.mediaData.find((m) => m.media_type === 'video' || m.media_type === 'external_video');
+        firstMedia = this.mediaData.find(
+          (m) => m.media_type === 'video' || m.media_type === 'external_video'
+        );
       }
 
-      if (firstMedia && viewer.dataset.currentMediaId != firstMedia.id) {
+      if (firstMedia && viewer.dataset.currentMediaId !== String(firstMedia.id)) {
         this.renderPopupViewer(firstMedia.id, viewer);
         this.updatePopupThumbActive(firstMedia.id);
         viewer.dataset.currentMediaId = firstMedia.id;
@@ -456,7 +448,8 @@ buttons.forEach((btn) => {
     };
   });
 
-  if (!defaultRendered) {
+  // ✅ Always render clicked image on open
+  if (viewer.dataset.currentMediaId !== String(mediaId)) {
     this.renderPopupViewer(mediaId, viewer);
     this.updatePopupThumbActive(mediaId);
     viewer.dataset.currentMediaId = mediaId;
