@@ -337,7 +337,7 @@ renderPopup() {
 
 openPopup(mediaId) {
 
-  console.log("Opening popup for media:", ${mediaId}, ${new Date().toISOString()});
+
   const popup = document.getElementById('product-gallery-popup');
   if (!popup) {
     console.log('Rendering new popup');
