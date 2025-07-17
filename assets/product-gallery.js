@@ -15,38 +15,39 @@ class ProductGallery extends HTMLElement {
     });
   }
 
-  connectedCallback() {
-    const raw = this.querySelector('[data-product-media]');
-    if (!raw) return;
+connectedCallback() {
+  const raw = this.querySelector('[data-product-media]');
+  if (!raw) return;
 
-    try {
-      this.mediaData = JSON.parse(raw.innerHTML.trim());
-    } catch (err) {
-      console.error('Invalid JSON in <template>', err);
-      return;
-    }
-
-    this.wrapper = this.querySelector('.custom-product-gallery');
-    this.main = this.querySelector('[data-main-media-wrapper]');
-
-    this.initThumbnails();
-
-    if (this.mediaData.length > 0) {
-      // this.setActiveMedia(this.mediaData[0].id);
-    }
-
-    window.addEventListener('resize', this.handleResize.bind(this));
-
-    this.main.addEventListener('click', (e) => {
-      const container = e.target.closest('.main-image-container');
-      if (container) {
-        const media = this.mediaData.find((m) => m.id == this.activeMediaId);
-        if (media.media_type != 'model') {
-          this.openPopup(this.activeMediaId);
-        }
-      }
-    });
+  try {
+    this.mediaData = JSON.parse(raw.innerHTML.trim());
+  } catch (err) {
+    console.error('Invalid JSON in <template>', err);
+    return;
   }
+
+  this.wrapper = this.querySelector('.custom-product-gallery');
+  this.main = this.querySelector('[data-main-media-wrapper]');
+
+  this.initThumbnails();
+
+  if (this.mediaData.length > 0) {
+    this.setActiveMedia(this.mediaData[0].id); // ✅ ensure zoom initializes
+  }
+
+  window.addEventListener('resize', this.handleResize.bind(this));
+
+  this.main.addEventListener('click', (e) => {
+    const container = e.target.closest('.main-image-container');
+    if (container) {
+      const media = this.mediaData.find((m) => m.id == this.activeMediaId);
+      if (media.media_type != 'model') {
+        this.openPopup(this.activeMediaId);
+      }
+    }
+  });
+}
+
 
   handleResize() {
     const activeId = this.activeMediaId;
