@@ -3,6 +3,8 @@ $('.browse-brand .category-tab-content').slick({
   infinite: true,
   draggable: true,
   cssEase: 'linear',
+  swipeToSlide: true,   
+  touchThreshold: 4,  
   slidesToShow: 5,
   slidesToScroll: 1,
    responsive: [
