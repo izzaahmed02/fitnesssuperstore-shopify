@@ -32,7 +32,7 @@ class ProductGallery extends HTMLElement {
     this.initThumbnails();
 
     if (this.mediaData.length > 0) {
-       this.setActiveMedia(this.mediaData[0].id);
+      // this.setActiveMedia(this.mediaData[0].id);
     }
 
     window.addEventListener('resize', this.handleResize.bind(this));
@@ -110,18 +110,6 @@ class ProductGallery extends HTMLElement {
   setActiveMedia(id) {
     if (this.activeMediaId === id) return;
     this.activeMediaId = id;
-
-    // ✅ Remove is-active from all media items
-  this.main.querySelectorAll('[data-media-id]').forEach((el) => {
-    el.classList.remove('is-active');
-  });
-
-  // ✅ Add is-active to current
-  const activeEl = this.main.querySelector(`[data-media-id="${id}"]`);
-  if (activeEl) {
-    activeEl.classList.add('is-active');
-  }
-    
     const media = this.mediaData.find((m) => m.id == id);
     if (!media || !this.main) return;
 
