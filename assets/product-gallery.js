@@ -32,7 +32,7 @@ class ProductGallery extends HTMLElement {
     this.initThumbnails();
 
     if (this.mediaData.length > 0) {
-      // this.setActiveMedia(this.mediaData[0].id);
+       this.setActiveMedia(this.mediaData[0].id);
     }
 
     window.addEventListener('resize', this.handleResize.bind(this));
@@ -107,7 +107,7 @@ class ProductGallery extends HTMLElement {
     });
   }
 
-  setActiveMedia(id) {
+ setActiveMedia(id) {
   if (this.activeMediaId === id) return;
   this.activeMediaId = id;
   const media = this.mediaData.find((m) => m.id == id);
