@@ -332,32 +332,30 @@ buttons.forEach((btn) => {
     document.body.appendChild(popupHTML.firstElementChild);
   }
 
-  openPopup(mediaId) {
+ openPopup(mediaId) {
   const popup = document.getElementById('product-gallery-popup');
   const viewer = popup.querySelector('[data-popup-viewer]');
   const tabImages = popup.querySelector('[data-tab-content="images"]');
   const tabVideos = popup.querySelector('[data-tab-content="videos"]');
   const tabs = popup.querySelectorAll('.popup-tab');
-  if (tabs.length === 0) return;
   const titleContainer = popup.querySelector('[data-popup-title]');
 
+  if (!tabs.length) return;
+
   if (titleContainer) {
-    titleContainer.textContent =
-      this.getAttribute('data-product-title') || '';
+    titleContainer.textContent = this.getAttribute('data-product-title') || '';
   }
 
   const clickedMedia = this.mediaData.find((m) => m.id == mediaId);
-  const defaultTab =
-    clickedMedia?.media_type === 'video' ||
-    clickedMedia?.media_type === 'external_video'
-      ? 'videos'
-      : 'images';
+  const defaultTab = clickedMedia?.media_type === 'video' || clickedMedia?.media_type === 'external_video'
+    ? 'videos'
+    : 'images';
 
   popup.hidden = false;
   document.body.style.overflow = 'hidden';
 
+  // Handle tab active state and default render
   let defaultRendered = false;
-
   tabs.forEach((tab) => {
     const isMatch = tab.dataset.tab === defaultTab;
     tab.classList.toggle('is-active', isMatch);
@@ -407,21 +405,18 @@ buttons.forEach((btn) => {
 
         this.renderPopupViewer(media.id, viewer);
         this.updatePopupThumbActive(media.id);
+        viewer.dataset.currentMediaId = media.id; // Track current image
       });
 
       tabImages.appendChild(btn);
-    } else if (
-      media.media_type === 'video' ||
-      media.media_type === 'external_video'
-    ) {
+    } else if (media.media_type === 'video' || media.media_type === 'external_video') {
       btn = this.renderVideoThumbItem(media);
       tabVideos.appendChild(btn);
     }
   });
 
   tabs.forEach((tab) => {
-    const isMatch = tab.dataset.tab === defaultTab;
-    tab.classList.toggle('is-active', isMatch);
+    tab.classList.toggle('is-active', tab.dataset.tab === defaultTab);
   });
 
   tabImages.classList.toggle('hidden', defaultTab !== 'images');
@@ -450,30 +445,28 @@ buttons.forEach((btn) => {
       if (type === 'images') {
         firstMedia = this.mediaData.find((m) => m.media_type === 'image');
       } else if (type === 'videos') {
-        firstMedia = this.mediaData.find(
-          (m) => m.media_type === 'video' || m.media_type === 'external_video'
-        );
+        firstMedia = this.mediaData.find((m) => m.media_type === 'video' || m.media_type === 'external_video');
       }
 
-      if (firstMedia && firstMedia.id !== viewer.dataset.currentMediaId) {
-  this.renderPopupViewer(firstMedia.id, viewer);
-  this.updatePopupThumbActive(firstMedia.id);
-}
+      if (firstMedia && viewer.dataset.currentMediaId != firstMedia.id) {
+        this.renderPopupViewer(firstMedia.id, viewer);
+        this.updatePopupThumbActive(firstMedia.id);
+        viewer.dataset.currentMediaId = firstMedia.id;
+      }
     };
   });
 
-  // Defer renderPopupViewer to ensure DOM is ready and avoid double rendering
-  // Only render once if not already rendered via tab logic
-if (!defaultRendered) {
-  this.renderPopupViewer(mediaId, viewer);
-  this.updatePopupThumbActive(mediaId);
-}
-
+  if (!defaultRendered) {
+    this.renderPopupViewer(mediaId, viewer);
+    this.updatePopupThumbActive(mediaId);
+    viewer.dataset.currentMediaId = mediaId;
+  }
 
   popup.querySelector('.popup-close').onclick = this.closePopup.bind(this);
   popup.querySelector('.product-popup-backdrop').onclick = this.closePopup.bind(this);
   document.addEventListener('keydown', this.handleEscClose);
 }
+
 
 
   renderPopupViewer(mediaId, viewer) {
