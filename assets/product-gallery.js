@@ -31,9 +31,11 @@ connectedCallback() {
 
   this.initThumbnails();
 
+ requestAnimationFrame(() => {
   if (this.mediaData.length > 0) {
-    this.setActiveMedia(this.mediaData[0].id); // ✅ ensure zoom initializes
+    this.setActiveMedia(this.mediaData[0].id);
   }
+});
 
   window.addEventListener('resize', this.handleResize.bind(this));
 
@@ -331,118 +333,69 @@ buttons.forEach((btn) => {
   }
 
   openPopup(mediaId) {
-    const popup = document.getElementById('product-gallery-popup');
-    const viewer = popup.querySelector('[data-popup-viewer]');
-    const tabImages = popup.querySelector('[data-tab-content="images"]');
-    const tabVideos = popup.querySelector('[data-tab-content="videos"]');
-    const tabs = popup.querySelectorAll('.popup-tab');
-    if (tabs.length === 0) return;
-    const titleContainer = popup.querySelector('[data-popup-title]');
+  const popup = document.getElementById('product-gallery-popup');
+  const viewer = popup.querySelector('[data-popup-viewer]');
+  const tabImages = popup.querySelector('[data-tab-content="images"]');
+  const tabVideos = popup.querySelector('[data-tab-content="videos"]');
+  const tabs = popup.querySelectorAll('.popup-tab');
+  if (tabs.length === 0) return;
+  const titleContainer = popup.querySelector('[data-popup-title]');
 
-    if (titleContainer) {
-      titleContainer.textContent =
-          this.getAttribute('data-product-title') || '';
-    }
-
-    const clickedMedia = this.mediaData.find((m) => m.id == mediaId);
-    const defaultTab =
-        clickedMedia?.media_type === 'video' ||
-        clickedMedia?.media_type === 'external_video'
-            ? 'videos'
-            : 'images';
-
-    popup.hidden = false;
-    document.body.style.overflow = 'hidden';
-
-  //  this.renderPopupViewer(mediaId, viewer);
-
-    // Then skip calling it again in the tab logic unless tab is clicked by user
-let defaultRendered = false;
-
-tabs.forEach((tab) => {
-  const isMatch = tab.dataset.tab === defaultTab;
-  tab.classList.toggle('is-active', isMatch);
-
-  if (isMatch && !defaultRendered) {
-    defaultRendered = true; // ✅ prevent second render
+  if (titleContainer) {
+    titleContainer.textContent =
+      this.getAttribute('data-product-title') || '';
   }
-});
 
-    tabImages.innerHTML = '';
-    tabVideos.innerHTML = '';
+  const clickedMedia = this.mediaData.find((m) => m.id == mediaId);
+  const defaultTab =
+    clickedMedia?.media_type === 'video' ||
+    clickedMedia?.media_type === 'external_video'
+      ? 'videos'
+      : 'images';
 
-    this.mediaData.forEach((media) => {
-      let btn;
+  popup.hidden = false;
+  document.body.style.overflow = 'hidden';
 
-      if (media.media_type === 'image') {
-        btn = document.createElement('button');
-        btn.className = 'popup-thumb';
-        btn.type = 'button';
-        btn.setAttribute('data-media-id', media.id);
+  let defaultRendered = false;
 
-        const skeletonWrapper = document.createElement('div');
-        const img = document.createElement('img');
-        img.src = media.preview_image.src;
-        img.alt = media.alt || '';
-        img.width = media.preview_image.width;
-        img.height = media.preview_image.height;
-        skeletonWrapper.className = 'image-skeleton-wrapper';
+  tabs.forEach((tab) => {
+    const isMatch = tab.dataset.tab === defaultTab;
+    tab.classList.toggle('is-active', isMatch);
 
-        btn.appendChild(skeletonWrapper);
-        skeletonWrapper.appendChild(img);
+    if (isMatch && !defaultRendered) {
+      defaultRendered = true;
+    }
+  });
 
-        img.onload = () => {
-          skeletonWrapper.classList.add('loaded');
-        };
+  tabImages.innerHTML = '';
+  tabVideos.innerHTML = '';
 
-        btn.addEventListener('click', () => {
-          const zoomedViewer = popup.querySelector(
-              '.popup-media-viewer.is-zoomed',
-          );
+  this.mediaData.forEach((media) => {
+    let btn;
 
-          if (zoomedViewer) {
-            zoomedViewer.classList.remove('is-zoomed');
-            const inner = zoomedViewer.querySelector('.popup-media-inner');
-            if (inner) {
-              inner.style.left = '0px';
-              inner.style.top = '0px';
-            }
-          }
+    if (media.media_type === 'image') {
+      btn = document.createElement('button');
+      btn.className = 'popup-thumb';
+      btn.type = 'button';
+      btn.setAttribute('data-media-id', media.id);
 
-          this.renderPopupViewer(media.id, viewer);
-          this.updatePopupThumbActive(media.id);
-        });
+      const skeletonWrapper = document.createElement('div');
+      const img = document.createElement('img');
+      img.src = media.preview_image.src;
+      img.alt = media.alt || '';
+      img.width = media.preview_image.width;
+      img.height = media.preview_image.height;
+      skeletonWrapper.className = 'image-skeleton-wrapper';
 
-        tabImages.appendChild(btn);
-      } else if (
-          media.media_type === 'video' ||
-          media.media_type === 'external_video'
-      ) {
-        btn = this.renderVideoThumbItem(media);
-        tabVideos.appendChild(btn);
-      }
-    });
+      btn.appendChild(skeletonWrapper);
+      skeletonWrapper.appendChild(img);
 
-    tabs.forEach((tab) => {
-      const isMatch = tab.dataset.tab === defaultTab;
-      tab.classList.toggle('is-active', isMatch);
-    });
-    tabImages.classList.toggle('hidden', defaultTab !== 'images');
-    tabVideos.classList.toggle('hidden', defaultTab !== 'videos');
+      img.onload = () => {
+        skeletonWrapper.classList.add('loaded');
+      };
 
-    tabs.forEach((tab) => {
-      tab.onclick = () => {
-        tabs.forEach((t) => t.classList.remove('is-active'));
-        tab.classList.add('is-active');
-
-        const type = tab.dataset.tab;
-        tabImages.classList.toggle('hidden', type !== 'images');
-        tabVideos.classList.toggle('hidden', type !== 'videos');
-
-        const zoomedViewer = popup.querySelector(
-            '.popup-media-viewer.is-zoomed',
-        );
-
+      btn.addEventListener('click', () => {
+        const zoomedViewer = popup.querySelector('.popup-media-viewer.is-zoomed');
         if (zoomedViewer) {
           zoomedViewer.classList.remove('is-zoomed');
           const inner = zoomedViewer.querySelector('.popup-media-inner');
@@ -452,30 +405,74 @@ tabs.forEach((tab) => {
           }
         }
 
-        let firstMedia = null;
-        if (type === 'images') {
-          firstMedia = this.mediaData.find((m) => m.media_type === 'image');
-        } else if (type === 'videos') {
-          firstMedia = this.mediaData.find(
-              (m) =>
-                  m.media_type === 'video' || m.media_type === 'external_video',
-          );
-        }
+        this.renderPopupViewer(media.id, viewer);
+        this.updatePopupThumbActive(media.id);
+      });
 
-        if (firstMedia) {
-          this.renderPopupViewer(firstMedia.id, viewer);
-          this.updatePopupThumbActive(firstMedia.id);
-        }
-      };
-    });
+      tabImages.appendChild(btn);
+    } else if (
+      media.media_type === 'video' ||
+      media.media_type === 'external_video'
+    ) {
+      btn = this.renderVideoThumbItem(media);
+      tabVideos.appendChild(btn);
+    }
+  });
 
+  tabs.forEach((tab) => {
+    const isMatch = tab.dataset.tab === defaultTab;
+    tab.classList.toggle('is-active', isMatch);
+  });
+
+  tabImages.classList.toggle('hidden', defaultTab !== 'images');
+  tabVideos.classList.toggle('hidden', defaultTab !== 'videos');
+
+  tabs.forEach((tab) => {
+    tab.onclick = () => {
+      tabs.forEach((t) => t.classList.remove('is-active'));
+      tab.classList.add('is-active');
+
+      const type = tab.dataset.tab;
+      tabImages.classList.toggle('hidden', type !== 'images');
+      tabVideos.classList.toggle('hidden', type !== 'videos');
+
+      const zoomedViewer = popup.querySelector('.popup-media-viewer.is-zoomed');
+      if (zoomedViewer) {
+        zoomedViewer.classList.remove('is-zoomed');
+        const inner = zoomedViewer.querySelector('.popup-media-inner');
+        if (inner) {
+          inner.style.left = '0px';
+          inner.style.top = '0px';
+        }
+      }
+
+      let firstMedia = null;
+      if (type === 'images') {
+        firstMedia = this.mediaData.find((m) => m.media_type === 'image');
+      } else if (type === 'videos') {
+        firstMedia = this.mediaData.find(
+          (m) => m.media_type === 'video' || m.media_type === 'external_video'
+        );
+      }
+
+      if (firstMedia) {
+        this.renderPopupViewer(firstMedia.id, viewer);
+        this.updatePopupThumbActive(firstMedia.id);
+      }
+    };
+  });
+
+  // Defer renderPopupViewer to ensure DOM is ready and avoid double rendering
+  requestAnimationFrame(() => {
+    this.renderPopupViewer(mediaId, viewer);
     this.updatePopupThumbActive(mediaId);
+  });
 
-    popup.querySelector('.popup-close').onclick = this.closePopup.bind(this);
-    popup.querySelector('.product-popup-backdrop').onclick =
-        this.closePopup.bind(this);
-    document.addEventListener('keydown', this.handleEscClose);
-  }
+  popup.querySelector('.popup-close').onclick = this.closePopup.bind(this);
+  popup.querySelector('.product-popup-backdrop').onclick = this.closePopup.bind(this);
+  document.addEventListener('keydown', this.handleEscClose);
+}
+
 
   renderPopupViewer(mediaId, viewer) {
     const media = this.mediaData.find((m) => m.id == mediaId);
