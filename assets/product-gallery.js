@@ -332,32 +332,27 @@ buttons.forEach((btn) => {
     document.body.appendChild(popupHTML.firstElementChild);
   }
 
- openPopup(mediaId) {
+openPopup(mediaId) {
   const popup = document.getElementById('product-gallery-popup');
   const viewer = popup.querySelector('[data-popup-viewer]');
   const tabImages = popup.querySelector('[data-tab-content="images"]');
   const tabVideos = popup.querySelector('[data-tab-content="videos"]');
   const tabs = popup.querySelectorAll('.popup-tab');
+  if (tabs.length === 0) return;
+
   const titleContainer = popup.querySelector('[data-popup-title]');
-
-  if (!tabs.length) return;
-
   if (titleContainer) {
     titleContainer.textContent = this.getAttribute('data-product-title') || '';
   }
 
   const clickedMedia = this.mediaData.find((m) => m.id == mediaId);
-  const defaultTab = clickedMedia?.media_type === 'video' || clickedMedia?.media_type === 'external_video'
-    ? 'videos'
-    : 'images';
+  const defaultTab =
+    clickedMedia?.media_type === 'video' || clickedMedia?.media_type === 'external_video'
+      ? 'videos'
+      : 'images';
 
   popup.hidden = false;
   document.body.style.overflow = 'hidden';
-
-  // Clear tabs and mark active
-  tabs.forEach((tab) => {
-    tab.classList.toggle('is-active', tab.dataset.tab === defaultTab);
-  });
 
   tabImages.innerHTML = '';
   tabVideos.innerHTML = '';
@@ -409,6 +404,11 @@ buttons.forEach((btn) => {
     }
   });
 
+  tabs.forEach((tab) => {
+    const isMatch = tab.dataset.tab === defaultTab;
+    tab.classList.toggle('is-active', isMatch);
+  });
+
   tabImages.classList.toggle('hidden', defaultTab !== 'images');
   tabVideos.classList.toggle('hidden', defaultTab !== 'videos');
 
@@ -448,17 +448,26 @@ buttons.forEach((btn) => {
     };
   });
 
-  // ✅ Always render clicked image on open
-  if (viewer.dataset.currentMediaId !== String(mediaId)) {
-    this.renderPopupViewer(mediaId, viewer);
-    this.updatePopupThumbActive(mediaId);
-    viewer.dataset.currentMediaId = mediaId;
-  }
+  // ✅ DEFER INITIAL RENDER TO AFTER DOM IS READY
+  requestAnimationFrame(() => {
+    const freshViewer = popup.querySelector('[data-popup-viewer]');
+    if (!freshViewer) {
+      console.warn('[Popup] Viewer not found after opening.');
+      return;
+    }
+
+    if (freshViewer.dataset.currentMediaId !== String(mediaId)) {
+      this.renderPopupViewer(mediaId, freshViewer);
+      this.updatePopupThumbActive(mediaId);
+      freshViewer.dataset.currentMediaId = mediaId;
+    }
+  });
 
   popup.querySelector('.popup-close').onclick = this.closePopup.bind(this);
   popup.querySelector('.product-popup-backdrop').onclick = this.closePopup.bind(this);
   document.addEventListener('keydown', this.handleEscClose);
 }
+
 
 
 
