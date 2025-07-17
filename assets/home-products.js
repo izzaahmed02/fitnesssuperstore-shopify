@@ -100,9 +100,9 @@
               settings: {
                 slidesToShow: 2,
                 dots: true,
-                draggable: true,
-                swipe: true,
-                touchMove: true,
+                draggable: false,
+                swipe: false,
+                touchMove: false,
               },
             },
           ]
