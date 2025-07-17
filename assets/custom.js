@@ -346,15 +346,11 @@ function hidePopup(popup) {
 function outsideClose(e) {
   const globoPopup = document.getElementById('ui-id-1');
 
-  // Check if globoPopup exists before trying to use it
   if (globoPopup) {
-    // Check if search exists before trying to use it
     if (!globoPopup.contains(e.target) && (!search || !search.contains(e.target))) {
       hidePopup(globoPopup);
     }
   }
-  // If globoPopup doesn't exist, the function simply does nothing,
-  // avoiding the error.
 }
 
 	setTimeout(() => {
