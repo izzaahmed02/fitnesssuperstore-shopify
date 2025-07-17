@@ -166,134 +166,133 @@ class ProductGallery extends HTMLElement {
   }
 
   initZoom(container, media, forceStart = false) {
-    if (!this.isDesktop()) return;
-    const img = container.querySelector('img');
-    if (!img || !media.preview_image || container.dataset.zoomInitialized === 'true') return;
-    container.dataset.zoomInitialized = 'true';
+  if (!this.isDesktop()) return;
+  const img = container.querySelector('img');
+  if (!img || !media.preview_image || container.dataset.zoomInitialized === 'true') return;
 
-    const zoomResult = document.createElement('div');
-    zoomResult.className = 'zoom-result';
-    container.appendChild(zoomResult);
+  // Reset zoom initialization flag
+  container.dataset.zoomInitialized = 'true';
 
-    const lens = document.createElement('div');
-    lens.className = 'zoom-lens';
-    lens.style.zIndex = '100';
-    container.appendChild(lens);
+  const zoomResult = document.createElement('div');
+  zoomResult.className = 'zoom-result';
+  container.appendChild(zoomResult);
 
-    const zoomImg = new Image();
-    const imgAspect = media.preview_image.width / media.preview_image.height;
-    const zoomWidth = 1000;
-    const zoomHeight = Math.round(zoomWidth / imgAspect);
-    zoomImg.src = media.preview_image.src.replace(/width=\d+/, `width=${zoomWidth}`).replace(/height=\d+/, `height=${zoomHeight}`);
-    zoomImg.style.transform = 'scale(0.7)';
-    zoomImg.style.transformOrigin = 'center';
-    zoomResult.appendChild(zoomImg);
+  const lens = document.createElement('div');
+  lens.className = 'zoom-lens';
+  lens.style.zIndex = '100';
+  container.appendChild(lens);
 
-    zoomImg.onload = () => {
-      const minZoomRatio = 1.2;
-      const zoomRatio = zoomImg.naturalWidth / img.clientWidth;
-      if (zoomImg.naturalWidth < 750 || zoomRatio < minZoomRatio) {
-        zoomResult.remove();
-        lens.remove();
-        return;
-      }
+  const zoomImg = new Image();
+  const imgAspect = media.preview_image.width / media.preview_image.height;
+  const zoomWidth = 1000;
+  const zoomHeight = Math.round(zoomWidth / imgAspect);
+  zoomImg.src = media.preview_image.src.replace(/width=\d+/, `width=${zoomWidth}`).replace(/height=\d+/, `height=${zoomHeight}`);
+  zoomImg.style.transform = 'scale(0.7)';
+  zoomImg.style.transformOrigin = 'center';
+  zoomResult.appendChild(zoomImg);
 
-      const isLandscape = media.preview_image.width > media.preview_image.height;
-      const scaleX = zoomImg.naturalWidth / img.clientWidth;
-      const scaleY = zoomImg.naturalHeight / img.clientHeight;
+  zoomImg.onload = () => {
+    const minZoomRatio = 1.2;
+    const zoomRatio = zoomImg.naturalWidth / img.clientWidth;
+    if (zoomImg.naturalWidth < 750 || zoomRatio < minZoomRatio) {
+      zoomResult.remove();
+      lens.remove();
+      return;
+    }
 
-      requestAnimationFrame(() => {
-        const prevDisplay = zoomResult.style.display;
-        const prevVisibility = zoomResult.style.visibility;
-        zoomResult.style.visibility = 'hidden';
-        zoomResult.style.display = 'block';
+    const isLandscape = media.preview_image.width > media.preview_image.height;
+    const scaleX = zoomImg.naturalWidth / img.clientWidth;
+    const scaleY = zoomImg.naturalHeight / img.clientHeight;
 
-        const zoomW = zoomResult.offsetWidth;
-        const zoomH = zoomResult.offsetHeight;
+    requestAnimationFrame(() => {
+      const prevDisplay = zoomResult.style.display;
+      const prevVisibility = zoomResult.style.visibility;
+      zoomResult.style.visibility = 'hidden';
+      zoomResult.style.display = 'block';
 
-        zoomResult.style.display = prevDisplay;
-        zoomResult.style.visibility = prevVisibility;
+      const zoomW = zoomResult.offsetWidth;
+      const zoomH = zoomResult.offsetHeight;
 
-        if (!zoomW || !zoomH) return;
+      zoomResult.style.display = prevDisplay;
+      zoomResult.style.visibility = prevVisibility;
 
-        const lensW = zoomW / scaleX;
-        const lensH = zoomH / scaleY;
+      if (!zoomW || !zoomH) return;
 
-        lens.style.width = `${Math.min(lensW, img.clientWidth)}px`;
-        lens.style.height = `${Math.min(lensH, img.clientHeight)}px`;
+      const lensW = zoomW / scaleX;
+      const lensH = zoomH / scaleY;
 
-        const announcementBarSection = document.querySelector('.announcement-bar-section');
-        const headerWrapper = document.querySelector('.header-wrapper');
+      lens.style.width = `${Math.min(lensW, img.clientWidth)}px`;
+      lens.style.height = `${Math.min(lensH, img.clientHeight)}px`;
 
-        const updateZoomTop = () => {
-          const threshold = (announcementBarSection?.offsetHeight || 0) + (headerWrapper?.offsetHeight || 0);
-          document.documentElement.style.setProperty('--header-height', `${threshold}px`);
+      const announcementBarSection = document.querySelector('.announcement-bar-section');
+      const headerWrapper = document.querySelector('.header-wrapper');
 
-          if (!isLandscape) {
-            zoomResult.style.top = '14px';
-            zoomResult.style.height = `calc(98vh - ${threshold}px)`;
-          } else {
-            zoomResult.style.top = '';
-            zoomResult.style.height = '';
-          }
-        };
+      const updateZoomTop = () => {
+        const threshold = (announcementBarSection?.offsetHeight || 0) + (headerWrapper?.offsetHeight || 0);
+        document.documentElement.style.setProperty('--header-height', `${threshold}px`);
 
-        updateZoomTop();
-        window.addEventListener('scroll', updateZoomTop, { passive: true });
-      });
-
-      let frameId;
-      const moveLens = (e) => {
-        if (frameId) cancelAnimationFrame(frameId);
-        frameId = requestAnimationFrame(() => {
-          const rect = img.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          const lensHalfW = lens.offsetWidth / 2;
-          const lensHalfH = lens.offsetHeight / 2;
-          let left = x - lensHalfW;
-          let top = y - lensHalfH;
-
-          left = Math.max(0, Math.min(left, img.clientWidth - lens.offsetWidth));
-          top = Math.max(0, Math.min(top, img.clientHeight - lens.offsetHeight));
-
-          lens.style.left = `${left}px`;
-          lens.style.top = `${top}px`;
-
-          const scaleX = zoomImg.naturalWidth / img.clientWidth;
-          const scaleY = zoomImg.naturalHeight / img.clientHeight;
-
-          zoomResult.scrollLeft = (left + lensHalfW) * scaleX - zoomResult.clientWidth / 2;
-          zoomResult.scrollTop = (top + lensHalfH) * scaleY - zoomResult.clientHeight / 2;
-        });
+        if (!isLandscape) {
+          zoomResult.style.top = '14px';
+          zoomResult.style.height = `calc(98vh - ${threshold}px)`;
+        } else {
+          zoomResult.style.top = '';
+          zoomResult.style.height = '';
+        }
       };
 
-      container.addEventListener('mousemove', moveLens);
-      container.addEventListener('mouseenter', () => {
+      updateZoomTop();
+      window.addEventListener('scroll', updateZoomTop, { passive: true });
+    });
+
+    let frameId;
+    const moveLens = (e) => {
+      if (frameId) cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        const rect = img.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const lensHalfW = lens.offsetWidth / 2;
+        const lensHalfH = lens.offsetHeight / 2;
+        let left = x - lensHalfW;
+        let top = y - lensHalfH;
+
+        left = Math.max(0, Math.min(left, img.clientWidth - lens.offsetWidth));
+        top = Math.max(0, Math.min(top, img.clientHeight - lens.offsetHeight));
+
+        lens.style.left = `${left}px`;
+        lens.style.top = `${top}px`;
+
+        zoomResult.scrollLeft = (left + lensHalfW) * scaleX - zoomResult.clientWidth / 2;
+        zoomResult.scrollTop = (top + lensHalfH) * scaleY - zoomResult.clientHeight / 2;
+      });
+    };
+
+    container.addEventListener('mousemove', moveLens);
+    container.addEventListener('mouseenter', () => {
+      zoomResult.style.display = 'block';
+      lens.style.display = 'block';
+    });
+    container.addEventListener('mouseleave', () => {
+      zoomResult.style.display = 'none';
+      lens.style.display = 'none';
+    });
+
+    zoomResult.addEventListener('mouseenter', () => {
+      zoomResult.style.display = 'none';
+      lens.style.display = 'none';
+    });
+
+    if (forceStart && this.lastMouseX && this.lastMouseY) {
+      const rect = img.getBoundingClientRect();
+      const inside = this.lastMouseX > rect.left && this.lastMouseX < rect.right && this.lastMouseY > rect.top && this.lastMouseY < rect.bottom;
+      if (inside) {
         zoomResult.style.display = 'block';
         lens.style.display = 'block';
-      });
-      container.addEventListener('mouseleave', () => {
-        zoomResult.style.display = 'none';
-        lens.style.display = 'none';
-      });
-
-      zoomResult.addEventListener('mouseenter', () => {
-        zoomResult.style.display = 'none';
-        lens.style.display = 'none';
-      });
-
-      if (forceStart && this.lastMouseX && this.lastMouseY) {
-        const rect = img.getBoundingClientRect();
-        const inside = this.lastMouseX > rect.left && this.lastMouseX < rect.right && this.lastMouseY > rect.top && this.lastMouseY < rect.bottom;
-        if (inside) {
-          zoomResult.style.display = 'block';
-          lens.style.display = 'block';
-          moveLens({ clientX: this.lastMouseX, clientY: this.lastMouseY });
-        }
+        moveLens({ clientX: this.lastMouseX, clientY: this.lastMouseY });
       }
-    };
-  }
+    }
+  };
+}
   renderPopup() {
     if (document.getElementById('product-gallery-popup')) return;
 
