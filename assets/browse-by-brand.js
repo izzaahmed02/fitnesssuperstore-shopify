@@ -10,7 +10,7 @@ $('.browse-brand .category-tab-content').slick({
    responsive: [
       { breakpoint: 1300, settings: { slidesToShow: 4 }},
       { breakpoint: 1024, settings: { slidesToShow: 3 }},
-      { breakpoint: 989,  settings: { slidesToShow: 2, touchThreshold: 8, slidesToShow: 5 }}
+      { breakpoint: 989,  settings: { slidesToShow: 2, touchThreshold: 8 }}
     ]
 });
 	
