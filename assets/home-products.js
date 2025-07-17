@@ -65,7 +65,7 @@
 
 
     $('.home-products .featured_products_container').slick({
-  dots: true,
+  dots: false,
   arrows: true,
   infinite: false,
   autoplay: false,
