@@ -154,7 +154,7 @@ class MobileGallery extends HTMLElement {
       $(this.slider).slick({
         dots: true,
         appendDots: this.dots,
-        arrows: false,
+        arrows: true,
         infinite: false,
         adaptiveHeight: true,
         lazyLoad: 'ondemand',
