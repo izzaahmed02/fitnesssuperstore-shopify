@@ -155,6 +155,13 @@ connectedCallback() {
       model.setAttribute('data-shopify-feature', '1.12');
       container.appendChild(model);
     }
+
+    // Update thumbnail button active state
+const buttons = this.querySelectorAll('.thumbnail-btn');
+buttons.forEach((btn) => {
+  const btnId = btn.getAttribute('data-media-id');
+  btn.classList.toggle('is-active', btnId === id);
+});
   }
 
   isDesktop() {
@@ -341,6 +348,18 @@ connectedCallback() {
     document.body.style.overflow = 'hidden';
 
     this.renderPopupViewer(mediaId, viewer);
+
+    // Then skip calling it again in the tab logic unless tab is clicked by user
+let defaultRendered = false;
+
+tabs.forEach((tab) => {
+  const isMatch = tab.dataset.tab === defaultTab;
+  tab.classList.toggle('is-active', isMatch);
+
+  if (isMatch && !defaultRendered) {
+    defaultRendered = true; // ✅ prevent second render
+  }
+});
 
     tabImages.innerHTML = '';
     tabVideos.innerHTML = '';
