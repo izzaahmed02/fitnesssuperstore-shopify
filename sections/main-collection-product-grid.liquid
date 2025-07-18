@@ -51,27 +51,20 @@
     {% if collection.metafields.custom.related_collections %}
                    <div class="collection-hero__related-collections-wrapper">
                     <ul class="collection-hero__related-collections">
-                        {% for related in collection.metafields.custom.related_collections.value %}
-                            {% assign active_class = '' %}
-                            {% if related.url == current_url %}
-                                {% assign active_class = 'active' %}
-                            {% elsif forloop.first and match_found == false %}
-                                {% assign active_class = 'active' %}
-                            {% endif %}
-                            {% if forloop.first %}
-                                <li>
-                                    <a href="{{ related.url }}"
-                                       class="collection-hero__related-collection {{ active_class }}">All</a>
-                                </li>
-                            {% else %}
-                                <li>
-                                    <a href="{{ related.url }}"
-                                       class="collection-hero__related-collection {{ active_class }}">
-                                        {{ related.title }}
-                                    </a>
-                                </li>
-                            {% endif %}
-                        {% endfor %}
+                                         {% assign current_url = collection.url %}
+
+{% for related in collection.metafields.custom.related_collections.value %}
+  {% assign active_class = '' %}
+  {% if related.url == current_url %}
+    {% assign active_class = 'active' %}
+  {% endif %}
+  
+  <li>
+    <a href="{{ related.url }}" class="collection-hero__related-collection {{ active_class }}">
+      {{ related.title }}
+    </a>
+  </li>
+{% endfor %}
                     </ul>
                 </div>
                 {% endif %}
