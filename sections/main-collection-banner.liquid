@@ -1,140 +1,50 @@
+
+
 {% comment %}theme-check-disable ImgLazyLoading{% endcomment %}
 {{ 'component-collection-hero.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
-    @media screen and (max-width: 749px) {
+  @media screen and (max-width: 749px) {
     .collection-hero--with-image .collection-hero__inner {
-    padding-bottom: calc({{ settings.media_shadow_vertical_offset | at_least: 0 }}px + 2rem);
-     }
+      padding-bottom: calc({{ settings.media_shadow_vertical_offset | at_least: 0 }}px + 2rem);
     }
+  }
 {%- endstyle -%}
 
-
-
 <div class="collection-hero{% if section.settings.show_collection_image and collection.image %} collection-hero--with-image{% endif %} color-{{ section.settings.color_scheme }} gradient">
-    <div class="collection-hero__inner page-width {% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
-        <div class="collection-hero__text-wrapper">
-            <h1 class="collection-hero__title">
-                <span class="visually-hidden">{{ 'sections.collection_template.title' | t }}: </span>
-                {{- collection.title | escape -}}
-            </h1>
-            {% if section.settings.show_collection_description %}
-                <div class="collection-hero__description">
-                    {{ collection.description }}
-                </div>
-            {% endif %}
-            {% comment %}
-            {% if collection.metafields.custom.related_collections != blank %}
-                {% assign current_url = collection.url %}
-                {% assign match_found = false %}
-                {% for related in collection.metafields.custom.related_collections.value %}
-                    {% if related.url == current_url %}
-                        {% assign match_found = true %}
-                    {% endif %}
-                {% endfor %}
-                {%- assign subCategoriesCount = 0 -%}
-                {%- for subCategory in collection.metafields.custom.related_collections.value -%}
-                {%- assign subCategoriesCount = subCategoriesCount | plus: 1 -%}
-                {%- endfor -%}
-                {% if subCategoriesCount > 1 %}
-                   <div class="collection-hero__related-collections-wrapper">
-                    <button class="collection-hero__related-collections-toggle" aria-expanded="false">
-                        <span>{{ section.settings.related_collections_toggle | default: "Browse subcategories" }}</span>
-                        <svg class="icon icon-caret" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="#B3B3B3"></path>
-                        </svg>
-                    </button>
-                    <ul class="collection-hero__related-collections">
-                        {%- assign related_collections_sorted =
-                        collection.metafields.custom.related_collections.value
-                        | sort: 'title' -%}
+  <div class="collection-hero__inner {% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
+    <div class="collection-hero__text-wrapper">
+      <h1 class="collection-hero__title">
+        <span class="visually-hidden">{{ 'sections.collection_template.title' | t }}: </span>
+        {{- collection.title | escape -}}&nbsp;({{ collection.all_products_count }})
+      </h1>
 
-                        {%- assign match_found = false -%}
-                        {%- for related in related_collections_sorted -%}
-                        {%- assign active_class = '' -%}
+      {%- if section.settings.show_collection_description -%}
+        <div class="collection-hero__description rte">{{ collection.description }}</div>
+      {%- endif -%}
+    </div>
 
-                        {%- if related.url == current_url -%}
-                            {%- assign active_class = 'active' -%}
-                        {%- assign match_found = true -%}
-                        {%- elsif forloop.first and match_found == false -%}
-                            {%- assign active_class = 'active' -%}
-                        {%- endif -%}
-
-                          {% if forloop.first %}
-                                <li>
-                                    <a href="{{ related.url }}"
-                                       class="collection-hero__related-collection {{ active_class }}">All</a>
-                                </li>
-                            {% else %}
-                                <li>
-                                    <a href="{{ related.url }}"
-                                       class="collection-hero__related-collection {{ active_class }}">
-                                        {{ related.title }}
-                                    </a>
-                                </li>
-                            {% endif %}
-                    {%- endfor -%}
-                    </ul>
-                </div>
-                {% endif %}
-            {% endif %} {% endcomment %}
-
-
-                   {% if collection.metafields.custom.related_collections != blank %}
-                {% assign current_url = collection.url %}
-                {% assign match_found = false %}
-                {% for related in collection.metafields.custom.related_collections.value %}
-                    {% if related.url == current_url %}
-                        {% assign match_found = true %}
-                    {% endif %}
-                {% endfor %}
-                <div class="collection-hero__related-collections-wrapper">
-                    <button class="collection-hero__related-collections-toggle" aria-expanded="false">
-                        <span>{{ section.settings.related_collections_toggle | default: "Browse subcategories" }}</span>
-                        <svg class="icon icon-caret" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="#B3B3B3"></path>
-                        </svg>
-                    </button>
-                    <ul class="collection-hero__related-collections">
-                 {% assign current_url = collection.url %}
-
-{% for related in collection.metafields.custom.related_collections.value %}
-  {% assign active_class = '' %}
-  {% if related.url == current_url %}
-    {% assign active_class = 'active' %}
-  {% endif %}
-  
-  <li>
-    <a href="{{ related.url }}" class="collection-hero__related-collection {{ active_class }}">
-      {{ related.title }}
-    </a>
-  </li>
-{% endfor %}
-
-                    </ul>
-                </div>
-            {% endif %}
-
-          
-        </div>
-        {%- if section.settings.show_collection_image and collection.image -%}
-            <div class="collection-hero__image-container media gradient">
-                <img srcset="
+    {%- if section.settings.show_collection_image and collection.image -%}
+      <div class="collection-hero__image-container media gradient">
+        <img
+          srcset="
             {%- if collection.image.width >= 165 -%}{{ collection.image | image_url: width: 165 }} 165w,{%- endif -%}
             {%- if collection.image.width >= 360 -%}{{ collection.image | image_url: width: 360 }} 360w,{%- endif -%}
             {%- if collection.image.width >= 535 -%}{{ collection.image | image_url: width: 535 }} 535w,{%- endif -%}
             {%- if collection.image.width >= 750 -%}{{ collection.image | image_url: width: 750 }} 750w,{%- endif -%}
             {%- if collection.image.width >= 1070 -%}{{ collection.image | image_url: width: 1070 }} 1070w,{%- endif -%}
             {%- if collection.image.width >= 1500 -%}{{ collection.image | image_url: width: 1500 }} 1500w,{%- endif -%}
-            {{ collection.image | image_url }} {{ collection.image.width }}w"
-                        src="{{ collection.image | image_url: width: 750 }}"
-                        sizes="(min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 | divided_by: 2 }}px, (min-width: 750px) calc(50vw - 130px), calc(50vw - 55px)"
-                        alt="{{ collection.image.alt | escape }}"
-                        width="{{ collection.image.width }}"
-                        height="{{ collection.image.height }}">
-            </div>
-        {%- endif -%}
-    </div>
+            {{ collection.image | image_url }} {{ collection.image.width }}w
+          "
+          src="{{ collection.image | image_url: width: 750 }}"
+          sizes="(min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 | divided_by: 2 }}px, (min-width: 750px) calc(50vw - 130px), calc(50vw - 55px)"
+          alt="{{ collection.image.alt | escape }}"
+          width="{{ collection.image.width }}"
+          height="{{ collection.image.height }}"
+        >
+      </div>
+    {%- endif -%}
+  </div>
 </div>
 
 {% schema %}
@@ -156,15 +66,7 @@
       "type": "checkbox",
       "id": "show_collection_image",
       "default": false,
-      "label": "t:sections.main-collection-banner.settings.show_collection_image.label",
-      "info": "t:sections.main-collection-banner.settings.show_collection_image.info"
-    },
-    {
-        "type": "text",
-        "id": "related_collections_toggle",
-        "label": "t:sections.main-collection-banner.settings.related_collections_toggle.label",
-        "default": "Browse subcategories",
-        "info": "t:sections.main-collection-banner.settings.related_collections_toggle.info"
+      "label": "t:sections.main-collection-banner.settings.show_collection_image.label"
     },
     {
       "type": "color_scheme",
