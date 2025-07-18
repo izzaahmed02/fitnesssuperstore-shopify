@@ -57,6 +57,83 @@
           {%- endif -%}
         </form>
     </summary>
+
+
+
+    <div id="glFilter-search-popup" class="ui-menu glFilter-search-popup gl-filter-search-fullscreen gl-filter-animate" role="dialog" aria-modal="true" aria-label="{{ 'general.search.search' | t }}">
+  <div class="gl-backdrop gl-close-layer"></div>
+  <div class="gl-fullscreen-layer gl-animate-transition" tabindex="-1">
+    
+    <!-- Search Header with Input -->
+    <div class="gl-fullscreen-header">
+      <form class="gl-d-searchbox" method="GET" action="{{ routes.search_url }}" role="search">
+        <label class="gl-icon gl-d-searchbox-icon" for="gl-d-searchbox-input">
+          {{ 'icon-search.svg' | inline_asset_content }}
+        </label>
+        <input
+          type="text"
+          class="gl-d-searchbox-input"
+          id="gl-d-searchbox-input"
+          placeholder="{{ 'general.search.search' | t }}"
+          name="q"
+          value="{{ search.terms | escape }}"
+          autocapitalize="off"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+        >
+      </form>
+      <!-- Close Button -->
+      <button type="button" class="gl-d-close-btn" aria-label="{{ 'accessibility.close' | t }}">
+        {{ 'icon-close.svg' | inline_asset_content }}
+      </button>
+    </div>
+
+    <!-- Suggestions (empty or predictive if JS-enhanced) -->
+    <div class="gl-fullscreen-suggestions"></div>
+
+    <!-- Static Initial Content -->
+    <div class="gl-fullscreen-initial-content">
+      <div class="gl-row">
+        <!-- Left Column - Maybe you're looking for -->
+        <div class="gl-col-left">
+          <div class="gl-list gl-fullscreen-top-searches">
+            <div class="gl-list__group">
+              <div class="gl-list__title">{{ 'general.search.suggestions' | t }}</div>
+              <div class="gl-list__content">
+                <ul>
+                  <li><a href="/search?q=fsr90">fsr90</a></li>
+                  <li><a href="/search?q=leg+press">leg press</a></li>
+                  <li><a href="/search?q=smith+machine">smith machine</a></li>
+                  <li><a href="/search?q=lat+pulldown">lat pulldown</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Trending Products -->
+        <div class="gl-col-right">
+          <div class="gl-list gl-fullscreen-top-clicked">
+            <div class="gl-fullscreen-results__meta">
+              <div class="gl-list__title">{{ 'general.search.trending_products' | t }}</div>
+            </div>
+            <div class="gl-list__content">
+              <div class="gl-fullscreen-results__content">
+                {% render 'search-product-card', product: all_products['french-fitness-tahoe-seated-leg-curl-leg-extension-new'] %}
+                {% render 'search-product-card', product: all_products['french-fitness-fsr90-functional-trainer-smith-squat-rack-machine-new'] %}
+                {% render 'search-product-card', product: all_products['bowflex-treadclimber-tc5000-remanufactured'] %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+    {% comment %}
     <div
       class="search-modal modal__content gradient"
       role="dialog"
@@ -137,6 +214,9 @@
         </button>
       </div>
     </div>
+{% endcomment %}
+
+            
   </details>
 </details-modal>
 
