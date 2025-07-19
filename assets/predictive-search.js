@@ -81,6 +81,13 @@ class PredictiveSearch extends SearchForm {
                     </div>
                   </a>
                 </li>
+                <li id="predictive-search-option-collection-2" class="predictive-search__list-item" role="option" aria-selected="false">
+                  <a href="/collections/french-furniture" class="predictive-search__item link link--text" tabindex="-1">
+                    <div class="predictive-search__item-content predictive-search__item-content--centered">
+                      <p class="predictive-search__item-heading h5">French Furniture</p>
+                    </div>
+                  </a>
+                </li>
               </ul>
             </div>
           ` : ''}
@@ -104,7 +111,7 @@ class PredictiveSearch extends SearchForm {
       </div>
     `;
 
-    // Fallback for no search results, including collections
+    // Fallback for no search results, including collections and suggestions
     this.noResultsContent = `
       <div id="predictive-search-results" role="listbox">
         <div id="predictive-search-results-groups-wrapper" class="predictive-search__results-groups-wrapper">
@@ -121,6 +128,54 @@ class PredictiveSearch extends SearchForm {
                   <a href="/collections/all" class="predictive-search__item link link--text" tabindex="-1">
                     <div class="predictive-search__item-content predictive-search__item-content--centered">
                       <p class="predictive-search__item-heading h5">All Products</p>
+                    </div>
+                  </a>
+                </li>
+                <li id="predictive-search-option-collection-2" class="predictive-search__list-item" role="option" aria-selected="false">
+                  <a href="/collections/french-furniture" class="predictive-search__item link link--text" tabindex="-1">
+                    <div class="predictive-search__item-content predictive-search__item-content--centered">
+                      <p class="predictive-search__item-heading h5">French Furniture</p>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          ` : ''}
+          ${this.defaultResources.product ? `
+            <div class="predictive-search__result-group">
+              <h2 id="predictive-search-products" class="predictive-search__heading text-body caption-with-letter-spacing">
+                Trending Products
+              </h2>
+              <ul id="predictive-search-results-products-list" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-products">
+                <li id="predictive-search-option-product-1" class="predictive-search__list-item" role="option" aria-selected="false">
+                  <a href="/products/sample-product-1" class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text" tabindex="-1">
+                    <img class="predictive-search__image" src="/path/to/placeholder-image.jpg" alt="Sample Product 1" width="50" height="50">
+                    <div class="predictive-search__item-content">
+                      <p class="predictive-search__item-heading h5">Sample Product 1</p>
+                    </div>
+                  </a>
+                </li>
+                <li id="predictive-search-option-product-2" class="predictive-search__list-item" role="option" aria-selected="false">
+                  <a href="/products/sample-product-2" class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text" tabindex="-1">
+                    <img class="predictive-search__image" src="/path/to/placeholder-image.jpg" alt="Sample Product 2" width="50" height="50">
+                    <div class="predictive-search__item-content">
+                      <p class="predictive-search__item-heading h5">Sample Product 2</p>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          ` : ''}
+          ${this.defaultResources.product ? `
+            <div class="predictive-search__result-group">
+              <h2 id="predictive-search-queries" class="predictive-search__heading text-body caption-with-letter-spacing">
+                Suggestions
+              </h2>
+              <ul id="predictive-search-results-queries-list" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-queries">
+                <li id="predictive-search-option-query-1" class="predictive-search__list-item" role="option" aria-selected="false">
+                  <a href="/search?q=french%20furniture" class="predictive-search__item link link--text" tabindex="-1">
+                    <div class="predictive-search__item-content predictive-search__item-content--centered">
+                      <p class="predictive-search__item-heading h5">French Furniture</p>
                     </div>
                   </a>
                 </li>
@@ -315,7 +370,7 @@ class PredictiveSearch extends SearchForm {
     if (this.defaultResources.collection) resourceTypes.push('collection');
     if (this.defaultResources.article) resourceTypes.push('article');
     if (resourceTypes.length > 0) params.set('resources[type]', resourceTypes.join(','));
-    params.set('resources[limit]', '15'); // Increased to 5
+    params.set('resources[limit]', '6'); // Increased to 6
 
     console.log('Default results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
@@ -373,7 +428,7 @@ class PredictiveSearch extends SearchForm {
     const params = new URLSearchParams();
     params.set('q', '*');
     params.set('resources[type]', 'product,page,collection,article');
-    params.set('resources[limit]', '15'); // Increased to 5
+    params.set('resources[limit]', '6'); // Increased to 6
 
     console.log('Minimal default results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
@@ -446,7 +501,7 @@ class PredictiveSearch extends SearchForm {
     if (this.defaultResources.collection) resourceTypes.push('collection');
     if (this.defaultResources.article) resourceTypes.push('article');
     if (resourceTypes.length > 0) params.set('resources[type]', resourceTypes.join(','));
-    params.set('resources[limit]', '15'); // Increased to 5
+    params.set('resources[limit]', '6'); // Increased to 6
 
     console.log('Search results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
@@ -505,7 +560,7 @@ class PredictiveSearch extends SearchForm {
     const params = new URLSearchParams();
     params.set('q', encodeURIComponent(searchTerm));
     params.set('resources[type]', 'product,page,collection,article');
-    params.set('resources[limit]', '15'); // Increased to 5
+    params.set('resources[limit]', '6'); // Increased to 6
 
     console.log('Minimal search results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
