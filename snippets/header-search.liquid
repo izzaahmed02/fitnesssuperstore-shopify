@@ -244,44 +244,25 @@
 </details-modal>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const detailsEl = document.querySelector('.header__search details');
-    if (!detailsEl) return;
 
-    const input = detailsEl.querySelector('.search__input');
-    const defaultTerm = 'fsr90';
+  
+document.addEventListener('DOMContentLoaded', () => {
+  const detailsEl = document.querySelector('.header__search details');
+  if (!detailsEl) return;
 
-    // Helper to simulate input (Shopify listens for real 'input' events)
-    function simulateSearch(term) {
-      input.value = term;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.value = ''; // Clear it again
+  detailsEl.addEventListener('toggle', () => {
+    if (detailsEl.open) {
+      setTimeout(() => {
+        const predictiveSearchEl = document.querySelector('predictive-search');
+        if (predictiveSearchEl?.triggerDefaultSearch) {
+          predictiveSearchEl.triggerDefaultSearch('fsr90');
+          predictiveSearchEl.input.focus();
+        }
+      }, 50);
     }
-
-    // On open, trigger default search
-    detailsEl.addEventListener('toggle', () => {
-      if (detailsEl.open) {
-        setTimeout(() => {
-          simulateSearch(defaultTerm);
-          input.focus();
-        }, 50);
-      }
-    });
-
-    // When user deletes everything, show default again
-    input.addEventListener('input', () => {
-      if (input.value.trim() === '') {
-        simulateSearch(defaultTerm);
-      }
-    });
-
-    // When refocused with nothing typed
-    input.addEventListener('focus', () => {
-      if (input.value.trim() === '') {
-        simulateSearch(defaultTerm);
-      }
-    });
   });
+});
+
 </script>
 
 
