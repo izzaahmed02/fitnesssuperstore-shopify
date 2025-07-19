@@ -288,14 +288,43 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!detailsEl) return;
 
   const input = detailsEl.querySelector('.search__input');
+  const predictiveSearchResults = detailsEl.querySelector('[data-predictive-search]');
+  const defaultSearchContent = detailsEl.querySelector('#default-search-content'); // Get the new div
 
   detailsEl.addEventListener('toggle', () => {
     if (detailsEl.open) {
+      // Show default content when modal opens and input is empty
+      if (input.value.trim() === '') {
+        defaultSearchContent.style.display = 'block';
+        predictiveSearchResults.style.display = 'none'; // Ensure predictive results are hidden
+      }
       setTimeout(() => {
-        input.dispatchEvent(new Event('input', { bubbles: true }));
         input.focus();
       }, 10);
+    } else {
+      // Hide both when modal closes
+      defaultSearchContent.style.display = 'none';
+      predictiveSearchResults.style.display = 'none';
     }
   });
+
+  input.addEventListener('input', () => {
+    if (input.value.trim() === '') {
+      // Show default content if input is cleared
+      defaultSearchContent.style.display = 'block';
+      predictiveSearchResults.style.display = 'none';
+    } else {
+      // Hide default content and show predictive search results
+      defaultSearchContent.style.display = 'none';
+      predictiveSearchResults.style.display = 'block';
+    }
+  });
+
+  // Also handle the case where the input already has a value when the modal opens (e.g., from browser autofill)
+  if (detailsEl.open && input.value.trim() !== '') {
+    defaultSearchContent.style.display = 'none';
+    predictiveSearchResults.style.display = 'block';
+    input.dispatchEvent(new Event('input', { bubbles: true })); // Trigger search if already has value
+  }
 });
 </script>
