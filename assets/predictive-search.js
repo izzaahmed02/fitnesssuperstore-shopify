@@ -13,11 +13,11 @@ class PredictiveSearch extends SearchForm {
 
   setupEventListeners() {
     this.input.form.addEventListener('submit', this.onFormSubmit.bind(this));
-
     this.input.addEventListener('focus', this.onFocus.bind(this));
     this.addEventListener('focusout', this.onFocusOut.bind(this));
     this.addEventListener('keyup', this.onKeyup.bind(this));
     this.addEventListener('keydown', this.onKeydown.bind(this));
+    this.input.addEventListener('input', this.onChange.bind(this));
   }
 
   getQuery() {
@@ -25,24 +25,13 @@ class PredictiveSearch extends SearchForm {
   }
 
   onChange() {
-    super.onChange();
     const newSearchTerm = this.getQuery();
     if (!this.searchTerm || !newSearchTerm.startsWith(this.searchTerm)) {
-      // Remove the results when they are no longer relevant for the new search term
-      // so they don't show up when the dropdown opens again
       this.querySelector('#predictive-search-results-groups-wrapper')?.remove();
     }
 
-    // Update the term asap, don't wait for the predictive search query to finish loading
     this.updateSearchForTerm(this.searchTerm, newSearchTerm);
-
     this.searchTerm = newSearchTerm;
-
-    if (!this.searchTerm.length) {
-      this.close(true);
-      return;
-    }
-
     this.getSearchResults(this.searchTerm);
   }
 
@@ -62,13 +51,7 @@ class PredictiveSearch extends SearchForm {
 
   onFocus() {
     const currentSearchTerm = this.getQuery();
-
-    if (!currentSearchTerm.length) return;
-
-    if (this.searchTerm !== currentSearchTerm) {
-      // Search term was changed from other search input, treat it as a user change
-      this.onChange();
-    } else if (this.getAttribute('results') === 'true') {
+    if (this.getAttribute('results') === 'true') {
       this.open();
     } else {
       this.getSearchResults(this.searchTerm);
@@ -99,7 +82,6 @@ class PredictiveSearch extends SearchForm {
   }
 
   onKeydown(event) {
-    // Prevent the cursor from moving in the input when using the up and down arrow keys
     if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
       event.preventDefault();
     }
@@ -110,7 +92,6 @@ class PredictiveSearch extends SearchForm {
     const currentButtonText = searchForTextElement?.innerText;
     if (currentButtonText) {
       if (currentButtonText.match(new RegExp(previousTerm, 'g')).length > 1) {
-        // The new term matches part of the button text and not just the search term, do not replace to avoid mistakes
         return;
       }
       const newButtonText = currentButtonText.replace(previousTerm, newTerm);
@@ -123,9 +104,6 @@ class PredictiveSearch extends SearchForm {
 
     const moveUp = direction === 'up';
     const selectedElement = this.querySelector('[aria-selected="true"]');
-
-    // Filter out hidden elements (duplicated page and article resources) thanks
-    // to this https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetParent
     const allVisibleElements = Array.from(this.querySelectorAll('li, button.predictive-search__item')).filter(
       (element) => element.offsetParent !== null
     );
@@ -163,7 +141,6 @@ class PredictiveSearch extends SearchForm {
 
   selectOption() {
     const selectedOption = this.querySelector('[aria-selected="true"] a, button[aria-selected="true"]');
-
     if (selectedOption) selectedOption.click();
   }
 
@@ -176,7 +153,11 @@ class PredictiveSearch extends SearchForm {
       return;
     }
 
-    fetch(`${routes.predictive_search_url}?q=${encodeURIComponent(searchTerm)}&section_id=predictive-search`, {
+    const url = searchTerm
+      ? `${routes.predictive_search_url}?q=${encodeURIComponent(searchTerm)}&section_id=predictive-search`
+      : `${routes.predictive_search_url}?section_id=predictive-search`;
+
+    fetch(url, {
       signal: this.abortController.signal,
     })
       .then((response) => {
@@ -185,14 +166,12 @@ class PredictiveSearch extends SearchForm {
           this.close();
           throw error;
         }
-
         return response.text();
       })
       .then((text) => {
         const resultsMarkup = new DOMParser()
           .parseFromString(text, 'text/html')
           .querySelector('#shopify-section-predictive-search').innerHTML;
-        // Save bandwidth keeping the cache in all instances synced
         this.allPredictiveSearchInstances.forEach((predictiveSearchInstance) => {
           predictiveSearchInstance.cachedResults[queryKey] = resultsMarkup;
         });
@@ -200,7 +179,6 @@ class PredictiveSearch extends SearchForm {
       })
       .catch((error) => {
         if (error?.code === 20) {
-          // Code 20 means the call was aborted
           return;
         }
         this.close();
@@ -211,7 +189,6 @@ class PredictiveSearch extends SearchForm {
   setLiveRegionLoadingState() {
     this.statusElement = this.statusElement || this.querySelector('.predictive-search-status');
     this.loadingText = this.loadingText || this.getAttribute('data-loading-text');
-
     this.setLiveRegionText(this.loadingText);
     this.setAttribute('loading', true);
   }
@@ -219,7 +196,6 @@ class PredictiveSearch extends SearchForm {
   setLiveRegionText(statusText) {
     this.statusElement.setAttribute('aria-hidden', 'false');
     this.statusElement.textContent = statusText;
-
     setTimeout(() => {
       this.statusElement.setAttribute('aria-hidden', 'true');
     }, 1000);
@@ -228,7 +204,6 @@ class PredictiveSearch extends SearchForm {
   renderSearchResults(resultsMarkup) {
     this.predictiveSearchResults.innerHTML = resultsMarkup;
     this.setAttribute('results', true);
-
     this.setLiveRegionResults();
     this.open();
   }
@@ -262,9 +237,7 @@ class PredictiveSearch extends SearchForm {
       this.removeAttribute('results');
     }
     const selected = this.querySelector('[aria-selected="true"]');
-
     if (selected) selected.setAttribute('aria-selected', false);
-
     this.input.setAttribute('aria-activedescendant', '');
     this.removeAttribute('loading');
     this.removeAttribute('open');
