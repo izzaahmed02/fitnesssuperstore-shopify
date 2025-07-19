@@ -11,9 +11,9 @@ class PredictiveSearch extends SearchForm {
     // Configuration for default results
     this.defaultResources = {
       product: true,
-      page: true,         // Enable pages
-      collection: true,  // Enable collections
-      article: true      // Enable articles
+      page: true,
+      collection: true,
+      article: true
     };
 
     // Fallback content for default view and API failures
@@ -104,13 +104,29 @@ class PredictiveSearch extends SearchForm {
       </div>
     `;
 
-    // Fallback for no search results
+    // Fallback for no search results, including collections
     this.noResultsContent = `
       <div id="predictive-search-results" role="listbox">
         <div id="predictive-search-results-groups-wrapper" class="predictive-search__results-groups-wrapper">
           <div class="predictive-search__result-group">
             <p class="predictive-search__no-results">No results found for your search.</p>
           </div>
+          ${this.defaultResources.collection ? `
+            <div class="predictive-search__result-group">
+              <h2 id="predictive-search-collections" class="predictive-search__heading text-body caption-with-letter-spacing">
+                Collections
+              </h2>
+              <ul id="predictive-search-results-collections-list" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-collections">
+                <li id="predictive-search-option-collection-1" class="predictive-search__list-item" role="option" aria-selected="false">
+                  <a href="/collections/all" class="predictive-search__item link link--text" tabindex="-1">
+                    <div class="predictive-search__item-content predictive-search__item-content--centered">
+                      <p class="predictive-search__item-heading h5">All Products</p>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          ` : ''}
         </div>
       </div>
     `;
@@ -299,7 +315,7 @@ class PredictiveSearch extends SearchForm {
     if (this.defaultResources.collection) resourceTypes.push('collection');
     if (this.defaultResources.article) resourceTypes.push('article');
     if (resourceTypes.length > 0) params.set('resources[type]', resourceTypes.join(','));
-    params.set('resources[limit]', '4');
+    params.set('resources[limit]', '5'); // Increased to 5
 
     console.log('Default results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
@@ -315,6 +331,7 @@ class PredictiveSearch extends SearchForm {
             try {
               const json = JSON.parse(text);
               console.error('Parsed error response body:', JSON.stringify(json));
+              console.log('API response resources:', json.resources || 'none');
             } catch (e) {
               console.error('Failed to parse error response as JSON:', e.message);
             }
@@ -356,7 +373,7 @@ class PredictiveSearch extends SearchForm {
     const params = new URLSearchParams();
     params.set('q', '*');
     params.set('resources[type]', 'product,page,collection,article');
-    params.set('resources[limit]', '4');
+    params.set('resources[limit]', '5'); // Increased to 5
 
     console.log('Minimal default results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
@@ -372,6 +389,7 @@ class PredictiveSearch extends SearchForm {
             try {
               const json = JSON.parse(text);
               console.error('Parsed error response body:', JSON.stringify(json));
+              console.log('API response resources:', json.resources || 'none');
             } catch (e) {
               console.error('Failed to parse error response as JSON:', e.message);
             }
@@ -428,7 +446,7 @@ class PredictiveSearch extends SearchForm {
     if (this.defaultResources.collection) resourceTypes.push('collection');
     if (this.defaultResources.article) resourceTypes.push('article');
     if (resourceTypes.length > 0) params.set('resources[type]', resourceTypes.join(','));
-    params.set('resources[limit]', '4');
+    params.set('resources[limit]', '5'); // Increased to 5
 
     console.log('Search results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
@@ -444,6 +462,7 @@ class PredictiveSearch extends SearchForm {
             try {
               const json = JSON.parse(text);
               console.error('Parsed error response body:', JSON.stringify(json));
+              console.log('API response resources:', json.resources || 'none');
             } catch (e) {
               console.error('Failed to parse error response as JSON:', e.message);
             }
@@ -486,7 +505,7 @@ class PredictiveSearch extends SearchForm {
     const params = new URLSearchParams();
     params.set('q', encodeURIComponent(searchTerm));
     params.set('resources[type]', 'product,page,collection,article');
-    params.set('resources[limit]', '4');
+    params.set('resources[limit]', '5'); // Increased to 5
 
     console.log('Minimal search results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
@@ -502,6 +521,7 @@ class PredictiveSearch extends SearchForm {
             try {
               const json = JSON.parse(text);
               console.error('Parsed error response body:', JSON.stringify(json));
+              console.log('API response resources:', json.resources || 'none');
             } catch (e) {
               console.error('Failed to parse error response as JSON:', e.message);
             }
