@@ -10,74 +10,19 @@
 
 <details-modal class="header__search">
   <details>
-    <summary
-      class="customSearch"
-    >
-        <form action="{{ routes.search_url }}" method="get" role="search" class="search custom-header-search">
-          
-            <input
-              class="custom-header-search--input"
-              id="{{ input_id }}"
-              type="search"
-              name="q"
-              value="{{ search.terms | escape }}"
-              placeholder="{{ 'general.search.search' | t }}"
-              {%- if settings.predictive_search_enabled -%}
-                role="combobox"
-                aria-expanded="false"
-                aria-owns="predictive-search-results"
-                aria-controls="predictive-search-results"
-                aria-haspopup="listbox"
-                aria-autocomplete="list"
-                autocorrect="off"
-                autocomplete="off"
-                autocapitalize="off"
-                spellcheck="false"
-              {%- endif -%}
-            >
-            
-            <input type="hidden" name="options[prefix]" value="last">
-            <button
-              type="reset"
-              class="reset__button field__button field__button{% if search.terms == blank %} hidden{% endif %}"
-              aria-label="{{ 'general.search.reset' | t }}"
-            >
-              <span class="svg-wrapper">
-                {{- 'icon-reset.svg' | inline_asset_content -}}
-              </span>
-            </button>
-     
-
-          {%- if settings.predictive_search_enabled -%}
-            <div class="predictive-search predictive-search--header" tabindex="-1" data-predictive-search>
-              {%- render 'loading-spinner', class: 'predictive-search__loading-state' -%}
-            </div>
-
-            <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
-          {%- endif -%}
-        </form>
-    </summary>
-
-
-
- <div id="glFilter-search-popup" class="ui-menu glFilter-search-popup gl-filter-search-fullscreen gl-filter-animate" role="dialog" aria-modal="true" aria-label="{{ 'general.search.search' | t }}">
-  <div class="gl-backdrop gl-close-layer"></div>
-
-  <div class="gl-fullscreen-layer gl-animate-transition" tabindex="-1">
-    <!-- Search Header -->
-    <div class="gl-fullscreen-header">
+    <summary class="customSearch">
       <predictive-search class="gl-d-searchbox" data-loading-text="{{ 'accessibility.loading' | t }}">
-        <form method="GET" action="{{ routes.search_url }}" role="search">
+        <form action="{{ routes.search_url }}" method="get" role="search">
           <label class="gl-icon gl-d-searchbox-icon" for="predictive-search-input">
             {{ 'icon-search.svg' | inline_asset_content }}
           </label>
           <input
             id="predictive-search-input"
+            class="gl-d-searchbox-input custom-header-search--input"
             type="search"
-            class="gl-d-searchbox-input"
             name="q"
-            placeholder="{{ 'general.search.search' | t }}"
             value="{{ search.terms | escape }}"
+            placeholder="{{ 'general.search.search' | t }}"
             role="combobox"
             aria-expanded="false"
             aria-owns="predictive-search-results"
@@ -89,147 +34,53 @@
             autocapitalize="off"
             spellcheck="false"
           >
+          <input type="hidden" name="options[prefix]" value="last">
         </form>
 
-        <!-- Predictive Search Dropdown -->
+        <!-- Live search results -->
         <div class="gl-fullscreen-suggestions predictive-search predictive-search--header" tabindex="-1" data-predictive-search>
           {% render 'loading-spinner', class: 'predictive-search__loading-state' %}
         </div>
-
         <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
       </predictive-search>
+    </summary>
 
-      <!-- Close Button -->
-      <button type="button" class="gl-d-close-btn" aria-label="{{ 'accessibility.close' | t }}">
-        {{ 'icon-close.svg' | inline_asset_content }}
-      </button>
-    </div>
-
-    <!-- Optional: Static initial content (optional) -->
-    <div class="gl-fullscreen-initial-content">
-      <div class="gl-row">
-        <div class="gl-col-left">
-          <div class="gl-list gl-fullscreen-top-searches">
-            <div class="gl-list__group">
-              <div class="gl-list__title">Maybe you’re looking for</div>
-              <div class="gl-list__content">
-                <ul>
-                  <li><a href="/search?q=fsr90">fsr90</a></li>
-                  <li><a href="/search?q=leg+press">leg press</a></li>
-                  <li><a href="/search?q=smith+machine">smith machine</a></li>
-                  <li><a href="/search?q=lat+pulldown">lat pulldown</a></li>
-                </ul>
-              </div>
-            </div>
-          </div>
+    <!-- Fullscreen popup content -->
+    <div id="glFilter-search-popup" class="ui-menu glFilter-search-popup gl-filter-search-fullscreen gl-filter-animate" role="dialog" aria-modal="true" aria-label="{{ 'general.search.search' | t }}">
+      <div class="gl-backdrop gl-close-layer"></div>
+      <div class="gl-fullscreen-layer gl-animate-transition" tabindex="-1">
+        <div class="gl-fullscreen-header">
+          <button type="button" class="gl-d-close-btn" aria-label="{{ 'accessibility.close' | t }}">
+            {{ 'icon-close.svg' | inline_asset_content }}
+          </button>
         </div>
 
-        <div class="gl-col-right">
-          <div class="gl-list gl-fullscreen-top-clicked">
-            <div class="gl-fullscreen-results__meta">
-              <div class="gl-list__title">Trending products</div>
-            </div>
-            <div class="gl-list__content">
-              <div class="gl-fullscreen-results__content">
-                {% render 'search-product-card', product: all_products['french-fitness-tahoe-seated-leg-curl-leg-extension-new'] %}
-                {% render 'search-product-card', product: all_products['french-fitness-fsr90-functional-trainer-smith-squat-rack-machine-new'] %}
-                {% render 'search-product-card', product: all_products['bowflex-treadclimber-tc5000-remanufactured'] %}
+        <!-- Optional static content (initial suggestions, trends) -->
+        <div class="gl-fullscreen-initial-content">
+          <div class="gl-search-title">{{ 'Maybe you’re looking for' }}</div>
+          <ul class="gl-search-suggestions">
+            <li><a href="/collections/all?q=dumbbells">Dumbbells</a></li>
+            <li><a href="/collections/all?q=treadmill">Treadmill</a></li>
+            <li><a href="/collections/all?q=barbell">Barbell</a></li>
+          </ul>
+
+          <div class="gl-search-title">Trending Products</div>
+          <div class="gl-search-trending-products">
+            {% for product in collections.frontpage.products limit: 4 %}
+              <div class="gl-trending-product">
+                <a href="{{ product.url }}">
+                  <img src="{{ product.featured_image | image_url: width: 120 }}" alt="{{ product.title }}" />
+                  <div class="gl-trending-product-title">{{ product.title }}</div>
+                </a>
               </div>
-            </div>
+            {% endfor %}
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-
-
-    {% comment %}
-    <div
-      class="search-modal modal__content gradient"
-      role="dialog"
-      aria-modal="true"
-      aria-label="{{ 'general.search.search' | t }}"
-    >
-      <div class="modal-overlay"></div>
-      <div
-        class="search-modal__content{% if settings.inputs_shadow_vertical_offset != 0 and settings.inputs_shadow_vertical_offset < 0 %} search-modal__content-top{% else %} search-modal__content-bottom{% endif %}"
-        tabindex="-1"
-      >
-        {%- if settings.predictive_search_enabled -%}
-          <predictive-search class="search-modal__form" data-loading-text="{{ 'accessibility.loading' | t }}">
-        {%- else -%}
-          <search-form class="search-modal__form">
-        {%- endif -%}
-        <form action="{{ routes.search_url }}" method="get" role="search" class="search search-modal__form">
-          <div class="field">
-            <input
-              class="search__input field__input"
-              id="{{ input_id }}"
-              type="search"
-              name="q"
-              value="{{ search.terms | escape }}"
-              placeholder="{{ 'general.search.search' | t }}"
-              {%- if settings.predictive_search_enabled -%}
-                role="combobox"
-                aria-expanded="false"
-                aria-owns="predictive-search-results"
-                aria-controls="predictive-search-results"
-                aria-haspopup="listbox"
-                aria-autocomplete="list"
-                autocorrect="off"
-                autocomplete="off"
-                autocapitalize="off"
-                spellcheck="false"
-              {%- endif -%}
-            >
-            <label class="field__label" for="{{ input_id }}">{{ 'general.search.search' | t }}</label>
-            <input type="hidden" name="options[prefix]" value="last">
-            <button
-              type="reset"
-              class="reset__button field__button{% if search.terms == blank %} hidden{% endif %}"
-              aria-label="{{ 'general.search.reset' | t }}"
-            >
-              <span class="svg-wrapper">
-                {{- 'icon-reset.svg' | inline_asset_content -}}
-              </span>
-            </button>
-            <button class="search__button field__button" aria-label="{{ 'general.search.search' | t }}">
-              <span class="svg-wrapper">
-                {{- 'icon-search.svg' | inline_asset_content -}}
-              </span>
-            </button>
-          </div>
-
-          {%- if settings.predictive_search_enabled -%}
-            <div class="predictive-search predictive-search--header" tabindex="-1" data-predictive-search>
-              {%- render 'loading-spinner', class: 'predictive-search__loading-state' -%}
-            </div>
-
-            <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
-          {%- endif -%}
-        </form>
-        {%- if settings.predictive_search_enabled -%}
-          </predictive-search>
-        {%- else -%}
-          </search-form>
-        {%- endif -%}
-        <button
-          type="button"
-          class="search-modal__close-button modal__close-button link link--text focus-inset"
-          aria-label="{{ 'accessibility.close' | t }}"
-        >
-          <span class="svg-wrapper">
-            {{- 'icon-close.svg' | inline_asset_content -}}
-          </span>
-        </button>
-      </div>
-    </div>
-{% endcomment %}
-
-            
   </details>
 </details-modal>
+
 
             <style>
               .custom-header-search .field:after, .custom-header-search .field:before{
