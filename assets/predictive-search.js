@@ -17,7 +17,7 @@ class PredictiveSearch extends SearchForm {
       articles: false      // Show articles (optional)
     };
 
-    // Fallback content for default view
+    // Fallback content if API returns no results
     this.fallbackContent = `
       <div id="predictive-search-results" role="listbox">
         <div id="predictive-search-results-groups-wrapper" class="predictive-search__results-groups-wrapper">
@@ -92,17 +92,6 @@ class PredictiveSearch extends SearchForm {
               </ul>
             </div>
           ` : ''}
-        </div>
-      </div>
-    `;
-
-    // Fallback for no search results
-    this.noResultsContent = `
-      <div id="predictive-search-results" role="listbox">
-        <div id="predictive-search-results-groups-wrapper" class="predictive-search__results-groups-wrapper">
-          <div class="predictive-search__result-group">
-            <p class="predictive-search__no-results">No results found for your search.</p>
-          </div>
         </div>
       </div>
     `;
@@ -266,14 +255,11 @@ class PredictiveSearch extends SearchForm {
     this.setLiveRegionLoadingState();
     console.log('Fetching default results');
 
- lll', queryKey);
-
-    // Temporarily disable caching for default results to ensure fresh API calls
-    // if (this.cachedResults[queryKey]) {
-    //   console.log('Using cached default results');
-    //   this.renderSearchResults(this.cachedResults[queryKey]);
-    //   return;
-    // }
+    if (this.cachedResults[queryKey]) {
+      console.log('Using cached default results');
+      this.renderSearchResults(this.cachedResults[queryKey]);
+      return;
+    }
 
     const params = new URLSearchParams();
     params.set('section_id', 'predictive-search');
@@ -288,21 +274,19 @@ class PredictiveSearch extends SearchForm {
       signal: this.abortController.signal,
     })
       .then((response) => {
-        console.log('Default results API response status:', response.status);
         if (!response.ok) {
-          console.error('Predictive search API error for default results:', response.status);
+          console.error('Predictive search API error:', response.status);
           this.renderSearchResults(this.fallbackContent);
           throw new Error(response.status);
         }
         return response.text();
       })
       .then((text) => {
-        console.log('Default results API response text length:', text.length);
         const resultsMarkup = new DOMParser()
           .parseFromString(text, 'text/html')
           .querySelector('#shopify-section-predictive-search')?.innerHTML;
         if (!resultsMarkup || resultsMarkup.trim() === '') {
-          console.warn('Predictive search API returned empty results for default query');
+          console.warn('Predictive search API returned empty results, using fallback content');
           this.renderSearchResults(this.fallbackContent);
           return;
         }
@@ -314,7 +298,6 @@ class PredictiveSearch extends SearchForm {
       })
       .catch((error) => {
         if (error?.code === 20) {
-          console.log('Default results fetch aborted');
           return;
         }
         console.error('Error fetching default results:', error);
@@ -327,12 +310,11 @@ class PredictiveSearch extends SearchForm {
     this.setLiveRegionLoadingState();
     console.log('Fetching search results for query:', searchTerm);
 
-    // Temporarily disable caching for search results to ensure fresh API calls
-    // if (this.cachedResults[queryKey]) {
-    //   console.log('Using cached results for:', queryKey);
-    //   this.renderSearchResults(this.cachedResults[queryKey]);
-    //   return;
-    // }
+    if (this.cachedResults[queryKey]) {
+      console.log('Using cached results for:', queryKey);
+      this.renderSearchResults(this.cachedResults[queryKey]);
+      return;
+    }
 
     const params = new URLSearchParams();
     params.set('q', encodeURIComponent(searchTerm));
@@ -348,22 +330,20 @@ class PredictiveSearch extends SearchForm {
       signal: this.abortController.signal,
     })
       .then((response) => {
-        console.log('Search results API response status:', response.status);
         if (!response.ok) {
-          console.error('Predictive search API error for query:', searchTerm, 'Status:', response.status);
-          this.renderSearchResults(this.noResultsContent);
+          console.error('Predictive search API error:', response.status);
+          this.renderSearchResults(this.fallbackContent);
           throw new Error(response.status);
         }
         return response.text();
       })
       .then((text) => {
-        console.log('Search results API response text length:', text.length);
         const resultsMarkup = new DOMParser()
           .parseFromString(text, 'text/html')
           .querySelector('#shopify-section-predictive-search')?.innerHTML;
         if (!resultsMarkup || resultsMarkup.trim() === '') {
           console.warn('Predictive search API returned empty results for:', searchTerm);
-          this.renderSearchResults(this.noResultsContent);
+          this.renderSearchResults(this.fallbackContent);
           return;
         }
         this.allPredictiveSearchInstances.forEach((predictiveSearchInstance) => {
@@ -374,11 +354,10 @@ class PredictiveSearch extends SearchForm {
       })
       .catch((error) => {
         if (error?.code === 20) {
-          console.log('Search results fetch aborted for:', searchTerm);
           return;
         }
-        console.error('Error fetching search results for:', searchTerm, 'Error:', error);
-        this.renderSearchResults(this.noResultsContent);
+        console.error('Error fetching search results:', error);
+        this.renderSearchResults(this.fallbackContent);
       });
   }
 
@@ -398,7 +377,7 @@ class PredictiveSearch extends SearchForm {
   }
 
   renderSearchResults(resultsMarkup) {
-    console.log('Rendering results (first 100 chars):', resultsMarkup.substring(0, 100) + '...');
+    console.log('Rendering results:', resultsMarkup.substring(0, 100) + '...');
     this.predictiveSearchResults.innerHTML = resultsMarkup;
     this.setAttribute('results', true);
     this.setLiveRegionResults();
