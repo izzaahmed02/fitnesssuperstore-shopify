@@ -222,34 +222,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const input = detailsEl.querySelector('.search__input');
   const fakePlaceholder = detailsEl.querySelector('.fake-placeholder');
+  let fakeTerm = 'fsr90';
+
+  function triggerSearch(term) {
+    const tempInput = input;
+    const originalValue = tempInput.value;
+
+    tempInput.value = term;
+    tempInput.dispatchEvent(new Event('input', { bubbles: true }));
+    tempInput.value = ''; // clear back for visual
+  }
 
   detailsEl.addEventListener('toggle', () => {
     if (detailsEl.open) {
       setTimeout(() => {
         if (!input || !fakePlaceholder) return;
 
-        input.value = 'fsr90';
+        input.classList.remove('typing');
         fakePlaceholder.style.opacity = '1';
 
-        // Trigger predictive search
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+        triggerSearch(fakeTerm);
         input.focus();
       }, 10);
     }
   });
 
-  // Clear dummy value on user input
   input.addEventListener('input', () => {
-    if (input.value === 'fsr90') return;
-
-    input.classList.add('typing');
-    input.value = input.value.replace('fsr90', '');
-    fakePlaceholder.style.opacity = '0';
+    if (input.value.trim() === '') {
+      input.classList.remove('typing');
+      fakePlaceholder.style.opacity = '1';
+      triggerSearch(fakeTerm);
+    } else {
+      input.classList.add('typing');
+      fakePlaceholder.style.opacity = '0';
+    }
   });
 
   input.addEventListener('focus', () => {
-    if (input.value === 'fsr90') {
-      input.value = '';
+    if (input.value.trim() === '') {
+      fakePlaceholder.style.opacity = '1';
+      triggerSearch(fakeTerm);
     }
   });
 });
