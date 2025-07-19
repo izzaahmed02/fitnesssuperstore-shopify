@@ -369,48 +369,41 @@
                   <h2 id="predictive-search-products-default" class="predictive-search__heading text-body caption-with-letter-spacing">Featured Products</h2>
                   <a href="/collections/all" class="bannerBtn">View all products</a>
                 </div>
-                <ul id="predictive-search-results-products-list-default" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-products-default">
-                  <li id="predictive-search-option-product-default-1" class="predictive-search__list-item" role="option" aria-selected="false">
-                    <a href="/products/sample-product-a" class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text" tabindex="-1">
-                      <img class="predictive-search__image" src="https://placehold.co/50x50/cccccc/333333?text=Product+A" alt="Sample Product A" width="50" height="50">
-                      <div class="predictive-search__item-content">
-                        <p class="predictive-search__item-heading h5">Sample Product A</p>
-                        <span class="visually-hidden">Vendor:</span>
-                        <div class="predictive-search__item-vendor">
-                          Brand X
-                        </div>
-                        <div class="price">
-                          <div class="price__container">
-                            <div class="price__regular">
-                              <span class="visually-hidden visually-hidden--inline">Regular price</span>
-                              <span class="price-item-fixed ">$29.99</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </a>
-                  </li>
-                  <li id="predictive-search-option-product-default-2" class="predictive-search__list-item" role="option" aria-selected="false">
-                    <a href="/products/sample-product-b" class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text" tabindex="-1">
-                      <img class="predictive-search__image" src="https://placehold.co/50x50/cccccc/333333?text=Product+B" alt="Sample Product B" width="50" height="50">
-                      <div class="predictive-search__item-content">
-                        <p class="predictive-search__item-heading h5">Sample Product B</p>
-                        <span class="visually-hidden">Vendor:</span>
-                        <div class="predictive-search__item-vendor">
-                          Brand Y
-                        </div>
-                        <div class="price">
-                          <div class="price__container">
-                            <div class="price__regular">
-                              <span class="visually-hidden visually-hidden--inline">Regular price</span>
-                              <span class="price-item-fixed ">$49.99</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </a>
-                  </li>
-                </ul>
+          {% assign product_recommendations = recommendations.products %}
+
+<ul id="predictive-search-results-products-list-default" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-products-default">
+  {% for product in product_recommendations %}
+    <li id="predictive-search-option-product-default-{{ forloop.index }}" class="predictive-search__list-item" role="option" aria-selected="false">
+      <a href="{{ product.url }}" class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text" tabindex="-1">
+        <img
+          class="predictive-search__image"
+          src="{{ product.featured_image | image_url: width: 50 }}"
+          alt="{{ product.title | escape }}"
+          width="50"
+          height="50"
+        >
+        <div class="predictive-search__item-content">
+          <p class="predictive-search__item-heading h5">{{ product.title }}</p>
+
+          <span class="visually-hidden">Vendor:</span>
+          <div class="predictive-search__item-vendor">
+            {{ product.vendor }}
+          </div>
+
+          <div class="price">
+            <div class="price__container">
+              <div class="price__regular">
+                <span class="visually-hidden visually-hidden--inline">Regular price</span>
+                <span class="price-item-fixed">{{ product.price | money }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+    </li>
+  {% endfor %}
+</ul>
+
               </div>
 
               <div class="predictive-search__column">
