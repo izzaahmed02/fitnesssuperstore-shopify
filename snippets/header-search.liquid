@@ -24,56 +24,46 @@
   <div class="gl-backdrop gl-close-layer"></div>
   <div class="gl-fullscreen-layer gl-animate-transition" tabindex="-1">
 
-    <predictive-search class="search-modal__form" data-loading-text="{{ 'accessibility.loading' | t }}">
-      <form action="{{ routes.search_url }}" method="get" role="search" class="search search-modal__form">
-        <div class="field">
-          <input
-            class="search__input field__input"
-            id="SearchInput"
-            type="search"
-            name="q"
-            placeholder="{{ 'general.search.search' | t }}"
-            role="combobox"
-            aria-expanded="false"
-            aria-owns="predictive-search-results"
-            aria-controls="predictive-search-results"
-            aria-haspopup="listbox"
-            aria-autocomplete="list"
-            autocorrect="off"
-            autocomplete="off"
-            autocapitalize="off"
-            spellcheck="false"
-          >
+<predictive-search class="search-modal__form" data-loading-text="Loading..." results="true">
+  <form action="/search" method="get" role="search" class="search search-modal__form">
+    <div class="field">
+      <input
+        id="SearchInput"
+        class="search__input field__input"
+        type="search"
+        name="q"
+        placeholder="I'm looking for..."
+        role="combobox"
+        aria-expanded="false"
+        aria-owns="predictive-search-results"
+        aria-controls="predictive-search-results"
+        aria-haspopup="listbox"
+        aria-autocomplete="list"
+        autocorrect="off"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+      />
+      <label class="field__label" for="SearchInput">I'm looking for...</label>
+    </div>
 
-          <label class="field__label" for="SearchInput">{{ 'general.search.search' | t }}</label>
-          <input type="hidden" name="options[prefix]" value="last">
+    <!-- ✅ Predictive Results (EMPTY initially) -->
+    <div
+      id="predictive-search-results"
+      class="predictive-search predictive-search--header"
+      tabindex="-1"
+      data-predictive-search
+    ></div>
 
-          <button
-            type="reset"
-            class="reset__button field__button hidden"
-            aria-label="{{ 'general.search.reset' | t }}"
-          >
-            <span class="svg-wrapper">
-              {{ 'icon-reset.svg' | inline_asset_content }}
-            </span>
-          </button>
+    <!-- ✅ Live status element required by JS -->
+    <span
+      class="predictive-search-status visually-hidden"
+      role="status"
+      aria-hidden="true"
+    >Loading...</span>
+  </form>
+</predictive-search>
 
-          <button class="search__button field__button" aria-label="{{ 'general.search.search' | t }}">
-            <span class="svg-wrapper">
-              {{ 'icon-search.svg' | inline_asset_content }}
-            </span>
-          </button>
-        </div>
-
-        <!-- Results container injected by predictive-search.js -->
-        <div class="predictive-search predictive-search--header" tabindex="-1" data-predictive-search>
-          {%- render 'loading-spinner', class: 'predictive-search__loading-state' -%}
-        </div>
-
-        <!-- ✅ REQUIRED: This prevents .textContent JS error -->
-        <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
-      </form>
-    </predictive-search>
 
     <button type="button" class="gl-d-close-btn" aria-label="{{ 'accessibility.close' | t }}">
       {{ 'icon-close.svg' | inline_asset_content }}
