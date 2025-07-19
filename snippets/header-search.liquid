@@ -323,35 +323,21 @@
             <div class="predictive-search__result-group">
               <div class="queries">
                 <h2 id="predictive-search-queries-default" class="predictive-search__heading text-body caption-with-letter-spacing">Popular Searches</h2>
-                <ul id="predictive-search-results-queries-list-default" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-queries-default">
-                  <li id="predictive-search-option-query-default-1" class="predictive-search__list-item" role="option" aria-selected="false">
-                    <a href="/search?q=dresses" class="predictive-search__item link link--text" tabindex="-1">
-                      <div class="predictive-search__item-content predictive-search__item-content--centered">
-                        <p class="predictive-search__item-heading predictive-search__item-query-result h5" aria-label="Dresses">
-                          <span>Dresses</span>
-                        </p>
-                      </div>
-                    </a>
-                  </li>
-                  <li id="predictive-search-option-query-default-2" class="predictive-search__list-item" role="option" aria-selected="false">
-                    <a href="/search?q=shoes" class="predictive-search__item link link--text" tabindex="-1">
-                      <div class="predictive-search__item-content predictive-search__item-content--centered">
-                        <p class="predictive-search__item-heading predictive-search__item-query-result h5" aria-label="Shoes">
-                          <span>Shoes</span>
-                        </p>
-                      </div>
-                    </a>
-                  </li>
-                  <li id="predictive-search-option-query-default-3" class="predictive-search__list-item" role="option" aria-selected="false">
-                    <a href="/search?q=accessories" class="predictive-search__item link link--text" tabindex="-1">
-                      <div class="predictive-search__item-content predictive-search__item-content--centered">
-                        <p class="predictive-search__item-heading predictive-search__item-query-result h5" aria-label="Accessories">
-                          <span>Accessories</span>
-                        </p>
-                      </div>
-                    </a>
-                  </li>
-                </ul>
+                {% assign popular_searches = settings.popular_searches | split: "," %}
+                    <ul id="predictive-search-results-queries-list-default" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-queries-default">
+                      {% for search in popular_searches %}
+                        {% assign search_trimmed = search | strip %}
+                        <li class="predictive-search__list-item" role="option" aria-selected="false">
+                          <a href="/search?q={{ search_trimmed | url_encode }}" class="predictive-search__item link link--text" tabindex="-1">
+                            <div class="predictive-search__item-content predictive-search__item-content--centered">
+                              <p class="predictive-search__item-heading predictive-search__item-query-result h5" aria-label="{{ search_trimmed }}">
+                                <span>{{ search_trimmed }}</span>
+                              </p>
+                            </div>
+                          </a>
+                        </li>
+                      {% endfor %}
+                    </ul>
               </div>
 
               <div class="predictive-search__pages-wrapper">
