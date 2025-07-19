@@ -192,16 +192,14 @@ class FacetFiltersForm extends HTMLElement {
     FacetFiltersForm.toggleActiveFacets(false);
   }
 
-  static renderAdditionalElements(html) {
-    const mobileElementSelectors = ['.mobile-facets__open', '.mobile-facets__count', '.sorting'];
+ static renderAdditionalElements(html) {
+  const mobileElementSelectors = ['.mobile-facets__open', '.mobile-facets__count', '.sorting'];
 
-    mobileElementSelectors.forEach((selector) => {
-      if (!html.querySelector(selector)) return;
-      document.querySelector(selector).innerHTML = html.querySelector(selector).innerHTML;
-    });
-
-    document.getElementById('FacetFiltersFormMobile').closest('menu-drawer').bindEvents();
-  }
+  mobileElementSelectors.forEach((selector) => {
+    if (!html.querySelector(selector)) return;
+    document.querySelector(selector).innerHTML = html.querySelector(selector).innerHTML;
+  });
+}
 
   static renderCounts(source, target) {
     const targetSummary = target.querySelector('.facets__summary');
