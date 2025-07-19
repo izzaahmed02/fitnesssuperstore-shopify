@@ -115,13 +115,22 @@ class PredictiveSearch extends SearchForm {
 
   onChange() {
     const newSearchTerm = this.getQuery();
-    if (!this.searchTerm || !newSearchTerm.startsWith(this.searchTerm)) {
-      this.querySelector('#predictive-search-results-groups-wrapper')?.remove();
-    }
+    console.log('onChange triggered with term:', newSearchTerm);
+
+    // Clear previous results
+    this.querySelector('#predictive-search-results-groups-wrapper')?.remove();
+    this.predictiveSearchResults.innerHTML = '';
 
     this.updateSearchForTerm(this.searchTerm, newSearchTerm);
     this.searchTerm = newSearchTerm;
-    this.getSearchResults(this.searchTerm);
+
+    if (!this.searchTerm) {
+      console.log('Empty search term, fetching default results');
+      this.getDefaultResults();
+    } else {
+      console.log('Fetching search results for:', this.searchTerm);
+      this.getSearchResults(this.searchTerm);
+    }
   }
 
   onFormSubmit(event) {
@@ -135,12 +144,14 @@ class PredictiveSearch extends SearchForm {
       this.abortController.abort();
       this.abortController = new AbortController();
       this.closeResults(true);
+      console.log('Form reset, fetching default results');
       this.getDefaultResults();
     }
   }
 
   onFocus() {
     const currentSearchTerm = this.getQuery();
+    console.log('onFocus triggered, current term:', currentSearchTerm);
     if (this.getAttribute('results') === 'true') {
       this.open();
     } else {
@@ -155,7 +166,9 @@ class PredictiveSearch extends SearchForm {
   }
 
   onKeyup(event) {
-    if (!this.getQuery().length) {
+    const query = this.getQuery();
+    console.log('onKeyup triggered, query:', query);
+    if (!query) {
       this.getDefaultResults();
       return;
     }
@@ -240,8 +253,10 @@ class PredictiveSearch extends SearchForm {
   getDefaultResults() {
     const queryKey = 'default';
     this.setLiveRegionLoadingState();
+    console.log('Fetching default results');
 
     if (this.cachedResults[queryKey]) {
+      console.log('Using cached default results');
       this.renderSearchResults(this.cachedResults[queryKey]);
       return;
     }
@@ -278,6 +293,7 @@ class PredictiveSearch extends SearchForm {
         this.allPredictiveSearchInstances.forEach((predictiveSearchInstance) => {
           predictiveSearchInstance.cachedResults[queryKey] = resultsMarkup;
         });
+        console.log('Rendering default results');
         this.renderSearchResults(resultsMarkup);
       })
       .catch((error) => {
@@ -292,25 +308,25 @@ class PredictiveSearch extends SearchForm {
   getSearchResults(searchTerm) {
     const queryKey = searchTerm.replace(' ', '-').toLowerCase();
     this.setLiveRegionLoadingState();
+    console.log('Fetching search results for query:', searchTerm);
 
     if (this.cachedResults[queryKey]) {
+      console.log('Using cached results for:', queryKey);
       this.renderSearchResults(this.cachedResults[queryKey]);
       return;
     }
 
-    const url = searchTerm
-      ? `${routes.predictive_search_url}?q=${encodeURIComponent(searchTerm)}§ion_id=predictive-search`
-      : `${routes.predictive_search_url}?${new URLSearchParams({
-          'section_id': 'predictive-search',
-          'resources[type][products]': this.defaultResources.products ? 'true' : 'false',
-          'resources[type][pages]': this.defaultResources.pages ? 'true' : 'false',
-          'resources[type][queries]': this.defaultResources.queries ? 'true' : 'false',
-          'resources[type][collections]': this.defaultResources.collections ? 'true' : 'false',
-          'resources[type][articles]': this.defaultResources.articles ? 'true' : 'false',
-          'resources[limit]': '4'
-        }).toString()}`;
+    const params = new URLSearchParams();
+    params.set('q', encodeURIComponent(searchTerm));
+    params.set('section_id', 'predictive-search');
+    if (this.defaultResources.products) params.set('resources[type][products]', 'true');
+    if (this.defaultResources.pages) params.set('resources[type][pages]', 'true');
+    if (this.defaultResources.queries) params.set('resources[type][queries]', 'true');
+    if (this.defaultResources.collections) params.set('resources[type][collections]', 'true');
+    if (this.defaultResources.articles) params.set('resources[type][articles]', 'true');
+    params.set('resources[limit]', '4');
 
-    fetch(url, {
+    fetch(`${routes.predictive_search_url}?${params.toString()}`, {
       signal: this.abortController.signal,
     })
       .then((response) => {
@@ -326,13 +342,14 @@ class PredictiveSearch extends SearchForm {
           .parseFromString(text, 'text/html')
           .querySelector('#shopify-section-predictive-search')?.innerHTML;
         if (!resultsMarkup || resultsMarkup.trim() === '') {
-          console.warn('Predictive search API returned empty results, using fallback content');
+          console.warn('Predictive search API returned empty results for:', searchTerm);
           this.renderSearchResults(this.fallbackContent);
           return;
         }
         this.allPredictiveSearchInstances.forEach((predictiveSearchInstance) => {
           predictiveSearchInstance.cachedResults[queryKey] = resultsMarkup;
         });
+        console.log('Rendering search results for:', searchTerm);
         this.renderSearchResults(resultsMarkup);
       })
       .catch((error) => {
@@ -360,6 +377,7 @@ class PredictiveSearch extends SearchForm {
   }
 
   renderSearchResults(resultsMarkup) {
+    console.log('Rendering results:', resultsMarkup.substring(0, 100) + '...');
     this.predictiveSearchResults.innerHTML = resultsMarkup;
     this.setAttribute('results', true);
     this.setLiveRegionResults();
@@ -393,6 +411,7 @@ class PredictiveSearch extends SearchForm {
     if (clearSearchTerm) {
       this.input.value = '';
       this.removeAttribute('results');
+      console.log('Clearing search term, fetching default results');
       this.getDefaultResults();
     }
     const selected = this.querySelector('[aria-selected="true"]');
