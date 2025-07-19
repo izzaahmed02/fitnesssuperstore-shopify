@@ -8,19 +8,19 @@ class PredictiveSearch extends SearchForm {
     this.abortController = new AbortController();
     this.searchTerm = '';
 
-    // Configuration for default results
+    // Configuration for default results (using singular resource types per Shopify docs)
     this.defaultResources = {
-      products: true,      // Show trending products
-      pages: false,        // Disable pages to simplify request
-      collections: false,  // Disable collections
-      articles: false      // Disable articles
+      product: true,       // Show trending products
+      page: false,         // Disable pages to simplify request
+      collection: false,   // Disable collections
+      article: false       // Disable articles
     };
 
     // Fallback content for default view
     this.fallbackContent = `
       <div id="predictive-search-results" role="listbox">
         <div id="predictive-search-results-groups-wrapper" class="predictive-search__results-groups-wrapper">
-          ${this.defaultResources.products ? `
+          ${this.defaultResources.product ? `
             <div class="predictive-search__result-group">
               <h2 id="predictive-search-products" class="predictive-search__heading text-body caption-with-letter-spacing">
                 Trending Products
@@ -228,10 +228,10 @@ class PredictiveSearch extends SearchForm {
     const params = new URLSearchParams();
     params.set('q', '*'); // Use wildcard for default results
     params.set('section_id', 'predictive-search');
-    if (this.defaultResources.products) params.set('resources[type][products]', 'true');
-    if (this.defaultResources.pages) params.set('resources[type][pages]', 'true');
-    if (this.defaultResources.collections) params.set('resources[type][collections]', 'true');
-    if (this.defaultResources.articles) params.set('resources[type][articles]', 'true');
+    if (this.defaultResources.product) params.set('resources[type][product]', 'true');
+    if (this.defaultResources.page) params.set('resources[type][page]', 'true');
+    if (this.defaultResources.collection) params.set('resources[type][collection]', 'true');
+    if (this.defaultResources.article) params.set('resources[type][article]', 'true');
     params.set('resources[limit]', '4'); // Limit to 4 results per type
 
     console.log('Default results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
@@ -243,8 +243,11 @@ class PredictiveSearch extends SearchForm {
         console.log('Default results API response status:', response.status);
         if (!response.ok) {
           console.error('Predictive search API error for default results:', response.status, response.statusText);
-          return response.text().then((text) => {
-            console.error('Error response body:', text);
+          return response.json().then((json) => {
+            console.error('Error response body:', JSON.stringify(json));
+            throw new Error(response.status);
+          }).catch(() => {
+            console.error('Failed to parse error response as JSON');
             throw new Error(response.status);
           });
         }
@@ -273,6 +276,59 @@ class PredictiveSearch extends SearchForm {
         }
         console.error('Error fetching default results:', error);
         this.renderSearchResults(this.noResultsContent);
+        // Fallback to minimal request if full request fails
+        this.tryMinimalDefaultRequest();
+      });
+  }
+
+  tryMinimalDefaultRequest() {
+    console.log('Attempting minimal default request');
+    const params = new URLSearchParams();
+    params.set('q', '*');
+    params.set('section_id', 'predictive-search');
+
+    console.log('Minimal default results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
+
+    fetch(`${routes.predictive_search_url}?${params.toString()}`, {
+      signal: this.abortController.signal,
+    })
+      .then((response) => {
+        console.log('Minimal default results API response status:', response.status);
+        if (!response.ok) {
+          console.error('Minimal predictive search API error:', response.status, response.statusText);
+          return response.json().then((json) => {
+            console.error('Error response body:', JSON.stringify(json));
+            throw new Error(response.status);
+          }).catch(() => {
+            console.error('Failed to parse error response as JSON');
+            throw new Error(response.status);
+          });
+        }
+        return response.text();
+      })
+      .then((text) => {
+        console.log('Minimal default results API response text length:', text.length);
+        const resultsMarkup = new DOMParser()
+          .parseFromString(text, 'text/html')
+          .querySelector('#shopify-section-predictive-search')?.innerHTML;
+        if (!resultsMarkup || resultsMarkup.trim() === '') {
+          console.warn('Minimal predictive search API returned empty results');
+          this.renderSearchResults(this.noResultsContent);
+          return;
+        }
+        this.allPredictiveSearchInstances.forEach((predictiveSearchInstance) => {
+          predictiveSearchInstance.cachedResults['default'] = resultsMarkup;
+        });
+        console.log('Rendering minimal default results');
+        this.renderSearchResults(resultsMarkup);
+      })
+      .catch((error) => {
+        if (error?.code === 20) {
+          console.log('Minimal default results fetch aborted');
+          return;
+        }
+        console.error('Error fetching minimal default results:', error);
+        this.renderSearchResults(this.noResultsContent);
       });
   }
 
@@ -291,10 +347,10 @@ class PredictiveSearch extends SearchForm {
     const params = new URLSearchParams();
     params.set('q', encodeURIComponent(searchTerm));
     params.set('section_id', 'predictive-search');
-    if (this.defaultResources.products) params.set('resources[type][products]', 'true');
-    if (this.defaultResources.pages) params.set('resources[type][pages]', 'true');
-    if (this.defaultResources.collections) params.set('resources[type][collections]', 'true');
-    if (this.defaultResources.articles) params.set('resources[type][articles]', 'true');
+    if (this.defaultResources.product) params.set('resources[type][product]', 'true');
+    if (this.defaultResources.page) params.set('resources[type][page]', 'true');
+    if (this.defaultResources.collection) params.set('resources[type][collection]', 'true');
+    if (this.defaultResources.article) params.set('resources[type][article]', 'true');
     params.set('resources[limit]', '4');
 
     console.log('Search results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
@@ -306,8 +362,11 @@ class PredictiveSearch extends SearchForm {
         console.log('Search results API response status:', response.status);
         if (!response.ok) {
           console.error('Predictive search API error for query:', searchTerm, 'Status:', response.status, response.statusText);
-          return response.text().then((text) => {
-            console.error('Error response body:', text);
+          return response.json().then((json) => {
+            console.error('Error response body:', JSON.stringify(json));
+            throw new Error(response.status);
+          }).catch(() => {
+            console.error('Failed to parse error response as JSON');
             throw new Error(response.status);
           });
         }
@@ -335,6 +394,60 @@ class PredictiveSearch extends SearchForm {
           return;
         }
         console.error('Error fetching search results for:', searchTerm, 'Error:', error);
+        this.renderSearchResults(this.noResultsContent);
+        // Fallback to minimal request if full request fails
+        this.tryMinimalSearchRequest(searchTerm);
+      });
+  }
+
+  tryMinimalSearchRequest(searchTerm) {
+    const queryKey = searchTerm.replace(' ', '-').toLowerCase();
+    console.log('Attempting minimal search request for:', searchTerm);
+    const params = new URLSearchParams();
+    params.set('q', encodeURIComponent(searchTerm));
+    params.set('section_id', 'predictive-search');
+
+    console.log('Minimal search results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
+
+    fetch(`${routes.predictive_search_url}?${params.toString()}`, {
+      signal: this.abortController.signal,
+    })
+      .then((response) => {
+        console.log('Minimal search results API response status:', response.status);
+        if (!response.ok) {
+          console.error('Minimal predictive search API error for query:', searchTerm, 'Status:', response.status, response.statusText);
+          return response.json().then((json) => {
+            console.error('Error response body:', JSON.stringify(json));
+            throw new Error(response.status);
+          }).catch(() => {
+            console.error('Failed to parse error response as JSON');
+            throw new Error(response.status);
+          });
+        }
+        return response.text();
+      })
+      .then((text) => {
+        console.log('Minimal search results API response text length:', text.length);
+        const resultsMarkup = new DOMParser()
+          .parseFromString(text, 'text/html')
+          .querySelector('#shopify-section-predictive-search')?.innerHTML;
+        if (!resultsMarkup || resultsMarkup.trim() === '') {
+          console.warn('Minimal predictive search API returned empty results for:', searchTerm);
+          this.renderSearchResults(this.noResultsContent);
+          return;
+        }
+        this.allPredictiveSearchInstances.forEach((predictiveSearchInstance) => {
+          predictiveSearchInstance.cachedResults[queryKey] = resultsMarkup;
+        });
+        console.log('Rendering minimal search results for:', searchTerm);
+        this.renderSearchResults(resultsMarkup);
+      })
+      .catch((error) => {
+        if (error?.code === 20) {
+          console.log('Minimal search results fetch aborted for:', searchTerm);
+          return;
+        }
+        console.error('Error fetching minimal search results for:', searchTerm, 'Error:', error);
         this.renderSearchResults(this.noResultsContent);
       });
   }
