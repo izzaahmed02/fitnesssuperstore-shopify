@@ -10,10 +10,10 @@ class PredictiveSearch extends SearchForm {
 
     // Configuration for default results
     this.defaultResources = {
-      product: true,       // Show trending products
-      page: false,         // Disable pages
-      collection: false,   // Disable collections
-      article: false       // Disable articles
+      product: true,
+      page: true,         // Enable pages
+      collection: true,  // Enable collections
+      article: true      // Enable articles
     };
 
     // Fallback content for default view and API failures
@@ -39,6 +39,61 @@ class PredictiveSearch extends SearchForm {
                     <img class="predictive-search__image" src="/path/to/placeholder-image.jpg" alt="Sample Product 2" width="50" height="50">
                     <div class="predictive-search__item-content">
                       <p class="predictive-search__item-heading h5">Sample Product 2</p>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          ` : ''}
+          ${this.defaultResources.page ? `
+            <div class="predictive-search__result-group">
+              <h2 id="predictive-search-pages" class="predictive-search__heading text-body caption-with-letter-spacing">
+                Pages
+              </h2>
+              <ul id="predictive-search-results-pages-list" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-pages">
+                <li id="predictive-search-option-page-1" class="predictive-search__list-item" role="option" aria-selected="false">
+                  <a href="/pages/about-us" class="predictive-search__item link link--text" tabindex="-1">
+                    <div class="predictive-search__item-content predictive-search__item-content--centered">
+                      <p class="predictive-search__item-heading h5">About Us</p>
+                    </div>
+                  </a>
+                </li>
+                <li id="predictive-search-option-page-2" class="predictive-search__list-item" role="option" aria-selected="false">
+                  <a href="/pages/contact" class="predictive-search__item link link--text" tabindex="-1">
+                    <div class="predictive-search__item-content predictive-search__item-content--centered">
+                      <p class="predictive-search__item-heading h5">Contact</p>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          ` : ''}
+          ${this.defaultResources.collection ? `
+            <div class="predictive-search__result-group">
+              <h2 id="predictive-search-collections" class="predictive-search__heading text-body caption-with-letter-spacing">
+                Collections
+              </h2>
+              <ul id="predictive-search-results-collections-list" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-collections">
+                <li id="predictive-search-option-collection-1" class="predictive-search__list-item" role="option" aria-selected="false">
+                  <a href="/collections/all" class="predictive-search__item link link--text" tabindex="-1">
+                    <div class="predictive-search__item-content predictive-search__item-content--centered">
+                      <p class="predictive-search__item-heading h5">All Products</p>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          ` : ''}
+          ${this.defaultResources.article ? `
+            <div class="predictive-search__result-group">
+              <h2 id="predictive-search-articles" class="predictive-search__heading text-body caption-with-letter-spacing">
+                Articles
+              </h2>
+              <ul id="predictive-search-results-articles-list" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-articles">
+                <li id="predictive-search-option-article-1" class="predictive-search__list-item" role="option" aria-selected="false">
+                  <a href="/blogs/news/sample-article" class="predictive-search__item link link--text" tabindex="-1">
+                    <div class="predictive-search__item-content predictive-search__item-content--centered">
+                      <p class="predictive-search__item-heading h5">Sample Article</p>
                     </div>
                   </a>
                 </li>
@@ -300,6 +355,8 @@ class PredictiveSearch extends SearchForm {
     console.log('Attempting minimal default request');
     const params = new URLSearchParams();
     params.set('q', '*');
+    params.set('resources[type]', 'product,page,collection,article');
+    params.set('resources[limit]', '4');
 
     console.log('Minimal default results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
@@ -402,7 +459,7 @@ class PredictiveSearch extends SearchForm {
           .querySelector('#shopify-section-predictive-search')?.innerHTML;
         if (!resultsMarkup || resultsMarkup.trim() === '') {
           console.warn('Predictive search API returned empty results for:', searchTerm);
-          this.renderSearchResults(this.fallbackContent);
+          this.renderSearchResults(this.noResultsContent);
           return;
         }
         this.allPredictiveSearchInstances.forEach((predictiveSearchInstance) => {
@@ -417,7 +474,7 @@ class PredictiveSearch extends SearchForm {
           return;
         }
         console.error('Error fetching search results for:', searchTerm, 'Error:', error);
-        this.renderSearchResults(this.fallbackContent);
+        this.renderSearchResults(this.noResultsContent);
         // Try minimal request
         this.tryMinimalSearchRequest(searchTerm);
       });
@@ -428,6 +485,8 @@ class PredictiveSearch extends SearchForm {
     console.log('Attempting minimal search request for:', searchTerm);
     const params = new URLSearchParams();
     params.set('q', encodeURIComponent(searchTerm));
+    params.set('resources[type]', 'product,page,collection,article');
+    params.set('resources[limit]', '4');
 
     console.log('Minimal search results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
@@ -458,7 +517,7 @@ class PredictiveSearch extends SearchForm {
           .querySelector('#shopify-section-predictive-search')?.innerHTML;
         if (!resultsMarkup || resultsMarkup.trim() === '') {
           console.warn('Minimal predictive search API returned empty results for:', searchTerm);
-          this.renderSearchResults(this.fallbackContent);
+          this.renderSearchResults(this.noResultsContent);
           return;
         }
         this.allPredictiveSearchInstances.forEach((predictiveSearchInstance) => {
@@ -473,7 +532,7 @@ class PredictiveSearch extends SearchForm {
           return;
         }
         console.error('Error fetching minimal search results for:', searchTerm, 'Error:', error);
-        this.renderSearchResults(this.fallbackContent);
+        this.renderSearchResults(this.noResultsContent);
       });
   }
 
