@@ -249,49 +249,39 @@
     if (!detailsEl) return;
 
     const input = detailsEl.querySelector('.search__input');
-    const fakePlaceholder = detailsEl.querySelector('.fake-placeholder');
     const defaultTerm = 'fsr90';
 
-    function triggerSearch(term) {
+    // Helper to simulate input (Shopify listens for real 'input' events)
+    function simulateSearch(term) {
       input.value = term;
-
-      // Trigger native input event — required by Shopify's predictive search
-      const event = new Event('input', { bubbles: true });
-      input.dispatchEvent(event);
-
-      // Clear visually
-      input.value = '';
-      input.classList.remove('typing');
-      fakePlaceholder.style.opacity = '1';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.value = ''; // Clear it again
     }
 
-    // On modal open
+    // On open, trigger default search
     detailsEl.addEventListener('toggle', () => {
       if (detailsEl.open) {
         setTimeout(() => {
-          triggerSearch(defaultTerm);
+          simulateSearch(defaultTerm);
           input.focus();
         }, 50);
       }
     });
 
-    // On typing
+    // When user deletes everything, show default again
     input.addEventListener('input', () => {
-      const value = input.value.trim();
-      if (value === '') {
-        triggerSearch(defaultTerm);
-      } else {
-        input.classList.add('typing');
-        fakePlaceholder.style.opacity = '0';
+      if (input.value.trim() === '') {
+        simulateSearch(defaultTerm);
       }
     });
 
-    // On focus with empty input
+    // When refocused with nothing typed
     input.addEventListener('focus', () => {
       if (input.value.trim() === '') {
-        triggerSearch(defaultTerm);
+        simulateSearch(defaultTerm);
       }
     });
   });
 </script>
+
 
