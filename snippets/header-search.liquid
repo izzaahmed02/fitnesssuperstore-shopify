@@ -162,3 +162,27 @@
     </div>
   </details>
 </details-modal>
+
+            <script>
+              document.addEventListener('DOMContentLoaded', () => {
+  const detailsEl = document.querySelector('.header__search details');
+
+  if (!detailsEl) return;
+
+  detailsEl.addEventListener('toggle', () => {
+    if (detailsEl.open) {
+      setTimeout(() => {
+        const modalInput = detailsEl.querySelector('.search-modal__form .search__input');
+        if (modalInput) {
+          modalInput.value = 'dress'; // <-- Default term
+          modalInput.focus();
+
+          // Dispatch input event so predictive search triggers
+          modalInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }, 50); // slight delay ensures DOM is ready
+    }
+  });
+});
+
+            </script>
