@@ -13,70 +13,67 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let scrollListenerAttached = false;
 
-function checkScroll() {
-  const headerWrapper = document.querySelector(".header-wrapper");
-  const productContainer = document.querySelector(".product");
-  const productInfo = document.querySelector(".product__info-wrapper");
-  const leftContainer = document.querySelector(".product-main-left-container");
-  const productExtraInfo = document.querySelector(".product__extra_info");
-  const fixedContainer = document.querySelector(".page-width-desktop.page-width-index");
+  function checkScroll() {
+    const headerWrapper = document.querySelector(".header-wrapper");
+    const productContainer = document.querySelector(".product");
+    const productInfo = document.querySelector(".product__info-wrapper");
+    const leftContainer = document.querySelector(".product-main-left-container");
+    const productExtraInfo = document.querySelector(".product__extra_info");
+    const fixedContainer = document.querySelector(".page-width-desktop.page-width-index");
 
-  if (!productContainer || !productInfo || !leftContainer || !productExtraInfo) return;
+    if (!productContainer || !productInfo || !leftContainer || !productExtraInfo) return;
 
-  const productContainerRect = productContainer.getBoundingClientRect();
-  const extraInfoRect = productExtraInfo.getBoundingClientRect();
+    const productContainerRect = productContainer.getBoundingClientRect();
+    const extraInfoRect = productExtraInfo.getBoundingClientRect();
 
-  const windowHeight = window.innerHeight;
-  const productInfoHeight = productInfo.offsetHeight;
-  const extraInfoHeight = productExtraInfo.offsetHeight;
+    const windowHeight = window.innerHeight;
+    const productInfoHeight = productInfo.offsetHeight;
+    const extraInfoHeight = productExtraInfo.offsetHeight;
 
-  productContainer.style.minHeight = `${productInfoHeight}px`;
+    productContainer.style.minHeight = `${productInfoHeight}px`;
 
-  if (window.scrollY <= headerWrapper.offsetHeight) {
-    productInfo.classList.remove("fixed", "absolute");
-    productInfo.style.top = "";
-    productInfo.style.right = "";
-    productInfo.style.left = "";
-    return;
+    if (window.scrollY <= headerWrapper.offsetHeight) {
+      productInfo.classList.remove("fixed", "absolute");
+      productInfo.style.top = "";
+      productInfo.style.right = "";
+      productInfo.style.left = "";
+      return;
+    }
+
+    if (extraInfoRect.top <= windowHeight - productInfoHeight) {
+      productInfo.classList.add("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = "";
+    } else {
+      productInfo.classList.remove("fixed");
+    }
+
+    if (extraInfoRect.top <= windowHeight && extraInfoRect.bottom > windowHeight) {
+      productInfo.classList.add("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = "";
+    }
+
+    if (extraInfoRect.bottom <= windowHeight) {
+      productInfo.classList.remove("fixed");
+      productInfo.classList.add("absolute");
+      productInfo.style.top = `${extraInfoHeight + headerWrapper.offsetHeight}px`;
+      productInfo.style.left = "";
+      productInfo.style.right = "";
+      return;
+    }
+
+    if (fixedContainer && productInfo.classList.contains("fixed")) {
+      const containerRect = fixedContainer.getBoundingClientRect();
+      const leftOffset = containerRect.right - productInfo.offsetWidth - 1;
+
+      productInfo.style.left = `${leftOffset}px`;
+      productInfo.style.right = "auto";
+    } else {
+      productInfo.style.left = "";
+      productInfo.style.right = "";
+    }
   }
-
-  if (extraInfoRect.top <= windowHeight - productInfoHeight) {
-    productInfo.classList.add("fixed");
-    productInfo.classList.remove("absolute");
-    productInfo.style.top = "";
-  } else {
-    productInfo.classList.remove("fixed");
-  }
-
-  if (extraInfoRect.top <= windowHeight && extraInfoRect.bottom > windowHeight) {
-    productInfo.classList.add("fixed");
-    productInfo.classList.remove("absolute");
-    productInfo.style.top = "";
-  }
-
-  if (extraInfoRect.bottom <= windowHeight) {
-    productInfo.classList.remove("fixed");
-    productInfo.classList.add("absolute");
-    productInfo.style.top = `${extraInfoHeight + headerWrapper.offsetHeight}px`;
-    productInfo.style.left = "";
-    productInfo.style.right = "";
-    return;
-  }
-
-  if (fixedContainer && productInfo.classList.contains("fixed")) {
-    const containerRect = fixedContainer.getBoundingClientRect();
-    const leftOffset = containerRect.right - productInfo.offsetWidth - 1;
-
-    productInfo.style.left = `${leftOffset}px`;
-    productInfo.style.right = "auto";
-  } else {
-    productInfo.style.left = "";
-    productInfo.style.right = "";
-  }
-}
-
-  
-
 
   function setupScrollListener() {
     const productInfo = document.querySelector(".product__info-wrapper");
@@ -106,5 +103,5 @@ function checkScroll() {
     resizeTimeout = setTimeout(setupScrollListener, 100);
   });
 
-  waitForElement(".avpoptions-container__v2", setupScrollListener);
+  waitForElement(".product__info-wrapper", setupScrollListener);
 });

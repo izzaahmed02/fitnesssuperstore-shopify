@@ -77,7 +77,7 @@ function createAssemblySelect() {
 	}
 	if (doubledSelect) {
 		options.forEach((option) => {
-			const optionValue = option.querySelector('.swatch-variant-title').innerHTML;
+			const optionValue = option.querySelector('.swatch-variant-title').innerHTML + <span avis-price="64900" avis-price-compare="0" class="money apo-money">[Add $649.00]</span>;
 			const optionInputName = option.querySelector('input').getAttribute("value");
 			const optionTag = doubledSelect.appendChild(document.createElement("option"));
 			optionTag.innerHTML = optionValue;
@@ -298,7 +298,7 @@ function setupOptions() {
 }
 
 function setupOptionsPopup() {
-	document.querySelectorAll('.ap-label-tooltip, .group-color .apo-title').forEach((element) => {
+	document.querySelectorAll('.ap-label-tooltip, .group-color .apo-title, .product-options__subcategory-title svg').forEach((element) => {
 		if (element.dataset.initialized) {
 			return;
 		}
@@ -357,7 +357,7 @@ function setupOptionsPopup() {
 				event.preventDefault();
 				event.stopPropagation();
 
-        let headingElement = parentWithHandle.previousElementSibling;
+        		let headingElement = parentWithHandle.previousElementSibling;
 
 				while (headingElement) {
 					if (headingElement.classList.contains('ap-options__heading-container')) {
@@ -396,8 +396,13 @@ function setupOptionsPopup() {
 				}
 
 				const encodedProductTitle = encodeURIComponent(productTitleSearch);
+
+				const productId = event.target.getAttribute('data-product-id');
+				console.log(productId);
 				
-				const product = await fetchProductByOptionCategory(optionCategoryId, encodedProductTitle);
+				//const product = await fetchProductByOptionCategory(optionCategoryId, encodedProductTitle);
+				const product = await fetchProductDetailsWithMetafields(productId);
+				console.log(product);
 
 				if (!product) {
 					return;

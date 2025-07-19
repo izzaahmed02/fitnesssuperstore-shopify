@@ -312,8 +312,13 @@ try {
 							customFieldvalue = 'Warranty (30)';
 							product = await fetchProductByTitle(customFieldvalue);
 						}
+
 						if (product) {
-							document.querySelector('#dynamic-product-content').style.width = "auto";
+							const container = document.getElementById('dynamic-product-content');
+							const modalWrapper = document.querySelector('.modal-wrapper');
+							const closeIconTemplate = document.getElementById('icon-close-template').innerHTML;
+
+							container.style.width = "auto";
 							modalWrapper.style.display = 'flex';
 							const tempDiv = document.createElement('div');
 							tempDiv.innerHTML = product.body_html;
@@ -332,10 +337,12 @@ try {
 			});
 		});
 
+		const modalWrapper = document.querySelector('.modal-wrapper');
 		modalWrapper.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
 		});
 
+		const container = document.getElementById('dynamic-product-content');
 		container.addEventListener('click', (event) => {
 			event.stopPropagation();
 		});
@@ -390,6 +397,26 @@ try {
 	});
 } catch (error) {
 	console.log(error)
+}
+
+async function fetchProductByTitle(title) {
+	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbytitle?title=${encodeURIComponent(title)}`;
+
+	try {
+		const response = await fetch(shopifyUrl, {
+			method: 'GET'
+		});
+
+		if (!response.ok) {
+			throw new Error('Failed to fetch product by title');
+		}
+
+		const data = await response.json();
+		return data.products[0];
+	} catch (error) {
+		console.error('Error fetching product by title:', error);
+		return null;
+	}
 }
 
 function generatePayLaterText() {
@@ -528,6 +555,8 @@ function showPayLaterModal() {
 	const payLaterAggregateHTML = generatePayLaterAggregate();
 
 	if (generatePayLaterAggregate) {
+		const modalWrapper = document.querySelector('.modal-wrapper');
+		const closeIconTemplate = document.getElementById('icon-close-template').innerHTML;
 		modalWrapper.style.display = 'flex';
 		const tempDiv = document.createElement('div');
 		tempDiv.innerHTML = payLaterAggregateHTML;

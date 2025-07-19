@@ -1,0 +1,122 @@
+{% comment %}
+  Partial template for rendering a cart item custom option popup
+  Parameters:
+    - variant: product variant to display
+    - item_key: unique key of the parent cart item
+{% endcomment %}
+
+{% if is_product %}
+    <div data-key="{{ variant.id }}" class="cart-item__custom-option-popup">
+        <div class="cart-item__custom-option-popup-inner">
+            <svg class="popup-close" width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 5.96967C5.76256 5.67678 6.23744 5.67678 6.53033 5.96967L12 11.4393L17.4697 5.96967C17.7626 5.67678 18.2374 5.67678 18.5303 5.96967C18.8232 6.26256 18.8232 6.73744 18.5303 7.03033L13.0607 12.5L18.5303 17.9697C18.8232 18.2626 18.8232 18.7374 18.5303 19.0303C18.2374 19.3232 17.7626 19.3232 17.4697 19.0303L12 13.5607L6.53033 19.0303C6.23744 19.3232 5.76256 19.3232 5.46967 19.0303C5.17678 18.7374 5.17678 18.2626 5.46967 17.9697L10.9393 12.5L5.46967 7.03033C5.17678 6.73744 5.17678 6.26256 5.46967 5.96967Z" fill="#808080"/>
+            </svg>
+            <div class="cart-item__custom-option-popup-img-wrapper {% if variant.featured_image %} {% else %} empty {% endif %}">
+                {% if variant.featured_image %}
+                    <img src="{{ variant.featured_image | image_url }}"
+                         alt="{{ variant.title }}"
+                         class="cart-item__custom-option-option-image">
+                {% else %}
+
+                {% endif %}
+            </div>
+            <div class="cart-item__custom-option-popup-content">
+                {% assign cleaned_title = variant.title %}
+
+                {% if product_title contains "($" or product_title contains "(+$" %}
+                    {% assign parts = product_title | split: ")" %}
+                    {% if parts.size > 1 %}
+                        {% assign first_part = parts | first | append: ")" %}
+                        {% if first_part contains "$" %}
+                            {% assign cleaned_title = product_title | remove_first: first_part | strip %}
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+
+                {% if cleaned_title contains "($" or cleaned_title contains "(+$" %}
+                    {% assign last_bracket_index = cleaned_title | split: "(" | size | minus: 1 %}
+                    {% if last_bracket_index > 0 %}
+                        {% assign parts = cleaned_title | split: "(" %}
+                        {% assign last_part = "(" | append: parts[last_bracket_index] %}
+                        {% if last_part contains "$" and last_part contains ")" %}
+                            {% assign cleaned_title = cleaned_title | remove: last_part | strip %}
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+                <h5 class="cart-item__custom-options-option-title">{{ cleaned_title }}</h5>
+                <span class="cart-item__custom-options-option-price">(+{{ variant.price | money }})</span>
+                <div class="cart-item__custom-options-option-copy">{{ variant.product.description }}</div>
+            </div>
+        </div>
+        <div class="cart-item__custom-option-popup-buttons">
+            <a href="#" class="cart-item__custom-option-popup-cancel">Cancel</a>
+            <button data-variant="{{ variant.id }}"
+                    data-key="{{ item_key  }}"
+                    data-group="{{ item_group }}"
+                    class="button button--tertiary">
+                {% if variant.available == false %}
+                    Sold Out
+                {% else %}
+                    Add
+                {% endif %}
+            </button>
+        </div>
+    </div>
+{% else %}
+    <div data-key="{{ variant.id }}" class="cart-item__custom-option-popup">
+        <div class="cart-item__custom-option-popup-inner">
+            <svg class="popup-close" width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 5.96967C5.76256 5.67678 6.23744 5.67678 6.53033 5.96967L12 11.4393L17.4697 5.96967C17.7626 5.67678 18.2374 5.67678 18.5303 5.96967C18.8232 6.26256 18.8232 6.73744 18.5303 7.03033L13.0607 12.5L18.5303 17.9697C18.8232 18.2626 18.8232 18.7374 18.5303 19.0303C18.2374 19.3232 17.7626 19.3232 17.4697 19.0303L12 13.5607L6.53033 19.0303C6.23744 19.3232 5.76256 19.3232 5.46967 19.0303C5.17678 18.7374 5.17678 18.2626 5.46967 17.9697L10.9393 12.5L5.46967 7.03033C5.17678 6.73744 5.17678 6.26256 5.46967 5.96967Z" fill="#808080"/>
+            </svg>
+            <div class="cart-item__custom-option-popup-img-wrapper  {% if variant.featured_image %} {% else %} empty {% endif %}">
+                {% if variant.featured_image %}
+                    <img src="{{ variant.featured_image | image_url }}"
+                         alt="{{ variant.title }}"
+                         class="cart-item__custom-option-option-image">
+                {% else %}
+                {% endif %}
+            </div>
+            <div class="cart-item__custom-option-popup-content">
+                {% assign cleaned_title = variant.title %}
+
+                {% if product_title contains "($" or product_title contains "(+$" %}
+                    {% assign parts = product_title | split: ")" %}
+                    {% if parts.size > 1 %}
+                        {% assign first_part = parts | first | append: ")" %}
+                        {% if first_part contains "$" %}
+                            {% assign cleaned_title = product_title | remove_first: first_part | strip %}
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+
+                {% if cleaned_title contains "($" or cleaned_title contains "(+$" %}
+                    {% assign last_bracket_index = cleaned_title | split: "(" | size | minus: 1 %}
+                    {% if last_bracket_index > 0 %}
+                        {% assign parts = cleaned_title | split: "(" %}
+                        {% assign last_part = "(" | append: parts[last_bracket_index] %}
+                        {% if last_part contains "$" and last_part contains ")" %}
+                            {% assign cleaned_title = cleaned_title | remove: last_part | strip %}
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+
+                <h5 class="cart-item__custom-options-option-title">{{ cleaned_title }}</h5>
+                <span class="cart-item__custom-options-option-price">(+{{ variant.price | money }})</span>
+                <div class="cart-item__custom-options-option-copy">{{ variant.product.description }}</div>
+            </div>
+        </div>
+        <div class="cart-item__custom-option-popup-buttons">
+            <a href="#" class="cart-item__custom-option-popup-cancel">Cancel</a>
+            <button data-variant="{{ variant.id }}"
+                    data-key="{{ item_key }}"
+                    data-group="{{ item_group }}"
+                    class="button button--tertiary">
+                {% if variant.available == false %}
+                    Sold Out
+                {% else %}
+                    Add
+                {% endif %}
+            </button>
+        </div>
+    </div>
+{% endif %}

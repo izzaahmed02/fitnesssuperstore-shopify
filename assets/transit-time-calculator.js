@@ -140,7 +140,7 @@ var TransitTimeCalculator = {
       }
 
       let faiSelect = document.querySelector('#double-assembly-input');
-      
+
       if (faiSelect) {
         deliveryOptionText = faiSelect.value;
         if (!faiSelect.dataset.listenerAttached) {

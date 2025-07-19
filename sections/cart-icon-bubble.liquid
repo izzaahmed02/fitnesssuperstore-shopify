@@ -7,10 +7,19 @@
 -%}
 <span class="visually-hidden">{{ 'templates.cart.cart' | t }}</span>
 {%- if cart != empty -%}
+  {% assign cart_count = 0 %}
+  {%- for item in cart.items -%}
+    {%- for property in item.properties -%}
+      {% if item.properties._parent_product_id == blank %}
+        {% assign cart_count = cart_count | plus: item.quantity %}
+        {% break %}
+      {% endif %}
+    {%- endfor -%}
+  {% endfor %}
   <div class="cart-count-bubble">
     {%- if cart.item_count < 100 -%}
-      <span aria-hidden="true">{{ cart.item_count }}</span>
+      <span aria-hidden="true">{{ cart_count }}</span>
     {%- endif -%}
-    <span class="visually-hidden">{{ 'sections.header.cart_count' | t: count: cart.item_count }}</span>
+    <span class="visually-hidden">{{ 'sections.header.cart_count' | t: count: cart_count }}</span>
   </div>
 {%- endif -%}
