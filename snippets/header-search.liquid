@@ -234,35 +234,51 @@ document.addEventListener('DOMContentLoaded', () => {
   const input = detailsEl.querySelector('.search__input');
   const fakePlaceholder = detailsEl.querySelector('.fake-placeholder');
 
+  function triggerDummySearch() {
+    if (!input) return;
+    
+    // Set fake search value
+    input.value = 'fsr90';
+    input.classList.remove('typing');
+
+    // Show placeholder again
+    if (fakePlaceholder) fakePlaceholder.style.opacity = '1';
+
+    // Trigger predictive search
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+  }
+
   detailsEl.addEventListener('toggle', () => {
     if (detailsEl.open) {
-      setTimeout(() => {
-        if (!input || !fakePlaceholder) return;
-
-        input.value = 'fsr90';
-        fakePlaceholder.style.opacity = '1';
-
-        // Trigger predictive search
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.focus();
-      }, 10);
+      setTimeout(triggerDummySearch, 20);
     }
   });
 
-  // Clear dummy value on user input
+  // Clear fake search on typing
   input.addEventListener('input', () => {
-    if (input.value === 'fsr90') return;
-
-    input.classList.add('typing');
-    input.value = input.value.replace('fsr90', '');
-    fakePlaceholder.style.opacity = '0';
+    if (input.value !== 'fsr90') {
+      input.classList.add('typing');
+      if (fakePlaceholder) fakePlaceholder.style.opacity = '0';
+    }
   });
 
   input.addEventListener('focus', () => {
-    if (input.value === 'fsr90') {
+    // Optional: prevent 'fsr90' from clearing too early
+    if (input.classList.contains('typing')) return;
+
+    input.value = '';
+    if (fakePlaceholder) fakePlaceholder.style.opacity = '1';
+  });
+
+  // When reset button is clicked, restore dummy search on next open
+  input.form?.addEventListener('reset', () => {
+    setTimeout(() => {
       input.value = '';
-    }
+      input.classList.remove('typing');
+    }, 0);
   });
 });
 </script>
+
 
