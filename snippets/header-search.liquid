@@ -10,58 +10,70 @@
 
 <details-modal class="header__search">
   <details>
+    <!-- 🔍 Trigger -->
     <summary class="customSearch">
-      <predictive-search class="gl-d-searchbox" data-loading-text="{{ 'accessibility.loading' | t }}">
-        <form action="{{ routes.search_url }}" method="get" role="search">
-          <label class="gl-icon gl-d-searchbox-icon" for="predictive-search-input">
-            {{ 'icon-search.svg' | inline_asset_content }}
-          </label>
-          <input
-            id="predictive-search-input"
-            class="gl-d-searchbox-input custom-header-search--input"
-            type="search"
-            name="q"
-            value="{{ search.terms | escape }}"
-            placeholder="{{ 'general.search.search' | t }}"
-            role="combobox"
-            aria-expanded="false"
-            aria-owns="predictive-search-results"
-            aria-controls="predictive-search-results"
-            aria-haspopup="listbox"
-            aria-autocomplete="list"
-            autocorrect="off"
-            autocomplete="off"
-            autocapitalize="off"
-            spellcheck="false"
-          >
-          <input type="hidden" name="options[prefix]" value="last">
-        </form>
-
-        <!-- Live search results -->
-        <div class="gl-fullscreen-suggestions predictive-search predictive-search--header" tabindex="-1" data-predictive-search>
-          {% render 'loading-spinner', class: 'predictive-search__loading-state' %}
-        </div>
-        <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
-      </predictive-search>
+      <span class="gl-d-searchbox-icon">
+        {{ 'icon-search.svg' | inline_asset_content }}
+      </span>
+      <span class="gl-d-searchbox-placeholder">
+        {{ 'general.search.search' | t }}
+      </span>
     </summary>
 
-    <!-- Fullscreen popup content -->
+    <!-- 🔍 Fullscreen Predictive Search -->
     <div id="glFilter-search-popup" class="ui-menu glFilter-search-popup gl-filter-search-fullscreen gl-filter-animate" role="dialog" aria-modal="true" aria-label="{{ 'general.search.search' | t }}">
       <div class="gl-backdrop gl-close-layer"></div>
       <div class="gl-fullscreen-layer gl-animate-transition" tabindex="-1">
+
+        <!-- Header with Input -->
         <div class="gl-fullscreen-header">
+          <predictive-search class="gl-d-searchbox" data-loading-text="{{ 'accessibility.loading' | t }}">
+            <form method="GET" action="{{ routes.search_url }}" role="search">
+              <label class="gl-icon gl-d-searchbox-icon" for="predictive-search-input">
+                {{ 'icon-search.svg' | inline_asset_content }}
+              </label>
+              <input
+                type="search"
+                class="gl-d-searchbox-input"
+                id="predictive-search-input"
+                name="q"
+                value="{{ search.terms | escape }}"
+                placeholder="{{ 'general.search.search' | t }}"
+                role="combobox"
+                aria-expanded="false"
+                aria-owns="predictive-search-results"
+                aria-controls="predictive-search-results"
+                aria-haspopup="listbox"
+                aria-autocomplete="list"
+                autocapitalize="off"
+                autocomplete="off"
+                autocorrect="off"
+                spellcheck="false"
+              >
+              <input type="hidden" name="options[prefix]" value="last">
+            </form>
+
+            <!-- 🔮 Predictive Results -->
+            <div class="predictive-search predictive-search--header gl-fullscreen-suggestions" tabindex="-1" data-predictive-search>
+              {% render 'loading-spinner', class: 'predictive-search__loading-state' %}
+            </div>
+
+            <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
+          </predictive-search>
+
+          <!-- ❌ Close -->
           <button type="button" class="gl-d-close-btn" aria-label="{{ 'accessibility.close' | t }}">
             {{ 'icon-close.svg' | inline_asset_content }}
           </button>
         </div>
 
-        <!-- Optional static content (initial suggestions, trends) -->
+        <!-- 💡 Optional Trending Section -->
         <div class="gl-fullscreen-initial-content">
-          <div class="gl-search-title">{{ 'Maybe you’re looking for' }}</div>
+          <div class="gl-search-title">Maybe you’re looking for</div>
           <ul class="gl-search-suggestions">
-            <li><a href="/collections/all?q=dumbbells">Dumbbells</a></li>
+            <li><a href="/collections/all?q=bench">Bench</a></li>
             <li><a href="/collections/all?q=treadmill">Treadmill</a></li>
-            <li><a href="/collections/all?q=barbell">Barbell</a></li>
+            <li><a href="/collections/all?q=dumbbell">Dumbbell</a></li>
           </ul>
 
           <div class="gl-search-title">Trending Products</div>
@@ -69,17 +81,19 @@
             {% for product in collections.frontpage.products limit: 4 %}
               <div class="gl-trending-product">
                 <a href="{{ product.url }}">
-                  <img src="{{ product.featured_image | image_url: width: 120 }}" alt="{{ product.title }}" />
+                  <img src="{{ product.featured_image | image_url: width: 120 }}" alt="{{ product.title }}">
                   <div class="gl-trending-product-title">{{ product.title }}</div>
                 </a>
               </div>
             {% endfor %}
           </div>
         </div>
+
       </div>
     </div>
   </details>
 </details-modal>
+
 
 
             <style>
