@@ -67,51 +67,24 @@
   pointer-events: none!important;
 }
 
-
-
-.predictive-wrapper input.search__input {
-  color: transparent !important;
-  caret-color: black !important;
-}
-
-.predictive-wrapper input.search__input.typing {
-  color: #212529 !important;
-}
-
-
-
-
-
-
-  .predictive-wrapper {
+.predictive-wrapper {
   position: relative;
-}
-
-.search__input {
-  color: transparent;
-  caret-color: black;
-}
-
-.search__input.typing {
-  color: #000;
 }
 
 .fake-placeholder {
   position: absolute;
-  top: 50%;
   left: 12px;
+  top: 50%;
   transform: translateY(-50%);
   color: #999;
   pointer-events: none;
   font-size: 16px;
-  white-space: nowrap;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s;
 }
 
-.search__input.typing + .fake-placeholder {
+input.typing + .fake-placeholder {
   opacity: 0;
 }
-
 
   
 </style>
@@ -174,13 +147,12 @@
         {%- endif -%}
         <form action="{{ routes.search_url }}" method="get" role="search" class="search search-modal__form">
           <div class="field">
-            <div class="field predictive-wrapper">
             <input
               class="search__input field__input"
               id="{{ input_id }}"
               type="search"
               name="q"
-              placeholder="I am looking for"
+              
               value="{{ search.terms | escape }}"
 
               {%- if settings.predictive_search_enabled -%}
@@ -197,7 +169,6 @@
               {%- endif -%}
             >
             <span class="fake-placeholder">I am looking for</span>
-            </div>
             
             <input type="hidden" name="options[prefix]" value="last">
             <button
@@ -244,25 +215,43 @@
 </details-modal>
 
 <script>
-
-  
 document.addEventListener('DOMContentLoaded', () => {
   const detailsEl = document.querySelector('.header__search details');
+
   if (!detailsEl) return;
+
+  const input = detailsEl.querySelector('.search__input');
+  const fakePlaceholder = detailsEl.querySelector('.fake-placeholder');
 
   detailsEl.addEventListener('toggle', () => {
     if (detailsEl.open) {
       setTimeout(() => {
-        const predictiveSearchEl = document.querySelector('predictive-search');
-        if (predictiveSearchEl?.triggerDefaultSearch) {
-          predictiveSearchEl.triggerDefaultSearch('fsr90');
-          predictiveSearchEl.input.focus();
-        }
-      }, 50);
+        if (!input || !fakePlaceholder) return;
+
+        input.value = 'fsr90';
+        fakePlaceholder.style.opacity = '1';
+
+        // Trigger predictive search
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.focus();
+      }, 10);
+    }
+  });
+
+  // Clear dummy value on user input
+  input.addEventListener('input', () => {
+    if (input.value === 'fsr90') return;
+
+    input.classList.add('typing');
+    input.value = input.value.replace('fsr90', '');
+    fakePlaceholder.style.opacity = '0';
+  });
+
+  input.addEventListener('focus', () => {
+    if (input.value === 'fsr90') {
+      input.value = '';
     }
   });
 });
-
 </script>
-
 
