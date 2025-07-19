@@ -452,12 +452,13 @@
                                 {%- for filter in results.filters -%}
                                     {% liquid
                                         assign presentation = filter.presentation | default: default_presentation
+                                        assign visual_layout_class = 'facets-layout facets-layout-list facets-layout-list--' | append: presentation
                                         if presentation == 'image'
+                                            assign show_more_number = 12
                                             assign visual_layout_class = 'facets-layout facets-layout-grid facets-layout-grid--' | append: presentation
                                         else
-                                            assign visual_layout_class = 'facets-layout facets-layout-list facets-layout-list--' | append: presentation
+                                            assign show_more_number = 5
                                         endif
-                                        assign show_more_number = presentation == 'image' ? 12 : 5
                                     %}
                                     {% case filter.type %}
                                         {% when 'boolean', 'list' %}
