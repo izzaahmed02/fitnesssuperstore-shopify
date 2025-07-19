@@ -24,27 +24,29 @@ class PredictiveSearch extends SearchForm {
     return this.input.value.trim();
   }
 
-  onChange() {
-    super.onChange();
-    const newSearchTerm = this.getQuery();
-    if (!this.searchTerm || !newSearchTerm.startsWith(this.searchTerm)) {
-      // Remove the results when they are no longer relevant for the new search term
-      // so they don't show up when the dropdown opens again
-      this.querySelector('#predictive-search-results-groups-wrapper')?.remove();
-    }
+onChange() {
+  super.onChange();
+  const newSearchTerm = this.getQuery();
+  const defaultSuggestions = this.querySelector('[data-default-suggestions]');
 
-    // Update the term asap, don't wait for the predictive search query to finish loading
-    this.updateSearchForTerm(this.searchTerm, newSearchTerm);
-
-    this.searchTerm = newSearchTerm;
-
-    if (!this.searchTerm.length) {
-      this.close(true);
-      return;
-    }
-
-    this.getSearchResults(this.searchTerm);
+  // Show/hide custom suggestions
+  if (!newSearchTerm.length) {
+    defaultSuggestions?.classList.remove('hidden');
+    this.predictiveSearchResults.innerHTML = '';
+    return;
+  } else {
+    defaultSuggestions?.classList.add('hidden');
   }
+
+  // Continue with actual predictive logic
+  if (!this.searchTerm || !newSearchTerm.startsWith(this.searchTerm)) {
+    this.querySelector('#predictive-search-results-groups-wrapper')?.remove();
+  }
+
+  this.updateSearchForTerm(this.searchTerm, newSearchTerm);
+  this.searchTerm = newSearchTerm;
+  this.getSearchResults(this.searchTerm);
+}
 
   onFormSubmit(event) {
     if (!this.getQuery().length || this.querySelector('[aria-selected="true"] a')) event.preventDefault();
@@ -61,19 +63,25 @@ class PredictiveSearch extends SearchForm {
   }
 
   onFocus() {
-    const currentSearchTerm = this.getQuery();
+  const currentSearchTerm = this.getQuery();
+  const defaultSuggestions = this.querySelector('[data-default-suggestions]');
 
-    if (!currentSearchTerm.length) return;
-
-    if (this.searchTerm !== currentSearchTerm) {
-      // Search term was changed from other search input, treat it as a user change
-      this.onChange();
-    } else if (this.getAttribute('results') === 'true') {
-      this.open();
-    } else {
-      this.getSearchResults(this.searchTerm);
-    }
+  if (!currentSearchTerm.length) {
+    defaultSuggestions?.classList.remove('hidden');
+    this.predictiveSearchResults.innerHTML = ''; // clear default search results if any
+    return;
   }
+
+  defaultSuggestions?.classList.add('hidden');
+
+  if (this.searchTerm !== currentSearchTerm) {
+    this.onChange();
+  } else if (this.getAttribute('results') === 'true') {
+    this.open();
+  } else {
+    this.getSearchResults(this.searchTerm);
+  }
+}
 
   onFocusOut() {
     setTimeout(() => {
