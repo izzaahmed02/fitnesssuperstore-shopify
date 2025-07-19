@@ -22,15 +22,6 @@ class PredictiveSearch extends SearchForm {
 
   getQuery() {
     return this.input.value.trim();
-    triggerDefaultSearch(term = 'fsr90') {
-  this.searchTerm = term;
-  this.input.value = term;
-  this.getSearchResults(term);
-
-  // Set up fake input value for visual placeholder
-  this.input.value = ''; // leave visually blank
-  this.setAttribute('results', true);
-}
   }
 
   onChange() {
