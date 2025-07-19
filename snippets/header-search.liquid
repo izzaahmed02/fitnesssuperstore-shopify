@@ -1,4 +1,40 @@
 <style>
+
+.default-search-content {
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 5px;
+  margin-top: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  width: 100%;
+}
+
+.default-search-content h3 {
+  margin-top: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.default-search-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.default-search-content li {
+  margin-bottom: 10px;
+}
+
+.default-search-content a {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: bold;
+}
+
+.default-search-content a:hover {
+  text-decoration: underline;
+}
+
+  
   .gl-search-fullscreen {
     font-size: 16px !important;
     color: #212529 !important;
@@ -36,7 +72,7 @@
   }
 
   .search.search-modal__form{
-    padding: 0px !important;
+      padding: 0px !important;
   }
 
   .predictive-search {
@@ -101,93 +137,6 @@
     line-height: 64px;
     color: #000 !important;
   }
-
-  /* Existing CSS for predictive search results */
-  #predictive-search-results-queries-list .predictive-search__list-item:before,
-  #predictive-search-results-pages-list-desktop .predictive-search__list-item:before,
-  #predictive-search-results-collections-list .predictive-search__list-item:before,
-  .predictive-search__results-groups-wrapper .predictive-search__list-item:before
-  {
-    content: "";
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 24px;
-    height: 24px;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-size: contain;
-    left: 0;
-    background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M3.5 11C3.5 6.85786 6.85786 3.5 11 3.5C15.1421 3.5 18.5 6.85786 18.5 11C18.5 15.1421 15.1421 18.5 11 18.5C6.85786 18.5 3.5 15.1421 3.5 11ZM11 2.5C6.30558 2.5 2.5 6.30558 2.5 11C2.5 15.6944 6.30558 19.5 11 19.5C13.1673 19.5 15.1451 18.6889 16.6465 17.3536L19.6464 20.3536C19.8417 20.5488 20.1583 20.5488 20.3536 20.3536C20.5488 20.1583 20.5488 19.8417 20.3536 19.6464L17.3536 16.6465C18.6889 15.1451 19.5 13.1673 19.5 11C19.5 6.30558 15.6944 2.5 11 2.5Z' fill='%23808080'/%3E%3C/svg%3E");
-  }
-
-  .prodsHeader{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .prodsHeader .bannerBtn{
-    color: #f1592a;
-    font-size: 16px;
-    font-weight: 700;
-    text-decoration: underline;
-  }
-
-  .predictive-search__list-item {
-    position: relative;
-    padding-left: 0;
-  }
-
-  .predictive-search__result-group--adjacent {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 30px;
-    flex-direction: row;
-  }
-
-  .predictive-search__search-for-button, .predictive-search__loading-state{
-    background: white;
-    margin-top: 10px;
-  }
-
-    .predictive-search__search-for-button button, .predictive-search__search-for-button button:hover{
-      color: black;
-    }
-
-  .predictive-search__column {
-    flex: 1;
-  }
-
-
-  @media (max-width: 989px) {
-  .predictive-search__results-groups-wrapper, .predictive-search__result-group--adjacent{
-    gap: 10px!important;
-  }
-  }
-
-  @media (max-width: 768px) {
-    .predictive-search__result-group--adjacent {
-      flex-direction: column;
-    }
-    .predictive-search__column {
-      max-width: none;
-    }
-  }
-
-  /* New CSS for default content to match predictive search layout */
-  .default-search-content {
-    /* Inherit styles from predictive-search-results-groups-wrapper if needed */
-    width: 100%; /* Ensure it takes full width */
-    padding: 20px; /* Add some padding */
-    background: #f8f9fa; /* Match modal background */
-    box-shadow: none; /* Remove previous box shadow if it conflicts */
-  }
-
-  /* Ensure the default content's internal structure matches predictive search layout */
-  .default-search-content .predictive-search__results-groups-wrapper {
-    margin-top: 0; /* Adjust margin if needed */
-  }
 </style>
 
 <details-modal class="header__search gl-fullscreen-search">
@@ -234,7 +183,7 @@
     </summary>
 
     <div
-      class="search-modal modal__content gl-fullscreen-search"
+      class="search-modal modal__content gl-search-fullscreen"
       role="dialog"
       aria-modal="true"
       aria-label="{{ 'general.search.search' | t }}"
@@ -289,19 +238,34 @@
 
           {%- if settings.predictive_search_enabled -%}
             <div class="predictive-search predictive-search--header" tabindex="-1" data-predictive-search>
-              {% comment %}
-                This is where the predictive search results will be injected.
-                Initially, it will contain the loading spinner.
-              {% endcomment %}
               {%- render 'loading-spinner', class: 'predictive-search__loading-state' -%}
             </div>
             <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
           {%- endif -%}
         </form>
 
-        <!-- START: Default Search Content with Predictive Search Structure -->
+  
+            
+        {%- if settings.predictive_search_enabled -%}
+          <button
+            type="button"
+            class="search-modal__close-button modal__close-button link link--text focus-inset"
+            aria-label="{{ 'accessibility.close' | t }}"
+          >
+            <span class="svg-wrapper">
+              {{- 'icon-close.svg' | inline_asset_content -}}
+            </span>
+          </button>
+          </predictive-search>
+        {%- else -%}
+          </search-form>
+        {%- endif -%}
+
+
+
+             <!-- START: Default Search Content with Predictive Search Structure -->
         <div class="default-search-content" id="default-search-content">
-          <div id="predictive-search-results-groups-wrapper-default" class="predictive-search__results-groups-wrapper">
+          <div id="predictive-search-results-groups-wrapper" class="predictive-search__results-groups-wrapper">
             <div class="predictive-search__result-group">
               <div class="queries">
                 <h2 id="predictive-search-queries-default" class="predictive-search__heading text-body caption-with-letter-spacing">Popular Searches</h2>
@@ -337,8 +301,8 @@
               </div>
 
               <div class="predictive-search__pages-wrapper">
-                <h2 id="predictive-search-pages-desktop-default" class="predictive-search__heading text-body caption-with-letter-spacing">Pages</h2>
-                <ul id="predictive-search-results-pages-list-desktop-default" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-pages-desktop-default">
+                <h2 id="predictive-search-pages-default" class="predictive-search__heading text-body caption-with-letter-spacing">Pages</h2>
+                <ul id="predictive-search-results-pages-list-default" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-pages-default">
                   <li id="predictive-search-option-page-default-1" class="predictive-search__list-item" role="option" aria-selected="false">
                     <a href="/pages/about-us" class="predictive-search__item link link--text" tabindex="-1">
                       <div class="predictive-search__item-content predictive-search__item-content--centered">
@@ -455,20 +419,8 @@
         <!-- END: Default Search Content -->
 
 
-        {%- if settings.predictive_search_enabled -%}
-          <button
-            type="button"
-            class="search-modal__close-button modal__close-button link link--text focus-inset"
-            aria-label="{{ 'accessibility.close' | t }}"
-          >
-            <span class="svg-wrapper">
-              {{- 'icon-close.svg' | inline_asset_content -}}
-            </span>
-          </button>
-          </predictive-search>
-        {%- else -%}
-          </search-form>
-        {%- endif -%}
+
+            
       </div>
     </div>
   </details>
@@ -482,14 +434,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const input = detailsEl.querySelector('.search__input');
   const predictiveSearchResults = detailsEl.querySelector('[data-predictive-search]');
-  const defaultSearchContent = detailsEl.querySelector('#default-search-content');
+  const defaultSearchContent = detailsEl.querySelector('#default-search-content'); // Get the new div
 
   detailsEl.addEventListener('toggle', () => {
     if (detailsEl.open) {
       // Show default content when modal opens and input is empty
       if (input.value.trim() === '') {
         defaultSearchContent.style.display = 'block';
-        predictiveSearchResults.style.display = 'none';
+        predictiveSearchResults.style.display = 'none'; // Ensure predictive results are hidden
       }
       setTimeout(() => {
         input.focus();
