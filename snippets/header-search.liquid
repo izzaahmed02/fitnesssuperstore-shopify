@@ -238,36 +238,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const input = detailsEl.querySelector('.search__input');
   const fakePlaceholder = detailsEl.querySelector('.fake-placeholder');
-  let fakeTerm = 'fsr90';
+  const defaultTerm = 'fsr90';
 
   function triggerSearch(term) {
-    const tempInput = input;
-    const originalValue = tempInput.value;
-
-    tempInput.value = term;
-    tempInput.dispatchEvent(new Event('input', { bubbles: true }));
-    tempInput.value = ''; // clear back for visual
+    // Temporarily set value to trigger predictive results
+    input.value = term;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.value = ''; // Clear so it looks empty
   }
 
   detailsEl.addEventListener('toggle', () => {
     if (detailsEl.open) {
       setTimeout(() => {
-        if (!input || !fakePlaceholder) return;
-
         input.classList.remove('typing');
         fakePlaceholder.style.opacity = '1';
-
-        triggerSearch(fakeTerm);
+        triggerSearch(defaultTerm);
         input.focus();
       }, 10);
     }
   });
 
   input.addEventListener('input', () => {
-    if (input.value.trim() === '') {
+    const value = input.value.trim();
+
+    if (value === '') {
       input.classList.remove('typing');
       fakePlaceholder.style.opacity = '1';
-      triggerSearch(fakeTerm);
+      triggerSearch(defaultTerm);
     } else {
       input.classList.add('typing');
       fakePlaceholder.style.opacity = '0';
@@ -277,9 +274,10 @@ document.addEventListener('DOMContentLoaded', () => {
   input.addEventListener('focus', () => {
     if (input.value.trim() === '') {
       fakePlaceholder.style.opacity = '1';
-      triggerSearch(fakeTerm);
+      triggerSearch(defaultTerm);
     }
   });
 });
+
 </script>
 
