@@ -12,12 +12,11 @@ class PredictiveSearch extends SearchForm {
     this.defaultResources = {
       products: true,      // Show trending products
       pages: true,         // Show pages
-      queries: true,       // Show suggested queries
       collections: false,  // Show collections (optional)
       articles: false      // Show articles (optional)
     };
 
-    // Fallback content if API returns no results
+    // Fallback content for default view
     this.fallbackContent = `
       <div id="predictive-search-results" role="listbox">
         <div id="predictive-search-results-groups-wrapper" class="predictive-search__results-groups-wrapper">
@@ -40,29 +39,6 @@ class PredictiveSearch extends SearchForm {
                     <img class="predictive-search__image" src="/path/to/placeholder-image.jpg" alt="Sample Product 2" width="50" height="50">
                     <div class="predictive-search__item-content">
                       <p class="predictive-search__item-heading h5">Sample Product 2</p>
-                    </div>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          ` : ''}
-          ${this.defaultResources.queries ? `
-            <div class="predictive-search__result-group">
-              <h2 id="predictive-search-queries" class="predictive-search__heading text-body caption-with-letter-spacing">
-                Maybe you’re looking for
-              </h2>
-              <ul id="predictive-search-results-queries-list" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-queries">
-                <li id="predictive-search-option-query-1" class="predictive-search__list-item" role="option" aria-selected="false">
-                  <a href="/search?q=shoes" class="predictive-search__item link link--text" tabindex="-1">
-                    <div class="predictive-search__item-content predictive-search__item-content--centered">
-                      <p class="predictive-search__item-heading h5">Shoes</p>
-                    </div>
-                  </a>
-                </li>
-                <li id="predictive-search-option-query-2" class="predictive-search__list-item" role="option" aria-selected="false">
-                  <a href="/search?q=jackets" class="predictive-search__item link link--text" tabindex="-1">
-                    <div class="predictive-search__item-content predictive-search__item-content--centered">
-                      <p class="predictive-search__item-heading h5">Jackets</p>
                     </div>
                   </a>
                 </li>
@@ -92,6 +68,17 @@ class PredictiveSearch extends SearchForm {
               </ul>
             </div>
           ` : ''}
+        </div>
+      </div>
+    `;
+
+    // Fallback for no search results or API errors
+    this.noResultsContent = `
+      <div id="predictive-search-results" role="listbox">
+        <div id="predictive-search-results-groups-wrapper" class="predictive-search__results-groups-wrapper">
+          <div class="predictive-search__result-group">
+            <p class="predictive-search__no-results">No results found for your search.</p>
+          </div>
         </div>
       </div>
     `;
@@ -262,32 +249,36 @@ class PredictiveSearch extends SearchForm {
     }
 
     const params = new URLSearchParams();
+    params.set('q', '*'); // Use wildcard to fetch default results
     params.set('section_id', 'predictive-search');
     if (this.defaultResources.products) params.set('resources[type][products]', 'true');
     if (this.defaultResources.pages) params.set('resources[type][pages]', 'true');
-    if (this.defaultResources.queries) params.set('resources[type][queries]', 'true');
     if (this.defaultResources.collections) params.set('resources[type][collections]', 'true');
     if (this.defaultResources.articles) params.set('resources[type][articles]', 'true');
     params.set('resources[limit]', '4'); // Limit to 4 results per type
+
+    console.log('Default results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
     fetch(`${routes.predictive_search_url}?${params.toString()}`, {
       signal: this.abortController.signal,
     })
       .then((response) => {
+        console.log('Default results API response status:', response.status);
         if (!response.ok) {
-          console.error('Predictive search API error:', response.status);
-          this.renderSearchResults(this.fallbackContent);
+          console.error('Predictive search API error for default results:', response.status, response.statusText);
+          this.renderSearchResults(this.noResultsContent);
           throw new Error(response.status);
         }
         return response.text();
       })
       .then((text) => {
+        console.log('Default results API response text length:', text.length);
         const resultsMarkup = new DOMParser()
           .parseFromString(text, 'text/html')
           .querySelector('#shopify-section-predictive-search')?.innerHTML;
         if (!resultsMarkup || resultsMarkup.trim() === '') {
-          console.warn('Predictive search API returned empty results, using fallback content');
-          this.renderSearchResults(this.fallbackContent);
+          console.warn('Predictive search API returned empty results for default query');
+          this.renderSearchResults(this.noResultsContent);
           return;
         }
         this.allPredictiveSearchInstances.forEach((predictiveSearchInstance) => {
@@ -298,10 +289,11 @@ class PredictiveSearch extends SearchForm {
       })
       .catch((error) => {
         if (error?.code === 20) {
+          console.log('Default results fetch aborted');
           return;
         }
         console.error('Error fetching default results:', error);
-        this.renderSearchResults(this.fallbackContent);
+        this.renderSearchResults(this.noResultsContent);
       });
   }
 
@@ -321,29 +313,32 @@ class PredictiveSearch extends SearchForm {
     params.set('section_id', 'predictive-search');
     if (this.defaultResources.products) params.set('resources[type][products]', 'true');
     if (this.defaultResources.pages) params.set('resources[type][pages]', 'true');
-    if (this.defaultResources.queries) params.set('resources[type][queries]', 'true');
     if (this.defaultResources.collections) params.set('resources[type][collections]', 'true');
     if (this.defaultResources.articles) params.set('resources[type][articles]', 'true');
     params.set('resources[limit]', '4');
+
+    console.log('Search results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
     fetch(`${routes.predictive_search_url}?${params.toString()}`, {
       signal: this.abortController.signal,
     })
       .then((response) => {
+        console.log('Search results API response status:', response.status);
         if (!response.ok) {
-          console.error('Predictive search API error:', response.status);
-          this.renderSearchResults(this.fallbackContent);
+          console.error('Predictive search API error for query:', searchTerm, 'Status:', response.status, response.statusText);
+          this.renderSearchResults(this.noResultsContent);
           throw new Error(response.status);
         }
         return response.text();
       })
       .then((text) => {
+        console.log('Search results API response text length:', text.length);
         const resultsMarkup = new DOMParser()
           .parseFromString(text, 'text/html')
           .querySelector('#shopify-section-predictive-search')?.innerHTML;
         if (!resultsMarkup || resultsMarkup.trim() === '') {
           console.warn('Predictive search API returned empty results for:', searchTerm);
-          this.renderSearchResults(this.fallbackContent);
+          this.renderSearchResults(this.noResultsContent);
           return;
         }
         this.allPredictiveSearchInstances.forEach((predictiveSearchInstance) => {
@@ -354,10 +349,11 @@ class PredictiveSearch extends SearchForm {
       })
       .catch((error) => {
         if (error?.code === 20) {
+          console.log('Search results fetch aborted for:', searchTerm);
           return;
         }
-        console.error('Error fetching search results:', error);
-        this.renderSearchResults(this.fallbackContent);
+        console.error('Error fetching search results for:', searchTerm, 'Error:', error);
+        this.renderSearchResults(this.noResultsContent);
       });
   }
 
@@ -377,7 +373,7 @@ class PredictiveSearch extends SearchForm {
   }
 
   renderSearchResults(resultsMarkup) {
-    console.log('Rendering results:', resultsMarkup.substring(0, 100) + '...');
+    console.log('Rendering results (first 100 chars):', resultsMarkup.substring(0, 100) + '...');
     this.predictiveSearchResults.innerHTML = resultsMarkup;
     this.setAttribute('results', true);
     this.setLiveRegionResults();
