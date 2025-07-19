@@ -244,53 +244,58 @@
 </details-modal>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const detailsEl = document.querySelector('.header__search details');
+  document.addEventListener('DOMContentLoaded', () => {
+    const detailsEl = document.querySelector('.header__search details');
 
-  if (!detailsEl) return;
+    if (!detailsEl) return;
 
-  const input = detailsEl.querySelector('.search__input');
-  const fakePlaceholder = detailsEl.querySelector('.fake-placeholder');
-  const defaultTerm = 'fsr90';
+    const input = detailsEl.querySelector('.search__input');
+    const fakePlaceholder = detailsEl.querySelector('.fake-placeholder');
+    const defaultTerm = 'fsr90';
 
-  function triggerSearch(term) {
-    // Temporarily set value to trigger predictive results
-    input.value = term;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.value = ''; // Clear so it looks empty
-  }
-
-  detailsEl.addEventListener('toggle', () => {
-    if (detailsEl.open) {
-      setTimeout(() => {
-        input.classList.remove('typing');
-        fakePlaceholder.style.opacity = '1';
-        triggerSearch(defaultTerm);
-        input.focus();
-      }, 10);
+    function showPredictiveSearch(term) {
+      const form = input.closest('form');
+      const event = new CustomEvent('predictive-search:request', {
+        bubbles: true,
+        detail: {
+          form: form,
+          searchTerm: term
+        }
+      });
+      input.dispatchEvent(event);
     }
-  });
 
-  input.addEventListener('input', () => {
-    const value = input.value.trim();
-
-    if (value === '') {
-      input.classList.remove('typing');
-      fakePlaceholder.style.opacity = '1';
-      triggerSearch(defaultTerm);
-    } else {
-      input.classList.add('typing');
-      fakePlaceholder.style.opacity = '0';
+    function setTypingState(isTyping) {
+      input.classList.toggle('typing', isTyping);
+      fakePlaceholder.style.opacity = isTyping ? '0' : '1';
     }
-  });
 
-  input.addEventListener('focus', () => {
-    if (input.value.trim() === '') {
-      fakePlaceholder.style.opacity = '1';
-      triggerSearch(defaultTerm);
-    }
-  });
-});
+    detailsEl.addEventListener('toggle', () => {
+      if (detailsEl.open) {
+        setTimeout(() => {
+          input.value = '';
+          setTypingState(false);
+          showPredictiveSearch(defaultTerm);
+          input.focus();
+        }, 10);
+      }
+    });
 
+    input.addEventListener('input', () => {
+      const typed = input.value.trim();
+      setTypingState(typed !== '');
+      if (typed === '') {
+        showPredictiveSearch(defaultTerm);
+      }
+    });
+
+    input.addEventListener('focus', () => {
+      if (input.value.trim() === '') {
+        setTypingState(false);
+        showPredictiveSearch(defaultTerm);
+      }
+    });
+  });
 </script>
+
 
