@@ -25,51 +25,57 @@
   <div class="gl-backdrop gl-close-layer"></div>
   <div class="gl-fullscreen-layer gl-animate-transition" tabindex="-1">
 
-    <predictive-search class="gl-d-searchbox-wrapper" data-loading-text="{{ 'accessibility.loading' | t }}">
-      <form class="gl-d-searchbox" method="GET" action="{{ routes.search_url }}" role="search">
+    <predictive-search class="search-modal__form gl-search-wrapper" data-loading-text="{{ 'accessibility.loading' | t }}">
+      <form action="{{ routes.search_url }}" method="get" role="search" class="gl-d-searchbox">
         <label class="gl-icon gl-d-searchbox-icon" for="{{ input_id }}">
           {{ 'icon-search.svg' | inline_asset_content }}
         </label>
+
         <input
-          type="search"
-          class="gl-d-searchbox-input"
           id="{{ input_id }}"
-          placeholder="{{ 'general.search.search' | t }}"
+          class="gl-d-searchbox-input"
+          type="search"
           name="q"
           value="{{ search.terms | escape }}"
+          placeholder="{{ 'general.search.search' | t }}"
           role="combobox"
           aria-expanded="false"
           aria-owns="predictive-search-results"
           aria-controls="predictive-search-results"
           aria-haspopup="listbox"
           aria-autocomplete="list"
-          autocorrect="off"
           autocomplete="off"
+          autocorrect="off"
           autocapitalize="off"
           spellcheck="false"
-        />
+        >
 
-        <!-- Reset Button -->
+        <input type="hidden" name="options[prefix]" value="last">
+
         <button
           type="reset"
           class="reset__button field__button hidden"
           aria-label="{{ 'general.search.reset' | t }}"
         >
-          {{ 'icon-reset.svg' | inline_asset_content }}
+          <span class="svg-wrapper">
+            {{ 'icon-reset.svg' | inline_asset_content }}
+          </span>
         </button>
 
-        <!-- Submit Button -->
         <button class="search__button field__button" aria-label="{{ 'general.search.search' | t }}">
-          {{ 'icon-search.svg' | inline_asset_content }}
+          <span class="svg-wrapper">
+            {{ 'icon-search.svg' | inline_asset_content }}
+          </span>
         </button>
       </form>
 
-      <!-- Predictive Search Results Container -->
+      <!-- Predictive results -->
       <div class="predictive-search predictive-search--header" tabindex="-1" data-predictive-search>
         {%- render 'loading-spinner', class: 'predictive-search__loading-state' -%}
+        <!-- This is where predictive results will be injected -->
       </div>
 
-      <!-- ✅ REQUIRED: This fixes the `textContent` error -->
+      <!-- 🔥 This span is required — fixes your `textContent` error -->
       <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
     </predictive-search>
 
@@ -79,6 +85,7 @@
     </button>
   </div>
 </div>
+
 
   </details>
 </details-modal>
