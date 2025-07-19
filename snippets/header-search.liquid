@@ -60,48 +60,81 @@
 
 
 
-    <div id="glFilter-search-popup" class="ui-menu glFilter-search-popup gl-filter-search-fullscreen gl-filter-animate" role="dialog" aria-modal="true" aria-label="{{ 'general.search.search' | t }}">
+<div id="glFilter-search-popup"
+     class="ui-menu glFilter-search-popup gl-filter-search-fullscreen gl-filter-animate"
+     role="dialog"
+     aria-modal="true"
+     aria-label="{{ 'general.search.search' | t }}">
   <div class="gl-backdrop gl-close-layer"></div>
   <div class="gl-fullscreen-layer gl-animate-transition" tabindex="-1">
-    
-    <!-- Search Header with Input -->
-    <div class="gl-fullscreen-header">
-      <form class="gl-d-searchbox" method="GET" action="{{ routes.search_url }}" role="search">
+
+    <!-- ✅ Predictive Search Wrapper -->
+    <predictive-search class="search-modal__form" data-loading-text="{{ 'accessibility.loading' | t }}">
+
+      <!-- ✅ Search Form -->
+      <form class="gl-d-searchbox search search-modal__form" method="GET" action="{{ routes.search_url }}" role="search">
         <label class="gl-icon gl-d-searchbox-icon" for="{{ input_id }}">
           {{ 'icon-search.svg' | inline_asset_content }}
         </label>
+
         <input
-          type="text"
-          class="gl-d-searchbox-input"
+          type="search"
           id="{{ input_id }}"
+          class="gl-d-searchbox-input search__input field__input"
           placeholder="{{ 'general.search.search' | t }}"
           name="q"
           value="{{ search.terms | escape }}"
+          role="combobox"
+          aria-expanded="false"
+          aria-owns="predictive-search-results"
+          aria-controls="predictive-search-results"
+          aria-haspopup="listbox"
+          aria-autocomplete="list"
           autocapitalize="off"
           autocomplete="off"
           autocorrect="off"
           spellcheck="false"
         >
-        
+
+        <!-- ✅ Reset Button -->
+        <button
+          type="reset"
+          class="reset__button field__button{% if search.terms == blank %} hidden{% endif %}"
+          aria-label="{{ 'general.search.reset' | t }}"
+        >
+          <span class="svg-wrapper">
+            {{ 'icon-reset.svg' | inline_asset_content }}
+          </span>
+        </button>
+
+        <!-- Optional: Search submit button -->
+        <button class="search__button field__button" aria-label="{{ 'general.search.search' | t }}">
+          <span class="svg-wrapper">
+            {{ 'icon-search.svg' | inline_asset_content }}
+          </span>
+        </button>
       </form>
-      <!-- Close Button -->
-      <button type="button" class="gl-d-close-btn" aria-label="{{ 'accessibility.close' | t }}">
-        {{ 'icon-close.svg' | inline_asset_content }}
-      </button>
-    </div>
 
-    <!-- Suggestions (empty or predictive if JS-enhanced) -->
-   
-     <div class="gl-fullscreen-suggestions predictive-search predictive-search--header" tabindex="-1" data-predictive-search>
-              {%- render 'loading-spinner', class: 'predictive-search__loading-state' -%}
-            </div>
+      <!-- ✅ Predictive Results -->
+      <div class="gl-fullscreen-suggestions predictive-search predictive-search--header"
+           id="predictive-search-results"
+           tabindex="-1"
+           data-predictive-search>
+        {%- render 'loading-spinner', class: 'predictive-search__loading-state' -%}
+      </div>
 
-            <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
+      <!-- ✅ Live region for screen readers -->
+      <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
+    </predictive-search>
+
+    <!-- ✅ Close Button -->
+    <button type="button" class="gl-d-close-btn" aria-label="{{ 'accessibility.close' | t }}">
+      {{ 'icon-close.svg' | inline_asset_content }}
+    </button>
 
     <!-- Static Initial Content -->
     <div class="gl-fullscreen-initial-content">
       <div class="gl-row">
-        <!-- Left Column - Maybe you're looking for -->
         <div class="gl-col-left">
           <div class="gl-list gl-fullscreen-top-searches">
             <div class="gl-list__group">
@@ -118,7 +151,6 @@
           </div>
         </div>
 
-        <!-- Right Column - Trending Products -->
         <div class="gl-col-right">
           <div class="gl-list gl-fullscreen-top-clicked">
             <div class="gl-fullscreen-results__meta">
@@ -138,6 +170,7 @@
 
   </div>
 </div>
+
 
     {% comment %}
     <div
