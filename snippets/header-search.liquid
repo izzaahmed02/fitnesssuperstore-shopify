@@ -322,40 +322,55 @@
           <div id="predictive-search-results-groups-wrapper-default" class="predictive-search__results-groups-wrapper">
             <div class="predictive-search__result-group">
               <div class="queries">
-                <h2 id="predictive-search-queries-default" class="predictive-search__heading text-body caption-with-letter-spacing">Popular Products</h2>
+                <h2 id="predictive-search-queries-default" class="predictive-search__heading text-body caption-with-letter-spacing">Popular Searches</h2>
                 <ul id="predictive-search-results-queries-list-default" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-queries-default">
-                  {% comment %} Loop through a selection of products for popular searches {% endcomment %}
-                  {% for product in all_products limit: 3 %}
-                    <li id="predictive-search-option-query-default-{{ forloop.index }}" class="predictive-search__list-item" role="option" aria-selected="false">
-                      <a href="{{ product.url }}" class="predictive-search__item link link--text" tabindex="-1">
-                        <div class="predictive-search__item-content predictive-search__item-content--centered">
-                          <p class="predictive-search__item-heading predictive-search__item-query-result h5" aria-label="{{ product.title | escape }}">
-                            <span>{{ product.title | escape }}</span>
-                          </p>
-                        </div>
-                      </a>
-                    </li>
-                  {% endfor %}
+                  <li id="predictive-search-option-query-default-1" class="predictive-search__list-item" role="option" aria-selected="false">
+                    <a href="/search?q=dresses" class="predictive-search__item link link--text" tabindex="-1">
+                      <div class="predictive-search__item-content predictive-search__item-content--centered">
+                        <p class="predictive-search__item-heading predictive-search__item-query-result h5" aria-label="Dresses">
+                          <span>Dresses</span>
+                        </p>
+                      </div>
+                    </a>
+                  </li>
+                  <li id="predictive-search-option-query-default-2" class="predictive-search__list-item" role="option" aria-selected="false">
+                    <a href="/search?q=shoes" class="predictive-search__item link link--text" tabindex="-1">
+                      <div class="predictive-search__item-content predictive-search__item-content--centered">
+                        <p class="predictive-search__item-heading predictive-search__item-query-result h5" aria-label="Shoes">
+                          <span>Shoes</span>
+                        </p>
+                      </div>
+                    </a>
+                  </li>
+                  <li id="predictive-search-option-query-default-3" class="predictive-search__list-item" role="option" aria-selected="false">
+                    <a href="/search?q=accessories" class="predictive-search__item link link--text" tabindex="-1">
+                      <div class="predictive-search__item-content predictive-search__item-content--centered">
+                        <p class="predictive-search__item-heading predictive-search__item-query-result h5" aria-label="Accessories">
+                          <span>Accessories</span>
+                        </p>
+                      </div>
+                    </a>
+                  </li>
                 </ul>
               </div>
 
               <div class="predictive-search__pages-wrapper">
                 <h2 id="predictive-search-pages-desktop-default" class="predictive-search__heading text-body caption-with-letter-spacing">Pages</h2>
                 <ul id="predictive-search-results-pages-list-desktop-default" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-pages-desktop-default">
-                  {% comment %} Loop through specific pages {% endcomment %}
-                  {% assign default_pages = 'about-us,contact-us,our-blog' | split: ',' %}
-                  {% for page_handle in default_pages %}
-                    {% assign page = pages[page_handle] %}
-                    {% if page != blank %}
-                      <li id="predictive-search-option-page-default-{{ forloop.index }}" class="predictive-search__list-item" role="option" aria-selected="false">
-                        <a href="{{ page.url }}" class="predictive-search__item link link--text" tabindex="-1">
-                          <div class="predictive-search__item-content predictive-search__item-content--centered">
-                            <p class="predictive-search__item-heading h5">{{ page.title | escape }}</p>
-                          </div>
-                        </a>
-                      </li>
-                    {% endif %}
-                  {% endfor %}
+                  <li id="predictive-search-option-page-default-1" class="predictive-search__list-item" role="option" aria-selected="false">
+                    <a href="/pages/about-us" class="predictive-search__item link link--text" tabindex="-1">
+                      <div class="predictive-search__item-content predictive-search__item-content--centered">
+                        <p class="predictive-search__item-heading h5">About Us</p>
+                      </div>
+                    </a>
+                  </li>
+                  <li id="predictive-search-option-page-default-2" class="predictive-search__list-item" role="option" aria-selected="false">
+                    <a href="/pages/contact-us" class="predictive-search__item link link--text" tabindex="-1">
+                      <div class="predictive-search__item-content predictive-search__item-content--centered">
+                        <p class="predictive-search__item-heading h5">Contact Us</p>
+                      </div>
+                    </a>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -364,36 +379,49 @@
               <div class="predictive-search__column">
                 <div class="prodsHeader">
                   <h2 id="predictive-search-products-default" class="predictive-search__heading text-body caption-with-letter-spacing">Featured Products</h2>
-                  <a href="{{ routes.all_products_collection_url }}" class="bannerBtn">View all products</a>
+                  <a href="/collections/all" class="bannerBtn">View all products</a>
                 </div>
                 <ul id="predictive-search-results-products-list-default" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-products-default">
-                  {% comment %} Loop through featured products {% endcomment %}
-                  {% for product in all_products limit: 2 %}
-                    <li id="predictive-search-option-product-default-{{ forloop.index }}" class="predictive-search__list-item" role="option" aria-selected="false">
-                      <a href="{{ product.url }}" class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text" tabindex="-1">
-                        {% if product.featured_media != blank %}
-                          <img class="predictive-search__image" src="{{ product.featured_media | image_url: width: 150 }}" alt="{{ product.featured_media.alt | escape }}" width="50" height="{{ 50 | divided_by: product.featured_media.preview_image.aspect_ratio }}">
-                        {% else %}
-                          <img class="predictive-search__image" src="https://placehold.co/50x50/cccccc/333333?text=No+Image" alt="No Image Available" width="50" height="50">
-                        {% endif %}
-                        <div class="predictive-search__item-content">
-                          <p class="predictive-search__item-heading h5">{{ product.title | escape }}</p>
-                          <span class="visually-hidden">Vendor:</span>
-                          <div class="predictive-search__item-vendor">
-                            {{ product.vendor | escape }}
-                          </div>
-                          <div class="price">
-                            <div class="price__container">
-                              <div class="price__regular">
-                                <span class="visually-hidden visually-hidden--inline">Regular price</span>
-                                <span class="price-item-fixed ">{{ product.price | money }}</span>
-                              </div>
+                  <li id="predictive-search-option-product-default-1" class="predictive-search__list-item" role="option" aria-selected="false">
+                    <a href="/products/sample-product-a" class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text" tabindex="-1">
+                      <img class="predictive-search__image" src="https://placehold.co/50x50/cccccc/333333?text=Product+A" alt="Sample Product A" width="50" height="50">
+                      <div class="predictive-search__item-content">
+                        <p class="predictive-search__item-heading h5">Sample Product A</p>
+                        <span class="visually-hidden">Vendor:</span>
+                        <div class="predictive-search__item-vendor">
+                          Brand X
+                        </div>
+                        <div class="price">
+                          <div class="price__container">
+                            <div class="price__regular">
+                              <span class="visually-hidden visually-hidden--inline">Regular price</span>
+                              <span class="price-item-fixed ">$29.99</span>
                             </div>
                           </div>
                         </div>
-                      </a>
-                    </li>
-                  {% endfor %}
+                      </div>
+                    </a>
+                  </li>
+                  <li id="predictive-search-option-product-default-2" class="predictive-search__list-item" role="option" aria-selected="false">
+                    <a href="/products/sample-product-b" class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text" tabindex="-1">
+                      <img class="predictive-search__image" src="https://placehold.co/50x50/cccccc/333333?text=Product+B" alt="Sample Product B" width="50" height="50">
+                      <div class="predictive-search__item-content">
+                        <p class="predictive-search__item-heading h5">Sample Product B</p>
+                        <span class="visually-hidden">Vendor:</span>
+                        <div class="predictive-search__item-vendor">
+                          Brand Y
+                        </div>
+                        <div class="price">
+                          <div class="price__container">
+                            <div class="price__regular">
+                              <span class="visually-hidden visually-hidden--inline">Regular price</span>
+                              <span class="price-item-fixed ">$49.99</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </a>
+                  </li>
                 </ul>
               </div>
 
@@ -402,34 +430,41 @@
                   Browse Categories
                 </h2>
                 <ul id="predictive-search-results-collections-list-default" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-collections-default">
-                  {% comment %} Loop through collections {% endcomment %}
-                  {% for collection in all_collections limit: 3 %}
-                    <li id="predictive-search-option-collection-default-{{ forloop.index }}" class="predictive-search__list-item" role="option" aria-selected="false">
-                      <a href="{{ collection.url }}" class="predictive-search__item link link--text" tabindex="-1">
-                        <div class="predictive-search__item-content predictive-search__item-content--centered">
-                          <p class="predictive-search__item-heading h5">{{ collection.title | escape }}</p>
-                        </div>
-                      </a>
-                    </li>
-                  {% endfor %}
+                  <li id="predictive-search-option-collection-default-1" class="predictive-search__list-item" role="option" aria-selected="false">
+                    <a href="/collections/womens" class="predictive-search__item link link--text" tabindex="-1">
+                      <div class="predictive-search__item-content predictive-search__item-content--centered">
+                        <p class="predictive-search__item-heading h5">Women's Fashion</p>
+                      </div>
+                    </a>
+                  </li>
+                  <li id="predictive-search-option-collection-default-2" class="predictive-search__list-item" role="option" aria-selected="false">
+                    <a href="/collections/mens" class="predictive-search__item link link--text" tabindex="-1">
+                      <div class="predictive-search__item-content predictive-search__item-content--centered">
+                        <p class="predictive-search__item-heading h5">Men's Apparel</p>
+                      </div>
+                    </a>
+                  </li>
+                  <li id="predictive-search-option-collection-default-3" class="predictive-search__list-item" role="option" aria-selected="false">
+                    <a href="/collections/kids" class="predictive-search__item link link--text" tabindex="-1">
+                      <div class="predictive-search__item-content predictive-search__item-content--centered">
+                        <p class="predictive-search__item-heading h5">Kids' Collection</p>
+                      </div>
+                    </a>
+                  </li>
                 </ul>
               </div>
 
-              <!-- This section can be removed if not needed, or populated with more dynamic pages/articles -->
+              <!-- You can duplicate the pages section for mobile if needed, or remove if not applicable -->
               <div class="predictive-search__pages-wrapper">
-                <h2 id="predictive-search-pages-mobile-default" class="predictive-search__heading text-body caption-with-letter-spacing">More Info</h2>
+                <h2 id="predictive-search-pages-mobile-default" class="predictive-search__heading text-body caption-with-letter-spacing">More Pages</h2>
                 <ul id="predictive-search-results-pages-list-mobile-default" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-pages-mobile-default">
-                  {% comment %} Example: Link to a blog post or another important page {% endcomment %}
-                  {% assign blog_post = blogs.news.articles.first %}
-                  {% if blog_post != blank %}
-                    <li id="predictive-search-option-article-mobile-default-1" class="predictive-search__list-item" role="option" aria-selected="false">
-                      <a href="{{ blog_post.url }}" class="predictive-search__item link link--text" tabindex="-1">
-                        <div class="predictive-search__item-content predictive-search__item-content--centered">
-                          <p class="predictive-search__item-heading h5">{{ blog_post.title | escape }}</p>
-                        </div>
-                      </a>
-                    </li>
-                  {% endif %}
+                  <li id="predictive-search-option-page-mobile-default-1" class="predictive-search__list-item" role="option" aria-selected="false">
+                    <a href="/pages/blog" class="predictive-search__item link link--text" tabindex="-1">
+                      <div class="predictive-search__item-content predictive-search__item-content--centered">
+                        <p class="predictive-search__item-heading h5">Our Blog</p>
+                      </div>
+                    </a>
+                  </li>
                 </ul>
               </div>
             </div>
