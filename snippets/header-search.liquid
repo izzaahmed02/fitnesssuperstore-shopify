@@ -67,6 +67,24 @@
   pointer-events: none!important;
 }
 
+.predictive-wrapper {
+  position: relative;
+}
+
+.fake-placeholder {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  pointer-events: none;
+  font-size: 16px;
+  transition: opacity 0.2s;
+}
+
+input.typing + .fake-placeholder {
+  opacity: 0;
+}
 
   
 </style>
@@ -196,37 +214,44 @@
   </details>
 </details-modal>
 
-    <script>
+<script>
 document.addEventListener('DOMContentLoaded', () => {
   const detailsEl = document.querySelector('.header__search details');
 
   if (!detailsEl) return;
 
+  const input = detailsEl.querySelector('.search__input');
+  const fakePlaceholder = detailsEl.querySelector('.fake-placeholder');
+
   detailsEl.addEventListener('toggle', () => {
     if (detailsEl.open) {
       setTimeout(() => {
-        const modalInput = detailsEl.querySelector('.search-modal__form .search__input');
-        if (modalInput) {
-          // Fake display instead of typing real value
-          modalInput.setAttribute('data-fake-placeholder', 'I am looking for');
-          modalInput.value = 'fsr90';
-          modalInput.classList.add('fake-search');
+        if (!input || !fakePlaceholder) return;
 
-          // Trigger search
-          modalInput.dispatchEvent(new Event('input', { bubbles: true }));
-          modalInput.focus();
-        }
+        input.value = 'fsr90';
+        fakePlaceholder.style.opacity = '1';
+
+        // Trigger predictive search
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.focus();
       }, 10);
     }
   });
-});
 
-document.addEventListener('input', (e) => {
-  if (e.target.classList.contains('fake-search')) {
-    e.target.classList.remove('fake-search');
-    e.target.removeAttribute('data-fake-placeholder');
-    e.target.value = ''; // Clear fsr90
-  }
+  // Clear dummy value on user input
+  input.addEventListener('input', () => {
+    if (input.value === 'fsr90') return;
+
+    input.classList.add('typing');
+    input.value = input.value.replace('fsr90', '');
+    fakePlaceholder.style.opacity = '0';
+  });
+
+  input.addEventListener('focus', () => {
+    if (input.value === 'fsr90') {
+      input.value = '';
+    }
+  });
 });
 </script>
 
