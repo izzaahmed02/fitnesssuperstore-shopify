@@ -373,7 +373,7 @@ class PredictiveSearch extends SearchForm {
     const params = new URLSearchParams();
     params.set('q', '*');
     params.set('resources[type]', 'product,page,collection,article');
-    params.set('resources[limit]', '5'); // Increased to 5
+    params.set('resources[limit]', '15'); // Increased to 5
 
     console.log('Minimal default results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
@@ -446,7 +446,7 @@ class PredictiveSearch extends SearchForm {
     if (this.defaultResources.collection) resourceTypes.push('collection');
     if (this.defaultResources.article) resourceTypes.push('article');
     if (resourceTypes.length > 0) params.set('resources[type]', resourceTypes.join(','));
-    params.set('resources[limit]', '5'); // Increased to 5
+    params.set('resources[limit]', '15'); // Increased to 5
 
     console.log('Search results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
@@ -505,7 +505,7 @@ class PredictiveSearch extends SearchForm {
     const params = new URLSearchParams();
     params.set('q', encodeURIComponent(searchTerm));
     params.set('resources[type]', 'product,page,collection,article');
-    params.set('resources[limit]', '5'); // Increased to 5
+    params.set('resources[limit]', '15'); // Increased to 5
 
     console.log('Minimal search results API URL:', `${routes.predictive_search_url}?${params.toString()}`);
 
