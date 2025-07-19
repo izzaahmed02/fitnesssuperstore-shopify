@@ -11,9 +11,9 @@ class PredictiveSearch extends SearchForm {
     // Configuration for default results
     this.defaultResources = {
       products: true,      // Show trending products
-      pages: true,         // Show pages
-      collections: false,  // Show collections (optional)
-      articles: false      // Show articles (optional)
+      pages: false,        // Disable pages to simplify request
+      collections: false,  // Disable collections
+      articles: false      // Disable articles
     };
 
     // Fallback content for default view
@@ -39,29 +39,6 @@ class PredictiveSearch extends SearchForm {
                     <img class="predictive-search__image" src="/path/to/placeholder-image.jpg" alt="Sample Product 2" width="50" height="50">
                     <div class="predictive-search__item-content">
                       <p class="predictive-search__item-heading h5">Sample Product 2</p>
-                    </div>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          ` : ''}
-          ${this.defaultResources.pages ? `
-            <div class="predictive-search__pages-wrapper">
-              <h2 id="predictive-search-pages-desktop" class="predictive-search__heading text-body caption-with-letter-spacing">
-                Pages
-              </h2>
-              <ul id="predictive-search-results-pages-list-desktop" class="predictive-search__results-list list-unstyled" role="group" aria-labelledby="predictive-search-pages-desktop">
-                <li id="predictive-search-option-page-desktop-1" class="predictive-search__list-item" role="option" aria-selected="false">
-                  <a href="/pages/about-us" class="predictive-search__item link link--text" tabindex="-1">
-                    <div class="predictive-search__item-content predictive-search__item-content--centered">
-                      <p class="predictive-search__item-heading h5">About Us</p>
-                    </div>
-                  </a>
-                </li>
-                <li id="predictive-search-option-page-desktop-2" class="predictive-search__list-item" role="option" aria-selected="false">
-                  <a href="/pages/contact" class="predictive-search__item link link--text" tabindex="-1">
-                    <div class="predictive-search__item-content predictive-search__item-content--centered">
-                      <p class="predictive-search__item-heading h5">Contact</p>
                     </div>
                   </a>
                 </li>
@@ -249,7 +226,7 @@ class PredictiveSearch extends SearchForm {
     }
 
     const params = new URLSearchParams();
-    params.set('q', '*'); // Use wildcard to fetch default results
+    params.set('q', '*'); // Use wildcard for default results
     params.set('section_id', 'predictive-search');
     if (this.defaultResources.products) params.set('resources[type][products]', 'true');
     if (this.defaultResources.pages) params.set('resources[type][pages]', 'true');
@@ -266,8 +243,10 @@ class PredictiveSearch extends SearchForm {
         console.log('Default results API response status:', response.status);
         if (!response.ok) {
           console.error('Predictive search API error for default results:', response.status, response.statusText);
-          this.renderSearchResults(this.noResultsContent);
-          throw new Error(response.status);
+          return response.text().then((text) => {
+            console.error('Error response body:', text);
+            throw new Error(response.status);
+          });
         }
         return response.text();
       })
@@ -302,11 +281,12 @@ class PredictiveSearch extends SearchForm {
     this.setLiveRegionLoadingState();
     console.log('Fetching search results for query:', searchTerm);
 
-    if (this.cachedResults[queryKey]) {
-      console.log('Using cached results for:', queryKey);
-      this.renderSearchResults(this.cachedResults[queryKey]);
-      return;
-    }
+    // Temporarily disable caching to ensure fresh API calls
+    // if (this.cachedResults[queryKey]) {
+    //   console.log('Using cached results for:', queryKey);
+    //   this.renderSearchResults(this.cachedResults[queryKey]);
+    //   return;
+    // }
 
     const params = new URLSearchParams();
     params.set('q', encodeURIComponent(searchTerm));
@@ -326,8 +306,10 @@ class PredictiveSearch extends SearchForm {
         console.log('Search results API response status:', response.status);
         if (!response.ok) {
           console.error('Predictive search API error for query:', searchTerm, 'Status:', response.status, response.statusText);
-          this.renderSearchResults(this.noResultsContent);
-          throw new Error(response.status);
+          return response.text().then((text) => {
+            console.error('Error response body:', text);
+            throw new Error(response.status);
+          });
         }
         return response.text();
       })
