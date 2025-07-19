@@ -186,23 +186,18 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const detailsEl = document.querySelector('.header__search details');
+
   if (!detailsEl) return;
 
-  const predictiveSearch = document.querySelector('predictive-search');
   const input = detailsEl.querySelector('.search__input');
 
   detailsEl.addEventListener('toggle', () => {
     if (detailsEl.open) {
       setTimeout(() => {
-        predictiveSearch.dispatchEvent(new CustomEvent('loadDefaultResults'));
+        input.dispatchEvent(new Event('input', { bubbles: true }));
         input.focus();
       }, 10);
     }
-  });
-
-  // Ensure input event triggers onChange
-  input.addEventListener('input', () => {
-    predictiveSearch.dispatchEvent(new Event('input', { bubbles: true }));
   });
 });
 </script>
