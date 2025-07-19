@@ -51,6 +51,23 @@
     color: #333!important;
   }
 
+  .search__input.fake-search {
+  color: transparent!important;
+  caret-color: black!important; /* so user still sees caret */
+  position: relative!important;
+}
+
+.search__input.fake-search::before {
+  content: attr(data-fake-placeholder)!important;
+  position: absolute!important;
+  top: 50%!important;
+  left: 12px!important;
+  transform: translateY(-50%)!important;
+  color: #999!important;
+  pointer-events: none!important;
+}
+
+
   
 </style>
 
@@ -178,8 +195,8 @@
   </details>
 </details-modal>
 
-            <script>
-              document.addEventListener('DOMContentLoaded', () => {
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
   const detailsEl = document.querySelector('.header__search details');
 
   if (!detailsEl) return;
@@ -189,15 +206,26 @@
       setTimeout(() => {
         const modalInput = detailsEl.querySelector('.search-modal__form .search__input');
         if (modalInput) {
-          modalInput.value = 'fsr90'; // <-- Default term
-          modalInput.focus();
+          // Fake display instead of typing real value
+          modalInput.setAttribute('data-fake-placeholder', 'I am looking for');
+          modalInput.value = 'fsr90';
+          modalInput.classList.add('fake-search');
 
-          // Dispatch input event so predictive search triggers
+          // Trigger search
           modalInput.dispatchEvent(new Event('input', { bubbles: true }));
+          modalInput.focus();
         }
-      }, 10); // slight delay ensures DOM is ready
+      }, 10);
     }
   });
 });
 
-            </script>
+document.addEventListener('input', (e) => {
+  if (e.target.classList.contains('fake-search')) {
+    e.target.classList.remove('fake-search');
+    e.target.removeAttribute('data-fake-placeholder');
+    e.target.value = ''; // Clear fsr90
+  }
+});
+</script>
+
