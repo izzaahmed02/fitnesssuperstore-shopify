@@ -1,100 +1,64 @@
 <style>
-  .gl-search-fullscreen{
-    font-size: 16px!important;
-    color: #212529!important;
-    position: fixed!important;
-    top: 0!important;
-    left: 0!important;
-    right: 0!important;
-    bottom: 0!important;
-    width: 100%!important;
-    z-index: 2147483647!important;
+  .gl-search-fullscreen {
+    font-size: 16px !important;
+    color: #212529 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    z-index: 2147483647 !important;
     overflow: hidden !important;
-    background: #f8f9fa!important;
+    background: #f8f9fa !important;
   }
 
-  .search-modal__form{
-  max-width: 100%!important;
-    width: 100%!important;
-        padding: 24px 0px!important;
-        display: flex!important;
+  .search-modal__form {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 24px 0px !important;
+    display: flex !important;
   }
 
-  .predictive-search{
-   background: white!important; 
+  .predictive-search {
+    background: white !important;
   }
 
-  .search-modal__content{
-  align-items: start!important;  
+  .search-modal__content {
+    align-items: start !important;
   }
 
-  .field__input, .field__label{
-    background-color: white!important;
-    color: #757575!important;
+  .field__input,
+  .field__label {
+    background-color: white !important;
+    color: #757575 !important;
   }
 
-   .predictive-search__heading{
-    color: #212529!important;
-    font-size: 18px!important;
-    font-weight: 700!important;
-    letter-spacing: 0!important;
-    text-transform: capitalize!important;
+  .predictive-search__heading {
+    color: #212529 !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0 !important;
+    text-transform: capitalize !important;
   }
 
-    .predictive-search__item-query-result mark{
-    font-size: 14px!important;
-    display: flex!important;
-    justify-content: space-between!important;
+  .predictive-search__item-query-result mark {
+    font-size: 14px !important;
+    display: flex !important;
+    justify-content: space-between !important;
     padding: 5px 8px !important;
-    border-radius: 4px!important;
-    text-decoration: none!important;
-    color: #333!important;
+    border-radius: 4px !important;
+    text-decoration: none !important;
+    color: #333 !important;
   }
 
-  .search__input.fake-search {
-  color: transparent!important;
-  caret-color: black!important; /* so user still sees caret */
-  position: relative!important;
-}
-
-.search__input.fake-search::before {
-  content: attr(data-fake-placeholder)!important;
-  position: absolute!important;
-  top: 50%!important;
-  left: 12px!important;
-  transform: translateY(-50%)!important;
-  color: #999!important;
-  pointer-events: none!important;
-}
-
-.predictive-wrapper {
-  position: relative;
-}
-
-.fake-placeholder {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #999;
-  pointer-events: none;
-  font-size: 16px;
-  transition: opacity 0.2s;
-}
-
-input.typing + .fake-placeholder {
-  opacity: 0;
-}
-
-  .modal__close-button .icon{
+  .modal__close-button .icon {
     color: black;
   }
 
-  .header predictive-search{
-    align-items: center!important;
+  .header predictive-search {
+    align-items: center !important;
   }
-
-  
 </style>
 
 <details-modal class="header__search gl-fullscreen-search">
@@ -106,7 +70,7 @@ input.typing + .fake-placeholder {
           id="{{ input_id }}"
           type="search"
           name="q"
-          value="{{ search.terms | escape }}"
+          value=""
           placeholder="{{ 'general.search.search' | t }}"
           {%- if settings.predictive_search_enabled -%}
             role="combobox"
@@ -124,7 +88,7 @@ input.typing + .fake-placeholder {
         <input type="hidden" name="options[prefix]" value="last">
         <button
           type="reset"
-          class="reset__button field__button field__button{% if search.terms == blank %} hidden{% endif %}"
+          class="reset__button field__button{% if search.terms == blank %} hidden{% endif %}"
           aria-label="{{ 'general.search.reset' | t }}"
         >
           <span class="svg-wrapper">
@@ -156,30 +120,26 @@ input.typing + .fake-placeholder {
         <form action="{{ routes.search_url }}" method="get" role="search" class="search search-modal__form">
           <div class="field">
             <div style="width: 100%;">
-            <input
-              class="search__input field__input"
-              id="{{ input_id }}"
-              type="search"
-              name="q"
-              
-              value="{{ search.terms | escape }}"
-
-              {%- if settings.predictive_search_enabled -%}
-                role="combobox"
-                aria-expanded="false"
-                aria-owns="predictive-search-results"
-                aria-controls="predictive-search-results"
-                aria-haspopup="listbox"
-                aria-autocomplete="list"
-                autocorrect="off"
-                autocomplete="off"
-                autocapitalize="off"
-                spellcheck="false"
-              {%- endif -%}
-            >
-            <span class="fake-placeholder">I am looking for</span>
-              </div>
-            
+              <input
+                class="search__input field__input"
+                id="{{ input_id }}"
+                type="search"
+                name="q"
+                value=""
+                {%- if settings.predictive_search_enabled -%}
+                  role="combobox"
+                  aria-expanded="false"
+                  aria-owns="predictive-search-results"
+                  aria-controls="predictive-search-results"
+                  aria-haspopup="listbox"
+                  aria-autocomplete="list"
+                  autocorrect="off"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                {%- endif -%}
+              >
+            </div>
             <input type="hidden" name="options[prefix]" value="last">
             <button
               type="reset"
@@ -205,21 +165,19 @@ input.typing + .fake-placeholder {
           {%- endif -%}
         </form>
         {%- if settings.predictive_search_enabled -%}
-             <button
-          type="button"
-          class="search-modal__close-button modal__close-button link link--text focus-inset"
-          aria-label="{{ 'accessibility.close' | t }}"
-        >
-          <span class="svg-wrapper">
-            {{- 'icon-close.svg' | inline_asset_content -}}
-          </span>
-        </button>
+          <button
+            type="button"
+            class="search-modal__close-button modal__close-button link link--text focus-inset"
+            aria-label="{{ 'accessibility.close' | t }}"
+          >
+            <span class="svg-wrapper">
+              {{- 'icon-close.svg' | inline_asset_content -}}
+            </span>
+          </button>
           </predictive-search>
         {%- else -%}
           </search-form>
         {%- endif -%}
-
-     
       </div>
     </div>
   </details>
@@ -232,37 +190,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!detailsEl) return;
 
   const input = detailsEl.querySelector('.search__input');
-  const fakePlaceholder = detailsEl.querySelector('.fake-placeholder');
 
   detailsEl.addEventListener('toggle', () => {
     if (detailsEl.open) {
       setTimeout(() => {
-        if (!input || !fakePlaceholder) return;
-
-        input.value = 'fsr90';
-        fakePlaceholder.style.opacity = '1';
-
-        // Trigger predictive search
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.focus();
       }, 10);
     }
   });
-
-  // Clear dummy value on user input
-  input.addEventListener('input', () => {
-    if (input.value === 'fsr90') return;
-
-    input.classList.add('typing');
-    input.value = input.value.replace('fsr90', '');
-    fakePlaceholder.style.opacity = '0';
-  });
-
-  input.addEventListener('focus', () => {
-    if (input.value === 'fsr90') {
-      input.value = '';
-    }
-  });
 });
 </script>
-
