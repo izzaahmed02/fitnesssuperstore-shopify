@@ -324,42 +324,42 @@
                     </div>
                   </details>
                 {% when 'price_range' %}
-                  <details
-                    id="Details-{{ filter.param_name | escape }}-{{ section.id }}"
-                    class="{% if filter_type == 'horizontal' %}disclosure-has-popup facets__disclosure{% else %} facets__disclosure-vertical{% endif %} js-filter"
-                    data-index="{{ forloop.index }}"
-                    {% if filter_type == 'vertical' and forloop.index == 1 %}
-                      open
-                    {% endif %}
-                  >
-                    <summary class="facets__summary caption-large focus-offset">
-                      <div>
-                        <span class="facets__summary-label">{{ filter.label | escape }}</span>
-                        {{- 'icon-caret.svg' | inline_asset_content -}}
-                      </div>
-                    </summary>
-                    <div
-                      id="Facet-{{ forloop.index }}-{{ section.id }}"
-                      class="{% if filter_type == 'horizontal' %}facets__display{% else %}facets__display-vertical{% endif %}"
-                    >
-                      <div class="{% if filter_type == 'horizontal' %}facets__header{% else %}facets__header-vertical{% endif %}">
-                        {%- assign max_price_amount = filter.range_max | money | strip_html | escape -%}
-                        <span class="facets__selected">
-                          {{- 'products.facets.max_price' | t: price: max_price_amount -}}
-                        </span>
-                        {%- if filter_type != 'vertical' -%}
-                          <facet-remove>
-                            <a href="{{ filter.url_to_remove }}" class="facets__reset link underlined-link">
-                              {{ 'products.facets.reset' | t }}
-                            </a>
-                          </facet-remove>
-                        {%- endif -%}
-                      </div>
-                      <price-range class="facets__price">
-                        {% render 'price-facet', filter: filter, id_prefix: 'Filter-', filter_type: filter_type %}
-                      </price-range>
-                    </div>
-                  </details>
+  <details
+    id="Details-{{ filter.param_name | escape }}-{{ section.id }}"
+    class="{% if filter_type == 'horizontal' %}disclosure-has-popup facets__disclosure{% else %}facets__disclosure-vertical{% endif %} js-filter"
+    data-index="{{ forloop.index }}"
+    {% if filter_type == 'vertical' and forloop.index == 1 %}
+      open
+    {% endif %}
+  >
+    <summary class="facets__summary caption-large focus-offset">
+      <div>
+        <span class="facets__summary-label">{{ filter.label | escape }}</span>
+        {{- 'icon-caret.svg' | inline_asset_content -}}
+      </div>
+    </summary>
+    <div
+      id="Facet-{{ forloop.index }}-{{ section.id }}"
+      class="{% if filter_type == 'horizontal' %}facets__display{% else %}facets__display-vertical{% endif %}"
+    >
+      <div class="{% if filter_type == 'horizontal' %}facets__header{% else %}facets__header-vertical{% endif %}">
+        {%- assign max_price_amount = filter.range_max | money | strip_html | escape -%}
+        <span class="facets__selected">
+          {{- 'products.facets.max_price' | t: price: max_price_amount -}}
+        </span>
+        {%- if filter_type != 'vertical' -%}
+          <facet-remove>
+            <a href="{{ filter.url_to_remove }}" class="facets__reset link underlined-link">
+              {{ 'products.facets.reset' | t }}
+            </a>
+          </facet-remove>
+        {%- endif -%}
+      </div>
+      <price-range-slider class="facets__price">
+        {% render 'price-range-facet', filter: filter, id_prefix: 'Filter-' %}
+      </price-range-slider>
+    </div>
+  </details>
               {% endcase %}
             {%- endfor -%}
           </div>
