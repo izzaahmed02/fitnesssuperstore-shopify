@@ -317,6 +317,7 @@ onSubmitHandler(event) {
       textInputs.forEach((input) => {
         input.value = input.id.includes('GTE') ? 0 : input.getAttribute('data-max');
       });
+      slider.isActive = false; // Reset isActive flag
     });
   }
 
