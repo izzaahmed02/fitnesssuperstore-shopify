@@ -254,10 +254,37 @@ class FacetFiltersForm extends HTMLElement {
     ];
   }
 
-  createSearchParams(form) {
-    const formData = new FormData(form);
-    return new URLSearchParams(formData).toString();
+createSearchParams(form) {
+  const formData = new FormData(form);
+  const searchParams = new URLSearchParams();
+
+  const priceRangeSlider = form.querySelector('price-range-slider');
+  const defaultMax = priceRangeSlider ? priceRangeSlider.querySelector('#price-range-max')?.max : null;
+
+  console.log('Form Data:', Object.fromEntries(formData));
+  console.log('Default Max:', defaultMax);
+  console.log('Price Range Slider Exists:', !!priceRangeSlider);
+
+  for (const [key, value] of formData) {
+    if (key.includes('filter[price]')) {
+      if (key.includes('min') && value !== '' && parseFloat(value) !== 0) {
+        console.log(`Including ${key}: ${value} (not default min)`);
+        searchParams.append(key, value);
+      }
+      if (key.includes('max') && value !== '' && defaultMax && parseFloat(value) !== parseFloat(defaultMax)) {
+        console.log(`Including ${key}: ${value} (not default max)`);
+        searchParams.append(key, value);
+      } else if (key.includes('max')) {
+        console.log(`Excluding ${key}: ${value} (matches default max or invalid)`);
+      }
+    } else {
+      searchParams.append(key, value);
+    }
   }
+
+  console.log('Search Params:', searchParams.toString());
+  return searchParams.toString();
+}
 
   onSubmitForm(searchParams, event) {
     FacetFiltersForm.renderPage(searchParams, event);
