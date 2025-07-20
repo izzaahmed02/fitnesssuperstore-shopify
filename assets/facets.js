@@ -372,14 +372,16 @@ class PriceRangeSlider extends HTMLElement {
     const urlParams = new URLSearchParams(window.location.search);
     const minPrice = urlParams.get('filter.v.price.gte');
     const maxPrice = urlParams.get('filter.v.price.lte');
-    this.isActive = minPrice !== null && parseFloat(minPrice) !== 0 || maxPrice !== null && parseFloat(maxPrice) !== parseFloat(this.maxSlider.max);
+    const defaultMax = this.maxSlider.max ? parseFloat(this.maxSlider.max) : null;
+    this.isActive = (minPrice !== null && parseFloat(minPrice) > 0) || 
+                    (maxPrice !== null && defaultMax && parseFloat(maxPrice) !== defaultMax);
 
     // Reset inputs if price filter is not active
     if (!this.isActive) {
       this.minSlider.value = 0;
-      this.maxSlider.value = this.maxSlider.max;
+      this.maxSlider.value = this.maxSlider.max || 100;
       this.textInputs.forEach((input) => {
-        input.value = input.id.includes('GTE') ? 0 : input.getAttribute('data-max');
+        input.value = input.id.includes('GTE') ? 0 : input.getAttribute('data-max') || this.maxSlider.max;
       });
     }
 
