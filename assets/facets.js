@@ -292,28 +292,44 @@ createSearchParams(form) {
     FacetFiltersForm.renderPage(searchParams, event);
   }
 
-  onSubmitHandler(event) {
-    event.preventDefault();
-    const sortFilterForms = document.querySelectorAll('facet-filters-form form');
-    if (event.srcElement.className == 'mobile-facets__checkbox') {
-      const searchParams = this.createSearchParams(event.target.closest('form'));
-      this.onSubmitForm(searchParams, event);
-    } else {
-      const forms = [];
-      const isMobile = event.target.closest('form').id === 'FacetFiltersFormMobile';
+onSubmitHandler(event) {
+  event.preventDefault();
+  const sortFilterForms = document.querySelectorAll('facet-filters-form form');
+  const isMobile = event.target.closest('form').id === 'FacetFiltersFormMobile';
+  const isPriceInput = event.target.closest('price-range-slider') !== null;
 
-      sortFilterForms.forEach((form) => {
-        if (!isMobile) {
-          if (form.id === 'FacetSortForm' || form.id === 'FacetFiltersForm' || form.id === 'FacetSortDrawerForm') {
-            forms.push(this.createSearchParams(form));
-          }
-        } else if (form.id === 'FacetFiltersFormMobile') {
+  // Reset price inputs if the event is not from the price range slider
+  if (!isPriceInput) {
+    const priceRangeSliders = event.target.closest('form').querySelectorAll('price-range-slider');
+    priceRangeSliders.forEach((slider) => {
+      const minInput = slider.querySelector('#price-range-min');
+      const maxInput = slider.querySelector('#price-range-max');
+      const textInputs = slider.querySelectorAll('.field__input');
+      if (minInput) minInput.value = 0;
+      if (maxInput) maxInput.value = maxInput.max;
+      textInputs.forEach((input) => {
+        input.value = input.id.includes('GTE') ? 0 : input.getAttribute('data-max');
+      });
+    });
+  }
+
+  if (event.srcElement.className == 'mobile-facets__checkbox') {
+    const searchParams = this.createSearchParams(event.target.closest('form'));
+    this.onSubmitForm(searchParams, event);
+  } else {
+    const forms = [];
+    sortFilterForms.forEach((form) => {
+      if (!isMobile) {
+        if (form.id === 'FacetSortForm' || form.id === 'FacetFiltersForm' || form.id === 'FacetSortDrawerForm') {
           forms.push(this.createSearchParams(form));
         }
-      });
-      this.onSubmitForm(forms.join('&'), event);
-    }
+      } else if (form.id === 'FacetFiltersFormMobile') {
+        forms.push(this.createSearchParams(form));
+      }
+    });
+    this.onSubmitForm(forms.join('&'), event);
   }
+}
 
   onActiveFilterClick(event) {
     event.preventDefault();
@@ -333,82 +349,106 @@ customElements.define('facet-filters-form', FacetFiltersForm);
 FacetFiltersForm.setListeners();
 
 class PriceRangeSlider extends HTMLElement {
-	constructor() {
-		super();
-		requestAnimationFrame(() => this.init());
-	}
+  constructor() {
+    super();
+    this.isActive = false;
+    requestAnimationFrame(() => this.init());
+  }
 
-	init() {
-		this.textInputs = this.querySelectorAll('.field__input');
-		this.minSlider = this.querySelector('#price-range-min');
-		this.maxSlider = this.querySelector('#price-range-max');
-		if (!this.minSlider || !this.maxSlider) {
-			return;
-		}
-		this.minSlider.addEventListener('input', this.updateMinValue.bind(this));
-		this.maxSlider.addEventListener('input', this.updateMaxValue.bind(this));
+  init() {
+    this.textInputs = this.querySelectorAll('.field__input');
+    this.minSlider = this.querySelector('#price-range-min');
+    this.maxSlider = this.querySelector('#price-range-max');
+    if (!this.minSlider || !this.maxSlider) return;
 
-		if (this.textInputs.length > 1) {
-			this.textInputs.forEach((input) => {
-				input.addEventListener('change', this.syncTextInputs.bind(this));
-			});
-		}
+    // Check if price filter is active based on URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const minPrice = urlParams.get('filter.v.price.gte');
+    const maxPrice = urlParams.get('filter.v.price.lte');
+    this.isActive = minPrice !== null && parseFloat(minPrice) !== 0 || maxPrice !== null && parseFloat(maxPrice) !== parseFloat(this.maxSlider.max);
 
-		this.updateSliderBackground();
-	}
+    // Reset inputs if price filter is not active
+    if (!this.isActive) {
+      this.minSlider.value = 0;
+      this.maxSlider.value = this.maxSlider.max;
+      this.textInputs.forEach((input) => {
+        input.value = input.id.includes('GTE') ? 0 : input.getAttribute('data-max');
+      });
+    }
 
-	updateMinValue() {
-		const minValue = Number(this.minSlider.value);
-		const maxValue = Number(this.maxSlider.value);
+    this.minSlider.addEventListener('input', () => {
+      this.isActive = true;
+      this.updateMinValue();
+    });
+    this.maxSlider.addEventListener('input', () => {
+      this.isActive = true;
+      this.updateMaxValue();
+    });
 
-		if (minValue > maxValue) {
-			this.minSlider.value = maxValue;
-		}
+    if (this.textInputs.length > 1) {
+      this.textInputs.forEach((input) => {
+        input.addEventListener('change', () => {
+          this.isActive = true;
+          this.syncTextInputs();
+        });
+      });
+    }
 
-		if (this.textInputs.length > 0) {
-			this.textInputs[0].value = this.minSlider.value;
-		}
-		this.updateSliderBackground();
-	}
+    this.updateSliderBackground();
+  }
 
-	updateMaxValue() {
-		const minValue = Number(this.minSlider.value);
-		const maxValue = Number(this.maxSlider.value);
+  updateMinValue() {
+    const minValue = Number(this.minSlider.value);
+    const maxValue = Number(this.maxSlider.value);
 
-		if (maxValue < minValue) {
-			this.maxSlider.value = minValue;
-		}
+    if (minValue > maxValue) {
+      this.minSlider.value = maxValue;
+    }
 
-		if (this.textInputs.length > 1) {
-			this.textInputs[1].value = this.maxSlider.value;
-		}
-		this.updateSliderBackground();
-	}
+    if (this.textInputs.length > 0) {
+      this.textInputs[0].value = this.minSlider.value;
+    }
+    this.updateSliderBackground();
+  }
 
-	syncTextInputs() {
-		const minValue = Number(this.textInputs[0]?.value);
-		const maxValue = Number(this.textInputs[1]?.value);
+  updateMaxValue() {
+    const minValue = Number(this.minSlider.value);
+    const maxValue = Number(this.maxSlider.value);
 
-		if (!isNaN(minValue) && minValue >= 0 && minValue <= maxValue) {
-			this.minSlider.value = minValue;
-		}
+    if (maxValue < minValue) {
+      this.maxSlider.value = minValue;
+    }
 
-		if (!isNaN(maxValue) && maxValue >= minValue) {
-			this.maxSlider.value = maxValue;
-		}
+    if (this.textInputs.length > 1) {
+      this.textInputs[1].value = this.maxSlider.value;
+    }
+    this.updateSliderBackground();
+  }
 
-		this.updateSliderBackground();
-	}
+  syncTextInputs() {
+    const minValue = Number(this.textInputs[0]?.value.replace(/,/g, ''));
+    const maxValue = Number(this.textInputs[1]?.value.replace(/,/g, ''));
 
-	updateSliderBackground() {
-		const minValue = Number(this.minSlider.value);
-		const maxValue = Number(this.maxSlider.value);
-		const rangeMax = this.maxSlider.max || 100;
+    if (!isNaN(minValue) && minValue >= 0 && minValue <= maxValue) {
+      this.minSlider.value = minValue;
+    }
 
-		const fromPosition = (minValue * 100) / rangeMax;
-		const toPosition = (maxValue * 100) / rangeMax;
+    if (!isNaN(maxValue) && maxValue >= minValue) {
+      this.maxSlider.value = maxValue;
+    }
 
-		this.maxSlider.style.background = `linear-gradient(
+    this.updateSliderBackground();
+  }
+
+  updateSliderBackground() {
+    const minValue = Number(this.minSlider.value);
+    const maxValue = Number(this.maxSlider.value);
+    const rangeMax = this.maxSlider.max || 100;
+
+    const fromPosition = (minValue * 100) / rangeMax;
+    const toPosition = (maxValue * 100) / rangeMax;
+
+    this.maxSlider.style.background = `linear-gradient(
       to right,
       #C6C6C6 0%,
       #C6C6C6 ${fromPosition}%,
@@ -417,7 +457,7 @@ class PriceRangeSlider extends HTMLElement {
       #C6C6C6 ${toPosition}%,
       #C6C6C6 100%
     )`;
-	}
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
