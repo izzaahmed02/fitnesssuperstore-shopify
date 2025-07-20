@@ -259,23 +259,25 @@ createSearchParams(form) {
   const searchParams = new URLSearchParams();
 
   const priceRangeSlider = form.querySelector('price-range-slider');
-  const defaultMax = priceRangeSlider ? priceRangeSlider.querySelector('#price-range-max')?.max : null;
+  const maxSlider = priceRangeSlider ? priceRangeSlider.querySelector('#price-range-max') : null;
+  const defaultMax = maxSlider && maxSlider.max ? parseFloat(maxSlider.max) : null;
+  const defaultMin = 0;
 
   console.log('Form Data:', Object.fromEntries(formData));
-  console.log('Default Max:', defaultMax);
-  console.log('Price Range Slider Exists:', !!priceRangeSlider);
+  console.log('Default Max:', defaultMax, 'Default Min:', defaultMin);
 
   for (const [key, value] of formData) {
-    if (key.includes('filter[price]')) {
-      if (key.includes('min') && value !== '' && parseFloat(value) !== 0) {
-        console.log(`Including ${key}: ${value} (not default min)`);
-        searchParams.append(key, value);
-      }
-      if (key.includes('max') && value !== '' && defaultMax && parseFloat(value) !== parseFloat(defaultMax)) {
-        console.log(`Including ${key}: ${value} (not default max)`);
-        searchParams.append(key, value);
-      } else if (key.includes('max')) {
-        console.log(`Excluding ${key}: ${value} (matches default max or invalid)`);
+    if (key.includes('filter.v.price')) {
+      // Normalize value by removing commas and converting to number
+      const normalizedValue = parseFloat(value.replace(/,/g, ''));
+      if (key.includes('gte') && value !== '' && normalizedValue !== defaultMin) {
+        console.log(`Including ${key}: ${value}`);
+        searchParams.append(key, normalizedValue);
+      } else if (key.includes('lte') && value !== '' && defaultMax && normalizedValue !== defaultMax) {
+        console.log(`Including ${key}: ${value}`);
+        searchParams.append(key, normalizedValue);
+      } else {
+        console.log(`Excluding ${key}: ${value}`);
       }
     } else {
       searchParams.append(key, value);
