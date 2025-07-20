@@ -105,52 +105,7 @@
           </facet-filters-form>
         {%- endif -%}
 
-        <div class="active-facets active-facets-desktop">
-          {%- for filter in search.filters -%}
-            {%- for value in filter.active_values -%}
-              <facet-remove>
-                <a href="{{ value.url_to_remove }}" class="active-facets__button active-facets__button--light">
-                  <span class="active-facets__button-inner button button--tertiary">
-                    {{ filter.label | escape }}: {{ value.label | escape }}
-                    <span class="svg-wrapper">
-                      {{- 'icon-close-small.svg' | inline_asset_content -}}
-                    </span>
-                    <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
-                  </span>
-                </a>
-              </facet-remove>
-            {%- endfor -%}
-            {% if filter.type == 'price_range' %}
-              {% assign min = filter.min_value.value %}
-              {% assign max = filter.max_value.value %}
-              {%- if min != null or max != null -%}
-                <facet-remove>
-                  <a href="{{ filter.url_to_remove }}" class="active-facets__button active-facets__button--light">
-                    <span class="active-facets__button-inner button button--tertiary">
-                      {{ min | default: 0 | money }} - {{ max | default: filter.range_max | money }}
-                      <span class="svg-wrapper">
-                        {{- 'icon-close-small.svg' | inline_asset_content -}}
-                      </span>
-                      <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
-                    </span>
-                  </a>
-                </facet-remove>
-              {%- endif -%}
-            {% endif %}
-          {%- endfor -%}
-          <div class="active-facets-vertical-filter">
-            <facet-remove class="active-facets__button-wrapper">
-              <a href="{{ search_url }}" class="active-facets__button-remove underlined-link">
-                <span>Clear all</span>
-                <span>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12.4698 0.469844C12.7627 0.17695 13.2375 0.17695 13.5304 0.469844C13.8233 0.762737 13.8233 1.2375 13.5304 1.53039L8.06066 7.00012L13.5304 12.4698L13.5821 12.5265C13.8225 12.8211 13.805 13.2558 13.5304 13.5304C13.2558 13.805 12.8211 13.8225 12.5265 13.5821L12.4698 13.5304L7.00012 8.06066L1.53039 13.5304C1.2375 13.8233 0.762737 13.8233 0.469844 13.5304C0.17695 13.2375 0.17695 12.7627 0.469844 12.4698L5.93957 7.00012L0.469844 1.53039L0.418086 1.47375C0.177777 1.17917 0.19524 0.744447 0.469844 0.469844C0.744447 0.19524 1.17917 0.177777 1.47375 0.418086L1.53039 0.469844L7.00012 5.93957L12.4698 0.469844Z" fill="#E9380D"/>
-                  </svg>
-                </span>
-              </a>
-            </facet-remove>
-          </div>
-        </div>
+
 
         {%- if search.results.size == 0 -%}
           <div class="collection collection--empty page-width" id="product-grid" data-id="{{ section.id }}">
