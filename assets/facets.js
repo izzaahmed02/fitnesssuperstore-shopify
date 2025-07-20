@@ -263,28 +263,37 @@ class FacetFiltersForm extends HTMLElement {
     FacetFiltersForm.renderPage(searchParams, event);
   }
 
-  onSubmitHandler(event) {
-    event.preventDefault();
-    const sortFilterForms = document.querySelectorAll('facet-filters-form form');
-    if (event.srcElement.className == 'mobile-facets__checkbox') {
-      const searchParams = this.createSearchParams(event.target.closest('form'));
-      this.onSubmitForm(searchParams, event);
-    } else {
-      const forms = [];
-      const isMobile = event.target.closest('form').id === 'FacetFiltersFormMobile';
+ onSubmitHandler(event) {
+  event.preventDefault();
+  const sortFilterForms = document.querySelectorAll('facet-filters-form form');
+  const isMobile = event.target.closest('form').id === 'FacetFiltersFormMobile';
+  const isPriceInput = event.target.closest('price-range-slider') !== null;
 
-      sortFilterForms.forEach((form) => {
-        if (!isMobile) {
-          if (form.id === 'FacetSortForm' || form.id === 'FacetFiltersForm' || form.id === 'FacetSortDrawerForm') {
-            forms.push(this.createSearchParams(form));
-          }
-        } else if (form.id === 'FacetFiltersFormMobile') {
+  // Reset price inputs if the event is not from the price range slider
+  if (!isPriceInput) {
+    const priceInputs = event.target.closest('form').querySelectorAll('.field__input');
+    priceInputs.forEach((input) => {
+      input.value = ''; // Or set to default min/max values
+    });
+  }
+
+  if (event.srcElement.className == 'mobile-facets__checkbox') {
+    const searchParams = this.createSearchParams(event.target.closest('form'));
+    this.onSubmitForm(searchParams, event);
+  } else {
+    const forms = [];
+    sortFilterForms.forEach((form) => {
+      if (!isMobile) {
+        if (form.id === 'FacetSortForm' || form.id === 'FacetFiltersForm' || form.id === 'FacetSortDrawerForm') {
           forms.push(this.createSearchParams(form));
         }
-      });
-      this.onSubmitForm(forms.join('&'), event);
-    }
+      } else if (form.id === 'FacetFiltersFormMobile') {
+        forms.push(this.createSearchParams(form));
+      }
+    });
+    this.onSubmitForm(forms.join('&'), event);
   }
+}
 
   onActiveFilterClick(event) {
     event.preventDefault();
