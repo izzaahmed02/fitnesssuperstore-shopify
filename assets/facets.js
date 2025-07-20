@@ -255,29 +255,9 @@ class FacetFiltersForm extends HTMLElement {
   }
 
   createSearchParams(form) {
-  const formData = new FormData(form);
-  const searchParams = new URLSearchParams();
-
-  // Get the price range filter's default max value (assuming it's available in the DOM or passed via data attributes)
-  const priceRangeSlider = form.querySelector('price-range-slider');
-  const defaultMax = priceRangeSlider ? priceRangeSlider.querySelector('#price-range-max').max : null;
-
-  for (const [key, value] of formData) {
-    // Only include price inputs if they differ from default values
-    if (key.includes('filter[price]')) {
-      if (key.includes('min') && value !== '' && parseFloat(value) !== 0) {
-        searchParams.append(key, value);
-      }
-      if (key.includes('max') && value !== '' && defaultMax && parseFloat(value) !== parseFloat(defaultMax)) {
-        searchParams.append(key, value);
-      }
-    } else {
-      searchParams.append(key, value);
-    }
+    const formData = new FormData(form);
+    return new URLSearchParams(formData).toString();
   }
-
-  return searchParams.toString();
-}
 
   onSubmitForm(searchParams, event) {
     FacetFiltersForm.renderPage(searchParams, event);
