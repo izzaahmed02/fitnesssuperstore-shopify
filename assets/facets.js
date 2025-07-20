@@ -263,21 +263,28 @@ createSearchParams(form) {
   const defaultMax = maxSlider && maxSlider.max ? parseFloat(maxSlider.max) : null;
   const defaultMin = 0;
 
+  // Check if price filter is active based on PriceRangeSlider's isActive flag
+  const isPriceActive = priceRangeSlider && priceRangeSlider.isActive;
+
   console.log('Form Data:', Object.fromEntries(formData));
   console.log('Default Max:', defaultMax, 'Default Min:', defaultMin);
+  console.log('Price Filter Active:', isPriceActive);
 
   for (const [key, value] of formData) {
     if (key.includes('filter.v.price')) {
-      // Normalize value by removing commas and converting to number
-      const normalizedValue = parseFloat(value.replace(/,/g, ''));
-      if (key.includes('gte') && value !== '' && normalizedValue !== defaultMin) {
-        console.log(`Including ${key}: ${value}`);
-        searchParams.append(key, normalizedValue);
-      } else if (key.includes('lte') && value !== '' && defaultMax && normalizedValue !== defaultMax) {
-        console.log(`Including ${key}: ${value}`);
-        searchParams.append(key, normalizedValue);
+      const normalizedValue = value === '' ? null : parseFloat(value.replace(/,/g, ''));
+      if (isPriceActive) {
+        if (key.includes('gte') && normalizedValue !== null && normalizedValue !== defaultMin) {
+          console.log(`Including ${key}: ${normalizedValue}`);
+          searchParams.append(key, normalizedValue);
+        } else if (key.includes('lte') && normalizedValue !== null && defaultMax && normalizedValue !== defaultMax) {
+          console.log(`Including ${key}: ${normalizedValue}`);
+          searchParams.append(key, normalizedValue);
+        } else {
+          console.log(`Excluding ${key}: ${value}`);
+        }
       } else {
-        console.log(`Excluding ${key}: ${value}`);
+        console.log(`Excluding ${key}: ${value} (price filter not active)`);
       }
     } else {
       searchParams.append(key, value);
