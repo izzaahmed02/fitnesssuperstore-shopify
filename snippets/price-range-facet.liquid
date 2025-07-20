@@ -4,7 +4,7 @@
             <input
                     class="field__input"
                     id="{{ id_prefix }}{{ filter.label | escape }}-GTE"
-                    value="{{ filter.min_value.value | money_without_currency | default: 0 }}"
+                    value="{% if filter.min_value.value and filter.min_value.value > 0 %}{{ filter.min_value.value | money_without_currency }}{% endif %}"
                     type="text"
                     inputmode="decimal"
                     placeholder="0"
@@ -16,7 +16,7 @@
             <input
                     class="field__input"
                     id="{{ id_prefix }}{{ filter.label | escape }}-LTE"
-                    value="{{ filter.max_value.value | money_without_currency | default: filter.range_max | money_without_currency }}"
+                    value="{% if filter.max_value.value and filter.max_value.value != filter.range_max %}{{ filter.max_value.value | money_without_currency }}{% endif %}"
                     type="text"
                     inputmode="decimal"
                     placeholder="{{ filter.range_max | money_without_currency }}"
@@ -34,7 +34,7 @@
                 min="0"
                 max="{{ filter.range_max | divided_by: 100 }}"
                 step="1"
-                value="{{ filter.min_value.value | divided_by: 100 | default: 0 }}">
+                value="{% if filter.min_value.value and filter.min_value.value > 0 %}{{ filter.min_value.value | divided_by: 100 }}{% else %}0{% endif %}">
         <input
                 type="range"
                 class="range-input"
@@ -43,7 +43,7 @@
                 min="0"
                 max="{{ filter.range_max | divided_by: 100 }}"
                 step="1"
-                value="{{ filter.max_value.value | divided_by: 100 | default: filter.range_max | divided_by: 100 }}">
+                value="{% if filter.max_value.value and filter.max_value.value != filter.range_max %}{{ filter.max_value.value | divided_by: 100 }}{% else %}{{ filter.range_max | divided_by: 100 }}{% endif %}">
     </div>
 </div>
 
