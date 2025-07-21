@@ -3,7 +3,8 @@
 {{ 'template-collection.css' | asset_url | stylesheet_tag }}
 {{ 'component-card.css' | asset_url | stylesheet_tag }}
 {{ 'component-price.css' | asset_url | stylesheet_tag }}
-{{ 'colln-grid-cards.css' | asset_url | stylesheet_tag }}
+
+{{ 'collection-section.css' | asset_url | stylesheet_tag }}
 {{ 'component-search.css' | asset_url | stylesheet_tag }}
 {% if section.settings.image_shape == 'blob' %}
     {{ 'mask-blobs.css' | asset_url | stylesheet_tag }}
@@ -12,39 +13,6 @@
 {% comment %}<script src="{{ 'main-search.js' | asset_url }}" defer="defer"></script>{% endcomment %}
 
 <style>
-
-
-  .filterSearchInput, #search-input, #search-input-mobile {
-    width: 248px;
-    height: 48px;
-    border-radius: 8px;
-    border: 1.5px solid #E5E5E5;
-    background: #fff;
-    background-image: url(data:image/svg+xml;charset=UTF-8,%3Csvg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath fill-rule="evenodd" clip-rule="evenodd" d="M3.75 11C3.75 6.99594 6.99594 3.75 11 3.75C15.0041 3.75 18.25 6.99594 18.25 11C18.25 15.0041 15.0041 18.25 11 18.25C6.99594 18.25 3.75 15.0041 3.75 11ZM11 2.25C6.16751 2.25 2.25 6.16751 2.25 11C2.25 15.8325 6.16751 19.75 11 19.75C13.1462 19.75 15.112 18.9773 16.6342 17.6949L19.4697 20.5303C19.7626 20.8232 20.2374 20.8232 20.5303 20.5303C20.8232 20.2374 20.8232 19.7626 20.5303 19.4697L17.6949 16.6342C18.9773 15.112 19.75 13.1462 19.75 11C19.75 6.16751 15.8325 2.25 11 2.25Z" fill="%23B3B3B3"/%3E%3C/svg%3E);
-    background-repeat: no-repeat;
-    background-position: 12px center;
-    padding-left: 44px;
-}
-
-  @media (max-width: 749px) {
-
-    .mobile-facets__wrapper {
-        order: 1;
-    }
-
-    .search #search-input-mobile {
-        display: block;
-        width: 100%;
-    }
-    
-    .collection-filter-wrapper {
-        display: block !important;
-    }
-
-        .collection-wrapper {
-        flex-direction: column;
-    }
-}
     .template-search__header {
         margin-bottom: 3rem;
     }
@@ -261,14 +229,7 @@
                 </div>
             </div>
             {% paginate search.results by products_per_page %}
-                <ul
-              id="product-grid"
-              data-id="{{ section.id }}"
-              class="
-                grid product-grid grid--2-col-tablet-down
-                grid--4-col-desktop
-              "
-            >
+                <ul class="collection" id="product-grid" data-id="{{ section.id }}">
                     <div class="loading-overlay gradient"></div>
                     {%- for item in search.results -%}
                         {% assign lazy_load = false %}
@@ -281,7 +242,7 @@
                                                     {% endif %}>
                                                 {%- case item.object_type -%}
                                                     {%- when 'product' -%}
-                                                         {% render 'related-items-colln', product: item %}
+                                                        {% render 'product-item', product: item %}
                                                         {%- assign skip_card_product_styles = true -%}
                                                 {%- endcase -%}
                                             </li>
@@ -342,13 +303,13 @@
 </script>
 
 
-<script src="{{ 'colln-grid-cards.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'collection-section.js' | asset_url }}"></script>
 <script src="{{ 'facets.js' | asset_url }}"></script>
 {% schema %}
 {
   "name": "t:sections.main-search.name",
   "tag": "section",
-  "class": "section search collnGrid",
+  "class": "section search",
   "settings": [
   ],
   "presets": [
