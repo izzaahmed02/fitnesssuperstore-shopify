@@ -3,7 +3,7 @@
 {{ 'template-collection.css' | asset_url | stylesheet_tag }}
 {{ 'component-card.css' | asset_url | stylesheet_tag }}
 {{ 'component-price.css' | asset_url | stylesheet_tag }}
-{{ 'colln-grid-cards.css' | asset_url | stylesheet_tag }}
+
 {{ 'collection-section.css' | asset_url | stylesheet_tag }}
 {{ 'component-search.css' | asset_url | stylesheet_tag }}
 {% if section.settings.image_shape == 'blob' %}
@@ -89,177 +89,195 @@
                 %}
             </aside>
         </div>
-       <div
-        class="product-grid-container{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}
-        {%- if section.settings.filter_type == 'vertical' -%}verticalFilters{% endif %} {%- if section.settings.filter_type == 'horizontal' -%}horizontalFilters{% endif %}"
-        id="ProductGridContainer"
-        {% if settings.animations_reveal_on_scroll %}
-          data-cascade
-        {% endif %}
-      >
-        {%- if section.settings.enable_sorting and section.settings.filter_type == 'vertical' -%}
-          <facet-filters-form class="facets facets-vertical-sort small-hide">
-            <form class="facets-vertical-form" id="FacetSortForm">
-              <div class="facet-filters sorting caption">
-                <div class="facet-filters__field">
-                  <h2 class="facet-filters__label caption-large text-body">
-                    <label for="SortBy">{{ 'products.facets.sort_by_label' | t }}</label>
-                  </h2>
-                  <div class="select">
-                    {%- assign sort_by = search.sort_by | default: search.default_sort_by -%}
-                    <select
-                      name="sort_by"
-                      class="facet-filters__sort select__select caption-large"
-                      id="SortBy"
-                      aria-describedby="a11y-refresh-page-message"
-                    >
-                      {%- for option in search.sort_options -%}
-                        <option
-                          value="{{ option.value | escape }}"
-                          {% if option.value == sort_by %}
-                            selected="selected"
-                          {% endif %}
-                        >
-                          {{ option.name | escape }}
-                        </option>
-                      {%- endfor -%}
-                    </select>
-                    <span class="svg-wrapper">
-                      {{- 'icon-caret.svg' | inline_asset_content -}}
-                    </span>
-                  </div>
+        <div id="ProductGridContainer" class="collection-product-wrapper">
+            {%- liquid
+                assign sort_by = search.sort_by | default: search.default_sort_by
+                assign terms = search.terms | escape
+                assign search_url = '?q=' | append: terms | append: '&options%5Bprefix%5D=last&sort_by=' | append: sort_by
+            -%}
+            <div class="collection-grid-top">
+                <input type="text" id="search-input" placeholder="Search within page">
+                <div class="right-side">
+                    <facet-filters-form class="facets facets-vertical-sort small-hide">
+                        <form class="facets-vertical-form" id="FacetSortForm">
+                            <div class="facet-filters sorting caption">
+                                <div class="facet-filters__field">
+                                    <div class="select">
+                                        {%- assign sort_by = search.sort_by | default: search.default_sort_by -%}
+                                        <select
+                                                name="sort_by"
+                                                class="facet-filters__sort select__select caption-large"
+                                                id="SortBy"
+                                                aria-describedby="a11y-refresh-page-message">
+                                            {%- for option in search.sort_options -%}
+                                                <option
+                                                        value="{{ option.value | escape }}"
+                                                        {% if option.value == sort_by %}
+                                                            selected="selected"
+                                                        {% endif %}
+                                                >
+                                                    {{ 'products.facets.sort_by_label' | t }}
+                                                    {{ option.name | escape }}
+                                                </option>
+                                            {%- endfor -%}
+                                        </select>
+                                        {% render 'icon-caret' %}
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </facet-filters-form>
+                    {%- capture contentForQuerystring -%}{{ content_for_header }}{%- endcapture -%}
+                    {%- assign pageUrl = contentForQuerystring | split: '"pageurl":"' | last | split: '"' | first | split: '.myshopify.com' | last | replace: '\/', '/' | replace: '%20', ' ' | replace: '\u0026', '&' -%}
+                    {%- assign products_per_page = 30 -%}
+                    {%- for i in (1..1) -%}
+                        {%- unless pageUrl contains "?" -%}{% break %}{%- endunless -%}
+                        {%- if pageUrl contains "view=30" -%}{%- assign products_per_page = 30 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=60" -%}{%- assign products_per_page = 60 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=90" -%}{%- assign products_per_page = 90 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=120" -%}{%- assign products_per_page = 120 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=99999" -%}{%- assign products_per_page = 99999 -%}{%- endif -%}
+                    {%- endfor -%}
+                    <div class="sort-per-page">
+                        <span class="label">Show </span>
+                        <div class="select">
+                            <select id="sel1" class="num">
+                                <option value="/search?view=30"
+                                        {% if products_per_page == 30 %}selected="selected"{% endif %}>30
+                                </option>
+                                <option value="/search?view=60"
+                                        {% if products_per_page == 60 %}selected="selected"{% endif %}>60
+                                </option>
+                                <option value="/search?view=90"
+                                        {% if products_per_page == 90 %}selected="selected"{% endif %}>90
+                                </option>
+                                <option value="/search?view=120"
+                                        {% if products_per_page == 120 %}selected="selected"{% endif %}>120
+                                </option>
+                            </select>
+                            {% render 'icon-caret' %}
+                        </div>
+                        <span class="label"> per page</span>
+                    </div>
                 </div>
-              </div>
-
-              {%- if section.settings.filter_type == 'vertical' -%}
-                <div class="product-count-vertical light" role="status">
-                  <h2 class="product-count__text text-body">
-                    <span id="ProductCountDesktop">
-                      {%- if search.results_count -%}
-                        {{
-                          'templates.search.results_with_count'
-                          | t: terms: search.terms, count: search.results_count
-                        }}
-                      {%- elsif search.products_count == search.all_products_count -%}
-                        {{ 'products.facets.product_count_simple' | t: count: search.products_count }}
-                      {%- else -%}
-                        {{
-                          'products.facets.product_count'
-                          | t: product_count: search.products_count, count: search.all_products_count
-                        }}
-                      {%- endif -%}
-                    </span>
-                  </h2>
-                  {%- render 'loading-spinner' -%}
-                </div>
-              {%- endif -%}
-            </form>
-          </facet-filters-form>
-        {%- endif -%}
-
-             <div class="active-facets active-facets-desktop">
-              
-                {%- for filter in search.filters -%}
-                  {%- for value in filter.active_values -%}
-                    <facet-remove>
-                      <a href="{{ value.url_to_remove }}" class="active-facets__button active-facets__button--light">
+            </div>
+            <div class="tags-wrapper">
+                {% paginate search.results by products_per_page %}
+                    {% assign current_page = paginate.current_page %}
+                    {% assign current_offset = paginate.current_offset %}
+                    {% assign items_count = paginate.items %}
+                {% endpaginate %}
+                {% assign current_offset = current_offset | plus: 1 %}
+                {% assign page_count = current_page | times: products_per_page %}
+                <div class="collecion-count">
+               <span>
+                   {% if current_offset != items_count %} {{ current_offset }}-{% if page_count <= items_count %}{{ page_count }}{% else %}{{ items_count }}{% endif %}{% else %}{{ current_offset }}{% endif %}
+               </span> of {{ items_count }}</div>
+                <div class="active-facets active-facets-desktop">
+                    {%- for filter in search.filters -%}
+                        {%- for value in filter.active_values -%}
+                            <facet-remove>
+                                <a href="{{ value.url_to_remove }}"
+                                   class="active-facets__button active-facets__button--light">
                         <span class="active-facets__button-inner button button--tertiary">
-                          {{ filter.label | escape }}: {{ value.label | escape }}
-                          <span class="svg-wrapper">
-                            {{- 'icon-close-small.svg' | inline_asset_content -}}
-                          </span>
+                          <span>{{ filter.label | escape }}: </span> {{ value.label | escape }}
+                            {% render 'icon-close-small' %}
                           <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
                         </span>
-                      </a>
-                    </facet-remove>
-                  {%- endfor -%}
-                  {% if filter.type == 'price_range' %}
-                    {% assign min = filter.min_value.value %}
-                    {% assign max = filter.max_value.value %}
-                    {%- if min != null or max != null -%}
-                      <facet-remove>
-                        <a href="{{ filter.url_to_remove }}" class="active-facets__button active-facets__button--light">
+                                </a>
+                            </facet-remove>
+                        {%- endfor -%}
+                        {% if filter.type == 'price_range' %}
+                            {% assign min = filter.min_value.value %}
+                            {% assign max = filter.max_value.value %}
+                            {%- if min != null or max != null -%}
+                                <facet-remove>
+                                    <a href="{{ filter.url_to_remove }}"
+                                       class="active-facets__button active-facets__button--light">
                           <span class="active-facets__button-inner button button--tertiary">
                             {{ min | default: 0 | money }} - {{ max | default: filter.range_max | money }}
-                            <span class="svg-wrapper">
-                              {{- 'icon-close-small.svg' | inline_asset_content -}}
-                            </span>
+                              {% render 'icon-close-small' %}
                             <span class="visually-hidden">{{ 'products.facets.clear_filter' | t }}</span>
                           </span>
-                        </a>
-                      </facet-remove>
-                    {%- endif -%}
-                  {% endif %}
-                {%- endfor -%}
-             <div class="active-facets-vertical-filter">
-                  <facet-remove class="active-facets__button-wrapper">
-                    <a href="{{ search_url }}" class="active-facets__button-remove underlined-link">
-                      <span>Clear all</span>
-                  <span>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12.4698 0.469844C12.7627 0.17695 13.2375 0.17695 13.5304 0.469844C13.8233 0.762737 13.8233 1.2375 13.5304 1.53039L8.06066 7.00012L13.5304 12.4698L13.5821 12.5265C13.8225 12.8211 13.805 13.2558 13.5304 13.5304C13.2558 13.805 12.8211 13.8225 12.5265 13.5821L12.4698 13.5304L7.00012 8.06066L1.53039 13.5304C1.2375 13.8233 0.762737 13.8233 0.469844 13.5304C0.17695 13.2375 0.17695 12.7627 0.469844 12.4698L5.93957 7.00012L0.469844 1.53039L0.418086 1.47375C0.177777 1.17917 0.19524 0.744447 0.469844 0.469844C0.744447 0.19524 1.17917 0.177777 1.47375 0.418086L1.53039 0.469844L7.00012 5.93957L12.4698 0.469844Z" fill="#E9380D"/>
-                    </svg>
-                  </span>
-                    </a>
-                  </facet-remove>
+                                    </a>
+                                </facet-remove>
+                            {%- endif -%}
+                        {% endif %}
+                    {%- endfor -%}
+                    <div class="active-facets-vertical-filter">
+                        {% assign tagsCount = 0 %}
+                        {%- for filter in search.filters -%}
+                            {%- for value in filter.active_values -%}
+                                {% assign tagsCount = tagsCount | plus: 1 %}
+                            {% endfor %}
+                        {% endfor %}
+                        {% if tagsCount > 0 %}
+                            <facet-remove class="active-facets__button-wrapper">
+                                <a href="{{ results_url }}" class="active-facets__button-remove underlined-link">
+                      <span>
+                        Clear all
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                  d="M5.46967 5.46967C5.76256 5.17678 6.23744 5.17678 6.53033 5.46967L12 10.9393L17.4697 5.46967C17.7626 5.17678 18.2374 5.17678 18.5303 5.46967C18.8232 5.76256 18.8232 6.23744 18.5303 6.53033L13.0607 12L18.5303 17.4697C18.8232 17.7626 18.8232 18.2374 18.5303 18.5303C18.2374 18.8232 17.7626 18.8232 17.4697 18.5303L12 13.0607L6.53033 18.5303C6.23744 18.8232 5.76256 18.8232 5.46967 18.5303C5.17678 18.2374 5.17678 17.7626 5.46967 17.4697L10.9393 12L5.46967 6.53033C5.17678 6.23744 5.17678 5.76256 5.46967 5.46967Z"
+                                  fill="#E9380D"/>
+                            </svg>
+                      </span>
+                                </a>
+                            </facet-remove>
+                        {% endif %}
+                    </div>
                 </div>
-              </div>
-
-
-
-        {%- if search.results.size == 0 -%}
-          <div class="collection collection--empty page-width" id="product-grid" data-id="{{ section.id }}">
-            <div class="loading-overlay gradient"></div>
-            <div class="title-wrapper center">
-              <h2 class="title title--primary">
-                {{ 'sections.collection_template.empty' | t -}}
-                <br>
-                {{
-                  'sections.collection_template.use_fewer_filters_html'
-                  | t: link: search_url, class: 'underlined-link link'
-                }}
-              </h2>
             </div>
-          </div>
-        {%- else -%}
-          <div class="collection{% if section.settings.filter_type != 'vertical' %}{% endif %}">
-            <div class="loading-overlay gradient"></div>
-            <ul
-              id="product-grid"
-              data-id="{{ section.id }}"
-              class="
-                grid product-grid grid--{{ section.settings.columns_mobile }}-col-tablet-down
-                grid--{{ section.settings.columns_desktop }}-col-desktop
-              "
-            >
-              {% assign skip_card_product_styles = false %}
-              {%- for item in search.results -%}
-                {% assign lazy_load = false %}
-                {%- if forloop.index > 2 -%}
-                  {%- assign lazy_load = true -%}
-                {%- endif -%}
-                <li
-                  class="product-item{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
-                  {% if settings.animations_reveal_on_scroll %}
-                    data-cascade
-                    style="--animation-order: {{ forloop.index }};"
-                  {% endif %}
-                >
-                  {%- case item.object_type -%}
-                    {%- when 'product' -%}
-                      {% render 'related-items-colln', product: item %}
-                      {%- assign skip_card_product_styles = true -%}
-                  {%- endcase -%}
-                </li>
-              {%- endfor -%}
-            </ul>
-
-            {%- if paginate.pages > 1 -%}
-              {% render 'pagination', paginate: paginate, anchor: '' %}
-            {%- endif -%}
-          </div>
-        {%- endif -%}
-      </div>
+            {% paginate search.results by products_per_page %}
+                <ul class="collection" id="product-grid" data-id="{{ section.id }}">
+                    <div class="loading-overlay gradient"></div>
+                    {%- for item in search.results -%}
+                        {% assign lazy_load = false %}
+                        {%- if forloop.index > 2 -%}
+                            {%- assign lazy_load = true -%}
+                        {%- endif -%}
+                                            <li class="scroll-trigger animate--slide-in"
+                                            {% if settings.animations_reveal_on_scroll %}
+                                                data-cascade
+                                                    {% endif %}>
+                                                {%- case item.object_type -%}
+                                                    {%- when 'product' -%}
+                                                        {% render 'product-item', product: item %}
+                                                        {%- assign skip_card_product_styles = true -%}
+                                                {%- endcase -%}
+                                            </li>
+                    {%- endfor -%}
+                </ul>
+                {% assign size = paginate.parts | size %}
+                {% unless size == 0 %}
+                    <div class="pagination">
+                        <a href="{{ paginate.previous.url }}">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                      d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z"
+                                      fill="{% if paginate.previous %}#F1592A{% else %}#CCCCCC{% endif %}"/>
+                            </svg>
+                        </a>
+                        {% for part in paginate.parts %}
+                            {% if part.is_link %}
+                                <a href="{{ part.url }}">{{ part.title }}</a>
+                            {% else %}
+                                <span class="current">{{ part.title }}</span>
+                            {% endif %}
+                        {% endfor %}
+                        <a href="{{ paginate.next.url }}">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                      d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z"
+                                      fill="{% if paginate.next %}#F1592A{% else %}#CCCCCC{% endif %}"/>
+                            </svg>
+                        </a>
+                    </div>
+                {% endunless %}
+            {% endpaginate %}
+        </div>
     </div>
 </div>
 <script>
@@ -291,7 +309,7 @@
 {
   "name": "t:sections.main-search.name",
   "tag": "section",
-  "class": "section search collnGrid",
+  "class": "section search",
   "settings": [
   ],
   "presets": [
