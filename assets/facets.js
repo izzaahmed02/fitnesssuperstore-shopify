@@ -540,7 +540,6 @@ onSubmitHandler(event) {
   const perview = currentURLParams.get('perview');
   const isMobile = event.target?.closest('form')?.id === 'FacetFiltersFormMobile';
 
-  // Initialize array to collect relevant forms
   const forms = [];
   sortFilterForms.forEach((form) => {
     if (!isMobile) {
@@ -552,47 +551,65 @@ onSubmitHandler(event) {
     }
   });
 
-  // Construct parameters from form inputs
   const formParams = [];
   forms.forEach((form) => {
     const formData = new FormData(form);
     const params = new URLSearchParams();
-    const priceMinInput = form.querySelector('#price-range-min');
-    const priceMaxInput = form.querySelector('#price-range-max');
+    const priceMinTextInput = form.querySelector('#Filter-Price-GTE, #Mobile-Filter-Price-GTE');
+    const priceMaxTextInput = form.querySelector('#Filter-Price-LTE, #Mobile-Filter-Price-LTE');
     let includePrice = true;
 
-    // Check if price inputs are at default values
-    if (priceMinInput && priceMaxInput) {
-      const minValue = Number(priceMinInput.value);
-      const maxValue = Number(priceMaxInput.value);
-      const rangeMax = Number(priceMinInput.max);
-      const isPriceDefault = minValue === 0 && maxValue === rangeMax;
+    if (priceMinTextInput && priceMaxTextInput) {
+      const textMax = Number(priceMaxTextInput.getAttribute('data-max').replace(/,/g, ''));
+      let minValue = priceMinTextInput.value ? Number(priceMinTextInput.value.replace(/,/g, '')) : 0;
+      let maxValue = priceMaxTextInput.value ? Number(priceMaxTextInput.value.replace(/,/g, '')) : textMax;
+
+      // Clamp values
+      minValue = Math.max(0, Math.min(minValue, textMax));
+      maxValue = Math.max(minValue, Math.min(maxValue, textMax));
+
+      // Update text inputs
+      priceMinTextInput.value = minValue > 0 ? minValue.toFixed(2) : '';
+      priceMaxTextInput.value = maxValue < textMax ? maxValue.toFixed(2) : '';
+
+      // Update range sliders
+      const minSlider = form.querySelector('#price-range-min');
+      const maxSlider = form.querySelector('#price-range-max');
+      if (minSlider && maxSlider) {
+        minSlider.value = Math.round(minValue);
+        maxSlider.value = Math.round(maxValue);
+      }
+
+      const isPriceDefault = minValue === 0 && maxValue >= textMax;
       const isPriceModified = form.querySelector('.price-range-wrapper')?.contains(event.target);
       if (isPriceDefault && !isPriceModified) {
-        includePrice = false; // Exclude price parameters if default and not modified
+        includePrice = false;
       }
     }
 
-    // Build parameters
     for (const [key, value] of formData) {
       if (value !== '' && (includePrice || !key.includes('filter.v.price'))) {
-        params.append(key, value);
+        if (key.includes('filter.v.price')) {
+          const numValue = Number(value.replace(/,/g, ''));
+          const maxAllowed = priceMaxTextInput ? Number(priceMaxTextInput.getAttribute('data-max').replace(/,/g, '')) : Infinity;
+          if (numValue <= maxAllowed) {
+            params.append(key, numValue.toFixed(2));
+          }
+        } else {
+          params.append(key, value);
+        }
       }
     }
     formParams.push(params.toString());
   });
 
-  // Combine parameters from all forms
   let finalParams = formParams.filter((param) => param).join('&');
-
-  // Preserve perview parameter if present
   if (perview) {
     const updatedParams = new URLSearchParams(finalParams);
     updatedParams.set('perview', perview);
     finalParams = updatedParams.toString();
   }
 
-  // Submit the constructed parameters
   this.onSubmitForm(finalParams, event);
 }
 
