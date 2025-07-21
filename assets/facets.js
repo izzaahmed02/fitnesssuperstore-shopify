@@ -273,33 +273,40 @@ class FacetFiltersForm extends HTMLElement {
 	}
 
 	static renderPage(searchParams, event, updateURLHash = true) {
-		FacetFiltersForm.searchParamsPrev = searchParams;
-		const sections = FacetFiltersForm.getSections();
-		const countContainer = document.getElementById('ProductCount');
-		const countContainerDesktop = document.getElementById('ProductCountDesktop');
-		const loadingSpinners = document.querySelectorAll(
-			'.facets-container .loading__spinner, facet-filters-form .loading__spinner'
-		);
-		loadingSpinners.forEach((spinner) => spinner.classList.remove('hidden'));
-		document.getElementById('ProductGridContainer').querySelector('.collection').classList.add('loading');
-		if (countContainer) {
-			countContainer.classList.add('loading');
-		}
-		if (countContainerDesktop) {
-			countContainerDesktop.classList.add('loading');
-		}
+  FacetFiltersForm.searchParamsPrev = searchParams;
+  const sections = FacetFiltersForm.getSections();
+  const countContainer = document.getElementById('ProductCount');
+  const countContainerDesktop = document.getElementById('ProductCountDesktop');
+  const loadingSpinners = document.querySelectorAll(
+    '.facets-container .loading__spinner, facet-filters-form .loading__spinner'
+  );
+  loadingSpinners.forEach((spinner) => spinner.classList.remove('hidden'));
 
-		sections.forEach((section) => {
-			const url = `${window.location.pathname}?section_id=${section.section}&${searchParams}`;
-			const filterDataUrl = (element) => element.url === url;
-			FacetFiltersForm.filterData.some(filterDataUrl)
-				? FacetFiltersForm.renderSectionFromCache(filterDataUrl, event)
-				: FacetFiltersForm.renderSectionFromFetch(url, event);
-		});
+  const productGridContainer = document.getElementById('ProductGridContainer');
+  const collectionElement = productGridContainer?.querySelector('.collection-product-wrapper');
+  if (collectionElement) {
+    collectionElement.classList.add('loading');
+  } else {
+    console.warn('Collection element not found in ProductGridContainer');
+  }
 
-		if (updateURLHash) FacetFiltersForm.updateURLHash(searchParams);
+  if (countContainer) {
+    countContainer.classList.add('loading');
+  }
+  if (countContainerDesktop) {
+    countContainerDesktop.classList.add('loading');
+  }
 
-	}
+  sections.forEach((section) => {
+    const url = `${window.location.pathname}?section_id=${section.section}&${searchParams}`;
+    const filterDataUrl = (element) => element.url === url;
+    FacetFiltersForm.filterData.some(filterDataUrl)
+      ? FacetFiltersForm.renderSectionFromCache(filterDataUrl, event)
+      : FacetFiltersForm.renderSectionFromFetch(url, event);
+  });
+
+  if (updateURLHash) FacetFiltersForm.updateURLHash(searchParams);
+}
 
 	static renderSectionFromFetch(url, event) {
 		fetch(url)
