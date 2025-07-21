@@ -98,7 +98,7 @@ class MobileGallery extends HTMLElement {
     `;
     document.body.appendChild(popup);
     this.updatePopupReferences();
-    console.log('[MobileGallery] Created #mobile-gallery-popup');
+   
   }
 
 observePopup() {
@@ -402,7 +402,7 @@ observePopup() {
     if (this.popup) {
       this.popup.hidden = true;
       this.popup.classList.remove('is-active');
-      console.log('[MobileGallery] Closed popup at', new Date().toISOString());
+     
     }
     document.body.style.overflow = '';
     this.pauseAllMedia(this.popup);
@@ -558,7 +558,7 @@ observePopup() {
           skeletonWrapper.classList.add('loaded');
         }
         const allowZoom = zoomImg.naturalWidth > 300;
-        console.log('Image loaded:', { naturalWidth: zoomImg.naturalWidth, naturalHeight: zoomImg.naturalHeight, allowZoom });
+       
 
         if (!allowZoom) {
           wrapper.className += ' zoom-disabled';
@@ -575,7 +575,7 @@ observePopup() {
             Math.max(750 / zoomImg.naturalHeight, 1.5),
             3
           );
-          console.log('maxScale:', maxScale);
+          
 
           hammer.get('pinch').set({ enable: true });
           hammer.get('doubletap').set({ taps: 2 });
@@ -585,7 +585,7 @@ observePopup() {
           });
 
           hammer.on('pinchmove', (e) => {
-            console.log('Pinchmove:', e.scale);
+          
             scale = Math.max(1, Math.min(lastScale * e.scale, maxScale));
             if (scale === 1) {
               posX = 0;
@@ -597,7 +597,7 @@ observePopup() {
           });
 
           hammer.on('doubletap', () => {
-            console.log('Doubletap triggered');
+            
             if (zoomImg.src !== highResSrc) {
               const preload = new Image();
               preload.src = highResSrc;
