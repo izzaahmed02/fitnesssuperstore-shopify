@@ -540,6 +540,7 @@ onSubmitHandler(event) {
   const perview = currentURLParams.get('perview');
   const isMobile = event.target?.closest('form')?.id === 'FacetFiltersFormMobile';
 
+  // Initialize array to collect relevant forms
   const forms = [];
   sortFilterForms.forEach((form) => {
     if (!isMobile) {
@@ -551,66 +552,47 @@ onSubmitHandler(event) {
     }
   });
 
+  // Construct parameters from form inputs
   const formParams = [];
   forms.forEach((form) => {
     const formData = new FormData(form);
     const params = new URLSearchParams();
-    const priceMinTextInput = form.querySelector('#Filter-Price-GTE, #Mobile-Filter-Price-GTE');
-    const priceMaxTextInput = form.querySelector('#Filter-Price-LTE, #Mobile-Filter-Price-LTE');
+    const priceMinInput = form.querySelector('#price-range-min');
+    const priceMaxInput = form.querySelector('#price-range-max');
     let includePrice = true;
 
-    if (priceMinTextInput && priceMaxTextInput) {
-      const textMax = Number(priceMaxTextInput.getAttribute('data-max').replace(/,/g, ''));
-      const minValue = priceMinTextInput.value ? Number(priceMinTextInput.value.replace(/,/g, '')) : 0;
-      const maxValue = priceMaxTextInput.value ? Number(priceMaxTextInput.value.replace(/,/g, '')) : textMax;
-      const isPriceDefault = minValue === 0 && maxValue >= textMax;
+    // Check if price inputs are at default values
+    if (priceMinInput && priceMaxInput) {
+      const minValue = Number(priceMinInput.value);
+      const maxValue = Number(priceMaxInput.value);
+      const rangeMax = Number(priceMinInput.max);
+      const isPriceDefault = minValue === 0 && maxValue === rangeMax;
       const isPriceModified = form.querySelector('.price-range-wrapper')?.contains(event.target);
-
-      // Clamp values to valid range
-      const clampedMin = Math.max(0, Math.min(minValue, textMax));
-      const clampedMax = Math.max(clampedMin, Math.min(maxValue, textMax));
-
-      // Update text inputs to reflect clamped values
-      priceMinTextInput.value = clampedMin > 0 ? clampedMin.toFixed(2) : '';
-      priceMaxTextInput.value = clampedMax < textMax ? clampedMax.toFixed(2) : '';
-
-      // Update range sliders
-      const minSlider = form.querySelector('#price-range-min');
-      const maxSlider = form.querySelector('#price-range-max');
-      if (minSlider && maxSlider) {
-        minSlider.value = clampedMin / 100;
-        maxSlider.value = clampedMax / 100;
-      }
-
       if (isPriceDefault && !isPriceModified) {
-        includePrice = false;
+        includePrice = false; // Exclude price parameters if default and not modified
       }
     }
 
+    // Build parameters
     for (const [key, value] of formData) {
       if (value !== '' && (includePrice || !key.includes('filter.v.price'))) {
-        // For price inputs, ensure values are within bounds
-        if (key.includes('filter.v.price')) {
-          const numValue = Number(value.replace(/,/g, ''));
-          const maxAllowed = priceMaxTextInput ? Number(priceMaxTextInput.getAttribute('data-max').replace(/,/g, '')) : Infinity;
-          if (numValue <= maxAllowed) {
-            params.append(key, numValue.toFixed(2));
-          }
-        } else {
-          params.append(key, value);
-        }
+        params.append(key, value);
       }
     }
     formParams.push(params.toString());
   });
 
+  // Combine parameters from all forms
   let finalParams = formParams.filter((param) => param).join('&');
+
+  // Preserve perview parameter if present
   if (perview) {
     const updatedParams = new URLSearchParams(finalParams);
     updatedParams.set('perview', perview);
     finalParams = updatedParams.toString();
   }
 
+  // Submit the constructed parameters
   this.onSubmitForm(finalParams, event);
 }
 
@@ -644,27 +626,6 @@ class PriceRangeSlider extends HTMLElement {
     if (!this.minSlider || !this.maxSlider) {
       return;
     }
-
-    // Get max from attributes (in cents for range inputs)
-    const rangeMax = Number(this.maxSlider.max);
-    const textMax = Number(this.textInputs[1]?.getAttribute('data-max').replace(/,/g, ''));
-
-    // Initialize values, clamping to valid range
-    let minValue = this.textInputs[0]?.value ? Number(this.textInputs[0].value.replace(/,/g, '')) : 0;
-    let maxValue = this.textInputs[1]?.value ? Number(this.textInputs[1].value.replace(/,/g, '')) : textMax;
-
-    // Validate and clamp values
-    minValue = Math.max(0, Math.min(minValue, textMax));
-    maxValue = Math.max(minValue, Math.min(maxValue, textMax));
-
-    // Update text inputs
-    this.textInputs[0].value = minValue > 0 ? minValue.toFixed(2) : '';
-    this.textInputs[1].value = maxValue < textMax ? maxValue.toFixed(2) : '';
-
-    // Update range sliders (convert to cents)
-    this.minSlider.value = minValue / 100;
-    this.maxSlider.value = maxValue / 100;
-
     this.minSlider.addEventListener('input', this.updateMinValue.bind(this));
     this.maxSlider.addEventListener('input', this.updateMaxValue.bind(this));
 
@@ -682,14 +643,12 @@ class PriceRangeSlider extends HTMLElement {
     const maxValue = Number(this.maxSlider.value);
     const rangeMax = Number(this.maxSlider.max);
 
-    // Clamp min to not exceed max
     if (minValue > maxValue) {
       this.minSlider.value = maxValue;
     }
 
     if (this.textInputs.length > 0) {
-      const textValue = minValue * 100;
-      this.textInputs[0].value = textValue > 0 ? textValue.toFixed(2) : '';
+      this.textInputs[0].value = minValue > 0 ? minValue * 100 : '';
     }
     this.updateSliderBackground();
   }
@@ -699,41 +658,38 @@ class PriceRangeSlider extends HTMLElement {
     const maxValue = Number(this.maxSlider.value);
     const rangeMax = Number(this.maxSlider.max);
 
-    // Clamp max to not go below min
     if (maxValue < minValue) {
       this.maxSlider.value = minValue;
     }
 
     if (this.textInputs.length > 1) {
-      const textValue = maxValue * 100;
-      const textMax = Number(this.textInputs[1].getAttribute('data-max').replace(/,/g, ''));
-      this.textInputs[1].value = textValue < textMax ? textValue.toFixed(2) : '';
+      this.textInputs[1].value = maxValue < rangeMax ? maxValue * 100 : '';
     }
     this.updateSliderBackground();
   }
 
-  syncTextInputs() {
+  syncTextInputs(e) {
     const minInput = this.textInputs[0];
     const maxInput = this.textInputs[1];
-    const textMax = Number(maxInput.getAttribute('data-max').replace(/,/g, ''));
-    let minValue = minInput.value ? Number(minInput.value.replace(/,/g, '')) : 0;
-    let maxValue = maxInput.value ? Number(maxInput.value.replace(/,/g, '')) : textMax;
+    const rangeMax = Number(this.maxSlider.max) * 100;
+    let minValue = minInput.value ? Number(minInput.value) : 0;
+    let maxValue = maxInput.value ? Number(maxInput.value) : rangeMax;
 
-    // Validate and clamp values
+    // Validate inputs
     if (isNaN(minValue) || minValue < 0) {
       minValue = 0;
       minInput.value = '';
     }
-    if (isNaN(maxValue) || maxValue > textMax) {
-      maxValue = textMax;
+    if (isNaN(maxValue) || maxValue > rangeMax) {
+      maxValue = rangeMax;
       maxInput.value = '';
     }
     if (minValue > maxValue) {
       minValue = maxValue;
-      minInput.value = maxValue > 0 ? maxValue.toFixed(2) : '';
+      minInput.value = maxValue > 0 ? maxValue : '';
     }
 
-    // Update sliders (convert to cents)
+    // Update sliders
     this.minSlider.value = minValue / 100;
     this.maxSlider.value = maxValue / 100;
 
@@ -745,22 +701,18 @@ class PriceRangeSlider extends HTMLElement {
     const maxValue = Number(this.maxSlider.value);
     const rangeMax = Number(this.maxSlider.max);
 
-    if (minValue === 0 && maxValue === rangeMax) {
-      this.maxSlider.style.background = '#C6C6C6'; // Neutral gray for no filter
-    } else {
-      const fromPosition = (minValue * 100) / rangeMax;
-      const toPosition = (maxValue * 100) / rangeMax;
+    const fromPosition = (minValue * 100) / rangeMax;
+    const toPosition = (maxValue * 100) / rangeMax;
 
-      this.maxSlider.style.background = `linear-gradient(
-        to right,
-        #C6C6C6 0%,
-        #C6C6C6 ${fromPosition}%,
-        #F1592A ${fromPosition}%,
-        #F1592A ${toPosition}%,
-        #C6C6C6 ${toPosition}%,
-        #C6C6C6 100%
-      )`;
-    }
+    this.maxSlider.style.background = `linear-gradient(
+      to right,
+      #C6C6C6 0%,
+      #C6C6C6 ${fromPosition}%,
+      #F1592A ${fromPosition}%,
+      #F1592A ${toPosition}%,
+      #C6C6C6 ${toPosition}%,
+      #C6C6C6 100%
+    )`;
   }
 }
 
