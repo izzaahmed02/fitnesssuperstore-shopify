@@ -641,13 +641,14 @@ class PriceRangeSlider extends HTMLElement {
   updateMinValue() {
     const minValue = Number(this.minSlider.value);
     const maxValue = Number(this.maxSlider.value);
+    const rangeMax = Number(this.maxSlider.max);
 
     if (minValue > maxValue) {
       this.minSlider.value = maxValue;
     }
 
     if (this.textInputs.length > 0) {
-      this.textInputs[0].value = minValue > 0 ? minValue * 100 : ''; // Empty if at default (0)
+      this.textInputs[0].value = minValue > 0 ? minValue * 100 : '';
     }
     this.updateSliderBackground();
   }
@@ -662,23 +663,35 @@ class PriceRangeSlider extends HTMLElement {
     }
 
     if (this.textInputs.length > 1) {
-      this.textInputs[1].value = maxValue < rangeMax ? maxValue * 100 : ''; // Empty if at default (range_max)
+      this.textInputs[1].value = maxValue < rangeMax ? maxValue * 100 : '';
     }
     this.updateSliderBackground();
   }
 
-  syncTextInputs() {
-    const minValue = this.textInputs[0]?.value ? Number(this.textInputs[0].value) : 0;
-    const maxValue = this.textInputs[1]?.value ? Number(this.textInputs[1].value) : Number(this.maxSlider.max) * 100;
+  syncTextInputs(e) {
+    const minInput = this.textInputs[0];
+    const maxInput = this.textInputs[1];
     const rangeMax = Number(this.maxSlider.max) * 100;
+    let minValue = minInput.value ? Number(minInput.value) : 0;
+    let maxValue = maxInput.value ? Number(maxInput.value) : rangeMax;
 
-    if (!isNaN(minValue) && minValue >= 0 && minValue <= maxValue) {
-      this.minSlider.value = minValue / 100;
+    // Validate inputs
+    if (isNaN(minValue) || minValue < 0) {
+      minValue = 0;
+      minInput.value = '';
+    }
+    if (isNaN(maxValue) || maxValue > rangeMax) {
+      maxValue = rangeMax;
+      maxInput.value = '';
+    }
+    if (minValue > maxValue) {
+      minValue = maxValue;
+      minInput.value = maxValue > 0 ? maxValue : '';
     }
 
-    if (!isNaN(maxValue) && maxValue >= minValue && maxValue <= rangeMax) {
-      this.maxSlider.value = maxValue / 100;
-    }
+    // Update sliders
+    this.minSlider.value = minValue / 100;
+    this.maxSlider.value = maxValue / 100;
 
     this.updateSliderBackground();
   }
