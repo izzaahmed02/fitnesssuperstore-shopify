@@ -598,82 +598,84 @@ customElements.define('facet-filters-form', FacetFiltersForm);
 FacetFiltersForm.setListeners();
 
 class PriceRangeSlider extends HTMLElement {
-	constructor() {
-		super();
-		requestAnimationFrame(() => this.init());
-	}
+  constructor() {
+    super();
+    requestAnimationFrame(() => this.init());
+  }
 
-	init() {
-		this.textInputs = this.querySelectorAll('.field__input');
-		this.minSlider = this.querySelector('#price-range-min');
-		this.maxSlider = this.querySelector('#price-range-max');
-		if (!this.minSlider || !this.maxSlider) {
-			return;
-		}
-		this.minSlider.addEventListener('input', this.updateMinValue.bind(this));
-		this.maxSlider.addEventListener('input', this.updateMaxValue.bind(this));
+  init() {
+    this.textInputs = this.querySelectorAll('.field__input');
+    this.minSlider = this.querySelector('#price-range-min');
+    this.maxSlider = this.querySelector('#price-range-max');
+    if (!this.minSlider || !this.maxSlider) {
+      return;
+    }
+    this.minSlider.addEventListener('input', this.updateMinValue.bind(this));
+    this.maxSlider.addEventListener('input', this.updateMaxValue.bind(this));
 
-		if (this.textInputs.length > 1) {
-			this.textInputs.forEach((input) => {
-				input.addEventListener('change', this.syncTextInputs.bind(this));
-			});
-		}
+    if (this.textInputs.length > 1) {
+      this.textInputs.forEach((input) => {
+        input.addEventListener('change', this.syncTextInputs.bind(this));
+      });
+    }
 
-		this.updateSliderBackground();
-	}
+    this.updateSliderBackground();
+  }
 
-	updateMinValue() {
-		const minValue = Number(this.minSlider.value);
-		const maxValue = Number(this.maxSlider.value);
+  updateMinValue() {
+    const minValue = Number(this.minSlider.value);
+    const maxValue = Number(this.maxSlider.value);
 
-		if (minValue > maxValue) {
-			this.minSlider.value = maxValue;
-		}
+    if (minValue > maxValue) {
+      this.minSlider.value = maxValue;
+    }
 
-		if (this.textInputs.length > 0) {
-			this.textInputs[0].value = this.minSlider.value;
-		}
-		this.updateSliderBackground();
-	}
+    if (this.textInputs.length > 0) {
+      this.textInputs[0].value = minValue > 0 ? minValue * 100 : ''; // Empty if at default (0)
+    }
+    this.updateSliderBackground();
+  }
 
-	updateMaxValue() {
-		const minValue = Number(this.minSlider.value);
-		const maxValue = Number(this.maxSlider.value);
+  updateMaxValue() {
+    const minValue = Number(this.minSlider.value);
+    const maxValue = Number(this.maxSlider.value);
+    const rangeMax = Number(this.maxSlider.max);
 
-		if (maxValue < minValue) {
-			this.maxSlider.value = minValue;
-		}
+    if (maxValue < minValue) {
+      this.maxSlider.value = minValue;
+    }
 
-		if (this.textInputs.length > 1) {
-			this.textInputs[1].value = this.maxSlider.value;
-		}
-		this.updateSliderBackground();
-	}
+    if (this.textInputs.length > 1) {
+      this.textInputs[1].value = maxValue < rangeMax ? maxValue * 100 : ''; // Empty if at default (range_max)
+    }
+    this.updateSliderBackground();
+  }
 
-	syncTextInputs() {
-		const minValue = Number(this.textInputs[0]?.value);
-		const maxValue = Number(this.textInputs[1]?.value);
+  syncTextInputs() {
+    const minValue = this.textInputs[0]?.value ? Number(this.textInputs[0].value) : 0;
+    const maxValue = this.textInputs[1]?.value ? Number(this.textInputs[1].value) : Number(this.maxSlider.max) * 100;
+    const rangeMax = Number(this.maxSlider.max) * 100;
 
-		if (!isNaN(minValue) && minValue >= 0 && minValue <= maxValue) {
-			this.minSlider.value = minValue;
-		}
+    if (!isNaN(minValue) && minValue >= 0 && minValue <= maxValue) {
+      this.minSlider.value = minValue / 100;
+    }
 
-		if (!isNaN(maxValue) && maxValue >= minValue) {
-			this.maxSlider.value = maxValue;
-		}
+    if (!isNaN(maxValue) && maxValue >= minValue && maxValue <= rangeMax) {
+      this.maxSlider.value = maxValue / 100;
+    }
 
-		this.updateSliderBackground();
-	}
+    this.updateSliderBackground();
+  }
 
-	updateSliderBackground() {
-		const minValue = Number(this.minSlider.value);
-		const maxValue = Number(this.maxSlider.value);
-		const rangeMax = this.maxSlider.max || 100;
+  updateSliderBackground() {
+    const minValue = Number(this.minSlider.value);
+    const maxValue = Number(this.maxSlider.value);
+    const rangeMax = Number(this.maxSlider.max);
 
-		const fromPosition = (minValue * 100) / rangeMax;
-		const toPosition = (maxValue * 100) / rangeMax;
+    const fromPosition = (minValue * 100) / rangeMax;
+    const toPosition = (maxValue * 100) / rangeMax;
 
-		this.maxSlider.style.background = `linear-gradient(
+    this.maxSlider.style.background = `linear-gradient(
       to right,
       #C6C6C6 0%,
       #C6C6C6 ${fromPosition}%,
@@ -682,7 +684,7 @@ class PriceRangeSlider extends HTMLElement {
       #C6C6C6 ${toPosition}%,
       #C6C6C6 100%
     )`;
-	}
+  }
 }
 
 // Определяем кастомный элемент после загрузки DOM
