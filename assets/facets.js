@@ -557,9 +557,25 @@ onSubmitHandler(event) {
   forms.forEach((form) => {
     const formData = new FormData(form);
     const params = new URLSearchParams();
+    const priceMinInput = form.querySelector('#price-range-min');
+    const priceMaxInput = form.querySelector('#price-range-max');
+    let includePrice = true;
+
+    // Check if price inputs are at default values
+    if (priceMinInput && priceMaxInput) {
+      const minValue = Number(priceMinInput.value);
+      const maxValue = Number(priceMaxInput.value);
+      const rangeMax = Number(priceMinInput.max);
+      const isPriceDefault = minValue === 0 && maxValue === rangeMax;
+      const isPriceModified = form.querySelector('.price-range-wrapper')?.contains(event.target);
+      if (isPriceDefault && !isPriceModified) {
+        includePrice = false; // Exclude price parameters if default and not modified
+      }
+    }
+
+    // Build parameters
     for (const [key, value] of formData) {
-      // Only include non-empty values to exclude unset price inputs
-      if (value !== '') {
+      if (value !== '' && (includePrice || !key.includes('filter.v.price'))) {
         params.append(key, value);
       }
     }
