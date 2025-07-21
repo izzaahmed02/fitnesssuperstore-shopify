@@ -368,7 +368,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (document.querySelector('product-form')) {
 			const colorSwatches = document.querySelectorAll('.group-color-container .color_options_container');
 			colorSwatches.forEach((item) => {
-				item.querySelectorAll('.swatch:not(.swatch--custom-trigger)')[0].classList.add('color-selected');
+                const notTrigger = item.querySelectorAll('.swatch:not(.swatch--custom-trigger)')[0];
+				notTrigger && notTrigger.classList.add('color-selected');
 			});
 		}	
 
