@@ -626,6 +626,27 @@ class PriceRangeSlider extends HTMLElement {
     if (!this.minSlider || !this.maxSlider) {
       return;
     }
+
+    // Get max from attributes (in cents for range inputs)
+    const rangeMax = Number(this.maxSlider.max);
+    const textMax = Number(this.textInputs[1]?.getAttribute('data-max').replace(/,/g, ''));
+
+    // Initialize values, clamping to valid range
+    let minValue = this.textInputs[0]?.value ? Number(this.textInputs[0].value.replace(/,/g, '')) : 0;
+    let maxValue = this.textInputs[1]?.value ? Number(this.textInputs[1].value.replace(/,/g, '')) : textMax;
+
+    // Validate and clamp values
+    minValue = Math.max(0, Math.min(minValue, textMax));
+    maxValue = Math.max(minValue, Math.min(maxValue, textMax));
+
+    // Update text inputs
+    this.textInputs[0].value = minValue > 0 ? minValue.toFixed(2) : '';
+    this.textInputs[1].value = maxValue < textMax ? maxValue.toFixed(2) : '';
+
+    // Update range sliders (convert to cents)
+    this.minSlider.value = minValue / 100;
+    this.maxSlider.value = maxValue / 100;
+
     this.minSlider.addEventListener('input', this.updateMinValue.bind(this));
     this.maxSlider.addEventListener('input', this.updateMaxValue.bind(this));
 
@@ -643,12 +664,14 @@ class PriceRangeSlider extends HTMLElement {
     const maxValue = Number(this.maxSlider.value);
     const rangeMax = Number(this.maxSlider.max);
 
+    // Clamp min to not exceed max
     if (minValue > maxValue) {
       this.minSlider.value = maxValue;
     }
 
     if (this.textInputs.length > 0) {
-      this.textInputs[0].value = minValue > 0 ? minValue * 100 : '';
+      const textValue = minValue * 100;
+      this.textInputs[0].value = textValue > 0 ? textValue.toFixed(2) : '';
     }
     this.updateSliderBackground();
   }
@@ -658,38 +681,41 @@ class PriceRangeSlider extends HTMLElement {
     const maxValue = Number(this.maxSlider.value);
     const rangeMax = Number(this.maxSlider.max);
 
+    // Clamp max to not go below min
     if (maxValue < minValue) {
       this.maxSlider.value = minValue;
     }
 
     if (this.textInputs.length > 1) {
-      this.textInputs[1].value = maxValue < rangeMax ? maxValue * 100 : '';
+      const textValue = maxValue * 100;
+      const textMax = Number(this.textInputs[1].getAttribute('data-max').replace(/,/g, ''));
+      this.textInputs[1].value = textValue < textMax ? textValue.toFixed(2) : '';
     }
     this.updateSliderBackground();
   }
 
-  syncTextInputs(e) {
+  syncTextInputs() {
     const minInput = this.textInputs[0];
     const maxInput = this.textInputs[1];
-    const rangeMax = Number(this.maxSlider.max) * 100;
-    let minValue = minInput.value ? Number(minInput.value) : 0;
-    let maxValue = maxInput.value ? Number(maxInput.value) : rangeMax;
+    const textMax = Number(maxInput.getAttribute('data-max').replace(/,/g, ''));
+    let minValue = minInput.value ? Number(minInput.value.replace(/,/g, '')) : 0;
+    let maxValue = maxInput.value ? Number(maxInput.value.replace(/,/g, '')) : textMax;
 
-    // Validate inputs
+    // Validate and clamp values
     if (isNaN(minValue) || minValue < 0) {
       minValue = 0;
       minInput.value = '';
     }
-    if (isNaN(maxValue) || maxValue > rangeMax) {
-      maxValue = rangeMax;
+    if (isNaN(maxValue) || maxValue > textMax) {
+      maxValue = textMax;
       maxInput.value = '';
     }
     if (minValue > maxValue) {
       minValue = maxValue;
-      minInput.value = maxValue > 0 ? maxValue : '';
+      minInput.value = maxValue > 0 ? maxValue.toFixed(2) : '';
     }
 
-    // Update sliders
+    // Update sliders (convert to cents)
     this.minSlider.value = minValue / 100;
     this.maxSlider.value = maxValue / 100;
 
@@ -701,18 +727,22 @@ class PriceRangeSlider extends HTMLElement {
     const maxValue = Number(this.maxSlider.value);
     const rangeMax = Number(this.maxSlider.max);
 
-    const fromPosition = (minValue * 100) / rangeMax;
-    const toPosition = (maxValue * 100) / rangeMax;
+    if (minValue === 0 && maxValue === rangeMax) {
+      this.maxSlider.style.background = '#C6C6C6'; // Neutral gray for no filter
+    } else {
+      const fromPosition = (minValue * 100) / rangeMax;
+      const toPosition = (maxValue * 100) / rangeMax;
 
-    this.maxSlider.style.background = `linear-gradient(
-      to right,
-      #C6C6C6 0%,
-      #C6C6C6 ${fromPosition}%,
-      #F1592A ${fromPosition}%,
-      #F1592A ${toPosition}%,
-      #C6C6C6 ${toPosition}%,
-      #C6C6C6 100%
-    )`;
+      this.maxSlider.style.background = `linear-gradient(
+        to right,
+        #C6C6C6 0%,
+        #C6C6C6 ${fromPosition}%,
+        #F1592A ${fromPosition}%,
+        #F1592A ${toPosition}%,
+        #C6C6C6 ${toPosition}%,
+        #C6C6C6 100%
+      )`;
+    }
   }
 }
 
