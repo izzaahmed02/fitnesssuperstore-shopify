@@ -101,32 +101,34 @@ class MobileGallery extends HTMLElement {
     console.log('[MobileGallery] Created #mobile-gallery-popup');
   }
 
-  observePopup() {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
+observePopup() {
+  if (this.observer) {
+    this.observer.disconnect();
+  }
 
-    const parent = document.body;
-    this.observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.removedNodes.length) {
-          for (const node of mutation.removedNodes) {
-            if (node.id === 'mobile-gallery-popup' || node.querySelector('#mobile-gallery-popup')) {
-              console.warn('[MobileGallery] Detected removal of #mobile-gallery-popup at', new Date().toISOString());
-              console.trace();
-              this.createPopup();
-              if (this.popup.classList.contains('is-active')) {
-                this.openPopup(0); // Reopen if it was active
-              }
-              break;
+  const parent = document.body;
+  this.observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.removedNodes.length) {
+        for (const node of mutation.removedNodes) {
+          // Only process element nodes (nodeType === 1)
+          if (node.nodeType === 1 && 
+              (node.id === 'mobile-gallery-popup' || node.querySelector('#mobile-gallery-popup'))) {
+            console.warn('[MobileGallery] Detected removal of #mobile-gallery-popup at', new Date().toISOString());
+            console.trace();
+            this.createPopup();
+            if (this.popup.classList.contains('is-active')) {
+              this.openPopup(0); // Reopen if it was active
             }
+            break;
           }
         }
       }
-    });
+    }
+  });
 
-    this.observer.observe(parent, { childList: true, subtree: true });
-  }
+  this.observer.observe(parent, { childList: true, subtree: true });
+}
 
   disconnectedCallback() {
     if (this.observer) {
