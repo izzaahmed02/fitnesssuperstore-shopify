@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  // 👇 this part sticks it to the right edge of the container
+ /*
   if (fixedContainer && productInfo.classList.contains("fixed")) {
     const containerRightOffset = window.innerWidth - fixedContainer.getBoundingClientRect().right + 1;
 
@@ -74,6 +74,20 @@ document.addEventListener("DOMContentLoaded", function () {
     productInfo.style.right = "";
   }
 }
+  */
+
+   if (fixedContainer && productInfo.classList.contains("fixed")) {
+  const containerRect = fixedContainer.getBoundingClientRect();
+  const productInfoWidth = productInfo.offsetWidth;
+  const leftOffset = containerRect.right - productInfoWidth;
+
+  productInfo.style.left = `${leftOffset}px`;
+  productInfo.style.right = "auto";
+} else {
+  productInfo.style.left = "";
+  productInfo.style.right = "";
+}
+
 
 
   function setupScrollListener() {
