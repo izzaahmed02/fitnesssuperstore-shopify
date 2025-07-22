@@ -53,6 +53,9 @@ function createAssemblySelect() {
 		return
 	}
 	const assembly = document.querySelectorAll(".handle-491, .installation-needed")[0];
+	if (!assembly) {
+		return
+	}
 	const options = assembly.querySelectorAll('.ap-options__swatch label');
 	let header = document.createElement('div');
 	header.innerHTML='<h3 id="double-assembly-header" class="avp-heading">Assembly &amp; Room of Choice Installation Needed?</h3>'
@@ -379,13 +382,17 @@ function setupOptionsPopup() {
 				modalWrapper.style.display = 'flex';
 				container.innerHTML = '';
 
-				const productTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
+						const optionTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
 				let optionHTML = '';
-				
+
 				if (headingTitle) {
-					productTitleSearch = `${productTitle} - ${headingTitle} (${optionCategoryId})`;
+					productTitleSearch = `${optionTitle} - ${headingTitle} (${optionCategoryId})`;
 				} else {
-					productTitleSearch = `${productTitle} (${optionCategoryId})`;
+					productTitleSearch = `${optionTitle} (${optionCategoryId})`;
+				}
+
+				if (productTitleSearch.includes('Warranty')) {
+					productTitleSearch = `Warranty (${optionCategoryId})`;
 				}
 
 				const encodedProductTitle = encodeURIComponent(productTitleSearch);
