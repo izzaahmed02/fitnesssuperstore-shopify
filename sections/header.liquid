@@ -629,7 +629,50 @@
 
     customElements.define('sticky-header', StickyHeader);
     {% endjavascript %}
-
+{% if section.settings.enable_hover_dropdowns %}
+<script>
+    $(document).ready(function() {
+        $('details').each(function() {
+            const $details = $(this);
+            const $summary = $details.find('summary');
+            let hoverTimer;
+            const hoverDelay = 100;
+            
+            $summary.on('click', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            $details.on('mouseenter', function() {
+                clearTimeout(hoverTimer);
+                hoverTimer = setTimeout(function() {
+                    $details.attr('open', true);
+                    $summary.attr('aria-expanded', 'true');
+                }, hoverDelay);
+            });
+            
+            $details.on('mouseleave', function() {
+                clearTimeout(hoverTimer);
+                hoverTimer = setTimeout(function() {
+                    $details.removeAttr('open');
+                    $summary.attr('aria-expanded', 'false');
+                }, hoverDelay);
+            });
+            
+            if ('ontouchstart' in window) {
+                $summary.on('touchstart', function(e) {
+                    e.preventDefault();
+                    $details.attr('open', function(i, attr) {
+                        const newState = attr !== 'open';
+                        $summary.attr('aria-expanded', newState);
+                        return newState;
+                    });
+                });
+            }
+        });
+    });
+</script>
+{% endif %}
     <script type="application/ld+json">
         {
           "@context": "http://schema.org",
@@ -726,6 +769,12 @@
       "class": "section-header",
       "max_blocks": 6,
       "settings": [
+        {
+          "type": "checkbox",
+          "id": "enable_hover_dropdowns",
+          "default": true,
+          "label": "Enable Dropdowns to open on hover"
+        },
         {
           "type": "select",
           "id": "logo_position",
