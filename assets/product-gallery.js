@@ -15,16 +15,16 @@ class ProductGallery extends HTMLElement {
   }
 
   connectedCallback() {
-    console.log('ConnectedCallback: ProductGallery component initialized.');
+   
     const raw = this.querySelector('[data-product-media]');
     if (!raw) {
-      console.log('ConnectedCallback: No [data-product-media] found. Exiting.');
+      
       return;
     }
 
     try {
       this.mediaData = JSON.parse(raw.innerHTML.trim());
-      console.log('ConnectedCallback: Media data parsed successfully.', this.mediaData);
+     
     } catch (err) {
       console.error('ConnectedCallback: Invalid JSON in [data-product-media] element.', err);
       return;
@@ -36,19 +36,19 @@ class ProductGallery extends HTMLElement {
       console.error('ConnectedCallback: Missing .custom-product-gallery or [data-main-media-wrapper]. Exiting.');
       return;
     }
-    console.log('ConnectedCallback: Wrapper and Main elements assigned.');
+  
 
     this.initThumbnails();
-    console.log('ConnectedCallback: initThumbnails called.');
+   
 
     const currentActiveThumbnail = this.querySelector('.thumbnail-btn.is-active');
 
     if (!currentActiveThumbnail && this.mediaData.length > 0) {
-      console.log('ConnectedCallback: No active thumbnail found, setting first media as active.');
+    
       this.setActiveMedia(this.mediaData[0].id);
     } else if (currentActiveThumbnail) {
       this.activeMediaId = currentActiveThumbnail.getAttribute('data-media-id');
-      console.log('ConnectedCallback: Active thumbnail found from Liquid:', this.activeMediaId);
+     
 
       const firstMedia = this.mediaData.find(m => m.id == this.activeMediaId);
       const mainImageContainer = this.main?.querySelector('[data-zoom-container]');
@@ -56,10 +56,10 @@ class ProductGallery extends HTMLElement {
       if (mainImageContainer && firstMedia && firstMedia.media_type === 'image' && firstMedia.preview_image) {
         const img = mainImageContainer.querySelector('img');
         if (img && img.complete) {
-          console.log('ConnectedCallback: Main image complete, initializing zoom.');
+         
           this.initZoom(mainImageContainer, firstMedia, true);
         } else if (img) {
-          console.log('ConnectedCallback: Main image not complete, setting onload for zoom.');
+          
           img.onload = () => {
             mainImageContainer.querySelector('.image-skeleton-wrapper')?.classList.add('loaded');
             this.initZoom(mainImageContainer, firstMedia, true);
@@ -69,16 +69,16 @@ class ProductGallery extends HTMLElement {
     }
 
     window.addEventListener('resize', this.handleResize.bind(this));
-    console.log('ConnectedCallback: Resize listener added.');
+  
 
     this.main.addEventListener('click', (e) => {
-      console.log('Main image click event detected.');
+     
       const container = e.target.closest('.main-image-container');
       if (container) {
         const media = this.mediaData.find((m) => m.id == this.activeMediaId);
         const popup = document.getElementById('product-gallery-popup');
         if (media && media.media_type !== 'model' && popup && popup.hidden) {
-          console.log('Main image click: Opening popup for mediaId:', this.activeMediaId);
+         
           this.openPopup(this.activeMediaId);
         } else if (media && media.media_type === 'model') {
           console.log('Main image click: Media type is model, not opening popup.');
@@ -92,13 +92,13 @@ class ProductGallery extends HTMLElement {
   }
 
   handleResize() {
-    console.log('handleResize: Window resized.');
+   
     const activeId = this.activeMediaId;
     const container = this.main?.querySelector('[data-zoom-container]');
     const media = this.mediaData.find((m) => m.id == activeId);
 
     if (!container || !media || media.media_type !== 'image' || !media.preview_image) {
-      console.log('handleResize: Not an image, container not found, or preview_image missing. Exiting.');
+     
       return;
     }
 
@@ -108,21 +108,21 @@ class ProductGallery extends HTMLElement {
     if (oldLens) oldLens.remove();
 
     container.dataset.zoomInitialized = 'false';
-    console.log('handleResize: Removed old zoom elements and reset zoomInitialized.');
+   
 
     const img = container.querySelector('img');
     if (!img) return;
 
     img.onload = null;
-    console.log('handleResize: Cleared img.onload.');
+   
 
     requestAnimationFrame(() => {
       if (this.isDesktop()) {
         if (img.complete) {
-          console.log('handleResize: Desktop and image complete, re-initializing zoom.');
+         
           this.initZoom(container, media);
         } else {
-          console.log('handleResize: Desktop and image not complete, setting onload for re-initialization of zoom.');
+          
           img.onload = () => {
             this.initZoom(container, media);
           };
@@ -134,50 +134,50 @@ class ProductGallery extends HTMLElement {
   }
 
   initThumbnails() {
-    console.log('initThumbnails: Initializing thumbnail event listeners.');
+  
     const buttons = this.querySelectorAll('.thumbnail-btn');
     buttons.forEach((btn) => {
       const mediaId = btn.getAttribute('data-media-id');
       const media = this.mediaData.find(m => m.id == mediaId);
       const isVideoThumb = media && (media.media_type === 'video' || media.media_type === 'external_video');
 
-      console.log(`initThumbnails: Processing thumbnail for mediaId: ${mediaId}`);
+     
 
       btn.addEventListener('click', (e) => {
-        console.log(`Thumbnail click event for mediaId: ${mediaId}`);
+        
         if (isVideoThumb || this.activeMediaId === mediaId) {
-          console.log(`Thumbnail click: Opening popup for ${mediaId}.`);
+         
           this.openPopup(mediaId);
         } else {
-          console.log(`Thumbnail click: Setting active media for ${mediaId}.`);
+         
           this.setActiveMedia(mediaId);
         }
       });
 
       let hoverTimer;
       btn.addEventListener('mouseenter', () => {
-        console.log(`Thumbnail mouseenter for mediaId: ${mediaId}`);
+        
         if (this.activeMediaId === mediaId) {
-          console.log('Thumbnail mouseenter: Already active, skipping hover action.');
+         
           return;
         }
         hoverTimer = setTimeout(() => {
-          console.log(`Thumbnail hover: Setting active media for ${mediaId}.`);
+         
           this.setActiveMedia(mediaId);
         }, 150);
       });
 
       btn.addEventListener('mouseleave', () => {
-        console.log(`Thumbnail mouseleave for mediaId: ${mediaId}`);
+       
         clearTimeout(hoverTimer);
       });
     });
   }
 
   setActiveMedia(id) {
-    console.log(`setActiveMedia: Attempting to set active media to ID: ${id}`);
+    
     if (this.activeMediaId == id) {
-      console.log(`setActiveMedia: Media ${id} is already active, skipping.`);
+     
       return;
     }
     this.activeMediaId = id;
@@ -204,7 +204,7 @@ class ProductGallery extends HTMLElement {
         container.classList.add('is-video-preview');
       }
       this.main.appendChild(container);
-      console.log(`setActiveMedia: Appended main container for media type: ${media.media_type}`);
+     
 
       if (media.media_type === 'image' && media.preview_image) {
         const img = document.createElement('img');
@@ -219,10 +219,10 @@ class ProductGallery extends HTMLElement {
         img.loading = 'lazy';
         container.appendChild(skeletonWrapper);
         skeletonWrapper.appendChild(img);
-        console.log(`setActiveMedia: Image element created for ID: ${id}`);
+        
 
         img.onload = () => {
-          console.log(`setActiveMedia: Image for ID ${id} loaded. Initializing zoom.`);
+          
           skeletonWrapper.classList.add('loaded');
           this.initZoom(container, media, true);
         };
@@ -236,7 +236,7 @@ class ProductGallery extends HTMLElement {
       model.setAttribute('camera-orbit', '0deg 75deg 2m');
       model.setAttribute('data-shopify-feature', '1.12');
       container.appendChild(model);
-      console.log(`setActiveMedia: Model viewer created for ID: ${id}`);
+      
     }
 
     const buttons = this.querySelectorAll('.thumbnail-btn');
@@ -245,10 +245,10 @@ class ProductGallery extends HTMLElement {
       const isActive = btnId == String(id);
       btn.classList.toggle('is-active', isActive);
       if (isActive) {
-        console.log(`setActiveMedia: Thumbnail ${btnId} set to active.`);
+       
       }
     });
-    console.log(`setActiveMedia: Finished setting active media to ID: ${id}`);
+   
   }
 
   isDesktop() {
@@ -256,24 +256,24 @@ class ProductGallery extends HTMLElement {
   }
 
   initZoom(container, media, forceStart = false) {
-    console.log(`initZoom: Called for media ID: ${media.id}, forceStart: ${forceStart}`);
+    
     if (!this.isDesktop()) {
-      console.log('initZoom: Not desktop, skipping zoom initialization.');
+    
       return;
     }
     const img = container.querySelector('img');
     if (!img || !media.preview_image || container.dataset.zoomInitialized === 'true') {
-      console.log('initZoom: Conditions not met to initialize zoom (img/media missing or already initialized, or preview_image missing).');
+     
       return;
     }
 
     if (this.activeMediaId != media.id) {
-        console.log('initZoom: Active media ID mismatch, not initializing zoom.');
+       
         return;
     }
 
     container.dataset.zoomInitialized = 'true';
-    console.log('initZoom: Zoom initialized for container.');
+   
 
     const zoomResult = document.createElement('div');
     zoomResult.className = 'zoom-result';
@@ -297,11 +297,11 @@ class ProductGallery extends HTMLElement {
     zoomResult.appendChild(zoomImg);
 
     zoomImg.onload = () => {
-      console.log('initZoom: Zoom image loaded.');
+     
       const minZoomRatio = 1.2;
       const zoomRatio = zoomImg.naturalWidth / img.clientWidth;
       if (zoomImg.naturalWidth < 750 || zoomRatio < minZoomRatio) {
-        console.log('initZoom: Zoom conditions not met (image too small or ratio too low). Removing zoom elements.');
+       
         zoomResult.remove();
         lens.remove();
         return;
@@ -333,7 +333,7 @@ class ProductGallery extends HTMLElement {
 
         lens.style.width = `${Math.min(lensW, img.clientWidth)}px`;
         lens.style.height = `${Math.min(lensH, img.clientHeight)}px`;
-        console.log('initZoom: Lens dimensions calculated and set.');
+       
 
         const announcementBarSection = document.querySelector('.announcement-bar-section');
         const headerWrapper = document.querySelector('.header-wrapper');
@@ -349,7 +349,7 @@ class ProductGallery extends HTMLElement {
             zoomResult.style.top = '';
             zoomResult.style.height = '';
           }
-          console.log('initZoom: Zoom top position updated.');
+         
         };
 
         window.removeEventListener('scroll', updateZoomTop);
@@ -387,7 +387,7 @@ class ProductGallery extends HTMLElement {
 
       container.removeEventListener('mouseenter', this._handleZoomMouseEnter);
       this._handleZoomMouseEnter = () => {
-        console.log('initZoom: Mouseenter on main image container. Showing zoom.');
+        
         zoomResult.style.display = 'block';
         lens.style.display = 'block';
       };
@@ -395,7 +395,7 @@ class ProductGallery extends HTMLElement {
 
       container.removeEventListener('mouseleave', this._handleZoomMouseLeave);
       this._handleZoomMouseLeave = () => {
-        console.log('initZoom: Mouseleave on main image container. Hiding zoom.');
+       
         zoomResult.style.display = 'none';
         lens.style.display = 'none';
       };
@@ -403,23 +403,23 @@ class ProductGallery extends HTMLElement {
 
       zoomResult.removeEventListener('mouseenter', this._handleZoomResultMouseEnter);
       this._handleZoomResultMouseEnter = () => {
-        console.log('initZoom: Mouseenter on zoom result. Hiding zoom.');
+        
         zoomResult.style.display = 'none';
         lens.style.display = 'none';
       };
       zoomResult.addEventListener('mouseenter', this._handleZoomResultMouseEnter);
 
       if (forceStart && this.lastMouseX && this.lastMouseY) {
-        console.log('initZoom: forceStart is true. Attempting to start zoom at last mouse position.');
+       
         const rect = img.getBoundingClientRect();
         const inside = this.lastMouseX > rect.left && this.lastMouseX < rect.right && this.lastMouseY > rect.top && this.lastMouseY < rect.bottom;
         if (inside) {
-          console.log('initZoom: Mouse was inside image, showing zoom and moving lens.');
+         
           zoomResult.style.display = 'block';
           lens.style.display = 'block';
           moveLens({ clientX: this.lastMouseX, clientY: this.lastMouseY });
         } else {
-          console.log('initZoom: Mouse was NOT inside image, not showing zoom on forceStart.');
+          
         }
       }
     };
@@ -429,7 +429,7 @@ class ProductGallery extends HTMLElement {
   renderPopup() {
     // Only append the popup HTML if it doesn't already exist in the DOM
     if (!document.getElementById('product-gallery-popup')) {
-      console.log('renderPopup: Popup does not exist. Appending HTML.');
+      
       const popupHTML = document.createElement('div');
       popupHTML.innerHTML = `
         <div id="product-gallery-popup" class="product-popup-overlay" hidden>
@@ -451,16 +451,16 @@ class ProductGallery extends HTMLElement {
         </div>
       `;
       document.body.appendChild(popupHTML.firstElementChild);
-      console.log('renderPopup: Popup HTML appended to body.');
+      
     } else {
-      console.log('renderPopup: Popup already exists. Skipping HTML creation.');
+     
     }
   }
   // --- End of modified renderPopup ---
 
   // --- Start of modified openPopup ---
   openPopup(mediaId) {
-    console.log(`openPopup: Attempting to open popup for mediaId: ${mediaId}`);
+   
     // Ensure the popup HTML structure is in the DOM
     this.renderPopup();
     
@@ -482,12 +482,11 @@ class ProductGallery extends HTMLElement {
 
     const clickedMedia = this.mediaData.find((m) => m.id == mediaId);
     const defaultTab = clickedMedia && (clickedMedia.media_type === 'video' || clickedMedia.media_type === 'external_video') ? 'videos' : 'images';
-    console.log(`openPopup: Determined default tab: ${defaultTab} for mediaId: ${mediaId}`);
+   
 
     // If popup is already open, just update its content and return
     if (!popup.hidden) {
-      console.log(`openPopup: Popup already visible, rendering and updating active thumbnail for ${mediaId}.`);
-      this.renderPopupViewer(mediaId, viewer);
+            this.renderPopupViewer(mediaId, viewer);
       this.updatePopupThumbActive(mediaId);
       return;
     }
@@ -495,16 +494,16 @@ class ProductGallery extends HTMLElement {
     // First, make the popup visible
     popup.hidden = false;
     document.body.style.overflow = 'hidden';
-    console.log('openPopup: Popup visibility set to true, body overflow hidden.');
+   
 
     // Then, render the initial viewer content
     this.renderPopupViewer(mediaId, viewer);
-    console.log(`openPopup: Initial call to renderPopupViewer for mediaId: ${mediaId}`);
+    
 
     // Populate thumbnails and set up tabs only once when opening for the first time
     // or if they were cleared/not populated (e.g., if popup was removed from DOM)
     if (tabImages.innerHTML === '' && tabVideos.innerHTML === '') {
-      console.log('openPopup: Populating popup thumbnails and setting up tab listeners.');
+     
       this.mediaData.forEach((media) => {
         let btn;
 
@@ -530,13 +529,13 @@ class ProductGallery extends HTMLElement {
           };
 
           btn.addEventListener('click', () => {
-            console.log(`Popup thumbnail click for mediaId: ${media.id}`);
+           
             const zoomedViewer = popup.querySelector(
               '.popup-media-viewer.is-zoomed-simple',
             );
 
             if (zoomedViewer) {
-              console.log('Popup thumbnail click: Zoomed viewer detected, resetting zoom.');
+             
               zoomedViewer.classList.remove('is-zoomed-simple');
               const inner = zoomedViewer.querySelector('.popup-media-inner');
               if (inner) {
@@ -547,7 +546,7 @@ class ProductGallery extends HTMLElement {
 
             this.renderPopupViewer(media.id, viewer);
             this.updatePopupThumbActive(media.id);
-            console.log(`Popup thumbnail click: renderPopupViewer called for ${media.id}`);
+           
           });
 
           tabImages.appendChild(btn);
@@ -557,7 +556,7 @@ class ProductGallery extends HTMLElement {
         ) {
           btn = this.renderVideoThumbItem(media);
           btn.addEventListener('click', () => {
-            console.log(`Popup video thumbnail click for mediaId: ${media.id}`);
+           
             this.renderPopupViewer(
               media.id,
               document.querySelector('[data-popup-viewer]')
@@ -567,13 +566,13 @@ class ProductGallery extends HTMLElement {
           tabVideos.appendChild(btn);
         }
       });
-      console.log('openPopup: Populated popup thumbnails.');
+     
 
       // Setup tab listeners
       tabs.forEach((tab) => {
         tab.removeEventListener('click', this._handlePopupTabClick); // Ensure no duplicate listeners
         this._handlePopupTabClick = () => {
-          console.log(`Popup tab click: ${tab.dataset.tab} tab clicked.`);
+         
           tabs.forEach((t) => t.classList.remove('is-active'));
           tab.classList.add('is-active');
 
@@ -586,7 +585,7 @@ class ProductGallery extends HTMLElement {
           );
 
           if (zoomedViewer) {
-            console.log('Popup tab click: Zoomed viewer detected, resetting zoom.');
+           
             zoomedViewer.classList.remove('is-zoomed-simple');
             const inner = zoomedViewer.querySelector('.popup-media-inner');
             if (inner) {
@@ -606,11 +605,11 @@ class ProductGallery extends HTMLElement {
           }
 
           if (firstMedia) {
-            console.log(`Popup tab click: Rendering viewer for first media in ${type} tab: ${firstMedia.id}`);
+            
             this.renderPopupViewer(firstMedia.id, viewer);
             this.updatePopupThumbActive(firstMedia.id);
           } else {
-            console.log(`Popup tab click: No media found for ${type} tab.`);
+           
           }
         };
         tab.addEventListener('click', this._handlePopupTabClick);
@@ -624,21 +623,21 @@ class ProductGallery extends HTMLElement {
     });
     tabImages.classList.toggle('hidden', defaultTab !== 'images');
     tabVideos.classList.toggle('hidden', defaultTab !== 'videos');
-    console.log(`openPopup: Set active tab to ${defaultTab}.`);
+   
 
     this.updatePopupThumbActive(mediaId);
-    console.log(`openPopup: Initial active popup thumbnail set to ${mediaId}.`);
+   
 
     popup.querySelector('.popup-close').onclick = this.closePopup.bind(this);
     popup.querySelector('.product-popup-backdrop').onclick = this.closePopup.bind(this);
     document.addEventListener('keydown', this.handleEscClose);
-    console.log('openPopup: Close listeners added.');
+   
   }
   // --- End of modified openPopup ---
 
 
   renderPopupViewer(mediaId, viewer) {
-    console.log(`renderPopupViewer: Rendering viewer for mediaId: ${mediaId}`);
+   
     const media = this.mediaData.find((m) => m.id == mediaId);
     if (!media) {
       console.error(`renderPopupViewer: Media not found for ID: ${mediaId}`);
@@ -670,7 +669,7 @@ class ProductGallery extends HTMLElement {
     let newMediaElement; // Declare a variable to hold the new media element
 
     if (media.media_type === 'image') {
-      console.log('renderPopupViewer: Media type is image.');
+      
       viewer.classList.add('popup-media-viewer-media-zoom-img');
 
       const inner = document.createElement('div');
@@ -692,11 +691,11 @@ class ProductGallery extends HTMLElement {
       skeletonWrapper.appendChild(img);
       inner.appendChild(skeletonWrapper);
       newMediaElement = inner; // Assign the new image container to newMediaElement
-      console.log('renderPopupViewer: Image elements prepared for viewer.');
+     
 
       img.onload = () => {
         skeletonWrapper.classList.add('loaded');
-        console.log(`renderPopupViewer: Image for ID ${media.id} loaded in popup.`);
+       
       };
 
       let isZoomed = false;
@@ -717,7 +716,7 @@ class ProductGallery extends HTMLElement {
       this._handlePopupClick = () => {
         isZoomed = !isZoomed;
         viewer.classList.toggle('is-zoomed-simple', isZoomed);
-        console.log(`renderPopupViewer: Viewer clicked, isZoomed: ${isZoomed}`);
+       
 
         const isLandscape = img.naturalWidth && img.naturalHeight ? img.naturalWidth > img.naturalHeight : true;
         const zoomLevel = isLandscape ? 1.5 : 1.2;
@@ -731,7 +730,7 @@ class ProductGallery extends HTMLElement {
       media.external_id &&
       media.host
     ) {
-      console.log('renderPopupViewer: Media type is external video.');
+      
       let embedUrl = '';
       if (media.host === 'youtube') {
         embedUrl = `https://www.youtube.com/embed/${media.external_id}`; // Corrected YouTube URL
@@ -749,10 +748,10 @@ class ProductGallery extends HTMLElement {
         iframe.style.width = '100%';
         iframe.style.aspectRatio = '16/9';
         newMediaElement = iframe; // Assign the new iframe to newMediaElement
-        console.log(`renderPopupViewer: External video iframe prepared for ID: ${media.id}`);
+       
       }
     } else if (media.media_type === 'video') {
-      console.log('renderPopupViewer: Media type is native video.');
+      
       const video = document.createElement('video');
       video.controls = true;
       video.autoplay = true;
@@ -772,14 +771,14 @@ class ProductGallery extends HTMLElement {
         source.type = validSource.mime_type;
         video.appendChild(source);
         newMediaElement = video; // Assign the new video to newMediaElement
-        console.log(`renderPopupViewer: Native video prepared for ID: ${media.id}`);
+       
       } else {
         newMediaElement = document.createElement('p');
         newMediaElement.textContent = 'Video format not supported or no valid source found.';
         console.warn(`renderPopupViewer: No valid video source found for ID: ${media.id}`);
       }
     } else if (media.media_type === 'model') {
-      console.log('renderPopupViewer: Media type is 3D model.');
+      
       const model = document.createElement('model-viewer');
       model.src = media.url;
       model.setAttribute('alt', media.alt || '3D model');
@@ -789,7 +788,7 @@ class ProductGallery extends HTMLElement {
       model.style.width = '100%';
       model.style.height = '100%';
       newMediaElement = model; // Assign the new model-viewer to newMediaElement
-      console.log(`renderPopupViewer: 3D model prepared for ID: ${media.id}`);
+     
     } else {
       newMediaElement = document.createElement('p');
       newMediaElement.textContent = 'Unsupported media type.';
@@ -798,12 +797,12 @@ class ProductGallery extends HTMLElement {
 
     if (newMediaElement) {
         viewer.appendChild(newMediaElement); // Append the newly created media element
-        console.log(`renderPopupViewer: New media element appended for ID: ${media.id}`);
+        
     }
   }
 
   renderVideoThumbItem(media) {
-    console.log(`renderVideoThumbItem: Creating video thumbnail for media ID: ${media.id}`);
+    
     const btn = document.createElement('button');
     btn.className = 'popup-thumb video-thumb-item';
     btn.type = 'button';
@@ -825,7 +824,7 @@ class ProductGallery extends HTMLElement {
   }
 
   updatePopupThumbActive(mediaId) {
-    console.log(`updatePopupThumbActive: Setting active thumbnail in popup to ${mediaId}`);
+   
     const popup = document.getElementById('product-gallery-popup');
     if (!popup) {
       console.warn('updatePopupThumbActive: Popup not found.');
@@ -839,13 +838,13 @@ class ProductGallery extends HTMLElement {
       thumb.classList.toggle('is-active', isActive);
       if (isActive) {
         thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        console.log(`updatePopupThumbActive: Popup thumbnail ${thumbId} set to active.`);
+       
       }
     });
   }
 
   closePopup() {
-    console.log('closePopup: Closing popup.');
+
     const popup = document.getElementById('product-gallery-popup');
     const viewer = popup?.querySelector('[data-popup-viewer]');
 
@@ -877,14 +876,14 @@ class ProductGallery extends HTMLElement {
 
     if (popup) popup.hidden = true;
     document.body.style.overflow = '';
-    console.log('closePopup: Popup hidden, body overflow reset.');
+   
 
     document.removeEventListener('keydown', this.handleEscClose);
   }
 
   handleEscClose = (e) => {
     if (e.key === 'Escape') {
-      console.log('handleEscClose: Escape key pressed.');
+      
       this.closePopup();
     }
   };

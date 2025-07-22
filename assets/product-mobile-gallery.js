@@ -98,35 +98,37 @@ class MobileGallery extends HTMLElement {
     `;
     document.body.appendChild(popup);
     this.updatePopupReferences();
-    console.log('[MobileGallery] Created #mobile-gallery-popup');
+   
   }
 
-  observePopup() {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
+observePopup() {
+  if (this.observer) {
+    this.observer.disconnect();
+  }
 
-    const parent = document.body;
-    this.observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.removedNodes.length) {
-          for (const node of mutation.removedNodes) {
-            if (node.id === 'mobile-gallery-popup' || node.querySelector('#mobile-gallery-popup')) {
-              console.warn('[MobileGallery] Detected removal of #mobile-gallery-popup at', new Date().toISOString());
-              console.trace();
-              this.createPopup();
-              if (this.popup.classList.contains('is-active')) {
-                this.openPopup(0); // Reopen if it was active
-              }
-              break;
+  const parent = document.body;
+  this.observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.removedNodes.length) {
+        for (const node of mutation.removedNodes) {
+          // Only process element nodes (nodeType === 1)
+          if (node.nodeType === 1 && 
+              (node.id === 'mobile-gallery-popup' || node.querySelector('#mobile-gallery-popup'))) {
+            console.warn('[MobileGallery] Detected removal of #mobile-gallery-popup at', new Date().toISOString());
+            console.trace();
+            this.createPopup();
+            if (this.popup.classList.contains('is-active')) {
+              this.openPopup(0); // Reopen if it was active
             }
+            break;
           }
         }
       }
-    });
+    }
+  });
 
-    this.observer.observe(parent, { childList: true, subtree: true });
-  }
+  this.observer.observe(parent, { childList: true, subtree: true });
+}
 
   disconnectedCallback() {
     if (this.observer) {
@@ -400,7 +402,7 @@ class MobileGallery extends HTMLElement {
     if (this.popup) {
       this.popup.hidden = true;
       this.popup.classList.remove('is-active');
-      console.log('[MobileGallery] Closed popup at', new Date().toISOString());
+     
     }
     document.body.style.overflow = '';
     this.pauseAllMedia(this.popup);
@@ -556,7 +558,7 @@ class MobileGallery extends HTMLElement {
           skeletonWrapper.classList.add('loaded');
         }
         const allowZoom = zoomImg.naturalWidth > 300;
-        console.log('Image loaded:', { naturalWidth: zoomImg.naturalWidth, naturalHeight: zoomImg.naturalHeight, allowZoom });
+       
 
         if (!allowZoom) {
           wrapper.className += ' zoom-disabled';
@@ -573,7 +575,7 @@ class MobileGallery extends HTMLElement {
             Math.max(750 / zoomImg.naturalHeight, 1.5),
             3
           );
-          console.log('maxScale:', maxScale);
+          
 
           hammer.get('pinch').set({ enable: true });
           hammer.get('doubletap').set({ taps: 2 });
@@ -583,7 +585,7 @@ class MobileGallery extends HTMLElement {
           });
 
           hammer.on('pinchmove', (e) => {
-            console.log('Pinchmove:', e.scale);
+          
             scale = Math.max(1, Math.min(lastScale * e.scale, maxScale));
             if (scale === 1) {
               posX = 0;
@@ -595,7 +597,7 @@ class MobileGallery extends HTMLElement {
           });
 
           hammer.on('doubletap', () => {
-            console.log('Doubletap triggered');
+            
             if (zoomImg.src !== highResSrc) {
               const preload = new Image();
               preload.src = highResSrc;

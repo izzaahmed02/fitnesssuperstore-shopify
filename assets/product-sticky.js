@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let scrollListenerAttached = false;
 
- function checkScroll() {
+function checkScroll() {
   const headerWrapper = document.querySelector(".header-wrapper");
   const productContainer = document.querySelector(".product");
   const productInfo = document.querySelector(".product__info-wrapper");
@@ -24,7 +24,6 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!productContainer || !productInfo || !leftContainer || !productExtraInfo) return;
 
   const productContainerRect = productContainer.getBoundingClientRect();
-  const productInfoRect = productInfo.getBoundingClientRect();
   const extraInfoRect = productExtraInfo.getBoundingClientRect();
 
   const windowHeight = window.innerHeight;
@@ -36,7 +35,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (window.scrollY <= headerWrapper.offsetHeight) {
     productInfo.classList.remove("fixed", "absolute");
     productInfo.style.top = "";
-    productInfo.style.right = ""; // Reset positioning
+    productInfo.style.right = "";
+    productInfo.style.left = "";
     return;
   }
 
@@ -57,23 +57,25 @@ document.addEventListener("DOMContentLoaded", function () {
   if (extraInfoRect.bottom <= windowHeight) {
     productInfo.classList.remove("fixed");
     productInfo.classList.add("absolute");
-    productInfo.style.top = `${
-      extraInfoHeight + headerWrapper.offsetHeight
-    }px`;
-    productInfo.style.right = ""; // reset for absolute
+    productInfo.style.top = `${extraInfoHeight + headerWrapper.offsetHeight}px`;
+    productInfo.style.left = "";
+    productInfo.style.right = "";
     return;
   }
 
-  // 👇 this part sticks it to the right edge of the container
   if (fixedContainer && productInfo.classList.contains("fixed")) {
-    const containerRightOffset = window.innerWidth - fixedContainer.getBoundingClientRect().right + 1;
+    const containerRect = fixedContainer.getBoundingClientRect();
+    const leftOffset = containerRect.right - productInfo.offsetWidth - 1;
 
-    productInfo.style.right = containerRightOffset + "px";
-    productInfo.style.left = "auto";
+    productInfo.style.left = `${leftOffset}px`;
+    productInfo.style.right = "auto";
   } else {
+    productInfo.style.left = "";
     productInfo.style.right = "";
   }
 }
+
+  
 
 
   function setupScrollListener() {
