@@ -382,13 +382,17 @@ function setupOptionsPopup() {
 				modalWrapper.style.display = 'flex';
 				container.innerHTML = '';
 
-				const productTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
+						const optionTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
 				let optionHTML = '';
-				
+
 				if (headingTitle) {
-					productTitleSearch = `${productTitle} - ${headingTitle} (${optionCategoryId})`;
+					productTitleSearch = `${optionTitle} - ${headingTitle} (${optionCategoryId})`;
 				} else {
-					productTitleSearch = `${productTitle} (${optionCategoryId})`;
+					productTitleSearch = `${optionTitle} (${optionCategoryId})`;
+				}
+
+				if (productTitleSearch.includes('Warranty')) {
+					productTitleSearch = `Warranty (${optionCategoryId})`;
 				}
 
 				const encodedProductTitle = encodeURIComponent(productTitleSearch);
