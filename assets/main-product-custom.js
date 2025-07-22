@@ -307,6 +307,12 @@ try {
 						}
 						
 						var product = await fetchProductByTitle(customFieldvalue);
+
+                        if (!product && customFieldvalue.includes('Warranty')) {
+							customFieldvalue = 'Warranty (30)';
+							product = await fetchProductByTitle(customFieldvalue);
+						}
+
 						if (product) {
 							document.querySelector('#dynamic-product-content').style.width = "auto";
 							modalWrapper.style.display = 'flex';

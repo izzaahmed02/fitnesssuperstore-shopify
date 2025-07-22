@@ -382,13 +382,17 @@ function setupOptionsPopup() {
 				modalWrapper.style.display = 'flex';
 				container.innerHTML = '';
 
-				const productTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
+				const optionTitle = parentWithHandle.querySelector('.apo-title')?.innerText;
 				let optionHTML = '';
 				
 				if (headingTitle) {
-					productTitleSearch = `${productTitle} - ${headingTitle} (${optionCategoryId})`;
+					productTitleSearch = `${optionTitle} - ${headingTitle} (${optionCategoryId})`;
 				} else {
-					productTitleSearch = `${productTitle} (${optionCategoryId})`;
+					productTitleSearch = `${optionTitle} (${optionCategoryId})`;
+				}
+
+				if (productTitleSearch.includes('Warranty')) {
+					productTitleSearch = `Warranty (${optionCategoryId})`;
 				}
 
 				const encodedProductTitle = encodeURIComponent(productTitleSearch);
@@ -765,7 +769,7 @@ async function fetchProductByTitle(title) {
 }
 
 async function fetchProductByOptionCategory(optionCategoryId, title) {
-	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbyoptioncategory?optionCategoryId=${optionCategoryId}&title=${title}`;
+	const shopifyUrl = `https://localhost:52417/api/shopify/productbyoptioncategory?optionCategoryId=${optionCategoryId}&title=${title}`;
 
 	try {
 		const response = await fetch(shopifyUrl, {
@@ -785,7 +789,7 @@ async function fetchProductByOptionCategory(optionCategoryId, title) {
 }
 
 async function fetchProductMetafields(productId) {
-	const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${productId}/`;
+	const shopifyUrl = `https://localhost:52417/api/shopify/metafields/${productId}/`;
 	try {
 		const response = await fetch(shopifyUrl, {
 			method: 'GET'
