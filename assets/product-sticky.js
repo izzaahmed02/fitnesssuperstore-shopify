@@ -65,7 +65,7 @@ function checkScroll() {
 
   if (fixedContainer && productInfo.classList.contains("fixed")) {
     const containerRect = fixedContainer.getBoundingClientRect();
-    const leftOffset = containerRect.right - productInfo.offsetWidth;
+    const leftOffset = containerRect.right - productInfo.offsetWidth - 1;
 
     productInfo.style.left = `${leftOffset}px`;
     productInfo.style.right = "auto";
