@@ -79,11 +79,12 @@ class TileCalculator extends HTMLElement {
 
 
   calculateTiles(lengthCm, widthCm) {
+    let result = {};
     const tileTypes = Object.keys(this.variants).map((t) => t.toLowerCase());
     const isRoll =
     this.dataset.tileType?.toLowerCase?.() === 'roll' ||
     tileTypes.includes('roll') ||
-    tileTypes.includes('rubber roll');
+    tileTypes.includes('rubberroll');
 
     if (isRoll) {
       const effectiveCoverageM2 = 9.5;      
@@ -92,7 +93,7 @@ class TileCalculator extends HTMLElement {
       const rolls =
         areaM2 > 0 ? Math.ceil((areaM2 - EPS) / effectiveCoverageM2) : 0;
 
-      return { roll: rolls, total: rolls };
+      result = { rubberroll: rolls };
     }
 
     const wCm = this.tileWidthIn  * 2.54;
@@ -113,7 +114,6 @@ class TileCalculator extends HTMLElement {
     const tilesPerCol   = best.cols;
     const physicalTotal = tilesPerRow * tilesPerCol;
 
-    let result = {};
 
     if (
       tileTypes.includes('middle') &&
@@ -144,7 +144,9 @@ class TileCalculator extends HTMLElement {
     } else if (tileTypes.length === 1 && tileTypes.includes('square')) {
       result.square = physicalTotal;
     } else {
-      tileTypes.forEach((t) => (result[t] = 0));
+      if (!isRoll) {
+        tileTypes.forEach((t) => (result[t] = 0));
+      }
     }
 
     result.total = Object.values(result).reduce((sum, val) => sum + val, 0);
@@ -276,6 +278,10 @@ class TileCalculator extends HTMLElement {
       //   input.value = 0;
       // }
       // });
+
+      const inputs = this.querySelectorAll(
+        '.tile-calculator__breakdown input[type="number"]',
+      );
 
       input.addEventListener('blur', () => {
         const val = parseFloat(input.value);
@@ -527,11 +533,12 @@ class TileCalculator extends HTMLElement {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept':       'application/json',
         'X-Requested-With': 'XMLHttpRequest',
       },
+      credentials: 'same-origin', 
       body: JSON.stringify({ items }),
     };
-
     const response = await fetch(`${routes.cart_add_url}`, config);
 
     if (response.ok) {
