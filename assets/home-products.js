@@ -27,6 +27,7 @@
                  draggable: false,
                 swipe: false,
                 dots: true,
+                arrows: true,
                 touchMove: false,
               },
             },
