@@ -73,59 +73,88 @@ class TileCalculator extends HTMLElement {
     });
   }
 
-  // Convert a value from selected unit to centimeters
   convertToCm(value, unit) {
     return value * (this.unitFactors[unit] || 1);
   }
 
-  // Calculate required tile counts based on length and width in cm
-  calculateTiles(lengthCm, widthCm) {
-    // const tileCm = this.tileSizeIn * 2.54;
-    const tileWidthCm = this.tileWidthIn * 2.54; // convert tile width to cm
-    const tileLengthCm = this.tileLengthIn * 2.54; // convert tile lengt to cm
 
-    const tilesPerRow = Math.max(Math.ceil(lengthCm / tileLengthCm), 1);
-    const tilesPerCol = Math.max(Math.ceil(widthCm / tileWidthCm), 1);
+calculateTiles(lengthCm, widthCm) {
+  const tileTypes = Object.keys(this.variants).map((t) => t.toLowerCase());
+  const isRoll =
+    this.dataset.tileType?.toLowerCase?.() === 'roll' ||
+    tileTypes.includes('roll') ||
+    tileTypes.includes('rubber roll');
 
-    const totalTiles = tilesPerRow * tilesPerCol;
-    const tileTypes = Object.keys(this.variants);
+  if (isRoll) {
+    const rollWidthIn  = 39.37;
+    const rollLengthIn = 393.7;
+    const rollWidthCm  = rollWidthIn  * 2.54;
+    const rollLengthCm = rollLengthIn * 2.54;
 
-    let result = {};
+    const effectiveCoverageM2 = 9.5;
 
-    if (
-      tileTypes.includes('middle') &&
-      tileTypes.includes('edge') &&
-      tileTypes.includes('corner')
-    ) {
-      // Standard layout with corners and edges
-      const corner = Math.min(tilesPerRow, tilesPerCol) >= 2 ? 4 : 0;
-      const edge = Math.max((tilesPerRow - 2) * 2 + (tilesPerCol - 2) * 2, 0);
-      const middle = Math.max(totalTiles - edge - corner, 0);
+    const areaM2 = (lengthCm * widthCm) / 1e4;
+    const rolls  = areaM2 > 0 ? Math.ceil(areaM2 / effectiveCoverageM2) : 0;
 
-      result = { middle, edge, corner };
-    } else {
-      // Fallback logic for other combinations
-      if (tileTypes.length === 1 && tileTypes.includes('square')) {
-        result['square'] = totalTiles;
-      } else if (
-        tileTypes.length === 2 &&
-        tileTypes.includes('square') &&
-        tileTypes.includes('border')
-      ) {
-        result['square'] = totalTiles;
-        result['border'] = tilesPerRow * 2 + tilesPerCol * 2;
-      } else {
-        tileTypes.forEach((type) => {
-          result[type] = 0;
-        });
-      }
-    }
-
-    result.total = Object.values(result).reduce((sum, val) => sum + val, 0);
-    return result;
+    return { roll: rolls, total: rolls };
   }
 
-  // Main calculate action triggered by "Calculate" button
+  const wCm = this.tileWidthIn  * 2.54;
+  const lCm = this.tileLengthIn * 2.54;
+
+  const orient = (len, wid) => ({
+    rows: Math.ceil(lengthCm / len),
+    cols: Math.ceil(widthCm  / wid),
+    len,
+    wid,
+  });
+
+  const o1 = orient(lCm, wCm);        
+  const o2 = orient(wCm, lCm);     
+  const best = o1.rows * o1.cols <= o2.rows * o2.cols ? o1 : o2;
+
+  const tilesPerRow   = best.rows;
+  const tilesPerCol   = best.cols;
+  const physicalTotal = tilesPerRow * tilesPerCol;
+
+  let result = {};
+
+  if (
+    tileTypes.includes('middle') &&
+    tileTypes.includes('edge') &&
+    tileTypes.includes('corner')
+  ) {
+    const corner = Math.min(tilesPerRow, tilesPerCol) >= 2 ? 4 : 0;
+    let edge =
+      Math.max((tilesPerRow - 2) * 2 + (tilesPerCol - 2) * 2, 0);
+
+    if (edge + corner > physicalTotal) {
+      edge = Math.max(physicalTotal - corner, 0);
+    }
+    const middle = Math.max(physicalTotal - edge - corner, 0);
+    result = { middle, edge, corner };
+  } else if (
+    tileTypes.length === 2 &&
+    tileTypes.includes('square') &&
+    tileTypes.includes('border')
+  ) {
+    const border =
+      physicalTotal <= 1
+        ? physicalTotal
+        : Math.max(tilesPerRow * 2 + tilesPerCol * 2 - 4, 0);
+
+    const square = Math.max(physicalTotal - border, 0);
+    result = { square, border };
+  } else if (tileTypes.length === 1 && tileTypes.includes('square')) {
+    result.square = physicalTotal;
+  } else {
+    tileTypes.forEach((t) => (result[t] = 0));
+  }
+
+  result.total = Object.values(result).reduce((s, v) => s + v, 0);
+  return result;
+}
+
   async calculate() {
     const spinner = this.querySelector('#calc-spinner');
     spinner.style.display = 'block';
