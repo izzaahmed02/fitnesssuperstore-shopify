@@ -26,6 +26,7 @@
                 slidesToShow: 1,
                  draggable: false,
                 swipe: false,
+                dots: true,
                 touchMove: false,
               },
             },
