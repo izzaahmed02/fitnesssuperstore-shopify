@@ -5,16 +5,22 @@
     <div class="content">
 
       <div class="description">
-      <div class="ratingBlock">
-        <div class="rating">
-         {% render 'rating' %}        
-        </div>
-        <span>{{ section.settings.rating_text }}</span>
-      </div>
-      <a href="{{ section.settings.button_link }}" class="bannerBtn mobile button button--secondary">
-                 {{ section.settings.button_text }}
-                {% render 'chevron-button' %}
-            </a>
+        {% if section.settings.rating_link != blank %}
+        <a class="rating-button-link" href="{{ section.settings.rating_link }}">
+        {% endif %}
+          <div class="ratingBlock">
+            <div class="rating">
+            {% render 'rating' %}        
+            </div>
+            <span>{{ section.settings.rating_text }}</span>
+          </div>
+          {% if section.settings.rating_link != blank %}
+        </a>
+        {% endif %}
+        <a href="{{ section.settings.button_link }}" class="bannerBtn mobile button button--secondary">
+            {{ section.settings.button_text }}
+            {% render 'chevron-button' %}
+        </a>
     </div>
     
       <div class="title">
@@ -84,7 +90,11 @@
       "label": "Rating Text",
       "default": "4.9/5 by Thousands of happy customers"
     },
-   
+    {
+      "type": "url",
+      "id": "rating_link",
+      "label": "Rating Link"
+    },
     {
       "type": "text",
       "id": "title_text",
