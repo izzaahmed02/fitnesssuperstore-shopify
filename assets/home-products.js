@@ -24,9 +24,9 @@
               breakpoint: 768,
               settings: {
                 slidesToShow: 1,
-                 draggable: true,
-                swipe: true,
-                touchMove: true,
+                 draggable: false,
+                swipe: false,
+                touchMove: false,
               },
             },
           ],
