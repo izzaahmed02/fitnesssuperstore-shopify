@@ -147,7 +147,7 @@ class TileCalculator extends HTMLElement {
       tileTypes.forEach((t) => (result[t] = 0));
     }
 
-    result.total = Object.values(result).reduce((s, v) => s + v, 0);
+    result.total = Object.values(result).reduce((sum, val) => sum + val, 0);
     return result;
   }
 
