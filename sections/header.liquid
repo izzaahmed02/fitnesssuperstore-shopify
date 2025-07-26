@@ -633,37 +633,54 @@
 {% if section.settings.enable_hover_dropdowns %}
 <script>
   $(document).ready(function () {
-    if (window.innerWidth >= 989) { 
-      $('header.header details').each(function () {
-        const $details = $(this);
-        const $summary = $details.find('summary');
-        let hoverTimer;
-        const hoverDelay = 100;
+    let hoverMenuInitialized = false;
 
-        $summary.on('click', function (e) {
-          e.preventDefault();
-          return false;
-        });
+    function initDesktopHoverMenus() {
+      if (window.innerWidth >= 1024 && !hoverMenuInitialized) {
+        hoverMenuInitialized = true;
 
-        $details.on('mouseenter', function () {
-          clearTimeout(hoverTimer);
-          hoverTimer = setTimeout(function () {
-            $details.attr('open', true);
-            $summary.attr('aria-expanded', 'true');
-          }, hoverDelay);
-        });
+        $('header.header details').each(function () {
+          const $details = $(this);
+          const $summary = $details.find('summary');
+          let hoverTimer;
+          const hoverDelay = 100;
 
-        $details.on('mouseleave', function () {
-          clearTimeout(hoverTimer);
-          hoverTimer = setTimeout(function () {
-            $details.removeAttr('open');
-            $summary.attr('aria-expanded', 'false');
-          }, hoverDelay);
+          $summary.on('click.preventHover', function (e) {
+            e.preventDefault();
+            return false;
+          });
+
+          $details.on('mouseenter.hoverMenu', function () {
+            clearTimeout(hoverTimer);
+            hoverTimer = setTimeout(function () {
+              $details.attr('open', true);
+              $summary.attr('aria-expanded', 'true');
+            }, hoverDelay);
+          });
+
+          $details.on('mouseleave.hoverMenu', function () {
+            clearTimeout(hoverTimer);
+            hoverTimer = setTimeout(function () {
+              $details.removeAttr('open');
+              $summary.attr('aria-expanded', 'false');
+            }, hoverDelay);
+          });
         });
-      });
+      } else if (window.innerWidth < 1024 && hoverMenuInitialized) {
+        hoverMenuInitialized = false;
+        $('header.header details summary').off('.preventHover');
+        $('header.header details').off('.hoverMenu');
+      }
     }
+
+    initDesktopHoverMenus();
+
+    $(window).on('resize', function () {
+      initDesktopHoverMenus();
+    });
   });
 </script>
+
 
 {% endif %}
 
