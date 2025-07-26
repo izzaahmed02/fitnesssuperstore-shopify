@@ -629,52 +629,46 @@
 
     customElements.define('sticky-header', StickyHeader);
     {% endjavascript %}
-    {% comment %}
+
 {% if section.settings.enable_hover_dropdowns %}
 <script>
-    $(document).ready(function() {
-        $('header.header details').each(function() {
-            const $details = $(this);
-            const $summary = $details.find('summary');
-            let hoverTimer;
-            const hoverDelay = 100;
-            
-            $summary.on('click', function(e) {
-                e.preventDefault();
-                return false;
-            });
-            
-            $details.on('mouseenter', function() {
-                clearTimeout(hoverTimer);
-                hoverTimer = setTimeout(function() {
-                    $details.attr('open', true);
-                    $summary.attr('aria-expanded', 'true');
-                }, hoverDelay);
-            });
-            
-            $details.on('mouseleave', function() {
-                clearTimeout(hoverTimer);
-                hoverTimer = setTimeout(function() {
-                    $details.removeAttr('open');
-                    $summary.attr('aria-expanded', 'false');
-                }, hoverDelay);
-            });
-            
-            if ('ontouchstart' in window) {
-                $summary.on('touchstart', function(e) {
-                    e.preventDefault();
-                    $details.attr('open', function(i, attr) {
-                        const newState = attr !== 'open';
-                        $summary.attr('aria-expanded', newState);
-                        return newState;
-                    });
-                });
-            }
+  $(document).ready(function () {
+    if (window.innerWidth >= 1024) { // Target desktop only
+      $('header.header details').each(function () {
+        const $details = $(this);
+        const $summary = $details.find('summary');
+        let hoverTimer;
+        const hoverDelay = 100;
+
+        $summary.on('click', function (e) {
+          e.preventDefault();
+          return false;
         });
-    });
+
+        $details.on('mouseenter', function () {
+          clearTimeout(hoverTimer);
+          hoverTimer = setTimeout(function () {
+            $details.attr('open', true);
+            $summary.attr('aria-expanded', 'true');
+          }, hoverDelay);
+        });
+
+        $details.on('mouseleave', function () {
+          clearTimeout(hoverTimer);
+          hoverTimer = setTimeout(function () {
+            $details.removeAttr('open');
+            $summary.attr('aria-expanded', 'false');
+          }, hoverDelay);
+        });
+
+        // Optional: Remove touch behavior since it's desktop-only
+      });
+    }
+  });
 </script>
+
 {% endif %}
-{% endcomment %}
+
     <script type="application/ld+json">
         {
           "@context": "http://schema.org",
