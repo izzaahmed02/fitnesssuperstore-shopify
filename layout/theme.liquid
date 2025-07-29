@@ -564,6 +564,80 @@ content: ''!important;
       </head>
     
       <body class="page-width-desktop page-width-index gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %} {% if template contains 'page'      %} page-{{ page.handle }}{% endif %}">
+        
+        <script>
+          // CORS Test Script for Shopify Storefront API
+async function testStorefrontAPICORS() {
+  console.log('Starting CORS test for Storefront API...');
+
+  // Use variables from Liquid code
+  const shopifyDomain = window.shopifyDomain || '79ef8b-5e.myshopify.com';
+  const storefrontToken = window.shopifyStorefrontToken;
+  const apiUrl = `https://${shopifyDomain}/api/2025-01/graphql.json`;
+
+  // Simple GraphQL query to test connectivity (fetch shop name)
+  const testQuery = `
+    query {
+      shop {
+        name
+      }
+    }
+  `;
+
+  try {
+    // Make the GraphQL request
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Storefront-Access-Token': storefrontToken,
+      },
+      body: JSON.stringify({ query: testQuery }),
+    });
+
+    // Check response status
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+    }
+
+    // Parse response
+    const { data, errors } = await response.json();
+
+    if (errors) {
+      console.error('GraphQL errors:', JSON.stringify(errors));
+      throw new Error('GraphQL query failed with errors');
+    }
+
+    // Log success
+    console.log('CORS Test Success: Storefront API request completed successfully.');
+    console.log('Shop Name:', data?.shop?.name || 'Not available');
+  } catch (error) {
+    // Log detailed error
+    console.error('CORS Test Failed: Error making Storefront API request.');
+    console.error('Error Details:', error.message);
+    console.error('API URL:', apiUrl);
+    console.error('Token Used:', storefrontToken ? 'Present' : 'Missing');
+    
+    // Check for CORS-specific errors
+    if (error.message.includes('Access-Control-Allow-Origin') || error.message.includes('CORS')) {
+      console.error('CORS Issue Detected: The server blocked the request due to CORS policy.');
+      console.error('Check the X-Shopify-Storefront-Access-Token and ensure it is valid for', shopifyDomain);
+    } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+      console.error('Authentication Issue: Invalid or unauthorized Storefront API token.');
+      console.error('Verify the token in Shopify Admin > Apps > Your App > Storefront API.');
+    } else {
+      console.error('Other Issue: May be network-related or server configuration.');
+    }
+  }
+}
+
+// Run the test when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Initiating CORS test on page load...');
+  testStorefrontAPICORS();
+});
+        </script>
+        
         <a class="skip-to-content-link button visually-hidden" href="#MainContent">
           {{ 'accessibility.skip_to_text' | t }}
         </a>
