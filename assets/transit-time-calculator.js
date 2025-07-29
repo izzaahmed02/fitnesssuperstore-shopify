@@ -411,62 +411,14 @@ var TransitTimeCalculator = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    fetchProductDetailsWithMetafields(window.product.id).then((product) => {	 
-        const processingTimeMetafield = product.metafields.find(
-            (metafield) => metafield.key === "processing_time"
-        );
-
-        if (processingTimeMetafield) {
-            TransitTimeCalculator.processingTime = processingTimeMetafield.value;
-            TransitTimeCalculator.displayTransitTimes();
-        }
-    });
+  const processingTimeElement = document.querySelector('span[data-processingtime]');
+  if (processingTimeElement) {
+    const processingTime = processingTimeElement.dataset.processingtime;
+    TransitTimeCalculator.processingTime = processingTime
+    TransitTimeCalculator.displayTransitTimes();
+  }
 });
 
 function setUserLocationDisplay(userLoc) {
   document.querySelector('.location-display').innerHTML = `${userLoc.city} ${userLoc.region_code}, ${userLoc.postal}` 
 }
-
-async function fetchProductDetailsWithMetafields(productId) {
-    const productUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${productId}`;
-    const metafieldsUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${productId}/`;
-  
-    try {
-      const [productResponse, metafieldsResponse] = await Promise.all([
-        fetch(productUrl, { method: 'GET' }),
-        fetch(metafieldsUrl, { method: 'GET' })
-      ]);
-  
-      if (!productResponse.ok || !metafieldsResponse.ok) {
-        throw new Error('Failed to fetch product details or metafields');
-      }
-  
-      const productData = await productResponse.json();
-      const metafieldsData = await metafieldsResponse.json();
-  
-      productData.product.metafields = metafieldsData.metafields;
-      return productData.product;
-    } catch (error) {
-      console.error('Error fetching product details with metafields:', error);
-      return null;
-    }
-  }
-  
-  async function fetchProductMetaObject(metaObjectId) {
-    const shopifyUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metaobject?metaobjectId=${metaObjectId}`;
-  
-    try {
-      const response = await fetch(shopifyUrl, {
-        method: 'GET'
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to fetch metaobject');
-      }
-  
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching meta object:', error);
-      return null;
-    }
-  }
