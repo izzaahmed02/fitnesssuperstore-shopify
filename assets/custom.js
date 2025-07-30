@@ -372,7 +372,40 @@ function outsideClose(e) {
           //  document.querySelector('.compare-products-actions a').setAttribute('href', '');
 });
 
+// Disabling Compare Link from the Compare button
 
+function disableCompareLink() {
+    document.querySelectorAll('.compare-products-actions .open-compare-link').forEach(link => {
+      link.removeAttribute('href');
+      console.log("Removed href from .open-compare-link");
+    });
+  }
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach(mutation => {
+      mutation.addedNodes.forEach(node => {
+        if (
+          node.nodeType === 1 && // Ensure it's an element
+          node.classList.contains('compare-products-actions')
+        ) {
+          disableCompareLink();
+        }
+
+        // Check if nested inside added node
+        if (node.nodeType === 1) {
+          const target = node.querySelector('.compare-products-actions');
+          if (target) {
+            disableCompareLink();
+          }
+        }
+      });
+    });
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
 
 async function getDistanceFromBenicia(postal) {
 	try {
