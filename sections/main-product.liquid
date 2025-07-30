@@ -236,14 +236,19 @@
                     <div class="review_header"></div>
                     <div id="product_just_stars" class="reg"></div>
                   </div>
-
-                  <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                    {% if product.available == true %}
-                      <span>Available to Order</span>
-                    {% else %}
-                      <span>Out of stock</span>
-                    {% endif %}
-                  </div>
+                  {% if product.metafields.custom.backorder == true %}
+                    <div class="badge backorder-badge stock-badge">
+                       <span>Available to Pre-Order</span>
+                    </div>
+                  {% else %}
+                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
+                      {% if product.available == true %}
+                        <span>Available to Order</span>
+                      {% else %}
+                        <span>Out of stock</span>
+                      {% endif %}
+                    </div>
+                  {% endif %}
                 </div>
               {% when 'price' %}
 {% comment %} 
@@ -729,7 +734,7 @@
                       <div class="item__text">
                         <span class="title">Processing Time:</span>
                         {{ product.metafields.custom.processing_time_long }}
-                        <span class="more-info" data-customfield="Processing Time">(More Info)</span>
+                        <span class="more-info" data-customfield="Processing Time" data-processingtime="{{ product.metafields.custom.processing_time }}">(More Info)</span>
                       </div>
                     </div>
                   {% endif %}
@@ -1176,7 +1181,14 @@
                       </div>
                     </div>
                   </div>
-
+                  {% if product.metafields.custom.backorder == true and product.metafields.custom.back_order_availability_date %}
+                    <div class="backorder_container">
+                      <span>
+                        Backorder. Availability Date: Ships by 
+                        {{ product.metafields.custom.back_order_availability_date | date: "%m/%d/%Y" }}
+                      </span>
+                    </div>
+                  {% endif %}
                   <div class="product_installment">
                     {%- if product.quantity_price_breaks_configured? -%}
                       <div class="volume-pricing-note" id="Volume-Note-{{ section.id }}">
@@ -1363,13 +1375,19 @@
                     <div id="product_just_stars" class="reg"></div>
                   </div>
 
-                  <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                    {% if product.available == true %}
-                      <span>Available to Order</span>
-                    {% else %}
-                      <span>Out of stock</span>
-                    {% endif %}
-                  </div>
+                  {% if product.metafields.custom.backorder == true %}
+                    <div class="badge backorder-badge stock-badge">
+                       <span>Available to Pre-Order</span>
+                    </div>
+                  {% else %}
+                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
+                      {% if product.available == true %}
+                        <span>Available to Order</span>
+                      {% else %}
+                        <span>Out of stock</span>
+                      {% endif %}
+                    </div>
+                  {% endif %}
                 </div>
 
               {%- when 'sku' -%}
