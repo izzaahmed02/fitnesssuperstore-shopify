@@ -393,6 +393,9 @@ try {
 }
 
 function generatePayLaterText() {
+	if (!PayTomorrow)
+		return;
+	
 	let payLaterText = '';
 	const productPrice = getProductPrice();	
 	document.querySelector('square-placement').setAttribute('data-amount', productPrice);
