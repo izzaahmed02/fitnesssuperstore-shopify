@@ -1,38 +1,44 @@
-{% comment %} Product Tile Calculator snippet — shows only if required tile variants exist. {% endcomment %}
-
-{%- assign width_in = product.metafields.custom.width_in.value -%}
+{%- assign width_in  = product.metafields.custom.width_in.value  -%}
 {%- assign length_in = product.metafields.custom.length_in.value -%}
-{% assign tile_variants = '' %}
-{% assign tile_data = '' %}
-{% assign has_required_variants = false %}
+{%- assign tile_items = ''  -%}
 
-{% for v in product.variants %}
-  {% assign tile_type = v.metafields.custom.tile_type.value | downcase %}
-
-  {% if tile_type != blank %}
-    {% assign has_required_variants = true %}
-
-    {% capture item %}
-      "{{ tile_type }}": {
+{%- for v in product.variants -%}
+  {%- assign tileType = v.metafields.custom.tile_type.value | downcase | strip -%}
+  {%- if tileType != '' -%}
+    {%- capture item -%}
+      "{{ tileType }}": {
         "id": {{ v.id | json }},
         "price": {{ v.price | json }},
         "available": {{ v.available | json }}
       }
-    {% endcapture %}
+    {%- endcapture -%}
+    {%- if tile_items != '' -%}{% assign tile_items = tile_items | append: ',' %}{%- endif -%}
+    {%- assign tile_items = tile_items | append: item -%}
+  {%- endif -%}
+{%- endfor -%}
 
-    {% assign tile_data = tile_data | append: item %}
-    {% unless forloop.last %}{% assign tile_data = tile_data | append: ',' %}{% endunless %}
-  {% endif %}
-{% endfor %}
+{%- if tile_items == '' -%}
+  {%- assign tileTypeMetafield = product.metafields.custom.tile_type.value | downcase | strip -%}
+  {%- if tileTypeMetafield != '' -%}
+    {%- capture item -%}
+      "{{ tileTypeMetafield }}": {
+        "id": {{ product.id | json }},
+        "price": {{ product.price | json }},
+        "available": {{ product.available | json }}
+      }
+    {%- endcapture -%}
+    {%- assign tile_items = item -%}
+  {%- endif -%}
+{%- endif -%}
 
-{% if has_required_variants %}
-  {% assign has_required_variants = true %}
-  <script id="tile-variants-json" type="application/json">
-    { {{ tile_data }} }
-  </script>
-{% endif %}
+{%- unless tile_items == '' -%}
+<script id="tile-variants-json" type="application/json">
+  { {{ tile_items }} }
+</script>
+{%- endunless -%}
 
-{% if has_required_variants %}
+
+{% if tile_items != blank %}
   {{ 'component-tile-calculator.css' | asset_url | stylesheet_tag }}
   <tile-calculator class="tile-calculator" data-tile-width-in="{{ width_in | default: 24 }}" data-tile-length-in="{{ length_in | default: width_in | default: 24 }}" data-single-label="{{ 'sections.tile_calculator.single_variant_label' | t }}">
     <details class="tile-calculator__details" open>
