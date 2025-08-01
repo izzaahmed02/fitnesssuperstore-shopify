@@ -393,7 +393,7 @@ try {
 }
 
 function generatePayLaterText() {
-	if (PayTomorrow == 'undefined')
+	if (typeof PayTomorrow == 'undefined')
 		return;
 	
 	let payLaterText = '';
