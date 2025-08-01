@@ -62,14 +62,13 @@ class TileCalculator extends HTMLElement {
       setTimeout(() => {
         this.updateQuantity(0);
         this.updateCustomPrice({});
-
-        this.form.addEventListener('submit', this.onSubmitHandler.bind(this));
+        this.form.addEventListener('submit', this.onSubmitHandler.bind(this)); 
         this.disableAddToCartButton();
 
         this.enableBreakdownInputsRealtimeSync();
 
         this.initSingleVariantSync();
-      }, 2000);
+      }, 1000);
     });
   }
 
@@ -478,10 +477,9 @@ class TileCalculator extends HTMLElement {
     if (this.btn) this.btn.disabled = false;
   }
 
-  // Submit form manually with all calculated tile variant quantities
+    // Submit form manually with all calculated tile variant quantities
   async onSubmitHandler(e) {
     e.preventDefault();
-
     this.btn.setAttribute('aria-disabled', true);
     this.btn.classList.add('loading');
     this.btn.querySelector('.loading__spinner').classList.remove('hidden');
@@ -542,7 +540,22 @@ class TileCalculator extends HTMLElement {
     const response = await fetch(`${routes.cart_add_url}`, config);
 
     if (response.ok) {
-      // Update cart drawer using cart.js and published events
+      await this.renderCartDrawer();
+
+      // Reset loading states
+      this.resetStates();
+    } else {
+      // Handle error
+      console.warn('❌ Add to cart failed.');
+      this.btn.classList.remove('loading');
+      if (this.cart && this.cart.classList.contains('is-empty'))
+        this.cart.classList.remove('is-empty');
+      if (!this.error) this.btn.removeAttribute('aria-disabled');
+      this.btn.querySelector('.loading__spinner').classList.add('hidden');
+    }
+  }
+  
+  async renderCartDrawer() {
       const finalCartData = await fetch('/cart.js').then((res) => res.json());
       publish(PUB_SUB_EVENTS.cartUpdate, {
         source: 'tile-calculator',
@@ -561,22 +574,14 @@ class TileCalculator extends HTMLElement {
       if (this.cart?.renderContents) {
         this.cart.renderContents(parsedState);
       }
+  }
 
-      // Reset loading states
-      this.btn.classList.remove('loading');
-      if (this.cart && this.cart.classList.contains('is-empty'))
-        this.cart.classList.remove('is-empty');
-      if (!this.error) this.btn.removeAttribute('aria-disabled');
-      this.btn.querySelector('.loading__spinner').classList.add('hidden');
-    } else {
-      // Handle error
-      console.warn('❌ Add to cart failed.');
-      this.btn.classList.remove('loading');
-      if (this.cart && this.cart.classList.contains('is-empty'))
-        this.cart.classList.remove('is-empty');
-      if (!this.error) this.btn.removeAttribute('aria-disabled');
-      this.btn.querySelector('.loading__spinner').classList.add('hidden');
-    }
+  resetStates() {
+    this.btn.classList.remove('loading');
+    if (this.cart && this.cart.classList.contains('is-empty'))
+      this.cart.classList.remove('is-empty');
+    if (!this.error) this.btn.removeAttribute('aria-disabled');
+    this.btn.querySelector('.loading__spinner').classList.add('hidden');
   }
 }
 
