@@ -517,7 +517,6 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const scrollableContent = document.getElementById("scrollableContent");
-  const topScrollArrows = document.getElementById("topScrollArrows");
   const stickyScrollArrows = document.getElementById("stickyScrollArrows");
   const bottomScrollArrows = document.getElementById("bottomScrollArrows");
   const stickyHeader = document.getElementById("stickyHeader");
@@ -645,73 +644,6 @@ document.addEventListener("DOMContentLoaded", function () {
     title.style.height = maxHeight + "px";
   });
 });
-</script>
-
-
-
-{% else %}
-
-
-{{ 'main-article-compare.css' | asset_url | stylesheet_tag }}
-
-
-<div class="page-width">
-    <div class="comparison-main__wrapper">
-        <h1 class="comparison-main__title">
-            {{ page.title }}
-        </h1>
-        {{ page.content }}
-    </div>
-</div>
-
-
-<script>
-	document.addEventListener('DOMContentLoaded', () => {
-		const scrollArea = document.querySelector('.comparison-scroll-area');
-		const btnLeft = document.querySelector('.scroll-btn--left');
-		const btnRight = document.querySelector('.scroll-btn--right');
-		const tableHeaderRow = document.querySelector('.comparison-table thead tr');
-		const columns = tableHeaderRow.querySelectorAll('th:not(.sticky-col)');
-		const colCount = columns.length;
-		if (colCount <= 4) {
-			btnLeft.style.display = 'none';
-			btnRight.style.display = 'none';
-			return;
-		}
-		const firstCol = columns[0];
-		let scrollStep = firstCol.offsetWidth;
-
-		function updateArrows() {
-			if (scrollArea.scrollLeft <= 0) {
-				btnLeft.classList.add('disabled');
-			} else {
-				btnLeft.classList.remove('disabled');
-			}
-			const atRightEdge = scrollArea.scrollLeft + scrollArea.clientWidth >= scrollArea.scrollWidth - 1;
-			if (atRightEdge) {
-				btnRight.classList.add('disabled');
-			} else {
-				btnRight.classList.remove('disabled');
-			}
-		}
-
-		updateArrows();
-		scrollArea.addEventListener('scroll', updateArrows);
-		btnLeft.addEventListener('click', () => {
-			if (btnLeft.classList.contains('disabled')) return;
-			scrollArea.scrollBy({
-				left: -scrollStep,
-				behavior: 'smooth'
-			});
-		});
-		btnRight.addEventListener('click', () => {
-			if (btnRight.classList.contains('disabled')) return;
-			scrollArea.scrollBy({
-				left: scrollStep,
-				behavior: 'smooth'
-			});
-		});
-	});
 </script>
 
   {% endif %}
