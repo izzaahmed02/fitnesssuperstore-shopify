@@ -104,13 +104,13 @@
     {%- assign first_type = true -%}
 
     {%- for v in product.variants -%}
-      {%- assign tt = v.metafields.custom.tile_type.value | downcase | strip -%}
-      {%- if tt != '' -%}
+      {%- assign tileType = v.metafields.custom.tile_type.value | downcase | strip -%}
+      {%- if tileType != '' -%}
         {%- if first_type -%}
-          {%- assign tile_types = tt -%}
+          {%- assign tile_types = tileType -%}
           {%- assign first_type = false -%}
         {%- else -%}
-          {%- assign tile_types = tile_types | append: ',' | append: tt -%}
+          {%- assign tile_types = tile_types | append: ',' | append: tileType -%}
         {%- endif -%}
       {%- endif -%}
     {%- endfor -%}
@@ -130,13 +130,13 @@
       </p>
 
       <div class="tile-calculator__fields-group tile-calculator__fields-group--equal-cols">
-        {%- for tt in tile_arr -%}
+        {%- for tileType in tile_arr -%}
           <div class="tile-calculator__field">
             <label class="tile-calculator__label">
-              {{- tt | capitalize }} {{ block.settings.tile_type_suffix -}}
+              {{- tileType | capitalize }} {{ block.settings.tile_type_suffix -}}
             </label>
             <input
-              id="{{ tt }}-tiles"
+              id="{{ tileType }}-tiles"
               inputmode="numeric"
               pattern="[0-9]*"
               type="number"
