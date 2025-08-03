@@ -68,14 +68,10 @@
     transition: transform 0.3s ease;
     overflow-x: auto;
     overflow-y: hidden;
-    opacity: 0;
-    visibility: hidden;
   }
 
   .compareChart .sticky-header.visible {
     transform: translateY(0);
-    opacity: 1;
-    visibility: visible;
   }
 
   .compareChart .sticky-header table {
@@ -532,20 +528,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const tableBottom = tableRect.bottom;
     const originalHeaderBottom = originalHeaderRect.bottom;
     
-    // Get site header height dynamically - try multiple selectors for Shopify themes
-    let siteHeader = document.querySelector('header') || 
-                     document.querySelector('.header') || 
-                     document.querySelector('#header') ||
-                     document.querySelector('.site-header') ||
-                     document.querySelector('.main-header') ||
-                     document.querySelector('[role="banner"]');
-    
-    const siteHeaderHeight = siteHeader ? siteHeader.offsetHeight : 0;
+    // Get section header height dynamically
+    const sectionHeader = document.querySelector('.section-header');
+    const sectionHeaderHeight = sectionHeader ? sectionHeader.offsetHeight : 0;
     
     // Show sticky header only when:
-    // 1. Original header bottom is above the site header bottom (completely hidden)
+    // 1. Original header bottom is above the section header bottom (completely hidden)
     // 2. We haven't scrolled past the entire table
-    const shouldShowSticky = originalHeaderBottom <= siteHeaderHeight && tableBottom > (siteHeaderHeight + 100);
+    const shouldShowSticky = originalHeaderBottom <= sectionHeaderHeight && tableBottom > (sectionHeaderHeight + 100);
     
     if (shouldShowSticky) {
       if (!stickyHeader.classList.contains('visible')) {
@@ -555,7 +545,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const scrollableRect = scrollableContent.getBoundingClientRect();
         stickyHeader.style.left = scrollableRect.left + 'px';
         stickyHeader.style.width = scrollableRect.width + 'px';
-        stickyHeader.style.top = siteHeaderHeight + 'px';
+        stickyHeader.style.top = sectionHeaderHeight + 'px';
       }
     } else {
       if (stickyHeader.classList.contains('visible')) {
