@@ -100,32 +100,50 @@
         <p id="calc-result" class="tile-calculator__result"></p>
       </div>
     </details>
+    {%- assign tile_types = '' -%}
+    {%- assign first_type = true -%}
 
-    <div class="tile-calculator__breakdown{% if product.variants.size == 1 %} hidden{% endif %}" id="types-breakdown">
+    {%- for v in product.variants -%}
+      {%- assign tileType = v.metafields.custom.tile_type.value | downcase | strip -%}
+      {%- if tileType != '' -%}
+        {%- if first_type -%}
+          {%- assign tile_types = tileType -%}
+          {%- assign first_type = false -%}
+        {%- else -%}
+          {%- assign tile_types = tile_types | append: ',' | append: tileType -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+
+    {%- if tile_types == '' -%}
+      {%- assign pt = product.metafields.custom.tile_type.value | downcase | strip -%}
+      {%- if pt != '' -%}
+        {%- assign tile_types = pt -%}
+      {%- endif -%}
+    {%- endif -%}
+
+    {%- assign tile_arr = tile_types | split: ',' | uniq -%}
+
+    <div class="tile-calculator__breakdown{% if tile_arr.size == 0 %} hidden{% endif %}" id="types-breakdown">
       <p class="tile-calculator__breakdown-title">
         <strong>{{ block.settings.breakdown_heading }}</strong>
       </p>
-      <div class="tile-calculator__fields-group tile-calculator__fields-group--equal-cols">
-        {% for variant in product.variants %}
-          {% assign tile_type = variant.metafields.custom.tile_type.value | downcase %}
 
-          {% if tile_type != blank %}
-            <div class="tile-calculator__field">
-              <label class="tile-calculator__label">
-                {{- tile_type | capitalize }}
-                {{ block.settings.tile_type_suffix -}}
-              </label>
-              <input
-                id="{{ tile_type }}-tiles"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                type="number"
-                min="0"
-                value="0"
-              >
-            </div>
-          {% endif %}
-        {% endfor %}
+      <div class="tile-calculator__fields-group tile-calculator__fields-group--equal-cols">
+        {%- for tileType in tile_arr -%}
+          <div class="tile-calculator__field">
+            <label class="tile-calculator__label">
+              {{- tileType | capitalize }} {{ block.settings.tile_type_suffix -}}
+            </label>
+            <input
+              id="{{ tileType }}-tiles"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              type="number"
+              min="0"
+              value="0">
+          </div>
+        {%- endfor -%}
       </div>
     </div>
   </tile-calculator>
