@@ -523,28 +523,40 @@ document.addEventListener("DOMContentLoaded", function () {
   // Handle sticky header visibility and positioning based on page scroll
   function handleStickyHeader() {
     const tableRect = mainTable.getBoundingClientRect();
-    const originalHeaderRect = mainTable.querySelector('thead').getBoundingClientRect();
-    const tableTop = tableRect.top;
+    const originalHeader = mainTable.querySelector('thead');
+    const originalHeaderRect = originalHeader.getBoundingClientRect();
     const tableBottom = tableRect.bottom;
-    const originalHeaderTop = originalHeaderRect.top;
+    const originalHeaderBottom = originalHeaderRect.bottom;
     
-    // Get section header height dynamically
-    const sectionHeader = document.querySelector('.section-header');
-    const sectionHeaderHeight = sectionHeader ? sectionHeader.offsetHeight : 0;
+    // Get site header height dynamically - try multiple selectors for Shopify themes
+    let siteHeader = document.querySelector('header') || 
+                     document.querySelector('.header') || 
+                     document.querySelector('#header') ||
+                     document.querySelector('.site-header') ||
+                     document.querySelector('.main-header') ||
+                     document.querySelector('[role="banner"]');
+    
+    const siteHeaderHeight = siteHeader ? siteHeader.offsetHeight : 0;
     
     // Show sticky header only when:
-    // 1. Original header is scrolled above the section header (not visible)
+    // 1. Original header bottom is above the site header bottom (completely hidden)
     // 2. We haven't scrolled past the entire table
-    if (originalHeaderTop < sectionHeaderHeight && tableBottom > (150 + sectionHeaderHeight)) {
-      stickyHeader.classList.add('visible');
-      
-      // Get the exact position of the scrollable content area
-      const scrollableRect = scrollableContent.getBoundingClientRect();
-      stickyHeader.style.left = scrollableRect.left + 'px';
-      stickyHeader.style.width = scrollableRect.width + 'px';
-      stickyHeader.style.top = sectionHeaderHeight + 'px';
+    const shouldShowSticky = originalHeaderBottom <= siteHeaderHeight && tableBottom > (siteHeaderHeight + 100);
+    
+    if (shouldShowSticky) {
+      if (!stickyHeader.classList.contains('visible')) {
+        stickyHeader.classList.add('visible');
+        
+        // Get the exact position of the scrollable content area
+        const scrollableRect = scrollableContent.getBoundingClientRect();
+        stickyHeader.style.left = scrollableRect.left + 'px';
+        stickyHeader.style.width = scrollableRect.width + 'px';
+        stickyHeader.style.top = siteHeaderHeight + 'px';
+      }
     } else {
-      stickyHeader.classList.remove('visible');
+      if (stickyHeader.classList.contains('visible')) {
+        stickyHeader.classList.remove('visible');
+      }
     }
   }
 
