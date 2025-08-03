@@ -363,6 +363,7 @@ text-transform: uppercase;
         <tr>
           <th class="feature-col"></th>
           {% assign products = page.metafields.custom.comparison_products.value %}
+          {% comment %}
           {% assign feature_names = '' %}
           {% assign product_features_map = '' %}
           {% for product in products %}
@@ -378,6 +379,36 @@ text-transform: uppercase;
             {% assign product_features_map = product_features_map | append: feature_map | append: '##' %}
           {% endfor %}
           {% assign feature_names = feature_names | split: '||' | uniq %}
+          {% endcomment %}
+           {% assign feature_names = '' %}
+{% assign product_features_map = '' %}
+
+{% for product in products %}
+  {% assign feature_map = '' %}
+  {% for feature in product.features.value %}
+    {% assign fname = feature.name %}
+    {% assign fvalue = feature.value %}
+    
+    {% assign current_features = feature_names | split: '||' %}
+    {% assign already_exists = false %}
+
+    {% for existing in current_features %}
+      {% if existing == fname %}
+        {% assign already_exists = true %}
+      {% endif %}
+    {% endfor %}
+
+    {% unless already_exists %}
+      {% assign feature_names = feature_names | append: fname | append: '||' %}
+    {% endunless %}
+
+    {% assign feature_map = feature_map | append: fname | append: '::' | append: fvalue | append: '||' %}
+  {% endfor %}
+  {% assign product_features_map = product_features_map | append: feature_map | append: '##' %}
+{% endfor %}
+
+{% assign feature_names = feature_names | split: '||' | uniq | reject: '' %}
+
           {% assign product_feature_blocks = product_features_map | split: '##' | reject: '' %}
 
           {% for product in products %}          
