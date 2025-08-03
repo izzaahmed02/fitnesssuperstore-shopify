@@ -329,18 +329,12 @@ text-transform: uppercase;
 </style>
 
   
-
 <div class="comparisonDescp">
 <h1 class="main-page-title page-title customTitle{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
     {{ page.title | escape }}
   </h1>
   <div class="customContent">{{ page.content }}</div>
   </div>
-
-
-
-
-
 
 <div class="comparison-chart-outer compareChart">
   <div class="scroll-arrows">
@@ -359,8 +353,6 @@ text-transform: uppercase;
   {% endfor %}
 </colgroup>
 
-
-
       <thead>
         <tr>
           <th class="feature-col"></th>
@@ -372,14 +364,15 @@ text-transform: uppercase;
             {% for feature in product.features.value %}
               {% assign fname = feature.name %}
               {% assign fvalue = feature.value %}
-              {% unless feature_names contains fname %}
-                {% assign feature_names = feature_names | append: fname | append: '||' %}
+              {% assign fname_with_delimiters = '|||' | append: fname | append: '|||' %}
+              {% unless feature_names contains fname_with_delimiters %}
+                {% assign feature_names = feature_names | append: '|||' | append: fname | append: '|||' %}
               {% endunless %}
               {% assign feature_map = feature_map | append: fname | append: '::' | append: fvalue | append: '||' %}
             {% endfor %}
             {% assign product_features_map = product_features_map | append: feature_map | append: '##' %}
           {% endfor %}
-          {% assign feature_names = feature_names | split: '||' | uniq %}
+          {% assign feature_names = feature_names | split: '|||' | uniq | compact %}
           {% assign product_feature_blocks = product_features_map | split: '##' | reject: '' %}
 
           {% for product in products %}          
@@ -429,7 +422,6 @@ text-transform: uppercase;
     <button class="scroll-btn right bottom" aria-label="Scroll right">&rarr;</button>
   </div>
 </div>
-
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -500,7 +492,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
-
 
 
 
