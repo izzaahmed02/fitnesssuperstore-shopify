@@ -7,32 +7,35 @@
     {% endif %}
   </div>
 
-  <div class="category-tab-content">     
+  <div class="category-tab-content">
     {% for block in section.blocks %}
-      {% assign desktop_image = block.settings.image %}
-{% assign mobile_image = block.settings.mobile_image %}
-<div class="category-card">
-  <a href="{{ block.settings.link }}">
-    <div 
-      class="card-image-wrapper"
-      style="background-image: url({{ desktop_image | image_url: width: 800 }});"
-    >
-      <picture>
-        {% if mobile_image != blank %}
-          <source media="(max-width: 768px)" srcset="{{ mobile_image | image_url: width: 600 }}">
-        {% endif %}
-        <img 
-          src="{{ desktop_image | image_url: width: 800 }}" 
-          alt="{{ block.settings.title }}"
-        >
-      </picture>
-      <div class="image-title">
-        <p>{{ block.settings.title }}</p>
+      {%- assign desktop_image = block.settings.image -%}
+      {%- assign mobile_image = block.settings.mobile_image -%}
+      <div class="category-card">
+        <a href="{{ block.settings.link }}">
+          
+          <div class="card-image-wrapper">
+            <picture>
+              {% if mobile_image != blank %}
+                <source
+                  media="(max-width: 768px)"
+                  srcset="{{ mobile_image | image_url: width: 600 }}"
+                >
+              {% endif %}
+              <img
+                src="{{ desktop_image | image_url: width: 800 }}"
+                alt="{{ block.settings.title | escape }}"
+                loading="lazy"
+                width="{{ desktop_image.width }}"
+                height="{{ desktop_image.height }}"
+              >
+            </picture>
+            <div class="image-title">
+              <h3>{{ block.settings.title }}</h3>
+            </div>
+          </div>
+        </a>
       </div>
-    </div>
-  </a>
-</div>
-
     {% endfor %}
   </div>
 </div>
@@ -67,7 +70,8 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title"
+          "label": "Title",
+          "default": "Category Title"
         },
         {
           "type": "url",
