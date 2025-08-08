@@ -58,7 +58,7 @@ function createAssemblySelect() {
 	}
 	const options = assembly.querySelectorAll('.ap-options__swatch label');
 	let header = document.createElement('div');
-	header.innerHTML='<h3 id="double-assembly-header" class="avp-heading ">Assembly &amp; Room of Choice Installation Needed?</h3>'
+	header.innerHTML='<h3 id="double-assembly-header" class="avp-heading ap-options__heading ">Assembly &amp; Room of Choice Installation Needed?</h3>'
 	document.querySelectorAll('product-form')[0].before(header);
 	let doubledSelect = document.createElement('select');
 	doubledSelect.setAttribute('id', "double-assembly-input");
