@@ -398,8 +398,7 @@ function outsideClose(e) {
 		});
 	});
 
-	// Removing Attributes from Compare Products Action Buttons to resolve redirect issue - Usman
-            document.querySelector('.compare-products-actions a').setAttribute('href', '');
+
 });
 
 
