@@ -1,23 +1,53 @@
 window.addEventListener('DOMContentLoaded', async () => {
-	let faqItems = document.querySelectorAll('.faq__item');
-	if (faqItems.length) {
-		faqItems.forEach((item) => {
-			let contentELem = item.querySelector('.faq__item-content');
-			let btn = item.querySelector('.faq__item-btn');
+	setTimeout(function () {
+    console.log("Removing link from Compare Button");
+    var compareBtn = document.querySelector('.compare-products-actions a');
+    if (compareBtn) {
+        compareBtn.setAttribute('href', '');
+    }
+}, 3000); 
 
-			btn.addEventListener('click', () => {
-				if (!btn.classList.contains('opened')) {
-					btn.classList.add('opened');
-					let height = contentELem.scrollHeight;
-					contentELem.style.height = `${height}px`;
-				} else {
-					btn.classList.remove('opened');
-					contentELem.style.height = '0px';
-				}
-				item.classList.toggle('opened');
-			})
-		})
-	}
+	document.querySelectorAll('.faq').forEach((faqSection) => {
+  const faqItems = faqSection.querySelectorAll('.faq__item');
+
+  faqItems.forEach((item) => {
+    const contentElem = item.querySelector('.faq__item-content');
+    const btn = item.querySelector('.faq__item-btn');
+
+    // Make it smooth by default
+    contentElem.style.overflow = 'hidden';
+    contentElem.style.maxHeight = '0';
+    contentElem.style.transition = 'max-height 0.3s ease';
+
+    // Watch for height changes inside
+    const resizeObserver = new ResizeObserver(() => {
+      if (btn.classList.contains('opened')) {
+        contentElem.style.maxHeight = contentElem.scrollHeight + 'px';
+      }
+    });
+    resizeObserver.observe(contentElem);
+
+    btn.addEventListener('click', () => {
+      const isOpening = !btn.classList.contains('opened');
+
+      // Close all in section
+      faqItems.forEach((otherItem) => {
+        const otherBtn = otherItem.querySelector('.faq__item-btn');
+        const otherContent = otherItem.querySelector('.faq__item-content');
+        otherBtn.classList.remove('opened');
+        otherContent.style.maxHeight = null;
+        otherItem.classList.remove('opened');
+      });
+
+      // Open clicked
+      if (isOpening) {
+        btn.classList.add('opened');
+        contentElem.style.maxHeight = contentElem.scrollHeight + 'px';
+        item.classList.add('opened');
+      }
+    });
+  });
+});
 
 	let tabsSections = document.querySelectorAll('[data-tabs-section]');
 
