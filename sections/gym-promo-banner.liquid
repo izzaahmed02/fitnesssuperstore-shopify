@@ -1,0 +1,316 @@
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --text-color: {{ section.settings.text_color }};
+    --button-bg-color: {{ section.settings.button_bg_color }};
+    --button-text-color: {{ section.settings.button_text_color }};
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  .gym-promo-banner {
+    position: relative;
+    overflow: hidden;
+    max-height: 400px;
+    padding_top: 40px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .gym-promo-banner__container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .gym-promo-banner__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    min-height: 400px;
+  }
+
+  .gym-promo-banner__placeholder {
+    width: 100%;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gym-promo-banner__content {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 30px;
+    text-align: center;
+    color: var(--text-color);
+  }
+
+  .gym-promo-banner__heading {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0 0 16px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+  }
+
+  .gym-promo-banner__subheading {
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0 0 32px 0;
+    opacity: 0.9;
+    text-align: end;
+    color: white !important;
+  }
+
+  .gym-promo-banner__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    padding: 14px 28px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    border: 1px solid var(--button-bg-color);
+    min-width: 180px;
+    margin: 0 auto;
+  }
+
+  .gym-promo-banner__button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    background-color: rgb(218, 214, 214);
+    border: 1px solid rgb(218, 214, 214);;
+  }
+
+  @media screen and (min-width: 750px) {
+    .gym-promo-banner {
+      max-height: 500px;
+    }
+
+    .gym-promo-banner__image {
+      max-height: 500px;
+    }
+
+    .gym-promo-banner__content {
+      padding: 60px 40px;
+      text-align: left;
+    }
+
+    .gym-promo-banner__heading {
+      font-size: 32px;
+    }
+
+    .gym-promo-banner__subheading {
+        font-size: 13px;
+        text-align: end;
+    }
+
+    .gym-promo-banner__button {
+      margin: 0;
+      align-self: flex-end;
+      padding: 16px 32px;
+      font-size: 16px;
+      min-width: 200px;
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .gym-promo-banner {
+      max-height: 600px;
+    }
+
+    .gym-promo-banner__image {
+      max-height: 600px;
+    }
+
+    .gym-promo-banner__content {
+      padding: 80px 60px;
+    }
+
+    .gym-promo-banner__heading {
+      font-size: 50px;
+      color: white !important;
+    }
+
+    .gym-promo-banner__subheading {
+      font-size: 13px;
+      text-align: end;
+    }
+  }
+
+  @media screen and (max-width: 749px) {  
+    .page-width {
+      margin-top: 2rem;
+    }
+
+    .gym-promo-banner__content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      justify-content: flex-end;
+      padding: 40px 0;
+    }
+
+    .gym-promo-banner__heading {
+      font-size: 20px;
+      color: white;
+    }
+
+    .gym-promo-banner__subheading {
+      font-size: 12px;
+      margin-bottom: 20px;
+      text-align: end;
+      color: white !important;
+    }
+
+    .gym-promo-banner__button {
+      padding: 12px 24px;
+      font-size: 14px;
+      min-width: 160px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="gym-promo-banner section-{{ section.id }} page-width">
+  <div class="gym-promo-banner__container">
+    {% if section.settings.image != blank %}
+      {{
+        section.settings.image
+        | image_url: width: 1200
+        | image_tag:
+          class: 'gym-promo-banner__image',
+          loading: 'lazy',
+          alt: section.settings.image.alt | escape
+      }}
+    {% else %}
+      <div class="gym-promo-banner__placeholder">
+        <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&h=600&fit=crop" alt="Gym Machines Banner" class="gym-promo-banner__image" width="1200" height="600">
+      </div>
+    {% endif %}
+    
+    <div class="gym-promo-banner__content">
+      {% if section.settings.heading != blank %}
+        <h2 class="gym-promo-banner__heading">{{ section.settings.heading }}</h2>
+      {% endif %}
+      
+      {% if section.settings.subheading != blank %}
+        <p class="gym-promo-banner__subheading">{{ section.settings.subheading }}</p>
+      {% endif %}
+      
+      {% if section.settings.button_label != blank %}
+        <a href="https://fitnesssuperstore.roomplanner.com/" class="button gym-promo-banner__button">
+          {{ section.settings.button_label }}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Gym Promo Banner",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Equipment Image"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "BUILD YOUR SPACE TODAY."
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "CREATE, BUILD AND VISUALISE WITH GYM DESIGNER"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button Label",
+      "default": "Start Designing"
+    },
+
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "button_bg_color",
+      "label": "Button Background Color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button Text Color",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 60
+    }
+  ],
+  "presets": [
+    {
+      "name": "Gym Promo Banner"
+    }
+  ]
+}
+{% endschema %} 

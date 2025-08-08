@@ -1,0 +1,298 @@
+<div class="feature-boxes-section">
+  <div class="page-width">
+    <h2 class="feature-boxes-title">{{ section.settings.title | escape }}</h2>
+    <div class="feature-boxes-container">
+      {% for i in (1..3) %}
+        {% assign icon_key = 'feature_' | append: i | append: '_icon' %}
+        {% assign title_key = 'feature_' | append: i | append: '_title' %}
+        {% assign description_key = 'feature_' | append: i | append: '_description' %}
+        {% assign disabled_key = 'feature_' | append: i | append: '_disabled' %}
+        
+        <div class="feature-box {% if section.settings[disabled_key] %}disabled{% endif %}">
+          <div class="feature-icon">
+            {% if section.settings[icon_key] != blank %}
+              {{ section.settings[icon_key] | image_url: width: 60 | image_tag:
+                loading: 'lazy',
+                class: 'feature-icon-image',
+                alt: section.settings[title_key] | escape
+              }}
+            {% else %}
+              {% case i %}
+                {% when 1 %}
+                  <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="3" stroke="#F1592A" stroke-width="2" fill="none"/>
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#F1592A" stroke-width="2" fill="none"/>
+                  </svg>
+                {% when 2 %}
+                  <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 17L17 7" stroke="#F1592A" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M7 7h10v10" stroke="#F1592A" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                {% when 3 %}
+                  <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="8" r="5" stroke="#F1592A" stroke-width="2" fill="none"/>
+                    <path d="M20 21c0-4.4-3.6-8-8-8s-8 3.6-8 8" stroke="#F1592A" stroke-width="2" fill="none"/>
+                    <circle cx="18" cy="6" r="2" fill="#F1592A"/>
+                  </svg>
+              {% endcase %}
+            {% endif %}
+          </div>
+          <h3 class="feature-title">{{ section.settings[title_key] | escape }}</h3>
+          <p class="feature-description">{{ section.settings[description_key] | escape }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Gym Designer Features",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section Title",
+      "default": "Why Use Our Platform?"
+    },
+    {
+      "type": "header",
+      "content": "Feature 1"
+    },
+    {
+      "type": "image_picker",
+      "id": "feature_1_icon",
+      "label": "Feature 1 Icon"
+    },
+    {
+      "type": "text",
+      "id": "feature_1_title",
+      "label": "Feature 1 Title",
+      "default": "Visualize in 3D"
+    },
+    {
+      "type": "textarea",
+      "id": "feature_1_description",
+      "label": "Feature 1 Description",
+      "default": "See exactly how equipment will fit and look in your space before you make a purchase."
+    },
+    {
+      "type": "checkbox",
+      "id": "feature_1_disabled",
+      "label": "Disable Feature 1",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Feature 2"
+    },
+    {
+      "type": "image_picker",
+      "id": "feature_2_icon",
+      "label": "Feature 2 Icon"
+    },
+    {
+      "type": "text",
+      "id": "feature_2_title",
+      "label": "Feature 2 Title",
+      "default": "Maximize Your Space"
+    },
+    {
+      "type": "textarea",
+      "id": "feature_2_description",
+      "label": "Feature 2 Description",
+      "default": "Optimize your floor plan for safety, traffic flow, and an excellent workout experience."
+    },
+    {
+      "type": "checkbox",
+      "id": "feature_2_disabled",
+      "label": "Disable Feature 2",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Feature 3"
+    },
+    {
+      "type": "image_picker",
+      "id": "feature_3_icon",
+      "label": "Feature 3 Icon"
+    },
+    {
+      "type": "text",
+      "id": "feature_3_title",
+      "label": "Feature 3 Title",
+      "default": "Expert Guidance"
+    },
+    {
+      "type": "textarea",
+      "id": "feature_3_description",
+      "label": "Feature 3 Description",
+      "default": "Get personalized recommendations from our team of design specialists to fit your goals and budget."
+    },
+    {
+      "type": "checkbox",
+      "id": "feature_3_disabled",
+      "label": "Disable Feature 3",
+      "default": false
+    }
+  ],
+  "presets": [
+    {
+      "name": "Gym Designer Features"
+    }
+  ]
+}
+{% endschema %}
+
+<style>
+.feature-boxes-section {
+  padding: 60px 0;
+  background-color: #ffffff;
+}
+
+.feature-boxes-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 50px;
+  color: #333;
+  font-family: Arial, sans-serif;
+}
+
+.feature-boxes-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-box {
+  background-color: #f8f8f8;
+  border-radius: 12px;
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+}
+
+.feature-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.feature-box.disabled {
+  opacity: 0.6;
+}
+
+.feature-box.disabled::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 40%, #ff0000 40%, #ff0000 60%, transparent 60%);
+  background-size: 4px 4px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.feature-box.disabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(-45deg, transparent 40%, #ff0000 40%, #ff0000 60%, transparent 60%);
+  background-size: 4px 4px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.feature-icon {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+}
+
+.feature-icon-image {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.feature-icon-placeholder {
+  width: 60px;
+  height: 60px;
+  background-color: #e0e0e0;
+  border-radius: 50%;
+}
+
+.feature-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #333;
+  font-family: Arial, sans-serif;
+}
+
+.feature-description {
+  font-size: 1.4rem;
+  line-height: 1.5;
+  color: #666;
+  font-family: Arial, sans-serif;
+}
+
+.feature-icon-svg {
+  width: 40px;
+  height: 40px;
+}
+
+@media screen and (max-width: 989px) {
+  .feature-boxes-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  
+  .feature-boxes-title {
+    font-size: 2rem;
+    margin-bottom: 40px;
+  }
+}
+
+@media screen and (max-width: 749px) {
+  .feature-boxes-section {
+    padding: 40px 0;
+  }
+  
+  .feature-boxes-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .feature-boxes-title {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+  }
+  
+  .feature-box {
+    padding: 25px 15px;
+  }
+  
+  .feature-title {
+    font-size: 1.2rem;
+  }
+  
+  .feature-description {
+    font-size: 0.9rem;
+  }
+}
+</style> 
