@@ -131,6 +131,27 @@
     </div>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('[id^="shopify-section-"]').forEach(function(section) {
+    // Make sure we only target collapsible-content sections
+    if (!section.querySelector('.collapsible-content')) return;
+
+    section.querySelectorAll('.accordion details').forEach(function(details) {
+      details.addEventListener('toggle', function() {
+        if (details.open) {
+          // Close all other details in the same section
+          section.querySelectorAll('.accordion details').forEach(function(other) {
+            if (other !== details) {
+              other.removeAttribute('open');
+            }
+          });
+        }
+      });
+    });
+  });
+});
+</script>
 
 <script type="application/ld+json">
 {
