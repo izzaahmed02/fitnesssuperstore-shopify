@@ -11,14 +11,9 @@
     {% for block in section.blocks %}
       {%- assign desktop_image = block.settings.image -%}
       {%- assign mobile_image = block.settings.mobile_image -%}
-
-      {%- assign page_handle = block.settings.link | split: '/' | last -%}
-      {%- assign linked_page = pages[page_handle] -%}
-
-      {% assign link_title = linked_page.title | default: block.settings.title | default: page_handle %}
-
       <div class="category-card">
-        <a href="{{ block.settings.link }}" aria-label="View {{ link_title }}">
+        <a href="{{ block.settings.link }}">
+          
           <div class="card-image-wrapper">
             <picture>
               {% if mobile_image != blank %}
@@ -29,14 +24,14 @@
               {% endif %}
               <img
                 src="{{ desktop_image | image_url: width: 800 }}"
-                alt="{{ link_title | escape }}"
+                alt="{{ desktop_image.alt | escape }}"
                 loading="lazy"
                 width="{{ desktop_image.width }}"
                 height="{{ desktop_image.height }}"
               >
             </picture>
             <div class="image-title">
-              <h3>{{ link_title }}</h3>
+              <h3>{{ block.settings.title }}</h3>
             </div>
           </div>
         </a>
