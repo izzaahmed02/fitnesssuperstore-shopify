@@ -157,7 +157,7 @@ class ProductGallery extends HTMLElement {
       let hoverTimer;
       btn.addEventListener('mouseenter', () => {
         
-        if (this.activeMediaId === mediaId) {
+        if (this.activeMediaId === mediaId || isVideoThumb) {
          
           return;
         }

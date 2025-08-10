@@ -1005,7 +1005,7 @@
               "name": "{% if product.vendor %}{{ product.vendor | escape }}{% else %}{{ shop.name | escape }}{% endif %}"
             },
             "image": "{{ product.featured_image | img_url: '800x800' | absolute_url }}",
-            "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{{product.metafields.custom.condition_state}}Condition{% else %}NewCondition{% endif %}",
+            "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is'%}UsedCondition {%else%} {{product.metafields.custom.condition_state}}Condition{%endif%}{% else %}NewCondition{% endif %}",
             "offers": {
               "@type": "Offer",
               "url": "https://{{ shop.domain }}{{ product.url | absolute_url }}",
