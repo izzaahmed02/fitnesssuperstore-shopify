@@ -5,11 +5,11 @@
     color: #ffffff;
     text-align: center;
     padding: 60px 20px;
+    position: relative;
   }
 
   .section-{{ section.id }}-padding .footer-gym__content {
     padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
-    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
   }
 
   .footer-gym__content {
@@ -50,14 +50,62 @@
     transform: translateY(-2px);
   }
 
+  .footer-gym__contact-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .footer-gym__contact-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #ffffff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    white-space: nowrap;
+    min-width: max-content;
+  }
+
+  .footer-gym__contact-item:hover {
+    opacity: 0.8;
+  }
+
+  .footer-gym__contact-icon {
+    width: 14px;
+    height: 14px;
+    fill: #ffffff;
+    flex-shrink: 0;
+  }
+
+  .footer-gym__contact-text {
+    color: #ffffff;
+  }
+
   @media screen and (min-width: 750px) {
     .footer-gym {
       margin-top: {{ section.settings.margin_top }}px;
+      padding: 60px 20px 0 20px;
     }
 
     .section-{{ section.id }}-padding .footer-gym__content {
       padding-top: {{ section.settings.padding_top }}px;
-      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+
+    .footer-gym__content {
+      padding-bottom: 90px;
     }
 
     .footer-gym__headline {
@@ -67,11 +115,29 @@
     .footer-gym__subtext {
       font-size: 20px;
     }
+
+    .footer-gym__contact-bar {
+      padding: 20px 30px;
+      gap: 50px;
+    }
+
+    .footer-gym__contact-item {
+      font-size: 13px;
+    }
+
+    .footer-gym__contact-icon {
+      width: 16px;
+      height: 16px;
+    }
   }
 
   @media screen and (max-width: 749px) {
     .footer-gym {
-      padding: 40px 20px;
+      padding: 40px 20px 0 20px;
+    }
+
+    .footer-gym__content {
+      padding-bottom: 70px;
     }
 
     .footer-gym__headline {
@@ -87,11 +153,30 @@
       padding: 14px 28px;
       font-size: 15px;
     }
+
+    .footer-gym__contact-bar {
+      padding: 14px 16px;
+      gap: 20px;
+      justify-content: flex-start;
+    }
+
+    .footer-gym__contact-item {
+      font-size: 11px;
+    }
+
+    .footer-gym__contact-icon {
+      width: 13px;
+      height: 13px;
+    }
   }
 
   @media screen and (max-width: 480px) {
     .footer-gym {
-      padding: 32px 16px;
+      padding: 32px 16px 0 16px;
+    }
+
+    .footer-gym__content {
+      padding-bottom: 60px;
     }
 
     .footer-gym__headline {
@@ -107,6 +192,21 @@
       padding: 12px 24px;
       font-size: 14px;
     }
+
+    .footer-gym__contact-bar {
+      padding: 12px 14px;
+      gap: 15px;
+      justify-content: flex-start;
+    }
+
+    .footer-gym__contact-item {
+      font-size: 10px;
+    }
+
+    .footer-gym__contact-icon {
+      width: 12px;
+      height: 12px;
+    }
   }
 {%- endstyle -%}
 
@@ -117,6 +217,26 @@
     {%- if section.settings.button_text != blank -%}
       <a href="{{ section.settings.button_url | default: '#' }}" class="footer-gym__button">{{ section.settings.button_text }}</a>
     {%- endif -%}
+  </div>
+  
+  <div class="footer-gym__contact-bar">
+    <a href="tel:{{ section.settings.phone_number | default: '+1-925-215-2927' | replace: '-', '' | replace: '(', '' | replace: ')', '' | replace: ' ', '' }}" class="footer-gym__contact-item">
+      <svg class="footer-gym__contact-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+      </svg>
+      <span class="footer-gym__contact-text">
+        {{ section.settings.phone_number | default: '+1-925-215-2927' }}
+      </span>
+    </a>
+    
+    <a href="mailto:{{ section.settings.email_address | default: 'sales@fitnesssuperstore.com' }}" class="footer-gym__contact-item">
+      <svg class="footer-gym__contact-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+      </svg>
+      <span class="footer-gym__contact-text">
+        {{ section.settings.email_address | default: 'sales@fitnesssuperstore.com' }}
+      </span>
+    </a>
   </div>
 </div>
 
@@ -151,6 +271,22 @@
       "type": "url",
       "id": "button_url",
       "label": "Button URL"
+    },
+    {
+      "type": "header",
+      "content": "Contact Information"
+    },
+    {
+      "type": "text",
+      "id": "phone_number",
+      "label": "Phone Number",
+      "default": "+1-925-215-2927"
+    },
+    {
+      "type": "text",
+      "id": "email_address",
+      "label": "Email Address",
+      "default": "sales@fitnesssuperstore.com"
     },
     {
       "type": "header",
