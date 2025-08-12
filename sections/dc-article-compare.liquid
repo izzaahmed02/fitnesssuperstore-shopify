@@ -1,8 +1,21 @@
-{%  if page.metafields.custom.comparison_products.value %}
 
 <style>
 
-  .compareChart .sticky-header {
+  .compareChart .comparison-table a{
+  text-decoration: underline;
+}
+
+.compareChart .comparison-table li{
+list-style: disc;
+margin-left: 5px;
+}
+
+.compareChart .comparison-table p{
+margin: 0;
+}
+
+
+  .compareChart .sticky-header { 
   /* existing styles... */
   scrollbar-width: none; /* Firefox */
 }
@@ -441,13 +454,7 @@ background: #fff;
 </div>
 
 <div class="comparison-chart-outer compareChart">
-  {% comment %}
-  <div class="scroll-arrows" id="topScrollArrows">
-    <button class="scroll-btn left" aria-label="Scroll left">&larr;</button>
-    <button class="scroll-btn right" aria-label="Scroll right">&rarr;</button>
-  </div> {% endcomment %}
 
-  <!-- Sticky scroll arrows (initially hidden) -->
   <div class="scroll-arrows sticky" id="stickyScrollArrows" style="display: none;">
     <button class="scroll-btn left" aria-label="Scroll left">&larr;</button>
     <button class="scroll-btn right" aria-label="Scroll right">&rarr;</button>
@@ -474,7 +481,7 @@ background: #fff;
               {% assign feature_map = '' %}
               {% for feature in product.features.value %}
                 {% assign fname = feature.name %}
-                {% assign fvalue = feature.value %}
+                {% assign fvalue = feature.value1 %}
                 {% assign fname_with_delimiters = '|||' | append: fname | append: '|||' %}
                 {% unless feature_names contains fname_with_delimiters %}
                   {% assign feature_names = feature_names | append: '|||' | append: fname | append: '|||' %}
@@ -511,10 +518,10 @@ background: #fff;
               <tr class="{% if mod == 0 %}even-class{% else %}odd-class{% endif %}">
                 <td class="feature-label">{{ fname }}</td>
                 {% for product in products %}
-                  {% assign match = '—' %}
+                  {% assign match = '—' %} 
                   {% for feature in product.features.value %}
                     {% if feature.name == fname %}
-                      {% assign match = feature.value %}
+                      {% assign match = feature.value1 | metafield_tag %}
                       {% break %}
                     {% endif %}
                   {% endfor %}
@@ -666,22 +673,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-{% else %}
 
-
-{{ 'main-article-compare.css' | asset_url | stylesheet_tag }}
-
-
-<div class="page-width">
-    <div class="comparison-main__wrapper">
-        <h1 class="comparison-main__title">
-            {{ page.title }}
-        </h1>
-        {{ page.content }}
-    </div>
-</div>
-
-  {% endif %}
 
 
 {% schema %}
