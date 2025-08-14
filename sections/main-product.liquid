@@ -213,8 +213,8 @@
   {%- endif -%}
   {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
 
- 
-    {% comment %} pdp-page-width main-container {% endcomment %}
+
+  {% comment %} pdp-page-width main-container {% endcomment %}
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
       <div class="product__info-wrapper--mobile">
         <div class="product__info-container--mobile">
@@ -230,43 +230,45 @@
                   </a>
                 </div>
               {%- when 'review_widget' -%}
-                <div class="available-wrap">
-                  <div class="sa-reviews">
-                    {% render 'icon-rstar' %}
-                    <div class="review_header"></div>
-                    <div id="product_just_stars" class="reg"></div>
-                  </div>
-                  {% if product.metafields.custom.backorder == true %}
-                    <div class="badge backorder-badge stock-badge">
-                       <span>Available to Pre-Order</span>
-                    </div>
-                  {% else %}
-                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                      {% if product.available == true %}
-                        <span>Available to Order</span>
-                      {% else %}
-                        <span>Out of stock</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
+              {% unless product.tags contains 'avisplus-product-options' %}
+              <div class="available-wrap">
+                <div class="sa-reviews">
+                  {% render 'icon-rstar' %}
+                  <div class="review_header"></div>
+                  <div id="product_just_stars" class="reg"></div>
                 </div>
+                {% if product.metafields.custom.backorder == true %}
+                  <div class="badge backorder-badge stock-badge">
+                      <span>Available to Pre-Order</span>
+                  </div>
+                {% else %}
+                  <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
+                    {% if product.available == true %}
+                      <span>Available to Order</span>
+                    {% else %}
+                      <span>Out of stock</span>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+              {% endunless %}
               {% when 'price' %}
-{% comment %} 
-{% assign campaign_text = '' %}
+                {% comment %} 
+                {% assign campaign_text = '' %}
 
-{% if product.title contains 'French Fitness' %}
-  {% assign campaign_text = settings.sale_promo_ff %}
-{% elsif product.title contains 'Remanufactured' %}
-  {% assign campaign_text = settings.sale_promo_reman %}
-{% else %}
-  {% assign campaign_text = settings.sale_promo_default %}
-{% endif %}
+                {% if product.title contains 'French Fitness' %}
+                  {% assign campaign_text = settings.sale_promo_ff %}
+                {% elsif product.title contains 'Remanufactured' %}
+                  {% assign campaign_text = settings.sale_promo_reman %}
+                {% else %}
+                  {% assign campaign_text = settings.sale_promo_default %}
+                {% endif %}
 
-{% unless campaign_text == blank %}
-  <div class="campaign-sale-container hide-on-mobile">
-    <p>{{ campaign_text | escape }}</p>
-  </div>
-{% endunless %} {% endcomment %}
+                {% unless campaign_text == blank %}
+                  <div class="campaign-sale-container hide-on-mobile">
+                    <p>{{ campaign_text | escape }}</p>
+                  </div>
+                {% endunless %} {% endcomment %}
 
                 <div>
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
@@ -833,6 +835,7 @@
                 {% endif %}
 
               {%- when 'price_with_option' -%}
+               {% unless product.tags contains 'avisplus-product-options' %}
                 <product-form
                   class="product-form"
                   data-hide-errors="{{ gift_card_recipient_feature_active }}"
@@ -1305,6 +1308,7 @@
                   >
                   </square-placement>
                 </product-form>
+               {% endunless %}
               {%- when 'inventory' -%}
                 <p
                   class="product__inventory{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.inventory_management != 'shopify' %} visibility-hidden{% endif %}"
@@ -1368,6 +1372,7 @@
                 {%- endif -%}
 
               {%- when 'review_widget' -%}
+              {% unless product.tags contains 'avisplus-product-options' %}
                 <div class="available-wrap hidden lg:flex">
                   <div class="sa-reviews">
                     {% render 'icon-rstar' %}
@@ -1389,7 +1394,7 @@
                     </div>
                   {% endif %}
                 </div>
-
+              {% endunless %}
               {%- when 'sku' -%}
                 <p
                   class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
