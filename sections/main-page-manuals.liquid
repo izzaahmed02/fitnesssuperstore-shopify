@@ -1,66 +1,186 @@
-{{ 'custom-manuals.css' | asset_url | stylesheet_tag }}
+{{ 'manuals.css' | asset_url | stylesheet_tag }}
+{% assign brands = shop.metaobjects.brand_manuals.values %}
+{% assign page_title = section.settings.title | default: page.titlelue %}
 
-<custom-manuals class="manuals">
-  <div class="manuals-header">
-    <div class="page-width">
-      <h2 class="manuals-title">{{ section.settings.title | default: page.title }}</h2>
-      <form class="manuals-search" role="search" onsubmit="return false;">
-        <div class="manuals-search__wrapper">
-          <div class="manuals-search__container">
-            <div class="manuals-search-icon">{% render 'icon-search-manuals' %}</div>
-            <input
-              type="search"
-              class="manuals-search__input"
-              placeholder="Search by brand name"
-              aria-label="Search brands"
-            >
-            <button type="reset" class="manuals-search__reset-btn" aria-label="Reset search">
-              {% render 'icon-close-manual' %}
-            </button>
+
+
+
+<div class="manuals__inner">
+  <div class="page-width">
+      <div class="manuals__wrapper">
+          <div class="manuals__headding">
+              <h1>{{ section.settings.title | default: page.title }}</h1>
           </div>
-        </div>
-      </form>
+          <div class="manuals">
+              <div class="manuals__controls">
+                  <div class="custom-search">
+                      <input type="text" class="custom-search__input" id="search"
+                          placeholder="Search by item name">
+                      <div class="custom-search__img">
+                          <img src="{{'search.svg' | asset_url}}" alt="">
+                      </div>
+                  </div>
+                  <div class="custom-dropdown">
+                      <select class="custom-dropdown__select" id="brandFilter">
+                          <option value="">All Brands</option>
+                      </select>
+                  </div>
+              </div>
 
-      <div class="manuals-filters">
-        <div class="manuals-filters-list" style="grid-template-rows: repeat(11, auto);">
-          {% assign brands = shop.metaobjects.brand_manuals.values %}
-          {% for brand in brands %}
-            {% if brand.brand_page %}
-              <a
-                href="{{ brand.brand_page.value.url }}"
-                class="manuals-filter-collection"
-                data-title="{{- brand.brand_name -}}"
-                data-handle="{{- brand.brand_name | handle -}}"
-              >
-                {% if brand.brand_logo != blank %}
-                  <img
-                    src="{{ brand.brand_logo | img_url: '300x' }}"
-                    alt="{{ brand.brand_name }}"
-                    loading="lazy"
-                    width="{{ brand.brand_name.width }}"
-                    height=""
-                    class="manuals-filter-collection__img"
-                  >
-                {% endif %}
-                <p href="{{ brand.brand_page.value.url }}" class="manuals-filter-collection__title">
-                  {{- brand.brand_name -}}
-                </p>
-              </a>
-            {% endif %}
-          {% endfor %}
-          <p class="manuals-empty-message" hidden>No brands found. Please check your spelling.</p>
-        </div>
+              <p class="manuals__count" id="itemCount"><em>112</em> item(s)</p>
+
+              <div class="manuals__table-wrapper">
+                  <table class="manuals__table">
+                      <thead>
+                          <tr>
+                              <th class="manuals__th--sortable" data-sort="model">Model</th>
+                              <th class="manuals__th--sortable" data-sort="brand">Brand</th>
+                          </tr>
+                      </thead>
+                      <tbody id="manualTable" class="manuals__body"></tbody>
+                  </table>
+              </div>
+
+
+              <button class="manuals__load-more" id="loadMore">Load More</button>
+          </div>
       </div>
-    </div>
   </div>
-</custom-manuals>
+</div>
 
-<script src="{{ 'page-custom-manuals.js' | asset_url }}" defer="defer"></script>
+<script>
+
+  const manualsData = [
+    {%- for brand in brands -%}
+      {%- if brand.brand_page -%}
+        {% paginate brand.manuals.value by 1000 %}
+            {%- for manual in brand.manuals.value -%}
+                    {
+                        model: "{{manual.title | replace: '"', '\"'}}",
+                        manualUrl: "{{manual.manual_url}}",
+                        brand: "{{brand.brand_name}}",
+                        brandUrl: "{{brand.brand_page.value.url}}",
+                        brandLogo: "{{brand.brand_logo | img_url: '300x'}}"
+                    }{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}{%- unless forloop.last -%},{%- endunless -%}
+            
+        {% endpaginate %}
+    {%- endif -%}
+    {%- endfor -%}
+  ];
+  console.log(manualsData);
+
+  let visibleCount = 25;
+  let sortDirection = { model: 'asc', brand: 'asc' };
+  let currentSortKey = null;
+
+  const bodyEl = document.querySelector('.manuals__body');
+  const brandFilterEl = document.getElementById('brandFilter');
+  const searchEl = document.getElementById('search');
+  const itemCountEl = document.getElementById('itemCount');
+  const loadMoreEl = document.getElementById('loadMore');
+
+  function populateBrandFilter() {
+      const brands = [...new Set(manualsData.map(m => m.brand))].sort();
+      brands.forEach(brand => {
+          const opt = document.createElement('option');
+          opt.value = brand;
+          opt.textContent = brand;
+          brandFilterEl.appendChild(opt);
+      });
+  }
+
+ function updateUrlWithBrandUrl(brandValue) {
+    if (!brandValue) {
+        // Default page without brand filter
+        window.history.pushState({}, '', '/pages/all-manuals');
+        return;
+    }
+    const brandItem = manualsData.find(item => item.brand === brandValue);
+    if (brandItem) {
+        // Use the brandUrl from your data
+        window.history.pushState({}, '', brandItem.brandUrl);
+    }
+}
+ 
+
+  function renderTable() {
+      const searchVal = searchEl.value.toLowerCase();
+      const brandVal = brandFilterEl.value;
+      let filtered = manualsData.filter(item =>
+          item.model.toLowerCase().includes(searchVal) &&
+          (brandVal === "" || item.brand === brandVal)
+      );
+
+      if (currentSortKey) {
+          filtered.sort((a, b) => {
+              let aText = a[currentSortKey].toLowerCase();
+              let bText = b[currentSortKey].toLowerCase();
+              if (aText < bText) return sortDirection[currentSortKey] === 'asc' ? -1 : 1;
+              if (aText > bText) return sortDirection[currentSortKey] === 'asc' ? 1 : -1;
+              return 0;
+          });
+      }
+
+      bodyEl.innerHTML = "";
+      filtered.slice(0, visibleCount).forEach(item => {
+          const tr = document.createElement('tr');
+          tr.className = 'manuals__row';
+          tr.innerHTML = `
+              <td><a href="${item.manualUrl}" target="_blank" class="manuals__link">${item.model}</a></td>
+              <td><a href="${item.brandUrl}"><img src="${item.brandLogo}" alt="${item.brand}" class="manuals__brand-logo"> ${item.brand}</a></td>
+          `;
+          bodyEl.appendChild(tr);
+      });
+
+      // itemCountEl.textContent = `${filtered.length} item(s)`;
+      itemCountEl.innerHTML = `<em>${filtered.length}</em> item(s)`;
+      loadMoreEl.style.display = visibleCount < filtered.length ? 'block' : 'none';
+  }
+
+  document.querySelectorAll('.manuals__th--sortable').forEach(th => {
+      th.addEventListener('click', () => {
+          const key = th.dataset.sort;
+          if (currentSortKey === key) {
+              sortDirection[key] = sortDirection[key] === 'asc' ? 'desc' : 'asc';
+          } else {
+              currentSortKey = key;
+          }
+          renderTable();
+      });
+  });
+
+  searchEl.addEventListener('input', () => {
+      visibleCount = 25;
+      renderTable();
+  });
+  brandFilterEl.addEventListener('change', () => {
+      visibleCount = 25;
+      updateUrlWithBrandUrl(brandFilterEl.value); // update address bar using brandUrl
+      renderTable();
+  });
+  loadMoreEl.addEventListener('click', () => {
+      visibleCount += 25;
+      renderTable();
+  });
+
+  populateBrandFilter();
+  renderTable();
+</script>
+
+
+
+
+
+
+
+{% comment %} <script src="{{ 'page-custom-manuals.js' | asset_url }}" defer="defer"></script> {% endcomment %}
 
 
 {% schema %}
 {
   "name": "Manuals Section",
+  "tag": "section",
+  "class": "manuals",
   "settings": [
     {
       "type": "text",
