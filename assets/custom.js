@@ -339,7 +339,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 		})
 	}
 
-	if (!sessionStorage.userLoc) {
+	/* if (!sessionStorage.userLoc) {
 		const locationRes = await fetch("https://french-fitness-api.azurewebsites.net/api/location");
 		if (locationRes) {
 			const userLoc = await locationRes.json();
@@ -364,7 +364,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 				document.querySelector('.california-discount-offer ').style.display = 'block';
 			}
 		}
-	}
+	} */
 
 	const search = document.querySelector('.custom-header-search--input');
 
