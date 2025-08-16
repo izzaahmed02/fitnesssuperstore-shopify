@@ -547,11 +547,12 @@ document.addEventListener('DOMContentLoaded', function() {
         maroon: "#800000",
         burgundy: "#800020",
         metallicsilver: "#aaa9ad",
-        stormgray: "#747880" 
+        stormgray: "#747880",
+        darkgray: "#1a1919"
     };
 
     function getHexFromName(name) {
-        const normalized = (name || "").toLowerCase().replace(' ', '').replace(/\s*\([^()]*\)/g, '').trim();
+        const normalized = (name || "").toLowerCase().replace('w/', '').replace('w', '').replace('frame', '').replace(/\s*\([^()]*\)/g, '').replace(' ', '').trim();
         return colorMap[normalized] || "#000000";
     }
 
@@ -561,6 +562,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const parts = colorString.split("/")
             .map(str => str.trim())
             .filter(Boolean);
+
+        if (parts.length > 2) {
+            parts.splice(2, 1);
+        }
 
         if (parts.length === 0) {
             return "linear-gradient(to right, #000000, #000000)";
