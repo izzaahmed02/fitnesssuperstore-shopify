@@ -1,0 +1,78 @@
+{{ 'section-related-products.css' | asset_url | stylesheet_tag }}
+
+{% comment %} Get the metafield data {% endcomment %}
+{% assign related_products_metafield = product.metafields.custom.related_products %}
+
+{% assign fallback_count = 4 %}
+{% assign offset = "now" | date: "%S" | modulo: 10 | times: 1 %}
+{% assign products_to_display = '' | split: '' %}
+
+{% if related_products_metafield and related_products_metafield.size > 0 %}
+  {% comment %} Use shop.products to get products by ID more efficiently {% endcomment %}
+  {% for gid in related_products_metafield %}
+    {% comment %} Extract product ID from GID {% endcomment %}
+    {% assign product_id = gid | split: '/' | last | plus: 0 %}
+    
+    {% comment %} Get product by ID using shop.products {% endcomment %}
+    {% assign related_product = shop.products[product_id] %}
+    
+    {% if related_product and related_product.available and related_product.id != product.id %}
+      {% assign products_to_display = products_to_display | concat: related_product %}
+      
+      {% comment %} Stop if we have enough products {% endcomment %}
+      {% if products_to_display.size >= fallback_count %}
+        {% break %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+  
+  {% comment %} Apply offset and limit {% endcomment %}
+  {% if products_to_display.size > 0 %}
+    {% assign limited_products = products_to_display | slice: offset, fallback_count %}
+    {% if limited_products.size > 0 %}
+      {% assign products_to_display = limited_products %}
+    {% else %}
+      {% assign products_to_display = products_to_display | slice: 0, fallback_count %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+
+{% comment %} Fallback to random products if no metafield products found {% endcomment %}
+{% if products_to_display.size == 0 %}
+  {% assign in_stock_products = collections.all.products | where: 'available', true %}
+  {% assign products_to_display = in_stock_products | slice: offset, fallback_count %}
+  {% if products_to_display.size == 0 %}
+    {% assign products_to_display = in_stock_products | slice: 0, fallback_count %}
+  {% endif %}
+{% endif %}
+
+{% if products_to_display.size > 0 %}
+  <div class="custom-container">
+    <div class="featured_products_header">
+      {% if section.settings.title != blank %}
+        <h2>{{ section.settings.title }}</h2>
+      {% endif %}
+    </div>
+    <div class="featured_products_container">
+      {% for product in products_to_display %}
+        {% render 'related-items', product: product %}
+      {% endfor %}
+    </div>
+  </div>
+  <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "t:sections.related-products.name",
+  "tag": "section",
+  "class": "section related-products",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "t:sections.main-list-collections.settings.title.label"
+    }
+  ]
+}
+{% endschema %}
