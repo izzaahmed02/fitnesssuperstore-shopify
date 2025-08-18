@@ -1,33 +1,22 @@
 {{ 'section-related-products.css' | asset_url | stylesheet_tag }}
 
-{% comment %} Get the metafield data - try without .value first {% endcomment %}
-{% assign related_products_metafield = product.metafields.custom.related_products %}
-
-{% comment %} Debug: Check metafield content {% endcomment %}
-Debug: Raw metafield: {{ related_products_metafield }} 
-Debug: Metafield size: {{ related_products_metafield.size }} 
-Debug: Metafield type: {{ related_products_metafield.type }} 
-Debug: With .value: {{ product.metafields.custom.related_products.value }} 
-Debug: First item: {{ related_products_metafield[0] }} 
+{% comment %} Get the metafield data - use .value to get ProductListDrop {% endcomment %}
+{% assign related_products_list = product.metafields.custom.related_products.value %}
 
 {% assign fallback_count = 4 %}
 {% assign products_to_display = blank %}
 {% assign product_count = 0 %}
 
-{% if related_products_metafield != blank %}
-  {% comment %} Try direct iteration first {% endcomment %}
-  {% for related_product_ref in related_products_metafield %}
-    {% comment %} Get the actual product object {% endcomment %}
-    {% assign related_product = all_products[related_product_ref] %}
-    
-    {% comment %} Debug each iteration {% endcomment %}
-    <!-- Debug iteration {{ forloop.index }}: {{ related_product_ref }} / Product: {{ related_product.title }} -->
-    
+{% comment %} Check if we have related products in the metafield {% endcomment %}
+{% if related_products_list != blank %}
+  {% comment %} ProductListDrop can be iterated directly {% endcomment %}
+  {% for related_product in related_products_list %}
+    {% comment %} Check if product is available and not the current product {% endcomment %}
     {% if related_product != blank and related_product.available and related_product.id != product.id %}
       {% if products_to_display == blank %}
-        {% assign products_to_display = related_product %}
+        {% capture products_to_display %}{{ related_product.id }}{% endcapture %}
       {% else %}
-        {% assign products_to_display = products_to_display | append: '|||' | append: related_product %}
+        {% capture products_to_display %}{{ products_to_display }},{{ related_product.id }}{% endcapture %}
       {% endif %}
       {% assign product_count = product_count | plus: 1 %}
       
@@ -37,44 +26,58 @@ Debug: First item: {{ related_products_metafield[0] }}
     {% endif %}
   {% endfor %}
   
-  {% comment %} Convert to array if we have products {% endcomment %}
+  {% comment %} Convert the IDs back to products for display {% endcomment %}
   {% if products_to_display != blank %}
-    {% assign products_to_display = products_to_display | split: '|||' %}
+    {% assign product_ids = products_to_display | split: ',' %}
+    {% assign products_to_display = blank %}
+    
+    {% for product_id in product_ids %}
+      {% comment %} Get each product by iterating through the list again {% endcomment %}
+      {% for related_product in related_products_list %}
+        {% assign id_string = related_product.id | append: '' %}
+        {% assign check_id = product_id | append: '' %}
+        {% if id_string == check_id %}
+          {% if products_to_display == blank %}
+            {% assign products_to_display = related_product %}
+          {% else %}
+            {% assign products_to_display = products_to_display | append: '|||' | append: related_product %}
+          {% endif %}
+          {% break %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    
+    {% if products_to_display != blank and products_to_display contains '|||' %}
+      {% assign products_to_display = products_to_display | split: '|||' %}
+    {% elsif products_to_display != blank %}
+      {% comment %} Single product - create array {% endcomment %}
+      {% assign temp_product = products_to_display %}
+      {% assign products_to_display = blank | split: ',' %}
+      {% assign products_to_display = products_to_display | push: temp_product %}
+    {% endif %}
   {% endif %}
 {% endif %}
 
-{% comment %} Alternative method if above doesn't work - try with .value {% endcomment %}
+{% comment %} Simpler approach - try direct iteration and collection {% endcomment %}
 {% if products_to_display == blank or products_to_display.size == 0 %}
-  {% assign related_products_metafield_value = product.metafields.custom.related_products.value %}
-  {% if related_products_metafield_value != blank %}
-    {% assign products_to_display = blank %}
-    {% assign product_count = 0 %}
-    
-    {% for related_product in related_products_metafield_value %}
-      {% if related_product != blank and related_product.available and related_product.id != product.id %}
-        {% if products_to_display == blank %}
-          {% assign products_to_display = related_product %}
-        {% else %}
-          {% assign products_to_display = products_to_display | append: '|||' | append: related_product %}
-        {% endif %}
-        {% assign product_count = product_count | plus: 1 %}
-        
-        {% if product_count >= fallback_count %}
-          {% break %}
-        {% endif %}
+  {% assign products_array = blank | split: ',' %}
+  
+  {% if related_products_list != blank %}
+    {% for related_product in related_products_list limit: fallback_count %}
+      {% if related_product.available and related_product.id != product.id %}
+        {% assign products_array = products_array | push: related_product %}
       {% endif %}
     {% endfor %}
     
-    {% if products_to_display != blank %}
-      {% assign products_to_display = products_to_display | split: '|||' %}
+    {% if products_array.size > 0 %}
+      {% assign products_to_display = products_array %}
     {% endif %}
   {% endif %}
 {% endif %}
 
 {% comment %} Fallback to collection products if no metafield products found {% endcomment %}
 {% if products_to_display == blank or products_to_display.size == 0 %}
-  {% assign products_to_display = blank %}
-  {% assign product_count = 0 %}
+  {% assign products_array = blank | split: ',' %}
   
   {% comment %} Try to get products from the same collection first {% endcomment %}
   {% if product.collections.size > 0 %}
@@ -82,47 +85,41 @@ Debug: First item: {{ related_products_metafield[0] }}
     
     {% for collection_product in current_collection.products limit: 10 %}
       {% if collection_product.available and collection_product.id != product.id %}
-        {% if products_to_display == blank %}
-          {% assign products_to_display = collection_product %}
-        {% else %}
-          {% assign products_to_display = products_to_display | append: '|||' | append: collection_product %}
-        {% endif %}
-        {% assign product_count = product_count | plus: 1 %}
+        {% assign products_array = products_array | push: collection_product %}
         
-        {% if product_count >= fallback_count %}
+        {% if products_array.size >= fallback_count %}
           {% break %}
         {% endif %}
       {% endif %}
     {% endfor %}
-    
-    {% if products_to_display != blank %}
-      {% assign products_to_display = products_to_display | split: '|||' %}
-    {% endif %}
   {% endif %}
   
-  {% comment %} If still no products, use all products collection {% endcomment %}
-  {% if products_to_display == blank or products_to_display.size == 0 %}
-    {% assign products_to_display = blank %}
-    {% assign product_count = 0 %}
-    
+  {% comment %} If still need more products, use all products collection {% endcomment %}
+  {% if products_array.size < fallback_count %}
     {% for fallback_product in collections.all.products limit: 10 %}
       {% if fallback_product.available and fallback_product.id != product.id %}
-        {% if products_to_display == blank %}
-          {% assign products_to_display = fallback_product %}
-        {% else %}
-          {% assign products_to_display = products_to_display | append: '|||' | append: fallback_product %}
-        {% endif %}
-        {% assign product_count = product_count | plus: 1 %}
+        {% comment %} Check if not already in array {% endcomment %}
+        {% assign already_added = false %}
+        {% for existing in products_array %}
+          {% if existing.id == fallback_product.id %}
+            {% assign already_added = true %}
+            {% break %}
+          {% endif %}
+        {% endfor %}
         
-        {% if product_count >= fallback_count %}
+        {% unless already_added %}
+          {% assign products_array = products_array | push: fallback_product %}
+        {% endunless %}
+        
+        {% if products_array.size >= fallback_count %}
           {% break %}
         {% endif %}
       {% endif %}
     {% endfor %}
-    
-    {% if products_to_display != blank %}
-      {% assign products_to_display = products_to_display | split: '|||' %}
-    {% endif %}
+  {% endif %}
+  
+  {% if products_array.size > 0 %}
+    {% assign products_to_display = products_array %}
   {% endif %}
 {% endif %}
 
@@ -134,14 +131,12 @@ Debug: First item: {{ related_products_metafield[0] }}
       {% endif %}
     </div>
     <div class="featured_products_container">
-      {% for product in products_to_display %}
-        {% render 'related-items', product: product %}
+      {% for display_product in products_to_display limit: fallback_count %}
+        {% render 'related-items', product: display_product %}
       {% endfor %}
     </div>
   </div>
   <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
-{% else %}
-  <!-- No products to display -->
 {% endif %}
 
 {% schema %}
