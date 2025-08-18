@@ -1,11 +1,24 @@
 {{ 'section-related-products.css' | asset_url | stylesheet_tag }}
 
-{% assign related_products = product.metafields.custom.related_products %}
-{% for p in related_products %}
-  {{ p.title }}<br>
+{%- comment -%}
+Step 1: Get metafield values (list of product handles/ids)
+{%- endcomment -%}
+{% assign related_products_ids = product.metafields.custom.related_products.value %}
+
+{%- comment -%}
+Step 2: Convert IDs into product objects
+{%- endcomment -%}
+{% assign related_products = '' | split: '' %}
+{% for id in related_products_ids %}
+  {% assign p = all_products[id] %}
+  {% if p %}
+    {% assign related_products = related_products | concat: p | split: '___' %}
+  {% endif %}
 {% endfor %}
 
-
+{%- comment -%}
+Step 3: Apply filtering and slicing
+{%- endcomment -%}
 {% assign fallback_count = 4 %}
 {% assign offset = "now" | date: "%S" | modulo: 10 | times: 1 %}
 
@@ -23,6 +36,9 @@
   {% endif %}
 {% endif %}
 
+{%- comment -%}
+Step 4: Render output
+{%- endcomment -%}
 {% if products_to_display.size > 0 %}
   <div class="custom-container">
     <div class="featured_products_header">
