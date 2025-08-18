@@ -29,7 +29,11 @@ Step 3: Apply filtering and slicing
     {% assign products_to_display = available_products | slice: 0, fallback_count %}
   {% endif %}
 {% else %}
-
+  {% assign in_stock_products = collections.all.products | where: 'available', true %}
+  {% assign products_to_display = in_stock_products | slice: offset, fallback_count %}
+  {% if products_to_display.size == 0 %}
+    {% assign products_to_display = in_stock_products | slice: 0, fallback_count %}
+  {% endif %}
 {% endif %}
 
 {%- comment -%}
