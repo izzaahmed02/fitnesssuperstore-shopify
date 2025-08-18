@@ -1,67 +1,132 @@
 {{ 'section-related-products.css' | asset_url | stylesheet_tag }}
 
-{% comment %} Get the metafield data {% endcomment %}
-{% assign related_products_metafield = product.metafields.custom.related_products.value %}
+{% comment %} Get the metafield data - try without .value first {% endcomment %}
+{% assign related_products_metafield = product.metafields.custom.related_products %}
 
 {% comment %} Debug: Check metafield content {% endcomment %}
+<!-- Debug: Raw metafield: {{ related_products_metafield }} -->
 <!-- Debug: Metafield size: {{ related_products_metafield.size }} -->
-<!-- Debug: First product in metafield: {{ related_products_metafield.first.title }} -->
+<!-- Debug: Metafield type: {{ related_products_metafield.type }} -->
+<!-- Debug: With .value: {{ product.metafields.custom.related_products.value }} -->
+<!-- Debug: First item: {{ related_products_metafield[0] }} -->
 
 {% assign fallback_count = 4 %}
-{% assign products_to_display = '' | split: '' %}
+{% assign products_to_display = blank %}
+{% assign product_count = 0 %}
 
-{% if related_products_metafield and related_products_metafield.size > 0 %}
-  {% comment %} Metafield contains product references - iterate through them {% endcomment %}
-  {% for related_product in related_products_metafield %}
-    {% comment %} Check if product is available and not the current product {% endcomment %}
-    {% if related_product and related_product.available and related_product.id != product.id %}
-      {% assign products_to_display = products_to_display | append: related_product | append: ',' | split: ',' %}
+{% if related_products_metafield != blank %}
+  {% comment %} Try direct iteration first {% endcomment %}
+  {% for related_product_ref in related_products_metafield %}
+    {% comment %} Get the actual product object {% endcomment %}
+    {% assign related_product = all_products[related_product_ref] %}
+    
+    {% comment %} Debug each iteration {% endcomment %}
+    <!-- Debug iteration {{ forloop.index }}: {{ related_product_ref }} / Product: {{ related_product.title }} -->
+    
+    {% if related_product != blank and related_product.available and related_product.id != product.id %}
+      {% if products_to_display == blank %}
+        {% assign products_to_display = related_product %}
+      {% else %}
+        {% assign products_to_display = products_to_display | append: '|||' | append: related_product %}
+      {% endif %}
+      {% assign product_count = product_count | plus: 1 %}
       
-      {% comment %} Stop if we have enough products {% endcomment %}
-      {% if products_to_display.size >= fallback_count %}
+      {% if product_count >= fallback_count %}
         {% break %}
       {% endif %}
     {% endif %}
   {% endfor %}
   
-  {% comment %} Limit to fallback_count {% endcomment %}
-  {% if products_to_display.size > fallback_count %}
-    {% assign products_to_display = products_to_display | slice: 0, fallback_count %}
+  {% comment %} Convert to array if we have products {% endcomment %}
+  {% if products_to_display != blank %}
+    {% assign products_to_display = products_to_display | split: '|||' %}
+  {% endif %}
+{% endif %}
+
+{% comment %} Alternative method if above doesn't work - try with .value {% endcomment %}
+{% if products_to_display == blank or products_to_display.size == 0 %}
+  {% assign related_products_metafield_value = product.metafields.custom.related_products.value %}
+  {% if related_products_metafield_value != blank %}
+    {% assign products_to_display = blank %}
+    {% assign product_count = 0 %}
+    
+    {% for related_product in related_products_metafield_value %}
+      {% if related_product != blank and related_product.available and related_product.id != product.id %}
+        {% if products_to_display == blank %}
+          {% assign products_to_display = related_product %}
+        {% else %}
+          {% assign products_to_display = products_to_display | append: '|||' | append: related_product %}
+        {% endif %}
+        {% assign product_count = product_count | plus: 1 %}
+        
+        {% if product_count >= fallback_count %}
+          {% break %}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    
+    {% if products_to_display != blank %}
+      {% assign products_to_display = products_to_display | split: '|||' %}
+    {% endif %}
   {% endif %}
 {% endif %}
 
 {% comment %} Fallback to collection products if no metafield products found {% endcomment %}
-{% if products_to_display.size == 0 %}
-  {% comment %} Try to get products from the same collection first {% endcomment %}
-  {% assign current_collection = collections[product.collections.first.handle] %}
+{% if products_to_display == blank or products_to_display.size == 0 %}
+  {% assign products_to_display = blank %}
+  {% assign product_count = 0 %}
   
-  {% if current_collection %}
-    {% assign collection_products = current_collection.products | where: 'available', true %}
-    {% for collection_product in collection_products limit: 5 %}
-      {% if collection_product.id != product.id %}
-        {% assign products_to_display = products_to_display | append: collection_product | append: ',' | split: ',' %}
-        {% if products_to_display.size >= fallback_count %}
+  {% comment %} Try to get products from the same collection first {% endcomment %}
+  {% if product.collections.size > 0 %}
+    {% assign current_collection = product.collections.first %}
+    
+    {% for collection_product in current_collection.products limit: 10 %}
+      {% if collection_product.available and collection_product.id != product.id %}
+        {% if products_to_display == blank %}
+          {% assign products_to_display = collection_product %}
+        {% else %}
+          {% assign products_to_display = products_to_display | append: '|||' | append: collection_product %}
+        {% endif %}
+        {% assign product_count = product_count | plus: 1 %}
+        
+        {% if product_count >= fallback_count %}
           {% break %}
         {% endif %}
       {% endif %}
     {% endfor %}
+    
+    {% if products_to_display != blank %}
+      {% assign products_to_display = products_to_display | split: '|||' %}
+    {% endif %}
   {% endif %}
   
   {% comment %} If still no products, use all products collection {% endcomment %}
-  {% if products_to_display.size == 0 %}
-    {% assign all_products = collections.all.products | where: 'available', true %}
-    {% for fallback_product in all_products limit: 5 %}
-      {% if fallback_product.id != product.id %}
-        {% assign products_to_display = products_to_display | append: fallback_product | append: ',' | split: ',' %}
-        {% if products_to_display.size >= fallback_count %}
+  {% if products_to_display == blank or products_to_display.size == 0 %}
+    {% assign products_to_display = blank %}
+    {% assign product_count = 0 %}
+    
+    {% for fallback_product in collections.all.products limit: 10 %}
+      {% if fallback_product.available and fallback_product.id != product.id %}
+        {% if products_to_display == blank %}
+          {% assign products_to_display = fallback_product %}
+        {% else %}
+          {% assign products_to_display = products_to_display | append: '|||' | append: fallback_product %}
+        {% endif %}
+        {% assign product_count = product_count | plus: 1 %}
+        
+        {% if product_count >= fallback_count %}
           {% break %}
         {% endif %}
       {% endif %}
     {% endfor %}
+    
+    {% if products_to_display != blank %}
+      {% assign products_to_display = products_to_display | split: '|||' %}
+    {% endif %}
   {% endif %}
 {% endif %}
 
-{% if products_to_display.size > 0 %}
+{% if products_to_display != blank and products_to_display.size > 0 %}
   <div class="custom-container">
     <div class="featured_products_header">
       {% if section.settings.title != blank %}
@@ -75,6 +140,8 @@
     </div>
   </div>
   <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
+{% else %}
+  <!-- No products to display -->
 {% endif %}
 
 {% schema %}
