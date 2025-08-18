@@ -1,6 +1,6 @@
 class PredictiveSearch extends SearchForm {
   constructor() {
-    super();
+    super(); 
     this.cachedResults = {};
     this.predictiveSearchResults = this.querySelector('[data-predictive-search]');
     this.allPredictiveSearchInstances = document.querySelectorAll('predictive-search');
@@ -18,6 +18,10 @@ class PredictiveSearch extends SearchForm {
     this.addEventListener('focusout', this.onFocusOut.bind(this));
     this.addEventListener('keyup', this.onKeyup.bind(this));
     this.addEventListener('keydown', this.onKeydown.bind(this));
+    this.input.addEventListener('input', this.onChange.bind(this));
+this.input.addEventListener('paste', () => {
+  setTimeout(() => this.onChange(), 0);
+});
   }
 
   getQuery() {
@@ -106,17 +110,18 @@ class PredictiveSearch extends SearchForm {
   }
 
   updateSearchForTerm(previousTerm, newTerm) {
-    const searchForTextElement = this.querySelector('[data-predictive-search-search-for-text]');
-    const currentButtonText = searchForTextElement?.innerText;
-    if (currentButtonText) {
-      if (currentButtonText.match(new RegExp(previousTerm, 'g')).length > 1) {
-        // The new term matches part of the button text and not just the search term, do not replace to avoid mistakes
-        return;
-      }
-      const newButtonText = currentButtonText.replace(previousTerm, newTerm);
-      searchForTextElement.innerText = newButtonText;
+  const searchForTextElement = this.querySelector('[data-predictive-search-search-for-text]');
+  const currentButtonText = searchForTextElement?.innerText;
+  if (currentButtonText) {
+    const matches = currentButtonText.match(new RegExp(previousTerm, 'g'));
+    if (matches && matches.length > 1) {
+      // The new term matches part of the button text and not just the search term, do not replace to avoid mistakes
+      return;
     }
+    const newButtonText = currentButtonText.replace(previousTerm, newTerm);
+    searchForTextElement.innerText = newButtonText;
   }
+}
 
   switchOption(direction) {
     if (!this.getAttribute('open')) return;
