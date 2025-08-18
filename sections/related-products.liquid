@@ -1,12 +1,7 @@
 {{ 'section-related-products.css' | asset_url | stylesheet_tag }}
+{% assign related_products_ids = product.metafields.custom.related_products %}
 
-{% assign related_products = product.metafields.custom.related_products %}
-
-{% for p in product.metafields.custom.related_products %}
-  {{ p.title }}<br>
-{% endfor %}
-
-{% if related_products and related_products.size > 0 %}
+{% if related_products_ids and related_products_ids.size > 0 %}
   <div class="custom-container">
     <div class="featured_products_header">
       {% if section.settings.title != blank %}
@@ -15,7 +10,27 @@
     </div>
 
     <div class="featured_products_container">
-      {% for p in related_products %}
+      {% for gid in related_products_ids %}
+        {%- comment -%}
+        Extract the product handle from the GID
+        GID format: gid://shopify/Product/9879152525628
+        all_products only accepts handles, not IDs.
+        {%- endcomment -%}
+
+        {% assign id_parts = gid | split: '/' %}
+        {% assign product_id = id_parts.last %}
+
+        {%- comment -%}
+        You cannot resolve a product by numeric ID in Liquid.
+        all_products only works with product handles.
+        So you have 2 options:
+          1. Change metafield to "List of product *handles*" (works directly with all_products)
+          2. Or use Shopify Storefront API (outside Liquid).
+        {%- endcomment -%}
+
+        <p style="color:red;">DEBUG: GID {{ gid }} → extracted ID {{ product_id }}</p>
+
+        {% assign p = all_products[product_id] %}
         {% if p and p.available %}
           {% render 'related-items', product: p %}
         {% endif %}
