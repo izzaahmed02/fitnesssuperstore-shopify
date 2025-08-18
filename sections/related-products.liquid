@@ -1,19 +1,8 @@
 {{ 'section-related-products.css' | asset_url | stylesheet_tag }}
 
-{% comment %}
-TEST 1: Show metafield raw value
-{% endcomment %}
-<p style="color:red;">Metafield raw: {{ product.metafields.custom.related_products }}</p>
-<p style="color:red;">Metafield .value: {{ product.metafields.custom.related_products.value }}</p>
+{% assign related_products = product.metafields.custom.related_products %}
 
-{% assign related_products_ids = product.metafields.custom.related_products.value %}
-
-{% comment %}
-TEST 2: Show metafield size
-{% endcomment %}
-<p style="color:red;">Metafield IDs count: {{ related_products_ids.size }}</p>
-
-{% if related_products_ids and related_products_ids.size > 0 %}
+{% if related_products and related_products.size > 0 %}
   <div class="custom-container">
     <div class="featured_products_header">
       {% if section.settings.title != blank %}
@@ -22,21 +11,13 @@ TEST 2: Show metafield size
     </div>
 
     <div class="featured_products_container">
-      {% for id in related_products_ids %}
-        {% assign p = all_products[id] %}
-        
-        {% comment %}
-        TEST 3: Show each resolved ID + product title
-        {% endcomment %}
-        <p style="color:blue;">Resolved ID: {{ id }} → Product: {% if p %}{{ p.title }}{% else %}NOT FOUND{% endif %}</p>
-        
+      {% for p in related_products %}
         {% if p and p.available %}
           {% render 'related-items', product: p %}
         {% endif %}
       {% endfor %}
     </div>
   </div>
-
 {% else %}
   <p style="color:red;">Metafield empty → showing fallback products</p>
 
@@ -58,17 +39,13 @@ TEST 2: Show metafield size
 
       <div class="featured_products_container">
         {% for product in products_to_display %}
-          {% comment %}
-          TEST 4: Show fallback product titles
-          {% endcomment %}
-          <p style="color:green;">Fallback product: {{ product.title }}</p>
-          
           {% render 'related-items', product: product %}
         {% endfor %}
       </div>
     </div>
   {% endif %}
 {% endif %}
+
 
 <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
 
