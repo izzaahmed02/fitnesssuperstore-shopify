@@ -1,13 +1,18 @@
 {{ 'section-related-products.css' | asset_url | stylesheet_tag }}
 
-{%- comment -%}
-Step 1: Get metafield values (list of product handles/ids)
-{%- endcomment -%}
+{% comment %}
+TEST 1: Show metafield raw value
+{% endcomment %}
+<p style="color:red;">Metafield raw: {{ product.metafields.custom.related_products }}</p>
+<p style="color:red;">Metafield .value: {{ product.metafields.custom.related_products.value }}</p>
+
 {% assign related_products_ids = product.metafields.custom.related_products.value %}
 
-{%- comment -%}
-Step 2: Render metafield products if they exist
-{%- endcomment -%}
+{% comment %}
+TEST 2: Show metafield size
+{% endcomment %}
+<p style="color:red;">Metafield IDs count: {{ related_products_ids.size }}</p>
+
 {% if related_products_ids and related_products_ids.size > 0 %}
   <div class="custom-container">
     <div class="featured_products_header">
@@ -19,6 +24,12 @@ Step 2: Render metafield products if they exist
     <div class="featured_products_container">
       {% for id in related_products_ids %}
         {% assign p = all_products[id] %}
+        
+        {% comment %}
+        TEST 3: Show each resolved ID + product title
+        {% endcomment %}
+        <p style="color:blue;">Resolved ID: {{ id }} → Product: {% if p %}{{ p.title }}{% else %}NOT FOUND{% endif %}</p>
+        
         {% if p and p.available %}
           {% render 'related-items', product: p %}
         {% endif %}
@@ -27,9 +38,8 @@ Step 2: Render metafield products if they exist
   </div>
 
 {% else %}
-  {%- comment -%}
-  Step 3: Fallback to random in-stock products
-  {%- endcomment -%}
+  <p style="color:red;">Metafield empty → showing fallback products</p>
+
   {% assign fallback_count = 4 %}
   {% assign offset = "now" | date: "%S" | modulo: 10 | times: 1 %}
   {% assign in_stock_products = collections.all.products | where: 'available', true %}
@@ -48,6 +58,11 @@ Step 2: Render metafield products if they exist
 
       <div class="featured_products_container">
         {% for product in products_to_display %}
+          {% comment %}
+          TEST 4: Show fallback product titles
+          {% endcomment %}
+          <p style="color:green;">Fallback product: {{ product.title }}</p>
+          
           {% render 'related-items', product: product %}
         {% endfor %}
       </div>
@@ -56,6 +71,8 @@ Step 2: Render metafield products if they exist
 {% endif %}
 
 <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
+
+
 
 {% schema %}
 {
