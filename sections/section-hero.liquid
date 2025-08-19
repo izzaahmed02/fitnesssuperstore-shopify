@@ -1,21 +1,94 @@
 {{ 'section-hero.css' | asset_url | stylesheet_tag }}
 
-<div class="hero-section">
-        {%- assign desktop_image = section.settings.image -%}
-       <img
-                src="{{ desktop_image | image_url }}"
-                alt="{{ desktop_image.alt | escape }}"
-                loading="lazy"
-                
-              >
+
+
+
+
+
+
+<div class="we-offer">
+  <div class="tab-header">
+    {% if section.settings.heading != blank %}
+      <h2>{{ section.settings.heading }}</h2>
+    {% endif %}
+  </div>
+
+  <div class="category-tab-content">
+    
+      {%- assign desktop_image = block.settings.image -%}
+    
+
+
+
+      <div class="category-card">
+      
+          <div class="card-image-wrapper">
+            <picture>
            
+              <img
+                src="{{ desktop_image | image_url: width: 800 }}"
+                loading="lazy"
+                width="{{ desktop_image.width }}"
+                height="{{ desktop_image.height }}"
+              >
+            </picture>
+            <div class="image-title">
+                <div class="content">
+
+      <div class="description">
+        {% if section.settings.rating_link != blank %}
+        <a class="rating-button-link" target="_blank" href="{{ section.settings.rating_link }}">
+        {% endif %}
+          <div class="ratingBlock">
+            <div class="rating">
+            {% render 'rating' %}        
+            </div>
+            <span>{{ section.settings.rating_text }}</span>
+          </div>
+          {% if section.settings.rating_link != blank %}
+        </a>
+        {% endif %}
+        <a href="{{ section.settings.button_link }}" class="bannerBtn mobile button button--secondary">
+            {{ section.settings.button_text }}
+            {% render 'chevron-button' %}
+        </a>
+    </div>
+    
+      <div class="title">
+        <h1>{{ section.settings.title_text }}</h1>
+        <p class="copyText">{{ section.settings.copy_text }}</p>
+      </div>
+            <a href="{{ section.settings.button_link }}" class="bannerBtn desktop button button--secondary">
+                 {{ section.settings.button_text }}
+                {% render 'chevron-button' %}
+
+            </a>
+    </div>
+            </div>
+          </div>
+       
+      </div>
+    
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="hero-section">
   <div class="image">
-
-
-
-            
-         
-
     <div class="content">
 
       <div class="description">
@@ -71,16 +144,16 @@
 </div>
 
 <style>
- .heroSection img {
+  .heroSection .image {
   display: flex;
   flex-direction: row;
   align-items: center;
   padding: 20px 16px 35px 16px;
   gap: 10px;
- /* background-image: 
+  background-image: 
     linear-gradient(180deg, rgba(35, 35, 43, 0) 0%, rgba(35, 35, 43, 0.4) 50%),
     linear-gradient(269.75deg, rgba(35, 35, 43, 0) 1.15%, rgba(35, 35, 43, 0.3) 68.4%),
-    url('{{ section.settings.background_image | img_url: 'large' }}');*/
+    url('{{ section.settings.background_image | img_url: 'large' }}');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -98,12 +171,6 @@
   "name": "Hero Section",
   "class": "heroSection",
   "settings": [
-
-     {
-          "type": "image_picker",
-          "id": "image",
-            "label": "Banner Image",
-     },
     {
       "type": "text",
       "id": "rating_text",
@@ -162,7 +229,6 @@
       "id": "background_image",
       "label": "Background Image"
     }
- 
   ],
   "presets": [
     {
