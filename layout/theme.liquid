@@ -43,29 +43,30 @@
           <!-- End Google Tag Manager -->
 
           {% if template contains 'index' %}
-    <script type="application/ld+json">
-        {
-          "@context": "http://schema.org",
-          "@type": "Organization",
-          "name": {{ shop.name | json }},
-        {% if settings.logo %}
-      "logo": {{ settings.logo | image_url: width: 500 | prepend: "https:" | json }},
-    {% endif %}
-        "sameAs": [
-        {{ settings.social_twitter_link | json }}
-      {{ settings.social_facebook_link | json }}
-      {{ settings.social_pinterest_link | json }}
-      {{ settings.social_instagram_link | json }}
-      {{ settings.social_tiktok_link | json }}
-      {{ settings.social_tumblr_link | json }}
-      {{ settings.social_snapchat_link | json }}
-      {{ settings.social_youtube_link | json }}
-      {{ settings.social_vimeo_link | json }}
-        ],
-        "url": {{ request.origin | append: page.url | json }}
-        }
-    </script>
-  {% endif %}
+  <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "Organization",
+      "name": {{ shop.name | json }},
+      {% if settings.logo %}
+        "logo": {{ settings.logo | image_url: width: 500 | prepend: "https:" | json }},
+      {% endif %}
+      "sameAs": [
+        {% if settings.social_twitter_link %}{{ settings.social_twitter_link | json }}{% endif %}
+        {% if settings.social_facebook_link %}, {{ settings.social_facebook_link | json }}{% endif %}
+        {% if settings.social_pinterest_link %}, {{ settings.social_pinterest_link | json }}{% endif %}
+        {% if settings.social_instagram_link %}, {{ settings.social_instagram_link | json }}{% endif %}
+        {% if settings.social_tiktok_link %}, {{ settings.social_tiktok_link | json }}{% endif %}
+        {% if settings.social_tumblr_link %}, {{ settings.social_tumblr_link | json }}{% endif %}
+        {% if settings.social_snapchat_link %}, {{ settings.social_snapchat_link | json }}{% endif %}
+        {% if settings.social_youtube_link %}, {{ settings.social_youtube_link | json }}{% endif %}
+        {% if settings.social_vimeo_link %}, {{ settings.social_vimeo_link | json }}{% endif %}
+      ],
+      "url": {{ request.origin | append: page.url | json }}
+    }
+  </script>
+{% endif %}
+
 
   {% if template contains 'product' and product %}
   {% assign domain_origin = request.origin %}
