@@ -230,7 +230,7 @@
             </div>
             {% paginate search.results by products_per_page %}
                 <ul class="collection" id="product-grid" data-id="{{ section.id }}">
-                    <div class="loading-overlay gradient"></div>
+                    {% comment %} <div class="loading-overlay gradient"></div> {% endcomment %}
                     {%- for item in search.results -%}
                         {% assign lazy_load = false %}
                         {%- if forloop.index > 2 -%}
@@ -300,6 +300,24 @@
 			}
 		});
 	});
+
+
+    $(document).ready(function() {
+        $("#search-input").on("keyup", function() {
+            var value = $(this).val().toLowerCase(); // get input text
+            $(".collection li").filter(function() {
+            $(this).toggle($(this).find("a").text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+
+        $("#search-input-mobile").on("keyup", function() {
+            var value = $(this).val().toLowerCase(); // get input text
+            $(".collection li").filter(function() {
+            $(this).toggle($(this).find("a").text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+        });
+
 </script>
 
 
