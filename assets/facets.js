@@ -43,8 +43,8 @@ class FacetFiltersForm extends HTMLElement {
 			searchInput.addEventListener("input", debounce(filterProducts, 300));
 		}
 		if (searchInputMobile) {
-			searchInput.removeEventListener("input", filterProducts);
-			searchInput.addEventListener("input", debounce(filterProducts, 300));
+			searchInputMobile.removeEventListener("input", filterProducts);
+			searchInputMobile.addEventListener("input", debounce(filterProducts, 300));
 		}
 
 		document.querySelectorAll(".facet-checkbox__text-label").forEach(element => {
@@ -85,7 +85,8 @@ class FacetFiltersForm extends HTMLElement {
 		}
 
 		function filterProducts(event) {
-			const searchText = document.getElementById('search-input').value.toLowerCase();
+			console.log("Filtering products..." + event.target.value);
+			const searchText = event.target.value.toLowerCase();
 			if (!searchText) {
 				const searchParams = new URLSearchParams(window.location.search) ?? FacetFiltersForm.searchParamsInitial;
 				FacetFiltersForm.renderPage(searchParams, event);
