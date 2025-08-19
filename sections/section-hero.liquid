@@ -2,21 +2,15 @@
 
 <div class="hero-section">
   <div class="image">
-      {%- assign desktop_image = block.settings.image -%}
+      {%- assign desktop_image = section.settings.image -%}
 
  <picture>
-              {% if mobile_image != blank %}
-                <source
-                  media="(max-width: 768px)"
-                  srcset="{{ mobile_image | image_url: width: 600 }}"
-                >
-              {% endif %}
+            
               <img
-                src="{{ desktop_image | image_url: width: 800 }}"
-                alt="{{ block.settings.title | escape }}"
+                src="{{ desktop_image | image_url }}"
+                alt="{{ desktop_image.alt | escape }}"
                 loading="lazy"
-                width="{{ desktop_image.width }}"
-                height="{{ desktop_image.height }}"
+                
               >
             </picture>
 
@@ -75,7 +69,7 @@
 </div>
 
 <style>
-  .heroSection .image {
+/*  .heroSection .image {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -93,7 +87,7 @@
   align-self: stretch;
   height: 100%;
   flex-grow: 0;
-}
+}*/
 </style>
 
 
@@ -102,6 +96,12 @@
   "name": "Hero Section",
   "class": "heroSection",
   "settings": [
+
+     {
+          "type": "image_picker",
+          "id": "image",
+            "label": "Banner Image",
+     },
     {
       "type": "text",
       "id": "rating_text",
@@ -160,19 +160,7 @@
       "id": "background_image",
       "label": "Background Image"
     }
-  ],
-   "blocks": [
-    {
-      "type": "image",
-      "name": "Banner Image",
-      "settings": [
-        {
-          "type": "image_picker",
-          "id": "image",
-          "label": "Image"
-        }
-      ]
-    }
+ 
   ],
   "presets": [
     {
