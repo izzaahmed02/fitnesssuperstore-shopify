@@ -102,7 +102,11 @@
 
     <div class="{% if section.settings.filter_type == 'vertical' %} facets-vertical page-width{% endif %}">
       {{ 'component-facets.css' | asset_url | stylesheet_tag }}
-      <script src="{{ 'facets.js' | asset_url }}" defer="defer"></script>
+      {% if collection.template_suffix == 'product-index' %}
+<script src="{{ 'facets-product-index.js' | asset_url }}" defer="defer"></script>
+{% else %}
+<script src="{{ 'facets.js' | asset_url }}" defer="defer"></script>
+{% endif %}
       {%- if section.settings.enable_filtering or section.settings.enable_sorting -%}
         <aside
           aria-labelledby="verticalTitle"
