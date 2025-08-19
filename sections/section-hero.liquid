@@ -1,5 +1,14 @@
 {{ 'section-hero.css' | asset_url | stylesheet_tag }}
-
+{%- if section.settings.background_image != blank -%}
+  <link 
+    rel="preload" 
+    as="image"
+    href="{{ section.settings.background_image | image_url: width: 2000 }}" 
+    imagesrcset="{{ section.settings.background_image | image_url: width: 2000, format: 'webp' }} 2000w, {{ section.settings.background_image | image_url: width: 1200, format: 'webp' }} 1200w"
+    imagesizes="100vw"
+    fetchpriority="high"
+  >
+{%- endif -%}
 <div class="hero-section">
   <div class="image-wrapper">
     <picture>
