@@ -263,19 +263,42 @@ this.input.addEventListener('paste', () => {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = predictiveMarkup || '';
 
-    if (skuMarkup) {
-      let productsList = wrapper.querySelector('#predictive-search-results-products-list');
+    // Collect product handles already present in predictive search
+    const seenHandles = new Set(
+      Array.from(wrapper.querySelectorAll('#predictive-search-results-products-list li a'))
+        .map(a => {
+          const href = a.getAttribute('href') || '';
+          return normalizeHandle(href);
+        })
+    );
 
-      if (productsList) {
-        // Append to existing products list
-        productsList.insertAdjacentHTML('beforeend', skuMarkup);
-      } else {
-        // Create new products list if predictive had none
-        const newList = document.createElement('ul');
-        newList.id = 'predictive-search-results-products-list';
-        newList.className = 'predictive-search__list predictive-search__list--products';
-        newList.innerHTML = skuMarkup;
-        wrapper.appendChild(newList);
+    if (skuMarkup) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = skuMarkup;
+
+      // Filter out duplicates by normalized handle
+      const skuItems = Array.from(tempDiv.querySelectorAll('li')).filter(li => {
+        const link = li.querySelector('a');
+        if (!link) return false;
+        const handle = normalizeHandle(link.getAttribute('href'));
+        if (seenHandles.has(handle)) {
+          return false; // already included from predictive search
+        }
+        seenHandles.add(handle);
+        return true;
+      });
+
+      if (skuItems.length) {
+        let productsList = wrapper.querySelector('#predictive-search-results-products-list');
+        if (productsList) {
+          skuItems.forEach(item => productsList.appendChild(item));
+        } else {
+          const newList = document.createElement('ul');
+          newList.id = 'predictive-search-results-products-list';
+          newList.className = 'predictive-search__list predictive-search__list--products';
+          skuItems.forEach(item => newList.appendChild(item));
+          wrapper.appendChild(newList);
+        }
       }
     }
 
@@ -287,6 +310,7 @@ this.input.addEventListener('paste', () => {
 
     this.renderSearchResults(combinedMarkup);
   })
+
   .catch((error) => {
     if (error?.code === 20) return; // aborted
     this.close();
@@ -443,6 +467,15 @@ renderSkuResultsFromVariants(variants) {
 
 
 
+}
+function normalizeHandle(href) {
+  try {
+    // Remove query params, anchors, and leading `/products/`
+    const url = new URL(href, window.location.origin);
+    return url.pathname.replace(/^\/products\//, '').replace(/\/$/, '');
+  } catch {
+    return href.replace(/^\/products\//, '').split('?')[0].replace(/\/$/, '');
+  }
 }
 
 customElements.define('predictive-search', PredictiveSearch);
