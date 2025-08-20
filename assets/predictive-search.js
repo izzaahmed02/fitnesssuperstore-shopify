@@ -8,6 +8,10 @@ function debounce(fn, delay) {
     timeout = setTimeout(() => fn.apply(this, args), delay);
   };
 }
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 
 
 class PredictiveSearch extends SearchForm {
@@ -125,7 +129,8 @@ this.input.addEventListener('paste', () => {
   const searchForTextElement = this.querySelector('[data-predictive-search-search-for-text]');
   const currentButtonText = searchForTextElement?.innerText;
   if (currentButtonText) {
-    const matches = currentButtonText.match(new RegExp(previousTerm, 'g'));
+    const safePrevTerm = escapeRegExp(previousTerm);
+const matches = currentButtonText.match(new RegExp(safePrevTerm, 'gi'));
     if (matches && matches.length > 1) {
       // The new term matches part of the button text and not just the search term, do not replace to avoid mistakes
       return;
