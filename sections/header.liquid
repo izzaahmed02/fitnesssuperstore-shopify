@@ -369,8 +369,33 @@
                     {%- endif -%}
                 </a>
             {%- endif -%}
-             <div class="custom-header-search-container">
-                 {% render 'header-search', input_id: 'My-Id'%}
+           
+              <div class="custom-header-search-container">
+                <form action="{{ routes.search_url }}" method="get" role="search" class="custom-header-search">
+                    <input
+                            class="custom-header-search--input"
+                            id="{{ input_id }}"
+                            type="search"
+                            name="q"
+                            value="{{ search.terms | escape }}"
+                            placeholder="{{ 'general.search.search' | t }}"
+                            {%- if settings.predictive_search_enabled -%}
+                                role="combobox"
+                                aria-expanded="false"
+                                aria-owns="predictive-search-results"
+                                aria-controls="predictive-search-results"
+                                aria-haspopup="listbox"
+                                aria-autocomplete="list"
+                                autocorrect="off"
+                                autocomplete="off"
+                                autocapitalize="off"
+                                spellcheck="false"
+                            {%- endif -%}
+                    >
+                    <input type="hidden" name="options[prefix]" value="last">
+                    <button class="search__button field__button" aria-label="{{ 'general.search.search' | t }}">
+                    </button>
+                </form>
             </div>
             {% if section.settings.menu_type_desktop != 'sidebar' %}
                  <a href="tel:+1-925-215-2927" aria-label="click here to call" class="header__contact link">
