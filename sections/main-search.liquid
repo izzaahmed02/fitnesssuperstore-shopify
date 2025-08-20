@@ -283,25 +283,25 @@
     </div>
 </div>
 <script>
-	document.addEventListener('DOMContentLoaded', () => {
-		const elements = document.querySelectorAll('.product-item .title');
-		console.log(elements);
-		elements.forEach((elem) => {
-			if (elem.tagName === 'A') {
-				const url = new URL(elem.href, window.location.origin);
-				url.search = '';
-				elem.href = url.toString();
-			}
-			else {
-				const link = elem.querySelector('a');
-				if (link) {
-					const url = new URL(link.href, window.location.origin);
-					url.search = '';
-					link.href = url.toString();
-				}
-			}
-		});
-	});
+	// document.addEventListener('DOMContentLoaded', () => {
+	// 	const elements = document.querySelectorAll('.product-item .title');
+	// 	console.log(elements);
+	// 	elements.forEach((elem) => {
+	// 		if (elem.tagName === 'A') {
+	// 			const url = new URL(elem.href, window.location.origin);
+	// 			url.search = '';
+	// 			elem.href = url.toString();
+	// 		}
+	// 		else {
+	// 			const link = elem.querySelector('a');
+	// 			if (link) {
+	// 				const url = new URL(link.href, window.location.origin);
+	// 				url.search = '';
+	// 				link.href = url.toString();
+	// 			}
+	// 		}
+	// 	});
+	// });
 
 
     // $(document).ready(function() {
@@ -320,31 +320,41 @@
     //     });
     //     });
 
-   $(document).ready(function() {
+  
+$(document).ready(function() {
   var perPage = {{products_per_page_js}}; // items per page
-  var $list = $(".collection li").filter(function() {
-    return $(this).find("a").length > 0; // exclude empty li
-  });
   var $countEl = $(".collecion-count");
   var $pagination = $(".pagination");
-  var filteredItems = $list;
+  var filteredItems = getList(); // always fresh list
 
-  // init first render
+  // initial render
   render(1);
 
-  // search handler
-  $("#search-input").on("keyup", function() {
+  // search handler (use .on() so it survives re-renders)
+  $(document).on("keyup", "#search-input", function() {
     var value = $(this).val().toLowerCase();
-
-    filteredItems = $list.filter(function() {
+    filteredItems = getList().filter(function() {
       return $(this).find("a").text().toLowerCase().indexOf(value) > -1;
     });
-
+    // updateCount(); // 🔥 update after filtering
     render(1); // reset to page 1
   });
 
+  // get latest <li> elements (excluding empty placeholders)
+  function getList() {
+    return $(".collection li").filter(function() {
+      return $(this).find("a").length > 0;
+    });
+  }
+//   function updateCount() {
+//     var totalVisible = $('#product-grid .grid__item:visible').length;
+//     $('#product-count').text(totalVisible);
+//     }
+
   function render(page) {
+    var $list = getList();
     $list.hide();
+    var $countEl = $(".collecion-count");
     var total = filteredItems.length;
     var start = (page - 1) * perPage;
     var end = start + perPage;
@@ -370,7 +380,7 @@
     if (totalPages <= 1) return;
 
     // Prev button
-    var $prev = $("<a href='#'>&lt;</a>").on("click", function(e) {
+    var $prev = $('<a href="#"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" fill="#F1592A"></path></svg></a>').on("click", function(e) {
       e.preventDefault();
       if (currentPage > 1) render(currentPage - 1);
     });
@@ -380,7 +390,7 @@
     for (var i = 1; i <= totalPages; i++) {
       var $page = $("<a href='#'>" + i + "</a>");
       if (i === currentPage) {
-        $page.addClass("active");
+        $page = $("<span class='current'>" + i + "</span>");
       }
       (function(i) {
         $page.on("click", function(e) {
@@ -392,7 +402,7 @@
     }
 
     // Next button
-    var $next = $("<a href='#'>&gt;</a>").on("click", function(e) {
+    var $next = $('<a href="#"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="#F1592A"></path></svg></a>').on("click", function(e) {
       e.preventDefault();
       if (currentPage < totalPages) render(currentPage + 1);
     });
