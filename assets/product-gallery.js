@@ -292,8 +292,13 @@ class ProductGallery extends HTMLElement {
     const zoomWidth = 1600;
     const zoomHeight = Math.round(zoomWidth / imgAspect);
     zoomImg.src = media.preview_image.src.replace(/width=\d+/, `width=${zoomWidth}`).replace(/height=\d+/, `height=${zoomHeight}`);
-    zoomImg.style.transform = 'scale(0.5)';
-    zoomImg.style.transformOrigin = 'center';
+    zoomImg.style.position = 'absolute';
+zoomImg.style.top = '50%';
+zoomImg.style.left = '50%';
+zoomImg.style.transform = 'translate(-50%, -50%)';
+zoomImg.style.objectFit = 'contain';
+zoomImg.style.maxWidth = 'none';
+zoomImg.style.maxHeight = 'none';
     zoomResult.appendChild(zoomImg);
 
     zoomImg.onload = () => {
@@ -377,8 +382,10 @@ class ProductGallery extends HTMLElement {
           const scaleX = zoomImg.naturalWidth / img.clientWidth;
           const scaleY = zoomImg.naturalHeight / img.clientHeight;
 
-          zoomResult.scrollLeft = (left + lensHalfW) * scaleX - zoomResult.clientWidth / 2;
-          zoomResult.scrollTop = (top + lensHalfH) * scaleY - zoomResult.clientHeight / 2;
+          const offsetX = (left + lensHalfW) * scaleX;
+const offsetY = (top + lensHalfH) * scaleY;
+
+zoomImg.style.transform = `translate(-${offsetX}px, -${offsetY}px)`;
         });
       };
 
