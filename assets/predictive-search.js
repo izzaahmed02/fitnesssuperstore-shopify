@@ -217,33 +217,36 @@ const matches = currentButtonText.match(new RegExp(safePrevTerm, 'gi'));
 
   // --- Storefront API SKU Search ---
   const skuQuery = `
-    query($term: String!) {
-      products(first: 5, query: $term) {
-        edges {
-          node {
-            id
-            title
-            handle
-            variants(first: 1) {
-              edges {
-                node {
-                  sku
-                  price {
-                    amount
-                    currencyCode
-                  }
+  query($term: String!) {
+    products(first: 5, query: $term) {
+      edges {
+        node {
+          id
+          title
+          handle
+          productType
+          tags
+          variants(first: 1) {
+            edges {
+              node {
+                sku
+                price {
+                  amount
+                  currencyCode
                 }
               }
             }
-            featuredImage {
-              url
-              altText
-            }
+          }
+          featuredImage {
+            url
+            altText
           }
         }
       }
     }
-  `;
+  }
+`;
+
 
   const skuFetch = fetch(STOREFRONT_API_URL, {
     method: 'POST',
@@ -258,9 +261,32 @@ const matches = currentButtonText.match(new RegExp(safePrevTerm, 'gi'));
   })
   .then(res => res.json())
   .then(data => {
-    if (!data.data?.products?.edges.length) return '';
-    return this.renderSkuResults(data.data.products.edges);
+  if (!data.data?.products?.edges.length) return '';
+
+  const excludedTypes = [
+    "Avis-add-charge",
+    "Custom Field More Info",
+    "Option Category",
+    "Product (Hidden)"
+  ];
+
+  const excludedTags = [
+    "hidden",
+    "draft",
+    "avisplus-product-options",
+    "about_option_categories"
+  ];
+
+  // Filter products
+  const filteredProducts = data.data.products.edges.filter(({ node }) => {
+    if (excludedTypes.includes(node.productType)) return false;
+    if (node.tags.some(tag => excludedTags.includes(tag.toLowerCase()))) return false;
+    return true;
   });
+
+  if (!filteredProducts.length) return '';
+  return this.renderSkuResults(filteredProducts);
+});
 
   // --- Merge Results ---
   Promise.all([predictiveFetch, skuFetch])
