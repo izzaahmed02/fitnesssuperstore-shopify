@@ -129,30 +129,31 @@
                     </facet-filters-form>
                     {%- capture contentForQuerystring -%}{{ content_for_header }}{%- endcapture -%}
                     {%- assign pageUrl = contentForQuerystring | split: '"pageurl":"' | last | split: '"' | first | split: '.myshopify.com' | last | replace: '\/', '/' | replace: '%20', ' ' | replace: '\u0026', '&' -%}
-                    {%- assign products_per_page = 30 -%}
+                    {%- assign products_per_page = 99999 -%}
+                    {%- assign products_per_page_js = 30 -%}
                     {%- for i in (1..1) -%}
                         {%- unless pageUrl contains "?" -%}{% break %}{%- endunless -%}
-                        {%- if pageUrl contains "view=30" -%}{%- assign products_per_page = 30 -%}{%- endif -%}
-                        {%- if pageUrl contains "view=60" -%}{%- assign products_per_page = 60 -%}{%- endif -%}
-                        {%- if pageUrl contains "view=90" -%}{%- assign products_per_page = 90 -%}{%- endif -%}
-                        {%- if pageUrl contains "view=120" -%}{%- assign products_per_page = 120 -%}{%- endif -%}
-                        {%- if pageUrl contains "view=99999" -%}{%- assign products_per_page = 99999 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=30" -%}{%- assign products_per_page_js = 30 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=60" -%}{%- assign products_per_page_js = 60 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=90" -%}{%- assign products_per_page_js = 90 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=120" -%}{%- assign products_per_page_js = 120 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=99999" -%}{%- assign products_per_page_js = 99999 -%}{%- endif -%}
                     {%- endfor -%}
                     <div class="sort-per-page">
                         <span class="label">Show </span>
                         <div class="select">
                             <select id="sel1" class="num">
                                 <option value="/search?view=30"
-                                        {% if products_per_page == 30 %}selected="selected"{% endif %}>30
+                                        {% if products_per_page_js == 30 %}selected="selected"{% endif %}>30
                                 </option>
                                 <option value="/search?view=60"
-                                        {% if products_per_page == 60 %}selected="selected"{% endif %}>60
+                                        {% if products_per_page_js == 60 %}selected="selected"{% endif %}>60
                                 </option>
                                 <option value="/search?view=90"
-                                        {% if products_per_page == 90 %}selected="selected"{% endif %}>90
+                                        {% if products_per_page_js == 90 %}selected="selected"{% endif %}>90
                                 </option>
                                 <option value="/search?view=120"
-                                        {% if products_per_page == 120 %}selected="selected"{% endif %}>120
+                                        {% if products_per_page_js == 120 %}selected="selected"{% endif %}>120
                                 </option>
                             </select>
                             {% render 'icon-caret' %}
@@ -172,7 +173,7 @@
                 <div class="collecion-count">
                <span>
                    {% if current_offset != items_count %} {{ current_offset }}-{% if page_count <= items_count %}{{ page_count }}{% else %}{{ items_count }}{% endif %}{% else %}{{ current_offset }}{% endif %}
-               </span> of {{ items_count }}</div>
+               </span> of <span class="search_count">{{ items_count }}</span></div>
                 <div class="active-facets active-facets-desktop">
                     {%- for filter in search.filters -%}
                         {%- for value in filter.active_values -%}
@@ -236,18 +237,19 @@
                         {%- if forloop.index > 2 -%}
                             {%- assign lazy_load = true -%}
                         {%- endif -%}
-                                            <li class="scroll-trigger animate--slide-in"
-                                            {% if settings.animations_reveal_on_scroll %}
-                                                data-cascade
-                                                    {% endif %}>
-                                                {%- case item.object_type -%}
-                                                    {%- when 'product' -%}
-                                                        {% render 'product-item', product: item %}
-                                                        {%- assign skip_card_product_styles = true -%}
-                                                {%- endcase -%}
-                                            </li>
+                            <li class="scroll-trigger animate--slide-in"
+                            {% if settings.animations_reveal_on_scroll %}
+                                data-cascade
+                                    {% endif %}>
+                                {%- case item.object_type -%}
+                                    {%- when 'product' -%}
+                                        {% render 'product-item', product: item %}
+                                        {%- assign skip_card_product_styles = true -%}
+                                {%- endcase -%}
+                            </li>
                     {%- endfor -%}
                 </ul>
+                <div class="pagination"></div>
                 {% assign size = paginate.parts | size %}
                 {% unless size == 0 %}
                     <div class="pagination">
@@ -302,21 +304,105 @@
 	});
 
 
-    $(document).ready(function() {
-        $("#search-input").on("keyup", function() {
-            var value = $(this).val().toLowerCase(); // get input text
-            $(".collection li").filter(function() {
-            $(this).toggle($(this).find("a").text().toLowerCase().indexOf(value) > -1);
-            });
-        });
+    // $(document).ready(function() {
+    //     $("#search-input").on("keyup", function() {
+    //         var value = $(this).val().toLowerCase(); // get input text
+    //         $(".collection li").filter(function() {
+    //         $(this).toggle($(this).find("a").text().toLowerCase().indexOf(value) > -1);
+    //         });
+    //     });
 
-        $("#search-input-mobile").on("keyup", function() {
-            var value = $(this).val().toLowerCase(); // get input text
-            $(".collection li").filter(function() {
-            $(this).toggle($(this).find("a").text().toLowerCase().indexOf(value) > -1);
-            });
+    //     $("#search-input-mobile").on("keyup", function() {
+    //         var value = $(this).val().toLowerCase(); // get input text
+    //         $(".collection li").filter(function() {
+    //         $(this).toggle($(this).find("a").text().toLowerCase().indexOf(value) > -1);
+    //         });
+    //     });
+    //     });
+
+   $(document).ready(function() {
+  var perPage = {{products_per_page_js}}; // items per page
+  var $list = $(".collection li").filter(function() {
+    return $(this).find("a").length > 0; // exclude empty li
+  });
+  var $countEl = $(".collecion-count");
+  var $pagination = $(".pagination");
+  var filteredItems = $list;
+
+  // init first render
+  render(1);
+
+  // search handler
+  $("#search-input").on("keyup", function() {
+    var value = $(this).val().toLowerCase();
+
+    filteredItems = $list.filter(function() {
+      return $(this).find("a").text().toLowerCase().indexOf(value) > -1;
+    });
+
+    render(1); // reset to page 1
+  });
+
+  function render(page) {
+    $list.hide();
+    var total = filteredItems.length;
+    var start = (page - 1) * perPage;
+    var end = start + perPage;
+    filteredItems.slice(start, end).show();
+
+    // update count
+    if (total === 0) {
+      $countEl.text("0 of 0");
+    } else if (total <= perPage) {
+      $countEl.html("<span>1-" + total + "</span> of <span>" + total + "</span>");
+    } else {
+      var last = Math.min(end, total);
+      $countEl.html("<span>"+(start + 1) + "-" + last + "</span> of <span>" + total + "</span>");
+    }
+
+    // build pagination
+    buildPagination(page, total);
+  }
+
+  function buildPagination(currentPage, total) {
+    $pagination.empty();
+    var totalPages = Math.ceil(total / perPage);
+    if (totalPages <= 1) return;
+
+    // Prev button
+    var $prev = $("<a href='#'>&lt;</a>").on("click", function(e) {
+      e.preventDefault();
+      if (currentPage > 1) render(currentPage - 1);
+    });
+    $pagination.append($prev);
+
+    // Page numbers
+    for (var i = 1; i <= totalPages; i++) {
+      var $page = $("<a href='#'>" + i + "</a>");
+      if (i === currentPage) {
+        $page.addClass("active");
+      }
+      (function(i) {
+        $page.on("click", function(e) {
+          e.preventDefault();
+          render(i);
         });
-        });
+      })(i);
+      $pagination.append($page);
+    }
+
+    // Next button
+    var $next = $("<a href='#'>&gt;</a>").on("click", function(e) {
+      e.preventDefault();
+      if (currentPage < totalPages) render(currentPage + 1);
+    });
+    $pagination.append($next);
+  }
+});
+
+
+
+
 
 </script>
 
