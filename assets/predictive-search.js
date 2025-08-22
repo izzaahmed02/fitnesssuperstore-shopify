@@ -1,3 +1,19 @@
+const STOREFRONT_API_URL = '/api/2023-07/graphql.json'; // Adjust API version
+const STOREFRONT_ACCESS_TOKEN = 'c58409094793cba2fc6ce881d45d39f5';
+
+function debounce(fn, delay) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+
+
 class PredictiveSearch extends SearchForm {
   constructor() {
     super(); 
@@ -18,7 +34,7 @@ class PredictiveSearch extends SearchForm {
     this.addEventListener('focusout', this.onFocusOut.bind(this));
     this.addEventListener('keyup', this.onKeyup.bind(this));
     this.addEventListener('keydown', this.onKeydown.bind(this));
-    this.input.addEventListener('input', this.onChange.bind(this));
+    this.input.addEventListener('input', debounce(this.onChange.bind(this), 250));
 this.input.addEventListener('paste', () => {
   setTimeout(() => this.onChange(), 0);
 });
@@ -113,7 +129,8 @@ this.input.addEventListener('paste', () => {
   const searchForTextElement = this.querySelector('[data-predictive-search-search-for-text]');
   const currentButtonText = searchForTextElement?.innerText;
   if (currentButtonText) {
-    const matches = currentButtonText.match(new RegExp(previousTerm, 'g'));
+    const safePrevTerm = escapeRegExp(previousTerm);
+const matches = currentButtonText.match(new RegExp(safePrevTerm, 'gi'));
     if (matches && matches.length > 1) {
       // The new term matches part of the button text and not just the search term, do not replace to avoid mistakes
       return;
@@ -173,45 +190,166 @@ this.input.addEventListener('paste', () => {
   }
 
   getSearchResults(searchTerm) {
-    const queryKey = searchTerm.replace(' ', '-').toLowerCase();
-    this.setLiveRegionLoadingState();
+  const queryKey = searchTerm.replace(' ', '-').toLowerCase();
+  this.setLiveRegionLoadingState();
 
-    if (this.cachedResults[queryKey]) {
-      this.renderSearchResults(this.cachedResults[queryKey]);
-      return;
+  if (this.cachedResults[queryKey]) {
+    this.renderSearchResults(this.cachedResults[queryKey]);
+    return;
+  }
+
+  // --- Shopify Predictive Search ---
+  const predictiveFetch = fetch(`${routes.predictive_search_url}?q=${encodeURIComponent(searchTerm)}&section_id=predictive-search`, {
+    signal: this.abortController.signal,
+  })
+  .then((response) => {
+    if (!response.ok) throw new Error(response.status);
+    return response.text();
+  })
+  .then((text) => {
+    const section = new DOMParser()
+      .parseFromString(text, 'text/html')
+      .querySelector('#shopify-section-predictive-search');
+
+    if (!section) return '';
+    return section.innerHTML;
+  });
+
+  // --- Storefront API SKU Search ---
+  const skuQuery = `
+  query($term: String!) {
+    products(first: 5, query: $term) {
+      edges {
+        node {
+          id
+          title
+          handle
+          productType
+          tags
+          variants(first: 1) {
+            edges {
+              node {
+                sku
+                price {
+                  amount
+                  currencyCode
+                }
+              }
+            }
+          }
+          featuredImage {
+            url
+            altText
+          }
+        }
+      }
+    }
+  }
+`;
+
+
+  const skuFetch = fetch(STOREFRONT_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Shopify-Storefront-Access-Token': STOREFRONT_ACCESS_TOKEN
+    },
+    body: JSON.stringify({
+      query: skuQuery,
+      variables: { term: `sku:${searchTerm.toUpperCase()}` } // 🔑 normalize to uppercase
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+  if (!data.data?.products?.edges.length) return '';
+
+  const excludedTypes = [
+    "Avis-add-charge",
+    "Custom Field More Info",
+    "Option Category",
+    "Product (Hidden)"
+  ];
+
+  const excludedTags = [
+    "hidden",
+    "draft",
+    "avisplus-product-options",
+    "about_option_categories"
+  ];
+
+  // Filter products
+  const filteredProducts = data.data.products.edges.filter(({ node }) => {
+    if (excludedTypes.includes(node.productType)) return false;
+    if (node.tags.some(tag => excludedTags.includes(tag.toLowerCase()))) return false;
+    return true;
+  });
+
+  if (!filteredProducts.length) return '';
+  return this.renderSkuResults(filteredProducts);
+});
+
+  // --- Merge Results ---
+  Promise.all([predictiveFetch, skuFetch])
+  .then(([predictiveMarkup, skuMarkup]) => {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = predictiveMarkup || '';
+
+    // Collect product handles already present in predictive search
+    const seenHandles = new Set(
+      Array.from(wrapper.querySelectorAll('#predictive-search-results-products-list li a'))
+        .map(a => {
+          const href = a.getAttribute('href') || '';
+          return normalizeHandle(href);
+        })
+    );
+
+    if (skuMarkup) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = skuMarkup;
+
+      // Filter out duplicates by normalized handle
+      const skuItems = Array.from(tempDiv.querySelectorAll('li')).filter(li => {
+        const link = li.querySelector('a');
+        if (!link) return false;
+        const handle = normalizeHandle(link.getAttribute('href'));
+        if (seenHandles.has(handle)) {
+          return false; // already included from predictive search
+        }
+        seenHandles.add(handle);
+        return true;
+      });
+
+      if (skuItems.length) {
+        let productsList = wrapper.querySelector('#predictive-search-results-products-list');
+        if (productsList) {
+          skuItems.forEach(item => productsList.appendChild(item));
+        } else {
+          const newList = document.createElement('ul');
+          newList.id = 'predictive-search-results-products-list';
+          newList.className = 'predictive-search__list predictive-search__list--products';
+          skuItems.forEach(item => newList.appendChild(item));
+          wrapper.appendChild(newList);
+        }
+      }
     }
 
-    fetch(`${routes.predictive_search_url}?q=${encodeURIComponent(searchTerm)}&section_id=predictive-search`, {
-      signal: this.abortController.signal,
-    })
-      .then((response) => {
-        if (!response.ok) {
-          var error = new Error(response.status);
-          this.close();
-          throw error;
-        }
+    const combinedMarkup = wrapper.innerHTML;
 
-        return response.text();
-      })
-      .then((text) => {
-        const resultsMarkup = new DOMParser()
-          .parseFromString(text, 'text/html')
-          .querySelector('#shopify-section-predictive-search').innerHTML;
-        // Save bandwidth keeping the cache in all instances synced
-        this.allPredictiveSearchInstances.forEach((predictiveSearchInstance) => {
-          predictiveSearchInstance.cachedResults[queryKey] = resultsMarkup;
-        });
-        this.renderSearchResults(resultsMarkup);
-      })
-      .catch((error) => {
-        if (error?.code === 20) {
-          // Code 20 means the call was aborted
-          return;
-        }
-        this.close();
-        throw error;
-      });
-  }
+    this.allPredictiveSearchInstances.forEach((instance) => {
+      instance.cachedResults[queryKey] = combinedMarkup;
+    });
+
+    this.renderSearchResults(combinedMarkup);
+  })
+
+  .catch((error) => {
+    if (error?.code === 20) return; // aborted
+    this.close();
+    throw error;
+  });
+}
+
+
 
   setLiveRegionLoadingState() {
     this.statusElement = this.statusElement || this.querySelector('.predictive-search-status');
@@ -276,6 +414,98 @@ this.input.addEventListener('paste', () => {
     this.input.setAttribute('aria-expanded', false);
     this.resultsMaxHeight = false;
     this.predictiveSearchResults.removeAttribute('style');
+  }
+  renderSkuResults(products) {
+  let html = '';
+
+  products.forEach(({ node }, index) => {
+    const variant = node.variants.edges[0]?.node;
+
+    html += `
+      <li id="predictive-search-option-sku-${index}" 
+          class="predictive-search__list-item" 
+          role="option" aria-selected="false">
+        <a href="/products/${node.handle}" 
+           class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text" 
+           tabindex="-1">
+          ${node.featuredImage ? `
+            <img class="predictive-search__image" 
+                 src="${node.featuredImage.url}&width=150" 
+                 alt="${node.featuredImage.altText || node.title}" 
+                 width="50" />` : ''}
+
+          <div class="predictive-search__item-content">
+            <p class="predictive-search__item-heading h5">${node.title}</p>
+            <div class="predictive-search__item-vendor">SKU: ${variant?.sku || ''}</div>
+            <div class="price">
+              <div class="price__container">
+                <div class="price__regular">
+                  <span class="visually-hidden visually-hidden--inline">Regular price</span>
+                  <span class="price-item-fixed">
+                    ${variant?.price?.amount ? `$${parseFloat(variant.price.amount).toLocaleString()} ${variant.price.currencyCode}` : ''}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </a>
+      </li>
+    `;
+  });
+
+  return html;
+}
+renderSkuResultsFromVariants(variants) {
+  let html = '';
+
+  variants.forEach(({ node }, index) => {
+    const product = node.product;
+
+    html += `
+      <li id="predictive-search-option-sku-${index}" 
+          class="predictive-search__list-item" 
+          role="option" aria-selected="false">
+        <a href="/products/${product.handle}" 
+           class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text" 
+           tabindex="-1">
+          ${product.featuredImage ? `
+            <img class="predictive-search__image" 
+                 src="${product.featuredImage.url}&width=150" 
+                 alt="${product.featuredImage.altText || product.title}" 
+                 width="50" />` : ''}
+
+          <div class="predictive-search__item-content">
+            <p class="predictive-search__item-heading h5">${product.title}</p>
+            <div class="predictive-search__item-vendor">SKU: ${node.sku}</div>
+            <div class="price">
+              <div class="price__container">
+                <div class="price__regular">
+                  <span class="visually-hidden visually-hidden--inline">Regular price</span>
+                  <span class="price-item-fixed">
+                    ${node.price?.amount ? `$${parseFloat(node.price.amount).toLocaleString()} ${node.price.currencyCode}` : ''}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </a>
+      </li>
+    `;
+  });
+
+  return html;
+}
+
+
+
+}
+function normalizeHandle(href) {
+  try {
+    // Remove query params, anchors, and leading `/products/`
+    const url = new URL(href, window.location.origin);
+    return url.pathname.replace(/^\/products\//, '').replace(/\/$/, '');
+  } catch {
+    return href.replace(/^\/products\//, '').split('?')[0].replace(/\/$/, '');
   }
 }
 
