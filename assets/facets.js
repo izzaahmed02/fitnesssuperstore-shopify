@@ -36,16 +36,16 @@ class FacetFiltersForm extends HTMLElement {
 				}
 			});
 		})
-		const searchInput = document.getElementById("search-input");
-		const searchInputMobile = document.getElementById("search-input-mobile");
-		if (searchInput) {
-			searchInput.removeEventListener("input", filterProducts);
-			searchInput.addEventListener("input", debounce(filterProducts, 300));
-		}
-		if (searchInputMobile) {
-			searchInput.removeEventListener("input", filterProducts);
-			searchInput.addEventListener("input", debounce(filterProducts, 300));
-		}
+		// const searchInput = document.getElementById("search-input");
+		// const searchInputMobile = document.getElementById("search-input-mobile");
+		// if (searchInput) {
+		// 	searchInput.removeEventListener("input", filterProducts);
+		// 	searchInput.addEventListener("input", debounce(filterProducts, 300));
+		// }
+		// if (searchInputMobile) {
+		// 	searchInputMobile.removeEventListener("input", filterProducts);
+		// 	searchInputMobile.addEventListener("input", debounce(filterProducts, 300));
+		// }
 
 		document.querySelectorAll(".facet-checkbox__text-label").forEach(element => {
 			element.textContent = decodeHTML(element.innerHTML);
@@ -85,7 +85,8 @@ class FacetFiltersForm extends HTMLElement {
 		}
 
 		function filterProducts(event) {
-			const searchText = document.getElementById('search-input').value.toLowerCase();
+			console.log("Filtering products..." + event.target.value);
+			const searchText = event.target.value.toLowerCase();
 			if (!searchText) {
 				const searchParams = new URLSearchParams(window.location.search) ?? FacetFiltersForm.searchParamsInitial;
 				FacetFiltersForm.renderPage(searchParams, event);

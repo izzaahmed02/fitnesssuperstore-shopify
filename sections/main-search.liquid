@@ -129,30 +129,31 @@
                     </facet-filters-form>
                     {%- capture contentForQuerystring -%}{{ content_for_header }}{%- endcapture -%}
                     {%- assign pageUrl = contentForQuerystring | split: '"pageurl":"' | last | split: '"' | first | split: '.myshopify.com' | last | replace: '\/', '/' | replace: '%20', ' ' | replace: '\u0026', '&' -%}
-                    {%- assign products_per_page = 30 -%}
+                    {%- assign products_per_page = 99999 -%}
+                    {%- assign products_per_page_js = 30 -%}
                     {%- for i in (1..1) -%}
                         {%- unless pageUrl contains "?" -%}{% break %}{%- endunless -%}
-                        {%- if pageUrl contains "view=30" -%}{%- assign products_per_page = 30 -%}{%- endif -%}
-                        {%- if pageUrl contains "view=60" -%}{%- assign products_per_page = 60 -%}{%- endif -%}
-                        {%- if pageUrl contains "view=90" -%}{%- assign products_per_page = 90 -%}{%- endif -%}
-                        {%- if pageUrl contains "view=120" -%}{%- assign products_per_page = 120 -%}{%- endif -%}
-                        {%- if pageUrl contains "view=99999" -%}{%- assign products_per_page = 99999 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=30" -%}{%- assign products_per_page_js = 30 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=60" -%}{%- assign products_per_page_js = 60 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=90" -%}{%- assign products_per_page_js = 90 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=120" -%}{%- assign products_per_page_js = 120 -%}{%- endif -%}
+                        {%- if pageUrl contains "view=99999" -%}{%- assign products_per_page_js = 99999 -%}{%- endif -%}
                     {%- endfor -%}
                     <div class="sort-per-page">
                         <span class="label">Show </span>
                         <div class="select">
                             <select id="sel1" class="num">
                                 <option value="/search?view=30"
-                                        {% if products_per_page == 30 %}selected="selected"{% endif %}>30
+                                        {% if products_per_page_js == 30 %}selected="selected"{% endif %}>30
                                 </option>
                                 <option value="/search?view=60"
-                                        {% if products_per_page == 60 %}selected="selected"{% endif %}>60
+                                        {% if products_per_page_js == 60 %}selected="selected"{% endif %}>60
                                 </option>
                                 <option value="/search?view=90"
-                                        {% if products_per_page == 90 %}selected="selected"{% endif %}>90
+                                        {% if products_per_page_js == 90 %}selected="selected"{% endif %}>90
                                 </option>
                                 <option value="/search?view=120"
-                                        {% if products_per_page == 120 %}selected="selected"{% endif %}>120
+                                        {% if products_per_page_js == 120 %}selected="selected"{% endif %}>120
                                 </option>
                             </select>
                             {% render 'icon-caret' %}
@@ -172,7 +173,7 @@
                 <div class="collecion-count">
                <span>
                    {% if current_offset != items_count %} {{ current_offset }}-{% if page_count <= items_count %}{{ page_count }}{% else %}{{ items_count }}{% endif %}{% else %}{{ current_offset }}{% endif %}
-               </span> of {{ items_count }}</div>
+               </span> of <span class="search_count">{{ items_count }}</span></div>
                 <div class="active-facets active-facets-desktop">
                     {%- for filter in search.filters -%}
                         {%- for value in filter.active_values -%}
@@ -230,24 +231,25 @@
             </div>
             {% paginate search.results by products_per_page %}
                 <ul class="collection" id="product-grid" data-id="{{ section.id }}">
-                    <div class="loading-overlay gradient"></div>
+                    {% comment %} <div class="loading-overlay gradient"></div> {% endcomment %}
                     {%- for item in search.results -%}
                         {% assign lazy_load = false %}
                         {%- if forloop.index > 2 -%}
                             {%- assign lazy_load = true -%}
                         {%- endif -%}
-                                            <li class="scroll-trigger animate--slide-in"
-                                            {% if settings.animations_reveal_on_scroll %}
-                                                data-cascade
-                                                    {% endif %}>
-                                                {%- case item.object_type -%}
-                                                    {%- when 'product' -%}
-                                                        {% render 'product-item', product: item %}
-                                                        {%- assign skip_card_product_styles = true -%}
-                                                {%- endcase -%}
-                                            </li>
+                            <li class="scroll-trigger animate--slide-in"
+                            {% if settings.animations_reveal_on_scroll %}
+                                data-cascade
+                                    {% endif %}>
+                                {%- case item.object_type -%}
+                                    {%- when 'product' -%}
+                                        {% render 'product-item', product: item %}
+                                        {%- assign skip_card_product_styles = true -%}
+                                {%- endcase -%}
+                            </li>
                     {%- endfor -%}
                 </ul>
+                <div class="pagination"></div>
                 {% assign size = paginate.parts | size %}
                 {% unless size == 0 %}
                     <div class="pagination">
@@ -281,25 +283,137 @@
     </div>
 </div>
 <script>
-	document.addEventListener('DOMContentLoaded', () => {
-		const elements = document.querySelectorAll('.product-item .title');
-		console.log(elements);
-		elements.forEach((elem) => {
-			if (elem.tagName === 'A') {
-				const url = new URL(elem.href, window.location.origin);
-				url.search = '';
-				elem.href = url.toString();
-			}
-			else {
-				const link = elem.querySelector('a');
-				if (link) {
-					const url = new URL(link.href, window.location.origin);
-					url.search = '';
-					link.href = url.toString();
-				}
-			}
-		});
-	});
+	// document.addEventListener('DOMContentLoaded', () => {
+	// 	const elements = document.querySelectorAll('.product-item .title');
+	// 	console.log(elements);
+	// 	elements.forEach((elem) => {
+	// 		if (elem.tagName === 'A') {
+	// 			const url = new URL(elem.href, window.location.origin);
+	// 			url.search = '';
+	// 			elem.href = url.toString();
+	// 		}
+	// 		else {
+	// 			const link = elem.querySelector('a');
+	// 			if (link) {
+	// 				const url = new URL(link.href, window.location.origin);
+	// 				url.search = '';
+	// 				link.href = url.toString();
+	// 			}
+	// 		}
+	// 	});
+	// });
+
+
+    // $(document).ready(function() {
+    //     $("#search-input").on("keyup", function() {
+    //         var value = $(this).val().toLowerCase(); // get input text
+    //         $(".collection li").filter(function() {
+    //         $(this).toggle($(this).find("a").text().toLowerCase().indexOf(value) > -1);
+    //         });
+    //     });
+
+    //     $("#search-input-mobile").on("keyup", function() {
+    //         var value = $(this).val().toLowerCase(); // get input text
+    //         $(".collection li").filter(function() {
+    //         $(this).toggle($(this).find("a").text().toLowerCase().indexOf(value) > -1);
+    //         });
+    //     });
+    //     });
+
+  
+$(document).ready(function() {
+  var perPage = {{products_per_page_js}}; // items per page
+  var $countEl = $(".collecion-count");
+  var $pagination = $(".pagination");
+  var filteredItems = getList(); // always fresh list
+
+  // initial render
+  render(1);
+
+  // search handler (use .on() so it survives re-renders)
+  $(document).on("keyup", "#search-input", function() {
+    var value = $(this).val().toLowerCase();
+    filteredItems = getList().filter(function() {
+      return $(this).find("a").text().toLowerCase().indexOf(value) > -1;
+    });
+    // updateCount(); // 🔥 update after filtering
+    render(1); // reset to page 1
+  });
+
+  // get latest <li> elements (excluding empty placeholders)
+  function getList() {
+    return $(".collection li").filter(function() {
+      return $(this).find("a").length > 0;
+    });
+  }
+//   function updateCount() {
+//     var totalVisible = $('#product-grid .grid__item:visible').length;
+//     $('#product-count').text(totalVisible);
+//     }
+
+  function render(page) {
+    var $list = getList();
+    $list.hide();
+    var $countEl = $(".collecion-count");
+    var total = filteredItems.length;
+    var start = (page - 1) * perPage;
+    var end = start + perPage;
+    filteredItems.slice(start, end).show();
+
+    // update count
+    if (total === 0) {
+      $countEl.text("0 of 0");
+    } else if (total <= perPage) {
+      $countEl.html("<span>1-" + total + "</span> of <span>" + total + "</span>");
+    } else {
+      var last = Math.min(end, total);
+      $countEl.html("<span>"+(start + 1) + "-" + last + "</span> of <span>" + total + "</span>");
+    }
+
+    // build pagination
+    buildPagination(page, total);
+  }
+
+  function buildPagination(currentPage, total) {
+    $pagination.empty();
+    var totalPages = Math.ceil(total / perPage);
+    if (totalPages <= 1) return;
+
+    // Prev button
+    var $prev = $('<a href="#"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" fill="#F1592A"></path></svg></a>').on("click", function(e) {
+      e.preventDefault();
+      if (currentPage > 1) render(currentPage - 1);
+    });
+    $pagination.append($prev);
+
+    // Page numbers
+    for (var i = 1; i <= totalPages; i++) {
+      var $page = $("<a href='#'>" + i + "</a>");
+      if (i === currentPage) {
+        $page = $("<span class='current'>" + i + "</span>");
+      }
+      (function(i) {
+        $page.on("click", function(e) {
+          e.preventDefault();
+          render(i);
+        });
+      })(i);
+      $pagination.append($page);
+    }
+
+    // Next button
+    var $next = $('<a href="#"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="#F1592A"></path></svg></a>').on("click", function(e) {
+      e.preventDefault();
+      if (currentPage < totalPages) render(currentPage + 1);
+    });
+    $pagination.append($next);
+  }
+});
+
+
+
+
+
 </script>
 
 

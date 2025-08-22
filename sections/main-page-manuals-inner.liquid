@@ -4,7 +4,12 @@
 <custom-manuals class="manuals">
     <div class="manuals-header">
         <div class="page-width">
-            <h2 class="manuals-title">{{ section.settings.title | default: page.title }}</h2>
+            <h1 class="manuals-title">{{ section.settings.title | default: page.title }}</h1>
+            {% if page.content != blank %}
+                <div class="manuals__content">
+                    {{ page.content }}
+                </div>
+            {% endif %}
             <form class="manuals-search" role="search" onsubmit="return false;">
                 <div class="manuals-search__wrapper">
                     <div class="manuals-search__container">
@@ -48,7 +53,8 @@
                 {%- assign manual_owners = false -%}
 
                 {% if brand_data %}
-                    {% for manual in brand_data.manuals.value %}
+                    {% comment %} {% paginate brand_data.manuals.value by 1000 %}
+                        {% for manual in brand_data.manuals.value %}
                         {% if manual.manual_type == 'Assembly Manual' %}
                             {% if manual != blank %}
                                 {%- assign manual_assembly = true -%}
@@ -59,14 +65,19 @@
                                 {%- assign manual_owners = true -%}
                             {% endif %}
                         {% endif %}
+                        {{manual.manual_type}}
                     {% endfor %}
+                    {% endpaginate %} {% endcomment %}
+                    
 
                     <div class="manuals-content__result">
-                        {% if manual_assembly %}
+                        {% comment %} {% if manual_assembly %} {% endcomment %}
+                         {% assign all_manuals = brand_data.manuals.value %}
+                        {% paginate all_manuals by 1000 %}
                             <div class="manuals-content__col">
                                 <h2>Assembly Manuals</h2>
                                 <ul class="manuals-list-inner assembly-manuals">
-                                    {% for manual in brand_data.manuals.value %}
+                                        {% for manual in all_manuals %}
                                         {% if manual.manual_type == 'Assembly Manual' %}
                                             <li data-title="{{ manual.title | strip | downcase }}">
                                                 <a href="{{ manual.manual_url }}" class="manuals-list-item" target="_blank">
@@ -76,11 +87,17 @@
                                         {% endif %}
                                     {% endfor %}
                                 </ul>
+
+                               
                                 <div class="pagination assembly-pagination"></div>
                             </div>
-                        {% endif %}
+                                {%- if paginate.pages > 1 -%}
+                                    {% render 'pagination', paginate: paginate, anchor: '' %}
+                                {%- endif -%}
+                            {% endpaginate %}
+                        {% comment %} {% endif %} {% endcomment %}
 
-                        {% if manual_owners %}
+                        {% comment %} {% if manual_owners %} {% endcomment %}
                             <div class="manuals-content__col">
                                 <h2>Owner’s Manuals</h2>
                                 <ul class="manuals-list-inner owners-manuals">
@@ -93,10 +110,11 @@
                                             </li>
                                         {% endif %}
                                     {% endfor %}
+                                    
                                 </ul>
                                 <div class="pagination owners-pagination"></div>
                             </div>
-                        {% endif %}
+                        {% comment %} {% endif %} {% endcomment %}
 
                     </div>
                 {% endif %}
@@ -117,6 +135,8 @@
         </div>
     </div>
 </custom-manuals>
+
+
 
 <script src="{{ 'page-custom-manuals.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'page-custom-manuals-pagination.js' | asset_url }}" defer="defer"></script>
