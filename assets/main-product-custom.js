@@ -340,53 +340,51 @@ try {
 			event.stopPropagation();
 		});
 
-		if (Shopify.country === 'US') {
-			var afterPayIntervalTrigger = setInterval(() => {
-				hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
-			}, 500)
+		var afterPayIntervalTrigger = setInterval(() => {
+			hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
+		}, 500)
 
-			var affirmIntervalTrigger = setInterval(() => {
-				var affirmElement = document.querySelector('.affirm-as-low-as');
+		var affirmIntervalTrigger = setInterval(() => {
+			var affirmElement = document.querySelector('.affirm-as-low-as');
 
-				if (affirmElement) {
-					document.querySelector('.paylater-logo').innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="65" height="24" style="max-width: 110px;cursor: pointer;margin-top:-13px;object-fit:contain;">`
-					clearInterval(affirmIntervalTrigger);
+			if (affirmElement) {
+				document.querySelector('.paylater-logo').innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="65" height="24" style="max-width: 110px;cursor: pointer;margin-top:-13px;object-fit:contain;">`
+				clearInterval(affirmIntervalTrigger);
+			}
+		}, 500)
+
+		waitForPayLaterDependencies(() => { 
+			let payLaterText = generatePayLaterText();
+
+				document.querySelector('.paylater-container').style.display = 'flex';
+				document.querySelector('.paylater-text').innerHTML = `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+				<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#D83D0E"></path>
+				</svg>`
+		})
+
+		const targetNode = document.querySelector('.pr_custom_price');
+
+		const observerCallback = (mutationsList, observer) => {
+			for (const mutation of mutationsList) {
+				if (mutation.type === 'childList') {
+					let payLaterText = generatePayLaterText();
+
+					setTimeout(() => {			
+						document.querySelector('.paylater-text').innerHTML = `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#D83D0E"></path>
+						</svg>`
+				
+						hideOrShowAfterPayLogo();	
+					});
 				}
-			}, 500)
-
-			waitForPayLaterDependencies(() => { 
-				let payLaterText = generatePayLaterText();
+			}
+		};
 	
-					document.querySelector('.paylater-container').style.display = 'flex';
-					document.querySelector('.paylater-text').innerHTML = `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#D83D0E"></path>
-				  </svg>`
-			})
+		const observer = new MutationObserver(observerCallback);
 
-			const targetNode = document.querySelector('.pr_custom_price');
-
-			const observerCallback = (mutationsList, observer) => {
-				for (const mutation of mutationsList) {
-					if (mutation.type === 'childList') {
-						let payLaterText = generatePayLaterText();
+		const config = { childList: true, characterData: true, subtree: true };
 	
-						setTimeout(() => {			
-							document.querySelector('.paylater-text').innerHTML = `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-								<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#D83D0E"></path>
-							</svg>`
-					
-							hideOrShowAfterPayLogo();	
-						});
-					}
-				}
-			};
-		
-			const observer = new MutationObserver(observerCallback);
-	
-			const config = { childList: true, characterData: true, subtree: true };
-		
-			observer.observe(targetNode, config);
-		}
+		observer.observe(targetNode, config);
 	});
 } catch (error) {
 	console.log(error)
