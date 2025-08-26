@@ -348,7 +348,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 				const distanceFromBenicia = await getDistanceFromBenicia(userLoc.postal)
 				if (distanceFromBenicia <= 100) {
 					document.querySelector('.utility-bar').style.display = 'block';
-					document.querySelector('.california-discount-offer ').style.display = 'block';
+					//document.querySelector('.california-discount-offer ').style.display = 'block';
 				}
 			}
 		}
@@ -361,7 +361,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 			if (distanceFromBenicia <= 100) {
 				document.querySelector('.utility-bar').style.display = 'block';
-				document.querySelector('.california-discount-offer ').style.display = 'block';
+				//document.querySelector('.california-discount-offer ').style.display = 'block';
 			}
 		}
 	} 
