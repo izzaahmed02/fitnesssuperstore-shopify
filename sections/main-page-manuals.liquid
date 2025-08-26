@@ -9,8 +9,21 @@
   <div class="page-width">
       <div class="manuals__wrapper">
           <div class="manuals__headding">
-              <h1>{{ section.settings.title | default: page.title }}</h1>
+            {% if section.settings.title != blank %}
+                {% comment %} <h1>{{ section.settings.title | default: page.title }}</h1> {% endcomment %}
+                 <h1>{{ page.title }}</h1>
+                {% else %}
+                    <h1>{{ page.title }}</h1>
+            {% endif %}
           </div>
+
+          {% if page.content != blank %}
+                <div class="manuals__content">
+                    {{ page.content }}
+                </div>
+            {% endif %}
+
+
           <div class="manuals">
               <div class="manuals__controls">
                   <div class="custom-search">
@@ -67,7 +80,6 @@
     {%- endif -%}
     {%- endfor -%}
   ];
-  console.log(manualsData);
 
   let visibleCount = 25;
   let sortDirection = { model: 'asc', brand: 'asc' };
@@ -93,13 +105,35 @@
     if (!brandValue) {
         // Default page without brand filter
         window.history.pushState({}, '', '/pages/all-manuals');
+        setTimeout(function() {
+        renderTop();
+        }, 200);
+        
         return;
     }
     const brandItem = manualsData.find(item => item.brand === brandValue);
     if (brandItem) {
         // Use the brandUrl from your data
         window.history.pushState({}, '', brandItem.brandUrl);
+        console.log('URL updated to:', brandItem.brandUrl);
+        setTimeout(function() {
+        renderTop();
+        }, 200);
     }
+}
+
+function renderTop(){
+fetch("?section_id=main-page-manuals")
+    .then((response) => response.text())
+    .then((responseData) => {
+    var response_html = $(responseData);
+    var title_text = $(".manuals__headding", response_html);
+    $(".manuals__headding").replaceWith(title_text);
+
+    var description_text = $(".manuals__content", response_html);
+    $(".manuals__content").replaceWith(description_text);
+    renderTable();
+    });
 }
  
 
@@ -149,6 +183,18 @@
       });
   });
 
+  function initBrandFromUrl() {
+    const currentUrl = window.location.pathname + window.location.search; // full path
+    const brandItem = manualsData.find(item => item.brandUrl === currentUrl);
+
+    if (brandItem) {
+        brandFilterEl.value = brandItem.brand;
+    } else {
+        brandFilterEl.value = ""; // default (all)
+    }
+}
+
+
   searchEl.addEventListener('input', () => {
       visibleCount = 25;
       renderTable();
@@ -156,7 +202,7 @@
   brandFilterEl.addEventListener('change', () => {
       visibleCount = 25;
       updateUrlWithBrandUrl(brandFilterEl.value); // update address bar using brandUrl
-      renderTable();
+    //   renderTable();
   });
   loadMoreEl.addEventListener('click', () => {
       visibleCount += 25;
@@ -164,6 +210,7 @@
   });
 
   populateBrandFilter();
+  initBrandFromUrl();
   renderTable();
 </script>
 
