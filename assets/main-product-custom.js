@@ -340,6 +340,10 @@ try {
 			event.stopPropagation();
 		});
 
+		var afterPayIntervalTrigger = setInterval(() => {
+			hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
+		}, 100)
+
 		waitForPayLaterDependencies(() => { 
 			let payLaterText = generatePayLaterText();
 			document.querySelectorAll('.paylater-container').forEach(container => {
@@ -348,10 +352,6 @@ try {
 					container.innerHTML = getPaylaterModal(payLaterText);
 				});
 			})
-
-			var afterPayIntervalTrigger = setInterval(() => {
-				hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
-			}, 100)
 		
 			var affirmIntervalTrigger = setInterval(() => {
 				var affirmElement = document.querySelector('.affirm-as-low-as');
