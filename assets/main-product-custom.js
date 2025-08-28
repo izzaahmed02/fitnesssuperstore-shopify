@@ -352,7 +352,7 @@ try {
 					container.innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="65" height="24" style="max-width: 110px;cursor: pointer;margin-top:-13px;object-fit:contain;">`
 				});
 			}	clearInterval(affirmIntervalTrigger);
-		}, 500)
+		}, 1000)
 
 		waitForPayLaterDependencies(() => { 
 			let payLaterText = generatePayLaterText();
@@ -423,7 +423,7 @@ function generatePayLaterText() {
 	return payLaterText;
 }
 
-function waitForPayLaterDependencies(callback, timeout = 10000, interval = 100) {
+function waitForPayLaterDependencies(callback, timeout = 5000, interval = 100) {
     const start = Date.now();
 
     const checkReady = () => {
