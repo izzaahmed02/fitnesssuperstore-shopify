@@ -14,26 +14,28 @@
   }
 </style>
 <div class="customBreadcrumbs">
-<div class="pdp-breadcrumbs custom-breadcrumbs">
-  <p><strong>Browse for more gym equipment in the same category as this item:</strong></p>
-  {% for item in product.metafields.custom.breadcrumb_paths.value %}
-    <div class="pdp-breadcrumbs__item">
-      {% assign size = item.custom_titles.value | size | minus: 1 %}
-      {% for title in item.custom_titles.value %}
-        {% assign index = forloop.index0 %}
-        {% assign found = false %}
-        {% for step in item.steps.value %}
-          {% if index == forloop.index0 %}
-            <a href="{{ step.url }}">{{ title }}</a>{% if index < size %}<span class="divider">></span>{% endif %}
-            {% assign found = true %}
+  <div class="pdp-breadcrumbs custom-breadcrumbs">
+    <p><strong>Browse for more gym equipment in the same category as this item:</strong></p>
+
+    {% for item in product.metafields.custom.breadcrumb_paths.value %}
+      <div class="pdp-breadcrumbs__item">
+        {% assign size = item.custom_titles.value | size | minus: 1 %}
+
+        {% for title in item.custom_titles.value %}
+          {% assign index = forloop.index0 %}
+          {% assign step = item.steps.value[index] %}
+
+          {% if step and step.url %}
+            <a href="{{ step.url }}">{{ title }}</a>
+          {% else %}
+            <span>{{ title }}</span>
+          {% endif %}
+
+          {% if index < size %}
+            <span class="divider">></span>
           {% endif %}
         {% endfor %}
-        {% if found == false %}
-          <span>{{ title }}</span>{% if index < size %}<span class="divider">></span>{% endif %}
-        {% endif %}
-      {% endfor %}
-    </div>
-  {% endfor %}
-</div>
-
+      </div>
+    {% endfor %}
+  </div>
 </div>
