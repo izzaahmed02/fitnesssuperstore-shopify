@@ -354,7 +354,7 @@ try {
 			}	clearInterval(affirmIntervalTrigger);
 		}, 1000)
 
-		setTimeout(() => {
+		waitForPayLaterDependencies(() => { 
 			let payLaterText = generatePayLaterText();
 			document.querySelectorAll('.paylater-container').forEach(container => {
 				container.style.display = 'flex';
@@ -362,7 +362,7 @@ try {
 					container.innerHTML = getPaylaterModal(payLaterText);
 				});
 			})
-		}, 5000);
+		})
 
 		const targetNode = document.querySelector('.pr_custom_price');
 
@@ -423,7 +423,7 @@ function generatePayLaterText() {
 	return payLaterText;
 }
 
-function waitForPayLaterDependencies(callback, timeout = 5000, interval = 100) {
+function waitForPayLaterDependencies(callback, timeout = 20000, interval = 500) {
     const start = Date.now();
 
     const checkReady = () => {
