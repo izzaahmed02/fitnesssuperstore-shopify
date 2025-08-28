@@ -423,7 +423,7 @@ function generatePayLaterText() {
 	return payLaterText;
 }
 
-function waitForPayLaterDependencies(callback, timeout = 5000, interval = 100) {
+function waitForPayLaterDependencies(callback, timeout = 10000, interval = 100) {
     const start = Date.now();
 
     const checkReady = () => {
