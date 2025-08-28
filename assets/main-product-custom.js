@@ -354,7 +354,7 @@ try {
 			}	clearInterval(affirmIntervalTrigger);
 		}, 1000)
 
-		waitForPayLaterDependencies(() => { 
+		document.addEventListener('shopify:section:load', () => {
 			let payLaterText = generatePayLaterText();
 			document.querySelectorAll('.paylater-container').forEach(container => {
 				container.style.display = 'flex';
@@ -362,7 +362,7 @@ try {
 					container.innerHTML = getPaylaterModal(payLaterText);
 				});
 			})
-		})
+		});
 
 		const targetNode = document.querySelector('.pr_custom_price');
 
