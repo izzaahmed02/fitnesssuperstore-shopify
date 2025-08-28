@@ -595,10 +595,10 @@ function combinedPayLater() {
 }
 
 function generateAfterPayPaymentTerms() {
-	const afterPayRateElement = document.querySelector('square-placement')?.shadowRoot;
+	const afterPayRateElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
 	if (afterPayRateElement == null) return;
 
-	const afterPayRate = afterPayRateElement.querySelector('.afterpay-text2 strong');
+	const afterPayRate = afterPayRateElement.querySelector('strong');
 	if (!afterPayRate) return null;
 
 	const matchPrice = afterPayRate.innerHTML.match(/[\d,]+(\.\d{1,2})?/);
