@@ -342,7 +342,7 @@ try {
 
 		var afterPayIntervalTrigger = setInterval(() => {
 			hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
-		}, 500)
+		}, 100)
 
 		var affirmIntervalTrigger = setInterval(() => {
 			var affirmElement = document.querySelector('.affirm-as-low-as');
@@ -359,9 +359,7 @@ try {
 			document.querySelectorAll('.paylater-container').forEach(container => {
 				container.style.display = 'flex';
 				container.querySelectorAll('.paylater-text').forEach(container => {
-					container.innerHTML = `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-				<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#D83D0E"></path>
-				</svg>`
+					container.innerHTML = getPaylaterModal(payLaterText);
 				});
 			})
 		})
@@ -375,9 +373,7 @@ try {
 
 					setTimeout(() => {			
 						document.querySelectorAll('.paylater-text').forEach(container => {
-							container.innerHTML = `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-							   path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#D83D0E"></path>
-						     </svg>`
+							container.innerHTML = getPaylaterModal(payLaterText);
 						});
 				
 						hideOrShowAfterPayLogo();	
@@ -394,6 +390,12 @@ try {
 	});
 } catch (error) {
 	console.log(error)
+}
+
+function getPaylaterModal(payLaterText) {
+	return `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+				<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#D83D0E"></path>
+			</svg>`
 }
 
 function generatePayLaterText() {
@@ -421,15 +423,13 @@ function generatePayLaterText() {
 	return payLaterText;
 }
 
-function waitForPayLaterDependencies(callback, timeout = 10000, interval = 100) {
+function waitForPayLaterDependencies(callback, timeout = 5000, interval = 100) {
     const start = Date.now();
 
     const checkReady = () => {
         const payTomorrowReady = typeof PayTomorrow !== 'undefined' && typeof PayTomorrow.getMonthlyPayment === 'function';
         const container = document.querySelector('.paylater-container');
         const textEl = document.querySelector('.paylater-text');
-        const squarePlacement = document.querySelector('square-placement');
-        const shadowText = squarePlacement?.shadowRoot?.querySelector('.afterpay-text2 strong');
 
         const allReady = payTomorrowReady && container && textEl;
 
@@ -595,10 +595,13 @@ function combinedPayLater() {
 }
 
 function generateAfterPayPaymentTerms() {
-	const afterPayRateElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2')?.innerHTML;
-	if (!afterPayRateElement) return;
+	const afterPayRateElement = document.querySelector('square-placement')?.shadowRoot;
+	if (afterPayRateElement == null) return;
 
-	const matchPrice = afterPayRateElement.match(/[\d,]+(\.\d{1,2})?/);
+	const afterPayRate = afterPayRateElement.querySelector('.afterpay-text2 strong');
+	if (!afterPayRate) return null;
+
+	const matchPrice = afterPayRate.innerHTML.match(/[\d,]+(\.\d{1,2})?/);
 	const currentPrice = matchPrice ? parseFloat(matchPrice[0].replace(',', '')) : null;
 	if (!currentPrice) return;
 
@@ -769,18 +772,18 @@ function generatePayTomorrowPaymentTerms() {
   function hideOrShowAfterPayLogo(callback) {
 	var afterPayModalContainer = document.querySelector('afterpay-modal');
 	if (afterPayModalContainer) {
-		const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2 strong');
-		const afterPayLogo = document.querySelector('.afterPayLogo');
-	
-		if (afterPayElement) {
-			if (afterPayLogo) {
-				afterPayLogo.style.display = 'block';
-			}
-		} else {
-			if (afterPayLogo) {
-				afterPayLogo.style.display = 'none';
-			}
-		}
+		const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
+		document.querySelectorAll('.afterPayLogo').forEach(element => {
+		  if (afterPayElement) {
+			  if (element) {
+				  element.style.display = 'block';
+			  }
+		  } else {
+			 if (element) {
+				element.style.display = 'none';
+			 }
+		  }
+		});
 
 		if (callback) {
 			callback();
