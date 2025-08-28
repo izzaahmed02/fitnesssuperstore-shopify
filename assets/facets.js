@@ -2,14 +2,14 @@ let allProducts = [];
 let debounceTimeout;
 let productNames = new Set();
 
-function removeRightSideOnSmallScreens() {
-	if (window.innerWidth <= 749) {
-		const rightSideEl = document.querySelector('.right-side');
-		if (rightSideEl) {
-			rightSideEl.remove();
-		}
-	}
-}
+//function removeRightSideOnSmallScreens() {
+//	if (window.innerWidth <= 749) {
+//		const rightSideEl = document.querySelector('.right-side');
+//		if (rightSideEl) {
+//			rightSideEl.remove();
+//		}
+//	}
+//}
 
 
 document.addEventListener('DOMContentLoaded', removeRightSideOnSmallScreens);
