@@ -340,20 +340,6 @@ try {
 			event.stopPropagation();
 		});
 
-		var afterPayIntervalTrigger = setInterval(() => {
-			hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
-		}, 100)
-
-		var affirmIntervalTrigger = setInterval(() => {
-			var affirmElement = document.querySelector('.affirm-as-low-as');
-
-			if (affirmElement) {
-				document.querySelectorAll('.paylater-logo').forEach(container => {
-					container.innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="65" height="24" style="max-width: 110px;cursor: pointer;margin-top:-13px;object-fit:contain;">`
-				});
-			}	clearInterval(affirmIntervalTrigger);
-		}, 500)
-
 		waitForPayLaterDependencies(() => { 
 			let payLaterText = generatePayLaterText();
 			document.querySelectorAll('.paylater-container').forEach(container => {
@@ -362,7 +348,21 @@ try {
 					container.innerHTML = getPaylaterModal(payLaterText);
 				});
 			})
-		})
+
+			var afterPayIntervalTrigger = setInterval(() => {
+				hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
+			}, 100)
+		
+			var affirmIntervalTrigger = setInterval(() => {
+				var affirmElement = document.querySelector('.affirm-as-low-as');
+
+				if (affirmElement) {
+					document.querySelectorAll('.paylater-logo').forEach(element => {
+						element.innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="65" height="24" style="max-width: 110px;cursor: pointer;margin-top:-13px;object-fit:contain;">`
+					});
+				}	clearInterval(affirmIntervalTrigger);
+			}, 100)
+		});
 
 		const targetNode = document.querySelector('.pr_custom_price');
 
