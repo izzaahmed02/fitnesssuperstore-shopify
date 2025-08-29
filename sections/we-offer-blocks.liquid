@@ -23,7 +23,7 @@
     padding: 16px 85px 32px 85px;
   }
   
-  .gym-designer-hero-description {
+  .gym-designer-hero-description-container > p {
     font-size: 16px;
     line-height: 24px;
     color: #393940;
@@ -47,7 +47,7 @@
     line-height: 24px;
     transition: all 0.3s ease;
     font-family: Lato, sans-serif;
-    margin-bottom: 60px;
+    margin-bottom: 40px;
     text-transform: none;
     letter-spacing: 0px;
     border: none;
@@ -63,19 +63,18 @@
   .gym-designer-hero-video {
     width: 100%;
     max-width: 100%;
-    border-radius: 16px;
+    border-radius: 24px;
     overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     position: relative;
-    background: #f5f5f5;
+    padding: 0 16px 40px 16px;
   }
   
   .gym-designer-hero-video video {
     width: 100%;
-    height: auto;
     display: block;
     object-fit: cover;
-    filter: blur(12.5px);
+    border-radius: 24px;
+    height: 474px;
   }
   
   .gym-designer-hero-video .video-overlay {
@@ -84,7 +83,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(35, 35, 43, 0.3);
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -93,30 +92,27 @@
   .gym-designer-hero-play-button {
     width: 100px;
     height: 100px;
-    background-color: rgba(35, 35, 43, 0.3);
-    border-radius: 68.75px;
+    background: rgba(35, 35, 43, 0.8);
+    backdrop-filter: blur(12.5px);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: none;
-    padding: 25px;
+    padding: 0;
+    color: #fff;
+    border-radius: 68.75px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   }
   
   .gym-designer-hero-play-button:hover {
-    background-color: rgba(35, 35, 43, 0.5);
     transform: scale(1.05);
   }
   
-  .gym-designer-hero-play-button::before {
-    content: '';
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 15px 0 15px 25px;
-    border-color: transparent transparent transparent #ffffff;
-    margin-left: 5px;
+  .gym-designer-hero-play-button svg {
+    width: 100%;
+    height: 100%;
   }
 
   @media (max-width: 1024px) {
@@ -125,10 +121,10 @@
       line-height: 56px;
     }
     
-    .gym-designer-hero-description {
+    {% comment %} .gym-designer-hero-description {
       font-size: 15px;
       line-height: 22px;
-    }
+    } {% endcomment %}
     
     .gym-designer-hero {
       padding: 60px 0;
@@ -198,16 +194,40 @@
     const video = videoContainer.querySelector('video');
     const overlay = videoContainer.querySelector('.video-overlay');
     
-    if (video.paused) {
-      video.play();
-      video.style.filter = 'blur(0px)';
+    video.play().then(() => {
       overlay.style.display = 'none';
-    } else {
-      video.pause();
-      video.style.filter = 'blur(12.5px)';
-      overlay.style.display = 'flex';
-    }
+    }).catch((error) => {
+      console.log('Video play failed:', error);
+    });
   }
+  
+  function pauseVideo(videoContainer) {
+    const video = videoContainer.querySelector('video');
+    const overlay = videoContainer.querySelector('.video-overlay');
+    
+    video.pause();
+    overlay.style.display = 'flex';
+  }
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const videoContainers = document.querySelectorAll('.gym-designer-hero-video');
+    videoContainers.forEach(container => {
+      const video = container.querySelector('video');
+      const overlay = container.querySelector('.video-overlay');
+      
+      // Click on video to pause
+      video.addEventListener('click', function() {
+        if (!video.paused) {
+          pauseVideo(container);
+        }
+      });
+      
+      // Video ended - show play button again
+      video.addEventListener('ended', function() {
+        overlay.style.display = 'flex';
+      });
+    });
+  });
 </script>
 
 <section class="gym-designer-hero">
@@ -230,12 +250,26 @@
     
     {% if section.settings.hero_video != blank %}
       <div class="gym-designer-hero-video">
-        <video autoplay muted loop playsinline>
+        <video muted loop playsinline>
           <source src="{{ section.settings.hero_video }}" type="video/mp4">
           Your browser does not support the video tag.
         </video>
         <div class="video-overlay">
           <button class="gym-designer-hero-play-button" onclick="playVideo(this)">
+            <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <foreignObject x="-12.5" y="-12.5" width="125" height="125">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(6.25px);clip-path:url(#bgblur_0_5405_69729_clip_path);height:100%;width:100%"></div>
+              </foreignObject>
+              <g data-figma-bg-blur-radius="12.5">
+                <rect width="100" height="100" rx="50" fill="#23232B" fill-opacity="0.3"/>
+                <path d="M35.4167 55.798V44.2021C35.4167 37.554 35.4167 34.2299 37.5635 33.0401C39.7103 31.8502 42.5291 33.6119 48.1666 37.1354L57.4433 42.9334C62.5178 46.1049 65.055 47.6907 65.055 50C65.055 52.3094 62.5178 53.8952 57.4433 57.0667L48.1666 62.8646C42.5291 66.3881 39.7103 68.1499 37.5635 66.96C35.4167 65.7702 35.4167 62.4461 35.4167 55.798Z" fill="white"/>
+              </g>
+              <defs>
+                <clipPath id="bgblur_0_5405_69729_clip_path" transform="translate(12.5 12.5)">
+                  <rect width="100" height="100" rx="50"/>
+                </clipPath>
+              </defs>
+            </svg>
             <span class="sr-only">Play Video</span>
           </button>
         </div>
