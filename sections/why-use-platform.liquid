@@ -1,0 +1,258 @@
+<style>
+.why-use-platform {
+  padding: 40px 16px;
+  background-color: {{ section.settings.bg_color }};
+  text-align: center;
+}
+
+.why-use-platform-title {
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 50px;
+  color: #23232B;
+  margin: 0;
+  font-family: Oswald, sans-serif;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.why-use-platform-grid {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.why-use-platform-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.why-use-platform-card:hover {
+  transform: translateY(-5px);
+  {% comment %} box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); {% endcomment %}
+}
+
+.why-use-platform-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0;
+  font-family: Lato, sans-serif;
+  font-style: bold;
+  line-height: 26px;
+  letter-spacing: 0px;
+  text-align: center;
+}
+
+.why-use-platform-card-text > p {
+  font-size: 16px;
+  line-height: 24px;
+  color: #393940;
+  font-family: Lato, sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: 0px;
+  text-align: center;
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .why-use-platform-grid {
+    gap: 25px;
+  }
+  
+  .why-use-platform-title {
+    font-size: 40px;
+    margin-bottom: 50px;
+  }
+  
+  .why-use-platform-card {
+    width: 300px;
+    height: auto;
+    min-height: 178px;
+  }
+}
+
+@media (max-width: 768px) {
+  .why-use-platform {
+    padding: 60px 15px;
+  }
+  
+  .why-use-platform-grid {
+    gap: 20px;
+  }
+  
+  .why-use-platform-title {
+    font-size: 32px;
+    margin-bottom: 40px;
+  }
+  
+  .why-use-platform-card {
+    width: 280px;
+    padding: 20px;
+    gap: 20px;
+  }
+  
+  .why-use-platform-card-title {
+    font-size: 18px;
+    line-height: 24px;
+  }
+  
+  .why-use-platform-card-text {
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .why-use-platform {
+    padding: 40px 10px;
+  }
+  
+  .why-use-platform-title {
+    font-size: 28px;
+    margin-bottom: 30px;
+  }
+  
+  .why-use-platform-card {
+    width: 100%;
+    max-width: 320px;
+    padding: 20px;
+  }
+}
+</style>
+
+<section class="why-use-platform">
+  <div class="why-use-platform-container">
+    {% if section.settings.title != blank %}
+      <h2 class="why-use-platform-title">{{ section.settings.title }}</h2>
+    {% endif %}
+    
+    {% if section.blocks.size > 0 %}
+      <div class="why-use-platform-grid">
+        {% for block in section.blocks %}
+          {% case block.type %}
+            {% when 'feature_block' %}
+              <div class="why-use-platform-card" {{ block.shopify_attributes }}>
+                {% if block.settings.title != blank %}
+                  <h5 class="why-use-platform-card-title">{{ block.settings.title }}</h5>
+                {% endif %}
+                
+                {% if block.settings.text != blank %}
+                  <div class="why-use-platform-card-text">{{ block.settings.text }}</div>
+                {% endif %}
+              </div>
+          {% endcase %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Why Use Our Platform",
+  "tag": "section",
+  "class": "section",
+  "blocks": [
+    {
+      "type": "feature_block",
+      "name": "Feature Block",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Feature Title",
+          "default": "Feature Title"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Feature Description",
+          "default": "<p>Feature description goes here.</p>"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section Title",
+      "default": "WHY USE OUR PLATFORM"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title Color",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "block_bg_color",
+      "label": "Card Background Color",
+      "default": "#f8f8f8"
+    },
+    {
+      "type": "color",
+      "id": "block_title_color",
+      "label": "Card Title Color",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "block_text_color",
+      "label": "Card Text Color",
+      "default": "#666666"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Why Use Our Platform",
+      "blocks": [
+        {
+          "type": "feature_block",
+          "settings": {
+            "title": "Visualize in 3D",
+            "text": "<p>Bring your vision to life with realistic 3D renders, so you know exactly how your gym will look and feel before you commit.</p>"
+          }
+        },
+        {
+          "type": "feature_block",
+          "settings": {
+            "title": "Make Every Inch Count",
+            "text": "<p>Plan a layout that works as hard as you do, maximizing safety, flow, and functionality for an unbeatable training environment.</p>"
+          }
+        },
+        {
+          "type": "feature_block",
+          "settings": {
+            "title": "Backed by the Experts",
+            "text": "<p>Our design and product specialists are here to guide you with tailored advice, ensuring your space meets your goals, style, and budget.</p>"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %} 
