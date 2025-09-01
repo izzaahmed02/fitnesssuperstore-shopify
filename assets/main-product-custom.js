@@ -728,6 +728,8 @@ function generatePayTomorrowPaymentTerms() {
   }  
 
   function generateAffirmPaymentTerms() {
+	if (document.querySelector('.affirm-as-low-as').length === 0) return '';
+	
 	let productPrice = getProductPrice();  
 
 	if (productPrice) {
