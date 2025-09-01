@@ -728,7 +728,7 @@ function generatePayTomorrowPaymentTerms() {
   }  
 
   function generateAffirmPaymentTerms() {
-	if (document.querySelector('.affirm-as-low-as').length === 0) return '';
+	if (!document.querySelector('.affirm-as-low-as')) return '';
 	
 	let productPrice = getProductPrice();  
 
