@@ -420,9 +420,9 @@ function generatePayLaterText() {
 	document.querySelector('square-placement').setAttribute('data-amount', productPrice);
 
 	const payTomorrow24MosRate = PayTomorrow.getMonthlyPayment(productPrice, 24, {displayPrimeOffers: true, primeApr: 9});
-	let afterPayRate = 0;
+	let afterPayRate = null;
 	if (document.querySelector('square-placement').length > 0) {
-		parseFloat(document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML.replace('$', '').replace('/mo.', ''));
+		afterPayRate = parseFloat(document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML.replace('$', '').replace('/mo.', ''));
 	}
 	const affirm24MosRate = computeAffirmLoanDetails(productPrice, 24).MonthlyPaymentAmount;
 	const rates = [payTomorrow24MosRate, afterPayRate, affirm24MosRate]
