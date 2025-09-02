@@ -308,6 +308,8 @@ onReady(() => {
         if (typeof dist === 'number' && dist <= 100) {
           const bar = document.querySelector('.utility-bar');
           if (bar) bar.style.display = 'block';
+          const californiaSpecialOffer = document.querySelector('.california-discount-offer');
+          if (california) californiaSpecialOffer.style.display = 'block';
         }
       }
     } catch { }
