@@ -797,14 +797,10 @@ function generatePayTomorrowPaymentTerms() {
 	if (afterPayModalContainer) {
 		const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
 		document.querySelectorAll('.afterPayLogo').forEach(element => {
-		  if (afterPayElement) {
-			  if (element) {
-				  element.style.display = 'block';
-			  }
+		  if (afterPayElement && element) {
+			element.style.display = 'block';
 		  } else {
-			 if (element) {
-				element.style.display = 'none';
-			 }
+			element.style.display = 'none';
 		  }
 		});
 
@@ -818,14 +814,10 @@ function generatePayTomorrowPaymentTerms() {
 	var affirmElement = document.querySelector('.affirm-as-low-as');
 
 	document.querySelectorAll('.affirm-logo').forEach(element => {
-		if (affirmElement) {
-			if (element) {
-				element.style.display = 'block';
-			}
+		if (affirmElement && element) {
+			element.style.display = 'block';
 		} else {
-			if (element) {
 			element.style.display = 'none';
-			}
 		}
 	});
 
