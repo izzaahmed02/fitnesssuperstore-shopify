@@ -356,6 +356,10 @@ try {
 
 		var afterPayIntervalTrigger = setInterval(() => {
 			hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
+		}, 100);
+
+		var affirmPayIntervalTrigger = setInterval(() => {
+			hideOrShowAffirmLogo(() => clearInterval(affirmPayIntervalTrigger));
 		}, 100)
 
 		waitForPayLaterDependencies(() => { 
