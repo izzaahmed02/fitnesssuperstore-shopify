@@ -375,7 +375,7 @@ try {
 						element.innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="65" height="24" style="max-width: 110px;cursor: pointer;margin-top:-13px;object-fit:contain;">`
 					});
 				}	clearInterval(affirmIntervalTrigger);
-			}, 1000)
+			}, 1500)
 		});
 
 		const targetNode = document.querySelector('.pr_custom_price');
