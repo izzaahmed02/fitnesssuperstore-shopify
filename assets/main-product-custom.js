@@ -810,6 +810,28 @@ function generatePayTomorrowPaymentTerms() {
 	}
   }
 
+  function hideOrShowAffirmLogo(callback) {
+	var affirmElement = document.querySelector('.affirm-as-low-as');
+
+	if (affirmElement) {
+		document.querySelectorAll('.affirm-logo').forEach(element => {
+		  if (afterPayElement) {
+			  if (element) {
+				  element.style.display = 'block';
+			  }
+		  } else {
+			 if (element) {
+				element.style.display = 'none';
+			 }
+		  }
+		});
+
+		if (callback) {
+			callback();
+		}
+	}
+  }
+
   function observeModalVisibility(modalSelector = '.modal-wrapper') {
     const observer = new MutationObserver(() => {
         const anyModalOpen = Array.from(document.querySelectorAll(modalSelector))
