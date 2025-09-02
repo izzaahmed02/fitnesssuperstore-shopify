@@ -275,7 +275,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 		window.open(pdsUrl, "_blank"); 
 	})
 
-	document.querySelector('.compare-products-actions a').setAttribute('href', '');
+	document.querySelector('.compare-products-actions a')?.setAttribute('href', '');
 });
 
 
