@@ -365,9 +365,9 @@ try {
 				container.querySelectorAll('.paylater-text').forEach(container => {
 					container.innerHTML = getPaylaterModal(payLaterText);
 				});
-			})
-		
-			var affirmIntervalTrigger = setInterval(() => {
+			});
+
+		    var affirmIntervalTrigger = setInterval(() => {
 				var affirmElement = document.querySelector('.affirm-as-low-as');
 
 				if (affirmElement) {
