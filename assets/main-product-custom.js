@@ -444,7 +444,7 @@ function generatePayLaterText() {
 	return payLaterText;
 }
 
-function waitForPayLaterDependencies(callback, timeout = 20000, interval = 500) {
+function waitForPayTomorrow(callback, timeout = 20000, interval = 500) {
     const start = Date.now();
 
     const checkReady = () => {
