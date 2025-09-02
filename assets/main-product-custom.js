@@ -362,7 +362,7 @@ try {
 			hideOrShowAffirmLogo(() => clearInterval(affirmPayIntervalTrigger));
 		}, 100)
 
-		waitForPayLaterDependencies(() => { 
+		waitForPayTomorrow(() => { 
 			let payLaterText = generatePayLaterText();
 			document.querySelectorAll('.paylater-container').forEach(container => {
 				container.style.display = 'flex';
