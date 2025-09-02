@@ -66,7 +66,6 @@ class CartRemoveButton extends HTMLElement {
 
 customElements.define('cart-remove-button', CartRemoveButton);
 
-
 class CartItems extends HTMLElement {
 	constructor() {
 		super();
@@ -183,11 +182,6 @@ class CartItems extends HTMLElement {
 				section: document.getElementById('main-cart-items').dataset.id,
 				selector: '.js-contents',
 			},
-			/*{
-				id: 'cart-icon-bubble',
-				section: 'cart-icon-bubble',
-				selector: '.shopify-section',
-			},*/
 			{
 				id: 'cart-live-region-text',
 				section: 'cart-live-region-text',
@@ -205,41 +199,6 @@ class CartItems extends HTMLElement {
 		this.enableLoading(line);
 
 		try {
-			// const cartResponse = await fetch('/cart.js');
-			// const cartData = await cartResponse.json();
-			// const mainProduct = cartData.items[line - 1];
-	
-			// let matchingProductLine = null;
-
-			// if (mainProduct && mainProduct.properties?.['Custom color']) {
-			// 	const customColorValue = mainProduct.properties['Custom color'];
-
-			// 	const matchingProduct = cartData.items.find(
-			// 		(item) =>
-			// 			item.id === 50607223603516 &&
-			// 			item.properties?.['Color'] === customColorValue
-			// 	);
-
-			// 	if (matchingProduct) {
-			// 		matchingProductLine = matchingProduct.key;
-			// 	}
-			// }
-
-			// Updating matching product
-			// if (matchingProductLine) {
-			// 	await fetch(window.Shopify.routes.root + 'cart/update.js', {
-			// 		method: 'POST',
-			// 		headers: {
-			// 			'Content-Type': 'application/json',
-			// 		},
-			// 		body: JSON.stringify({
-			// 			updates: {
-			// 				[matchingProductLine]: quantity,
-			// 			},
-			// 		}),
-			// 	})
-
-			// }
 
 			// Main product update
 			const body = JSON.stringify({
@@ -346,79 +305,6 @@ class CartItems extends HTMLElement {
 	}
 
 	getSectionInnerHTML(html, selector) {
-
-		// document.querySelectorAll('.cart-item-new .show-extra').forEach(button => {
-		//       button.addEventListener('click', () => {
-		//           let currentItem = button.parentElement;
-		//           let nextElement = currentItem.nextElementSibling;
-		//           button.classList.toggle('active');
-
-		//           while (nextElement && !nextElement.classList.contains('cart-item-new')) {
-		//               if (nextElement.classList.contains('extra-option-item')) {
-		//                   nextElement.classList.toggle('toggle');
-		//               }
-		//               nextElement = nextElement.nextElementSibling;
-		//           }
-		//       });
-		//   });
-		//   let totalContentCount = 0;
-		//   document.querySelectorAll('.cart-item-new').forEach(cartItem => {
-		//       let count = 0;
-		//       let totalSum = 0;
-		//       let hasExtraContent = false;
-		//       let nextElement = cartItem.nextElementSibling;
-
-		//       while (nextElement && !nextElement.classList.contains('cart-item-new')) {
-		//           if (nextElement.classList.contains('extra-option-item')) {
-		//               hasExtraContent = true;
-		//               count++;
-		//               totalContentCount++;
-		//               const priceElement = nextElement.querySelector('.extra-option-price');
-		//               if (priceElement) {
-		//                   const priceText = priceElement.textContent.replace('$', '');
-		//                   const price = parseFloat(priceText);
-		//                   totalSum += isNaN(price) ? 0 : price;
-		//               }
-		//           }
-		//           nextElement = nextElement.nextElementSibling;
-		//       }
-
-		//       const quantityDisplay = cartItem.querySelector('.extra-quantity .value');
-		//       if (quantityDisplay) {
-		//           quantityDisplay.textContent = count;
-		//       }
-
-		//       const priceDisplay = cartItem.querySelector('.options-price');
-		//       if (priceDisplay) {
-		//           priceDisplay.textContent = `$${totalSum.toFixed(2)}`;
-		//       }
-
-		//       const showExtraButton = cartItem.querySelector('.show-extra');
-
-		//       if (showExtraButton && !hasExtraContent) {
-		//           showExtraButton.style.display = 'none';
-		//       } else {
-		//           showExtraButton.style.display = 'flex';
-		//       }
-		//   });
-
-		//   const drawerHeadingSpan = document.querySelector('.drawer__heading span');
-		//   const drawerSubHeadingSpan = document.querySelector('.cart-drawer__subheading span');
-		//   const cartCount = document.querySelector('.cart-count-bubble span');
-
-
-		//   console.log(drawerHeadingSpan);
-		//   if (drawerHeadingSpan && drawerSubHeadingSpan && cartCount ) {
-		//       const initialCount = parseInt(drawerHeadingSpan.getAttribute('data-count'), 10);
-		//       const newCount = isNaN(initialCount) ? 0 : initialCount - totalContentCount;
-		//       drawerHeadingSpan.textContent = newCount;
-		//       drawerSubHeadingSpan.textContent = newCount;
-		//       cartCount.textContent = newCount;
-
-		//       cartCount.style.display = "flex";
-		//       // drawerHeadingSpan.style.display = "inline";
-		//       // drawerSubHeadingSpan.style.display = "inline";
-		//   }
 		return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
 	}
 
@@ -530,22 +416,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		}, 200)
 	);
 	observerCartBlock.observe(document.body);
-
-	// const drShippingPoll = setInterval(() => {
-	// 	const drShippingZipCodeElement = document.querySelector('.docapp-shipping-calculator--input-zip');
-	// 	if (drShippingZipCodeElement) {
-	// 		drShippingZipCodeElement.addEventListener('change', (event) => {
-	// 			const targetElement = event.target;
-	// 			const value = targetElement.value;
-	// 			if (value) {
-	// 				setCartAttributeZipCode(value);
-	// 			}
-	// 		});
-	// 		clearInterval(drShippingPoll);
-	// 	}
-	// }, 100);
 });
-
 
 document.addEventListener('DOMContentLoaded', () => {
 	const chatBtn = document.getElementById('chat');

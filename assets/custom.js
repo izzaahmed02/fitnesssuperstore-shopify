@@ -218,14 +218,14 @@ onReady(() => {
 
   const pricingReferenceLink = document.querySelector('a[href="#pricing-reference"]');
   if (pricingReferenceLink) {
-    pricingReferenceLink.addEventListener('click', (ev) => {
+    pricingReferenceLink.addEventListener('click', async (ev) => {
       ev.preventDefault();
       const container = document.getElementById('dynamic-product-content');
       const modalWrapper = document.querySelector('.modal-wrapper');
       if (!container || !modalWrapper) return;
 
       const temp = document.createElement('div');
-      temp.innerHTML = pricingRefenceModalContent;
+      temp.innerHTML = await loadPricingReferenceHTML();
       container.innerHTML = temp.innerHTML + `
         <span class="modal-close">
           <svg aria-hidden="true" focusable="false" width="12" height="13" class="icon icon-close-small" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -367,46 +367,8 @@ onReady(() => {
   addEventListener('resize', debounceFn(() => rafBatch(moveSectionsToMain), 150), { passive: true });
 })();
 
-const pricingRefenceModalContent = `<div class="pricing-reference">
-  <h1 class="pricing-title">REFERENCES ON PRICING</h1>
-  <div class="pricing-section">
-    <h2 class="region-title">Central America + South America (West Coast) + Mexico + Main Pacific Areas (Japan / Australia / China / Singapore / Guam / South Korea / Indonesia / Malaysia / Taiwan / Vietnam):</h2>
-    <ul class="pricing-list">
-      <li>1-5 Crates: <span>$424 to $1,799</span></li>
-      <li>20' Container: <span>$1,999</span></li>
-      <li>40' Container: <span>$2,499</span></li>
-      <li>(2) 40' Containers: <span>$4,998</span></li>
-      <li>(3) 40' Containers: <span>$7,497</span></li>
-    </ul>
-  </div>
-  <div class="pricing-section">
-    <h2 class="region-title">Caribbean Sea + South America (East Coast) + Pacific Islands + India:</h2>
-    <ul class="pricing-list">
-      <li>1-5 Crates: <span>$499 to $2,299</span></li>
-      <li>20' Container: <span>$2,499</span></li>
-      <li>40' Container: <span>$2,999</span></li>
-      <li>(2) 40' Containers: <span>$5,998</span></li>
-      <li>(3) 40' Containers: <span>$8,997</span></li>
-    </ul>
-  </div>
-  <div class="pricing-section">
-    <h2 class="region-title">Western Europe / Middle East / East Africa:</h2>
-    <ul class="pricing-list">
-      <li>1-5 Crates: <span>$574 to $2,799</span></li>
-      <li>20' Container: <span>$2,999</span></li>
-      <li>40' Container: <span>$3,499</span></li>
-      <li>(2) 40' Containers: <span>$6,998</span></li>
-      <li>(3) 40' Containers: <span>$10,997</span></li>
-    </ul>
-  </div>
-  <div class="pricing-section">
-    <h2 class="region-title">West Africa / Eastern-Northern Europe / Russia:</h2>
-    <ul class="pricing-list">
-      <li>1-5 Crates: <span>$624 to $2,299</span></li>
-      <li>20' Container: <span>$3,499</span></li>
-      <li>40' Container: <span>$3,999</span></li>
-      <li>(2) 40' Containers: <span>$7,998</span></li>
-      <li>(3) 40' Containers: <span>$11,997</span></li>
-    </ul>
-  </div>
-</div>`;
+async function loadPricingReferenceHTML() {
+  const url = '{{ "pricing-reference.html" | asset_url }}';
+  const res = await fetch(url, { cache: 'force-cache' });
+  return res.text();
+}
