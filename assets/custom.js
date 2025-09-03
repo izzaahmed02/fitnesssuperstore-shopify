@@ -370,7 +370,7 @@ onReady(() => {
 })();
 
 async function loadPricingReferenceHTML() {
-  const url = '{{ "pricing-reference.html" | asset_url }}';
+  const url = window.pricingRefereceUrl;
   const res = await fetch(url, { cache: 'force-cache' });
   return res.text();
 }
