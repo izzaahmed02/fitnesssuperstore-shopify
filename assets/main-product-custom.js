@@ -811,7 +811,7 @@ function generatePayTomorrowPaymentTerms() {
 		}
 	});
 
-	if (callback) {
+	if (affirmElement && callback) {
 		callback();
 	}
   }
