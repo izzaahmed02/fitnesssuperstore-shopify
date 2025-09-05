@@ -1,166 +1,213 @@
-const FOCUSABLE_SELECTOR = "summary, a[href], button:enabled, [tabindex]:not([tabindex^='-']), [draggable], area, input:not([type=hidden]):enabled, select:enabled, textarea:enabled, object, iframe";
-
 function getFocusableElements(container) {
-  return container ? Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)) : [];
+  return Array.from(
+    container.querySelectorAll(
+      "summary, a[href], button:enabled, [tabindex]:not([tabindex^='-']), [draggable], area, input:not([type=hidden]):enabled, select:enabled, textarea:enabled, object, iframe"
+    )
+  );
 }
 
 class SectionId {
   static #separator = '__';
+
+  // for a qualified section id (e.g. 'template--22224696705326__main'), return just the section id (e.g. 'template--22224696705326')
   static parseId(qualifiedSectionId) {
     return qualifiedSectionId.split(SectionId.#separator)[0];
   }
+
+  // for a qualified section id (e.g. 'template--22224696705326__main'), return just the section name (e.g. 'main')
   static parseSectionName(qualifiedSectionId) {
     return qualifiedSectionId.split(SectionId.#separator)[1];
   }
+
+  // for a section id (e.g. 'template--22224696705326') and a section name (e.g. 'recommended-products'), return a qualified section id (e.g. 'template--22224696705326__recommended-products')
   static getIdForSection(sectionId, sectionName) {
     return `${sectionId}${SectionId.#separator}${sectionName}`;
   }
 }
 
 class HTMLUpdateUtility {
+  /**
+   * Used to swap an HTML node with a new node.
+   * The new node is inserted as a previous sibling to the old node, the old node is hidden, and then the old node is removed.
+   *
+   * The function currently uses a double buffer approach, but this should be replaced by a view transition once it is more widely supported https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
+   */
   static viewTransition(oldNode, newContent, preProcessCallbacks = [], postProcessCallbacks = []) {
-    preProcessCallbacks && preProcessCallbacks.forEach((cb) => cb(newContent));
+    preProcessCallbacks?.forEach((callback) => callback(newContent));
 
     const newNodeWrapper = document.createElement('div');
     HTMLUpdateUtility.setInnerHTML(newNodeWrapper, newContent.outerHTML);
     const newNode = newNodeWrapper.firstChild;
 
+    // dedupe IDs
     const uniqueKey = Date.now();
-    oldNode.querySelectorAll('[id], [form]').forEach((el) => {
-      if (el.id) el.id = `${el.id}-${uniqueKey}`;
-      if (el.form) el.setAttribute('form', `${el.form.getAttribute('id')}-${uniqueKey}`);
+    oldNode.querySelectorAll('[id], [form]').forEach((element) => {
+      element.id && (element.id = `${element.id}-${uniqueKey}`);
+      element.form && element.setAttribute('form', `${element.form.getAttribute('id')}-${uniqueKey}`);
     });
 
-    const parent = oldNode.parentNode;
-    if (parent) parent.insertBefore(newNode, oldNode);
+    oldNode.parentNode.insertBefore(newNode, oldNode);
     oldNode.style.display = 'none';
 
-    postProcessCallbacks && postProcessCallbacks.forEach((cb) => cb(newNode));
+    postProcessCallbacks?.forEach((callback) => callback(newNode));
 
     setTimeout(() => oldNode.remove(), 500);
   }
 
+  // Sets inner HTML and reinjects the script tags to allow execution. By default, scripts are disabled when using element.innerHTML.
   static setInnerHTML(element, html) {
     element.innerHTML = html;
     element.querySelectorAll('script').forEach((oldScriptTag) => {
       const newScriptTag = document.createElement('script');
-      for (let i = 0; i < oldScriptTag.attributes.length; i++) {
-        const a = oldScriptTag.attributes[i];
-        newScriptTag.setAttribute(a.name, a.value);
-      }
+      Array.from(oldScriptTag.attributes).forEach((attribute) => {
+        newScriptTag.setAttribute(attribute.name, attribute.value);
+      });
       newScriptTag.appendChild(document.createTextNode(oldScriptTag.innerHTML));
-      const p = oldScriptTag.parentNode;
-      if (p) p.replaceChild(newScriptTag, oldScriptTag);
+      oldScriptTag.parentNode.replaceChild(newScriptTag, oldScriptTag);
     });
   }
 }
 
 document.querySelectorAll('[id^="Details-"] summary').forEach((summary) => {
-  const details = summary.parentNode;
-  const panel = summary.nextElementSibling;
-
   summary.setAttribute('role', 'button');
-  summary.setAttribute('aria-expanded', details.hasAttribute('open'));
-  if (panel && panel.id) summary.setAttribute('aria-controls', panel.id);
+  summary.setAttribute('aria-expanded', summary.parentNode.hasAttribute('open'));
+
+  if (summary.nextElementSibling.getAttribute('id')) {
+    summary.setAttribute('aria-controls', summary.nextElementSibling.id);
+  }
 
   summary.addEventListener('click', (event) => {
-    const d = event.currentTarget.closest('details');
-    event.currentTarget.setAttribute('aria-expanded', !d.hasAttribute('open'));
+    event.currentTarget.setAttribute('aria-expanded', !event.currentTarget.closest('details').hasAttribute('open'));
   });
 
-  if (!summary.closest('header-drawer, menu-drawer')) {
-    details.addEventListener('keyup', onKeyUpEscape);
-  }
+  if (summary.closest('header-drawer, menu-drawer')) return;
+  summary.parentElement.addEventListener('keyup', onKeyUpEscape);
 });
 
-const trapFocusHandlers = Object.create(null);
+const trapFocusHandlers = {};
 
 function trapFocus(container, elementToFocus = container) {
-  const elements = getFocusableElements(container);
-  const first = elements[0];
-  const last = elements[elements.length - 1];
+  var elements = getFocusableElements(container);
+  var first = elements[0];
+  var last = elements[elements.length - 1];
 
   removeTrapFocus();
 
   trapFocusHandlers.focusin = (event) => {
-    const t = event.target;
-    if (t !== container && t !== last && t !== first) return;
+    if (event.target !== container && event.target !== last && event.target !== first) return;
+
     document.addEventListener('keydown', trapFocusHandlers.keydown);
   };
 
-  trapFocusHandlers.focusout = () => {
+  trapFocusHandlers.focusout = function () {
     document.removeEventListener('keydown', trapFocusHandlers.keydown);
   };
 
-  trapFocusHandlers.keydown = (event) => {
-    if (event.code.toUpperCase() !== 'TAB') return;
+  trapFocusHandlers.keydown = function (event) {
+    if (event.code.toUpperCase() !== 'TAB') return; // If not TAB key
+    // On the last focusable element and tab forward, focus the first element.
     if (event.target === last && !event.shiftKey) {
-      event.preventDefault(); first && first.focus();
+      event.preventDefault();
+      first.focus();
     }
+
+    //  On the first focusable element and tab backward, focus the last element.
     if ((event.target === container || event.target === first) && event.shiftKey) {
-      event.preventDefault(); last && last.focus();
+      event.preventDefault();
+      last.focus();
     }
   };
 
   document.addEventListener('focusout', trapFocusHandlers.focusout);
   document.addEventListener('focusin', trapFocusHandlers.focusin);
 
-  elementToFocus && elementToFocus.focus();
+  elementToFocus.focus();
 
   if (
-    elementToFocus &&
     elementToFocus.tagName === 'INPUT' &&
-    ['search','text','email','url'].includes(elementToFocus.type) &&
+    ['search', 'text', 'email', 'url'].includes(elementToFocus.type) &&
     elementToFocus.value
   ) {
     elementToFocus.setSelectionRange(0, elementToFocus.value.length);
   }
 }
 
-try { document.querySelector(':focus-visible'); }
-catch { focusVisiblePolyfill(); }
+// Here run the querySelector to figure out if the browser supports :focus-visible or not and run code based on it.
+try {
+  document.querySelector(':focus-visible');
+} catch (e) {
+  focusVisiblePolyfill();
+}
 
 function focusVisiblePolyfill() {
-  const NAV_KEYS = new Set(['ARROWUP','ARROWDOWN','ARROWLEFT','ARROWRIGHT','TAB','ENTER','SPACE','ESCAPE','HOME','END','PAGEUP','PAGEDOWN']);
+  const navKeys = [
+    'ARROWUP',
+    'ARROWDOWN',
+    'ARROWLEFT',
+    'ARROWRIGHT',
+    'TAB',
+    'ENTER',
+    'SPACE',
+    'ESCAPE',
+    'HOME',
+    'END',
+    'PAGEUP',
+    'PAGEDOWN',
+  ];
   let currentFocusedElement = null;
   let mouseClick = null;
 
   window.addEventListener('keydown', (event) => {
-    if (NAV_KEYS.has(event.code.toUpperCase())) mouseClick = false;
+    if (navKeys.includes(event.code.toUpperCase())) {
+      mouseClick = false;
+    }
   });
-  window.addEventListener('mousedown', () => { mouseClick = true; });
 
-  window.addEventListener('focus', () => {
-    if (currentFocusedElement) currentFocusedElement.classList.remove('focused');
-    if (mouseClick) return;
-    currentFocusedElement = document.activeElement;
-    currentFocusedElement && currentFocusedElement.classList.add('focused');
-  }, true);
+  window.addEventListener('mousedown', (event) => {
+    mouseClick = true;
+  });
+
+  window.addEventListener(
+    'focus',
+    () => {
+      if (currentFocusedElement) currentFocusedElement.classList.remove('focused');
+
+      if (mouseClick) return;
+
+      currentFocusedElement = document.activeElement;
+      currentFocusedElement.classList.add('focused');
+    },
+    true
+  );
 }
 
-
 function pauseAllMedia() {
-  document.querySelectorAll('.js-youtube').forEach((v) => {
-    v.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+  document.querySelectorAll('.js-youtube').forEach((video) => {
+    video.contentWindow.postMessage('{"event":"command","func":"' + 'pauseVideo' + '","args":""}', '*');
   });
-  document.querySelectorAll('.js-vimeo').forEach((v) => {
-    v.contentWindow.postMessage('{"method":"pause"}', '*');
+  document.querySelectorAll('.js-vimeo').forEach((video) => {
+    video.contentWindow.postMessage('{"method":"pause"}', '*');
   });
-  document.querySelectorAll('video').forEach((v) => v.pause());
-  document.querySelectorAll('product-model').forEach((m) => { if (m.modelViewerUI) m.modelViewerUI.pause(); });
+  document.querySelectorAll('video').forEach((video) => video.pause());
+  document.querySelectorAll('product-model').forEach((model) => {
+    if (model.modelViewerUI) model.modelViewerUI.pause();
+  });
 }
 
 function removeTrapFocus(elementToFocus = null) {
   document.removeEventListener('focusin', trapFocusHandlers.focusin);
   document.removeEventListener('focusout', trapFocusHandlers.focusout);
   document.removeEventListener('keydown', trapFocusHandlers.keydown);
+
   if (elementToFocus) elementToFocus.focus();
 }
 
 function onKeyUpEscape(event) {
   if (event.code.toUpperCase() !== 'ESCAPE') return;
+
   const openDetailsElement = event.target.closest('details[open]');
   if (!openDetailsElement) return;
+
   const summaryElement = openDetailsElement.querySelector('summary');
   openDetailsElement.removeAttribute('open');
   summaryElement.setAttribute('aria-expanded', false);
@@ -168,19 +215,17 @@ function onKeyUpEscape(event) {
 }
 
 class QuantityInput extends HTMLElement {
-  quantityUpdateUnsubscriber = undefined;
-
   constructor() {
     super();
     this.input = this.querySelector('input');
     this.changeEvent = new Event('change', { bubbles: true });
-
-    this.onInputChange = this.onInputChange.bind(this);
-    this.onButtonClick = this.onButtonClick.bind(this);
-
-    this.input.addEventListener('change', this.onInputChange);
-    this.querySelectorAll('button').forEach((b) => b.addEventListener('click', this.onButtonClick));
+    this.input.addEventListener('change', this.onInputChange.bind(this));
+    this.querySelectorAll('button').forEach((button) =>
+      button.addEventListener('click', this.onButtonClick.bind(this))
+    );
   }
+
+  quantityUpdateUnsubscriber = undefined;
 
   connectedCallback() {
     this.validateQtyRules();
@@ -188,29 +233,32 @@ class QuantityInput extends HTMLElement {
   }
 
   disconnectedCallback() {
-    if (this.quantityUpdateUnsubscriber) this.quantityUpdateUnsubscriber();
+    if (this.quantityUpdateUnsubscriber) {
+      this.quantityUpdateUnsubscriber();
+    }
   }
 
-  onInputChange() {
+  onInputChange(event) {
     this.validateQtyRules();
   }
 
   onButtonClick(event) {
     event.preventDefault();
-    const prev = this.input.value;
-    const min = parseInt(this.input.dataset.min);
-    const step = parseInt(this.input.step || '1');
+    const previousValue = this.input.value;
 
     if (event.target.name === 'plus') {
-      if (min > step && this.input.value == 0) this.input.value = this.input.dataset.min;
-      else this.input.stepUp();
+      if (parseInt(this.input.dataset.min) > parseInt(this.input.step) && this.input.value == 0) {
+        this.input.value = this.input.dataset.min;
+      } else {
+        this.input.stepUp();
+      }
     } else {
       this.input.stepDown();
     }
 
-    if (prev !== this.input.value) this.input.dispatchEvent(this.changeEvent);
+    if (previousValue !== this.input.value) this.input.dispatchEvent(this.changeEvent);
 
-    if (this.input.dataset.min === prev && event.target.name === 'minus') {
+    if (this.input.dataset.min === previousValue && event.target.name === 'minus') {
       this.input.value = parseInt(this.input.min);
     }
   }
@@ -218,61 +266,87 @@ class QuantityInput extends HTMLElement {
   validateQtyRules() {
     const value = parseInt(this.input.value);
     if (this.input.min) {
-      const btnMinus = this.querySelector(".quantity__button[name='minus']");
-      btnMinus && btnMinus.classList.toggle('disabled', value <= parseInt(this.input.min));
+      const buttonMinus = this.querySelector(".quantity__button[name='minus']");
+      buttonMinus.classList.toggle('disabled', parseInt(value) <= parseInt(this.input.min));
     }
     if (this.input.max) {
       const max = parseInt(this.input.max);
-      const btnPlus = this.querySelector(".quantity__button[name='plus']");
-      btnPlus && btnPlus.classList.toggle('disabled', value >= max);
+      const buttonPlus = this.querySelector(".quantity__button[name='plus']");
+      buttonPlus.classList.toggle('disabled', value >= max);
     }
   }
 }
+
 customElements.define('quantity-input', QuantityInput);
 
 function debounce(fn, wait) {
-  let t; return function (...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); };
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn.apply(this, args), wait);
+  };
 }
+
 function throttle(fn, delay) {
   let lastCall = 0;
   return function (...args) {
-    const now = Date.now();
-    if (now - lastCall < delay) return;
+    const now = new Date().getTime();
+    if (now - lastCall < delay) {
+      return;
+    }
     lastCall = now;
-    return fn.apply(this, args);
+    return fn(...args);
   };
 }
 
 function fetchConfig(type = 'json') {
-  return { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: `application/${type}` } };
+  return {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: `application/${type}` },
+  };
 }
 
-if (typeof window.Shopify === 'undefined') window.Shopify = {};
+/*
+ * Shopify Common JS
+ *
+ */
+if (typeof window.Shopify == 'undefined') {
+  window.Shopify = {};
+}
 
-Shopify.bind = function (fn, scope) { return function () { return fn.apply(scope, arguments); }; };
+Shopify.bind = function (fn, scope) {
+  return function () {
+    return fn.apply(scope, arguments);
+  };
+};
 
 Shopify.setSelectorByValue = function (selector, value) {
-  for (let i = 0, count = selector.options.length; i < count; i++) {
-    const option = selector.options[i];
-    if (value == option.value || value == option.innerHTML) { selector.selectedIndex = i; return i; }
+  for (var i = 0, count = selector.options.length; i < count; i++) {
+    var option = selector.options[i];
+    if (value == option.value || value == option.innerHTML) {
+      selector.selectedIndex = i;
+      return i;
+    }
   }
 };
 
 Shopify.addListener = function (target, eventName, callback) {
-  target.addEventListener ? target.addEventListener(eventName, callback, false) : target.attachEvent('on' + eventName, callback);
+  target.addEventListener
+    ? target.addEventListener(eventName, callback, false)
+    : target.attachEvent('on' + eventName, callback);
 };
 
 Shopify.postLink = function (path, options) {
   options = options || {};
-  const method = options['method'] || 'post';
-  const params = options['parameters'] || {};
+  var method = options['method'] || 'post';
+  var params = options['parameters'] || {};
 
-  const form = document.createElement('form');
+  var form = document.createElement('form');
   form.setAttribute('method', method);
   form.setAttribute('action', path);
 
-  for (const key in params) {
-    const hiddenField = document.createElement('input');
+  for (var key in params) {
+    var hiddenField = document.createElement('input');
     hiddenField.setAttribute('type', 'hidden');
     hiddenField.setAttribute('name', key);
     hiddenField.setAttribute('value', params[key]);
@@ -296,70 +370,77 @@ Shopify.CountryProvinceSelector = function (country_domid, province_domid, optio
 
 Shopify.CountryProvinceSelector.prototype = {
   initCountry: function () {
-    const value = this.countryEl.getAttribute('data-default');
+    var value = this.countryEl.getAttribute('data-default');
     Shopify.setSelectorByValue(this.countryEl, value);
     this.countryHandler();
   },
+
   initProvince: function () {
-    const value = this.provinceEl.getAttribute('data-default');
-    if (value && this.provinceEl.options.length > 0) Shopify.setSelectorByValue(this.provinceEl, value);
+    var value = this.provinceEl.getAttribute('data-default');
+    if (value && this.provinceEl.options.length > 0) {
+      Shopify.setSelectorByValue(this.provinceEl, value);
+    }
   },
-  countryHandler: function () {
-    const opt = this.countryEl.options[this.countryEl.selectedIndex];
-    const raw = opt.getAttribute('data-provinces');
-    const provinces = JSON.parse(raw);
+
+  countryHandler: function (e) {
+    var opt = this.countryEl.options[this.countryEl.selectedIndex];
+    var raw = opt.getAttribute('data-provinces');
+    var provinces = JSON.parse(raw);
 
     this.clearOptions(this.provinceEl);
     if (provinces && provinces.length == 0) {
       this.provinceContainer.style.display = 'none';
     } else {
-      for (let i = 0; i < provinces.length; i++) {
-        const o = document.createElement('option');
-        o.value = provinces[i][0];
-        o.innerHTML = provinces[i][1];
-        this.provinceEl.appendChild(o);
+      for (var i = 0; i < provinces.length; i++) {
+        var opt = document.createElement('option');
+        opt.value = provinces[i][0];
+        opt.innerHTML = provinces[i][1];
+        this.provinceEl.appendChild(opt);
       }
+
       this.provinceContainer.style.display = '';
     }
   },
+
   clearOptions: function (selector) {
-    while (selector.firstChild) selector.removeChild(selector.firstChild);
-  },
-  setOptions: function (selector, values) {
-    for (let i = 0; i < values.length; i++) {
-      const o = document.createElement('option');
-      o.value = values[i];
-      o.innerHTML = values[i];
-      selector.appendChild(o);
+    while (selector.firstChild) {
+      selector.removeChild(selector.firstChild);
     }
-  }
+  },
+
+  setOptions: function (selector, values) {
+    for (var i = 0, count = values.length; i < values.length; i++) {
+      var opt = document.createElement('option');
+      opt.value = values[i];
+      opt.innerHTML = values[i];
+      selector.appendChild(opt);
+    }
+  },
 };
 
 class MenuDrawer extends HTMLElement {
   constructor() {
     super();
+
     this.mainDetailsToggle = this.querySelector('details');
 
-    this.onKeyUp = this.onKeyUp.bind(this);
-    this.onFocusOut = this.onFocusOut.bind(this);
-    this.onSummaryClick = this.onSummaryClick.bind(this);
-    this.onCloseButtonClick = this.onCloseButtonClick.bind(this);
-
-    this.addEventListener('keyup', this.onKeyUp);
-    this.addEventListener('focusout', this.onFocusOut);
+    this.addEventListener('keyup', this.onKeyUp.bind(this));
+    this.addEventListener('focusout', this.onFocusOut.bind(this));
     this.bindEvents();
   }
 
   bindEvents() {
     this.querySelectorAll('summary').forEach((summary) =>
-      summary.addEventListener('click', this.onSummaryClick)
+      summary.addEventListener('click', this.onSummaryClick.bind(this))
     );
-    this.querySelectorAll('button:not(.localization-selector):not(.country-selector__close-button):not(.country-filter__reset-button):not(.button-show-more)')
-      .forEach((button) => button.addEventListener('click', this.onCloseButtonClick));
+    this.querySelectorAll(
+      'button:not(.localization-selector):not(.country-selector__close-button):not(.country-filter__reset-button):not(.button-show-more)'
+    ).forEach((button) => button.addEventListener('click', this.onCloseButtonClick.bind(this)));
   }
 
   onKeyUp(event) {
     if (event.code.toUpperCase() !== 'ESCAPE') return;
+
     const openDetailsElement = event.target.closest('details[open]');
     if (!openDetailsElement) return;
 
@@ -375,10 +456,10 @@ class MenuDrawer extends HTMLElement {
     const isOpen = detailsElement.hasAttribute('open');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-    const addTrapFocus = () => {
+    function addTrapFocus() {
       trapFocus(summaryElement.nextElementSibling, detailsElement.querySelector('button'));
       summaryElement.nextElementSibling.removeEventListener('transitionend', addTrapFocus);
-    };
+    }
 
     if (detailsElement === this.mainDetailsToggle) {
       if (isOpen) event.preventDefault();
@@ -391,8 +472,8 @@ class MenuDrawer extends HTMLElement {
       setTimeout(() => {
         detailsElement.classList.add('menu-opening');
         summaryElement.setAttribute('aria-expanded', true);
-        if (parentMenuElement) parentMenuElement.classList.add('submenu-open');
-        (!reducedMotion || reducedMotion.matches)
+        parentMenuElement && parentMenuElement.classList.add('submenu-open');
+        !reducedMotion || reducedMotion.matches
           ? addTrapFocus()
           : summaryElement.nextElementSibling.addEventListener('transitionend', addTrapFocus);
       }, 100);
@@ -400,7 +481,9 @@ class MenuDrawer extends HTMLElement {
   }
 
   openMenuDrawer(summaryElement) {
-    setTimeout(() => { this.mainDetailsToggle.classList.add('menu-opening'); });
+    setTimeout(() => {
+      this.mainDetailsToggle.classList.add('menu-opening');
+    });
     summaryElement.setAttribute('aria-expanded', true);
     trapFocus(this.mainDetailsToggle, summaryElement);
     document.body.classList.add(`overflow-hidden-${this.dataset.breakpoint}`);
@@ -410,22 +493,24 @@ class MenuDrawer extends HTMLElement {
     if (event === undefined) return;
 
     this.mainDetailsToggle.classList.remove('menu-opening');
-    this.mainDetailsToggle.querySelectorAll('details').forEach((d) => {
-      d.removeAttribute('open'); d.classList.remove('menu-opening');
+    this.mainDetailsToggle.querySelectorAll('details').forEach((details) => {
+      details.removeAttribute('open');
+      details.classList.remove('menu-opening');
     });
-    this.mainDetailsToggle.querySelectorAll('.submenu-open').forEach((sm) => sm.classList.remove('submenu-open'));
+    this.mainDetailsToggle.querySelectorAll('.submenu-open').forEach((submenu) => {
+      submenu.classList.remove('submenu-open');
+    });
     document.body.classList.remove(`overflow-hidden-${this.dataset.breakpoint}`);
     removeTrapFocus(elementToFocus);
     this.closeAnimation(this.mainDetailsToggle);
 
-    if (event instanceof KeyboardEvent) elementToFocus && elementToFocus.setAttribute('aria-expanded', false);
+    if (event instanceof KeyboardEvent) elementToFocus?.setAttribute('aria-expanded', false);
   }
 
   onFocusOut() {
     setTimeout(() => {
-      if (this.mainDetailsToggle.hasAttribute('open') && !this.mainDetailsToggle.contains(document.activeElement)) {
+      if (this.mainDetailsToggle.hasAttribute('open') && !this.mainDetailsToggle.contains(document.activeElement))
         this.closeMenuDrawer();
-      }
     });
   }
 
@@ -436,7 +521,7 @@ class MenuDrawer extends HTMLElement {
 
   closeSubmenu(detailsElement) {
     const parentMenuElement = detailsElement.closest('.submenu-open');
-    if (parentMenuElement) parentMenuElement.classList.remove('submenu-open');
+    parentMenuElement && parentMenuElement.classList.remove('submenu-open');
     detailsElement.classList.remove('menu-opening');
     detailsElement.querySelector('summary').setAttribute('aria-expanded', false);
     removeTrapFocus(detailsElement.querySelector('summary'));
@@ -445,39 +530,48 @@ class MenuDrawer extends HTMLElement {
 
   closeAnimation(detailsElement) {
     let animationStart;
+
     const handleAnimation = (time) => {
-      if (animationStart === undefined) animationStart = time;
+      if (animationStart === undefined) {
+        animationStart = time;
+      }
+
       const elapsedTime = time - animationStart;
+
       if (elapsedTime < 400) {
         window.requestAnimationFrame(handleAnimation);
       } else {
         detailsElement.removeAttribute('open');
-        const parentOpen = detailsElement.closest('details[open]');
-        if (parentOpen) trapFocus(parentOpen, detailsElement.querySelector('summary'));
+        if (detailsElement.closest('details[open]')) {
+          trapFocus(detailsElement.closest('details[open]'), detailsElement.querySelector('summary'));
+        }
       }
     };
+
     window.requestAnimationFrame(handleAnimation);
   }
 }
+
 customElements.define('menu-drawer', MenuDrawer);
 
 class HeaderDrawer extends MenuDrawer {
   constructor() {
     super();
-    this.onResize = this.onResize.bind(this);
   }
 
   openMenuDrawer(summaryElement) {
     this.header = this.header || document.querySelector('.section-header');
-    this.borderOffset = this.borderOffset || (this.closest('.header-wrapper').classList.contains('header-wrapper--border-bottom') ? 1 : 0);
-
+    this.borderOffset =
+      this.borderOffset || this.closest('.header-wrapper').classList.contains('header-wrapper--border-bottom') ? 1 : 0;
     document.documentElement.style.setProperty(
       '--header-bottom-position',
       `${parseInt(this.header.getBoundingClientRect().bottom - this.borderOffset)}px`
     );
     this.header.classList.add('menu-open');
 
-    setTimeout(() => { this.mainDetailsToggle.classList.add('menu-opening'); });
+    setTimeout(() => {
+      this.mainDetailsToggle.classList.add('menu-opening');
+    });
 
     summaryElement.setAttribute('aria-expanded', true);
     window.addEventListener('resize', this.onResize);
@@ -492,34 +586,40 @@ class HeaderDrawer extends MenuDrawer {
     window.removeEventListener('resize', this.onResize);
   }
 
-  onResize() {
-    if (this.header) {
+  onResize = () => {
+    this.header &&
       document.documentElement.style.setProperty(
         '--header-bottom-position',
         `${parseInt(this.header.getBoundingClientRect().bottom - this.borderOffset)}px`
       );
-    }
     document.documentElement.style.setProperty('--viewport-height', `${window.innerHeight}px`);
-  }
+  };
 }
+
 customElements.define('header-drawer', HeaderDrawer);
 
 class ModalDialog extends HTMLElement {
   constructor() {
     super();
     this.querySelector('[id^="ModalClose-"]').addEventListener('click', this.hide.bind(this, false));
-    this.addEventListener('keyup', (event) => { if (event.code.toUpperCase() === 'ESCAPE') this.hide(); });
+    this.addEventListener('keyup', (event) => {
+      if (event.code.toUpperCase() === 'ESCAPE') this.hide();
+    });
     if (this.classList.contains('media-modal')) {
       this.addEventListener('pointerup', (event) => {
         if (event.pointerType === 'mouse' && !event.target.closest('deferred-media, product-model')) this.hide();
       });
     } else {
-      this.addEventListener('click', (event) => { if (event.target === this) this.hide(); });
+      this.addEventListener('click', (event) => {
+        if (event.target === this) this.hide();
+      });
     }
   }
 
   connectedCallback() {
-    if (!this.moved) { this.moved = true; document.body.appendChild(this); }
+    if (this.moved) return;
+    this.moved = true;
+    document.body.appendChild(this);
   }
 
   show(opener) {
@@ -543,7 +643,10 @@ class ModalDialog extends HTMLElement {
 customElements.define('modal-dialog', ModalDialog);
 
 class BulkModal extends HTMLElement {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
+
   connectedCallback() {
     const handleIntersection = (entries, observer) => {
       if (!entries[0].isIntersecting) return;
@@ -551,25 +654,32 @@ class BulkModal extends HTMLElement {
       if (this.innerHTML.trim() === '') {
         const productUrl = this.dataset.url.split('?')[0];
         fetch(`${productUrl}?section_id=bulk-quick-order-list`)
-          .then((r) => r.text())
-          .then((txt) => {
-            const html = new DOMParser().parseFromString(txt, 'text/html');
+          .then((response) => response.text())
+          .then((responseText) => {
+            const html = new DOMParser().parseFromString(responseText, 'text/html');
             const sourceQty = html.querySelector('.quick-order-list-container').parentNode;
             this.innerHTML = sourceQty.innerHTML;
           })
-          .catch(console.error);
+          .catch((e) => {
+            console.error(e);
+          });
       }
     };
-    new IntersectionObserver(handleIntersection.bind(this))
-      .observe(document.querySelector(`#QuickBulk-${this.dataset.productId}-${this.dataset.sectionId}`));
+
+    new IntersectionObserver(handleIntersection.bind(this)).observe(
+      document.querySelector(`#QuickBulk-${this.dataset.productId}-${this.dataset.sectionId}`)
+    );
   }
 }
+
 customElements.define('bulk-modal', BulkModal);
 
 class ModalOpener extends HTMLElement {
   constructor() {
     super();
+
     const button = this.querySelector('button');
+
     if (!button) return;
     button.addEventListener('click', () => {
       const modal = document.querySelector(this.getAttribute('data-modal'));
@@ -583,20 +693,27 @@ class DeferredMedia extends HTMLElement {
   constructor() {
     super();
     const poster = this.querySelector('[id^="Deferred-Poster-"]');
-    if (poster) poster.addEventListener('click', this.loadContent.bind(this));
+    if (!poster) return;
+    poster.addEventListener('click', this.loadContent.bind(this));
   }
+
   loadContent(focus = true) {
     window.pauseAllMedia();
     if (!this.getAttribute('loaded')) {
       const content = document.createElement('div');
       content.appendChild(this.querySelector('template').content.firstElementChild.cloneNode(true));
+
       this.setAttribute('loaded', true);
       const deferredElement = this.appendChild(content.querySelector('video, model-viewer, iframe'));
       if (focus) deferredElement.focus();
-      if (deferredElement.nodeName === 'VIDEO' && deferredElement.getAttribute('autoplay')) deferredElement.play();
+      if (deferredElement.nodeName == 'VIDEO' && deferredElement.getAttribute('autoplay')) {
+        // force autoplay for safari
+        deferredElement.play();
+      }
     }
   }
 }
+
 customElements.define('deferred-media', DeferredMedia);
 
 class SliderComponent extends HTMLElement {
@@ -613,8 +730,8 @@ class SliderComponent extends HTMLElement {
     if (!this.slider || !this.nextButton) return;
 
     this.initPages();
-    const ro = new ResizeObserver(() => this.initPages());
-    ro.observe(this.slider);
+    const resizeObserver = new ResizeObserver((entries) => this.initPages());
+    resizeObserver.observe(this.slider);
 
     this.slider.addEventListener('scroll', this.update.bind(this));
     this.prevButton.addEventListener('click', this.onButtonClick.bind(this));
@@ -622,10 +739,12 @@ class SliderComponent extends HTMLElement {
   }
 
   initPages() {
-    this.sliderItemsToShow = Array.from(this.sliderItems).filter((el) => el.clientWidth > 0);
+    this.sliderItemsToShow = Array.from(this.sliderItems).filter((element) => element.clientWidth > 0);
     if (this.sliderItemsToShow.length < 2) return;
     this.sliderItemOffset = this.sliderItemsToShow[1].offsetLeft - this.sliderItemsToShow[0].offsetLeft;
-    this.slidesPerPage = Math.floor((this.slider.clientWidth - this.sliderItemsToShow[0].offsetLeft) / this.sliderItemOffset);
+    this.slidesPerPage = Math.floor(
+      (this.slider.clientWidth - this.sliderItemsToShow[0].offsetLeft) / this.sliderItemOffset
+    );
     this.totalPages = this.sliderItemsToShow.length - this.slidesPerPage + 1;
     this.update();
   }
@@ -636,6 +755,8 @@ class SliderComponent extends HTMLElement {
   }
 
   update() {
+    // Temporarily prevents unneeded updates resulting from variant changes
+    // This should be refactored as part of https://github.com/Shopify/dawn/issues/2057
     if (!this.slider || !this.nextButton) return;
 
     const previousPage = this.currentPage;
@@ -646,10 +767,15 @@ class SliderComponent extends HTMLElement {
       this.pageTotalElement.textContent = this.totalPages;
     }
 
-    if (this.currentPage !== previousPage) {
-      this.dispatchEvent(new CustomEvent('slideChanged', {
-        detail: { currentPage: this.currentPage, currentElement: this.sliderItemsToShow[this.currentPage - 1] }
-      }));
+    if (this.currentPage != previousPage) {
+      this.dispatchEvent(
+        new CustomEvent('slideChanged', {
+          detail: {
+            currentPage: this.currentPage,
+            currentElement: this.sliderItemsToShow[this.currentPage - 1],
+          },
+        })
+      );
     }
 
     if (this.enableSliderLooping) return;
@@ -668,8 +794,8 @@ class SliderComponent extends HTMLElement {
   }
 
   isSlideVisible(element, offset = 0) {
-    const lastVisible = this.slider.clientWidth + this.slider.scrollLeft - offset;
-    return element.offsetLeft + element.clientWidth <= lastVisible && element.offsetLeft >= this.slider.scrollLeft;
+    const lastVisibleSlide = this.slider.clientWidth + this.slider.scrollLeft - offset;
+    return element.offsetLeft + element.clientWidth <= lastVisibleSlide && element.offsetLeft >= this.slider.scrollLeft;
   }
 
   onButtonClick(event) {
@@ -683,9 +809,12 @@ class SliderComponent extends HTMLElement {
   }
 
   setSlidePosition(position) {
-    this.slider.scrollTo({ left: position });
+    this.slider.scrollTo({
+      left: position,
+    });
   }
 }
+
 customElements.define('slider-component', SliderComponent);
 
 class SlideshowComponent extends SliderComponent {
@@ -693,12 +822,14 @@ class SlideshowComponent extends SliderComponent {
     super();
     this.sliderControlWrapper = this.querySelector('.slider-buttons');
     this.enableSliderLooping = true;
+
     if (!this.sliderControlWrapper) return;
 
     this.sliderFirstItemNode = this.slider.querySelector('.slideshow__slide');
     if (this.sliderItemsToShow.length > 0) this.currentPage = 1;
 
     this.announcementBarSlider = this.querySelector('.announcement-bar-slider');
+    // Value below should match --duration-announcement-bar CSS value
     this.announcerBarAnimationDelay = this.announcementBarSlider ? 250 : 0;
 
     this.sliderControlLinksArray = Array.from(this.sliderControlWrapper.querySelectorAll('.slider-counter__link'));
@@ -708,9 +839,21 @@ class SlideshowComponent extends SliderComponent {
 
     if (this.announcementBarSlider) {
       this.announcementBarArrowButtonWasClicked = false;
+
       this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-      this.reducedMotion.addEventListener('change', () => { if (this.slider.getAttribute('data-autoplay') === 'true') this.setAutoPlay(); });
-      [this.prevButton, this.nextButton].forEach((b) => b.addEventListener('click', () => { this.announcementBarArrowButtonWasClicked = true; }, { once: true }));
+      this.reducedMotion.addEventListener('change', () => {
+        if (this.slider.getAttribute('data-autoplay') === 'true') this.setAutoPlay();
+      });
+
+      [this.prevButton, this.nextButton].forEach((button) => {
+        button.addEventListener(
+          'click',
+          () => {
+            this.announcementBarArrowButtonWasClicked = true;
+          },
+          { once: true }
+        );
+      });
     }
 
     if (this.slider.getAttribute('data-autoplay') === 'true') this.setAutoPlay();
@@ -737,31 +880,46 @@ class SlideshowComponent extends SliderComponent {
     super.onButtonClick(event);
     this.wasClicked = true;
 
-    const isFirst = this.currentPage === 1;
-    const isLast  = this.currentPage === this.sliderItemsToShow.length;
+    const isFirstSlide = this.currentPage === 1;
+    const isLastSlide = this.currentPage === this.sliderItemsToShow.length;
 
-    if (!isFirst && !isLast) { this.applyAnimationToAnnouncementBar(event.currentTarget.name); return; }
+    if (!isFirstSlide && !isLastSlide) {
+      this.applyAnimationToAnnouncementBar(event.currentTarget.name);
+      return;
+    }
 
-    if (isFirst && event.currentTarget.name === 'previous') {
-      this.slideScrollPosition = this.slider.scrollLeft + this.sliderFirstItemNode.clientWidth * this.sliderItemsToShow.length;
-    } else if (isLast && event.currentTarget.name === 'next') {
+    if (isFirstSlide && event.currentTarget.name === 'previous') {
+      this.slideScrollPosition =
+        this.slider.scrollLeft + this.sliderFirstItemNode.clientWidth * this.sliderItemsToShow.length;
+    } else if (isLastSlide && event.currentTarget.name === 'next') {
       this.slideScrollPosition = 0;
     }
+
     this.setSlidePosition(this.slideScrollPosition);
+
     this.applyAnimationToAnnouncementBar(event.currentTarget.name);
   }
 
   setSlidePosition(position) {
     if (this.setPositionTimeout) clearTimeout(this.setPositionTimeout);
-    this.setPositionTimeout = setTimeout(() => { this.slider.scrollTo({ left: position }); }, this.announcerBarAnimationDelay);
+    this.setPositionTimeout = setTimeout(() => {
+      this.slider.scrollTo({
+        left: position,
+      });
+    }, this.announcerBarAnimationDelay);
   }
 
   update() {
     super.update();
     this.sliderControlButtons = this.querySelectorAll('.slider-counter__link');
     this.prevButton.removeAttribute('disabled');
+
     if (!this.sliderControlButtons.length) return;
-    this.sliderControlButtons.forEach((link) => { link.classList.remove('slider-counter__link--active'); link.removeAttribute('aria-current'); });
+
+    this.sliderControlButtons.forEach((link) => {
+      link.classList.remove('slider-counter__link--active');
+      link.removeAttribute('aria-current');
+    });
     this.sliderControlButtons[this.currentPage - 1].classList.add('slider-counter__link--active');
     this.sliderControlButtons[this.currentPage - 1].setAttribute('aria-current', true);
   }
@@ -774,8 +932,9 @@ class SlideshowComponent extends SliderComponent {
 
   focusOutHandling(event) {
     if (this.sliderAutoplayButton) {
-      const focusedOnBtn = event.target === this.sliderAutoplayButton || this.sliderAutoplayButton.contains(event.target);
-      if (!this.autoplayButtonIsSetToPlay || focusedOnBtn) return;
+      const focusedOnAutoplayButton =
+        event.target === this.sliderAutoplayButton || this.sliderAutoplayButton.contains(event.target);
+      if (!this.autoplayButtonIsSetToPlay || focusedOnAutoplayButton) return;
       this.play();
     } else if (!this.reducedMotion.matches && !this.announcementBarArrowButtonWasClicked) {
       this.play();
@@ -784,16 +943,28 @@ class SlideshowComponent extends SliderComponent {
 
   focusInHandling(event) {
     if (this.sliderAutoplayButton) {
-      const focusedOnBtn = event.target === this.sliderAutoplayButton || this.sliderAutoplayButton.contains(event.target);
-      if (focusedOnBtn && this.autoplayButtonIsSetToPlay) this.play();
-      else if (this.autoplayButtonIsSetToPlay) this.pause();
+      const focusedOnAutoplayButton =
+        event.target === this.sliderAutoplayButton || this.sliderAutoplayButton.contains(event.target);
+      if (focusedOnAutoplayButton && this.autoplayButtonIsSetToPlay) {
+        this.play();
+      } else if (this.autoplayButtonIsSetToPlay) {
+        this.pause();
+      }
     } else if (this.announcementBarSlider.contains(event.target)) {
       this.pause();
     }
   }
 
-  play()  { this.slider.setAttribute('aria-live', 'off');  clearInterval(this.autoplay); this.autoplay = setInterval(this.autoRotateSlides.bind(this), this.autoplaySpeed); }
-  pause() { this.slider.setAttribute('aria-live', 'polite'); clearInterval(this.autoplay); }
+  play() {
+    this.slider.setAttribute('aria-live', 'off');
+    clearInterval(this.autoplay);
+    this.autoplay = setInterval(this.autoRotateSlides.bind(this), this.autoplaySpeed);
+  }
+
+  pause() {
+    this.slider.setAttribute('aria-live', 'polite');
+    clearInterval(this.autoplay);
+  }
 
   togglePlayButtonState(pauseAutoplay) {
     if (pauseAutoplay) {
@@ -806,20 +977,30 @@ class SlideshowComponent extends SliderComponent {
   }
 
   autoRotateSlides() {
-    const pos = this.currentPage === this.sliderItems.length ? 0 : this.slider.scrollLeft + this.sliderItemOffset;
-    this.setSlidePosition(pos);
+    const slideScrollPosition =
+      this.currentPage === this.sliderItems.length ? 0 : this.slider.scrollLeft + this.sliderItemOffset;
+
+    this.setSlidePosition(slideScrollPosition);
     this.applyAnimationToAnnouncementBar();
   }
 
-  setSlideVisibility() {
+  setSlideVisibility(event) {
     this.sliderItemsToShow.forEach((item, index) => {
-      const linkEls = item.querySelectorAll('a');
+      const linkElements = item.querySelectorAll('a');
       if (index === this.currentPage - 1) {
-        if (linkEls.length) linkEls.forEach((b) => b.removeAttribute('tabindex'));
-        item.setAttribute('aria-hidden', 'false'); item.removeAttribute('tabindex');
+        if (linkElements.length)
+          linkElements.forEach((button) => {
+            button.removeAttribute('tabindex');
+          });
+        item.setAttribute('aria-hidden', 'false');
+        item.removeAttribute('tabindex');
       } else {
-        if (linkEls.length) linkEls.forEach((b) => b.setAttribute('tabindex', '-1'));
-        item.setAttribute('aria-hidden', 'true'); item.setAttribute('tabindex', '-1');
+        if (linkElements.length)
+          linkElements.forEach((button) => {
+            button.setAttribute('tabindex', '-1');
+          });
+        item.setAttribute('aria-hidden', 'true');
+        item.setAttribute('tabindex', '-1');
       }
     });
     this.wasClicked = false;
@@ -828,12 +1009,12 @@ class SlideshowComponent extends SliderComponent {
   applyAnimationToAnnouncementBar(button = 'next') {
     if (!this.announcementBarSlider) return;
 
-    const count = this.sliderItems.length;
-    const inc = button === 'next' ? 1 : -1;
+    const itemsCount = this.sliderItems.length;
+    const increment = button === 'next' ? 1 : -1;
 
     const currentIndex = this.currentPage - 1;
-    let nextIndex = (currentIndex + inc) % count;
-    if (nextIndex === -1) nextIndex = count - 1;
+    let nextIndex = (currentIndex + increment) % itemsCount;
+    nextIndex = nextIndex === -1 ? itemsCount - 1 : nextIndex;
 
     const nextSlide = this.sliderItems[nextIndex];
     const currentSlide = this.sliderItems[currentIndex];
@@ -841,10 +1022,10 @@ class SlideshowComponent extends SliderComponent {
     const animationClassIn = 'announcement-bar-slider--fade-in';
     const animationClassOut = 'announcement-bar-slider--fade-out';
 
-    const isFirst = currentIndex === 0;
-    const isLast  = currentIndex === count - 1;
+    const isFirstSlide = currentIndex === 0;
+    const isLastSlide = currentIndex === itemsCount - 1;
 
-    const shouldMoveNext = (button === 'next' && !isLast) || (button === 'previous' && isFirst);
+    const shouldMoveNext = (button === 'next' && !isLastSlide) || (button === 'previous' && isFirstSlide);
     const direction = shouldMoveNext ? 'next' : 'previous';
 
     currentSlide.classList.add(`${animationClassOut}-${direction}`);
@@ -858,33 +1039,53 @@ class SlideshowComponent extends SliderComponent {
 
   linkToSlide(event) {
     event.preventDefault();
-    const delta = this.sliderFirstItemNode.clientWidth * (this.sliderControlLinksArray.indexOf(event.currentTarget) + 1 - this.currentPage);
-    this.slider.scrollTo({ left: this.slider.scrollLeft + delta });
+    const slideScrollPosition =
+      this.slider.scrollLeft +
+      this.sliderFirstItemNode.clientWidth *
+        (this.sliderControlLinksArray.indexOf(event.currentTarget) + 1 - this.currentPage);
+    this.slider.scrollTo({
+      left: slideScrollPosition,
+    });
   }
 }
+
 customElements.define('slideshow-component', SlideshowComponent);
 
 class VariantSelects extends HTMLElement {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
+
   connectedCallback() {
     this.addEventListener('change', (event) => {
       const target = this.getInputForEventTarget(event.target);
       this.updateSelectionMetadata(event);
-      publish(PUB_SUB_EVENTS.optionValueSelectionChange, { data: { event, target, selectedOptionValues: this.selectedOptionValues } });
+
+      publish(PUB_SUB_EVENTS.optionValueSelectionChange, {
+        data: {
+          event,
+          target,
+          selectedOptionValues: this.selectedOptionValues,
+        },
+      });
     });
   }
 
   updateSelectionMetadata({ target }) {
     const { value, tagName } = target;
+
     let targetName = target.getAttribute('name');
 
     if (tagName === 'SELECT' && target.selectedOptions.length) {
-      Array.from(target.options).find((o) => o.getAttribute('selected'))?.removeAttribute('selected');
+      Array.from(target.options)
+        .find((option) => option.getAttribute('selected'))
+        .removeAttribute('selected');
       target.selectedOptions[0].setAttribute('selected', 'selected');
-
+  
       const swatchValue = target.selectedOptions[0].dataset.optionSwatchValue;
-      const selectedDropdownSwatchValue = target.closest('.product-form__input')?.querySelector('[data-selected-value] > .swatch');
-
+      const selectedDropdownSwatchValue = target
+        .closest('.product-form__input')
+        .querySelector('[data-selected-value] > .swatch');
       if (selectedDropdownSwatchValue) {
         if (swatchValue) {
           selectedDropdownSwatchValue.style.setProperty('--swatch--background', swatchValue);
@@ -893,109 +1094,187 @@ class VariantSelects extends HTMLElement {
           selectedDropdownSwatchValue.style.setProperty('--swatch--background', 'unset');
           selectedDropdownSwatchValue.classList.add('swatch--unavailable');
         }
-        selectedDropdownSwatchValue.style.setProperty('--swatch-focal-point', target.selectedOptions[0].dataset.optionSwatchFocalPoint || 'unset');
+        selectedDropdownSwatchValue.style.setProperty(
+          '--swatch-focal-point',
+          target.selectedOptions[0].dataset.optionSwatchFocalPoint || 'unset'
+        );
       }
     } else if (tagName === 'INPUT' && target.type === 'radio') {
-      const selectedSwatchValue = target.closest('.product-form__input')?.querySelector('[data-selected-value]');
+      const selectedSwatchValue = target.closest('.product-form__input').querySelector('[data-selected-value]');
       if (selectedSwatchValue) selectedSwatchValue.innerHTML = value;
-
+  
+      // Clear custom color when a Shopify option is clicked
       const customColorInput = document.getElementById('custom-color-hidden');
       const customProductProperty = document.getElementById('custom-color-properties');
-      if (customColorInput) { customColorInput.value = ''; customProductProperty.value = ''; }
+      if (customColorInput) {
+        customColorInput.value = '';
+        customProductProperty.value = '';
+      }
 
       const customColorProduct = document.getElementById('custom-color-product');
       const customColorProductQuantity = document.getElementById('custom-color-quantity');
-      if (customColorProduct) { customColorProduct.disabled = true; customColorProductQuantity.disabled = true; customProductProperty.disabled = true; }
 
+      if (customColorProduct) {
+        customColorProduct.disabled = true;
+        customColorProductQuantity.disabled = true;
+        customProductProperty.disabled = true;
+      }
       const customSwatches = document.querySelectorAll('.swatch--custom.selected');
-      if (customSwatches) customSwatches.forEach((s) => s.classList.remove('selected'));
+      if (customSwatches) {
+        customSwatches.forEach((swatch) => swatch.classList.remove('selected'));
+      }
 
       const selectedColorElement = document.querySelector('.option_selected');
       const selectedColorPriceElement = document.querySelector('.option_selected-price');
       const selectedColorInfo = document.querySelector('.option_selected-container');
-
+       
       if (targetName.toLowerCase().includes('color')) {
-        if (selectedColorElement) selectedColorElement.textContent = `Color: ${value}`;
-        if (selectedColorPriceElement) selectedColorPriceElement.textContent = '$0';
-        if (selectedColorInfo) selectedColorInfo.style.display = 'flex';
+        if (selectedColorElement) {
+          selectedColorElement.textContent = `Color: ${value}`;          
+        }
+  
+        if(selectedColorPriceElement) {
+          selectedColorPriceElement.textContent = '$0';
+        }
+  
+        if (selectedColorInfo) {
+          selectedColorInfo.style.display = 'flex';
+        }
       }
     }
   }
 
-  getInputForEventTarget(target) { return target.tagName === 'SELECT' ? target.selectedOptions[0] : target; }
+  
+  getInputForEventTarget(target) {
+    return target.tagName === 'SELECT' ? target.selectedOptions[0] : target;
+  }
 
   get selectedOptionValues() {
-    return Array.from(this.querySelectorAll('select option[selected], fieldset input:checked')).map(({ dataset }) => dataset.optionValueId);
+    return Array.from(this.querySelectorAll('select option[selected], fieldset input:checked')).map(
+      ({ dataset }) => dataset.optionValueId
+    );
   }
 }
+
 customElements.define('variant-selects', VariantSelects);
 
 class ProductRecommendations extends HTMLElement {
   observer = undefined;
-  constructor() { super(); }
-  connectedCallback() { this.initializeRecommendations(this.dataset.productId); }
+
+  constructor() {
+    super();
+  }
+
+  connectedCallback() {
+    this.initializeRecommendations(this.dataset.productId);
+  }
 
   initializeRecommendations(productId) {
     this.observer?.unobserve(this);
-    this.observer = new IntersectionObserver((entries, observer) => {
-      if (!entries[0].isIntersecting) return;
-      observer.unobserve(this);
-      this.loadRecommendations(productId);
-    }, { rootMargin: '0px 0px 400px 0px' });
+    this.observer = new IntersectionObserver(
+      (entries, observer) => {
+        if (!entries[0].isIntersecting) return;
+        observer.unobserve(this);
+        this.loadRecommendations(productId);
+      },
+      { rootMargin: '0px 0px 400px 0px' }
+    );
     this.observer.observe(this);
   }
 
   loadRecommendations(productId) {
     fetch(`${this.dataset.url}&product_id=${productId}&section_id=${this.dataset.sectionId}`)
-      .then((r) => r.text())
+      .then((response) => response.text())
       .then((text) => {
-        const html = document.createElement('div'); html.innerHTML = text;
+        const html = document.createElement('div');
+        html.innerHTML = text;
         const recommendations = html.querySelector('product-recommendations');
-        if (recommendations?.innerHTML.trim().length) this.innerHTML = recommendations.innerHTML;
-        if (!this.querySelector('slideshow-component') && this.classList.contains('complementary-products')) this.remove();
-        if (html.querySelector('.grid__item')) this.classList.add('product-recommendations--loaded');
+
+        if (recommendations?.innerHTML.trim().length) {
+          this.innerHTML = recommendations.innerHTML;
+        }
+
+        if (!this.querySelector('slideshow-component') && this.classList.contains('complementary-products')) {
+          this.remove();
+        }
+
+        if (html.querySelector('.grid__item')) {
+          this.classList.add('product-recommendations--loaded');
+        }
       })
-      .catch(console.error);
+      .catch((e) => {
+        console.error(e);
+      });
   }
 }
+
 customElements.define('product-recommendations', ProductRecommendations);
 
 class AccountIcon extends HTMLElement {
-  constructor() { super(); this.icon = this.querySelector('.icon'); }
-  connectedCallback() { document.addEventListener('storefront:signincompleted', this.handleStorefrontSignInCompleted.bind(this)); }
-  handleStorefrontSignInCompleted(event) { if (event?.detail?.avatar) this.icon?.replaceWith(event.detail.avatar.cloneNode()); }
+  constructor() {
+    super();
+
+    this.icon = this.querySelector('.icon');
+  }
+
+  connectedCallback() {
+    document.addEventListener('storefront:signincompleted', this.handleStorefrontSignInCompleted.bind(this));
+  }
+
+  handleStorefrontSignInCompleted(event) {
+    if (event?.detail?.avatar) {
+      this.icon?.replaceWith(event.detail.avatar.cloneNode());
+    }
+  }
 }
+
 customElements.define('account-icon', AccountIcon);
 
 class BulkAdd extends HTMLElement {
-  constructor() { super(); this.queue = []; this.requestStarted = false; this.ids = []; }
+  constructor() {
+    super();
+    this.queue = [];
+    this.requestStarted = false;
+    this.ids = [];
+  }
+
   startQueue(id, quantity) {
     this.queue.push({ id, quantity });
     const interval = setInterval(() => {
       if (this.queue.length > 0) {
-        if (!this.requestStarted) this.sendRequest(this.queue);
-      } else { clearInterval(interval); }
+        if (!this.requestStarted) {
+          this.sendRequest(this.queue);
+        }
+      } else {
+        clearInterval(interval);
+      }
     }, 250);
   }
+
   sendRequest(queue) {
     this.requestStarted = true;
     const items = {};
-    queue.forEach((q) => { items[parseInt(q.id)] = q.quantity; });
-    this.queue = this.queue.filter((q) => !queue.includes(q));
+    queue.forEach((queueItem) => {
+      items[parseInt(queueItem.id)] = queueItem.quantity;
+    });
+    this.queue = this.queue.filter((queueElement) => !queue.includes(queueElement));
     const quickBulkElement = this.closest('quick-order-list') || this.closest('quick-add-bulk');
     quickBulkElement.updateMultipleQty(items);
   }
+
   resetQuantityInput(id) {
     const input = this.querySelector(`#Quantity-${id}`);
     input.value = input.getAttribute('value');
     this.isEnterPressed = false;
   }
+
   setValidity(event, index, message) {
     event.target.setCustomValidity(message);
     event.target.reportValidity();
     this.resetQuantityInput(index);
     event.target.select();
   }
+
   validateQuantity(event) {
     const inputValue = parseInt(event.target.value);
     const index = event.target.dataset.index;
@@ -1012,9 +1291,20 @@ class BulkAdd extends HTMLElement {
       this.startQueue(index, inputValue);
     }
   }
-  getSectionsUrl() { return window.pageNumber ? `${window.location.pathname}?page=${window.pageNumber}` : `${window.location.pathname}`; }
+
+  getSectionsUrl() {
+    if (window.pageNumber) {
+      return `${window.location.pathname}?page=${window.pageNumber}`;
+    } else {
+      return `${window.location.pathname}`;
+    }
+  }
+
   getSectionInnerHTML(html, selector) {
     return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
   }
 }
-if (!customElements.get('bulk-add')) customElements.define('bulk-add', BulkAdd);
+
+if (!customElements.get('bulk-add')) {
+  customElements.define('bulk-add', BulkAdd);
+}
