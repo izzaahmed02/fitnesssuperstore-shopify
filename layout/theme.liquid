@@ -6,21 +6,23 @@
           <meta http-equiv="X-UA-Compatible" content="IE=edge">
           <meta name="viewport" content="width=device-width,initial-scale=1">
           <meta name="theme-color" content="">
-          {% if template contains 'product' and product %}
-            <link rel="canonical" href="{{ shop.url }}/products/{{ product.handle }}">
-          {% elsif collection %}
-            <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
-          {% else %}
-            <link rel="canonical" href="{{ canonical_url }}">
-          {% endif %}
+{% if template contains 'product' and product %}
+  <link rel="canonical" href="{{ shop.url }}/products/{{ product.handle }}">
+{% elsif collection %}
+  <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
+{% else %}
+  <link rel="canonical" href="{{ canonical_url }}">
+{% endif %}
           {% if template == 'search' %}
             <meta name="robots" content="noindex,nofollow"/>
           {%- endif -%}
           {%- if settings.favicon != blank -%}
           
         <link rel="shortcut icon" href="{{ settings.favicon | img_url: '32x32' }}" type="image/png">
+
           {%- endif -%}
-      
+    
+         
           {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}
           <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
           {%- endunless -%}
@@ -40,200 +42,328 @@
           <!-- End Google Tag Manager -->
 
           {% if template contains 'index' %}
-          <script type="application/ld+json">
-            {
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              "name": {{ shop.name | json }},
-              {% if settings.logo %}
-                "logo": {{ settings.logo | image_url: width: 500 | prepend: "https:" | json }},
-              {% endif %}
-              "sameAs": [
-                {% if settings.social_twitter_link %}{{ settings.social_twitter_link | json }}{% endif %}
-                {% if settings.social_facebook_link %}, {{ settings.social_facebook_link | json }}{% endif %}
-                {% if settings.social_pinterest_link %}, {{ settings.social_pinterest_link | json }}{% endif %}
-                {% if settings.social_instagram_link %}, {{ settings.social_instagram_link | json }}{% endif %}
-                {% if settings.social_tiktok_link %}, {{ settings.social_tiktok_link | json }}{% endif %}
-                {% if settings.social_youtube_link %}, {{ settings.social_youtube_link | json }}{% endif %}
-              ],
-              "url": {{ request.origin | append: page.url | json }}
-            }
-          </script>
-        {% endif %}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": {{ shop.name | json }},
+      {% if settings.logo %}
+        "logo": {{ settings.logo | image_url: width: 500 | prepend: "https:" | json }},
+      {% endif %}
+      "sameAs": [
+        {% if settings.social_twitter_link %}{{ settings.social_twitter_link | json }}{% endif %}
+        {% if settings.social_facebook_link %}, {{ settings.social_facebook_link | json }}{% endif %}
+        {% if settings.social_pinterest_link %}, {{ settings.social_pinterest_link | json }}{% endif %}
+        {% if settings.social_instagram_link %}, {{ settings.social_instagram_link | json }}{% endif %}
+        {% if settings.social_tiktok_link %}, {{ settings.social_tiktok_link | json }}{% endif %}
+        {% if settings.social_youtube_link %}, {{ settings.social_youtube_link | json }}{% endif %}
+      ],
+      "url": {{ request.origin | append: page.url | json }}
+    }
+  </script>
+{% endif %}
 
 
   {% if template contains 'product' and product %}
   {% assign domain_origin = request.origin %}
-<script type="application/ld+json">
-{%- capture ld_json -%}
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@id": "https://{{ shop.domain }}{{ product.url }}#product",
-      "@type": "Product",
-      "brand": {
-        "@type": "Brand",
-        "@id": "https://{{ shop.domain }}{{ product.url }}#brand",
-        "name": "{{ product.vendor | default: shop.name | escape }}"
-      },
-      {% if product.metafields.reviews.rating.value and product.metafields.reviews.review_count %}
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "@id": "https://{{ shop.domain }}{{ product.url }}#aggregaterating",
-        "name": "{{ product.title | escape }}",
-        "ratingValue": "{{ product.metafields.reviews.rating.value | escape }}",
-        "ratingCount": "{{ product.metafields.reviews.review_count }}",
-        "reviewCount": "{{ product.metafields.reviews.review_count }}"
-      },
-      {% endif %}
-      "audience": "{{ product.metafields.custom.audience | default: 'Fitness enthusiasts and commercial gym users' | escape }}",
-      "category": "{{ product.type | default: 'Fitness Equipment' | escape }}",
-      "description": "{{ product.description | strip_html | strip_newlines | truncate: 500 | escape | default: 'High-quality fitness equipment for home or commercial use.' }}",
-      "image": [{% for image in product.images %}"{{ image.src | img_url: 'master' | split: '?' | first | escape }}"{% unless forloop.last %},{% endunless %}{% else %}"{{ 'product-placeholder.jpg' | asset_url | split: '?' | first | default: 'https://via.placeholder.com/500' | escape }}"{% endfor %}],
-      "name": "{{ product.title | escape }}",
-      "color": "{{ product.metafields.custom.product_color | default: 'Not specified' | escape }}",
-      "countryOfAssembly": "{{ product.metafields.custom.country_of_assembly | default: 'US' | escape }}",
-      "countryOfLastProcessing": "{{ product.metafields.custom.country_of_last_processing | default: 'US' | escape }}",
-      "hasMeasurement": {
-        "@type": "QuantitativeValue",
-        "@id": "https://{{ shop.domain }}{{ product.url }}#measurement",
-        "value": "Dimensions: {{product.metafields.custom.length_in | escape}} inch length x {{product.metafields.custom.width_in | escape}} inch weight x {{product.metafields.custom.height_in | escape}} inch height"
-      },
-      "keywords": [{%- assign keyword_list = product.metafields.custom.keywords.value -%}{%- if keyword_list != blank -%}{%- for keyword in keyword_list -%}"{{ keyword | strip | escape }}"{% unless forloop.last %},{% endunless %}{%- endfor -%}{%- elsif product.tags.size > 0 -%}{%- for tag in product.tags -%}"{{ tag | strip | escape }}"{% unless forloop.last %},{% endunless %}{%- endfor -%}{%- else -%}{%- assign words = product.title | split: ' ' -%}{%- for word in words -%}"{{ word | strip | escape }}"{% unless forloop.last %},{% endunless %}{%- endfor -%}{%- endif -%}],
-      "manufacturer": {
-        "@type": "Organization",
-        "@id": "https://{{ shop.domain }}{{ product.url }}#manufacturer",
-        "name": "{{ product.vendor | default: shop.name | escape }}"
-      },
-      "weight": "{{ product.metafields.custom.product_weight_lbs | default: 'Not specified' | escape }}",
-      "mpn": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
-      "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is'%}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured'%}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
-      "offers": {
-        "@id": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}#offer",
-        "@type": "Offer",
-        "availability": "https://schema.org/{% if product.selected_or_first_available_variant.available %}InStock{% else %}OutOfStock{% endif %}",
-        "price": "{{ product.price | divided_by: 100.0 | default: '0.00' }}",
-        "priceCurrency": "{{ shop.currency | default: 'USD' }}",
-        "url": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}",
-        {% if product.metafields.reviews.rating.value and product.metafields.reviews.review_count %}
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "@id": "https://{{ shop.domain }}{{ product.url }}#aggregaterating",
-          "name": "{{ product.title | escape }}",
-          "ratingValue": "{{ product.metafields.reviews.rating.value | escape }}",
-          "ratingCount": "{{ product.metafields.reviews.review_count }}",
-          "reviewCount": "{{ product.metafields.reviews.review_count }}"
-        },
-        {% endif %}
-        "offeredBy": {
-          "@type": "Organization",
-          "@id": "https://{{ shop.domain }}#seller",
-          "name": "{{ shop.name | escape }}",
-          "url": "https://{{ shop.domain }}",
-          "logo": "{{ 'logo.png' | asset_url | default: 'https://via.placeholder.com/500' }}",
-          "description": "{{ shop.description | escape | default: 'Premium fitness equipment at competitive prices.' }}",
-          "founder": "Timothy French",
-          "foundingDate": "2010",
-          "sameAs": [{% if shop.metafields.custom.social_media %}{% for link in shop.metafields.custom.social_media %}"{{ link | escape }}"{% unless forloop.last %},{% endunless %}{% endfor %}{% else %}"https://www.facebook.com/FitnessSuperstore","https://x.com/fitsuperstore","https://www.instagram.com/fitness.superstore/"{% endif %}],
-          "contactPoint": {
-            "@type": "ContactPoint",
-            "telephone": "{{ shop.phone | default: 'Not specified' | escape }}",
-            "contactType": "Customer Service",
-            "areaServed": "{{ shop.metafields.custom.area_served | default: 'US' | escape }}",
-            "availableLanguage": ["{{ shop.metafields.custom.language | default: 'English' | escape }}"]
+    <script type="application/ld+json">
+      {
+            "@context": "https://schema.org",
+            "@graph": [
+                  {
+                        "@id": "https://{{ shop.domain }}{{ product.url }}#product",
+                        "@type": "Product",
+                        "brand": {
+                              "@type": "Brand",
+                              "@id": "https://{{ shop.domain }}{{ product.url }}#brand",
+                              "name": "{{ product.vendor | default: shop.name | escape }}"
+                        },
+                        {% if product.metafields.reviews.rating.value and product.metafields.reviews.review_count %}
+                        "aggregateRating": {
+                              "@type": "AggregateRating",
+                              "@id": "https://{{ shop.domain }}{{ product.url }}#aggregaterating",
+                              "name": "{{ product.title | escape }}",
+                              "ratingValue": "{{ product.metafields.reviews.rating.value | escape }}",
+                              "ratingCount": "{{ product.metafields.reviews.review_count }}",
+                              "reviewCount": "{{ product.metafields.reviews.review_count }}"
+                        },
+                        {% endif %}
+                        "audience": "{{ product.metafields.custom.audience | default: 'Fitness enthusiasts and commercial gym users' | escape }}",
+                        "category": "{{ product.type | default: 'Fitness Equipment' | escape }}",
+                        "description": "{{ product.description | strip_html | strip_newlines | truncate: 500 | escape | default: 'High-quality fitness equipment for home or commercial use.' }}",
+                        "image": [
+  {% for image in product.images %}
+    "{{ image.src | image_url: 'master' | split: '?' | first | escape }}"{% unless forloop.last %},{% endunless %}
+  {% else %}
+    "{{ 'product-placeholder.jpg' | asset_url | split: '?' | first | default: 'https://via.placeholder.com/500' | escape }}"
+  {% endfor %}
+],
+                        "name": "{{ product.title | escape }}",
+                        "color": "{{ product.metafields.custom.product_color | default: 'Not specified' | escape }}",
+                        "countryOfAssembly": "{{ product.metafields.custom.country_of_assembly | default: 'US' | escape }}",
+                        "countryOfLastProcessing": "{{ product.metafields.custom.country_of_last_processing | default: 'US' | escape }}",
+                        "hasMeasurement": {
+                              "@type": "QuantitativeValue",
+                              "@id": "https://{{ shop.domain }}{{ product.url }}#measurement",
+                              "value": "Dimensions: {{product.metafields.custom.length_in | escape}} inch length x {{product.metafields.custom.width_in | escape}} inch weight x {{product.metafields.custom.height_in | escape}} inch height"
+                        },
+                        "keywords": [
+  {%- assign keyword_list = product.metafields.custom.keywords.value -%}
+
+  {%- if keyword_list != blank -%}
+    {%- for keyword in keyword_list -%}
+      "{{ keyword | strip | escape }}"{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+
+  {%- elsif product.tags.size > 0 -%}
+    {%- for tag in product.tags -%}
+      "{{ tag | strip | escape }}"{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+
+  {%- else -%}
+    {%- assign words = product.title | split: ' ' -%}
+    {%- for word in words -%}
+      "{{ word | strip | escape }}"{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+  {%- endif -%}
+],
+                        "manufacturer": {
+                              "@type": "Organization",
+                              "@id": "https://{{ shop.domain }}{{ product.url }}#manufacturer",
+                              "name": "{{ product.vendor | default: shop.name | escape }}"
+                        },
+                        "weight": "{{ product.metafields.custom.product_weight_lbs | default: 'Not specified' | escape }}",
+                        "mpn": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
+                         "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is'%}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured'%}RefurbishedCondition{%else%}{{product.metafields.custom.condition_state}}Condition{%endif%}{% else %}NewCondition{% endif %}",
+                        "offers": {
+                              "@id": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}#offer",
+                              "@type": "Offer",
+                              "availability": "https://schema.org/{% if product.selected_or_first_available_variant.available %}InStock{% else %}OutOfStock{% endif %}",
+                              "price": "{{ product.price | divided_by: 100.0 | default: '0.00' }}",
+                              "priceCurrency": "{{ shop.currency | default: 'USD' }}",
+                              "url": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}",
+                              "shippingDetails": {
+          "@type": "OfferShippingDetails",
+          "shippingSettingsLink": "https://www.fitnesssuperstore.com/pages/shipping-information",
+          "shippingOrigin": {
+            "@type": "DefinedRegion",
+            "addressCounty": "US"
           },
-          "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "{{ shop.address.street | default: 'Not specified' | escape }}",
-            "addressLocality": "{{ shop.address.city | default: 'Not specified' | escape }}",
-            "addressRegion": "{{ shop.address.province_code | default: 'Not specified' | escape }}",
-            "postalCode": "{{ shop.address.zip | default: 'Not specified' | escape }}",
-            "addressCountry": "{{ shop.address.country | default: 'Not specified' | escape }}"
+          "deliveryTime": {
+            "@type": "ShippingDeliveryTime",
+            "businessDays": {
+              "@type": "DayOfWeek",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ]
+            },
+            "handlingTime": {
+              "@type": "QuantitativeValue",
+              "value": "1-2 weeks",
+              "minValue": 1,
+              "maxValue": 14,
+              "unitCode": "DAY"
+            },
+            "transitTime": {
+              "@type": "QuantitativeValue",
+              "value": "2-10 business days",
+              "minValue": 2,
+              "maxValue": 10,
+              "unitCode": "DAY"
+            }
           },
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://{{ shop.domain }}/search?q={search_term_string}",
-            "query-input": "required name=search_term_string"
+          "shippingRegion": {
+            "@type": "DefinedRegion",
+            "addressCountry": "US"
+          },
+          "shippingDestination": {
+            "@type": "DefinedRegion",
+            "addressCountry": "US"
           }
-        }
-      },
-      "sku": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
-      "url": "https://{{ shop.domain }}{{ product.url }}"
-    },
+        },
+        "priceValidUntil": "2099",
+        "hasMerchantReturnPolicy": {
+          "@type": "MerchantReturnPolicy",
+          "applicableCountry": "US",
+          "merchantReturnLink": "https://www.fitnesssuperstore.com/pages/return-policy",
+          "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+          "merchantReturnDays": 14,
+          "returnMethod": "https://schema.org/ReturnByMail",
+          "returnFees": "https://schema.org/ReturnShippingFees"
+        },
+                              {% if product.metafields.reviews.rating.value and product.metafields.reviews.review_count %}
+                              "aggregateRating": {
+                                    "@type": "AggregateRating",
+                                    "@id": "https://{{ shop.domain }}{{ product.url }}#aggregaterating",
+                                    "name": "{{ product.title | escape }}",
+                                    "ratingValue": "{{ product.metafields.reviews.rating.value | escape }}",
+                                    "ratingCount": "{{ product.metafields.reviews.review_count }}",
+                                    "reviewCount": "{{ product.metafields.reviews.review_count }}"
+                              },
+                              {% endif %}
+                              "offeredBy": {
+                                    "@type": "Organization",
+                                    "@id": "https://{{ shop.domain }}#seller",
+                                    "name": "{{ shop.name | escape }}",
+                                    "url": "https://{{ shop.domain }}",
+                                    "logo": "{{ 'logo.png' | asset_url | default: 'https://via.placeholder.com/500' }}",
+                                    "description": "{{ shop.description | escape | default: 'Premium fitness equipment at competitive prices.' }}",
+                                    "founder": "Timothy French",
+                                    "foundingDate": "2010",
+                                    "sameAs": [
+                                          {% if shop.metafields.custom.social_media %}
+                                                {% for link in shop.metafields.custom.social_media %}
+                                                      "{{ link | escape }}"{% unless forloop.last %},{% endunless %}
+                                                {% endfor %}
+                                          {% else %}
+                                                "https://www.facebook.com/FitnessSuperstore",
+                                                "https://x.com/fitsuperstore",
+                                                "https://www.instagram.com/fitness.superstore/"
+                                          {% endif %}
+                                    ],
+                                    "contactPoint": {
+                                          "@type": "ContactPoint",
+                                          "telephone": "{{ shop.phone | default: 'Not specified' | escape }}",
+                                          "contactType": "Customer Service",
+                                          "areaServed": "{{ shop.metafields.custom.area_served | default: 'US' | escape }}",
+                                          "availableLanguage": [
+                                                "{{ shop.metafields.custom.language | default: 'English' | escape }}"
+                                          ]
+                                    },
+                                    "address": {
+                                          "@type": "PostalAddress",
+                                          "streetAddress": "{{ shop.address.street | default: 'Not specified' | escape }}",
+                                          "addressLocality": "{{ shop.address.city | default: 'Not specified' | escape }}",
+                                          "addressRegion": "{{ shop.address.province_code | default: 'Not specified' | escape }}",
+                                          "postalCode": "{{ shop.address.zip | default: 'Not specified' | escape }}",
+                                          "addressCountry": "{{ shop.address.country | default: 'Not specified' | escape }}"
+                                    },
+                                    "potentialAction": {
+                                          "@type": "SearchAction",
+                                          "target": "https://{{ shop.domain }}/search?q={search_term_string}",
+                                          "query-input": "required name=search_term_string"
+                                    }
+                              }
+                        },
+                        "sku": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
+                        "url": "https://{{ shop.domain }}{{ product.url }}"
+                  },
     {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "{{ shop.name | escape }}", "item": "{{ request.origin }}/" }
-        {%- assign position = 2 -%}
-        {%- assign all_breadcrumb_objects = product.metafields.custom.breadcrumb_paths.value | sort: "priority" -%}
-        {%- assign active_path = nil -%}
-        {%- assign source_flag = "unset" -%}
-        {%- if collection -%}
-          {%- for b_path in all_breadcrumb_objects -%}
-            {%- assign b_steps = b_path.steps.value -%}
-            {%- assign latest_step = b_steps.last -%}
-            {%- if latest_step and latest_step.handle == collection.handle -%}
-              {%- assign active_path = b_path -%}
-              {%- assign source_flag = "metaobject" -%}
-              {%- break -%}
-            {%- endif -%}
-          {%- endfor -%}
-        {%- endif -%}
-        {%- if active_path == nil -%}
-          {%- for fallback_path in all_breadcrumb_objects -%}
-            {%- if fallback_path.steps and fallback_path.steps.value != blank -%}
-              {%- assign active_path = fallback_path -%}
-              {%- assign source_flag = "metaobject" -%}
-              {%- break -%}
-            {%- endif -%}
-          {%- endfor -%}
-        {%- endif -%}
-        {%- assign crumbs_text = product.metafields.custom.breadcrumbs.value -%}
-        {%- if active_path == nil and crumbs_text != blank -%}
-          {%- assign source_flag = "text" -%}
-        {%- endif -%}
-        {%- if source_flag == "unset" and product.collections.first -%}
-          {%- assign default_coll = product.collections.first -%}
-          {%- assign source_flag = "default" -%}
-        {%- endif -%}
-        {%- if source_flag == "metaobject" -%}
-          {%- assign nav_steps = active_path.steps.value -%}
-          {%- assign nav_titles = active_path.custom_titles.value -%}
-          {%- for nav_coll in nav_steps -%}
-            {%- if nav_coll.handle != blank -%}
-              ,{ "@type": "ListItem", "position": {{ position }}, "name": "{{ nav_titles[forloop.index0] | default: nav_coll.title | escape }}", "item": "{{ request.origin }}/collections/{{ nav_coll.handle }}" }
-              {%- assign position = position | plus: 1 -%}
-            {%- endif -%}
-          {%- endfor -%}
-        {%- elsif source_flag == "text" -%}
-          {%- assign parts_split = crumbs_text | split: 'Home' -%}
-          {%- assign text_parts = parts_split[1] | split: '>' -%}
-          {%- assign crumbs_size = text_parts.size | minus: 1 -%}
-          {%- for idx in (0..crumbs_size) -%}
-            {%- assign raw = text_parts[idx] | strip | handleize -%}
-            {%- assign title = text_parts[idx] | strip -%}
-            {%- if idx > 0 and raw != blank and collections[raw] -%}
-              ,{ "@type": "ListItem", "position": {{ position }}, "name": "{{ title | escape }}", "item": "{{ request.origin }}/collections/{{ raw }}" }
-              {%- assign position = position | plus: 1 -%}
-            {%- endif -%}
-          {%- endfor -%}
-        {%- elsif source_flag == "default" -%}
-          ,{ "@type": "ListItem", "position": {{ position }}, "name": "{{ default_coll.title | escape }}", "item": "{{ request.origin }}/collections/{{ default_coll.handle }}" }
-          {%- assign position = position | plus: 1 -%}
-        {%- endif -%}
-        ,{ "@type": "ListItem", "position": {{ position }}, "name": "{{ product.title | escape }}", "item": "{{ request.origin }}{{ product.url }}" }
-      ]
-    }
-  ]
-}
-{%- endcapture -%}
-{{- ld_json | strip_newlines -}}
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "{{ shop.name | escape }}",
+        "item": "{{ request.origin }}/"
+      }
+      {%- assign position = 2 -%}
+
+      {%- assign all_breadcrumb_objects = product.metafields.custom.breadcrumb_paths.value | sort: "priority" -%}
+      {%- assign active_path = nil -%}
+      {%- assign source_flag = "unset" -%}
+
+      {%- if collection -%}
+        {%- for b_path in all_breadcrumb_objects -%}
+          {%- assign b_steps = b_path.steps.value -%}
+          {%- assign latest_step = b_steps.last -%}
+          {%- if latest_step and latest_step.handle == collection.handle -%}
+            {%- assign active_path = b_path -%}
+            {%- assign source_flag = "metaobject" -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+
+      {%- if active_path == nil -%}
+        {%- for fallback_path in all_breadcrumb_objects -%}
+          {%- if fallback_path.steps and fallback_path.steps.value != blank -%}
+            {%- assign active_path = fallback_path -%}
+            {%- assign source_flag = "metaobject" -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+
+      {%- assign crumbs_text = product.metafields.custom.breadcrumbs.value -%}
+      {%- if active_path == nil and crumbs_text != blank -%}
+        {%- assign source_flag = "text" -%}
+      {%- endif -%}
+
+      {%- if source_flag == "unset" and product.collections.first -%}
+        {%- assign default_coll = product.collections.first -%}
+        {%- assign source_flag = "default" -%}
+      {%- endif -%}
+
+      {%- if source_flag == "metaobject" -%}
+        {%- assign nav_steps = active_path.steps.value -%}
+        {%- assign nav_titles = active_path.custom_titles.value -%}
+        {%- for nav_coll in nav_steps -%}
+          {%- if nav_coll.handle != blank -%}
+            ,
+            {
+              "@type": "ListItem",
+              "position": {{ position }},
+              "name": "{{ nav_titles[forloop.index0] | default: nav_coll.title | escape }}",
+              "item": "{{ request.origin }}/collections/{{ nav_coll.handle }}"
+            }
+            {%- assign position = position | plus: 1 -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+      {%- elsif source_flag == "text" -%}
+        {%- assign parts_split = crumbs_text | split: 'Home' -%}
+        {%- assign text_parts = parts_split[1] | split: '>' -%}
+        {%- assign crumbs_size = text_parts.size | minus: 1 -%}
+
+        {%- for idx in (0..crumbs_size) -%}
+          {%- assign raw = text_parts[idx] | strip | handleize -%}
+          {%- assign title = text_parts[idx] | strip -%}
+
+          {%- if idx > 0 and raw != blank and collections[raw] -%}
+            ,
+            {
+              "@type": "ListItem",
+              "position": {{ position }},
+              "name": "{{ title | escape }}",
+              "item": "{{ request.origin }}/collections/{{ raw }}"
+            }
+            {%- assign position = position | plus: 1 -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+      {%- elsif source_flag == "default" -%}
+        ,
+        {
+          "@type": "ListItem",
+          "position": {{ position }},
+          "name": "{{ default_coll.title | escape }}",
+          "item": "{{ request.origin }}/collections/{{ default_coll.handle }}"
+        }
+        {%- assign position = position | plus: 1 -%}
+      {%- endif -%}
+
+      ,
+      {
+        "@type": "ListItem",
+        "position": {{ position }},
+        "name": "{{ product.title | escape }}",
+        "item": "{{ request.origin }}{{ product.url }}"
+      }
+    ]
+  }
+            ]
+      }
 </script>
 {% endif %}
 
 {% if template contains 'collection' and collection %}
+
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -323,6 +453,9 @@
 
 {% endif %}
                   
+  
+          
+    
 
           {% if page_description %}
           <meta name="description" content="{{ page_description | escape }}">
@@ -597,7 +730,7 @@ content: ''!important;
     height: 24px;
 }
           {% endstyle %}
-{% if template == 'index' %}
+          {% if template == 'index' %}
   <style>
     @media (max-width: 990px) {
       .grid-container.page-width {
@@ -658,9 +791,7 @@ content: ''!important;
               <link rel="stylesheet" href="{{ 'slick-theme.min.css' | asset_url }}">
           </noscript>
           <script src="{{ 'jquery.min.js' | asset_url }}"></script>
-{%- if request.page_type == 'index' or request.page_type == 'collection' or request.page_type == 'product' -%}
-  <script src="{{ 'slick.min.js' | asset_url }}" defer></script>
-{%- endif -%}
+          <script src="{{ 'slick.min.js' | asset_url }}" defer></script>
           
      
 
@@ -682,11 +813,8 @@ content: ''!important;
 
           {% if request.page_type == 'product' %}
                 <script src="https://js.squarecdn.com/square-marketplace.js" async></script>
-                <script type="text/javascript" src="https://cdn.paytomorrow.com/js/pt-mpe.min.js"></script> 
           {% endif %}
-          <script>
-            window.pricingRefereceUrl = "{{ 'pricing-reference.html' | asset_url }}";
-          </script>
+         
           <script>
             (function (h,e,a,t,m,ap) {
               (h._heatmap_paq = []).push([ 'setTrackerUrl', (h.heatUrl = e) + a]);
@@ -701,13 +829,53 @@ content: ''!important;
         
       {% if page.handle == 'all-manuals' or page.template_suffix == 'brand-manuals' %}
       <style>
-        .inner-container {width: 100%;}
+        .inner-container {
+          width: 100%;
+        }
       </style>
     {% endif %}
 {% comment %}
 {% if template contains 'index' %}
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"OnlineStore","name":"Fitness Superstore","url":"https://fitnesssuperstore.com","logo":"https://fitnesssuperstore.com/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500","image":"https://fitnesssuperstore.com/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500","description":"Fitness Superstore offers premium remanufactured fitness equipment at 30–60% off retail prices. Every machine includes a warranty and arrives in like-new condition. Customers can choose from extended 1-, 2-, 3-, 4- or 5-year parts and labor warranties for added peace of mind. Our product range includes ellipticals, treadmills, exercise bikes, stair steppers, strength equipment, free weights, and more. Based in the San Francisco Bay Area, we ship across the U.S., Canada, and internationally, delivering high-quality gym equipment at unbeatable value.","founder":"Timothy French","foundingDate":"2010","sameAs":["https://www.facebook.com/FitnessSuperstore","https://x.com/fitsuperstore","https://www.instagram.com/fitness.superstore/","https://www.pinterest.com/fsssuperstore/","https://www.tiktok.com/@fitnesssuperstoreusa","https://www.youtube.com/@FitnessSuperstoreUSA"],"contactPoint":{"@type":"ContactPoint","telephone":"+1-925-215-2927","contactType":"Customer Service","areaServed":"US","availableLanguage":["English"]},"address":{"@type":"PostalAddress","streetAddress":"537 Stone Rd STE F","addressLocality":"Benicia","addressRegion":"CA","postalCode":"94510","addressCountry":"United States"},"potentialAction":{"@type":"SearchAction","target":"https://fitnesssuperstore.com/search?q={search_term_string}","query-input":"required name=search_term_string"}}
+{
+  "@context": "https://schema.org",
+  "@type": "OnlineStore",
+  "name": "Fitness Superstore",
+  "url": "https://fitnesssuperstore.com",
+  "logo": "https://fitnesssuperstore.com/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500",
+  "image": "https://fitnesssuperstore.com/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500",
+  "description": "Fitness Superstore offers premium remanufactured fitness equipment at 30–60% off retail prices. Every machine includes a warranty and arrives in like-new condition. Customers can choose from extended 1-, 2-, 3-, 4- or 5-year parts and labor warranties for added peace of mind. Our product range includes ellipticals, treadmills, exercise bikes, stair steppers, strength equipment, free weights, and more. Based in the San Francisco Bay Area, we ship across the U.S., Canada, and internationally, delivering high-quality gym equipment at unbeatable value.",
+  "founder": "Timothy French",
+  "foundingDate": "2010",
+  "sameAs": [
+    "https://www.facebook.com/FitnessSuperstore",
+    "https://x.com/fitsuperstore",
+    "https://www.instagram.com/fitness.superstore/",
+    "https://www.pinterest.com/fsssuperstore/",
+    "https://www.tiktok.com/@fitnesssuperstoreusa",
+    "https://www.youtube.com/@FitnessSuperstoreUSA"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+1-925-215-2927",
+    "contactType": "Customer Service",
+    "areaServed": "US",
+    "availableLanguage": ["English"]
+  },
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "537 Stone Rd STE F",
+    "addressLocality": "Benicia",
+    "addressRegion": "CA",
+    "postalCode": "94510",
+    "addressCountry": "United States"
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://fitnesssuperstore.com/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
 </script>
 {% endif %}
  {% endcomment %}
@@ -764,9 +932,20 @@ content: ''!important;
           {% elsif request.page_type == 'page' or request.page_type == 'index' or request.page_type == 'collection' or request.page_type == 'product' or request.page_type == 'search' %}
             <style>
               @media only screen and (min-width: 990px) {
-                .side-bar-comtainer { position: relative;display: flex;gap: 0px!important;align-items: flex-start;}
-                .side-bar-comtainer .inner-container {flex: 1 1 0%;max-width: calc(100% - 236px);}
-                .side-bar-comtainer .sidebarmenu {flex: 0 0 236px;}
+                .side-bar-comtainer {
+                  position: relative;
+                  display: flex;
+                  gap: 0px!important;
+                  align-items: flex-start;
+                }
+                .side-bar-comtainer .inner-container {
+                  flex: 1 1 0%;
+                  max-width: calc(100% - 236px);
+                }
+                .side-bar-comtainer .sidebarmenu {
+                  flex: 0 0 236px;
+                }
+              
               }
             </style>
             <div class="grid-container {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %} side-bar-comtainer">
@@ -836,9 +1015,11 @@ content: ''!important;
         </script>
 
         <style>
-          .drawer {visibility: hidden;}
+          .drawer {
+              visibility: hidden;
+          }
         </style>
-       
+        
           
         {%- if settings.predictive_search_enabled -%}
           <script src="{{ 'predictive-search.js' | asset_url }}" defer="defer"></script>
