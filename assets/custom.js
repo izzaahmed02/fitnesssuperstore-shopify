@@ -1,586 +1,374 @@
-window.addEventListener('DOMContentLoaded', async () => {
-	setTimeout(function () {
-    console.log("Removing link from Compare Button");
-    var compareBtn = document.querySelector('.compare-products-actions a');
-    if (compareBtn) {
-        compareBtn.setAttribute('href', '');
-    }
-}, 3000); 
+const onReady = (fn) =>
+  (document.readyState === 'loading')
+    ? document.addEventListener('DOMContentLoaded', fn, { once: true })
+    : fn();
 
-	document.querySelectorAll('.faq').forEach((faqSection) => {
-  const faqItems = faqSection.querySelectorAll('.faq__item');
+const onIdle = (fn, t = 1500) =>
+  ('requestIdleCallback' in window)
+    ? requestIdleCallback(fn, { timeout: t })
+    : setTimeout(fn, 0);
 
-  faqItems.forEach((item) => {
-    const contentElem = item.querySelector('.faq__item-content');
-    const btn = item.querySelector('.faq__item-btn');
+const debounceFn = (fn, wait = 250) => {
+  let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), wait); };
+};
 
-    // Make it smooth by default
-    contentElem.style.overflow = 'hidden';
-    contentElem.style.maxHeight = '0';
-    contentElem.style.transition = 'max-height 0.3s ease';
-
-    // Watch for height changes inside
-    const resizeObserver = new ResizeObserver(() => {
-      if (btn.classList.contains('opened')) {
-        contentElem.style.maxHeight = contentElem.scrollHeight + 'px';
-      }
-    });
-    resizeObserver.observe(contentElem);
-
-    btn.addEventListener('click', () => {
-      const isOpening = !btn.classList.contains('opened');
-
-      // Close all in section
-      faqItems.forEach((otherItem) => {
-        const otherBtn = otherItem.querySelector('.faq__item-btn');
-        const otherContent = otherItem.querySelector('.faq__item-content');
-        otherBtn.classList.remove('opened');
-        otherContent.style.maxHeight = null;
-        otherItem.classList.remove('opened');
-      });
-
-      // Open clicked
-      if (isOpening) {
-        btn.classList.add('opened');
-        contentElem.style.maxHeight = contentElem.scrollHeight + 'px';
-        item.classList.add('opened');
-      }
-    });
-  });
-});
-
-	let tabsSections = document.querySelectorAll('[data-tabs-section]');
-
-	if (tabsSections.length) {
-		tabsSections.forEach((section) => {
-			const btns = section.querySelectorAll('.tab-btn');
-			const tabs = section.querySelectorAll('.tabs__item');
-
-			btns.forEach((btn) => {
-				btn.addEventListener('click', () => {
-					let index = btn.getAttribute('data-index');
-					let activeTab = section.querySelector(`.tabs__item[data-index="${index}"]`);
-
-					if (activeTab) {
-						btns.forEach(button => button.classList.remove('active'));
-						btn.classList.add('active');
-
-						tabs.forEach(tab => tab.classList.remove('active'));
-						activeTab.classList.add('active');
-
-						tabs.forEach(tab => tab.classList.remove('visible'));
-						activeTab.classList.add('visible');
-					}
-				})
-			})
-		})
-	}
-
-	// MOBILE DROPDOWNS (Event Delegation)
-	document.body.addEventListener('click', (e) => {
-		const dropdownBtn = e.target.closest('.dropdown-btn');
-		if (dropdownBtn && window.innerWidth <= 749) {
-			const section = dropdownBtn.nextElementSibling;
-			if (section) {
-				const isVisible = section.classList.contains('visible');
-				const arrow = dropdownBtn.querySelector('svg');
-				if (!isVisible) {
-					section.classList.add('visible');
-					section.style.height = `${section.scrollHeight}px`;
-					if (arrow) arrow.style.transform = 'rotate(180deg)';
-				} else {
-					section.classList.remove('visible');
-					section.style.height = '0';
-					if (arrow) arrow.style.transform = 'rotate(0deg)';
-				}
-			}
-		}
-	});
-	// IMAGE WITH TEXT DROPDOWNS
-	document.body.addEventListener('click', (e) => {
-		const btn = e.target.closest('.image-with-text__dropdown-button');
-		if (btn) {
-			const section = btn.nextElementSibling;
-			if (section) {
-				const isVisible = section.classList.contains('visible');
-				const arrow = btn.querySelector('svg');
-				if (!isVisible) {
-					section.classList.add('visible');
-					section.style.height = `${section.scrollHeight}px`;
-					if (arrow) arrow.style.transform = 'rotate(180deg)';
-				} else {
-					section.classList.remove('visible');
-					section.style.height = '0';
-					if (arrow) arrow.style.transform = 'rotate(0deg)';
-				}
-			}
-		}
-	});
-
-	// SCROLL TO SECTION
-	let scrollToSectionBtns = document.querySelectorAll('[data-scroll-to-section]');
-	if (scrollToSectionBtns.length) {
-		scrollToSectionBtns.forEach((btn) => {
-			let id = btn.getAttribute('data-scroll-to-section');
-			let section = document.querySelector(`#${id}`);
-
-			btn.addEventListener('click', () => {
-				if (section) {
-					section.scrollIntoView({behavior: "smooth", block: "start"});
-				}
-			});
-		});
-	}
-
-	class ScrollableFaq extends HTMLElement {
-		constructor() {
-			super();
-			this.buttons = this.querySelectorAll('.scrollable-faq__nav button');
-			this.contentBlocks = Array.from(this.querySelectorAll('.scrollable-faq__item'));
-			this.activeClass = 'active';
-			this.offset = 50;
-			this.mediaQuery = window.matchMedia('(min-width: 750px)');
-			this.handleMediaChange = this.handleMediaChange.bind(this);
-			this.observer = null;
-			this.init();
-		}
-
-		init() {
-			this.mediaQuery.addEventListener('change', this.handleMediaChange);
-			this.handleMediaChange(this.mediaQuery);
-		}
-
-		handleMediaChange(e) {
-			if (e.matches) {
-				this.buttons.forEach(btn => {
-					const id = btn.getAttribute('data-scroll-to');
-					btn.addEventListener('click', () => this.scrollToElement(id));
-				});
-
-				this.setupObserver();
-			} else {
-				this.buttons.forEach(btn => {
-					const id = btn.getAttribute('data-scroll-to');
-					btn.removeEventListener('click', () => this.scrollToElement(id));
-				});
-
-				if (this.observer) {
-					this.observer.disconnect();
-					this.observer = null;
-				}
-			}
-		}
-
-		scrollToElement(id) {
-			const element = document.querySelector(`#${id}`);
-			if (element) {
-				const offsetTop = element.getBoundingClientRect().top + window.scrollY - this.offset;
-				window.scrollTo({
-					top: offsetTop,
-					behavior: 'smooth'
-				});
-			}
-		}
-
-		setupObserver() {
-			if (this.observer) {
-				this.observer.disconnect();
-			}
-			this.observer = new IntersectionObserver((entries) => {
-				let activeId = null;
-				entries.forEach(entry => {
-					if (entry.isIntersecting) {
-						activeId = entry.target.id;
-					}
-				});
-				if (activeId) {
-					this.setActiveButton(activeId);
-				}
-			}, {
-				root: null,
-				rootMargin: `-50px 0px -30% 0px`,
-				threshold: 0.2
-			});
-			this.contentBlocks.forEach(block => this.observer.observe(block));
-		}
-
-		setActiveButton(activeId) {
-			this.buttons.forEach(btn => {
-				if (btn.getAttribute('data-scroll-to') === activeId) {
-					btn.classList.add(this.activeClass);
-				} else {
-					btn.classList.remove(this.activeClass);
-				}
-			});
-		}
-
-		disconnectedCallback() {
-			this.mediaQuery.removeEventListener('change', this.handleMediaChange);
-			if (this.observer) {
-				this.observer.disconnect();
-			}
-		}
-	}
-
-	customElements.define('scrollable-faq', ScrollableFaq);
-	document.body.addEventListener('click', (e) => {
-		const btn = e.target.closest('[data-scroll-to-mobile]');
-		if (btn && window.innerWidth <= 749) {
-			const id = btn.getAttribute('data-scroll-to-mobile');
-			const section = document.querySelector(`#${id}`);
-			if (section) {
-				const isVisible = section.classList.contains('visible');
-				const arrow = btn.querySelector('.scrollable-faq__arrow');
-				if (!isVisible) {
-					section.classList.add('visible');
-					section.style.height = `${section.scrollHeight}px`;
-					if (arrow) arrow.style.transform = 'rotate(180deg)';
-				} else {
-					section.classList.remove('visible');
-					section.style.height = '0';
-					if (arrow) arrow.style.transform = 'rotate(0deg)';
-				}
-			}
-		}
-	});
-
-	document.addEventListener('click', (e) => {
-		const btn = e.target.closest('.button.globo-formbuilder-open');
-		if (btn) {
-			document.body.style.overflow = 'hidden';
-		}
-		const closeBtn = e.target.closest('.header.dismiss');
-		if (closeBtn) {
-			document.body.style.overflow = 'auto';
-		}
-	});
-
-
-	const link = document.getElementById('paytomorrow-link');
-	if (link) {
-		link.addEventListener('click', (event) => {
-			event.preventDefault();
-			window.open(
-				'https://api.paytomorrow.com/api/ecommerce/public/pre-approval/a4f00e481c4f3e28756375f86d272b22',
-				'_blank',
-				'location=yes,height=670,width=500,scrollbars=yes,status=yes'
-			);
-		});
-	}
-	// MENU MOBILE ACCORDION (Event Delegation)
-	document.body.addEventListener('click', (e) => {
-		const btn = e.target.closest('.accordion-item');
-		if (btn) {
-			const content = btn.nextElementSibling;
-			if (content) {
-				const isVisible = content.classList.contains('visible');
-				const plus = btn.querySelector('.icon-plus');
-				const minus = btn.querySelector('.icon-minus');
-				const arrow = btn.querySelector('.arrow');
-				if (!isVisible) {
-					content.classList.add('visible');
-					content.style.height = `${content.scrollHeight}px`;
-					if (plus && minus) {
-						plus.style.display = 'none';
-						minus.style.display = 'block';
-					} else if (arrow) {
-						arrow.style.transform = 'rotate(180deg)';
-					}
-				} else {
-					content.classList.remove('visible');
-					content.style.height = '0';
-					if (plus && minus) {
-						plus.style.display = 'block';
-						minus.style.display = 'none';
-					} else if (arrow) {
-						arrow.style.transform = 'rotate(0deg)';
-					}
-				}
-			}
-		}
-	});
-
-
-	function updateHeights() {
-		document.querySelectorAll('.faq__item.opened .faq__item-content').forEach(content => {
-			content.style.height = `${content.scrollHeight}px`;
-		});
-		document.querySelectorAll('.visible').forEach(section => {
-			if (window.getComputedStyle(section).overflowY === 'hidden') {
-				section.style.height = `${section.scrollHeight}px`;
-			}
-		});
-	}
-
-	const debouncedResize = debounce(updateHeights, 250);
-	window.addEventListener('resize', debouncedResize);
-	const pricingReferenceLink = document.querySelector('a[href="#pricing-reference"]');
-	if (pricingReferenceLink) {
-		pricingReferenceLink.addEventListener('click', (event) => {
-			const container = document.getElementById('dynamic-product-content');
-			const modalWrapper = document.querySelector('.modal-wrapper');
-			console.log('here')
-			modalWrapper.style.display = 'flex';
-			document.querySelector('html').style.overflowY = 'hidden';
-			const tempDiv = document.createElement('div');
-			tempDiv.innerHTML = pricingRefenceModalContent;
-			const mainContent = tempDiv;
-			container.innerHTML = mainContent.innerHTML + `<span class="modal-close"><svg aria-hidden="true" focusable="false" width="12" height="13" class="icon icon-close-small" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8.48627 9.32917L2.82849 3.67098" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2.88539 9.38504L8.42932 3.61524" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </span>`;
-
-			const closeModalButton = container.querySelector('.modal-close');
-			closeModalButton.addEventListener('click', () => {
-				modalWrapper.style.display = 'none';
-				document.querySelector('html').style.overflowY = '';
-			});
-		})
-	}
-
-	 if (!sessionStorage.userLoc) {
-		const locationRes = await fetch("https://french-fitness-api.azurewebsites.net/api/location");
-		if (locationRes) {
-			const userLoc = await locationRes.json();
-			sessionStorage.userLoc = JSON.stringify(userLoc);
-			if (userLoc && userLoc.postal && userLoc.country_code === 'US' && userLoc.region_code === 'CA') {
-				const distanceFromBenicia = await getDistanceFromBenicia(userLoc.postal)
-				if (distanceFromBenicia <= 100) {
-					document.querySelector('.utility-bar').style.display = 'block';
-					document.querySelector('.california-discount-offer').style.display = 'block';
-				}
-			}
-		}
-	} 
-	else {
-		const userLocFromSessionStorage = JSON.parse(sessionStorage.userLoc);
-
-		if (userLocFromSessionStorage && userLocFromSessionStorage.postal && userLocFromSessionStorage.country_code === 'US'  && userLocFromSessionStorage.region_code === 'CA') {
-			const distanceFromBenicia = await getDistanceFromBenicia(userLocFromSessionStorage.postal);
-
-			if (distanceFromBenicia <= 100) {
-				document.querySelector('.utility-bar').style.display = 'block';
-				document.querySelector('.california-discount-offer').style.display = 'block';
-			}
-		}
-	} 
-
-	const search = document.querySelector('.custom-header-search--input');
-
-function hidePopup(popup) {
-  popup.style.display = 'none';
-  document.removeEventListener('click', outsideClose);
-}
-
-function outsideClose(e) {
-  const globoPopup = document.getElementById('ui-id-1');
-
-  if (globoPopup) {
-    if (!globoPopup.contains(e.target) && (!search || !search.contains(e.target))) {
-      hidePopup(globoPopup);
-    }
-  }
-}
-
-	setTimeout(() => {
-		document.addEventListener('click', outsideClose);
-		
-		search.addEventListener('input', (event) => {
-			const globoPopup  = document.getElementById('ui-id-1');
-			if (!search.value.trim()) {
-				setTimeout(() => {
-				 	hidePopup(globoPopup);
-				 	search.blur(); 
-				 	document.body.focus(); 
-				}, 100);
-			};
-		});
-	});
-
-
-});
-
-
+const rafBatch = (() => {
+  let queued = false, fns = [];
+  const run = () => { const jobs = fns; fns = []; queued = false; for (const fn of jobs) fn(); };
+  return (fn) => { fns.push(fn); if (!queued) { queued = true; requestAnimationFrame(run); } };
+})();
 
 async function getDistanceFromBenicia(postal) {
-	try {
-		const res = await fetch(`https://french-fitness-api.azurewebsites.net/api/location/distancefrombenicia/${postal}`);
-		return await res.json();
-	} catch (err) {
-		console.error(err);
-		return null;
-	}
-}
-
-function debounce(func, timeout = 250) {
-	let timer;
-	return (...args) => {
-		clearTimeout(timer);
-		timer = setTimeout(() => {
-			func.apply(this, args);
-		}, timeout);
-	};
+  try {
+    const res = await fetch(
+      `https://french-fitness-api.azurewebsites.net/api/location/distancefrombenicia/${encodeURIComponent(postal)}`,
+      { credentials: 'omit' }
+    );
+    return res.ok ? await res.json() : null;
+  } catch { return null; }
 }
 
 
-const mainBlocks = document.querySelectorAll('.info-grid__item.grid__item .link-style');
-const contentSections = document.querySelectorAll('.feature-block-container.content-section');
-const isMobile = () => window.innerWidth <= 750;
-const moveSectionsToMain = () => {
-	if (mainBlocks.length && contentSections.length) {
-		mainBlocks.forEach((block) => {
-			const targetId = block.getAttribute('data-target');
-			const targetSection = document.getElementById(targetId);
+onReady(() => {
+  onIdle(() => {
+    const compare = document.querySelector('.compare-products-actions a');
+    if (compare) compare.removeAttribute('href');
+  });
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.faq .faq__item-btn');
+    if (!btn) return;
 
-			if (isMobile() && targetSection) {
-				block.before(targetSection);
-			} else {
-				const originalContainer = document.querySelector(`.container-${targetId}`);
-				if (originalContainer && !originalContainer.contains(targetSection)) {
-					originalContainer.appendChild(targetSection);
-				}
-			}
-		});
-	}
-};
+    const item = btn.closest('.faq__item');
+    const faq = btn.closest('.faq');
+    if (!item || !faq) return;
 
-const toggleSectionVisibility = (targetId) => {
-	const targetSection = document.getElementById(targetId);
-	if (targetSection) {
-		const button = document.querySelector(`[data-target="${targetId}"]`);
-		const isOpened = targetSection.classList.contains('active');
-		if (!isOpened) {
-			targetSection.classList.add('active');
-			targetSection.style.maxHeight = '2500px';
-			button?.classList.add('active');
-			button.querySelector('span').textContent = "Show less";
-		} else {
-			targetSection.style.maxHeight = '0px';
-			targetSection.classList.remove('active');
-			button?.classList.remove('active');
-			button.querySelector('span').textContent = "Learn more";
-		}
-	}
-};
+    const content = item.querySelector('.faq__item-content');
+    const opening = !btn.classList.contains('opened');
 
-const enableDesktopScrolling = () => {
-	if (mainBlocks.length) {
-		mainBlocks.forEach((btn) => {
-			const id = btn.getAttribute('data-target');
-			const section = document.querySelector(`#${id}`);
+    faq.querySelectorAll('.faq__item-btn.opened').forEach((b) => b.classList.remove('opened'));
+    faq.querySelectorAll('.faq__item.opened').forEach((i) => i.classList.remove('opened'));
+    faq.querySelectorAll('.faq__item-content').forEach((c) => c.style.maxHeight = null);
 
-			btn.addEventListener('click', (event) => {
-				event.preventDefault();
-				if (section) {
-					section.scrollIntoView({behavior: "smooth", block: "start", inline: "start"});
-				}
-			});
-		});
-	}
-};
+    if (opening) {
+      btn.classList.add('opened');
+      item.classList.add('opened');
+      rafBatch(() => {
+        content.style.overflow = 'hidden';
+        if (!content.style.transition) content.style.transition = 'max-height 0.3s ease';
+        content.style.maxHeight = content.scrollHeight + 'px';
+      });
+    }
+  }, { passive: true });
 
-const initializeScrolling = () => {
-	if (mainBlocks.length && contentSections.length) {
-		if (isMobile()) {
-			mainBlocks.forEach((block) => {
-				block.addEventListener('click', (event) => {
-					event.preventDefault();
-					const targetId = block.getAttribute('data-target');
-					toggleSectionVisibility(targetId);
-				});
-			});
-			moveSectionsToMain();
-			window.addEventListener('resize', moveSectionsToMain);
-		} else {
-			enableDesktopScrolling();
-		}
-	}
-};
-
-initializeScrolling();
-window.addEventListener('resize', initializeScrolling);
-
-const pricingRefenceModalContent = `<div class="pricing-reference">
-  <h1 class="pricing-title">REFERENCES ON PRICING</h1>
-
-  <div class="pricing-section">
-    <h2 class="region-title">
-      Central America + South America (West Coast) + Mexico + Main Pacific Areas (Japan / Australia / China / Singapore / Guam / South Korea / Indonesia / Malaysia / Taiwan / Vietnam):
-    </h2>
-    <ul class="pricing-list">
-      <li>1-5 Crates: <span>$424 to $1,799</span></li>
-      <li>20' Container: <span>$1,999</span></li>
-      <li>40' Container: <span>$2,499</span></li>
-      <li>(2) 40' Containers: <span>$4,998</span></li>
-      <li>(3) 40' Containers: <span>$7,497</span></li>
-    </ul>
-  </div>
-
-  <div class="pricing-section">
-    <h2 class="region-title">
-      Caribbean Sea + South America (East Coast) + Pacific Islands + India:
-    </h2>
-    <ul class="pricing-list">
-      <li>1-5 Crates: <span>$499 to $2,299</span></li>
-      <li>20' Container: <span>$2,499</span></li>
-      <li>40' Container: <span>$2,999</span></li>
-      <li>(2) 40' Containers: <span>$5,998</span></li>
-      <li>(3) 40' Containers: <span>$8,997</span></li>
-    </ul>
-  </div>
-
-  <div class="pricing-section">
-    <h2 class="region-title">
-      Western Europe / Middle East / East Africa:
-    </h2>
-    <ul class="pricing-list">
-      <li>1-5 Crates: <span>$574 to $2,799</span></li>
-      <li>20' Container: <span>$2,999</span></li>
-      <li>40' Container: <span>$3,499</span></li>
-      <li>(2) 40' Containers: <span>$6,998</span></li>
-      <li>(3) 40' Containers: <span>$10,997</span></li>
-    </ul>
-  </div>
-
-  <div class="pricing-section">
-    <h2 class="region-title">
-      West Africa / Eastern-Northern Europe / Russia:
-    </h2>
-    <ul class="pricing-list">
-      <li>1-5 Crates: <span>$624 to $2,299</span></li>
-      <li>20' Container: <span>$3,499</span></li>
-      <li>40' Container: <span>$3,999</span></li>
-      <li>(2) 40' Containers: <span>$7,998</span></li>
-      <li>(3) 40' Containers: <span>$11,997</span></li>
-    </ul>
-  </div>
-</div>`
-
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('.video-thumbnail').forEach(thumbnail => {
-    thumbnail.addEventListener('click', () => {
-      const videoUrl = thumbnail.getAttribute('data-video-url');
-      const modal = document.getElementById('videoModal');
-      const container = document.getElementById('modalVideoContainer');
-
-      let embed;
-      if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
-        const id = videoUrl.split(/v=|\/([^\/\?]+)$/).filter(Boolean).pop();
-        embed = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" height="450" width="550" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-      } else {
-        embed = `<video controls autoplay src="${videoUrl}"></video>`;
-      }
-
-      container.innerHTML = embed;
-      modal.style.display = 'flex';
+  const faqRO = new ResizeObserver((entries) => {
+    entries.forEach(({ target }) => {
+      const item = target.closest('.faq__item');
+      const btn = item && item.querySelector('.faq__item-btn.opened');
+      if (btn) target.style.maxHeight = target.scrollHeight + 'px';
     });
   });
+  document.querySelectorAll('.faq__item-content').forEach((el) => {
+    el.style.overflow = 'hidden';
+    if (!el.style.transition) el.style.transition = 'max-height 0.3s ease';
+    el.style.maxHeight = '0';
+    faqRO.observe(el);
+  });
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-tabs-section] .tab-btn');
+    if (!btn) return;
 
-  window.closeModal = function () {
+    const section = btn.closest('[data-tabs-section]');
+    const idx = btn.getAttribute('data-index');
+    const active = section && section.querySelector(`.tabs__item[data-index="${idx}"]`);
+    if (!section || !active) return;
+
+    rafBatch(() => {
+      section.querySelectorAll('.tab-btn.active').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      section.querySelectorAll('.tabs__item.active, .tabs__item.visible').forEach((t) => t.classList.remove('active', 'visible'));
+      active.classList.add('active', 'visible');
+    });
+  }, { passive: true });
+
+  const toggleCollapsible = (panel, arrow, open) => {
+    rafBatch(() => {
+      const willOpen = open ?? !panel.classList.contains('visible');
+      panel.classList.toggle('visible', willOpen);
+      panel.style.height = willOpen ? `${panel.scrollHeight}px` : '0';
+      if (arrow) arrow.style.transform = willOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+    });
+  };
+
+  document.body.addEventListener('click', (e) => {
+    const mobileBtn = e.target.closest('.dropdown-btn');
+    if (mobileBtn && window.innerWidth <= 749) {
+      const panel = mobileBtn.nextElementSibling;
+      if (panel) toggleCollapsible(panel, mobileBtn.querySelector('svg'));
+      return;
+    }
+    const iwtBtn = e.target.closest('.image-with-text__dropdown-button');
+    if (iwtBtn) {
+      const panel = iwtBtn.nextElementSibling;
+      if (panel) toggleCollapsible(panel, iwtBtn.querySelector('svg'));
+    }
+  }, { passive: true });
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-scroll-to-section]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-scroll-to-section');
+    const target = id && document.getElementById(id);
+    if (!target) return;
+    e.preventDefault();
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, { passive: false });
+
+  if (!customElements.get('scrollable-faq')) {
+    class ScrollableFaq extends HTMLElement {
+      constructor(){
+        super();
+        this.buttons = this.querySelectorAll('.scrollable-faq__nav button');
+        this.blocks  = Array.from(this.querySelectorAll('.scrollable-faq__item'));
+        this.activeClass = 'active';
+        this.offset = 50;
+        this.mq = matchMedia('(min-width: 750px)');
+        this.onMQ = this.onMQ.bind(this);
+        this.io = null;
+      }
+      connectedCallback(){ this.mq.addEventListener('change', this.onMQ); this.onMQ(this.mq); }
+      disconnectedCallback(){ this.mq.removeEventListener('change', this.onMQ); this.io && this.io.disconnect(); }
+      onMQ(e){
+        this.buttons.forEach((b) => b.replaceWith(b.cloneNode(true)));
+        this.buttons = this.querySelectorAll('.scrollable-faq__nav button');
+        this.io && this.io.disconnect(); this.io = null;
+
+        if (e.matches) {
+          this.buttons.forEach((b) => b.addEventListener('click', () => this.scrollToId(b.getAttribute('data-scroll-to')), { passive: true }));
+          this.io = new IntersectionObserver((entries) => {
+            let activeId = null;
+            entries.forEach((en) => { if (en.isIntersecting) activeId = en.target.id; });
+            if (activeId) this.setActive(activeId);
+          }, { rootMargin: '-50px 0px -30% 0px', threshold: 0.2 });
+          this.blocks.forEach((bl) => this.io.observe(bl));
+        }
+      }
+      scrollToId(id){
+        const el = id && document.getElementById(id);
+        if (!el) return;
+        const top = el.getBoundingClientRect().top + scrollY - this.offset;
+        scrollTo({ top, behavior: 'smooth' });
+      }
+      setActive(id){
+        this.buttons.forEach((b) => b.classList.toggle(this.activeClass, b.getAttribute('data-scroll-to') === id));
+      }
+    }
+    customElements.define('scrollable-faq', ScrollableFaq);
+  }
+  
+  document.body.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-scroll-to-mobile]');
+    if (!btn || window.innerWidth > 749) return;
+    const id = btn.getAttribute('data-scroll-to-mobile');
+    const section = id && document.getElementById(id);
+    if (!section) return;
+    toggleCollapsible(section, btn.querySelector('.scrollable-faq__arrow'));
+  }, { passive: true });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.button.globo-formbuilder-open')) document.body.style.overflow = 'hidden';
+    if (e.target.closest('.header.dismiss')) document.body.style.overflow = 'auto';
+  }, { passive: true });
+
+  const payLink = document.getElementById('paytomorrow-link');
+  if (payLink) {
+    payLink.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      window.open(
+        'https://api.paytomorrow.com/api/ecommerce/public/pre-approval/a4f00e481c4f3e28756375f86d272b22',
+        '_blank',
+        'location=yes,height=670,width=500,scrollbars=yes,status=yes'
+      );
+    }, { passive: false });
+  }
+
+  document.body.addEventListener('click', (e) => {
+    const btn = e.target.closest('.accordion-item');
+    if (!btn) return;
+    const panel = btn.nextElementSibling; if (!panel) return;
+    const plus  = btn.querySelector('.icon-plus');
+    const minus = btn.querySelector('.icon-minus');
+    const arrow = btn.querySelector('.arrow');
+
+    const opening = !panel.classList.contains('visible');
+    rafBatch(() => {
+      panel.classList.toggle('visible', opening);
+      panel.style.height = opening ? `${panel.scrollHeight}px` : '0';
+      if (plus && minus) { plus.style.display = opening ? 'none' : 'block'; minus.style.display = opening ? 'block' : 'none'; }
+      if (arrow) arrow.style.transform = opening ? 'rotate(180deg)' : 'rotate(0deg)';
+    });
+  }, { passive: true });
+
+  const refreshHeights = () => {
+    document.querySelectorAll('.faq__item.opened .faq__item-content')
+      .forEach((c) => c.style.height = `${c.scrollHeight}px`);
+    document.querySelectorAll('.visible')
+      .forEach((s) => { if (getComputedStyle(s).overflowY === 'hidden') s.style.height = `${s.scrollHeight}px`; });
+  };
+  addEventListener('resize', debounceFn(() => rafBatch(refreshHeights), 150), { passive: true });
+
+  const pricingReferenceLink = document.querySelector('a[href="#pricing-reference"]');
+  if (pricingReferenceLink) {
+    pricingReferenceLink.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      const container = document.getElementById('dynamic-product-content');
+      const modalWrapper = document.querySelector('.modal-wrapper');
+      if (!container || !modalWrapper) return;
+
+      const temp = document.createElement('div');
+      temp.innerHTML = await loadPricingReferenceHTML();
+      container.innerHTML = temp.innerHTML + `
+        <span class="modal-close">
+          <svg aria-hidden="true" focusable="false" width="12" height="13" class="icon icon-close-small" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8.48627 9.32917L2.82849 3.67098" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2.88539 9.38504L8.42932 3.61524" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>`;
+
+      modalWrapper.style.display = 'flex';
+      document.documentElement.style.overflowY = 'hidden';
+
+      const closeBtn = container.querySelector('.modal-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          modalWrapper.style.display = 'none';
+          document.documentElement.style.overflowY = '';
+        }, { once: true });
+      }
+    }, { passive: false });
+  }
+
+  const search = document.querySelector('.custom-header-search--input');
+  const hidePopup = (p) => { if (p) p.style.display = 'none'; };
+  const outsideClose = (ev) => {
+    const popup = document.getElementById('ui-id-1');
+    if (!popup) return;
+    if (!popup.contains(ev.target) && (!search || !search.contains(ev.target))) hidePopup(popup);
+  };
+  document.addEventListener('click', outsideClose, true);
+  if (search) {
+    search.addEventListener('input', debounceFn(() => {
+      const popup = document.getElementById('ui-id-1');
+      if (search.value.trim()) return;
+      hidePopup(popup);
+      search.blur(); document.body.focus();
+    }, 150));
+  }
+
+  document.addEventListener('click', (e) => {
+    const thumb = e.target.closest('.video-thumbnail');
+    if (!thumb) return;
+    const url = thumb.getAttribute('data-video-url');
     const modal = document.getElementById('videoModal');
     const container = document.getElementById('modalVideoContainer');
-    container.innerHTML = '';
-    modal.style.display = 'none';
+    if (!url || !modal || !container) return;
+
+    let embed;
+    if (/youtube\.com|youtu\.be/.test(url)) {
+      const id = (url.split(/v=|\/([^\/\?]+)$/).filter(Boolean).pop() || '').trim();
+      embed = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" height="450" width="550" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    } else {
+      embed = `<video controls autoplay src="${url}"></video>`;
+    }
+    container.innerHTML = embed;
+    modal.style.display = 'flex';
+  }, { passive: true });
+
+  window.closeModal = function(){
+    const modal = document.getElementById('videoModal');
+    const container = document.getElementById('modalVideoContainer');
+    if (container) container.innerHTML = '';
+    if (modal) modal.style.display = 'none';
   };
+
 });
+
+onReady(() => {
+  onIdle(async () => {
+    try {
+      const ss = sessionStorage;
+      let loc = ss.userLoc ? JSON.parse(ss.userLoc) : null;
+      if (!loc) {
+        const res = await fetch("https://french-fitness-api.azurewebsites.net/api/location", { credentials: 'omit' });
+        if (!res.ok) return;
+        loc = await res.json();
+        ss.userLoc = JSON.stringify(loc);
+      }
+      if (loc && loc.postal && loc.country_code === 'US' && loc.region_code === 'CA') {
+        const dist = await getDistanceFromBenicia(loc.postal);
+        if (typeof dist === 'number' && dist <= 100) {
+          const bar = document.querySelector('.utility-bar');
+          if (bar) bar.style.display = 'block';
+        }
+      }
+    } catch { }
+  });
+});
+
+(() => {
+  const mainBlocks = document.querySelectorAll('.info-grid__item.grid__item .link-style');
+  const contentSections = document.querySelectorAll('.feature-block-container.content-section');
+  if (!mainBlocks.length || !contentSections.length) return;
+
+  const isMobile = () => innerWidth <= 750;
+
+  const moveSectionsToMain = () => {
+    mainBlocks.forEach((block) => {
+      const id = block.getAttribute('data-target');
+      const section = id && document.getElementById(id);
+      if (!section) return;
+      if (isMobile()) {
+        if (block.previousElementSibling !== section) block.before(section);
+      } else {
+        const original = document.querySelector(`.container-${id}`);
+        if (original && !original.contains(section)) original.appendChild(section);
+      }
+    });
+  };
+
+  const toggleSectionVisibility = (id) => {
+    const section = id && document.getElementById(id);
+    const btn = document.querySelector(`[data-target="${id}"]`);
+    if (!section || !btn) return;
+    const opening = !section.classList.contains('active');
+    rafBatch(() => {
+      section.classList.toggle('active', opening);
+      section.style.maxHeight = opening ? '2500px' : '0';
+      btn.classList.toggle('active', opening);
+      const span = btn.querySelector('span'); if (span) span.textContent = opening ? 'Show less' : 'Learn more';
+    });
+  };
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.info-grid__item.grid__item .link-style');
+    if (!btn) return;
+    const id = btn.getAttribute('data-target');
+    const section = id && document.getElementById(id);
+    if (!section) return;
+
+    e.preventDefault();
+    if (isMobile()) {
+      toggleSectionVisibility(id);
+    } else {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
+    }
+  }, { passive: false });
+
+  moveSectionsToMain();
+  addEventListener('resize', debounceFn(() => rafBatch(moveSectionsToMain), 150), { passive: true });
+})();
+
+async function loadPricingReferenceHTML() {
+  const url = window.pricingReferenceHtml
+  const res = await fetch(url, { cache: 'force-cache' });
+  return res.text();
+}
