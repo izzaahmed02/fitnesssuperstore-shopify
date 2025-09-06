@@ -1,81 +1,62 @@
 {%- if postpone_loading == 'init' -%}
-<script>
-const DEFER_SCRIPT_MATCHES = [
-  'assets/storefront/features',
-  'assets/shopify_pay',
-  'connect.facebook.net',
-  'apo-product-options', 
-  'apo-mini-cart', 
-  'apo-options', 
-  'apo-font',
-  'afterpay', 
-  'affirm',
-  'affirmShopify',
-  'cart-shipping-calculator-pro'
-];
-
-const DEFER_CSS_MATCHES = [
-  'apo-style-products', 'apo-style-collections'
-];
-
-const shouldDeferUrl = (url, matchList) => {
-  if (!url) return false;
-  try { return matchList.some(s => url.indexOf(s) !== -1); } catch { return false; }
-};
-
-const observer = new MutationObserver((mutList) => {
-  mutList.forEach(({ addedNodes }) => {
-    addedNodes.forEach((node) => {
-      if (node.nodeType !== 1) return; 
-      if (node.tagName === 'SCRIPT') {
-        if (node.innerHTML.includes('asyncLoad')) {
-          node.innerHTML = node.innerHTML
-            .replace(
-              'if(window.attachEvent)',
-              "document.addEventListener('asyncLazyLoad',function(event){asyncLoad();});if(window.attachEvent)"
-            )
-            .replaceAll(', asyncLoad', ', function(){}');
-        }
-        if (node.innerHTML.includes('PreviewBarInjector')) {
-          node.innerHTML = node.innerHTML.replace('DOMContentLoaded', 'asyncLazyLoad');
-        }
-        if (node.className === 'analytics') {
-          node.type = 'text/lazyload';
-        }
-        if (node.src && shouldDeferUrl(node.src, DEFER_SCRIPT_MATCHES)) {
-          node.setAttribute('data-src', node.src);
-          node.removeAttribute('src');
-          if (!node.defer && !node.async) node.defer = true;
-        }
-      }
-      if (node.tagName === 'LINK' && (node.rel === 'stylesheet' || node.getAttribute('rel') === 'stylesheet')) {
-        const href = node.getAttribute('href') || '';
-        if (shouldDeferUrl(href, DEFER_CSS_MATCHES)) {
-          node.setAttribute('data-href', href);
-          node.removeAttribute('href');
-          node.setAttribute('data-lazy-style', 'true');
-        }
-      }
+  <script type="text/javascript">
+    const observer = new MutationObserver((e) => {
+      e.forEach(({ addedNodes: e }) => {
+        e.forEach((e) => {
+          1 === e.nodeType &&
+            'SCRIPT' === e.tagName &&
+            (e.innerHTML.includes('asyncLoad') &&
+              (e.innerHTML = e.innerHTML
+                .replace(
+                  'if(window.attachEvent)',
+                  "document.addEventListener('asyncLazyLoad',function(event){asyncLoad();});if(window.attachEvent)",
+                )
+                .replaceAll(', asyncLoad', ', function(){}')),
+            e.innerHTML.includes('PreviewBarInjector') &&
+              (e.innerHTML = e.innerHTML.replace('DOMContentLoaded', 'asyncLazyLoad')),
+            e.className == 'analytics' && (e.type = 'text/lazyload'),
+            (e.src.includes('assets/storefront/features') ||
+              e.src.includes('assets/shopify_pay') ||
+              e.src.includes('connect.facebook.net')) &&
+              (e.setAttribute('data-src', e.src), e.removeAttribute('src')));
+        });
+      });
     });
-  });
-});
-observer.observe(document.documentElement, { childList: true, subtree: true });
-</script>
-<script>
-  eval(
-    (function (p, a, c, k, e, r) {
-      e = function (c) { return (c < a ? '' : e(parseInt(c / a))) + ((c = c % a) > 35 ? String.fromCharCode(c + 29) : c.toString(36)); };
-      if (!''.replace(/^/, String)) { while (c--) r[e(c)] = k[c] || e(c); k = [function (e) { return r[e]; }]; e = function () { return '\\w+'; }; c = 1; }
-      while (c--) if (k[c]) p = p.replace(new RegExp('\\b' + e(c) + '\\b', 'g'), k[c]);
-      return p;
-    })(
-      'l(r.O=="P y"){i j=[],s=[];u Q(a,b=R){S c;T(...d)=>{U(c),c=V(()=>a.W(X,d),b)}}2.m="Y"+(2.z||"")+"Z";2.A="10"+(2.z||"")+"11";12{i a=r[2.m],e=r[2.A];2.k=(e.B(\'y\')>-1&&a.B(\'13\')<0),2.m="!1",c=C}14(d){2.k=!1;i c=C;2.m="!1"}2.k=k;l(k)i v=D E(e=>{e.8(({F:e})=>{e.8(e=>{1===e.5&&"G"===e.6&&(e.4("n","o"),e.4("f-3",e.3),e.g("3")),1===e.5&&"H"===e.6&&++p>q&&e.4("n","o"),1===e.5&&"I"===e.6&&j.w&&j.8(t=>{e.7.h(t)&&(e.4("f-7",e.7),e.g("7"))}),1===e.5&&"J"===e.6&&(e.4("f-3",e.3),e.g("3"),e.15="16/17")})})}),p=0,q=K;18 i v=D E(e=>{e.8(({F:e})=>{e.8(e=>{1===e.5&&"G"===e.6&&(e.4("n","o"),e.4("f-3",e.3),e.g("3")),1===e.5&&"H"===e.6&&++p>q&&e.4("n","o"),1===e.5&&"I"===e.6&&j.w&&j.8(t=>{e.7.h(t)&&(e.4("f-7",e.7),e.g("7"))}),1===e.5&&"J"===e.6&&(s.w&&s.8(t=>{e.3.h(t)&&(e.4("f-3",e.3),e.g("3"))}),e.9.h("x")&&(e.9=e.9.L("l(2.M)","N.19(\'1a\',u(1b){x();});l(2.M)").1c(", x",", u(){}")),(e.9.h("1d")||e.9.h("1e"))&&(e.9=e.9.L("1f","1g")))})})}),p=0,q=K;v.1h(N.1i,{1j:!0,1k:!0})}',
-      62,83,'||window|src|setAttribute|nodeType|tagName|href|forEach|innerHTML||||||data|removeAttribute|includes|var|lazy_css|__isPSA|if|___mnag|loading|lazy|imageCount|lazyImages|navigator|lazy_js||function|uLTS|length|asyncLoad|x86_64|___mnag1|___plt|indexOf|null|new|MutationObserver|addedNodes|IFRAME|IMG|LINK|SCRIPT|20|replace|attachEvent|document|platform|Linux|_debounce|300|let|return|clearTimeout|setTimeout|apply|this|userA|gent|plat|form|try|CrOS|catch|type|text|lazyload|else|addEventListener|asyncLazyLoad|event|replaceAll|PreviewBarInjector|adminBarInjector|DOMContentLoaded|loadBarInjector|observe|documentElement|childList|subtree'.split('|'),0,{}
-    ),
-  );
-</script>
+    observer.observe(document.documentElement, { childList: !0, subtree: !0 });
+  </script>
+  <script>
+    eval(
+      (function (p, a, c, k, e, r) {
+        e = function (c) {
+          return (c < a ? '' : e(parseInt(c / a))) + ((c = c % a) > 35 ? String.fromCharCode(c + 29) : c.toString(36));
+        };
+        if (!''.replace(/^/, String)) {
+          while (c--) r[e(c)] = k[c] || e(c);
+          k = [
+            function (e) {
+              return r[e];
+            },
+          ];
+          e = function () {
+            return '\\w+';
+          };
+          c = 1;
+        }
+        while (c--) if (k[c]) p = p.replace(new RegExp('\\b' + e(c) + '\\b', 'g'), k[c]);
+        return p;
+      })(
+        'l(r.O=="P y"){i j=[],s=[];u Q(a,b=R){S c;T(...d)=>{U(c),c=V(()=>a.W(X,d),b)}}2.m="Y"+(2.z||"")+"Z";2.A="10"+(2.z||"")+"11";12{i a=r[2.m],e=r[2.A];2.k=(e.B(\'y\')>-1&&a.B(\'13\')<0),2.m="!1",c=C}14(d){2.k=!1;i c=C;2.m="!1"}2.k=k;l(k)i v=D E(e=>{e.8(({F:e})=>{e.8(e=>{1===e.5&&"G"===e.6&&(e.4("n","o"),e.4("f-3",e.3),e.g("3")),1===e.5&&"H"===e.6&&++p>q&&e.4("n","o"),1===e.5&&"I"===e.6&&j.w&&j.8(t=>{e.7.h(t)&&(e.4("f-7",e.7),e.g("7"))}),1===e.5&&"J"===e.6&&(e.4("f-3",e.3),e.g("3"),e.15="16/17")})})}),p=0,q=K;18 i v=D E(e=>{e.8(({F:e})=>{e.8(e=>{1===e.5&&"G"===e.6&&(e.4("n","o"),e.4("f-3",e.3),e.g("3")),1===e.5&&"H"===e.6&&++p>q&&e.4("n","o"),1===e.5&&"I"===e.6&&j.w&&j.8(t=>{e.7.h(t)&&(e.4("f-7",e.7),e.g("7"))}),1===e.5&&"J"===e.6&&(s.w&&s.8(t=>{e.3.h(t)&&(e.4("f-3",e.3),e.g("3"))}),e.9.h("x")&&(e.9=e.9.L("l(2.M)","N.19(\'1a\',u(1b){x();});l(2.M)").1c(", x",", u(){}")),(e.9.h("1d")||e.9.h("1e"))&&(e.9=e.9.L("1f","1g")))})})}),p=0,q=K;v.1h(N.1i,{1j:!0,1k:!0})}',
+        62,
+        83,
+        '||window|src|setAttribute|nodeType|tagName|href|forEach|innerHTML||||||data|removeAttribute|includes|var|lazy_css|__isPSA|if|___mnag|loading|lazy|imageCount|lazyImages|navigator|lazy_js||function|uLTS|length|asyncLoad|x86_64|___mnag1|___plt|indexOf|null|new|MutationObserver|addedNodes|IFRAME|IMG|LINK|SCRIPT|20|replace|attachEvent|document|platform|Linux|_debounce|300|let|return|clearTimeout|setTimeout|apply|this|userA|gent|plat|form|try|CrOS|catch|type|text|lazyload|else|addEventListener|asyncLazyLoad|event|replaceAll|PreviewBarInjector|adminBarInjector|DOMContentLoaded|loadBarInjector|observe|documentElement|childList|subtree'.split(
+          '|',
+        ),
+        0,
+        {},
+      ),
+    );
+  </script>
 {%- endif -%}
-
 
 {%- if postpone_loading == 'reset' -%}
   <script>
