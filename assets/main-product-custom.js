@@ -331,6 +331,19 @@ try {
 				}
 			});
 		});
+	
+		PayTomorrow.mpeInit({
+			debugMode: false,
+			enableMoreInfoLink: true,
+			logoColor: "original",
+			maxAmount: 20000,
+			maxTerm: 36,
+			minAmount: 500,
+			mpeSelector: ".mpe",
+			priceSelector: ".pr_custom_price",
+			storeDisplayName: "Fitnesssuperstore",
+			publicId: "a4f00e481c4f3e28756375f86d272b22"
+    	});
 
 		modalWrapper.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
