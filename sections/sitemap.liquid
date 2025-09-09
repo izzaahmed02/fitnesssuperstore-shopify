@@ -1488,25 +1488,46 @@ list-style: inherit!Important;
 
 
 
+
 <style>
-  
-  h1{font-size:2rem;margin:0 0 .75rem;}
+  :root{
+    --fg:#1a1a1a;
+    --muted:#667085;
+    --border:#e5e7eb;
+    --bg:#ffffff;
+    --chip:#f6f7f9;
+    --highlight:#fff3a3;
+    --accent:#ff6a00;
+  }
+  *{box-sizing:border-box}
+ 
+  h1{font-size:2rem;margin:0 0 .75rem;font-weight:700;letter-spacing:.2px;}
+  h2{font-size:1.05rem;margin:.25rem 0 .5rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#111;}
   .muted{color:var(--muted);font-size:.9rem;}
-  .sitemap-toolbar{position:sticky;top:0;z-index:10;background:#fff;padding:10px 0 14px;border-bottom:1px solid var(--border);}
+
+  .sitemap-toolbar{position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 0 14px;border-bottom:1px solid var(--border);}
   .search-wrap{display:flex;gap:10px;align-items:center;}
-  .search-wrap input{flex:1;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:16px;}
+  .search-wrap input{
+    flex:1;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:16px;
+    background:#fff;outline:none;
+  }
+  .search-wrap input:focus{box-shadow:0 0 0 3px rgba(255,106,0,.15);border-color:#f4a261;}
   .search-meta{font-size:.9rem;color:var(--muted);margin-top:6px;}
-  .sitemap{column-count:2; column-gap:22px; column-fill:balance;}
-  @media (min-width: 1100px){ .sitemap{column-width:520px;} }
-  @media (max-width: 1000px){ .sitemap{column-count:1; column-width:auto;} }
-  ul{break-inside:avoid; -webkit-column-break-inside:avoid; margin:0 0 .75rem 1.15rem; padding:0;}
+
+  .sitemap{column-count:2; column-gap:28px; column-fill:balance; margin-top:16px;}
+  @media (min-width:1200px){ .sitemap{column-width:560px;} }
+  @media (max-width:1000px){ .sitemap{column-count:1; column-width:auto;} }
+
+  .stack{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:22px;}
+  @media (max-width:1000px){.stack{grid-template-columns:1fr;}}
+  .sitemap-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(16,24,40,.04);}
+
+  ul{break-inside:avoid; -webkit-column-break-inside:avoid; margin:0 0 .75rem 1.05rem; padding:0;}
   li{margin:.25rem 0;}
-  .root > li > a, .root > li{font-weight:600;}
+  .root > li > a, .root > li{font-weight:700;}
   mark{background:var(--highlight);padding:0 .1em;border-radius:3px;}
   .is-hidden{display:none!important;}
 </style>
-
-
 <h1>Site Map</h1>
 <div class="sitemap-toolbar">
 <div class="search-wrap">
@@ -2847,7 +2868,6 @@ list-style: inherit!Important;
 
 <script>
 (function(){
-  // remove any 'FOOTER' list items if present
   document.querySelectorAll('li').forEach(function(li){
     var t = (li.textContent || '').trim().toUpperCase();
     if(t === 'FOOTER'){ li.remove(); }
@@ -2856,69 +2876,81 @@ list-style: inherit!Important;
   const input = document.getElementById('sitemap-search');
   const meta  = document.getElementById('search-meta');
   const root  = document.getElementById('sitemap-root');
+  const extras = Array.from(document.querySelectorAll('#supporting-sections ul'));
 
-  function clearMarks(rootEl){
-    rootEl.querySelectorAll('mark').forEach(function(m){
+  function labelText(li){
+    const a = li.querySelector(':scope > a');
+    if(a) return (a.textContent || '').trim();
+    let txt = '';
+    li.childNodes.forEach(function(n){ if(n.nodeType===3) txt += n.nodeValue; });
+    return txt.trim();
+  }
+
+  function clearMarks(el){
+    el.querySelectorAll('mark').forEach(function(m){
       const t = document.createTextNode(m.textContent);
       m.parentNode.replaceChild(t, m);
     });
   }
-  function highlight(node, q){
-    const text = node.nodeValue;
-    const idx  = text.toLowerCase().indexOf(q.toLowerCase());
-    if(idx === -1) return;
-    const span = document.createElement('span');
-    span.appendChild(document.createTextNode(text.slice(0, idx)));
-    const mark = document.createElement('mark');
-    mark.textContent = text.slice(idx, idx+q.length);
-    span.appendChild(mark);
-    span.appendChild(document.createTextNode(text.slice(idx+q.length)));
-    node.parentNode.replaceChild(span, node);
+  function highlightTitle(li, q){
+    const a = li.querySelector(':scope > a');
+    const target = a || li;
+    target.childNodes.forEach(function(n){
+      if(n.nodeType !== 3) return;
+      const text = n.nodeValue;
+      const i = text.toLowerCase().indexOf(q.toLowerCase());
+      if(i === -1) return;
+      const span = document.createElement('span');
+      span.appendChild(document.createTextNode(text.slice(0, i)));
+      const mark = document.createElement('mark'); mark.textContent = text.slice(i, i+q.length);
+      span.appendChild(mark);
+      span.appendChild(document.createTextNode(text.slice(i+q.length)));
+      n.parentNode.replaceChild(span, n);
+    });
   }
-  function filterUl(ul, q){
-    let shown = 0;
-    function visit(li){
-      let text = (li.firstChild && li.firstChild.textContent) ? li.firstChild.textContent : li.textContent;
-      text = (text || '').trim();
-      const kids = li.querySelector(':scope > ul');
-      let childMatch = false;
-      if(kids){
-        let any=false;
-        kids.querySelectorAll(':scope > li').forEach(function(c){ if(visit(c)) any=true; });
-        childMatch = any;
-      }
-      const selfMatch = q ? text.toLowerCase().includes(q.toLowerCase()) : true;
-      const show = q ? (selfMatch || childMatch) : true;
-      li.classList.toggle('is-hidden', !show);
-      if(show) shown++;
 
-      if(q){
-        clearMarks(li);
-        if(selfMatch){
-          const labelEls = li.querySelectorAll(':scope > a, :scope');
-          labelEls.forEach(function(el){
-            el.childNodes.forEach(function(n){
-              if(n.nodeType === 3) highlight(n, q);
-            });
-          });
-        }
-      }else{
-        clearMarks(li);
-      }
-      return show;
+  function filterNode(li, q){
+    const title = labelText(li);
+    const selfMatch = q ? title.toLowerCase().includes(q.toLowerCase()) : true;
+
+    const ul = li.querySelector(':scope > ul');
+    let anyChild = false;
+    if(ul){
+      const children = Array.from(ul.querySelectorAll(':scope > li'));
+      children.forEach(function(child){
+        const childShown = filterNode(child, q);
+        child.classList.toggle('is-hidden', !childShown);
+        anyChild = anyChild || childShown;
+      });
     }
-    ul.querySelectorAll(':scope > li').forEach(visit);
-    return shown;
+
+    const show = q ? (selfMatch || anyChild) : true;
+    li.classList.toggle('is-hidden', !show);
+
+    clearMarks(li);
+    if(q && selfMatch){ highlightTitle(li, q); }
+
+    return show;
   }
-  
-  const extraRoots = Array.from(document.querySelectorAll('#supporting-sections ul'));
+
+  function filterList(ul, q){
+    let total = 0;
+    const items = Array.from(ul.querySelectorAll(':scope > li'));
+    items.forEach(function(li){
+      const shown = filterNode(li, q);
+      if(shown) total++;
+    });
+    return total;
+  }
+
   function run(){
-    if(!root) return;
     const q = (input && input.value || '').trim();
-    let total = filterUl(root, q);
-    extraRoots.forEach(function(r){ total += filterUl(r, q); });
-    meta.textContent = q ? ('Showing ' + total + ' matching items') : '';
+    let total = 0;
+    if(root) total += filterList(root, q);
+    extras.forEach(function(ul){ total += filterList(ul, q); });
+    meta.textContent = q ? `Showing ${total} matching items` : '';
   }
+
   if(input){ input.addEventListener('input', run, {passive:true}); }
 })();
 </script>
