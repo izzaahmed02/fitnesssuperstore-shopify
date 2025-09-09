@@ -275,7 +275,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 		window.open(pdsUrl, "_blank"); 
 	})
 
-	document.querySelector('.compare-products-actions a').setAttribute('href', '');
+	document.querySelector('.compare-products-actions a')?.setAttribute('href', '');
 });
 
 
@@ -345,6 +345,20 @@ try {
 			publicId: "a4f00e481c4f3e28756375f86d272b22"
     	});
 
+		//Added this to replace paytomorrow widget
+		PayTomorrow.mpeInit({
+			debugMode: false,
+			enableMoreInfoLink: true,
+			logoColor: "original",
+			maxAmount: 20000,
+			maxTerm: 36,
+			minAmount: 500,
+			mpeSelector: ".mpe",
+			priceSelector: ".pr_custom_price",
+			storeDisplayName: "Fitnesssuperstore",
+			publicId: "a4f00e481c4f3e28756375f86d272b22"
+    	});
+
 		modalWrapper.addEventListener('click', () => {
 			modalWrapper.style.display = 'none';
 		});
@@ -355,26 +369,20 @@ try {
 
 		var afterPayIntervalTrigger = setInterval(() => {
 			hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
+		}, 100);
+
+		var affirmPayIntervalTrigger = setInterval(() => {
+			hideOrShowAffirmLogo(() => clearInterval(affirmPayIntervalTrigger));
 		}, 100)
 
-		waitForPayLaterDependencies(() => { 
+		waitForPayTomorrow(() => { 
 			let payLaterText = generatePayLaterText();
 			document.querySelectorAll('.paylater-container').forEach(container => {
 				container.style.display = 'flex';
 				container.querySelectorAll('.paylater-text').forEach(container => {
 					container.innerHTML = getPaylaterModal(payLaterText);
 				});
-			})
-		
-			var affirmIntervalTrigger = setInterval(() => {
-				var affirmElement = document.querySelector('.affirm-as-low-as');
-
-				if (affirmElement) {
-					document.querySelectorAll('.paylater-logo').forEach(element => {
-						element.innerHTML += `<img onclick="document.querySelector('.affirm-modal-trigger')?.click()" src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/affirm-logo.png?v=1743142751" width="65" height="24" style="max-width: 110px;cursor: pointer;margin-top:-13px;object-fit:contain;">`
-					});
-				}	clearInterval(affirmIntervalTrigger);
-			}, 100)
+			});
 		});
 
 		const targetNode = document.querySelector('.pr_custom_price');
@@ -439,7 +447,7 @@ function generatePayLaterText() {
 	return payLaterText;
 }
 
-function waitForPayLaterDependencies(callback, timeout = 20000, interval = 500) {
+function waitForPayTomorrow(callback, timeout = 20000, interval = 500) {
     const start = Date.now();
 
     const checkReady = () => {
@@ -729,7 +737,7 @@ function generatePayTomorrowPaymentTerms() {
 
   function generateAffirmPaymentTerms() {
 	if (!document.querySelector('.affirm-as-low-as')) return '';
-	
+
 	let productPrice = getProductPrice();  
 
 	if (productPrice) {
@@ -792,20 +800,32 @@ function generatePayTomorrowPaymentTerms() {
 	if (afterPayModalContainer) {
 		const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
 		document.querySelectorAll('.afterPayLogo').forEach(element => {
-		  if (afterPayElement) {
-			  if (element) {
-				  element.style.display = 'block';
-			  }
+		  if (afterPayElement && element) {
+			element.style.display = 'block';
 		  } else {
-			 if (element) {
-				element.style.display = 'none';
-			 }
+			element.style.display = 'none';
 		  }
 		});
 
 		if (callback) {
 			callback();
 		}
+	}
+  }
+
+  function hideOrShowAffirmLogo(callback) {
+	var affirmElement = document.querySelector('.affirm-as-low-as');
+
+	document.querySelectorAll('.affirm-logo').forEach(element => {
+		if (affirmElement && element) {
+			element.style.display = 'block';
+		} else {
+			element.style.display = 'none';
+		}
+	});
+
+	if (affirmElement && callback) {
+		callback();
 	}
   }
 
