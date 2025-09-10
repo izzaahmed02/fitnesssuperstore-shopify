@@ -293,9 +293,11 @@ try {
 
 					if (customFieldvalue) {			
 						if (customFieldvalue === 'Warranty' || customFieldvalue == 'Shipping' && brand === 'French Fitness') {
+							console.log("I am in custom field");
 							customFieldvalue = `${brand} ${customFieldvalue} Custom Field`
 						} else {
 							if (customFieldvalue === 'Warranty' && window.product.title.includes('Remanufactured')) {
+								console.log("I am in remanufactured custom field");
 								customFieldvalue = `${customFieldvalue} Remanufactured Custom Field`
 							} else if (customFieldvalue === 'Condition' && window.product.title.includes('Remanufactured')) {
 								window.open("/pages/remanufactured-gym-equipment", "_blank");
