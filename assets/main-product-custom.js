@@ -311,6 +311,7 @@ try {
 						var product = await fetchProductByTitle(customFieldvalue);
                       
                         if (!product && customFieldvalue.includes('Warranty')) {
+							console.log("I am in Warranty 30");
 							customFieldvalue = 'Warranty (30)';
 							product = await fetchProductByTitle(customFieldvalue);
 						}
