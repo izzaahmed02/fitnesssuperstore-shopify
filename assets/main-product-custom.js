@@ -307,6 +307,8 @@ try {
 								customFieldvalue += ' Custom Field';
 							}
 						}
+
+						console.log("Custom Field Value is "+ customFieldvalue);
 						
 						var product = await fetchProductByTitle(customFieldvalue);
                       
