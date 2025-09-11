@@ -2870,90 +2870,58 @@ list-style: inherit!Important;
   const input = document.getElementById('sitemap-search');
   const meta  = document.getElementById('search-meta');
 
-  // which containers to include in the search
-  const listSelectors = ['#sitemap-root', '#supporting-sections'];
+  // grab all list items
+  const lis = document.querySelectorAll('#sitemap-root li, #supporting-sections li');
 
-  function getAllLis(){
-    return Array.from(document.querySelectorAll(listSelectors.map(s => s + ' li').join(',')));
-  }
-
-  // get the title for a single <li> — prefer a direct <a> child, otherwise use direct text nodes
   function labelText(li){
-    const a = Array.from(li.children).find(c => c.tagName === 'A');
-    if (a) return (a.textContent || '').trim();
+    // prefer direct <a> text if present
+    const a = li.querySelector(':scope > a');
+    if (a) return a.textContent.trim();
+    // fallback: only direct text nodes (not children <ul>)
     let txt = '';
-    li.childNodes.forEach(function(n){ if(n.nodeType === 3) txt += n.nodeValue; });
+    li.childNodes.forEach(n => {
+      if (n.nodeType === 3) txt += n.nodeValue;
+    });
     return txt.trim();
   }
 
-  // remove any existing <mark> highlights (safe)
-  function clearMarks(li){
-    const a = Array.from(li.children).find(c => c.tagName === 'A');
+  function clearHighlight(li){
+    const a = li.querySelector(':scope > a');
+    if (a) a.textContent = a.textContent; // reset
+    li.querySelectorAll('mark').forEach(m => {
+      m.replaceWith(document.createTextNode(m.textContent));
+    });
+  }
+
+  function highlight(li, q){
+    const a = li.querySelector(':scope > a');
+    const regex = new RegExp(`(${q})`, 'ig');
     if (a) {
-      // reset anchor to plain text (removes any previous <mark>)
-      a.innerHTML = a.textContent;
-    } else {
-      li.querySelectorAll('mark').forEach(function(m){
-        m.replaceWith(document.createTextNode(m.textContent));
-      });
+      a.innerHTML = a.textContent.replace(regex, '<mark>$1</mark>');
     }
   }
 
-  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
-
-  // highlight matches only inside the title for this li
-  function highlightTitle(li, q){
-    const a = Array.from(li.children).find(c => c.tagName === 'A');
-    const re = new RegExp(escapeRegExp(q), 'ig');
-    if (a) {
-      const txt = a.textContent;
-      a.innerHTML = txt.replace(re, match => `<mark>${match}</mark>`);
-    } else {
-      // for plain-text li's, replace in the first text node we find
-      li.childNodes.forEach(function(n){
-        if (n.nodeType === 3) {
-          const newHtml = n.nodeValue.replace(re, match => `<mark>${match}</mark>`);
-          if (newHtml !== n.nodeValue) {
-            const span = document.createElement('span');
-            span.innerHTML = newHtml;
-            n.parentNode.replaceChild(span, n);
-          }
-        }
-      });
-    }
-  }
-
-  // main search run: every <li> is tested by its own title only
   function run(){
-    const q = (input && input.value || '').trim();
-    const qEmpty = q === '';
-    const qLower = q.toLowerCase();
+    const q = (input.value || '').trim().toLowerCase();
+    let count = 0;
 
-    const lis = getAllLis();
-    let total = 0;
+    lis.forEach(li => {
+      clearHighlight(li);
+      const title = labelText(li).toLowerCase();
+      const match = q === '' || title.includes(q);
 
-    lis.forEach(function(li){
-      clearMarks(li);
+      // show only self if match
+      li.style.display = match ? '' : 'none';
 
-      const title = labelText(li);
-      const selfMatch = qEmpty ? true : title.toLowerCase().includes(qLower);
-
-      // show only if THIS li's title matches; do NOT show parents because children matched
-      li.classList.toggle('is-hidden', !selfMatch);
-
-      if (selfMatch && !qEmpty) {
-        highlightTitle(li, q);
-        total++;
+      if (match && q !== '') {
+        highlight(li, q);
+        count++;
       }
     });
 
-    meta.textContent = q ? `Showing ${total} matching items` : '';
+    meta.textContent = q ? `Showing ${count} matching items` : '';
   }
 
-  if (input) {
-    input.addEventListener('input', run, {passive:true});
-    // initial run to set the default state
-    run();
-  }
+  input.addEventListener('input', run);
 })();
 </script>
