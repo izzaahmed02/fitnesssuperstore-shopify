@@ -2870,14 +2870,11 @@ list-style: inherit!Important;
   const input = document.getElementById('sitemap-search');
   const meta  = document.getElementById('search-meta');
 
-  // grab all list items
   const lis = document.querySelectorAll('#sitemap-root li, #supporting-sections li');
 
   function labelText(li){
-    // prefer direct <a> text if present
     const a = li.querySelector(':scope > a');
     if (a) return a.textContent.trim();
-    // fallback: only direct text nodes (not children <ul>)
     let txt = '';
     li.childNodes.forEach(n => {
       if (n.nodeType === 3) txt += n.nodeValue;
@@ -2887,7 +2884,7 @@ list-style: inherit!Important;
 
   function clearHighlight(li){
     const a = li.querySelector(':scope > a');
-    if (a) a.textContent = a.textContent; // reset
+    if (a) a.textContent = a.textContent;
     li.querySelectorAll('mark').forEach(m => {
       m.replaceWith(document.createTextNode(m.textContent));
     });
@@ -2901,6 +2898,16 @@ list-style: inherit!Important;
     }
   }
 
+  function showWithParents(li){
+    li.style.display = '';
+    let parent = li.parentElement;
+    while (parent && parent.tagName === 'UL') {
+      const pli = parent.closest('li');
+      if (pli) pli.style.display = '';
+      parent = pli ? pli.parentElement : null;
+    }
+  }
+
   function run(){
     const q = (input.value || '').trim().toLowerCase();
     let count = 0;
@@ -2908,14 +2915,17 @@ list-style: inherit!Important;
     lis.forEach(li => {
       clearHighlight(li);
       const title = labelText(li).toLowerCase();
-      const match = q === '' || title.includes(q);
+      const match = q === '' ? true : title.includes(q);
 
-      // show only self if match
-      li.style.display = match ? '' : 'none';
-
-      if (match && q !== '') {
-        highlight(li, q);
-        count++;
+      if (match) {
+        li.style.display = '';
+        if (q !== '') {
+          highlight(li, q);
+          count++;
+        }
+        if (q !== '') showWithParents(li); // ensure parents visible
+      } else {
+        li.style.display = q === '' ? '' : 'none';
       }
     });
 
