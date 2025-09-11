@@ -2909,29 +2909,27 @@ list-style: inherit!Important;
     });
   }
 
-  function filterNode(li, q){
-    const title = labelText(li);
-    const selfMatch = q ? title.toLowerCase().includes(q.toLowerCase()) : true;
+function filterNode(li, q){
+  const title = labelText(li);
+  const selfMatch = q ? title.toLowerCase().includes(q.toLowerCase()) : true;
 
-    const ul = li.querySelector(':scope > ul');
-    let anyChild = false;
-    if(ul){
-      const children = Array.from(ul.querySelectorAll(':scope > li'));
-      children.forEach(function(child){
-        const childShown = filterNode(child, q);
-        child.classList.toggle('is-hidden', !childShown);
-        anyChild = anyChild || childShown;
-      });
-    }
-
-    const show = q ? (selfMatch || anyChild) : true;
-    li.classList.toggle('is-hidden', !show);
-
-    clearMarks(li);
-    if(q && selfMatch){ highlightTitle(li, q); }
-
-    return show;
+  // Always hide children unless the parent itself matches
+  const ul = li.querySelector(':scope > ul');
+  if (ul) {
+    Array.from(ul.querySelectorAll(':scope > li')).forEach(function(child){
+      child.classList.add('is-hidden');
+    });
   }
+
+  const show = q ? selfMatch : true;
+  li.classList.toggle('is-hidden', !show);
+
+  clearMarks(li);
+  if(q && selfMatch){ highlightTitle(li, q); }
+
+  return show;
+}
+
 
   function filterList(ul, q){
     let total = 0;
