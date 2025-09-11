@@ -2865,90 +2865,95 @@ list-style: inherit!Important;
 </ul>
 </section>
 </div>
-
 <script>
 (function(){
-  document.querySelectorAll('li').forEach(function(li){
-    var t = (li.textContent || '').trim().toUpperCase();
-    if(t === 'FOOTER'){ li.remove(); }
-  });
-
   const input = document.getElementById('sitemap-search');
   const meta  = document.getElementById('search-meta');
-  const root  = document.getElementById('sitemap-root');
-  const extras = Array.from(document.querySelectorAll('#supporting-sections ul'));
 
+  // which containers to include in the search
+  const listSelectors = ['#sitemap-root', '#supporting-sections'];
+
+  function getAllLis(){
+    return Array.from(document.querySelectorAll(listSelectors.map(s => s + ' li').join(',')));
+  }
+
+  // get the title for a single <li> — prefer a direct <a> child, otherwise use direct text nodes
   function labelText(li){
-    const a = li.querySelector(':scope > a');
-    if(a) return (a.textContent || '').trim();
+    const a = Array.from(li.children).find(c => c.tagName === 'A');
+    if (a) return (a.textContent || '').trim();
     let txt = '';
-    li.childNodes.forEach(function(n){ if(n.nodeType===3) txt += n.nodeValue; });
+    li.childNodes.forEach(function(n){ if(n.nodeType === 3) txt += n.nodeValue; });
     return txt.trim();
   }
 
-  function clearMarks(el){
-    el.querySelectorAll('mark').forEach(function(m){
-      const t = document.createTextNode(m.textContent);
-      m.parentNode.replaceChild(t, m);
-    });
+  // remove any existing <mark> highlights (safe)
+  function clearMarks(li){
+    const a = Array.from(li.children).find(c => c.tagName === 'A');
+    if (a) {
+      // reset anchor to plain text (removes any previous <mark>)
+      a.innerHTML = a.textContent;
+    } else {
+      li.querySelectorAll('mark').forEach(function(m){
+        m.replaceWith(document.createTextNode(m.textContent));
+      });
+    }
   }
+
+  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+
+  // highlight matches only inside the title for this li
   function highlightTitle(li, q){
-    const a = li.querySelector(':scope > a');
-    const target = a || li;
-    target.childNodes.forEach(function(n){
-      if(n.nodeType !== 3) return;
-      const text = n.nodeValue;
-      const i = text.toLowerCase().indexOf(q.toLowerCase());
-      if(i === -1) return;
-      const span = document.createElement('span');
-      span.appendChild(document.createTextNode(text.slice(0, i)));
-      const mark = document.createElement('mark'); mark.textContent = text.slice(i, i+q.length);
-      span.appendChild(mark);
-      span.appendChild(document.createTextNode(text.slice(i+q.length)));
-      n.parentNode.replaceChild(span, n);
-    });
+    const a = Array.from(li.children).find(c => c.tagName === 'A');
+    const re = new RegExp(escapeRegExp(q), 'ig');
+    if (a) {
+      const txt = a.textContent;
+      a.innerHTML = txt.replace(re, match => `<mark>${match}</mark>`);
+    } else {
+      // for plain-text li's, replace in the first text node we find
+      li.childNodes.forEach(function(n){
+        if (n.nodeType === 3) {
+          const newHtml = n.nodeValue.replace(re, match => `<mark>${match}</mark>`);
+          if (newHtml !== n.nodeValue) {
+            const span = document.createElement('span');
+            span.innerHTML = newHtml;
+            n.parentNode.replaceChild(span, n);
+          }
+        }
+      });
+    }
   }
 
-function filterNode(li, q){
-  const title = labelText(li);
-  const selfMatch = q ? title.toLowerCase().includes(q.toLowerCase()) : true;
-
-  // Always hide children unless the parent itself matches
-  const ul = li.querySelector(':scope > ul');
-  if (ul) {
-    Array.from(ul.querySelectorAll(':scope > li')).forEach(function(child){
-      child.classList.add('is-hidden');
-    });
-  }
-
-  const show = q ? selfMatch : true;
-  li.classList.toggle('is-hidden', !show);
-
-  clearMarks(li);
-  if(q && selfMatch){ highlightTitle(li, q); }
-
-  return show;
-}
-
-
-  function filterList(ul, q){
-    let total = 0;
-    const items = Array.from(ul.querySelectorAll(':scope > li'));
-    items.forEach(function(li){
-      const shown = filterNode(li, q);
-      if(shown) total++;
-    });
-    return total;
-  }
-
+  // main search run: every <li> is tested by its own title only
   function run(){
     const q = (input && input.value || '').trim();
+    const qEmpty = q === '';
+    const qLower = q.toLowerCase();
+
+    const lis = getAllLis();
     let total = 0;
-    if(root) total += filterList(root, q);
-    extras.forEach(function(ul){ total += filterList(ul, q); });
+
+    lis.forEach(function(li){
+      clearMarks(li);
+
+      const title = labelText(li);
+      const selfMatch = qEmpty ? true : title.toLowerCase().includes(qLower);
+
+      // show only if THIS li's title matches; do NOT show parents because children matched
+      li.classList.toggle('is-hidden', !selfMatch);
+
+      if (selfMatch && !qEmpty) {
+        highlightTitle(li, q);
+        total++;
+      }
+    });
+
     meta.textContent = q ? `Showing ${total} matching items` : '';
   }
 
-  if(input){ input.addEventListener('input', run, {passive:true}); }
+  if (input) {
+    input.addEventListener('input', run, {passive:true});
+    // initial run to set the default state
+    run();
+  }
 })();
 </script>
