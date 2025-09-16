@@ -7,7 +7,76 @@
     padding-bottom: calc({{ settings.media_shadow_vertical_offset | at_least: 0 }}px + 2rem);
      }
     }
+
+    {%- endstyle -%}
+{% comment %}
+#collection-description a {
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight:bold;
+}
+
+#read-more {
+  color: #0d7a3c;
+}
+{% endcomment %}
+
+
+{%- style -%}
+#collection-description a {
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+#read-more-desktop,
+#read-more-mobile {
+  color: #0d7a3c;
+}
+
+/* Responsive visibility */
+.desktop-only {
+  display: block;
+}
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
+  .clamp-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .clamp-text::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1.5em;
+    background: linear-gradient(to bottom, transparent, white);
+  }
+}
 {%- endstyle -%}
+
+
+
+
+
 
 
 
@@ -21,9 +90,68 @@
             </h1>
             {% if section.settings.show_collection_description %}
                 <div class="collection-hero__description">
-                    {{ collection.description }}
+
+
+ {% comment %}  Old Code starts here
+{% if collection.description.size > 430 %}
+  <div id="collection-description">
+    <div id="short-description">
+      {{ collection.description | truncate: 430, "..." }}
+      <a href="#" id="read-more">Read More</a>
+    </div>
+    <div id="full-description" style="display: none;">
+      {{ collection.description }}
+      <a href="#" id="read-less">Read Less</a>
+    </div>
+  </div>
+{% else %}
+  <div id="collection-description">
+    {{ collection.description }}
+  </div>
+{% endif %} old code ends here
+{% endcomment %}
+
+<div id="collection-description">
+
+  <!-- Desktop Version (truncate after 430 characters) -->
+  {% if collection.description.size > 430 %}
+    <div id="short-description-desktop" class="desktop-only">
+      {{ collection.description | truncate: 430, "..." }}
+      <a href="#" id="read-more-desktop">Read More</a>
+    </div>
+    <div id="full-description-desktop" class="desktop-only" style="display: none;">
+      {{ collection.description }}
+      <a href="#" id="read-less-desktop">Read Less</a>
+    </div>
+  {% else %}
+    <div class="desktop-only">
+      {{ collection.description }}
+    </div>
+  {% endif %}
+
+  <!-- Mobile Version (line clamp after 3 lines) -->
+  <div id="short-description-mobile" class="mobile-only">
+    <div id="mobile-clamp-text" class="clamp-text">
+      {{ collection.description }}
+    </div>
+    <a href="#" id="read-more-mobile" style="display: none;">Read More</a>
+  </div>
+
+  <div id="full-description-mobile" class="mobile-only" style="display: none;">
+    {{ collection.description }}
+    <a href="#" id="read-less-mobile">Read Less</a>
+  </div>
+
+</div>
+
+
+
+
+
                 </div>
             {% endif %}
+
+
             {% comment %}
             {% if collection.metafields.custom.related_collections != blank %}
                 {% assign current_url = collection.url %}
@@ -176,3 +304,60 @@
   ]
 }
 {% endschema %}
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Desktop toggle
+    const readMoreDesktop = document.getElementById('read-more-desktop');
+    const readLessDesktop = document.getElementById('read-less-desktop');
+    const shortDescDesktop = document.getElementById('short-description-desktop');
+    const fullDescDesktop = document.getElementById('full-description-desktop');
+
+    readMoreDesktop?.addEventListener('click', function (e) {
+      e.preventDefault();
+      shortDescDesktop.style.display = 'none';
+      fullDescDesktop.style.display = 'block';
+    });
+
+    readLessDesktop?.addEventListener('click', function (e) {
+      e.preventDefault();
+      fullDescDesktop.style.display = 'none';
+      shortDescDesktop.style.display = 'block';
+    });
+
+    // Mobile toggle
+    const readMoreMobile = document.getElementById('read-more-mobile');
+    const readLessMobile = document.getElementById('read-less-mobile');
+    const shortDescMobile = document.getElementById('short-description-mobile');
+    const fullDescMobile = document.getElementById('full-description-mobile');
+    const clampText = document.getElementById('mobile-clamp-text');
+
+    function isClamped(el) {
+      return el.scrollHeight > el.clientHeight;
+    }
+
+    function showReadMoreMobileIfNeeded() {
+      if (window.innerWidth <= 767 && isClamped(clampText)) {
+        readMoreMobile.style.display = 'inline';
+      } else {
+        readMoreMobile.style.display = 'none';
+      }
+    }
+
+    // Run after layout is fully ready
+    requestAnimationFrame(showReadMoreMobileIfNeeded);
+
+    readMoreMobile?.addEventListener('click', function (e) {
+      e.preventDefault();
+      shortDescMobile.style.display = 'none';
+      fullDescMobile.style.display = 'block';
+    });
+
+    readLessMobile?.addEventListener('click', function (e) {
+      e.preventDefault();
+      fullDescMobile.style.display = 'none';
+      shortDescMobile.style.display = 'block';
+    });
+  });
+</script>
