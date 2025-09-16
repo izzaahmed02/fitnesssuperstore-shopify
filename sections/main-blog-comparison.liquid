@@ -1,0 +1,297 @@
+{{ 'component-article-card.css' | asset_url | stylesheet_tag }}
+{{ 'component-card.css' | asset_url | stylesheet_tag }}
+{{ 'section-main-blog.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+    .section-{{ section.id }}-padding {
+        padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+        padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+    }
+
+    @media screen and (min-width: 750px) {
+        .section-{{ section.id }}-padding {
+            padding-top: {{ section.settings.padding_top }}px;
+            padding-bottom: {{ section.settings.padding_bottom }}px;
+        }
+    }
+{%- endstyle -%}
+
+
+{%- paginate blog.articles by 3 -%}
+    <div class="main-blog page-width section-{{ section.id }}-padding">
+        {% if blog.all_tags.size > 0 %}
+            <div class="blog-filter">
+                <div class="dropdown">
+                    <button onclick="listFunction()" class="dropbtn" aria-label="Filter by Brand">
+                        Filter by Brand: <span class="selected-filter">All</span>
+                    </button>
+                    <div id="DropdownDiv" class="dropdown-content">
+                        <form id="tagFilterForm">
+                            <div class="tag-options">
+                                <label class="tag-option">
+                                    <input type="checkbox" name="tag" value="all" id="all-tags" onchange="handleTagChange(this)" checked>
+                                    <span class="tag-name">All</span>
+                                </label>
+                                {% for tag in blog.all_tags %}
+                                    <label class="tag-option">
+                                        <input type="checkbox" name="tag" value="{{ tag | handle }}" id="tag-{{ tag | handle }}" onchange="handleTagChange(this)">
+                                        <span class="tag-name">{{ tag }}</span>
+                                        {% if tag.products_count %}
+                                            <span class="tag-count">{{ tag.products_count }}</span>
+                                        {% endif %}
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
+            {%- for article in blog.articles -%}
+                <div class="blog-articles__article article{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+                {% if settings.animations_reveal_on_scroll %}
+                    data-cascade
+                    style="--animation-order: {{ forloop.index }};"
+                        {% endif %}>
+                    {%- render 'article-card',
+                            article: article,
+                            media_height: section.settings.image_height,
+                            media_aspect_ratio: article.image.aspect_ratio,
+                            show_image: section.settings.show_image,
+                            show_date: section.settings.show_date,
+                            show_author: section.settings.show_author,
+                            show_excerpt: true
+                    -%}
+                </div>
+            {%- endfor -%}
+        </div>
+        {%- if paginate.pages > 1 -%}
+            {%- render 'pagination', paginate: paginate -%}
+        {%- endif -%}
+    </div>
+{%- endpaginate -%}
+
+
+<script>
+    const STORAGE_KEY = 'selectedBlogTags';
+    
+    function saveSelectedTags(tags) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tags));
+    }
+    
+    function loadSelectedTags() {
+        const savedTags = localStorage.getItem(STORAGE_KEY);
+        return savedTags ? JSON.parse(savedTags) : [];
+    }
+    function updateURL(tags) {
+        if (tags.length === 0) {
+            window.location.href = '{{ blog.url }}';
+        } else {
+            const tagString = tags.join('+');
+            window.location.href = `{{ blog.url }}/tagged/${tagString}`;
+        }
+    }
+    
+
+    function updateFilterButtonText(selectedTags) {
+        const filterButton = document.querySelector('.dropbtn .selected-filter');
+        if (!selectedTags.length || (selectedTags.length === 1 && selectedTags[0] === 'all')) {
+            filterButton.textContent = 'All';
+        } else if (selectedTags.length === 1) {
+            const tag = document.querySelector(`#tag-${selectedTags[0]}`).closest('.tag-option').querySelector('.tag-name').textContent;
+            filterButton.textContent = tag;
+        } else {
+            filterButton.textContent = `Multiple (${selectedTags.length})`;
+        }
+    }
+    
+
+    function handleTagChange(checkbox) {
+        const allCheckbox = document.getElementById('all-tags');
+        const form = checkbox.closest('form');
+        const checkboxes = form.querySelectorAll('input[name="tag"]:checked');
+        const selectedTags = Array.from(checkboxes).map(cb => cb.value);
+
+        if (checkbox.id === 'all-tags' && checkbox.checked) {
+            form.querySelectorAll('input[name="tag"]').forEach(cb => {
+                if (cb.id !== 'all-tags') cb.checked = false;
+            });
+            saveSelectedTags([]);
+            updateFilterButtonText([]);
+            updateURL([]);
+        }
+        else {
+            if (checkbox.id !== 'all-tags') {
+                allCheckbox.checked = false;
+            }
+            if (selectedTags.length === 0) {
+                saveSelectedTags([]);
+                updateFilterButtonText([]);
+                updateURL([]);
+            } else {
+                const tagsToSave = selectedTags.filter(tag => tag !== 'all');
+                saveSelectedTags(tagsToSave);
+                updateFilterButtonText(tagsToSave);
+                updateURL(tagsToSave);
+            }
+        }
+    }
+    function listFunction() {
+        const dropdown = document.querySelector('.dropdown');
+        const dropdownContent = document.getElementById("DropdownDiv");
+        dropdown.classList.toggle('active');
+        dropdownContent.classList.toggle("show");
+    }
+
+    window.onclick = function(event) {
+        if (!event.target.matches('.dropbtn') && !event.target.closest('.dropbtn')) {
+            var dropdowns = document.getElementsByClassName("dropdown-content");
+            var dropdown = document.querySelector('.dropdown');
+            var i;
+            for (i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                    dropdown.classList.remove('active');
+                }
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedTags = loadSelectedTags();
+        const currentURL = window.location.pathname;
+        const tagMatch = currentURL.match(/\/tagged\/(.+)/);
+
+        if (tagMatch) {
+            const urlTags = tagMatch[1].split('+');
+            document.getElementById('all-tags').checked = false;
+            urlTags.forEach(tag => {
+                const checkbox = document.getElementById(`tag-${tag}`);
+                if (checkbox) checkbox.checked = true;
+            });
+            saveSelectedTags(urlTags);
+            updateFilterButtonText(urlTags);
+        } 
+
+        else if (savedTags.length > 0) {
+            document.getElementById('all-tags').checked = false;
+            savedTags.forEach(tag => {
+                const checkbox = document.getElementById(`tag-${tag}`);
+                if (checkbox) checkbox.checked = true;
+            });
+            updateFilterButtonText(savedTags);
+        }
+        else {
+            document.getElementById('all-tags').checked = true;
+            updateFilterButtonText([]);
+        }
+    });
+</script>
+{% schema %}
+{
+  "name": "t:sections.main-blog.name",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Blog description"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main-blog.settings.header.content"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "options": [
+        {
+          "value": "grid",
+          "label": "t:sections.main-blog.settings.layout.options__1.label"
+        },
+        {
+          "value": "collage",
+          "label": "t:sections.main-blog.settings.layout.options__2.label"
+        }
+      ],
+      "default": "collage",
+      "label": "t:sections.main-blog.settings.layout.label",
+      "info": "t:sections.main-blog.settings.layout.info"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_image",
+      "default": true,
+      "label": "t:sections.main-blog.settings.show_image.label"
+    },
+    {
+      "type": "select",
+      "id": "image_height",
+      "options": [
+        {
+          "value": "adapt",
+          "label": "t:sections.main-blog.settings.image_height.options__1.label"
+        },
+        {
+          "value": "small",
+          "label": "t:sections.main-blog.settings.image_height.options__2.label"
+        },
+        {
+          "value": "medium",
+          "label": "t:sections.main-blog.settings.image_height.options__3.label"
+        },
+        {
+          "value": "large",
+          "label": "t:sections.main-blog.settings.image_height.options__4.label"
+        }
+      ],
+      "default": "medium",
+      "label": "t:sections.main-blog.settings.image_height.label",
+      "info": "t:sections.main-blog.settings.image_height.info"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "default": true,
+      "label": "t:sections.main-blog.settings.show_date.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "default": false,
+      "label": "t:sections.main-blog.settings.show_author.label"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:sections.main-blog.settings.paragraph.content"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 36
+    }
+  ]
+}
+{% endschema %}

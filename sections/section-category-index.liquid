@@ -1,0 +1,217 @@
+{{ 'section-category-index.css' | asset_url | stylesheet_tag }}
+
+
+<div class="page-width">
+    <div class="category-index__wrapper">
+        <h2 class="category-index__title title">{{ section.settings.title }}</h2>
+        <div class="category-index__header">
+            <div class="index_sorting">
+              <span class="index_products_number">
+                {% assign total_links = 0 %}
+                  {% for block in section.blocks %}
+                      {% if block.settings.menu.links != blank %}
+                          {% for link in block.settings.menu.links %}
+                              {% assign total_links = total_links | plus: 1 %}
+
+                              {% if link.links.size > 0 %}
+                                  {% for child in link.links %}
+                                      {% assign total_links = total_links | plus: 1 %}
+
+                                      {% if child.links.size > 0 %}
+                                          {% for grandchild in child.links %}
+                                              {% assign total_links = total_links | plus: 1 %}
+                                          {% endfor %}
+                                      {% endif %}
+                                  {% endfor %}
+                              {% endif %}
+                          {% endfor %}
+                      {% endif %}
+                  {% endfor %}
+                     <b>{{ total_links }}</b> references
+                 </span>
+                <div class="index-select">
+                    <div class="dropdown-label">
+                        Sort by:
+                        <span class="selected-option">A-Z</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                  d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z"
+                                  fill="black"/>
+                        </svg>
+                    </div>
+                    <ul class="dropdown-options">
+                        <li data-value="a-z">A-Z</li>
+                        <li data-value="z-a">Z-A</li>
+                    </ul>
+                </div>
+                <div class="category-index__navigation category-index__navigation--mobile">
+                    {% for block in section.blocks %}
+                        <a href="#{{ block.settings.title }}">{{ block.settings.title }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="category-index__items">
+            {% for block in section.blocks %}
+                <div class="category-index__item">
+                    <h3 data-id="{{ block.settings.title }}" class="category-index__item-title">{{ block.settings.title }}</h3>
+                    <div class="category-index__item-links">
+                        {% if block.settings.menu.links != blank %}
+                            <ul class="category-index__item-list">
+                                {% for link in block.settings.menu.links %}
+                                    <li>
+                                        <a class="category-index__item-link category-index__item-link--first"
+                                           href="{{ link.url }}">{{ link.title }}</a>
+                                        {% if link.links.size > 0 %}
+                                            <ul class="category-index__item-sublist">
+                                                {% for child in link.links %}
+                                                    <li>
+                                                        <a class="category-index__item-link category-index__item-link--second"
+                                                           href="{{ child.url }}">{{ child.title }}</a>
+                                                        {% if child.links.size > 0 %}
+                                                            <ul>
+                                                                {% for grandchild in child.links %}
+                                                                    <li>
+                                                                        <a class="category-index__item-link category-index__item-link--third"
+                                                                           href="{{ grandchild.url }}">{{ grandchild.title }}</a>
+                                                                        {% if grandchild.object.metafields.custom.index_collections != blank %}
+                                                                            <ul>
+                                                                                {% for collection in grandchild.object.metafields.custom.index_collections.value %}
+                                                                                    <li>
+                                                                                        <a href="{{ collection.url }}"
+                                                                                           class="category-index__item-link category-index__item-link--four">{{ collection.title }}</a>
+                                                                                        {% if collection.metafields.custom.index_collections != blank %}
+                                                                                            <ul>
+                                                                                                {% for subcollection in collection.metafields.custom.index_collections.value %}
+                                                                                                    <li>
+                                                                                                        <a href="{{ subcollection.url }}"
+                                                                                                           class="category-index__item-link category-index__item-link--fifth">{{ subcollection.title }}</a>
+                                                                                                    </li>
+                                                                                                {% endfor %}
+                                                                                            </ul>
+                                                                                        {% endif %}
+                                                                                    </li>
+                                                                                {% endfor %}
+                                                                            </ul>
+                                                                        {% endif %}
+                                                                    </li>
+                                                                {% endfor %}
+                                                            </ul>
+                                                        {% endif %}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>No links available</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const dropdown = document.querySelector('.index-select');
+		const dropdownLabel = dropdown?.querySelector('.dropdown-label');
+		const selectedOption = dropdown?.querySelector('.selected-option');
+		const options = dropdown?.querySelector('.dropdown-options');
+		const wrapper = document.querySelector('.category-index__items');
+
+		if (!dropdown || !dropdownLabel || !selectedOption || !options || !wrapper) {
+			console.warn("Elements not found");
+			return;
+		}
+		dropdownLabel.addEventListener('click', () => {
+			dropdown.classList.toggle('active');
+		});
+
+		options.addEventListener('click', (event) => {
+			const target = event.target;
+			if (target.tagName !== 'LI') return;
+
+			const value = target.dataset.value;
+			const items = Array.from(wrapper.children);
+
+			if (value === 'z-a') {
+				items.sort((a, b) => b.textContent.localeCompare(a.textContent));
+			} else {
+				items.sort((a, b) => a.textContent.localeCompare(b.textContent));
+			}
+
+			const fragment = document.createDocumentFragment();
+			items.forEach(item => fragment.appendChild(item));
+			wrapper.innerHTML = '';
+			wrapper.appendChild(fragment);
+
+			selectedOption.textContent = ` ${target.textContent} `;
+			dropdown.classList.remove('active');
+		});
+
+		document.addEventListener('click', (event) => {
+			if (!dropdown.contains(event.target)) {
+				dropdown.classList.remove('active');
+			}
+		});
+	});
+	document.addEventListener('DOMContentLoaded', () => {
+		const links = document.querySelectorAll('.category-index__navigation a');
+
+		links.forEach(link => {
+			link.addEventListener('click', (event) => {
+				event.preventDefault();
+
+				const targetId = link.getAttribute('href').substring(1);
+				const targetElement = document.querySelector(`[data-id="${targetId}"]`);
+
+				if (targetElement) {
+					window.scrollTo({
+						top: targetElement.offsetTop - 20,
+						behavior: 'smooth'
+					});
+				}
+			});
+		});
+	});
+
+</script>
+
+
+{% schema %}
+{
+  "name": "Category Index",
+  "class": "category-index",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "default": "Category Index",
+      "label": "Heading"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading"
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": "Block Links"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

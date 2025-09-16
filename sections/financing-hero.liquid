@@ -1,0 +1,239 @@
+<section class="financing-plan-section">
+  <div class="wrap">
+
+    <div class="grid">
+      <div class="left">
+        <h2 class="title">{{ section.settings.heading }}</h2>
+        <p class="text">{{ section.settings.subheading }}</p>
+
+        <div class="logos">
+          {% for block in section.blocks %}
+            {% if block.type == 'logo' %}
+              <img
+                src="{{ block.settings.logo | img_url: '100x' }}"
+                alt="{{ block.settings.alt | escape }}"
+              >
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <a
+          href="{{ section.settings.cta_link }}"
+          class="cta"
+        >
+          {{ section.settings.cta_label }}
+        </a>
+      </div>
+
+      <div class="right">
+        {% if section.settings.hero != blank %}
+          <img
+            src="{{ section.settings.hero | img_url: '900x' }}"
+            alt="{{ section.settings.hero_alt | escape }}"
+          >
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.financing-plan-section {
+  padding: 64px 0;
+}
+
+.financing-plan-section .wrap {
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 5rem;
+}
+
+.financing-plan-section .grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.financing-plan-section .left {
+  width: 40%;
+}
+
+.financing-plan-section .title {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 64px;
+  color: #000;
+  margin: 0 0 24px;
+  color:#000;
+}
+
+.financing-plan-section .text {
+  font-size: 16px;
+  line-height: 24px;
+  color: #000;
+  margin: 0 0 24px;
+  font-weight: 400;
+}
+
+.financing-plan-section .logos {
+  display: flex;
+  gap: 24px;
+  margin: 0 0 36px;
+  flex-wrap: wrap;
+}
+
+.financing-plan-section .logos img {
+  height: 48px;
+  width: 70px;
+  object-fit: cover;
+}
+
+.financing-plan-section .cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #DF633A;
+  text-decoration: none;
+  line-height: 24px;
+  position: relative;
+}
+
+.financing-plan-section .cta::before {
+  content: url("https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Arrow_-_Bottom.png?v=1748530154");
+  position: absolute;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+  right: -28px;
+}
+
+.financing-plan-section .right {
+  width: 50%;
+}
+
+.financing-plan-section .right img {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  display: block;
+}
+
+.financing-plan-section .financing-color {
+  color: #DF633A;
+}
+
+@media (max-width: 1080px) {
+}
+
+@media (max-width: 768px) {
+  .financing-plan-section .grid {
+    flex-direction: column;
+    gap: 30px;
+  }
+  .financing-plan-section .left,
+  .financing-plan-section .right {
+    width: 100%;
+  }
+  .financing-plan-section .title {
+    font-size: 28px;
+    text-align: start;
+    margin: 0;
+  }
+  .financing-plan-section .text {
+    font-size: 14px;
+    text-align: start;
+  }
+  .financing-plan-section .wrap {
+    padding: 0 20px !important;
+  }
+}
+
+</style>
+
+{% schema %}
+{
+  "name": "Financing hero",
+  "settings": [
+    {
+      "type": "text",
+      "id": "crumb1_label",
+      "label": "Breadcrumb 1 label",
+      "default": "Home"
+    },
+    {
+      "type": "url",
+      "id": "crumb1_link",
+      "label": "Breadcrumb 1 link",
+      "default": "/"
+    },
+    {
+      "type": "text",
+      "id": "crumb2_label",
+      "label": "Current page label",
+      "default": "Financing"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "FINANCING"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "We offer a range of financing options, whether you’re setting up a home gym or are constructing a commercial fitness facility. Let us help you find the right mode of financing!"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "CTA label",
+      "default": "See comparison table"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "CTA link",
+  
+    },
+    {
+      "type": "image_picker",
+      "id": "hero",
+      "label": "Hero image"
+    },
+    {
+      "type": "text",
+      "id": "hero_alt",
+      "label": "Hero image alt text"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "logo",
+      "name": "Logo",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "logo",
+          "label": "Logo image"
+        },
+        {
+          "type": "text",
+          "id": "alt",
+          "label": "Alt text"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 10,
+  "presets": [
+    {
+      "name": "Financing hero"
+    }
+  ]
+}
+{% endschema %}

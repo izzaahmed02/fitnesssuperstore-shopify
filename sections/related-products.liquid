@@ -1,0 +1,125 @@
+{{ 'section-related-products.css' | asset_url | stylesheet_tag }}
+
+{% comment %} Get the metafield data - use .value to get ProductListDrop {% endcomment %}
+{% assign related_products_list = product.metafields.custom.related_products.value %}
+
+
+{% assign fallback_count = 4 %}
+{% assign found_metafield_products = false %}
+
+{% comment %} Check if we have related products in the metafield {% endcomment %}
+{% if related_products_list != blank %}
+  {% comment %} Count valid products first {% endcomment %}
+  {% assign valid_count = 0 %}
+  {% for related_product in related_products_list %}
+    <!-- Debug Loop {{ forloop.index }}: Product = {{ related_product.title }} (ID: {{ related_product.id }}) Available: {{ related_product.available }} -->
+    {% if related_product.available and related_product.id != product.id %}
+      {% assign valid_count = valid_count | plus: 1 %}
+      {% assign found_metafield_products = true %}
+    {% endif %}
+  {% endfor %}
+  
+  <!-- Debug: Valid products found = {{ valid_count }} -->
+  
+  {% if valid_count > 0 %}
+    <div class="custom-container">
+      <div class="featured_products_header">
+        {% if section.settings.title != blank %}
+          <h2>{{ section.settings.title }}</h2>
+        {% endif %}
+      </div>
+      <div class="featured_products_container">
+        {% assign product_count = 0 %}
+        {% for related_product in related_products_list %}
+          {% if related_product.available and related_product.id != product.id %}
+            <!-- Rendering metafield product: {{ related_product.title }} -->
+            {% render 'related-items', product: related_product %}
+            {% assign product_count = product_count | plus: 1 %}
+            
+            {% if product_count >= fallback_count %}
+              {% break %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
+  {% else %}
+    <!-- No valid products in metafield, using fallback -->
+    {% assign found_metafield_products = false %}
+  {% endif %}
+{% endif %}
+
+{% comment %} Fallback to collection products if no metafield products found {% endcomment %}
+{% unless found_metafield_products %}
+  <!-- Using fallback products -->
+  {% assign has_products = false %}
+  {% assign product_count = 0 %}
+  
+  {% comment %} Capture the products HTML first {% endcomment %}
+  {% capture fallback_products_html %}
+    {% comment %} Try to get products from the same collection first {% endcomment %}
+    {% if product.collections.size > 0 %}
+      {% assign current_collection = product.collections.first %}
+      
+      {% for collection_product in current_collection.products limit: 20 %}
+        {% if collection_product.available and collection_product.id != product.id %}
+          <!-- Rendering fallback product from collection: {{ collection_product.title }} -->
+          {% render 'related-items', product: collection_product %}
+          {% assign product_count = product_count | plus: 1 %}
+          {% assign has_products = true %}
+          
+          {% if product_count >= fallback_count %}
+            {% break %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    
+    {% comment %} If still need more products, use all products collection {% endcomment %}
+    {% if product_count < fallback_count %}
+      {% for fallback_product in collections.all.products limit: 20 %}
+        {% if fallback_product.available and fallback_product.id != product.id %}
+          <!-- Rendering fallback product from all: {{ fallback_product.title }} -->
+          {% render 'related-items', product: fallback_product %}
+          {% assign product_count = product_count | plus: 1 %}
+          {% assign has_products = true %}
+          
+          {% if product_count >= fallback_count %}
+            {% break %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  {% endcapture %}
+  
+  {% comment %} Only show the section if we found products {% endcomment %}
+  {% if has_products %}
+    <div class="custom-container">
+      <div class="featured_products_header">
+        {% if section.settings.title != blank %}
+          <h2>{{ section.settings.title }}</h2>
+        {% endif %}
+      </div>
+      <div class="featured_products_container">
+        {{ fallback_products_html }}
+      </div>
+    </div>
+    <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
+  {% endif %}
+{% endunless %}
+
+{% schema %}
+{
+  "name": "t:sections.related-products.name",
+  "tag": "section",
+  "class": "section related-products",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "t:sections.main-list-collections.settings.title.label"
+    }
+  ]
+}
+{% endschema %}

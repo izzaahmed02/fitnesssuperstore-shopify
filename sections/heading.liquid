@@ -1,0 +1,196 @@
+{{ 'section-heading.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top | times: 0.6 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round: 0 }}px;
+  }
+
+  .section-{{ section.id }} .heading__heading {
+    text-align: {{ section.settings.heading_align }}
+  }
+
+  .section-{{ section.id }} .heading__caption {
+    text-align: {{ section.settings.caption_align }}
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  @media screen and (max-width: 750px) {
+    .section-{{ section.id }} .heading__heading--medium {
+      text-align: start;
+    }
+
+    .section-{{ section.id }} .heading__caption {
+      text-align: start;
+    }
+  }
+
+  {% if section.settings.background %}
+    #shopify-section-{{ section.id }} {
+      background: #FAF9F9;
+    }
+  {% endif %}
+{%- endstyle -%}
+
+<div class="heading section-{{ section.id }} page-width scroll-trigger animate--slide-in">
+  <h1 class="heading__heading heading__heading--{{ section.settings.heading_size }}">{{ section.settings.heading }}</h1>
+
+  {% if section.settings.caption != empty %}
+    <p class="heading__caption">{{ section.settings.caption }}</p>
+  {% endif %}
+
+  {% if section.settings.link != empty %}
+    <a href="{{ section.settings.link-url }}" class="heading__link">
+      {{ section.settings.link }}
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="#F1592A"/>
+      </svg>
+    </a>
+  {% endif %}
+
+  {% assign warnings = section.blocks | where: 'type', 'warning' %}
+  {% for block in warnings %}
+    {% if block.settings.warning_text != blank %}
+      <div class="heading__warning">
+        {% if block.settings.warning_img %}
+          <img src='{{ block.settings.warning_img | image_url }}' alt="{{ block.settings.warning_img.alt }}" width="20" height="20">
+        {% endif %}
+        <span>{{ block.settings.warning_text }}</span>
+      </div>
+    {% endif %}
+  {% endfor %}
+
+</div>
+
+{% schema %}
+{
+  "name": "Heading",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "background",
+      "label": "Background",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Heading"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading"
+    },
+    {
+      "type": "text_alignment",
+      "id": "heading_align",
+      "label": "Align",
+      "default": "center"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "options": [
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "large",
+          "label": "Large"
+        }
+      ],
+      "label": "Size",
+      "default": "large"
+    },
+    {
+      "type": "header",
+      "content": "Caption"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "label": "Caption"
+    },
+    {
+      "type": "text_alignment",
+      "id": "caption_align",
+      "label": "Align",
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Link"
+    },
+    {
+      "type": "text",
+      "id": "link",
+      "label": "Link text"
+    },
+    {
+      "type": "url",
+      "id": "link-url",
+      "label": "Link url"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 50
+    }
+  ],
+  "blocks": [
+    {
+      "type": "warning",
+      "name": "Warning item",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "warning_img",
+          "label": "Warning icon"
+        },
+        {
+          "type": "richtext",
+          "id": "warning_text",
+          "label": "Warning text"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Heading"
+    }
+  ]
+}
+{% endschema %}
+

@@ -1,0 +1,260 @@
+{{ 'section-affiliate-marketing-design.css' | asset_url | stylesheet_tag }}
+
+<style>
+  #shopify-section-{{ section.id }}{
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    {% if section.settings.bg %}
+      background: {{ section.settings.bg }};
+    {% endif %}
+  }
+  .features-section .wrapper{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .features-section h2{
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--black-color);
+    line-height: 52px;
+    letter-spacing: 0.03em;
+    margin-top: 0;
+    margin-bottom: 54px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 3%;
+  }
+  .features-section a{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    color: var(--main-color);
+    text-decoration: none;
+  }
+  .features-section a svg{
+    margin-left: 8px
+  }
+  #shopify-section-{{ section.id }} .features-wrapper{
+    display: grid;
+    {% if section.blocks.size == 3%}
+      grid-template-columns: 1fr 1fr 1fr;
+    {% else %}
+      grid-template-columns: 1fr 1fr;
+    {% endif %}
+
+    gap: 30px;
+    margin-top: 0;
+
+  }
+  #shopify-section-{{ section.id }} .features-wrapper .image_wrapper{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .gallery-wrapper .image_wrapper img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .gallery-section .subheading{
+    display: flex;
+    justify-content: center;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: var(--font-title);
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--black-color);
+  }
+  .features-item{
+    padding: 24px 19px;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+  }
+  .features-item .title{
+    margin-top: 10px;
+    margin-bottom: 4px;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--black-color);
+    text-align: center;
+    font-family: "DM Sans", sans-serif;
+    
+  }
+  .features-item .text{
+    margin-top: 0px;
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--black-color);
+    text-align: center;
+
+  }
+  .features-item a{
+    margin-top: auto;
+  }
+  .features-item h4{
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
+  @media (max-width: 768px) {
+    #shopify-section-{{ section.id }} {
+      padding-bottom: 25px;
+    }
+  }
+</style>
+
+<div class="custom-container cbwig--custom-block-icons page-width">
+  <div class="wrapper">
+    <h2 class="title grid__item-title">{{ section.settings.title }}</h2>
+    <div class="features-wrapper">
+      {% for block in section.blocks %}
+        {% case block.type %}
+          {% when 'item' %}
+            {% if block.settings.image
+              or block.settings.title != blank
+              or block.settings.text != blank
+              or block.settings.list_text != blank
+            %}
+              <div class="features-item">
+                {% if block.settings.image != blank %}
+                  <div class="image_wrapper">
+                    <img
+                      src="{{ block.settings.image | img_url: 'master' }}"
+                      width="width"
+                      height="height"
+                      style="width:80px;"
+                      alt="{{ block.settings.image.alt }}"
+                    >
+                  </div>
+                {% endif %}
+              <div class="text-wrapper">
+                <h3 class="title grid-block-title">{{ block.settings.title }}</h3>
+                <p class="text">{{ block.settings.text_area }}</p>
+                <div class="blocks-grid__item-text">{{ block.settings.text }}</div>
+                {% if block.settings.url %}
+                  <a href="{{ block.settings.url }}">
+                    {{ block.settings.link_text }}
+                    <svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M8.46967 0.46967C8.76256 0.176777 9.23744 0.176777 9.53033 0.46967L15.5303 6.46967C15.8232 6.76256 15.8232 7.23744 15.5303 7.53033L9.53033 13.5303C9.23744 13.8232 8.76256 13.8232 8.46967 13.5303C8.17678 13.2374 8.17678 12.7626 8.46967 12.4697L13.1893 7.75H1C0.585786 7.75 0.25 7.41421 0.25 7C0.25 6.58579 0.585786 6.25 1 6.25H13.1893L8.46967 1.53033C8.17678 1.23744 8.17678 0.762563 8.46967 0.46967Z" fill="#DF633A"/>
+                    </svg>
+                  </a>
+                {% endif %}
+                      </div>
+              </div>
+            {% endif %}
+        {% endcase %}
+      {% endfor %}
+    </div>
+    {% if section.settings.url %}
+      <a style="margin-top: 62px;" href="{{ section.settings.url }}">
+        {{ section.settings.link_text }}
+        <svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M8.46967 0.46967C8.76256 0.176777 9.23744 0.176777 9.53033 0.46967L15.5303 6.46967C15.8232 6.76256 15.8232 7.23744 15.5303 7.53033L9.53033 13.5303C9.23744 13.8232 8.76256 13.8232 8.46967 13.5303C8.17678 13.2374 8.17678 12.7626 8.46967 12.4697L13.1893 7.75H1C0.585786 7.75 0.25 7.41421 0.25 7C0.25 6.58579 0.585786 6.25 1 6.25H13.1893L8.46967 1.53033C8.17678 1.23744 8.17678 0.762563 8.46967 0.46967Z" fill="#DF633A"/>
+        </svg>
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Custom Features Section",
+  "class": "features-section",
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg",
+      "label": "Background"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title"
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "URL"
+    },
+    {
+      "type": "text",
+      "id": "link_text",
+      "label": "Link text"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 40
+    }
+  ],
+  "max_blocks": 4,
+  "blocks": [
+   {
+     "name": "Item",
+     "type": "item",
+     "settings": [
+         {
+           "type": "image_picker",
+           "id": "image",
+           "label": "Image"
+         },
+         {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+         },
+         {
+           "type": "textarea",
+           "id": "text_area",
+           "label": "Text Area"
+         },
+         {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text"
+         },
+         {
+          "type": "url",
+          "id": "url",
+          "label": "URL"
+        },
+        {
+          "type": "text",
+          "id": "link_text",
+          "label": "Link text"
+        },
+       ]
+     },
+
+  ],
+  "presets": [
+    {
+    "name": "custom-features-section",
+    }
+  ]
+}
+{% endschema %}

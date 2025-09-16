@@ -1,0 +1,108 @@
+{{ 'section-rich-text-with-image.css' | asset_url | stylesheet_tag }}
+
+{% style %}
+  .average{
+    display: flex!important;
+    align-items: center;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    padding-left: 16px;
+    padding-right: 16px;
+    background: #3E77AA;
+    margin-top: 16px;
+    margin-left: auto;
+    margin-right: auto;
+    width: fit-content;
+    border-radius: 100px;
+  }
+  .average img{
+    margin-right: 8px;
+  }
+  .text{
+    font-size: 16px;
+    line-height: 24px;
+    color: #EDEFF3;
+  }
+
+  @media (max-width: 750px) {
+    .average {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .average img {
+      height: 20px;
+    }
+  }
+{% endstyle %}
+
+{% style %}
+  @media screen and (max-width: 750px) {
+    #shopify-section-{{ section.id }} .section-padding {
+      padding-block: 24px;
+    }
+  }
+{% endstyle %}
+
+<div class="rich-text-with-image section-padding scroll-trigger animate--slide-in">
+
+    <div class="rich-text-with-image__content">
+      {% if section.settings.title != blank %}
+        <h1 class="h0">{{ section.settings.title }}</h1>
+      {% endif %}
+      {% if section.settings.text != blank %}
+        <div class="rich-text-with-image__text">{{ section.settings.text }}</div>
+      {% endif %}
+    </div>
+    {% if section.settings.show_rating == true %}
+      <div class="average">
+        <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Rating.png?v=1730820626">
+        <div class="text">4.9/5 by Thousands of happy customers</div>
+      </div>
+    {% endif %}
+    {% if section.settings.image != blank %}
+      <div class="rich-text-with-image__image">
+        <img
+          src="{{ section.settings.image | img_url: 'master' }}"
+          alt="{{ section.settings.image.alt }}"
+          loading="lazy">
+      </div>
+    {% endif %}
+ 
+</div>
+
+
+{% schema %}
+  {
+    "name": "Rich text with image",
+    "class": "rich-text-image",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Title"
+      }, 
+      {
+        "type": "textarea",
+        "id": "text",
+        "label": "Text"
+      }, 
+      {
+        "type": "checkbox",
+        "id": "show_rating",
+        "label": "Show rating",
+        "default": false
+      },
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "Image"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Rich text with image"
+      }
+    ]
+  }
+{% endschema %}

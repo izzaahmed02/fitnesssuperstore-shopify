@@ -1,0 +1,246 @@
+{{ 'manuals.css' | asset_url | stylesheet_tag }}
+{% assign brands = shop.metaobjects.brand_manuals.values %}
+{% assign page_title = section.settings.title | default: page.titlelue %}
+
+
+
+
+<div class="manuals__inner">
+  <div class="page-width">
+      <div class="manuals__wrapper">
+          <div class="manuals__headding">
+            {% if section.settings.title != blank %}
+                {% comment %} <h1>{{ section.settings.title | default: page.title }}</h1> {% endcomment %}
+                 <h1>{{ page.title }}</h1>
+                {% else %}
+                    <h1>{{ page.title }}</h1>
+            {% endif %}
+          </div>
+
+          {% if page.content != blank %}
+                <div class="manuals__content">
+                    {{ page.content }}
+                </div>
+            {% endif %}
+
+
+          <div class="manuals">
+              <div class="manuals__controls">
+                  <div class="custom-search">
+                      <input type="text" class="custom-search__input" id="search"
+                          placeholder="Search by item name">
+                      <div class="custom-search__img">
+                          <img src="{{'search.svg' | asset_url}}" alt="">
+                      </div>
+                  </div>
+                  <div class="custom-dropdown">
+                      <select class="custom-dropdown__select" id="brandFilter">
+                          <option value="">All Brands</option>
+                      </select>
+                  </div>
+              </div>
+
+              <p class="manuals__count" id="itemCount"><em>112</em> item(s)</p>
+
+              <div class="manuals__table-wrapper">
+                  <table class="manuals__table">
+                      <thead>
+                          <tr>
+                              <th class="manuals__th--sortable" data-sort="model">Model</th>
+                              <th class="manuals__th--sortable" data-sort="brand">Brand</th>
+                          </tr>
+                      </thead>
+                      <tbody id="manualTable" class="manuals__body"></tbody>
+                  </table>
+              </div>
+
+
+              <button class="manuals__load-more" id="loadMore">Load More</button>
+          </div>
+      </div>
+  </div>
+</div>
+
+<script>
+
+  const manualsData = [
+    {%- for brand in brands -%}
+      {%- if brand.brand_page -%}
+        {% paginate brand.manuals.value by 1000 %}
+            {%- for manual in brand.manuals.value -%}
+                    {
+                        model: "{{manual.title | replace: '"', '\"'}}",
+                        manualUrl: "{{manual.manual_url}}",
+                        brand: "{{brand.brand_name}}",
+                        brandUrl: "{{brand.brand_page.value.url}}",
+                        brandLogo: "{{brand.brand_logo | img_url: '300x'}}"
+                    }{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}{%- unless forloop.last -%},{%- endunless -%}
+            
+        {% endpaginate %}
+    {%- endif -%}
+    {%- endfor -%}
+  ];
+
+  let visibleCount = 25;
+  let sortDirection = { model: 'asc', brand: 'asc' };
+  let currentSortKey = null;
+
+  const bodyEl = document.querySelector('.manuals__body');
+  const brandFilterEl = document.getElementById('brandFilter');
+  const searchEl = document.getElementById('search');
+  const itemCountEl = document.getElementById('itemCount');
+  const loadMoreEl = document.getElementById('loadMore');
+
+  function populateBrandFilter() {
+      const brands = [...new Set(manualsData.map(m => m.brand))].sort();
+      brands.forEach(brand => {
+          const opt = document.createElement('option');
+          opt.value = brand;
+          opt.textContent = brand;
+          brandFilterEl.appendChild(opt);
+      });
+  }
+
+ function updateUrlWithBrandUrl(brandValue) {
+    if (!brandValue) {
+        // Default page without brand filter
+        window.history.pushState({}, '', '/pages/all-manuals');
+        setTimeout(function() {
+        renderTop();
+        }, 200);
+        
+        return;
+    }
+    const brandItem = manualsData.find(item => item.brand === brandValue);
+    if (brandItem) {
+        // Use the brandUrl from your data
+        window.history.pushState({}, '', brandItem.brandUrl);
+        console.log('URL updated to:', brandItem.brandUrl);
+        setTimeout(function() {
+        renderTop();
+        }, 200);
+    }
+}
+
+function renderTop(){
+fetch("?section_id=main-page-manuals")
+    .then((response) => response.text())
+    .then((responseData) => {
+    var response_html = $(responseData);
+    var title_text = $(".manuals__headding", response_html);
+    $(".manuals__headding").replaceWith(title_text);
+
+    var description_text = $(".manuals__content", response_html);
+    $(".manuals__content").replaceWith(description_text);
+    renderTable();
+    });
+}
+ 
+
+  function renderTable() {
+      const searchVal = searchEl.value.toLowerCase();
+      const brandVal = brandFilterEl.value;
+      let filtered = manualsData.filter(item =>
+          item.model.toLowerCase().includes(searchVal) &&
+          (brandVal === "" || item.brand === brandVal)
+      );
+
+      if (currentSortKey) {
+          filtered.sort((a, b) => {
+              let aText = a[currentSortKey].toLowerCase();
+              let bText = b[currentSortKey].toLowerCase();
+              if (aText < bText) return sortDirection[currentSortKey] === 'asc' ? -1 : 1;
+              if (aText > bText) return sortDirection[currentSortKey] === 'asc' ? 1 : -1;
+              return 0;
+          });
+      }
+
+      bodyEl.innerHTML = "";
+      filtered.slice(0, visibleCount).forEach(item => {
+          const tr = document.createElement('tr');
+          tr.className = 'manuals__row';
+          tr.innerHTML = `
+              <td><a href="${item.manualUrl}" target="_blank" class="manuals__link">${item.model}</a></td>
+              <td><a href="${item.brandUrl}"><img src="${item.brandLogo}" alt="${item.brand}" class="manuals__brand-logo"> ${item.brand}</a></td>
+          `;
+          bodyEl.appendChild(tr);
+      });
+
+      // itemCountEl.textContent = `${filtered.length} item(s)`;
+      itemCountEl.innerHTML = `<em>${filtered.length}</em> item(s)`;
+      loadMoreEl.style.display = visibleCount < filtered.length ? 'block' : 'none';
+  }
+
+  document.querySelectorAll('.manuals__th--sortable').forEach(th => {
+      th.addEventListener('click', () => {
+          const key = th.dataset.sort;
+          if (currentSortKey === key) {
+              sortDirection[key] = sortDirection[key] === 'asc' ? 'desc' : 'asc';
+          } else {
+              currentSortKey = key;
+          }
+          renderTable();
+      });
+  });
+
+  function initBrandFromUrl() {
+    const currentUrl = window.location.pathname + window.location.search; // full path
+    const brandItem = manualsData.find(item => item.brandUrl === currentUrl);
+
+    if (brandItem) {
+        brandFilterEl.value = brandItem.brand;
+    } else {
+        brandFilterEl.value = ""; // default (all)
+    }
+}
+
+
+  searchEl.addEventListener('input', () => {
+      visibleCount = 25;
+      renderTable();
+  });
+  brandFilterEl.addEventListener('change', () => {
+      visibleCount = 25;
+      $('#search').val('');
+      updateUrlWithBrandUrl(brandFilterEl.value); // update address bar using brandUrl
+    //   renderTable();
+  });
+  loadMoreEl.addEventListener('click', () => {
+      visibleCount += 25;
+      renderTable();
+  });
+
+  populateBrandFilter();
+  initBrandFromUrl();
+  renderTable();
+</script>
+
+
+
+
+
+
+
+{% comment %} <script src="{{ 'page-custom-manuals.js' | asset_url }}" defer="defer"></script> {% endcomment %}
+
+
+{% schema %}
+{
+  "name": "Manuals Section",
+  "tag": "section",
+  "class": "manuals",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "Title"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Manuals Section"
+    }
+  ]
+}
+{% endschema %}

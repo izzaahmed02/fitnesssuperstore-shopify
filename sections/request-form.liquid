@@ -1,0 +1,82 @@
+{{ 'section-request-form.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+
+  @media screen and (max-width: 750px) {
+    #shopify-section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top | times: 0.3 | round }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.3 | round }}px;
+  }
+  }
+{%- endstyle -%}
+
+<div class="page-width">
+  <h2 class="request-form-title">{{ section.settings.title }}</h2>
+  <div class="request-form-warning">
+    {% if section.settings.icon %}
+      <img src="{{ section.settings.icon | image_url }}" alt="warning icon" width="20" height="20">
+    {% endif %}
+
+    <p>{{ section.settings.warning_text }}</p>
+  </div>
+
+  <div class="request-form-container">
+    <div class="globo-formbuilder" data-id="NjMxNTc="></div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Request form",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title"
+    },
+    {
+      "type": "image_picker",
+      "id": "icon",
+      "label": "Warning icon"
+    },
+    {
+      "type": "text",
+      "id": "warning_text",
+      "label": "Warning text"
+    },
+    {
+      "type": "header",
+      "content": "Section paddings"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 200,
+      "step": 5,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 200,
+      "step": 5,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 80
+    }
+  ],
+  "presets": [
+    {
+      "name": "Request form"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,79 @@
+{% style %}
+  #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.bg }};
+  }
+  .custom-breadcrumbs__navigation a:last-child, .custom-breadcrumbs__navigation span {
+    text-transform: capitalize;
+}
+{% endstyle %}
+
+<div class="custom-breadcrumbs">
+  <div class="page-width">
+    <div class="custom-breadcrumbs__wrapper">
+      <div class="custom-breadcrumbs__navigation">
+        {% unless template == 'index' %}
+          {% assign current_title = '' %}
+          {% case template %}
+            {% when 'page' %}{% assign current_title = page.title %}
+            {% when 'product' %}{% assign current_title = product.title %}
+            {% when 'collection' %}{% assign current_title = collection.title %}
+            {% when 'article' %}{% assign current_title = article.title %}
+            {% else %}{% assign current_title = page_title %}
+          {% endcase %}
+        {% endunless %}
+
+        {% for block in section.blocks %}
+          <a href="{{ block.settings.url }}">{{ block.settings.title }}</a>
+          {% if forloop.last %}
+            {% unless current_title == '' %}
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.31 3.65a.5.5 0 0 1 .71 0l4 4a.5.5 0 0 1 0 .71l-4 4a.5.5 0 1 1-.71-.71L9.96 8 6.31 4.35a.5.5 0 0 1 0-.7Z" fill="#DCDFE5"/></svg>
+            {% endunless %}
+          {% else %}
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.31 3.65a.5.5 0 0 1 .71 0l4 4a.5.5 0 0 1 0 .71l-4 4a.5.5 0 1 1-.71-.71L9.96 8 6.31 4.35a.5.5 0 0 1 0-.7Z" fill="#DCDFE5"/></svg>
+          {% endif %}
+        {% endfor %}
+
+        {% unless template == 'index' %}
+          <span aria-current="page">{{ current_title }}</span>
+        {% endunless %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Page Custom breadcrumbs",
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg",
+      "label": "Background color",
+      "default": "#ffffff"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "link",
+      "name": "Link",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "url"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Page Custom breadcrumbs"
+    }
+  ]
+}
+{% endschema %}

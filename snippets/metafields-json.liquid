@@ -1,0 +1,10 @@
+{%- paginate collection.products by 1000 -%}
+[
+    {%- for product in collection.products -%}
+    {
+        "handle": {{ product.handle | json }},
+        "manual_url": "{% if product.metafields.custom.manual_file %}{{ product.metafields.custom.manual_file | file_url }}{% else %}{{ product.metafields.custom.manual_link }}{% endif %}"
+        }{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+]
+{%- endpaginate -%}

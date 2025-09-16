@@ -1,0 +1,87 @@
+{{ 'dc-blog-header.css' | asset_url | stylesheet_tag }}
+
+
+<style>
+    .section-{{ section.id }}-padding {
+        padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+        padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+    }
+
+    @media screen and (min-width: 750px) {
+        .section-{{ section.id }}-padding {
+            padding-top: {{ section.settings.padding_top }}px;
+            padding-bottom: {{ section.settings.padding_bottom }}px;
+        }
+    }
+
+
+</style>
+
+<section class="section-{{ section.id }}-padding dc-blog-header">
+    <div class="page-width-dc">
+        <div class="dc-blog-header-content">
+            <div class="dc-blog-header-content-text">
+                <h1 class="dc-blog-header-content-text-title">{{ section.settings.title }}</h1>
+                <p class="dc-blog-header-content-text-subtitle">{{ section.settings.subtitle }}</p>
+            </div>
+            <img src="{{ section.settings.image | img_url: 'master' }}" alt="banner">
+        </div>
+    </div>
+</section>
+
+
+{% schema %}
+{
+  "name": "dc Blog Header",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 24
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "subtitle",
+      "label": "SubTitle"
+    }
+  ],
+  "presets": [
+    {
+      "name": "dc Blog Header"
+    }
+  ]
+}
+{% endschema %}

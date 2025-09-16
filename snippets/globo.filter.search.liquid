@@ -1,0 +1,221 @@
+{% raw %}
+
+  {% assign root_url = "" %}
+  {% assign search_url = "/search" %}
+  {% assign lazySrc = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" %}
+  {% capture noImage %}<img width="200" height="200" loading="lazy" src="{{ 'https://cdn.shopify.com/s/images/themes/product-1.png' | img_url: '200x' }}" />{% endcapture %}
+  {% assign zero_character_result = true %}
+  {% assign searchTranslation = translation.search %}
+  {% if result.term %}{% assign zero_character_result = false %}{% endif %}
+  {% assign product_list_layout = "grid" %}
+  {% assign products_suggestions_title = searchTranslation.products | default: "Products" %}
+  {% assign keywords_suggestions_title = searchTranslation.suggestions | default: "Suggestions" %}
+  {% if zero_character_result %}
+  {% assign product_list_layout = "grid" %}
+  {% if searchTranslation.zero_character_products_suggestions_title %}
+  {% assign products_suggestions_title = searchTranslation.zero_character_products_suggestions_title %}
+  {% endif %}
+  {% if searchTranslation.zero_character_keywords_searches_title %}
+  {% assign keywords_suggestions_title = searchTranslation.zero_character_keywords_searches_title %}
+  {% endif %}
+  {% elsif result.isEmpty %}
+  {% assign product_list_layout = "grid" %}
+  {% if searchTranslation.no_result_products_suggestions_title %}
+  {% assign products_suggestions_title = searchTranslation.no_result_products_suggestions_title %}
+  {% endif %}
+  {% if searchTranslation.no_result_keywords_suggestions_title %}
+  {% assign keywords_suggestions_title = searchTranslation.no_result_keywords_suggestions_title %}
+  {% endif %}
+  {% endif %}
+  {% assign page_limit = 5 %}
+  {% assign article_limit = 5 %}
+  {% assign elements = "vendor,price" | split: "," %}
+  {%- if layout == 1 -%}
+  <div id="glFilter-search-popup" class="ui-menu glFilter-search-popup gl-filter-search-fullscreen gl-filter-animate">
+  <div class="gl-backdrop gl-close-layer"></div>
+  <div class="gl-fullscreen-layer gl-animate-transition">
+  <div class="gl-fullscreen-header">
+  <form class="gl-d-searchbox" method="GET" action="{{ search_url }}">
+  <label class="gl-icon gl-d-searchbox-icon" for="gl-d-searchbox-input"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18px" height="18px"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M15.5 14h-.79l-.28-.27c1.2-1.4 1.82-3.31 1.48-5.34-.47-2.78-2.79-5-5.59-5.34-4.23-.52-7.79 3.04-7.27 7.27.34 2.8 2.56 5.12 5.34 5.59 2.03.34 3.94-.28 5.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg></label>
+  <input type="text" class="gl-d-searchbox-input" id="gl-d-searchbox-input" placeholder="{{ translation.product.search }}" name="q" value="{{ result.term | escape }}" autocapitalize="off" autocomplete="off" autocorrect="off">
+  </form>
+  <button type="button" class="gl-d-close-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M11.414 10l6.293-6.293a1 1 0 10-1.414-1.414L10 8.586 3.707 2.293a1 1 0 00-1.414 1.414L8.586 10l-6.293 6.293a1 1 0 101.414 1.414L10 11.414l6.293 6.293A.998.998 0 0018 17a.999.999 0 00-.293-.707L11.414 10z" fill="#5C5F62"/></svg></button>
+  </div>
+  <div class="gl-fullscreen-suggestions">
+  {% if result.isEmpty and result.term %}
+  <div>{% if searchTranslation.not_found %}{{ searchTranslation.not_found }}{% else %}Sorry, nothing found for{% endif %}&nbsp;<b>{{ result.term | escape }}</b></div>
+  {% endif %}
+  {% if zero_character_result and result.popular_keywords %}
+  <div>{% for keyword in result.popular_keywords %}<a href="{{ search_url }}?q={{ keyword.keyword | url_encode }}">{{ keyword.keyword | escape }}</a>{% endfor %}</div>
+  {% endif %}
+  </div>
+  <div class="gl-fullscreen-initial-content">
+  <div class="gl-row">
+  {% if result.suggestions or result.collections or result.pages or result.articles %}
+  <div class="gl-col-left">
+  <div class="gl-list gl-fullscreen-top-searches">
+  {% if result.suggestions %}
+  <div class="gl-list__group">
+  <div class="gl-list__title">{{ keywords_suggestions_title | escape }}</div>
+  <div class="gl-list__content"><ul>{% for suggestion in result.suggestions %}<li><a href="{{ search_url }}?q={{ suggestion.keyword | url_encode }}">{{ suggestion.keyword | escape }}<span class="count">{{ suggestion.count }}</span></a></li>{% endfor %}</ul></div>
+  </div>
+  {% endif %}
+  {%- if result.collections -%}
+  <div class="gl-list__group">
+  <div class="gl-list__title">{{ searchTranslation.collections | default: "Collections" }}</div>
+  <div class="gl-list__content"><ul>{%- for collection in result.collections -%}<li class="gl-list__item"><a href="{{ root_url }}/collections/{{ collection.handle }}">{{ collection.title | escape }}</a></li>{%- endfor -%}</ul></div>
+  </div>
+  {%- endif -%}
+  {%- if result.pages and result.pages.size > 0 -%}
+  <div class="gl-list__group">
+  <div class="gl-list__title">{{ searchTranslation.pages | default: "Pages" }}</div>
+  <div class="gl-list__content"><ul>{%- for page in result.pages limit: page_limit -%}<li class="gl-list__item"><a href="{{ page.url }}">{{ page.title | escape }}</a></li>{%- endfor -%}</ul></div>
+  </div>
+  {%- endif -%}
+  {%- if result.articles and result.articles.size > 0 -%}
+  <div class="gl-list__group">
+  <div class="gl-list__title">{{ searchTranslation.articles | default: "Blog Posts" }}</div>
+  <div class="gl-list__content"><ul>{%- for article in result.articles limit: article_limit -%}<li class="gl-list__item"><a href="{{ article.url }}">{{ article.title | escape }}</a></li>{%- endfor -%}</ul></div>
+  </div>
+  {%- endif -%}
+  </div>
+  </div>
+  {% endif %} 
+  <div class="gl-col-right">
+  {% if result.products %}
+  <div class="gl-list gl-fullscreen-top-clicked">
+  <div class="gl-fullscreen-results__meta">
+  <div class="gl-list__title">{{ products_suggestions_title }}</div>
+  {% if result.term and result.isEmpty == false %}
+  <a href="{% if result.url %}{{ result.url }}{% else %}{{ search_url }}?q={{ result.term | url_encode }}{% endif %}">
+  {% if searchTranslation.view_all_products %}{{ searchTranslation.view_all_products }}{% else %}View all products{% endif %}
+  </a>
+  {% endif %}
+  </div>
+  <div class="gl-list__content">
+  {% if product_list_layout == "carousel" %}<div class="gl-owl--carousel owl-carousel" id="gl-fullscreen-recommended-products">{% else %}<div class="gl-fullscreen-results__content">{% endif %}
+  {% for product in result.products %}
+  {% assign variantUrl = "" %}
+  {% assign productUrl = root_url | append: product.url | append: variantUrl %}
+  <div class="gl-card">
+  <div class="gl-card-media">
+  <div class="gl-card-thumbnail">
+  <a class="spf-image-ratio" href="{{productUrl}}" aria-label="{{ products_suggestions_title | escape }}: {{ product.title | escape }}">
+  {% if product.image %}
+  <img class="gflazyload" srcset="{{lazySrc}}" src="{{ product.image.src | img_url: image_size }}" data-src="{{ product.image.src | img_lazyload_url }}" data-sizes="auto" data-aspectratio="{{ product.image.aspect_ratio }}" data-parent-fit="contain" width="{{ product.image.width }}"  height="{{ product.image.height }}" alt="{{ product.image.alt | escape }}" />
+  {% else %}{{noImage}}{% endif %}
+  </a>
+  </div>
+  </div>
+  <div class="gl-card-content gl-card-flex">
+  <div class="gl-card-title" title="{{ product.title | escape }}"><a href="{{productUrl}}">{{ product.title | escape }}</a></div>
+  {%- if product.vendor and elements contains "vendor" -%}<div class="gf-search-item-product-vendor">{{ product.vendor }}</div>{%- endif -%}
+  {%- if elements contains 'type' -%}<div class="gf-search-item-product-vendor">{{ product.product_type | escape }}</div>{%- endif -%}
+  {%- if product.selected_or_first_available_variant.sku and elements contains 'sku' -%}<div class="gf-search-item-product-vendor">{{ product.selected_or_first_available_variant.sku }}</div>{%- endif -%}
+  <div class="gl-card-flex"></div>
+  {%- if elements contains 'price' -%}<div class="gl-card-pricing"><span class="gl-card-price">{{ product.price | money }}</span>{%- if product.compare_at_price and product.compare_at_price > product.price -%} <span class="gl-card-old-price">{{ product.compare_at_price | money }}</span>{%- endif -%}</div>{%- endif -%}
+  </div>
+  </div>
+  {% endfor %}
+  </div>
+  </div>
+  </div>
+  {% endif %}
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  
+  {%- elsif layout == 2 -%}
+  {% if result.isEmpty and result.term %}
+  <li class="gf-search-no-result" aria-label="{% if searchTranslation.not_found %}{{ searchTranslation.not_found }}{% else %}Sorry, nothing found for{% endif %} "{{ result.term | escape }}": {{ result.term | escape }}">
+  <p>{% if searchTranslation.not_found %}{{ searchTranslation.not_found }}{% else %}Sorry, nothing found for{% endif %}&nbsp;<b>{{ result.term | escape }}</b></p>
+  </li>
+  {% endif %}
+  {% if result.suggestions %}
+  <li class="gf-search-suggestions">
+  <a class="gf-search-header">{{ keywords_suggestions_title }}</a>
+  <ul>
+  {% for suggestion in result.suggestions %}
+  <li aria-label="{{ keywords_suggestions_title | escape }}: {{ suggestion.keyword | escape }}">
+  <a href="{{ search_url }}?q={{ suggestion.keyword | url_encode }}">{{ suggestion.keyword | escape }}<span class="count">{{ suggestion.count }}</span></a>
+  </li>
+  {% endfor %}
+  </ul>
+  </li>
+  {% endif %}
+  {% if result.collections %}
+  <li class="gf-search-collections">
+  <a class="gf-search-header">{{ searchTranslation.collections | default: "Collections" }}</a>
+  <ul>
+  {% for collection in result.collections %}
+  <li aria-label="{{ searchTranslation.collections | default: "Collections" }}: {{ collection.title | escape }}"><a href="{{ root_url }}/collections/{{ collection.handle }}">{{ collection.title | escape }}</a></li>
+  {% endfor %}
+  </ul>
+  </li>
+  {% endif %}
+  
+  {%- if result.pages and result.pages.size > 0 -%}
+  <li class="gf-search-pages">
+  <a class="gf-search-header">{{ searchTranslation.pages | default: "Pages" }}</a>
+  <ul>
+  {%- for page in result.pages limit: page_limit -%}
+  <li aria-label="{{ searchTranslation.pages | default: "Pages" }}: {{ page.title | escape }}">
+  <a href="{{ page.url }}">{{ page.title | escape }}</a>
+  </li>
+  {%- endfor -%}
+  </ul>
+  </li>
+  {%- endif -%}
+  {%- if result.articles and result.articles.size > 0 -%}
+  <li class="gf-search-articles">
+  <a class="gf-search-header">{{ searchTranslation.articles | default: "Blog Posts" }}</a>
+  <ul>
+  {%- for article in result.articles limit: article_limit -%}
+  <li aria-label="{{ searchTranslation.articles | default: "Blog Posts" }}: {{ article.title | escape }}">
+  <a href="{{ article.url }}">{{ article.title | escape }}</a>
+  </li>
+  {%- endfor -%}
+  </ul>
+  </li>
+  {%- endif -%}
+  
+  {% if result.products %}
+  <li class="gf-search-products">
+  <a class="gf-search-header">{{ products_suggestions_title }}</a>
+  <ul>
+  {% for product in result.products %}
+  {% assign variantUrl = "" %}
+  {% assign productUrl = root_url | append: product.url | append: variantUrl %}
+  <li aria-label="{{ products_suggestions_title | escape }}: {{ product.title | escape }}">
+  <a aria-label="{{ product.handle }}" href="{{productUrl}}">
+  <div class="gf-search-left">
+  {% if product.image %}
+  <img class="gflazyload" srcset="{{lazySrc}}" src="{{ product.image.src | img_url: image_size }}" data-src="{{ product.image.src | img_lazyload_url }}" data-sizes="auto" data-aspectratio="{{ product.image.aspect_ratio }}" data-parent-fit="contain" width="{{ product.image.width }}"  height="{{ product.image.height }}" alt="{{ product.image.alt | escape }}" />
+  {% else %}{{noImage}}{% endif %}
+  </div>
+  <div class="gf-search-right">
+  <div class="gf-search-item-product-title">{{ product.title | escape }}</div>
+  {% comment %} {%- if product.vendor and elements contains 'vendor' -%}<div class="gf-search-item-product-vendor">{{ product.vendor | escape }}</div>{%- endif -%}
+  {%- if product.product_type and elements contains 'type' -%}<div class="gf-search-item-product-vendor">{{ product.product_type | escape }}</div>{%- endif -%}
+  {%- if product.selected_or_first_available_variant.sku and elements contains 'sku' -%}<div class="gf-search-item-product-vendor">{{ product.selected_or_first_available_variant.sku }}</div>{%- endif -%} {% endcomment %}
+  {%- if elements contains 'price' -%}<div class="gf-search-item-product-price"><span class="gf-search-item-product">{{ product.price | money }}</span></div>{%- endif -%}
+  </div>
+  </a>
+  </li>
+  {% endfor %}
+  </ul>
+  </li>
+  {% endif %}
+  {% if result.term and result.isEmpty == false %}
+  <li class="gf-search-item gf-search-item-product gf-search-viewall">
+  <a href="{% if result.url %}{{ result.url }}{% else %}{{ search_url }}?q={{ result.term | url_encode }}{% endif %}">
+  {% if searchTranslation.view_all %}{{ searchTranslation.view_all }}{% else %}Search for{% endif %} "{{ result.term | escape }}"
+  </a>
+  </li>
+  {% endif %}
+  
+  {%- endif -%}
+  
+  {% endraw %}
