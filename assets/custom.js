@@ -179,8 +179,6 @@ onReady(() => {
     if (e.target.closest('.header.dismiss')) document.body.style.overflow = 'auto';
   }, { passive: true });
 
-  // PayTomorrow functionality removed - no event listener needed
-
   document.body.addEventListener('click', (e) => {
     const btn = e.target.closest('.accordion-item');
     if (!btn) return;
