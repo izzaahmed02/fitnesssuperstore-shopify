@@ -179,6 +179,18 @@ onReady(() => {
     if (e.target.closest('.header.dismiss')) document.body.style.overflow = 'auto';
   }, { passive: true });
 
+  const payLink = document.getElementById('paytomorrow-link');
+  if (payLink) {
+    payLink.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      window.open(
+        'https://api.paytomorrow.com/api/ecommerce/public/pre-approval/a4f00e481c4f3e28756375f86d272b22',
+        '_blank',
+        'location=yes,height=670,width=500,scrollbars=yes,status=yes'
+      );
+    }, { passive: false });
+  }
+
   document.body.addEventListener('click', (e) => {
     const btn = e.target.closest('.accordion-item');
     if (!btn) return;
