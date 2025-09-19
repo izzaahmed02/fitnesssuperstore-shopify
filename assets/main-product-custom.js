@@ -1,4 +1,11 @@
 window.addEventListener('DOMContentLoaded', async () => {
+	
+	_affirm_config = {
+      public_api_key:  "DDKLC4NZ9P7UTRIX",
+       script:          "https://cdn1.affirm.com/js/v2/affirm.js"
+    };
+    (function(l,g,m,e,a,f,b){var d,c=l[m]||{},h=document.createElement(f),n=document.getElementsByTagName(f)[0],k=function(a,b,c){return function(){a[b]._.push([c,arguments])}};c[e]=k(c,e,"set");d=c[e];c[a]={};c[a]._=[];d._=[];c[a][b]=k(c,a,b);a=0;for(b="set add save post open empty reset on off trigger ready setProduct".split(" ");a<b.length;a++)d[b[a]]=k(c,e,b[a]);a=0;for(b=["get","token","url","items"];a<b.length;a++)d[b[a]]=function(){};h.async=!0;h.src=g[f];n.parentNode.insertBefore(h,n);delete g[f];d(g);l[m]=c})(window,_affirm_config,"affirm","checkout","ui","script","ready");
+
 	observeModalVisibility();
 	
 	function checkForElements() {
@@ -353,29 +360,22 @@ try {
 			hideOrShowAffirmLogo(() => clearInterval(affirmPayIntervalTrigger));
 		}, 100)
 
-		const targetNode = document.querySelector('.pr_custom_price');
+		const waitForPayLaterDependency = setInterval(() => {
+		  const payLaterText = generatePayLaterText();
+		  const affirmElement = document.querySelector('.affirm-as-low-as');
+		  const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
 
-		const observerCallback = (mutationsList, observer) => {
-			for (const mutation of mutationsList) {
-				if (mutation.type === 'childList') {
-					let payLaterText = generatePayLaterText();
-
-					setTimeout(() => {			
-						document.querySelectorAll('.paylater-text').forEach(container => {
-							container.innerHTML = getPaylaterModal(payLaterText);
-						});
+		  if (affirmElement || afterPayElement) {
+			 document.querySelectorAll('.paylater-container').forEach(container => {
+				container.style.display = 'block';
+			 });
+			 document.querySelectorAll('.paylater-text').forEach(container => {
+				 container.innerHTML = getPaylaterModal(payLaterText);
+			 });
 				
-						hideOrShowAfterPayLogo();	
-					});
-				}
+			 clearInterval(waitForPayLaterDependency);
 			}
-		};
-	
-		const observer = new MutationObserver(observerCallback);
-
-		const config = { childList: true, characterData: true, subtree: true };
-	
-		observer.observe(targetNode, config);
+		  }, 100);
 	});
 } catch (error) {
 	console.log(error)
