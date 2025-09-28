@@ -73,20 +73,16 @@
     </button>
 
     <ul class="collection-hero__related-collections">
-      {% for subcat in collection.metafields.custom.subcategories_custom_titles.value %}
-  {% assign sub_handle = subcat.collection.handle %}
-  {% assign sub_collection = all_collections[sub_handle] %}
-  
-  {% assign active_class = '' %}
-  {% if sub_collection.url == collection.url %}
-    {% assign active_class = 'active' %}
+     {% for subcat in collection.metafields.custom.subcategories_custom_titles.value %}
+  {% if subcat.collection != blank %}
+    {% assign sub_handle = subcat.collection.handle %}
+    <li>
+      <a href="/collections/{{ sub_handle }}"
+         class="collection-hero__related-collection {% if request.path contains sub_handle %}active{% endif %}">
+        {{ subcat.custom_title | default: sub_handle }}
+      </a>
+    </li>
   {% endif %}
-
-  <li>
-    <a href="{{ sub_collection.url }}" class="collection-hero__related-collection {{ active_class }}">
-      {{ subcat.custom_title | default: sub_collection.title }}
-    </a>
-  </li>
 {% endfor %}
 
     </ul>
