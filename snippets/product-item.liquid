@@ -1,26 +1,14 @@
 {% assign product = product %}
 <div class="product-item card__inner" data-product-id="{{ product.id }}">
     <div class="image-wrap">
-      {% comment %}  {% assign images = product.images %}
+        {% assign images = product.images %}
         {% for item in images limit: 5 %}
             {% if item != '' %}
                 <div class="image-item aa">
-                    <img class="lazy-load" src="{{ item | image_url: width: auto }}">
+                    {{ item | image_url: width: auto | image_tag: class: 'lazy-load' }}
                 </div>
             {% endif %}
-        {% endfor %} {% endcomment %}
-          {% assign images = product.images %}
-         {% for item in product.images limit: 5 %}
-  <div class="image-item aa">
-    <img
-      class="lazy-load"
-      src="{{ item | image_url: width: 600 }}"
-      alt="{{ item.alt | escape }}"
-      loading="lazy"
-    >
-  </div>
-{% endfor %}
-
+        {% endfor %}
     </div>
     <div class="tags-wrapper">
         {% if product.metafields.custom.condition_state contains "New" %}
