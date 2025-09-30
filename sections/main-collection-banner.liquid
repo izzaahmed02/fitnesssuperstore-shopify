@@ -7,7 +7,76 @@
     padding-bottom: calc({{ settings.media_shadow_vertical_offset | at_least: 0 }}px + 2rem);
      }
     }
+
+    {%- endstyle -%}
+{% comment %}
+#collection-description a {
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight:bold;
+}
+
+#read-more {
+  color: #0d7a3c;
+}
+{% endcomment %}
+
+
+{%- style -%}
+#collection-description a {
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+#read-more-desktop,
+#read-more-mobile {
+  color: #0d7a3c;
+}
+
+/* Responsive visibility */
+.desktop-only {
+  display: block;
+}
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
+  .clamp-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 7;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .clamp-text::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1.5em;
+    background: linear-gradient(to bottom, transparent, white);
+  }
+}
 {%- endstyle -%}
+
+
+
+
+
 
 
 
@@ -15,17 +84,112 @@
     <div class="collection-hero__inner page-width {% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
         <div class="collection-hero__text-wrapper">
             <h1 class="collection-hero__title">
-               
+                {% comment %}
+                <span class="visually-hidden">{{ 'sections.collection_template.title' | t }}: </span>{% endcomment %}
                {{- collection.title | escape -}}
             </h1>
             {% if section.settings.show_collection_description %}
                 <div class="collection-hero__description">
-                    {{ collection.description }}
+
+
+<div id="collection-description">
+
+  <!-- Desktop Version (truncate after 640 characters) -->
+  {% if collection.description.size > 640 %}
+    <div id="short-description-desktop" class="desktop-only">
+      {{ collection.description | truncate: 640, "..." }}
+      <a href="#" id="read-more-desktop">Read More</a>
+    </div>
+    <div id="full-description-desktop" class="desktop-only" style="display: none;">
+      {{ collection.description }}
+      <a href="#" id="read-less-desktop">Read Less</a>
+    </div>
+  {% else %}
+    <div class="desktop-only">
+      {{ collection.description }}
+    </div>
+  {% endif %}
+
+  <!-- Mobile Version (line clamp after 3 lines) -->
+  <div id="short-description-mobile" class="mobile-only">
+    <div id="mobile-clamp-text" class="clamp-text">
+      {{ collection.description }}
+    </div>
+    <a href="#" id="read-more-mobile" style="display: none;">Read More</a>
+  </div>
+
+  <div id="full-description-mobile" class="mobile-only" style="display: none;">
+    {{ collection.description }}
+    <a href="#" id="read-less-mobile">Read Less</a>
+  </div>
+
+</div>
+
+
+
+
+
                 </div>
             {% endif %}
 
 
             {% comment %}
+            {% if collection.metafields.custom.related_collections != blank %}
+                {% assign current_url = collection.url %}
+                {% assign match_found = false %}
+                {% for related in collection.metafields.custom.related_collections.value %}
+                    {% if related.url == current_url %}
+                        {% assign match_found = true %}
+                    {% endif %}
+                {% endfor %}
+                {%- assign subCategoriesCount = 0 -%}
+                {%- for subCategory in collection.metafields.custom.related_collections.value -%}
+                {%- assign subCategoriesCount = subCategoriesCount | plus: 1 -%}
+                {%- endfor -%}
+                {% if subCategoriesCount > 1 %}
+                   <div class="collection-hero__related-collections-wrapper">
+                    <button class="collection-hero__related-collections-toggle" aria-expanded="false">
+                        <span>{{ section.settings.related_collections_toggle | default: "Browse subcategories" }}</span>
+                        <svg class="icon icon-caret" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="#B3B3B3"></path>
+                        </svg>
+                    </button>
+                    <ul class="collection-hero__related-collections">
+                        {%- assign related_collections_sorted =
+                        collection.metafields.custom.related_collections.value
+                        | sort: 'title' -%}
+
+                        {%- assign match_found = false -%}
+                        {%- for related in related_collections_sorted -%}
+                        {%- assign active_class = '' -%}
+
+                        {%- if related.url == current_url -%}
+                            {%- assign active_class = 'active' -%}
+                        {%- assign match_found = true -%}
+                        {%- elsif forloop.first and match_found == false -%}
+                            {%- assign active_class = 'active' -%}
+                        {%- endif -%}
+
+                          {% if forloop.first %}
+                                <li>
+                                    <a href="{{ related.url }}"
+                                       class="collection-hero__related-collection {{ active_class }}">All</a>
+                                </li>
+                            {% else %}
+                                <li>
+                                    <a href="{{ related.url }}"
+                                       class="collection-hero__related-collection {{ active_class }}">
+                                        {{ related.title }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                    {%- endfor -%}
+                    </ul>
+                </div>
+                {% endif %}
+            {% endif %} {% endcomment %}
+
+
                    {% if collection.metafields.custom.related_collections != blank %}
                 {% assign current_url = collection.url %}
                 {% assign match_found = false %}
@@ -55,43 +219,11 @@
       {{ related.title }}
     </a>
   </li>
-e
 {% endfor %}
 
                     </ul>
                 </div>
-            {% endif %} 
-             {% endcomment %}
-
-
-
-            {% if collection.metafields.custom.subcategories_custom_titles != blank %}
-  {% assign current_url = collection.url %}
-  <div class="collection-hero__related-collections-wrapper">
-    <button class="collection-hero__related-collections-toggle" aria-expanded="false">
-      <span>{{ section.settings.related_collections_toggle | default: "Browse subcategories" }}</span>
-      <svg class="icon icon-caret" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="#B3B3B3"></path>
-      </svg>
-    </button>
-
-    <ul class="collection-hero__related-collections">
-     {% for subcat in collection.metafields.custom.subcategories_custom_titles.value %}
-  {% if subcat.collection != blank %}
-    {% assign sub_handle = subcat.collection.value.handle %}
-    <li>
-      <a href="/collections/{{ sub_handle }}"
-         class="collection-hero__related-collection {% if request.path contains sub_handle %}active{% endif %}">
-        {{ subcat.custom_title | default: sub_handle }}
-      </a>
-    </li>
-  {% endif %}
-{% endfor %}
-
-    </ul>
-  </div>
-{% endif %} 
-
+            {% endif %}
 
           
         </div>
@@ -153,3 +285,60 @@ e
   ]
 }
 {% endschema %}
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Desktop toggle
+    const readMoreDesktop = document.getElementById('read-more-desktop');
+    const readLessDesktop = document.getElementById('read-less-desktop');
+    const shortDescDesktop = document.getElementById('short-description-desktop');
+    const fullDescDesktop = document.getElementById('full-description-desktop');
+
+    readMoreDesktop?.addEventListener('click', function (e) {
+      e.preventDefault();
+      shortDescDesktop.style.display = 'none';
+      fullDescDesktop.style.display = 'block';
+    });
+
+    readLessDesktop?.addEventListener('click', function (e) {
+      e.preventDefault();
+      fullDescDesktop.style.display = 'none';
+      shortDescDesktop.style.display = 'block';
+    });
+
+    // Mobile toggle
+    const readMoreMobile = document.getElementById('read-more-mobile');
+    const readLessMobile = document.getElementById('read-less-mobile');
+    const shortDescMobile = document.getElementById('short-description-mobile');
+    const fullDescMobile = document.getElementById('full-description-mobile');
+    const clampText = document.getElementById('mobile-clamp-text');
+
+    function isClamped(el) {
+      return el.scrollHeight > el.clientHeight;
+    }
+
+    function showReadMoreMobileIfNeeded() {
+      if (window.innerWidth <= 767 && isClamped(clampText)) {
+        readMoreMobile.style.display = 'inline';
+      } else {
+        readMoreMobile.style.display = 'none';
+      }
+    }
+
+    // Run after layout is fully ready
+    requestAnimationFrame(showReadMoreMobileIfNeeded);
+
+    readMoreMobile?.addEventListener('click', function (e) {
+      e.preventDefault();
+      shortDescMobile.style.display = 'none';
+      fullDescMobile.style.display = 'block';
+    });
+
+    readLessMobile?.addEventListener('click', function (e) {
+      e.preventDefault();
+      fullDescMobile.style.display = 'none';
+      shortDescMobile.style.display = 'block';
+    });
+  });
+</script>
