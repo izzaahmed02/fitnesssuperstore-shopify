@@ -336,11 +336,26 @@ content: ''!important;
   </style>
 {% endif %}
          
-
-          {{ 'custom.css' | asset_url | stylesheet_tag: preload: true }}
-          
           {{ 'base.css' | asset_url | stylesheet_tag }}
-          {{ 'globo-search-custom.css' | asset_url | stylesheet_tag }}
+          {% comment %} {{ 'custom.css' | asset_url | stylesheet_tag: preload: true }}
+          {{ 'globo-search-custom.css' | asset_url | stylesheet_tag }} {% endcomment %}
+
+          {{ 'base.css' | asset_url | stylesheet_tag }}
+
+          <link
+            rel="stylesheet"
+            href="{{ 'custom.css' | asset_url }}"
+            media="print"
+            onload="this.media='all'"
+          >
+
+          <link
+            rel="stylesheet"
+            href="{{ 'globo-search-custom.css' | asset_url }}"
+            media="print"
+            onload="this.media='all'"
+          >
+
           
           {%- unless settings.type_body_font.system? -%}
           <link rel="preload" as="font" href="{{ settings.type_body_font | font_url }}" type="font/woff2" crossorigin>
