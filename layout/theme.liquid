@@ -157,6 +157,33 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       },
       "sku": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
       "url": "https://{{ shop.domain }}{{ product.url }}"
+      {% if product.metafields.custom.seo_videos %}
+          {
+            "@video": [
+              {% for video in product.metafields.custom.seo_videos.value %}
+                {
+                  "@type": "VideoObject",
+                  "name": "{{ video.title | escape }}",
+                  "description": "{{ video.description | escape }}",
+                  "thumbnailUrl": "{{ video.thumbnail_url | escape }}",
+                  "duration": "PT{{ video.duration_seconds | escape }}S",
+                  "contentUrl": "{{ video.video_url | escape }}",
+                  "embedUrl": "{{ video.video_url | escape }}",
+                  "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
+                  "familyFriendly": "{{ video.family_friendly }}",
+                  "publisher": {
+                    "@type": "Organization",
+                    "name": "{{ shop.name | escape }}",
+                    "logo": {
+                      "@type": "ImageObject",
+                      "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
+                    }
+                  }
+                }{% unless forloop.last %},{% endunless %}
+              {% endfor %}
+            ]
+          }
+      {% endif %}       
     },
     {
       "@context": "https://schema.org",
@@ -296,6 +323,34 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             {% endif %}
           }{% unless forloop.last %},{% endunless %}
         {% endfor %}
+        {% if collection.metafields.custom.seo_videos %}
+            {
+              "@video": [
+                {% assign seo_videos = collection.metafields.custom["seo_videos"].value %}
+                {% for video in seo_videos %}
+                  {
+                    "@type": "VideoObject",
+                    "name": "{{ video.title | escape }}",
+                    "description": "{{ video.description | escape }}",
+                    "thumbnailUrl": "{{ video.thumbnail_url | escape }}",
+                    "duration": "PT{{ video.duration_seconds | escape }}S",
+                    "contentUrl": "{{ video.video_url | escape }}",
+                    "embedUrl": "{{ video.video_url | escape }}",
+                    "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
+                    "familyFriendly": "{{ video.family_friendly }}",
+                    "publisher": {
+                      "@type": "Organization",
+                      "name": "{{ shop.name | escape }}",
+                      "logo": {
+                        "@type": "ImageObject",
+                        "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
+                      }
+                    }
+                  }{% unless forloop.last %},{% endunless %}
+                {% endfor %}
+              ]
+            }
+          {% endif %}
       {% endpaginate %}
     ]
   },
@@ -319,7 +374,70 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </script>
 
 {% endif %}
-                  
+
+  {% if article.metafields.custom.seo_videos %}
+      <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {% assign seo_videos = article.metafields.custom["seo_videos"].value %}
+          {% for video in seo_videos %}
+          {
+            "@type": "VideoObject",
+            "name": "{{ video.title | escape }}",
+            "description": "{{ video.description | escape }}",
+            "thumbnailUrl": "{{ video.thumbnail_url | escape }}",
+            "duration": "PT{{ video.duration_seconds | escape }}S",
+            "contentUrl": "{{ video.video_url | escape }}",
+            "embedUrl": "{{ video.video_url | escape }}",
+            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
+            "familyFriendly": "{{ video.family_friendly }}",
+            "publisher": {
+              "@type": "Organization",
+              "name": "{{ shop.name | escape }}",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
+              }
+            }
+          }{% unless forloop.last %},{% endunless %}
+          {% endfor %}
+        ]
+      }
+      </script>
+  {% endif %}
+  
+  {% if page.metafields.custom.seo_videos %}
+      <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {% assign seo_videos = page.metafields.custom["seo_videos"].value %}
+          {% for video in seo_videos %}
+          {
+            "@type": "VideoObject",
+            "name": "{{ video.title | escape }}",
+            "description": "{{ video.description | escape }}",
+            "thumbnailUrl": "{{ video.thumbnail_url | escape }}",
+            "duration": "PT{{ video.duration_seconds | escape }}S",
+            "contentUrl": "{{ video.video_url | escape }}",
+            "embedUrl": "{{ video.video_url | escape }}",
+            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
+            "familyFriendly": "{{ video.family_friendly }}",
+            "publisher": {
+              "@type": "Organization",
+              "name": "{{ shop.name | escape }}",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
+              }
+            }
+          }{% unless forloop.last %},{% endunless %}
+          {% endfor %}
+        ]
+      }
+      </script>
+  {% endif %}     
 
           {% if page_description %}
           <meta name="description" content="{{ page_description | escape }}">
@@ -854,133 +972,6 @@ content: ''!important;
 {% if request.page_type == 'search' %}
 <script id="gspfResultsTitleTemplate" type="template/html">{% raw %}Search: {{ paginate.total }} results found for "{% endraw %}{{ search.terms }}{% raw %}"{% endraw %}</script>
  {% endif %}   
-        
-{% if product.metafields.custom.seo_videos %}
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {% for video in product.metafields.custom.seo_videos.value %}
-          {
-            "@type": "VideoObject",
-            "name": "{{ video.title | escape }}",
-            "description": "{{ video.description | escape }}",
-            "thumbnailUrl": "{{ video.thumbnail_url | escape }}",
-            "duration": "PT{{ video.duration_seconds | escape }}S",
-            "contentUrl": "{{ video.video_url | escape }}",
-            "embedUrl": "{{ video.video_url | escape }}",
-            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
-            "familyFriendly": "{{ video.family_friendly }}",
-            "publisher": {
-              "@type": "Organization",
-              "name": "{{ shop.name | escape }}",
-              "logo": {
-                "@type": "ImageObject",
-                "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
-              }
-            }
-          }{% unless forloop.last %},{% endunless %}
-        {% endfor %}
-      ]
-    }
-    </script>
-{% endif %}       
-
-{% if collection.metafields.custom.seo_videos %}
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {% assign seo_videos = collection.metafields.custom["seo_videos"].value %}
-        {% for video in seo_videos %}
-        {
-          "@type": "VideoObject",
-          "name": "{{ video.title | escape }}",
-          "description": "{{ video.description | escape }}",
-          "thumbnailUrl": "{{ video.thumbnail_url | escape }}",
-          "duration": "PT{{ video.duration_seconds | escape }}S",
-          "contentUrl": "{{ video.video_url | escape }}",
-          "embedUrl": "{{ video.video_url | escape }}",
-          "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
-          "familyFriendly": "{{ video.family_friendly }}",
-          "publisher": {
-            "@type": "Organization",
-            "name": "{{ shop.name | escape }}",
-            "logo": {
-              "@type": "ImageObject",
-              "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
-            }
-          }
-        }{% unless forloop.last %},{% endunless %}
-        {% endfor %}
-      ]
-    }
-    </script>
-{% endif %}
-
-{% if article.metafields.custom.seo_videos %}
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {% assign seo_videos = article.metafields.custom["seo_videos"].value %}
-        {% for video in seo_videos %}
-        {
-          "@type": "VideoObject",
-          "name": "{{ video.title | escape }}",
-          "description": "{{ video.description | escape }}",
-          "thumbnailUrl": "{{ video.thumbnail_url | escape }}",
-          "duration": "PT{{ video.duration_seconds | escape }}S",
-          "contentUrl": "{{ video.video_url | escape }}",
-          "embedUrl": "{{ video.video_url | escape }}",
-          "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
-          "familyFriendly": "{{ video.family_friendly }}",
-          "publisher": {
-            "@type": "Organization",
-            "name": "{{ shop.name | escape }}",
-            "logo": {
-              "@type": "ImageObject",
-              "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
-            }
-          }
-        }{% unless forloop.last %},{% endunless %}
-        {% endfor %}
-      ]
-    }
-    </script>
-{% endif %}
-
-{% if page.metafields.custom.seo_videos %}
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {% assign seo_videos = page.metafields.custom["seo_videos"].value %}
-        {% for video in seo_videos %}
-        {
-          "@type": "VideoObject",
-          "name": "{{ video.title | escape }}",
-          "description": "{{ video.description | escape }}",
-          "thumbnailUrl": "{{ video.thumbnail_url | escape }}",
-          "duration": "PT{{ video.duration_seconds | escape }}S",
-          "contentUrl": "{{ video.video_url | escape }}",
-          "embedUrl": "{{ video.video_url | escape }}",
-          "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
-          "familyFriendly": "{{ video.family_friendly }}",
-          "publisher": {
-            "@type": "Organization",
-            "name": "{{ shop.name | escape }}",
-            "logo": {
-              "@type": "ImageObject",
-              "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
-            }
-          }
-        }{% unless forloop.last %},{% endunless %}
-        {% endfor %}
-      ]
-    }
-    </script>
-{% endif %}
 
       </body>
     </html>
