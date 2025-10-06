@@ -31,47 +31,6 @@
 </div>
 
 
-<script>
-	document.addEventListener("DOMContentLoaded", () => {
-		const scrollUpBtn = document.getElementById("scroll-up");
-		const scrollDownBtn = document.getElementById("scroll-down");
-
-		if (!scrollUpBtn || !scrollDownBtn) {
-			console.error("Buttons not found");
-			return;
-		}
-
-		const halfScroll = document.body.scrollHeight / 2;
-
-		const toggleScrollButtons = () => {
-			const scrolled = window.scrollY;
-			const isScrolledPastHalf = scrolled > halfScroll;
-			scrollUpBtn.classList.toggle("visible", isScrolledPastHalf);
-			scrollDownBtn.classList.toggle("visible", !isScrolledPastHalf);
-		};
-
-		const debouncedToggleScrollButtons = (() => {
-			let timeout;
-			return () => {
-				clearTimeout(timeout);
-				timeout = setTimeout(toggleScrollButtons, 100);
-			};
-		})();
-
-		scrollUpBtn.addEventListener("click", () => {
-			window.scrollTo({top: 0, behavior: "smooth"});
-		});
-
-		scrollDownBtn.addEventListener("click", () => {
-			window.scrollTo({top: document.body.scrollHeight, behavior: "smooth"});
-		});
-
-		window.addEventListener("scroll", debouncedToggleScrollButtons);
-		toggleScrollButtons();
-	});
-
-</script>
-
 {% schema %}
 {
   "name": "Product Photos",
