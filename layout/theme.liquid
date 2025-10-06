@@ -1,4 +1,4 @@
-  <!doctype html>
+<!doctype html>
     <html class="js" lang="{{ request.locale.iso_code }}">
       <head>
         <meta charset="utf-8">
@@ -156,10 +156,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
       },
       "sku": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
-      "url": "https://{{ shop.domain }}{{ product.url }}"
+      "url": "https://{{ shop.domain }}{{ product.url }}",
+      "@graph":[
       {% if product.metafields.custom.seo_videos %}
-          {
-            "@video": [
               {% for video in product.metafields.custom.seo_videos.value %}
                 {
                   "@type": "VideoObject",
@@ -169,7 +168,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                   "duration": "PT{{ video.duration_seconds | escape }}S",
                   "contentUrl": "{{ video.video_url | escape }}",
                   "embedUrl": "{{ video.video_url | escape }}",
-                  "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
+                  "uploadDate": "{{ video.upload_date | date: '%Y-%m-%dT%H:%M:%S%:z' }}",
                   "familyFriendly": "{{ video.family_friendly }}",
                   "publisher": {
                     "@type": "Organization",
@@ -180,10 +179,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     }
                   }
                 }{% unless forloop.last %},{% endunless %}
-              {% endfor %}
-            ]
-          }
-      {% endif %}       
+          {% endfor %}
+      {% endif %} 
+      ]      
     },
     {
       "@context": "https://schema.org",
@@ -323,37 +321,35 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             {% endif %}
           }{% unless forloop.last %},{% endunless %}
         {% endfor %}
-        {% if collection.metafields.custom.seo_videos %}
-            {
-              "@video": [
-                {% assign seo_videos = collection.metafields.custom["seo_videos"].value %}
-                {% for video in seo_videos %}
-                  {
-                    "@type": "VideoObject",
-                    "name": "{{ video.title | escape }}",
-                    "description": "{{ video.description | escape }}",
-                    "thumbnailUrl": "{{ video.thumbnail_url | escape }}",
-                    "duration": "PT{{ video.duration_seconds | escape }}S",
-                    "contentUrl": "{{ video.video_url | escape }}",
-                    "embedUrl": "{{ video.video_url | escape }}",
-                    "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
-                    "familyFriendly": "{{ video.family_friendly }}",
-                    "publisher": {
-                      "@type": "Organization",
-                      "name": "{{ shop.name | escape }}",
-                      "logo": {
-                        "@type": "ImageObject",
-                        "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
-                      }
-                    }
-                  }{% unless forloop.last %},{% endunless %}
-                {% endfor %}
-              ]
-            }
-          {% endif %}
       {% endpaginate %}
     ]
   },
+  "@graph": [
+    {% if collection.metafields.custom.seo_videos %}
+          {% assign seo_videos = collection.metafields.custom["seo_videos"].value %}
+          {% for video in seo_videos %}
+            {
+              "@type": "VideoObject",
+              "name": "{{ video.title | escape }}",
+              "description": "{{ video.description | escape }}",
+              "thumbnailUrl": "{{ video.thumbnail_url | escape }}",
+              "duration": "PT{{ video.duration_seconds | escape }}S",
+              "contentUrl": "{{ video.video_url | escape }}",
+              "embedUrl": "{{ video.video_url | escape }}",
+              "uploadDate": "{{ video.upload_date | date: '%Y-%m-%dT%H:%M:%S%:z' }}",
+              "familyFriendly": "{{ video.family_friendly }}",
+              "publisher": {
+                "@type": "Organization",
+                "name": "{{ shop.name | escape }}",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
+                }
+              }
+            }{% unless forloop.last %},{% endunless %}
+          {% endfor %}
+      {% endif %}
+    ],
   "publisher": {
     "@type": "Organization",
     "name": "{{ shop.name | escape }}",
@@ -390,7 +386,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             "duration": "PT{{ video.duration_seconds | escape }}S",
             "contentUrl": "{{ video.video_url | escape }}",
             "embedUrl": "{{ video.video_url | escape }}",
-            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
+            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%dT%H:%M:%S%:z' }}",
             "familyFriendly": "{{ video.family_friendly }}",
             "publisher": {
               "@type": "Organization",
@@ -424,7 +420,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             "duration": "PT{{ video.duration_seconds | escape }}S",
             "contentUrl": "{{ video.video_url | escape }}",
             "embedUrl": "{{ video.video_url | escape }}",
-            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
+            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%dT%H:%M:%S%:z' }}",
             "familyFriendly": "{{ video.family_friendly }}",
             "publisher": {
               "@type": "Organization",
@@ -780,19 +776,19 @@ content: ''!important;
           <script src="{{ 'jquery.min.js' | asset_url }}"></script>
           <script src="{{ 'slick.min.js' | asset_url }}" defer></script>    
           <script>
-		      if (Shopify.designMode) {
-			      document.documentElement.classList.add('shopify-design-mode');
-		      }
+          if (Shopify.designMode) {
+            document.documentElement.classList.add('shopify-design-mode');
+          }
           </script>
           <script type="text/javascript" defer>
-		      function saLoadScript(src) {
-			      var js = window.document.createElement('script');
-			      js.src = src;
-			      js.type = 'text/javascript';
-			      document.getElementsByTagName('head')[0].appendChild(js);
-		      }
+          function saLoadScript(src) {
+            var js = window.document.createElement('script');
+            js.src = src;
+            js.type = 'text/javascript';
+            document.getElementsByTagName('head')[0].appendChild(js);
+          }
 
-		      saLoadScript('https://www.shopperapproved.com/widgets/group2.0/34099.js');
+          saLoadScript('https://www.shopperapproved.com/widgets/group2.0/34099.js');
           </script>
 
           {% if request.page_type == 'product' %}
