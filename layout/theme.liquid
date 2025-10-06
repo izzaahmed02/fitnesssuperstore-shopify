@@ -156,10 +156,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
       },
       "sku": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
-      "url": "https://{{ shop.domain }}{{ product.url }}"
+      "url": "https://{{ shop.domain }}{{ product.url }}",
+      "@graph":[
       {% if product.metafields.custom.seo_videos %}
-          {
-            "@video": [
               {% for video in product.metafields.custom.seo_videos.value %}
                 {
                   "@type": "VideoObject",
@@ -169,7 +168,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                   "duration": "PT{{ video.duration_seconds | escape }}S",
                   "contentUrl": "{{ video.video_url | escape }}",
                   "embedUrl": "{{ video.video_url | escape }}",
-                  "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
+                  "uploadDate": "{{ video.upload_date | date: '%Y-%m-%dT%H:%M:%S%:z' }}",
                   "familyFriendly": "{{ video.family_friendly }}",
                   "publisher": {
                     "@type": "Organization",
@@ -180,10 +179,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     }
                   }
                 }{% unless forloop.last %},{% endunless %}
-              {% endfor %}
-            ]
-          }
-      {% endif %}       
+          {% endfor %}
+      {% endif %} 
+      ]      
     },
     {
       "@context": "https://schema.org",
@@ -325,7 +323,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {% endfor %}
         {% if collection.metafields.custom.seo_videos %}
             {
-              "@video": [
                 {% assign seo_videos = collection.metafields.custom["seo_videos"].value %}
                 {% for video in seo_videos %}
                   {
@@ -336,7 +333,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     "duration": "PT{{ video.duration_seconds | escape }}S",
                     "contentUrl": "{{ video.video_url | escape }}",
                     "embedUrl": "{{ video.video_url | escape }}",
-                    "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
+                    "uploadDate": "{{ video.upload_date | date: '%Y-%m-%dT%H:%M:%S%:z' }}",
                     "familyFriendly": "{{ video.family_friendly }}",
                     "publisher": {
                       "@type": "Organization",
@@ -348,7 +345,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     }
                   }{% unless forloop.last %},{% endunless %}
                 {% endfor %}
-              ]
             }
           {% endif %}
       {% endpaginate %}
@@ -390,7 +386,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             "duration": "PT{{ video.duration_seconds | escape }}S",
             "contentUrl": "{{ video.video_url | escape }}",
             "embedUrl": "{{ video.video_url | escape }}",
-            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
+            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%dT%H:%M:%S%:z' }}",
             "familyFriendly": "{{ video.family_friendly }}",
             "publisher": {
               "@type": "Organization",
@@ -424,7 +420,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             "duration": "PT{{ video.duration_seconds | escape }}S",
             "contentUrl": "{{ video.video_url | escape }}",
             "embedUrl": "{{ video.video_url | escape }}",
-            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
+            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%dT%H:%M:%S%:z' }}",
             "familyFriendly": "{{ video.family_friendly }}",
             "publisher": {
               "@type": "Organization",
@@ -835,7 +831,6 @@ content: ''!important;
     window.pricingReferenceHtml = "{{ 'pricing-reference.html' | asset_url }}";
   </script>
   <script type="module" blocking="render" fetchpriority="high" src="https://cdn.intelligems.io/esm/af0d62f8eb94/bundle.js" async></script>
-
         
       </head>
     
@@ -848,9 +843,7 @@ content: ''!important;
           {%- render 'cart-drawer' -%}
         {%- endif -%}
     
-         {% unless template == 'page.goaffpro-create' %}
-        {% sections 'header-group' %}  
-        {% endunless %}
+        {% sections 'header-group' %}
         {% if settings.show_sidebar_menu %}
           <div class="content layout-side-menu">
             {% render 'header-sidebar-menu' %}
@@ -886,12 +879,11 @@ content: ''!important;
                 .side-bar-comtainer .sidebarmenu {flex: 0 0 236px;}
               }
             </style>
-            <div class="{% unless template == 'page.goaffpro-create' %} grid-container {% endunless %} {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %} {% unless template == 'page.goaffpro-create' %} side-bar-comtainer {% endunless %}">
-              {% unless template == 'page.goaffpro-create' %}
+            <div class="grid-container {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %} side-bar-comtainer">
+              
               <aside class="sidebarmenu">
                 {% render 'header-sidebar-menu' %}
               </aside>
-            {% endunless %}
 
               <div class="inner-container">
                 {{ content_for_layout }}
