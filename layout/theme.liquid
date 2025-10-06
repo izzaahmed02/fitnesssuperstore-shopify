@@ -156,9 +156,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
       },
       "sku": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
-      "url": "https://{{ shop.domain }}{{ product.url }}",
-      "@graph":[
+      "url": "https://{{ shop.domain }}{{ product.url }}"
       {% if product.metafields.custom.seo_videos %}
+          {
+            "@video": [
               {% for video in product.metafields.custom.seo_videos.value %}
                 {
                   "@type": "VideoObject",
@@ -168,7 +169,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                   "duration": "PT{{ video.duration_seconds | escape }}S",
                   "contentUrl": "{{ video.video_url | escape }}",
                   "embedUrl": "{{ video.video_url | escape }}",
-                  "uploadDate": "{{ video.upload_date | date: '%Y-%m-%dT%H:%M:%S%:z' }}",
+                  "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
                   "familyFriendly": "{{ video.family_friendly }}",
                   "publisher": {
                     "@type": "Organization",
@@ -179,9 +180,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     }
                   }
                 }{% unless forloop.last %},{% endunless %}
-          {% endfor %}
-      {% endif %} 
-      ]      
+              {% endfor %}
+            ]
+          }
+      {% endif %}       
     },
     {
       "@context": "https://schema.org",
@@ -323,6 +325,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {% endfor %}
         {% if collection.metafields.custom.seo_videos %}
             {
+              "@video": [
                 {% assign seo_videos = collection.metafields.custom["seo_videos"].value %}
                 {% for video in seo_videos %}
                   {
@@ -333,7 +336,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     "duration": "PT{{ video.duration_seconds | escape }}S",
                     "contentUrl": "{{ video.video_url | escape }}",
                     "embedUrl": "{{ video.video_url | escape }}",
-                    "uploadDate": "{{ video.upload_date | date: '%Y-%m-%dT%H:%M:%S%:z' }}",
+                    "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
                     "familyFriendly": "{{ video.family_friendly }}",
                     "publisher": {
                       "@type": "Organization",
@@ -345,6 +348,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     }
                   }{% unless forloop.last %},{% endunless %}
                 {% endfor %}
+              ]
             }
           {% endif %}
       {% endpaginate %}
@@ -386,7 +390,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             "duration": "PT{{ video.duration_seconds | escape }}S",
             "contentUrl": "{{ video.video_url | escape }}",
             "embedUrl": "{{ video.video_url | escape }}",
-            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%dT%H:%M:%S%:z' }}",
+            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
             "familyFriendly": "{{ video.family_friendly }}",
             "publisher": {
               "@type": "Organization",
@@ -420,7 +424,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             "duration": "PT{{ video.duration_seconds | escape }}S",
             "contentUrl": "{{ video.video_url | escape }}",
             "embedUrl": "{{ video.video_url | escape }}",
-            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%dT%H:%M:%S%:z' }}",
+            "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
             "familyFriendly": "{{ video.family_friendly }}",
             "publisher": {
               "@type": "Organization",
@@ -831,6 +835,14 @@ content: ''!important;
     window.pricingReferenceHtml = "{{ 'pricing-reference.html' | asset_url }}";
   </script>
   <script type="module" blocking="render" fetchpriority="high" src="https://cdn.intelligems.io/esm/af0d62f8eb94/bundle.js" async></script>
+
+
+
+  {% comment %} fix cls {% endcomment %}
+<style>.async-hide { opacity: 0 !important} </style>
+<script>(function(a,s,y,n,c,h,i,d,e){s.className+=' '+y;h.start=1*new Date;h.end=i=function(){s.className=s.className.replace(RegExp(' ?'+y),'')};(a[n]=a[n]||[]).hide=h;setTimeout(function(){i();h.end=null},c);h.timeout=c; })(window,document.documentElement,'async-hide','dataLayer',600, {'GTM-XXXXXX':true});</script>
+<link rel="preload" href="https://quickstart-41d588e3.myshopify.com/cdn/shop/t/3/assets/lazysizes-3.0.42.js" as="script"><script src="https://quickstart-41d588e3.myshopify.com/cdn/shop/t/3/assets/lazysizes-3.0.42.js"></script>
+
         
       </head>
     
@@ -843,7 +855,9 @@ content: ''!important;
           {%- render 'cart-drawer' -%}
         {%- endif -%}
     
-        {% sections 'header-group' %}
+         {% unless template == 'page.goaffpro-create' %}
+        {% sections 'header-group' %}  
+        {% endunless %}
         {% if settings.show_sidebar_menu %}
           <div class="content layout-side-menu">
             {% render 'header-sidebar-menu' %}
@@ -879,11 +893,12 @@ content: ''!important;
                 .side-bar-comtainer .sidebarmenu {flex: 0 0 236px;}
               }
             </style>
-            <div class="grid-container {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %} side-bar-comtainer">
-              
+            <div class="{% unless template == 'page.goaffpro-create' %} grid-container {% endunless %} {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %} {% unless template == 'page.goaffpro-create' %} side-bar-comtainer {% endunless %}">
+              {% unless template == 'page.goaffpro-create' %}
               <aside class="sidebarmenu">
                 {% render 'header-sidebar-menu' %}
               </aside>
+            {% endunless %}
 
               <div class="inner-container">
                 {{ content_for_layout }}
