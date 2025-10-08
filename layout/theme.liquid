@@ -2,6 +2,7 @@
     <html class="js" lang="{{ request.locale.iso_code }}">
       <head>
         <meta charset="utf-8">
+        <link rel="preconnect" href="https://cdn.shopify.com">
          {% render 'optimization', postpone_loading: 'init' %}         
           <meta http-equiv="X-UA-Compatible" content="IE=edge">
           <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -36,27 +37,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-PFW6SMSL');</script>
 <!-- End Google Tag Manager -->
-          {% if template contains 'index' %}
-          <script type="application/ld+json">
-            {
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              "name": {{ shop.name | json }},
-              {% if settings.logo %}
-                "logo": {{ settings.logo | image_url: width: 500 | prepend: "https:" | json }},
-              {% endif %}
-              "sameAs": [
-                {% if settings.social_twitter_link %}{{ settings.social_twitter_link | json }}{% endif %}
-                {% if settings.social_facebook_link %}, {{ settings.social_facebook_link | json }}{% endif %}
-                {% if settings.social_pinterest_link %}, {{ settings.social_pinterest_link | json }}{% endif %}
-                {% if settings.social_instagram_link %}, {{ settings.social_instagram_link | json }}{% endif %}
-                {% if settings.social_tiktok_link %}, {{ settings.social_tiktok_link | json }}{% endif %}
-                {% if settings.social_youtube_link %}, {{ settings.social_youtube_link | json }}{% endif %}
-              ],
-              "url": {{ request.origin | append: page.url | json }}
-            }
-          </script>
-        {% endif %}
+        {% render 'json-ld-tags'  settings:settings%}
 
 
   {% if template contains 'product' and product %}
