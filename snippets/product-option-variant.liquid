@@ -1,0 +1,80 @@
+{% comment %}
+  Компонент для рендеринга варианта продукта
+  Параметры:
+    - variant: вариант продукта
+    - product_option: родительская опция продукта
+    - hide_quantity: флаг скрытия селектора количества
+{% endcomment %}
+
+{% assign is_default_variant = variant.product.has_only_default_variant %}
+
+{% if is_default_variant %}
+    {% assign product_title = variant.product.title %}
+    {% assign featured_image = variant.product.featured_image %}
+{% else %}
+    {% assign product_title = variant.title %}
+    {% assign featured_image = variant.featured_image %}
+{% endif %}
+
+<label class="product-options__swatch-wrapper {% if variant.available == false %}product-options__swatch-wrapper--soldout{% endif %}"
+       {% if variant.available == false %}title="Sold out"{% endif %}>
+    <input type="radio"
+           field-name="{{ product_option.product_option_title }}"
+           name="{{ product_option.product_option_title }}"
+           value="{{ variant.id }}"
+           autocomplete="off"
+            {% if variant.id ==  default %}
+                checked
+            {% endif %}
+           class="product-options__swatch-input"
+           {% if variant.available == false %}disabled="disabled"{% endif %}>
+
+    {% if featured_image %}
+        <div class="product-options__swatch-img-wrapper">
+            <img src="{{ featured_image | image_url: width: 300, height: 300 }}">
+        </div>
+    {% endif %}
+
+
+        <span avis-price="{{ variant.price | money_without_currency }}"
+              avis-price-compare="0"
+              class="product-options__swatch-price">{{ variant.price | money }}</span>
+
+
+    {% assign cleaned_title = product_title %}
+
+    {% if product_title contains "($" or product_title contains "(+$" %}
+        {% assign parts = product_title | split: ")" %}
+        {% if parts.size > 1 %}
+            {% assign first_part = parts | first | append: ")" %}
+            {% if first_part contains "$" %}
+                {% assign cleaned_title = product_title | remove_first: first_part | strip %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+    {% if cleaned_title contains "($" or cleaned_title contains "(+$" %}
+        {% assign last_bracket_index = cleaned_title | split: "(" | size | minus: 1 %}
+        {% if last_bracket_index > 0 %}
+            {% assign parts = cleaned_title | split: "(" %}
+            {% assign last_part = "(" | append: parts[last_bracket_index] %}
+            {% if last_part contains "$" and last_part contains ")" %}
+                {% assign cleaned_title = cleaned_title | remove: last_part | strip %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+    <span class="product-options__swatch-title">{{ cleaned_title }}</span>
+
+    {% if variant.price > 0 and hide_quantity != true %}
+        <div class="product-options__quantity-selector" style="display: none;">
+            <button type="button" class="product-options__quantity-btn product-options__quantity-minus">
+                {% render 'product-option-minus' %}
+            </button>
+            <input type="number" min="1" value="1" class="product-options__quantity-input">
+            <button type="button" class="product-options__quantity-btn product-options__quantity-plus">
+                {% render 'product-option-plus' %}
+            </button>
+        </div>
+    {% endif %}
+</label>
