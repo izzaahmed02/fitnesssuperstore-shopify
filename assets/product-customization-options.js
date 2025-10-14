@@ -6,11 +6,16 @@ if (!customElements.get('product-customization-options')) {
         super();
         this.accordions = this.querySelectorAll('[data-option-accordion]');
         this.customizationOptions = this.querySelectorAll('[ data-customization-option]');
+        this.customColorOptionButton = this.querySelector('.custom-color-trigger');
+        this.closeColorPopupButton = this.querySelector('.close-color-popup');
+        this.customColorOptionPupop = this.querySelector('.custom-color-input');
       }
 
       connectedCallback() {
         this.toggleAccordions();
         this.setCustomizationOption();
+        this.openColorPopup();
+        this.closeColorPopup();
       }
 
       toggleAccordions() {
@@ -132,6 +137,20 @@ if (!customElements.get('product-customization-options')) {
             <path fill-rule="evenodd" clip-rule="evenodd" d="M3.57808 3.57417C3.81239 3.33986 4.19229 3.33986 4.42661 3.57417L8.00234 7.14991L11.5781 3.57417C11.8124 3.33986 12.1923 3.33986 12.4266 3.57417C12.6609 3.80849 12.6609 4.18839 12.4266 4.4227L8.85087 7.99844L12.4266 11.5742C12.6609 11.8085 12.6609 12.1884 12.4266 12.4227C12.1923 12.657 11.8124 12.657 11.5781 12.4227L8.00234 8.84697L4.42661 12.4227C4.19229 12.657 3.81239 12.657 3.57808 12.4227C3.34377 12.1884 3.34377 11.8085 3.57808 11.5742L7.15382 7.99844L3.57808 4.4227C3.34377 4.18839 3.34377 3.80849 3.57808 3.57417Z" fill="black"/>
         </svg>
         </p>`;
+      }
+
+      openColorPopup() {
+        if (!this.customColorOptionButton && !this.customColorOptionPupop) return;
+        this.customColorOptionButton.addEventListener('click', () => {
+          this.customColorOptionPupop.style.display = 'block';
+        });
+      }
+
+      closeColorPopup() {
+        if (!this.closeColorPopupButton) return;
+        this.closeColorPopupButton.addEventListener('click', () => {
+          this.customColorOptionPupop.style.display = 'none';
+        });
       }
     }
   );
