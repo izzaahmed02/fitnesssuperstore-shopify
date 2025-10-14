@@ -6,69 +6,90 @@
     - forloop_index: индекс текущей итерации цикла
 {% endcomment %}
 
-<div data-type="{{ category.title }}" class="product-options__accordion">
+{% liquid
+  assign conditions_to_render = ''
+  if product_option.tier_parent_products.value != blank
+    for condition in product_option.tier_parent_products.value
+      assign conditions_to_render = conditions_to_render | append: condition.id | append: ', '
+    endfor
+  endif
+%}
 
-    {% assign current_time = 'now' | date: '%s%N' %}
-    {% assign random_suffix = current_time | times: forloop_index | plus: forloop_index0 %}
-    {% assign extra_unique = current_time | reverse | slice: 0, 5 %}
-    {% assign accordion_id = 'accordion-content-' | append: product_option.product_option_title | handleize | append: '-' | append: forloop_index | append: '-' | append: product_id | append: '-' | append: random_suffix | append: '-' | append: extra_unique %}
-    <button class="product-options__accordion-header" aria-expanded="false" aria-controls="{{ accordion_id }}">
-        <h3 class="product-options__subcategory-title">
-            {{ product_option.product_option_title }}
-            {% assign has_related_products = false %}
-            {% for variant in product_option.product_option_variants.value %}
-                {% if variant.product.metafields.custom.related_products.value %}
-                    {% assign has_related_products = true %}
-                    {% assign first_variant_with_related = variant %}
-                    {% break %}
-                {% else %}
-                    {% if variant.product.description != blank %}
-                        {% assign has_related_products = true %}
-                    {% endif %}
+<div
+  data-type="{{ category.title }}"
+  data-option-accordion
+  class="product-options__accordion"
+  {% if conditions_to_render != blank %}
+    data-conditions-to-render="{{ conditions_to_render | replace_last: ',', '' | strip }}"
+  {% endif %}
+>
+  {% assign current_time = 'now' | date: '%s%N' %}
+  {% assign random_suffix = current_time | times: forloop_index | plus: forloop_index0 %}
+  {% assign extra_unique = current_time | reverse | slice: 0, 5 | first %}
+  {% assign accordion_id = 'accordion-content-'
+    | append: product_option.product_option_title
+    | handleize
+    | append: '-'
+    | append: forloop_index
+    | append: '-'
+    | append: product_id
+    | append: '-'
+    | append: random_suffix
+    | append: '-'
+    | append: extra_unique
+  %}
+  <button class="product-options__accordion-header" aria-expanded="false" aria-controls="{{ accordion_id }}" data-open-accordion>
+    <h3 class="product-options__subcategory-title" data-option-title>
+      {{ product_option.product_option_title }}
+      {% assign has_related_products = false %}
+      {% for variant in product_option.product_option_variants.value %}
+        {% if variant.product.metafields.custom.related_products.value %}
+          {% assign has_related_products = true %}
+          {% assign first_variant_with_related = variant %}
+          {% break %}
+        {% else %}
+          {% if variant.product.description != blank %}
+            {% assign has_related_products = true %}
+          {% endif %}
 
-                    {% assign first_variant_with_related = variant %}
-                {% endif %}
-            {% endfor %}
-            {% if has_related_products %}
-                {% render 'related-products-button', product_id: first_variant_with_related.product.id %}
-            {% endif %}
-        </h3>
+          {% assign first_variant_with_related = variant %}
+        {% endif %}
+      {% endfor %}
+      {% if has_related_products %}
+        {% render 'related-products-button', product_id: first_variant_with_related.product.id %}
+      {% endif %}
+    </h3>
 
-        <span class="product-options__accordion-label">
-      <span class="product-options__accordion-label-title"></span>
-      <span class="product-options__accordion-label-price"></span>
-      {% render 'product-option-remove' %}
-    </span>
+    <span class="product-options__accordion-label" data-selected-options="{{ product_option.product_option_sets_default.value.id }}"> </span>
 
-        <span class="product-options__accordion-icon">
+    <span class="product-options__accordion-icon">
       {% render 'product-option-chevron' %}
     </span>
-    </button>
+  </button>
 
-    <div id="{{ accordion_id }}" class="product-options__accordion-content" hidden>
-        <div class="product-options__item product-options__swatch-container"
-             key="{{ product_option.product_option_title | handleize }}"
-             role="group"
-             aria-labelledby="product-options-{{ product_option.product_option_title | handleize }}-{{ forloop_index0 }}-{{ forloop_index }}">
+  <div id="{{ accordion_id }}" class="product-options__accordion-content" hidden>
+    <div
+      class="product-options__item product-options__swatch-container"
+      key="{{ product_option.product_option_title | handleize }}"
+      role="group"
+      aria-labelledby="product-options-{{ product_option.product_option_title | handleize }}-{{ forloop_index0 }}-{{ forloop_index }}"
+    >
+      <div class="product-options__label-tooltip">
+        <label
+          class="product-options__title"
+          id="product-options-{{ product_option.product_option_title | handleize }}-{{ forloop_index0 }}-{{ forloop_index }}"
+        >
+        </label>
+        <div class="selected_options_container"></div>
+      </div>
 
-            <div class="product-options__label-tooltip">
-                <label class="product-options__title"
-                       id="product-options-{{ product_option.product_option_title | handleize }}-{{ forloop_index0 }}-{{ forloop_index }}">
-                </label>
-                <div class="selected_options_container"></div>
-            </div>
-
-            <span class="product-options__swatch product-options__swatch--single">
+      <span class="product-options__swatch product-options__swatch--single">
         {% for variant in product_option.product_option_variants.value %}
-            {% if variant.title != 'No Thanks' %}
-                {% render 'product-option-variant',
-                        variant: variant,
-                        default: default,
-                        product_option: product_option,
-                        hide_quantity: product_option.hide_quantity %}
-            {% endif %}
+          {% if variant.title != 'No Thanks' %}
+            {% render 'product-option-variant', variant: variant, default: default, product_option: product_option, hide_quantity: product_option.hide_quantity %}
+          {% endif %}
         {% endfor %}
       </span>
-        </div>
     </div>
+  </div>
 </div>

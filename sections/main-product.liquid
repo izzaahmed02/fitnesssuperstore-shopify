@@ -149,6 +149,8 @@
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
 
+  {{ 'product-options.css' | asset_url | stylesheet_tag }}
+
   {%- style -%}
     .section-{{ section.id }}-padding {
       padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
@@ -807,7 +809,13 @@
 
             {%- when 'price_with_option' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
-                <product-form
+                {% assign tag = 'product-form' %}
+
+                {% assign custom_prouct_options_block = section.blocks | where: 'type', 'product_options' %}
+                {% if custom_prouct_options_block.size > 0 %}
+                  {% assign tag = 'product-form-with-options' %}
+                {% endif %}
+                <{{ tag }}
                   class="product-form"
                   data-hide-errors="{{ gift_card_recipient_feature_active }}"
                   data-section-id="{{ section.id }}"
@@ -1165,7 +1173,7 @@
                     </div>
                   {% endif %}
                   {% render 'paylater-providers' %}
-                </product-form>
+                </{{ tag }}>
               {% endunless %}
             {%- when 'inventory' -%}
               <p
@@ -1498,7 +1506,7 @@
             {%- when 'variant_picker' -%}
               {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
             {%- when 'buy_buttons' -%}
-              {%- render 'buy-buttons', block: block, product: product, product_form_id: product_form_id, section_id: section.id, show_pickup_availability: true -%}
+              {%- render 'buy-buttons', block: block, product: product, product_form_id: product_form_id, section_id: section.id, show_pickup_availability: true, section: section -%}
             {%- when 'rating' -%}
               {%- if product.metafields.reviews.rating.value != blank -%}
                 <div class="rating-wrapper">
@@ -1677,6 +1685,8 @@
               </product-recommendations>
             {%- when 'icon-with-text' -%}
               {% render 'icon-with-text', block: block %}
+            {% when 'product_options' %}
+              {% render 'product-options', product: product %}
           {%- endcase -%}
         {%- endfor -%}
         <a href="{{ product.url }}" class="link product__view-details animate-arrow">
@@ -1812,9 +1822,9 @@
 <script>
   window.product = {{ product | json }}
 </script>
-<script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
+{% comment %} <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script> {% endcomment %}
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
-
+<script src="{{'product-customization-options.js' | asset_url }}" defer></script>
 <script defer type="text/javascript">
   var sa_products_count = 3;
   var sa_date_format = 'F j, Y';
