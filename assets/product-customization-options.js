@@ -14,8 +14,7 @@ if (!customElements.get('product-customization-options')) {
       connectedCallback() {
         this.toggleAccordions();
         this.setCustomizationOption();
-        // this.openColorPopup();
-        // this.closeColorPopup();
+        this.handleQuantity();
       }
 
       toggleAccordions() {
@@ -37,7 +36,7 @@ if (!customElements.get('product-customization-options')) {
       setCustomizationOption() {
         if (!this.customizationOptions.length === 0) return;
         this.customizationOptions.forEach((option) => {
-          option.addEventListener('input', (e) => {
+          option.addEventListener('input', () => {
             const optionContainer = option.closest('[data-option-accordion]');
             if (!optionContainer) return;
             const optionHandler = optionContainer.querySelector('[data-selected-options]');
@@ -48,7 +47,7 @@ if (!customElements.get('product-customization-options')) {
               this.conditionalChoice(option);
             }
             if (option.hasAttribute('data-has-multichoice')) {
-              this.multichoice(option, optionHandler);
+              this.multichoice(optionHandler, option);
             }
           });
         });
@@ -112,7 +111,7 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
-      multichoice(option, optionHandler) {
+      multichoice(optionHandler, option) {
         let selctedValues = [];
         const optionName = option.name;
         if (option.dataset.fieldName !== 'No Thanks') {
@@ -137,6 +136,30 @@ if (!customElements.get('product-customization-options')) {
             <path fill-rule="evenodd" clip-rule="evenodd" d="M3.57808 3.57417C3.81239 3.33986 4.19229 3.33986 4.42661 3.57417L8.00234 7.14991L11.5781 3.57417C11.8124 3.33986 12.1923 3.33986 12.4266 3.57417C12.6609 3.80849 12.6609 4.18839 12.4266 4.4227L8.85087 7.99844L12.4266 11.5742C12.6609 11.8085 12.6609 12.1884 12.4266 12.4227C12.1923 12.657 11.8124 12.657 11.5781 12.4227L8.00234 8.84697L4.42661 12.4227C4.19229 12.657 3.81239 12.657 3.57808 12.4227C3.34377 12.1884 3.34377 11.8085 3.57808 11.5742L7.15382 7.99844L3.57808 4.4227C3.34377 4.18839 3.34377 3.80849 3.57808 3.57417Z" fill="black"/>
         </svg>
         </p>`;
+      }
+
+      handleQuantity() {
+        if (this.accordions.length === 0) return;
+        this.accordions.forEach((accordion) => {
+          const quantitySelectorContainer = accordion.querySelector('[data-quantity-selector]');
+          if (!quantitySelectorContainer) return;
+          const qunatityInput = quantitySelectorContainer.querySelector('[data-input-quantity]');
+          const btnIncrease = quantitySelectorContainer.querySelector('[data-increase-quantity]');
+          const btnDecrease = quantitySelectorContainer.querySelector('[data-decrease-quantity]');
+          this.addQuantityListener(btnIncrease, 'increase', qunatityInput);
+          this.addQuantityListener(btnDecrease, 'decrease', qunatityInput);
+        });
+      }
+
+      addQuantityListener(el, option, input) {
+        el.addEventListener('click', () => {
+          const inputValue = Number(input.value);
+          console.log(inputValue);
+          console.log();
+
+          if (inputValue - 1 === 0 && option === 'decrease') return;
+          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+        });
       }
     }
   );

@@ -24,8 +24,10 @@
 
 {% if products %}
   {% for variant in products %}
-    {% if variant.title contains 'Custom Color' %}
-      {% assign custom_color_price = variant.price | money_without_currency %}
+    {% if custom_color_price.title contains 'Custom Color' %}
+      {% if variant.price != 0 %}
+        {% assign custom_color_price = variant.price | money_without_currency %}
+      {% endif %}
       {% assign custom_color_variant_id = variant.id %}
       {% assign has_custom_color = true %}
       {% break %}
@@ -103,8 +105,8 @@
           {% if variant.id == default %}
             data-checked
           {% endif %}
-          data-color-price="{{ variant.price | money }}"
-          data-tool-tip="{% if is_unavailable %}{{ variant.title }} (unavailable or sold-out){% else %}{{ variant.title }} {{ variant.price | money }}{% endif %}"
+          data-color-price="{% if variant.price != 0 %}{{ variant.price | money }}{% endif %}"
+          data-tool-tip="{% if is_unavailable %}{{ variant.title }} (unavailable or sold-out){% else %}{{ variant.title }} {% if variant.price != 0 %}{{ variant.price | money }}{% endif %}{% endif %}"
           data-title="{{ variant.title }}"
           style="background: {{ background_color | replace: ');', ')' }}; {% if is_unavailable %}opacity: 0.6;{% endif %}"
         ></div>
