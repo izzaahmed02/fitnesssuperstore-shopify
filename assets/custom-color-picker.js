@@ -180,6 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Close the popup after successful addition but don't reset prices
         this.hideCustomColorForm(false);
+        this.colorGroupElement.setAttribute('data-default', '');
       });
     }
 
@@ -347,6 +348,7 @@ document.addEventListener('DOMContentLoaded', function () {
         cartForm.appendChild(colorInput);
         console.log(`Создано скрытое поле для ${this.groupColorName} Color`);
       }
+
       colorInput.value = `Custom Color: ${color}`;
       console.log(`Установлено значение скрытого поля: ${colorInput.value}`);
       if (priceText) {
@@ -439,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedColorElement: this.element.querySelector('.option_selected'),
         selectedColorPriceElement: this.element.querySelector('.option_selected-price'),
         selectedColorInfo: this.element.querySelector('.option_selected-container'),
-        closeSelectedInfoBtn: this.element.querySelector('svg'),
+        closeSelectedInfoBtn: this.element.querySelector('svg.close-option'),
         colorOptionsContainer: this.element.querySelector('.color-options-container'),
         swatchContainer: this.element.querySelector('.color-options'),
       };
@@ -661,21 +663,25 @@ document.addEventListener('DOMContentLoaded', function () {
           const groupName = groupContainer.getAttribute('data-group-color-name');
           const groupType = groupName ? groupName.toLowerCase() : '';
           // Find the hidden input relative to the current group container
+
           const inputHidden = groupContainer.closest('.custom-color-group').querySelector(`#custom-color-${groupType}-hidden`);
           if (inputHidden) {
             inputHidden.setAttribute('data-price', colorPrice);
+            inputHidden.value = colorName;
           }
           const selectedElement = groupContainer.querySelector('.option_selected');
           const selectedPriceElement = groupContainer.querySelector('.option_selected-price');
           const selectedContainer = groupContainer.querySelector('.option_selected-container');
-
           if (selectedElement) selectedElement.textContent = `Color: ${colorName}`;
           if (selectedPriceElement) selectedPriceElement.textContent = colorPrice;
           if (selectedContainer) selectedContainer.style.display = 'flex';
           groupContainer.querySelectorAll('.swatch').forEach((s) => {
             s.classList.remove('color-selected');
           });
+
           this.classList.add('color-selected');
+          groupContainer.setAttribute('data-default', this.getAttribute('data-default'));
+
           updateHiddenFields(groupContainer, colorName, colorPrice, this);
         });
       }
@@ -705,7 +711,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
           if (selectedElement) selectedElement.textContent = '';
           if (selectedPriceElement) selectedPriceElement.textContent = '';
+
           resetHiddenFields(groupContainer);
+
+          const defaultSwatch = groupContainer.querySelector('.swatch[data-default="default"]');
+          if (defaultSwatch) {
+            defaultSwatch.click();
+          }
 
           console.log('Удалена опция цвета в группе:', groupContainer.getAttribute('data-group-color-name'));
         });
@@ -924,7 +936,6 @@ window.reinitializeColorPicker = function () {
         const selectedElement = groupContainer.querySelector('.option_selected');
         const selectedPriceElement = groupContainer.querySelector('.option_selected-price');
         const selectedContainer = groupContainer.querySelector('.option_selected-container');
-
         if (selectedElement) selectedElement.textContent = `Color: ${colorName}`;
         if (selectedPriceElement) selectedPriceElement.textContent = colorPrice;
         if (selectedContainer) selectedContainer.style.display = 'flex';
