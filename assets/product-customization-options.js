@@ -6,15 +6,15 @@ if (!customElements.get('product-customization-options')) {
         super();
         this.accordions = this.querySelectorAll('[data-option-accordion]');
         this.customizationOptions = this.querySelectorAll('[ data-customization-option]');
-        this.customColorOptionButton = this.querySelector('.custom-color-trigger');
-        this.closeColorPopupButton = this.querySelector('.close-color-popup');
-        this.customColorOptionPupop = this.querySelector('.custom-color-input');
+        this.openPopupButtons = this.querySelectorAll('[data-popup-open]');
+        this.closePopupButtons = document.querySelectorAll('[data-close-popup]');
       }
 
       connectedCallback() {
         this.toggleAccordions();
         this.setCustomizationOption();
         this.handleQuantity();
+        this.handlePopupHelper();
       }
 
       toggleAccordions() {
@@ -103,10 +103,18 @@ if (!customElements.get('product-customization-options')) {
         if (optionsToRender.length === 0) return;
         optionsToRender.forEach((renderOption) => {
           const conditionsToRender = renderOption.dataset.conditionsToRender;
+          const selectedOptionsValue = renderOption.querySelector('[data-selected-options]');
+
           if (conditionsToRender.includes(option.dataset.hasConditions)) {
             renderOption.style.display = 'block';
+            const selectedOptions = renderOption.querySelectorAll('[data-customization-option]:checked');
+            if (selectedOptions.length === 0) return;
+
+            selectedOptionsValue.dataset.selectedOptions = [...selectedOptions].map((option) => option.value).join(',');
           } else {
             renderOption.style.display = 'none';
+            if (!selectedOptionsValue) return;
+            selectedOptionsValue.dataset.selectedOptions = '';
           }
         });
       }
@@ -154,11 +162,29 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input) {
         el.addEventListener('click', () => {
           const inputValue = Number(input.value);
-          console.log(inputValue);
-          console.log();
-
           if (inputValue - 1 === 0 && option === 'decrease') return;
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+        });
+      }
+
+      handlePopupHelper() {
+        if (this.openPopupButtons.length === 0) return;
+        this.openPopupButtons.forEach((button) => {
+          button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const popup = document.querySelector(`[data-popup="${button.dataset?.popupOpen}"`);
+            if (!popup) return;
+            popup.classList.add('active');
+          });
+        });
+
+        if (this.closePopupButtons.length === 0) return;
+        this.closePopupButtons.forEach((button) => {
+          button.addEventListener('click', () => {
+            const popup = document.querySelector(`[data-popup="${button.dataset?.closePopup}"`);
+            if (!popup) return;
+            popup.classList.remove('active');
+          });
         });
       }
     }
