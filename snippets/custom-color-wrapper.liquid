@@ -24,10 +24,8 @@
 
 {% if products %}
   {% for variant in products %}
-    {% if custom_color_price.title contains 'Custom Color' %}
-      {% if variant.price != 0 %}
-        {% assign custom_color_price = variant.price | money_without_currency %}
-      {% endif %}
+    {% if variant.title contains 'Custom Color' %}
+      {% assign custom_color_price = variant.price | money_without_currency %}
       {% assign custom_color_variant_id = variant.id %}
       {% assign has_custom_color = true %}
       {% break %}
@@ -51,7 +49,7 @@
 {% endcapture %}
 
 {% capture close_icon_svg %}
-    <svg class="close-color-popup" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path fill-rule="evenodd" clip-rule="evenodd"
               d="M4.46967 4.46967C4.76256 4.17678 5.23744 4.17678 5.53033 4.46967L10 8.93934L14.4697 4.46967C14.7626 4.17678 15.2374 4.17678 15.5303 4.46967C15.8232 4.76256 15.8232 5.23744 15.5303 5.53033L11.0607 10L15.5303 14.4697C15.8232 14.7626 15.8232 15.2374 15.5303 15.5303C15.2374 15.8232 14.7626 15.8232 14.4697 15.5303L10 11.0607L5.53033 15.5303C5.23744 15.8232 4.76256 15.8232 4.46967 15.5303C4.17678 15.2374 4.17678 14.7626 4.46967 14.4697L8.93934 10L4.46967 5.53033C4.17678 5.23744 4.17678 4.76256 4.46967 4.46967Z"
               fill="black"/>
@@ -77,8 +75,8 @@
           {% for part in color_parts %}
             {% assign part_trimmed = part | strip %}
             {% capture part_color %}
-                {% render 'get-color-by-name', part_name: part_trimmed, color_map: color_map %}
-            {% endcapture %}
+                            {% render 'get-color-by-name', part_name: part_trimmed, color_map: color_map %}
+                        {% endcapture %}
 
             {% if gradient_colors != '' %}
               {% assign gradient_colors = gradient_colors | append: ', ' %}
@@ -94,8 +92,8 @@
           {% endif %}
         {% else %}
           {% capture background_color %}
-                {% render 'get-color-by-name', part_name: color_name, color_map: color_map %}
-            {% endcapture %}
+                        {% render 'get-color-by-name', part_name: color_name, color_map: color_map %}
+                    {% endcapture %}
         {% endif %}
 
         <div
@@ -106,7 +104,7 @@
             data-checked
           {% endif %}
           data-color-price="{% if variant.price != 0 %}{{ variant.price | money }}{% endif %}"
-          data-tool-tip="{% if is_unavailable %}{{ variant.title }} (unavailable or sold-out){% else %}{{ variant.title }} {% if variant.price != 0 %}{{ variant.price | money }}{% endif %}{% endif %}"
+          data-tool-tip="{% if is_unavailable %}{{ variant.title }} (unavailable or sold-out){% else %}{{ variant.title }} {{ variant.price | money }}{% endif %}"
           data-title="{{ variant.title }}"
           style="background: {{ background_color | replace: ');', ')' }}; {% if is_unavailable %}opacity: 0.6;{% endif %}"
         ></div>
