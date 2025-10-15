@@ -12,14 +12,26 @@
     {% endif %}
   {% endif %}
 
+  {% for item in product %}
+    {% assign item_product = item.product %}
+    {% break %}
+  {% endfor %}
+
   {% if products.product_option_title contains 'Paint' or has_custom_color_paint %}
     <div class="group-color-container" data-group-color-name="Paint">
-      <div class="group-color">
-        <span class="apo-title">Paint Color</span>
+      <h3 class="group-color product-options__subcategory-title">
+        Paint Color
+        {% render 'related-products-button',
+          product_id: item_product.id,
+          product_handle: item_product.handle,
+          product_category: item_product.metafields.custom.option_category_id.value,
+          option_title: products.product_option_title
+        %}
         <div class="option_selected-container" style="display: none;">
           <p class="option_selected"></p>
           <span class="option_selected-price"></span>
           <svg
+            class="close-option"
             width="16"
             height="16"
             viewBox="0 0 16 16"
@@ -31,7 +43,7 @@
                   fill="black"/>
           </svg>
         </div>
-      </div>
+      </h3>
 
       <div class="color_options_container options_container">
         {% render 'custom-color-wrapper', group: 'paint', products: products.product_option_variants.value, title: products.product_option_title, default: default %}
@@ -41,12 +53,14 @@
 
   {% if products.product_option_title contains 'Vinyl' or has_custom_color_vinyl %}
     <div class="group-color-container" data-group-color-name="Vinyl">
-      <div class="group-color">
-        <span class="apo-title">Vinyl Color</span>
+      <h3 class="group-color product-options__subcategory-title">
+        Vinyl Color
+        {% render 'related-products-button', product_id: item_product.id, product_handle: item_product.handle, product_category: item_product.metafields.custom.option_category_id.value %}
         <div class="option_selected-container" style="display: none;">
           <p class="option_selected"></p>
           <span class="option_selected-price"></span>
           <svg
+            class="close-option"
             width="16"
             height="16"
             viewBox="0 0 16 16"
@@ -58,7 +72,7 @@
                   fill="black"/>
           </svg>
         </div>
-      </div>
+      </h3>
 
       <div class="color_options_container options_container">
         {% render 'custom-color-wrapper', group: 'vinyl', products: products.product_option_variants.value, title: products.product_option_title, default: default %}

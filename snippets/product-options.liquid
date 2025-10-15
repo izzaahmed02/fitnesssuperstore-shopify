@@ -11,24 +11,6 @@
       {% assign index = index | plus: 1 %}
       <h2 class="product-options__category-title">
         <span>{{ index }}</span>{{ category.title }}
-        {% assign has_related_products = false %}
-        {% for product_option in category.product_options.value %}
-          {% if product_option.product_option_variants.value %}
-            {% if product_option.product_option_title contains 'Color' %}
-              {% assign has_related_products = true %}
-            {% endif %}
-            {% for variant in product_option.product_option_variants.value %}
-              {% if variant.product.description %}
-                {% assign first_variant_with_related = variant.product.id %}
-              {% else %}
-                {% assign has_related_products = false %}
-              {% endif %}
-            {% endfor %}
-          {% endif %}
-        {% endfor %}
-        {% if has_related_products %}
-          {% render 'related-products-button', product_id: first_variant_with_related, option_title: category.title %}
-        {% endif %}
       </h2>
     {% endif %}
     {% for product_option in category.product_options.value %}
