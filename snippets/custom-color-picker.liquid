@@ -18,64 +18,92 @@
   {% endfor %}
 
   {% if products.product_option_title contains 'Paint' or has_custom_color_paint %}
-    <div class="group-color-container" data-group-color-name="Paint">
+    <div class="group-color-container" data-group-color-name="{{  products.product_option_title }}">
       <h3 class="group-color product-options__subcategory-title">
-        Paint Color
+        {{ products.product_option_title }}
         {% render 'related-products-button',
           product_id: item_product.id,
           product_handle: item_product.handle,
           product_category: item_product.metafields.custom.option_category_id.value,
           option_title: products.product_option_title
         %}
-        <div class="option_selected-container" style="display: none;">
-          <p class="option_selected"></p>
-          <span class="option_selected-price"></span>
-          <svg
-            class="close-option"
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path fill-rule="evenodd" clip-rule="evenodd"
-                  d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
-                  fill="black"/>
-          </svg>
+        <div class="option_selected-container" data-selected-color-option>
+          <p class="option_selected" data-option-id="{{ products.product_option_sets_default.value.id }}">
+            <span data-color-selected-title>
+              {{ products.product_option_sets_default.value.title }}
+            </span>
+            <span class="option_selected-price">
+              {% if products.product_option_sets_default.value.price > 0 %}
+                {{ products.product_option_sets_default.value.price }}
+              {% endif %}
+            </span>
+            <svg
+              class="close-option"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path fill-rule="evenodd" clip-rule="evenodd"
+                    d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
+                    fill="black"/>
+            </svg>
+          </p>
         </div>
       </h3>
 
       <div class="color_options_container options_container">
-        {% render 'custom-color-wrapper', group: 'paint', products: products.product_option_variants.value, title: products.product_option_title, default: default %}
+        {% render 'custom-color-wrapper',
+          group: 'paint',
+          products: products.product_option_variants.value,
+          title: products.product_option_title,
+          default: default,
+          default_option: products.product_option_sets_default.value
+        %}
       </div>
     </div>
   {% endif %}
 
   {% if products.product_option_title contains 'Vinyl' or has_custom_color_vinyl %}
-    <div class="group-color-container" data-group-color-name="Vinyl">
+    <div class="group-color-container" data-group-color-name="{{ products.product_option_title}}">
       <h3 class="group-color product-options__subcategory-title">
-        Vinyl Color
+        {{ products.product_option_title }}
         {% render 'related-products-button', product_id: item_product.id, product_handle: item_product.handle, product_category: item_product.metafields.custom.option_category_id.value %}
-        <div class="option_selected-container" style="display: none;">
-          <p class="option_selected"></p>
-          <span class="option_selected-price"></span>
-          <svg
-            class="close-option"
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path fill-rule="evenodd" clip-rule="evenodd"
-                  d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
-                  fill="black"/>
-          </svg>
+        <div class="option_selected-container">
+          <p class="option_selected" data-option-id="{{ products.product_option_sets_default.value.id }}">
+            <span data-color-selected-title>
+              {{ products.product_option_sets_default.value.title }}
+            </span>
+            <span class="option_selected-price">
+              {% if products.product_option_sets_default.value.price > 0 %}
+                {{ products.product_option_sets_default.value.price }}
+              {% endif %}
+            </span>
+            <svg
+              class="close-option"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path fill-rule="evenodd" clip-rule="evenodd"
+                    d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
+                    fill="black"/>
+            </svg>
+          </p>
         </div>
       </h3>
 
       <div class="color_options_container options_container">
-        {% render 'custom-color-wrapper', group: 'vinyl', products: products.product_option_variants.value, title: products.product_option_title, default: default %}
+        {% render 'custom-color-wrapper',
+          group: 'vinyl',
+          products: products.product_option_variants.value,
+          title: products.product_option_title,
+          default: default,
+          default_option: products.product_option_sets_default.value
+        %}
       </div>
     </div>
   {% endif %}

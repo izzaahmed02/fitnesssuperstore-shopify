@@ -50,7 +50,7 @@
 >
   <input
     type="{% if product_option.enable_multichoice == true %}checkbox{% else %}radio{% endif %}"
-    data-customization-option="{{ variant.id }}{% if variant.metafields.custom.price_reduction_value != blank %}:::{{variant.metafields.custom.price_reduction_value}}{% endif %}"
+    data-customization-option="{{ variant.id }}"
     {% if product_option.enable_conditional_choice == true %}
       data-has-conditions="{{ variant.id | strip }}"
     {% endif %}
@@ -100,7 +100,7 @@
       <button type="button" data-decrease-quantity="{{ variant.id }}" class="product-options__quantity-btn product-options__quantity-minus">
         {% render 'product-option-minus' %}
       </button>
-      <input type="number" data-input-quantity="{{ variant.id }}" min="1" value="1" class="product-options__quantity-input">
+      <input type="number" data-input-quantity="{{ variant.id }}" min="1" value="1" max="{{ variant.metafields.custom.max_quantity | default: 999 }}" class="product-options__quantity-input">
       <button type="button" data-increase-quantity="{{ variant.id }}" class="product-options__quantity-btn product-options__quantity-plus">
         {% render 'product-option-plus' %}
       </button>

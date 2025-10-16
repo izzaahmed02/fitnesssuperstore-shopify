@@ -16,7 +16,7 @@
 %}
 
 <div
-  data-type="{{ category.title }}"
+  data-type="{{ product_option.product_option_title | handleize }}"
   data-option-accordion
   class="product-options__accordion"
   {% if conditions_to_render != blank %}
@@ -61,10 +61,12 @@
         %}
       {% endif %}
     </h3>
+    {% assign price = product_option.product_option_sets_default.value.price %}
+    {% assign price_substract = product_option.product_option_sets_default.value.metafields.custom.price_reduction_value %}
 
     <span
       class="product-options__accordion-label"
-      data-selected-options="{{ product_option.product_option_sets_default.value.id }}"
+      data-selected-options="{{ product_option.product_option_sets_default.value.id }}{% if price_substract != blank %}:::-{{price_substract}}{% endif %}{% if price > 0 %}:::{{price}}{% endif %}"
       {% if product_option.mandatory %}
         data-mandatory
       {% endif %}

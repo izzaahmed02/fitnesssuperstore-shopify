@@ -5,9 +5,16 @@ if (!customElements.get('product-customization-options')) {
       constructor() {
         super();
         this.accordions = this.querySelectorAll('[data-option-accordion]');
-        this.customizationOptions = this.querySelectorAll('[ data-customization-option]');
+        this.customizationOptions = this.querySelectorAll('[data-customization-option]');
         this.openPopupButtons = this.querySelectorAll('[data-popup-open]');
         this.closePopupButtons = document.querySelectorAll('[data-close-popup]');
+        this.priceElement = document.querySelector('.pr_custom_price ');
+        this.swatches = this.querySelectorAll('[data-color-name]');
+        this.swatchesActiveContainer = this.querySelector('[data-selected-color-option]');
+        this.colorInput = this.querySelector('[data-color-variant-input]');
+        this.colorForm = this.querySelector('.custom-color-input');
+        this.addCustomColor = this.querySelector('.add-custom-color');
+        this.closeColorPopup = this.querySelector('[data-close-color-popup]');
       }
 
       connectedCallback() {
@@ -15,6 +22,9 @@ if (!customElements.get('product-customization-options')) {
         this.setCustomizationOption();
         this.handleQuantity();
         this.handlePopupHelper();
+        this.colorSwatchHandler();
+        this.addCustomColorHandler();
+        this.setDefaultOptionsListener();
       }
 
       toggleAccordions() {
@@ -49,6 +59,7 @@ if (!customElements.get('product-customization-options')) {
             if (option.hasAttribute('data-has-multichoice')) {
               this.multichoice(optionHandler, option);
             }
+            this.updatePrice();
           });
         });
       }
@@ -84,7 +95,7 @@ if (!customElements.get('product-customization-options')) {
             const filteredOptions = selectedValues.filter((item) => item !== id);
             optionHandler.dataset.selectedOptions = filteredOptions.join(',');
             option.remove();
-            const input = this.querySelector(`[data-customization-option="${id}"]`);
+            const input = this.querySelector(`[data-customization-option][value="${id}"]`);
             if (!input) return;
             input.checked = false;
             if (optionHandler.dataset.selectedOptions === '') {
@@ -94,6 +105,7 @@ if (!customElements.get('product-customization-options')) {
                 noThanksOriginalOption.disabled = false;
               }
             }
+            this.updatePrice();
           });
         });
       }
@@ -146,6 +158,17 @@ if (!customElements.get('product-customization-options')) {
         </p>`;
       }
 
+      setDefaultOptionsListener() {
+        this.customizationOptions.forEach((option) => {
+          const optionContainer = option.closest('[data-option-accordion]');
+          if (!optionContainer) return;
+          const optionHandler = optionContainer.querySelector('[data-selected-options]');
+          if (!optionHandler) return;
+          this.addRemoveListener(optionHandler, option);
+          this.updatePrice();
+        });
+      }
+
       handleQuantity() {
         if (this.accordions.length === 0) return;
         this.accordions.forEach((accordion) => {
@@ -162,8 +185,13 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input) {
         el.addEventListener('click', () => {
           const inputValue = Number(input.value);
+          const maxInputValue = Number(input.max);
           if (inputValue - 1 === 0 && option === 'decrease') return;
+          if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+          const optionContainer = el.closest('[data-option-accordion]').querySelector('[data-customization-option]');
+          if (!optionContainer) return;
+          optionContainer.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
 
@@ -185,6 +213,109 @@ if (!customElements.get('product-customization-options')) {
             if (!popup) return;
             popup.classList.remove('active');
           });
+        });
+      }
+
+      updatePrice() {
+        let priceAdjustment = 0;
+        let price = 0;
+        const activeOptions = document.querySelectorAll('[data-customization-option]:checked');
+        if (activeOptions.length === 0) return;
+        activeOptions.forEach((option) => {
+          const value = option.value;
+          if (value.includes(':::')) {
+            const quantityInput = document.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+            if (quantityInput) {
+              price = Number(value.split(':::')[1]) * Number(quantityInput.value);
+            } else {
+              price = Number(value.split(':::')[1]);
+            }
+            priceAdjustment += price;
+          }
+        });
+
+        const colorVariantInput = document.querySelector('[data-color-variant-input]');
+        const colorPrice = colorVariantInput.dataset?.price;
+
+        if (colorPrice !== '') {
+          priceAdjustment += Number(colorPrice || 0);
+        }
+
+        this.priceHelper(priceAdjustment);
+      }
+
+      priceHelper(priceAdjustment) {
+        if (!this.priceElement) return;
+        const currentPrice = this.priceElement.dataset?.priceValue;
+        const finalPrice = Number(currentPrice) + priceAdjustment;
+        const formattedPrice = finalPrice.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        this.priceElement.innerText = `${this.priceElement.dataset?.currency}${formattedPrice}`;
+      }
+
+      colorSwatchHandler() {
+        if (this.swatches.length === 0) return;
+        this.swatches.forEach((swatch) => {
+          swatch.addEventListener('click', () => {
+            this.swatches.forEach((swatch) => swatch.classList.remove('color-selected'));
+            swatch.classList.add('color-selected');
+            if (swatch.classList.contains('swatch--custom-trigger')) {
+              this.colorForm.removeAttribute('style');
+            } else {
+              this.colorForm.style.display = 'none';
+              this.colorInput.dataset.variant = swatch.dataset.id;
+              this.colorInput.dataset.price = swatch.dataset.colorPrice;
+
+              this.swatchesActiveContainer.innerHTML = this.setColorOptionHTML(swatch, false);
+              this.updatePrice();
+            }
+          });
+        });
+      }
+
+      addCustomColorHandler() {
+        if (!this.addCustomColor) return;
+        this.addCustomColor.addEventListener('click', () => {
+          const input = this.colorForm.querySelector('input[type="text"]');
+          if (!input) return;
+          this.colorInput.dataset.variant = input.dataset.id;
+          this.colorInput.dataset.price = input.dataset.price;
+          this.swatchesActiveContainer.innerHTML = this.setColorOptionHTML(input, true);
+          this.colorForm.style.display = 'none';
+          input.value = '';
+          this.updatePrice();
+        });
+      }
+
+      setColorOptionHTML(colorOption, customColor) {
+        return `<p class="option_selected" data-option-id="${colorOption.dataset.id}">
+          <span data-color-selected-title>
+          ${customColor ? `Custom Color: ${colorOption.value}` : `${colorOption.dataset.colorName}`}
+          </span>
+          <span class="option_selected-price">
+          ${customColor ? `${colorOption.dataset?.price !== '' ? `$${colorOption.dataset?.price}` : ''}` : `${colorOption.dataset.colorPrice !== '0' ? `$${colorOption.dataset.colorPrice}` : ''}`}
+          </span>
+          <svg
+            class="close-option"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
+                  fill="black"/>
+          </svg>
+        </p>`;
+      }
+
+      closeColorPopupHandler() {
+        if (!this.closeColorPopup) return;
+        this.closeColorPopup.addEventListener('click', () => {
+          this.colorForm.style.display = 'none';
         });
       }
     }

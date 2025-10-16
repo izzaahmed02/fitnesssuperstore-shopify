@@ -836,13 +836,36 @@
                     <span class="product-form__error-message"></span>
                   </div>
                   <h5 class="product_price_with_options-heading">Total with options</h5>
-
+                  {% liquid
+                    assign current_price = product.selected_or_first_available_variant.price
+                    assign options = product.metafields.options.product_options.value
+                    if options != blank
+                      for category in options
+                        for product_option in category.product_options.value
+                          if product_option.product_option_sets_default.value != blank
+                            assign variant = product_option.product_option_sets_default.value
+                            if variant.metafields.custom.price_reduction_value != blank
+                              assign reduction_price = variant.metafields.custom.price_reduction_value | times: 100
+                              assign current_price = current_price | minus: reduction_price
+                            endif
+                            if variant.price > 0
+                              assign current_price = current_price | plus: variant.price
+                            endif
+                          endif
+                        endfor
+                      endfor
+                    endif
+                  %}
                   <div class="product_price_with_options-contaniner">
                     <div class="product_prices">
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}">
-                            {{ product.selected_or_first_available_variant.price | money }}
+                          <p
+                            class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}"
+                            data-price-value="{{  product.selected_or_first_available_variant.price | divided_by: 100 }}"
+                            data-currency="{{cart.currency.symbol }}"
+                          >
+                            {{ current_price | money }}
                           </p>
                         </div>
                       </div>
@@ -1893,10 +1916,11 @@
   window.product = {{ product | json }}
 </script>
 {% comment %} <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script> {% endcomment %}
-<script src="{{'custom-color-picker.js' | asset_url }}" defer></script>
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
-<script src="{{'product-customization-options.js' | asset_url }}" defer></script>
+<script src="{{'product-custom-options.js' | asset_url }}" defer></script>
+
 {% if custom_prouct_options_block.size > 0 %}
+  {% comment %} <script src="{{'custom-color-picker.js' | asset_url }}" defer></script> {% endcomment %}
   <script src="{{'product-form-with-options.js' | asset_url }}" defer></script>
 {% endif %}
 <script defer type="text/javascript">

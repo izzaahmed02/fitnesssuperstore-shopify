@@ -198,7 +198,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     saveCurrentOptions() {
       const otherOptions = {};
-      document.querySelectorAll('.product-options__swatch-input:checked').forEach((input) => {
+      const options = document.querySelectorAll('.product-options__swatch-input:checked');
+      if (options.length === 0) return;
+      options.forEach((input) => {
         if (!input.getAttribute('field-name').includes('Color')) {
           otherOptions[input.getAttribute('field-name')] = input.value;
         }
