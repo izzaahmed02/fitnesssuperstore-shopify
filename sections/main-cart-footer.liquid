@@ -3,7 +3,7 @@
 {{ 'component-price.css' | asset_url | stylesheet_tag }}
 {{ 'component-discounts.css' | asset_url | stylesheet_tag }}
 <style>
-    .docapp-cart-with-shipping-summary .docapp-shipping-calculator--input select.docapp-shipping-calculator--select, .docapp-single-shipping-calculator .docapp-shipping-calculator--input select.docapp-shipping-calculator--select {
+    .custom-shipping-calculator .docapp-shipping-calculator--input select.docapp-shipping-calculator--select, .docapp-single-shipping-calculator .docapp-shipping-calculator--input select.docapp-shipping-calculator--select {
         background-image: url("{{ 'chevron.svg' | asset_url }}") !important;
     }
 </style>
@@ -53,28 +53,66 @@
                         </div>
                     </div>
                 </div>
-                {% comment %}
-                <div class="accordion">
-                    <button
-                            class="accordion-header"
-                            type="button"
-                            aria-expanded="false"
-                            aria-controls="accordion-content-1">
-                                <span class="accordion-title">
-                                Calculate shipping
+                <div class="shipping-calculator">
+                    <div class="shipping-calculator__summary">
+                        <div class="shipping-calculator__header">
+                            <span class="shipping-calculator__icon" style="margin-right: 5px">
+                                <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/shipping-truck-icon.svg?v=1742263147" height="24" width="24" alt="">
+                            </span>
+                            <span class="shipping-calculator__label">Ships to:</span>
+                            <button class="shipping-calculator__change-trigger" type="button" tabindex="0" aria-expanded="false">
+                                <span class="shipping-calculator__province"></span>
+                                <span class="shipping-calculator__zip"></span>
+                                <span class="shipping-calculator__trigger-label" style="margin-left: 5px">
+                                    <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/shipping-change-icon.png?v=1742263406" alt="">
                                 </span>
-                        {% render 'chevron' %}
-                    </button>
-                    <div
-                            id="accordion-content-1"
-                            class="accordion-content"
-                            aria-hidden="true"
-                    >
-                        <div class="accordion-content-inner">
-                            <div class="docapp-cart-with-shipping-summary"></div>
+                            </button>
                         </div>
+
+                        <div class="shipping-calculator__details">
+                        <div class="shipping-calculator__location">
+                            <div class="shipping-calculator__field shipping-calculator__field--country">
+                            <select id="AddressCountry" name="address[country]" data-default="{{ form.country | default: customer.default_address.country }}">
+                                {{ all_country_option_tags }}
+                            </select>
+                            </div>
+
+                            <div class="shipping-calculator__field shipping-calculator__field--province">
+                            <select id="AddressProvince" name="address[province]" data-default="{{ form.province | default: customer.default_address.province }}">
+                                <option value="" disabled selected>Select a state/region</option>
+                            </select>
+                            </div>
+
+                            <div class="shipping-calculator__field shipping-calculator__field--city">
+                            <input type="text" name="shipping_address[city]" class="shipping-calculator__input shipping-calculator__input--city" placeholder="City" autocomplete="off">
+                            <div class="shipping-calculator__error"></div>
+                            </div>
+
+                            <div class="shipping-calculator__field shipping-calculator__field--zip">
+                            <input type="text" name="shipping_address[zip]" class="shipping-calculator__input shipping-calculator__input--zip" placeholder="Zip code" autocomplete="off">
+                            <div class="shipping-calculator__error"></div>
+                            </div>
+
+                            <div class="shipping-calculator__actions">
+                            <button class="shipping-calculator__estimate-btn" type="button" tabindex="0">
+                                <span class="shipping-calculator__button-text">Estimate Shipping</span>
+                                <div class="shipping-calculator__loader" aria-hidden="true"></div>
+                            </button>
+                            </div>
+                        </div>
+                        <div id="shippingRates" class="shipping-calculator__rates"></div>
+
+                        <div class="shipping-calculator__loader" aria-hidden="true"></div>
+                        </div>
+
+                        <!-- <div class="shipping-calculator__total">
+                            <span class="shipping-calculator__total-left"><strong>Total (with Shipping)</strong></span>
+                            <span class="shipping-calculator__total-right">
+                                <span class="shipping-calculator__total-price"></span>
+                            </span>
+                        </div> -->
                     </div>
-                </div> {% endcomment %}
+                </div>
 
                 {% for block in section.blocks %}
                     {%- case block.type -%}

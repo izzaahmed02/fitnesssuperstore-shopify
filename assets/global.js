@@ -310,16 +310,18 @@ Shopify.CountryProvinceSelector.prototype = {
     const provinces = JSON.parse(raw);
 
     this.clearOptions(this.provinceEl);
-    if (provinces && provinces.length == 0) {
-      this.provinceContainer.style.display = 'none';
-    } else {
-      for (let i = 0; i < provinces.length; i++) {
-        const o = document.createElement('option');
-        o.value = provinces[i][0];
-        o.innerHTML = provinces[i][1];
-        this.provinceEl.appendChild(o);
+    if (this.provinceContainer) {
+      if (provinces && provinces.length == 0) {
+        this.provinceContainer.style.display = 'none';
+      } else {
+        for (let i = 0; i < provinces.length; i++) {
+          const o = document.createElement('option');
+          o.value = provinces[i][0];
+          o.innerHTML = provinces[i][1];
+          this.provinceEl.appendChild(o);
+        }
+        this.provinceContainer.style.display = '';
       }
-      this.provinceContainer.style.display = '';
     }
   },
   clearOptions: function (selector) {

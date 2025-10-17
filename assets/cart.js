@@ -537,3 +537,330 @@ fetch('/cart/update.js', {
 });
 
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+  if (window.Shopify && Shopify.CountryProvinceSelector) {
+    new Shopify.CountryProvinceSelector('AddressCountry', 'AddressProvince', {
+      hideElement: ''
+    });
+  } else {
+    const country = document.getElementById('AddressCountry');
+    const province = document.getElementById('AddressProvince');
+    const populate = () => {
+      const opt = country.options[country.selectedIndex];
+      const provinces = JSON.parse(opt.getAttribute('data-provinces') || '[]');
+      province.innerHTML = provinces.length
+        ? provinces.map(([code, name]) => `<option value="${name}">${name}</option>`).join('')
+        : `<option value="">No regions</option>`;
+    };
+    country.addEventListener('change', populate);
+    populate();
+  }
+
+    function isActivationKey(e){ return e.key==='Enter'||e.key===' '||e.key==='Spacebar'; }
+
+  function setupCalc(root){
+    if(!root) return;
+
+    var header = root.querySelector('.shipping-calculator__header');
+    if(!header) return;
+
+    header.setAttribute('role','button');
+    header.setAttribute('tabindex','0');
+    header.setAttribute('aria-expanded','false');
+
+    var details = root.querySelector('.shipping-calculator__details');
+    if(details && !details.id){
+      details.id = 'sc-details-' + Math.random().toString(36).slice(2,8);
+    }
+    if(details){ header.setAttribute('aria-controls', details.id); }
+
+    function toggle(open){
+      var isOpen = open!=null ? !!open : !root.classList.contains('is-open');
+      root.classList.toggle('is-open', isOpen);
+      header.setAttribute('aria-expanded', String(isOpen));
+      if(isOpen && details){
+        var first = details.querySelector('select, input, button, [tabindex]:not([tabindex="-1"])');
+        if(first) setTimeout(function(){ try{ first.focus(); }catch(e){} }, 0);
+      }
+    }
+
+    header.addEventListener('click', function(e){
+      e.preventDefault();
+      toggle();
+    });
+    header.addEventListener('keydown', function(e){
+      if(isActivationKey(e)){ e.preventDefault(); toggle(); }
+    });
+  }
+
+  document.querySelectorAll('.shipping-calculator').forEach(setupCalc);
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  var raw = sessionStorage.getItem('userLoc') || window.sessionStorage.userLoc;
+  if (!raw) return;
+
+  var loc;
+  try { loc = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch(e){ return; }
+  if (!loc) return;
+
+  var COUNTRY_NAME = loc.country_name || loc.country || '';
+  var COUNTRY_CODE = (loc.country_code || '').toUpperCase();
+  var PROVINCE_NAME = loc.region || '';
+  var PROVINCE_CODE = (loc.region_code || '').toUpperCase();
+  var CITY  = loc.city || '';
+  var ZIP   = loc.postal || '';
+
+  var citySpan   = document.querySelector('.shipping-calculator__city');
+  var regionSpan = document.querySelector('.shipping-calculator__province');
+  var zipSpan    = document.querySelector('.shipping-calculator__zip');
+
+  if (citySpan)   citySpan.textContent   = CITY || '';
+  if (regionSpan) regionSpan.textContent = PROVINCE_NAME || (!CITY ? (COUNTRY_NAME || '') : '');
+  if (zipSpan)    zipSpan.textContent    = ', ' + ZIP || '';
+
+  function findCountryOption(select, name, code) {
+    if (!select) return null;
+    var opts = Array.from(select.options);
+    var lower = name.trim().toLowerCase();
+    var opt = opts.find(o => o.value.trim().toLowerCase() === lower || o.textContent.trim().toLowerCase() === lower);
+    if (opt) return opt;
+    if (code) {
+      var byCode = opts.find(o => (o.dataset && o.dataset.code || '').toUpperCase() === code);
+      if (byCode) return byCode;
+    }
+    return null;
+  }
+
+  function findProvinceOption(select, name, code) {
+    if (!select) return null;
+    var lower = (name||'').trim().toLowerCase();
+    var opts = Array.from(select.options);
+    var opt = opts.find(o => o.textContent.trim().toLowerCase() === lower || o.value.trim().toLowerCase() === lower);
+    if (opt) return opt;
+    if (code) {
+      opt = opts.find(o => o.value.toUpperCase() === code || o.textContent.toUpperCase() === code);
+      if (opt) return opt;
+    }
+    return null;
+  }
+
+  function waitAndSetProvince(countryEl, provinceEl, name, code, tries) {
+    tries = tries || 0;
+    var hasOptions = provinceEl && provinceEl.options && provinceEl.options.length > 1;
+    if (!hasOptions && tries < 20) {
+      return setTimeout(function(){
+        waitAndSetProvince(countryEl, provinceEl, name, code, tries+1);
+      }, 50);
+    }
+    var opt = findProvinceOption(provinceEl, name, code);
+    if (opt) {
+      provinceEl.value = opt.value;
+      provinceEl.dispatchEvent(new Event('change', { bubbles:true }));
+    }
+  }
+
+  document.querySelectorAll('.shipping-calculator').forEach(function(root){
+    var countryEl  = root.querySelector('#AddressCountry');
+    var provinceEl = root.querySelector('#AddressProvince');
+    var cityEl     = root.querySelector('input[name="shipping_address[city]"]');
+    var zipEl      = root.querySelector('input[name="shipping_address[zip]"]');
+
+    if (countryEl) {
+      var countryOpt = findCountryOption(countryEl, COUNTRY_NAME, COUNTRY_CODE);
+      if (countryOpt) {
+        countryEl.value = countryOpt.value;
+        countryEl.dispatchEvent(new Event('change', { bubbles:true }));
+      }
+    }
+
+    if (provinceEl) {
+      waitAndSetProvince(countryEl, provinceEl, PROVINCE_NAME, PROVINCE_CODE);
+    }
+
+    if (cityEl && CITY) {
+      cityEl.value = CITY;
+      cityEl.dispatchEvent(new Event('input', { bubbles:true }));
+    }
+    if (zipEl && ZIP) {
+      zipEl.value = ZIP;
+      zipEl.dispatchEvent(new Event('input', { bubbles:true }));
+    }
+
+    var provinceSpan = root.querySelector('.shipping-calculator__province');
+    var zipSpan      = root.querySelector('.shipping-calculator__zip');
+    if (provinceSpan) provinceSpan.textContent = PROVINCE_NAME || COUNTRY_NAME;
+    if (zipSpan) zipSpan.textContent = ZIP ? ', ' + ZIP : '';
+  });
+
+  const shippingCalculateBtn = document.querySelector('.shipping-calculator__estimate-btn');
+
+  shippingCalculateBtn.addEventListener('click', async function() {
+	var countryEl  = document.querySelector('#AddressCountry');
+    var provinceEl = document.querySelector('#AddressProvince');
+    var cityEl     = document.querySelector('input[name="shipping_address[city]"]');
+    var zipEl      = document.querySelector('input[name="shipping_address[zip]"]');
+
+	const container = document.getElementById('shippingRates');
+	container.innerHTML = `<div class="shipping-calculator__rates-title">Shipping Rates:</div>
+							<div class="shipping-calculator__rate-name">Calculating…</div>`;
+	try {
+		const rates = await getCartShippingRates({
+			country: countryEl.value,
+			province: provinceEl.value,
+			zip: zipEl.value,
+			city: cityEl.value
+		});
+
+    	renderShippingRates(container, rates, { zip: zipEl.value, currency: 'USD' });
+	} catch (err) {
+		container.innerHTML = `<div class="shipping-calculator__rates-title">Shipping Rates:</div>
+							<div class="shipping-calculator__rate-name">Error fetching rates.</div>`;
+	}
+  })
+});
+
+
+async function prepareShippingRates(addr) {
+  const params = new URLSearchParams();
+  params.set('shipping_address[country]', addr.country);
+  if (addr.province) params.set('shipping_address[province]', addr.province);
+  params.set('shipping_address[zip]', addr.zip);
+
+  const res = await fetch('/cart/prepare_shipping_rates.json?' + params.toString(), {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  });
+  if (!res.ok) throw new Error(`prepare_shipping_rates failed: ${res.status} ${res.statusText}`);
+  return res.text().then(t => (t ? JSON.parse(t) : null));
+}
+
+
+async function pollShippingRates(addr, opts = {}) {
+  const intervalMs = opts.intervalMs ?? 800;     
+  const maxAttempts = opts.maxAttempts ?? 20;  
+
+  const params = new URLSearchParams();
+  params.set('shipping_address[country]', addr.country);
+  if (addr.province) params.set('shipping_address[province]', addr.province); 
+  if (addr.zip)      params.set('shipping_address[zip]', addr.zip);
+  if (addr.city)     params.set('shipping_address[city]', addr.city);
+  if (addr.address1) params.set('shipping_address[address1]', addr.address1);
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const res = await fetch('/cart/async_shipping_rates.json?' + params.toString(), {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (res.status === 429) {
+      const retryAfter = parseInt(res.headers.get('Retry-After') || '1', 10);
+      await new Promise(r => setTimeout(r, (retryAfter || 1) * 1000));
+      continue;
+    }
+
+    if (!res.ok) throw new Error(`async_shipping_rates failed: ${res.status} ${res.statusText}`);
+
+    const text = await res.text();
+    if (!text) {
+    } else {
+      const json = JSON.parse(text);
+      if (json && Array.isArray(json.shipping_rates)) {
+        return json.shipping_rates; 
+      }
+    }
+
+    await new Promise(r => setTimeout(r, intervalMs));
+  }
+
+  throw new Error('Timed out waiting for shipping rates.');
+}
+
+async function getCartShippingRates(address, opts) {
+  await prepareShippingRates(address);
+  return pollShippingRates(address, opts);
+}
+
+function formatCurrency(amount, currency = 'USD', locale = undefined) {
+  const num = typeof amount === 'string' ? parseFloat(amount) : Number(amount || 0);
+  return num.toLocaleString(locale, { style: 'currency', currency });
+}
+
+function getRateAmounts(rate) {
+  const major = typeof rate.price === 'string' ? parseFloat(rate.price) : Number(rate.price || 0);
+  const cents = Math.round(major * 100);
+  return { major, cents };
+}
+
+
+function renderShippingRates(container, rates, { zip, currency = 'USD' } = {}) {
+  const groupName = `shipping_rate_${zip || 'unknown'}`;
+
+  if (!rates || !rates.length) {
+    container.innerHTML = `
+      <div class="shipping-calculator__rates-title">Shipping Rates:</div>
+      <div class="shipping-calculator__rate">
+        <div class="shipping-calculator__rate-name">No shipping options available for this address.</div>
+      </div>`;
+    return;
+  }
+  const sorted = [...rates].sort((a, b) => Number(a.price) - Number(b.price));
+
+  const title = `<div class="shipping-calculator__rates-title">Shipping Rates:</div>`;
+  const items = sorted.map((r, idx) => {
+	const { major, priceCents } = getRateAmounts(r);
+    const isFree = major === 0;
+    const checkedAttr = idx === 0 ? 'checked' : '';
+    const selectedClass = idx === 0 ? ' shipping-calculator__rate-price--selected' : '';
+    const priceHtml = isFree
+      ? `<span class="shipping-calculator__free-amount">FREE</span>`
+      : `<span class="shipping-calculator__rate-amount">${formatCurrency(major, currency)}</span>`;
+
+    return `
+      <div class="shipping-calculator__rate" data-index="${idx}">
+        <div class="shipping-calculator__rate-name">
+          <label>
+            <input
+              type="radio"
+              name="${groupName}"
+              value="${priceCents}"
+              data-rate-code="${(r.code || '').replace(/"/g, '&quot;')}"
+              data-rate-name="${(r.name || '').replace(/"/g, '&quot;')}"
+              data-price-cents="${priceCents}"
+              ${checkedAttr}
+            >
+            ${r.name || r.code || 'Shipping'}
+          </label>
+        </div>
+        <div class="shipping-calculator__rate-price${selectedClass}" data-index="${idx}">
+          ${priceHtml}
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = title + items;
+
+  const radios = container.querySelectorAll(`input[name="${groupName}"]`);
+  radios.forEach(r => {
+    r.addEventListener('change', () => {
+      const selectedIdx = [...radios].findIndex(x => x.checked);
+      container.querySelectorAll('.shipping-calculator__rate-price').forEach(p => {
+        p.classList.toggle('shipping-calculator__rate-price--selected', Number(p.dataset.index) === selectedIdx);
+      });
+      container.dispatchEvent(new CustomEvent('shippingRateSelected', {
+        detail: {
+          index: selectedIdx,
+          name: radios[selectedIdx].dataset.rateName,
+          code: radios[selectedIdx].dataset.rateCode,
+          price_cents: Number(radios[selectedIdx].dataset.priceCents)
+        }
+      }));
+    });
+  });
+}
