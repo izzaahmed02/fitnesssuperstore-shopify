@@ -205,12 +205,13 @@ if (!customElements.get('product-form-with-options')) {
         const productColorOptionVariantID = `gid://shopify/ProductVariant/${colorOption.dataset.variant}`;
         const productColorOptionPrice = colorOption.dataset?.price ? Number(colorOption.dataset?.price) : 0;
         const groupContainer = colorOption.closest('[data-group-color-name]');
-
+        const colorName = groupContainer.querySelector('[data-color-selected-title]');
         const productColorOption = {
           variantId: productColorOptionVariantID,
           priceAdjustment: productColorOptionPrice,
           quantity: 1,
-          groupHandle: groupContainer.dataset.groupColorName || '',
+          groupHandle: groupContainer.dataset.groupColorName ? groupContainer.dataset.groupColorName : '',
+          colorName: colorName ? colorName.innerText.trim() : '',
         };
 
         productOptions.push(productColorOption);
