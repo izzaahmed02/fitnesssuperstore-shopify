@@ -6,6 +6,19 @@
 {{ 'quantity-popover.css' | asset_url | stylesheet_tag }}
 {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
 {{ 'avis-custom.css' | asset_url | stylesheet_tag }}
+{% assign show_product_options = false %}
+
+{% for item in cart.items %}
+  {% for property in item.properties %}
+    {% if property.first == '_functionOperation' %}
+      {% assign show_product_options = true %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
+{% if show_product_options %}
+  {{ 'product-options.css' | asset_url | stylesheet_tag }}
+{% endif %}
 <style>
   .avis-edit-options:after {
       position: absolute;
@@ -646,9 +659,10 @@
                     </div>
                     {% for property in item.properties %}
                       {% if property.first == '_functionOperation' %}
-                        <div class="product-edit-options cart-item__custom-options-trigger" data-key="{{ item.key }}" data-cart-item="CartItem-{{ forloop.index }}">
+                        <div class="product-edit-options cart-item__custom-options-trigger" data-key-modify="{{ item.key }}" data-cart-item="CartItem-{{ forloop.index }}">
                           <span>Modify</span>
                         </div>
+                        {% render 'cart-item-product-options', line_item: item %}
                         {% break %}
                       {% endif %}
                     {% endfor %}
@@ -713,6 +727,11 @@
     </div>
   </div>
 </div>
+
+{% if show_product_options %}
+  <script src="{{ 'product-custom-options.js' | asset_url }}" defer></script>
+{% endif %}
+
 {% schema %}
 {
   "name": "t:sections.main-cart-items.name",

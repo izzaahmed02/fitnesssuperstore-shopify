@@ -122,10 +122,14 @@ burgundy:#800020' %}
     id="custom-color-{{ group }}-hidden"
     name="custom-color-{{ group }}-hidden"
     value="{{ default }}"
-    data-price="{{ default_option.price | divided_by: 100 }}"
+    data-price="{% if selected_price %}{{ selected_price }}{%else%}{{ default_option.price | divided_by: 100 }}{% endif %}"
   >
   {% if has_custom_color %}
-    <div class="swatch swatch--custom-trigger custom-color-trigger" data-color-name="Custom Color" data-tool-tip="Add custom color">
+    <div
+      class="swatch swatch--custom-trigger custom-color-trigger{% if custom_color_variant_id == default %} color-selected{% endif %}"
+      data-color-name="Custom Color"
+      data-tool-tip="Add custom color"
+    >
       {{ plus_icon_svg }}
     </div>
   {% endif %}
