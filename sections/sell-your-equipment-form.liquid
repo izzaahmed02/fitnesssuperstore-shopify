@@ -4,7 +4,6 @@
   Compatible with Dawn theme + Shopify contact submission system
 {% endcomment %}
 
-
 <section class="section section-{{ section.id }} sell-equipment-form">
   <div class="page-width">
     <div class="contact-form">
@@ -13,18 +12,23 @@
 
       {% form 'contact', id: 'SellEquipmentForm', class: 'form' %}
         {% if form.posted_successfully? %}
-         <div class="form-status form-status--success">
-    <strong>Thank you! Your form has been submitted successfully.</strong>
-  </div>
+          <div class="form-status form-status--success success-message">
+            <div class="success-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="success-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="success-check" fill="none" d="M14 27l7 7 16-16"/>
+              </svg>
+            </div>
+            <h3>Thank you!</h3>
+            <p>Your form has been submitted successfully.</p>
+          </div>
         {% elsif form.errors %}
           <div class="form-status form-status--error">
             {{ form.errors | default_errors }}
           </div>
         {% endif %}
 
-  
-
-
+        {% unless form.posted_successfully? %}
         <div class="grid grid--1-col">
           <!-- Name -->
           <div class="field">
@@ -51,82 +55,43 @@
           </div>
 
           <!-- State -->
-         <div class="field">
-  <p class="field__title"><strong>Select your State</strong></p>
-  <select name="contact[state]" class="custom-select">
-    <option value="">-- Select State --</option>
-    <option>Alabama</option>
-    <option>Alaska</option>
-    <option>Arizona</option>
-    <option>Arkansas</option>
-    <option>California</option>
-    <option>Colorado</option>
-    <option>Connecticut</option>
-    <option>Delaware</option>
-    <option>Florida</option>
-    <option>Georgia</option>
-    <option>Hawaii</option>
-    <option>Idaho</option>
-    <option>Illinois</option>
-    <option>Indiana</option>
-    <option>Iowa</option>
-    <option>Kansas</option>
-    <option>Kentucky</option>
-    <option>Louisiana</option>
-    <option>Maine</option>
-    <option>Maryland</option>
-    <option>Massachusetts</option>
-    <option>Michigan</option>
-    <option>Minnesota</option>
-    <option>Mississippi</option>
-    <option>Missouri</option>
-    <option>Montana</option>
-    <option>Nebraska</option>
-    <option>Nevada</option>
-    <option>New Hampshire</option>
-    <option>New Jersey</option>
-    <option>New Mexico</option>
-    <option>New York</option>
-    <option>North Carolina</option>
-    <option>North Dakota</option>
-    <option>Ohio</option>
-    <option>Oklahoma</option>
-    <option>Oregon</option>
-    <option>Pennsylvania</option>
-    <option>Rhode Island</option>
-    <option>South Carolina</option>
-    <option>South Dakota</option>
-    <option>Tennessee</option>
-    <option>Texas</option>
-    <option>Utah</option>
-    <option>Vermont</option>
-    <option>Virginia</option>
-    <option>Washington</option>
-    <option>West Virginia</option>
-    <option>Wisconsin</option>
-    <option>Wyoming</option>
-    <option>Washington D.C.</option>
-    <option>None</option>
-  </select>
-</div>
-
+          <div class="field">
+            <p class="field__title"><strong>Select your State</strong></p>
+            <select name="contact[state]" class="custom-select">
+              <option value="">-- Select State --</option>
+              <option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option>
+              <option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option>
+              <option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option>
+              <option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option>
+              <option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option>
+              <option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option>
+              <option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option>
+              <option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option>
+              <option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option>
+              <option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option>
+              <option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option>
+              <option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option>
+              <option>Wisconsin</option><option>Wyoming</option><option>Washington D.C.</option>
+              <option>None</option>
+            </select>
+          </div>
 
           <!-- Product Category -->
           <div class="field">
             <p class="field__title"><strong>Select Product Category *</strong></p>
             <select name="contact[category]" class="custom-select" required>
               <option value="">-- Select Category --</option>
-              <option value="Elliptical">Elliptical Crosstrainers</option>
-              <option value="Exercise Bike">Exercise Bikes</option>
-              <option value="Free Weight Equipment">Free Weight Equipment</option>
-              <option value="Pilates Reformers">Pilates Reformers</option>
-              <option value="Rowing Machines">Rowing Machines</option>
-              <option value="Stair Climber">Stair Climbers / Steppers</option>
-              <option value="Treadclimber">Treadclimbers</option>
-              <option value="Treadmill">Treadmill</option>
-              <option value="Vibration Trainers">Vibration Trainers</option>
-              <option value="Weight Lifting Machines">Weight Lifting Machines</option>
-              <option value="Other">Other</option>
+              <option>Elliptical Crosstrainers</option>
+              <option>Exercise Bikes</option>
+              <option>Free Weight Equipment</option>
+              <option>Pilates Reformers</option>
+              <option>Rowing Machines</option>
+              <option>Stair Climbers / Steppers</option>
+              <option>Treadclimbers</option>
+              <option>Treadmill</option>
+              <option>Vibration Trainers</option>
+              <option>Weight Lifting Machines</option>
+              <option>Other</option>
             </select>
           </div>
 
@@ -135,64 +100,10 @@
             <p class="field__title"><strong>Select a Product Brand</strong></p>
             <select name="contact[brand]" class="custom-select">
               <option value="">-- Select Brand --</option>
-              <option value="Avanti">Avanti</option>
-              <option value="BodyCraft">Body Craft</option>
-              <option value="BodySolid">Body Solid</option>
-              <option value="Bowflex">Bowflex</option>
-              <option value="Concept 2">Concept 2</option>
-              <option value="Cybex">Cybex</option>
-              <option value="CycleOps">CycleOps</option>
-              <option value="Expresso">Expresso Fitness</option>
-              <option value="First Degree">First Degree</option>
-              <option value="Fitnex">Fitnex</option>
-              <option value="FreeMotion">Free Motion</option>
-              <option value="Hammer Strength">Hammer Strength</option>
-              <option value="Hoist">Hoist</option>
-              <option value="Jacobs Ladder">Jacob's Ladder</option>
-              <option value="Keiser">Keiser</option>
-              <option value="Kettler">Kettler</option>
-              <option value="Landice">Landice</option>
-              <option value="Legend">Legend</option>
-              <option value="LeMond">LeMond</option>
-              <option value="Life Fitness">Life Fitness</option>
-              <option value="Magnum">Magnum Fitness</option>
-              <option value="Marpo Kinetics">Marpo Kinetics</option>
-              <option value="Matrix">Matrix</option>
-              <option value="Maximus">Maximus</option>
-              <option value="Monark">Monark</option>
-              <option value="MultiSports">MultiSports</option>
-              <option value="Nautilus">Nautilus</option>
-              <option value="Noramco">Noramco Fitness</option>
-              <option value="Nustep">Nustep</option>
-              <option value="Octane">Octane Fitness</option>
-              <option value="Paramount">Paramount</option>
-              <option value="ProMaxima">ProMaxima</option>
-              <option value="Physiostep">Physiostep</option>
-              <option value="Power Plate">Power Plate</option>
-              <option value="Powertec">Powertec</option>
-              <option value="Precor">Precor</option>
-              <option value="Quantum">Quantum Fitness</option>
-              <option value="ROM">ROM</option>
-              <option value="SportsArt">SportsArt</option>
-              <option value="Star Trac">Star Trac</option>
-              <option value="Schwinn">Schwinn</option>
-              <option value="SciFit">SciFit</option>
-              <option value="Soloflex">Soloflex</option>
-              <option value="Spirit">Spirit</option>
-              <option value="Stairmaster">Stairmaster</option>
-              <option value="Stex">Stex</option>
-              <option value="Technogym">Technogym</option>
-              <option value="Theracycle">Theracycle</option>
-              <option value="Total Gym">Total Gym</option>
-              <option value="True">True</option>
-              <option value="Turbosonic">Turbosonic</option>
-              <option value="Universal">Universal</option>
-              <option value="Vectra">Vectra</option>
-              <option value="Versaclimber">Versaclimber</option>
-              <option value="WaterRower">WaterRower</option>
-              <option value="Woodway">Woodway</option>
-              <option value="Yukon">Yukon</option>
-              <option value="Other">Other</option>
+              <option>Avanti</option><option>Body Craft</option><option>Body Solid</option><option>Bowflex</option>
+              <option>Concept 2</option><option>Cybex</option><option>Expresso Fitness</option><option>Life Fitness</option>
+              <option>Matrix</option><option>Octane Fitness</option><option>Precor</option><option>Technogym</option>
+              <option>True</option><option>Woodway</option><option>Other</option>
             </select>
           </div>
 
@@ -239,28 +150,27 @@
             {{ section.settings.button_label }}
           </button>
         </div>
-
+        {% endunless %}
       {% endform %}
     </div>
   </div>
 </section>
 
 <style>
-    .field:after, .select:after, .customer .field:after, .customer select:after, .localization-form__select:after {
+  {{ 'none' }}
+
+  /* KEEP EXISTING STYLES */
+  .field:after, .select:after, .customer .field:after, .customer select:after, .localization-form__select:after {
     box-shadow: none;
-}
+  }
 
-.field:hover.field:after {
+  .field:after {
     box-shadow: none;
-}
+  }
+  .field:hover.field:after { box-shadow: none; }
+  .sell-equipment-form .field { display: block; }
+  .sell-equipment-form .grid { row-gap: 0px; }
 
-.sell-equipment-form .field {
-display: block;
-}
-
-.sell-equipment-form .grid {
-row-gap: 0px;
-}
   .sell-equipment-form .custom-input,
   .sell-equipment-form .custom-select,
   .sell-equipment-form .custom-textarea {
@@ -275,42 +185,57 @@ row-gap: 0px;
     margin-bottom: 10px;
   }
 
-  .sell-equipment-form .custom-select {
-    height: 38px;
-  }
+  .sell-equipment-form .custom-select { height: 38px; }
+  .sell-equipment-form .custom-textarea { min-height: 100px; resize: vertical; }
 
-  .sell-equipment-form .custom-textarea {
-    min-height: 100px;
-    resize: vertical;
-  }
-
-  .sell-equipment-form .field__title {
-    margin-bottom: 4px;
-    font-size: 15px;
-    color: #222;
-  }
-
-  .sell-equipment-form .checkbox label,
-  .sell-equipment-form .radio-group label {
-    font-size: 14px;
-  }
-
-  .sell-equipment-form .contact-form__actions {
-    margin-top: 20px;
-  }
+  .sell-equipment-form .field__title { margin-bottom: 4px; font-size: 15px; color: #222; }
+  .sell-equipment-form .checkbox label, .sell-equipment-form .radio-group label { font-size: 14px; }
+  .sell-equipment-form .contact-form__actions { margin-top: 20px; }
 
   .sell-equipment-form .button {
     background-color: #c41200;
     color: white;
     border: none;
     text-transform: uppercase;
-    justify-content:center;
-    margin-bottom:15px;
+    justify-content: center;
   }
+  .sell-equipment-form .button:hover { background-color: #a00e00; }
 
-  .sell-equipment-form .button:hover {
-    background-color: #a00e00;
+  /* SUCCESS MESSAGE */
+  .success-message {
+    text-align: center;
+    padding: 40px 20px;
+    background: #f6fff8;
+    border: 1px solid #d9f7e9;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    animation: fadeIn 0.5s ease-in-out;
   }
+  .success-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 15px;
+  }
+  .success-icon svg { width: 80px; height: 80px; }
+  .success-circle {
+    stroke: #28a745;
+    stroke-width: 3;
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-linecap: round;
+    animation: stroke 0.6s ease-out forwards;
+  }
+  .success-check {
+    stroke: #28a745;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.4s 0.6s ease-out forwards;
+  }
+  @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+  @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 </style>
 
 {% schema %}
@@ -318,29 +243,10 @@ row-gap: 0px;
   "name": "Sell Your Equipment Form",
   "class": "sell-equipment-form",
   "settings": [
-    {
-      "type": "text",
-      "id": "heading",
-      "label": "Heading",
-      "default": "Sell Your Equipment / Trade-ins"
-    },
-    {
-      "type": "text",
-      "id": "subheading",
-      "label": "Subheading",
-      "default": "For a quick price quote, tell us as much as you can."
-    },
-    {
-      "type": "text",
-      "id": "button_label",
-      "label": "Button Label",
-      "default": "Submit"
-    }
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Sell Your Equipment / Trade-ins" },
+    { "type": "text", "id": "subheading", "label": "Subheading", "default": "For a quick price quote, tell us as much as you can." },
+    { "type": "text", "id": "button_label", "label": "Button Label", "default": "Submit" }
   ],
-  "presets": [
-    {
-      "name": "Sell Equipment Form"
-    }
-  ]
+  "presets": [{ "name": "Sell Equipment Form" }]
 }
 {% endschema %}
