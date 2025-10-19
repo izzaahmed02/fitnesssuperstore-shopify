@@ -612,14 +612,6 @@ document.addEventListener('DOMContentLoaded', function () {
   var CITY  = loc.city || '';
   var ZIP   = loc.postal || '';
 
-  var citySpan   = document.querySelector('.shipping-calculator__city');
-  var regionSpan = document.querySelector('.shipping-calculator__province');
-  var zipSpan    = document.querySelector('.shipping-calculator__zip');
-
-  if (citySpan)   citySpan.textContent   = CITY || '';
-  if (regionSpan) regionSpan.textContent = PROVINCE_NAME || (!CITY ? (COUNTRY_NAME || '') : '');
-  if (zipSpan)    zipSpan.textContent    = ', ' + ZIP || '';
-
   setShippingHeader(COUNTRY_NAME, PROVINCE_NAME, CITY, ZIP);
 
   function findCountryOption(select, name, code) {
@@ -689,11 +681,6 @@ document.addEventListener('DOMContentLoaded', function () {
       zipEl.value = ZIP;
       zipEl.dispatchEvent(new Event('input', { bubbles:true }));
     }
-
-    var provinceSpan = root.querySelector('.shipping-calculator__province');
-    var zipSpan      = root.querySelector('.shipping-calculator__zip');
-    if (provinceSpan) provinceSpan.textContent = PROVINCE_NAME || COUNTRY_NAME;
-    if (zipSpan) zipSpan.textContent = ZIP ? ', ' + ZIP : '';
   });
 
   const shippingCalculateBtn = document.querySelector('.shipping-calculator__estimate-btn');
@@ -869,9 +856,12 @@ function setShippingHeader(COUNTRY_NAME, PROVINCE_NAME, CITY, ZIP) {
    var regionSpan = document.querySelector('.shipping-calculator__province');
    var zipSpan    = document.querySelector('.shipping-calculator__zip');
    
-   if (citySpan)   citySpan.textContent   = CITY || '';
+   if (citySpan) {
+	  citySpan.style.display = 'block';
+	  citySpan.textContent   = CITY || '';
+   }
    if (regionSpan) regionSpan.textContent = PROVINCE_NAME || (!CITY ? (COUNTRY_NAME || '') : '');
-   if (zipSpan)    zipSpan.textContent    = ',' + ZIP || '';
+   if (zipSpan)    zipSpan.textContent    = ', ' + ZIP || '';
 }
 
 function moneyFromCents(cents, currency = (window?.Shopify?.currency?.active || 'USD'), locale) {
