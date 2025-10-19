@@ -620,6 +620,8 @@ document.addEventListener('DOMContentLoaded', function () {
   if (regionSpan) regionSpan.textContent = PROVINCE_NAME || (!CITY ? (COUNTRY_NAME || '') : '');
   if (zipSpan)    zipSpan.textContent    = ', ' + ZIP || '';
 
+  setShippingHeader(COUNTRY_NAME, PROVINCE_NAME, CITY, ZIP);
+
   function findCountryOption(select, name, code) {
     if (!select) return null;
     var opts = Array.from(select.options);
@@ -713,10 +715,14 @@ document.addEventListener('DOMContentLoaded', function () {
 			city: cityEl.value
 		});
 
-    	renderShippingRates(container, rates, { zip: zipEl.value, currency: 'USD' });
+    	renderShippingRates(container, rates, { zip: zipEl.value, currency: Shopify.currency.active });
+
+		setShippingHeader(countryEl.value, provinceEl.value, cityEl.value, zipEl.value);
+
+		setShippingTotalPrice();
 	} catch (err) {
 		container.innerHTML = `<div class="shipping-calculator__rates-title">Shipping Rates:</div>
-							<div class="shipping-calculator__rate-name">Error fetching rates.</div>`;
+							<div class="shipping-calculator__rate-name">We couldn’t find any shipping rates for the address you entered. Please check your country, state/region, and postal code, or contact us for a custom quote.</div>`;
 	}
   })
 });
@@ -798,7 +804,6 @@ function getRateAmounts(rate) {
   return { major, cents };
 }
 
-
 function renderShippingRates(container, rates, { zip, currency = 'USD' } = {}) {
   const groupName = `shipping_rate_${zip || 'unknown'}`;
 
@@ -806,7 +811,7 @@ function renderShippingRates(container, rates, { zip, currency = 'USD' } = {}) {
     container.innerHTML = `
       <div class="shipping-calculator__rates-title">Shipping Rates:</div>
       <div class="shipping-calculator__rate">
-        <div class="shipping-calculator__rate-name">No shipping options available for this address.</div>
+        <div class="shipping-calculator__rate-name">No shipping rates available for this address.</div>
       </div>`;
     return;
   }
@@ -820,7 +825,7 @@ function renderShippingRates(container, rates, { zip, currency = 'USD' } = {}) {
     const selectedClass = idx === 0 ? ' shipping-calculator__rate-price--selected' : '';
     const priceHtml = isFree
       ? `<span class="shipping-calculator__free-amount">FREE</span>`
-      : `<span class="shipping-calculator__rate-amount">${formatCurrency(major, currency)}</span>`;
+      : `<span class="shipping-calculator__rate-amount" data-price-cents="${major}">${formatCurrency(major, currency)}</span>`;
 
     return `
       <div class="shipping-calculator__rate" data-index="${idx}">
@@ -853,14 +858,39 @@ function renderShippingRates(container, rates, { zip, currency = 'USD' } = {}) {
       container.querySelectorAll('.shipping-calculator__rate-price').forEach(p => {
         p.classList.toggle('shipping-calculator__rate-price--selected', Number(p.dataset.index) === selectedIdx);
       });
-      container.dispatchEvent(new CustomEvent('shippingRateSelected', {
-        detail: {
-          index: selectedIdx,
-          name: radios[selectedIdx].dataset.rateName,
-          code: radios[selectedIdx].dataset.rateCode,
-          price_cents: Number(radios[selectedIdx].dataset.priceCents)
-        }
-      }));
+  
+	  setShippingTotalPrice();
     });
   });
+}
+
+function setShippingHeader(COUNTRY_NAME, PROVINCE_NAME, CITY, ZIP) {
+   var citySpan   = document.querySelector('.shipping-calculator__city');
+   var regionSpan = document.querySelector('.shipping-calculator__province');
+   var zipSpan    = document.querySelector('.shipping-calculator__zip');
+   
+   if (citySpan)   citySpan.textContent   = CITY || '';
+   if (regionSpan) regionSpan.textContent = PROVINCE_NAME || (!CITY ? (COUNTRY_NAME || '') : '');
+   if (zipSpan)    zipSpan.textContent    = ',' + ZIP || '';
+}
+
+function moneyFromCents(cents, currency = (window?.Shopify?.currency?.active || 'USD'), locale) {
+  return (Number(cents) / 100).toLocaleString(locale, { style: 'currency', currency });
+}
+
+function getBaseCartCents() {
+  return Number(document.querySelector('.shipping-calculator__total-price')?.dataset?.cartPrice || 0);
+}
+
+function setShippingTotalPrice() {
+	const totalEl = document.querySelector('.shipping-calculator__total-price');
+	const selectedRate = document.querySelector('.shipping-calculator__rate-price--selected .shipping-calculator__rate-amount');
+	const cartPriceCents = Number(totalEl?.dataset?.cartPrice || 0);
+
+	if (selectedRate) {
+		const selectedShippingCents = Number(selectedRate.dataset.priceCents + '00' || 0);	
+		if (totalEl) totalEl.textContent = moneyFromCents(selectedShippingCents + cartPriceCents);
+	} else {
+		totalEl.textContent = moneyFromCents(cartPriceCents);
+	}
 }
