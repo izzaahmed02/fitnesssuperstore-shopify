@@ -15,24 +15,43 @@ if (!customElements.get('product-customization-options')) {
         this.colorForm = this.querySelector('.custom-color-input');
         this.addCustomColor = this.querySelector('.add-custom-color');
         this.closeColorPopup = this.querySelector('[data-close-color-popup]');
+        this.modifyButton = document.querySelector(`[ data-key-modify="${this.modifyID}"]`);
+        this.closeModifyButtons = this.querySelectorAll('[data-close-popup]');
+        this.applyChangesButton = this.querySelector('[data-apply-changes]');
+        this.cartItems = document.querySelector('cart-items');
+      }
+
+      get modifyID() {
+        return this.dataset.productId;
+      }
+
+      get quantityInput() {
+        return this.closest('[data-quantity-variant-id]');
       }
 
       connectedCallback() {
         this.toggleAccordions();
         this.setCustomizationOption();
+        this.setDefaultOptionsListener();
         this.handleQuantity();
         this.handlePopupHelper();
         this.colorSwatchHandler();
         this.addCustomColorHandler();
-        this.setDefaultOptionsListener();
+        this.closeColorPopupHandler();
+        this.openModifyHandler();
+        this.closeModifyHandler();
+        this.handleItemUpdate();
       }
+
+      // Method for Accordion state
 
       toggleAccordions() {
         if (!this.accordions.length === 0) return;
         this.accordions.forEach((accordion) => {
           const openButton = accordion.querySelector('[data-open-accordion]');
           if (!openButton) return;
-          openButton.addEventListener('click', () => {
+          openButton.addEventListener('click', (event) => {
+            event.preventDefault();
             const controlElementID = openButton.getAttribute('aria-controls');
             if (!controlElementID) return;
             const accordionBody = this.querySelector(`#${controlElementID}`);
@@ -42,6 +61,8 @@ if (!customElements.get('product-customization-options')) {
           });
         });
       }
+
+      // Method to select customization option
 
       setCustomizationOption() {
         if (!this.customizationOptions.length === 0) return;
@@ -64,52 +85,7 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
-      createOptionHTML(optionHandler, option) {
-        if (!option) return;
-        if (optionHandler.dataset.selectedOptions.includes(option.value)) return;
-        if (option.hasAttribute('data-has-multichoice')) {
-          const noThanksOriginalOption = this.querySelector(`[data-customization-option][name="${option.name}"][data-field-name="No Thanks"]`);
-          if (noThanksOriginalOption) {
-            const noThanksOption = this.querySelector(`[data-option-id="${noThanksOriginalOption.value}"]`);
-            if (noThanksOption) noThanksOption.remove();
-          }
-          optionHandler.insertAdjacentHTML('beforeend', this.placeholderHTML(option));
-        } else {
-          optionHandler.innerHTML = this.placeholderHTML(option);
-          optionHandler.dataset.selectedOptions = option.value;
-        }
-        optionHandler.style.display = 'flex';
-
-        this.addRemoveListener(optionHandler, option);
-      }
-
-      addRemoveListener(optionHandler, originalOption) {
-        if (!optionHandler) return;
-        const selectedOptions = optionHandler.querySelectorAll('[data-option-id]');
-        if (selectedOptions.length === 0) return;
-        selectedOptions.forEach((option) => {
-          option.addEventListener('click', (event) => {
-            event.stopPropagation();
-            const id = option.dataset?.optionId;
-            const selectedValues = optionHandler.dataset.selectedOptions.split(',');
-            const filteredOptions = selectedValues.filter((item) => item !== id);
-            optionHandler.dataset.selectedOptions = filteredOptions.join(',');
-            option.remove();
-            const input = this.querySelector(`[data-customization-option][value="${id}"]`);
-            if (!input) return;
-            input.checked = false;
-            if (optionHandler.dataset.selectedOptions === '') {
-              optionHandler.style.display = 'none';
-              const noThanksOriginalOption = this.querySelector(`[data-customization-option][name="${originalOption.name}"][data-field-name="No Thanks"]`);
-              if (noThanksOriginalOption) {
-                noThanksOriginalOption.disabled = false;
-              }
-            }
-            this.updatePrice();
-          });
-        });
-      }
-
+      // Helper, If option have conditional logic
       conditionalChoice(option) {
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
         if (optionsToRender.length === 0) return;
@@ -131,6 +107,8 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
+      // Helper, for options multichoice
+
       multichoice(optionHandler, option) {
         let selctedValues = [];
         const optionName = option.name;
@@ -147,8 +125,62 @@ if (!customElements.get('product-customization-options')) {
         optionHandler.dataset.selectedOptions = selctedValues.join(',');
       }
 
+      // Helper for creating option badge
+
+      createOptionHTML(optionHandler, option) {
+        if (!option) return;
+        if (optionHandler.dataset.selectedOptions.includes(option.value)) return;
+        if (option.hasAttribute('data-has-multichoice')) {
+          const noThanksOriginalOption = this.querySelector(`[data-customization-option][name="${option.name}"][data-field-name="No Thanks"]`);
+          if (noThanksOriginalOption) {
+            const noThanksOption = this.querySelector(`[data-option-id="${noThanksOriginalOption.value}"]`);
+            if (noThanksOption) noThanksOption.remove();
+          }
+          optionHandler.insertAdjacentHTML('beforeend', this.placeholderHTML(option));
+        } else {
+          optionHandler.innerHTML = this.placeholderHTML(option);
+          optionHandler.dataset.selectedOptions = option.value;
+        }
+        optionHandler.style.display = 'flex';
+
+        this.addRemoveListener(optionHandler, option);
+      }
+
+      // Add Event Lister to newly create Option Badge.
+      // Need to add lister, because element not in DOM on Page Load
+
+      addRemoveListener(optionHandler, originalOption) {
+        if (!optionHandler) return;
+        const selectedOptions = optionHandler.querySelectorAll('[data-option-id]');
+        if (selectedOptions.length === 0) return;
+        selectedOptions.forEach((option) => {
+          option.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const id = option.dataset?.optionId;
+            const selectedValues = optionHandler.dataset.selectedOptions.split(',');
+            const filteredOptions = selectedValues.filter((item) => !item.includes(id));
+            optionHandler.dataset.selectedOptions = filteredOptions.join(',');
+            option.remove();
+            const input = this.querySelector(`[data-customization-option="${id}"]`);
+            if (!input) return;
+            input.checked = false;
+            if (optionHandler.dataset.selectedOptions === '') {
+              optionHandler.style.display = 'none';
+              const noThanksOriginalOption = this.querySelector(`[data-customization-option][name="${originalOption.name}"][data-field-name="No Thanks"]`);
+              if (noThanksOriginalOption) {
+                noThanksOriginalOption.disabled = false;
+              }
+            }
+            this.updatePrice();
+          });
+        });
+      }
+
+      // Option badge HTML placeholder
+
       placeholderHTML(option) {
-        return `<p data-option-id="${option.value}">
+        return `<p data-option-id="${option.dataset.customizationOption}">
         <span class="product-options__accordion-label-title" data-option-title>${option.dataset.fieldName}</span>
         ${option.hasAttribute('data-field-price') ? `<span class="product-options__accordion-label-price" data-option-price>${option.dataset.fieldPrice}</span>` : ''}
 
@@ -157,6 +189,8 @@ if (!customElements.get('product-customization-options')) {
         </svg>
         </p>`;
       }
+
+      // Default option event lister (Add possibility to remove default)
 
       setDefaultOptionsListener() {
         this.customizationOptions.forEach((option) => {
@@ -168,6 +202,8 @@ if (!customElements.get('product-customization-options')) {
           this.updatePrice();
         });
       }
+
+      // Method to change item quantity if enabled
 
       handleQuantity() {
         if (this.accordions.length === 0) return;
@@ -182,8 +218,11 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
+      // Helper to incease/decrease quanity
+
       addQuantityListener(el, option, input) {
-        el.addEventListener('click', () => {
+        el.addEventListener('click', (event) => {
+          event.preventDefault();
           const inputValue = Number(input.value);
           const maxInputValue = Number(input.max);
           if (inputValue - 1 === 0 && option === 'decrease') return;
@@ -195,10 +234,13 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
+      // Tooltip popup handler
+
       handlePopupHelper() {
         if (this.openPopupButtons.length === 0) return;
         this.openPopupButtons.forEach((button) => {
           button.addEventListener('click', (event) => {
+            event.preventDefault();
             event.stopPropagation();
             const popup = document.querySelector(`[data-popup="${button.dataset?.popupOpen}"`);
             if (!popup) return;
@@ -208,13 +250,16 @@ if (!customElements.get('product-customization-options')) {
 
         if (this.closePopupButtons.length === 0) return;
         this.closePopupButtons.forEach((button) => {
-          button.addEventListener('click', () => {
+          button.addEventListener('click', (event) => {
+            event.preventDefault();
             const popup = document.querySelector(`[data-popup="${button.dataset?.closePopup}"`);
             if (!popup) return;
             popup.classList.remove('active');
           });
         });
       }
+
+      // Method to update price when options are selected (increase/decrease)
 
       updatePrice() {
         let priceAdjustment = 0;
@@ -244,6 +289,8 @@ if (!customElements.get('product-customization-options')) {
         this.priceHelper(priceAdjustment);
       }
 
+      // Helper to create corect price HTML
+
       priceHelper(priceAdjustment) {
         if (!this.priceElement) return;
         const currentPrice = this.priceElement.dataset?.priceValue;
@@ -255,10 +302,13 @@ if (!customElements.get('product-customization-options')) {
         this.priceElement.innerText = `${this.priceElement.dataset?.currency}${formattedPrice}`;
       }
 
+      // Method to select color
+
       colorSwatchHandler() {
         if (this.swatches.length === 0) return;
         this.swatches.forEach((swatch) => {
-          swatch.addEventListener('click', () => {
+          swatch.addEventListener('click', (event) => {
+            event.preventDefault();
             this.swatches.forEach((swatch) => swatch.classList.remove('color-selected'));
             swatch.classList.add('color-selected');
             if (swatch.classList.contains('swatch--custom-trigger')) {
@@ -275,9 +325,12 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
+      // Nethod to add custom color using input
+
       addCustomColorHandler() {
         if (!this.addCustomColor) return;
-        this.addCustomColor.addEventListener('click', () => {
+        this.addCustomColor.addEventListener('click', (event) => {
+          event.preventDefault();
           const input = this.colorForm.querySelector('input[type="text"]');
           if (!input) return;
           this.colorInput.dataset.variant = input.dataset.id;
@@ -288,6 +341,8 @@ if (!customElements.get('product-customization-options')) {
           this.updatePrice();
         });
       }
+
+      // Hepler to create custom color badge
 
       setColorOptionHTML(colorOption, customColor) {
         return `<p class="option_selected" data-option-id="${colorOption.dataset.id}">
@@ -312,11 +367,255 @@ if (!customElements.get('product-customization-options')) {
         </p>`;
       }
 
+      // Method to close custom color popup
+
       closeColorPopupHandler() {
         if (!this.closeColorPopup) return;
-        this.closeColorPopup.addEventListener('click', () => {
+        this.closeColorPopup.addEventListener('click', (event) => {
+          event.preventDefault();
           this.colorForm.style.display = 'none';
         });
+      }
+
+      // Method to open Modify popup in Cart
+
+      openModifyHandler() {
+        if (!this.modifyButton) return;
+        this.modifyButton.addEventListener('click', () => {
+          this.classList.add('modify-opened');
+          this.dataset.stamp = this.htmlToBase64(this.innerHTML);
+        });
+      }
+
+      // Method to close Modify popup in Cart
+
+      closeModifyHandler() {
+        if (this.closeModifyButtons.length === 0) return;
+        this.closeModifyButtons.forEach((button) => {
+          button.addEventListener('click', () => {
+            this.classList.remove('modify-opened');
+            this.dataset.stamp = 'none';
+          });
+        });
+      }
+
+      // Method to update cart item if options are changed
+
+      handleItemUpdate() {
+        if (!this.applyChangesButton) return;
+        this.applyChangesButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          const currentStamp = this.htmlToBase64(this.innerHTML);
+          if (currentStamp === this.dataset.stamp) {
+            this.classList.remove('modify-opened');
+            this.dataset.stamp = 'none';
+          } else {
+            this.applyChangesButton.classList.add('loading');
+            this.replaceItem();
+          }
+        });
+      }
+
+      // Method to send neccessary Request to Shopidy server
+      // We compare the previous selection with new selection.
+      // If they are the same we close Modify popup otherwise we remove previous product and add new
+
+      async replaceItem() {
+        const changeUrl = `${window.Shopify.routes.root}cart/change.js`;
+        const addUrl = `${window.Shopify.routes.root}cart/add.js`;
+        if (!this.checkMandatoryFields()) alert('Please select your options before adding this item to cart');
+        const productProperties = {
+          _mainProductId: this.modifyID.split(':')[0],
+          ...this.prepareOptions(),
+          _functionOperation: this.prepareFunctionalProperties(),
+        };
+
+        const changeRequest = {
+          id: this.modifyID,
+          quantity: 0,
+          sections: this.getSectionsToRender().map((section) => section.section),
+          sections_url: window.location.pathname,
+        };
+
+        const changeConfig = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(changeRequest),
+        };
+
+        const updateRequest = {
+          items: [
+            {
+              id: this.modifyID.split(':')[0],
+              quantity: this.quantityInput?.value || 1,
+              properties: productProperties,
+            },
+          ],
+          sections: this.getSectionsToRender().map((section) => section.section),
+          sections_url: window.location.pathname,
+        };
+
+        const updateConfig = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updateRequest),
+        };
+
+        try {
+          const response = await fetch(changeUrl, changeConfig);
+          if (response.ok) {
+            const updateResponse = await fetch(addUrl, updateConfig);
+
+            const updateResult = await updateResponse.json();
+            console.log(updateResult);
+
+            if (!updateResponse.ok) throw new Error('Failed to add to cart');
+            this.getSectionsToRender().forEach((section) => {
+              const elementToReplace = document.getElementById(section.id).querySelector(section.selector) || document.getElementById(section.id);
+              elementToReplace.innerHTML = this.getSectionInnerHTML(updateResult.sections[section.section], section.selector);
+            });
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      // Helper to check if all mandatory options are selected.
+      // If no we stop add to cart process
+
+      checkMandatoryFields() {
+        const mandatoryFields = this.querySelectorAll('[data-selected-options][data-mandatory]');
+        if (mandatoryFields.length === 0) return true;
+        let errorCounter = 0;
+        mandatoryFields.forEach((field) => {
+          if (field.dataset.selectedOptions === '') {
+            field.classList.add('error');
+            errorCounter += 1;
+          } else {
+            field.classList.remove('error');
+          }
+        });
+        return errorCounter > 0 ? false : true;
+      }
+
+      // Helper to prepare line item properties
+
+      prepareOptions() {
+        const activeOptions = this.querySelectorAll('[data-selected-options]');
+        if (activeOptions.length === 0) return;
+        let lineItemProperties = {};
+        activeOptions.forEach((option) => {
+          if (option.dataset.selectedOptions !== '') {
+            const parentElement = option.closest('[data-option-accordion]');
+            if (!parentElement) return;
+            const key = parentElement.querySelector('[data-option-title]').innerText.trim();
+            const value = parentElement.querySelectorAll('[data-customization-option]:checked');
+            if (value.length === 0) return;
+            const formatedValue = [...value].map((item) => item.dataset.fieldName).join(', ');
+            lineItemProperties[key] = formatedValue;
+          }
+          const selectedColor = this.querySelector('.custom-color-group .option_selected [data-color-selected-title]');
+          if (!selectedColor) return;
+          const colorGroup = selectedColor.closest('[data-group-color-name]');
+          const selectedColorValue = selectedColor.innerText;
+          const selectedColorPrice = this.querySelector('.custom-color-group .option_selected-price');
+          lineItemProperties[colorGroup.dataset.groupColorName] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
+          if (selectedColorPrice.innerText != '') {
+            lineItemProperties[colorGroup.dataset.groupColorName] += ` [+${selectedColorPrice.innerText}]`;
+          }
+        });
+
+        return lineItemProperties;
+      }
+
+      // Hepler to create Shopify Function logic
+
+      prepareFunctionalProperties() {
+        const activeOptions = this.querySelectorAll('[data-selected-options]');
+        if (activeOptions.length === 0) return;
+        let productOptions = [];
+        activeOptions.forEach((option) => {
+          if (option.dataset.selectedOptions !== '') {
+            const parent = option.closest('[data-option-accordion]');
+            const values = option.dataset.selectedOptions.split(',');
+            values.forEach((value) => {
+              const variantID = value.includes(':::') ? `gid://shopify/ProductVariant/${value.split(':::')[0].trim()}` : `gid://shopify/ProductVariant/${value.trim()}`;
+              const variantPrice = value.includes(':::') ? Number(value.split(':::')[1].trim()) : 0;
+              const inputIdValue = value.includes(':::') ? value.split(':::')[0].trim() : value.trim();
+              const quantityElement = this.querySelector(`[data-input-quantity="${inputIdValue}"]`);
+              const quantity = quantityElement ? Number(quantityElement.value) : 1;
+              const productOption = {
+                variantId: variantID,
+                priceAdjustment: variantPrice,
+                quantity: quantity,
+                groupHandle: parent.dataset.type || '',
+              };
+
+              productOptions.push(productOption);
+            });
+          }
+        });
+
+        const colorOption = this.querySelector('[data-color-variant-input]');
+        if (!colorOption) return;
+        const productColorOptionVariantID = `gid://shopify/ProductVariant/${colorOption.dataset.variant}`;
+        const productColorOptionPrice = colorOption.dataset?.price ? Number(colorOption.dataset?.price) : 0;
+        const groupContainer = colorOption.closest('[data-group-color-name]');
+        const colorName = groupContainer.querySelector('[data-color-selected-title]');
+        const productColorOption = {
+          variantId: productColorOptionVariantID,
+          priceAdjustment: productColorOptionPrice,
+          quantity: 1,
+          groupHandle: groupContainer.dataset.groupColorName ? groupContainer.dataset.groupColorName : '',
+          colorName: colorName ? colorName.innerText.trim() : '',
+        };
+
+        productOptions.push(productColorOption);
+
+        return productOptions;
+      }
+
+      // Array of sections to be rerendered
+
+      getSectionsToRender() {
+        return [
+          {
+            id: 'main-cart-items',
+            section: document.getElementById('main-cart-items').dataset.id,
+            selector: '.js-contents',
+          },
+          {
+            id: 'cart-live-region-text',
+            section: 'cart-live-region-text',
+            selector: '.shopify-section',
+          },
+          {
+            id: 'main-cart-footer',
+            section: document.getElementById('main-cart-footer').dataset.id,
+            selector: '.js-contents',
+          },
+        ];
+      }
+
+      // Helper to parse HTML after server response
+
+      getSectionInnerHTML(html, selector) {
+        return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
+      }
+
+      // Helper to compare previous option state with new.
+      // We create a stamp of HTML in Base64 format and compare old and new one
+
+      htmlToBase64(html) {
+        const bytes = new TextEncoder().encode(html);
+        const binary = Array.from(bytes)
+          .map((b) => String.fromCharCode(b))
+          .join('');
+        return btoa(binary);
       }
     }
   );
