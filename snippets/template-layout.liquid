@@ -1,0 +1,42 @@
+{%- comment -%} Main content layout handling {%- endcomment -%}
+
+{% if request.page_type == 'page' and page.metafields.layout.narrow == true %}
+  <div class="page-narrow-layout">
+    {{ content_for_layout }}
+  </div>
+{% elsif request.page_type == 'page' or request.page_type == 'index' or request.page_type == 'collection' or request.page_type == 'product' or request.page_type == 'search' %}
+  
+  {% unless template == 'page.goaffpro-create' %}
+    <style>
+      @media only screen and (min-width: 990px) {
+        .side-bar-comtainer { 
+          position: relative;
+          display: flex;
+          gap: 0px!important;
+          align-items: flex-start;
+        }
+        .side-bar-comtainer .inner-container {
+          flex: 1 1 0%;
+          max-width: calc(100% - 236px);
+        }
+        .side-bar-comtainer .sidebarmenu {
+          flex: 0 0 236px;
+        }
+      }
+    </style>
+    
+    <div class="grid-container {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %} side-bar-comtainer">
+      <aside class="sidebarmenu">
+        {% render 'header-sidebar-menu' %}
+      </aside>
+
+      <div class="inner-container">
+        {{ content_for_layout }}
+      </div>
+    </div>
+  {% else %}
+    {{ content_for_layout }}
+  {% endunless %}
+{% else %}
+  {{ content_for_layout }}
+{% endif %}
