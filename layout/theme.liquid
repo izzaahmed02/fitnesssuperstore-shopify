@@ -9,10 +9,7 @@
       {% if current_page != 1 %} &ndash; Page {{ current_page }}{% endif %}
     </title>
 
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-PFW6SMSL');</script>
-    <!-- End Google Tag Manager -->
-
+    {% render 'google-tag-manager-head' %}
     {% render 'schema-ld-json' %}
 
     {% if page_description %}
@@ -21,42 +18,29 @@
 
     {% render 'meta-tags' %}
     {% render 'stylesheet-tags' %}
-    {% render 'script-tags' %}
+    {% render 'head-scripts' %}
 
     {% style %}
       {% render 'css-variables' %}
+      {% render 'custom-css' %}
     {% endstyle %}
 
     {{ content_for_header }}
-
-    <script>
-      window.Shopify = window.Shopify || {theme: {id: {{ theme.id }}, role: '{{ theme.role }}' } };
-      window._template = {
-        directory: "{{ template.directory }}",
-        name: "{{ template.name }}",
-        suffix: "{{ template.suffix }}"
-      };
-      window.pricingReferenceHtml = "{{ 'pricing-reference.html' | asset_url }}";
-    </script>
-    
-    <script type="module" blocking="render" fetchpriority="high" src="https://cdn.intelligems.io/esm/af0d62f8eb94/bundle.js" async></script>
   </head>
 
   <body class="accessibility-mode page-width-desktop page-width-index gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %} {% if template contains 'page' %} page-{{ page.handle }}{% endif %}">
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PFW6SMSL" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
+    {% render 'google-tag-manager-body' %}
     
     <a class="skip-to-content-link button visually-hidden" href="#MainContent">
       {{ 'accessibility.skip_to_text' | t }}
     </a>
 
-    {% if settings.cart_type == 'drawer' %}
-      {% render 'cart-drawer' %}
-    {% endif %}
+    {%- if settings.cart_type == 'drawer' -%}
+      {%- render 'cart-drawer' -%}
+    {%- endif -%}
 
     {% unless template == 'page.goaffpro-create' %}
-      {% sections 'header-group' %}
+      {% sections 'header-group' %}  
     {% endunless %}
 
     {% if settings.show_sidebar_menu %}
@@ -65,34 +49,48 @@
     {% endif %}
 
     <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
-      {% render 'template-specific-content' %}
+      {%- comment -%} Template-specific modals and banners {%- endcomment -%}
+      {% render 'template-modals' %}
+      {% render 'template-offers' %}
       
+      {%- comment -%} MAIN CONTENT LAYOUT - content_for_layout MUST be in main template {%- endcomment -%}
       {% if request.page_type == 'page' and page.metafields.layout.narrow == true %}
-            <div class="page-narrow-layout">
-              {{ content_for_layout }}
-            </div>
-          {% elsif request.page_type == 'page' or request.page_type == 'index' or request.page_type == 'collection' or request.page_type == 'product' or request.page_type == 'search' %}
-            <style>
-              @media only screen and (min-width: 990px) {
-                .side-bar-comtainer { position: relative;display: flex;gap: 0px!important;align-items: flex-start;}
-                .side-bar-comtainer .inner-container {flex: 1 1 0%;max-width: calc(100% - 236px);}
-                .side-bar-comtainer .sidebarmenu {flex: 0 0 236px;}
-              }
-            </style>
-            <div class="{% unless template == 'page.goaffpro-create' %} grid-container {% endunless %} {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %} {% unless template == 'page.goaffpro-create' %} side-bar-comtainer {% endunless %}">
-              {% unless template == 'page.goaffpro-create' %}
-              <aside class="sidebarmenu">
-                {% render 'header-sidebar-menu' %}
-              </aside>
-            {% endunless %}
+        <div class="page-narrow-layout">
+          {{ content_for_layout }}
+        </div>
+      {% elsif request.page_type == 'page' or request.page_type == 'index' or request.page_type == 'collection' or request.page_type == 'product' or request.page_type == 'search' %}
+        <style>
+          @media only screen and (min-width: 990px) {
+            .side-bar-comtainer { 
+              position: relative;
+              display: flex;
+              gap: 0px!important;
+              align-items: flex-start;
+            }
+            .side-bar-comtainer .inner-container {
+              flex: 1 1 0%;
+              max-width: calc(100% - 236px);
+            }
+            .side-bar-comtainer .sidebarmenu {
+              flex: 0 0 236px;
+            }
+          }
+        </style>
+        
+        <div class="{% unless template == 'page.goaffpro-create' %} grid-container {% endunless %} {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %} {% unless template == 'page.goaffpro-create' %} side-bar-comtainer {% endunless %}">
+          {% unless template == 'page.goaffpro-create' %}
+            <aside class="sidebarmenu">
+              {% render 'header-sidebar-menu' %}
+            </aside>
+          {% endunless %}
 
-              <div class="inner-container">
-                {{ content_for_layout }}
-              </div>
-            </div>
-          {% else %}
+          <div class="inner-container">
             {{ content_for_layout }}
-          {% endif %}
+          </div>
+        </div>
+      {% else %}
+        {{ content_for_layout }}
+      {% endif %}
     </main>
 
     {% if settings.show_sidebar_menu %}
@@ -101,9 +99,13 @@
 
     {% sections 'footer-group' %}
 
-    {% render 'accessibility-messages' %}
+    <ul hidden>
+      <li id="a11y-refresh-page-message">{{ 'accessibility.refresh_page' | t }}</li>
+      <li id="a11y-new-window-message">{{ 'accessibility.link_messages.new_window' | t }}</li>
+    </ul>
+
     {% render 'body-scripts' %}
     {% render 'modals-and-templates' %}
-    {% render 'optimization', postpone_loading: 'reset' %}
+    {%- render 'optimization', postpone_loading: 'reset' -%}
   </body>
 </html>
