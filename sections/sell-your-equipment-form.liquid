@@ -33,13 +33,16 @@
           <!-- Name -->
           <div class="field">
             <p class="field__title"><strong>Your Name</strong></p>
-            <input type="text" name="contact[name]" class="field__input custom-input" required>
+            <input type="text" name="contact[name]" class="field__input custom-input">
           </div>
 
           <!-- Email -->
-          <div class="field">
+          <div class="field" id="email-field-container">
             <p class="field__title"><strong>Email Address *</strong></p>
             <input type="email" name="contact[email]" class="field__input custom-input" required>
+            <p class="inline-error" style="color: red; display: none; font-size: 13px; margin-top: 3px;">
+              Please enter a valid email address.
+            </p>
           </div>
 
           <!-- Phone -->
@@ -78,8 +81,8 @@
 
           <!-- Product Category -->
           <div class="field">
-            <p class="field__title"><strong>Select Product Category *</strong></p>
-            <select name="contact[category]" class="custom-select" required>
+            <p class="field__title"><strong>Select Product Category</strong></p>
+            <select name="contact[category]" class="custom-select">
               <option value="">-- Select Category --</option>
               <option>Elliptical Crosstrainers</option>
               <option>Exercise Bikes</option>
@@ -146,7 +149,7 @@
         </div>
 
         <div class="contact-form__actions">
-          <button type="submit" class="button button--primary">
+          <button type="submit" class="button button--primary" disabled>
             {{ section.settings.button_label }}
           </button>
         </div>
@@ -160,13 +163,8 @@
   {{ 'none' }}
 
   /* KEEP EXISTING STYLES */
-  .field:after, .select:after, .customer .field:after, .customer select:after, .localization-form__select:after {
-    box-shadow: none;
-  }
-
-  .field:after {
-    box-shadow: none;
-  }
+  .field:after, .select:after, .customer .field:after, .customer select:after, .localization-form__select:after { box-shadow: none; }
+  .field:after { box-shadow: none; }
   .field:hover.field:after { box-shadow: none; }
   .sell-equipment-form .field { display: block; }
   .sell-equipment-form .grid { row-gap: 0px; }
@@ -211,32 +209,54 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     animation: fadeIn 0.5s ease-in-out;
   }
-  .success-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 15px;
-  }
+  .success-icon { width: 80px; height: 80px; margin: 0 auto 15px; }
   .success-icon svg { width: 80px; height: 80px; }
-  .success-circle {
-    stroke: #28a745;
-    stroke-width: 3;
-    stroke-dasharray: 166;
-    stroke-dashoffset: 166;
-    stroke-linecap: round;
-    animation: stroke 0.6s ease-out forwards;
-  }
-  .success-check {
-    stroke: #28a745;
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-dasharray: 48;
-    stroke-dashoffset: 48;
-    animation: stroke 0.4s 0.6s ease-out forwards;
-  }
+  .success-circle { stroke: #28a745; stroke-width: 3; stroke-dasharray: 166; stroke-dashoffset: 166; stroke-linecap: round; animation: stroke 0.6s ease-out forwards; }
+  .success-check { stroke: #28a745; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.4s 0.6s ease-out forwards; }
   @keyframes stroke { 100% { stroke-dashoffset: 0; } }
   @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+  /* INLINE EMAIL ERROR */
+  .inline-error.show { display: block !important; }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('SellEquipmentForm');
+    const emailField = form.querySelector('input[name="contact[email]"]');
+    const errorMsg = form.querySelector('.inline-error');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    function isValidEmail(email) {
+      // Regex for proper email validation with TLD
+      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+      return regex.test(email);
+    }
+
+    function validateEmail() {
+      const value = emailField.value.trim();
+      if (value === '' || !isValidEmail(value)) {
+        errorMsg.classList.add('show');
+        submitBtn.disabled = true;
+      } else {
+        errorMsg.classList.remove('show');
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Only show error on blur
+    emailField.addEventListener('blur', validateEmail);
+
+    // Enable/disable submit button as user types
+    emailField.addEventListener('input', function() {
+      submitBtn.disabled = !isValidEmail(emailField.value.trim());
+      if (isValidEmail(emailField.value.trim())) {
+        errorMsg.classList.remove('show');
+      }
+    });
+  });
+</script>
+
 
 {% schema %}
 {
