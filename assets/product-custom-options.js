@@ -230,6 +230,7 @@ if (!customElements.get('product-customization-options')) {
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
           const optionContainer = el.closest('[data-option-accordion]').querySelector('[data-customization-option]');
           if (!optionContainer) return;
+          optionContainer.checked = true;
           optionContainer.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
