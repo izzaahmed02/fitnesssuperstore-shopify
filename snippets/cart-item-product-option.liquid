@@ -53,12 +53,15 @@
       for item in options_data
         if item.groupHandle == option_handle
           if item.variantId contains '/'
-            assign default_variant_id = item.variantId | split: '/' | last | plus: 0
+            assign id_last = item.variantId | split: '/' | last
+            if id_last != 'ProductVariant'
+              assign default_variant_id = item.variantId | split: '/' | last | plus: 0
+            endif
           endif
-          if item.priceAdjustment != '0'
+          if item.priceAdjustment != '0' and item.priceAdjustment != 0
             assign default_variant_price = item.priceAdjustment | plus: 0
           endif
-          if item.quantity != '0'
+          if item.quantity != '0' and item.quantity != 0
             assign default_quantity = item.quantity | plus: 0
           endif
         endif
@@ -90,7 +93,7 @@
     </h3>
     <span
       class="product-options__accordion-label"
-      data-selected-options="{{ default_variant_id }}{% if default_variant_price != 0 %}:::{{default_variant_price}}{% endif %}"
+      data-selected-options="{{ default_variant_id }}{% if default_variant_price != blank and default_variant_price != '0' and default_variant_price != 0 %}:::{{default_variant_price}}{% endif %}"
       {% if product_option.mandatory %}
         data-mandatory
       {% endif %}

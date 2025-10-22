@@ -15,7 +15,6 @@ if (!customElements.get('product-customization-options')) {
         this.colorForm = this.querySelector('.custom-color-input');
         this.addCustomColor = this.querySelector('.add-custom-color');
         this.closeColorPopup = this.querySelector('[data-close-color-popup]');
-        this.modifyButton = document.querySelector(`[ data-key-modify="${this.modifyID}"]`);
         this.closeModifyButtons = this.querySelectorAll('[data-close-popup]');
         this.applyChangesButton = this.querySelector('[data-apply-changes]');
         this.cartItems = document.querySelector('cart-items');
@@ -26,7 +25,7 @@ if (!customElements.get('product-customization-options')) {
       }
 
       get quantityInput() {
-        return this.closest('[data-quantity-variant-id]');
+        return document.querySelector(`[data-quantity-variant-id="${this.dataset.variantId}"]`);
       }
 
       connectedCallback() {
@@ -381,8 +380,9 @@ if (!customElements.get('product-customization-options')) {
       // Method to open Modify popup in Cart
 
       openModifyHandler() {
-        if (!this.modifyButton) return;
-        this.modifyButton.addEventListener('click', () => {
+        const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`);
+        if (!modifyButton) return;
+        modifyButton.addEventListener('click', () => {
           this.classList.add('modify-opened');
           this.dataset.stamp = this.htmlToBase64(this.innerHTML);
         });
@@ -472,13 +472,15 @@ if (!customElements.get('product-customization-options')) {
             const updateResponse = await fetch(addUrl, updateConfig);
 
             const updateResult = await updateResponse.json();
-            console.log(updateResult);
 
             if (!updateResponse.ok) throw new Error('Failed to add to cart');
             this.getSectionsToRender().forEach((section) => {
-              const elementToReplace = document.getElementById(section.id).querySelector(section.selector) || document.getElementById(section.id);
+              const elementToReplace = document.querySelector(section.selector) || document.getElementById(section.id);
               elementToReplace.innerHTML = this.getSectionInnerHTML(updateResult.sections[section.section], section.selector);
             });
+
+            this.classList.remove('modify-opened');
+            this.dataset.stamp = 'none';
           }
         } catch (error) {
           console.error(error);
@@ -587,7 +589,7 @@ if (!customElements.get('product-customization-options')) {
           {
             id: 'main-cart-items',
             section: document.getElementById('main-cart-items').dataset.id,
-            selector: '.js-contents',
+            selector: '.section-cart-items',
           },
           {
             id: 'cart-live-region-text',

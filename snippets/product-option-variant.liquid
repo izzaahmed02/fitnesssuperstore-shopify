@@ -100,7 +100,14 @@
       <button type="button" data-decrease-quantity="{{ variant.id }}" class="product-options__quantity-btn product-options__quantity-minus">
         {% render 'product-option-minus' %}
       </button>
-      <input type="number" data-input-quantity="{{ variant.id }}" min="1" value="1" max="{{ variant.metafields.custom.max_quantity | default: 999 }}" class="product-options__quantity-input">
+      <input
+        type="number"
+        data-input-quantity="{{ variant.id }}"
+        value="{% if default_quantity != blank and default_quantity != '0' and default_quantity != 0 %}{{default_quantity}}{%else%}1{% endif %}"
+        min="1"
+        max="{{ variant.metafields.custom.max_quantity | default: 999 }}"
+        class="product-options__quantity-input"
+      >
       <button type="button" data-increase-quantity="{{ variant.id }}" class="product-options__quantity-btn product-options__quantity-plus">
         {% render 'product-option-plus' %}
       </button>
