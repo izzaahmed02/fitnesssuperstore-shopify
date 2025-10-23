@@ -529,12 +529,12 @@ function generatePayLaterAggregate() {
 function combinedPayLater() {
 	let payLaterOptions = '';
 
-	payLaterOptions += generateAfterPayPaymentTerms();
+	{%comment%}payLaterOptions += generateAfterPayPaymentTerms();{%endcomment%}
 	payLaterOptions += generateAffirmPaymentTerms();
 
 	return payLaterOptions;
 }
-
+{%comment%}
 function generateAfterPayPaymentTerms() {
 	const afterPayRateElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
 	if (afterPayRateElement == null) return;
@@ -559,7 +559,7 @@ function generateAfterPayPaymentTerms() {
 
 	return afterPayTermsHTML;
 }
-
+{%endcomment}
 function generateAfterPayOptionHTML(term, rate) {
 	const { MonthlyPaymentForNewTerm, APR, TotalPaymentsNewTerm } = rate;
 
