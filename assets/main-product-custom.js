@@ -650,7 +650,7 @@ function generateAffirmPaymentTerms() {
 	const productPrice = parseFloat(formattedProductPrice);
 	return productPrice;
   }
-
+/*
   function hideOrShowAfterPayLogo(callback) {
 	var afterPayModalContainer = document.querySelector('afterpay-modal');
 	if (afterPayModalContainer) {
@@ -667,7 +667,7 @@ function generateAffirmPaymentTerms() {
 			callback();
 		}
 	}
-  }
+  }*/
 
   function hideOrShowAffirmLogo(callback) {
 	var affirmElement = document.querySelector('.affirm-as-low-as');
