@@ -18,6 +18,7 @@ if (!customElements.get('product-customization-options')) {
         this.closeModifyButtons = this.querySelectorAll('[data-close-popup]');
         this.applyChangesButton = this.querySelector('[data-apply-changes]');
         this.cartItems = document.querySelector('cart-items');
+        this.cartDrawer = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
       }
 
       get modifyID() {
@@ -79,6 +80,7 @@ if (!customElements.get('product-customization-options')) {
             if (option.hasAttribute('data-has-multichoice')) {
               this.multichoice(optionHandler, option);
             }
+            if (this.closest('cart-drawer')) return;
             this.updatePrice();
           });
         });
@@ -122,6 +124,10 @@ if (!customElements.get('product-customization-options')) {
         if (multiChoiceOptions.length === 0) selctedValues = [];
         multiChoiceOptions.forEach((choice) => selctedValues.push(choice.value));
         optionHandler.dataset.selectedOptions = selctedValues.join(',');
+        const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
+        if (!option.checked && addedOption) {
+          addedOption.remove();
+        }
       }
 
       // Helper for creating option badge
@@ -380,11 +386,14 @@ if (!customElements.get('product-customization-options')) {
       // Method to open Modify popup in Cart
 
       openModifyHandler() {
-        const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`);
-        if (!modifyButton) return;
-        modifyButton.addEventListener('click', () => {
-          this.classList.add('modify-opened');
-          this.dataset.stamp = this.htmlToBase64(this.innerHTML);
+        setTimeout(() => {
+          const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`) || this.cartDrawer.querySelector(`[data-key-modify="${this.modifyID}"]`);
+          if (!modifyButton) return;
+
+          modifyButton.addEventListener('click', () => {
+            this.classList.add('modify-opened');
+            this.dataset.stamp = this.htmlToBase64(this.innerHTML);
+          });
         });
       }
 
@@ -424,7 +433,12 @@ if (!customElements.get('product-customization-options')) {
       async replaceItem() {
         const changeUrl = `${window.Shopify.routes.root}cart/change.js`;
         const addUrl = `${window.Shopify.routes.root}cart/add.js`;
-        if (!this.checkMandatoryFields()) alert('Please select your options before adding this item to cart');
+        if (!this.checkMandatoryFields()) return alert('Please select your options before adding this item to cart');
+        let sections = this.cartDrawer.getSectionsToRender().map((section) => section.id);
+        if (window.location.href.includes('/cart')) {
+          sections = this.getSectionsToRender().map((section) => section.section);
+        }
+
         const productProperties = {
           _mainProductId: this.modifyID.split(':')[0],
           ...this.prepareOptions(),
@@ -434,7 +448,7 @@ if (!customElements.get('product-customization-options')) {
         const changeRequest = {
           id: this.modifyID,
           quantity: 0,
-          sections: this.getSectionsToRender().map((section) => section.section),
+          sections: sections,
           sections_url: window.location.pathname,
         };
 
@@ -454,7 +468,7 @@ if (!customElements.get('product-customization-options')) {
               properties: productProperties,
             },
           ],
-          sections: this.getSectionsToRender().map((section) => section.section),
+          sections: sections,
           sections_url: window.location.pathname,
         };
 
@@ -474,10 +488,14 @@ if (!customElements.get('product-customization-options')) {
             const updateResult = await updateResponse.json();
 
             if (!updateResponse.ok) throw new Error('Failed to add to cart');
-            this.getSectionsToRender().forEach((section) => {
-              const elementToReplace = document.querySelector(section.selector) || document.getElementById(section.id);
-              elementToReplace.innerHTML = this.getSectionInnerHTML(updateResult.sections[section.section], section.selector);
-            });
+            if (window.location.href.includes('/cart')) {
+              this.getSectionsToRender().forEach((section) => {
+                const elementToReplace = document.querySelector(section.selector) || document.getElementById(section.id);
+                elementToReplace.innerHTML = this.getSectionInnerHTML(updateResult.sections[section.section], section.selector);
+              });
+            } else {
+              this.cartDrawer.renderContents(updateResult);
+            }
 
             this.classList.remove('modify-opened');
             this.dataset.stamp = 'none';
@@ -526,9 +544,9 @@ if (!customElements.get('product-customization-options')) {
           const colorGroup = selectedColor.closest('[data-group-color-name]');
           const selectedColorValue = selectedColor.innerText;
           const selectedColorPrice = this.querySelector('.custom-color-group .option_selected-price');
-          lineItemProperties[colorGroup.dataset.groupColorName] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
+          lineItemProperties[colorGroup.dataset.colorName] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
           if (selectedColorPrice.innerText != '') {
-            lineItemProperties[colorGroup.dataset.groupColorName] += ` [+${selectedColorPrice.innerText}]`;
+            lineItemProperties[colorGroup.dataset.colorName] += ` [+${selectedColorPrice.innerText}]`;
           }
         });
 
@@ -556,6 +574,7 @@ if (!customElements.get('product-customization-options')) {
                 priceAdjustment: variantPrice,
                 quantity: quantity,
                 groupHandle: parent.dataset.type || '',
+                defaultValues: option.dataset.selectedOptions,
               };
 
               productOptions.push(productOption);

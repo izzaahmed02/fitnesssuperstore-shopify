@@ -40,9 +40,11 @@
   %}
   {% liquid
     assign options_data = null
-    assign default_variant_id = null
-    assign default_variant_price = null
-    assign default_quantity = null
+    assign default_variant_id = ''
+    assign default_variant_price = 0
+    assign default_quantity = ''
+    assign default_values = ''
+
     assign option_handle = product_option.product_option_title | handleize
     for property in line_item.properties
       if property.first == '_functionOperation'
@@ -63,6 +65,10 @@
           endif
           if item.quantity != '0' and item.quantity != 0
             assign default_quantity = item.quantity | plus: 0
+          endif
+
+          if item.defaultValues != blank
+            assign default_values = item.defaultValues
           endif
         endif
       endfor
@@ -93,31 +99,37 @@
     </h3>
     <span
       class="product-options__accordion-label"
-      data-selected-options="{{ default_variant_id }}{% if default_variant_price != blank and default_variant_price != '0' and default_variant_price != 0 %}:::{{default_variant_price}}{% endif %}"
+      data-selected-options="{{ default_values }}"
       {% if product_option.mandatory %}
         data-mandatory
       {% endif %}
     >
       {% if default_variant_id != blank %}
-        <p data-option-id="{{ default_variant_id }}">
-          <span class="product-options__accordion-label-title" data-option-title>
+        {% assign values = default_values | split: ',' %}
+        {% for value in values %}
+          {% assign id = value | split: ':::' | first | plus: 0 %}
+          {% assign price = value | split: ':::' | last | plus: 0 %}
+          <p data-option-id="{{ id }}">
             {% for variant in product_option.product_option_variants.value %}
-              {% if variant.id == default_variant_id %}
-                {{ variant.title }}
+              {% if variant.id == id %}
+                <span class="product-options__accordion-label-title" data-option-title>
+                  {{ variant.title }}
+                </span>
+
+                {% if price > 0 and price != variant.id %}
+                  <span class="product-options__accordion-label-price" data-option-price>
+                    {{ price | prepend: cart.currency.symbol }}
+                  </span>
+                {% endif %}
                 {% break %}
               {% endif %}
             {% endfor %}
-          </span>
-          {% if default_variant_price > 0 %}
-            <span class="product-options__accordion-label-price" data-option-price>
-              {{ default_variant_price | prepend: cart.currency.symbol }}
-            </span>
-          {% endif %}
 
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.57808 3.57417C3.81239 3.33986 4.19229 3.33986 4.42661 3.57417L8.00234 7.14991L11.5781 3.57417C11.8124 3.33986 12.1923 3.33986 12.4266 3.57417C12.6609 3.80849 12.6609 4.18839 12.4266 4.4227L8.85087 7.99844L12.4266 11.5742C12.6609 11.8085 12.6609 12.1884 12.4266 12.4227C12.1923 12.657 11.8124 12.657 11.5781 12.4227L8.00234 8.84697L4.42661 12.4227C4.19229 12.657 3.81239 12.657 3.57808 12.4227C3.34377 12.1884 3.34377 11.8085 3.57808 11.5742L7.15382 7.99844L3.57808 4.4227C3.34377 4.18839 3.34377 3.80849 3.57808 3.57417Z" fill="black"/>
-          </svg>
-        </p>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M3.57808 3.57417C3.81239 3.33986 4.19229 3.33986 4.42661 3.57417L8.00234 7.14991L11.5781 3.57417C11.8124 3.33986 12.1923 3.33986 12.4266 3.57417C12.6609 3.80849 12.6609 4.18839 12.4266 4.4227L8.85087 7.99844L12.4266 11.5742C12.6609 11.8085 12.6609 12.1884 12.4266 12.4227C12.1923 12.657 11.8124 12.657 11.5781 12.4227L8.00234 8.84697L4.42661 12.4227C4.19229 12.657 3.81239 12.657 3.57808 12.4227C3.34377 12.1884 3.34377 11.8085 3.57808 11.5742L7.15382 7.99844L3.57808 4.4227C3.34377 4.18839 3.34377 3.80849 3.57808 3.57417Z" fill="black"/>
+            </svg>
+          </p>
+        {% endfor %}
       {% endif %}
     </span>
 
@@ -144,9 +156,10 @@
       <span class="product-options__swatch product-options__swatch--single">
         {% for variant in product_option.product_option_variants.value %}
           {% if variant.title != 'No Thanks' %}
-            {% render 'product-option-variant',
+            {%
+              render 'cart-item-option-variant',
               variant: variant,
-              default: default_variant_id,
+              default_values: default_values | split: ',',
               product_option: product_option,
               hide_quantity: product_option.hide_quantity,
               default_quantity: default_quantity

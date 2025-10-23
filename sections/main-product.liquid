@@ -148,8 +148,18 @@
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
+  {% assign hide_product_options = false %}
+  {% for item in cart.items %}
+    {% for property in item.properties %}
+      {% if property.first == '_functionOperation' %}
+        {% assign hide_product_options = true %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
 
-  {{ 'product-options.css' | asset_url | stylesheet_tag }}
+  {% unless hide_product_options %}
+    {{ 'product-options.css' | asset_url | stylesheet_tag }}
+  {% endunless %}
 
   {%- style -%}
     .section-{{ section.id }}-padding {
@@ -1917,10 +1927,11 @@
 </script>
 {% comment %} <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script> {% endcomment %}
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
-<script src="{{'product-custom-options.js' | asset_url }}" defer></script>
+{% unless hide_product_options %}
+  <script src="{{'product-custom-options.js' | asset_url }}" defer></script>
+{% endunless %}
 
 {% if custom_prouct_options_block.size > 0 %}
-  {% comment %} <script src="{{'custom-color-picker.js' | asset_url }}" defer></script> {% endcomment %}
   <script src="{{'product-form-with-options.js' | asset_url }}" defer></script>
 {% endif %}
 <script defer type="text/javascript">

@@ -4,6 +4,7 @@ if (!customElements.get('product-form-with-options')) {
     class ProductFormWithOptions extends HTMLElement {
       constructor() {
         super();
+        this.productContainer = document.getElementById(`MainProduct-${this.dataset.sectionId}`);
         this.form = this.querySelector('form[data-type="add-to-cart-form"]');
         this.cart = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
         this.submitButton = this.querySelector('button[type="submit"]');
@@ -28,7 +29,7 @@ if (!customElements.get('product-form-with-options')) {
       async handleAddToCart(event) {
         event.preventDefault();
         if (this.submitButton.getAttribute('aria-disabled') === 'true') return;
-        if (!this.checkMandatoryFields()) alert('Please select your options before adding this item to cart');
+        if (!this.checkMandatoryFields()) return alert('Please select your options before adding this item to cart');
 
         this.handleErrorMessage();
 
@@ -120,26 +121,7 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       handleCartSuccess(response) {
-        publish(PUB_SUB_EVENTS.cartUpdate, {
-          source: 'product-form',
-          productVariantId: this.variantIdInput.value,
-          cartData: response,
-        });
-        const quickAddModal = this.closest('quick-add-modal');
-        if (quickAddModal) {
-          document.body.addEventListener(
-            'modalClosed',
-            () => {
-              setTimeout(() => {
-                this.cart.renderContents(response);
-              });
-            },
-            { once: true }
-          );
-          quickAddModal.hide(true);
-        } else {
-          this.cart.renderContents(response);
-        }
+        this.cart.renderContents(response);
         this.submitButton.classList.remove('loading');
         if (this.cart && this.cart.classList.contains('is-empty')) this.cart.classList.remove('is-empty');
         this.submitButton.removeAttribute('aria-disabled');
@@ -147,7 +129,7 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       prepareOptions() {
-        const activeOptions = document.querySelectorAll('[data-selected-options]');
+        const activeOptions = this.productContainer.querySelectorAll('[data-selected-options]');
         if (activeOptions.length === 0) return;
         let lineItemProperties = {};
         activeOptions.forEach((option) => {
@@ -160,11 +142,11 @@ if (!customElements.get('product-form-with-options')) {
             const formatedValue = [...value].map((item) => item.dataset.fieldName).join(', ');
             lineItemProperties[key] = formatedValue;
           }
-          const selectedColor = document.querySelector('.custom-color-group .option_selected [data-color-selected-title]');
+          const selectedColor = this.productContainer.querySelector('.custom-color-group .option_selected [data-color-selected-title]');
           if (!selectedColor) return;
           const colorGroup = selectedColor.closest('[data-group-color-name]');
           const selectedColorValue = selectedColor.innerText;
-          const selectedColorPrice = document.querySelector('.custom-color-group .option_selected-price');
+          const selectedColorPrice = this.productContainer.querySelector('.custom-color-group .option_selected-price');
           lineItemProperties[colorGroup.dataset.groupColorName] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
           if (selectedColorPrice.innerText != '') {
             lineItemProperties[colorGroup.dataset.groupColorName] += ` [+${selectedColorPrice.innerText}]`;
@@ -175,7 +157,7 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       prepareFunctionalProperties() {
-        const activeOptions = document.querySelectorAll('[data-selected-options]');
+        const activeOptions = this.productContainer.querySelectorAll('[data-selected-options]');
         if (activeOptions.length === 0) return;
         let productOptions = [];
         activeOptions.forEach((option) => {
@@ -186,13 +168,14 @@ if (!customElements.get('product-form-with-options')) {
               const variantID = value.includes(':::') ? `gid://shopify/ProductVariant/${value.split(':::')[0].trim()}` : `gid://shopify/ProductVariant/${value.trim()}`;
               const variantPrice = value.includes(':::') ? Number(value.split(':::')[1].trim()) : 0;
               const inputIdValue = value.includes(':::') ? value.split(':::')[0].trim() : value.trim();
-              const quantityElement = document.querySelector(`[data-input-quantity="${inputIdValue}"]`);
+              const quantityElement = this.productContainer.querySelector(`[data-input-quantity="${inputIdValue}"]`);
               const quantity = quantityElement ? Number(quantityElement.value) : 1;
               const productOption = {
                 variantId: variantID,
                 priceAdjustment: variantPrice,
                 quantity: quantity,
                 groupHandle: parent.dataset.type || '',
+                defaultValues: option.dataset.selectedOptions,
               };
 
               productOptions.push(productOption);
@@ -200,7 +183,7 @@ if (!customElements.get('product-form-with-options')) {
           }
         });
 
-        const colorOption = document.querySelector('[data-color-variant-input]');
+        const colorOption = this.productContainer.querySelector('[data-color-variant-input]');
         if (!colorOption) return;
         const productColorOptionVariantID = `gid://shopify/ProductVariant/${colorOption.dataset.variant}`;
         const productColorOptionPrice = colorOption.dataset?.price ? Number(colorOption.dataset?.price) : 0;
@@ -220,7 +203,7 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       checkMandatoryFields() {
-        const mandatoryFields = document.querySelectorAll('[data-selected-options][data-mandatory]');
+        const mandatoryFields = this.productContainer.querySelectorAll('[data-selected-options][data-mandatory]');
         if (mandatoryFields.length === 0) return true;
         let errorCounter = 0;
         mandatoryFields.forEach((field) => {
@@ -231,6 +214,7 @@ if (!customElements.get('product-form-with-options')) {
             field.classList.remove('error');
           }
         });
+
         return errorCounter > 0 ? false : true;
       }
     }
