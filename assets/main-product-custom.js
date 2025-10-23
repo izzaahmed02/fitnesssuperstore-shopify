@@ -529,7 +529,7 @@ function generatePayLaterAggregate() {
 function combinedPayLater() {
 	let payLaterOptions = '';
 
-	{%comment%}payLaterOptions += generateAfterPayPaymentTerms();{%endcomment%}
+	/*payLaterOptions += generateAfterPayPaymentTerms();*/
 	payLaterOptions += generateAffirmPaymentTerms();
 
 	return payLaterOptions;
