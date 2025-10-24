@@ -41,8 +41,6 @@
   {% liquid
     assign options_data = null
     assign default_variant_id = ''
-    assign default_variant_price = 0
-    assign default_quantity = ''
     assign default_values = ''
 
     assign option_handle = product_option.product_option_title | handleize
@@ -60,13 +58,6 @@
               assign default_variant_id = item.variantId | split: '/' | last | plus: 0
             endif
           endif
-          if item.priceAdjustment != '0' and item.priceAdjustment != 0
-            assign default_variant_price = item.priceAdjustment | plus: 0
-          endif
-          if item.quantity != '0' and item.quantity != 0
-            assign default_quantity = item.quantity | plus: 0
-          endif
-
           if item.defaultValues != blank
             assign default_values = item.defaultValues
           endif
@@ -156,13 +147,21 @@
       <span class="product-options__swatch product-options__swatch--single">
         {% for variant in product_option.product_option_variants.value %}
           {% if variant.title != 'No Thanks' %}
+            {% assign default_quantity = '' %}
+            {% for item in options_data %}
+              {% if item.defaultValues contains variant.id %}
+                {% assign default_quantity = item.quantity %}
+                {% break %}
+              {% endif %}
+            {% endfor %}
             {%
               render 'cart-item-option-variant',
               variant: variant,
               default_values: default_values | split: ',',
               product_option: product_option,
               hide_quantity: product_option.hide_quantity,
-              default_quantity: default_quantity
+              default_quantity: default_quantity,
+              line_item: line_item
             %}
           {% endif %}
         {% endfor %}

@@ -177,6 +177,7 @@ if (!customElements.get('product-customization-options')) {
                 noThanksOriginalOption.disabled = false;
               }
             }
+            if (this.closest('cart-drawer')) return;
             this.updatePrice();
           });
         });
@@ -204,6 +205,7 @@ if (!customElements.get('product-customization-options')) {
           const optionHandler = optionContainer.querySelector('[data-selected-options]');
           if (!optionHandler) return;
           this.addRemoveListener(optionHandler, option);
+          if (this.closest('cart-drawer')) return;
           this.updatePrice();
         });
       }
@@ -270,12 +272,12 @@ if (!customElements.get('product-customization-options')) {
       updatePrice() {
         let priceAdjustment = 0;
         let price = 0;
-        const activeOptions = document.querySelectorAll('[data-customization-option]:checked');
+        const activeOptions = this.querySelectorAll('[data-customization-option]:checked');
         if (activeOptions.length === 0) return;
         activeOptions.forEach((option) => {
           const value = option.value;
           if (value.includes(':::')) {
-            const quantityInput = document.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+            const quantityInput = this.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
             if (quantityInput) {
               price = Number(value.split(':::')[1]) * Number(quantityInput.value);
             } else {
@@ -285,7 +287,7 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        const colorVariantInput = document.querySelector('[data-color-variant-input]');
+        const colorVariantInput = this.querySelector('[data-color-variant-input]');
         const colorPrice = colorVariantInput.dataset?.price;
 
         if (colorPrice !== '') {
@@ -325,6 +327,7 @@ if (!customElements.get('product-customization-options')) {
               this.colorInput.dataset.price = swatch.dataset.colorPrice;
 
               this.swatchesActiveContainer.innerHTML = this.setColorOptionHTML(swatch, false);
+              if (this.closest('cart-drawer')) return;
               this.updatePrice();
             }
           });
@@ -344,6 +347,7 @@ if (!customElements.get('product-customization-options')) {
           this.swatchesActiveContainer.innerHTML = this.setColorOptionHTML(input, true);
           this.colorForm.style.display = 'none';
           input.value = '';
+          if (this.closest('cart-drawer')) return;
           this.updatePrice();
         });
       }
