@@ -352,9 +352,9 @@ try {
 			event.stopPropagation();
 		});
 
-		var afterPayIntervalTrigger = setInterval(() => {
+		/*var afterPayIntervalTrigger = setInterval(() => {
 			hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
-		}, 100);
+		}, 100);*/
 
 		var affirmPayIntervalTrigger = setInterval(() => {
 			hideOrShowAffirmLogo(() => clearInterval(affirmPayIntervalTrigger));
@@ -497,7 +497,7 @@ function generatePayLaterAggregate() {
 	<h1 class="title">BUY NOW. PAY LATER.</h1>
 	<p class="price">Purchase price: <strong>$${cleanedPrice}</strong>
 	</p>
-	<p class="description"> Select Affirm or Afterpay as your payment method at checkout to pay in installments. </p>
+	<p class="description"> Select Affirm as your payment method at checkout to pay in installments. </p>
 	<div class="steps-container">
 	  <div class="step">
 		<div class="step-circle">1</div>
@@ -529,12 +529,12 @@ function generatePayLaterAggregate() {
 function combinedPayLater() {
 	let payLaterOptions = '';
 
-	payLaterOptions += generateAfterPayPaymentTerms();
+	/*payLaterOptions += generateAfterPayPaymentTerms();*/
 	payLaterOptions += generateAffirmPaymentTerms();
 
 	return payLaterOptions;
 }
-
+/*
 function generateAfterPayPaymentTerms() {
 	const afterPayRateElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
 	if (afterPayRateElement == null) return;
@@ -559,7 +559,7 @@ function generateAfterPayPaymentTerms() {
 
 	return afterPayTermsHTML;
 }
-
+*/
 function generateAfterPayOptionHTML(term, rate) {
 	const { MonthlyPaymentForNewTerm, APR, TotalPaymentsNewTerm } = rate;
 
@@ -650,7 +650,7 @@ function generateAffirmPaymentTerms() {
 	const productPrice = parseFloat(formattedProductPrice);
 	return productPrice;
   }
-
+/*
   function hideOrShowAfterPayLogo(callback) {
 	var afterPayModalContainer = document.querySelector('afterpay-modal');
 	if (afterPayModalContainer) {
@@ -667,7 +667,7 @@ function generateAffirmPaymentTerms() {
 			callback();
 		}
 	}
-  }
+  }*/
 
   function hideOrShowAffirmLogo(callback) {
 	var affirmElement = document.querySelector('.affirm-as-low-as');
