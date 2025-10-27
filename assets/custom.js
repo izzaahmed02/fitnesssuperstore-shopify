@@ -291,13 +291,13 @@ onReady(() => {
         loc = await res.json();
         ss.userLoc = JSON.stringify(loc);
       }
-      if (loc && loc.postal && loc.country_code === 'US' && loc.region_code === 'CA') {
-        const dist = await getDistanceFromBenicia(loc.postal);
-        if (typeof dist === 'number' && dist <= 100) {
-          const bar = document.querySelector('.utility-bar');
-          if (bar) bar.style.display = 'block';
-        }
-      }
+      // if (loc && loc.postal && loc.country_code === 'US' && loc.region_code === 'CA') {
+      //   const dist = await getDistanceFromBenicia(loc.postal);
+      //   if (typeof dist === 'number' && dist <= 100) {
+      //     const bar = document.querySelector('.utility-bar');
+      //     if (bar) bar.style.display = 'block';
+      //   }
+      // }
     } catch { }
   });
 });
