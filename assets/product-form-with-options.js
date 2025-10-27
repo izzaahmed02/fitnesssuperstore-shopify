@@ -37,11 +37,9 @@ if (!customElements.get('product-form-with-options')) {
         this.submitButton.classList.add('loading');
         this.querySelector('.loading__spinner').classList.remove('hidden');
         this.cart.setActiveElement(document.activeElement);
-        const mainVariantID = `gid://shopify/ProductVariant/${this.variantIdInput.value}`;
         const url = `${window.Shopify.routes.root}cart/add.js`;
 
         const productProperties = {
-          _mainProductId: mainVariantID,
           ...this.prepareOptions(),
           _functionOperation: this.prepareFunctionalProperties(),
         };

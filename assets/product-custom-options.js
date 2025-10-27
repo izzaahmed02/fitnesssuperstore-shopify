@@ -444,7 +444,6 @@ if (!customElements.get('product-customization-options')) {
         }
 
         const productProperties = {
-          _mainProductId: this.modifyID.split(':')[0],
           ...this.prepareOptions(),
           _functionOperation: this.prepareFunctionalProperties(),
         };
