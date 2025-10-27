@@ -145,9 +145,9 @@ if (!customElements.get('product-form-with-options')) {
           const colorGroup = selectedColor.closest('[data-group-color-name]');
           const selectedColorValue = selectedColor.innerText;
           const selectedColorPrice = this.productContainer.querySelector('.custom-color-group .option_selected-price');
-          lineItemProperties[colorGroup.dataset.groupColorName] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
+          lineItemProperties[colorGroup.dataset.colorName] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
           if (selectedColorPrice.innerText != '') {
-            lineItemProperties[colorGroup.dataset.groupColorName] += ` [+${selectedColorPrice.innerText}]`;
+            lineItemProperties[colorGroup.dataset.colorName] += ` [+${selectedColorPrice.innerText}]`;
           }
         });
 
