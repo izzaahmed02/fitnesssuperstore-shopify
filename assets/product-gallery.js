@@ -230,10 +230,13 @@ class ProductGallery extends HTMLElement {
     } else if (media.media_type == 'model') {
       this.main.appendChild(container);
       const model = document.createElement('model-viewer');
+      const modalEl = document.querySelector('.prodTemplate');
+      const modelOrbit = modalEl?.getAttribute('data-3d-camera-orbit');
+
       model.src = media.url;
       model.setAttribute('alt', media.alt);
       model.setAttribute('camera-controls', 'true');
-      model.setAttribute('camera-orbit', '0deg 75deg 2m');
+      model.setAttribute('camera-orbit', modelOrbit);
       model.setAttribute('data-shopify-feature', '1.12');
       container.appendChild(model);
       
@@ -780,10 +783,13 @@ class ProductGallery extends HTMLElement {
     } else if (media.media_type === 'model') {
       
       const model = document.createElement('model-viewer');
+      const modalEl = document.querySelector('.prodTemplate');
+      const modelOrbit = modalEl?.getAttribute('data-3d-camera-orbit');
+
       model.src = media.url;
       model.setAttribute('alt', media.alt || '3D model');
       model.setAttribute('camera-controls', 'true');
-      model.setAttribute('camera-orbit', '0deg 75deg 2m');
+      model.setAttribute('camera-orbit', modelOrbit);
       model.setAttribute('data-shopify-feature', '1.12');
       model.style.width = '100%';
       model.style.height = '100%';
