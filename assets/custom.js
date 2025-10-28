@@ -280,28 +280,6 @@ onReady(() => {
 
 });
 
-onReady(() => {
-  onIdle(async () => {
-    try {
-      const ss = sessionStorage;
-      let loc = ss.userLoc ? JSON.parse(ss.userLoc) : null;
-      if (!loc) {
-        const res = await fetch("https://french-fitness-api.azurewebsites.net/api/location", { credentials: 'omit' });
-        if (!res.ok) return;
-        loc = await res.json();
-        ss.userLoc = JSON.stringify(loc);
-      }
-      // if (loc && loc.postal && loc.country_code === 'US' && loc.region_code === 'CA') {
-      //   const dist = await getDistanceFromBenicia(loc.postal);
-      //   if (typeof dist === 'number' && dist <= 100) {
-      //     const bar = document.querySelector('.utility-bar');
-      //     if (bar) bar.style.display = 'block';
-      //   }
-      // }
-    } catch { }
-  });
-});
-
 (() => {
   const mainBlocks = document.querySelectorAll('.info-grid__item.grid__item .link-style');
   const contentSections = document.querySelectorAll('.feature-block-container.content-section');
