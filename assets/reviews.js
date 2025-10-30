@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
           { breakpoint: 1300, settings: { slidesToShow: 3 } },
           { breakpoint: 1024, settings: { slidesToShow: 3 } },
           { breakpoint: 989, settings: { slidesToShow: 2 } },
-          { breakpoint: 768, settings: "unslick" } // Unslick at 768px
+          { breakpoint: 768, settings: { slidesToShow: 1 } }
         ]
       });
 
