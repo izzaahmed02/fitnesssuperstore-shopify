@@ -14,7 +14,7 @@
   cursor: pointer;
   background-color: transparent;
   border-bottom: 1px solid #e8e8e8;
-  justify-content: space-between;
+  gap: 8px;
 }
 
 .product-options__accordion:first-child {
@@ -36,7 +36,8 @@
   transform: rotate(180deg);
 }
 
-.product-options__accordion-header[aria-expanded='true'] .product-options__accordion-icon {
+.product-options__accordion-icon {
+  margin-left: auto;
 }
 
 .product-options__category-title {
@@ -80,6 +81,10 @@
   align-items: center;
   column-gap: 8px;
   flex-shrink: 0;
+
+  &:not(.group-color) {
+    max-width: 100px;
+  }
 }
 
 .button--popup {
@@ -267,21 +272,88 @@ input[type='checkbox'].product-options__swatch-input {
   font-size: 14px;
   color: #393940;
   background-color: #fff;
-  margin-left: 4px;
 
   &:has(p) {
     display: flex;
   }
+
+  p {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
 }
 
 .product-options__accordion-label-title {
+  display: block;
   font-family: Lato, sans-serif;
   font-weight: 400;
   font-size: 10px;
   line-height: 14px;
   letter-spacing: 0;
-  vertical-align: middle;
   margin-right: 6px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 150px;
+}
+
+.product-options__accordion-content {
+  overflow: hidden;
+  height: 0;
+  transition: height 0.25s ease-in-out;
+}
+
+.product-options__accordion[multichoice] .product-options__accordion-header {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  .product-options__accordion-label {
+    order: 3;
+    flex-direction: column;
+    width: fit-content;
+    align-items: flex-start;
+    gap: 6px;
+    border: 0;
+    background-color: transparent;
+    padding: 0;
+
+    p {
+      background-color: #fff;
+      border: 1px solid #f2f2f2;
+      padding: 5px 8px 5px 10px;
+    }
+  }
+}
+
+@media screen and (max-width: 520px) {
+  .product-options__accordion-header:has(p) {
+    flex-wrap: wrap;
+
+    .product-options__subcategory-title:not(.group-color) {
+      width: 88%;
+      max-width: none;
+    }
+
+    .product-options__accordion-label {
+      order: 3;
+    }
+  }
+
+  .product-options__accordion-label-title {
+    max-width: 360px;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .product-options__accordion-label-title {
+    max-width: 280px;
+  }
 }
 
 .product-options__accordion-label-price {
@@ -513,18 +585,6 @@ product-info[data-product-id='9879174938940'] .custom-color-group .group-color-c
 
 .avpoptions-container__v2 {
   display: none;
-}
-
-@media (max-width: 576px) {
-  .product-options__accordion-header {
-    flex-wrap: wrap;
-    row-gap: 4px;
-  }
-
-  .product-options__accordion-label {
-    order: 3;
-    margin-left: 0;
-  }
 }
 
 .option-popup {
