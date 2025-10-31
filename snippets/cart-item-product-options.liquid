@@ -1,0 +1,47 @@
+{% assign options = line_item.product.metafields.options.product_options.value %}
+<product-customization-options
+  data-product-id="{{ line_item.key }}"
+  data-variant-id="{{ line_item.variant.id }}"
+  class="product-options"
+  id="product-options"
+  data-product="default"
+  data-stamp="none"
+>
+  <div class="product-options__overlay" data-close-popup="{{ line_item.key }}"></div>
+  <div class="product-options__popup-container">
+    <div class="product-options__popup-container--header">
+      <h3>{{ line_item.product.title }}</h3>
+      <span class="avis-popupHeader-close" data-close-popup="{{ line_item.key }}">×</span>
+    </div>
+    <div class="product-options__popup-container--inner">
+      {% assign index = 0 %}
+      {% for category in options %}
+        {% if category.title != blank %}
+          {% assign index = index | plus: 1 %}
+          <h2 class="product-options__category-title">
+            <span>{{ index }}</span>{{ category.title }}
+          </h2>
+        {% endif %}
+        {% for product_option in category.product_options.value %}
+          {% assign title = product_option.product_option_title | downcase %}
+          {% if title == 'paint color' or title == 'paint colors' or title == 'color' %}
+            {% render 'cart-item-color-picker', product: product_option.product_option_variants.value, products: product_option, color_type: 'paint', title: category.title, line_item: line_item %}
+          {% endif %}
+          {% if title == 'vinyl color' %}
+            {% render 'cart-item-color-picker', product: product_option.product_option_variants.value, products: product_option, color_type: 'vinyl', title: category.title, line_item: line_item %}
+          {% endif %}
+          {% if title != 'paint color' and title != 'vinyl color' and title != 'paint colors' and title != 'vinyl colors' %}
+            {% render 'cart-item-product-option', category: category, product_option: product_option, forloop_index: forloop.index, product_id: line_item.product.id, line_item: line_item %}
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </div>
+    <div class="product-options__popup-container-footer">
+      <button class="button button--cancel" data-close-popup="{{ line_item.key }}">Cancel</button>
+      <button data-apply-changes="{{ line_item.key }}" class="button--options button button--primary cart-item__custom-options-popup-button">
+        <span>Save changes</span>
+        {% render 'loading-spinner' %}
+      </button>
+    </div>
+  </div>
+</product-customization-options>
