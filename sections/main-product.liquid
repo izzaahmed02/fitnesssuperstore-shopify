@@ -347,8 +347,18 @@
             </div>
           </div>
         {% endcomment %}
+        {%- assign product_orbit = product.metafields.custom['3d_camera_orbit'] | to_s | strip -%}
+        {%- assign model = product.media | where: 'media_type', 'model' | first -%}
+        {%- assign model_orbit = blank -%}
+        {%- if model and model.metafields and model.metafields.custom and model.metafields.custom['3d_camera_orbit'] -%}
+          {%- assign model_orbit = model.metafields.custom['3d_camera_orbit'] | to_s | strip -%}
+        {%- endif -%}
+        {%- assign orbit = model_orbit | default: product_orbit | strip -%}
 
-        <product-gallery data-product-title="{{ product.title | escape }}">
+        <product-gallery
+          data-product-title="{{ product.title | escape }}"
+          {% if orbit != blank %}data-3d-camera-orbit="{{ orbit | escape }}"{% endif %}
+        >
           <div class="custom-product-gallery">
             <div class="custom-gallery-wrapper">
               <!-- Thumbnails -->
@@ -452,7 +462,7 @@
                   >
                     <model-viewer alt="{{ model.alt | json }}" src="{% for source in model.sources %}{% if source.format == 'glb' %}{{ source.url }}{% endif %}{% endfor %}" 
                     camera-controls="true" 
-                    camera-orbit="{{ product.metafields.custom['3d_camera_orbit'] }}" 
+                    {% if orbit != blank %}camera-orbit="{{ orbit | escape }}"{% endif %}
                     data-shopify-feature="1.12" 
                     data-js-focus-visible="" ar-status="not-presenting"></model-viewer> 
                   </div>
@@ -491,6 +501,7 @@
           <script type="application/json" data-product-media>
             [
               {% assign model = product.media | where: 'media_type', 'model' | first %}
+              {% assign orbit = product.metafields.custom['3d_camera_orbit'] | default: '' %}
               {% if model %}
                 {
                   "id": {{ model.id | json }},
@@ -503,6 +514,7 @@
                     "width": {{ model.preview_image.width | json }},
                     "height": {{ model.preview_image.height | json }}
                   },
+                  "camera_orbit": {{ orbit | json }},
                   "url": {% for source in model.sources %}{% if source.format == 'glb' %}"{{ source.url }}"{% endif %}{% endfor %}
                 },
               {% endif %}
@@ -517,7 +529,8 @@
                     "sizes": "(min-width: 990px) 800px, 100vw",
                     "width": {{ media.preview_image.width | json }},
                     "height": {{ media.preview_image.height | json }}
-                  }
+                  },
+                  "camera_orbit": {{ orbit | json }}
                   {% if media.media_type == 'video' %}
                     , "sources": [
                       {% for source in media.sources %}
