@@ -355,8 +355,14 @@
 
               <div class="custom-gallery-thumbnails only-desktop">
                 {% assign model = product.media | where: 'media_type', 'model' | first %}
-                {%- if model -%}
-                  {% assign preview = model.preview_image %}
+               
+                {%- assign image_limit = 4 -%}
+                {%- for media in image_media limit: image_limit -%}
+                  {% assign preview = media.preview_image %}
+                  {% assign is_last = forloop.last %}
+                  {% assign remaining = image_media.size | minus: image_limit %}
+
+                   {% assign preview = model.preview_image %}
 
                   <button
                     class="thumbnail-btn is-active"
@@ -374,13 +380,6 @@
                       >
                     </div>
                   </button>
-
-                {%- endif -%}
-                {%- assign image_limit = 4 -%}
-                {%- for media in image_media limit: image_limit -%}
-                  {% assign preview = media.preview_image %}
-                  {% assign is_last = forloop.last %}
-                  {% assign remaining = image_media.size | minus: image_limit %}
 
                   <button
                     class="thumbnail-btn{% if model %}{% else %}{% if forloop.first %} is-active{% endif %}{% endif %}"
