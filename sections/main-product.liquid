@@ -444,54 +444,42 @@
 
               <!-- Main image -->
               <div class="custom-gallery-main" data-main-media-wrapper>
-  {%- assign first_media = product.selected_or_first_available_variant.featured_media
-      | default: product.featured_media
-      | default: product.media.first -%}
-  {%- assign preview = first_media.preview_image -%}
+                {% if model %}
+                  <div
+                    class="main-image-container"
+                    data-media-id="{{ model.id }}"
+                  >
+                    <model-viewer alt="{{ model.alt | json }}" src="{% for source in model.sources %}{% if source.format == 'glb' %}{{ source.url }}{% endif %}{% endfor %}" camera-controls="true" camera-orbit="0deg 75deg 4m" data-shopify-feature="1.12" data-js-focus-visible="" ar-status="not-presenting"></model-viewer>
+                  </div>
+                {% else %}
+                  {% assign first_media = product.media.first %}
+                  {% assign preview = first_media.preview_image %}
 
-  <div class="main-image-container" data-media-id="{{ first_media.id }}" data-zoom-container>
-    {%- case first_media.media_type -%}
-      {%- when 'image' -%}
-        <div class="image-skeleton-wrapper">
-          <img
-            src="{{ preview | image_url: width: 800 }}"
-            alt="{{ first_media.alt | escape }}"
-            class="main-product-image"
-            width="{{ preview.width }}"
-            height="{{ preview.height }}"
-            loading="eager"
-            onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
-          >
-        </div>
-
-      {%- when 'video' -%}
-        {{ first_media | media_tag }}
-
-      {%- when 'external_video' -%}
-        {{ first_media | media_tag }}
-
-      {%- when 'model' -%}
-        {%- assign glb = '' -%}
-        {%- for source in first_media.sources -%}
-          {%- if source.format == 'glb' -%}{%- assign glb = source.url -%}{%- endif -%}
-        {%- endfor -%}
-        <model-viewer
-          alt="{{ first_media.alt | escape }}"
-          src="{{ glb }}"
-          poster="{{ preview | image_url: width: 800 }}"
-          camera-controls
-          camera-orbit="0deg 75deg 4m"
-          data-shopify-feature="1.12"
-          data-js-focus-visible
-          ar-status="not-presenting"
-        ></model-viewer>
-
-      {%- else -%}
-        <div class="media-placeholder">Preview available in popup only.</div>
-    {%- endcase -%}
-  </div>
-</div>
-
+                  <div
+                    class="main-image-container"
+                    data-media-id="{{ first_media.id }}"
+                    data-zoom-container
+                  >
+                    {% if first_media.media_type == 'image' %}
+                      <div class="image-skeleton-wrapper">
+                        <img
+                          src="{{ preview | image_url: width: 800 }}"
+                          alt="{{ first_media.alt | escape }}"
+                          class="main-product-image"
+                          width="{{ preview.width }}"
+                          height="{{ preview.height }}"
+                          loading="eager"
+                          onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                        >
+                      </div>
+                    {% elsif first_media.media_type == 'video' %}
+                      {{ first_media | media_tag }}
+                    {% else %}
+                      <div class="media-placeholder">Preview available in popup only.</div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
           </div>
 
