@@ -3636,33 +3636,59 @@
   console.log("=== Price Sync Script Started ===");
   
   let attemptCount = 0;
-  const maxAttempts = 50; // Try for 5 seconds (50 * 100ms)
+  const maxAttempts = 50;
   
   function findAndSync() {
     attemptCount++;
     console.log(`Attempt ${attemptCount}: Looking for elements...`);
     
-    // Try to find elements
     const source = document.querySelector(".pr_custom_price");
     const target = document.querySelector(".price-item-fixed");
     
-    // Log what we found
     console.log("Source (.pr_custom_price):", source);
     console.log("Target (.price-item-fixed):", target);
     
-    // If both exist, set up the sync
     if (source && target) {
       console.log("✓ Both elements found!");
       console.log("Source HTML:", source.innerHTML);
+      console.log("Target HTML BEFORE:", target.innerHTML);
+      
+      // Force the sync with multiple methods
+      function performSync() {
+        const sourceContent = source.innerHTML;
+        console.log("Copying content:", sourceContent);
+        
+        // Method 1: Direct innerHTML
+        target.innerHTML = sourceContent;
+        
+        // Method 2: Also copy text content as backup
+        target.textContent = source.textContent;
+        
+        // Force visual update
+        target.style.display = 'none';
+        target.offsetHeight; // Trigger reflow
+        target.style.display = '';
+        
+        console.log("Target HTML AFTER:", target.innerHTML);
+        console.log("Target text AFTER:", target.textContent);
+        
+        // Highlight target element for visual confirmation
+        target.style.border = "3px solid red";
+        target.style.backgroundColor = "yellow";
+        setTimeout(() => {
+          target.style.border = "";
+          target.style.backgroundColor = "";
+        }, 2000);
+      }
       
       // Initial sync
-      target.innerHTML = source.innerHTML;
+      performSync();
       console.log("✓ Initial sync complete!");
       
       // Set up observer for future changes
       const observer = new MutationObserver((mutations) => {
-        console.log("Source element changed! Syncing...");
-        target.innerHTML = source.innerHTML;
+        console.log("🔄 Source element changed! Mutations:", mutations.length);
+        performSync();
       });
       
       observer.observe(source, {
@@ -3673,10 +3699,18 @@
       });
       
       console.log("✓ Observer set up successfully!");
-      return true; // Success
+      
+      // Also add a manual interval check as backup
+      setInterval(() => {
+        if (source.innerHTML !== target.innerHTML) {
+          console.log("⚠️ Content mismatch detected, forcing sync...");
+          performSync();
+        }
+      }, 500);
+      
+      return true;
     }
     
-    // If we haven't found them yet and haven't exceeded max attempts
     if (attemptCount < maxAttempts) {
       console.log("⟳ Elements not found, retrying...");
       setTimeout(findAndSync, 100);
@@ -3689,7 +3723,6 @@
     }
   }
   
-  // Start immediately
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', findAndSync);
   } else {
