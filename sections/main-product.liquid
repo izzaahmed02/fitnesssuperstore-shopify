@@ -3637,96 +3637,115 @@
   
   let attemptCount = 0;
   const maxAttempts = 50;
+  let currentObserver = null;
   
-  function findAndSync() {
-    attemptCount++;
-    console.log(`Attempt ${attemptCount}: Looking for elements...`);
+  function syncContent() {
+    const source = document.querySelector(".pr_custom_price");
+    const target = document.querySelector(".price-item-fixed");
+    
+    if (source && target && source.innerHTML !== target.innerHTML) {
+      console.log("🔄 Syncing price...");
+      console.log("Source:", source.innerHTML);
+      target.innerHTML = source.innerHTML;
+      console.log("✓ Target updated!");
+    }
+  }
+  
+  function setupObserver() {
+    // Disconnect old observer if exists
+    if (currentObserver) {
+      currentObserver.disconnect();
+    }
     
     const source = document.querySelector(".pr_custom_price");
     const target = document.querySelector(".price-item-fixed");
     
-    console.log("Source (.pr_custom_price):", source);
-    console.log("Target (.price-item-fixed):", target);
-    
-    if (source && target) {
-      console.log("✓ Both elements found!");
-      console.log("Source HTML:", source.innerHTML);
-      console.log("Target HTML BEFORE:", target.innerHTML);
-      
-      // Force the sync with multiple methods
-      function performSync() {
-        const sourceContent = source.innerHTML;
-        console.log("Copying content:", sourceContent);
-        
-        // Method 1: Direct innerHTML
-        target.innerHTML = sourceContent;
-        
-        // Method 2: Also copy text content as backup
-        target.textContent = source.textContent;
-        
-        // Force visual update
-        target.style.display = 'none';
-        target.offsetHeight; // Trigger reflow
-        target.style.display = '';
-        
-        console.log("Target HTML AFTER:", target.innerHTML);
-        console.log("Target text AFTER:", target.textContent);
-        
-        // Highlight target element for visual confirmation
-        target.style.border = "3px solid red";
-        target.style.backgroundColor = "yellow";
-        setTimeout(() => {
-          target.style.border = "";
-          target.style.backgroundColor = "";
-        }, 2000);
+    if (!source || !target) {
+      if (attemptCount < maxAttempts) {
+        attemptCount++;
+        console.log(`Attempt ${attemptCount}: Elements not found, retrying...`);
+        setTimeout(setupObserver, 100);
       }
-      
-      // Initial sync
-      performSync();
-      console.log("✓ Initial sync complete!");
-      
-      // Set up observer for future changes
-      const observer = new MutationObserver((mutations) => {
-        console.log("🔄 Source element changed! Mutations:", mutations.length);
-        performSync();
+      return;
+    }
+    
+    console.log("✓ Elements found!");
+    
+    // Initial sync
+    syncContent();
+    
+    // Watch the PARENT of the source element
+    // This catches when the entire source element is replaced
+    const sourceParent = source.parentElement;
+    if (sourceParent) {
+      currentObserver = new MutationObserver((mutations) => {
+        console.log("🔔 Change detected in parent container");
+        syncContent();
+        
+        // Re-setup observer in case source element was replaced
+        const newSource = document.querySelector(".pr_custom_price");
+        if (newSource && newSource !== source) {
+          console.log("⚠️ Source element was replaced! Re-setting up observer...");
+          setupObserver();
+        }
       });
       
-      observer.observe(source, {
+      currentObserver.observe(sourceParent, {
         childList: true,
         subtree: true,
         characterData: true,
         attributes: true
       });
       
-      console.log("✓ Observer set up successfully!");
-      
-      // Also add a manual interval check as backup
-      setInterval(() => {
-        if (source.innerHTML !== target.innerHTML) {
-          console.log("⚠️ Content mismatch detected, forcing sync...");
-          performSync();
-        }
-      }, 500);
-      
-      return true;
+      console.log("✓ Observer watching parent element:", sourceParent);
     }
     
-    if (attemptCount < maxAttempts) {
-      console.log("⟳ Elements not found, retrying...");
-      setTimeout(findAndSync, 100);
-    } else {
-      console.error("✗ FAILED: Could not find elements after " + maxAttempts + " attempts");
-      console.log("Available elements with 'price' in class name:");
-      document.querySelectorAll('[class*="price"]').forEach(el => {
-        console.log("  -", el.className, el);
-      });
-    }
+    // Also watch the source element itself
+    const sourceObserver = new MutationObserver(() => {
+      console.log("🔔 Direct change in source element");
+      syncContent();
+    });
+    
+    sourceObserver.observe(source, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true
+    });
+    
+    console.log("✓ Observer watching source element");
+    
+    // Backup: Continuous polling every 200ms
+    setInterval(syncContent, 200);
+    console.log("✓ Polling backup active (every 200ms)");
   }
   
+  // Start setup
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', findAndSync);
+    document.addEventListener('DOMContentLoaded', setupObserver);
   } else {
-    findAndSync();
+    setupObserver();
   }
+  
+  // Also listen for common variant change events
+  document.addEventListener('change', function(e) {
+    if (e.target.matches('input[type="radio"], select')) {
+      console.log("🎯 Variant change detected via event");
+      setTimeout(syncContent, 50);
+      setTimeout(syncContent, 200);
+      setTimeout(syncContent, 500);
+    }
+  });
+  
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('[data-variant], .variant-option, .swatch')) {
+      console.log("🎯 Variant change detected via click");
+      setTimeout(syncContent, 50);
+      setTimeout(syncContent, 200);
+      setTimeout(syncContent, 500);
+    }
+  });
+  
+  console.log("✓ Event listeners added for variant changes");
 })();
 </script>
