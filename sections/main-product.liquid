@@ -3632,14 +3632,22 @@
 {% endschema %}
 
 <script>
-const src = document.querySelector('.pr_custom_price');
-const dest = document.querySelector('.price-item-fixed');
+document.addEventListener("DOMContentLoaded", () => {
+  const source = document.querySelector(".pr_custom_price");
+  const target = document.querySelector(".price-item-fixed");
 
-if (src && dest) {
-  const obs = new MutationObserver(() => dest.innerHTML = src.innerHTML);
-  obs.observe(src, { childList: true, subtree: true, characterData: true });
-  dest.innerHTML = src.innerHTML; // initial sync
-}
+  if (source && target) {
+    const observer = new MutationObserver(() => {
+      target.innerHTML = source.innerHTML;
+    });
+
+    observer.observe(source, { childList: true, subtree: true, characterData: true });
+
+    // Initial sync
+    target.innerHTML = source.innerHTML;
+  }
+});
 </script>
+
 
 
