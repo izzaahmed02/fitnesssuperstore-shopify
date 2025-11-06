@@ -3633,119 +3633,131 @@
 
 <script>
 (function() {
-  console.log("=== Price Sync Script Started ===");
+  console.log("=== DIAGNOSTIC MODE: Price Sync Script ===");
   
-  let attemptCount = 0;
-  const maxAttempts = 50;
-  let currentObserver = null;
+  let lastSourceContent = "";
   
   function syncContent() {
     const source = document.querySelector(".pr_custom_price");
     const target = document.querySelector(".price-item-fixed");
     
-    if (source && target && source.innerHTML !== target.innerHTML) {
-      console.log("🔄 Syncing price...");
-      console.log("Source:", source.innerHTML);
-      target.innerHTML = source.innerHTML;
-      console.log("✓ Target updated!");
+    if (!source || !target) {
+      console.log("❌ Elements not found!");
+      console.log("Source exists:", !!source);
+      console.log("Target exists:", !!target);
+      return;
+    }
+    
+    const currentSourceContent = source.innerHTML.trim();
+    const currentTargetContent = target.innerHTML.trim();
+    
+    // Log current state
+    console.log("─────────────────────────");
+    console.log("📊 Current State:");
+    console.log("Source HTML:", currentSourceContent);
+    console.log("Target HTML:", currentTargetContent);
+    console.log("Match:", currentSourceContent === currentTargetContent);
+    
+    // Check if source changed
+    if (currentSourceContent !== lastSourceContent) {
+      console.log("🔥 SOURCE CHANGED!");
+      console.log("Old:", lastSourceContent);
+      console.log("New:", currentSourceContent);
+      lastSourceContent = currentSourceContent;
+    }
+    
+    // Sync if different
+    if (currentSourceContent !== currentTargetContent) {
+      console.log("🔄 UPDATING TARGET...");
+      
+      // Try multiple update methods
+      target.innerHTML = currentSourceContent;
+      console.log("Method 1 (innerHTML) - Target now:", target.innerHTML.trim());
+      
+      // Check if something is overwriting it
+      setTimeout(() => {
+        if (target.innerHTML.trim() !== currentSourceContent) {
+          console.log("⚠️ WARNING: Target was changed after update!");
+          console.log("Expected:", currentSourceContent);
+          console.log("Actual:", target.innerHTML.trim());
+          
+          // Force it again
+          target.innerHTML = currentSourceContent;
+        }
+      }, 10);
+    } else {
+      console.log("✓ Already in sync");
     }
   }
   
-  function setupObserver() {
-    // Disconnect old observer if exists
-    if (currentObserver) {
-      currentObserver.disconnect();
-    }
-    
+  // Initial setup
+  function init() {
     const source = document.querySelector(".pr_custom_price");
     const target = document.querySelector(".price-item-fixed");
     
     if (!source || !target) {
-      if (attemptCount < maxAttempts) {
-        attemptCount++;
-        console.log(`Attempt ${attemptCount}: Elements not found, retrying...`);
-        setTimeout(setupObserver, 100);
-      }
+      console.log("Waiting for elements...");
+      setTimeout(init, 100);
       return;
     }
     
-    console.log("✓ Elements found!");
+    console.log("✓ Both elements found!");
+    console.log("Source element:", source);
+    console.log("Target element:", target);
+    console.log("Source parent:", source.parentElement);
+    console.log("Target parent:", target.parentElement);
     
     // Initial sync
     syncContent();
     
-    // Watch the PARENT of the source element
-    // This catches when the entire source element is replaced
-    const sourceParent = source.parentElement;
-    if (sourceParent) {
-      currentObserver = new MutationObserver((mutations) => {
-        console.log("🔔 Change detected in parent container");
-        syncContent();
-        
-        // Re-setup observer in case source element was replaced
-        const newSource = document.querySelector(".pr_custom_price");
-        if (newSource && newSource !== source) {
-          console.log("⚠️ Source element was replaced! Re-setting up observer...");
-          setupObserver();
-        }
-      });
-      
-      currentObserver.observe(sourceParent, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-        attributes: true
-      });
-      
-      console.log("✓ Observer watching parent element:", sourceParent);
-    }
+    // Aggressive polling - check every 100ms
+    setInterval(syncContent, 100);
+    console.log("✓ Polling every 100ms");
     
-    // Also watch the source element itself
-    const sourceObserver = new MutationObserver(() => {
-      console.log("🔔 Direct change in source element");
+    // Watch entire document for any changes
+    const bodyObserver = new MutationObserver(() => {
       syncContent();
     });
     
-    sourceObserver.observe(source, {
+    bodyObserver.observe(document.body, {
       childList: true,
       subtree: true,
-      characterData: true,
-      attributes: true
+      characterData: true
     });
+    console.log("✓ Watching entire document");
     
-    console.log("✓ Observer watching source element");
+    // Listen to ALL clicks on the page
+    document.addEventListener('click', (e) => {
+      console.log("🖱️ CLICK detected on:", e.target);
+      setTimeout(syncContent, 0);
+      setTimeout(syncContent, 50);
+      setTimeout(syncContent, 100);
+      setTimeout(syncContent, 200);
+      setTimeout(syncContent, 500);
+      setTimeout(syncContent, 1000);
+    }, true);
     
-    // Backup: Continuous polling every 200ms
-    setInterval(syncContent, 200);
-    console.log("✓ Polling backup active (every 200ms)");
+    // Listen to ALL changes
+    document.addEventListener('change', (e) => {
+      console.log("📝 CHANGE detected on:", e.target);
+      setTimeout(syncContent, 0);
+      setTimeout(syncContent, 50);
+      setTimeout(syncContent, 100);
+      setTimeout(syncContent, 200);
+      setTimeout(syncContent, 500);
+      setTimeout(syncContent, 1000);
+    }, true);
+    
+    console.log("✓ Event listeners active");
+    console.log("=================================");
+    console.log("NOW CLICK A VARIANT AND WATCH THE CONSOLE!");
+    console.log("=================================");
   }
   
-  // Start setup
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupObserver);
+    document.addEventListener('DOMContentLoaded', init);
   } else {
-    setupObserver();
+    init();
   }
-  
-  // Also listen for common variant change events
-  document.addEventListener('change', function(e) {
-    if (e.target.matches('input[type="radio"], select')) {
-      console.log("🎯 Variant change detected via event");
-      setTimeout(syncContent, 50);
-      setTimeout(syncContent, 200);
-      setTimeout(syncContent, 500);
-    }
-  });
-  
-  document.addEventListener('click', function(e) {
-    if (e.target.closest('[data-variant], .variant-option, .swatch')) {
-      console.log("🎯 Variant change detected via click");
-      setTimeout(syncContent, 50);
-      setTimeout(syncContent, 200);
-      setTimeout(syncContent, 500);
-    }
-  });
-  
-  console.log("✓ Event listeners added for variant changes");
 })();
 </script>
