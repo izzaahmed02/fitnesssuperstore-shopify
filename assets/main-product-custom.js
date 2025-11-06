@@ -12,13 +12,233 @@ window.addEventListener("DOMContentLoaded",async()=>{function e(){let e=document
         <option value="new">Sort by: Newest to Oldest</option>
         <option value="old">Sort by: Oldest to Newest</option>
         <option value="featured">Sort by: Favorite Reviews</option>
-      `,e.appendChild(t);let _=document.createElement("div");_.setAttribute("class","show-dropdown-container"),e.appendChild(_);let l=document.createElement("a");l.setAttribute("id","writeReviewButton"),l.setAttribute("href","https://www.shopperapproved.com/reviews/fitnesssuperstore.com#reviews"),l.setAttribute("target","_blank"),l.setAttribute("rel","noopener noreferrer"),l.textContent="Write a Review",l.classList.add("write-review-btn"),e.appendChild(l);let r=document.querySelector("#product_page"),a=document.querySelector("#review_header"),o=document.querySelector(".sa-reviews-dropdown-container");r&&a&&!o&&r.parentNode.insertBefore(e,r)}function n(){setInterval(async function(){let e=document.querySelector("#sa_review_paging");e&&(o(),Object.keys(sa_product_reviews.high).length>sa_products_count&&a(),document.querySelector(".merchantheader")||(document.querySelector(".product__info-container .available-wrap .sa-reviews").style.display="flex",document.querySelector(".product__info-container--mobile .available-wrap .sa-reviews").style.display="flex"))},500)}function i(){let e=setInterval(async function(){let t=document.querySelector(".product_review");if(t){clearInterval(e);let _=document.querySelector(".product__info-container"),l=_.querySelector("#product_just_stars .on");if(!l){var r=await getShopperApprovedTotalReviewsCount();r&&(_.querySelector("#product_just_stars").innerHTML=`<span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="ind_cnt med"><a class="sa_jump_to_reviews" href="#review_header">${r} <span class="ind_cnt_desc">reviews</span></a></span>`,_.querySelector(".sa-reviews").style.display="flex")}}})}function s(){setTimeout(()=>{let e="",t=document.getElementById("sortByDropdown"),_=document.getElementById("sa_sort");if(document.getElementById("showDropdown"),t&&(e=t.value),t&&_){let l=t.cloneNode(!0);t.value=_.value,t.parentNode.replaceChild(l,t),e&&(l.value=e),l.addEventListener("change",()=>{saJQ("#review_header").length>0&&saJQ("html, body").animate({scrollTop:saJQ("#review_header").offset().top}),saJQ("#product_page").toggleClass("sa_loading_bg",!0),saJQ("#sa_review_section").animate({opacity:0},300),saLoadScript(sa_host+"widgets/"+sa_page+".php?siteid="+sa_siteid+"&productid="+("undefined"!=typeof sa_product?sa_product:sa_productid)+"&page=0&sort="+(sort=l.value)+("undefined"==typeof sa_productreverse?"":"&reverse="+sa_productreverse)+"&loadnow=1&rtype="+sa_rtype),s()})}},1e3)}n(),s(),i(),document.querySelector("#download-pds").addEventListener("click",()=>{let e=window.product;var t=`https://fs-child-products.azurewebsites.net/api/pdf/${e.id}/${e.variants[0].sku}`;window.open(t,"_blank")}),document.querySelector(".compare-products-actions a")?.setAttribute("href","")});try{document.addEventListener("DOMContentLoaded",e=>{document.querySelectorAll(".metainfo-wrapper .more-info").forEach(e=>{e.addEventListener("click",async t=>{t.preventDefault(),t.stopPropagation();var _=window.product;if(_){var l=e.dataset.customfield,r=_.vendor;if(l){if("Warranty"===l||"Shipping"==l&&"French Fitness"===r)console.log("I am in custom field"),l=`${r} ${l} Custom Field`;else if("Warranty"===l&&window.product.title.includes("Remanufactured"))console.log("I am in remanufactured custom field"),l=`${l} Remanufactured Custom Field`;else if("Condition"===l&&window.product.title.includes("Remanufactured")){window.open("/pages/remanufactured-gym-equipment","_blank");return}else l+=" Custom Field";console.log("Custom Field Value is "+l);var a=await fetchProductByTitle(l);if(!a&&l.includes("Warranty")&&(console.log("I am in Warranty 30"),a=await fetchProductByTitle(l="Warranty (30)")),a){document.querySelector("#dynamic-product-content").style.width="auto",modalWrapper.style.display="flex";let o=document.createElement("div");o.innerHTML=a.body_html;let n=o;container.innerHTML=n.innerHTML+`<span class="modal-close">${closeIconTemplate}</span>`;let i=container.querySelector(".modal-close");i.addEventListener("click",()=>{modalWrapper.style.display="none",$("#dynamic-product-content").empty()})}}}})}),modalWrapper.addEventListener("click",()=>{modalWrapper.style.display="none"}),container.addEventListener("click",e=>{e.stopPropagation()});var t=setInterval(()=>{hideOrShowAfterPayLogo(()=>clearInterval(t))},100),_=setInterval(()=>{hideOrShowAffirmLogo(()=>clearInterval(_))},100);let l=setInterval(()=>{let e=generatePayLaterText(),t=document.querySelector(".affirm-as-low-as"),_=document.querySelector("square-placement")?.shadowRoot?.querySelector(".afterpay-text2");(t||_)&&(document.querySelectorAll(".paylater-container").forEach(e=>{e.style.display="block"}),document.querySelectorAll(".paylater-text").forEach(t=>{t.innerHTML=getPaylaterModal(e)}),clearInterval(l))},100)})}catch(e){console.log(e)}function getPaylaterModal(e){return`<span>${e}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      `;
+      dropdownContainer.appendChild(sortByDropdown);
+      
+      const showContainer = document.createElement('div');
+      showContainer.setAttribute('class', 'show-dropdown-container');
+      
+      dropdownContainer.appendChild(showContainer);
+       
+      const writeReviewButton = document.createElement('a');
+      writeReviewButton.setAttribute('id', 'writeReviewButton');
+      writeReviewButton.setAttribute('href', 'https://www.shopperapproved.com/reviews/fitnesssuperstore.com#reviews');
+      writeReviewButton.setAttribute('target', '_blank'); 
+      writeReviewButton.setAttribute('rel', 'noopener noreferrer'); 
+      writeReviewButton.textContent = 'Write a Review';
+      writeReviewButton.classList.add('write-review-btn');
+      dropdownContainer.appendChild(writeReviewButton); 
+     
+	  const productPage = document.querySelector('#product_page');
+	  const reviewHeader = document.querySelector('#review_header');
+	  const existingDropdownContainer = document.querySelector('.sa-reviews-dropdown-container');
+	  
+	  if (productPage && reviewHeader && !existingDropdownContainer) {
+		productPage.parentNode.insertBefore(dropdownContainer, productPage);
+	  }
+    }
+  
+    function registerSAReviewsPolling() {
+      const interval = setInterval(async function () {
+        const reviewSection = document.querySelector("#sa_review_paging");
+		if (reviewSection) {
+			addCustomActions();
+
+			if (Object.keys(sa_product_reviews.high).length > sa_products_count) {
+				addPaginationArrows();
+			}
+
+			if (!document.querySelector('.merchantheader')) {
+				document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
+				document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
+			} 
+		}
+      }, 500);
+    }
+
+	function registerProductReviewsPolling() {
+		const interval = setInterval(async function() {
+			const reviewSection = document.querySelector('.product_review');
+
+			if (reviewSection) {			
+				clearInterval(interval);
+				const productInfoContainer = document.querySelector('.product__info-container');
+
+				const starsReview =  productInfoContainer.querySelector('#product_just_stars .on');
+
+				if (!starsReview) {
+					var saTotalStars = await getShopperApprovedTotalReviewsCount();
+
+					if (saTotalStars) {
+						productInfoContainer.querySelector('#product_just_stars').innerHTML = `<span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="ind_cnt med"><a class="sa_jump_to_reviews" href="#review_header">${saTotalStars} <span class="ind_cnt_desc">reviews</span></a></span>`
+						productInfoContainer.querySelector('.sa-reviews').style.display = 'flex';
+					}
+				}
+			}
+		});
+	}
+
+    function registerCustomActionEvent() {
+		setTimeout(() => {
+			let sortByDropDownCurrentValue = '';
+			let showDropDownCurrentValue = '';
+	
+			const sortByDropdown = document.getElementById('sortByDropdown');
+			const saSort = document.getElementById('sa_sort');
+			var showDropdownSelect = document.getElementById('showDropdown');
+	
+			if (sortByDropdown) {
+				sortByDropDownCurrentValue = sortByDropdown.value;
+			}
+	
+			if (sortByDropdown && saSort) {
+			  const newSortByDropdown = sortByDropdown.cloneNode(true);
+	
+			  sortByDropdown.value = saSort.value;
+
+			  sortByDropdown.parentNode.replaceChild(newSortByDropdown, sortByDropdown);
+		
+			  if (sortByDropDownCurrentValue) {
+				newSortByDropdown.value = sortByDropDownCurrentValue;
+			  }
+
+			  newSortByDropdown.addEventListener('change', () => {
+				if (saJQ('#review_header').length > 0) {
+					saJQ('html, body').animate({
+						scrollTop: saJQ('#review_header').offset().top
+					});
+				}
+				saJQ('#product_page').toggleClass('sa_loading_bg', true);
+				saJQ('#sa_review_section').animate({
+					opacity: 0
+				}, 300);
+				sort = newSortByDropdown.value;
+				var reverse = (typeof (sa_productreverse) == 'undefined') ? '' : '&reverse=' + sa_productreverse;
+				var productId = (typeof (sa_product) != 'undefined') ? sa_product : sa_productid;
+				saLoadScript(sa_host + 'widgets/' + sa_page + '.php?siteid=' + sa_siteid + '&productid=' + productId + '&page=0&sort=' + sort + reverse + '&loadnow=1' + '&rtype=' + sa_rtype);
+				registerCustomActionEvent();
+			  });
+			}
+		}, 1000);
+    }
+    
+    registerSAReviewsPolling();
+	registerCustomActionEvent(); 
+	registerProductReviewsPolling();
+
+	document.querySelector('#download-pds').addEventListener('click', () => {
+		const product = window.product;
+		var pdsUrl = `https://fs-child-products.azurewebsites.net/api/pdf/${product.id}/${product.variants[0].sku}`; 
+		window.open(pdsUrl, "_blank"); 
+	})
+
+	document.querySelector('.compare-products-actions a')?.setAttribute('href', '');
+});
+
+
+try {
+	document.addEventListener('DOMContentLoaded', (event) => {	
+		document.querySelectorAll('.metainfo-wrapper .more-info').forEach(element => {
+			element.addEventListener('click', async (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				var currentProduct = window.product;
+
+				if (currentProduct) {
+					var customFieldvalue = element.dataset.customfield;	
+					var brand = currentProduct.vendor
+
+					if (customFieldvalue) {			
+						if (customFieldvalue === 'Warranty' || customFieldvalue == 'Shipping' && brand === 'French Fitness') {
+							console.log("I am in custom field");
+							customFieldvalue = `${brand} ${customFieldvalue} Custom Field`
+						} else {
+							if (customFieldvalue === 'Warranty' && window.product.title.includes('Remanufactured')) {
+								console.log("I am in remanufactured custom field");
+								customFieldvalue = `${customFieldvalue} Remanufactured Custom Field`
+							} else if (customFieldvalue === 'Condition' && window.product.title.includes('Remanufactured')) {
+								window.open("/pages/remanufactured-gym-equipment", "_blank");
+								return;
+							} 
+							else {
+								customFieldvalue += ' Custom Field';
+							}
+						}
+
+						console.log("Custom Field Value is "+ customFieldvalue);
+						
+						var product = await fetchProductByTitle(customFieldvalue);
+                      
+                        if (!product && customFieldvalue.includes('Warranty')) {
+							console.log("I am in Warranty 30");
+							customFieldvalue = 'Warranty (30)';
+							product = await fetchProductByTitle(customFieldvalue);
+						}
+						if (product) {
+							document.querySelector('#dynamic-product-content').style.width = "auto";
+							modalWrapper.style.display = 'flex';
+							const tempDiv = document.createElement('div');
+							tempDiv.innerHTML = product.body_html;
+							const mainContent = tempDiv;
+							container.innerHTML = mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
+	
+							const closeModalButton = container.querySelector('.modal-close');
+	
+							closeModalButton.addEventListener('click', () => {
+								modalWrapper.style.display = 'none';
+                              $('#dynamic-product-content').empty();
+							});
+						};
+					}
+				}
+			});
+		});
+
+		modalWrapper.addEventListener('click', () => {
+			modalWrapper.style.display = 'none';
+		});
+
+		container.addEventListener('click', (event) => {
+			event.stopPropagation();
+		});
+
+		/*var afterPayIntervalTrigger = setInterval(() => {
+			hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
+		}, 100);*/
+
+		var affirmPayIntervalTrigger = setInterval(() => {
+			hideOrShowAffirmLogo(() => clearInterval(affirmPayIntervalTrigger));
+		}, 100)
+
+		const waitForPayLaterDependency = setInterval(() => {
+		  const payLaterText = generatePayLaterText();
+		  const affirmElement = document.querySelector('.affirm-as-low-as');
+		  const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
+
+		  if (affirmElement || afterPayElement) {
+			 document.querySelectorAll('.paylater-container').forEach(container => {
+				container.style.display = 'block';
+			 });
+			 document.querySelectorAll('.paylater-text').forEach(container => {
+				 container.innerHTML = getPaylaterModal(payLaterText);
+			 });
+				
+			 clearInterval(waitForPayLaterDependency);
+			}
+		  }, 100);
+	});
+} catch (error) {
+	console.log(error)
+}
+
+function getPaylaterModal(payLaterText) {
+	return `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
 				<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#D83D0E"></path>
 			</svg>`}function generatePayLaterText(){let e="",t=getProductPrice();document.querySelector("square-placement").setAttribute("data-amount",t);let _=null;document.querySelector("square-placement").length>0&&(_=parseFloat(document.querySelector("square-placement").shadowRoot.querySelector(".afterpay-text2 strong")?.innerHTML.replace("$","").replace("/mo.","")));let l=computeAffirmLoanDetails(t,24).MonthlyPaymentAmount,r=[_,l].map(e=>parseFloat(e)).filter(e=>!isNaN(e)),a=r.length?Math.min(...r):0;return`As low as ${a.toLocaleString("en-US",{style:"currency",currency:"USD"})}/mo. / 24 interest-free payment`}function toggleTransitTimeForm(){let e=document.querySelector(".transit-time-form"),t=document.querySelector(".location-header .location-display");"block"===e.style.display?(e.style.display="none",t.style.color="#D83D0E"):(e.style.display="block",t.style.color="#57200F")}function computeAfterPayLoanDetails(e,t,_,l=null){function r(l){return e*l/(1-Math.pow(1+l,-_))-t}let a=function e(){let t=1e-4,_=1,l;for(;_-t>1e-6;)r(l=(t+_)/2)>0?_=l:t=l;return l}(),o=(1200*a).toFixed(2),n=null,i=t*_,s=null;return l&&(s=(n=(e*a/(1-Math.pow(1+a,-l))).toFixed(2))*l),{APR:o+"%",MonthlyPaymentForNewTerm:l?`$${n}`:"N/A",TotalPaymentsOriginalTerm:`${parseFloat(i).toLocaleString("en-US",{style:"currency",currency:"USD"})}`,TotalPaymentsNewTerm:l?`${parseFloat(i).toLocaleString("en-US",{style:"currency",currency:"USD"})}`:"N/A"}}function showPayLaterModal(){let e=generatePayLaterAggregate();if(generatePayLaterAggregate){modalWrapper.style.display="flex";let t=document.createElement("div");t.innerHTML=e,container.innerHTML=t.innerHTML+`<span class="modal-close">${closeIconTemplate}</span>`;let _=container.querySelector(".modal-close");_.addEventListener("click",()=>{modalWrapper.style.display="none"}),document.querySelector("#dynamic-product-content").style.width="600px"}}function generatePayLaterAggregate(){let e=document.querySelector(".pr_custom_price"),t=e.textContent.replace(/[^\d,\.]/g,"");return`<div class="buy-now-pay-later">
 	<h1 class="title">BUY NOW. PAY LATER.</h1>
 	<p class="price">Purchase price: <strong>$${t}</strong>
 	</p>
-	<p class="description"> Select Affirm or Afterpay as your payment method at checkout to pay in installments. </p>
+	<p class="description"> Select Affirm as your payment method at checkout to pay in installments. </p>
 	<div class="steps-container">
 	  <div class="step">
 		<div class="step-circle">1</div>
@@ -42,7 +262,49 @@ window.addEventListener("DOMContentLoaded",async()=>{function e(){let e=document
 	</div>
 	<div class="options">${combinedPayLater()}</div>
 
-  </div>`}function combinedPayLater(){let e="";return e+=generateAfterPayPaymentTerms(),e+=generateAffirmPaymentTerms()}function generateAfterPayPaymentTerms(){let e=document.querySelector("square-placement")?.shadowRoot?.querySelector(".afterpay-text2");if(null==e)return;let t=e.querySelector("strong");if(!t)return null;let _=t.innerHTML.match(/[\d,]+(\.\d{1,2})?/),l=_?parseFloat(_[0].replace(",","")):null;if(!l)return;let r=getProductPrice(),a="";return[6,12,24].forEach(e=>{let t=computeAfterPayLoanDetails(r,l,12,e);t&&(a+=generateAfterPayOptionHTML(e,t))}),a}function generateAfterPayOptionHTML(e,t){let{MonthlyPaymentForNewTerm:_,APR:l,TotalPaymentsNewTerm:r}=t;return`
+  </div>`
+
+  return buyNowPayLaterHTML;
+}
+
+function combinedPayLater() {
+	let payLaterOptions = '';
+
+	/*payLaterOptions += generateAfterPayPaymentTerms();*/
+	payLaterOptions += generateAffirmPaymentTerms();
+
+	return payLaterOptions;
+}
+/*
+function generateAfterPayPaymentTerms() {
+	const afterPayRateElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
+	if (afterPayRateElement == null) return;
+
+	const afterPayRate = afterPayRateElement.querySelector('strong');
+	if (!afterPayRate) return null;
+
+	const matchPrice = afterPayRate.innerHTML.match(/[\d,]+(\.\d{1,2})?/);
+	const currentPrice = matchPrice ? parseFloat(matchPrice[0].replace(',', '')) : null;
+	if (!currentPrice) return;
+
+	const productPrice = getProductPrice();
+	const terms = [6, 12, 24];
+	let afterPayTermsHTML = '';
+
+	terms.forEach(term => {
+		const rate = computeAfterPayLoanDetails(productPrice, currentPrice, 12, term);
+		if (rate) {
+			afterPayTermsHTML += generateAfterPayOptionHTML(term, rate);
+		}
+	});
+
+	return afterPayTermsHTML;
+}
+*/
+function generateAfterPayOptionHTML(term, rate) {
+	const { MonthlyPaymentForNewTerm, APR, TotalPaymentsNewTerm } = rate;
+
+	return `
 		<div class="option">
 			<div class="option-details">
 				<p class="payment-info">
@@ -85,4 +347,107 @@ window.addEventListener("DOMContentLoaded",async()=>{function e(){let e=document
                            See terms: <strong><u>Affirm</u></strong>
                           </span>
 						</a>
-					</div>`)}),t}}function computeAffirmLoanDetails(e,t){let _=(e/t).toFixed(2);return{MonthlyPaymentAmount:e/t,MonthlyPayment:`$${_}`,APR:"0.00%",TotalPayment:`$${e.toFixed(2)}`}}function getProductPrice(){let e=document.querySelector(".pr_custom_price").innerText,t=e.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0].replace(/,/g,"").replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0+$/,""),_=parseFloat(t);return _}function hideOrShowAfterPayLogo(e){if(document.querySelector("afterpay-modal")){let t=document.querySelector("square-placement")?.shadowRoot?.querySelector(".afterpay-text2");document.querySelectorAll(".afterPayLogo").forEach(e=>{t&&e?e.style.display="block":e.style.display="none"}),e&&e()}}function hideOrShowAffirmLogo(e){var t=document.querySelector(".affirm-as-low-as");document.querySelectorAll(".affirm-logo").forEach(e=>{t&&e?e.style.display="block":e.style.display="none"}),t&&e&&e()}function observeModalVisibility(e=".modal-wrapper"){let t=new MutationObserver(()=>{let t=Array.from(document.querySelectorAll(e)).some(e=>{let t=window.getComputedStyle(e);return"none"!==t.display&&"hidden"!==t.visibility&&"0"!==t.opacity});document.body.classList.toggle("modal-open",t)}),_=document.querySelectorAll(e);_.forEach(e=>{t.observe(e,{attributes:!0,attributeFilter:["style","class"],subtree:!1})})}async function getShopperApprovedTotalReviewsCount(){try{let e=await fetch("https://fitnesssuperstore-api.azurewebsites.net/api/reviews/reviewscount",{method:"GET"});if(!e.ok)throw Error("Failed to fetch API fetchShopperApprovedTotalReviews");let t=await e.json();return t}catch(_){return console.error("Error fetching API fetchShopperApprovedTotalReviews",_),null}}
+					</div>`;
+			}
+		});
+
+		return affirmTermsHTML;
+	}
+  }
+
+  function computeAffirmLoanDetails(productPrice, months) {
+	const monthly = (productPrice / months).toFixed(2);
+	return {
+		MonthlyPaymentAmount: (productPrice / months),
+		MonthlyPayment: `$${monthly}`,
+		APR: '0.00%',
+		TotalPayment: `$${productPrice.toFixed(2)}`
+	};
+  }
+
+  function getProductPrice() {
+    const priceElement = document.querySelector('.pr_custom_price').innerText;
+
+	const formattedProductPrice = priceElement.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]  
+	.replace(/,/g, '') 
+	.replace(/(\.\d*?[1-9])0+$/, '$1') 
+	.replace(/\.0+$/, ''); 
+	const productPrice = parseFloat(formattedProductPrice);
+	return productPrice;
+  }
+/*
+  function hideOrShowAfterPayLogo(callback) {
+	var afterPayModalContainer = document.querySelector('afterpay-modal');
+	if (afterPayModalContainer) {
+		const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
+		document.querySelectorAll('.afterPayLogo').forEach(element => {
+		  if (afterPayElement && element) {
+			element.style.display = 'block';
+		  } else {
+			element.style.display = 'none';
+		  }
+		});
+
+		if (callback) {
+			callback();
+		}
+	}
+  }*/
+
+  function hideOrShowAffirmLogo(callback) {
+	var affirmElement = document.querySelector('.affirm-as-low-as');
+
+	document.querySelectorAll('.affirm-logo').forEach(element => {
+		if (affirmElement && element) {
+			element.style.display = 'block';
+		} else {
+			element.style.display = 'none';
+		}
+	});
+
+	if (affirmElement && callback) {
+		callback();
+	}
+  }
+
+  function observeModalVisibility(modalSelector = '.modal-wrapper') {
+    const observer = new MutationObserver(() => {
+        const anyModalOpen = Array.from(document.querySelectorAll(modalSelector))
+            .some(modal => {
+                const style = window.getComputedStyle(modal);
+                return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+            });
+
+        document.body.classList.toggle('modal-open', anyModalOpen);
+    });
+
+    const modals = document.querySelectorAll(modalSelector);
+
+    modals.forEach(modal => {
+        observer.observe(modal, {
+            attributes: true,
+            attributeFilter: ['style', 'class'],
+            subtree: false,
+        });
+    });
+}
+
+async function getShopperApprovedTotalReviewsCount() {
+	const apiUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/reviews/reviewscount`;
+
+	try {
+		const response = await fetch(apiUrl, {
+			method: 'GET'
+		});
+
+		if (!response.ok) {
+			throw new Error('Failed to fetch API fetchShopperApprovedTotalReviews');
+		}
+
+        const data = await response.json();
+		return data;
+	} catch (error) {
+		console.error('Error fetching API fetchShopperApprovedTotalReviews', error);
+		return null;
+	}
+}
