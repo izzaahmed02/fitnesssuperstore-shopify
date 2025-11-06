@@ -3632,50 +3632,68 @@
 {% endschema %}
 
 <script>
-// Wait for the page to fully load
-window.addEventListener("load", () => {
+(function() {
+  console.log("=== Price Sync Script Started ===");
   
-  // Retry mechanism to wait for elements to appear
-  function syncPrices() {
+  let attemptCount = 0;
+  const maxAttempts = 50; // Try for 5 seconds (50 * 100ms)
+  
+  function findAndSync() {
+    attemptCount++;
+    console.log(`Attempt ${attemptCount}: Looking for elements...`);
+    
+    // Try to find elements
     const source = document.querySelector(".pr_custom_price");
     const target = document.querySelector(".price-item-fixed");
-
-    // Log for debugging
-    console.log("Source element:", source);
-    console.log("Target element:", target);
-
+    
+    // Log what we found
+    console.log("Source (.pr_custom_price):", source);
+    console.log("Target (.price-item-fixed):", target);
+    
+    // If both exist, set up the sync
     if (source && target) {
-      console.log("Both elements found! Setting up sync...");
+      console.log("✓ Both elements found!");
+      console.log("Source HTML:", source.innerHTML);
       
-      // Create observer to watch for changes
-      const observer = new MutationObserver(() => {
-        console.log("Source changed, updating target...");
-        target.innerHTML = source.innerHTML;
-      });
-
-      // Watch for any changes in the source
-      observer.observe(source, { 
-        childList: true, 
-        subtree: true, 
-        characterData: true 
-      });
-
       // Initial sync
       target.innerHTML = source.innerHTML;
-      console.log("Initial sync complete!");
+      console.log("✓ Initial sync complete!");
       
+      // Set up observer for future changes
+      const observer = new MutationObserver((mutations) => {
+        console.log("Source element changed! Syncing...");
+        target.innerHTML = source.innerHTML;
+      });
+      
+      observer.observe(source, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true
+      });
+      
+      console.log("✓ Observer set up successfully!");
+      return true; // Success
+    }
+    
+    // If we haven't found them yet and haven't exceeded max attempts
+    if (attemptCount < maxAttempts) {
+      console.log("⟳ Elements not found, retrying...");
+      setTimeout(findAndSync, 100);
     } else {
-      console.log("Elements not found yet, retrying in 100ms...");
-      // If elements don't exist yet, try again
-      setTimeout(syncPrices, 100);
+      console.error("✗ FAILED: Could not find elements after " + maxAttempts + " attempts");
+      console.log("Available elements with 'price' in class name:");
+      document.querySelectorAll('[class*="price"]').forEach(el => {
+        console.log("  -", el.className, el);
+      });
     }
   }
-
-  // Start the sync process
-  syncPrices();
-});
+  
+  // Start immediately
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', findAndSync);
+  } else {
+    findAndSync();
+  }
+})();
 </script>
-
-
-
-
