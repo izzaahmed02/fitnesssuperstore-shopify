@@ -3678,88 +3678,64 @@ if(!window.__pmInit3){window.__pmInit3=1;(function(){
 
 <style>.pm-empty{visibility:hidden!important}</style>
 <script>
-if(!window.__pmFix){window.__pmFix=1;(function(){
-  const ROOT='.product__prices',
-        PRICE='.price-item--sale.price-item--last, .price-item-fixed',
-        CMP='.pr_custom_compare_price s',
-        SAVE='.you-save',
-        VID='.product-variant-id';
-
+if(!window.__pmMin){window.__pmMin=1;(function(){
+  const ROOT='.product__prices', PRICE='.price-item--sale.price-item--last, .price-item-fixed',
+        CMP='.pr_custom_compare_price s', SAVE='.you-save', VID='.product-variant-id';
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const cents=n=>Number.isFinite(+n)?Math.round(+n):null, fmt=c=>"$"+((c||0)/100).toFixed(2);
 
-  // Convert any Shopify-ish value to cents (int), handling: 500, "500", "6.5", "$6.50", "6.50"
-  function toCents(val){
-    if(val==null) return null;
-    if(typeof val==='number'){
-      if(Number.isInteger(val) && val>=100) return val;          // likely already cents (e.g., 650)
-      return Math.round(val*100);                                 // dollars → cents (e.g., 6.5 → 650)
-    }
-    const s=String(val).trim().replace(/[^\d.]/g,'');             // strip $, commas, text
-    if(!s) return null;
-    if(s.includes('.')) return Math.round(parseFloat(s)*100);     // dollars with decimals
-    const n=parseInt(s,10);
-    if(!Number.isFinite(n)) return null;
-    return n>=100 ? n : n*100;                                    // if small integer, treat as dollars
-  }
-  const fmt=c=>"$"+((c||0)/100).toFixed(2);
-
-  // Normalize "You save" container once: keep label, add <span class="pm-save-amt">
+  // --- Normalize "You save" node: keep only the label, add <span class="pm-save-amt"> for the number ---
   function initSave(){
     const n=$(SAVE); if(!n) return null;
-    const m=/^\s*You save\b/i.exec(n.textContent||'');
+    // Extract a clean label (default to "You save")
+    const raw=n.textContent||'';
+    const m=/^\s*You save\b/i.exec(raw);
     const label=(m?m[0]:'You save')+' ';
-    n.textContent=label;
-    const a=document.createElement('span'); a.className='pm-save-amt'; n.appendChild(a);
+    n.textContent=label;                      // wipe any old numbers
+    const a=document.createElement('span');   // dedicated amount holder
+    a.className='pm-save-amt';
+    n.appendChild(a);
     return a;
   }
   const saveAmt=initSave();
 
-  function clearNumbers(){
+  function clear(){
     const root=$(ROOT); if(!root) return;
-    $$(PRICE,root).forEach(x=>{ x.textContent=x.textContent||''; x.classList.add('pm-empty'); });
-    const cmp=$(CMP,root); if(cmp){ cmp.textContent=''; cmp.classList.add('pm-empty'); }
+    $$(PRICE,root).forEach(x=>{x.textContent=x.textContent||''; x.classList.add('pm-empty');});
+    const c=$(CMP,root); if(c){ c.textContent=''; c.classList.add('pm-empty'); }
     if(saveAmt){ saveAmt.textContent=''; saveAmt.classList.add('pm-empty'); }
   }
 
   let byId=new Map();
-  async function loadProduct(){
+  async function init(){
     const inline=$('script[type="application/json"][data-product],script[type="application/json"][data-product-json]');
     const data=inline?JSON.parse(inline.textContent):await (await fetch(location.pathname.replace(/\/+$/,'')+'.js')).json();
     byId=new Map((data.variants||[]).map(v=>[String(v.id),v]));
   }
 
-  function renderFromVariant(v){
+  function paint(v){
     const root=$(ROOT); if(!root) return;
-    if(!v){ clearNumbers(); return; }
+    if(!v){ clear(); return; }
 
-    const priceC=toCents(v.price);
-    const cmpC=toCents(v.compare_at_price);
-    const hasCmp=cmpC!=null && priceC!=null && cmpC>priceC;
+    $$(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
 
-    // 1) Price
-    $$(PRICE,root).forEach(x=>{ x.textContent=fmt(priceC); x.classList.remove('pm-empty'); });
+    const hasCmp=v.compare_at_price && cents(v.compare_at_price)>cents(v.price);
+    const c=$(CMP,root);
+    if(c){ c.textContent=hasCmp?fmt(cents(v.compare_at_price)):''; c.classList.toggle('pm-empty',!hasCmp); }
 
-    // 2) Compare-at (from variant only)
-    const cmp=$(CMP,root);
-    if(cmp){ cmp.textContent=hasCmp?fmt(cmpC):''; cmp.classList.toggle('pm-empty',!hasCmp); }
-
-    // 3) You save = compare - price (variant only)
     if(saveAmt){
-      const sav=hasCmp ? (cmpC - priceC) : null;
-      saveAmt.textContent = sav!=null ? fmt(sav) : '';
-      saveAmt.classList.toggle('pm-empty', sav==null);
+      const s=hasCmp?cents(v.compare_at_price)-cents(v.price):null;
+      saveAmt.textContent=s?fmt(s):''; 
+      saveAmt.classList.toggle('pm-empty',!s);
     }
   }
 
-  const fromId=()=>{ const id=$(VID)?.value; renderFromVariant(id?byId.get(String(id)):null); };
+  const fromId=()=>{ const id=$(VID)?.value; paint(id?byId.get(String(id)):null); };
 
-  document.addEventListener('variant:change', e => renderFromVariant(e?.detail?.variant || byId.get($(VID)?.value) || null));
-  document.addEventListener('shopify:section:load', () => setTimeout(fromId));
-  const idEl=$(VID); if(idEl){
-    idEl.addEventListener('change', fromId);
-    new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']});
-  }
+  document.addEventListener('variant:change',e=>paint(e?.detail?.variant||byId.get($(VID)?.value)||null));
+  document.addEventListener('shopify:section:load',()=>setTimeout(fromId));
+  const idEl=$(VID); if(idEl){ idEl.addEventListener('change',fromId); new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']}); }
 
-  document.addEventListener('DOMContentLoaded', async ()=>{ try{ await loadProduct(); fromId(); } catch(_){ clearNumbers(); } });
+  document.addEventListener('DOMContentLoaded',async()=>{ try{ await init(); fromId(); }catch(_){ clear(); } });
 })(); }
 </script>
