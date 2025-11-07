@@ -3684,9 +3684,20 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const cents=n=>Number.isFinite(+n)?Math.round(+n):null, fmt=c=>"$"+((c||0)/100).toFixed(2);
 
-  const saveAmt=(()=>{ const n=$(SAVE); if(!n) return null;
-    let a=n.querySelector('.pm-save-amt'); if(!a){ a=document.createElement('span'); a.className='pm-save-amt'; n.append(' ',a); }
-    return a; })();
+  // --- Normalize "You save" node: keep only the label, add <span class="pm-save-amt"> for the number ---
+  function initSave(){
+    const n=$(SAVE); if(!n) return null;
+    // Extract a clean label (default to "You save")
+    const raw=n.textContent||'';
+    const m=/^\s*You save\b/i.exec(raw);
+    const label=(m?m[0]:'You save')+' ';
+    n.textContent=label;                      // wipe any old numbers
+    const a=document.createElement('span');   // dedicated amount holder
+    a.className='pm-save-amt';
+    n.appendChild(a);
+    return a;
+  }
+  const saveAmt=initSave();
 
   function clear(){
     const root=$(ROOT); if(!root) return;
@@ -3705,11 +3716,18 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
   function paint(v){
     const root=$(ROOT); if(!root) return;
     if(!v){ clear(); return; }
+
     $$(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
+
     const hasCmp=v.compare_at_price && cents(v.compare_at_price)>cents(v.price);
-    const c=$(CMP,root); if(c){ c.textContent=hasCmp?fmt(cents(v.compare_at_price)):''; c.classList.toggle('pm-empty',!hasCmp); }
-    if(saveAmt){ const s=hasCmp?cents(v.compare_at_price)-cents(v.price):null;
-      saveAmt.textContent=s?fmt(s):''; saveAmt.classList.toggle('pm-empty',!s); }
+    const c=$(CMP,root);
+    if(c){ c.textContent=hasCmp?fmt(cents(v.compare_at_price)):''; c.classList.toggle('pm-empty',!hasCmp); }
+
+    if(saveAmt){
+      const s=hasCmp?cents(v.compare_at_price)-cents(v.price):null;
+      saveAmt.textContent=s?fmt(s):''; 
+      saveAmt.classList.toggle('pm-empty',!s);
+    }
   }
 
   const fromId=()=>{ const id=$(VID)?.value; paint(id?byId.get(String(id)):null); };
