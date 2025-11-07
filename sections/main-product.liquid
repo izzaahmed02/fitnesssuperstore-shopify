@@ -3631,3 +3631,76 @@
 }
 {% endschema %}
 
+<script>
+  if (!window.__priceMirrorInit) {
+    window.__priceMirrorInit = true;
+
+    (function () {
+      // Inside price (already updates with variant change)
+      const INSIDE_PRICE_SELECTOR = '.product_price_with_options-contaniner .pr_custom_price';
+      // Outside price root (the block you want mirrored)
+      const OUTSIDE_PRICE_ROOT = '.product__prices';
+      // Nodes in the outside block that display the amount
+      const OUTSIDE_SALE_SELECTOR = '.price-item--sale.price-item--last, .price-item-fixed';
+
+      function getInsidePriceText() {
+        const el = document.querySelector(INSIDE_PRICE_SELECTOR);
+        return el ? (el.textContent || '').replace(/\s+/g, ' ').trim() : null;
+      }
+
+      function setOutsidePrice(text) {
+        const root = document.querySelector(OUTSIDE_PRICE_ROOT);
+        if (!root || !text) return;
+
+        // Update the visible price numbers
+        root.querySelectorAll(OUTSIDE_SALE_SELECTOR).forEach(n => { n.textContent = text; });
+
+        // (Optional) If your outside unit price should mirror too:
+        const unitLast = root.querySelector('.unit-price .price-item--last > span:first-child');
+        if (unitLast) unitLast.textContent = text;
+      }
+
+      function syncOnce() {
+        const t = getInsidePriceText();
+        if (t) setOutsidePrice(t);
+      }
+
+      // Observe the inside price (Dawn re-renders it on variant change)
+      let mo;
+      function startObserver() {
+        const source = document.querySelector(INSIDE_PRICE_SELECTOR);
+        if (!source) return;
+        if (mo) mo.disconnect();
+        mo = new MutationObserver(syncOnce);
+        mo.observe(source, { characterData: true, subtree: true, childList: true });
+      }
+
+      // Hook common theme events
+      function bindThemeEvents() {
+        // Many Dawn variants dispatch this on selection change
+        document.addEventListener('variant:change', () =>
+          requestAnimationFrame(() => requestAnimationFrame(syncOnce))
+        );
+
+        // If your theme exposes pub/sub (your global.js likely does)
+        if (window.PUB_SUB_EVENTS && typeof window.subscribe === 'function') {
+          try {
+            window.subscribe(window.PUB_SUB_EVENTS.optionValueSelectionChange, () =>
+              requestAnimationFrame(() => requestAnimationFrame(syncOnce))
+            );
+          } catch (e) {}
+        }
+
+        // Handle Section re-renders
+        document.addEventListener('shopify:section:load', () => { syncOnce(); startObserver(); });
+        document.addEventListener('shopify:section:select', () => { syncOnce(); });
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        syncOnce();
+        startObserver();
+        bindThemeEvents();
+      });
+    })();
+  }
+</script>
