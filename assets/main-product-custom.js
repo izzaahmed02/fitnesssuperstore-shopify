@@ -642,7 +642,6 @@ function generateAffirmPaymentTerms() {
 
   function getProductPrice() {
     const priceElement = document.querySelector('.pr_custom_price').innerText;
-console.log("test");
 	const formattedProductPrice = priceElement.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]  
 	.replace(/,/g, '') 
 	.replace(/(\.\d*?[1-9])0+$/, '$1') 
