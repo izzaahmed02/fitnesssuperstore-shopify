@@ -3632,161 +3632,44 @@
 {% endschema %}
 
 <script>
-  // Run once even if the section re-renders
-  if (!window.__priceMirrorVariantInit) {
-    window.__priceMirrorVariantInit = true;
+if(!window.__pmInit3){window.__pmInit3=1;(function(){
+  const ROOT='.product__prices',
+        PRICE='.price-item--sale.price-item--last, .price-item-fixed',
+        CMP='.pr_custom_compare_price s',
+        SAVE='.you-save',
+        VID='.product-variant-id';
+  const $=(s,r=document)=>r.querySelector(s),$all=(s,r=document)=>[...r.querySelectorAll(s)];
+  const cents=n=>Number.isFinite(+n)?Math.round(+n):null;
+  const fmt=c=>"$"+((c||0)/100).toFixed(2); // no "USD"
 
-    (function () {
-      // ====== CONFIG: adjust only if your classes differ ======
-      const OUTSIDE_ROOT = '.product__prices';
-      const OUTSIDE_SALE_SELECTOR = '.price-item--sale.price-item--last, .price-item-fixed';
-      const OUTSIDE_COMPARE_SELECTOR = '.pr_custom_compare_price s'; // "As high as: <s>...</s>"
-      const OUTSIDE_SAVE_SELECTOR = '.you-save'; // "You save $X" (updates only if present)
-      const VARIANT_ID_INPUT = '.product-variant-id'; // hidden input that tracks selected variant id
-
-      // ====== Helpers ======
-      function toInt(x) {
-        if (x == null) return null;
-        const n = Number(x);
-        return Number.isFinite(n) ? Math.round(n) : null;
-      }
-
-      // Basic money formatter (USD default). If you use multi-currency, this will still show correct numbers for the active currency server rendered.
-      function formatMoney(cents, currency = 'USD') {
-        if (cents == null) return '';
-        const amount = cents / 100;
-        try {
-          return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
-        } catch (_) {
-          return '$' + amount.toFixed(2);
-        }
-      }
-
-      function qs(root, sel) { return (root || document).querySelector(sel); }
-      function qsa(root, sel) { return Array.from((root || document).querySelectorAll(sel)); }
-
-      function getCurrentVariantId() {
-        const el = document.querySelector(VARIANT_ID_INPUT);
-        return el ? el.value : null;
-      }
-
-      // Get product JSON (prefer inline, else fetch /product-handle.js)
-      async function getProductJson() {
-        // Inline JSON Dawn often renders:
-        const inline = document.querySelector('script[type="application/json"][data-product]') ||
-                       document.querySelector('script[type="application/json"][data-product-json]');
-        if (inline) {
-          try { return JSON.parse(inline.textContent); } catch (_) {}
-        }
-        // Fallback to public product JSON
-        const url = window.location.pathname.replace(/\/+$/, '') + '.js';
-        const res = await fetch(url, { credentials: 'same-origin' });
-        if (!res.ok) throw new Error('Product JSON fetch failed');
-        return await res.json();
-      }
-
-      // Update the outside block with a variant
-      function renderOutsidePrice(variant, currency = 'USD') {
-        const root = qs(null, OUTSIDE_ROOT);
-        if (!root || !variant) return;
-
-        // Sale/regular price nodes visible to shoppers
-        qsa(root, OUTSIDE_SALE_SELECTOR).forEach(n => {
-          n.textContent = formatMoney(toInt(variant.price), currency);
-        });
-
-        // Compare at price (if the variant has one)
-        const compareNode = qs(root, OUTSIDE_COMPARE_SELECTOR);
-        if (compareNode) {
-          if (variant.compare_at_price && toInt(variant.compare_at_price) > toInt(variant.price)) {
-            compareNode.textContent = formatMoney(toInt(variant.compare_at_price), currency);
-          } else {
-            // If no compare price, clear it (or hide parent span)
-            compareNode.textContent = '';
-          }
-        }
-
-        // "You save" (if present)
-        const saveNode = qs(root, OUTSIDE_SAVE_SELECTOR);
-        if (saveNode) {
-          const hasCompare = variant.compare_at_price && toInt(variant.compare_at_price) > toInt(variant.price);
-          if (hasCompare) {
-            const diff = toInt(variant.compare_at_price) - toInt(variant.price);
-            const match = saveNode.textContent.match(/^\s*You save/i);
-            const prefix = match ? match[0] : 'You save';
-            saveNode.textContent = prefix + ' ' + formatMoney(diff, currency);
-          } else {
-            // If no savings, you can hide or zero out; here we zero out politely
-            const match = saveNode.textContent.match(/^\s*You save/i);
-            const prefix = match ? match[0] : 'You save';
-            saveNode.textContent = prefix + ' ' + formatMoney(0, currency);
-          }
-        }
-      }
-
-      // Bootstrap: cache product variants
-      let productData = null;
-      let variantById = new Map();
-
-      async function ensureProductData() {
-        if (productData) return productData;
-        productData = await getProductJson();
-        if (productData && Array.isArray(productData.variants)) {
-          variantById = new Map(productData.variants.map(v => [String(v.id), v]));
-        }
-        return productData;
-      }
-
-      function updateFromCurrentId() {
-        const vid = getCurrentVariantId();
-        if (!vid) return;
-        const variant = variantById.get(String(vid));
-        if (variant) {
-          // currency is best-effort; if you render currency elsewhere, you can pass it here
-          renderOutsidePrice(variant, (productData && productData.currency) || 'USD');
-        }
-      }
-
-      // Event bindings
-      function bindEvents() {
-        // 1) Dawn often dispatches a variant:change with detail.variant
-        document.addEventListener('variant:change', (e) => {
-          const v = e && e.detail && e.detail.variant;
-          if (v) {
-            renderOutsidePrice(v, (productData && productData.currency) || 'USD');
-          } else {
-            // Fallback to current ID if detail is missing
-            updateFromCurrentId();
-          }
-        });
-
-        // 2) Hidden input change (some themes update .product-variant-id)
-        const idEl = document.querySelector(VARIANT_ID_INPUT);
-        if (idEl) {
-          idEl.addEventListener('change', updateFromCurrentId);
-          // Mutation observer in case value is set programmatically
-          const mo = new MutationObserver(updateFromCurrentId);
-          mo.observe(idEl, { attributes: true, attributeFilter: ['value'] });
-        }
-
-        // 3) Section reloads
-        document.addEventListener('shopify:section:load', () => {
-          // Re-run after DOM changes
-          setTimeout(() => updateFromCurrentId(), 0);
-        });
-      }
-
-      // Init
-      document.addEventListener('DOMContentLoaded', async () => {
-        try {
-          await ensureProductData();
-          updateFromCurrentId();
-          bindEvents();
-        } catch (err) {
-          // Silent fail to avoid breaking the page
-          // console.warn('Price mirror init failed', err);
-        }
-      });
-    })();
+  let byId=new Map();
+  async function init(){
+    const inline=$('script[type="application/json"][data-product],script[type="application/json"][data-product-json]');
+    const data=inline?JSON.parse(inline.textContent):await (await fetch(location.pathname.replace(/\/+$/,'')+'.js')).json();
+    byId=new Map(data.variants.map(v=>[String(v.id),v]));
   }
+  function paint(v){
+    const root=$(ROOT); if(!root||!v) return;
+    $all(PRICE,root).forEach(n=>n.textContent=fmt(cents(v.price)));
+    const c=$(CMP,root);
+    if(c){
+      const has=v.compare_at_price && cents(v.compare_at_price)>cents(v.price);
+      c.textContent=has?fmt(cents(v.compare_at_price)):'';
+    }
+    const s=$(SAVE,root);
+    if(s){
+      const has=v.compare_at_price && cents(v.compare_at_price)>cents(v.price);
+      const prefix=(s.textContent.match(/^\s*You save/i)||['You save'])[0];
+      s.textContent=prefix+' '+fmt(has?cents(v.compare_at_price)-cents(v.price):0);
+    }
+  }
+  const fromId=()=>{const id=$(VID)?.value;if(id)paint(byId.get(String(id)));};
+
+  document.addEventListener('variant:change',e=>paint(e?.detail?.variant||byId.get($(VID)?.value)));
+  document.addEventListener('shopify:section:load',()=>setTimeout(fromId));
+  const idEl=$(VID);
+  if(idEl){idEl.addEventListener('change',fromId);new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']});}
+
+  document.addEventListener('DOMContentLoaded',async()=>{try{await init();fromId();}catch(e){}});
+})(); }
 </script>
