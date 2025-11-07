@@ -3676,64 +3676,48 @@ if(!window.__pmInit3){window.__pmInit3=1;(function(){
 </script>
 {%endcomment %}
 
+<style>.pm-empty{visibility:hidden!important}</style>
 <script>
-if(!window.__pmInit4){window.__pmInit4=1;(function(){
-  const ROOT='.product__prices',
-        PRICE='.price-item--sale.price-item--last, .price-item-fixed',
-        CMP='.pr_custom_compare_price s',
-        SAVE='.you-save',
-        VID='.product-variant-id';
-  const $=(s,r=document)=>r.querySelector(s),$all=(s,r=document)=>[...r.querySelectorAll(s)];
-  const toCents=n=>Number.isFinite(+n)?Math.round(+n):null;
-  const fmt=c=>"$"+((c||0)/100).toFixed(2); // shows $, no “USD”
+if(!window.__pmMin){window.__pmMin=1;(function(){
+  const ROOT='.product__prices', PRICE='.price-item--sale.price-item--last, .price-item-fixed',
+        CMP='.pr_custom_compare_price s', SAVE='.you-save', VID='.product-variant-id';
+  const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const cents=n=>Number.isFinite(+n)?Math.round(+n):null, fmt=c=>"$"+((c||0)/100).toFixed(2);
 
-  function clearOutside(){
+  const saveAmt=(()=>{ const n=$(SAVE); if(!n) return null;
+    let a=n.querySelector('.pm-save-amt'); if(!a){ a=document.createElement('span'); a.className='pm-save-amt'; n.append(' ',a); }
+    return a; })();
+
+  function clear(){
     const root=$(ROOT); if(!root) return;
-    $all(PRICE,root).forEach(n=>n.textContent='');
-    const c=$(CMP,root); if(c) c.textContent='';
-    const s=$(SAVE,root); if(s){
-      const prefix=(s.textContent.match(/^\s*You save/i)||['You save'])[0];
-      s.textContent=prefix+' ';
-    }
+    $$(PRICE,root).forEach(x=>{x.textContent=x.textContent||''; x.classList.add('pm-empty');});
+    const c=$(CMP,root); if(c){ c.textContent=''; c.classList.add('pm-empty'); }
+    if(saveAmt){ saveAmt.textContent=''; saveAmt.classList.add('pm-empty'); }
   }
 
   let byId=new Map();
-  async function initData(){
+  async function init(){
     const inline=$('script[type="application/json"][data-product],script[type="application/json"][data-product-json]');
     const data=inline?JSON.parse(inline.textContent):await (await fetch(location.pathname.replace(/\/+$/,'')+'.js')).json();
-    byId=new Map(data.variants.map(v=>[String(v.id),v]));
+    byId=new Map((data.variants||[]).map(v=>[String(v.id),v]));
   }
 
   function paint(v){
-    const root=$(ROOT); if(!root){return;}
-    if(!v){ clearOutside(); return; }
-    $all(PRICE,root).forEach(n=>n.textContent=fmt(toCents(v.price)));
-    const c=$(CMP,root);
-    if(c){
-      const has=v.compare_at_price && toCents(v.compare_at_price)>toCents(v.price);
-      c.textContent=has?fmt(toCents(v.compare_at_price)):'';
-    }
-    const s=$(SAVE,root);
-    if(s){
-      const has=v.compare_at_price && toCents(v.compare_at_price)>toCents(v.price);
-      const prefix=(s.textContent.match(/^\s*You save/i)||['You save'])[0];
-      s.textContent=prefix+' '+(has?fmt(toCents(v.compare_at_price)-toCents(v.price)):'');
-    }
+    const root=$(ROOT); if(!root) return;
+    if(!v){ clear(); return; }
+    $$(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
+    const hasCmp=v.compare_at_price && cents(v.compare_at_price)>cents(v.price);
+    const c=$(CMP,root); if(c){ c.textContent=hasCmp?fmt(cents(v.compare_at_price)):''; c.classList.toggle('pm-empty',!hasCmp); }
+    if(saveAmt){ const s=hasCmp?cents(v.compare_at_price)-cents(v.price):null;
+      saveAmt.textContent=s?fmt(s):''; saveAmt.classList.toggle('pm-empty',!s); }
   }
 
   const fromId=()=>{ const id=$(VID)?.value; paint(id?byId.get(String(id)):null); };
 
   document.addEventListener('variant:change',e=>paint(e?.detail?.variant||byId.get($(VID)?.value)||null));
   document.addEventListener('shopify:section:load',()=>setTimeout(fromId));
-  const idEl=$(VID);
-  if(idEl){
-    idEl.addEventListener('change',fromId);
-    new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']});
-  }
+  const idEl=$(VID); if(idEl){ idEl.addEventListener('change',fromId); new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']}); }
 
-  document.addEventListener('DOMContentLoaded',async()=>{ try{ await initData(); fromId(); }catch(e){ clearOutside(); } });
+  document.addEventListener('DOMContentLoaded',async()=>{ try{ await init(); fromId(); }catch(_){ clear(); } });
 })(); }
 </script>
-
-
-
