@@ -21,6 +21,7 @@ if (!customElements.get('price-per-item')) {
         this.variantIdChangedUnsubscriber = subscribe(PUB_SUB_EVENTS.variantChange, (event) => {
           this.variantId = event.data.variant.id.toString();
           this.getVolumePricingArray();
+          console.log("price updating");
         });
 
         this.updatePricePerItemUnsubscriber = subscribe(PUB_SUB_EVENTS.cartUpdate, (response) => {
