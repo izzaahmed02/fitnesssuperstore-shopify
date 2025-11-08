@@ -3697,7 +3697,7 @@ if(!window.__pmInit3){window.__pmInit3=1;(function(){
 {%endcomment %}
 
 
-
+{% comment %}
 <style>.pm-empty{visibility:hidden!important}</style>
 <script>
 if(!window.__pmMin){window.__pmMin=1;(function(){
@@ -3732,6 +3732,95 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
     const c=$(CMP,root); if(c){ c.textContent=hasCmp?fmt(cents(v.compare_at_price)):''; c.classList.toggle('pm-empty',!hasCmp); }
     if(saveAmt){ const s=hasCmp?cents(v.compare_at_price)-cents(v.price):null;
       saveAmt.textContent=s?fmt(s):''; saveAmt.classList.toggle('pm-empty',!s); }
+  }
+
+  const fromId=()=>{ const id=$(VID)?.value; paint(id?byId.get(String(id)):null); };
+
+  document.addEventListener('variant:change',e=>paint(e?.detail?.variant||byId.get($(VID)?.value)||null));
+  document.addEventListener('shopify:section:load',()=>setTimeout(fromId));
+  const idEl=$(VID); if(idEl){ idEl.addEventListener('change',fromId); new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']}); }
+
+  document.addEventListener('DOMContentLoaded',async()=>{ try{ await init(); fromId(); }catch(_){ clear(); } });
+})(); }
+</script>
+{% endcomment %}
+
+<style>.pm-empty{visibility:hidden!important}</style>
+<script>
+if(!window.__pmMin){window.__pmMin=1;(function(){
+  const ROOT='.product__prices', PRICE='.price-item--sale.price-item--last, .price-item-fixed',
+        CMP='.pr_custom_compare_price s', SAVE='.you-save', VID='.product-variant-id';
+  const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const cents=n=>Number.isFinite(+n)?Math.round(+n):null, fmt=c=>"$"+((c||0)/100).toFixed(2);
+
+  let saveAmt, savePct, savePctWrap;
+  
+  const initSave=()=>{ 
+    const n=$(SAVE); 
+    if(!n) return;
+    saveAmt=n.querySelector('.pm-save-amt'); 
+    if(!saveAmt){ 
+      saveAmt=document.createElement('span'); 
+      saveAmt.className='pm-save-amt'; 
+      n.append(' ',saveAmt); 
+    }
+    savePctWrap=n.querySelector('.pm-save-pct-wrap');
+    if(!savePctWrap){
+      savePctWrap=document.createElement('span');
+      savePctWrap.className='pm-save-pct-wrap';
+      savePctWrap.textContent='(';
+      savePct=document.createElement('span');
+      savePct.className='pm-save-pct';
+      savePctWrap.appendChild(savePct);
+      savePctWrap.append('%)');
+      n.append(' ',savePctWrap);
+    } else {
+      savePct=savePctWrap.querySelector('.pm-save-pct');
+    }
+  };
+
+  function clear(){
+    const root=$(ROOT); if(!root) return;
+    $$(PRICE,root).forEach(x=>{x.textContent=x.textContent||''; x.classList.add('pm-empty');});
+    const c=$(CMP,root); if(c){ c.textContent=''; c.classList.add('pm-empty'); }
+    if(saveAmt){ saveAmt.textContent=''; saveAmt.classList.add('pm-empty'); }
+    if(savePct){ savePct.textContent=''; }
+    if(savePctWrap){ savePctWrap.classList.add('pm-empty'); }
+  }
+
+  let byId=new Map();
+  async function init(){
+    const inline=$('script[type="application/json"][data-product],script[type="application/json"][data-product-json]');
+    const data=inline?JSON.parse(inline.textContent):await (await fetch(location.pathname.replace(/\/+$/,'')+'.js')).json();
+    byId=new Map((data.variants||[]).map(v=>[String(v.id),v]));
+    initSave();
+  }
+
+  function paint(v){
+    const root=$(ROOT); if(!root) return;
+    if(!v){ clear(); return; }
+    
+    $$(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
+    
+    const hasCmp=v.compare_at_price && cents(v.compare_at_price)>cents(v.price);
+    const c=$(CMP,root); 
+    if(c){ c.textContent=hasCmp?fmt(cents(v.compare_at_price)):''; c.classList.toggle('pm-empty',!hasCmp); }
+    
+    if(saveAmt){ 
+      if(hasCmp){
+        const s=cents(v.compare_at_price)-cents(v.price);
+        const pct=Math.round((s*100)/cents(v.compare_at_price));
+        saveAmt.textContent=fmt(s); 
+        saveAmt.classList.remove('pm-empty');
+        if(savePct){ savePct.textContent=String(pct); }
+        if(savePctWrap){ savePctWrap.classList.remove('pm-empty'); }
+      } else {
+        saveAmt.textContent=''; 
+        saveAmt.classList.add('pm-empty');
+        if(savePct){ savePct.textContent=''; }
+        if(savePctWrap){ savePctWrap.classList.add('pm-empty'); }
+      }
+    }
   }
 
   const fromId=()=>{ const id=$(VID)?.value; paint(id?byId.get(String(id)):null); };
