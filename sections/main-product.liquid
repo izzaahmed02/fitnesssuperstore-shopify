@@ -271,7 +271,7 @@
                 {% endunless %}
                 <div>
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-                    <span class="pr_custom_compare_price test1"
+                    <span class="pr_custom_compare_price"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
@@ -283,7 +283,7 @@
                       sale_price: product.metafields.custom.sale_price
                     %}
                   {% else %}
-                    <div class="price-container test1">
+                    <div class="price-container">
                       {%- render 'price',
                         product: product,
                         use_variant: true,
@@ -291,19 +291,8 @@
                         price_class: 'price--large'
                       -%}
 
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
-                      %}
+                      {{ compare_at_price | minus: price | money }}
 
-                      
-                        <span class="you-save"
-                          >You save
-                          {{
-                            product.metafields.custom.retail_price
-                            | minus: product.selected_or_first_available_variant.price
-                            | money
-                          -}}
-                        </span>
-                      {% endif %}
                     </div>
                   {% endif %}
                 </div>
@@ -803,7 +792,7 @@
 
                 <div class="product__prices hidden lg:block">
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-                    <span class="pr_custom_compare_price test2"
+                    <span class="pr_custom_compare_price"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
@@ -841,8 +830,26 @@
                     
                     </div>
                   {% endif %}
+        
+
+                      
+
+
+
+
+{% comment %}{{
+                        <span class="you-save"
+                          >You save
+                         
+                          
+                            product.metafields.custom.retail_price
+                            | minus: product.selected_or_first_available_variant.price
+                            | money
+                          -}} 
+                        </span>{% endcomment %}
                       {% endif %}
                     </div>
+                 {% comment %} {% endif %} {% endcomment %}
                 </div>
               {% render 'paylater-providers' %}
               {%- when 'tile_calculator' -%}
