@@ -3801,8 +3801,16 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
     const root = $('.product__prices');
     if (!root) return;
     
+    // Re-query save elements every time to ensure we have them
+    sWrap = $('.you-save');
+    if (sWrap) {
+      sAmt = sWrap.querySelector('.pm-save-amt');
+      sPctWrap = sWrap.querySelector('.pm-save-pct-wrap');
+      sPct = sPctWrap ? sPctWrap.querySelector('.pm-save-pct') : null;
+    }
+    
     // Update prices
-    $$('.price-item--sale.price-item--last, .price-item-fixed', root).forEach(x => {
+    $('.price-item--sale.price-item--last, .price-item-fixed', root).forEach(x => {
       if (v) {
         x.textContent = fmt(v.price);
         x.classList.remove('pm-empty');
@@ -3826,8 +3834,6 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
     }
     
     // Update "You save"
-    if (!sWrap) initSave();
-    
     if (sWrap && sAmt) {
       if (hasCmp) {
         const s = cents(v.compare_at_price) - cents(v.price);
