@@ -3748,20 +3748,160 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
 <style>.pm-empty{visibility:hidden!important}</style>
 <script>
 if(!window.__pmMin){window.__pmMin=1;(function(){
-  const $=(s,r=document)=>r.querySelector(s),$=(s,r=document)=>Array.from(r.querySelectorAll(s));
-  const FMT={{ shop.money_format | json }},cents=n=>Number.isFinite(+n)?Math.round(+n):null;
-  const fmt=c=>{const n=cents(c)??0;if(window.Shopify?.formatMoney)return Shopify.formatMoney(n,FMT);const v=(n/100).toFixed(2);return typeof FMT==='string'?FMT.replace(/\{\{\s*amount\s*\}\}/g,v).replace(/\{\{\s*amount_no_decimals\s*\}\}/g,Math.round(n/100))||'+v:'+v};
+  const $=(s,r=document)=>r.querySelector(s);
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   
-  let byId,sWrap,sAmt,sPct;
-  const initSave=()=>{sWrap=$('.you-save');if(!sWrap)return;sAmt=sWrap.querySelector('.pm-save-amt')||Object.assign(document.createElement('span'),{className:'pm-save-amt'});sWrap.append(sAmt);const pw=sWrap.querySelector('.pm-save-pct-wrap')||Object.assign(document.createElement('span'),{className:'pm-save-pct-wrap',textContent:'('});sPct=pw.querySelector('.pm-save-pct')||Object.assign(document.createElement('span'),{className:'pm-save-pct'});pw.append(sPct,'%)');sWrap.append(' ',pw);sWrap.setAttribute('aria-live','polite')};
+  const FMT = {{ shop.money_format | json }};
+  const cents = n => Number.isFinite(+n) ? Math.round(+n) : null;
   
-  const paint=v=>{const r=$('.product__prices');if(!r)return;$('.price-item--sale.price-item--last, .price-item-fixed',r).forEach(x=>{x.textContent=v?fmt(v.price):'';x.classList.toggle('pm-empty',!v)});const c=$('.pr_custom_compare_price s',r),hasCmp=v?.compare_at_price&&cents(v.compare_at_price)>cents(v.price);if(c){c.textContent=hasCmp?fmt(v.compare_at_price):'';c.classList.toggle('pm-empty',!hasCmp)}if(sWrap&&sAmt){if(hasCmp){const s=cents(v.compare_at_price)-cents(v.price);sAmt.textContent=fmt(s);if(sPct)sPct.textContent=Math.round(s*100/cents(v.compare_at_price));sWrap.classList.remove('pm-empty')}else{sAmt.textContent='';if(sPct)sPct.textContent='';sWrap.classList.add('pm-empty')}}};
+  const fmt = c => {
+    const n = cents(c) ?? 0;
+    if (window.Shopify?.formatMoney) return Shopify.formatMoney(n, FMT);
+    const v = (n/100).toFixed(2);
+    if (typeof FMT === 'string') {
+      return FMT.replace(/\{\{\s*amount\s*\}\}/g, v)
+                .replace(/\{\{\s*amount_no_decimals\s*\}\}/g, Math.round(n/100)) || '$'+v;
+    }
+    return '$'+v;
+  };
   
-  const update=()=>{const id=$('.product-variant-id')?.value;paint(id?byId.get(id):null)};
+  let byId = new Map();
+  let sWrap, sAmt, sPct, sPctWrap;
   
-  document.addEventListener('DOMContentLoaded',async()=>{try{const inline=$('script[type="application/json"][data-product]');const data=inline?JSON.parse(inline.textContent):await(await fetch(location.pathname.replace(/\/+$/,'')+'.js')).json();byId=new Map((data.variants||[]).map(v=>[String(v.id),v]));initSave();setTimeout(update,100);const el=$('.product-variant-id');if(el){el.addEventListener('change',update);new MutationObserver(update).observe(el,{attributes:1,attributeFilter:['value']})}}catch(e){paint()}});
+  const initSave = () => {
+    sWrap = $('.you-save');
+    if (!sWrap) return;
+    
+    sAmt = sWrap.querySelector('.pm-save-amt');
+    if (!sAmt) {
+      sAmt = document.createElement('span');
+      sAmt.className = 'pm-save-amt';
+      sWrap.appendChild(sAmt);
+    }
+    
+    sPctWrap = sWrap.querySelector('.pm-save-pct-wrap');
+    if (!sPctWrap) {
+      sPctWrap = document.createElement('span');
+      sPctWrap.className = 'pm-save-pct-wrap';
+      sPctWrap.textContent = '(';
+      sPct = document.createElement('span');
+      sPct.className = 'pm-save-pct';
+      sPctWrap.appendChild(sPct);
+      sPctWrap.append('%)');
+      sWrap.appendChild(document.createTextNode(' '));
+      sWrap.appendChild(sPctWrap);
+    } else {
+      sPct = sPctWrap.querySelector('.pm-save-pct');
+    }
+    
+    sWrap.setAttribute('aria-live', 'polite');
+  };
   
-  document.addEventListener('variant:change',e=>paint(e?.detail?.variant?.id?byId.get(String(e.detail.variant.id)):null));
-  document.addEventListener('shopify:section:load',()=>setTimeout(update,100));
+  const paint = v => {
+    const root = $('.product__prices');
+    if (!root) return;
+    
+    // Update prices
+    $$('.price-item--sale.price-item--last, .price-item-fixed', root).forEach(x => {
+      if (v) {
+        x.textContent = fmt(v.price);
+        x.classList.remove('pm-empty');
+      } else {
+        x.textContent = '';
+        x.classList.add('pm-empty');
+      }
+    });
+    
+    // Update compare-at price
+    const hasCmp = v && v.compare_at_price && cents(v.compare_at_price) > cents(v.price);
+    const cEl = $('.pr_custom_compare_price s', root);
+    if (cEl) {
+      if (hasCmp) {
+        cEl.textContent = fmt(v.compare_at_price);
+        cEl.classList.remove('pm-empty');
+      } else {
+        cEl.textContent = '';
+        cEl.classList.add('pm-empty');
+      }
+    }
+    
+    // Update "You save"
+    if (!sWrap) initSave();
+    
+    if (sWrap && sAmt) {
+      if (hasCmp) {
+        const s = cents(v.compare_at_price) - cents(v.price);
+        const pct = Math.round((s * 100) / cents(v.compare_at_price));
+        
+        sAmt.textContent = fmt(s);
+        sAmt.classList.remove('pm-empty');
+        
+        if (sPct) {
+          sPct.textContent = String(pct);
+        }
+        if (sPctWrap) {
+          sPctWrap.classList.remove('pm-empty');
+        }
+        sWrap.classList.remove('pm-empty');
+      } else {
+        sAmt.textContent = '';
+        sAmt.classList.add('pm-empty');
+        if (sPct) sPct.textContent = '';
+        if (sPctWrap) sPctWrap.classList.add('pm-empty');
+        sWrap.classList.add('pm-empty');
+      }
+    }
+  };
+  
+  const update = () => {
+    const idEl = $('.product-variant-id');
+    const id = idEl?.value;
+    if (id && byId.has(String(id))) {
+      paint(byId.get(String(id)));
+    } else {
+      paint(null);
+    }
+  };
+  
+  // Event listeners
+  document.addEventListener('variant:change', e => {
+    if (e?.detail?.variant) {
+      paint(e.detail.variant);
+    } else {
+      update();
+    }
+  });
+  
+  document.addEventListener('shopify:section:load', () => {
+    initSave();
+    setTimeout(update, 100);
+  });
+  
+  // Initialize
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const inline = $('script[type="application/json"][data-product]');
+      const data = inline 
+        ? JSON.parse(inline.textContent) 
+        : await (await fetch(location.pathname.replace(/\/+$/, '') + '.js')).json();
+      
+      byId = new Map((data.variants || []).map(v => [String(v.id), v]));
+      
+      initSave();
+      setTimeout(update, 100);
+      
+      const idEl = $('.product-variant-id');
+      if (idEl) {
+        idEl.addEventListener('change', update);
+        new MutationObserver(update).observe(idEl, {
+          attributes: true,
+          attributeFilter: ['value']
+        });
+      }
+    } catch (e) {
+      console.error('Price update init error:', e);
+      paint(null);
+    }
+  });
 })();}
 </script>
