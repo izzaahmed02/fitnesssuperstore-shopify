@@ -3753,15 +3753,11 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const cents=n=>Number.isFinite(+n)?Math.round(+n):null, fmt=c=>"$"+((c||0)/100).toFixed(2);
 
-  const saveAmt=(()=>{ const n=$(SAVE); if(!n) return null;
-    let a=n.querySelector('.pm-save-amt'); if(!a){ a=document.createElement('span'); a.className='pm-save-amt'; n.append(' ',a); }
-    return a; })();
-
   function clear(){
     const root=$(ROOT); if(!root) return;
     $$(PRICE,root).forEach(x=>{x.textContent=x.textContent||''; x.classList.add('pm-empty');});
     const c=$(CMP,root); if(c){ c.textContent=''; c.classList.add('pm-empty'); }
-    if(saveAmt){ saveAmt.textContent=''; saveAmt.classList.add('pm-empty'); }
+    const saveEl=$(SAVE); if(saveEl){ saveEl.textContent=''; saveEl.classList.add('pm-empty'); }
   }
 
   let byId=new Map();
@@ -3774,13 +3770,23 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
   function paint(v){
     const root=$(ROOT); if(!root) return;
     if(!v){ clear(); return; }
+    
     $$(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
+    
     const hasCmp=v.compare_at_price && cents(v.compare_at_price)>cents(v.price);
-    const c=$(CMP,root); if(c){ c.textContent=hasCmp?fmt(cents(v.compare_at_price)):''; c.classList.toggle('pm-empty',!hasCmp); }
-    if(saveAmt){ 
-      const s=hasCmp?cents(v.compare_at_price)-cents(v.price):null;
-      saveAmt.textContent=s?fmt(s):''; 
-      saveAmt.classList.toggle('pm-empty',!s); 
+    const c=$(CMP,root); 
+    if(c){ c.textContent=hasCmp?fmt(cents(v.compare_at_price)):''; c.classList.toggle('pm-empty',!hasCmp); }
+    
+    const saveEl=$(SAVE);
+    if(saveEl){ 
+      if(hasCmp){
+        const s=cents(v.compare_at_price)-cents(v.price);
+        saveEl.textContent='You save '+fmt(s);
+        saveEl.classList.remove('pm-empty');
+      } else {
+        saveEl.textContent='';
+        saveEl.classList.add('pm-empty');
+      }
     }
   }
 
