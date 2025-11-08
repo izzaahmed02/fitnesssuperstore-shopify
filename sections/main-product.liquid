@@ -3877,29 +3877,26 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
 <style>.pm-empty{visibility:hidden!important}</style>
 <script>
 if(!window.__pmMin){window.__pmMin=1;(function(){
-  const ROOT = '.product__prices';
+  const ROOT = '.product__prices'; // one instance per price block
 
   const SELECTORS = {
     PRICE: '.price-item--sale.price-item--last, .price-item-fixed',
     CMP: '.pr_custom_compare_price s',
     SAVE: '.you-save',
-    VID:  '.product-variant-id, input[name="id"]',
+    VID: '.product-variant-id',
     PRODUCT_JSON: 'script[type="application/json"][data-product],script[type="application/json"][data-product-json]'
   };
 
   const cents = n => Number.isFinite(+n) ? Math.round(+n) : null;
   const fmt   = c => "$" + ((c || 0) / 100).toFixed(2);
 
-  // Shared caches so desktop & mobile blocks can share data
-  const productCacheByHandle = new Map();  // handle -> {variants:[]}
-  const productCacheById     = new Map();  // variantId -> variant
-
-  // Try to extract a product handle near a block
+  // Try to extract a product handle from common DOM patterns
   function findHandleNear(el){
+    // explicit data attribute on card/section?
     const attr = el.closest('[data-product-handle]')?.getAttribute('data-product-handle');
     if (attr) return attr.replace(/^\/products\//,'').replace(/\/+$/,'');
-    const container = el.closest('[data-product-id], section, .product, .card, .grid__item') || document;
-    const link = container.querySelector('a[href*="/products/"]');
+    // any product link inside the same card?
+    const link = el.closest('[data-product-id], .product, section, .card, .grid__item')?.querySelector('a[href*="/products/"]');
     if (link){
       try {
         const url = new URL(link.href, location.origin);
@@ -3908,6 +3905,7 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
         if (i>=0 && parts[i+1]) return parts[i+1].replace(/\/+$/,'');
       } catch(_){}
     }
+    // if we're on a product page already
     if (/\/products\//.test(location.pathname)){
       const parts = location.pathname.split('/').filter(Boolean);
       const i = parts.indexOf('products');
@@ -3921,8 +3919,8 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
       this.root = root;
       this.$  = (sel, r=this.root) => r.querySelector(sel);
       this.$$ = (sel, r=this.root) => Array.from(r.querySelectorAll(sel));
-      this.variants = [];
       this.byId = new Map();
+      this.variants = [];
       this.form = null;
       this.boundFormChange = this.onFormChange.bind(this);
     }
@@ -3937,7 +3935,6 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
       if(!v){ this.clear(); return; }
       // price
       this.$$(SELECTORS.PRICE).forEach(x => { x.textContent = fmt(cents(v.price)); x.classList.remove('pm-empty'); });
-
       // compare-at
       const hasCmp = v.compare_at_price && cents(v.compare_at_price) > cents(v.price);
       const c = this.$(SELECTORS.CMP);
@@ -3945,7 +3942,6 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
         c.textContent = hasCmp ? fmt(cents(v.compare_at_price)) : '';
         c.classList.toggle('pm-empty', !hasCmp);
       }
-
       // you save
       const save = this.$(SELECTORS.SAVE);
       if (save){
@@ -3960,105 +3956,98 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
       }
     }
 
-    // ---------- Resolve current variant ----------
-    findVariantIdEl(){
-      // Prefer inside/near this block
-      let el = this.$(SELECTORS.VID);
-      if (el) return el;
-
-      // Try the associated form (nearby or parent)
-      const container = this.root.closest('[data-product-id], section, .product, .card, .grid__item') || document;
-      const form = container.querySelector('form[action*="/cart/add"]');
-      if (form) return form.querySelector(SELECTORS.VID);
-
-      // Fallback: any id input on the page
-      return document.querySelector(SELECTORS.VID);
-    }
-
-    currentVariantFromIdLocal(){
-      const el = this.findVariantIdEl();
-      const id = el?.value || el?.getAttribute('value');
+    // ---- Variant resolution ----
+    currentVariantFromId(){
+      const idEl = this.findVariantIdEl();
+      const id = idEl?.value || idEl?.getAttribute('value');
       return id ? this.byId.get(String(id)) : null;
     }
 
-    currentVariantFromIdGlobal(){
-      if (!this.byId.size) return null;
-      const allIdEls = document.querySelectorAll('input[name="id"], .product-variant-id');
-      for (const el of allIdEls){
-        const val = el?.value || el?.getAttribute('value');
-        if (val && this.byId.has(String(val))) return this.byId.get(String(val));
+    findVariantIdEl(){
+      // inside this block first
+      let el = this.$(SELECTORS.VID);
+      if (el) return el;
+      // inside the form associated with this block
+      if (this.form) {
+        el = this.form.querySelector(SELECTORS.VID);
+        if (el) return el;
       }
-      return null;
+      // fallback: closest container
+      const container = this.root.closest('[data-product-id], section, .product, .card, .grid__item') || document;
+      return container.querySelector(SELECTORS.VID);
     }
 
     currentVariantFromOptions(){
-      // Look for option1/2/3 in a nearby form
-      const container = this.root.closest('[data-product-id], section, .product, .card, .grid__item') || document;
-      const form = container.querySelector('form[action*="/cart/add"]');
-      if (!form || !this.variants.length) return null;
+      if (!this.form || !this.variants.length) return null;
 
+      // Collect selected option values from selects/radios in the form
       const getVal = (name) => {
-        const field = form.querySelector(`[name="${name}"]`);
-        if (field) {
-          if (field.tagName === 'SELECT') return field.value;
-          if (field.type === 'hidden' || field.type === 'text') return field.value;
+        // select or input[name="optionX"]
+        const sel = this.form.querySelector(`[name="${name}"]`);
+        if (sel) {
+          if (sel.tagName === 'SELECT') return sel.value;
+          if (sel.type === 'hidden' || sel.type === 'text') return sel.value;
         }
-        const radios = form.querySelectorAll(`input[name="${name}"]`);
+        // radio group
+        const radios = this.form.querySelectorAll(`input[name="${name}"]`);
         for (const r of radios) if (r.checked) return r.value;
         return null;
       };
 
-      const o1 = getVal('option1'), o2 = getVal('option2'), o3 = getVal('option3');
-      const opts = [o1, o2, o3].filter(Boolean);
-      if (!opts.length) return this.variants.length === 1 ? this.variants[0] : null;
+      const o1 = getVal('option1');
+      const o2 = getVal('option2');
+      const o3 = getVal('option3');
 
-      return this.variants.find(v =>
+      // Fallback: Dawn sets data-indexed option inputs; collect generically
+      const opts = [o1, o2, o3].filter(v => v != null);
+
+      if (!opts.length){
+        // no explicit options found; if there is only one variant, return it
+        if (this.variants.length === 1) return this.variants[0];
+        return null;
+      }
+
+      // Find a variant whose options match all provided selections
+      const match = this.variants.find(v =>
         (!opts[0] || v.option1 === opts[0]) &&
         (!opts[1] || v.option2 === opts[1]) &&
         (!opts[2] || v.option3 === opts[2])
-      ) || null;
+      );
+
+      return match || null;
     }
 
     resolveCurrentVariant(){
-      return (
-        this.currentVariantFromIdLocal() ||
-        this.currentVariantFromIdGlobal() ||  // catches sticky mobile bar
-        this.currentVariantFromOptions() ||
-        this.variants[0] ||
-        null
-      );
+      return this.currentVariantFromId() || this.currentVariantFromOptions() || this.variants[0] || null;
     }
 
-    // ---------- Data loading ----------
+    // ---- Data loading ----
     async loadProductData(){
-      // 1) Use inline JSON near this block (desktop or mobile copy)
-      let data = null;
+      // Prefer inline JSON near this block
       let jsonEl = this.$(SELECTORS.PRODUCT_JSON);
       if (!jsonEl){
         const container = this.root.closest('[data-product-id], section, .product, .card, .grid__item');
         if (container) jsonEl = container.querySelector(SELECTORS.PRODUCT_JSON);
       }
+
+      let data = null;
+
       if (jsonEl){
         try { data = JSON.parse(jsonEl.textContent || '{}'); } catch(_){}
       }
 
-      // 2) If still missing, try cache by handle or fetch
       if (!data || !Array.isArray(data.variants) || !data.variants.length){
+        // Try to derive product handle and fetch
         const handle = findHandleNear(this.root);
         if (handle){
-          if (productCacheByHandle.has(handle)){
-            data = productCacheByHandle.get(handle);
-          } else {
-            try {
-              const res = await fetch(`/products/${handle}.js`);
-              if (res.ok) data = await res.json();
-              if (data && Array.isArray(data.variants)) productCacheByHandle.set(handle, data);
-            } catch(_){}
-          }
+          try {
+            const res = await fetch(`/products/${handle}.js`);
+            if (res.ok) data = await res.json();
+          } catch(_){}
         }
       }
 
-      // 3) As a last resort on product page, fetch the page product
+      // On full product page where the page describes one product, as final fallback:
       if ((!data || !Array.isArray(data.variants) || !data.variants.length) && /\/products\//.test(location.pathname)){
         try {
           const res = await fetch(location.pathname.replace(/\/+$/,'') + '.js');
@@ -4066,78 +4055,53 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
         } catch(_){}
       }
 
-      // 4) Populate maps and global cache by variant id (so the other block can reuse)
       if (data && Array.isArray(data.variants)){
         this.variants = data.variants;
-        this.byId = new Map(this.variants.map(v => {
-          productCacheById.set(String(v.id), v);
-          return [String(v.id), v];
-        }));
+        this.byId = new Map(this.variants.map(v => [String(v.id), v]));
       } else {
-        // Fallback: if any id input matches a cached variant, build from cache
-        const candidates = Array.from(document.querySelectorAll('input[name="id"], .product-variant-id'))
-          .map(el => String(el.value || el.getAttribute('value')))
-          .filter(Boolean);
-        const variants = candidates
-          .map(id => productCacheById.get(id))
-          .filter(Boolean);
-        this.variants = variants;
-        this.byId = new Map(variants.map(v => [String(v.id), v]));
+        this.variants = [];
+        this.byId.clear();
       }
     }
 
-    // ---------- Init ----------
-    attachLocalFormListeners(){
-      // Listen to nearby form for quick updates (desktop block, mobile block)
-      const container = this.root.closest('[data-product-id], section, .product, .card, .grid__item') || document;
-      const form = container.querySelector('form[action*="/cart/add"]');
-      if (!form) return;
-      // Use input+change (mobile radios often fire input first)
-      form.addEventListener('input',  (e)=>this.maybeRepaint(e), {passive:true});
-      form.addEventListener('change', (e)=>this.maybeRepaint(e), {passive:true});
+    attachForm(){
+      // Find the form that controls this block (nearby or parent)
+      this.form =
+        this.root.closest('form[action*="/cart/add"]') ||
+        this.root.parentElement?.querySelector('form[action*="/cart/add"]') ||
+        this.root.querySelector('form[action*="/cart/add"]');
+
+      if (this.form){
+        this.form.removeEventListener('change', this.boundFormChange);
+        this.form.addEventListener('change', this.boundFormChange);
+      }
     }
 
-    maybeRepaint(e){
+    onFormChange(e){
       const name = e.target?.name || '';
-      if (name.includes('option') || name === 'id'){
-        setTimeout(() => this.paint(this.resolveCurrentVariant()), 60);
+      if (name.includes('option') || name.includes('id')){
+        setTimeout(() => this.paint(this.resolveCurrentVariant()), 100);
       }
     }
 
     async init(){
       await this.loadProductData();
-      this.attachLocalFormListeners();
-      // Initial render (after a small delay so sticky bars can sync their id)
-      setTimeout(() => this.paint(this.resolveCurrentVariant()), 50);
+      this.attachForm();
+      this.paint(this.resolveCurrentVariant());
     }
   }
 
-  // Track all blocks so global events can repaint both desktop+mobile copies
-  const blocks = new Set();
-
-  function bootAll(context=document){
-    context.querySelectorAll(ROOT).forEach(root => {
+  function bootAll(){
+    document.querySelectorAll(ROOT).forEach(root => {
       if (root.__pmPricesInit) return;
       root.__pmPricesInit = true;
       const comp = new PriceBlock(root);
-      blocks.add(comp);
-      comp.init().catch(()=>{});
+      comp.init().catch(()=>{ /* fail silently per block */ });
     });
   }
 
-  document.addEventListener('DOMContentLoaded', ()=>bootAll());
+  document.addEventListener('DOMContentLoaded', bootAll);
   if (document.readyState !== 'loading') bootAll();
-  document.addEventListener('shopify:section:load', (e)=> bootAll(e.target || document));
-
-  // Global capture listeners: catch sticky mobile bar / quick add forms anywhere
-  const globalHandler = (e) => {
-    const name = e.target?.name || '';
-    if (name && (name.includes('option') || name === 'id')){
-      setTimeout(() => { blocks.forEach(b => b.paint(b.resolveCurrentVariant())); }, 60);
-    }
-  };
-  document.addEventListener('input',  globalHandler, true);
-  document.addEventListener('change', globalHandler, true);
 
 })(); }
 </script>
