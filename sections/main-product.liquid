@@ -3777,7 +3777,7 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
     const root=$(ROOT); if(!root) return;
     if(!v){ clear(); return; }
     
-    $$(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
+    $(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
     
     const hasCmp=v.compare_at_price && cents(v.compare_at_price)>cents(v.price);
     const c=$(CMP,root); 
@@ -3786,41 +3786,36 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
     const sw=$(SAVE);
     if(sw){
       let amt=sw.querySelector('.pm-save-amt');
-      if(!amt){ amt=document.createElement('span'); amt.className='pm-save-amt'; sw.appendChild(amt); }
-      
-      let pctw=sw.querySelector('.pm-save-pct-wrap');
-      if(!pctw){
-        pctw=document.createElement('span');
-        pctw.className='pm-save-pct-wrap';
-        pctw.textContent='(';
-        const pct=document.createElement('span');
-        pct.className='pm-save-pct';
-        pctw.appendChild(pct);
-        pctw.appendChild(document.createTextNode('%)'));
-        sw.appendChild(document.createTextNode(' '));
-        sw.appendChild(pctw);
+      if(!amt){ 
+        amt=document.createElement('span'); 
+        amt.className='pm-save-amt'; 
+        sw.appendChild(amt); 
       }
-      const pct=pctw.querySelector('.pm-save-pct');
       
       if(hasCmp){
-        const s=cents(v.compare_at_price)-cents(v.price);
-        const p=Math.round((s*100)/cents(v.compare_at_price));
-        amt.textContent=fmt(s);
+        const saveAmount=cents(v.compare_at_price)-cents(v.price);
+        amt.textContent=fmt(saveAmount);
         amt.classList.remove('pm-empty');
-        if(pct) pct.textContent=String(p);
-        pctw.classList.remove('pm-empty');
+        sw.classList.remove('pm-empty');
       } else {
         amt.textContent='';
         amt.classList.add('pm-empty');
-        if(pct) pct.textContent='';
-        pctw.classList.add('pm-empty');
+        sw.classList.add('pm-empty');
       }
     }
   }
 
   const fromId=()=>{ const id=$(VID)?.value; paint(id?byId.get(String(id)):null); };
 
-  document.addEventListener('variant:change',e=>paint(e?.detail?.variant||byId.get($(VID)?.value)||null));
+  document.addEventListener('variant:change',e=>{
+    const v=e?.detail?.variant;
+    if(v && v.id){
+      paint(byId.get(String(v.id))||v);
+    } else {
+      const id=$(VID)?.value;
+      paint(id?byId.get(String(id)):null);
+    }
+  });
   document.addEventListener('shopify:section:load',()=>setTimeout(fromId));
   const idEl=$(VID); if(idEl){ idEl.addEventListener('change',fromId); new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']}); }
 
