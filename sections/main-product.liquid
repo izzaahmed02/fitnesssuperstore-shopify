@@ -3753,39 +3753,40 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const cents=n=>Number.isFinite(+n)?Math.round(+n):null, fmt=c=>"$"+((c||0)/100).toFixed(2);
 
-  let saveAmt, savePct, savePctWrap;
-  
   const initSave=()=>{ 
     const n=$(SAVE); 
-    if(!n) return;
-    saveAmt=n.querySelector('.pm-save-amt'); 
-    if(!saveAmt){ 
-      saveAmt=document.createElement('span'); 
-      saveAmt.className='pm-save-amt'; 
-      n.append(' ',saveAmt); 
+    if(!n) return null;
+    let amt=n.querySelector('.pm-save-amt'); 
+    if(!amt){ 
+      amt=document.createElement('span'); 
+      amt.className='pm-save-amt'; 
+      n.append(' ',amt); 
     }
-    savePctWrap=n.querySelector('.pm-save-pct-wrap');
-    if(!savePctWrap){
-      savePctWrap=document.createElement('span');
-      savePctWrap.className='pm-save-pct-wrap';
-      savePctWrap.textContent='(';
-      savePct=document.createElement('span');
-      savePct.className='pm-save-pct';
-      savePctWrap.appendChild(savePct);
-      savePctWrap.append('%)');
-      n.append(' ',savePctWrap);
-    } else {
-      savePct=savePctWrap.querySelector('.pm-save-pct');
+    let pctWrap=n.querySelector('.pm-save-pct-wrap');
+    if(!pctWrap){
+      pctWrap=document.createElement('span');
+      pctWrap.className='pm-save-pct-wrap';
+      pctWrap.textContent='(';
+      const pct=document.createElement('span');
+      pct.className='pm-save-pct';
+      pctWrap.appendChild(pct);
+      pctWrap.append('%)');
+      n.append(' ',pctWrap);
     }
+    return {amt, pctWrap, pct: pctWrap.querySelector('.pm-save-pct')};
   };
 
   function clear(){
     const root=$(ROOT); if(!root) return;
-    $$(PRICE,root).forEach(x=>{x.textContent=x.textContent||''; x.classList.add('pm-empty');});
+    $(PRICE,root).forEach(x=>{x.textContent=x.textContent||''; x.classList.add('pm-empty');});
     const c=$(CMP,root); if(c){ c.textContent=''; c.classList.add('pm-empty'); }
-    if(saveAmt){ saveAmt.textContent=''; saveAmt.classList.add('pm-empty'); }
-    if(savePct){ savePct.textContent=''; }
-    if(savePctWrap){ savePctWrap.classList.add('pm-empty'); }
+    const save=initSave();
+    if(save){ 
+      save.amt.textContent=''; 
+      save.amt.classList.add('pm-empty'); 
+      if(save.pct) save.pct.textContent='';
+      if(save.pctWrap) save.pctWrap.classList.add('pm-empty');
+    }
   }
 
   let byId=new Map();
@@ -3793,32 +3794,32 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
     const inline=$('script[type="application/json"][data-product],script[type="application/json"][data-product-json]');
     const data=inline?JSON.parse(inline.textContent):await (await fetch(location.pathname.replace(/\/+$/,'')+'.js')).json();
     byId=new Map((data.variants||[]).map(v=>[String(v.id),v]));
-    initSave();
   }
 
   function paint(v){
     const root=$(ROOT); if(!root) return;
     if(!v){ clear(); return; }
     
-    $$(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
+    $(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
     
     const hasCmp=v.compare_at_price && cents(v.compare_at_price)>cents(v.price);
     const c=$(CMP,root); 
     if(c){ c.textContent=hasCmp?fmt(cents(v.compare_at_price)):''; c.classList.toggle('pm-empty',!hasCmp); }
     
-    if(saveAmt){ 
+    const save=initSave();
+    if(save && save.amt){ 
       if(hasCmp){
         const s=cents(v.compare_at_price)-cents(v.price);
         const pct=Math.round((s*100)/cents(v.compare_at_price));
-        saveAmt.textContent=fmt(s); 
-        saveAmt.classList.remove('pm-empty');
-        if(savePct){ savePct.textContent=String(pct); }
-        if(savePctWrap){ savePctWrap.classList.remove('pm-empty'); }
+        save.amt.textContent=fmt(s); 
+        save.amt.classList.remove('pm-empty');
+        if(save.pct){ save.pct.textContent=String(pct); }
+        if(save.pctWrap){ save.pctWrap.classList.remove('pm-empty'); }
       } else {
-        saveAmt.textContent=''; 
-        saveAmt.classList.add('pm-empty');
-        if(savePct){ savePct.textContent=''; }
-        if(savePctWrap){ savePctWrap.classList.add('pm-empty'); }
+        save.amt.textContent=''; 
+        save.amt.classList.add('pm-empty');
+        if(save.pct){ save.pct.textContent=''; }
+        if(save.pctWrap){ save.pctWrap.classList.add('pm-empty'); }
       }
     }
   }
