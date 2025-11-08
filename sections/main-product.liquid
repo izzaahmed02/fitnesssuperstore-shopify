@@ -3792,7 +3792,28 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
 
   const fromId=()=>{ const id=$(VID)?.value; paint(id?byId.get(String(id)):null); };
 
-  document.addEventListener('variant:change',e=>paint(e?.detail?.variant||byId.get($(VID)?.value)||null));
+  document.addEventListener('variant:change',e=>{
+    console.log('Variant change event:', e?.detail?.variant);
+    const eventVariant = e?.detail?.variant;
+    const inputId = $(VID)?.value;
+    
+    // Try to get full variant data from our map
+    let variant = null;
+    if(eventVariant?.id) {
+      variant = byId.get(String(eventVariant.id));
+      console.log('Found variant in map:', variant);
+    }
+    if(!variant && inputId) {
+      variant = byId.get(String(inputId));
+      console.log('Found variant by input ID:', variant);
+    }
+    if(!variant) {
+      variant = eventVariant;
+      console.log('Using event variant:', variant);
+    }
+    
+    paint(variant);
+  });
   document.addEventListener('shopify:section:load',()=>setTimeout(fromId));
   const idEl=$(VID); if(idEl){ idEl.addEventListener('change',fromId); new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']}); }
 
