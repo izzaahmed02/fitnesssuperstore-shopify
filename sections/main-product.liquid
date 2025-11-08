@@ -3879,157 +3879,226 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
 <style>.pm-empty{visibility:hidden!important}</style>
 <script>
 if(!window.__pmMin){window.__pmMin=1;(function(){
-  // ====== Config / selectors ======
   const ROOT = '.product__prices'; // one instance per price block
+
   const SELECTORS = {
     PRICE: '.price-item--sale.price-item--last, .price-item-fixed',
     CMP: '.pr_custom_compare_price s',
     SAVE: '.you-save',
-    VID:  '.product-variant-id',
+    VID: '.product-variant-id',
     PRODUCT_JSON: 'script[type="application/json"][data-product],script[type="application/json"][data-product-json]'
   };
 
   const cents = n => Number.isFinite(+n) ? Math.round(+n) : null;
   const fmt   = c => "$" + ((c || 0) / 100).toFixed(2);
 
+  // Try to extract a product handle from common DOM patterns
+  function findHandleNear(el){
+    // explicit data attribute on card/section?
+    const attr = el.closest('[data-product-handle]')?.getAttribute('data-product-handle');
+    if (attr) return attr.replace(/^\/products\//,'').replace(/\/+$/,'');
+    // any product link inside the same card?
+    const link = el.closest('[data-product-id], .product, section, .card, .grid__item')?.querySelector('a[href*="/products/"]');
+    if (link){
+      try {
+        const url = new URL(link.href, location.origin);
+        const parts = url.pathname.split('/').filter(Boolean);
+        const i = parts.indexOf('products');
+        if (i>=0 && parts[i+1]) return parts[i+1].replace(/\/+$/,'');
+      } catch(_){}
+    }
+    // if we're on a product page already
+    if (/\/products\//.test(location.pathname)){
+      const parts = location.pathname.split('/').filter(Boolean);
+      const i = parts.indexOf('products');
+      if (i>=0 && parts[i+1]) return parts[i+1].replace(/\/+$/,'');
+    }
+    return null;
+  }
+
   class PriceBlock {
     constructor(root){
       this.root = root;
-      // Scope helpers
       this.$  = (sel, r=this.root) => r.querySelector(sel);
       this.$$ = (sel, r=this.root) => Array.from(r.querySelectorAll(sel));
-
       this.byId = new Map();
-      this.boundOnFormChange = this.onFormChange.bind(this);
+      this.variants = [];
+      this.form = null;
+      this.boundFormChange = this.onFormChange.bind(this);
     }
 
     clear(){
-      this.$$(SELECTORS.PRICE).forEach(x => {
-        x.textContent = x.textContent || '';
-        x.classList.add('pm-empty');
-      });
-      const c = this.$(SELECTORS.CMP);
-      if (c) { c.textContent = ''; c.classList.add('pm-empty'); }
-      const saveEl = this.$(SELECTORS.SAVE);
-      if (saveEl) { saveEl.textContent = ''; saveEl.classList.add('pm-empty'); }
+      this.$$(SELECTORS.PRICE).forEach(x => { x.textContent = x.textContent || ''; x.classList.add('pm-empty'); });
+      const c = this.$(SELECTORS.CMP); if (c){ c.textContent=''; c.classList.add('pm-empty'); }
+      const s = this.$(SELECTORS.SAVE); if (s){ s.textContent=''; s.classList.add('pm-empty'); }
     }
 
     paint(v){
       if(!v){ this.clear(); return; }
-
-      // Price
-      this.$$(SELECTORS.PRICE).forEach(x => {
-        x.textContent = fmt(cents(v.price));
-        x.classList.remove('pm-empty');
-      });
-
-      // Compare-at
+      // price
+      this.$$(SELECTORS.PRICE).forEach(x => { x.textContent = fmt(cents(v.price)); x.classList.remove('pm-empty'); });
+      // compare-at
       const hasCmp = v.compare_at_price && cents(v.compare_at_price) > cents(v.price);
       const c = this.$(SELECTORS.CMP);
-      if (c) {
+      if (c){
         c.textContent = hasCmp ? fmt(cents(v.compare_at_price)) : '';
         c.classList.toggle('pm-empty', !hasCmp);
       }
-
-      // You save
-      const saveEl = this.$(SELECTORS.SAVE);
-      if (saveEl) {
-        if (hasCmp) {
+      // you save
+      const save = this.$(SELECTORS.SAVE);
+      if (save){
+        if (hasCmp){
           const s = cents(v.compare_at_price) - cents(v.price);
-          saveEl.textContent = 'You save ' + fmt(s);
-          saveEl.classList.remove('pm-empty');
+          save.textContent = 'You save ' + fmt(s);
+          save.classList.remove('pm-empty');
         } else {
-          saveEl.textContent = '';
-          saveEl.classList.add('pm-empty');
+          save.textContent = '';
+          save.classList.add('pm-empty');
         }
       }
     }
 
-    fromId(){
+    // ---- Variant resolution ----
+    currentVariantFromId(){
       const idEl = this.findVariantIdEl();
-      const id = idEl?.value;
-      const v = id ? this.byId.get(String(id)) : null;
-      this.paint(v);
+      const id = idEl?.value || idEl?.getAttribute('value');
+      return id ? this.byId.get(String(id)) : null;
     }
 
     findVariantIdEl(){
-      // Prefer an ID field inside the same product card/section
-      let idEl = this.$(SELECTORS.VID);
-      if (idEl) return idEl;
-
-      // Try a nearby form first
-      const form = this.root.closest('form[action*="/cart/add"]') || this.root.parentElement?.querySelector('form[action*="/cart/add"]');
-      idEl = form?.querySelector(SELECTORS.VID);
-      if (idEl) return idEl;
-
-      // Fallback: search upward for a container then within it
+      // inside this block first
+      let el = this.$(SELECTORS.VID);
+      if (el) return el;
+      // inside the form associated with this block
+      if (this.form) {
+        el = this.form.querySelector(SELECTORS.VID);
+        if (el) return el;
+      }
+      // fallback: closest container
       const container = this.root.closest('[data-product-id], section, .product, .card, .grid__item') || document;
       return container.querySelector(SELECTORS.VID);
     }
 
-    attachFormListener(){
-      // Attach to the form associated with this block
-      const form = this.root.closest('form[action*="/cart/add"]') || this.root.parentElement?.querySelector('form[action*="/cart/add"]');
-      if (!form) return;
-      form.removeEventListener('change', this.boundOnFormChange);
-      form.addEventListener('change', this.boundOnFormChange);
-    }
+    currentVariantFromOptions(){
+      if (!this.form || !this.variants.length) return null;
 
-    onFormChange(e){
-      // Only react to option/id changes
-      const name = e.target?.name || '';
-      if (name.includes('option') || name.includes('id')) {
-        // Give theme a tick to update hidden variant id
-        setTimeout(() => this.fromId(), 100);
+      // Collect selected option values from selects/radios in the form
+      const getVal = (name) => {
+        // select or input[name="optionX"]
+        const sel = this.form.querySelector(`[name="${name}"]`);
+        if (sel) {
+          if (sel.tagName === 'SELECT') return sel.value;
+          if (sel.type === 'hidden' || sel.type === 'text') return sel.value;
+        }
+        // radio group
+        const radios = this.form.querySelectorAll(`input[name="${name}"]`);
+        for (const r of radios) if (r.checked) return r.value;
+        return null;
+      };
+
+      const o1 = getVal('option1');
+      const o2 = getVal('option2');
+      const o3 = getVal('option3');
+
+      // Fallback: Dawn sets data-indexed option inputs; collect generically
+      const opts = [o1, o2, o3].filter(v => v != null);
+
+      if (!opts.length){
+        // no explicit options found; if there is only one variant, return it
+        if (this.variants.length === 1) return this.variants[0];
+        return null;
       }
+
+      // Find a variant whose options match all provided selections
+      const match = this.variants.find(v =>
+        (!opts[0] || v.option1 === opts[0]) &&
+        (!opts[1] || v.option2 === opts[1]) &&
+        (!opts[2] || v.option3 === opts[2])
+      );
+
+      return match || null;
     }
 
-    async initProductData(){
-      // Look for product JSON close to this block first
+    resolveCurrentVariant(){
+      return this.currentVariantFromId() || this.currentVariantFromOptions() || this.variants[0] || null;
+    }
+
+    // ---- Data loading ----
+    async loadProductData(){
+      // Prefer inline JSON near this block
       let jsonEl = this.$(SELECTORS.PRODUCT_JSON);
-      if (!jsonEl) {
-        // try within a nearby container (card/section)
+      if (!jsonEl){
         const container = this.root.closest('[data-product-id], section, .product, .card, .grid__item');
-        jsonEl = container ? container.querySelector(SELECTORS.PRODUCT_JSON) : null;
+        if (container) jsonEl = container.querySelector(SELECTORS.PRODUCT_JSON);
       }
 
-      let data;
-      if (jsonEl) {
-        data = JSON.parse(jsonEl.textContent || '{}');
-      } else {
-        // As a last resort on full product page, try the page-level product JSON
-        const globalJson = document.querySelector(SELECTORS.PRODUCT_JSON);
-        if (globalJson) {
-          data = JSON.parse(globalJson.textContent || '{}');
-        } else {
-          // Avoid fetching location pathname on collection pages (wrong product)
-          data = {};
+      let data = null;
+
+      if (jsonEl){
+        try { data = JSON.parse(jsonEl.textContent || '{}'); } catch(_){}
+      }
+
+      if (!data || !Array.isArray(data.variants) || !data.variants.length){
+        // Try to derive product handle and fetch
+        const handle = findHandleNear(this.root);
+        if (handle){
+          try {
+            const res = await fetch(`/products/${handle}.js`);
+            if (res.ok) data = await res.json();
+          } catch(_){}
         }
       }
 
-      this.byId = new Map((data.variants || []).map(v => [String(v.id), v]));
+      // On full product page where the page describes one product, as final fallback:
+      if ((!data || !Array.isArray(data.variants) || !data.variants.length) && /\/products\//.test(location.pathname)){
+        try {
+          const res = await fetch(location.pathname.replace(/\/+$/,'') + '.js');
+          if (res.ok) data = await res.json();
+        } catch(_){}
+      }
+
+      if (data && Array.isArray(data.variants)){
+        this.variants = data.variants;
+        this.byId = new Map(this.variants.map(v => [String(v.id), v]));
+      } else {
+        this.variants = [];
+        this.byId.clear();
+      }
+    }
+
+    attachForm(){
+      // Find the form that controls this block (nearby or parent)
+      this.form =
+        this.root.closest('form[action*="/cart/add"]') ||
+        this.root.parentElement?.querySelector('form[action*="/cart/add"]') ||
+        this.root.querySelector('form[action*="/cart/add"]');
+
+      if (this.form){
+        this.form.removeEventListener('change', this.boundFormChange);
+        this.form.addEventListener('change', this.boundFormChange);
+      }
+    }
+
+    onFormChange(e){
+      const name = e.target?.name || '';
+      if (name.includes('option') || name.includes('id')){
+        setTimeout(() => this.paint(this.resolveCurrentVariant()), 100);
+      }
     }
 
     async init(){
-      try {
-        await this.initProductData();
-        this.attachFormListener();
-        this.fromId(); // initial render
-      } catch(_){
-        this.clear();
-      }
+      await this.loadProductData();
+      this.attachForm();
+      this.paint(this.resolveCurrentVariant());
     }
   }
 
-  // ====== Boot: instantiate for every price block on page ======
   function bootAll(){
-    const roots = Array.from(document.querySelectorAll(ROOT));
-    roots.forEach(root => {
-      // Prevent double-init
+    document.querySelectorAll(ROOT).forEach(root => {
       if (root.__pmPricesInit) return;
       root.__pmPricesInit = true;
       const comp = new PriceBlock(root);
-      comp.init();
+      comp.init().catch(()=>{ /* fail silently per block */ });
     });
   }
 
@@ -4038,4 +4107,3 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
 
 })(); }
 </script>
-
