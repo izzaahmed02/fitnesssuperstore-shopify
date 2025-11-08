@@ -3792,23 +3792,45 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
 
   const fromId=()=>{ const id=$(VID)?.value; paint(id?byId.get(String(id)):null); };
 
-  // Hook into VariantSelects custom element
-  const variantSelects = document.querySelector('variant-selects');
-  if(variantSelects){
-    variantSelects.addEventListener('change', (e) => {
-      setTimeout(fromId, 50);
-    });
-  }
-
-  // Listen to PubSub event from VariantSelects
-  if(window.subscribe && window.PUB_SUB_EVENTS?.optionValueSelectionChange){
-    window.subscribe(window.PUB_SUB_EVENTS.optionValueSelectionChange, fromId);
-  }
-
+  // Multiple event listeners
   document.addEventListener('variant:change',e=>paint(e?.detail?.variant||byId.get($(VID)?.value)||null));
   document.addEventListener('shopify:section:load',()=>setTimeout(fromId));
-  const idEl=$(VID); if(idEl){ idEl.addEventListener('change',fromId); new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']}); }
+  
+  // Wait for DOM and set up all listeners
+  const setupListeners = () => {
+    const idEl=$(VID); 
+    if(idEl){ 
+      idEl.addEventListener('change',fromId); 
+      new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']}); 
+    }
+    
+    const variantSelects = document.querySelector('variant-selects');
+    if(variantSelects){
+      variantSelects.addEventListener('change', ()=>setTimeout(fromId, 100));
+    }
+    
+    // Also listen to any radio/select changes in product form
+    const productForm = document.querySelector('form[action*="/cart/add"]');
+    if(productForm){
+      productForm.addEventListener('change', (e)=>{
+        if(e.target.name && (e.target.name.includes('option') || e.target.name.includes('id'))){
+          setTimeout(fromId, 100);
+        }
+      });
+    }
+  };
 
-  document.addEventListener('DOMContentLoaded',async()=>{ try{ await init(); fromId(); }catch(_){ clear(); } });
+  document.addEventListener('DOMContentLoaded',async()=>{ 
+    try{ 
+      await init(); 
+      setupListeners();
+      fromId(); 
+    }catch(_){ clear(); } 
+  });
+  
+  // Also try setting up listeners immediately in case DOM is already loaded
+  if(document.readyState !== 'loading') {
+    init().then(()=>{setupListeners(); fromId();}).catch(()=>clear());
+  }
 })(); }
 </script>
