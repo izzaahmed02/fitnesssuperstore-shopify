@@ -293,6 +293,13 @@
 
                       {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
                       %}
+
+                      {% assign v = product.selected_or_first_available_variant %}
+{% assign retail_cents = product.metafields.custom.retail_price | times: 100 %}
+{% assign savings = retail_cents | minus: v.price %}
+
+{{ savings | money }}
+
                         <span class="you-save"
                           >You save
                           {{
