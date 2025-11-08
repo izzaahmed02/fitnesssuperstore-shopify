@@ -3890,6 +3890,9 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
   const cents = n => Number.isFinite(+n) ? Math.round(+n) : null;
   const fmt   = c => "$" + ((c || 0) / 100).toFixed(2);
 
+  // Store all price block instances globally
+  const allPriceBlocks = [];
+
   // Try to extract a product handle from common DOM patterns
   function findHandleNear(el){
     // explicit data attribute on card/section?
@@ -4071,8 +4074,9 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
         this.root.parentElement?.querySelector('form[action*="/cart/add"]') ||
         this.root.querySelector('form[action*="/cart/add"]');
 
-      if (this.form){
-        this.form.removeEventListener('change', this.boundFormChange);
+      if (this.form && !this.form.__pmFormListenerAttached){
+        // Mark form as having listener attached to avoid duplicates
+        this.form.__pmFormListenerAttached = true;
         this.form.addEventListener('change', this.boundFormChange);
       }
     }
@@ -4080,7 +4084,15 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
     onFormChange(e){
       const name = e.target?.name || '';
       if (name.includes('option') || name.includes('id')){
-        setTimeout(() => this.paint(this.resolveCurrentVariant()), 100);
+        // Update ALL price blocks that share the same form or product
+        setTimeout(() => {
+          allPriceBlocks.forEach(block => {
+            if (block.form === this.form || 
+                findHandleNear(block.root) === findHandleNear(this.root)) {
+              block.paint(block.resolveCurrentVariant());
+            }
+          });
+        }, 100);
       }
     }
 
@@ -4097,8 +4109,10 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
       root.__pmPricesInit = true;
       const comp = new PriceBlock(root);
       
+      // Store instance globally
+      allPriceBlocks.push(comp);
+      
       // Initialize both visible and hidden blocks
-      // Hidden blocks (mobile/desktop) will still work when they become visible
       comp.init().catch(()=>{ /* fail silently per block */ });
     });
   }
