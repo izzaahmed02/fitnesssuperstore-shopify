@@ -3805,33 +3805,45 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
     const root=$(ROOT); if(!root) return;
     if(!v){ clear(); return; }
     
-    $$(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
+    console.log('Painting variant:', v.id, 'Price:', v.price, 'Compare:', v.compare_at_price);
+    
+    $(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
     
     const hasCmp=v.compare_at_price && cents(v.compare_at_price)>cents(v.price);
     const c=$(CMP,root); 
     if(c){ c.textContent=hasCmp?fmt(cents(v.compare_at_price)):''; c.classList.toggle('pm-empty',!hasCmp); }
     
     const save=initSave();
+    console.log('Save elements:', save);
     if(save && save.amt){ 
       if(hasCmp){
         const s=cents(v.compare_at_price)-cents(v.price);
         const pct=Math.round((s*100)/cents(v.compare_at_price));
+        console.log('Savings:', s, 'Percent:', pct);
         save.amt.textContent=fmt(s); 
         save.amt.classList.remove('pm-empty');
         if(save.pct){ save.pct.textContent=String(pct); }
         if(save.pctWrap){ save.pctWrap.classList.remove('pm-empty'); }
       } else {
+        console.log('No compare at price or not higher');
         save.amt.textContent=''; 
         save.amt.classList.add('pm-empty');
         if(save.pct){ save.pct.textContent=''; }
         if(save.pctWrap){ save.pctWrap.classList.add('pm-empty'); }
       }
+    } else {
+      console.log('Save elements not found!');
     }
   }
 
   const fromId=()=>{ const id=$(VID)?.value; paint(id?byId.get(String(id)):null); };
 
-  document.addEventListener('variant:change',e=>paint(e?.detail?.variant||byId.get($(VID)?.value)||null));
+  document.addEventListener('variant:change',e=>{
+    const vid = e?.detail?.variant?.id || $(VID)?.value;
+    const variant = vid ? byId.get(String(vid)) : null;
+    console.log('Variant change:', variant);
+    paint(variant);
+  });
   document.addEventListener('shopify:section:load',()=>setTimeout(fromId,100));
   
   document.addEventListener('DOMContentLoaded',async()=>{ 
