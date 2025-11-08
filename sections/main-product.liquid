@@ -3792,6 +3792,14 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
 
   const fromId=()=>{ const id=$(VID)?.value; paint(id?byId.get(String(id)):null); };
 
+  // Hook into VariantSelects custom element
+  const variantSelects = document.querySelector('variant-selects');
+  if(variantSelects){
+    variantSelects.addEventListener('change', (e) => {
+      setTimeout(fromId, 50);
+    });
+  }
+
   // Listen to PubSub event from VariantSelects
   if(window.subscribe && window.PUB_SUB_EVENTS?.optionValueSelectionChange){
     window.subscribe(window.PUB_SUB_EVENTS.optionValueSelectionChange, fromId);
