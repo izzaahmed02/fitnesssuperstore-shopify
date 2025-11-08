@@ -3774,21 +3774,47 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
   function paint(v){
     const root=$(ROOT); if(!root) return;
     if(!v){ clear(); return; }
-    $$(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
+    
+    $(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
+    
     const hasCmp=v.compare_at_price && cents(v.compare_at_price)>cents(v.price);
-    const c=$(CMP,root); if(c){ c.textContent=hasCmp?fmt(cents(v.compare_at_price)):''; c.classList.toggle('pm-empty',!hasCmp); }
-    if(saveAmt){ 
-      const s=hasCmp?cents(v.compare_at_price)-cents(v.price):null;
-      saveAmt.textContent=s?fmt(s):''; 
-      saveAmt.classList.toggle('pm-empty',!s); 
+    const c=$(CMP,root); 
+    if(c){ c.textContent=hasCmp?fmt(cents(v.compare_at_price)):''; c.classList.toggle('pm-empty',!hasCmp); }
+    
+    const sw=$(SAVE);
+    if(sw){
+      let amt=sw.querySelector('.pm-save-amt');
+      if(!amt){ 
+        amt=document.createElement('span'); 
+        amt.className='pm-save-amt'; 
+        sw.appendChild(amt); 
+      }
+      
+      if(hasCmp){
+        const saveAmount=cents(v.compare_at_price)-cents(v.price);
+        amt.textContent=fmt(saveAmount);
+        amt.classList.remove('pm-empty');
+      } else {
+        amt.textContent='';
+        amt.classList.add('pm-empty');
+      }
     }
   }
 
   const fromId=()=>{ const id=$(VID)?.value; paint(id?byId.get(String(id)):null); };
 
   document.addEventListener('variant:change',e=>{
-    const vid=e?.detail?.variant?.id||$(VID)?.value;
-    paint(vid?byId.get(String(vid)):null);
+    const eventVariant = e?.detail?.variant;
+    const inputId = $(VID)?.value;
+    let variant = null;
+    
+    if(eventVariant && eventVariant.id) {
+      variant = byId.get(String(eventVariant.id)) || eventVariant;
+    } else if(inputId) {
+      variant = byId.get(String(inputId));
+    }
+    
+    paint(variant);
   });
   document.addEventListener('shopify:section:load',()=>setTimeout(fromId));
   const idEl=$(VID); if(idEl){ idEl.addEventListener('change',fromId); new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']}); }
