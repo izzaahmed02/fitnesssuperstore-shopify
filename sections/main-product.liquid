@@ -822,6 +822,20 @@
                       -%}
 
                       {% comment %}{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %} {% endcomment %}
+
+                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
+                      %}
+                        <span class="you-save"
+                          >You save
+                          {{
+                            product.metafields.custom.retail_price
+                            | minus: product.selected_or_first_available_variant.price
+                            | money
+                          -}}
+                        </span>
+                      {% endif %}
+
+                      
                        {% assign current_variant = product.selected_or_first_available_variant %}
 
 {% if current_variant.compare_at_price > current_variant.price %}
@@ -830,6 +844,8 @@
     You save {{ savings | money }}
   </span>
 {% endif %}
+
+
 
 
 
