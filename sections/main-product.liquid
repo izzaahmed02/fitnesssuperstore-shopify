@@ -3760,25 +3760,29 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
     if(!amt){ 
       amt=document.createElement('span'); 
       amt.className='pm-save-amt'; 
-      n.append(' ',amt); 
+      n.appendChild(amt); 
     }
     let pctWrap=n.querySelector('.pm-save-pct-wrap');
+    let pct=null;
     if(!pctWrap){
       pctWrap=document.createElement('span');
       pctWrap.className='pm-save-pct-wrap';
       pctWrap.textContent='(';
-      const pct=document.createElement('span');
+      pct=document.createElement('span');
       pct.className='pm-save-pct';
       pctWrap.appendChild(pct);
-      pctWrap.append('%)');
-      n.append(' ',pctWrap);
+      pctWrap.appendChild(document.createTextNode('%)'));
+      n.appendChild(document.createTextNode(' '));
+      n.appendChild(pctWrap);
+    } else {
+      pct=pctWrap.querySelector('.pm-save-pct');
     }
-    return {amt, pctWrap, pct: pctWrap.querySelector('.pm-save-pct')};
+    return {amt, pctWrap, pct};
   };
 
   function clear(){
     const root=$(ROOT); if(!root) return;
-    $(PRICE,root).forEach(x=>{x.textContent=x.textContent||''; x.classList.add('pm-empty');});
+    $$(PRICE,root).forEach(x=>{x.textContent=''; x.classList.add('pm-empty');});
     const c=$(CMP,root); if(c){ c.textContent=''; c.classList.add('pm-empty'); }
     const save=initSave();
     if(save){ 
@@ -3794,13 +3798,14 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
     const inline=$('script[type="application/json"][data-product],script[type="application/json"][data-product-json]');
     const data=inline?JSON.parse(inline.textContent):await (await fetch(location.pathname.replace(/\/+$/,'')+'.js')).json();
     byId=new Map((data.variants||[]).map(v=>[String(v.id),v]));
+    initSave();
   }
 
   function paint(v){
     const root=$(ROOT); if(!root) return;
     if(!v){ clear(); return; }
     
-    $(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
+    $$(PRICE,root).forEach(x=>{ x.textContent=fmt(cents(v.price)); x.classList.remove('pm-empty'); });
     
     const hasCmp=v.compare_at_price && cents(v.compare_at_price)>cents(v.price);
     const c=$(CMP,root); 
@@ -3827,9 +3832,18 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
   const fromId=()=>{ const id=$(VID)?.value; paint(id?byId.get(String(id)):null); };
 
   document.addEventListener('variant:change',e=>paint(e?.detail?.variant||byId.get($(VID)?.value)||null));
-  document.addEventListener('shopify:section:load',()=>setTimeout(fromId));
-  const idEl=$(VID); if(idEl){ idEl.addEventListener('change',fromId); new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']}); }
-
-  document.addEventListener('DOMContentLoaded',async()=>{ try{ await init(); fromId(); }catch(_){ clear(); } });
+  document.addEventListener('shopify:section:load',()=>setTimeout(fromId,100));
+  
+  document.addEventListener('DOMContentLoaded',async()=>{ 
+    try{ 
+      await init(); 
+      setTimeout(fromId,100);
+      const idEl=$(VID); 
+      if(idEl){ 
+        idEl.addEventListener('change',fromId); 
+        new MutationObserver(fromId).observe(idEl,{attributes:true,attributeFilter:['value']}); 
+      }
+    }catch(_){ clear(); } 
+  });
 })(); }
 </script>
