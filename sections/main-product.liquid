@@ -3748,65 +3748,36 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
 <style>.pm-empty{visibility:hidden!important}</style>
 <script>
 if(!window.__pmMin){window.__pmMin=1;(function(){
-  // ========= Config & tiny UI debug badge =========
-  const PM_DEBUG = true; // set to false to hide the badge/logging
-
-  let badge, tick;
-  (function setupBadge(){
-    if(!PM_DEBUG) return;
-    badge = document.getElementById('pm-variant-badge');
-    if(!badge){
-      badge = document.createElement('div');
-      badge.id = 'pm-variant-badge';
-      badge.style.cssText = 'position:fixed;bottom:10px;right:10px;background:#111;color:#fff;padding:6px 10px;font:12px/1.2 monospace;z-index:99999;border-radius:6px;opacity:.9;box-shadow:0 2px 6px rgba(0,0,0,.35)';
-      badge.textContent = 'waiting…';
-      document.addEventListener('DOMContentLoaded', ()=> document.body.appendChild(badge));
-      if(document.readyState !== 'loading'){ document.body.appendChild(badge); }
-    }
-    tick = (src, extra) => {
-      if(!PM_DEBUG || !badge) return;
-      const t = new Date().toLocaleTimeString();
-      badge.textContent = `last: ${src} @ ${t}${extra?(' | '+extra):''}`;
-    };
-  })();
-  const dbg = (...args)=>{ if(PM_DEBUG) try{ console.log('[pm-variant]', ...args); }catch(_){} };
-
-  // ========= Your original selectors / utils =========
-  const ROOT='.product__prices',
-        PRICE='.price-item--sale.price-item--last, .price-item-fixed',
-        CMP='.pr_custom_compare_price s',
-        SAVE='.you-save',
-        VID='.product-variant-id';
+  // ====== Selectors / utils ======
+  const ROOT='.product__prices',                          // price wrapper
+        PRICE='.price-item--sale.price-item--last, .price-item-fixed', // current price nodes
+        CMP='.pr_custom_compare_price s',                 // compare-at element (struck)
+        SAVE='.you-save',                                 // where "You save ..." is printed
+        VID='.product-variant-id';                        // input/select that holds current variant id
 
   const $=(s,r=document)=>r.querySelector(s),
         $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const cents=n=>Number.isFinite(+n)?Math.round(+n):null,
         fmt=c=>"$"+((c||0)/100).toFixed(2);
 
-  // ========= Clear UI =========
+  // ====== Clear UI ======
   function clear(){
     const root=$(ROOT); if(!root) return;
     $$(PRICE,root).forEach(x=>{ x.textContent=x.textContent||''; x.classList.add('pm-empty'); });
     const c=$(CMP,root); if(c){ c.textContent=''; c.classList.add('pm-empty'); }
     const saveEl=$(SAVE); if(saveEl){ saveEl.textContent=''; saveEl.classList.add('pm-empty'); }
-    tick && tick('clear()');
-    dbg('clear()');
   }
 
-  // ========= Load product JSON and index variants =========
+  // ====== Load product JSON and index variants ======
   let byId=new Map();
   async function init(){
     const inline=$('script[type="application/json"][data-product],script[type="application/json"][data-product-json]');
     const data=inline?JSON.parse(inline.textContent):await (await fetch(location.pathname.replace(/\/+$/,'')+'.js')).json();
     byId=new Map((data.variants||[]).map(v=>[String(v.id),v]));
-    dbg('init()', { variantCount: byId.size });
   }
 
-  // ========= Paint UI for a variant (now with badge tick) =========
-  function paint(v, source='unknown'){
-    dbg('paint()', { source, variantId: v?.id, hasVariant: !!v });
-    tick && tick(source, v ? `id:${v.id}` : 'no variant');
-
+  // ====== Paint UI for a variant ======
+  function paint(v){
     const root=$(ROOT); if(!root) return;
     if(!v){ clear(); return; }
 
@@ -3838,68 +3809,32 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
     }
   }
 
-  // ========= Helpers to get current variant from input =========
-  const fromId=(src='fromId')=>{
+  // ====== Get current variant from the variant-id input/select ======
+  const fromId=()=>{
     const id=$(VID)?.value;
     const v=id?byId.get(String(id)):null;
-    dbg('fromId()', { src, id, vFound: !!v });
-    paint(v, src);
+    paint(v);
   };
 
-  // ========= Event listeners (each tagged for the badge) =========
-  document.addEventListener('variant:change', e=>{
-    const v = e?.detail?.variant || byId.get($(VID)?.value) || null;
-    dbg('event fired: variant:change', { hasDetail: !!e?.detail?.variant });
-    paint(v, 'event:variant:change');
-  });
-
-  // Optional alt event some themes use
-  document.addEventListener('product:variant-change', e=>{
-    const v = e?.detail?.variant || byId.get($(VID)?.value) || null;
-    dbg('event fired: product:variant-change', { hasDetail: !!e?.detail?.variant });
-    paint(v, 'event:product:variant-change');
-  });
-
-  document.addEventListener('shopify:section:load',()=>{
-    dbg('event fired: shopify:section:load');
-    setTimeout(()=>fromId('event:section:load'));
-  });
-
-  const setupListeners = () => {
-    const idEl=$(VID);
-    if(idEl){
-      idEl.addEventListener('change', ()=>fromId('input:variant-id:change'));
-      new MutationObserver(()=>fromId('mutation:variant-id:value'))
-        .observe(idEl,{attributes:true,attributeFilter:['value']});
-    }
-
-    const variantSelects = document.querySelector('variant-selects');
-    if(variantSelects){
-      variantSelects.addEventListener('change', ()=>{
-        dbg('event fired: variant-selects change');
-        setTimeout(()=>fromId('element:variant-selects:change'), 100);
-      });
-    }
-
+  // ====== Keep ONLY the product form change listener (your logs confirm this fires) ======
+  function setupListeners(){
     const productForm = document.querySelector('form[action*="/cart/add"]');
     if(productForm){
       productForm.addEventListener('change', (e)=>{
         if(e.target.name && (e.target.name.includes('option') || e.target.name.includes('id'))){
-          dbg('event fired: product form change', { targetName: e.target.name });
-          setTimeout(()=>fromId('form:change'), 100);
+          // Give the theme a beat to update the hidden variant id
+          setTimeout(fromId, 100);
         }
       });
     }
-  };
+  }
 
-  // ========= Init (both code paths labeled) =========
-  document.addEventListener('DOMContentLoaded',async()=>{
-    try{ await init(); setupListeners(); fromId('init:DOMContentLoaded'); }
-    catch(_){ clear(); }
+  // ====== Init (initial render + listener) ======
+  document.addEventListener('DOMContentLoaded', async()=>{
+    try{ await init(); setupListeners(); fromId(); }catch(_){ clear(); }
   });
-
   if(document.readyState !== 'loading'){
-    init().then(()=>{ setupListeners(); fromId('init:readyState!=loading'); }).catch(()=>clear());
+    init().then(()=>{ setupListeners(); fromId(); }).catch(()=>clear());
   }
 })(); }
 </script>
