@@ -3492,121 +3492,149 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
 
 <script>
 (function () {
-  // Helper: read the media manifest that you already output
+  // === helpers you already had ===
   function getMediaManifest(root) {
-    const el = root.querySelector('script[data-product-media]');
+    const el = (root || document).querySelector('script[data-product-media]');
     if (!el) return [];
-    try {
-      return JSON.parse(el.textContent || '[]');
-    } catch (e) {
-      return [];
-    }
+    try { return JSON.parse(el.textContent || '[]'); } catch (e) { return []; }
   }
 
-  // Build quick lookup tables
   const galleryRoot = document.querySelector('product-gallery') || document;
-  const mediaList    = getMediaManifest(galleryRoot);
-  const mediaById    = new Map(mediaList.map(m => [String(m.id), m]));
-  const mediaBySrc   = new Map(
+  const mediaList  = getMediaManifest(galleryRoot);
+  const mediaById  = new Map(mediaList.map(m => [String(m.id), m]));
+  const mediaBySrc = new Map(
     mediaList
       .filter(m => m.preview_image && m.preview_image.src)
       .map(m => [new URL(m.preview_image.src, location.origin).pathname, m])
   );
 
-  // Swap the main viewer to a specific media id
+  // === NEW: mobile slide activator ===
+  function activateMobileById(mediaId) {
+    const slider = document.querySelector('.mobile-gallery-slider');
+    if (!slider) return;
+
+    // find target slide
+    const slide = slider.querySelector('.mobile-gallery-slide[data-media-id="' + mediaId + '"]');
+    if (!slide) return;
+
+    // slides are wrapped; we want the wrapper for layout/offset
+    const wrap = slide.closest('.mobile-gallery-slide-wrap') || slide;
+
+    // 1) scroll the slider to the target slide (works for scrollable and many transform-based sliders)
+    try {
+      const left = wrap.offsetLeft - (slider.offsetLeft || 0);
+      slider.scrollTo({ left, behavior: 'instant' });
+    } catch (e) {
+      // fallback
+      slider.scrollLeft = wrap.offsetLeft || 0;
+    }
+
+    // 2) update "is-active" classes on mobile slides (common pattern)
+    slider.querySelectorAll('.mobile-gallery-slide-wrap, .mobile-gallery-slide').forEach(el => {
+      el.classList.remove('is-active');
+    });
+    wrap.classList.add('is-active');
+
+    // 3) sync dots (if present and 1:1 with slides)
+    const dots = document.querySelector('.mobile-gallery-dots');
+    if (dots) {
+      const allWraps = Array.from(slider.querySelectorAll('.mobile-gallery-slide-wrap'));
+      const idx = Math.max(0, allWraps.indexOf(wrap));
+
+      // some themes render dots as buttons/spans
+      const dotEls = Array.from(dots.children);
+      dotEls.forEach(d => d.classList.remove('is-active', 'active', 'current'));
+      if (dotEls[idx]) dotEls[idx].classList.add('is-active');
+    }
+
+    // 4) emit a custom event in case product-mobile-gallery.js listens for something
+    slider.dispatchEvent(new CustomEvent('mobile-gallery:go-to', {
+      bubbles: true,
+      detail: { mediaId: String(mediaId) }
+    }));
+  }
+
+  // === existing desktop activator, extended to call mobile ===
   function activateMediaById(mediaId) {
     if (!mediaId) return;
 
-    // 1) If a thumbnail for this media exists, click it so your existing gallery handles everything
+    // Desktop: prefer clicking the thumbnail so your gallery JS runs
     const thumbBtn = galleryRoot.querySelector('.custom-gallery-thumbnails .thumbnail-btn[data-media-id="' + mediaId + '"]');
-    if (thumbBtn) {
-      thumbBtn.click();
-      return;
-    }
+    if (thumbBtn) thumbBtn.click();
+    else {
+      // fallback: rebuild main viewer (as before)
+      const container = galleryRoot.querySelector('.custom-gallery-main') || galleryRoot.querySelector('[data-main-media-wrapper]');
+      if (!container) return;
 
-    // 2) Otherwise, rebuild the main viewer using the manifest (leaves thumbnails untouched)
-    const main = galleryRoot.querySelector('.custom-gallery-main [data-main-media-wrapper]');
-    const container = galleryRoot.querySelector('.custom-gallery-main') || galleryRoot.querySelector('[data-main-media-wrapper]');
-    if (!container) return;
+      const media = mediaById.get(String(mediaId));
+      if (!media) return;
 
-    const media = mediaById.get(String(mediaId));
-    if (!media) return;
+      container.innerHTML = '';
+      const wrap = document.createElement('div');
+      wrap.className = 'main-image-container';
+      wrap.setAttribute('data-media-id', media.id);
 
-    // clear existing
-    container.innerHTML = '';
-
-    // Create a fresh main container for the new media
-    const wrap = document.createElement('div');
-    wrap.className = 'main-image-container';
-    wrap.setAttribute('data-media-id', media.id);
-
-    if (media.media_type === 'image') {
-      const imgWrap = document.createElement('div');
-      imgWrap.className = 'image-skeleton-wrapper loaded';
-      const img = document.createElement('img');
-      img.className = 'main-product-image';
-      img.loading = 'eager';
-      img.alt = media.alt || '';
-      img.src = media.preview_image?.src || '';
-      img.width = media.preview_image?.width || '';
-      img.height = media.preview_image?.height || '';
-      imgWrap.appendChild(img);
-      wrap.appendChild(imgWrap);
-    } else if (media.media_type === 'video' && Array.isArray(media.sources) && media.sources.length) {
-      const video = document.createElement('video');
-      video.controls = true;
-      video.muted = true;
-      video.playsInline = true;
-      video.preload = 'metadata';
-      video.poster = media.preview_image?.src || '';
-      // choose the first source
-      const src = document.createElement('source');
-      src.src = media.sources[0].url;
-      src.type = media.sources[0].mime_type || 'video/mp4';
-      video.appendChild(src);
-      wrap.appendChild(video);
-    } else if (media.media_type === 'external_video' && media.host && media.external_id) {
-      // Let Shopify’s external tag handle it normally; simple iframe fallback:
-      const iframe = document.createElement('iframe');
-      iframe.width = '100%';
-      iframe.height = '480';
-      iframe.allow =
-        'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-      iframe.allowFullscreen = true;
-      // Basic YouTube/Vimeo guess:
-      if (media.host === 'youtube') {
-        iframe.src = 'https://www.youtube.com/embed/' + media.external_id + '?rel=0&modestbranding=1';
-      } else if (media.host === 'vimeo') {
-        iframe.src = 'https://player.vimeo.com/video/' + media.external_id;
+      if (media.media_type === 'image') {
+        const imgWrap = document.createElement('div');
+        imgWrap.className = 'image-skeleton-wrapper loaded';
+        const img = document.createElement('img');
+        img.className = 'main-product-image';
+        img.loading = 'eager';
+        img.alt = media.alt || '';
+        img.src = media.preview_image?.src || '';
+        img.width = media.preview_image?.width || '';
+        img.height = media.preview_image?.height || '';
+        imgWrap.appendChild(img);
+        wrap.appendChild(imgWrap);
+      } else if (media.media_type === 'video' && Array.isArray(media.sources) && media.sources.length) {
+        const video = document.createElement('video');
+        video.controls = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'metadata';
+        video.poster = media.preview_image?.src || '';
+        const src = document.createElement('source');
+        src.src = media.sources[0].url;
+        src.type = media.sources[0].mime_type || 'video/mp4';
+        video.appendChild(src);
+        wrap.appendChild(video);
+      } else if (media.media_type === 'external_video' && media.host && media.external_id) {
+        const iframe = document.createElement('iframe');
+        iframe.width = '100%';
+        iframe.height = '480';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.allowFullscreen = true;
+        if (media.host === 'youtube') {
+          iframe.src = 'https://www.youtube.com/embed/' + media.external_id + '?rel=0&modestbranding=1';
+        } else if (media.host === 'vimeo') {
+          iframe.src = 'https://player.vimeo.com/video/' + media.external_id;
+        }
+        wrap.appendChild(iframe);
+      } else if (media.media_type === 'model' && media.url) {
+        const mv = document.createElement('model-viewer');
+        mv.setAttribute('src', media.url);
+        mv.setAttribute('camera-controls', 'true');
+        mv.setAttribute('camera-orbit', '0deg 75deg 4m');
+        mv.alt = media.alt || '';
+        wrap.appendChild(mv);
+      } else {
+        const ph = document.createElement('div');
+        ph.className = 'media-placeholder';
+        ph.textContent = 'Preview available in popup only.';
+        wrap.appendChild(ph);
       }
-      wrap.appendChild(iframe);
-    } else if (media.media_type === 'model' && media.url) {
-      const mv = document.createElement('model-viewer');
-      mv.setAttribute('src', media.url);
-      mv.setAttribute('camera-controls', 'true');
-      mv.setAttribute('camera-orbit', '0deg 75deg 4m');
-      mv.alt = media.alt || '';
-      wrap.appendChild(mv);
-    } else {
-      const ph = document.createElement('div');
-      ph.className = 'media-placeholder';
-      ph.textContent = 'Preview available in popup only.';
-      wrap.appendChild(ph);
+
+      container.appendChild(wrap);
     }
 
-    container.appendChild(wrap);
+    // NEW: also sync the mobile strip
+    activateMobileById(mediaId);
   }
 
-  // Tries to resolve a mediaId from variant payload (supports both featured_media and featured_image.src)
+  // === resolve media id from variant (unchanged) ===
   function resolveMediaIdFromVariant(variant) {
     if (!variant) return null;
-
-    // 1) Newer Dawn / Online Store 2.0
-    if (variant.featured_media && variant.featured_media.id) {
-      return String(variant.featured_media.id);
-    }
-
-    // 2) Fallback via image src matching
+    if (variant.featured_media && variant.featured_media.id) return String(variant.featured_media.id);
     if (variant.featured_image && variant.featured_image.src) {
       try {
         const path = new URL(variant.featured_image.src, location.origin).pathname;
@@ -3614,31 +3642,25 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
         if (m) return String(m.id);
       } catch (e) {}
     }
-
     return null;
   }
 
-  // Listen to BOTH possible events fired by product form code across themes
   function onVariantChange(e) {
     const variant = e?.detail?.variant || e?.detail?.dataset?.variant || e?.detail;
     const mediaId = resolveMediaIdFromVariant(variant);
-    if (mediaId) {
-      activateMediaById(mediaId);
-    }
+    if (mediaId) activateMediaById(mediaId);
   }
 
-  document.addEventListener('variant:change', onVariantChange);   // Dawn / OS 2.0
-  document.addEventListener('variant-change', onVariantChange);   // some custom themes
+  document.addEventListener('variant:change', onVariantChange);
+  document.addEventListener('variant-change', onVariantChange);
 
-  // Also support native select/radio changes as a last resort (fires once after page load wiring)
+  // Last-resort sync if theme doesn’t fire events
   const productForm = document.querySelector('form[action*="/cart/add"]');
   if (productForm && !productForm.__variantSyncBound) {
     productForm.__variantSyncBound = true;
     productForm.addEventListener('change', function () {
-      // let your existing product-form.js compute the variant, then try to read it
       setTimeout(() => {
         try {
-          // If your theme exposes the current variant on window or via hidden input, try to read it
           const vIdInput = productForm.querySelector('.product-variant-id');
           if (vIdInput && window.product && Array.isArray(window.product.variants)) {
             const current = window.product.variants.find(v => String(v.id) === String(vIdInput.value));
@@ -3648,6 +3670,26 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
         } catch (e) {}
       }, 50);
     });
+  }
+
+  // OPTIONAL: when the mobile popup opens, keep it in sync too
+  const popup = document.getElementById('product-gallery-popup');
+  if (popup) {
+    const observer = new MutationObserver(() => {
+      const isOpen = !popup.hasAttribute('hidden');
+      if (!isOpen) return;
+      // read current variant media id and sync
+      try {
+        const vIdInput = document.querySelector('.product-variant-id');
+        const current = window.product?.variants?.find(v => String(v.id) === String(vIdInput?.value));
+        const mediaId = resolveMediaIdFromVariant(current);
+        if (mediaId) {
+          // ensure the images tab is visible and highlight the right thumb if your popup JS supports it
+          popup.dispatchEvent(new CustomEvent('gallery:show-media', { bubbles: true, detail: { mediaId } }));
+        }
+      } catch (e) {}
+    });
+    observer.observe(popup, { attributes: true, attributeFilter: ['hidden'] });
   }
 })();
 </script>
