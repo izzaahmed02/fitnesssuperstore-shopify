@@ -3495,81 +3495,78 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
 <script>
 (function () {
   /* ===============================
-     Helpers & media manifest
+     Utilities & manifest
   =============================== */
   function getMediaManifest(root) {
     const el = (root || document).querySelector('script[data-product-media]');
     if (!el) return [];
     try { return JSON.parse(el.textContent || '[]'); } catch (e) { return []; }
   }
-
-  const galleryRoot = document.querySelector('product-gallery') || document;
-  const mediaList  = getMediaManifest(galleryRoot);
-
-  const mediaById  = new Map(mediaList.map(m => [String(m.id), m]));
-
-  // Build src -> media maps (split by type to avoid matching video previews)
   function safePath(u) {
     try { return new URL(u, location.origin).pathname; } catch (e) { return String(u || ''); }
   }
-  const mediaBySrcImg   = new Map(
+
+  const galleryRoot = document.querySelector('product-gallery') || document;
+  const mediaList   = getMediaManifest(galleryRoot);
+  const mediaById   = new Map(mediaList.map(m => [String(m.id), m]));
+
+  // Map only IMAGE preview src -> media (avoid video previews!)
+  const mediaBySrcImg = new Map(
     mediaList
-      .filter(m => m.media_type === 'image' && m.preview_image && m.preview_image.src)
+      .filter(m => m.media_type === 'image' && m.preview_image?.src)
       .map(m => [safePath(m.preview_image.src), m])
   );
-  const mediaBySrcVideo = new Map(
-    mediaList
-      .filter(m => (m.media_type === 'video' || m.media_type === 'external_video') && m.preview_image && m.preview_image.src)
-      .map(m => [safePath(m.preview_image.src), m])
-  );
 
-  /* ========================================
-     Mobile: go to slide by media id
-  ======================================== */
-  function activateMobileById(mediaId) {
-    const slider = document.querySelector('.mobile-gallery-slider');
-    if (!slider) return;
-
-    const slide = slider.querySelector('.mobile-gallery-slide[data-media-id="' + mediaId + '"]');
-    if (!slide) return;
-
-    const wrap = slide.closest('.mobile-gallery-slide-wrap') || slide;
-
-    // Scroll into view
-    const left = (wrap.offsetLeft || 0) - (slider.offsetLeft || 0);
-    if (slider.scrollTo) {
-      try { slider.scrollTo({ left, behavior: 'instant' }); } catch (e) { slider.scrollLeft = left; }
-    } else {
-      slider.scrollLeft = left;
+  // Precompute stable mapping: variant.id -> IMAGE media id (never video)
+  const variantImageMediaId = new Map();
+  if (window.product && Array.isArray(window.product.variants)) {
+    for (const v of window.product.variants) {
+      let imgId = null;
+      if (v.featured_image?.src) {
+        const match = mediaBySrcImg.get(safePath(v.featured_image.src));
+        if (match) imgId = String(match.id);
+      }
+      if (!imgId) {
+        const firstImg = mediaList.find(m => m.media_type === 'image');
+        if (firstImg) imgId = String(firstImg.id);
+      }
+      if (imgId) variantImageMediaId.set(String(v.id), imgId);
     }
-
-    // Toggle active classes
-    slider.querySelectorAll('.mobile-gallery-slide-wrap, .mobile-gallery-slide').forEach(el => {
-      el.classList.remove('is-active', 'active', 'current');
-    });
-    wrap.classList.add('is-active');
-
-    // Sync dots
-    const dots = document.querySelector('.mobile-gallery-dots');
-    if (dots) {
-      const allWraps = Array.from(slider.querySelectorAll('.mobile-gallery-slide-wrap'));
-      const idx = Math.max(0, allWraps.indexOf(wrap));
-      const dotEls = Array.from(dots.children);
-      dotEls.forEach(d => d.classList.remove('is-active', 'active', 'current'));
-      if (dotEls[idx]) dotEls[idx].classList.add('is-active');
-    }
-
-    // Notify
-    slider.dispatchEvent(new CustomEvent('mobile-gallery:go-to', {
-      bubbles: true,
-      detail: { mediaId: String(mediaId) }
-    }));
   }
 
-  /* =======================================================
-     Desktop: render main viewer for a given media object
-     (avoids clicking popup-bound thumbs)
-  ======================================================= */
+  /* ===============================
+     Popup suppression around variant changes
+     (thumbnails still open it normally)
+  =============================== */
+  let suppressPopupUntil = 0;
+  function suppressPopupFor(ms) { suppressPopupUntil = Date.now() + (ms || 400); }
+
+  // Block clicks on popup triggers during suppression window
+  document.addEventListener('click', function (e) {
+    if (Date.now() < suppressPopupUntil) {
+      const btn = e.target && e.target.closest && e.target.closest('[data-popup-open]');
+      if (btn) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        return false;
+      }
+    }
+  }, true);
+
+  // If any other script still toggles the popup, immediately re-hide during suppression
+  const popupEl = document.getElementById('product-gallery-popup');
+  if (popupEl) {
+    const obs = new MutationObserver(() => {
+      if (Date.now() < suppressPopupUntil && !popupEl.hasAttribute('hidden')) {
+        popupEl.setAttribute('hidden', '');
+      }
+    });
+    obs.observe(popupEl, { attributes: true, attributeFilter: ['hidden'] });
+  }
+
+  /* ===============================
+     Render main viewer (no thumb clicks)
+  =============================== */
   function renderMainFromManifest(media) {
     const container = galleryRoot.querySelector('.custom-gallery-main') || galleryRoot.querySelector('[data-main-media-wrapper]');
     if (!container || !media) return;
@@ -3632,69 +3629,82 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
     container.appendChild(wrap);
   }
 
-  /* =======================================================
-     Unified activator (desktop + mobile)
-     - prefers clicking IMAGE thumbnail (no popup)
-     - never clicks video/external video thumbs
-     - otherwise renders from manifest
-  ======================================================= */
-  function activateMediaById(mediaId) {
-    if (!mediaId) return;
+  /* ===============================
+     Mobile sync
+  =============================== */
+  function activateMobileById(mediaId) {
+    const slider = document.querySelector('.mobile-gallery-slider');
+    if (!slider) return;
 
-    const media = mediaById.get(String(mediaId));
-    const isImage = media && media.media_type === 'image';
+    const slide = slider.querySelector('.mobile-gallery-slide[data-media-id="' + mediaId + '"]');
+    if (!slide) return;
 
-    // Desktop: try clicking an IMAGE thumbnail that isn't wired to open popup
-    const thumbBtn = galleryRoot.querySelector('.custom-gallery-thumbnails .thumbnail-btn[data-media-id="' + mediaId + '"]');
+    const wrap = slide.closest('.mobile-gallery-slide-wrap') || slide;
+    const left = (wrap.offsetLeft || 0) - (slider.offsetLeft || 0);
 
-    const thumbIsVideoish = thumbBtn && (thumbBtn.classList.contains('is-video') || thumbBtn.hasAttribute('data-popup-open'));
-
-    if (isImage && thumbBtn && !thumbIsVideoish) {
-      thumbBtn.click();
+    if (slider.scrollTo) {
+      try { slider.scrollTo({ left, behavior: 'instant' }); } catch (e) { slider.scrollLeft = left; }
     } else {
-      // Render directly (prevents video popup on first variant)
-      renderMainFromManifest(media);
+      slider.scrollLeft = left;
     }
 
-    // Always sync mobile
-    activateMobileById(mediaId);
+    slider.querySelectorAll('.mobile-gallery-slide-wrap, .mobile-gallery-slide').forEach(el => {
+      el.classList.remove('is-active', 'active', 'current');
+    });
+    wrap.classList.add('is-active');
+
+    const dots = document.querySelector('.mobile-gallery-dots');
+    if (dots) {
+      const allWraps = Array.from(slider.querySelectorAll('.mobile-gallery-slide-wrap'));
+      const idx = Math.max(0, allWraps.indexOf(wrap));
+      const dotEls = Array.from(dots.children);
+      dotEls.forEach(d => d.classList.remove('is-active', 'active', 'current'));
+      if (dotEls[idx]) dotEls[idx].classList.add('is-active');
+    }
+
+    slider.dispatchEvent(new CustomEvent('mobile-gallery:go-to', {
+      bubbles: true,
+      detail: { mediaId: String(mediaId) }
+    }));
   }
 
-  /* =======================================================
-     Image-first resolver to avoid video previews
-     Order:
-       1) variant.featured_image.src => image media match
-       2) variant.featured_media IF it's an image
-       3) First image in manifest
-  ======================================================= */
+  /* ===============================
+     Variant -> media resolution (image-only)
+  =============================== */
   function resolveMediaIdFromVariant(variant) {
     if (!variant) return null;
 
-    // 1) Prefer actual image src
-    if (variant.featured_image && variant.featured_image.src) {
-      const path = safePath(variant.featured_image.src);
-      const imgMedia = mediaBySrcImg.get(path);
-      if (imgMedia) return String(imgMedia.id);
+    // Prefer precomputed, stable mapping
+    const mapHit = variantImageMediaId.get(String(variant.id));
+    if (mapHit) return mapHit;
 
-      // If it matched a video preview by mistake, ignore it:
-      // const vidMedia = mediaBySrcVideo.get(path); // intentionally not used
+    // Fallbacks
+    if (variant.featured_image?.src) {
+      const match = mediaBySrcImg.get(safePath(variant.featured_image.src));
+      if (match) return String(match.id);
     }
-
-    // 2) featured_media if (and only if) it's an IMAGE
-    if (variant.featured_media && variant.featured_media.id) {
-      const m = mediaById.get(String(variant.featured_media.id));
-      if (m && m.media_type === 'image') return String(m.id);
-    }
-
-    // 3) Fallback to the first image in the product media
     const firstImg = mediaList.find(m => m.media_type === 'image');
     return firstImg ? String(firstImg.id) : null;
   }
 
-  /* =======================================================
+  /* ===============================
+     Activator (desktop + mobile)
+     - No thumbnail clicks (so popup isn’t triggered)
+  =============================== */
+  function activateMediaById(mediaId) {
+    if (!mediaId) return;
+    const media = mediaById.get(String(mediaId));
+    renderMainFromManifest(media);
+    activateMobileById(mediaId);
+  }
+
+  /* ===============================
      Event wiring
-  ======================================================= */
+  =============================== */
   function onVariantChange(e) {
+    // Mark a short suppression window so any popup trigger is ignored
+    suppressPopupFor(600);
+
     const variant = e?.detail?.variant || e?.detail?.dataset?.variant || e?.detail;
     const mediaId = resolveMediaIdFromVariant(variant);
     if (mediaId) activateMediaById(mediaId);
@@ -3703,12 +3713,14 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
   document.addEventListener('variant:change', onVariantChange);
   document.addEventListener('variant-change', onVariantChange);
 
-  // Last-resort sync via hidden input after change
+  // Last-resort: hidden input watcher
   const productForm = document.querySelector('form[action*="/cart/add"]');
   if (productForm && !productForm.__variantSyncBound) {
     productForm.__variantSyncBound = true;
     productForm.addEventListener('change', function () {
+      // variant calculation may be async in some themes
       setTimeout(() => {
+        suppressPopupFor(600);
         try {
           const vIdInput = productForm.querySelector('.product-variant-id');
           if (vIdInput && window.product && Array.isArray(window.product.variants)) {
@@ -3719,24 +3731,6 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
         } catch (e) {}
       }, 50);
     });
-  }
-
-  // Optional: when popup opens, align to current variant media (no-op if ignored)
-  const popup = document.getElementById('product-gallery-popup');
-  if (popup) {
-    const observer = new MutationObserver(() => {
-      const isOpen = !popup.hasAttribute('hidden');
-      if (!isOpen) return;
-      try {
-        const vIdInput = document.querySelector('.product-variant-id');
-        const current = window.product?.variants?.find(v => String(v.id) === String(vIdInput?.value));
-        const mediaId = resolveMediaIdFromVariant(current);
-        if (mediaId) {
-          popup.dispatchEvent(new CustomEvent('gallery:show-media', { bubbles: true, detail: { mediaId } }));
-        }
-      } catch (e) {}
-    });
-    observer.observe(popup, { attributes: true, attributeFilter: ['hidden'] });
   }
 })();
 </script>
