@@ -3505,14 +3505,22 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
 
   const galleryRoot = document.querySelector('product-gallery') || document;
   const mediaList  = getMediaManifest(galleryRoot);
+
   const mediaById  = new Map(mediaList.map(m => [String(m.id), m]));
-  const mediaBySrc = new Map(
+
+  // Build src -> media maps (split by type to avoid matching video previews)
+  function safePath(u) {
+    try { return new URL(u, location.origin).pathname; } catch (e) { return String(u || ''); }
+  }
+  const mediaBySrcImg   = new Map(
     mediaList
-      .filter(m => m.preview_image && m.preview_image.src)
-      .map(m => {
-        try { return [new URL(m.preview_image.src, location.origin).pathname, m]; }
-        catch (e) { return [m.preview_image.src, m]; }
-      })
+      .filter(m => m.media_type === 'image' && m.preview_image && m.preview_image.src)
+      .map(m => [safePath(m.preview_image.src), m])
+  );
+  const mediaBySrcVideo = new Map(
+    mediaList
+      .filter(m => (m.media_type === 'video' || m.media_type === 'external_video') && m.preview_image && m.preview_image.src)
+      .map(m => [safePath(m.preview_image.src), m])
   );
 
   /* ========================================
@@ -3527,14 +3535,12 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
 
     const wrap = slide.closest('.mobile-gallery-slide-wrap') || slide;
 
-    // Scroll into view (native scroll-based slider)
-    try {
-      const left = wrap.offsetLeft - (slider.offsetLeft || 0);
-      // Some browsers don't support "instant"; fall back gracefully
-      slider.scrollTo && slider.scrollTo({ left, behavior: 'instant' });
-      if (!slider.scrollTo) slider.scrollLeft = left;
-    } catch (e) {
-      slider.scrollLeft = wrap.offsetLeft || 0;
+    // Scroll into view
+    const left = (wrap.offsetLeft || 0) - (slider.offsetLeft || 0);
+    if (slider.scrollTo) {
+      try { slider.scrollTo({ left, behavior: 'instant' }); } catch (e) { slider.scrollLeft = left; }
+    } else {
+      slider.scrollLeft = left;
     }
 
     // Toggle active classes
@@ -3543,7 +3549,7 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
     });
     wrap.classList.add('is-active');
 
-    // Sync dots if present
+    // Sync dots
     const dots = document.querySelector('.mobile-gallery-dots');
     if (dots) {
       const allWraps = Array.from(slider.querySelectorAll('.mobile-gallery-slide-wrap'));
@@ -3553,7 +3559,7 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
       if (dotEls[idx]) dotEls[idx].classList.add('is-active');
     }
 
-    // Let theme JS know (if it listens)
+    // Notify
     slider.dispatchEvent(new CustomEvent('mobile-gallery:go-to', {
       bubbles: true,
       detail: { mediaId: String(mediaId) }
@@ -3561,7 +3567,7 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
   }
 
   /* =======================================================
-     Desktop: render main viewer for a given media id
+     Desktop: render main viewer for a given media object
      (avoids clicking popup-bound thumbs)
   ======================================================= */
   function renderMainFromManifest(media) {
@@ -3629,8 +3635,8 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
   /* =======================================================
      Unified activator (desktop + mobile)
      - prefers clicking IMAGE thumbnail (no popup)
+     - never clicks video/external video thumbs
      - otherwise renders from manifest
-     - always syncs mobile
   ======================================================= */
   function activateMediaById(mediaId) {
     if (!mediaId) return;
@@ -3638,45 +3644,49 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
     const media = mediaById.get(String(mediaId));
     const isImage = media && media.media_type === 'image';
 
-    // Desktop: if we have an IMAGE thumbnail that doesn't open a popup, click it
+    // Desktop: try clicking an IMAGE thumbnail that isn't wired to open popup
     const thumbBtn = galleryRoot.querySelector('.custom-gallery-thumbnails .thumbnail-btn[data-media-id="' + mediaId + '"]');
-    if (isImage && thumbBtn && !thumbBtn.hasAttribute('data-popup-open')) {
+
+    const thumbIsVideoish = thumbBtn && (thumbBtn.classList.contains('is-video') || thumbBtn.hasAttribute('data-popup-open'));
+
+    if (isImage && thumbBtn && !thumbIsVideoish) {
       thumbBtn.click();
     } else {
-      // Render directly from manifest (prevents accidental video popup)
+      // Render directly (prevents video popup on first variant)
       renderMainFromManifest(media);
     }
 
-    // Keep mobile slider in sync
+    // Always sync mobile
     activateMobileById(mediaId);
   }
 
   /* =======================================================
-     Safer resolver:
-     1) Prefer variant.featured_image.src → image media
-     2) Then featured_media if it's an IMAGE
-     3) Fallback: first image in manifest
+     Image-first resolver to avoid video previews
+     Order:
+       1) variant.featured_image.src => image media match
+       2) variant.featured_media IF it's an image
+       3) First image in manifest
   ======================================================= */
   function resolveMediaIdFromVariant(variant) {
     if (!variant) return null;
 
+    // 1) Prefer actual image src
     if (variant.featured_image && variant.featured_image.src) {
-      try {
-        const path = new URL(variant.featured_image.src, location.origin).pathname;
-        const m = mediaBySrc.get(path);
-        if (m && m.media_type === 'image') return String(m.id);
-      } catch (e) {
-        // Non-standard URL; try raw match
-        const m = mediaBySrc.get(variant.featured_image.src);
-        if (m && m.media_type === 'image') return String(m.id);
-      }
+      const path = safePath(variant.featured_image.src);
+      const imgMedia = mediaBySrcImg.get(path);
+      if (imgMedia) return String(imgMedia.id);
+
+      // If it matched a video preview by mistake, ignore it:
+      // const vidMedia = mediaBySrcVideo.get(path); // intentionally not used
     }
 
+    // 2) featured_media if (and only if) it's an IMAGE
     if (variant.featured_media && variant.featured_media.id) {
       const m = mediaById.get(String(variant.featured_media.id));
       if (m && m.media_type === 'image') return String(m.id);
     }
 
+    // 3) Fallback to the first image in the product media
     const firstImg = mediaList.find(m => m.media_type === 'image');
     return firstImg ? String(firstImg.id) : null;
   }
@@ -3690,11 +3700,10 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
     if (mediaId) activateMediaById(mediaId);
   }
 
-  // Dawn / OS 2.0 & common custom events
   document.addEventListener('variant:change', onVariantChange);
   document.addEventListener('variant-change', onVariantChange);
 
-  // Last-resort: read variant id from hidden input after option change
+  // Last-resort sync via hidden input after change
   const productForm = document.querySelector('form[action*="/cart/add"]');
   if (productForm && !productForm.__variantSyncBound) {
     productForm.__variantSyncBound = true;
@@ -3712,7 +3721,7 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
     });
   }
 
-  // Optional: when your popup opens, align it to current variant media (no-op if your code ignores this)
+  // Optional: when popup opens, align to current variant media (no-op if ignored)
   const popup = document.getElementById('product-gallery-popup');
   if (popup) {
     const observer = new MutationObserver(() => {
