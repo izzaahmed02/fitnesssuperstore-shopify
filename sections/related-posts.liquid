@@ -1,6 +1,6 @@
 {% comment %}
 Related posts — pick up to 3 individual articles.
-Now includes author name below title.
+Now includes author name and published date.
 {% endcomment %}
 
 <section
@@ -40,9 +40,13 @@ Now includes author name below title.
                       <span class="card__heading-text">{{ article.title }}</span>
                     </h3>
 
-                    {% if article.author %}
-                      <p class="card__author" style="font-size: 0.9em; color: var(--color-foreground-secondary); margin-bottom: 0.5em;">
-                        {{ article.author }}
+                    {% if article.author or article.published_at %}
+                      <p class="card__meta" style="font-size: 0.9em; color: var(--color-foreground-secondary); margin-bottom: 0.5em;">
+                        {% if article.author %}By {{ article.author }}{% endif %}
+                        {% if article.published_at %}
+                          {% if article.author %} &nbsp;•&nbsp; {% endif %}
+                          {{ article.published_at | date: "%b %d, %Y" }}
+                        {% endif %}
                       </p>
                     {% endif %}
 
