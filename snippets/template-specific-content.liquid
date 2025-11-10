@@ -1,0 +1,53 @@
+{%- comment -%} Template-specific content and layout handling {%- endcomment -%}
+
+{% if request.page_type == 'collection' %}
+  <div class="video-modal" id="videoModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal()">&times;</span>
+      <div id="modalVideoContainer"></div>
+    </div>
+  </div>
+{% endif %}
+
+{% if request.page_type == 'cart' %}
+  <div class="california-discount-offer">
+    <p class="desktop-text">{{ settings.ca_offer_desktop }}</p>
+    <p class="mobile-text">{{ settings.ca_offer_mobile }}</p>
+  </div>
+{% endif %}
+
+{%- comment -%} Main content layout handling {%- endcomment -%}
+{% if request.page_type == 'page' and page.metafields.layout.narrow == true %}
+  <div class="page-narrow-layout">
+    {{ content_for_layout }}
+  </div>
+{% elsif request.page_type == 'page' or request.page_type == 'index' or request.page_type == 'collection' or request.page_type == 'product' or request.page_type == 'search' %}
+  <style>
+    @media only screen and (min-width: 990px) {
+      .side-bar-comtainer { 
+        position: relative;
+        display: flex;
+        gap: 0px!important;
+        align-items: flex-start;
+      }
+      .side-bar-comtainer .inner-container {
+        flex: 1 1 0%;
+        max-width: calc(100% - 236px);
+      }
+      .side-bar-comtainer .sidebarmenu {
+        flex: 0 0 236px;
+      }
+    }
+  </style>
+  
+  <div class="{% unless template == 'page.goaffpro-create' %} grid-container {% endunless %} {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %} {% unless template == 'page.goaffpro-create' %} side-bar-comtainer {% endunless %}">
+    {% unless template == 'page.goaffpro-create' %}
+      <aside class="sidebarmenu">
+        {% render 'header-sidebar-menu' %}
+      </aside>
+    {% endunless %}
+
+  </div>
+{% else %}
+  {{ content_for_layout }}
+{% endif %}
