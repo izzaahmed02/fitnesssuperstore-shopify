@@ -354,29 +354,7 @@
               {%- assign image_media = product.media | where: 'media_type', 'image' -%}
 
               <div class="custom-gallery-thumbnails only-desktop">
-                {% assign model = product.media | where: 'media_type', 'model' | first %}
-                {%- if model -%}
-                  {% assign preview = model.preview_image %}
-
-                  <button
-                    class="thumbnail-btn is-active"
-                    data-media-id="{{ model.id }}"
-                    type="button"
-                  >
-                    <div class="image-skeleton-wrapper">
-                      <img
-                        src="{{ preview | image_url: width: 100 }}"
-                        alt="{{ model.alt | escape }}"
-                        width="{{ preview.width }}"
-                        height="{{ preview.height }}"
-                        loading="lazy"
-                        fetchpriority="high"
-                        onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
-                      >
-                    </div>
-                  </button>
-
-                {%- endif -%}
+                
                 {%- assign image_limit = 4 -%}
                 {%- for media in image_media limit: image_limit -%}
                   {% assign preview = media.preview_image %}
@@ -405,6 +383,30 @@
                     {%- endif -%}
                   </button>
                 {%- endfor -%}
+
+                {% assign model = product.media | where: 'media_type', 'model' | first %}
+                {%- if model -%}
+                  {% assign preview = model.preview_image %}
+
+                  <button
+                    class="thumbnail-btn"
+                    data-media-id="{{ model.id }}"
+                    type="button"
+                  >
+                    <div class="image-skeleton-wrapper">
+                      <img
+                        src="{{ preview | image_url: width: 100 }}"
+                        alt="{{ model.alt | escape }}"
+                        width="{{ preview.width }}"
+                        height="{{ preview.height }}"
+                        loading="lazy"
+                        fetchpriority="high"
+                        onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                      >
+                    </div>
+                  </button>
+
+                {%- endif -%}
 
                 {% assign video_count = 0 %}
                 {% for media in product.media %}
@@ -446,15 +448,10 @@
 
               <!-- Main image -->
               <div class="custom-gallery-main" data-main-media-wrapper>
-                {% if model %}
-                  <div
-                    class="main-image-container"
-                    data-media-id="{{ model.id }}"
-                  >
-                    <model-viewer alt="{{ model.alt | json }}" src="{% for source in model.sources %}{% if source.format == 'glb' %}{{ source.url }}{% endif %}{% endfor %}" camera-controls="true" camera-orbit="0deg 75deg 4m" data-shopify-feature="1.12" data-js-focus-visible="" ar-status="not-presenting"></model-viewer>
-                  </div>
-                {% else %}
-                  {% assign first_media = product.media.first %}
+                {% if product.media.first %}
+                
+
+                    {% assign first_media = product.media.first %}
                   {% assign preview = first_media.preview_image %}
 
                   <div
@@ -481,6 +478,14 @@
                       <div class="media-placeholder">Preview available in popup only.</div>
                     {% endif %}
                   </div>
+                {% else %}
+                  <div
+                    class="main-image-container"
+                    data-media-id="{{ model.id }}"
+                  >
+                    <model-viewer alt="{{ model.alt | json }}" src="{% for source in model.sources %}{% if source.format == 'glb' %}{{ source.url }}{% endif %}{% endfor %}" camera-controls="true" camera-orbit="0deg 75deg 4m" data-shopify-feature="1.12" data-js-focus-visible="" ar-status="not-presenting"></model-viewer>
+                  </div>
+
                 {% endif %}
               </div>
             </div>
