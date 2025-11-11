@@ -17,7 +17,7 @@ const onReady=e=>"loading"===document.readyState?document.addEventListener("DOMC
         }, { once: true });
       }
     }, { passive: false });
-  }
+  };
 
   const search = document.querySelector('.custom-header-search--input');
   const hidePopup = (p) => { if (p) p.style.display = 'none'; };
