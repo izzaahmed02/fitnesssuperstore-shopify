@@ -3506,3 +3506,76 @@ document.addEventListener("variant:change",onVariantChange);document.addEventLis
 const productForm=document.querySelector('form[action*="/cart/add"]');if(productForm&&!productForm.__variantSyncBound){productForm.__variantSyncBound=!0;productForm.addEventListener("change",function(){setTimeout(()=>{suppressPopupFor(600);try{const idEl=productForm.querySelector(".product-variant-id");if(idEl&&window.product&&Array.isArray(window.product.variants)){const cur=window.product.variants.find(v=>String(v.id)===String(idEl.value)),mid=resolveMediaIdFromVariant(cur);if(mid)activateMediaById(mid)}}catch(_){ }},50)})}
 })();
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var idEl=document.querySelector('.product-variant-id'), v=null;
+  if(idEl && window.product && Array.isArray(window.product.variants)){
+    v=window.product.variants.find(x=>String(x.id)===String(idEl.value));
+  }
+  if(!v && window.product && window.product.selected_or_first_available_variant){
+    v=window.product.selected_or_first_available_variant;
+  }
+  if(typeof resolveMediaIdFromVariant==='function' && typeof activateMediaById==='function'){
+    var mid=resolveMediaIdFromVariant(v);
+    if(mid) activateMediaById(mid);
+  }
+});
+</script>
+<script>
+(function(){
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const q=(s,r=document)=>r.querySelector(s);
+
+  function groups(){
+    const cs=$$('variant-radios, variant-selects, .product-form__input, fieldset.product-form__input, [data-product-options], [data-index^="option"]');
+    const gs=[];
+    cs.forEach(c=>{
+      let ctrls=$$('input[type="radio"]',c);
+      if(!ctrls.length) ctrls=$$('select',c);
+      if(!ctrls.length) ctrls=$$('[data-option-value],[data-value],button[role="option"]',c);
+      if(ctrls.length) gs.push({c,ctrls});
+    });
+    return gs.filter((g,i,a)=>a.findIndex(h=>h.c===g.c)===i);
+  }
+  const enabled=el=>el&&!el.disabled&&el.getAttribute('aria-disabled')!=='true'&&!el.classList.contains('disabled')&&!el.closest('[aria-disabled="true"]');
+  function firstAvailable(g){
+    const r=g.ctrls.find(x=>x.tagName==='INPUT'&&x.type==='radio'&&enabled(x));
+    if(r) return r;
+    const s=g.ctrls.find(x=>x.tagName==='SELECT');
+    if(s){ const opt=[...s.options].find(o=>!o.disabled); if(opt) return {sel:s,val:opt.value}; }
+    const p=g.ctrls.find(x=>enabled(x)&&x.tagName!=='INPUT'&&x.tagName!=='SELECT');
+    return p||null;
+  }
+  function choose(ctrl){
+    if(!ctrl) return;
+    if(ctrl.sel){ if(ctrl.sel.value!==ctrl.val){ ctrl.sel.value=ctrl.val; ctrl.sel.dispatchEvent(new Event('change',{bubbles:true})); } return; }
+    if(ctrl.tagName==='INPUT'){ if(!ctrl.checked){ (q(`label[for="${ctrl.id}"]`)||ctrl).click(); ctrl.dispatchEvent(new Event('change',{bubbles:true})); } return; }
+    ctrl.click(); ctrl.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  function hasSelection(g){
+    const rs=g.ctrls.filter(x=>x.tagName==='INPUT'&&x.type==='radio');
+    if(rs.length) return rs.some(r=>r.checked);
+    const s=g.ctrls.find(x=>x.tagName==='SELECT'); if(s) return !!s.value;
+    return g.ctrls.some(el=>el.getAttribute('aria-pressed')==='true'||el.getAttribute('aria-selected')==='true'||el.classList.contains('is-selected')||el.classList.contains('selected')||el.classList.contains('active'));
+  }
+
+  // On page load: ensure the second group (e.g., Weight) has something selected
+  document.addEventListener('DOMContentLoaded',()=>{
+    const gs=groups();
+    if(gs[1] && !hasSelection(gs[1])) choose(firstAvailable(gs[1]));
+  });
+
+  // When the first group changes, auto-pick first available in the next group
+  document.addEventListener('change',e=>{
+    const gs=groups();
+    const i=gs.findIndex(g=>g.c.contains(e.target));
+    const next=gs[i+1];
+    if(!next) return;
+    // let theme finish enabling/disabling, then pick
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(!hasSelection(next)) choose(firstAvailable(next));
+    }));
+  });
+})();
+</script>
