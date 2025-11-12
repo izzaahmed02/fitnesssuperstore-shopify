@@ -3508,118 +3508,74 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 </script>
 
 <script>
+document.addEventListener('DOMContentLoaded',function(){
+  var idEl=document.querySelector('.product-variant-id'), v=null;
+  if(idEl && window.product && Array.isArray(window.product.variants)){
+    v=window.product.variants.find(x=>String(x.id)===String(idEl.value));
+  }
+  if(!v && window.product && window.product.selected_or_first_available_variant){
+    v=window.product.selected_or_first_available_variant;
+  }
+  if(typeof resolveMediaIdFromVariant==='function' && typeof activateMediaById==='function'){
+    var mid=resolveMediaIdFromVariant(v);
+    if(mid) activateMediaById(mid);
+  }
+});
+</script>
+<script>
 (function(){
-  const $$ = (s,root=document)=>Array.from(root.querySelectorAll(s));
-  const q  = (s,root=document)=>root.querySelector(s);
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const q=(s,r=document)=>r.querySelector(s);
 
-  // Visibility + enabled checks that work for radios, selects, and pill buttons
-  const visible = el => !!el && (el.offsetParent!==null || getComputedStyle(el).display!=='none');
-  const enabled = el => !!el && !el.disabled && el.getAttribute('aria-disabled')!=='true' && !el.classList.contains('disabled') && !el.closest('[aria-disabled="true"]') && visible(el);
-
-  // Build option groups for a given product form, in DOM order (no hard-coded names)
-  function getGroups(form){
-    const containers = $$(
-      'variant-radios, variant-selects, .product-form__input, fieldset.product-form__input, [data-product-options], [data-index^="option"]',
-      form
-    );
-    const groups = [];
-    containers.forEach(c=>{
-      let ctrls = $$('input[type="radio"]', c);
-      if (!ctrls.length) ctrls = $$('select', c);
-      if (!ctrls.length) ctrls = $$('[data-option-value],[data-value],button[role="option"]', c);
-      if (ctrls.length) groups.push({ c, ctrls });
+  function groups(){
+    const cs=$$('variant-radios, variant-selects, .product-form__input, fieldset.product-form__input, [data-product-options], [data-index^="option"]');
+    const gs=[];
+    cs.forEach(c=>{
+      let ctrls=$$('input[type="radio"]',c);
+      if(!ctrls.length) ctrls=$$('select',c);
+      if(!ctrls.length) ctrls=$$('[data-option-value],[data-value],button[role="option"]',c);
+      if(ctrls.length) gs.push({c,ctrls});
     });
-    // De-dup nested wrappers
-    return groups.filter((g,i,a)=>a.findIndex(h=>h.c===g.c)===i);
+    return gs.filter((g,i,a)=>a.findIndex(h=>h.c===g.c)===i);
   }
-
-  function hasSelection(g){
-    const rs = g.ctrls.filter(x=>x.tagName==='INPUT' && x.type==='radio');
-    if (rs.length) return rs.some(r=>r.checked);
-    const sel = g.ctrls.find(x=>x.tagName==='SELECT');
-    if (sel) return !!sel.value;
-    // Pills / buttons
-    return g.ctrls.some(el =>
-      el.getAttribute('aria-pressed')==='true' ||
-      el.getAttribute('aria-selected')==='true' ||
-      el.classList.contains('is-selected') ||
-      el.classList.contains('selected') ||
-      el.classList.contains('active')
-    );
-  }
-
+  const enabled=el=>el&&!el.disabled&&el.getAttribute('aria-disabled')!=='true'&&!el.classList.contains('disabled')&&!el.closest('[aria-disabled="true"]');
   function firstAvailable(g){
-    // 1) enabled radio
-    const r = g.ctrls.find(x=>x.tagName==='INPUT' && x.type==='radio' && enabled(x));
-    if (r) return r;
-    // 2) select's first enabled option
-    const s = g.ctrls.find(x=>x.tagName==='SELECT');
-    if (s){
-      const opt = Array.from(s.options).find(o=>!o.disabled);
-      if (opt) return { sel:s, val:opt.value };
-    }
-    // 3) enabled pill/button
-    const p = g.ctrls.find(x=>enabled(x) && x.tagName!=='INPUT' && x.tagName!=='SELECT');
-    return p || null;
+    const r=g.ctrls.find(x=>x.tagName==='INPUT'&&x.type==='radio'&&enabled(x));
+    if(r) return r;
+    const s=g.ctrls.find(x=>x.tagName==='SELECT');
+    if(s){ const opt=[...s.options].find(o=>!o.disabled); if(opt) return {sel:s,val:opt.value}; }
+    const p=g.ctrls.find(x=>enabled(x)&&x.tagName!=='INPUT'&&x.tagName!=='SELECT');
+    return p||null;
   }
-
   function choose(ctrl){
-    if (!ctrl) return false;
-    // <select>
-    if (ctrl.sel){ if (ctrl.sel.value!==ctrl.val){ ctrl.sel.value = ctrl.val; ctrl.sel.dispatchEvent(new Event('change',{bubbles:true})); } return true; }
-    // radio
-    if (ctrl.tagName==='INPUT'){
-      if (ctrl.checked) return true;
-      const lab = ctrl.id && document.querySelector(`label[for="${CSS.escape(ctrl.id)}"]`);
-      (lab || ctrl).click();
-      ctrl.dispatchEvent(new Event('change',{bubbles:true}));
-      return true;
-    }
-    // pill/button
-    ctrl.click();
-    ctrl.dispatchEvent(new Event('change',{bubbles:true}));
-    return true;
+    if(!ctrl) return;
+    if(ctrl.sel){ if(ctrl.sel.value!==ctrl.val){ ctrl.sel.value=ctrl.val; ctrl.sel.dispatchEvent(new Event('change',{bubbles:true})); } return; }
+    if(ctrl.tagName==='INPUT'){ if(!ctrl.checked){ (q(`label[for="${ctrl.id}"]`)||ctrl).click(); ctrl.dispatchEvent(new Event('change',{bubbles:true})); } return; }
+    ctrl.click(); ctrl.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  function hasSelection(g){
+    const rs=g.ctrls.filter(x=>x.tagName==='INPUT'&&x.type==='radio');
+    if(rs.length) return rs.some(r=>r.checked);
+    const s=g.ctrls.find(x=>x.tagName==='SELECT'); if(s) return !!s.value;
+    return g.ctrls.some(el=>el.getAttribute('aria-pressed')==='true'||el.getAttribute('aria-selected')==='true'||el.classList.contains('is-selected')||el.classList.contains('selected')||el.classList.contains('active'));
   }
 
-  // Retry helper: lets theme finish toggling availability before we pick
-  function pickFirstWithRetries(group){
-    let tries = 0;
-    (function attempt(){
-      tries++;
-      const ctrl = firstAvailable(group);
-      const picked = choose(ctrl);
-      if (!picked && tries < 8) setTimeout(attempt, tries*70); // 70..490ms
-    })();
-  }
-
-  // Ensure the second group has something selected in a given form
-  function ensureSecondSelected(form){
-    const gs = getGroups(form);
-    if (gs[1] && !hasSelection(gs[1])) pickFirstWithRetries(gs[1]);
-  }
-
-  // INITIAL: for each product form on the page
-  document.addEventListener('DOMContentLoaded', ()=>{
-    $$('form[action*="/cart/add"]').forEach(form=>{
-      ensureSecondSelected(form); // if Singles is default, pick first Weight (e.g., 2.5 lbs / 190 lbs Set)
-    });
+  // On page load: ensure the second group (e.g., Weight) has something selected
+  document.addEventListener('DOMContentLoaded',()=>{
+    const gs=groups();
+    if(gs[1] && !hasSelection(gs[1])) choose(firstAvailable(gs[1]));
   });
 
-  // ON CHANGE: when any option changes inside a form, pick the first available in the *next* group of that same form
-  document.addEventListener('change', e=>{
-    const form = e.target.closest('form[action*="/cart/add"]');
-    if (!form) return;
-    const gs = getGroups(form);
-    const idx = gs.findIndex(g=>g.c.contains(e.target));
-    const next = gs[idx+1];
-    if (!next) return;
-    // Wait two frames so Dawn updates enabled/disabled, then pick
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{ if (!hasSelection(next)) pickFirstWithRetries(next); }));
-  });
-
-  // On Shopify section re-loads, do the same
-  document.addEventListener('shopify:section:load', ()=>{
-    $$('form[action*="/cart/add"]').forEach(ensureSecondSelected);
+  // When the first group changes, auto-pick first available in the next group
+  document.addEventListener('change',e=>{
+    const gs=groups();
+    const i=gs.findIndex(g=>g.c.contains(e.target));
+    const next=gs[i+1];
+    if(!next) return;
+    // let theme finish enabling/disabling, then pick
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(!hasSelection(next)) choose(firstAvailable(next));
+    }));
   });
 })();
 </script>
