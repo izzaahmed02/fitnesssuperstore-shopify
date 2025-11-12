@@ -171,7 +171,7 @@ if (!customElements.get('product-customization-options')) {
       // Need to add lister, because element not in DOM on Page Load
 
       addRemoveListener(optionHandler, originalOption) {
-        if (!optionHandler) return;
+        if (!optionHandler || optionHandler.hasAttribute('data-mandatory')) return;
         const selectedOptions = optionHandler.querySelectorAll('[data-option-id]');
         if (selectedOptions.length === 0) return;
         selectedOptions.forEach((option) => {
@@ -198,7 +198,6 @@ if (!customElements.get('product-customization-options')) {
             }
             if (this.closest('cart-drawer')) return;
             this.updatePrice();
-            this.closeAccordion(optionContainer);
           });
         });
       }
