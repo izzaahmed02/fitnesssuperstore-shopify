@@ -3509,168 +3509,117 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 
 <script>
 (function(){
-  /* ========== helpers ========== */
-  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
-  const q=(s,r=document)=>r.querySelector(s);
+  const $$ = (s,root=document)=>Array.from(root.querySelectorAll(s));
+  const q  = (s,root=document)=>root.querySelector(s);
 
-  /* ========= media manifest & rendering (image only) ========= */
-  function getMediaList(){
-    const el=document.querySelector('script[data-product-media]');
-    if(!el) return [];
-    try{ return JSON.parse(el.textContent||'[]'); }catch(_){ return []; }
-  }
-  function safePath(u){ try{ return new URL(u,location.origin).pathname; }catch(_){ return String(u||''); } }
+  // Visibility + enabled checks that work for radios, selects, and pill buttons
+  const visible = el => !!el && (el.offsetParent!==null || getComputedStyle(el).display!=='none');
+  const enabled = el => !!el && !el.disabled && el.getAttribute('aria-disabled')!=='true' && !el.classList.contains('disabled') && !el.closest('[aria-disabled="true"]') && visible(el);
 
-  const mediaList=getMediaList();
-  const mediaById=new Map(mediaList.map(m=>[String(m.id),m]));
-  const imgBySrc=new Map(
-    mediaList.filter(m=>m.media_type==='image' && m.preview_image?.src)
-             .map(m=>[safePath(m.preview_image.src),m])
-  );
-
-  function mediaIdForVariant(v){
-    if(!v) return null;
-    // 1) featured_media id
-    const mid=v.featured_media && v.featured_media.id;
-    if(mid && mediaById.has(String(mid))) return String(mid);
-    // 2) match by featured_image src
-    if(v.featured_image?.src){
-      const hit=imgBySrc.get(safePath(v.featured_image.src));
-      if(hit) return String(hit.id);
-    }
-    // 3) fallback: first image in manifest
-    const first=mediaList.find(m=>m.media_type==='image');
-    return first?String(first.id):null;
-  }
-
-  function renderMainByMediaId(id){
-    const m=mediaById.get(String(id));
-    const container=q('.custom-gallery-main') || q('[data-main-media-wrapper]');
-    if(!m || !container) return;
-    container.innerHTML='';
-    const wrap=document.createElement('div');
-    wrap.className='main-image-container';
-    wrap.setAttribute('data-media-id', m.id);
-    const shell=document.createElement('div');
-    shell.className='image-skeleton-wrapper loaded';
-    const img=document.createElement('img');
-    img.className='main-product-image';
-    img.loading='eager';
-    img.alt=m.alt||'';
-    img.src=m.preview_image?.src||'';
-    if(m.preview_image?.width)  img.width=m.preview_image.width;
-    if(m.preview_image?.height) img.height=m.preview_image.height;
-    shell.appendChild(img); wrap.appendChild(shell); container.appendChild(wrap);
-  }
-
-  function paintFromVariant(v){
-    const mid=mediaIdForVariant(v);
-    if(mid) renderMainByMediaId(mid);
-  }
-
-  function currentVariant(){
-    // hidden input first
-    const idEl=q('.product-variant-id');
-    const id=idEl && (idEl.value || idEl.getAttribute('value'));
-    if(id && window.product && Array.isArray(window.product.variants)){
-      const v=window.product.variants.find(x=>String(x.id)===String(id));
-      if(v) return v;
-    }
-    // theme-injected current/first
-    if(window.product && (window.product.selected_or_first_available_variant || Array.isArray(window.product.variants))){
-      return window.product.selected_or_first_available_variant || window.product.variants?.[0] || null;
-    }
-    return null;
-  }
-
-  /* ========= auto-select next option group (name-agnostic) ========= */
-  function getGroups(){
-    const C=$$('variant-radios, variant-selects, .product-form__input, fieldset.product-form__input, [data-product-options], [data-index^="option"]');
-    const out=[];
-    C.forEach(c=>{
-      let ctrls=$$('input[type="radio"]',c);
-      if(!ctrls.length) ctrls=$$('select',c);
-      if(!ctrls.length) ctrls=$$('[data-option-value],[data-value],button[role="option"]',c);
-      if(ctrls.length) out.push({c,ctrls});
+  // Build option groups for a given product form, in DOM order (no hard-coded names)
+  function getGroups(form){
+    const containers = $$(
+      'variant-radios, variant-selects, .product-form__input, fieldset.product-form__input, [data-product-options], [data-index^="option"]',
+      form
+    );
+    const groups = [];
+    containers.forEach(c=>{
+      let ctrls = $$('input[type="radio"]', c);
+      if (!ctrls.length) ctrls = $$('select', c);
+      if (!ctrls.length) ctrls = $$('[data-option-value],[data-value],button[role="option"]', c);
+      if (ctrls.length) groups.push({ c, ctrls });
     });
-    // dedupe nested
-    return out.filter((g,i,a)=>a.findIndex(h=>h.c===g.c)===i);
+    // De-dup nested wrappers
+    return groups.filter((g,i,a)=>a.findIndex(h=>h.c===g.c)===i);
   }
-  const enabled=el=>el && !el.disabled && el.getAttribute('aria-disabled')!=='true' && !el.classList.contains('disabled') && !el.closest('[aria-disabled="true"]');
-  function hasSelection(g){
-    const r=g.ctrls.filter(x=>x.tagName==='INPUT' && x.type==='radio');
-    if(r.length) return r.some(x=>x.checked);
-    const s=g.ctrls.find(x=>x.tagName==='SELECT'); if(s) return !!s.value;
-    return g.ctrls.some(el => el.getAttribute('aria-pressed')==='true' || el.getAttribute('aria-selected')==='true' || el.classList.contains('is-selected') || el.classList.contains('selected') || el.classList.contains('active'));
-  }
-  function firstAvailable(g){
-    const r=g.ctrls.find(x=>x.tagName==='INPUT' && x.type==='radio' && enabled(x));
-    if(r) return r;
-    const s=g.ctrls.find(x=>x.tagName==='SELECT');
-    if(s){ const opt=[...s.options].find(o=>!o.disabled); if(opt) return {sel:s,val:opt.value}; }
-    const p=g.ctrls.find(x=>enabled(x) && x.tagName!=='INPUT' && x.tagName!=='SELECT');
-    return p||null;
-  }
-  function choose(ctrl){
-    if(!ctrl) return false;
-    if(ctrl.sel){ if(ctrl.sel.value!==ctrl.val){ ctrl.sel.value=ctrl.val; ctrl.sel.dispatchEvent(new Event('change',{bubbles:true})); } return true; }
-    if(ctrl.tagName==='INPUT'){ if(!ctrl.checked){ (q(`label[for="${ctrl.id}"]`)||ctrl).click(); ctrl.dispatchEvent(new Event('change',{bubbles:true})); } return true; }
-    ctrl.click(); ctrl.dispatchEvent(new Event('change',{bubbles:true})); return true;
-  }
-  const userTouched=new WeakSet();
-  document.addEventListener('pointerdown',e=>{
-    const g=getGroups().find(gr=>gr.c.contains(e.target));
-    if(g) userTouched.add(g.c);
-  },true);
 
-  function autoPickNextGroup(next){
-    if(!next || userTouched.has(next.c) || hasSelection(next)) return;
-    let tries=0;(function retry(){
-      if(userTouched.has(next.c) || hasSelection(next)) return;
-      const picked=choose(firstAvailable(next));
-      if(!picked && ++tries<6) setTimeout(retry, tries*60); // 60..300ms
+  function hasSelection(g){
+    const rs = g.ctrls.filter(x=>x.tagName==='INPUT' && x.type==='radio');
+    if (rs.length) return rs.some(r=>r.checked);
+    const sel = g.ctrls.find(x=>x.tagName==='SELECT');
+    if (sel) return !!sel.value;
+    // Pills / buttons
+    return g.ctrls.some(el =>
+      el.getAttribute('aria-pressed')==='true' ||
+      el.getAttribute('aria-selected')==='true' ||
+      el.classList.contains('is-selected') ||
+      el.classList.contains('selected') ||
+      el.classList.contains('active')
+    );
+  }
+
+  function firstAvailable(g){
+    // 1) enabled radio
+    const r = g.ctrls.find(x=>x.tagName==='INPUT' && x.type==='radio' && enabled(x));
+    if (r) return r;
+    // 2) select's first enabled option
+    const s = g.ctrls.find(x=>x.tagName==='SELECT');
+    if (s){
+      const opt = Array.from(s.options).find(o=>!o.disabled);
+      if (opt) return { sel:s, val:opt.value };
+    }
+    // 3) enabled pill/button
+    const p = g.ctrls.find(x=>enabled(x) && x.tagName!=='INPUT' && x.tagName!=='SELECT');
+    return p || null;
+  }
+
+  function choose(ctrl){
+    if (!ctrl) return false;
+    // <select>
+    if (ctrl.sel){ if (ctrl.sel.value!==ctrl.val){ ctrl.sel.value = ctrl.val; ctrl.sel.dispatchEvent(new Event('change',{bubbles:true})); } return true; }
+    // radio
+    if (ctrl.tagName==='INPUT'){
+      if (ctrl.checked) return true;
+      const lab = ctrl.id && document.querySelector(`label[for="${CSS.escape(ctrl.id)}"]`);
+      (lab || ctrl).click();
+      ctrl.dispatchEvent(new Event('change',{bubbles:true}));
+      return true;
+    }
+    // pill/button
+    ctrl.click();
+    ctrl.dispatchEvent(new Event('change',{bubbles:true}));
+    return true;
+  }
+
+  // Retry helper: lets theme finish toggling availability before we pick
+  function pickFirstWithRetries(group){
+    let tries = 0;
+    (function attempt(){
+      tries++;
+      const ctrl = firstAvailable(group);
+      const picked = choose(ctrl);
+      if (!picked && tries < 8) setTimeout(attempt, tries*70); // 70..490ms
     })();
   }
 
-  /* ========= wiring ========= */
-  // 1) Initial image for current variant (fixes missing 2.5 lbs image)
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const v=currentVariant();
-    if(v) paintFromVariant(v);
-  });
-
-  // 2) Repaint on variant change (theme event + hidden input change)
-  document.addEventListener('variant:change', e=>{
-    const v=e?.detail?.variant || null;
-    if(v) paintFromVariant(v);
-  });
-  const idEl=q('.product-variant-id');
-  if(idEl){
-    new MutationObserver(()=>{ const v=currentVariant(); if(v) paintFromVariant(v); })
-      .observe(idEl,{attributes:true,attributeFilter:['value']});
-    idEl.addEventListener('change', ()=>{ const v=currentVariant(); if(v) paintFromVariant(v); });
+  // Ensure the second group has something selected in a given form
+  function ensureSecondSelected(form){
+    const gs = getGroups(form);
+    if (gs[1] && !hasSelection(gs[1])) pickFirstWithRetries(gs[1]);
   }
 
-  // 3) Ensure Weight (2nd group) has a selection on load
+  // INITIAL: for each product form on the page
   document.addEventListener('DOMContentLoaded', ()=>{
-    const gs=getGroups();
-    if(gs[1] && !hasSelection(gs[1])) autoPickNextGroup(gs[1]);
+    $$('form[action*="/cart/add"]').forEach(form=>{
+      ensureSecondSelected(form); // if Singles is default, pick first Weight (e.g., 2.5 lbs / 190 lbs Set)
+    });
   });
 
-  // 4) When first group changes, pick first available in the next group (e.g., Weight)
+  // ON CHANGE: when any option changes inside a form, pick the first available in the *next* group of that same form
   document.addEventListener('change', e=>{
-    const gs=getGroups();
-    const i=gs.findIndex(g=>g.c.contains(e.target));
-    const next=gs[i+1];
-    if(!next) return;
-    // wait two frames so theme can toggle enabled/disabled, then pick
-    requestAnimationFrame(()=>requestAnimationFrame(()=>autoPickNextGroup(next)));
+    const form = e.target.closest('form[action*="/cart/add"]');
+    if (!form) return;
+    const gs = getGroups(form);
+    const idx = gs.findIndex(g=>g.c.contains(e.target));
+    const next = gs[idx+1];
+    if (!next) return;
+    // Wait two frames so Dawn updates enabled/disabled, then pick
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ if (!hasSelection(next)) pickFirstWithRetries(next); }));
   });
 
-  // 5) Re-apply after section reloads
+  // On Shopify section re-loads, do the same
   document.addEventListener('shopify:section:load', ()=>{
-    const v=currentVariant(); if(v) paintFromVariant(v);
-    const gs=getGroups(); if(gs[1] && !hasSelection(gs[1])) autoPickNextGroup(gs[1]);
+    $$('form[action*="/cart/add"]').forEach(ensureSecondSelected);
   });
 })();
 </script>
