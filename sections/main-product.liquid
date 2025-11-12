@@ -3610,17 +3610,22 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 </script>
 
 
+
+
+
+
+
+
+
 <script>
 (function(){
-  const MOBILE_ROOT = document.querySelector('.product__info-wrapper--mobile');
-  if(!MOBILE_ROOT) return;
+  const MOBILE_WRAPPER_SELECTOR = '.product__info-wrapper--mobile';
 
-  /* ---------- helpers ---------- */
+  const q=(s,r=document)=>r.querySelector(s);
   const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
-  const q =(s,r=document)=>r.querySelector(s);
   const safePath=u=>{try{return new URL(u,location.origin).pathname}catch(_){return String(u||'')}};
 
-  // Media manifest
+  // --- media manifest
   function getMediaList(){
     const el=document.querySelector('script[data-product-media]');
     if(!el) return [];
@@ -3629,62 +3634,76 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
   const mediaList=getMediaList();
   const mediaById=new Map(mediaList.map(m=>[String(m.id),m]));
   const imgBySrc=new Map(
-    mediaList.filter(m=>m.media_type==='image'&&m.preview_image?.src)
+    mediaList.filter(m=>m.media_type==='image' && m.preview_image?.src)
              .map(m=>[safePath(m.preview_image.src),m])
   );
 
-  // Resolve media id for a variant
-  function mediaIdForVariant(v){
+  // Pick best media for a variant
+  function mediaForVariant(v){
     if(!v) return null;
+    // 1) featured_media id present in manifest
     const mid=v.featured_media && v.featured_media.id;
-    if(mid && mediaById.has(String(mid))) return String(mid);
+    if(mid && mediaById.has(String(mid))) return mediaById.get(String(mid));
+    // 2) match by featured_image src
     if(v.featured_image?.src){
       const hit=imgBySrc.get(safePath(v.featured_image.src));
-      if(hit) return String(hit.id);
+      if(hit) return hit;
     }
-    const first=mediaList.find(m=>m.media_type==='image');
-    return first?String(first.id):null;
+    // 3) fallback to first image
+    return mediaList.find(m=>m.media_type==='image') || null;
   }
 
-  // Update mobile view: prefer slides with data-media-id, else swap a single image
-  function showOnlyByIdMobile(id){
-    const slides = $$('.mobile-gallery-slide,[data-media-id]', MOBILE_ROOT);
-    if(!slides.length) return false;
-    let matched=false;
-    slides.forEach(el=>{
-      const ok=String(el.getAttribute('data-media-id')||'')===String(id);
-      el.style.display = ok ? '' : 'none';
-      if(ok) matched=true;
-    });
-    return matched;
-  }
-  function swapMobileImg(media){
-    if(!media || media.media_type!=='image') return false;
-    const holder = q('[data-mobile-main]', MOBILE_ROOT) ||
-                   q('.custom-gallery-main-mobile', MOBILE_ROOT) ||
-                   MOBILE_ROOT;
-    const img = holder.querySelector('img.mobile-product-image, img');
-    if(!img) return false;
-    img.src = media.preview_image?.src || img.src;
-    if(media.preview_image?.width)  img.width  = media.preview_image.width;
-    if(media.preview_image?.height) img.height = media.preview_image.height;
-    if(media.preview_image?.srcset && 'srcset' in img) img.srcset = media.preview_image.srcset;
-    return true;
-  }
-  function syncMobileByVariant(v){
-    const mid=mediaIdForVariant(v);
-    if(!mid) return;
-    const media=mediaById.get(String(mid));
-    if(!media) return;
-    if(!showOnlyByIdMobile(mid)) swapMobileImg(media);
+  // Ensure there is a dedicated mobile image we can control
+  function ensureMobileImgEl(){
+    const wrap=q(MOBILE_WRAPPER_SELECTOR);
+    if(!wrap) return null;
+
+    // Prefer an existing image inside the mobile wrapper
+    let img = wrap.querySelector('img.mobile-product-image, .custom-gallery-main-mobile img, img');
+    // If found but it's inside price/title area, still OK—we’ll just swap its src.
+
+    // If no image at all, inject one at the top (non-intrusive)
+    if(!img){
+      const holder=document.createElement('div');
+      holder.className='pm-mobile-variant-holder';
+      img=document.createElement('img');
+      img.className='mobile-product-image';
+      img.alt='';
+      img.loading='eager';
+      holder.appendChild(img);
+      // insert at very top of the mobile wrapper
+      wrap.insertBefore(holder, wrap.firstChild || null);
+    }
+    return img;
   }
 
-  // Current variant via hidden input (let theme compute it)
+  // Swap mobile image to the given media (image only)
+  function paintMobile(media){
+    if(!media || media.media_type!=='image') return;
+    const imgEl=ensureMobileImgEl();
+    if(!imgEl) return;
+
+    const src = media.preview_image?.src || media.src || media.original_src || '';
+    if(!src) return;
+
+    // Set attributes safely
+    if(imgEl.src !== src) imgEl.src = src;
+    if(media.preview_image?.width)  imgEl.width  = media.preview_image.width;
+    if(media.preview_image?.height) imgEl.height = media.preview_image.height;
+
+    // Optional srcset if present in manifest
+    if(media.preview_image?.srcset && 'srcset' in imgEl) imgEl.srcset = media.preview_image.srcset;
+    // Keep alt readable
+    imgEl.alt = media.alt || '';
+  }
+
+  // Current variant helper
   function currentVariant(){
     const idEl=q('.product-variant-id');
     const id=idEl && (idEl.value || idEl.getAttribute('value'));
     if(id && window.product && Array.isArray(window.product.variants)){
-      return window.product.variants.find(x=>String(x.id)===String(id)) || null;
+      const v=window.product.variants.find(x=>String(x.id)===String(id));
+      if(v) return v;
     }
     if(window.product){
       return window.product.selected_or_first_available_variant || (window.product.variants||[])[0] || null;
@@ -3692,45 +3711,36 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
     return null;
   }
 
-  // After a click/change on any option inside a form, retry a few times to catch the new variant id
-  function scheduleSyncFromForm(){
-    let tries=0;(function tick(){
-      tries++;
-      const v=currentVariant();
-      if(v){ syncMobileByVariant(v); return; }
-      if(tries<8) setTimeout(tick, tries*70); // 70..490ms
-    })();
+  function syncMobile(){
+    const v=currentVariant();
+    const m=mediaForVariant(v);
+    paintMobile(m);
   }
 
-  /* ---------- wire up: click + change + variant:change + id mutation ---------- */
-  document.addEventListener('click', e=>{
-    const form=e.target.closest('form[action*="/cart/add"]');
-    if(!form) return;
-    // only react to option UIs inside the form
-    if(!e.target.closest('variant-radios, variant-selects, .product-form__input, [data-product-options], [data-index^="option"]')) return;
-    requestAnimationFrame(()=>requestAnimationFrame(scheduleSyncFromForm));
-  }, true);
+  // --- Wire up
+  document.addEventListener('DOMContentLoaded', syncMobile);
 
-  document.addEventListener('change', e=>{
-    const form=e.target.closest('form[action*="/cart/add"]');
-    if(!form) return;
-    if(!e.target.closest('variant-radios, variant-selects, .product-form__input, [data-product-options], [data-index^="option"]')) return;
-    requestAnimationFrame(()=>requestAnimationFrame(scheduleSyncFromForm));
-  });
-
+  // Theme event when a variant resolves
   document.addEventListener('variant:change', e=>{
     const v=e?.detail?.variant || null;
-    if(v) syncMobileByVariant(v);
+    paintMobile(mediaForVariant(v));
   });
 
+  // Hidden variant id watcher
   const idEl=q('.product-variant-id');
   if(idEl){
-    new MutationObserver(()=> syncMobileByVariant(currentVariant()))
-      .observe(idEl,{attributes:true,attributeFilter:['value']});
-    idEl.addEventListener('change', ()=> syncMobileByVariant(currentVariant()));
+    new MutationObserver(syncMobile).observe(idEl,{attributes:true,attributeFilter:['value']});
+    idEl.addEventListener('change', syncMobile);
   }
 
-  // Initial paint for the default selected variant on mobile
-  document.addEventListener('DOMContentLoaded', ()=>{ const v=currentVariant(); if(v) syncMobileByVariant(v); });
+  // Late-mount safety (if mobile DOM renders after load)
+  if(window.MutationObserver){
+    const wrap=q(MOBILE_WRAPPER_SELECTOR);
+    if(wrap){
+      const mo=new MutationObserver(()=>syncMobile());
+      mo.observe(wrap,{childList:true,subtree:true});
+      setTimeout(()=>mo.disconnect(), 5000);
+    }
+  }
 })();
 </script>
