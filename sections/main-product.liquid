@@ -3735,140 +3735,50 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
 })();
 </script>
 
-<script>
-(function(){
+\(function(){
   const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const q=(s,r=document)=>r.querySelector(s);
-  const enabled = el => (
-    el && !el.disabled &&
-    el.getAttribute('aria-disabled')!=='true' &&
-    !el.classList.contains('disabled') &&
-    !el.closest('[aria-disabled="true"]')
-  );
-
-  // Find option groups in DOM order (radios, selects, or button groups)
-  function getGroups() {
-    const groups = [];
-    // Common wrappers in Dawn / custom themes
-    const containers = $$(
-      'variant-radios, variant-selects, .product-form__input, fieldset.product-form__input, [data-product-options], [data-index^="option"]'
-    );
+  function getGroups(){
+    const groups=[];
+    const containers=$$('variant-radios, variant-selects, .product-form__input, fieldset.product-form__input, [data-product-options], [data-index^="option"]');
     containers.forEach(c=>{
-      // Try to locate the actual controls inside each container
-      let controls = $$('input[type="radio"]', c);
-      if (!controls.length) controls = $$('select', c);
-      if (!controls.length) controls = $$('[data-option-value], [data-value], button[role="option"]', c);
-      if (!controls.length) return;
-      groups.push({ container: c, controls });
+      let ctrls=$$('input[type="radio"]',c);
+      if(!ctrls.length) ctrls=$$('select',c);
+      if(!ctrls.length) ctrls=$$('[data-option-value],[data-value],button[role="option"]',c);
+      if(!ctrls.length) return;
+      groups.push({container:c,controls:ctrls});
     });
-    // De-dup if wrappers nested
-    return groups.filter((g,i,arr)=> arr.findIndex(h=>h.container===g.container)===i);
+    return groups.filter((g,i,a)=>a.findIndex(h=>h.container===g.container)===i);
   }
-
-  function firstAvailableControl(group){
-    // Priority: enabled radio → first enabled option in select → enabled button-like control
-    const radios = group.controls.filter(el => el.tagName==='INPUT' && el.type==='radio' && enabled(el));
-    if (radios.length) return radios[0];
-
-    const select = group.controls.find(el => el.tagName==='SELECT');
-    if (select) {
-      const opt = Array.from(select.options).find(o=>!o.disabled);
-      if (opt) return { _select: select, _value: opt.value };
-    }
-
-    const pills = group.controls.filter(el => enabled(el) && (el.dataset.optionValue || el.dataset.value || el.getAttribute('data-value')));
-    if (pills.length) return pills[0];
-
-    // Last resort: any enabled clickable
-    const any = group.controls.find(el=>enabled(el));
-    return any || null;
+  const isEnabled=el=>el&&!el.disabled&&el.getAttribute('aria-disabled')!=='true'&&!el.classList.contains('disabled')&&!el.closest('[aria-disabled="true"]');
+  const hasSelection=g=>{
+    const radios=g.controls.filter(x=>x.tagName==='INPUT'&&x.type==='radio');
+    if(radios.length) return radios.some(r=>r.checked);
+    const sel=g.controls.find(x=>x.tagName==='SELECT'); if(sel) return !!sel.value;
+    return g.controls.some(el=>el.getAttribute('aria-pressed')==='true'||el.getAttribute('aria-selected')==='true'||el.classList.contains('is-selected')||el.classList.contains('selected')||el.classList.contains('active'));
+  };
+  function chooseFirst(g){
+    const r=g.controls.find(x=>x.tagName==='INPUT'&&x.type==='radio'&&isEnabled(x));
+    if(r&&!r.checked){ (q(`label[for="${CSS.escape(r.id)}"]`)||r).click(); r.dispatchEvent(new Event('change',{bubbles:true})); return true; }
+    const s=g.controls.find(x=>x.tagName==='SELECT');
+    if(s){ const opt=[...s.options].find(o=>!o.disabled); if(opt&&s.value!==opt.value){ s.value=opt.value; s.dispatchEvent(new Event('change',{bubbles:true})); return true; } }
+    const p=g.controls.find(x=>isEnabled(x)&&x.tagName!=='INPUT'&&x.tagName!=='SELECT');
+    if(p){ p.click(); p.dispatchEvent(new Event('change',{bubbles:true})); return true; }
+    return false;
   }
-
-  function hasSelection(group){
-    const radios = group.controls.filter(el => el.tagName==='INPUT' && el.type==='radio');
-    if (radios.length) return radios.some(r=>r.checked);
-    const select = group.controls.find(el => el.tagName==='SELECT');
-    if (select) return !!select.value;
-    // Buttons: infer selected by aria-pressed/selected or data-selected class
-    const pills = group.controls.filter(el => el !== null);
-    return pills.some(el =>
-      el.getAttribute('aria-pressed')==='true' ||
-      el.getAttribute('aria-selected')==='true' ||
-      el.classList.contains('is-selected') ||
-      el.classList.contains('selected') ||
-      el.classList.contains('active')
-    );
+  const userTouched=new WeakSet();
+  document.addEventListener('pointerdown',e=>{ const g=getGroups().find(gr=>gr.container.contains(e.target)); if(g) userTouched.add(g.container); },true);
+  function autoPickNextGroup(next){
+    if(!next||userTouched.has(next.container)||hasSelection(next)) return;
+    let tries=0;(function retry(){ if(userTouched.has(next.container)||hasSelection(next)) return;
+      const picked=chooseFirst(next); if(!picked&&++tries<6) setTimeout(retry,tries*60); })();
   }
-
-  function choose(control){
-    if (!control) return false;
-
-    // Select option in a <select>
-    if (control._select) {
-      const sel = control._select;
-      if (sel.value === control._value) return false;
-      sel.value = control._value;
-      sel.dispatchEvent(new Event('change',{bubbles:true}));
-      return true;
-    }
-
-    // Clickable button-pill
-    if (control.tagName!=='INPUT') {
-      control.click();
-      control.dispatchEvent(new Event('change',{bubbles:true}));
-      return true;
-    }
-
-    // Radio input
-    if (control.checked) return false;
-    // Prefer clicking its <label> if possible to trigger theme hooks
-    const id = control.id;
-    const label = id && document.querySelector(`label[for="${CSS.escape(id)}"]`);
-    if (label) label.click();
-    else {
-      control.click();
-      control.dispatchEvent(new Event('change',{bubbles:true}));
-    }
-    return true;
-  }
-
-  // Pick first available for a group, with retries (lets theme update disabled states)
-  function pickFirstWithRetries(group, tries=0){
-    const control = firstAvailableControl(group);
-    const picked = choose(control);
-    if (!picked && tries < 7) {
-      setTimeout(()=>pickFirstWithRetries(group, tries+1), 60*(tries+1)); // 60,120,...420ms
-    }
-  }
-
-  // When any group changes, auto-pick the next group
-  document.addEventListener('change', e=>{
-    const target = e.target;
-    // Only react to option-related controls
-    if (!target.closest('variant-radios, variant-selects, .product-form__input, [data-product-options], [data-index^="option"]')) return;
-
-    // Wait 2 frames so the theme can toggle availability, then pick next
-    const groups = getGroups();
-    // Find the group that contains the changed control
-    const idx = groups.findIndex(g => g.container.contains(target));
-    const next = idx >= 0 ? groups[idx+1] : null;
-    if (next) {
-      requestAnimationFrame(()=>requestAnimationFrame(()=>pickFirstWithRetries(next)));
-    }
+  document.addEventListener('change',e=>{
+    const groups=getGroups(); const idx=groups.findIndex(g=>g.container.contains(e.target));
+    if(idx===-1) return; const next=groups[idx+1];
+    if(next) requestAnimationFrame(()=>requestAnimationFrame(()=>autoPickNextGroup(next)));
   });
-
-  // On load: ensure a valid chain (first available in each group, in order)
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const groups = getGroups();
-    groups.forEach((g,i)=>{
-      if (!hasSelection(g)) pickFirstWithRetries(g);
-    });
-  });
-
-  // Also re-apply after Shopify section reloads
-  document.addEventListener('shopify:section:load', ()=>{
-    const groups = getGroups();
-    groups.forEach(g => { if (!hasSelection(g)) pickFirstWithRetries(g); });
-  });
+  document.addEventListener('DOMContentLoaded',()=>{ getGroups().forEach(g=>{ if(!hasSelection(g)) autoPickNextGroup(g); }); });
+  document.addEventListener('shopify:section:load',()=>{ getGroups().forEach(g=>{ if(!hasSelection(g)&&!userTouched.has(g.container)) autoPickNextGroup(g); }); });
 })();
-</script>
+
