@@ -3608,3 +3608,129 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
   });
 })();
 </script>
+
+
+<script>
+(function(){
+  const MOBILE_ROOT = document.querySelector('.product__info-wrapper--mobile');
+  if(!MOBILE_ROOT) return;
+
+  /* ---------- helpers ---------- */
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const q =(s,r=document)=>r.querySelector(s);
+  const safePath=u=>{try{return new URL(u,location.origin).pathname}catch(_){return String(u||'')}};
+
+  // Media manifest
+  function getMediaList(){
+    const el=document.querySelector('script[data-product-media]');
+    if(!el) return [];
+    try{ return JSON.parse(el.textContent||'[]'); }catch(_){ return []; }
+  }
+  const mediaList=getMediaList();
+  const mediaById=new Map(mediaList.map(m=>[String(m.id),m]));
+  const imgBySrc=new Map(
+    mediaList.filter(m=>m.media_type==='image'&&m.preview_image?.src)
+             .map(m=>[safePath(m.preview_image.src),m])
+  );
+
+  // Resolve media id for a variant
+  function mediaIdForVariant(v){
+    if(!v) return null;
+    const mid=v.featured_media && v.featured_media.id;
+    if(mid && mediaById.has(String(mid))) return String(mid);
+    if(v.featured_image?.src){
+      const hit=imgBySrc.get(safePath(v.featured_image.src));
+      if(hit) return String(hit.id);
+    }
+    const first=mediaList.find(m=>m.media_type==='image');
+    return first?String(first.id):null;
+  }
+
+  // Update mobile view: prefer slides with data-media-id, else swap a single image
+  function showOnlyByIdMobile(id){
+    const slides = $$('.mobile-gallery-slide,[data-media-id]', MOBILE_ROOT);
+    if(!slides.length) return false;
+    let matched=false;
+    slides.forEach(el=>{
+      const ok=String(el.getAttribute('data-media-id')||'')===String(id);
+      el.style.display = ok ? '' : 'none';
+      if(ok) matched=true;
+    });
+    return matched;
+  }
+  function swapMobileImg(media){
+    if(!media || media.media_type!=='image') return false;
+    const holder = q('[data-mobile-main]', MOBILE_ROOT) ||
+                   q('.custom-gallery-main-mobile', MOBILE_ROOT) ||
+                   MOBILE_ROOT;
+    const img = holder.querySelector('img.mobile-product-image, img');
+    if(!img) return false;
+    img.src = media.preview_image?.src || img.src;
+    if(media.preview_image?.width)  img.width  = media.preview_image.width;
+    if(media.preview_image?.height) img.height = media.preview_image.height;
+    if(media.preview_image?.srcset && 'srcset' in img) img.srcset = media.preview_image.srcset;
+    return true;
+  }
+  function syncMobileByVariant(v){
+    const mid=mediaIdForVariant(v);
+    if(!mid) return;
+    const media=mediaById.get(String(mid));
+    if(!media) return;
+    if(!showOnlyByIdMobile(mid)) swapMobileImg(media);
+  }
+
+  // Current variant via hidden input (let theme compute it)
+  function currentVariant(){
+    const idEl=q('.product-variant-id');
+    const id=idEl && (idEl.value || idEl.getAttribute('value'));
+    if(id && window.product && Array.isArray(window.product.variants)){
+      return window.product.variants.find(x=>String(x.id)===String(id)) || null;
+    }
+    if(window.product){
+      return window.product.selected_or_first_available_variant || (window.product.variants||[])[0] || null;
+    }
+    return null;
+  }
+
+  // After a click/change on any option inside a form, retry a few times to catch the new variant id
+  function scheduleSyncFromForm(){
+    let tries=0;(function tick(){
+      tries++;
+      const v=currentVariant();
+      if(v){ syncMobileByVariant(v); return; }
+      if(tries<8) setTimeout(tick, tries*70); // 70..490ms
+    })();
+  }
+
+  /* ---------- wire up: click + change + variant:change + id mutation ---------- */
+  document.addEventListener('click', e=>{
+    const form=e.target.closest('form[action*="/cart/add"]');
+    if(!form) return;
+    // only react to option UIs inside the form
+    if(!e.target.closest('variant-radios, variant-selects, .product-form__input, [data-product-options], [data-index^="option"]')) return;
+    requestAnimationFrame(()=>requestAnimationFrame(scheduleSyncFromForm));
+  }, true);
+
+  document.addEventListener('change', e=>{
+    const form=e.target.closest('form[action*="/cart/add"]');
+    if(!form) return;
+    if(!e.target.closest('variant-radios, variant-selects, .product-form__input, [data-product-options], [data-index^="option"]')) return;
+    requestAnimationFrame(()=>requestAnimationFrame(scheduleSyncFromForm));
+  });
+
+  document.addEventListener('variant:change', e=>{
+    const v=e?.detail?.variant || null;
+    if(v) syncMobileByVariant(v);
+  });
+
+  const idEl=q('.product-variant-id');
+  if(idEl){
+    new MutationObserver(()=> syncMobileByVariant(currentVariant()))
+      .observe(idEl,{attributes:true,attributeFilter:['value']});
+    idEl.addEventListener('change', ()=> syncMobileByVariant(currentVariant()));
+  }
+
+  // Initial paint for the default selected variant on mobile
+  document.addEventListener('DOMContentLoaded', ()=>{ const v=currentVariant(); if(v) syncMobileByVariant(v); });
+})();
+</script>
