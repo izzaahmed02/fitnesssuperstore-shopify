@@ -64,7 +64,7 @@ if (!customElements.get('product-customization-options')) {
       }
 
       closeAccordion(parent) {
-        if (parent.hasAttribute('multichoice')) return;
+        if (parent.hasAttribute('multichoice') || parent.querySelector('[data-quantity-selector]')) return;
         const openButton = parent.querySelector('[data-open-accordion]') || parent.closest('[data-open-accordion]');
         if (!openButton) return;
         if (!openButton) return;
