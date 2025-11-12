@@ -3737,65 +3737,73 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
 
 <script>
 (function(){
-  // ---- Config: use your option names exactly as they appear in your product ----
-  const OPTION_PRIMARY  = 'Single or Set';
-  const OPTION_SECONDARY = 'Weight';
+  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+  const q  = (s,r=document)=>r.querySelector(s);
 
-  // Helpers
-  const $$ = (sel,root=document)=>Array.from(root.querySelectorAll(sel));
-  const byName = name => ({
-    radios: $$(`input[type="radio"][name="options[${CSS.escape(name)}]"]`),
-    select: document.querySelector(`select[name="options[${CSS.escape(name)}]"]`)
-  });
-
-  function firstEnabledRadio(radios){ return radios.find(r=>!r.disabled); }
-
-  function pickFirstAvailable(name){
-    const {radios, select} = byName(name);
-
-    if (radios.length){
-      const first = firstEnabledRadio(radios);
-      if (first && !first.checked){
-        first.click(); // triggers Dawn's variant logic
-        first.dispatchEvent(new Event('change', {bubbles:true}));
-      }
-      return;
-    }
-
-    if (select){
-      const opt = Array.from(select.options).find(o=>!o.disabled);
-      if (opt && opt.value !== select.value){
-        select.value = opt.value;
-        select.dispatchEvent(new Event('change', {bubbles:true}));
-      }
-    }
+  // Find option groups (radios/selects) in DOM order, no hard-coded names
+  function getGroups(){
+    const seen = new Set(), groups = [];
+    $$('input[name^="options["], select[name^="options["]').forEach(el=>{
+      const m = el.name && el.name.match(/^options\[(.*)\]$/);
+      if (!m) return;
+      const name = m[1];
+      if (seen.has(name)) return;
+      seen.add(name);
+      groups.push({
+        name,
+        get radios(){ return $$(`input[type="radio"][name="options[${CSS.escape(name)}]"]`); },
+        get select(){ return q(`select[name="options[${CSS.escape(name)}]"]`); }
+      });
+    });
+    return groups;
   }
 
-  function isAnyChecked(name){
-    const {radios, select} = byName(name);
-    if (radios.length) return radios.some(r=>r.checked);
-    if (select) return !!select.value;
-    return false;
+  const isEnabled = r => !r.disabled && r.getAttribute('aria-disabled') !== 'true';
+  const pickRadio = r => { if(!r || r.checked) return false; r.click(); r.dispatchEvent(new Event('change',{bubbles:true})); return true; };
+  const pickSelectFirst = sel => {
+    if(!sel) return false;
+    const opt = Array.from(sel.options).find(o=>!o.disabled);
+    if(!opt || sel.value === opt.value) return false;
+    sel.value = opt.value;
+    sel.dispatchEvent(new Event('change',{bubbles:true}));
+    return true;
+  };
+  const hasSelection = g => g.radios.length ? g.radios.some(r=>r.checked) : (g.select ? !!g.select.value : true);
+
+  // Try to pick first available for a group; retry briefly so theme can update states
+  function pickFirstWithRetries(group){
+    let tries = 0;
+    (function attempt(){
+      tries++;
+      const picked =
+        (group.radios.length && pickRadio(group.radios.find(isEnabled))) ||
+        (group.select && pickSelectFirst(group.select));
+      if (!picked && tries < 6) setTimeout(attempt, tries*60); // 60,120,180,240,300ms
+    })();
   }
 
-  // When "Single or Set" changes -> auto choose first available "Weight"
-  document.addEventListener('change', (e)=>{
-    const t = e.target;
-    if (!t.name || !t.name.startsWith('options[')) return;
-    // Extract raw option name between brackets
-    const m = t.name.match(/^options\[(.*)\]$/);
+  // When any group changes, auto-pick the next group’s first available
+  document.addEventListener('change', e=>{
+    const el = e.target;
+    if (!el.name) return;
+    const m = el.name.match(/^options\[(.*)\]$/);
     if (!m) return;
-    if (m[1].toLowerCase() === OPTION_PRIMARY.toLowerCase()){
-      pickFirstAvailable(OPTION_SECONDARY);
+    const groups = getGroups();
+    const idx = groups.findIndex(g => g.name === m[1]);
+    if (idx === -1) return;
+    const next = groups[idx+1];
+    if (next) {
+      // let Dawn finish enabling/disabling before we pick
+      requestAnimationFrame(()=>requestAnimationFrame(()=>pickFirstWithRetries(next)));
     }
   });
 
-  // On first load:
+  // On load: ensure a valid chain (first available in each group)
   document.addEventListener('DOMContentLoaded', ()=>{
-    // Ensure primary has a choice; if not, pick first available
-    if (!isAnyChecked(OPTION_PRIMARY)) pickFirstAvailable(OPTION_PRIMARY);
-    // Ensure secondary has a choice that matches current primary
-    if (!isAnyChecked(OPTION_SECONDARY)) pickFirstAvailable(OPTION_SECONDARY);
+    const groups = getGroups();
+    groups.forEach((g,i)=>{
+      if (!hasSelection(g)) pickFirstWithRetries(g);
+    });
   });
 })();
 </script>
