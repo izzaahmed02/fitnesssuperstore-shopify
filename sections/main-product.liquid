@@ -3734,3 +3734,68 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
   }
 })();
 </script>
+
+<script>
+(function(){
+  // ---- Config: use your option names exactly as they appear in your product ----
+  const OPTION_PRIMARY  = 'Single or Set';
+  const OPTION_SECONDARY = 'Weight';
+
+  // Helpers
+  const $$ = (sel,root=document)=>Array.from(root.querySelectorAll(sel));
+  const byName = name => ({
+    radios: $$(`input[type="radio"][name="options[${CSS.escape(name)}]"]`),
+    select: document.querySelector(`select[name="options[${CSS.escape(name)}]"]`)
+  });
+
+  function firstEnabledRadio(radios){ return radios.find(r=>!r.disabled); }
+
+  function pickFirstAvailable(name){
+    const {radios, select} = byName(name);
+
+    if (radios.length){
+      const first = firstEnabledRadio(radios);
+      if (first && !first.checked){
+        first.click(); // triggers Dawn's variant logic
+        first.dispatchEvent(new Event('change', {bubbles:true}));
+      }
+      return;
+    }
+
+    if (select){
+      const opt = Array.from(select.options).find(o=>!o.disabled);
+      if (opt && opt.value !== select.value){
+        select.value = opt.value;
+        select.dispatchEvent(new Event('change', {bubbles:true}));
+      }
+    }
+  }
+
+  function isAnyChecked(name){
+    const {radios, select} = byName(name);
+    if (radios.length) return radios.some(r=>r.checked);
+    if (select) return !!select.value;
+    return false;
+  }
+
+  // When "Single or Set" changes -> auto choose first available "Weight"
+  document.addEventListener('change', (e)=>{
+    const t = e.target;
+    if (!t.name || !t.name.startsWith('options[')) return;
+    // Extract raw option name between brackets
+    const m = t.name.match(/^options\[(.*)\]$/);
+    if (!m) return;
+    if (m[1].toLowerCase() === OPTION_PRIMARY.toLowerCase()){
+      pickFirstAvailable(OPTION_SECONDARY);
+    }
+  });
+
+  // On first load:
+  document.addEventListener('DOMContentLoaded', ()=>{
+    // Ensure primary has a choice; if not, pick first available
+    if (!isAnyChecked(OPTION_PRIMARY)) pickFirstAvailable(OPTION_PRIMARY);
+    // Ensure secondary has a choice that matches current primary
+    if (!isAnyChecked(OPTION_SECONDARY)) pickFirstAvailable(OPTION_SECONDARY);
+  });
+})();
+</script>
