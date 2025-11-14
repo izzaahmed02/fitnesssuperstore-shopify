@@ -1040,6 +1040,7 @@ content: ''!important;
 .spf-filter-loading .tempSearch{
 opacity:0;
 }
+ 
   .auto-hidden-h1 {
     position: absolute !important;
     width: 1px;
@@ -1055,16 +1056,26 @@ opacity:0;
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  // Check if page already has an H1
+
   if (!document.querySelector("h1")) {
-     var h1 = document.createElement("h1");
-     
-    var title = "{{ page.title | default: shop.name }}";
-  h1.textContent = title;
-    h1.className = "auto-hidden-h1";
- 
+alert("work in progress");
+    var h1 = document.createElement("h1");
+
+    var title = 
+      `{{ product.title | escape | default: 
+          collection.title | escape | default:
+          article.title | escape | default:
+          blog.title | escape | default:
+          page.title | escape | default:
+          shop.name | escape 
+      }}`;
+
+    h1.textContent = title;
+    h1.classList.add("auto-hidden-h1");
+
     document.body.insertBefore(h1, document.body.firstChild);
   }
+
 });
 </script>
       </body>
