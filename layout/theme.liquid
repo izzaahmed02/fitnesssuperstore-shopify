@@ -1,6 +1,10 @@
 <!doctype html>
     <html class="js" lang="{{ request.locale.iso_code }}">
       <head>
+{% capture canonical_url %}
+  {% render 'canonical-tag' %}
+{% endcapture %}
+
         <meta charset="utf-8">
          {% render 'optimization', postpone_loading: 'init' %}         
           <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -39,7 +43,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         
 
 
-        {% if template contains 'index' %}
+        
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -86,7 +90,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     ]
   }
   </script>
-{% endif %}
+
 
 
 
@@ -1012,6 +1016,21 @@ content: ''!important;
 
 {% if request.page_type == 'search' %}
 <script id="gspfResultsTitleTemplate" type="template/html">{% raw %}Search: {{ paginate.total }} results found for "{% endraw %}{{ search.terms }}{% raw %}"{% endraw %}</script>
+
+<script>
+  function updateSearchHeading() {
+    setTimeout(() => {
+      const input = document.querySelector('.gf-controls-search-input');
+      const heading = document.querySelector('.page-width.tempSearch > h1');
+
+      if (!input || !heading) return;
+
+      const inputValue = input.value.trim();
+      heading.textContent = `Search Results for "${inputValue}"`;
+    }, 500);
+  }
+   window.addEventListener("globoFilterRenderCompleted", updateSearchHeading)
+</script>
  {% endif %}   
  
 <style>
