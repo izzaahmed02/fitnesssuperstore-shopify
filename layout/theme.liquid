@@ -1040,43 +1040,38 @@ content: ''!important;
 .spf-filter-loading .tempSearch{
 opacity:0;
 }
- 
-  .auto-hidden-h1 {
-    position: absolute !important;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
+  
 </style>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
+ {% if template contains 'product' %}
+  <h1 class="page-main-title" style="display:none;">
+    {{ product.title }}
+  </h1>
 
-  if (!document.querySelector("h1")) {
-alert("work in progress");
-    var h1 = document.createElement("h1");
+{% elsif template contains 'collection' %}
+  <h1 class="page-main-title" style="display:none;">
+    {{ collection.title }}
+  </h1>
 
-    var title = 
-      `{{ product.title | escape | default: 
-          collection.title | escape | default:
-          article.title | escape | default:
-          blog.title | escape | default:
-          page.title | escape | default:
-          shop.name | escape 
-      }}`;
+{% elsif template contains 'article' %}
+  <h1 class="page-main-title" style="display:none;">
+    {{ article.title }}
+  </h1>
 
-    h1.textContent = title;
-    h1.classList.add("auto-hidden-h1");
+{% elsif template contains 'blog' %}
+  <h1 class="page-main-title" style="display:none;">
+    {{ blog.title }}
+  </h1>
 
-    document.body.insertBefore(h1, document.body.firstChild);
-  }
+{% elsif template contains 'page' %}
+  <h1 class="page-main-title" style="display:none;">
+    {{ page.title }}
+  </h1>
 
-});
-</script>
+{% else %}
+  <h1 class="page-main-title" style="display:none;">
+    {{ shop.name }}
+  </h1>
+{% endif %}
       </body>
     </html>
