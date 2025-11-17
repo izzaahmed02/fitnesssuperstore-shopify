@@ -362,6 +362,29 @@
                   </button>
                 {%- endfor -%}
 
+                {% assign model = product.media | where: 'media_type', 'model' | first %}
+                {%- if model -%}
+                  {% assign preview = model.preview_image %}
+
+                  <button
+                    class="thumbnail-btn"
+                    data-media-id="{{ model.id }}"
+                    type="button"
+                  >
+                    <div class="image-skeleton-wrapper">
+                      <img
+                        src="{{ preview | image_url: width: 100 }}"
+                        alt="{{ model.alt | escape }}"
+                        width="{{ preview.width }}"
+                        height="{{ preview.height }}"
+                        loading="lazy"
+                        fetchpriority="high"
+                        onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                      >
+                    </div>
+                  </button>
+
+                {%- endif -%}
 
                 {% assign video_count = 0 %}
                 {% for media in product.media %}
