@@ -5,55 +5,13 @@
   "settings": [
     {
       "type": "inline_richtext",
-      "id": "hdg",
-      "label": "Heading"
-    },
-    {
-  "type": "text",
-  "id": "activate_metaobject",
-  "label": "Activate Extra Info Metafield"
-},
-
-    {
-      "type": "select",
-      "id": "videos_per_row",
-      "label": "Videos per row (max 3)",
-      "default": "3",
-      "options": [
-        { "label": "1", "value": "1" },
-        { "label": "2", "value": "2" },
-        { "label": "3", "value": "3" }
-      ]
+      "id": "heading",
+      "label": "Heading",
+      "default": "Instruction & Assembly Videos"
     }
   ],
-
-  "blocks": [
-    {
-      "type": "video_block",
-      "name": "Video",
-      "settings": [
-        {
-          "type": "url",
-          "id": "video_url",
-          "label": "Video URL",
-          "info": "Click the Dynamic Source icon to select a URL from product.extra_info → Instructional Video URL"
-        },
-        {
-          "type": "image_picker",
-          "id": "thumbnail",
-          "label": "Thumbnail Image (optional)"
-        },
-        {
-          "type": "video",
-          "id": "shopify_video",
-          "label": "Shopify Video File (optional)"
-        }
-      ]
-    }
-  ],
-
-  "max_blocks": 20,
-
+  "blocks": [],
+  "max_blocks": 1,
   "presets": [
     {
       "name": "Product Video Slider"
@@ -62,116 +20,133 @@
 }
 {% endschema %}
 
+{% assign extra = product.metafields.custom.extra_info.value %}
 
-<div class="video-carousel-section">
-  <h2 class="carouselHdg">{{ section.settings.hdg }}</h2>
+{% assign has_instruction_video = false %}
+{% assign has_assembly_video = false %}
 
-  <div
-    class="video-carousel slick-carousel"
-    data-videos-per-row="{{ section.settings.videos_per_row }}"
-  >
-    {%- comment -%}
-      Read the product metafield that references the metaobject:
-      - Metafield definition: product -> custom.extra_info
-      - Metaobject type: product_extra_info
-      - Field we care about: instructional_video_url (List · URL)
-    {%- endcomment -%}
+{% if extra %}
+  {% if extra.instructional_video_url != blank %}
+    {% assign has_instruction_video = true %}
+  {% endif %}
+  {% if extra.assembly_video_url != blank %}
+    {% assign has_assembly_video = true %}
+  {% endif %}
+{% endif %}
 
-    {% if product and product.metafields.custom.extra_info %}
-      {% assign extra_info = product.metafields.custom.extra_info.value %}
+{% if has_instruction_video or has_assembly_video %}
+  <div class="video-carousel-section instruction-assembly-section">
+    <h2 class="carouselHdg">{{ section.settings.heading }}</h2>
 
-      {% if extra_info and extra_info.instructional_video_url != blank %}
-        {%- comment -%}
-          Use product featured image as thumbnail for now.
-          You can later add a thumbnail field on the metaobject if you like.
-        {%- endcomment -%}
-        {% if product.featured_image %}
-          {% assign thumb_image = product.featured_image %}
-          {% assign fallback_thumb = thumb_image | image_url: width: 1200 %}
-        {% endif %}
-
-        {% for video_url in extra_info.instructional_video_url %}
-          {% assign player_src = video_url %}
-          {% assign video_type = 'external' %}
-
-          <div class="carousel-item">
-            <div
-              class="video-thumbnail"
-              data-video-url="{{ player_src }}"
-              data-video-type="{{ video_type }}"
-            >
-              {% if fallback_thumb %}
-                <img src="{{ fallback_thumb }}" alt="{{ product.title | escape }}" />
-              {% endif %}
-              <div class="play-button">&#9658;</div>
+    <div class="instruction-assembly-slider">
+      {%- comment -%} Instructional video slide {%- endcomment -%}
+      {% if has_instruction_video %}
+        <div class="video-slide">
+          <div class="video-slide-inner">
+            <div class="video-label">Instructional video</div>
+            <div class="video-embed-wrapper">
+              <iframe
+                src="{{ extra.instructional_video_url }}"
+                title="Instructional video"
+                loading="lazy"
+                frameborder="0"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              ></iframe>
             </div>
-
-            {%- comment -%} JSON-LD for SEO {%- endcomment -%}
-            {% if player_src != blank and fallback_thumb %}
-              <script type="application/ld+json">
-              {
-                "@context": "https://schema.org",
-                "@type": "VideoObject",
-                "name": "{{ product.title | escape }} - Instructional Video",
-                "description": "Instructional video for {{ product.title | strip_html | escape }}",
-                "thumbnailUrl": "{{ fallback_thumb | prepend: 'https:' }}",
-                "uploadDate": "{{ 'now' | date: "%Y-%m-%d" }}",
-                "duration": "PT1M57S",
-                "contentUrl": "{{ player_src }}",
-                "embedUrl": "{{ player_src }}",
-                "publisher": {
-                  "@type": "Organization",
-                  "name": "Fitness Superstore",
-                  "logo": {
-                    "@type": "ImageObject",
-                    "url": "{{ request.host | prepend: 'https://' }}/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500"
-                  }
-                }
-              }
-              </script>
-            {% endif %}
           </div>
-        {% endfor %}
+        </div>
       {% endif %}
-    {% endif %}
-  </div>
 
-  <div class="video-modal" id="videoModal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="closeModal()">&times;</span>
-      <div id="modalVideoContainer"></div>
+      {%- comment -%} Assembly video slide {%- endcomment -%}
+      {% if has_assembly_video %}
+        <div class="video-slide">
+          <div class="video-slide-inner">
+            <div class="video-label">Assembly video</div>
+            <div class="video-embed-wrapper">
+              <iframe
+                src="{{ extra.assembly_video_url }}"
+                title="Assembly video"
+                loading="lazy"
+                frameborder="0"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      {% endif %}
     </div>
   </div>
-</div>
+{% endif %}
 
 <style>
-  .video-carousel .carouselHdg {
+  .instruction-assembly-section .carouselHdg {
     font-family: Oswald;
     font-weight: 600;
-    font-size: 48px;
-    line-height: 68px;
-    letter-spacing: 0;
-    text-align: center;
-    vertical-align: middle;
+    font-size: 32px;
+    line-height: 1.3;
     text-transform: uppercase;
-    margin-bottom: 52px;
+    text-align: left;
+    margin-bottom: 24px;
   }
 
-  .video-carousel .slick-prev,
-  .video-carousel .slick-next {
-    height: 44px;
-    width: 44px;
+  .instruction-assembly-section {
+    max-width: 1320px;
+    padding: 20px;
+    margin: 0 auto;
+  }
+
+  .instruction-assembly-slider .video-slide {
+    padding: 0 12px;
+    box-sizing: border-box;
+  }
+
+  .instruction-assembly-slider .video-slide-inner {
+    border-radius: 16px;
+    background: #f7f7f7;
+    padding: 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .instruction-assembly-slider .video-label {
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .instruction-assembly-slider .video-embed-wrapper {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 */
+    overflow: hidden;
+    border-radius: 12px;
+    background: #000;
+  }
+
+  .instruction-assembly-slider .video-embed-wrapper iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Slick arrows & dots for this slider */
+  .instruction-assembly-section .slick-prev,
+  .instruction-assembly-section .slick-next {
+    height: 40px;
+    width: 40px;
     border-radius: 100px;
     font-size: 0;
     line-height: 0;
     position: absolute;
     top: 50%;
-    display: block;
-    z-index: 999;
-    padding: 0;
-    -webkit-transform: translate(0, -50%);
-    -ms-transform: translate(0,-50%);
     transform: translateY(-50%);
+    z-index: 99;
     cursor: pointer;
     color: transparent;
     border: none;
@@ -179,328 +154,86 @@
     background: #616166;
   }
 
-  .video-carousel button.slick-next.slick-arrow {
-    position: absolute;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    top: 50%;
-    justify-content: center;
-    align-items: center;
-    right: -20px;
-    z-index: 999;
+  .instruction-assembly-section .slick-prev {
+    left: -8px;
   }
 
-  .video-carousel button.slick-prev.slick-arrow {
-    position: absolute;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    right: 55px;
-    z-index: 999;
+  .instruction-assembly-section .slick-next {
+    right: -8px;
   }
 
-  .video-carousel .slick-next:before {
+  .instruction-assembly-section .slick-next:before,
+  .instruction-assembly-section .slick-prev:before {
     content: '' !important;
-    background-image: url('{{ 'arrow-right.svg' | asset_url }}') !important;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
     background-size: contain;
     background-repeat: no-repeat;
-    display: inline-block;
-    width: 24px;
-    height: 24px;
   }
 
-  .video-carousel .slick-prev:before {
-    content: '' !important;
-    background-image: url('{{ 'arrow-left.svg' | asset_url }}') !important;
-    background-size: contain;
-    background-repeat: no-repeat;
-    display: inline-block;
-    width: 24px;
-    height: 24px;
+  .instruction-assembly-section .slick-next:before {
+    background-image: url('{{ "arrow-right.svg" | asset_url }}') !important;
   }
 
-  .video-carousel .slick-dotted.slick-slider {
-    margin-bottom: 70px;
+  .instruction-assembly-section .slick-prev:before {
+    background-image: url('{{ "arrow-left.svg" | asset_url }}') !important;
   }
 
-  .video-carousel .slick-dots {
-    display: block !important;
-    bottom: -50px !important;
+  .instruction-assembly-section .slick-dots {
+    margin-top: 16px;
   }
 
-  .video-carousel .slick-dots li {
-    width: auto;
-    height: auto;
-    margin: 0 3px;
+  .instruction-assembly-section .slick-dots li button:before {
+    font-size: 10px;
   }
 
-  .video-carousel .slick-dots li button {
-    width: 12px !important;
-    height: 12px !important;
-    padding: 0 !important;
-  }
-
-  .video-carousel .slick-dots li button:before {
-    font-size: 34px !important;
-    line-height: 12px !important;
-    width: 12px !important;
-    height: 12px !important;
-    content: '' !important;
-    display: block !important;
-    background-color: #ccc !important;
-    border-radius: 50% !important;
-  }
-
-  .video-carousel .slick-dots li.slick-active button:before {
-    background-color: #23232B !important;
-  }
-
-  .video-carousel .slick-next:focus,
-  .video-carousel .slick-next:hover,
-  .video-carousel .slick-prev:focus,
-  .video-carousel .slick-prev:hover {
-    background: #616166;
-    outline: none !important;
-  }
-
-  .video-carousel .slick-slide {
-    margin: 0 16px;
-  }
-
-  .video-carousel .slick-list {
-    margin: 0 -18px;
-  }
-
-  .video-carousel .video-carousel-section {
-    max-width: 1320px;
-    padding: 20px;
-    margin: 0 auto;
-  }
-
-  .video-carousel .video-thumbnail {
-    position: relative;
-    cursor: pointer;
-  }
-
-  .video-carousel .video-thumbnail img {
-    border-radius: 12px;
-    width: 100%;
-  }
-
-  .video-carousel .play-button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 22px;
-    color: white;
-    backdrop-filter: blur(6px);
-    background: #23232B4D;
-    padding: 12px 16px;
-    border-radius: 50%;
-  }
-
-  .video-carousel .video-modal {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    z-index: 1000;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0,0,0,0.8);
-    padding: 20px;
-    box-sizing: border-box;
-  }
-
-  .video-carousel .modal-content {
-    position: relative;
-    max-width: 1280px;
-    max-height: calc(100vh - 40px);
-    background: transparent;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .video-carousel .modal-content iframe,
-  .video-carousel .modal-content video {
-    width: 100%;
-    max-height: calc(100vh - 40px - 86px);
-    border-radius: 24px;
-    height: auto;
-    object-fit: contain;
-  }
-
-  .video-carousel .close-modal {
-    position: absolute;
-    top: -66px;
-    right: 0px;
-    font-size: 28px;
-    background: #616166;
-    cursor: pointer;
-    height: 48px;
-    width: 48px;
-    border-radius: 34px;
-    display: flex;
-    font-weight: 100 !important;
-    color: white;
-    align-items: center;
-    justify-content: center;
-  }
-
-  body.acsb-keynav :focus {
-    outline: none !important;
-  }
-
-  @media screen and (max-width: 749px) {
-    .video-carousel .carouselHdg {
-      font-family: Oswald;
-      font-weight: 600;
-      font-size: 20px;
-      line-height: 26px;
-      letter-spacing: 0px;
-      vertical-align: middle;
-      text-transform: uppercase;
-      text-align: left;
-      margin-bottom: 20px;
-    }
-
-    .video-carousel .video-thumbnail img {
-      border-radius: 24px;
-      width: 100%;
-    }
-
-    .video-carousel button.slick-next.slick-arrow {
-      width: 36px;
-      height: 36px;
-      right: 0;
-      top: 100%;
-    }
-
-    .video-carousel button.slick-prev.slick-arrow {
-      width: 36px;
-      height: 36px;
-      left: 0;
-      top: 100%;
-    }
-
-    .video-carousel .slick-dotted.slick-slider {
-      padding-bottom: 40px !important;
-    }
-
-    .video-carousel .slick-dots {
-      display: block !important;
-      bottom: -10px !important;
-    }
-
-    .video-carousel .video-carousel-section {
-      max-width: 1320px;
+  @media (max-width: 749px) {
+    .instruction-assembly-section {
       padding: 16px;
-      margin: 0 auto;
     }
 
-    .video-carousel .video-modal {
-      padding: 10px;
+    .instruction-assembly-section .carouselHdg {
+      font-size: 20px;
+      margin-bottom: 16px;
     }
 
-    .video-carousel .modal-content {
-      max-height: calc(100vh - 20px);
+    .instruction-assembly-section .slick-prev,
+    .instruction-assembly-section .slick-next {
+      width: 32px;
+      height: 32px;
+      top: 100%;
+      transform: translateY(-50%);
     }
 
-    .video-carousel .modal-content iframe,
-    .video-carousel .modal-content video {
-      max-height: calc(100vh - 20px - 66px);
+    .instruction-assembly-section .slick-prev {
+      left: 0;
+    }
+
+    .instruction-assembly-section .slick-next {
+      right: 0;
     }
   }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  var $carousel = $('.video-carousel .slick-carousel');
-  var videosPerRow = parseInt($carousel.data('videos-per-row'), 10) || 3;
+  var $slider = $('.instruction-assembly-slider');
+  if (!$slider.length) return;
 
-  // Cap at max 3 on desktop
-  var desktopSlides = Math.min(videosPerRow, 3);
-
-  $carousel.slick({
-    slidesToShow: desktopSlides,
+  $slider.slick({
+    slidesToShow: 2,
     slidesToScroll: 1,
     arrows: true,
-    cssEase: 'linear',
     dots: true,
     responsive: [
       {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: desktopSlides
-        }
-      },
-      {
-        breakpoint: 750, // mobile: always 1
+        breakpoint: 750,
         settings: {
           slidesToShow: 1
         }
       }
     ]
-  });
-
-  var $modal = $('#videoModal');
-  var $modalContainer = $('#modalVideoContainer');
-
-  function openVideoModal(src, type) {
-    if (!src) return;
-
-    var html = '';
-
-    // YouTube handling for external URLs
-    if (type === 'external' && (src.indexOf('youtube.com') > -1 || src.indexOf('youtu.be') > -1)) {
-      var embedUrl = src;
-
-      if (src.indexOf('watch?v=') > -1) {
-        embedUrl = src.replace('watch?v=', 'embed/');
-      }
-
-      html = '<iframe src="' + embedUrl + '" frameborder="0" allowfullscreen></iframe>';
-    } else {
-      // Direct video file
-      html = '<video controls autoplay><source src="' + src + '" type="video/mp4"></video>';
-    }
-
-    $modalContainer.html(html);
-    $modal.css('display', 'flex');
-  }
-
-  window.closeModal = function () {
-    $modal.css('display', 'none');
-    $modalContainer.html('');
-  };
-
-  // Close when clicking backdrop
-  $modal.on('click', function (e) {
-    if ($(e.target).is('#videoModal')) {
-      window.closeModal();
-    }
-  });
-
-  // Open modal when thumbnail clicked
-  $('.video-carousel').on('click', '.video-thumbnail', function () {
-    var src = $(this).data('video-url');
-    var type = $(this).data('video-type');
-    openVideoModal(src, type);
   });
 });
 </script>
