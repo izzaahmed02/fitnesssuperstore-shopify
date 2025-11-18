@@ -3,12 +3,12 @@
   "name": "Product Video Slider",
   "class": "video-carousel",
   "settings": [
-     {
-          "type": "inline_richtext",
-          "id": "hdg",
-          "default": "t:sections.rich-text.blocks.heading.settings.heading.default",
-          "label": "t:sections.rich-text.blocks.heading.settings.heading.label"
-        },
+    {
+      "type": "inline_richtext",
+      "id": "hdg",
+      "default": "t:sections.rich-text.blocks.heading.settings.heading.default",
+      "label": "t:sections.rich-text.blocks.heading.settings.heading.label"
+    },
     {
       "type": "select",
       "id": "videos_per_row",
@@ -17,36 +17,34 @@
       "options": [
         { "label": "1", "value": "1" },
         { "label": "2", "value": "2" },
-        { "label": "3", "value": "3" },
-        { "label": "4", "value": "4" },
-        { "label": "5", "value": "5" }
+        { "label": "3", "value": "3" }
       ]
     }
   ],
-"blocks": [
-  {
-    "type": "video_block",
-    "name": "Video",
-    "settings": [
-      {
-        "type": "image_picker",
-        "id": "thumbnail",
-        "label": "Thumbnail Image"
-      },
-      {
-        "type": "url",
-        "id": "video_url",
-        "label": "Video URL (YouTube or uploaded file URL)",
-        "info": "Paste a YouTube link or a video file URL uploaded via Content > Files"
-      },
-      {
-        "type": "video",
-        "id": "shopify_video",
-        "label": "Video File"
-      }
-    ]
-  }
-],
+  "blocks": [
+    {
+      "type": "video_block",
+      "name": "Video",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "thumbnail",
+          "label": "Thumbnail Image"
+        },
+        {
+          "type": "url",
+          "id": "video_url",
+          "label": "Video URL (YouTube or uploaded file URL)",
+          "info": "Paste a YouTube link or a video file URL uploaded via Content > Files"
+        },
+        {
+          "type": "video",
+          "id": "shopify_video",
+          "label": "Video File"
+        }
+      ]
+    }
+  ],
   "max_blocks": 10,
   "presets": [
     {
@@ -56,7 +54,6 @@
 }
 {% endschema %}
 
-
 <div class="video-carousel-section">
   <h2 class="carouselHdg">{{ section.settings.hdg }}</h2>
   <div
@@ -64,67 +61,67 @@
     data-videos-per-row="{{ section.settings.videos_per_row }}"
   >
     {% for block in section.blocks %}
-  {% assign video_url = block.settings.video_url %}
-  {% assign shopify_video = block.settings.shopify_video %}
-  {% assign fallback_thumb = block.settings.thumbnail | image_url: width: 1200 %}
-  <div class="carousel-item">
-    <div class="video-thumbnail" data-video-url="{{ video_url }}">
-      <img src="{{ fallback_thumb }}" alt="{{ block.settings.thumbnail.alt | escape }}" />
-      <div class="play-button">&#9658;</div>
-    </div>
+      {% assign video_url = block.settings.video_url %}
+      {% assign shopify_video = block.settings.shopify_video %}
+      {% assign fallback_thumb = block.settings.thumbnail | image_url: width: 1200 %}
+      <div class="carousel-item">
+        <div class="video-thumbnail" data-video-url="{{ video_url }}">
+          <img src="{{ fallback_thumb }}" alt="{{ block.settings.thumbnail.alt | escape }}" />
+          <div class="play-button">&#9658;</div>
+        </div>
 
-    {% if shopify_video != blank and shopify_video.sources != blank %}
-  {% assign video_src = shopify_video.sources[0].url %}
-  {% assign video_embed = shopify_video.sources | where: "format", "mp4" | first %}
-  {% assign video_thumb = shopify_video.preview_image | image_url: width: 1200 %}
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "VideoObject",
-    "name": "{{ block.settings.thumbnail.alt | escape }}",
-    "description": "Video about {{ section.settings.hdg | strip_html | escape }} — {{ block.settings.thumbnail.alt | escape }}",
-    "thumbnailUrl": "{{ video_thumb | prepend: 'https:' }}",
-    "uploadDate": "{{ 'now' | date: "%Y-%m-%d" }}",
-    "duration": "PT1M57S",
-    "contentUrl": "{{ video_src }}",
-    "embedUrl": "{{ video_embed.url | default: video_src }}",
-    "publisher": {
-      "@type": "Organization",
-      "name": "Fitness Superstore",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "{{ request.host | prepend: 'https://' }}/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500"
-      }
-    }
-  }
-  </script>
-{% elsif video_url != blank %}
-  {% assign fallback_thumb = block.settings.thumbnail | image_url: width: 1200 %}
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "VideoObject",
-    "name": "{{ block.settings.thumbnail.alt | escape }}",
-    "description": "Video about {{ section.settings.hdg | strip_html | escape }} — {{ block.settings.thumbnail.alt | escape }}",
-    "thumbnailUrl": "{{ fallback_thumb | prepend: 'https:' }}",
-    "uploadDate": "{{ 'now' | date: "%Y-%m-%d" }}",
-    "duration": "PT1M57S",
-    "contentUrl": "{{ video_url }}",
-    "embedUrl": "{{ video_url }}",
-    "publisher": {
-      "@type": "Organization",
-      "name": "Fitness Superstore",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "{{ request.host  | prepend: 'https://' }}/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500"
-      }
-    }
-  }
-  </script>
-{% endif %}
+        {% if shopify_video != blank and shopify_video.sources != blank %}
+          {% assign video_src = shopify_video.sources[0].url %}
+          {% assign video_embed = shopify_video.sources | where: "format", "mp4" | first %}
+          {% assign video_thumb = shopify_video.preview_image | image_url: width: 1200 %}
+          <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@type": "VideoObject",
+            "name": "{{ block.settings.thumbnail.alt | escape }}",
+            "description": "Video about {{ section.settings.hdg | strip_html | escape }} — {{ block.settings.thumbnail.alt | escape }}",
+            "thumbnailUrl": "{{ video_thumb | prepend: 'https:' }}",
+            "uploadDate": "{{ 'now' | date: "%Y-%m-%d" }}",
+            "duration": "PT1M57S",
+            "contentUrl": "{{ video_src }}",
+            "embedUrl": "{{ video_embed.url | default: video_src }}",
+            "publisher": {
+              "@type": "Organization",
+              "name": "Fitness Superstore",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "{{ request.host | prepend: 'https://' }}/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500"
+              }
+            }
+          }
+          </script>
+        {% elsif video_url != blank %}
+          {% assign fallback_thumb = block.settings.thumbnail | image_url: width: 1200 %}
+          <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@type": "VideoObject",
+            "name": "{{ block.settings.thumbnail.alt | escape }}",
+            "description": "Video about {{ section.settings.hdg | strip_html | escape }} — {{ block.settings.thumbnail.alt | escape }}",
+            "thumbnailUrl": "{{ fallback_thumb | prepend: 'https:' }}",
+            "uploadDate": "{{ 'now' | date: "%Y-%m-%d" }}",
+            "duration": "PT1M57S",
+            "contentUrl": "{{ video_url }}",
+            "embedUrl": "{{ video_url }}",
+            "publisher": {
+              "@type": "Organization",
+              "name": "Fitness Superstore",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "{{ request.host  | prepend: 'https://' }}/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500"
+              }
+            }
+          }
+          </script>
+        {% endif %}
 
-  </div>
-{% endfor %}
+      </div>
+    {% endfor %}
 
   </div>
 
@@ -199,9 +196,10 @@
     z-index: 999;
   }
 
+  /* 🔁 Fixed: correct arrow directions */
   .video-carousel .slick-next:before {
     content: ''!important;
-    background-image: url('{{ 'arrow-left.svg' | asset_url }}') !important;
+    background-image: url('{{ 'arrow-right.svg' | asset_url }}') !important;
     background-size: contain;
     background-repeat: no-repeat;
     display: inline-block;
@@ -211,7 +209,7 @@
 
   .video-carousel .slick-prev:before {
     content: ''!important;
-    background-image: url('{{ 'arrow-right.svg' | asset_url }}') !important;
+    background-image: url('{{ 'arrow-left.svg' | asset_url }}') !important;
     background-size: contain;
     background-repeat: no-repeat;
     display: inline-block;
@@ -255,7 +253,10 @@
     background-color: #23232B!important;
   }
 
-  .video-carousel .slick-next:focus, .video-carousel .slick-next:hover, .video-carousel .slick-prev:focus, .video-carousel .slick-prev:hover {
+  .video-carousel .slick-next:focus,
+  .video-carousel .slick-next:hover,
+  .video-carousel .slick-prev:focus,
+  .video-carousel .slick-prev:hover {
     background: #616166;
     outline: none !important;
   }
@@ -354,7 +355,6 @@
     outline: none!important;
   }
 
-
   @media screen and (max-width: 749px) {
     .video-carousel .carouselHdg {
       font-family: Oswald;
@@ -419,26 +419,27 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  var $carousel = $('.video-carousel .slick-carousel');
+  var videosPerRow = parseInt($carousel.data('videos-per-row'), 10) || 3;
 
+  // 🔒 Cap at max 3 on desktop
+  var desktopSlides = Math.min(videosPerRow, 3);
 
-
-
-  $('.video-carousel .slick-carousel').slick({
-
-    slidesToShow: 3,
+  $carousel.slick({
+    slidesToShow: desktopSlides,
     slidesToScroll: 1,
     arrows: true,
     cssEase: 'linear',
     dots: true,
     responsive: [
       {
-        breakpoint: 768,
+        breakpoint: 1024, // tablet / small desktop
         settings: {
-          slidesToShow: 2
+          slidesToShow: desktopSlides
         }
       },
       {
-        breakpoint: 480,
+        breakpoint: 750, // 🔒 mobile: always 1 slide
         settings: {
           slidesToShow: 1
         }
