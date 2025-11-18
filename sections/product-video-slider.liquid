@@ -6,7 +6,7 @@
     {
       "type": "inline_richtext",
       "id": "hdg",
-      "default": "t:sections.rich-text.blocks.heading.settings.heading.default",
+      "default": "Instructional Videos",
       "label": "Heading"
     },
     {
@@ -21,31 +21,8 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "type": "video_block",
-      "name": "Video",
-      "settings": [
-        {
-          "type": "url",
-          "id": "video_url",
-          "label": "Video URL (YouTube / file / dynamic source)",
-          "info": "Click the dynamic source icon to bind this to your metaobject URL (e.g. Instructional Video URL)."
-        },
-        {
-          "type": "image_picker",
-          "id": "thumbnail",
-          "label": "Thumbnail Image (optional)"
-        },
-        {
-          "type": "video",
-          "id": "shopify_video",
-          "label": "Video File (optional)"
-        }
-      ]
-    }
-  ],
-  "max_blocks": 10,
+  "blocks": [],
+  "max_blocks": 1,
   "presets": [
     {
       "name": "Product Video Slider"
@@ -61,88 +38,70 @@
     class="video-carousel slick-carousel"
     data-videos-per-row="{{ section.settings.videos_per_row }}"
   >
-    {% for block in section.blocks %}
-      {% assign video_url = block.settings.video_url %}
-      {% assign shopify_video = block.settings.shopify_video %}
+    {%- comment -%}
+      Read the product metafield that references the metaobject:
+      - Metafield definition: product -> custom.extra_info
+      - Metaobject type: product_extra_info
+      - Field we care about: instructional_video_url (List · URL)
+    {%- endcomment -%}
 
-      {%- comment -%}
-        Thumbnail:
-        - Use block thumbnail if set
-        - Otherwise use Shopify video preview image (if there is a video file)
-      {%- endcomment -%}
-      {% assign thumb_image = nil %}
-      {% if block.settings.thumbnail != blank %}
-        {% assign thumb_image = block.settings.thumbnail %}
-      {% elsif shopify_video != blank %}
-        {% assign thumb_image = shopify_video.preview_image %}
-      {% endif %}
+    {% if product and product.metafields.custom.extra_info %}
+      {% assign extra_info = product.metafields.custom.extra_info.value %}
 
-      {% if thumb_image %}
-        {% assign fallback_thumb = thumb_image | image_url: width: 1200 %}
-      {% endif %}
-
-      {%- comment -%}
-        Choose video source for player:
-        1) video_url (can come from metaobject via dynamic source)
-        2) Shopify hosted video file
-      {%- endcomment -%}
-      {% assign player_src = '' %}
-      {% assign video_type = '' %}
-
-      {% if video_url != blank %}
-        {% assign player_src = video_url %}
-        {% assign video_type = 'external' %}
-      {% elsif shopify_video != blank and shopify_video.sources != blank %}
-        {% assign mp4_source = shopify_video.sources | where: "format", "mp4" | first %}
-        {% if mp4_source != blank %}
-          {% assign player_src = mp4_source.url %}
-        {% else %}
-          {% assign player_src = shopify_video.sources[0].url %}
-        {% endif %}
-        {% assign video_type = 'shopify' %}
-      {% endif %}
-
-      <div class="carousel-item">
-        <div
-          class="video-thumbnail"
-          data-video-url="{{ player_src }}"
-          data-video-type="{{ video_type }}"
-        >
-          {% if fallback_thumb %}
-            <img src="{{ fallback_thumb }}" alt="{{ thumb_image.alt | default: section.settings.hdg | escape }}" />
-          {% endif %}
-          <div class="play-button">&#9658;</div>
-        </div>
-
+      {% if extra_info and extra_info.instructional_video_url != blank %}
         {%- comment -%}
-          JSON-LD for SEO
+          Use product featured image as thumbnail for now.
+          You can later add a thumbnail field on the metaobject if you like.
         {%- endcomment -%}
-        {% if player_src != blank and thumb_image %}
-          {% assign video_thumb = thumb_image | image_url: width: 1200 %}
-          <script type="application/ld+json">
-          {
-            "@context": "https://schema.org",
-            "@type": "VideoObject",
-            "name": "{{ thumb_image.alt | default: section.settings.hdg | escape }}",
-            "description": "Video about {{ section.settings.hdg | strip_html | escape }}",
-            "thumbnailUrl": "{{ video_thumb | prepend: 'https:' }}",
-            "uploadDate": "{{ 'now' | date: "%Y-%m-%d" }}",
-            "duration": "PT1M57S",
-            "contentUrl": "{{ player_src }}",
-            "embedUrl": "{{ player_src }}",
-            "publisher": {
-              "@type": "Organization",
-              "name": "Fitness Superstore",
-              "logo": {
-                "@type": "ImageObject",
-                "url": "{{ request.host | prepend: 'https://' }}/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500"
-              }
-            }
-          }
-          </script>
+        {% if product.featured_image %}
+          {% assign thumb_image = product.featured_image %}
+          {% assign fallback_thumb = thumb_image | image_url: width: 1200 %}
         {% endif %}
-      </div>
-    {% endfor %}
+
+        {% for video_url in extra_info.instructional_video_url %}
+          {% assign player_src = video_url %}
+          {% assign video_type = 'external' %}
+
+          <div class="carousel-item">
+            <div
+              class="video-thumbnail"
+              data-video-url="{{ player_src }}"
+              data-video-type="{{ video_type }}"
+            >
+              {% if fallback_thumb %}
+                <img src="{{ fallback_thumb }}" alt="{{ product.title | escape }}" />
+              {% endif %}
+              <div class="play-button">&#9658;</div>
+            </div>
+
+            {%- comment -%} JSON-LD for SEO {%- endcomment -%}
+            {% if player_src != blank and fallback_thumb %}
+              <script type="application/ld+json">
+              {
+                "@context": "https://schema.org",
+                "@type": "VideoObject",
+                "name": "{{ product.title | escape }} - Instructional Video",
+                "description": "Instructional video for {{ product.title | strip_html | escape }}",
+                "thumbnailUrl": "{{ fallback_thumb | prepend: 'https:' }}",
+                "uploadDate": "{{ 'now' | date: "%Y-%m-%d" }}",
+                "duration": "PT1M57S",
+                "contentUrl": "{{ player_src }}",
+                "embedUrl": "{{ player_src }}",
+                "publisher": {
+                  "@type": "Organization",
+                  "name": "Fitness Superstore",
+                  "logo": {
+                    "@type": "ImageObject",
+                    "url": "{{ request.host | prepend: 'https://' }}/cdn/shop/files/Logo_Main_Dark_Background.svg?v=1745567646&width=500"
+                  }
+                }
+              }
+              </script>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endif %}
   </div>
 
   <div class="video-modal" id="videoModal">
@@ -485,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       html = '<iframe src="' + embedUrl + '" frameborder="0" allowfullscreen></iframe>';
     } else {
-      // Shopify hosted / direct video file
+      // Direct video file
       html = '<video controls autoplay><source src="' + src + '" type="video/mp4"></video>';
     }
 
