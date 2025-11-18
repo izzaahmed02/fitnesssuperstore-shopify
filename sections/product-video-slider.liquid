@@ -32,28 +32,28 @@
 {%- assign extra = product.metafields.custom.extra_info.value -%}
 
 {%- comment -%}
-  Build array of video URLs from:
-  - extra.instructional_video_url.value  (single URL)
-  - extra.other_videos.value (list of links: link.url)
+  Collect all videos:
+  • extra.instructional_video_url.value → single video
+  • extra.other_videos.value → list of videos (each link.url)
 {%- endcomment -%}
 
 {% assign videos = '' | split: ',' %}
 
-{% if extra %}
-  {%- comment -%} Main instructional video {%- endcomment -%}
-  {% if extra.instructional_video_url != blank %}
-    {% assign videos = videos | push: extra.instructional_video_url.value %}
-  {% endif %}
+{%- if extra != blank -%}
 
-  {%- comment -%} Other videos list {%- endcomment -%}
-  {% if extra.other_videos != blank %}
+  {%- if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank -%}
+    {% assign videos = videos | push: extra.instructional_video_url.value %}
+  {%- endif -%}
+
+  {%- if extra.other_videos != blank and extra.other_videos.value != blank -%}
     {% for link in extra.other_videos.value %}
       {% if link.url != blank %}
         {% assign videos = videos | push: link.url %}
       {% endif %}
     {% endfor %}
-  {% endif %}
-{% endif %}
+  {%- endif -%}
+
+{%- endif -%}
 
 {% if videos.size > 0 %}
   <div class="video-carousel-section product-video-slider">
@@ -63,28 +63,21 @@
       class="product-video-slider-track"
       data-videos-per-row="{{ section.settings.videos_per_row }}"
     >
-      {% assign thumb = product.featured_image | image_url: width: 1200 %}
-
       {% for video_url in videos %}
         <div class="video-slide">
           <div class="video-slide-inner">
-            <div class="video-thumbnail" data-video-url="{{ video_url }}">
-              {% if thumb %}
-                <img src="{{ thumb }}" alt="{{ product.title | escape }}">
-              {% endif %}
-              <div class="play-button">&#9658;</div>
+            <div class="video-embed-wrapper">
+              <iframe
+                src="{{ video_url }}"
+                loading="lazy"
+                frameborder="0"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              ></iframe>
             </div>
           </div>
         </div>
       {% endfor %}
-    </div>
-
-    {%- comment -%} Popup modal {%- endcomment -%}
-    <div class="video-modal" id="productVideoModal">
-      <div class="modal-content">
-        <span class="close-modal" id="productVideoModalClose">&times;</span>
-        <div id="productModalVideoContainer"></div>
-      </div>
     </div>
   </div>
 {% endif %}
@@ -94,10 +87,8 @@
     font-family: Oswald;
     font-weight: 600;
     font-size: 32px;
-    line-height: 1.3;
-    text-transform: uppercase;
-    text-align: left;
     margin-bottom: 24px;
+    text-transform: uppercase;
   }
 
   .product-video-slider {
@@ -108,7 +99,6 @@
 
   .product-video-slider-track .video-slide {
     padding: 0 12px;
-    box-sizing: border-box;
   }
 
   .product-video-slider-track .video-slide-inner {
@@ -117,158 +107,52 @@
     padding: 16px;
   }
 
-  .product-video-slider .video-thumbnail {
+  .video-embed-wrapper {
     position: relative;
-    cursor: pointer;
-  }
-
-  .product-video-slider .video-thumbnail img {
     width: 100%;
-    display: block;
+    padding-bottom: 56.25%;
+    background: black;
     border-radius: 12px;
+    overflow: hidden;
   }
 
-  .product-video-slider .play-button {
+  .video-embed-wrapper iframe {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 22px;
-    color: #fff;
-    background: #23232b4d;
-    backdrop-filter: blur(6px);
-    padding: 12px 16px;
-    border-radius: 50%;
-  }
-
-  /* Modal styles */
-  .product-video-slider .video-modal {
-    display: none;
-    position: fixed;
     inset: 0;
-    z-index: 1000;
-    background-color: rgba(0,0,0,0.8);
-    padding: 20px;
-    box-sizing: border-box;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .product-video-slider .modal-content {
-    position: relative;
-    max-width: 1280px;
     width: 100%;
-    max-height: calc(100vh - 40px);
-    background: transparent;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
+    height: 100%;
   }
 
-  .product-video-slider .modal-content iframe {
-    width: 100%;
-    height: calc(100vh - 40px - 60px);
-    border-radius: 16px;
-    border: none;
-  }
-
-  .product-video-slider .close-modal {
-    position: absolute;
-    top: -52px;
-    right: 0;
-    font-size: 28px;
-    background: #616166;
-    cursor: pointer;
-    height: 40px;
-    width: 40px;
-    border-radius: 50%;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Slick arrows & dots */
   .product-video-slider .slick-prev,
   .product-video-slider .slick-next {
     height: 40px;
     width: 40px;
-    border-radius: 100px;
-    font-size: 0;
-    line-height: 0;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 99;
-    cursor: pointer;
-    color: transparent;
-    border: none;
-    outline: none;
     background: #616166;
-  }
-
-  .product-video-slider .slick-prev {
-    left: -8px;
-  }
-
-  .product-video-slider .slick-next {
-    right: -8px;
-  }
-
-  .product-video-slider .slick-next:before,
-  .product-video-slider .slick-prev:before {
-    content: '' !important;
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    background-size: contain;
-    background-repeat: no-repeat;
+    border-radius: 100px;
+    z-index: 99;
   }
 
   .product-video-slider .slick-next:before {
-    background-image: url('{{ "arrow-right.svg" | asset_url }}') !important;
+    content: '' !important;
+    background-image: url('{{ "arrow-right.svg" | asset_url }}');
+    background-size: contain;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
   }
 
   .product-video-slider .slick-prev:before {
-    background-image: url('{{ "arrow-left.svg" | asset_url }}') !important;
-  }
-
-  .product-video-slider .slick-dots {
-    margin-top: 16px;
-  }
-
-  .product-video-slider .slick-dots li button:before {
-    font-size: 10px;
+    content: '' !important;
+    background-image: url('{{ "arrow-left.svg" | asset_url }}');
+    background-size: contain;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
   }
 
   @media (max-width: 749px) {
-    .product-video-slider {
-      padding: 16px;
-    }
-
     .product-video-slider .carouselHdg {
       font-size: 20px;
-      margin-bottom: 16px;
-    }
-
-    .product-video-slider .slick-prev,
-    .product-video-slider .slick-next {
-      width: 32px;
-      height: 32px;
-      top: 100%;
-      transform: translateY(-50%);
-    }
-
-    .product-video-slider .slick-prev {
-      left: 0;
-    }
-
-    .product-video-slider .slick-next {
-      right: 0;
-    }
-
-    .product-video-slider .modal-content iframe {
-      height: calc(100vh - 20px - 60px);
     }
   }
 </style>
@@ -295,45 +179,5 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     ]
   });
-
-  var $modal = $('#productVideoModal');
-  var $modalContainer = $('#productModalVideoContainer');
-
-  function openVideoModal(src) {
-    if (!src) return;
-
-    var html = '<iframe src="' + src + '" ' +
-               'frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" ' +
-               'allowfullscreen></iframe>';
-
-    $modalContainer.html(html);
-    $modal.css('display', 'flex');
-  }
-
-  function closeVideoModal() {
-    $modal.css('display', 'none');
-    $modalContainer.html('');
-  }
-
-  // Open on thumbnail click
-  $('.product-video-slider-track').on('click', '.video-thumbnail', function () {
-    var src = $(this).data('video-url');
-    openVideoModal(src);
-  });
-
-  // Close button
-  $('#productVideoModalClose').on('click', function () {
-    closeVideoModal();
-  });
-
-  // Click outside content to close
-  $modal.on('click', function (e) {
-    if ($(e.target).is('#productVideoModal')) {
-      closeVideoModal();
-    }
-  });
-
-  // Expose close function globally if needed
-  window.closeProductVideoModal = closeVideoModal;
 });
 </script>
