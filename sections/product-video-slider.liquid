@@ -1,79 +1,3 @@
-{% assign extra = product.metafields.custom.extra_info.value %}
-
-{%- comment -%}
-  Build a flat array of video URLs from:
-  - extra.instructional_video_url (single URL or array of URLs)
-  - extra.other_videos (list of links with .url)
-{%- endcomment -%}
-
-{% assign videos = '' | split: ',' %}
-
-{% if extra %}
-
-  {%- comment -%} Instructional video(s) {%- endcomment -%}
-  {% if extra.instructional_video_url != blank %}
-    {% assign inst_list = extra.instructional_video_url.value | default: extra.instructional_video_url %}
-
-    {% if inst_list.first %}
-      {%- comment -%} inst_list is an array {%- endcomment -%}
-      {% for src in inst_list %}
-        {% if src != blank %}
-          {% assign videos = videos | push: src %}
-        {% endif %}
-      {% endfor %}
-    {% elsif inst_list != blank %}
-      {%- comment -%} Single URL {%- endcomment -%}
-      {% assign videos = videos | push: inst_list %}
-    {% endif %}
-  {% endif %}
-
-  {%- comment -%} Other videos list {%- endcomment -%}
-  {% if extra.other_videos != blank %}
-    {% assign other_list = extra.other_videos.value | default: extra.other_videos %}
-    {% if other_list %}
-      {% for link in other_list %}
-        {% if link.url != blank %}
-          {% assign videos = videos | push: link.url %}
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-  {% endif %}
-
-{% endif %}
-
-{% if videos.size > 0 %}
-  <div class="video-carousel-section product-video-slider">
-    <h2 class="carouselHdg">{{ section.settings.heading }}</h2>
-
-    <div
-      class="product-video-slider-track"
-      data-videos-per-row="{{ section.settings.videos_per_row }}"
-    >
-      {% assign thumb = product.featured_image | image_url: width: 1200 %}
-
-      {% for video_url in videos %}
-        <div class="video-slide">
-          <div class="video-slide-inner">
-            <div class="video-thumbnail" data-video-url="{{ video_url }}">
-              {% if thumb %}
-                <img src="{{ thumb }}" alt="{{ product.title | escape }}">
-              {% endif %}
-              <div class="play-button">&#9658;</div>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-
-    <div class="video-modal" id="productVideoModal">
-      <div class="modal-content">
-        <span class="close-modal" id="productVideoModalClose">&times;</span>
-        <div id="productModalVideoContainer"></div>
-      </div>
-    </div>
-  </div>
-{% endif %}
-
 {% schema %}
 {
   "name": "Product Video Slider",
@@ -104,6 +28,70 @@
   ]
 }
 {% endschema %}
+
+{%- assign extra = product.metafields.custom.extra_info.value -%}
+
+{%- comment -%}
+  Build a flat list of video URLs from:
+  - extra.instructional_video_url (array of URLs)
+  - extra.other_videos (array of {text, url})
+{%- endcomment -%}
+
+{% assign videos = '' | split: ',' %}
+
+{% if extra %}
+  {%- comment -%} All instructional videos {%- endcomment -%}
+  {% if extra.instructional_video_url %}
+    {% for src in extra.instructional_video_url %}
+      {% if src != blank %}
+        {% assign videos = videos | push: src %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {%- comment -%} All "other_videos" URLs {%- endcomment -%}
+  {% if extra.other_videos %}
+    {% for link in extra.other_videos %}
+      {% if link.url != blank %}
+        {% assign videos = videos | push: link.url %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endif %}
+
+{% if videos.size > 0 %}
+  <div class="video-carousel-section product-video-slider">
+    <h2 class="carouselHdg">{{ section.settings.heading }}</h2>
+
+    <div
+      class="product-video-slider-track"
+      data-videos-per-row="{{ section.settings.videos_per_row }}"
+    >
+      {% assign thumb = product.featured_image | image_url: width: 1200 %}
+
+      {% for video_url in videos %}
+        <div class="video-slide">
+          <div class="video-slide-inner">
+            <div class="video-thumbnail" data-video-url="{{ video_url }}">
+              {% if thumb %}
+                <img src="{{ thumb }}" alt="{{ product.title | escape }}">
+              {% endif %}
+              <div class="play-button">&#9658;</div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {%- comment -%} Popup modal {%- endcomment -%}
+    <div class="video-modal" id="productVideoModal">
+      <div class="modal-content">
+        <span class="close-modal" id="productVideoModalClose">&times;</span>
+        <div id="productModalVideoContainer"></div>
+      </div>
+    </div>
+  </div>
+{% endif %}
 
 <style>
   .product-video-slider .carouselHdg {
@@ -181,8 +169,7 @@
     flex-direction: column;
   }
 
-  .product-video-slider .modal-content iframe,
-  .product-video-slider .modal-content video {
+  .product-video-slider .modal-content iframe {
     width: 100%;
     height: calc(100vh - 40px - 60px);
     border-radius: 16px;
@@ -285,8 +272,7 @@
       right: 0;
     }
 
-    .product-video-slider .modal-content iframe,
-    .product-video-slider .modal-content video {
+    .product-video-slider .modal-content iframe {
       height: calc(100vh - 20px - 60px);
     }
   }
@@ -321,19 +307,11 @@ document.addEventListener('DOMContentLoaded', function () {
   function openVideoModal(src) {
     if (!src) return;
 
-    var html = '';
-
-    if (src.indexOf('.mp4') !== -1) {
-      html =
-        '<video controls autoplay>' +
-        '<source src="' + src + '" type="video/mp4">' +
-        '</video>';
-    } else {
-      html =
-        '<iframe src="' + src + '"' +
-        ' frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
-        ' allowfullscreen></iframe>';
-    }
+    // If you later add YouTube watch URLs, you can convert to embed here.
+    var html =
+      '<iframe src="' + src + '"' +
+      ' frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
+      ' allowfullscreen></iframe>';
 
     $modalContainer.html(html);
     $modal.css('display', 'flex');
@@ -344,15 +322,18 @@ document.addEventListener('DOMContentLoaded', function () {
     $modalContainer.html('');
   }
 
+  // Open on thumbnail click
   $('.product-video-slider-track').on('click', '.video-thumbnail', function () {
     var src = $(this).data('video-url');
     openVideoModal(src);
   });
 
+  // Close button
   $('#productVideoModalClose').on('click', function () {
     closeVideoModal();
   });
 
+  // Click outside content to close
   $modal.on('click', function (e) {
     if ($(e.target).is('#productVideoModal')) {
       closeVideoModal();
