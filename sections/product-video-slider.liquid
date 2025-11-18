@@ -29,65 +29,17 @@
 }
 {% endschema %}
 
-{%- assign extra = product.metafields.custom.extra_info.value -%}
+{% assign extra = product.metafields.custom.extra_info.value %}
 
-{%- comment -%}
-  Build array of video URLs from:
-  - extra.instructional_video_url.value  (single URL)
-  - extra.other_videos.value (list of links: link.url)
-{%- endcomment -%}
+<h2 style="color:red;">DEBUG: Product Video Slider is Loaded</h2>
 
-{% assign videos = '' | split: ',' %}
-
-{% if extra %}
-  {%- comment -%} Main instructional video {%- endcomment -%}
-  {% if extra.instructional_video_url != blank %}
-    {% assign videos = videos | push: extra.instructional_video_url.value %}
-  {% endif %}
-
-  {%- comment -%} Other videos list {%- endcomment -%}
-  {% if extra.other_videos != blank %}
-    {% for link in extra.other_videos.value %}
-      {% if link.url != blank %}
-        {% assign videos = videos | push: link.url %}
-      {% endif %}
-    {% endfor %}
-  {% endif %}
+{% if extra == blank %}
+  <p style="color:orange;">extra_info metafield is NOT connected to this product.</p>
+{% else %}
+  <p style="color:green;">extra_info loaded successfully.</p>
+  <pre>{{ extra | json }}</pre>
 {% endif %}
 
-{% if videos.size > 0 %}
-  <div class="video-carousel-section product-video-slider">
-    <h2 class="carouselHdg">{{ section.settings.heading }}</h2>
-
-    <div
-      class="product-video-slider-track"
-      data-videos-per-row="{{ section.settings.videos_per_row }}"
-    >
-      {% assign thumb = product.featured_image | image_url: width: 1200 %}
-
-      {% for video_url in videos %}
-        <div class="video-slide">
-          <div class="video-slide-inner">
-            <div class="video-thumbnail" data-video-url="{{ video_url }}">
-              {% if thumb %}
-                <img src="{{ thumb }}" alt="{{ product.title | escape }}">
-              {% endif %}
-              <div class="play-button">&#9658;</div>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-
-    {%- comment -%} Popup modal {%- endcomment -%}
-    <div class="video-modal" id="productVideoModal">
-      <div class="modal-content">
-        <span class="close-modal" id="productVideoModalClose">&times;</span>
-        <div id="productModalVideoContainer"></div>
-      </div>
-    </div>
-  </div>
-{% endif %}
 
 <style>
   .product-video-slider .carouselHdg {
