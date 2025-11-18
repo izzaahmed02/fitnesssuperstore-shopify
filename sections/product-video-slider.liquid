@@ -56,6 +56,7 @@
 
 <div class="video-carousel-section">
   <h2 class="carouselHdg">{{ section.settings.hdg }}</h2>
+
   <div
     class="video-carousel slick-carousel"
     data-videos-per-row="{{ section.settings.videos_per_row }}"
@@ -63,17 +64,62 @@
     {% for block in section.blocks %}
       {% assign video_url = block.settings.video_url %}
       {% assign shopify_video = block.settings.shopify_video %}
-      {% assign fallback_thumb = block.settings.thumbnail | image_url: width: 1200 %}
+
+      {%- comment -%}
+        Choose thumbnail:
+        1) Manual thumbnail if set
+        2) Otherwise Shopify video preview image
+      {%- endcomment -%}
+      {% assign thumb_image = nil %}
+      {% if block.settings.thumbnail != blank %}
+        {% assign thumb_image = block.settings.thumbnail %}
+      {% elsif shopify_video != blank %}
+        {% assign thumb_image = shopify_video.preview_image %}
+      {% endif %}
+
+      {% if thumb_image %}
+        {% assign fallback_thumb = thumb_image | image_url: width: 1200 %}
+      {% endif %}
+
+      {%- comment -%}
+        Choose video source for player (external URL or Shopify mp4)
+      {%- endcomment -%}
+      {% assign player_src = '' %}
+      {% assign video_type = '' %}
+
+      {% if video_url != blank %}
+        {% assign player_src = video_url %}
+        {% assign video_type = 'external' %}
+      {% elsif shopify_video != blank and shopify_video.sources != blank %}
+        {% assign mp4_source = shopify_video.sources | where: "format", "mp4" | first %}
+        {% if mp4_source != blank %}
+          {% assign player_src = mp4_source.url %}
+        {% else %}
+          {% assign player_src = shopify_video.sources[0].url %}
+        {% endif %}
+        {% assign video_type = 'shopify' %}
+      {% endif %}
+
       <div class="carousel-item">
-        <div class="video-thumbnail" data-video-url="{{ video_url }}">
-          <img src="{{ fallback_thumb }}" alt="{{ block.settings.thumbnail.alt | escape }}" />
+        <div
+          class="video-thumbnail"
+          data-video-url="{{ player_src }}"
+          data-video-type="{{ video_type }}"
+        >
+          {% if fallback_thumb %}
+            <img src="{{ fallback_thumb }}" alt="{{ block.settings.thumbnail.alt | escape }}" />
+          {% endif %}
           <div class="play-button">&#9658;</div>
         </div>
 
+        {%- comment -%}
+          JSON-LD – reuse thumbnail & video src for SEO
+        {%- endcomment -%}
         {% if shopify_video != blank and shopify_video.sources != blank %}
           {% assign video_src = shopify_video.sources[0].url %}
           {% assign video_embed = shopify_video.sources | where: "format", "mp4" | first %}
-          {% assign video_thumb = shopify_video.preview_image | image_url: width: 1200 %}
+          {% assign video_thumb = thumb_image | image_url: width: 1200 %}
+
           <script type="application/ld+json">
           {
             "@context": "https://schema.org",
@@ -96,14 +142,14 @@
           }
           </script>
         {% elsif video_url != blank %}
-          {% assign fallback_thumb = block.settings.thumbnail | image_url: width: 1200 %}
+          {% assign video_thumb = thumb_image | image_url: width: 1200 %}
           <script type="application/ld+json">
           {
             "@context": "https://schema.org",
             "@type": "VideoObject",
             "name": "{{ block.settings.thumbnail.alt | escape }}",
             "description": "Video about {{ section.settings.hdg | strip_html | escape }} — {{ block.settings.thumbnail.alt | escape }}",
-            "thumbnailUrl": "{{ fallback_thumb | prepend: 'https:' }}",
+            "thumbnailUrl": "{{ video_thumb | prepend: 'https:' }}",
             "uploadDate": "{{ 'now' | date: "%Y-%m-%d" }}",
             "duration": "PT1M57S",
             "contentUrl": "{{ video_url }}",
@@ -119,10 +165,8 @@
           }
           </script>
         {% endif %}
-
       </div>
     {% endfor %}
-
   </div>
 
   <div class="video-modal" id="videoModal">
@@ -146,7 +190,8 @@
     margin-bottom: 52px;
   }
 
-  .video-carousel .slick-prev, .video-carousel .slick-next {
+  .video-carousel .slick-prev,
+  .video-carousel .slick-next {
     height: 44px;
     width: 44px;
     border-radius: 100px;
@@ -196,9 +241,9 @@
     z-index: 999;
   }
 
-  /* 🔁 Fixed: correct arrow directions */
+  /* Arrow icons */
   .video-carousel .slick-next:before {
-    content: ''!important;
+    content: '' !important;
     background-image: url('{{ 'arrow-right.svg' | asset_url }}') !important;
     background-size: contain;
     background-repeat: no-repeat;
@@ -208,7 +253,7 @@
   }
 
   .video-carousel .slick-prev:before {
-    content: ''!important;
+    content: '' !important;
     background-image: url('{{ 'arrow-left.svg' | asset_url }}') !important;
     background-size: contain;
     background-repeat: no-repeat;
@@ -222,8 +267,8 @@
   }
 
   .video-carousel .slick-dots {
-    display: block!important;
-    bottom: -50px!important;
+    display: block !important;
+    bottom: -50px !important;
   }
 
   .video-carousel .slick-dots li {
@@ -233,24 +278,24 @@
   }
 
   .video-carousel .slick-dots li button {
-    width: 12px!important;
-    height: 12px!important;
-    padding: 0!important;
+    width: 12px !important;
+    height: 12px !important;
+    padding: 0 !important;
   }
 
   .video-carousel .slick-dots li button:before {
-    font-size: 34px!important;
-    line-height: 12px!important;
-    width: 12px!important;
-    height: 12px!important;
-    content: ''!important;
-    display: block!important;
-    background-color: #ccc!important;
-    border-radius: 50%!important;
+    font-size: 34px !important;
+    line-height: 12px !important;
+    width: 12px !important;
+    height: 12px !important;
+    content: '' !important;
+    display: block !important;
+    background-color: #ccc !important;
+    border-radius: 50% !important;
   }
 
   .video-carousel .slick-dots li.slick-active button:before {
-    background-color: #23232B!important;
+    background-color: #23232B !important;
   }
 
   .video-carousel .slick-next:focus,
@@ -316,7 +361,7 @@
   .video-carousel .modal-content {
     position: relative;
     max-width: 1280px;
-    max-height: calc(100vh - 40px); 
+    max-height: calc(100vh - 40px);
     background: transparent;
     padding: 0;
     display: flex;
@@ -330,7 +375,7 @@
     width: 100%;
     max-height: calc(100vh - 40px - 86px);
     border-radius: 24px;
-    height: auto; 
+    height: auto;
     object-fit: contain;
   }
 
@@ -352,7 +397,7 @@
   }
 
   body.acsb-keynav :focus {
-    outline: none!important;
+    outline: none !important;
   }
 
   @media screen and (max-width: 749px) {
@@ -388,12 +433,12 @@
     }
 
     .video-carousel .slick-dotted.slick-slider {
-      padding-bottom: 40px!important;
+      padding-bottom: 40px !important;
     }
 
     .video-carousel .slick-dots {
       display: block !important;
-      bottom: -10px!important;
+      bottom: -10px !important;
     }
 
     .video-carousel .video-carousel-section {
@@ -422,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var $carousel = $('.video-carousel .slick-carousel');
   var videosPerRow = parseInt($carousel.data('videos-per-row'), 10) || 3;
 
-  // 🔒 Cap at max 3 on desktop
+  // Cap at max 3 on desktop
   var desktopSlides = Math.min(videosPerRow, 3);
 
   $carousel.slick({
@@ -433,18 +478,63 @@ document.addEventListener('DOMContentLoaded', function () {
     dots: true,
     responsive: [
       {
-        breakpoint: 1024, // tablet / small desktop
+        breakpoint: 1024,
         settings: {
           slidesToShow: desktopSlides
         }
       },
       {
-        breakpoint: 750, // 🔒 mobile: always 1 slide
+        breakpoint: 750, // mobile: always 1
         settings: {
           slidesToShow: 1
         }
       }
     ]
+  });
+
+  var $modal = $('#videoModal');
+  var $modalContainer = $('#modalVideoContainer');
+
+  function openVideoModal(src, type) {
+    if (!src) return;
+
+    var html = '';
+
+    // YouTube handling for external URLs
+    if (type === 'external' && (src.indexOf('youtube.com') > -1 || src.indexOf('youtu.be') > -1)) {
+      var embedUrl = src;
+
+      if (src.indexOf('watch?v=') > -1) {
+        embedUrl = src.replace('watch?v=', 'embed/');
+      }
+
+      html = '<iframe src="' + embedUrl + '" frameborder="0" allowfullscreen></iframe>';
+    } else {
+      // Shopify hosted / direct video file
+      html = '<video controls autoplay><source src="' + src + '" type="video/mp4"></video>';
+    }
+
+    $modalContainer.html(html);
+    $modal.css('display', 'flex');
+  }
+
+  window.closeModal = function () {
+    $modal.css('display', 'none');
+    $modalContainer.html('');
+  };
+
+  // Close when clicking backdrop
+  $modal.on('click', function (e) {
+    if ($(e.target).is('#videoModal')) {
+      window.closeModal();
+    }
+  });
+
+  // Open modal when thumbnail clicked
+  $('.video-carousel').on('click', '.video-thumbnail', function () {
+    var src = $(this).data('video-url');
+    var type = $(this).data('video-type');
+    openVideoModal(src, type);
   });
 });
 </script>
