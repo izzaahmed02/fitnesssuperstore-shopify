@@ -32,26 +32,22 @@
 {%- assign extra = product.metafields.custom.extra_info.value -%}
 
 {%- comment -%}
-  Build a flat list of video URLs from:
-  - extra.instructional_video_url (array of URLs)
-  - extra.other_videos (array of {text, url})
+  Build array of video URLs from:
+  - extra.instructional_video_url.value  (single URL)
+  - extra.other_videos.value (list of links: link.url)
 {%- endcomment -%}
 
 {% assign videos = '' | split: ',' %}
 
 {% if extra %}
-  {%- comment -%} All instructional videos {%- endcomment -%}
-  {% if extra.instructional_video_url %}
-    {% for src in extra.instructional_video_url %}
-      {% if src != blank %}
-        {% assign videos = videos | push: src %}
-      {% endif %}
-    {% endfor %}
+  {%- comment -%} Main instructional video {%- endcomment -%}
+  {% if extra.instructional_video_url != blank %}
+    {% assign videos = videos | push: extra.instructional_video_url.value %}
   {% endif %}
 
-  {%- comment -%} All "other_videos" URLs {%- endcomment -%}
-  {% if extra.other_videos %}
-    {% for link in extra.other_videos %}
+  {%- comment -%} Other videos list {%- endcomment -%}
+  {% if extra.other_videos != blank %}
+    {% for link in extra.other_videos.value %}
       {% if link.url != blank %}
         {% assign videos = videos | push: link.url %}
       {% endif %}
@@ -174,7 +170,6 @@
     height: calc(100vh - 40px - 60px);
     border-radius: 16px;
     border: none;
-    background: #000;
   }
 
   .product-video-slider .close-modal {
@@ -307,11 +302,9 @@ document.addEventListener('DOMContentLoaded', function () {
   function openVideoModal(src) {
     if (!src) return;
 
-    // If you later add YouTube watch URLs, you can convert to embed here.
-    var html =
-      '<iframe src="' + src + '"' +
-      ' frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
-      ' allowfullscreen></iframe>';
+    var html = '<iframe src="' + src + '" ' +
+               'frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" ' +
+               'allowfullscreen></iframe>';
 
     $modalContainer.html(html);
     $modal.css('display', 'flex');
@@ -339,5 +332,8 @@ document.addEventListener('DOMContentLoaded', function () {
       closeVideoModal();
     }
   });
+
+  // Expose close function globally if needed
+  window.closeProductVideoModal = closeVideoModal;
 });
 </script>
