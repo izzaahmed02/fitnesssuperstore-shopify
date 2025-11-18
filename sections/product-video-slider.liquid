@@ -7,7 +7,7 @@
       "type": "inline_richtext",
       "id": "heading",
       "label": "Heading",
-      "default": "Product Videos"
+      "default": "Product videos"
     },
     {
       "type": "select",
@@ -21,6 +21,8 @@
       ]
     }
   ],
+  "blocks": [],
+  "max_blocks": 1,
   "presets": [
     {
       "name": "Product Video Slider"
@@ -32,43 +34,38 @@
 {%- assign extra = product.metafields.custom.extra_info.value -%}
 
 {%- comment -%}
-  Collect all videos:
-  • extra.instructional_video_url.value → single video
-  • extra.other_videos.value → list of videos (each link.url)
+  We will render:
+  - 1 slide for extra.instructional_video_url.value (if present)
+  - 1 slide for each link in extra.other_videos.value (if present)
 {%- endcomment -%}
 
-{% assign videos = '' | split: ',' %}
+{% assign has_any_video = false %}
 
-{%- if extra != blank -%}
+{% if extra %}
+  {% if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank %}
+    {% assign has_any_video = true %}
+  {% endif %}
 
-  {%- if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank -%}
-    {% assign videos = videos | push: extra.instructional_video_url.value %}
-  {%- endif -%}
+  {% if extra.other_videos != blank and extra.other_videos.value != blank %}
+    {% assign has_any_video = true %}
+  {% endif %}
+{% endif %}
 
-  {%- if extra.other_videos != blank and extra.other_videos.value != blank -%}
-    {% for link in extra.other_videos.value %}
-      {% if link.url != blank %}
-        {% assign videos = videos | push: link.url %}
-      {% endif %}
-    {% endfor %}
-  {%- endif -%}
-
-{%- endif -%}
-
-{% if videos.size > 0 %}
-  <div class="video-carousel-section product-video-slider">
+{% if has_any_video %}
+  <div class="video-carousel-section extra-info-videos">
     <h2 class="carouselHdg">{{ section.settings.heading }}</h2>
 
     <div
-      class="product-video-slider-track"
+      class="extra-info-video-slider"
       data-videos-per-row="{{ section.settings.videos_per_row }}"
     >
-      {% for video_url in videos %}
+      {%- comment -%} Slide from instructional_video_url {%- endcomment -%}
+      {% if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank %}
         <div class="video-slide">
           <div class="video-slide-inner">
             <div class="video-embed-wrapper">
               <iframe
-                src="{{ video_url }}"
+                src="{{ extra.instructional_video_url.value }}"
                 loading="lazy"
                 frameborder="0"
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -77,93 +74,167 @@
             </div>
           </div>
         </div>
-      {% endfor %}
+      {% endif %}
+
+      {%- comment -%} Slides from other_videos list {%- endcomment -%}
+      {% if extra.other_videos != blank and extra.other_videos.value != blank %}
+        {% for link in extra.other_videos.value %}
+          {% if link.url != blank %}
+            <div class="video-slide">
+              <div class="video-slide-inner">
+                <div class="video-embed-wrapper">
+                  <iframe
+                    src="{{ link.url }}"
+                    loading="lazy"
+                    frameborder="0"
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                  ></iframe>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
     </div>
   </div>
 {% endif %}
 
 <style>
-  .product-video-slider .carouselHdg {
+  .extra-info-videos .carouselHdg {
     font-family: Oswald;
     font-weight: 600;
     font-size: 32px;
-    margin-bottom: 24px;
+    line-height: 1.3;
     text-transform: uppercase;
+    text-align: left;
+    margin-bottom: 24px;
   }
 
-  .product-video-slider {
+  .extra-info-videos {
     max-width: 1320px;
     padding: 20px;
     margin: 0 auto;
   }
 
-  .product-video-slider-track .video-slide {
+  .extra-info-video-slider .video-slide {
     padding: 0 12px;
+    box-sizing: border-box;
   }
 
-  .product-video-slider-track .video-slide-inner {
-    background: #f7f7f7;
+  .extra-info-video-slider .video-slide-inner {
     border-radius: 16px;
+    background: #f7f7f7;
     padding: 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
-  .video-embed-wrapper {
+  .extra-info-video-slider .video-embed-wrapper {
     position: relative;
     width: 100%;
-    padding-bottom: 56.25%;
-    background: black;
-    border-radius: 12px;
+    padding-bottom: 56.25%; /* 16:9 */
     overflow: hidden;
+    border-radius: 12px;
+    background: #000;
   }
 
-  .video-embed-wrapper iframe {
+  .extra-info-video-slider .video-embed-wrapper iframe {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
   }
 
-  .product-video-slider .slick-prev,
-  .product-video-slider .slick-next {
+  /* Slick arrows & dots */
+  .extra-info-videos .slick-prev,
+  .extra-info-videos .slick-next {
     height: 40px;
     width: 40px;
-    background: #616166;
     border-radius: 100px;
+    font-size: 0;
+    line-height: 0;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
     z-index: 99;
+    cursor: pointer;
+    color: transparent;
+    border: none;
+    outline: none;
+    background: #616166;
   }
 
-  .product-video-slider .slick-next:before {
-    content: '' !important;
-    background-image: url('{{ "arrow-right.svg" | asset_url }}');
-    background-size: contain;
-    width: 20px;
-    height: 20px;
-    display: inline-block;
+  .extra-info-videos .slick-prev {
+    left: -8px;
   }
 
-  .product-video-slider .slick-prev:before {
+  .extra-info-videos .slick-next {
+    right: -8px;
+  }
+
+  .extra-info-videos .slick-next:before,
+  .extra-info-videos .slick-prev:before {
     content: '' !important;
-    background-image: url('{{ "arrow-left.svg" | asset_url }}');
-    background-size: contain;
+    display: inline-block;
     width: 20px;
     height: 20px;
-    display: inline-block;
+    background-size: contain;
+    background-repeat: no-repeat;
+  }
+
+  .extra-info-videos .slick-next:before {
+    background-image: url('{{ "arrow-right.svg" | asset_url }}') !important;
+  }
+
+  .extra-info-videos .slick-prev:before {
+    background-image: url('{{ "arrow-left.svg" | asset_url }}') !important;
+  }
+
+  .extra-info-videos .slick-dots {
+    margin-top: 16px;
+  }
+
+  .extra-info-videos .slick-dots li button:before {
+    font-size: 10px;
   }
 
   @media (max-width: 749px) {
-    .product-video-slider .carouselHdg {
+    .extra-info-videos {
+      padding: 16px;
+    }
+
+    .extra-info-videos .carouselHdg {
       font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    .extra-info-videos .slick-prev,
+    .extra-info-videos .slick-next {
+      width: 32px;
+      height: 32px;
+      top: 100%;
+      transform: translateY(-50%);
+    }
+
+    .extra-info-videos .slick-prev {
+      left: 0;
+    }
+
+    .extra-info-videos .slick-next {
+      right: 0;
     }
   }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  var $slider = $('.product-video-slider-track');
+  var $slider = $('.extra-info-video-slider');
   if (!$slider.length) return;
 
-  var perRow = parseInt($slider.data('videos-per-row'), 10) || 2;
-  var desktopSlides = Math.min(perRow, 3);
+  var videosPerRow = parseInt($slider.data('videos-per-row'), 10) || 2;
+  var desktopSlides = Math.min(videosPerRow, 3); // hard cap at 3
 
   $slider.slick({
     slidesToShow: desktopSlides,
