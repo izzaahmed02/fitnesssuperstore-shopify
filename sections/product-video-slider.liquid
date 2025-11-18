@@ -7,11 +7,20 @@
       "type": "inline_richtext",
       "id": "heading",
       "label": "Heading",
-      "default": "Instruction & Assembly Videos"
+      "default": "Product Videos"
+    },
+    {
+      "type": "select",
+      "id": "videos_per_row",
+      "label": "Videos per row (desktop)",
+      "default": "2",
+      "options": [
+        { "label": "1", "value": "1" },
+        { "label": "2", "value": "2" },
+        { "label": "3", "value": "3" }
+      ]
     }
   ],
-  "blocks": [],
-  "max_blocks": 1,
   "presets": [
     {
       "name": "Product Video Slider"
@@ -20,33 +29,46 @@
 }
 {% endschema %}
 
-{% assign extra = product.metafields.custom.extra_info.value %}
+{%- assign extra = product.metafields.custom.extra_info.value -%}
 
-{% assign has_instruction_video = false %}
-{% assign has_assembly_video = false %}
+{%- comment -%}
+  Collect all videos:
+  • extra.instructional_video_url.value → single video
+  • extra.other_videos.value → list of videos (each link.url)
+{%- endcomment -%}
 
-{% if extra %}
-  {% if extra.instructional_video_url != blank %}
-    {% assign has_instruction_video = true %}
-  {% endif %}
-  {% if extra.assembly_video_url != blank %}
-    {% assign has_assembly_video = true %}
-  {% endif %}
-{% endif %}
+{% assign videos = '' | split: ',' %}
 
-{% if has_instruction_video or has_assembly_video %}
-  <div class="video-carousel-section instruction-assembly-section">
+{%- if extra != blank -%}
+
+  {%- if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank -%}
+    {% assign videos = videos | push: extra.instructional_video_url.value %}
+  {%- endif -%}
+
+  {%- if extra.other_videos != blank and extra.other_videos.value != blank -%}
+    {% for link in extra.other_videos.value %}
+      {% if link.url != blank %}
+        {% assign videos = videos | push: link.url %}
+      {% endif %}
+    {% endfor %}
+  {%- endif -%}
+
+{%- endif -%}
+
+{% if videos.size > 0 %}
+  <div class="video-carousel-section product-video-slider">
     <h2 class="carouselHdg">{{ section.settings.heading }}</h2>
 
-    <div class="instruction-assembly-slider">
-      {%- comment -%} Instructional video slide {%- endcomment -%}
-      {% if has_instruction_video %}
+    <div
+      class="product-video-slider-track"
+      data-videos-per-row="{{ section.settings.videos_per_row }}"
+    >
+      {% for video_url in videos %}
         <div class="video-slide">
           <div class="video-slide-inner">
             <div class="video-embed-wrapper">
               <iframe
-                src="{{ extra.instructional_video_url.value }}"
-                title="Instructional video"
+                src="{{ video_url }}"
                 loading="lazy"
                 frameborder="0"
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -55,164 +77,96 @@
             </div>
           </div>
         </div>
-      {% endif %}
-
-      {%- comment -%} Assembly video slide {%- endcomment -%}
-      {% if has_assembly_video %}
-        <div class="video-slide">
-          <div class="video-slide-inner">
-            <div class="video-embed-wrapper">
-              <iframe
-                src="{{ extra.assembly_video_url.value }}"
-                title="Assembly video"
-                loading="lazy"
-                frameborder="0"
-                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
-              ></iframe>
-            </div>
-          </div>
-        </div>
-      {% endif %}
+      {% endfor %}
     </div>
   </div>
 {% endif %}
 
 <style>
-  .instruction-assembly-section .carouselHdg {
+  .product-video-slider .carouselHdg {
     font-family: Oswald;
     font-weight: 600;
     font-size: 32px;
-    line-height: 1.3;
-    text-transform: uppercase;
-    text-align: left;
     margin-bottom: 24px;
+    text-transform: uppercase;
   }
 
-  .instruction-assembly-section {
+  .product-video-slider {
     max-width: 1320px;
     padding: 20px;
     margin: 0 auto;
   }
 
-  .instruction-assembly-slider .video-slide {
+  .product-video-slider-track .video-slide {
     padding: 0 12px;
-    box-sizing: border-box;
   }
 
-  .instruction-assembly-slider .video-slide-inner {
-    border-radius: 16px;
+  .product-video-slider-track .video-slide-inner {
     background: #f7f7f7;
+    border-radius: 16px;
     padding: 16px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
   }
 
-  .instruction-assembly-slider .video-embed-wrapper {
+  .video-embed-wrapper {
     position: relative;
     width: 100%;
-    padding-bottom: 56.25%; /* 16:9 */
-    overflow: hidden;
+    padding-bottom: 56.25%;
+    background: black;
     border-radius: 12px;
-    background: #000;
+    overflow: hidden;
   }
 
-  .instruction-assembly-slider .video-embed-wrapper iframe {
+  .video-embed-wrapper iframe {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
   }
 
-  /* Slick arrows & dots for this slider */
-  .instruction-assembly-section .slick-prev,
-  .instruction-assembly-section .slick-next {
+  .product-video-slider .slick-prev,
+  .product-video-slider .slick-next {
     height: 40px;
     width: 40px;
-    border-radius: 100px;
-    font-size: 0;
-    line-height: 0;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 99;
-    cursor: pointer;
-    color: transparent;
-    border: none;
-    outline: none;
     background: #616166;
+    border-radius: 100px;
+    z-index: 99;
   }
 
-  .instruction-assembly-section .slick-prev {
-    left: -8px;
-  }
-
-  .instruction-assembly-section .slick-next {
-    right: -8px;
-  }
-
-  .instruction-assembly-section .slick-next:before,
-  .instruction-assembly-section .slick-prev:before {
+  .product-video-slider .slick-next:before {
     content: '' !important;
-    display: inline-block;
+    background-image: url('{{ "arrow-right.svg" | asset_url }}');
+    background-size: contain;
     width: 20px;
     height: 20px;
+    display: inline-block;
+  }
+
+  .product-video-slider .slick-prev:before {
+    content: '' !important;
+    background-image: url('{{ "arrow-left.svg" | asset_url }}');
     background-size: contain;
-    background-repeat: no-repeat;
-  }
-
-  .instruction-assembly-section .slick-next:before {
-    background-image: url('{{ "arrow-right.svg" | asset_url }}') !important;
-  }
-
-  .instruction-assembly-section .slick-prev:before {
-    background-image: url('{{ "arrow-left.svg" | asset_url }}') !important;
-  }
-
-  .instruction-assembly-section .slick-dots {
-    margin-top: 16px;
-  }
-
-  .instruction-assembly-section .slick-dots li button:before {
-    font-size: 10px;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
   }
 
   @media (max-width: 749px) {
-    .instruction-assembly-section {
-      padding: 16px;
-    }
-
-    .instruction-assembly-section .carouselHdg {
+    .product-video-slider .carouselHdg {
       font-size: 20px;
-      margin-bottom: 16px;
-    }
-
-    .instruction-assembly-section .slick-prev,
-    .instruction-assembly-section .slick-next {
-      width: 32px;
-      height: 32px;
-      top: 100%;
-      transform: translateY(-50%);
-    }
-
-    .instruction-assembly-section .slick-prev {
-      left: 0;
-    }
-
-    .instruction-assembly-section .slick-next {
-      right: 0;
     }
   }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  var $slider = $('.instruction-assembly-slider');
+  var $slider = $('.product-video-slider-track');
   if (!$slider.length) return;
 
+  var perRow = parseInt($slider.data('videos-per-row'), 10) || 2;
+  var desktopSlides = Math.min(perRow, 3);
+
   $slider.slick({
-    slidesToShow: 2,
+    slidesToShow: desktopSlides,
     slidesToScroll: 1,
     arrows: true,
     dots: true,
