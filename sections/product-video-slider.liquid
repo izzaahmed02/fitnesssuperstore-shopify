@@ -29,61 +29,108 @@
 }
 {% endschema %}
 
-{% assign extra = product.metafields.custom.extra_info.value %}
-{% assign videos = '' | split: ',' %}
+{%- assign extra = product.metafields.custom.extra_info.value -%}
+
+{%- comment -%}
+  Check if we have at least one video:
+  - extra.instructional_video_url.value
+  - extra.assembly_video.value
+  - any link in extra.other_videos.value
+{%- endcomment -%}
+
+{% assign has_any_video = false %}
 
 {% if extra %}
-
-  {%- comment -%} Instructional video {%- endcomment -%}
-  {% if extra.instructional_video_url and extra.instructional_video_url.value %}
-    {% assign videos = videos | push: extra.instructional_video_url.value %}
+  {% if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank %}
+    {% assign has_any_video = true %}
   {% endif %}
 
-  {%- comment -%} Assembly video {%- endcomment -%}
-  {% if extra.assembly_video and extra.assembly_video.value %}
-    {% assign videos = videos | push: extra.assembly_video.value %}
+  {% if extra.assembly_video != blank and extra.assembly_video.value != blank %}
+    {% assign has_any_video = true %}
   {% endif %}
 
-  {%- comment -%} Other videos {%- endcomment -%}
-  {% if extra.other_videos and extra.other_videos.value %}
+  {% if extra.other_videos != blank and extra.other_videos.value != blank %}
     {% for link in extra.other_videos.value %}
       {% if link.url != blank %}
-        {% assign videos = videos | push: link.url %}
+        {% assign has_any_video = true %}
       {% endif %}
     {% endfor %}
   {% endif %}
-
 {% endif %}
 
-{% if videos.size > 0 %}
+{% if has_any_video %}
   <div class="video-carousel-section extra-info-videos">
     <h2 class="carouselHdg">{{ section.settings.heading }}</h2>
 
-    <div class="extra-info-video-slider" data-videos-per-row="{{ section.settings.videos_per_row }}">
-
+    <div
+      class="extra-info-video-slider"
+      data-videos-per-row="{{ section.settings.videos_per_row }}"
+    >
       {% assign thumb = product.featured_image | image_url: width: 1200 %}
 
-      {% for video in videos %}
+      {%- comment -%} Slide from instructional_video_url (thumbnail only) {%- endcomment -%}
+      {% if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank %}
         <div class="video-slide">
           <div class="video-slide-inner">
-            <div class="video-thumbnail" data-video-url="{{ video }}">
-              <img src="{{ thumb }}" alt="{{ product.title }}">
+            <div
+              class="video-thumbnail"
+              data-video-url="{{ extra.instructional_video_url.value }}"
+            >
+              {% if thumb %}
+                <img src="{{ thumb }}" alt="{{ product.title | escape }}">
+              {% endif %}
               <div class="play-button">&#9658;</div>
             </div>
           </div>
         </div>
-      {% endfor %}
+      {% endif %}
 
+      {%- comment -%} Slide from assembly_video (thumbnail only) {%- endcomment -%}
+      {% if extra.assembly_video != blank and extra.assembly_video.value != blank %}
+        <div class="video-slide other-videos">
+          <div class="video-slide-inner">
+            <div
+              class="video-thumbnail"
+              data-video-url="{{ extra.assembly_video.value }}"
+            >
+              {% if thumb %}
+                <img src="{{ thumb }}" alt="{{ product.title | escape }}">
+              {% endif %}
+              <div class="play-button">&#9658;</div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {%- comment -%} Slides from other_videos list (thumbnail only) {%- endcomment -%}
+      {% if extra.other_videos != blank and extra.other_videos.value != blank %}
+        {% for link in extra.other_videos.value %}
+          {% if link.url != blank %}
+            <div class="video-slide other-videos">
+              <div class="video-slide-inner">
+                <div
+                  class="video-thumbnail"
+                  data-video-url="{{ link.url }}"
+                >
+                  {% if thumb %}
+                    <img src="{{ thumb }}" alt="{{ link.text | default: product.title | escape }}">
+                  {% endif %}
+                  <div class="play-button">&#9658;</div>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
     </div>
 
-    {# Popup Modal #}
-    <div class="video-modal" id="videoPopupModal">
+    {%- comment -%} Popup modal (plays video) {%- endcomment -%}
+    <div class="video-modal" id="extraInfoVideoModal">
       <div class="modal-content">
-        <span class="close-modal" id="closeVideoPopup">&times;</span>
-        <div id="videoPopupContainer"></div>
+        <span class="close-modal" id="extraInfoVideoModalClose">&times;</span>
+        <div id="extraInfoVideoModalContainer"></div>
       </div>
     </div>
-
   </div>
 {% endif %}
 
@@ -92,136 +139,253 @@
     font-family: Oswald;
     font-weight: 600;
     font-size: 32px;
+    line-height: 1.3;
+    text-transform: uppercase;
+    text-align: left;
     margin-bottom: 24px;
+  }
+
+  .extra-info-videos {
+    max-width: 1320px;
+    padding: 20px;
+    margin: 0 auto;
   }
 
   .extra-info-video-slider .video-slide {
     padding: 0 12px;
+    box-sizing: border-box;
   }
 
-  .video-slide-inner {
-    background: #f7f7f7;
+  .extra-info-video-slider .video-slide-inner {
     border-radius: 16px;
+    background: #f7f7f7;
     padding: 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
-  .video-thumbnail {
+  .extra-info-video-slider .video-thumbnail {
     position: relative;
     cursor: pointer;
   }
 
-  .video-thumbnail img {
-    width: 100%;
+  .extra-info-video-slider .video-thumbnail img {
     border-radius: 12px;
+    width: 100%;
+    display: block;
   }
 
-  .play-button {
+  .extra-info-video-slider .play-button {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 24px;
-    background: rgba(0,0,0,0.6);
-    padding: 12px 16px;
+    font-size: 22px;
     color: white;
+    backdrop-filter: blur(6px);
+    background: #23232B4D;
+    padding: 12px 16px;
     border-radius: 50%;
+  }
+
+  /* Slick arrows & dots (you already had these) */
+  .extra-info-videos .slick-prev,
+  .extra-info-videos .slick-next {
+    height: 40px;
+    width: 40px;
+    border-radius: 100px;
+    font-size: 0;
+    line-height: 0;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 99;
+    cursor: pointer;
+    color: transparent;
+    border: none;
+    outline: none;
+    background: #616166;
+  }
+
+  .extra-info-videos .slick-prev {
+    left: -8px;
+  }
+
+  .extra-info-videos .slick-next {
+    right: -8px;
+  }
+
+  .extra-info-videos .slick-next:before,
+  .extra-info-videos .slick-prev:before {
+    content: '' !important;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-size: contain;
+    background-repeat: no-repeat;
+  }
+
+  .extra-info-videos .slick-next:before {
+    background-image: url('{{ "arrow-right.svg" | asset_url }}') !important;
+  }
+
+  .extra-info-videos .slick-prev:before {
+    background-image: url('{{ "arrow-left.svg" | asset_url }}') !important;
+  }
+
+  .extra-info-videos .slick-dots {
+    margin-top: 16px;
+  }
+
+  .extra-info-videos .slick-dots li button:before {
+    font-size: 10px;
   }
 
   /* Modal */
-  .video-modal {
+  .extra-info-videos .video-modal {
     display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.9);
-    z-index: 9999;
-    justify-content: center;
     align-items: center;
-    padding: 20px;
-  }
-
-  .modal-content {
-    max-width: 1000px;
-    width: 100%;
-    position: relative;
-  }
-
-  .modal-content video,
-  .modal-content iframe {
-    width: 100%;
-    height: 550px;
-    background: black;
-    border-radius: 10px;
-  }
-
-  .close-modal {
-    position: absolute;
-    top: -50px;
+    justify-content: center;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
     right: 0;
-    height: 45px;
-    width: 45px;
-    background: #616166;
-    color: white;
-    border-radius: 50%;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.8);
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .extra-info-videos .modal-content {
+    position: relative;
+    max-width: 1280px;
+    max-height: calc(100vh - 40px);
+    background: transparent;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .extra-info-videos .modal-content iframe,
+  .extra-info-videos .modal-content video {
+    width: 100%;
+    max-height: calc(100vh - 40px - 60px);
+    border-radius: 16px;
+    border: none;
+    background: #000;
+  }
+
+  .extra-info-videos .close-modal {
+    position: absolute;
+    top: -52px;
+    right: 0;
     font-size: 28px;
+    background: #616166;
+    cursor: pointer;
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
+  }
+
+  @media (max-width: 749px) {
+    .extra-info-videos {
+      padding: 16px;
+    }
+
+    .extra-info-videos .carouselHdg {
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    .extra-info-videos .slick-prev,
+    .extra-info-videos .slick-next {
+      width: 32px;
+      height: 32px;
+      top: 100%;
+      transform: translateY(-50%);
+    }
+
+    .extra-info-videos .slick-prev {
+      left: 0;
+    }
+
+    .extra-info-videos .slick-next {
+      right: 0;
+    }
   }
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  var $slider = $(".extra-info-video-slider");
+document.addEventListener('DOMContentLoaded', function () {
+  var $slider = $('.extra-info-video-slider');
+  if (!$slider.length) return;
+
+  var videosPerRow = parseInt($slider.data('videos-per-row'), 10) || 2;
+  var desktopSlides = Math.min(videosPerRow, 3); // hard cap at 3
 
   $slider.slick({
-    slidesToShow: parseInt($slider.data("videos-per-row")) || 2,
+    slidesToShow: desktopSlides,
     slidesToScroll: 1,
     arrows: true,
-    dots: false,
+    dots: true,
     responsive: [
       {
         breakpoint: 750,
-        settings: { slidesToShow: 1 }
+        settings: {
+          slidesToShow: 1
+        }
       }
     ]
   });
 
-  var $modal = $("#videoPopupModal");
-  var $container = $("#videoPopupContainer");
+  var $modal = $('#extraInfoVideoModal');
+  var $container = $('#extraInfoVideoModalContainer');
 
-  // CLICK → open popup
-  $(".video-thumbnail").click(function () {
-    var videoUrl = $(this).data("video-url");
+  function openVideoPopup(src) {
+    if (!src) return;
 
-    var html = "";
+    var html;
 
-    if (videoUrl.includes(".mp4")) {
+    if (src.indexOf('.mp4') !== -1) {
       html =
-        '<video controls autoplay><source src="' +
-        videoUrl +
-        '" type="video/mp4"></video>';
+        '<video controls autoplay>' +
+        '<source src="' + src + '" type="video/mp4">' +
+        '</video>';
     } else {
       html =
-        '<iframe src="' +
-        videoUrl +
-        '" frameborder="0" allowfullscreen></iframe>';
+        '<iframe src="' + src + '"' +
+        ' frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
+        ' allowfullscreen></iframe>';
     }
 
     $container.html(html);
-    $modal.css("display", "flex");
+    $modal.css('display', 'flex');
+  }
+
+  function closeVideoPopup() {
+    $modal.css('display', 'none');
+    $container.html('');
+  }
+
+  // Open popup when clicking thumbnail
+  $slider.on('click', '.video-thumbnail', function () {
+    var src = $(this).data('video-url');
+    openVideoPopup(src);
   });
 
-  // Close modal
-  $("#closeVideoPopup").click(function () {
-    $modal.hide();
-    $container.html("");
+  $('#extraInfoVideoModalClose').on('click', function () {
+    closeVideoPopup();
   });
 
-  $modal.click(function (e) {
-    if (e.target.id === "videoPopupModal") {
-      $modal.hide();
-      $container.html("");
+  $modal.on('click', function (e) {
+    if (e.target.id === 'extraInfoVideoModal') {
+      closeVideoPopup();
     }
   });
 });
