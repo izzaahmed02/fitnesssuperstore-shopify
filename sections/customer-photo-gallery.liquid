@@ -136,8 +136,27 @@
     var lightboxImg = lightbox.querySelector('img');
     var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
 
-    function openLightbox(src) {
-      lightboxImg.src = src;
+    // ---------- PRELOAD FULL IMAGES ----------
+    var fullImageCache = [];
+
+    section.querySelectorAll('.customer-photo-gallery__item img').forEach(function(img, index) {
+      var fullSrc = img.getAttribute('data-full') || img.src;
+
+      var preloadImg = new Image();
+      preloadImg.src = fullSrc;
+
+      fullImageCache[index] = preloadImg;
+    });
+    // -----------------------------------------
+
+    function openLightbox(src, index) {
+      // Use preloaded version if available
+      if (fullImageCache[index] && fullImageCache[index].complete) {
+        lightboxImg.src = fullImageCache[index].src;
+      } else {
+        lightboxImg.src = src;
+      }
+
       lightbox.classList.add('customer-photo-gallery__lightbox--active');
       lightbox.setAttribute('aria-hidden', 'false');
     }
@@ -145,31 +164,27 @@
     function closeLightbox() {
       lightbox.classList.remove('customer-photo-gallery__lightbox--active');
       lightbox.setAttribute('aria-hidden', 'true');
-      lightboxImg.src = '';
     }
 
-    section.querySelectorAll('.customer-photo-gallery__item img').forEach(function(img) {
+    section.querySelectorAll('.customer-photo-gallery__item img').forEach(function(img, index) {
       img.addEventListener('click', function() {
         var fullSrc = this.getAttribute('data-full') || this.src;
-        openLightbox(fullSrc);
+        openLightbox(fullSrc, index);
       });
     });
 
     closeBtn.addEventListener('click', closeLightbox);
 
     lightbox.addEventListener('click', function(e) {
-      if (e.target === lightbox) {
-        closeLightbox();
-      }
+      if (e.target === lightbox) closeLightbox();
     });
 
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && lightbox.classList.contains('customer-photo-gallery__lightbox--active')) {
-        closeLightbox();
-      }
+      if (e.key === 'Escape') closeLightbox();
     });
   })();
 </script>
+
 
 {% schema %}
 {
