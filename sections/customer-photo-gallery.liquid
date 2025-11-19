@@ -1,11 +1,13 @@
-{% if customer and customer.metafields.custom.customer_photo_gallery and customer.metafields.custom.customer_photo_gallery.value != blank %}
+{%- assign gallery_metafield = product.metafields.custom.customer_photo_gallery -%}
+
+{% if gallery_metafield and gallery_metafield.value != blank %}
 <section class="customer-photo-gallery">
   <div class="customer-photo-gallery__header">
     <h2>Customer's Photo Gallery</h2>
   </div>
 
   <div class="customer-photo-gallery__grid">
-    {% for image in customer.metafields.custom.customer_photo_gallery.value %}
+    {% for image in gallery_metafield.value %}
       <div class="customer-photo-gallery__item">
         <img
           src="{{ image | image_url: width: 800 }}"
@@ -60,6 +62,7 @@
 {% schema %}
 {
   "name": "Customer photo gallery",
+  "templates": ["product"],
   "settings": [],
   "presets": [
     {
