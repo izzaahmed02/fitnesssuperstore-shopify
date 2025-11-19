@@ -66,55 +66,73 @@
       class="extra-info-video-slider"
       data-videos-per-row="{{ section.settings.videos_per_row }}"
     >
-      {% assign thumb = product.featured_image | image_url: width: 1200 %}
-
-      {%- comment -%} Slide from instructional_video_url (thumbnail only) {%- endcomment -%}
+      {%- comment -%} Instructional video slide (video as thumbnail) {%- endcomment -%}
       {% if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank %}
+        {% assign instructional_url = extra.instructional_video_url.value %}
         <div class="video-slide">
           <div class="video-slide-inner">
             <div
               class="video-thumbnail"
-              data-video-url="{{ extra.instructional_video_url.value }}"
+              data-video-url="{{ instructional_url }}"
             >
-              {% if thumb %}
-                <img src="{{ thumb }}" alt="{{ product.title | escape }}">
-              {% endif %}
+              <video
+                class="video-thumb-video"
+                src="{{ instructional_url }}"
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
               <div class="play-button">&#9658;</div>
             </div>
           </div>
         </div>
       {% endif %}
 
-      {%- comment -%} Slide from assembly_video (thumbnail only) {%- endcomment -%}
+      {%- comment -%} Assembly video slide (video as thumbnail) {%- endcomment -%}
       {% if extra.assembly_video != blank and extra.assembly_video.value != blank %}
+        {% assign assembly_url = extra.assembly_video.value %}
         <div class="video-slide other-videos">
           <div class="video-slide-inner">
             <div
               class="video-thumbnail"
-              data-video-url="{{ extra.assembly_video.value }}"
+              data-video-url="{{ assembly_url }}"
             >
-              {% if thumb %}
-                <img src="{{ thumb }}" alt="{{ product.title | escape }}">
-              {% endif %}
+              <video
+                class="video-thumb-video"
+                src="{{ assembly_url }}"
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
               <div class="play-button">&#9658;</div>
             </div>
           </div>
         </div>
       {% endif %}
 
-      {%- comment -%} Slides from other_videos list (thumbnail only) {%- endcomment -%}
+      {%- comment -%} Optional: other_videos list (video or embed URLs) {%- endcomment -%}
       {% if extra.other_videos != blank and extra.other_videos.value != blank %}
         {% for link in extra.other_videos.value %}
           {% if link.url != blank %}
+            {% assign other_url = link.url %}
             <div class="video-slide other-videos">
               <div class="video-slide-inner">
                 <div
                   class="video-thumbnail"
-                  data-video-url="{{ link.url }}"
+                  data-video-url="{{ other_url }}"
                 >
-                  {% if thumb %}
-                    <img src="{{ thumb }}" alt="{{ link.text | default: product.title | escape }}">
-                  {% endif %}
+                  {%- comment -%}
+                    If other_url is an mp4, the video tag will show first frame.
+                    If it's e.g. YouTube or Drive, the tag may not load; we still use it
+                    as a visual container and let the popup handle playing properly.
+                  {%- endcomment -%}
+                  <video
+                    class="video-thumb-video"
+                    src="{{ other_url }}"
+                    muted
+                    playsinline
+                    preload="metadata"
+                  ></video>
                   <div class="play-button">&#9658;</div>
                 </div>
               </div>
@@ -170,10 +188,11 @@
     cursor: pointer;
   }
 
-  .extra-info-video-slider .video-thumbnail img {
-    border-radius: 12px;
+  .extra-info-video-slider .video-thumb-video {
     width: 100%;
+    border-radius: 12px;
     display: block;
+    pointer-events: none; /* prevent inline play on click */
   }
 
   .extra-info-video-slider .play-button {
@@ -189,7 +208,7 @@
     border-radius: 50%;
   }
 
-  /* Slick arrows & dots (you already had these) */
+  /* Slick arrows & dots */
   .extra-info-videos .slick-prev,
   .extra-info-videos .slick-next {
     height: 40px;
