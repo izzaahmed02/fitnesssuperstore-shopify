@@ -36,6 +36,20 @@
 {%- comment -%} Search Results Title Template {%- endcomment -%}
 {% if request.page_type == 'search' %}
   <script id="gspfResultsTitleTemplate" type="template/html">{% raw %}Search: {{ paginate.total }} results found for "{% endraw %}{{ search.terms }}{% raw %}"{% endraw %}</script>
+<script>
+  function updateSearchHeading() {
+    setTimeout(() => {
+      const input = document.querySelector('.gf-controls-search-input');
+      const heading = document.querySelector('.page-width.tempSearch > h1');
+
+      if (!input || !heading) return;
+
+      const inputValue = input.value.trim();
+      heading.textContent = `Search Results for "${inputValue}"`;
+    }, 500);
+  }
+   window.addEventListener("globoFilterRenderCompleted", updateSearchHeading)
+</script>
 {% endif %}
 
 {%- comment -%} Shopper Approved Script {%- endcomment -%}
