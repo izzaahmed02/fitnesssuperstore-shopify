@@ -1,21 +1,40 @@
 {%- assign gallery_metafield = product.metafields.custom.customer_photo_gallery -%}
 
 {% if gallery_metafield and gallery_metafield.value != blank %}
-<section class="customer-photo-gallery">
-  <div class="customer-photo-gallery__header">
-    <h2>Customer's Photo Gallery</h2>
+<section id="customer-photo-gallery-{{ section.id }}" class="customer-photo-gallery">
+  <div class="page-width">
+    <div class="customer-photo-gallery__header">
+      <h2>Customer's Photo Gallery</h2>
+    </div>
+
+    <div class="customer-photo-gallery__grid">
+      {% for image in gallery_metafield.value %}
+        {% assign thumb = image | image_url: width: 800 %}
+        {% assign full  = image | image_url: width: 2400 %}
+        <div class="customer-photo-gallery__item">
+          <img
+            src="{{ thumb }}"
+            data-full="{{ full }}"
+            alt="Customer photo {{ forloop.index }}"
+            loading="lazy"
+          >
+        </div>
+      {% endfor %}
+    </div>
   </div>
 
-  <div class="customer-photo-gallery__grid">
-    {% for image in gallery_metafield.value %}
-      <div class="customer-photo-gallery__item">
-        <img
-          src="{{ image | image_url: width: 800 }}"
-          alt="Customer photo {{ forloop.index }}"
-          loading="lazy"
-        >
-      </div>
-    {% endfor %}
+  <!-- Lightbox -->
+  <div class="customer-photo-gallery__lightbox" aria-hidden="true">
+    <div class="customer-photo-gallery__lightbox-inner">
+      <button
+        type="button"
+        class="customer-photo-gallery__lightbox-close"
+        aria-label="Close"
+      >
+        &times;
+      </button>
+      <img src="" alt="Expanded customer photo">
+    </div>
   </div>
 </section>
 {% endif %}
@@ -42,6 +61,7 @@
   .customer-photo-gallery__item {
     overflow: hidden;
     border-radius: 4px;
+    cursor: pointer;
   }
 
   .customer-photo-gallery__item img {
@@ -49,6 +69,11 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.2s ease;
+  }
+
+  .customer-photo-gallery__item:hover img {
+    transform: scale(1.03);
   }
 
   /* Mobile: 1 image per row */
@@ -57,7 +82,94 @@
       grid-template-columns: 1fr;
     }
   }
+
+  /* Lightbox styles */
+  .customer-photo-gallery__lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 999;
+  }
+
+  .customer-photo-gallery__lightbox--active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .customer-photo-gallery__lightbox-inner {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+
+  .customer-photo-gallery__lightbox-inner img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .customer-photo-gallery__lightbox-close {
+    position: absolute;
+    top: -32px;
+    right: -8px;
+    background: transparent;
+    border: none;
+    font-size: 32px;
+    line-height: 1;
+    color: #ffffff;
+    cursor: pointer;
+  }
 </style>
+
+<script>
+  (function() {
+    var section = document.getElementById('customer-photo-gallery-{{ section.id }}');
+    if (!section) return;
+
+    var lightbox = section.querySelector('.customer-photo-gallery__lightbox');
+    var lightboxImg = lightbox.querySelector('img');
+    var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
+
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.classList.add('customer-photo-gallery__lightbox--active');
+      lightbox.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+      lightbox.setAttribute('aria-hidden', 'true');
+      lightboxImg.src = '';
+    }
+
+    section.querySelectorAll('.customer-photo-gallery__item img').forEach(function(img) {
+      img.addEventListener('click', function() {
+        var fullSrc = this.getAttribute('data-full') || this.src;
+        openLightbox(fullSrc);
+      });
+    });
+
+    closeBtn.addEventListener('click', closeLightbox);
+
+    lightbox.addEventListener('click', function(e) {
+      if (e.target === lightbox) {
+        closeLightbox();
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && lightbox.classList.contains('customer-photo-gallery__lightbox--active')) {
+        closeLightbox();
+      }
+    });
+  })();
+</script>
 
 {% schema %}
 {
