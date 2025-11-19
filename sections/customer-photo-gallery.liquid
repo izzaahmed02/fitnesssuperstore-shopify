@@ -1,0 +1,70 @@
+{% if customer and customer.metafields.custom.customer_photo_gallery and customer.metafields.custom.customer_photo_gallery.value != blank %}
+<section class="customer-photo-gallery">
+  <div class="customer-photo-gallery__header">
+    <h2>Customer's Photo Gallery</h2>
+  </div>
+
+  <div class="customer-photo-gallery__grid">
+    {% for image in customer.metafields.custom.customer_photo_gallery.value %}
+      <div class="customer-photo-gallery__item">
+        <img
+          src="{{ image | image_url: width: 800 }}"
+          alt="Customer photo {{ forloop.index }}"
+          loading="lazy"
+        >
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<style>
+  .customer-photo-gallery {
+    margin: 40px 0;
+  }
+
+  .customer-photo-gallery__header {
+    margin-bottom: 20px;
+  }
+
+  .customer-photo-gallery__header h2 {
+    margin: 0;
+  }
+
+  .customer-photo-gallery__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .customer-photo-gallery__item {
+    overflow: hidden;
+    border-radius: 4px;
+  }
+
+  .customer-photo-gallery__item img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Mobile: 1 image per row */
+  @media screen and (max-width: 749px) {
+    .customer-photo-gallery__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Customer photo gallery",
+  "settings": [],
+  "presets": [
+    {
+      "name": "Customer photo gallery"
+    }
+  ]
+}
+{% endschema %}
