@@ -1,0 +1,46 @@
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "{{ shop.url }}/#website",
+        "url": "{{ shop.url }}",
+        "name": "Fitness Superstore"
+      },
+      {
+        "@type": "Organization",
+        "@id": "{{ shop.url }}/#organization",
+        "name": {{ "Fitness Superstore" | json }},
+        "url": "{{ shop.url }}",
+        {% if settings.logo %}
+        "logo": {
+          "@type": "ImageObject",
+          "url": {{ settings.logo | image_url: width: 500 | prepend: "https:" | json }}
+        },
+        {% endif %}
+        "sameAs": [
+          {%- assign first=true -%}
+          {%- if settings.social_twitter_link -%}
+            {%- unless first -%}, {%- endunless -%}{{ settings.social_twitter_link | json }}{%- assign first=false -%}
+          {%- endif -%}
+          {%- if settings.social_facebook_link -%}
+            {%- unless first -%}, {%- endunless -%}{{ settings.social_facebook_link | json }}{%- assign first=false -%}
+          {%- endif -%}
+          {%- if settings.social_pinterest_link -%}
+            {%- unless first -%}, {%- endunless -%}{{ settings.social_pinterest_link | json }}{%- assign first=false -%}
+          {%- endif -%}
+          {%- if settings.social_instagram_link -%}
+            {%- unless first -%}, {%- endunless -%}{{ settings.social_instagram_link | json }}{%- assign first=false -%}
+          {%- endif -%}
+          {%- if settings.social_tiktok_link -%}
+            {%- unless first -%}, {%- endunless -%}{{ settings.social_tiktok_link | json }}{%- assign first=false -%}
+          {%- endif -%}
+          {%- if settings.social_youtube_link -%}
+            {%- unless first -%}, {%- endunless -%}{{ settings.social_youtube_link | json }}
+          {%- endif -%}
+        ]
+      }
+    ]
+  }
+  </script>
