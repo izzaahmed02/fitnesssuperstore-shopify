@@ -1,7 +1,7 @@
 {%- assign gallery_metafield = product.metafields.custom.customer_photo_gallery -%}
 
 {% if gallery_metafield and gallery_metafield.value != blank %}
-<section id="customer-photo-gallery-{{ section.id }}" class="customer-photo-gallery page-width">
+<section id="customer-photo-gallery-{{ section.id }}" class="customer-photo-gallery">
   <div class="page-width">
     <div class="customer-photo-gallery__header">
       <h4>Customer's Photo Gallery</h4>
@@ -55,11 +55,9 @@
     text-transform: none;
   }
 
-  .customer-photo-gallery__header h2 {
-    margin: 0;
-  }
-
-  /* Desktop grid: 4 columns */
+  /* ================================
+     DESKTOP GRID
+     ================================ */
   .customer-photo-gallery__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -84,38 +82,39 @@
     transform: scale(1.03);
   }
 
-  /* Mobile slider: 1 image per "slide" with scroll snap */
+  /* ================================
+     MOBILE SLIDER (≤749px)
+     ================================ */
   @media screen and (max-width: 749px) {
-    .customer-photo-gallery__grid {
-      /* make horizontal scrolling slider */
+    #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__grid {
       display: grid;
       grid-auto-flow: column;
       grid-auto-columns: 100%;
-      gap: 16px;
+      grid-template-columns: none !important;
       overflow-x: auto;
+      gap: 16px;
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 8px; /* space for touch scrolling */
-      /* visually collapse vertical spacing so each slide fills viewport width */
-      align-items: start;
+      padding-bottom: 6px;
     }
 
-    .customer-photo-gallery__grid::-webkit-scrollbar {
+    #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__grid::-webkit-scrollbar {
       display: none;
     }
 
-    .customer-photo-gallery__item {
-      min-width: 100%;
+    #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__item {
+      min-width: 100% !important;
       scroll-snap-align: start;
-      /* ensure item takes full height of its "slide" */
+      box-sizing: border-box;
       display: block;
     }
 
-    .customer-photo-gallery__item img {
-      height: calc(60vw); /* approximate height for mobile slides — adjust as desired */
-      max-height: 70vh;
+    #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__item img {
       width: 100%;
+      height: calc(60vw);
+      max-height: 70vh;
       object-fit: cover;
+      display: block;
     }
   }
 
@@ -147,7 +146,6 @@
   .customer-photo-gallery__lightbox-inner img {
     display: block;
     max-width: 100%;
-    margin: 0 auto;
     max-height: 100%;
   }
 
@@ -157,92 +155,94 @@
     right: -8px;
     background: transparent;
     border: none;
-    line-height: 1;
-    color: #ffffff;
+    color: #fff;
     cursor: pointer;
-    font-size:32px;
+    font-size: 32px;
   }
 </style>
 
 <script>
-  (function() {
-    var section = document.getElementById('customer-photo-gallery-{{ section.id }}');
-    if (!section) return;
+(function() {
+  var section = document.getElementById('customer-photo-gallery-{{ section.id }}');
+  if (!section) return;
 
-    var lightbox = section.querySelector('.customer-photo-gallery__lightbox');
-    var lightboxImg = lightbox.querySelector('img');
-    var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
-    var grid = section.querySelector('.customer-photo-gallery__grid');
-    var items = Array.prototype.slice.call(section.querySelectorAll('.customer-photo-gallery__item img'));
+  var grid = section.querySelector('.customer-photo-gallery__grid');
+  var items = Array.from(section.querySelectorAll('.customer-photo-gallery__item img'));
 
-    // ---------- PRELOAD FULL IMAGES ----------
-    var fullImageCache = [];
+  var lightbox = section.querySelector('.customer-photo-gallery__lightbox');
+  var lightboxImg = lightbox.querySelector('img');
+  var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
 
-    items.forEach(function(img, index) {
+  /* =======================================
+     PRELOAD FULL IMAGES
+     ======================================= */
+  var fullImageCache = [];
+
+  items.forEach(function(img, index) {
+    var fullSrc = img.getAttribute('data-full') || img.src;
+    var preloadImg = new Image();
+    preloadImg.src = fullSrc;
+    fullImageCache[index] = preloadImg;
+  });
+
+  /* =======================================
+     LIGHTBOX FUNCTIONS
+     ======================================= */
+  function openLightbox(src, index) {
+    if (fullImageCache[index] && fullImageCache[index].complete) {
+      lightboxImg.src = fullImageCache[index].src;
+    } else {
+      lightboxImg.src = src;
+    }
+    lightbox.classList.add('customer-photo-gallery__lightbox--active');
+    lightbox.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+    lightbox.setAttribute('aria-hidden', 'true');
+  }
+
+  items.forEach(function(img, index) {
+    img.addEventListener('click', function() {
       var fullSrc = img.getAttribute('data-full') || img.src;
-
-      var preloadImg = new Image();
-      preloadImg.src = fullSrc;
-
-      fullImageCache[index] = preloadImg;
+      openLightbox(fullSrc, index);
     });
-    // -----------------------------------------
+  });
 
-    function openLightbox(src, index) {
-      // Use preloaded version if available
-      if (fullImageCache[index] && fullImageCache[index].complete) {
-        lightboxImg.src = fullImageCache[index].src;
+  closeBtn.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  /* =======================================
+     FIX SLIDE WIDTH (REAL DEVICE WIDTH)
+     ======================================= */
+  function updateItemWidths() {
+    var isMobile = window.matchMedia('(max-width: 749px)').matches;
+    var gridWidth = grid ? grid.getBoundingClientRect().width : 0;
+
+    items.forEach(function(img) {
+      var item = img.closest('.customer-photo-gallery__item');
+      if (!item) return;
+
+      if (isMobile && gridWidth > 0) {
+        item.style.minWidth = gridWidth + 'px';
+        item.style.maxWidth = gridWidth + 'px';
       } else {
-        lightboxImg.src = src;
+        item.style.minWidth = '';
+        item.style.maxWidth = '';
       }
-
-      lightbox.classList.add('customer-photo-gallery__lightbox--active');
-      lightbox.setAttribute('aria-hidden', 'false');
-    }
-
-    function closeLightbox() {
-      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
-      lightbox.setAttribute('aria-hidden', 'true');
-    }
-
-    items.forEach(function(img, index) {
-      img.addEventListener('click', function() {
-        var fullSrc = this.getAttribute('data-full') || this.src;
-        openLightbox(fullSrc, index);
-      });
     });
+  }
 
-    closeBtn.addEventListener('click', closeLightbox);
+  window.addEventListener('resize', updateItemWidths);
+  updateItemWidths();
 
-    lightbox.addEventListener('click', function(e) {
-      if (e.target === lightbox) closeLightbox();
-    });
-
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeLightbox();
-    });
-
-    // ---- small helper: ensure items keep correct min-width if layout changes ----
-    function updateItemWidths() {
-      if (window.matchMedia('(max-width: 749px)').matches) {
-        // ensure each item matches computed grid-auto-columns (100%)
-        items.forEach(function(img) {
-          var item = img.closest('.customer-photo-gallery__item');
-          if (item) item.style.minWidth = '100%';
-        });
-      } else {
-        items.forEach(function(img) {
-          var item = img.closest('.customer-photo-gallery__item');
-          if (item) item.style.minWidth = '';
-        });
-      }
-    }
-
-    window.addEventListener('resize', updateItemWidths);
-    // run once on init
-    updateItemWidths();
-
-  })();
+})();
 </script>
 
 {% schema %}
