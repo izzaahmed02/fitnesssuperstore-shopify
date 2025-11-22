@@ -1,3 +1,5 @@
+
+
 window.addEventListener('DOMContentLoaded', async () => {
 	
 	_affirm_config = {
