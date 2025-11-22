@@ -3741,33 +3741,22 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!productForm) return;
 
   const selects = productForm.querySelectorAll('select');
-  const variants = window.productVariants || [];
 
-  function selectNextAvailableVariant(changedSelect) {
-    // Get current selected options
-    const currentOptions = Array.from(selects).map(s => s.value);
-
-    // Find the first variant that is available and differs from the current selection
-    const nextVariant = variants.find(variant => {
-      if (!variant.available) return false;
-      return variant.options.some((opt, idx) => opt !== currentOptions[idx]);
-    });
-
-    if (!nextVariant) return;
-
-    // Update all selects to match the next available variant
-    selects.forEach((select, idx) => {
-      if (select.value !== nextVariant.options[idx]) {
-        select.value = nextVariant.options[idx];
-        select.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    });
+  function selectFirstVisibleOption(select) {
+    const firstOption = Array.from(select.options).find(opt => opt.offsetParent !== null && !opt.disabled);
+    if (firstOption) {
+      select.value = firstOption.value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   }
 
-  // Listen for changes on all selects
   selects.forEach(select => {
     select.addEventListener('change', function() {
-      selectNextAvailableVariant(select);
+      // Only select the first visible option if the current select has no value or Add to Cart disabled
+      const addToCart = productForm.querySelector('[name="add"]');
+      if (!select.value || (addToCart && addToCart.disabled)) {
+        selectFirstVisibleOption(select);
+      }
     });
   });
 });
