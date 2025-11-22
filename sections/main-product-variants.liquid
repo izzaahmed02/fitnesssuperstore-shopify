@@ -3734,3 +3734,26 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
   }
 })();
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const productForm = document.querySelector('form[data-product-form]');
+  if (!productForm) return;
+
+  productForm.addEventListener('change', function(e) {
+    // Only proceed if a variant select changed
+    if (!e.target.matches('select')) return;
+
+    // Loop through all selects
+    const selects = productForm.querySelectorAll('select');
+    selects.forEach(select => {
+      const firstAvailable = Array.from(select.options).find(opt => !opt.disabled && opt.offsetParent !== null);
+      if (firstAvailable && select.value !== firstAvailable.value) {
+        select.value = firstAvailable.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  });
+});
+
+</script>
