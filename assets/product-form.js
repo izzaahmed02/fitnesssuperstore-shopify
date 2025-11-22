@@ -16,7 +16,7 @@ if (!customElements.get('product-form')) {
 
         this.hideErrors = this.dataset.hideErrors === 'true';
 
-        // --- Auto-select first visible option when variant input changes ---
+        // --- Auto-select first visible option for the clicked variant group only ---
         this.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
           input.addEventListener('change', (event) => this._onOptionChange(event));
         });
@@ -134,19 +134,18 @@ if (!customElements.get('product-form')) {
         return this.form.querySelector('[name=id]');
       }
 
-      // --- New method to handle option changes ---
+      // --- Optimized _onOptionChange ---
       _onOptionChange(event) {
-        // Auto-select first visible & enabled option for all variant groups
-        const optionGroups = this.querySelectorAll('[data-product-option]');
+        const clickedInput = event.target.closest('[data-product-option]');
+        if (!clickedInput) return;
 
-        optionGroups.forEach(group => {
-          const firstOption = Array.from(group.querySelectorAll('input[type="radio"], input[type="checkbox"]'))
-            .find(opt => !opt.disabled && opt.offsetParent !== null);
+        // Select the first visible & enabled option in the clicked group only
+        const firstOption = Array.from(clickedInput.querySelectorAll('input[type="radio"], input[type="checkbox"]'))
+          .find(opt => !opt.disabled && opt.offsetParent !== null);
 
-          if (firstOption && !firstOption.checked) {
-            firstOption.click(); // triggers Dawn's internal variant logic
-          }
-        });
+        if (firstOption && !firstOption.checked) {
+          firstOption.click(); // triggers Dawn's internal variant logic
+        }
       }
     }
   );
