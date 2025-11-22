@@ -15,6 +15,11 @@ if (!customElements.get('product-form')) {
         if (document.querySelector('cart-drawer')) this.submitButton.setAttribute('aria-haspopup', 'dialog');
 
         this.hideErrors = this.dataset.hideErrors === 'true';
+
+        // --- Auto-select first visible option when variant input changes ---
+        this.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
+          input.addEventListener('change', (event) => this._onOptionChange(event));
+        });
       }
 
       onSubmitHandler(evt) {
@@ -127,6 +132,21 @@ if (!customElements.get('product-form')) {
 
       get variantIdInput() {
         return this.form.querySelector('[name=id]');
+      }
+
+      // --- New method to handle option changes ---
+      _onOptionChange(event) {
+        // Auto-select first visible & enabled option for all variant groups
+        const optionGroups = this.querySelectorAll('[data-product-option]');
+
+        optionGroups.forEach(group => {
+          const firstOption = Array.from(group.querySelectorAll('input[type="radio"], input[type="checkbox"]'))
+            .find(opt => !opt.disabled && opt.offsetParent !== null);
+
+          if (firstOption && !firstOption.checked) {
+            firstOption.click(); // triggers Dawn's internal variant logic
+          }
+        });
       }
     }
   );
