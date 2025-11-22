@@ -3737,44 +3737,32 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-  const productForms = document.querySelectorAll('form[data-product-form]');
+  const productForm = document.querySelector('form[data-product-form]');
+  if (!productForm) return;
 
-  productForms.forEach((form) => {
-    // Access Dawn's ProductForm instance
-    const productFormInstance = form.__productForm;
-    if (!productFormInstance) return;
+  // Function to click the first visible & enabled option in a group
+  function clickFirstVisibleOption(optionGroup) {
+    const firstOption = Array.from(optionGroup.querySelectorAll('input[type="radio"]'))
+      .find(opt => !opt.disabled && opt.offsetParent !== null);
 
-    const optionGroups = form.querySelectorAll('[data-product-option]');
+    if (firstOption) {
+      firstOption.click();
+    }
+  }
 
-    optionGroups.forEach((group) => {
-      // Listen for clicks on any option in the group
-      group.addEventListener('click', () => {
-        // Allow Dawn to update visibility first
-        setTimeout(() => {
-          // Find first visible & enabled option inside this group
-          const firstOption = Array.from(group.querySelectorAll('input[type="radio"]'))
-            .find((opt) => !opt.disabled && opt.offsetParent !== null);
+  // On page load, select the first visible option for all variant groups
+  const optionGroups = productForm.querySelectorAll('[data-product-option]');
+  optionGroups.forEach(group => clickFirstVisibleOption(group));
 
-          if (firstOption && !firstOption.checked) {
-            // Use Dawn's internal method to select this option
-            productFormInstance.onOptionChange({ target: firstOption });
-          }
-        }, 50);
-      });
+  // When a variant option group is clicked, select the first visible option in it
+  optionGroups.forEach(group => {
+    group.addEventListener('click', () => {
+      // Small timeout to let Dawn update visibility first
+      setTimeout(() => clickFirstVisibleOption(group), 50);
     });
-
-    // Auto-select first visible option on page load
-    setTimeout(() => {
-      optionGroups.forEach((group) => {
-        const firstOption = Array.from(group.querySelectorAll('input[type="radio"]'))
-          .find((opt) => !opt.disabled && opt.offsetParent !== null);
-        if (firstOption) {
-          productFormInstance.onOptionChange({ target: firstOption });
-        }
-      });
-    }, 50);
   });
 });
+
 
 
 
