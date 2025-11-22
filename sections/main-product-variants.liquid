@@ -3740,20 +3740,29 @@ document.addEventListener('DOMContentLoaded', function() {
   const productForm = document.querySelector('form[data-product-form]');
   if (!productForm) return;
 
+  // Listen for Shopify variant change (Dawn triggers 'change' on select)
   productForm.addEventListener('change', function(e) {
-    // Only proceed if a variant select changed
     if (!e.target.matches('select')) return;
 
-    // Loop through all selects
     const selects = productForm.querySelectorAll('select');
-    selects.forEach(select => {
-      const firstAvailable = Array.from(select.options).find(opt => !opt.disabled && opt.offsetParent !== null);
-      if (firstAvailable && select.value !== firstAvailable.value) {
-        select.value = firstAvailable.value;
-        select.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // Loop through each select starting from the one after the changed one
+    for (let i = 0; i < selects.length - 1; i++) {
+      if (selects[i] === e.target) {
+        const nextSelect = selects[i + 1];
+        if (!nextSelect) break;
+
+        // Pick the first available option in the next select
+        const firstAvailable = Array.from(nextSelect.options).find(opt => !opt.disabled && opt.offsetParent !== null);
+        if (firstAvailable) {
+          nextSelect.value = firstAvailable.value;
+          nextSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        break; // stop after updating the next select
       }
-    });
+    }
   });
 });
+
 
 </script>
