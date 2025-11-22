@@ -3740,26 +3740,26 @@ document.addEventListener('DOMContentLoaded', function() {
   const productForm = document.querySelector('form[data-product-form]');
   if (!productForm) return;
 
-  const selects = productForm.querySelectorAll('select');
-
-  function selectFirstVisibleOption(select) {
-    const firstOption = Array.from(select.options).find(opt => opt.offsetParent !== null && !opt.disabled);
-    if (firstOption) {
-      select.value = firstOption.value;
-      select.dispatchEvent(new Event('change', { bubbles: true }));
+  // Function to select first visible and enabled option in a variant group
+  function selectFirstVisibleOption(variantGroup) {
+    const firstOption = variantGroup.querySelector('[type="radio"]:not(:disabled):not([hidden])');
+    if (firstOption && !firstOption.checked) {
+      firstOption.click();
     }
   }
 
-  selects.forEach(select => {
-    select.addEventListener('change', function() {
-      // Only select the first visible option if the current select has no value or Add to Cart disabled
-      const addToCart = productForm.querySelector('[name="add"]');
-      if (!select.value || (addToCart && addToCart.disabled)) {
-        selectFirstVisibleOption(select);
-      }
+  // Listen for clicks on variant option groups
+  const optionGroups = productForm.querySelectorAll('[data-product-option]');
+  optionGroups.forEach(group => {
+    group.addEventListener('click', function() {
+      selectFirstVisibleOption(group);
     });
   });
+
+  // Also select first visible option on page load
+  optionGroups.forEach(group => selectFirstVisibleOption(group));
 });
+
 
 
 </script>
