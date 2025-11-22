@@ -7,6 +7,14 @@
       <h4>Customer's Photo Gallery</h4>
     </div>
 
+    <!-- Mobile Arrows -->
+    <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--left" aria-label="Previous image">
+      &#10094;
+    </button>
+    <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--right" aria-label="Next image">
+      &#10095;
+    </button>
+
     <div class="customer-photo-gallery__grid">
       {% for image in gallery_metafield.value %}
         {% assign thumb = image | image_url: width: 800 %}
@@ -42,19 +50,18 @@
 <style>
   .customer-photo-gallery {
     margin: 40px 0;
+    position: relative;
   }
 
   @media screen and (min-width: 750px) {
-    .page-width-custom {
-        padding: 0 5rem;
-    }
-}
+    .page-width-custom { padding: 0 5rem; }
+  }
 
-.page-width-custom {
+  .page-width-custom {
     max-width: var(--page-width);
     margin: 0 auto;
     padding: 0 1.5rem;
-}
+  }
 
   .customer-photo-gallery__header {
     margin-bottom: 20px;
@@ -63,13 +70,9 @@
   .customer-photo-gallery__header h4 {
     font-family: Lato;
     font-weight: 700;
-    letter-spacing: normal;
-    text-transform: none;
   }
 
-  /* ================================
-     DESKTOP GRID
-     ================================ */
+  /* DESKTOP GRID */
   .customer-photo-gallery__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -83,96 +86,108 @@
   }
 
   .customer-photo-gallery__item img {
-    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.2s ease;
+    transition: transform .2s ease;
   }
 
   .customer-photo-gallery__item:hover img {
     transform: scale(1.03);
   }
 
-  /* ================================
-     MOBILE SLIDER (≤749px)
-     ================================ */
+  /* MOBILE SLIDER */
   @media screen and (max-width: 749px) {
-    #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__grid {
+    .customer-photo-gallery__grid {
       display: grid;
       grid-auto-flow: column;
       grid-auto-columns: 100%;
-      grid-template-columns: none !important;
       overflow-x: auto;
-      gap: 16px;
       scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
+      gap: 16px;
       padding-bottom: 6px;
+      -webkit-overflow-scrolling: touch;
     }
 
-    #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__grid::-webkit-scrollbar {
+    .customer-photo-gallery__grid::-webkit-scrollbar {
       display: none;
     }
 
-    #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__item {
+    .customer-photo-gallery__item {
       min-width: 100% !important;
       scroll-snap-align: start;
-      box-sizing: border-box;
-      display: block;
     }
 
-    #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__item img {
-      width: 100%;
+    .customer-photo-gallery__item img {
       height: calc(60vw);
       max-height: 70vh;
       object-fit: cover;
-      display: block;
     }
-    .customer-photo-gallery .customer-photo-gallery__lightbox-inner {
-    max-width: 90vw;
+
+    /* MOBILE ARROWS */
+    .customer-photo-gallery__arrow {
+      display: block;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.4);
+      color: #fff;
+      border: none;
+      font-size: 32px;
+      padding: 6px 12px;
+      border-radius: 50%;
+      z-index: 50;
+      cursor: pointer;
+      backdrop-filter: blur(3px);
+    }
+
+    .customer-photo-gallery__arrow--left {
+      left: 10px;
+    }
+
+    .customer-photo-gallery__arrow--right {
+      right: 10px;
     }
   }
 
-  /* Lightbox styles */
+  /* Desktop hide arrows */
+  @media screen and (min-width: 750px) {
+    .customer-photo-gallery__arrow { display: none !important; }
+  }
+
+  /* LIGHTBOX */
   .customer-photo-gallery__lightbox {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: rgba(0,0,0,0.8);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease;
+    justify-content: center;
+    align-items: center;
+    transition: .2s ease;
     z-index: 999;
   }
-
   .customer-photo-gallery__lightbox--active {
     opacity: 1;
     pointer-events: auto;
   }
-
   .customer-photo-gallery__lightbox-inner {
-    position: relative;
     max-width: 45vw;
     max-height: 90vh;
   }
-
   .customer-photo-gallery__lightbox-inner img {
-    display: block;
     max-width: 100%;
     max-height: 100%;
   }
-
   .customer-photo-gallery__lightbox-close {
     position: absolute;
     top: -32px;
     right: -8px;
     background: transparent;
-    border: none;
     color: #fff;
-    cursor: pointer;
     font-size: 32px;
+    cursor: pointer;
+    border: none;
   }
 </style>
 
@@ -182,81 +197,68 @@
   if (!section) return;
 
   var grid = section.querySelector('.customer-photo-gallery__grid');
-  var items = Array.from(section.querySelectorAll('.customer-photo-gallery__item img'));
+  var items = [...section.querySelectorAll('.customer-photo-gallery__item img')];
 
+  /* Mobile arrows */
+  var arrowLeft = section.querySelector('.customer-photo-gallery__arrow--left');
+  var arrowRight = section.querySelector('.customer-photo-gallery__arrow--right');
+
+  /* Lightbox */
   var lightbox = section.querySelector('.customer-photo-gallery__lightbox');
   var lightboxImg = lightbox.querySelector('img');
   var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
 
-  /* =======================================
-     PRELOAD FULL IMAGES
-     ======================================= */
+  /* Preload images */
   var fullImageCache = [];
-
-  items.forEach(function(img, index) {
-    var fullSrc = img.getAttribute('data-full') || img.src;
-    var preloadImg = new Image();
-    preloadImg.src = fullSrc;
-    fullImageCache[index] = preloadImg;
+  items.forEach(function(img, i) {
+    var preload = new Image();
+    preload.src = img.dataset.full || img.src;
+    fullImageCache[i] = preload;
   });
 
-  /* =======================================
-     LIGHTBOX FUNCTIONS
-     ======================================= */
-  function openLightbox(src, index) {
-    if (fullImageCache[index] && fullImageCache[index].complete) {
-      lightboxImg.src = fullImageCache[index].src;
-    } else {
-      lightboxImg.src = src;
-    }
-    lightbox.classList.add('customer-photo-gallery__lightbox--active');
-    lightbox.setAttribute('aria-hidden', 'false');
-  }
-
-  function closeLightbox() {
-    lightbox.classList.remove('customer-photo-gallery__lightbox--active');
-    lightbox.setAttribute('aria-hidden', 'true');
-  }
-
-  items.forEach(function(img, index) {
+  /* Open lightbox */
+  items.forEach(function(img, i) {
     img.addEventListener('click', function() {
-      var fullSrc = img.getAttribute('data-full') || img.src;
-      openLightbox(fullSrc, index);
+      var src = img.dataset.full;
+      lightboxImg.src = fullImageCache[i].complete ? fullImageCache[i].src : src;
+      lightbox.classList.add('customer-photo-gallery__lightbox--active');
     });
   });
 
-  closeBtn.addEventListener('click', closeLightbox);
-  lightbox.addEventListener('click', function(e) {
-    if (e.target === lightbox) closeLightbox();
-  });
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeLightbox();
-  });
+  closeBtn.addEventListener('click', () => lightbox.classList.remove('customer-photo-gallery__lightbox--active'));
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.classList.remove('customer-photo-gallery__lightbox--active'); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') lightbox.classList.remove('customer-photo-gallery__lightbox--active'); });
 
-  /* =======================================
-     FIX SLIDE WIDTH (REAL DEVICE WIDTH)
-     ======================================= */
-  function updateItemWidths() {
+  /* Update mobile slide width */
+  function updateWidths() {
+    if (!grid) return;
     var isMobile = window.matchMedia('(max-width: 749px)').matches;
-    var gridWidth = grid ? grid.getBoundingClientRect().width : 0;
+    var width = grid.getBoundingClientRect().width;
 
-    items.forEach(function(img) {
+    items.forEach(img => {
       var item = img.closest('.customer-photo-gallery__item');
-      if (!item) return;
-
-      if (isMobile && gridWidth > 0) {
-        item.style.minWidth = gridWidth + 'px';
-        item.style.maxWidth = gridWidth + 'px';
+      if (isMobile) {
+        item.style.minWidth = width + 'px';
+        item.style.maxWidth = width + 'px';
       } else {
         item.style.minWidth = '';
         item.style.maxWidth = '';
       }
     });
   }
+  updateWidths();
+  window.addEventListener('resize', updateWidths);
 
-  window.addEventListener('resize', updateItemWidths);
-  updateItemWidths();
+  /* MOBILE ARROWS → SCROLL SLIDER */
+  if (arrowLeft && arrowRight) {
+    arrowLeft.addEventListener('click', function() {
+      grid.scrollBy({ left: -grid.clientWidth, behavior: 'smooth' });
+    });
 
+    arrowRight.addEventListener('click', function() {
+      grid.scrollBy({ left: grid.clientWidth, behavior: 'smooth' });
+    });
+  }
 })();
 </script>
 
@@ -265,10 +267,6 @@
   "name": "Customer photo gallery",
   "templates": ["product"],
   "settings": [],
-  "presets": [
-    {
-      "name": "Customer photo gallery"
-    }
-  ]
+  "presets": [{ "name": "Customer photo gallery" }]
 }
 {% endschema %}
