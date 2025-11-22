@@ -3741,22 +3741,36 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!productForm) return;
 
   const selects = productForm.querySelectorAll('select');
+  const variants = window.productVariants || [];
 
-  function goToFirstAvailableVariant() {
-    const variants = window.productVariants || [];
-    const firstAvailable = variants.find(v => v.available);
-    if (!firstAvailable) return;
+  function selectNextAvailableVariant(changedSelect) {
+    // Get current selected options
+    const currentOptions = Array.from(selects).map(s => s.value);
 
-    // Construct the URL with the first available variant ID
-    const url = new URL(window.location.href);
-    url.searchParams.set('variant', firstAvailable.id);
-    window.location.href = url.toString();
+    // Find the first variant that is available and differs from the current selection
+    const nextVariant = variants.find(variant => {
+      if (!variant.available) return false;
+      return variant.options.some((opt, idx) => opt !== currentOptions[idx]);
+    });
+
+    if (!nextVariant) return;
+
+    // Update all selects to match the next available variant
+    selects.forEach((select, idx) => {
+      if (select.value !== nextVariant.options[idx]) {
+        select.value = nextVariant.options[idx];
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
   }
 
-  // Trigger whenever a variant select is changed
+  // Listen for changes on all selects
   selects.forEach(select => {
-    select.addEventListener('change', goToFirstAvailableVariant);
+    select.addEventListener('change', function() {
+      selectNextAvailableVariant(select);
+    });
   });
 });
+
 
 </script>
