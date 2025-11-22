@@ -3742,30 +3742,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const selects = productForm.querySelectorAll('select');
 
-  function selectFirstAvailableVariant() {
-    // Find first combination of options that corresponds to an available variant
-    const optionValues = Array.from(selects).map(select => select.value);
-    
-    // Iterate through all variants (Dawn stores them in window.productVariants)
+  function goToFirstAvailableVariant() {
     const variants = window.productVariants || [];
-    const firstAvailable = variants.find(variant => variant.available);
-
+    const firstAvailable = variants.find(v => v.available);
     if (!firstAvailable) return;
 
-    // Set selects to match the first available variant
-    selects.forEach((select, idx) => {
-      if (select.value !== firstAvailable.options[idx]) {
-        select.value = firstAvailable.options[idx];
-        select.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    });
+    // Construct the URL with the first available variant ID
+    const url = new URL(window.location.href);
+    url.searchParams.set('variant', firstAvailable.id);
+    window.location.href = url.toString();
   }
 
-  // Trigger whenever a select changes
+  // Trigger whenever a variant select is changed
   selects.forEach(select => {
-    select.addEventListener('change', selectFirstAvailableVariant);
+    select.addEventListener('change', goToFirstAvailableVariant);
   });
 });
-
 
 </script>
