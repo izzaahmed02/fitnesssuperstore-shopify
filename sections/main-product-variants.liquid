@@ -3736,39 +3736,38 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
 </script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-  const productForms = document.querySelectorAll('form[data-product-form]');
+  document.addEventListener('DOMContentLoaded', () => {
+  const productForm = document.querySelector('form[data-product-form]');
+  if (!productForm) return;
 
-  productForms.forEach(form => {
-    // Get Dawn's ProductForm instance
-    const productFormInstance = form.__productForm;
+  // Function to select the first visible and enabled option in a group
+  function selectFirstVisibleOption(optionGroup) {
+    const firstOption = Array.from(optionGroup.querySelectorAll('input[type="radio"], select option'))
+      .find(opt => !opt.disabled && opt.offsetParent !== null);
 
-    if (!productFormInstance) return;
+    if (!firstOption) return;
 
-    // Listen for variant change events (Dawn emits 'variantChange')
-    form.addEventListener('variantChange', function() {
-      const selects = form.querySelectorAll('select');
+    if (firstOption.tagName.toLowerCase() === 'input') {
+      if (!firstOption.checked) firstOption.click();
+    } else {
+      firstOption.selected = true;
+      firstOption.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
 
-      selects.forEach(select => {
-        // Only act if no option is currently selected
-        if (!select.value) {
-          // Pick first visible & enabled option
-          const firstOption = Array.from(select.options).find(opt => !opt.disabled && opt.offsetParent !== null);
-          if (firstOption) {
-            select.value = firstOption.value;
-            // Trigger Dawn's internal change event
-            select.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        }
-      });
+  // Listen for clicks on variant groups
+  const optionGroups = productForm.querySelectorAll('[data-product-option]');
+  optionGroups.forEach(group => {
+    group.addEventListener('click', () => {
+      // Small delay to let Dawn show the newly selected variant options
+      setTimeout(() => selectFirstVisibleOption(group), 50);
     });
-
-    // Also select first available options on page load
-    setTimeout(() => {
-      form.dispatchEvent(new Event('variantChange', { bubbles: true }));
-    }, 50);
   });
+
+  // Auto-select first visible option on page load
+  optionGroups.forEach(group => setTimeout(() => selectFirstVisibleOption(group), 50));
 });
+
 
 
 </script>
