@@ -3740,25 +3740,49 @@ document.addEventListener('DOMContentLoaded', function() {
   const productForm = document.querySelector('form[data-product-form]');
   if (!productForm) return;
 
-  // Function to select first visible and enabled option in a variant group
-  function selectFirstVisibleOption(variantGroup) {
-    const firstOption = variantGroup.querySelector('[type="radio"]:not(:disabled):not([hidden])');
-    if (firstOption && !firstOption.checked) {
-      firstOption.click();
-    }
+  const product = productForm.closest('[data-product]');
+  if (!product) return;
+
+  // Dawn exposes a ProductForm class attached to the form
+  const formInstance = productForm.__productForm;
+  if (!formInstance) return;
+
+  function selectFirstOptionForVariant(variantIndex) {
+    const optionSelectors = productForm.querySelectorAll('select, [data-option]');
+
+    // Loop through option selectors to find visible & enabled option
+    optionSelectors.forEach(select => {
+      const options = select.querySelectorAll('option, input[type="radio"]');
+      for (const opt of options) {
+        if (!opt.disabled && opt.offsetParent !== null) {
+          if (opt.tagName.toLowerCase() === 'option') {
+            select.value = opt.value;
+          } else {
+            opt.click();
+          }
+          // Trigger Dawn variant change
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+          break;
+        }
+      }
+    });
   }
 
-  // Listen for clicks on variant option groups
-  const optionGroups = productForm.querySelectorAll('[data-product-option]');
-  optionGroups.forEach(group => {
-    group.addEventListener('click', function() {
-      selectFirstVisibleOption(group);
+  // Listen for clicks on variant swatches or buttons
+  const variantButtons = product.querySelectorAll('[data-option-value]');
+  variantButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      // Small delay to allow Dawn JS to update visibility
+      setTimeout(() => {
+        selectFirstOptionForVariant();
+      }, 50);
     });
   });
 
-  // Also select first visible option on page load
-  optionGroups.forEach(group => selectFirstVisibleOption(group));
+  // Also select first available option on page load
+  setTimeout(selectFirstOptionForVariant, 50);
 });
+
 
 
 
