@@ -3738,29 +3738,35 @@ if(!window.__pmMin){window.__pmMin=1;(function(){const e=".product__prices",t={P
 <script>
   document.addEventListener('DOMContentLoaded', () => {
   const productForm = document.querySelector('form[data-product-form]');
-  if (!productForm) return;
-
-  // Function to click the first visible & enabled option in a group
-  function clickFirstVisibleOption(optionGroup) {
-    const firstOption = Array.from(optionGroup.querySelectorAll('input[type="radio"]'))
-      .find(opt => !opt.disabled && opt.offsetParent !== null);
-
-    if (firstOption) {
-      firstOption.click();
-    }
+  if (!productForm) {
+    console.log('Product form not found');
+    return;
   }
 
-  // On page load, select the first visible option for all variant groups
-  const optionGroups = productForm.querySelectorAll('[data-product-option]');
-  optionGroups.forEach(group => clickFirstVisibleOption(group));
+  console.log('Product form found, setting up debug listeners');
 
-  // When a variant option group is clicked, select the first visible option in it
-  optionGroups.forEach(group => {
-    group.addEventListener('click', () => {
-      // Small timeout to let Dawn update visibility first
-      setTimeout(() => clickFirstVisibleOption(group), 50);
+  // 1. Listen for changes on all selects
+  const selects = productForm.querySelectorAll('select');
+  selects.forEach(select => {
+    select.addEventListener('change', (e) => {
+      console.log('Select changed:', select.name, 'Value:', select.value);
     });
   });
+
+  // 2. Listen for clicks on variant radio buttons or swatches
+  const radios = productForm.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+  radios.forEach(radio => {
+    radio.addEventListener('click', (e) => {
+      console.log('Radio/Swatch clicked:', radio.name, 'Value:', radio.value, 'Checked:', radio.checked);
+    });
+  });
+
+  // 3. Listen for Dawn internal variant change event
+  productForm.addEventListener('variantChange', (e) => {
+    console.log('variantChange event triggered:', e.detail);
+  });
+
+  console.log('Debug listeners set up');
 });
 
 
