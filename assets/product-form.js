@@ -16,10 +16,17 @@ if (!customElements.get('product-form')) {
 
         this.hideErrors = this.dataset.hideErrors === 'true';
 
-        // --- Auto-select first visible option for the clicked variant group only ---
+        // --- Attach option change listeners ---
         this.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
           input.addEventListener('change', (event) => this._onOptionChange(event));
         });
+
+        // Store Dawn variant data from JSON
+        try {
+          this.variants = JSON.parse(this.form.dataset.variants);
+        } catch (e) {
+          this.variants = [];
+        }
       }
 
       onSubmitHandler(evt) {
@@ -134,17 +141,38 @@ if (!customElements.get('product-form')) {
         return this.form.querySelector('[name=id]');
       }
 
-      // --- Optimized _onOptionChange ---
+      // --- Fully working _onOptionChange ---
       _onOptionChange(event) {
-        const clickedInput = event.target.closest('[data-product-option]');
-        if (!clickedInput) return;
+        const optionGroup = event.target.closest('[data-product-option]');
+        if (!optionGroup || !this.variants.length) return;
 
-        // Select the first visible & enabled option in the clicked group only
-        const firstOption = Array.from(clickedInput.querySelectorAll('input[type="radio"], input[type="checkbox"]'))
-          .find(opt => !opt.disabled && opt.offsetParent !== null);
+        // Select first visible & enabled input in this group
+        const firstOption = Array.from(optionGroup.querySelectorAll('input[type="radio"], input[type="checkbox"]'))
+          .find(input => !input.disabled && input.offsetParent !== null);
 
-        if (firstOption && !firstOption.checked) {
-          firstOption.click(); // triggers Dawn's internal variant logic
+        if (!firstOption) return;
+
+        // Update input state
+        firstOption.checked = true;
+
+        // Collect selected options
+        const selectedOptions = Array.from(this.querySelectorAll('[data-product-option]'))
+          .map(group => {
+            const checked = group.querySelector('input[type="radio"]:checked, input[type="checkbox"]:checked');
+            return checked ? checked.value : null;
+          });
+
+        // Find the matching variant
+        const matchedVariant = this.variants.find(variant =>
+          variant.options.every((opt, i) => opt === selectedOptions[i])
+        );
+
+        if (matchedVariant) {
+          this.variantIdInput.value = matchedVariant.id;
+          this.submitButton.removeAttribute('disabled');
+        } else {
+          this.variantIdInput.value = '';
+          this.submitButton.setAttribute('disabled', 'disabled');
         }
       }
     }
