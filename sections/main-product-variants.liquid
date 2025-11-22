@@ -3740,27 +3740,30 @@ document.addEventListener('DOMContentLoaded', function() {
   const productForm = document.querySelector('form[data-product-form]');
   if (!productForm) return;
 
-  // Listen for Shopify variant change (Dawn triggers 'change' on select)
-  productForm.addEventListener('change', function(e) {
-    if (!e.target.matches('select')) return;
+  const selects = productForm.querySelectorAll('select');
 
-    const selects = productForm.querySelectorAll('select');
+  function selectFirstAvailableVariant() {
+    // Find first combination of options that corresponds to an available variant
+    const optionValues = Array.from(selects).map(select => select.value);
+    
+    // Iterate through all variants (Dawn stores them in window.productVariants)
+    const variants = window.productVariants || [];
+    const firstAvailable = variants.find(variant => variant.available);
 
-    // Loop through each select starting from the one after the changed one
-    for (let i = 0; i < selects.length - 1; i++) {
-      if (selects[i] === e.target) {
-        const nextSelect = selects[i + 1];
-        if (!nextSelect) break;
+    if (!firstAvailable) return;
 
-        // Pick the first available option in the next select
-        const firstAvailable = Array.from(nextSelect.options).find(opt => !opt.disabled && opt.offsetParent !== null);
-        if (firstAvailable) {
-          nextSelect.value = firstAvailable.value;
-          nextSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        break; // stop after updating the next select
+    // Set selects to match the first available variant
+    selects.forEach((select, idx) => {
+      if (select.value !== firstAvailable.options[idx]) {
+        select.value = firstAvailable.options[idx];
+        select.dispatchEvent(new Event('change', { bubbles: true }));
       }
-    }
+    });
+  }
+
+  // Trigger whenever a select changes
+  selects.forEach(select => {
+    select.addEventListener('change', selectFirstAvailableVariant);
   });
 });
 
