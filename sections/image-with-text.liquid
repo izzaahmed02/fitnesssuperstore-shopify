@@ -146,6 +146,8 @@
                                         {% if block.settings.number %}
                                             <span class="number">{{ block.settings.number }}</span>
                                         {% endif %}
+
+                                        {% if section.settings.h1 %}
                                         <h2
                                                 class="image-with-text__heading h2 inline-richtext {{ block.settings.heading_size }} uppercase-{{ block.settings.text_transform }} {{ block.settings.mobile_title_size }}"
                                                 {{ block.shopify_attributes }}>
@@ -158,6 +160,24 @@
                                                 {{ text }}
                                             {% endif %}
                                         </h2>
+                                      {% else %}
+
+                                          <h1
+                                                class="image-with-text__heading h2 inline-richtext {{ block.settings.heading_size }} uppercase-{{ block.settings.text_transform }} {{ block.settings.mobile_title_size }}"
+                                                {{ block.shopify_attributes }}>
+                                            {% assign text = block.settings.heading %}
+                                            {% assign parts = text | split: '*' %}
+                                            {% if parts.size > 1 %}
+                                                <span>{{ parts[0] }}</span>
+                                                <span class="accent">{{ parts[1] }}</span>{{ parts[2] }}
+                                            {% else %}
+                                                {{ text }}
+                                            {% endif %}
+                                        </h1>
+
+                                      {% endif %}
+
+
                                     </div>
                                 {%- when 'caption' -%}
                                     <p class="image-with-text__text image-with-text__text--caption {{ block.settings.text_style }} {{ block.settings.text_style }}--{{ block.settings.text_size }} {{ block.settings.text_style }}"
@@ -322,6 +342,14 @@
       "id": "original_image_proportions",
       "label": "Original image proportions"
     },
+
+     {
+      "type": "checkbox",
+      "id": "h1",
+      "label": "Use h1",
+      "default": false
+    },
+    
     {
       "type": "select",
       "id": "height",
