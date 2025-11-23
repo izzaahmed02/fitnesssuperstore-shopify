@@ -6,9 +6,9 @@
     <h4>Customer's Photo Gallery</h4>
   </div>
 
-  <!-- Mobile arrows -->
-  <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--left" aria-label="Previous image">&#10094;</button>
-  <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--right" aria-label="Next image">&#10095;</button>
+  <!-- Mobile arrows (characters chosen to match other section) -->
+  <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--left" aria-label="Previous image">‹</button>
+  <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--right" aria-label="Next image">›</button>
 
   <div class="customer-photo-gallery__slider">
     {% for image in gallery_metafield.value %}
@@ -78,7 +78,7 @@
     transform: scale(1.03);
   }
 
-  /* Hide arrows on desktop */
+  /* Hide arrows on desktop (keep grid clean) */
   .customer-photo-gallery__arrow { display: none; }
 }
 
@@ -95,7 +95,7 @@
   }
 
   .customer-photo-gallery .customer-photo-gallery__lightbox-inner {
-  max-width: 90vw;
+    max-width: 90vw;
   }
 
   .customer-photo-gallery__slider::-webkit-scrollbar { display: none; }
@@ -113,22 +113,25 @@
     border-radius: 4px;
   }
 
-  /* Mobile arrows */
+  /* Mobile arrows — match the Product Video Slider look */
   .customer-photo-gallery__arrow {
     display: flex;
     position: absolute;
-    top: 60%;
+    top: 50%;
     transform: translateY(-50%);
     background: rgba(0,0,0,0.4);
     color: #fff;
     border: none;
-    font-size: 32px;
-    padding: 6px 12px;
+    font-size: 22px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
     border-radius: 50%;
     z-index: 50;
     cursor: pointer;
     align-items: center;
     justify-content: center;
+    line-height: 1;
   }
 
   .customer-photo-gallery__arrow--left { left: 10px; }
@@ -217,9 +220,16 @@
   lightbox.addEventListener('click', (e) => { if(e.target===lightbox) lightbox.classList.remove('customer-photo-gallery__lightbox--active'); });
   document.addEventListener('keydown', (e) => { if(e.key==='Escape') lightbox.classList.remove('customer-photo-gallery__lightbox--active'); });
 
-  // Mobile arrows scroll one slide
-  arrowLeft?.addEventListener('click', ()=>{ slider.scrollBy({left: -window.innerWidth, behavior:'smooth'}); });
-  arrowRight?.addEventListener('click', ()=>{ slider.scrollBy({left: window.innerWidth, behavior:'smooth'}); });
+  // Mobile arrows scroll one slide (uses slider width so behavior matches slick)
+  function scrollBySlide(direction) {
+    if (!slider) return;
+    var slideWidth = slider.clientWidth || window.innerWidth;
+    var distance = slideWidth * (direction === 'next' ? 1 : -1);
+    slider.scrollBy({ left: distance, behavior: 'smooth' });
+  }
+
+  arrowLeft?.addEventListener('click', ()=> scrollBySlide('prev'));
+  arrowRight?.addEventListener('click', ()=> scrollBySlide('next'));
 
 })();
 </script>
