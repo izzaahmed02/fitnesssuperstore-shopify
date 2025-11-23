@@ -1,0 +1,111 @@
+{{ 'dc-blog-header.css' | asset_url | stylesheet_tag }}
+
+<style>
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+</style>
+
+<section class="section-{{ section.id }}-padding">
+  <div class="page-width-dc">
+    <div class="dc-blog-header-content">
+      <div class="dc-blog-header-content-text">
+
+        {% comment %}
+          ✅ Dynamically load title and subtitle from metafields if connected,
+          otherwise fallback to section settings.
+        {% endcomment %}
+        {% assign header_title = section.settings.title %}
+        {% assign header_subtitle = section.settings.subtitle %}
+
+        {%- if page.metafields.custom.banner_title.value != blank -%}
+          {% assign header_title = page.metafields.custom.banner_title.value %}
+        {%- endif -%}
+
+        {%- if page.metafields.custom.banner_subtitle.value != blank -%}
+          {% assign header_subtitle = page.metafields.custom.banner_subtitle.value %}
+        {%- endif -%}
+
+        <h1 class="dc-blog-header-content-text-title">{{ header_title }}</h1>
+        <p class="dc-blog-header-content-text-subtitle">{{ header_subtitle }}</p>
+      </div>
+
+      {% assign banner_image = page.metafields.custom.banner_image.value | default: section.settings.image %}
+      {% if banner_image %}
+        <img 
+          src="{{ banner_image | img_url: 'master' }}" 
+          alt="{{ header_title | escape }}"
+          class="state-banner-image">
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "dc Blog Header",
+  "class": "state-banner",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 24
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Default Title"
+    },
+    {
+  "type": "text",
+  "id": "subtitle",
+  "label": "Subtitle",
+  "default": "Default Subtitle",
+  "info": "You can connect this to a metafield using the dynamic source icon in the theme editor."
+}
+
+  ],
+  "presets": [
+    {
+      "name": "State Banner"
+    }
+  ]
+}
+{% endschema %}
