@@ -1,0 +1,318 @@
+<section class="section section-{{ section.id }} section-{{ section.id }}-padding">
+  <div class="page-width">
+
+    <!-- 🔍 Search Input -->
+    <div class="state-search-wrapper" style="text-align:center; margin-bottom: 2rem;">
+      <input 
+        type="text" 
+        id="stateSearchInput-{{ section.id }}" 
+        placeholder="Search state..." 
+        class="state-search-input" 
+      >
+    </div>
+
+    <div 
+      class="grid"
+      id="stateCardsGrid-{{ section.id }}"
+      style="
+        --grid-desktop-columns: {{ section.settings.columns_desktop }};
+        --grid-mobile-columns: {{ section.settings.columns_mobile }};
+      "
+    >
+      {% for block in section.blocks %}
+  <div class="grid__item state-card-item">
+    <div class="card card--media ratio" style="
+      --ratio-percent: 125%;
+      {% if block.settings.image != blank %}
+        background-image: url('{{ block.settings.image | image_url: width: 1200 }}');
+      {% endif %}
+      position: relative;
+    ">
+      <!-- Overlay -->
+      <div class="card__overlay" style="
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(35, 35, 43, 0) 0%, rgba(35, 35, 43, 0.4) 50%),
+linear-gradient(269.75deg, rgba(35, 35, 43, 0) 1.15%, rgba(35, 35, 43, 0.3) 68.4%);
+        z-index: 1;
+        display:block;
+      "></div>
+      
+      <div class="card__content" style="position: relative; inset: 0; padding: 2rem; z-index: 2;">
+        <div class="card__information overlay-content">
+          {% if block.settings.top_text != blank %}
+            <p class="caption-large text-uppercase"
+               style="color: {{ section.settings.top_text_color }}; font-size: {{ section.settings.top_text_size }}px;">
+               {{ block.settings.top_text }}
+            </p>
+          {% endif %}
+          {% if block.settings.heading != blank %}
+            <h3 class="h2 state-card-heading"
+                style="color: {{ section.settings.heading_color }}; font-size: {{ section.settings.heading_size }}px;">
+                {{ block.settings.heading }}
+            </h3>
+          {% endif %}
+          {% if block.settings.bottom_text != blank %}
+            <p class="rte"
+               style="color: {{ section.settings.bottom_text_color }}; font-size: {{ section.settings.bottom_text_size }}px;">
+               {{ block.settings.bottom_text }}
+            </p>
+          {% endif %}
+          {% if block.settings.button_label != blank and block.settings.button_link != blank %}
+            <a href="{{ block.settings.button_link }}"
+               class="button mt-3"
+               style="
+                  background-color: {{ section.settings.button_bg_color }};
+                  color: {{ section.settings.button_text_color }};
+                  opacity: {{ section.settings.button_opacity }};
+                  width: max-content;
+                  padding: 0.5em 1em;
+               ">
+              {{ block.settings.button_label }}
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endfor %}
+    </div>
+  </div>
+</section>
+
+<style>
+.section-{{ section.id }}-padding {
+  padding-top: {{ section.settings.padding_top }}px;
+  padding-bottom: {{ section.settings.padding_bottom }}px;
+}
+
+.button.mt-3:hover {
+  background-color: transparent !important;
+  border: 1px solid #d83d0e;
+}
+
+.section-{{ section.id }} .grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-mobile-columns), 1fr);
+  gap: var(--grid-desktop-horizontal-spacing, 1.5rem);
+}
+
+.h2.state-card-heading {
+  line-height:16px;
+}
+
+.state-search-wrapper input {
+  padding: 10px 15px; 
+  font-size: 16px; 
+  width: 100%; 
+  max-width: 100%; 
+  border-radius: 6px; 
+  border: 1px solid #ddd;
+
+}
+
+@media screen and (min-width: 750px) {
+  .section-{{ section.id }} .grid {
+    grid-template-columns: repeat(var(--grid-desktop-columns), 1fr);
+  }
+}
+
+.section-{{ section.id }} .card {
+  border-radius: var(--radius-large);
+  overflow: hidden;
+}
+
+.state-cards .grid__item {
+  width: 100% !important;
+  max-width: 100% !important;
+  border-radius: 20px;
+}
+
+.state-cards .card.card--media {
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  border-radius: 15px;
+}
+
+.state-search-input:focus {
+  outline: none;
+  border-color: #333;
+}
+
+
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('stateSearchInput-{{ section.id }}');
+  const cards = document.querySelectorAll('#stateCardsGrid-{{ section.id }} .state-card-item');
+
+  searchInput.addEventListener('input', function() {
+    const query = this.value.toLowerCase().trim();
+
+    cards.forEach(card => {
+      const heading = card.querySelector('.state-card-heading');
+      const text = heading ? heading.textContent.toLowerCase() : '';
+
+      if (text.includes(query)) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+});
+</script>
+
+{% schema %}
+{
+  "name": "State Cards",
+  "class": "state-cards",
+  "settings": [
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "label": "Columns on desktop",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "columns_mobile",
+      "label": "Columns on mobile",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 1
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 60
+    },
+    {
+      "type": "color",
+      "id": "top_text_color",
+      "label": "Top text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "number",
+      "id": "top_text_size",
+      "label": "Top text size (px)",
+      "default": 14
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "number",
+      "id": "heading_size",
+      "label": "Heading size (px)",
+      "default": 24
+    },
+    {
+      "type": "color",
+      "id": "bottom_text_color",
+      "label": "Bottom text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "number",
+      "id": "bottom_text_size",
+      "label": "Bottom text size (px)",
+      "default": 14
+    },
+    {
+      "type": "color",
+      "id": "button_bg_color",
+      "label": "Button background color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "button_opacity",
+      "label": "Button opacity",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "default": 1
+    }
+  ],
+  "blocks": [
+    {
+      "type": "card",
+      "name": "State Card",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Background image"
+        },
+        {
+          "type": "text",
+          "id": "top_text",
+          "label": "Text above heading"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading"
+        },
+        {
+          "type": "textarea",
+          "id": "bottom_text",
+          "label": "Text below heading"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Button label",
+          "default": "Order Now"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Button link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "State Cards",
+      "category": "Custom Sections"
+    }
+  ]
+}
+{% endschema %}
