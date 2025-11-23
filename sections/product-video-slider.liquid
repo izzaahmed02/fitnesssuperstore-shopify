@@ -212,58 +212,35 @@
     border-radius: 50%;
   }
 
-  /* Slick arrows & dots */
-  .extra-info-videos .slick-prev,
-  .extra-info-videos .slick-next {
-    height: 30px;
-    width: 30px;
-    border-radius: 100px;
-    font-size: 0;
-    line-height: 0;
+  /* Slick arrows - make them match the customer gallery arrows */
+  .extra-info-videos .slick-arrow {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
     position: absolute;
-    top: 45%;
+    top: 50%;
     transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    border: none;
     z-index: 99;
     cursor: pointer;
-    color: transparent;
-    border: none;
-    outline: none;
-    background: #616166;
   }
 
-  .extra-info-videos .slick-prev {
-    left: -8px;
-  }
+  .extra-info-videos .slick-prev { left: -8px; }
+  .extra-info-videos .slick-next { right: -8px; }
 
-  .extra-info-videos .slick-next {
-    right: -8px;
-  }
+  /* remove built-in slick :before icons if any */
+  .extra-info-videos .slick-prev:before,
+  .extra-info-videos .slick-next:before { content: none !important; }
 
-  .extra-info-videos .slick-next:before,
-  .extra-info-videos .slick-prev:before {
-    content: '' !important;
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    background-size: contain;
-    background-repeat: no-repeat;
-  }
-
-  .extra-info-videos .slick-next:before {
-    background-image: url('{{ "arrow-left.svg" | asset_url }}') !important;
-  }
-
-  .extra-info-videos .slick-prev:before {
-    background-image: url('{{ "arrow-right.svg" | asset_url }}') !important;
-  }
-
-  .extra-info-videos .slick-dots {
-    margin-top: 16px;
-  }
-
-  .extra-info-videos .slick-dots li button:before {
-    font-size: 10px;
-  }
+  /* hide dots entirely */
+  .extra-info-videos .slick-dots { display: none !important; }
 
   .video-slide-inner p {
     text-align: center;
@@ -332,21 +309,16 @@
       margin-bottom: 16px;
     }
 
-    .extra-info-videos .slick-prev,
-    .extra-info-videos .slick-next {
-      width: 30px;
-      height: 30px;
-      top: 45%;
+    .extra-info-videos .slick-arrow {
+      width: 32px;
+      height: 32px;
+      font-size: 18px;
+      top: 100%;
       transform: translateY(-50%);
     }
 
-    .extra-info-videos .slick-prev {
-      left: 0;
-    }
-
-    .extra-info-videos .slick-next {
-      right: 0;
-    }
+    .extra-info-videos .slick-prev { left: 0; }
+    .extra-info-videos .slick-next { right: 0; }
   }
 </style>
 
@@ -362,7 +334,10 @@ document.addEventListener('DOMContentLoaded', function () {
     slidesToShow: desktopSlides,
     slidesToScroll: 1,
     arrows: true,
-    dots: true,
+    dots: false, // <-- remove dots
+    // custom arrow HTML so they visually match the gallery buttons
+    prevArrow: '<button type="button" class="slick-prev slick-arrow" aria-label="Previous">‹</button>',
+    nextArrow: '<button type="button" class="slick-next slick-arrow" aria-label="Next">›</button>',
     responsive: [
       {
         breakpoint: 750,
