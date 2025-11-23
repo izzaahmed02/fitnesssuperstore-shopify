@@ -1,0 +1,89 @@
+<div class="all-service-locations page-width">
+  <h2>{{ section.settings.heading }}</h2>
+  <p>{{ section.settings.description }}</p>
+
+  
+{% assign state_collections = page.metafields.custom.service_state_collection %}
+
+{% if state_collections %}
+  <div class="locations-list">
+    {% for state in state_collections.value %}
+      {% assign collection_ref = state.city_collection.value %}
+      <div class="location-item">
+        {% if collection_ref %}
+          <a href="{{ collection_ref.url }}" class="city-name-link">
+            <div>{{ state.city_name }}</div>
+          </a>
+        {% else %}
+          <div class="city-name-link no-collection">{{ state.city_name }}</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>No metafield or values found.</p>
+{% endif %}
+
+</div>
+
+
+{% schema %}
+{
+  "name": "Service City Collection",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Our Service Locations"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Short description",
+      "default": "We provide services in the following cities:"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Service City Collection",
+      "category": "Collections"
+    }
+  ]
+}
+{% endschema %}
+
+<style>
+.locations-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.location-item {
+  width: calc(50% - 1rem);
+  border: 1px solid rgba(0,0,0,0.1);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+}
+.city-name-link {
+  display: inline-block;
+  color: var(--color-foreground, #000);
+  text-decoration: underline;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.city-name-link:hover {
+  color: var(--color-accent, #007ace);
+}
+.no-collection {
+  opacity: 0.6;
+  cursor: default;
+  text-decoration: none;
+}
+@media screen and (max-width: 749px) {
+  .location-item {
+    width: 100%;
+  }
+}
+</style>
