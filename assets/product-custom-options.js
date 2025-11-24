@@ -552,13 +552,14 @@ if (!customElements.get('product-customization-options')) {
             lineItemProperties[key] = formatedValue;
           }
           const selectedColor = this.querySelector('.custom-color-group .option_selected [data-color-selected-title]');
-          if (!selectedColor) return;
-          const colorGroup = selectedColor.closest('[data-group-color-name]');
-          const selectedColorValue = selectedColor.innerText;
-          const selectedColorPrice = this.querySelector('.custom-color-group .option_selected-price');
-          lineItemProperties[colorGroup.dataset.colorNameTitle] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
-          if (selectedColorPrice.innerText != '') {
-            lineItemProperties[colorGroup.dataset.colorNameTitle] += ` [+${selectedColorPrice.innerText}]`;
+          if (selectedColor) {
+            const colorGroup = selectedColor.closest('[data-group-color-name]');
+            const selectedColorValue = selectedColor.innerText;
+            const selectedColorPrice = this.querySelector('.custom-color-group .option_selected-price');
+            lineItemProperties[colorGroup.dataset.colorNameTitle] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
+            if (selectedColorPrice.innerText != '') {
+              lineItemProperties[colorGroup.dataset.colorNameTitle] += ` [+${selectedColorPrice.innerText}]`;
+            }
           }
         });
 
@@ -595,20 +596,20 @@ if (!customElements.get('product-customization-options')) {
         });
 
         const colorOption = this.querySelector('[data-color-variant-input]');
-        if (!colorOption) return;
-        const productColorOptionVariantID = `gid://shopify/ProductVariant/${colorOption.dataset.variant}`;
-        const productColorOptionPrice = colorOption.dataset?.price ? Number(colorOption.dataset?.price) : 0;
-        const groupContainer = colorOption.closest('[data-group-color-name]');
-        const colorName = groupContainer.querySelector('[data-color-selected-title]');
-        const productColorOption = {
-          variantId: productColorOptionVariantID,
-          priceAdjustment: productColorOptionPrice,
-          quantity: 1,
-          groupHandle: groupContainer.dataset.groupColorName ? groupContainer.dataset.groupColorName : '',
-          colorName: colorName ? colorName.innerText.trim() : '',
-        };
-
-        productOptions.push(productColorOption);
+        if (colorOption) {
+          const productColorOptionVariantID = `gid://shopify/ProductVariant/${colorOption.dataset.variant}`;
+          const productColorOptionPrice = colorOption.dataset?.price ? Number(colorOption.dataset?.price) : 0;
+          const groupContainer = colorOption.closest('[data-group-color-name]');
+          const colorName = groupContainer.querySelector('[data-color-selected-title]');
+          const productColorOption = {
+            variantId: productColorOptionVariantID,
+            priceAdjustment: productColorOptionPrice,
+            quantity: 1,
+            groupHandle: groupContainer.dataset.groupColorName ? groupContainer.dataset.groupColorName : '',
+            colorName: colorName ? colorName.innerText.trim() : '',
+          };
+          productOptions.push(productColorOption);
+        }
 
         return productOptions;
       }
