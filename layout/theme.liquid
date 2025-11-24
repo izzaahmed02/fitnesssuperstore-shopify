@@ -117,5 +117,60 @@ setTimeout(function() {
   document.querySelector('.smobile-gallery-wrapper.only-mobile').style.display = 'block';
 }, 3000);
     </script>
+
+    <script>
+setTimeout(function() {
+  // First, prevent the cart drawer from opening by intercepting its open method
+  var cartDrawer = document.querySelector('cart-drawer');
+  if (cartDrawer && cartDrawer.open) {
+    var originalOpen = cartDrawer.open;
+    cartDrawer.open = function() {
+      console.log('Cart drawer open blocked');
+      // Do nothing - block the drawer from opening
+    };
+  }
+
+  var btns = document.querySelectorAll('.product-form__submit.button.button--full-width.button--primary');
+  
+  btns.forEach(function(btn) {
+    if (btn.__customNavHandled) return;
+    btn.__customNavHandled = true;
+    
+    btn.addEventListener('click', function(e) {
+      console.log("Button ATC Clicked");
+      
+      var origOpen = XMLHttpRequest.prototype.open;
+      var origSend = XMLHttpRequest.prototype.send;
+      
+      XMLHttpRequest.prototype.open = function() {
+        if (arguments[1] && typeof arguments[1] === 'string' && arguments[1].indexOf('/cart/add') !== -1) {
+          this.__isCartAdd = true;
+        }
+        return origOpen.apply(this, arguments);
+      };
+      
+      XMLHttpRequest.prototype.send = function() {
+        if (this.__isCartAdd) {
+          this.addEventListener('load', function() {
+            if (this.status >= 200 && this.status < 300) {
+              // Immediately redirect on successful cart add
+              window.location.href = '/cart';
+            }
+          });
+        }
+        return origSend.apply(this, arguments);
+      };
+      
+      // Fallback redirect
+      setTimeout(function() {
+        XMLHttpRequest.prototype.open = origOpen;
+        XMLHttpRequest.prototype.send = origSend;
+        window.location.href = '/cart';
+      }, 1500);
+      
+    }, true);
+  });
+}, 3000);
+    </script>
   </body>
 </html>
