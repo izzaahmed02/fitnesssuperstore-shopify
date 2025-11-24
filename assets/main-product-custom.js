@@ -188,7 +188,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 	  }
     }
   
-    function registerSAReviewsPolling() {
+  /*  function registerSAReviewsPolling() {
       const interval = setInterval(async function () {
         const reviewSection = document.querySelector("#sa_review_paging");
 		if (reviewSection) {
@@ -204,7 +204,33 @@ window.addEventListener('DOMContentLoaded', async () => {
 			} 
 		}
       }, 500);
+    } */
+
+	  function registerSAReviewsPolling() {
+  const interval = setInterval(async function () {
+    const reviewSection = document.querySelector("#sa_review_paging");
+
+    if (reviewSection) {
+      addCustomActions();
+
+      if (sa_product_reviews?.high && Object.keys(sa_product_reviews.high).length > sa_products_count) {
+        addPaginationArrows();
+      }
+
+      if (!document.querySelector('.merchantheader')) {
+        const desktop = document.querySelector('.product__info-container .available-wrap .sa-reviews');
+        const mobile = document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews');
+
+        if (desktop) desktop.style.display = 'flex';
+        if (mobile) mobile.style.display = 'flex';
+      }
+
+      // Optional: stop polling once everything is ready
+      // clearInterval(interval);
     }
+  }, 500);
+}
+
 
 	function registerProductReviewsPolling() {
 		const interval = setInterval(async function() {
