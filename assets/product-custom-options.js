@@ -307,10 +307,12 @@ if (!customElements.get('product-customization-options')) {
         });
 
         const colorVariantInput = this.querySelector('[data-color-variant-input]');
-        const colorPrice = colorVariantInput.dataset?.price;
+        if (colorVariantInput) {
+          const colorPrice = colorVariantInput.dataset?.price;
 
-        if (colorPrice !== '') {
-          priceAdjustment += Number(colorPrice || 0);
+          if (colorPrice !== '') {
+            priceAdjustment += Number(colorPrice || 0);
+          }
         }
 
         this.priceHelper(priceAdjustment);
