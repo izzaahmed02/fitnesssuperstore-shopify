@@ -30,7 +30,9 @@ if (!customElements.get('product-customization-options')) {
       }
 
       connectedCallback() {
-        this.toggleAccordions();
+        if (!window.location.href.includes('/cart') && !this.closest('cart-notification') && !this.closest('cart-drawer')) {
+          this.toggleAccordions();
+        }
         this.setCustomizationOption();
         this.setDefaultOptionsListener();
         this.handleQuantity();
@@ -402,9 +404,9 @@ if (!customElements.get('product-customization-options')) {
         setTimeout(() => {
           const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`) || this.cartDrawer.querySelector(`[data-key-modify="${this.modifyID}"]`);
           if (!modifyButton) return;
-
           modifyButton.addEventListener('click', () => {
             this.classList.add('modify-opened');
+            this.toggleAccordions();
             this.dataset.stamp = this.htmlToBase64(this.innerHTML);
           });
         });
