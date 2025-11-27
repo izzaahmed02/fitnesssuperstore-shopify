@@ -1,6 +1,6 @@
 {{ 'home-products.css' | asset_url | stylesheet_tag }}
 
-<div class="custom-container">
+<div class="custom-container" style="background: {{ section.settings.bg }}">
   <div class="featured_products_header">
     {% if section.settings.heading != blank %}
       <h2>{{ section.settings.heading }}</h2>
@@ -9,7 +9,6 @@
     {% if section.settings.link != blank %}
       <a href="{{ section.settings.url }}" class="featured_products_link">
         {{ section.settings.link }}
-
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path fill-rule="evenodd" clip-rule="evenodd" d="M7.8017 4.46967C8.09459 4.17678 8.56947 4.17678 8.86236 4.46967L13.8624 9.46967C14.1553 9.76256 14.1553 10.2374 13.8624 10.5303L8.86236 15.5303C8.56947 15.8232 8.09459 15.8232 7.8017 15.5303C7.50881 15.2374 7.50881 14.7626 7.8017 14.4697L12.2714 10L7.8017 5.53033C7.50881 5.23744 7.50881 4.76256 7.8017 4.46967Z" fill="#fff"/>
         </svg>
@@ -18,9 +17,37 @@
   </div>
 
   <div class="featured_products_container">
-    {% for product in section.settings.products %}
-      {% render 'product-items-home', product: product %}
-    {% endfor %}
+    {%- comment -%}Use page metafield: page.metafields.custom.popular_state_products{%- endcomment -%}
+    {% assign mf = page.metafields.custom.popular_state_products %}
+    {% assign products_from_metafield = nil %}
+
+    {% if mf %}
+      {% if mf.references and mf.references.size > 0 %}
+        {% assign products_from_metafield = mf.references %}
+      {% else %}
+        {% assign raw_handles = mf.value | default: '' %}
+        {% assign products_from_metafield = raw_handles | split: ',' %}
+      {% endif %}
+    {% endif %}
+
+    {% if products_from_metafield %}
+      {% for item in products_from_metafield %}
+        {% assign product_obj = nil %}
+
+        {% if item.handle %}
+          {% assign product_obj = item %}
+        {% else %}
+          {% assign handle = item | strip %}
+          {% if handle != '' %}
+            {% assign product_obj = all_products[handle] %}
+          {% endif %}
+        {% endif %}
+
+        {% if product_obj %}
+          {% render 'product-items-home', product: product_obj %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
   </div>
 </div>
 
@@ -52,11 +79,6 @@
       "type": "url",
       "id": "url",
       "label": "Link url"
-    },
-    {
-      "type": "product_list",
-      "id": "products",
-      "label": "Choose Products"
     }
   ],
   "presets": [
