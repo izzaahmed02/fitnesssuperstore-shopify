@@ -18,32 +18,9 @@
   </div>
 
   <div class="featured_products_container">
-   {% assign products_list = page.metafields.custom.popular_state_products.references %}
-
-{% if products_list and products_list.size > 0 %}
-  <div class="featured_products_container">
-    <h3>Debug Metafield:</h3>
-{% if page.metafields.custom.popular_state_products %}
-  <p>Metafield exists.</p>
-  {% assign products_list = page.metafields.custom.popular_state_products.references %}
-  <p>Products list size: {{ products_list.size }}</p>
-  {% for p in products_list %}
-    <p>{{ p.title }} - {{ p.id }}</p>
-  {% endfor %}
-{% else %}
-  <p>Metafield does not exist on this page.</p>
-{% endif %}
-
-
-    {% for product in products_list %}
+    {% for product in section.settings.products %}
       {% render 'product-items-home', product: product %}
     {% endfor %}
-  </div>
-{% else %}
-  <p>No products found in the metafield.</p>
-{% endif %}
-
-
   </div>
 </div>
 
@@ -51,7 +28,7 @@
 
 {% schema %}
 {
-  "name": "Home products",
+  "name": "State products",
   "tag": "section",
   "class": "home-products",
   "settings": [
@@ -84,7 +61,7 @@
   ],
   "presets": [
     {
-      "name": "Home products"
+      "name": "State products"
     }
   ]
 }
