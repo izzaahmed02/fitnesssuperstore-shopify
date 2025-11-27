@@ -18,64 +18,9 @@
   </div>
 
   <div class="featured_products_container">
-   {%- comment -%}
-  Load products from page metafield `custom.popular_state_products`
-  - supports product references (mf.references)
-  - supports comma-separated product handles in mf.value
-  - fallback to section.settings.products if nothing resolved
-{%- endcomment -%}
-
-{% assign mf = page.metafields.custom.popular_state_products %}
-{% assign products_from_metafield = nil %}
-
-{% if mf %}
-  {% if mf.references and mf.references.size > 0 %}
-    {% assign products_from_metafield = mf.references %}
-  {% else %}
-    {% assign raw = mf.value | default: '' | strip %}
-    {% if raw != '' %}
-      {% assign raw = raw | replace: '\r\n', ',' | replace: '\n', ',' | replace: '\r', ',' %}
-      {% assign products_from_metafield = raw | split: ',' %}
-    {% endif %}
-  {% endif %}
-{% endif %}
-
-{% if products_from_metafield and products_from_metafield != empty %}
-  {% for item in products_from_metafield %}
-    {% if item.handle %}
-      {% render 'product-items-home', product: item %}
-    {% else %}
-      {% assign handle = item | strip %}
-      {% if handle != '' %}
-        {% assign product_obj = all_products[handle] %}
-        {% if product_obj %}
-          {% render 'product-items-home', product: product_obj %}
-        {% endif %}
-      {% endif %}
-    {% endif %}
-  {% endfor %}
-{% else %}
-  {% for product in section.settings.products %}
-    {% render 'product-items-home', product: product %}
-  {% endfor %}
-{% endif %}
-
-
-{% assign products_list = page.metafields.custom.popular_state_products.references %}
-<pre>
-Page object: {{ page | json }}
-Metafields: {{ page.metafields.custom.popular_state_products | json }}
-</pre>
-
-{% if products_list.size > 0 %}
-  {% for product in products_list %}
-    {% render 'product-items-home', product: product %}
-  {% endfor %}
-{% else %}
-  <p>No products found.</p>
-{% endif %}
-
-
+    {% for product in section.settings.products %}
+      {% render 'product-items-home', product: product %}
+    {% endfor %}
   </div>
 </div>
 
@@ -83,7 +28,7 @@ Metafields: {{ page.metafields.custom.popular_state_products | json }}
 
 {% schema %}
 {
-  "name": "State products",
+  "name": "Home products",
   "tag": "section",
   "class": "home-products",
   "settings": [
@@ -116,7 +61,7 @@ Metafields: {{ page.metafields.custom.popular_state_products | json }}
   ],
   "presets": [
     {
-      "name": "State products"
+      "name": "Home products"
     }
   ]
 }
