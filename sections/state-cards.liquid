@@ -21,13 +21,18 @@
     >
       {% for block in section.blocks %}
   <div class="grid__item state-card-item">
-    <div class="card card--media ratio" style="
-      --ratio-percent: 125%;
-      {% if block.settings.image != blank %}
-        background-image: url('{{ block.settings.image | image_url: width: 1200 }}');
-      {% endif %}
-      position: relative;
-    ">
+ <div
+  class="card card--media ratio"
+  data-bg="{% if block.settings.image != blank %}{{ block.settings.image | image_url: width: 1200 }}{% endif %}"
+  style="
+    --ratio-percent: 125%;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    background-color: #f3f3f3; /* placeholder */
+  "
+>
+
       <!-- Overlay -->
       <div class="card__overlay" style="
         position: absolute;
@@ -150,25 +155,60 @@ linear-gradient(269.75deg, rgba(35, 35, 43, 0) 1.15%, rgba(35, 35, 43, 0.3) 68.4
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const searchInput = document.getElementById('stateSearchInput-{{ section.id }}');
-  const cards = document.querySelectorAll('#stateCardsGrid-{{ section.id }} .state-card-item');
+  const sectionId = '{{ section.id }}';
+  const searchInput = document.getElementById('stateSearchInput-' + sectionId);
+  const cards = Array.from(document.querySelectorAll('#stateCardsGrid-' + sectionId + ' .state-card-item'));
+  const bgTargets = Array.from(document.querySelectorAll('#stateCardsGrid-' + sectionId + ' .card.card--media'));
 
-  searchInput.addEventListener('input', function() {
-    const query = this.value.toLowerCase().trim();
-
-    cards.forEach(card => {
-      const heading = card.querySelector('.state-card-heading');
-      const text = heading ? heading.textContent.toLowerCase() : '';
-
-      if (text.includes(query)) {
-        card.style.display = '';
-      } else {
-        card.style.display = 'none';
-      }
+  // ---------- Search filter ----------
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const query = this.value.toLowerCase().trim();
+      cards.forEach(card => {
+        const heading = card.querySelector('.state-card-heading');
+        const text = heading ? heading.textContent.toLowerCase() : '';
+        card.style.display = text.includes(query) ? '' : 'none';
+      });
     });
-  });
+  }
+
+  // ---------- Lazy load CSS background-images ----------
+  function loadBackground(el) {
+    const url = el.getAttribute('data-bg');
+    if (!url) return;
+    // set inline background-image
+    el.style.backgroundImage = 'url("' + url + '")';
+    el.removeAttribute('data-bg');
+    el.classList && el.classList.add('bg-loaded');
+  }
+
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          loadBackground(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      rootMargin: '200px 0px' // preload slightly before entering view
+    });
+
+    bgTargets.forEach(el => {
+      // if element already had no data-bg (no image), skip
+      if (!el.getAttribute('data-bg')) return;
+      io.observe(el);
+    });
+  } else {
+    // fallback: load all immediately
+    bgTargets.forEach(loadBackground);
+  }
+
+  // Optional: if your grid is filtered/changed and items are added later,
+  // you could re-observe new items — but for a static section this is enough.
 });
 </script>
+
 
 {% schema %}
 {
