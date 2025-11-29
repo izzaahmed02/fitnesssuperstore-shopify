@@ -1,0 +1,84 @@
+{%- comment -%}
+  sections/jsonld-schema.liquid
+  Outputs JSON-LD for FAQPage and LocalBusiness/Service based on section settings/blocks.
+  Safe: uses | json and | escape to avoid invalid JSON.
+  Add this file to your theme `sections/` folder. The page JSON you pasted should reference this section id/type.
+{%- endcomment -%}
+
+{%- schema -%}
+{
+  "name": "JSON-LD Schema",
+  "settings": [
+    { "id": "output_jsonld", "type": "checkbox", "label": "Output JSON-LD?", "default": true },
+    { "id": "output_faq", "type": "checkbox", "label": "Include FAQPage?", "default": true },
+    { "id": "output_localbusiness", "type": "checkbox", "label": "Include LocalBusiness/Service?", "default": true },
+    { "id": "service_type", "type": "select", "label": "Entity type for local business", "options": [ { "value": "LocalBusiness", "label": "LocalBusiness" }, { "value": "Service", "label": "Service" } ], "default": "LocalBusiness" },
+    { "id": "telephone", "type": "text", "label": "Telephone (optional)" },
+    { "id": "area_served", "type": "text", "label": "Area served (comma separated list of states)", "info": "e.g. Alabama, Georgia, Florida" }
+  ],
+  "blocks": [
+    { "type": "faq_item", "name": "FAQ item", "settings": [
+      { "id": "question", "type": "text", "label": "Question" },
+      { "id": "answer", "type": "textarea", "label": "Answer (plain text recommended)" }
+    ] }
+  ],
+  "max_blocks": 50,
+  "presets": [ { "name": "JSON-LD (FAQ)" } ]
+}
+{%- endschema -%}
+
+{%- comment -%} If global JSON-LD output is disabled, do nothing. {%- endcomment -%}
+{%- if section.settings.output_jsonld != true -%}
+  {%- comment -%} JSON-LD output disabled via section setting {%- endcomment -%}
+{%- else -%}
+
+  {%- comment -%} Render FAQPage if requested and blocks exist {%- endcomment -%}
+  {%- if section.settings.output_faq == true and section.blocks.size > 0 -%}
+    {%- assign faq_blocks = section.blocks | where: "type", "faq_item" -%}
+    {%- if faq_blocks.size > 0 -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {%- for b in faq_blocks -%}
+    {
+      "@type": "Question",
+      "name": {{ b.settings.question | escape | json }},
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": {{ b.settings.answer | escape | json }}
+      }
+    }{%- if forloop.last == false -%},{%- endif -%}
+    {%- endfor -%}
+  ]
+}
+</script>
+    {%- endif -%}
+  {%- endif -%}
+
+  {%- comment -%} Render LocalBusiness/Service JSON-LD if requested {%- endcomment -%}
+  {%- if section.settings.output_localbusiness == true -%}
+    {%- assign areas = section.settings.area_served | default: "" -%}
+    {%- assign area_list = areas | split: "," | map: "strip" | reject: "" -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": {{ section.settings.service_type | json }},
+  "name": {{ shop.name | json }},
+  "url": {{ shop.url | json }},{% if section.settings.telephone != blank %}
+  "telephone": {{ section.settings.telephone | json }},{% endif %}
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": {{ shop.country | json }}
+  },
+  "areaServed": [
+    {%- for s in area_list -%}
+      {{ s | json }}{%- if forloop.last == false -%},{%- endif -%}
+    {%- endfor -%}
+  ]
+}
+</script>
+  {%- endif -%}
+
+{%- endif -%}
