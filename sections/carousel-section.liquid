@@ -1,0 +1,180 @@
+<style>
+    .logo-carousel-section {
+  padding: 40px 20px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.logo-carousel__container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.logo-carousel__wrapper {
+  overflow: hidden;
+  position: relative;
+}
+
+.logo-carousel__track {
+  display: flex;
+  animation: scroll var(--autoplay-speed, 3000ms) linear infinite;
+  gap: 60px;
+}
+
+.logo-carousel__item {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.logo-carousel__item img {
+  max-height: 80px;
+  width: auto;
+  object-fit: contain;
+  filter: grayscale(100%);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.logo-carousel__item img:hover {
+  filter: grayscale(0%);
+  opacity: 1;
+}
+
+.logo-carousel__placeholder {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 40px 20px;
+}
+
+/* Pause on hover */
+.logo-carousel__wrapper:hover .logo-carousel__track {
+  animation-play-state: paused;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .logo-carousel__track {
+    gap: 40px;
+  }
+  
+  .logo-carousel__item img {
+    max-height: 60px;
+  }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.logo-carousel__wrapper').forEach(wrapper => {
+    const track = wrapper.querySelector('.logo-carousel__track');
+    const speed = wrapper.dataset.autoplaySpeed || 3000;
+
+    // Set CSS variable for animation duration
+    track.style.setProperty('--autoplay-speed', `${speed}ms`);
+  });
+});
+    </script>
+
+<div class="logo-carousel-section" id="LogoCarousel--{{ section.id }}">
+  <div class="logo-carousel__container">
+    <div class="logo-carousel__wrapper" data-autoplay-speed="{{ section.settings.autoplay_speed | default: 3000 }}">
+      {% if section.blocks.size > 0 %}
+        <div class="logo-carousel__track">
+          {% for block in section.blocks %}
+            {% if block.settings.logo != blank %}
+              <div class="logo-carousel__item" {{ block.shopify_attributes }}>
+                <img 
+                  src="{{ block.settings.logo | img_url: '300x' }}"
+                  loading="lazy"
+                  alt="{{ block.settings.logo.alt | escape }}"
+                  width="{{ block.settings.logo.width }}"
+                  height="{{ block.settings.logo.height }}"
+                >
+              </div>
+            {% endif %}
+          {% endfor %}
+
+          <!-- Duplicate items for seamless infinite loop -->
+          {% for block in section.blocks %}
+            {% if block.settings.logo != blank %}
+              <div class="logo-carousel__item" {{ block.shopify_attributes }}>
+                <img 
+                  src="{{ block.settings.logo | img_url: '300x' }}"
+                  loading="lazy"
+                  alt="{{ block.settings.logo.alt | escape }}"
+                  width="{{ block.settings.logo.width }}"
+                  height="{{ block.settings.logo.height }}"
+                >
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="logo-carousel__placeholder">Add logos in the theme editor.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Logo Carousel",
+  "class": "index-section logo-carousel-section-outer",
+  "settings": [
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "label": "Autoplay speed (ms)",
+      "min": 2000,
+      "max": 8000,
+      "step": 500,
+      "default": 3000
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "Show on mobile",
+      "default": true
+    }
+  ],
+  "blocks": [
+    {
+      "type": "logo",
+      "name": "Logo",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "logo",
+          "label": "Logo image",
+          "info": "Recommended: 200–400px width, transparent PNG or SVG converted to PNG"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Logo Carousel",
+      "category": "Image",
+      "blocks": [
+        { "type": "logo" },
+        { "type": "logo" },
+        { "type": "logo" },
+        { "type": "logo" },
+        { "type": "logo" }
+      ]
+    }
+  ]
+}
+{% endschema %}
