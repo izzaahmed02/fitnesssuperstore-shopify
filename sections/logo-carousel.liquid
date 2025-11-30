@@ -86,67 +86,138 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
     </script>
-
-<div class="logo-carousel-section" id="LogoCarousel--{{ section.id }}">
-  <div class="logo-carousel__container">
-    <div class="logo-carousel__wrapper" data-autoplay-speed="{{ section.settings.autoplay_speed | default: 3000 }}">
-      {% if section.blocks.size > 0 %}
-        <div class="logo-carousel__track">
-          {% for block in section.blocks %}
-            {% if block.settings.logo != blank %}
-              <div class="logo-carousel__item" {{ block.shopify_attributes }}>
+<div class="logo-carousel">
+  <div class="logo-carousel__inner">
+    <div class="logo-carousel__track">
+      {%- if section.blocks.size > 0 -%}
+        {%- for block in section.blocks -%}
+          {%- if block.settings.image -%}
+            <div class="logo-carousel__slide" {{ block.shopify_attributes }}>
+              <div class="logo-box">
                 <img 
-                  src="{{ block.settings.logo | img_url: '300x' }}"
+                  src="{{ block.settings.image | img_url: '500x' }}"
                   loading="lazy"
-                  alt="{{ block.settings.logo.alt | escape }}"
-                  width="{{ block.settings.logo.width }}"
-                  height="{{ block.settings.logo.height }}"
+                  alt="{{ block.settings.image.alt | escape }}"
+                  class="logo-img"
                 >
               </div>
-            {% endif %}
-          {% endfor %}
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
 
-          <!-- Duplicate items for seamless infinite loop -->
-          {% for block in section.blocks %}
-            {% if block.settings.logo != blank %}
-              <div class="logo-carousel__item" {{ block.shopify_attributes }}>
+        <!-- Duplicate set for seamless infinite scroll -->
+        {%- for block in section.blocks -%}
+          {%- if block.settings.image -%}
+            <div class="logo-carousel__slide">
+              <div class="logo-box">
                 <img 
-                  src="{{ block.settings.logo | img_url: '300x' }}"
+                  src="{{ block.settings.image | img_url: '500x' }}"
                   loading="lazy"
-                  alt="{{ block.settings.logo.alt | escape }}"
-                  width="{{ block.settings.logo.width }}"
-                  height="{{ block.settings.logo.height }}"
+                  alt="{{ block.settings.image.alt | escape }}"
+                  class="logo-img"
                 >
               </div>
-            {% endif %}
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="logo-carousel__placeholder">Add logos in the theme editor.</p>
-      {% endif %}
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- else -%}
+        <p style="text-align:center; padding:60px; color:#999;">
+          Add logos in the theme customizer
+        </p>
+      {%- endif -%}
     </div>
   </div>
 </div>
 
+<style>
+  .logo-carousel {
+    padding: 60px 0;
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .logo-carousel__inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .logo-carousel__track {
+    display: flex;
+    gap: 60px;
+    animation: scroll {{ section.settings.speed | default: 5000 }}ms linear infinite;
+  }
+
+  .logo-carousel__slide {
+    flex: 0 0 auto;
+  }
+
+  /* This is the magic box - all logos will be identical */
+  .logo-box {
+    width: 200px;
+    height: 120px;
+    border: 2px solid #000000;
+    background: #000000;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .logo-box:hover {
+    transform: translateY(-4px);
+  }
+
+  .logo-img {
+    max-width: 90%;
+    max-height: 90%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    filter: brightness(0) invert(1); /* Makes logo white on black background */
+  }
+
+  /* Pause on hover */
+  .logo-carousel:hover .logo-carousel__track {
+    animation-play-state: paused;
+  }
+
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 768px) {
+    .logo-box {
+      width: 160px;
+      height: 100px;
+      padding: 10px;
+    }
+    .logo-carousel__track {
+      gap: 40px;
+    }
+  }
+</style>
+
 {% schema %}
 {
   "name": "Logo Carousel",
-  "class": "index-section logo-carousel-section-outer",
+  "tag": "section",
+  "class": "section",
   "settings": [
     {
       "type": "range",
-      "id": "autoplay_speed",
-      "label": "Autoplay speed (ms)",
-      "min": 2000,
-      "max": 8000,
-      "step": 500,
-      "default": 3000
-    },
-    {
-      "type": "checkbox",
-      "id": "show_on_mobile",
-      "label": "Show on mobile",
-      "default": true
+      "id": "speed",
+      "label": "Scroll speed (longer = slower)",
+      "min": 5000,
+      "max": 9000,
+      "step": 1000,
+      "default": 5000,
+      "unit": "ms"
     }
   ],
   "blocks": [
@@ -156,9 +227,8 @@ document.addEventListener('DOMContentLoaded', function () {
       "settings": [
         {
           "type": "image_picker",
-          "id": "logo",
-          "label": "Logo image",
-          "info": "Recommended: 200–400px width, transparent PNG or SVG converted to PNG"
+          "id": "image",
+          "label": "Logo image (best on transparent or dark background)"
         }
       ]
     }
@@ -166,8 +236,8 @@ document.addEventListener('DOMContentLoaded', function () {
   "presets": [
     {
       "name": "Logo Carousel",
-      "category": "Image",
       "blocks": [
+        { "type": "logo" },
         { "type": "logo" },
         { "type": "logo" },
         { "type": "logo" },
