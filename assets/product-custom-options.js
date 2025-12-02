@@ -34,6 +34,7 @@ if (!customElements.get('product-customization-options')) {
           this.toggleAccordions();
         }
         this.setCustomizationOption();
+        this.optionSelectListener();
         this.setDefaultOptionsListener();
         this.handleQuantity();
         this.handlePopupHelper();
@@ -63,6 +64,18 @@ if (!customElements.get('product-customization-options')) {
             openButton.getAttribute('aria-expanded') === 'false' ? (accordionBody.style.height = `0px`) : (accordionBody.style.height = `${height}px`);
           });
         });
+      }
+
+      optionSelectListener() {
+        const selects = this.querySelectorAll('[data-select-option]');
+        if (selects.length === 0) return;
+        selects.forEach((select) =>
+          select.addEventListener('change', () => {
+            const option = select.selectedOptions[0]?.dataset.selectVariantTitle;
+            select.dataset.selectOption = option;
+            this.updatePrice();
+          })
+        );
       }
 
       closeAccordion(parent) {
@@ -293,7 +306,7 @@ if (!customElements.get('product-customization-options')) {
       updatePrice() {
         let priceAdjustment = 0;
         let price = 0;
-        const activeOptions = this.querySelectorAll('[data-customization-option]:checked');
+        const activeOptions = this.querySelectorAll('[data-customization-option]:checked, [data-select-option]');
         if (activeOptions.length === 0) return;
         activeOptions.forEach((option) => {
           const value = option.value;
@@ -402,7 +415,7 @@ if (!customElements.get('product-customization-options')) {
 
       openModifyHandler() {
         setTimeout(() => {
-          const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`) || this.cartDrawer.querySelector(`[data-key-modify="${this.modifyID}"]`);
+          const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`) || this.cartDrawer?.querySelector(`[data-key-modify="${this.modifyID}"]`);
           if (!modifyButton) return;
           modifyButton.addEventListener('click', () => {
             this.classList.add('modify-opened');
@@ -449,9 +462,11 @@ if (!customElements.get('product-customization-options')) {
         const changeUrl = `${window.Shopify.routes.root}cart/change.js`;
         const addUrl = `${window.Shopify.routes.root}cart/add.js`;
         if (!this.checkMandatoryFields()) return alert('Please select your options before adding this item to cart');
-        let sections = this.cartDrawer.getSectionsToRender().map((section) => section.id);
+        let sections = '';
         if (window.location.href.includes('/cart')) {
           sections = this.getSectionsToRender().map((section) => section.section);
+        } else {
+          sections = this.cartDrawer.getSectionsToRender().map((section) => section.id);
         }
 
         const productProperties = {
@@ -505,6 +520,8 @@ if (!customElements.get('product-customization-options')) {
             if (window.location.href.includes('/cart')) {
               this.getSectionsToRender().forEach((section) => {
                 const elementToReplace = document.querySelector(section.selector) || document.getElementById(section.id);
+                console.log(elementToReplace);
+
                 elementToReplace.innerHTML = this.getSectionInnerHTML(updateResult.sections[section.section], section.selector);
               });
             } else {
@@ -553,17 +570,27 @@ if (!customElements.get('product-customization-options')) {
             const formatedValue = [...value].map((item) => item.dataset.fieldName).join(', ');
             lineItemProperties[key] = formatedValue;
           }
-          const selectedColor = this.querySelector('.custom-color-group .option_selected [data-color-selected-title]');
-          if (selectedColor) {
-            const colorGroup = selectedColor.closest('[data-group-color-name]');
-            const selectedColorValue = selectedColor.innerText;
-            const selectedColorPrice = this.querySelector('.custom-color-group .option_selected-price');
-            lineItemProperties[colorGroup.dataset.colorNameTitle] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
-            if (selectedColorPrice.innerText != '') {
-              lineItemProperties[colorGroup.dataset.colorNameTitle] += ` [+${selectedColorPrice.innerText}]`;
-            }
-          }
         });
+
+        const selectedColor = this.querySelector('.custom-color-group .option_selected [data-color-selected-title]');
+        if (selectedColor) {
+          const colorGroup = selectedColor.closest('[data-group-color-name]');
+          const selectedColorValue = selectedColor.innerText;
+          const selectedColorPrice = this.querySelector('.custom-color-group .option_selected-price');
+          lineItemProperties[colorGroup.dataset.colorNameTitle] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
+          if (selectedColorPrice.innerText != '') {
+            lineItemProperties[colorGroup.dataset.colorNameTitle] += ` [+${selectedColorPrice.innerText}]`;
+          }
+        }
+
+        const selectOptions = this.querySelectorAll('[data-select-option]');
+        if (selectOptions.length > 0) {
+          selectOptions.forEach((select) => {
+            const selectOptionTitle = select.dataset.selectTitle;
+            const option = select.selectedOptions[0]?.dataset.selectVariantTitle;
+            lineItemProperties[selectOptionTitle] = option;
+          });
+        }
 
         return lineItemProperties;
       }
@@ -613,6 +640,22 @@ if (!customElements.get('product-customization-options')) {
           productOptions.push(productColorOption);
         }
 
+        const selectOptions = this.querySelectorAll('[data-select-option]');
+        if (selectOptions.length > 0) {
+          selectOptions.forEach((select) => {
+            const variantID = select.value.includes(':::') ? `gid://shopify/ProductVariant/${select.value.split(':::')[0].trim()}` : `gid://shopify/ProductVariant/${select.value.trim()}`;
+            const variantPrice = select.value.includes(':::') ? Number(select.value.split(':::')[1].trim()) : 0;
+            const productOption = {
+              variantId: variantID,
+              priceAdjustment: variantPrice,
+              quantity: 1,
+              groupHandle: select.name,
+              defaultValues: variantID.split('ProductVariant/')[1],
+            };
+            productOptions.push(productOption);
+          });
+        }
+
         return productOptions;
       }
 
@@ -626,14 +669,9 @@ if (!customElements.get('product-customization-options')) {
             selector: '.section-cart-items',
           },
           {
-            id: 'cart-live-region-text',
-            section: 'cart-live-region-text',
-            selector: '.shopify-section',
-          },
-          {
             id: 'main-cart-footer',
             section: document.getElementById('main-cart-footer').dataset.id,
-            selector: '.js-contents',
+            selector: '.footer-subtotal-value',
           },
         ];
       }
@@ -641,6 +679,8 @@ if (!customElements.get('product-customization-options')) {
       // Helper to parse HTML after server response
 
       getSectionInnerHTML(html, selector) {
+        console.log(new DOMParser().parseFromString(html, 'text/html').querySelector(selector));
+
         return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
       }
 
