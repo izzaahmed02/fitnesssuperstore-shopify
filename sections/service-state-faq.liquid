@@ -1,9 +1,8 @@
 {% comment %}
-Service State FAQs Accordion Section
+Service State FAQs Section
 Fetches FAQ data from page metafield: custom.service_state_faqs
 Metaobject: service_state_faqs
 Fields: faq_question, faq_answers
-Accordion: Only one open at a time
 {% endcomment %}
 
 <section class="state-faqs section section-{{ section.id }}">
@@ -14,6 +13,7 @@ Accordion: Only one open at a time
 
     {% assign faqs_metafield = page.metafields.custom.service_state_faqs %}
     {% assign faqs_list = '' %}
+    
     {% if faqs_metafield != blank %}
       {% if faqs_metafield.type == 'list.reference' %}
         {% assign faqs_list = faqs_metafield.references %}
@@ -23,16 +23,11 @@ Accordion: Only one open at a time
     {% endif %}
 
     {% if faqs_list != blank and faqs_list.size > 0 %}
-      <div class="state-faqs__accordion" id="accordion-{{ section.id }}">
+      <div class="state-faqs__list">
         {% for faq in faqs_list %}
           <div class="state-faqs__item">
-            <button class="state-faqs__question" type="button" aria-expanded="false">
-              {{ faq.faq_question }}
-              <span class="state-faqs__icon">+</span>
-            </button>
-            <div class="state-faqs__answer">
-              {{ faq.faq_answers }}
-            </div>
+            <h3 class="state-faqs__question">{{ faq.faq_question }}</h3>
+            <div class="state-faqs__answer">{{ faq.faq_answers }}</div>
           </div>
         {% endfor %}
       </div>
@@ -43,60 +38,17 @@ Accordion: Only one open at a time
 </section>
 
 <style>
-.state-faqs__accordion {
-  border-top: 1px solid #ddd;
-}
 .state-faqs__item {
-  border-bottom: 1px solid #ddd;
+  margin-bottom: 1.5rem;
 }
 .state-faqs__question {
-  width: 100%;
-  text-align: left;
-  padding: 1rem;
   font-weight: bold;
-  background: none;
-  border: none;
-  cursor: pointer;
-  position: relative;
-}
-.state-faqs__icon {
-  position: absolute;
-  right: 1rem;
-  font-weight: bold;
-  transition: transform 0.3s;
-}
-.state-faqs__question[aria-expanded="true"] .state-faqs__icon {
-  transform: rotate(45deg);
+  margin-bottom: 0.5rem;
 }
 .state-faqs__answer {
-  display: none;
-  padding: 0 1rem 1rem;
-}
-.state-faqs__answer.open {
-  display: block;
+  line-height: 1.5;
 }
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const accordions = document.querySelectorAll('#accordion-{{ section.id }} .state-faqs__question');
-  accordions.forEach(button => {
-    button.addEventListener('click', function () {
-      // Close all
-      accordions.forEach(btn => {
-        btn.setAttribute('aria-expanded', 'false');
-        btn.nextElementSibling.classList.remove('open');
-      });
-      // Open clicked one
-      const expanded = this.getAttribute('aria-expanded') === 'true';
-      if (!expanded) {
-        this.setAttribute('aria-expanded', 'true');
-        this.nextElementSibling.classList.add('open');
-      }
-    });
-  });
-});
-</script>
 
 {% schema %}
 {
