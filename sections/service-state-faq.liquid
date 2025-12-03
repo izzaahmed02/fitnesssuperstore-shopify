@@ -6,33 +6,80 @@
 
     {% assign faqs_list = page.metafields.custom.service_state_faqs.value %}
 
-    {% if faqs_list != blank %}
-      {% for faq in faqs_list %}
-        <div class="state-faqs__item">
-          <h3 class="state-faqs__question">{{ faq.faq_question }}</h3>
-          <div class="state-faqs__answer">{{ faq.faq_answers }}</div>
-        </div>
-      {% endfor %}
+    {% if faqs_list and faqs_list.size > 0 %}
+      <div class="state-faqs__accordion-container">
+        {% for faq in faqs_list %}
+          <div class="state-faqs__item">
+            <button type="button" class="state-faqs__question" aria-expanded="false">
+              {{ faq.faq_question }}
+              <span class="state-faqs__icon">+</span>
+            </button>
+            <div class="state-faqs__answer">
+              {{ faq.faq_answers }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
     {% else %}
       <p>No FAQs have been added for this page yet.</p>
     {% endif %}
   </div>
 </section>
-
-
 <style>
 .state-faqs__item {
-  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 0;
 }
 .state-faqs__question {
+  width: 100%;
+  text-align: left;
+  padding: 1rem;
   font-weight: bold;
-  margin-bottom: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+}
+.state-faqs__icon {
+  position: absolute;
+  right: 1rem;
+  transition: transform 0.3s;
+}
+.state-faqs__question[aria-expanded="true"] .state-faqs__icon {
+  transform: rotate(45deg);
 }
 .state-faqs__answer {
-  line-height: 1.5;
+  display: none;
+  padding: 0 1rem 1rem;
+}
+.state-faqs__answer.open {
+  display: block;
 }
 </style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.querySelector('.state-faqs__accordion-container');
+  if (!container) return;
 
+  const items = container.querySelectorAll('.state-faqs__item');
+
+  items.forEach(item => {
+    const btn = item.querySelector('.state-faqs__question');
+    const answer = item.querySelector('.state-faqs__answer');
+
+    btn.addEventListener('click', () => {
+      // Close all other items
+      items.forEach(i => {
+        i.querySelector('.state-faqs__question').setAttribute('aria-expanded', 'false');
+        i.querySelector('.state-faqs__answer').classList.remove('open');
+      });
+      // Open clicked one
+      btn.setAttribute('aria-expanded', 'true');
+      answer.classList.add('open');
+    });
+  });
+});
+</script>
 {% schema %}
 {
   "name": "Service State FAQs",
