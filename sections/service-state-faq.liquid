@@ -1,19 +1,38 @@
-{% comment %}
-State FAQs Section
-Fetches FAQ data from page metafield: custom.service_state_faqs
-Metaobject: service_state_faqs
-Fields: faq_question, faq_answers
-{% endcomment %}
-
 <section class="state-faqs section section-{{ section.id }}">
   <div class="page-width">
-    <h2>FAQs Debug Output</h2>
-    <pre>
-Metafield JSON: {{ page.metafields.custom.service_state_faqs | json }}
-    </pre>
+    {% if section.settings.heading != blank %}
+      <h2 class="state-faqs__heading">{{ section.settings.heading }}</h2>
+    {% endif %}
+
+    {% assign faqs_metafield = page.metafields.custom.service_state_faqs %}
+
+    {% if faqs_metafield != blank and faqs_metafield.references.size > 0 %}
+      <div class="state-faqs__list">
+        {% for faq in faqs_metafield.references %}
+          <div class="state-faqs__item">
+            <h3 class="state-faqs__question">{{ faq.faq_question }}</h3>
+            <div class="state-faqs__answer">{{ faq.faq_answers }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No FAQs have been added for this page yet.</p>
+    {% endif %}
   </div>
 </section>
 
+<style>
+.state-faqs__item {
+  margin-bottom: 1.5rem;
+}
+.state-faqs__question {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.state-faqs__answer {
+  line-height: 1.5;
+}
+</style>
 
 {% schema %}
 {
