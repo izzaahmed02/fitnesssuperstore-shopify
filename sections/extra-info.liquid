@@ -509,6 +509,37 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="product__extra_overview-list">{{ block.settings.overview }}</div>
               </div>
             {% endif %}
+          
+          {% when 'video' %}
+            {% assign video_url = "" %}
+            {% assign thumbnail_url = "" %}
+
+            {% if product.tags contains "French Fitness Tahoe Series" %}
+              {% assign video_url = "https://cdn.shopify.com/videos/c/o/v/f4336fd96df04be784bcad584e5d175d.mp4" %}
+              {% assign thumbnail_url = "https://cdn.shopify.com/s/files/1/0884/2012/2940/files/1_-_FRENCH_FITNESS___Product_Video_1_-_Tahoe_Line_-_Thumbnail_GRAPHICS__v1.jpg?v=1752527621" %}
+            {% elsif product.tags contains "French Fitness Shasta Series" %}
+              {% assign video_url = "https://cdn.shopify.com/videos/c/o/v/db426ede7d514d26a3d5d8697aa2d82b.mp4" %}
+              {% assign thumbnail_url = "https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Product_Video_2_-_French_Shasta_GRAPHICS__v1.jpg?v=1752527119" %}
+            {% elsif product.tags contains "French Fitness Rack & Rig Systems" %}
+              {% assign video_url = "https://cdn.shopify.com/videos/c/o/v/e9cf0ee9cab54e5987bcd959d2d752db.mp4" %}
+              {% assign thumbnail_url = "https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Product_Video_4_-_Rack_and_Rigs_THUMBNAIL__v3_1.png?v=1753666359" %}
+            {% elsif product.tags contains "French Fitness Marin Series" %}
+              {% assign video_url = "https://cdn.shopify.com/videos/c/o/v/d0a0e14af13847d7a1695b49f446df88.mp4" %}
+              {% assign thumbnail_url = "https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Product_Video_5_-_Marin_Line_THUMBNAIL__v1.png?v=1753043349" %}
+            {% elsif product.tags contains "French Fitness FFB Black Series" %}
+              {% assign video_url = "https://cdn.shopify.com/videos/c/o/v/81bf845187874aa08b551220f173b2c8.mp4" %}
+              {% assign thumbnail_url = "https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Product_Video_3_-_French_FFB_Black_THUMBNAIL__v1.jpg?v=1753044959" %}
+            {% endif %}
+            {% if video_url != blank %}
+              <div class="product-video-section extra-info-width">
+                {% if block.settings.heading != blank %}
+                  <h4 class="product__extra_info-title">{{ block.settings.heading }}</h4>
+                {% endif %}
+                <video width="100%" controls poster="{{ thumbnail_url }}">
+                  <source src="{{ video_url }}" type="video/mp4">
+                </video>
+              </div>
+            {% endif %}
     
           {% when 'features' %}
             {% if block.settings.features != blank %}
@@ -960,6 +991,17 @@ document.addEventListener("DOMContentLoaded", function() {
           "id": "tile_type_suffix",
           "label": "t:sections.main-product.blocks.tile_calculator.tile_type_suffix.label",
           "default": "Mats"
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "name": "Dynamic Video as Tag",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Title"
         }
       ]
     },
