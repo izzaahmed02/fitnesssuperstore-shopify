@@ -67,18 +67,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const answer = item.querySelector('.state-faqs__answer');
 
     btn.addEventListener('click', () => {
+      const isOpen = btn.getAttribute('aria-expanded') === 'true';
+
       // Close all items
       items.forEach(i => {
         i.querySelector('.state-faqs__question').setAttribute('aria-expanded', 'false');
         i.querySelector('.state-faqs__answer').classList.remove('open');
       });
-      // Open clicked item
-      btn.setAttribute('aria-expanded', 'true');
-      answer.classList.add('open');
+
+      // Toggle clicked item
+      if (!isOpen) {
+        btn.setAttribute('aria-expanded', 'true');
+        answer.classList.add('open');
+      }
+      // If it was already open, do nothing (it remains closed)
     });
   });
 });
 </script>
+
 
 {% schema %}
 {
