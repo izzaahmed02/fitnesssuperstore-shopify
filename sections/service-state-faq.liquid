@@ -1,6 +1,6 @@
 {% comment %}
 State FAQs Section
-Fetches FAQ data from metafield: custom.service_state_faqs
+Fetches FAQ data from page metafield: custom.service_state_faqs
 Metaobject: service_state_faqs
 Fields: faq_question, faq_answers
 {% endcomment %}
@@ -12,20 +12,27 @@ Fields: faq_question, faq_answers
     {% endif %}
 
     {% assign faqs_metafield = page.metafields.custom.service_state_faqs %}
-    
-    {% if faqs_metafield != blank and faqs_metafield.references.size > 0 %}
+
+    {% assign faqs_list = '' %}
+    {% if faqs_metafield != blank %}
+      {% if faqs_metafield.type == 'list.reference' %}
+        {% assign faqs_list = faqs_metafield.references %}
+      {% elsif faqs_metafield.type == 'single_reference' %}
+        {% assign faqs_list = faqs_metafield.reference | slice: 0,1 %}
+      {% endif %}
+    {% endif %}
+
+    {% if faqs_list != blank and faqs_list.size > 0 %}
       <div class="state-faqs__list">
-        {% for faq in faqs_metafield.references %}
+        {% for faq in faqs_list %}
           <div class="state-faqs__item">
             <h3 class="state-faqs__question">{{ faq.faq_question }}</h3>
-            <div class="state-faqs__answer">
-              {{ faq.faq_answers }}
-            </div>
+            <div class="state-faqs__answer">{{ faq.faq_answers }}</div>
           </div>
         {% endfor %}
       </div>
     {% else %}
-      <p>No FAQs available at this time.</p>
+      <p>No FAQs have been added for this page yet.</p>
     {% endif %}
   </div>
 </section>
