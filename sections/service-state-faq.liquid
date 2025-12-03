@@ -1,11 +1,3 @@
-{% comment %}
-Service State FAQs Accordion Section
-Fetches FAQ data from page metafield: custom.service_state_faqs
-Metaobject: service_state_faqs
-Fields: faq_question, faq_answers
-Accordion: Only one open at a time
-{% endcomment %}
-
 <section class="state-faqs section section-{{ section.id }}">
   <div class="page-width">
     {% if section.settings.heading != blank %}
@@ -71,15 +63,19 @@ Accordion: Only one open at a time
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const accordions = document.querySelectorAll('#accordion-{{ section.id }} .state-faqs__question');
-  accordions.forEach(button => {
-    button.addEventListener('click', function () {
-      // Close all other FAQs
-      accordions.forEach(btn => {
-        btn.setAttribute('aria-expanded', 'false');
-        btn.nextElementSibling.classList.remove('open');
+  const accordionId = 'accordion-{{ section.id }}';
+  const container = document.getElementById(accordionId);
+  if (!container) return;
+
+  const buttons = container.querySelectorAll('.state-faqs__question');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', function () {
+      // Close all
+      buttons.forEach(b => {
+        b.setAttribute('aria-expanded', 'false');
+        b.nextElementSibling.classList.remove('open');
       });
-      // Open clicked FAQ
+      // Open clicked
       const expanded = this.getAttribute('aria-expanded') === 'true';
       if (!expanded) {
         this.setAttribute('aria-expanded', 'true');
