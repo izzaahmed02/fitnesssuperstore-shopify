@@ -17,6 +17,10 @@
   if product_option.option_type != blank
     assign option_type = product_option.option_type
   endif
+  assign option_visible = true
+  if product_option.hide_values
+    assign option_visible = false
+  endif
 %}
 
 {% if option_type == 'Accordion' %}
@@ -30,6 +34,9 @@
     {% if product_option.enable_multichoice %}
       multichoice
     {% endif %}
+    {% unless option_visible %}
+      style="display: none !important;"
+    {% endunless %}
   >
     {% assign current_time = 'now' | date: '%s%N' %}
     {% assign random_suffix = current_time | times: forloop_index | plus: forloop_index0 %}
@@ -125,7 +132,15 @@
     </div>
   </div>
 {% else %}
-  <select name="{{ product_option.product_option_title | handleize }}" class="product-options__select" data-select-option data-select-title="{{ product_option.product_option_title }}">
+  <select
+    name="{{ product_option.product_option_title | handleize }}"
+    class="product-options__select"
+    data-select-option
+    data-select-title="{{ product_option.product_option_title }}"
+    {% unless option_visible %}
+      style="display: none !important;"
+    {% endunless %}
+  >
     {% for variant in product_option.product_option_variants.value %}
       {% liquid
         assign is_default_variant = variant.product.has_only_default_variant
