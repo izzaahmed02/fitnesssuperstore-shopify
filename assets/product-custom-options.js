@@ -222,7 +222,11 @@ if (!customElements.get('product-customization-options')) {
       placeholderHTML(option) {
         return `<p data-option-id="${option.dataset.customizationOption}">
         <span class="product-options__accordion-label-title" data-option-title>${option.dataset.fieldName}</span>
-        ${option.hasAttribute('data-field-price') ? `<span class="product-options__accordion-label-price" data-option-price>${option.dataset.fieldPrice}</span>` : ''}
+        ${
+          option.hasAttribute('data-field-price')
+            ? `<span class="product-options__accordion-label-price ${option.dataset.fieldPrice.includes('-') ? 'reduction' : ''}" data-option-price>${option.dataset.fieldPrice}</span>`
+            : ''
+        }
 
         <svg class="close-option" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M3.57808 3.57417C3.81239 3.33986 4.19229 3.33986 4.42661 3.57417L8.00234 7.14991L11.5781 3.57417C11.8124 3.33986 12.1923 3.33986 12.4266 3.57417C12.6609 3.80849 12.6609 4.18839 12.4266 4.4227L8.85087 7.99844L12.4266 11.5742C12.6609 11.8085 12.6609 12.1884 12.4266 12.4227C12.1923 12.657 11.8124 12.657 11.5781 12.4227L8.00234 8.84697L4.42661 12.4227C4.19229 12.657 3.81239 12.657 3.57808 12.4227C3.34377 12.1884 3.34377 11.8085 3.57808 11.5742L7.15382 7.99844L3.57808 4.4227C3.34377 4.18839 3.34377 3.80849 3.57808 3.57417Z" fill="black"/>
@@ -266,11 +270,27 @@ if (!customElements.get('product-customization-options')) {
           event.preventDefault();
           const inputValue = Number(input.value);
           const maxInputValue = Number(input.max);
+
           if (inputValue - 1 === 0 && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
           const optionContainer = el.closest('[data-option-accordion]').querySelector('[data-customization-option]');
           if (!optionContainer) return;
+          const priceContainer = el.closest('[data-option-accordion]').querySelector('[avis-price]');
+          if (priceContainer) {
+            const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
+            const formattedPrice = price.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            });
+            priceContainer.innerHTML = `$${formattedPrice}`;
+            setTimeout(() => {
+              const selectedOptionPrice = el.closest('[data-option-accordion]').querySelector('[data-option-price]');
+              if (selectedOptionPrice) {
+                selectedOptionPrice.innerHTML = `$${formattedPrice}`;
+              }
+            });
+          }
           optionContainer.checked = true;
           optionContainer.dispatchEvent(new Event('input', { bubbles: true }));
         });
@@ -679,8 +699,6 @@ if (!customElements.get('product-customization-options')) {
       // Helper to parse HTML after server response
 
       getSectionInnerHTML(html, selector) {
-        console.log(new DOMParser().parseFromString(html, 'text/html').querySelector(selector));
-
         return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
       }
 
