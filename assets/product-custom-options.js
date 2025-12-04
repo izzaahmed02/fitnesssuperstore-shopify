@@ -699,6 +699,8 @@ if (!customElements.get('product-customization-options')) {
       // Helper to parse HTML after server response
 
       getSectionInnerHTML(html, selector) {
+        console.log(new DOMParser().parseFromString(html, 'text/html').querySelector(selector));
+
         return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
       }
 
