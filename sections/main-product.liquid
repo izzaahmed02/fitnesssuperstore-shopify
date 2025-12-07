@@ -3618,63 +3618,35 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Variant picker debug: started');
 
-  const variantSelects = document.querySelectorAll('variant-selects');
+  // Try to select using the ID
+  const variantSelects = document.querySelectorAll('[id^="variant-selects-"]');
+
+  console.log('Variant selects found:', variantSelects.length);
 
   if (!variantSelects.length) {
-    console.warn('No variant-selects found!');
+    console.warn('No variant-selects found. Check your template rendering!');
     return;
   }
 
   variantSelects.forEach(variantSelect => {
     console.log('Found variantSelect:', variantSelect);
 
+    // Look for all option fieldsets inside
     const optionFieldsets = variantSelect.querySelectorAll('fieldset.product-form__input');
     console.log('Option fieldsets found:', optionFieldsets.length);
 
     optionFieldsets.forEach((fieldset, fsIndex) => {
+      console.log(`Fieldset ${fsIndex} inner HTML:`, fieldset.innerHTML);
+
       const radios = fieldset.querySelectorAll('input[type="radio"]');
       console.log(`Fieldset ${fsIndex} radios:`, radios.length);
 
       radios.forEach((radio, rIndex) => {
         radio.addEventListener('change', () => {
           console.log(`Radio changed: ${radio.value}`);
-
-          // Hide all other option sets except this one
-          optionFieldsets.forEach((fs, idx) => {
-            if (fs !== fieldset) {
-              fs.style.display = 'none';
-            } else {
-              fs.style.display = 'block';
-            }
-          });
-
-          // Try to auto-select the first available option
-          const firstOption = fieldset.querySelector('input[type="radio"]:not(.disabled), select option:not([disabled])');
-          if (firstOption) {
-            console.log('Auto-selecting first option:', firstOption.value || firstOption.text);
-
-            if (firstOption.tagName.toLowerCase() === 'option') {
-              firstOption.selected = true;
-              firstOption.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
-            } else {
-              firstOption.checked = true;
-              firstOption.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-          } else {
-            console.warn('No available first option found in this fieldset');
-          }
         });
       });
     });
-
-    // Trigger change on initially checked radio
-    const checkedRadio = variantSelect.querySelector('fieldset.product-form__input input[type="radio"]:checked');
-    if (checkedRadio) {
-      console.log('Triggering change on initially checked radio:', checkedRadio.value);
-      checkedRadio.dispatchEvent(new Event('change', { bubbles: true }));
-    } else {
-      console.warn('No initially checked radio found');
-    }
   });
 });
 
