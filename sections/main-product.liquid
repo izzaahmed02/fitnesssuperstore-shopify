@@ -3621,21 +3621,22 @@ document.addEventListener('DOMContentLoaded', () => {
   variantSelects.forEach(variantSelect => {
     // Listen to Dawn's custom variant option change
     variantSelect.addEventListener('variant:option-change', () => {
-      // Find the first input or select that is visible and not disabled
+      // Find the first visible and available input or select option
       const firstOption = variantSelect.querySelector(
-        'input[type="radio"]:not(:disabled):not([style*="display: none"]), select option:not([disabled]):not([hidden])'
+        'input[type="radio"]:not(.disabled):not([style*="display: none"]), select option:not([disabled]):not([hidden])'
       );
 
       if (!firstOption) return;
 
       if (firstOption.tagName.toLowerCase() === 'option') {
+        // For dropdowns, trigger a change
         firstOption.selected = true;
         firstOption.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
-        console.log('Auto-selected dropdown option:', firstOption.value || firstOption.text);
+        console.log('Clicked first available dropdown option:', firstOption.value || firstOption.text);
       } else {
-        firstOption.checked = true;
-        firstOption.dispatchEvent(new Event('change', { bubbles: true }));
-        console.log('Auto-selected radio option:', firstOption.value);
+        // For radios/swatches, simulate a click
+        firstOption.click();
+        console.log('Clicked first available radio/swab option:', firstOption.value);
       }
     });
 
