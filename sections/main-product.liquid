@@ -3616,53 +3616,50 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Variant picker debug: started');
+  console.log('Dawn Variant Auto-Select Debug Started');
 
-  // Select all variant-select containers
-  const variantSelects = document.querySelectorAll('[id^="variant-selects-"]');
-  console.log('Variant selects found:', variantSelects.length);
-
-  if (!variantSelects.length) {
-    console.warn('No variant-selects found. Check your template rendering!');
-    return;
-  }
+  const variantSelects = document.querySelectorAll('variant-selects');
 
   variantSelects.forEach(variantSelect => {
-    console.log('Found variantSelect:', variantSelect);
 
-    // Use event delegation: listen for any change on radios inside variantSelect
-    variantSelect.addEventListener('change', (event) => {
-      const target = event.target;
-      if (target.matches('input[type="radio"]')) {
-        console.log(`Radio changed: ${target.value}`);
+    // Listen for Dawn's built-in variant change event
+    variantSelect.addEventListener('variant:change', (event) => {
+      const selectedVariant = event?.detail?.variant;
+      console.log('Variant changed:', selectedVariant?.id);
 
-        // Find the parent fieldset of this radio
-        const fieldset = target.closest('fieldset.product-form__input');
-        if (!fieldset) return;
+      // Show/hide option fieldsets based on selected variant
+      const fieldsets = variantSelect.querySelectorAll('fieldset.product-form__input');
+      fieldsets.forEach(fs => {
+        const optionName = fs.querySelector('input, select')?.name;
+        // Show this fieldset if its option is part of selected variant
+        if (optionName && selectedVariant.options.includes(fs.querySelector('input, select').value)) {
+          fs.style.display = 'block';
 
-        // Hide all other fieldsets
-        variantSelect.querySelectorAll('fieldset.product-form__input').forEach(fs => {
-          fs.style.display = fs === fieldset ? 'block' : 'none';
-        });
-
-        // Auto-select the first available radio in this fieldset
-        const firstOption = fieldset.querySelector('input[type="radio"]:not(.disabled)');
-        if (firstOption && firstOption !== target) {
-          firstOption.checked = true;
-          firstOption.dispatchEvent(new Event('change', { bubbles: true }));
-          console.log('Auto-selected first option:', firstOption.value);
+          // Auto-select first available input or option
+          const firstInput = fs.querySelector('input:not(.disabled), select option:not([disabled])');
+          if (firstInput) {
+            if (firstInput.tagName.toLowerCase() === 'option') {
+              firstInput.selected = true;
+              firstInput.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+              firstInput.checked = true;
+              firstInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            console.log('Auto-selected first option:', firstInput.value || firstInput.text);
+          }
+        } else {
+          fs.style.display = 'none';
         }
-      }
+      });
     });
 
-    // Trigger change for initially checked radio on page load
-    const checkedRadio = variantSelect.querySelector('input[type="radio"]:checked');
-    if (checkedRadio) {
-      checkedRadio.dispatchEvent(new Event('change', { bubbles: true }));
-    }
+    // Trigger once on page load
+    const initEvent = new CustomEvent('variant:change', {
+      detail: { variant: JSON.parse(variantSelect.querySelector('[data-selected-variant]').textContent) }
+    });
+    variantSelect.dispatchEvent(initEvent);
   });
 });
-
 
 </script>
 
