@@ -3616,37 +3616,53 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Variant picker debug: started');
+  console.log('Variant picker auto-select debug started');
 
-  // Try to select using the ID
   const variantSelects = document.querySelectorAll('[id^="variant-selects-"]');
-
-  console.log('Variant selects found:', variantSelects.length);
-
-  if (!variantSelects.length) {
-    console.warn('No variant-selects found. Check your template rendering!');
-    return;
-  }
+  if (!variantSelects.length) return;
 
   variantSelects.forEach(variantSelect => {
-    console.log('Found variantSelect:', variantSelect);
-
-    // Look for all option fieldsets inside
     const optionFieldsets = variantSelect.querySelectorAll('fieldset.product-form__input');
-    console.log('Option fieldsets found:', optionFieldsets.length);
 
-    optionFieldsets.forEach((fieldset, fsIndex) => {
-      console.log(`Fieldset ${fsIndex} inner HTML:`, fieldset.innerHTML);
+    function showAndSelectFieldset(selectedFieldset) {
+      optionFieldsets.forEach(fs => {
+        fs.style.display = fs === selectedFieldset ? 'block' : 'none';
+      });
 
+      // Auto-select the first available option in the visible fieldset
+      const firstOption = selectedFieldset.querySelector(
+        'input[type="radio"]:not(.disabled), select option:not([disabled])'
+      );
+
+      if (firstOption) {
+        if (firstOption.tagName.toLowerCase() === 'option') {
+          firstOption.selected = true;
+          firstOption.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
+          console.log('Auto-selected dropdown option:', firstOption.value || firstOption.text);
+        } else {
+          firstOption.checked = true;
+          firstOption.dispatchEvent(new Event('change', { bubbles: true }));
+          console.log('Auto-selected radio/swab option:', firstOption.value);
+        }
+      }
+    }
+
+    // Attach listeners to all radios in all fieldsets
+    optionFieldsets.forEach(fieldset => {
       const radios = fieldset.querySelectorAll('input[type="radio"]');
-      console.log(`Fieldset ${fsIndex} radios:`, radios.length);
-
-      radios.forEach((radio, rIndex) => {
+      radios.forEach(radio => {
         radio.addEventListener('change', () => {
-          console.log(`Radio changed: ${radio.value}`);
+          console.log('Radio changed:', radio.value);
+          showAndSelectFieldset(fieldset);
         });
       });
     });
+
+    // Trigger auto-select for initially checked radio
+    const checkedRadio = variantSelect.querySelector('fieldset.product-form__input input[type="radio"]:checked');
+    if (checkedRadio) {
+      showAndSelectFieldset(checkedRadio.closest('fieldset'));
+    }
   });
 });
 
