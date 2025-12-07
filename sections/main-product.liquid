@@ -3616,50 +3616,46 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Dawn Variant Auto-Select Debug Started');
-
   const variantSelects = document.querySelectorAll('variant-selects');
 
   variantSelects.forEach(variantSelect => {
 
-    // Listen for Dawn's built-in variant change event
-    variantSelect.addEventListener('variant:change', (event) => {
-      const selectedVariant = event?.detail?.variant;
-      console.log('Variant changed:', selectedVariant?.id);
-
-      // Show/hide option fieldsets based on selected variant
+    // Listen to Dawn's built-in option change event
+    variantSelect.addEventListener('variant:option-change', (event) => {
+      const changedOptionName = event.detail.option;
       const fieldsets = variantSelect.querySelectorAll('fieldset.product-form__input');
-      fieldsets.forEach(fs => {
-        const optionName = fs.querySelector('input, select')?.name;
-        // Show this fieldset if its option is part of selected variant
-        if (optionName && selectedVariant.options.includes(fs.querySelector('input, select').value)) {
-          fs.style.display = 'block';
 
-          // Auto-select first available input or option
-          const firstInput = fs.querySelector('input:not(.disabled), select option:not([disabled])');
-          if (firstInput) {
-            if (firstInput.tagName.toLowerCase() === 'option') {
-              firstInput.selected = true;
-              firstInput.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
+      // Find the fieldset corresponding to the changed option
+      fieldsets.forEach(fs => {
+        const input = fs.querySelector('input, select');
+        if (input && input.name === changedOptionName) {
+
+          // Auto-select the first available option inside this fieldset
+          const firstOption = fs.querySelector('input:not(.disabled), select option:not([disabled])');
+          if (firstOption) {
+            if (firstOption.tagName.toLowerCase() === 'option') {
+              firstOption.selected = true;
+              firstOption.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
             } else {
-              firstInput.checked = true;
-              firstInput.dispatchEvent(new Event('change', { bubbles: true }));
+              firstOption.checked = true;
+              firstOption.dispatchEvent(new Event('change', { bubbles: true }));
             }
-            console.log('Auto-selected first option:', firstInput.value || firstInput.text);
           }
-        } else {
-          fs.style.display = 'none';
         }
       });
     });
 
-    // Trigger once on page load
-    const initEvent = new CustomEvent('variant:change', {
-      detail: { variant: JSON.parse(variantSelect.querySelector('[data-selected-variant]').textContent) }
-    });
-    variantSelect.dispatchEvent(initEvent);
+    // Trigger on page load with currently selected variant
+    const selectedVariantData = variantSelect.querySelector('[data-selected-variant]');
+    if (selectedVariantData) {
+      const event = new CustomEvent('variant:option-change', {
+        detail: { option: Object.keys(JSON.parse(selectedVariantData.textContent).options)[0] }
+      });
+      variantSelect.dispatchEvent(event);
+    }
   });
 });
+
 
 </script>
 
