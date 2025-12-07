@@ -3616,46 +3616,31 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Get all variant-selects components
-  const variantSelectsList = document.querySelectorAll('variant-selects');
+  const variantSelects = document.querySelectorAll('variant-selects');
 
-  variantSelectsList.forEach((variantSelect) => {
-    // Get the ProductForm instance tied to this variant-select
-    const productFormEl = variantSelect.closest('form');
-    if (!productFormEl || !window.Shopify?.ProductForm) return;
+  variantSelects.forEach(variantSelect => {
+    // Listen to Dawn's custom variant option change
+    variantSelect.addEventListener('variant:option-change', () => {
+      // Find the first input or select that is visible and not disabled
+      const firstOption = variantSelect.querySelector(
+        'input[type="radio"]:not(:disabled):not([style*="display: none"]), select option:not([disabled]):not([hidden])'
+      );
 
-    const productForm = productFormEl.__shopify_product_form;
-    if (!productForm) return;
+      if (!firstOption) return;
 
-    // Listen for Dawn's variant:option-change event
-    variantSelect.addEventListener('variant:option-change', (event) => {
-      const changedOption = event.detail.option;
-      const currentVariant = productForm.currentVariant;
-
-      // Loop through all options for this variant
-      productForm.options.forEach((optionName) => {
-        // Skip the option that was just changed
-        if (optionName === changedOption) return;
-
-        // Get available values for this option
-        const values = productForm.variantData.map(v => v.options[productForm.options.indexOf(optionName)]);
-        const firstAvailable = values.find((v, idx) => productForm.variantData[idx].available);
-
-        if (firstAvailable) {
-          // Programmatically set the first available value
-          productForm.updateOptions({ [optionName]: firstAvailable });
-        }
-      });
+      if (firstOption.tagName.toLowerCase() === 'option') {
+        firstOption.selected = true;
+        firstOption.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log('Auto-selected dropdown option:', firstOption.value || firstOption.text);
+      } else {
+        firstOption.checked = true;
+        firstOption.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log('Auto-selected radio option:', firstOption.value);
+      }
     });
 
-    // Trigger initial auto-selection on page load
-    const selectedVariantData = variantSelect.querySelector('[data-selected-variant]');
-    if (selectedVariantData) {
-      const event = new CustomEvent('variant:option-change', {
-        detail: { option: Object.keys(JSON.parse(selectedVariantData.textContent).options)[0] }
-      });
-      variantSelect.dispatchEvent(event);
-    }
+    // Trigger once on page load
+    variantSelect.dispatchEvent(new Event('variant:option-change', { bubbles: true }));
   });
 });
 
