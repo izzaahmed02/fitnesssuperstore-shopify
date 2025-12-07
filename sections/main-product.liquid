@@ -3618,9 +3618,8 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Variant picker debug: started');
 
-  // Try to select using the ID
+  // Select all variant-select containers
   const variantSelects = document.querySelectorAll('[id^="variant-selects-"]');
-
   console.log('Variant selects found:', variantSelects.length);
 
   if (!variantSelects.length) {
@@ -3631,22 +3630,36 @@ document.addEventListener('DOMContentLoaded', () => {
   variantSelects.forEach(variantSelect => {
     console.log('Found variantSelect:', variantSelect);
 
-    // Look for all option fieldsets inside
-    const optionFieldsets = variantSelect.querySelectorAll('fieldset.product-form__input');
-    console.log('Option fieldsets found:', optionFieldsets.length);
+    // Use event delegation: listen for any change on radios inside variantSelect
+    variantSelect.addEventListener('change', (event) => {
+      const target = event.target;
+      if (target.matches('input[type="radio"]')) {
+        console.log(`Radio changed: ${target.value}`);
 
-    optionFieldsets.forEach((fieldset, fsIndex) => {
-      console.log(`Fieldset ${fsIndex} inner HTML:`, fieldset.innerHTML);
+        // Find the parent fieldset of this radio
+        const fieldset = target.closest('fieldset.product-form__input');
+        if (!fieldset) return;
 
-      const radios = fieldset.querySelectorAll('input[type="radio"]');
-      console.log(`Fieldset ${fsIndex} radios:`, radios.length);
-
-      radios.forEach((radio, rIndex) => {
-        radio.addEventListener('change', () => {
-          console.log(`Radio changed: ${radio.value}`);
+        // Hide all other fieldsets
+        variantSelect.querySelectorAll('fieldset.product-form__input').forEach(fs => {
+          fs.style.display = fs === fieldset ? 'block' : 'none';
         });
-      });
+
+        // Auto-select the first available radio in this fieldset
+        const firstOption = fieldset.querySelector('input[type="radio"]:not(.disabled)');
+        if (firstOption && firstOption !== target) {
+          firstOption.checked = true;
+          firstOption.dispatchEvent(new Event('change', { bubbles: true }));
+          console.log('Auto-selected first option:', firstOption.value);
+        }
+      }
     });
+
+    // Trigger change for initially checked radio on page load
+    const checkedRadio = variantSelect.querySelector('input[type="radio"]:checked');
+    if (checkedRadio) {
+      checkedRadio.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   });
 });
 
