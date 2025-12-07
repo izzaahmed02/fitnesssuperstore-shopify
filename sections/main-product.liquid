@@ -3616,35 +3616,26 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // Select all variant pickers
   const variantSelects = document.querySelectorAll('variant-selects');
 
   variantSelects.forEach(variantSelect => {
-    // Listen to Dawn's custom variant option change
-    variantSelect.addEventListener('variant:option-change', () => {
-      // Find the first visible and available input or select option
-      const firstOption = variantSelect.querySelector(
-        'input[type="radio"]:not(.disabled):not([style*="display: none"]), select option:not([disabled]):not([hidden])'
-      );
+    // For each fieldset (each product option)
+    const fieldsets = variantSelect.querySelectorAll('fieldset.product-form__input');
 
-      if (!firstOption) return;
+    fieldsets.forEach(fieldset => {
+      // Find the first radio that is not disabled and visible
+      const firstAvailable = Array.from(fieldset.querySelectorAll('input[type="radio"]'))
+        .find(radio => !radio.classList.contains('disabled') && radio.offsetParent !== null);
 
-      if (firstOption.tagName.toLowerCase() === 'option') {
-        // For dropdowns, trigger a change
-        firstOption.selected = true;
-        firstOption.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
-        console.log('Clicked first available dropdown option:', firstOption.value || firstOption.text);
-      } else {
-        // For radios/swatches, simulate a click
-        firstOption.click();
-        console.log('Clicked first available radio/swab option:', firstOption.value);
+      if (firstAvailable) {
+        // Click it to trigger all Dawn variant logic
+        firstAvailable.click();
+        console.log('Clicked first available option:', firstAvailable.value);
       }
     });
-
-    // Trigger once on page load
-    variantSelect.dispatchEvent(new Event('variant:option-change', { bubbles: true }));
   });
 });
-
 
 
 </script>
