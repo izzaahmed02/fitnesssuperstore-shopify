@@ -3615,6 +3615,47 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 
 
 
+document.addEventListener('DOMContentLoaded', () => {
+  const variantSelects = document.querySelectorAll('variant-selects');
+
+  variantSelects.forEach(variantSelect => {
+    const optionFieldsets = variantSelect.querySelectorAll('fieldset.product-form__input');
+    
+    // Listen for changes on each main option (first-level variant)
+    optionFieldsets.forEach(fieldset => {
+      const radios = fieldset.querySelectorAll('input[type="radio"]');
+      radios.forEach(radio => {
+        radio.addEventListener('change', () => {
+          // Hide all other option sets except this one
+          optionFieldsets.forEach(fs => fs.style.display = 'none');
+          fieldset.style.display = 'block';
+
+          // Auto-select the first available option of this variant
+          const firstOption = fieldset.querySelector('input[type="radio"]:not(.disabled), select option:not([disabled])');
+          if (firstOption) {
+            if (firstOption.tagName.toLowerCase() === 'option') {
+              firstOption.selected = true;
+              firstOption.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+              firstOption.checked = true;
+              firstOption.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          }
+        });
+      });
+    });
+
+    // Initialize: trigger change on the currently selected main variant
+    const checkedRadio = variantSelect.querySelector('fieldset.product-form__input input[type="radio"]:checked');
+    if (checkedRadio) {
+      checkedRadio.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });
+});
+
+
+
+
 
 
 
