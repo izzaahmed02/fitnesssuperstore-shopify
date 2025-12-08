@@ -48,7 +48,7 @@ if (!customElements.get('product-form-with-options')) {
             {
               id: this.variantIdInput.value,
               quantity: this.quantityInput.value || 1,
-              // properties: productProperties,
+              properties: productProperties,
             },
           ],
           sections: this.cart.getSectionsToRender().map((section) => section.id),

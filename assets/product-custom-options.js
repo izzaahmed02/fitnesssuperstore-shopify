@@ -412,12 +412,12 @@ if (!customElements.get('product-customization-options')) {
 
       setColorOptionHTML(colorOption, customColor) {
         return `<p class="option_selected" data-option-id="${colorOption.dataset.id}">
-          <span data-color-selected-title>
+          <div data-color-selected-title>
           ${customColor ? `Custom Color: ${colorOption.value}` : `${colorOption.dataset.colorName}`}
-          </span>
-          <span class="option_selected-price">
+          </div>
+          <div class="option_selected-price">
           ${customColor ? `${colorOption.dataset?.price !== '' ? `$${colorOption.dataset?.price}` : ''}` : `${colorOption.dataset.colorPrice !== '0' ? `$${colorOption.dataset.colorPrice}` : ''}`}
-          </span>
+          </div>
         </p>`;
       }
 
@@ -540,7 +540,6 @@ if (!customElements.get('product-customization-options')) {
             if (window.location.href.includes('/cart')) {
               this.getSectionsToRender().forEach((section) => {
                 const elementToReplace = document.querySelector(section.selector) || document.getElementById(section.id);
-                console.log(elementToReplace);
 
                 elementToReplace.innerHTML = this.getSectionInnerHTML(updateResult.sections[section.section], section.selector);
               });
@@ -699,8 +698,6 @@ if (!customElements.get('product-customization-options')) {
       // Helper to parse HTML after server response
 
       getSectionInnerHTML(html, selector) {
-        console.log(new DOMParser().parseFromString(html, 'text/html').querySelector(selector));
-
         return new DOMParser().parseFromString(html, 'text/html').querySelector(selector).innerHTML;
       }
 
