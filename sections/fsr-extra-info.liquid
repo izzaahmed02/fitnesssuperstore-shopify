@@ -1,0 +1,483 @@
+<div class="fsr-extra-info">
+  <input type="radio" name="fsr-tabs" id="tab-product-details" checked>
+  <input type="radio" name="fsr-tabs" id="tab-tech-specs">
+  <input type="radio" name="fsr-tabs" id="tab-accessories">
+  <input type="radio" name="fsr-tabs" id="features">
+
+  <!-- TABS -->
+  <div class="fsr-tabs">
+    <label for="tab-product-details" class="tab-label">Details</label>
+    <label for="tab-tech-specs" class="tab-label">Tech Specs</label>
+    <label for="tab-accessories" class="tab-label">Accessories</label>
+    <label for="features" class="tab-label">Features</label>
+  </div>
+
+  <!-- TAB CONTENT -->
+  <div class="fsr-tab-contents">
+    <div class="tab-content" id="content-product-details">
+      <div class="product-details-wrapper">
+        <div class="content-left">
+          <div class="product-description">
+            {{ section.settings.product-details-content }}
+          </div>
+        </div>
+        <div class="content-right">
+          <div class="product-video-wrapper">
+            {% assign videos = product.media | where: "media_type", "video" %}
+            {% if videos.size > 0 %}
+              <div class="product-videos-wrapper">
+                {% for video in videos %}
+                  <div class="product-video-item">
+                    <a href="#" class="product-video-trigger" data-video-id="video-{{ video.id }}">
+                      {% if video.preview_image %}
+                        <div class="product-video-thumbnail-wrapper">
+                          <img 
+                            src="{{ video.preview_image | img_url: '800x' }}" 
+                            alt="{{ product.title }} video preview {{ forloop.index }}" 
+                            class="product-video-thumbnail"
+                          >
+                          <span class="product-video-play-icon">▶</span>
+                        </div>
+                      {% else %}
+                        <div class="video-placeholder">
+                          ▶ Play Video {{ forloop.index }}
+                        </div>
+                      {% endif %}
+                    </a>
+                  </div>
+
+                  <!-- Modal -->
+                  <div id="video-{{ video.id }}" class="product-video-modal">
+                    <div class="product-video-modal-content">
+                      <span class="product-video-close">&times;</span>
+                      {{ video | media_tag: controls: true, autoplay: true }}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+
+              <style>
+              .product-videos-wrapper {
+              display: flex;
+              flex-direction: column; /* stack vertically */
+              gap: 16px;
+              margin-bottom: 20px;
+            }
+
+            .product-video-item {
+              width: 100%; /* full width */
+            }
+
+            .product-video-thumbnail-wrapper {
+              position: relative;
+              width: 100%;
+            }
+
+            .product-video-thumbnail {
+              width: 100%;
+              border-radius: 12px;
+              cursor: pointer;
+              display: block;
+            }
+
+            .product-video-play-icon {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              font-size: 48px;
+              color: white;
+              text-shadow: 0 0 10px rgba(0,0,0,0.6);
+              pointer-events: none;
+            }
+
+            @media (max-width: 600px) {
+              .product-video-play-icon {
+                font-size: 36px; /* smaller on mobile */
+              }
+            }
+
+            /* Modal */
+            .product-video-modal {
+              display: none;
+              position: fixed;
+              z-index: 9999;
+              left: 0;
+              top: 0;
+              width: 100%;
+              height: 100%;
+              background: rgba(0,0,0,0.9);
+              justify-content: center;
+              align-items: center;
+              padding: 10px;
+            }
+
+            .product-video-modal-content {
+              position: relative;
+              width: 100%;
+              max-width: 900px; /* keeps it centered on big screens */
+              max-height: 90vh;
+            }
+
+            .product-video-modal iframe,
+            .product-video-modal video {
+              width: 100%;
+              height: auto;
+              max-height: 90vh;
+              border-radius: 12px;
+            }
+
+            .product-video-close {
+              position: absolute;
+              top: -40px;
+              right: 0;
+              font-size: 32px;
+              color: white;
+              cursor: pointer;
+            }
+            html.no-scroll,
+            body.no-scroll {
+              overflow: hidden;
+              height: 100%;
+            }
+
+            @media (max-width: 600px) {
+              .product-video-close {
+                top: 10px;
+                right: 10px;
+                font-size: 28px;
+                background: rgba(0,0,0,0.6);
+                border-radius: 50%;
+                padding: 4px 10px;
+                z-index: 999;
+              }
+            }
+
+
+
+              </style>
+            <script>
+            document.addEventListener("DOMContentLoaded", function() {
+              const triggers = document.querySelectorAll(".product-video-trigger");
+              const modals = document.querySelectorAll(".product-video-modal");
+
+              // Open modal
+              triggers.forEach(trigger => {
+                trigger.addEventListener("click", function(e) {
+                  e.preventDefault();
+                  const videoId = this.getAttribute("data-video-id");
+                  const modal = document.getElementById(videoId);
+                  if (modal) {
+                    modal.style.display = "flex";
+                    document.body.classList.add("no-scroll"); // disable scroll
+                  }
+                });
+              });
+
+              // Close modal
+              modals.forEach(modal => {
+                const closeBtn = modal.querySelector(".product-video-close");
+                closeBtn.addEventListener("click", function() {
+                  modal.style.display = "none";
+                  document.body.classList.remove("no-scroll"); // re-enable scroll
+                  stopVideo(modal);
+                });
+              });
+
+              // Close when clicking outside
+              window.addEventListener("click", function(e) {
+                modals.forEach(modal => {
+                  if (e.target === modal) {
+                    modal.style.display = "none";
+                    document.body.classList.remove("no-scroll"); // re-enable scroll
+                    stopVideo(modal);
+                  }
+                });
+              });
+
+              // Stop video (works for <video> and <iframe>)
+              function stopVideo(modal) {
+                const video = modal.querySelector("video");
+                const iframe = modal.querySelector("iframe");
+
+                if (video) {
+                  video.pause();
+                  video.currentTime = 0;
+                }
+
+                if (iframe) {
+                  iframe.src = iframe.src; // reload iframe to stop playback
+                }
+              }
+            });
+            </script>
+
+
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="content-tech-specs">
+      <div class="tech-specs-wrapper">
+        <div class="content-left">
+          <div class="tech-spec-image">
+          <img 
+              src="{{ section.settings.tech-specs-image | image_url: width: 430}}" 
+              alt="{{ section.settings.tech-specs-image.alt | escape }}"
+              style="width:100%; height:auto;"
+            >
+
+          </div>
+          <div class="tech-specs">
+            <h4>{{section.settings.tech-specs-title}}</h4>
+            <div class="tech-specs-content">{{section.settings.tech-specs-content}}</div>
+          </div>
+        </div>
+        <div class="content-right">
+          <div class="weight-stacks">
+            <h4>{{section.settings.weight-stacks-title}}</h4>
+            <div class="weight-stacks-content">{{section.settings.weight-stacks-content}}</div>
+          </div>
+          <div class="smith-bar-specs">
+            <h4>{{section.settings.smith-bar-specs-title}}</h4>
+            <div class="smith-bar-specs-content">{{section.settings.smith-bar-specs-content}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="content-accessories">{{section.settings.accessories-content}}</div>
+    <div class="tab-content" id="content-features">
+      <div class="features-wrapper">
+        <div class="content-left">
+          <h4>{{section.settings.features-title}}</h4>
+          <div class="features-content">{{section.settings.features-content}}</div>
+        </div>
+        <div class="content-right">
+        <h4>{{section.settings.all-in-one-title}}</h4>
+        <div class="all-in-one-content">{{section.settings.all-in-one-content}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .fsr-extra-info {
+    padding: 45px 32px;
+  }
+
+  .fsr-extra-info input[type="radio"] {
+    display: none;
+  }
+
+  .fsr-tabs {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;   
+    width: 100%;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #EDEFF3;
+  }
+
+  .tab-label {
+    font-family: Oswald;
+    font-size: 20px;
+    line-height: 26px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #23232B;
+    flex: 1;
+    text-align: center;
+    padding-bottom: 8px;
+    cursor: pointer;
+    transition: .2s;
+  }
+  #tab-product-details:checked ~ .fsr-tabs label[for="tab-product-details"],
+  #tab-tech-specs:checked ~ .fsr-tabs label[for="tab-tech-specs"],
+  #tab-accessories:checked ~ .fsr-tabs label[for="tab-accessories"],
+  #features:checked ~ .fsr-tabs label[for="features"] {
+    border-bottom: 3px solid #D83D0E;
+  }
+  .tab-content {
+    display: none;
+  }
+  #tab-product-details:checked ~ .fsr-tab-contents #content-product-details,
+  #tab-tech-specs:checked ~ .fsr-tab-contents #content-tech-specs,
+  #tab-accessories:checked ~ .fsr-tab-contents #content-accessories,
+  #features:checked ~ .fsr-tab-contents #content-features {
+    display: block;
+  }
+
+  .product-details-wrapper,.tech-specs-wrapper, .features-wrapper {
+    display: flex;
+    gap: 20px;
+  }
+  .content-left, .content-right{
+    width: 50%
+  }
+  .tech-specs-wrapper .content-left, .tech-specs-wrapper .content-right{
+    display:flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .tech-specs-wrapper h4, .features-wrapper h4{
+    font-size: 16px;
+    font-weight: 800;
+    margin: 0;
+    border-bottom: 1px solid #EDEFF3;
+  }
+  .tech-specs-wrapper .metafield-rich_text_field ul, .features-content ul, .all-in-one-content .metafield-single_line_text_field-array{
+    margin-left:20px;
+  }
+  .metafield-rich_text_field li{
+    list-style-type: disc;
+  }
+  #content-accessories .metafield-rich_text_field li{
+    list-style: none;
+    border-bottom: 1px solid #E5E5E5;
+    padding: 12px;
+  }
+  .features-content li, .all-in-one-content .metafield-single_line_text_field-array li{
+    list-style-type: disc;
+  }
+  .metafield-single_line_text_field-array li{
+    font-size: 14px;
+    font-weight: 700;
+  }
+  @media (max-width: 448px) {
+    .fsr-extra-info {
+      padding: 20px 16px;
+    }
+    .tab-label{
+      font-size: 14px;
+    }
+    .product-details-wrapper, .tech-specs-wrapper, .features-wrapper{
+      flex-direction: column;
+    }
+    .content-left, .content-right {
+      width: 100%;
+    }
+    .product-details-wrapper .content-right{
+      order: 1;
+    }
+    .product-details-wrapper .content-left{
+      order: 2;
+    }
+    #content-accessories .metafield-rich_text_field li {
+      padding: 12px 0px;
+    }
+  }
+</style>
+
+{% schema %}
+  {
+    "name": "FSR Extra Info",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Product Details"
+      },
+      {
+        "type": "text",
+        "id": "product-details-title",
+        "label": "Title",
+        "default": "Product Details"
+      },
+      {
+        "type": "richtext",
+        "id": "product-details-content",
+        "label": "Content",
+      },
+      {
+        "type": "header",
+        "content": "Tech Specs"
+      },
+      {
+        "type": "text",
+        "id": "tech-specs-title",
+        "label": "Title",
+        "default": "Tech Specs"
+      },
+      {
+        "type": "image_picker",
+        "id": "tech-specs-image",
+        "label": "Image"
+      },
+      {
+        "type": "richtext",
+        "id": "tech-specs-content",
+        "label": "Content",
+      },
+      {
+        "type": "text",
+        "id": "weight-stacks-title",
+        "label": "Title",
+        "default": "Weight Stacks",
+      },
+      {
+        "type": "richtext",
+        "id": "weight-stacks-content",
+        "label": "Content",
+      },
+      {
+        "type": "text",
+        "id": "smith-bar-specs-title",
+        "label": "Title",
+        "default": "Smith Bar Specs",
+      },
+      {
+        "type": "richtext",
+        "id": "smith-bar-specs-content",
+        "label": "Content",
+      },
+      {
+        "type": "header",
+        "content": "Accessories"
+      },
+      {
+        "type": "text",
+        "id": "accessories-title",
+        "label": "Title",
+        "default": "Accessories"
+      },
+      {
+        "type": "richtext",
+        "id": "accessories-content",
+        "label": "Content",
+      },
+      {
+        "type": "header",
+        "content": "Features"
+      },
+      {
+        "type": "text",
+        "id": "features-title",
+        "label": "Title",
+        "default": "Features"
+      },
+      {
+        "type": "richtext",
+        "id": "features-content",
+        "label": "Content",
+      },
+      {
+        "type": "text",
+        "id": "all-in-one-title",
+        "label": "Title",
+        "default": "The Ultimate ALL-IN-ONE Machine:"
+      },
+      {
+        "type": "richtext",
+        "id": "all-in-one-content",
+        "label": "Content"
+      }
+    ],
+    "presets": [
+      {
+        "name": "FSR Extra Info",
+        "category": "Product"
+      }
+    ],
+  }
+{% endschema %}
