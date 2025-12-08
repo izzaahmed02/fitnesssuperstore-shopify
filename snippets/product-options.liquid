@@ -11,6 +11,32 @@
       {% assign index = index | plus: 1 %}
       <h2 class="product-options__category-title">
         <span>{{ index }}</span>{{ category.title }}
+        {% for product_option in category.product_options.value %}
+          {% assign title = product_option.product_option_title | downcase %}
+          {% if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl color' %}
+            {% if product_option.product_option_sets_default.value.id %}
+              {% assign default = product_option.product_option_sets_default.value.id %}
+            {% endif %}
+            {% render 'related-products-button',
+              product_id: product.id,
+              product_handle: product.handle,
+              product_category: product.metafields.custom.option_category_id.value,
+              option_title: product_option.product_option_title
+            %}
+            <div class="option_selected-container" data-selected-color-option>
+              <p class="option_selected" data-option-id="{{ product_option.product_option_sets_default.value.id }}">
+                <div data-color-selected-title>
+                  {{ product_option.product_option_sets_default.value.title }}
+                </div>
+                <div class="option_selected-price">
+                  {% if product_option.product_option_sets_default.value.price > 0 %}
+                    {{ product_option.product_option_sets_default.value.price }}
+                  {% endif %}
+                </div>
+              </p>
+            </div>
+          {% endif %}
+        {% endfor %}
       </h2>
     {% endif %}
     {% for product_option in category.product_options.value %}
