@@ -28,25 +28,36 @@
     <div class="homepage-faqs__accordions">
         {% for block in section.blocks %}
             <div class="homepage-faqs__accordion-item accordion">
-                <button
-                        class="accordion-header"
-                        type="button"
-                        aria-expanded="false"
-                        aria-controls="accordion-content-{{ forloop.index }}">
-                                <span class="accordion-title">
-                                  {{ block.settings.title }}
-                                </span>
-                    {% render 'chevron' %}
-                </button>
-                <div
-                        id="accordion-content-{{ forloop.index }}"
-                        class="accordion-content"
-                        aria-hidden="true"
-                >
-                    <div class="accordion-content-inner">
-                        {{ block.settings.copy | replace: '<a ', '<a tabindex="-1" ' }}
-                    </div>
-                </div>
+              <button
+  class="accordion-header"
+  type="button"
+  aria-expanded="false"
+  aria-controls="accordion-content-{{ forloop.index }}"
+  id="accordion-header-{{ forloop.index }}"
+>
+  <span class="accordion-title">
+    {{ block.settings.title }}
+  </span>
+  {% render 'chevron' %}
+</button>
+
+<div
+  id="accordion-content-{{ forloop.index }}"
+  class="accordion-content"
+  role="region"
+  aria-labelledby="accordion-header-{{ forloop.index }}"
+  hidden
+>
+  {% assign faq_link_start = '<a class="accordion-link" aria-label="Learn more about ' 
+    | append: block.settings.title 
+    | append: '" ' 
+  %}
+
+  <div class="accordion-content-inner">
+    {{ block.settings.copy | replace: '<a ', faq_link_start }}
+  </div>
+</div>
+
             </div>
         {% endfor %}
     </div>
