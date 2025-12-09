@@ -18,21 +18,32 @@
       {% for category in options %}
         {% if category.title != blank %}
           {% assign index = index | plus: 1 %}
-          <h2 class="product-options__category-title">
+          {% assign color_counter = 0 %}
+          {% assign color_title = '' %}
+          {% assign color_group = '' %}
+          {% for product_option in category.product_options.value %}
+            {% assign title = product_option.product_option_title | downcase %}
+            {% if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color' %}
+              {% assign color_counter = color_counter | plus: 1 %}
+              {% assign color_title = product_option.product_option_title %}
+              {% assign color_group = title | handleize %}
+            {% endif %}
+          {% endfor %}
+
+          <h2
+            class="product-options__category-title"
+            {% if color_counter == 1 %}
+              data-group-color-name="{{ color_group }}"
+              data-color-name-title="{{ color_title }}"
+            {% endif %}
+          >
             <span>{{ index }}</span>{{ category.title }}
-            {% assign color_counter = 0 %}
-            {% for product_option in category.product_options.value %}
-              {% assign title = product_option.product_option_title | downcase %}
-              {% if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color' %}
-                {% assign color_counter = color_counter | plus: 1 %}
-              {% endif %}
-            {% endfor %}
+
             {% if color_counter == 1 %}
               {% for product_option in category.product_options.value %}
                 {% assign title = product_option.product_option_title | downcase %}
                 {% if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color' %}
                   {% if product_option.product_option_sets_default.value.id %}
-                    {% assign default = product_option.product_option_sets_default.value.id %}
                     {% render 'related-products-button',
                       product_id: product.id,
                       product_handle: product.handle,
@@ -63,11 +74,25 @@
           {% if title == 'paint color' or title == 'paint colors' or title == 'color' %}
             {% render 'cart-item-color-picker', product: product_option.product_option_variants.value, products: product_option, color_type: 'paint', title: category.title, line_item: line_item %}
           {% endif %}
-          {% if title == 'vinyl color' %}
-            {% render 'cart-item-color-picker', product: product_option.product_option_variants.value, products: product_option, color_type: 'vinyl', title: category.title, line_item: line_item %}
+          {% if title == 'vinyl color' or title == 'vinyl colors' %}
+            {% render 'cart-item-color-picker',
+              product: product_option.product_option_variants.value,
+              products: product_option,
+              color_type: 'vinyl',
+              title: category.title,
+              line_item: line_item,
+              color_counter: color_counter
+            %}
           {% endif %}
           {% if title != 'paint color' and title != 'vinyl color' and title != 'paint colors' and title != 'vinyl colors' %}
-            {% render 'cart-item-product-option', category: category, product_option: product_option, forloop_index: forloop.index, product_id: line_item.product.id, line_item: line_item %}
+            {% render 'cart-item-product-option',
+              category: category,
+              product_option: product_option,
+              forloop_index: forloop.index,
+              product_id: line_item.product.id,
+              line_item: line_item,
+              color_counter: color_counter
+            %}
           {% endif %}
         {% endfor %}
       {% endfor %}

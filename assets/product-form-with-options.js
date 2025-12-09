@@ -141,16 +141,17 @@ if (!customElements.get('product-form-with-options')) {
             lineItemProperties[key] = formatedValue;
           }
         });
-        const selectedColor = this.productContainer.querySelector('.custom-color-group .option_selected [data-color-selected-title]');
-        if (selectedColor) {
-          const colorGroup = selectedColor.closest('[data-group-color-name]');
-          const selectedColorValue = selectedColor.innerText;
-
-          const selectedColorPrice = this.productContainer.querySelector('.custom-color-group .option_selected-price');
-          lineItemProperties[colorGroup.dataset.colorNameTitle] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
-          if (selectedColorPrice.innerText != '') {
-            lineItemProperties[colorGroup.dataset.colorNameTitle] += ` [+${selectedColorPrice.innerText}]`;
-          }
+        const selectedColors = this.productContainer.querySelectorAll('[data-selected-color-option] [data-color-selected-title]');
+        if (selectedColors.length > 0) {
+          selectedColors.forEach((color) => {
+            const colorGroup = color.closest('[data-group-color-name]');
+            const selectedColorValue = color.innerText;
+            const selectedColorPrice = colorGroup.querySelector('.option_selected-price');
+            lineItemProperties[colorGroup.dataset.colorNameTitle] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
+            if (selectedColorPrice.innerText != '') {
+              lineItemProperties[colorGroup.dataset.colorNameTitle] += ` [+${selectedColorPrice.innerText}]`;
+            }
+          });
         }
 
         const selectOptions = this.productContainer.querySelectorAll('[data-select-option]');
@@ -193,21 +194,23 @@ if (!customElements.get('product-form-with-options')) {
           }
         });
 
-        const colorOption = this.productContainer.querySelector('[data-color-variant-input]');
-        if (colorOption) {
-          const productColorOptionVariantID = `gid://shopify/ProductVariant/${colorOption.dataset.variant}`;
-          const productColorOptionPrice = colorOption.dataset?.price ? Number(colorOption.dataset?.price) : 0;
-          const groupContainer = colorOption.closest('[data-group-color-name]');
-          const colorName = groupContainer.querySelector('[data-color-selected-title]');
-          const productColorOption = {
-            variantId: productColorOptionVariantID,
-            priceAdjustment: productColorOptionPrice,
-            quantity: 1,
-            groupHandle: groupContainer.dataset.groupColorName ? groupContainer.dataset.groupColorName : '',
-            colorName: colorName ? colorName.innerText.trim() : '',
-          };
+        const colorOptions = this.productContainer.querySelectorAll('[data-color-variant-input]');
+        if (colorOptions.length > 0) {
+          colorOptions.forEach((option) => {
+            const productColorOptionVariantID = `gid://shopify/ProductVariant/${option.dataset.variant}`;
+            const productColorOptionPrice = option.dataset?.price ? Number(option.dataset?.price) : 0;
+            const groupContainer = this.productContainer.querySelector(`[data-group-color-name="${option.dataset.group}"]`);
 
-          productOptions.push(productColorOption);
+            const colorName = groupContainer.querySelector('[data-color-selected-title]');
+            const productColorOption = {
+              variantId: productColorOptionVariantID,
+              priceAdjustment: productColorOptionPrice,
+              quantity: 1,
+              groupHandle: groupContainer.dataset.groupColorName ? groupContainer.dataset.groupColorName : '',
+              colorName: colorName ? colorName.innerText.trim() : '',
+            };
+            productOptions.push(productColorOption);
+          });
         }
 
         const selectOptions = this.productContainer.querySelectorAll('[data-select-option]');

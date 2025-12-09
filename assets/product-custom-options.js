@@ -8,13 +8,14 @@ if (!customElements.get('product-customization-options')) {
         this.customizationOptions = this.querySelectorAll('[data-customization-option]');
         this.openPopupButtons = this.querySelectorAll('[data-popup-open]');
         this.closePopupButtons = document.querySelectorAll('[data-close-popup]');
-        this.priceElement = document.querySelector('.pr_custom_price ');
+        this.priceElement = document.querySelector('.pr_custom_price');
+        this.colorGroups = this.querySelectorAll('.color_options_container');
         this.swatches = this.querySelectorAll('[data-color-name]');
-        this.swatchesActiveContainer = this.querySelector('[data-selected-color-option]');
-        this.colorInput = this.querySelector('[data-color-variant-input]');
-        this.colorForm = this.querySelector('.custom-color-input');
-        this.addCustomColor = this.querySelector('.add-custom-color');
-        this.closeColorPopup = this.querySelector('[data-close-color-popup]');
+        this.swatchesActiveContainers = this.querySelectorAll('[data-selected-color-option]');
+        this.colorInputs = this.querySelectorAll('[data-color-variant-input]');
+        this.colorForms = this.querySelectorAll('.custom-color-input');
+        this.addCustomColors = this.querySelectorAll('.add-custom-color');
+        this.closeColorPopups = this.querySelectorAll('[data-close-color-popup]');
         this.closeModifyButtons = this.querySelectorAll('[data-close-popup]');
         this.applyChangesButton = this.querySelector('[data-apply-changes]');
         this.cartItems = document.querySelector('cart-items');
@@ -369,42 +370,76 @@ if (!customElements.get('product-customization-options')) {
       // Method to select color
 
       colorSwatchHandler() {
-        if (this.swatches.length === 0) return;
-        this.swatches.forEach((swatch) => {
-          swatch.addEventListener('click', (event) => {
-            event.preventDefault();
-            this.swatches.forEach((item) => item.classList.remove('color-selected'));
-            swatch.classList.add('color-selected');
-            if (swatch.classList.contains('swatch--custom-trigger')) {
-              this.colorForm.removeAttribute('style');
-            } else {
-              this.colorForm.style.display = 'none';
-              this.colorInput.dataset.variant = swatch.dataset.id;
-              this.colorInput.dataset.price = swatch.dataset.colorPrice;
-
-              this.swatchesActiveContainer.innerHTML = this.setColorOptionHTML(swatch, false);
-              if (this.closest('cart-drawer')) return;
-              this.updatePrice();
-            }
+        if (this.colorGroups.length === 0) return;
+        this.colorGroups.forEach((group) => {
+          const colorForm = group.querySelector('.custom-color-input');
+          const colorInput = group.querySelector('[data-color-variant-input]');
+          const swatches = group.querySelectorAll('[data-color-name]');
+          if (swatches.length === 0) return;
+          swatches.forEach((swatch) => {
+            const swatchesActiveContainer = this.querySelector(`[data-selected-color-option="${swatch.dataset.group}"`);
+            swatch.addEventListener('click', (event) => {
+              event.preventDefault();
+              swatches.forEach((item) => item.classList.remove('color-selected'));
+              swatch.classList.add('color-selected');
+              if (swatch.classList.contains('swatch--custom-trigger')) {
+                colorForm.removeAttribute('style');
+              } else {
+                colorForm.style.display = 'none';
+                colorInput.dataset.variant = swatch.dataset.id;
+                colorInput.dataset.price = swatch.dataset.colorPrice;
+                swatchesActiveContainer.innerHTML = this.setColorOptionHTML(swatch, false);
+                if (this.closest('cart-drawer')) return;
+                this.updatePrice();
+              }
+            });
           });
         });
+
+        // if (this.swatches.length === 0) return;
+        // this.swatches.forEach((swatch) => {
+        //   swatch.addEventListener('click', (event) => {
+        //     event.preventDefault();
+        //     this.swatches.forEach((item) => item.classList.remove('color-selected'));
+        //     swatch.classList.add('color-selected');
+        //     if (swatch.classList.contains('swatch--custom-trigger')) {
+        //       this.colorForm.removeAttribute('style');
+        //     } else {
+        //       this.colorForm.style.display = 'none';
+        //       this.colorInput.dataset.variant = swatch.dataset.id;
+        //       this.colorInput.dataset.price = swatch.dataset.colorPrice;
+
+        //       this.swatchesActiveContainer.innerHTML = this.setColorOptionHTML(swatch, false);
+        //       if (this.closest('cart-drawer')) return;
+        //       this.updatePrice();
+        //     }
+        //   });
+        // });
       }
 
       // Nethod to add custom color using input
 
       addCustomColorHandler() {
-        if (!this.addCustomColor) return;
-        this.addCustomColor.addEventListener('click', (event) => {
-          event.preventDefault();
-          const input = this.colorForm.querySelector('input[type="text"]');
-          if (!input) return;
-          this.colorInput.dataset.variant = input.dataset.id;
-          this.colorInput.dataset.price = input.dataset.price;
-          this.swatchesActiveContainer.innerHTML = this.setColorOptionHTML(input, true);
-          this.colorForm.style.display = 'none';
-          input.value = '';
-          if (this.closest('cart-drawer')) return;
-          this.updatePrice();
+        if (this.colorGroups.length === 0) return;
+        this.colorGroups.forEach((group) => {
+          const addCustomColor = group.querySelector('.add-custom-color');
+          const colorForm = group.querySelector('.custom-color-input');
+          const colorInput = group.querySelector('[data-color-variant-input]');
+          if (!addCustomColor) return;
+          addCustomColor.addEventListener('click', (event) => {
+            event.preventDefault();
+            const input = colorForm.querySelector('input[type="text"]');
+            const swatchesActiveContainer = this.querySelector(`[data-selected-color-option="${input.dataset.group}"`);
+
+            if (!input) return;
+            colorInput.dataset.variant = input.dataset.id;
+            colorInput.dataset.price = input.dataset.price;
+            swatchesActiveContainer.innerHTML = this.setColorOptionHTML(input, true);
+            colorForm.style.display = 'none';
+            input.value = '';
+            if (this.closest('cart-drawer')) return;
+            this.updatePrice();
+          });
         });
       }
 
@@ -424,10 +459,15 @@ if (!customElements.get('product-customization-options')) {
       // Method to close custom color popup
 
       closeColorPopupHandler() {
-        if (!this.closeColorPopup) return;
-        this.closeColorPopup.addEventListener('click', (event) => {
-          event.preventDefault();
-          this.colorForm.style.display = 'none';
+        if (this.colorGroups.length === 0) return;
+        this.colorGroups.forEach((group) => {
+          const closeColorPopup = group.querySelector('[data-close-color-popup]');
+          const colorForm = group.querySelector('.custom-color-input');
+          if (!closeColorPopup) return;
+          closeColorPopup.addEventListener('click', (event) => {
+            event.preventDefault();
+            colorForm.style.display = 'none';
+          });
         });
       }
 
@@ -591,15 +631,17 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        const selectedColor = this.querySelector('.custom-color-group .option_selected [data-color-selected-title]');
-        if (selectedColor) {
-          const colorGroup = selectedColor.closest('[data-group-color-name]');
-          const selectedColorValue = selectedColor.innerText;
-          const selectedColorPrice = this.querySelector('.custom-color-group .option_selected-price');
-          lineItemProperties[colorGroup.dataset.colorNameTitle] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
-          if (selectedColorPrice.innerText != '') {
-            lineItemProperties[colorGroup.dataset.colorNameTitle] += ` [+${selectedColorPrice.innerText}]`;
-          }
+        const selectedColors = this.querySelectorAll('[data-selected-color-option] [data-color-selected-title]');
+        if (selectedColors.length > 0) {
+          selectedColors.forEach((color) => {
+            const colorGroup = color.closest('[data-group-color-name]');
+            const selectedColorValue = color.innerText;
+            const selectedColorPrice = colorGroup.querySelector('.option_selected-price');
+            lineItemProperties[colorGroup.dataset.colorNameTitle] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
+            if (selectedColorPrice.innerText != '') {
+              lineItemProperties[colorGroup.dataset.colorNameTitle] += ` [+${selectedColorPrice.innerText}]`;
+            }
+          });
         }
 
         const selectOptions = this.querySelectorAll('[data-select-option]');
@@ -643,20 +685,22 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        const colorOption = this.querySelector('[data-color-variant-input]');
-        if (colorOption) {
-          const productColorOptionVariantID = `gid://shopify/ProductVariant/${colorOption.dataset.variant}`;
-          const productColorOptionPrice = colorOption.dataset?.price ? Number(colorOption.dataset?.price) : 0;
-          const groupContainer = colorOption.closest('[data-group-color-name]');
-          const colorName = groupContainer.querySelector('[data-color-selected-title]');
-          const productColorOption = {
-            variantId: productColorOptionVariantID,
-            priceAdjustment: productColorOptionPrice,
-            quantity: 1,
-            groupHandle: groupContainer.dataset.groupColorName ? groupContainer.dataset.groupColorName : '',
-            colorName: colorName ? colorName.innerText.trim() : '',
-          };
-          productOptions.push(productColorOption);
+        const colorOptions = this.querySelectorAll('[data-color-variant-input]');
+        if (colorOptions.length > 0) {
+          colorOptions.forEach((option) => {
+            const productColorOptionVariantID = `gid://shopify/ProductVariant/${option.dataset.variant}`;
+            const productColorOptionPrice = option.dataset?.price ? Number(option.dataset?.price) : 0;
+            const groupContainer = this.querySelector(`[data-group-color-name="${option.dataset.group}"]`);
+            const colorName = groupContainer.querySelector('[data-color-selected-title]');
+            const productColorOption = {
+              variantId: productColorOptionVariantID,
+              priceAdjustment: productColorOptionPrice,
+              quantity: 1,
+              groupHandle: groupContainer.dataset.groupColorName ? groupContainer.dataset.groupColorName : '',
+              colorName: colorName ? colorName.innerText.trim() : '',
+            };
+            productOptions.push(productColorOption);
+          });
         }
 
         const selectOptions = this.querySelectorAll('[data-select-option]');
