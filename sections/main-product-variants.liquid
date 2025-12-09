@@ -3484,63 +3484,6 @@
   ]
 }
 {% endschema %}
-<script>
-// Ensure global variable to track listener state
-let scrollListenerAttached = false;
-
-// The function that handles scroll logic
-function checkScroll() {
-  const productInfo = document.querySelector(".product__info-wrapper");
-  if (!productInfo) return;
-
-  const topOffset = 100; // Example: adjust as needed
-  const scrollY = window.scrollY || window.pageYOffset;
-
-  if (scrollY > topOffset) {
-    productInfo.classList.add("fixed");
-    productInfo.classList.remove("absolute");
-    productInfo.style.top = "0px"; // adjust as needed
-  } else {
-    productInfo.classList.remove("fixed");
-    productInfo.classList.add("absolute");
-    productInfo.style.top = "";
-  }
-}
-
-// The function that sets up or removes the scroll listener
-function setupScrollListener() {
-  const productInfo = document.querySelector(".product__info-wrapper");
-  if (!productInfo) return;
-
-  const isDesktop = window.matchMedia("(min-width: 990px)").matches;
-
-  if (isDesktop) {
-    if (!scrollListenerAttached) {
-      window.addEventListener("scroll", checkScroll);
-      scrollListenerAttached = true;
-    }
-    // Run once immediately to set initial position
-    checkScroll();
-  } else {
-    if (scrollListenerAttached) {
-      window.removeEventListener("scroll", checkScroll);
-      scrollListenerAttached = false;
-    }
-
-    // Reset classes and styles for mobile
-    productInfo.classList.remove("fixed", "absolute");
-    productInfo.style.top = "";
-  }
-}
-
-// Initialize after DOM is ready
-document.addEventListener("DOMContentLoaded", setupScrollListener);
-
-// Re-run on resize to attach/detach scroll listener as needed
-window.addEventListener("resize", setupScrollListener);
-
-
-</script>
 
 
 
