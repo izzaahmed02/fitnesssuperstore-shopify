@@ -3485,10 +3485,16 @@
 }
 {% endschema %}
 <script>
+let scrollListenerAttached = false;
+
 function setupScrollListener() {
   const productInfo = document.querySelector(".product__info-wrapper");
 
-  if (window.matchMedia("screen and (min-width: 990px)").matches) {
+  if (!productInfo) return; // exit if element not found
+
+  const isDesktop = window.matchMedia("screen and (min-width: 990px)").matches;
+
+  if (isDesktop) {
     if (!scrollListenerAttached) {
       window.addEventListener("scroll", checkScroll);
       scrollListenerAttached = true;
@@ -3500,12 +3506,17 @@ function setupScrollListener() {
       scrollListenerAttached = false;
     }
 
-    if (productInfo) {
-      productInfo.classList.remove("fixed", "absolute");
-      productInfo.style.top = "";
-    }
+    productInfo.classList.remove("fixed", "absolute");
+    productInfo.style.top = "";
   }
 }
+
+// Run on DOM load
+document.addEventListener("DOMContentLoaded", setupScrollListener);
+
+// Re-check on resize
+window.addEventListener("resize", setupScrollListener);
+
 </script>
 
 
