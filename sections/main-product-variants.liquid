@@ -3636,3 +3636,109 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 })();
 </script>
 
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function waitForElement(selector, callback) {
+    const observer = new MutationObserver((mutationsList, observer) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        observer.disconnect();
+        callback(element);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  let scrollListenerAttached = false;
+
+  function checkScroll() {
+    const headerWrapper = document.querySelector(".header-wrapper");
+    const productContainer = document.querySelector(".product");
+    const productInfo = document.querySelector(".product__info-wrapper");
+    const productExtraInfo = document.querySelector(".product__extra_info");
+    const fixedContainer = document.querySelector(".page-width-desktop.page-width-index");
+
+    if (!productContainer || !productInfo || !productExtraInfo || !headerWrapper) return;
+
+    const windowHeight = window.innerHeight;
+    const scrollY = window.scrollY || window.pageYOffset;
+
+    const productInfoHeight = productInfo.offsetHeight;
+    const extraInfoRect = productExtraInfo.getBoundingClientRect();
+    const headerHeight = headerWrapper.offsetHeight;
+
+    // Ensure product container has min-height
+    productContainer.style.minHeight = `${productInfoHeight}px`;
+
+    // Reset for top of page
+    if (scrollY <= headerHeight) {
+      productInfo.classList.remove("fixed", "absolute");
+      productInfo.style.top = "";
+      productInfo.style.left = "";
+      productInfo.style.right = "";
+      return;
+    }
+
+    // Sticky logic
+    const extraInfoBottom = extraInfoRect.bottom;
+    const extraInfoTop = extraInfoRect.top;
+
+    if (extraInfoBottom > windowHeight) {
+      // Stick product info
+      productInfo.classList.add("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = "0px";
+
+      if (fixedContainer) {
+        const containerRect = fixedContainer.getBoundingClientRect();
+        productInfo.style.left = `${containerRect.right - productInfo.offsetWidth - 1}px`;
+        productInfo.style.right = "auto";
+      }
+    } else {
+      // Absolute at bottom
+      productInfo.classList.remove("fixed");
+      productInfo.classList.add("absolute");
+      productInfo.style.top = `${productExtraInfo.offsetHeight + headerHeight}px`;
+      productInfo.style.left = "";
+      productInfo.style.right = "";
+    }
+  }
+
+  function setupScrollListener() {
+    const productInfo = document.querySelector(".product__info-wrapper");
+    if (!productInfo) return;
+
+    const isDesktop = window.matchMedia("(min-width: 990px)").matches;
+
+    if (isDesktop) {
+      if (!scrollListenerAttached) {
+        window.addEventListener("scroll", checkScroll);
+        scrollListenerAttached = true;
+      }
+      checkScroll();
+    } else {
+      if (scrollListenerAttached) {
+        window.removeEventListener("scroll", checkScroll);
+        scrollListenerAttached = false;
+      }
+      productInfo.classList.remove("fixed", "absolute");
+      productInfo.style.top = "";
+      productInfo.style.left = "";
+      productInfo.style.right = "";
+    }
+  }
+
+  // Debounce resize for performance
+  let resizeTimeout;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(setupScrollListener, 100);
+  });
+
+  // Wait for product info to exist
+  waitForElement(".product__info-wrapper", setupScrollListener);
+});
+
+</script>
+
