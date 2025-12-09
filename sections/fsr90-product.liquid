@@ -229,7 +229,41 @@
                     </h2>
                   </a>
                 </div>
-            
+              {%- when 'sku' -%}
+                <p class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
+                  id="Sku-{{ section.id }}"
+                  role="status"
+                  {{ block.shopify_attributes }}
+                >
+                <span class="visually-hidden">{{ 'products.product.sku' | t }}:</span>
+                {{- product.selected_or_first_available_variant.sku -}}
+                </p>
+              {%- when 'review_widget' -%}
+                {% unless product.tags contains 'avisplus-product-options' %}
+                  <div class="available-wrap ">
+                    <div class="sa-reviews">
+                      {% for i in (1..5) %}
+                        {% render 'icon-rstar' %}
+                      {% endfor %}
+                      <div class="review_header" style="display: none;"></div>
+                      <div id="product_just_stars" class="reg"></div>
+                    </div>
+
+                    {% if product.metafields.custom.backorder == true %}
+                      <div class="badge backorder-badge stock-badge">
+                        <span>Available to Pre-Order</span>
+                      </div>
+                    {% else %}
+                      <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
+                        {% if product.available == true %}
+                          <span>Available to Order</span>
+                        {% else %}
+                          <span>Out of stock</span>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endunless %}
               {% when 'price' %}
                 <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
                 {% assign campaign_text = '' %}
@@ -249,10 +283,6 @@
                 {% endunless %}
                 <div>
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-                    <span class="pr_custom_compare_price"
-                      >As high as:
-                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-                    </span>
                   {% endif %}
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
@@ -271,8 +301,9 @@
 
                       {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
                       %}
+                        <s class="pr_custom_compare_price">{{ product.metafields.custom.retail_price | money -}}</s>
                         <span class="you-save"
-                          >You save
+                          >Save
                           {{
                             product.metafields.custom.retail_price
                             | minus: product.selected_or_first_available_variant.price
@@ -518,7 +549,7 @@
           </script>
         </product-gallery>
 
-        <mobile-gallery>
+        <mobile-gallery style="display:none;">
           <div class="mobile-gallery-wrapper only-mobile">
             <div class="main-slider-arrow--left" type="button">
               <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -759,6 +790,41 @@
                     </h2>
                   </a>
                 </div>
+              {%- when 'sku' -%}
+                <p class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
+                  id="Sku-{{ section.id }}"
+                  role="status"
+                  {{ block.shopify_attributes }}
+                >
+                <span class="visually-hidden">{{ 'products.product.sku' | t }}:</span>
+                {{- product.selected_or_first_available_variant.sku -}}
+                </p>
+              {%- when 'review_widget' -%}
+                {% unless product.tags contains 'avisplus-product-options' %}
+                  <div class="available-wrap ">
+                    <div class="sa-reviews">
+                      {% for i in (1..5) %}
+                        {% render 'icon-rstar' %}
+                      {% endfor %}
+                      <div class="review_header" style="display: none;"></div>
+                      <div id="product_just_stars" class="reg"></div>
+                    </div>
+
+                    {% if product.metafields.custom.backorder == true %}
+                      <div class="badge backorder-badge stock-badge">
+                        <span>Available to Pre-Order</span>
+                      </div>
+                    {% else %}
+                      <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
+                        {% if product.available == true %}
+                          <span>Available to Order</span>
+                        {% else %}
+                          <span>Out of stock</span>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endunless %}
               {% when 'price' %}
 
 {% assign campaign_text = '' %}
@@ -778,12 +844,6 @@
 {% endunless %} 
 
                 <div class="product__prices hidden lg:block">
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-                    <span class="pr_custom_compare_price"
-                      >As high as:
-                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-                    </span>
-                  {% endif %}
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
@@ -791,7 +851,7 @@
                       sale_price: product.metafields.custom.sale_price
                     %}
                   {% else %}
-                    <div class="price-container">
+                    <div class="price-container lg">
                       {%- render 'price',
                         product: product,
                         use_variant: true,
@@ -801,8 +861,9 @@
 
                       {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
                       %}
+                        <s class="pr_custom_compare_price">{{ product.metafields.custom.retail_price | money -}}</s>
                         <span class="you-save"
-                          >You save
+                          >Save
                           {{
                             product.metafields.custom.retail_price
                             | minus: product.selected_or_first_available_variant.price
@@ -1291,41 +1352,6 @@
                     {{ product.description }}
                   </div>
                 {%- endif -%}
-
-              {%- when 'review_widget' -%}
-              {% unless product.tags contains 'avisplus-product-options' %}
-                <div class="available-wrap ">
-                  <div class="sa-reviews">
-                    {% render 'icon-rstar' %}
-                    <div class="review_header"></div>
-                    <div id="product_just_stars" class="reg"></div>
-                  </div>
-
-                  {% if product.metafields.custom.backorder == true %}
-                    <div class="badge backorder-badge stock-badge">
-                       <span>Available to Pre-Order</span>
-                    </div>
-                  {% else %}
-                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                      {% if product.available == true %}
-                        <span>Available to Order</span>
-                      {% else %}
-                        <span>Out of stock</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-              {% endunless %}
-              {%- when 'sku' -%}
-                <p
-                  class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
-                  id="Sku-{{ section.id }}"
-                  role="status"
-                  {{ block.shopify_attributes }}
-                >
-                  <span class="visually-hidden">{{ 'products.product.sku' | t }}:</span>
-                  {{- product.selected_or_first_available_variant.sku -}}
-                </p>
               {%- when 'custom_liquid' -%}
                 {{ block.settings.custom_liquid }}
 
@@ -3795,3 +3821,72 @@
   ]
 }
 {% endschema %}
+<style>
+.thumbnail-btn.is-active {
+  outline: #23232B solid 1.5px;
+}
+.price-container .price-item-fixed {
+  font-size: 22px;
+  font-weight: 800;
+  color: #23232B;
+}
+.price-container .you-save {
+  padding: 4px 8px;
+  border-radius: 5px;
+  background-color: #23232B;
+}
+.pr_custom_compare_price{
+  font-size:14px;
+  margin-bottom:0;
+}
+.sa_jump_to_reviews{
+  font-size: 14px;
+  color: #23232B !important;
+}
+#product_just_stars::before,
+#product_just_stars::after {
+  content: none !important;
+}
+.product__sku{
+  font-size: 16px;
+  color: grey;
+}
+@media (max-width: 990px) {
+product-gallery{
+  display:block;
+}
+.custom-gallery-thumbnails.only-desktop, .popup-thumbnails.hidden {
+  display: flex;
+  gap: 8px;
+  order: 2;
+  overflow-x: auto;
+  padding: 10px;
+}
+.thumbnail-btn img{
+  width: 74px;
+  height: 74px;
+}
+.custom-gallery-wrapper{
+  flex-direction: column;
+}
+.thumbnail-btn{
+  overflow: unset;
+}
+.product-main-left-container{
+  order:1;
+}
+.product__info-wrapper--mobile{
+  order:2;
+}
+.product__info-wrapper.grid__item{
+  order:3;
+}
+.product__title h2{
+  font-size: 28px;
+  line-height: 36px;
+}
+.sa-reviews {
+  display: flex !important;
+}
+}
+</style>
