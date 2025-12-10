@@ -9,6 +9,9 @@
   {% for category in options %}
     {% if category.title != blank %}
       {% assign index = index | plus: 1 %}
+      {% if category.hide_option %}
+        {% assign index = index | minus: 1 %}   
+      {% endif %}
       {% assign color_counter = 0 %}
       {% assign color_title = '' %}
       {% assign color_group = '' %}
@@ -25,6 +28,9 @@
         {% if color_counter == 1 %}
           data-group-color-name="{{ color_group }}"
           data-color-name-title="{{ color_title }}"
+        {% endif %}
+        {% if category.hide_option %}
+          style="display: none !important"
         {% endif %}
       >
         <span>{{ index }}</span>{{ category.title }}
