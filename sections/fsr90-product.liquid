@@ -791,7 +791,7 @@
                   </a>
                 </div>
               {%- when 'sku' -%}
-                <p class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
+                <p class="product__sku hidden lg:block{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
                   id="Sku-{{ section.id }}"
                   role="status"
                   {{ block.shopify_attributes }}
@@ -801,7 +801,7 @@
                 </p>
               {%- when 'review_widget' -%}
                 {% unless product.tags contains 'avisplus-product-options' %}
-                  <div class="available-wrap ">
+                  <div class="available-wrap hidden lg:block">
                     <div class="sa-reviews">
                       {% for i in (1..5) %}
                         {% render 'icon-rstar' %}
@@ -809,20 +809,6 @@
                       <div class="review_header" style="display: none;"></div>
                       <div id="product_just_stars" class="reg"></div>
                     </div>
-
-                    {% if product.metafields.custom.backorder == true %}
-                      <div class="badge backorder-badge stock-badge">
-                        <span>Available to Pre-Order</span>
-                      </div>
-                    {% else %}
-                      <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                        {% if product.available == true %}
-                          <span>Available to Order</span>
-                        {% else %}
-                          <span>Out of stock</span>
-                        {% endif %}
-                      </div>
-                    {% endif %}
                   </div>
                 {% endunless %}
               {% when 'price' %}
@@ -874,7 +860,6 @@
                     </div>
                   {% endif %}
                 </div>
-              {% render 'paylater-providers' %}
               {%- when 'tile_calculator' -%}
                 {% if block.settings.show_tile_calculator %}
                   <div class="product__tile-calculator">
@@ -914,6 +899,24 @@
                             {{ product.selected_or_first_available_variant.price | money }}
                           </p>
                         </div>
+                        {% render 'paylater-providers' %}
+                        {% if product.metafields.custom.backorder == true %}
+                          <div class="badge backorder-badge stock-badge">
+                            <span>Available to Pre-Order</span>
+                          </div>
+                        {% else %}
+                          <div class="badge stock-badge lg {% if product.available == true %}in{% else %}out{% endif %}">
+                            {% if product.available == true %}
+                              <svg width="15" height="15" aria-hidden="true">
+                                <circle cx="7.5" cy="7.5" r="7.5" fill="rgb(62,214,96, 0.3)"/>
+                                <circle cx="7.5" cy="7.5" r="5" stroke="rgb(255, 255, 255)" stroke-width="1" fill="rgb(62,214,96)"/>
+                              </svg>
+                              <span>Available to Order</span>
+                            {% else %}
+                              <span>Out of stock</span>
+                            {% endif %}
+                          </div>
+                        {% endif %}
                       </div>
                     </div>
 
@@ -1288,8 +1291,46 @@
                       </button>
                     </div>
                   {% endif %}
-                {% render 'paylater-providers' %}
                 </product-form>
+                <ul class="icon-with-text icon-with-text--horizontal list-unstyled">
+                  <li class="icon-with-text__item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M17.666 19.5488V5.54883C17.666 5.0184 17.4729 4.50969 17.129 4.13461C16.7852 3.75954 16.3189 3.54883 15.8327 3.54883H8.49935C8.01312 3.54883 7.5468 3.75954 7.20299 4.13461C6.85917 4.50969 6.66602 5.0184 6.66602 5.54883V19.5488" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M2 20H22" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M2 10H22" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <line x1="20.416" y1="7.29883" x2="20.416" y2="11.7988" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <line x1="3.41602" y1="7.29883" x2="3.41602" y2="11.7988" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span style="text-align: center;">Lifetime Frame Warranty</span>
+                  </li>
+                  <li class="icon-with-text__item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8.30065 10.0008C8.17174 10.0078 8.04339 9.97907 7.9298 9.91771C7.81622 9.85635 7.72181 9.76477 7.65702 9.6531C7.59224 9.54143 7.55959 9.41402 7.5627 9.28496C7.56581 9.15589 7.60456 9.0302 7.67465 8.92178L11.4006 3.00078C11.4592 2.89535 11.544 2.80683 11.6468 2.74381C11.7496 2.68079 11.867 2.6454 11.9875 2.64108C12.108 2.63675 12.2276 2.66363 12.3347 2.71912C12.4418 2.77461 12.5327 2.85682 12.5986 2.95778L16.3006 8.90078C16.3736 9.00557 16.4165 9.12833 16.4247 9.25576C16.433 9.38319 16.4062 9.51044 16.3472 9.62373C16.2883 9.73703 16.1996 9.83205 16.0905 9.89851C15.9815 9.96497 15.8563 10.0003 15.7286 10.0008H8.30065Z" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M9 14H4C3.44772 14 3 14.4477 3 15V20C3 20.5523 3.44772 21 4 21H9C9.55228 21 10 20.5523 10 20V15C10 14.4477 9.55228 14 9 14Z" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M17.5 21C19.433 21 21 19.433 21 17.5C21 15.567 19.433 14 17.5 14C15.567 14 14 15.567 14 17.5C14 19.433 15.567 21 17.5 21Z" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span style="text-align: center;">10 Year Parts Warranty</span>
+                  </li>
+                  <li class="icon-with-text__item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 10V22" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M15 5.88L14 10H19.83C20.1405 10 20.4467 10.0723 20.7244 10.2111C21.0021 10.35 21.2437 10.5516 21.43 10.8C21.6163 11.0484 21.7422 11.3367 21.7977 11.6422C21.8533 11.9477 21.8369 12.2619 21.75 12.56L19.42 20.56C19.2988 20.9754 19.0462 21.3404 18.7 21.6C18.3538 21.8596 17.9327 22 17.5 22H4C3.46957 22 2.96086 21.7893 2.58579 21.4142C2.21071 21.0391 2 20.5304 2 20V12C2 11.4696 2.21071 10.9609 2.58579 10.5858C2.96086 10.2107 3.46957 10 4 10H6.76C7.13208 9.9998 7.49674 9.89581 7.81296 9.69972C8.12917 9.50363 8.38442 9.22321 8.55 8.89L12 2C12.4716 2.00584 12.9357 2.11817 13.3578 2.3286C13.7799 2.53902 14.1489 2.84211 14.4374 3.2152C14.7259 3.5883 14.9263 4.02176 15.0237 4.4832C15.1212 4.94464 15.113 5.42213 15 5.88Z" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span style="text-align: center;">1 Year On-Site Labor</span>
+                  </li>
+                </ul>
+                <div class="contact-box">
+                  <div class="contact-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M3.13146 2.16409e-05L3.19683 5.16816e-05L3.25703 3.16544e-05C3.58917 -0.000118346 3.8475 -0.00022848 4.0862 0.0418915C4.98561 0.200612 5.74755 0.795512 6.11967 1.62958C6.21843 1.85093 6.28097 2.10157 6.36138 2.42382L6.37597 2.48225L6.78959 4.13672L6.79864 4.17291C6.93873 4.73317 7.05762 5.2087 7.1148 5.61157C7.17568 6.04046 7.17744 6.45021 7.04053 6.87073C6.90363 7.29125 6.66097 7.62142 6.35926 7.9323C6.07585 8.2243 5.69979 8.5386 5.2567 8.9091L5.22809 8.933L3.61586 10.2808C4.91917 12.6402 6.77965 14.5007 9.13902 15.804L10.4869 14.1918L10.5108 14.1632C10.8812 13.7201 11.1956 13.344 11.4876 13.0606C11.7984 12.7589 12.1286 12.5163 12.5491 12.3794C12.9697 12.2424 13.3794 12.2442 13.8083 12.3051C14.2111 12.3623 14.6866 12.4811 15.2469 12.6212L15.2831 12.6303L16.9376 13.0439L16.996 13.0585C17.3183 13.1389 17.5689 13.2015 17.7903 13.3002C18.6244 13.6723 19.2193 14.4343 19.378 15.3337C19.4201 15.5724 19.42 15.8307 19.4198 16.1629V16.2231V16.2884C19.42 16.6714 19.4202 16.9737 19.3537 17.2715C19.1116 18.3555 18.1082 19.2657 17.0059 19.4014C16.7035 19.4386 16.4436 19.4132 16.1205 19.3815L16.0736 19.3769C13.4339 19.1194 11.0582 18.4599 8.98902 17.4202C5.91484 15.8756 3.5443 13.505 1.99968 10.4309C0.959972 8.3616 0.300522 5.98596 0.0429819 3.3463L0.0384019 3.29952C0.00671192 2.97628 -0.018758 2.71642 0.018472 2.41401C0.154192 1.31164 1.0644 0.308312 2.14837 0.0661816C2.44622 -0.000348389 2.74844 -0.000178359 3.13146 2.16409e-05ZM10.5275 16.4819C12.2079 17.202 14.1097 17.6782 16.2192 17.884C16.6057 17.9217 16.7014 17.9276 16.8226 17.9127C17.2953 17.8544 17.7859 17.4094 17.8898 16.9445C17.9157 16.8284 17.9198 16.7015 17.9198 16.2231C17.9198 15.8024 17.917 15.6863 17.9008 15.5944C17.8287 15.1855 17.5582 14.8392 17.1791 14.6701C17.0938 14.632 16.9819 14.6011 16.5738 14.4991L14.9193 14.0855C14.3131 13.934 13.9138 13.8351 13.5975 13.7902C13.2986 13.7478 13.1395 13.7646 13.0135 13.8057C12.8874 13.8467 12.7489 13.9268 12.5323 14.137C12.3031 14.3595 12.0385 14.6745 11.6377 15.1539L10.5275 16.4819ZM2.93802 8.8924L4.26598 7.7822C4.74539 7.38137 5.06043 7.11676 5.28289 6.88755C5.49313 6.67094 5.57318 6.53242 5.61422 6.40637C5.65526 6.28032 5.67211 6.12122 5.62969 5.82235C5.5848 5.50611 5.48593 5.10674 5.33438 4.50052L4.92076 2.84605C4.81874 2.43797 4.78788 2.32604 4.74983 2.24074C4.58068 1.86162 4.23434 1.59121 3.82552 1.51907C3.73354 1.50283 3.61746 1.50005 3.19683 1.50005C2.7184 1.50005 2.59146 1.50418 2.47537 1.53011C2.01047 1.63395 1.56544 2.12452 1.50723 2.5973C1.49232 2.71843 1.49818 2.81417 1.53589 3.20064C1.74171 5.31018 2.21787 7.21194 2.93802 8.8924ZM10.9197 4.74999C10.9197 4.33578 11.2555 3.99999 11.6697 3.99999C12.6962 3.99999 13.6037 4.6389 14.2172 5.29437C14.5608 5.66141 14.8519 6.07423 15.0606 6.48048C15.2618 6.87199 15.4197 7.32165 15.4197 7.74999C15.4197 8.1642 15.0839 8.5 14.6697 8.5C14.2555 8.5 13.9197 8.1642 13.9197 7.74999C13.9197 7.66004 13.876 7.45708 13.7265 7.16609C13.5845 6.88983 13.3756 6.59025 13.1221 6.31942C12.6259 5.78924 12.0883 5.49999 11.6697 5.49999C11.2555 5.49999 10.9197 5.16421 10.9197 4.74999ZM11.6697 0.999992C11.2555 0.999992 10.9197 1.33578 10.9197 1.74999C10.9197 2.16421 11.2555 2.49999 11.6697 2.49999C14.5692 2.49999 16.9197 4.8505 16.9197 7.74999C16.9197 8.1642 17.2555 8.5 17.6697 8.5C18.0839 8.5 18.4197 8.1642 18.4197 7.74999C18.4197 4.02207 15.3976 0.999992 11.6697 0.999992Z" fill="#868686"/>
+                    </svg>
+                  </div>
+                  <div class="contact-text">
+                    <div class="contact-title">Still not sure? Talk to a Specialist:</div>
+                    <div class="contact-phone">+1-925-215-2927</div>
+                  </div>
+                </div>
+
                {% endunless %}
               {%- when 'inventory' -%}
                 <p
@@ -3851,6 +3892,44 @@
   font-size: 16px;
   color: grey;
 }
+.product_price_with_options-contaniner{
+  display:block;
+}
+.product_prices{
+  position: relative;
+}
+.product_price_with_options_atc{
+  display:block;
+}
+.price-per-item__container{
+  display: none;
+}
+.pr_custom_price{
+  font-size: 22px;
+  font-weight: 800;
+  color: #23232B;
+}
+.stock-badge.in {
+  background: #faf9f9;
+  color: #23232B;
+  border-radius: 0;
+  justify-content: start;
+  gap:4px;
+  padding: 8px 0px;
+  margin-bottom: 10px;
+}
+.icon-with-text__item{
+  gap: 8px;
+}
+.contact-box {
+  display: flex;
+  gap: 17px;
+}
+.contact-text {
+  font-size: 16px;
+  font-weight: 700;
+}
+
 @media (max-width: 990px) {
 product-gallery{
   display:block;
