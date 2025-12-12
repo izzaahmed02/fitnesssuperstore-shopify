@@ -3636,7 +3636,7 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 })();
 </script>
 
-{%comment %}
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   function waitForElement(selector, callback) {
@@ -3742,68 +3742,5 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </script>
 
-{% endcomment %}
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const productInfo = document.querySelector(".product__info-wrapper");
-  const productSection = document.querySelector(".product");
-  const headerWrapper = document.querySelector(".header-wrapper");
-  if (!productInfo || !productSection) return;
 
-  const headerHeight = headerWrapper ? headerWrapper.offsetHeight : 0;
-  let scrollListenerAttached = false;
-
-  function handleScroll() {
-    const isDesktop = window.matchMedia("(min-width: 990px)").matches;
-    if (!isDesktop) {
-      productInfo.classList.remove("fixed");
-      productInfo.style.position = "";
-      productInfo.style.top = "";
-      productInfo.style.left = "";
-      return;
-    }
-
-    const sectionRect = productSection.getBoundingClientRect();
-    const infoHeight = productInfo.offsetHeight;
-    const viewportHeight = window.innerHeight;
-
-    // The point where the bottom of the section reaches viewport bottom
-    const triggerPoint = sectionRect.bottom - infoHeight - headerHeight;
-
-    if (triggerPoint <= 0) {
-      // Stick to viewport top
-      productInfo.classList.add("fixed");
-      productInfo.style.position = "fixed";
-      productInfo.style.top = `${headerHeight}px`;
-      productInfo.style.left = `${productSection.getBoundingClientRect().right - infoHeight}px`;
-    } else {
-      // Normal flow
-      productInfo.classList.remove("fixed");
-      productInfo.style.position = "absolute";
-      productInfo.style.top = "";
-      productInfo.style.left = "";
-    }
-  }
-
-  function setupScrollListener() {
-    const isDesktop = window.matchMedia("(min-width: 990px)").matches;
-    if (isDesktop && !scrollListenerAttached) {
-      window.addEventListener("scroll", handleScroll);
-      scrollListenerAttached = true;
-    } else if (!isDesktop && scrollListenerAttached) {
-      window.removeEventListener("scroll", handleScroll);
-      scrollListenerAttached = false;
-      productInfo.classList.remove("fixed");
-      productInfo.style.position = "";
-      productInfo.style.top = "";
-      productInfo.style.left = "";
-    }
-
-    handleScroll();
-  }
-
-  window.addEventListener("resize", setupScrollListener);
-  setupScrollListener();
-});
-</script>
