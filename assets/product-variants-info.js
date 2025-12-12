@@ -1,3 +1,7 @@
+// Override "Unavailable" text globally
+window.variantStrings = window.variantStrings || {};
+window.variantStrings.unavailable = "Select Weight";
+
 if (!customElements.get('product-info')) {
   customElements.define(
     'product-info',
