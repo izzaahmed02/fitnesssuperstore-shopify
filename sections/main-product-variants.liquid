@@ -3782,20 +3782,23 @@ document.addEventListener("DOMContentLoaded", function () {
     if (scrollY <= headerHeight) {
       productInfo.classList.remove("fixed", "absolute");
       productInfo.style.top = "";
+      productInfo.style.bottom = "";
       productInfo.style.left = "";
       productInfo.style.right = "";
       return;
     }
 
-    // Sticky logic
+    // Sticky logic - stick at bottom of viewport
     const extraInfoBottom = extraInfoRect.bottom;
     const extraInfoTop = extraInfoRect.top;
 
-    if (extraInfoBottom > windowHeight) {
-      // Stick product info
+    // Check if bottom of productInfo would pass the top of extraInfo section
+    if (extraInfoTop > productInfoHeight) {
+      // Keep it fixed at bottom of viewport
       productInfo.classList.add("fixed");
       productInfo.classList.remove("absolute");
-      productInfo.style.top = "0px";
+      productInfo.style.top = "";
+      productInfo.style.bottom = "0px";
 
       if (fixedContainer) {
         const containerRect = fixedContainer.getBoundingClientRect();
@@ -3803,10 +3806,11 @@ document.addEventListener("DOMContentLoaded", function () {
         productInfo.style.right = "auto";
       }
     } else {
-      // Absolute at bottom
+      // Lock it at the end of section (absolute positioning before extraInfo)
       productInfo.classList.remove("fixed");
       productInfo.classList.add("absolute");
-      productInfo.style.top = `${productExtraInfo.offsetHeight + headerHeight}px`;
+      productInfo.style.bottom = "";
+      productInfo.style.top = `${productExtraInfo.offsetTop - productInfoHeight}px`;
       productInfo.style.left = "";
       productInfo.style.right = "";
     }
@@ -3831,6 +3835,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       productInfo.classList.remove("fixed", "absolute");
       productInfo.style.top = "";
+      productInfo.style.bottom = "";
       productInfo.style.left = "";
       productInfo.style.right = "";
     }
