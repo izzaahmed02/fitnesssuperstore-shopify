@@ -3745,162 +3745,75 @@ document.addEventListener("DOMContentLoaded", function () {
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const WAIT_SELECTOR = ".avpoptions-container__v2";
   let scrollAttached = false;
 
-  function docTop(el){ return el.getBoundingClientRect().top + window.scrollY; }
-  function docBottom(el){ return el.getBoundingClientRect().bottom + window.scrollY; }
-
-  function applyPositionState(state, infoEl, extraEl, headerEl){
-    infoEl.classList.remove("fixed","absolute");
-    infoEl.style.top = infoEl.style.left = infoEl.style.right = "";
-    if(state === "fixed") infoEl.classList.add("fixed");
-    if(state === "absolute"){
-      infoEl.classList.add("absolute");
-      infoEl.style.top = `${(extraEl ? extraEl.offsetHeight : 0) + (headerEl ? headerEl.offsetHeight : 0)}px`;
-    }
-  }
-
-  function checkScroll(){
+  function checkScroll() {
     const header = document.querySelector(".header-wrapper");
     const product = document.querySelector(".product");
     const info = document.querySelector(".product__info-wrapper");
     const extra = document.querySelector(".product__extra_info");
     const fixedContainer = document.querySelector(".page-width-desktop.page-width-index");
-    if(!header || !product || !info || !extra) return;
+    if (!header || !product || !info || !extra) return;
 
     const infoH = info.offsetHeight;
     product.style.minHeight = `${infoH}px`;
-
     const headerH = header.offsetHeight || 0;
     const scrollY = window.scrollY;
     const winH = window.innerHeight;
+    const extraTopDoc = extra.getBoundingClientRect().top + scrollY;
+    const extraBottomDoc = extra.getBoundingClientRect().bottom + scrollY;
 
-    const extraTopDoc = docTop(extra);
-    const extraBottomDoc = docBottom(extra);
-
-    // deterministic decisions in document coords
-    if (scrollY <= headerH) {
-      applyPositionState("normal", info, extra, header);
-    } else if (scrollY + winH >= extraBottomDoc) {
-      applyPositionState("absolute", info, extra, header);
-    } else if (scrollY + winH >= extraTopDoc + infoH) {
-      applyPositionState("fixed", info, extra, header);
-    } else if (extraTopDoc <= scrollY + winH && extraBottomDoc > scrollY + winH) {
-      applyPositionState("fixed", info, extra, header);
+    // Decide state
+    if (scrollY <= headerH) info.classList.remove("fixed","absolute");
+    else if (scrollY + winH >= extraBottomDoc) { 
+      info.classList.remove("fixed"); info.classList.add("absolute"); info.style.top = `${extra.offsetHeight+headerH}px`;
+    }
+    else if (scrollY + winH >= extraTopDoc + infoH || (extraTopDoc <= scrollY + winH && extraBottomDoc > scrollY + winH)) {
+      info.classList.add("fixed"); info.classList.remove("absolute"); info.style.top="";
     } else {
-      applyPositionState("normal", info, extra, header);
+      info.classList.remove("fixed","absolute"); info.style.top="";
     }
 
-    // align to right of container when fixed
-    if(info.classList.contains("fixed") && fixedContainer){
+    if (info.classList.contains("fixed") && fixedContainer){
       const cRect = fixedContainer.getBoundingClientRect();
-      const leftOffset = cRect.right - info.offsetWidth - 1;
-      info.style.left = `${leftOffset}px`;
-      info.style.right = "auto";
-    } else {
-      info.style.left = info.style.right = "";
-    }
+      info.style.left = `${cRect.right - info.offsetWidth -1}px`;
+      info.style.right="auto";
+    } else { info.style.left=info.style.right=""; }
   }
 
-  function attachScroll(){ if(!scrollAttached){ window.addEventListener("scroll", checkScroll, {passive:true}); scrollAttached=true; } }
-  function detachScroll(){ if(scrollAttached){ window.removeEventListener("scroll", checkScroll); scrollAttached=false; } }
+  function attachScroll() { if(!scrollAttached){ window.addEventListener("scroll", checkScroll, {passive:true}); scrollAttached=true; } }
 
-  function waitFor(selector, timeout = 6000){
-    return new Promise((resolve) => {
-      const el = document.querySelector(selector);
-      if(el) return resolve(el);
-      const mo = new MutationObserver(() => {
-        const e = document.querySelector(selector);
-        if(e){ mo.disconnect(); resolve(e); }
-      });
-      mo.observe(document.body, { childList:true, subtree:true });
-      setTimeout(() => { mo.disconnect(); resolve(null); }, timeout);
+  // Detect variant changes or other product JS updates
+  function hookProductEvents() {
+    // Shopify 2.0 style: variant change triggers
+    document.querySelectorAll('.product-form input, .product-form select, .product-form .swatch input').forEach(el=>{
+      el.addEventListener('change', checkScroll);
+      el.addEventListener('click', checkScroll);
     });
+
+    // Also hook any custom event your theme might dispatch (some themes do "variant:change")
+    document.addEventListener('variantChange', checkScroll);
   }
 
-  (async function init(){
-    await waitFor(WAIT_SELECTOR).catch(()=>null);
+  // Run initial setup
+  const mm = window.matchMedia("screen and (min-width: 990px)");
+  if(mm.matches) attachScroll();
 
-    // ensure load & fonts ready (they affect layout)
-    await new Promise(res => {
-      if(document.readyState === "complete") return res();
-      window.addEventListener("load", () => res(), { once: true });
-      setTimeout(res, 1200);
+  // Initial check after DOM ready
+  requestAnimationFrame(checkScroll);
+
+  // Hook variant/change events
+  hookProductEvents();
+
+  // Observe layout changes dynamically
+  try {
+    const ro = new ResizeObserver(checkScroll);
+    ['.product__info-wrapper','.product__extra_info','.product','.header-wrapper'].forEach(sel=>{
+      const n=document.querySelector(sel); if(n) ro.observe(n);
     });
-    if(document.fonts && document.fonts.ready){ try{ await document.fonts.ready }catch(e){} }
+  } catch(e){ window.addEventListener("resize", checkScroll); }
 
-    const mm = window.matchMedia("screen and (min-width: 990px)");
-    if(mm.matches) attachScroll(); else detachScroll();
-
-    // find nodes
-    const extra = document.querySelector(".product__extra_info");
-    const info = document.querySelector(".product__info-wrapper");
-    const header = document.querySelector(".header-wrapper");
-
-    // If anything missing, bail early but keep observers
-    if (!extra || !info || !header) {
-      checkScroll();
-      return setupObservers();
-    }
-
-    // IntersectionObserver to reliably fire on load and when extra enters/leaves viewport.
-    // thresholds array helps trigger callback on small layout differences.
-    const io = new IntersectionObserver((entries) => {
-      // run deterministic check when intersection changes
-      checkScroll();
-    }, {
-      root: null,
-      rootMargin: '0px',
-      threshold: [0, 0.01, 0.25, 0.5, 0.75, 1]
-    });
-
-    io.observe(extra);
-
-    // immediate sequence: run check, force IO to process, then rAF checks to ensure same effect as manual scroll
-    checkScroll();                       // 1) deterministic immediate check
-    // force process of IO queued records then run final rAF-stabilize passes
-    // takeRecords helps ensure IO callbacks that are ready get processed synchronously
-    try { const pending = io.takeRecords(); if (pending && pending.length) checkScroll(); } catch(e){ /* ignore */ }
-
-    // run a couple of rAFs to let paint/layout settle (very fast, invisible)
-    requestAnimationFrame(() => {
-      checkScroll();
-      requestAnimationFrame(() => {
-        checkScroll();
-      });
-    });
-
-    // attach ResizeObserver + MutationObserver for future dynamic changes
-    function setupObservers(){
-      try {
-        const ro = new ResizeObserver(() => checkScroll());
-        ['.product__info-wrapper', '.product__extra_info', '.product', '.header-wrapper'].forEach(sel => {
-          const n = document.querySelector(sel);
-          if(n) ro.observe(n);
-        });
-      } catch(e){
-        window.addEventListener("resize", checkScroll);
-      }
-
-      const mo = new MutationObserver(() => {
-        if(window.__deb) clearTimeout(window.__deb);
-        window.__deb = setTimeout(checkScroll, 80);
-      });
-      mo.observe(document.body, { childList:true, subtree:true, attributes:true, characterData:true });
-    }
-
-    setupObservers();
-
-    // re-evaluate on breakpoint change
-    mm.addEventListener?.("change", e => {
-      if(e.matches) attachScroll(); else detachScroll();
-      checkScroll();
-      // ensure stable after breakpoint switch
-      requestAnimationFrame(() => requestAnimationFrame(checkScroll));
-    });
-  })();
-
-  // expose checkScroll for debugging if needed: window.__checkSticky = checkScroll;
+  const mo = new MutationObserver(()=>{ if(window.__deb) clearTimeout(window.__deb); window.__deb=setTimeout(checkScroll,80); });
+  mo.observe(document.body,{childList:true,subtree:true,attributes:true,characterData:true});
 });
 </script>
