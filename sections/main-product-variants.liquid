@@ -3743,3 +3743,230 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 {% endcomment %}
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function waitForElement(selector, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+      const el = document.querySelector(selector);
+      if (el) return resolve(el);
+
+      const observer = new MutationObserver(() => {
+        const e = document.querySelector(selector);
+        if (e) {
+          observer.disconnect();
+          resolve(e);
+        }
+      });
+
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      if (timeout) {
+        setTimeout(() => {
+          observer.disconnect();
+          reject(new Error("waitForElement timeout: " + selector));
+        }, timeout);
+      }
+    });
+  }
+
+  let scrollListenerAttached = false;
+  let lastStableTop = null;
+  let stableCount = 0;
+
+  function checkScroll() {
+    const headerWrapper = document.querySelector(".header-wrapper");
+    const productContainer = document.querySelector(".product");
+    const productInfo = document.querySelector(".product__info-wrapper");
+    const productExtraInfo = document.querySelector(".product__extra_info");
+    const fixedContainer = document.querySelector(".page-width-desktop.page-width-index");
+
+    if (!productContainer || !productInfo || !productExtraInfo || !headerWrapper) return;
+
+    const productInfoHeight = productInfo.offsetHeight;
+    const extraInfoRect = productExtraInfo.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    const extraInfoHeight = productExtraInfo.offsetHeight;
+
+    // keep left column minimum height so absolute positioning doesn't overlap
+    productContainer.style.minHeight = `${productInfoHeight}px`;
+
+    // before header threshold
+    if (window.scrollY <= (headerWrapper.offsetHeight || 0)) {
+      productInfo.classList.remove("fixed", "absolute");
+      productInfo.style.top = "";
+      productInfo.style.right = "";
+      productInfo.style.left = "";
+      return;
+    }
+
+    // generic fixed state when extra info top reaches visible area minus product info height
+    if (extraInfoRect.top <= windowHeight - productInfoHeight) {
+      productInfo.classList.add("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = "";
+    } else {
+      productInfo.classList.remove("fixed");
+    }
+
+    // ensure fixed while extra info spans through viewport bottom
+    if (extraInfoRect.top <= windowHeight && extraInfoRect.bottom > windowHeight) {
+      productInfo.classList.add("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = "";
+    }
+
+    // when extra info is fully within viewport (bottom <= windowHeight) -> absolute anchored after section end
+    if (extraInfoRect.bottom <= windowHeight) {
+      productInfo.classList.remove("fixed");
+      productInfo.classList.add("absolute");
+      // place it below header plus extraInfo height (adjust as needed)
+      productInfo.style.top = `${extraInfoHeight + (headerWrapper.offsetHeight || 0)}px`;
+      productInfo.style.left = "";
+      productInfo.style.right = "";
+      return;
+    }
+
+    // align right inside fixed container when fixed
+    if (fixedContainer && productInfo.classList.contains("fixed")) {
+      const containerRect = fixedContainer.getBoundingClientRect();
+      const leftOffset = containerRect.right - productInfo.offsetWidth - 1;
+      productInfo.style.left = `${leftOffset}px`;
+      productInfo.style.right = "auto";
+    } else {
+      productInfo.style.left = "";
+      productInfo.style.right = "";
+    }
+  }
+
+  function attachScroll() {
+    if (!scrollListenerAttached) {
+      window.addEventListener("scroll", checkScroll, { passive: true });
+      scrollListenerAttached = true;
+    }
+  }
+
+  function detachScroll() {
+    if (scrollListenerAttached) {
+      window.removeEventListener("scroll", checkScroll);
+      scrollListenerAttached = false;
+    }
+  }
+
+  // run multiple initial checks until measurements stabilize
+  function runInitialStabilizeChecks(maxTries = 8) {
+    const productInfo = document.querySelector(".product__info-wrapper");
+    if (!productInfo) return;
+
+    let tries = 0;
+
+    function measureAndMaybeRepeat() {
+      checkScroll();
+
+      // use getBoundingClientRect top to detect stabilization (could use width/height too)
+      const rect = productInfo.getBoundingClientRect();
+      const curTop = Math.round(rect.top);
+
+      if (lastStableTop === curTop) {
+        stableCount++;
+      } else {
+        stableCount = 0;
+      }
+      lastStableTop = curTop;
+      tries++;
+
+      // stop if stable for 2 consecutive checks or ran out of tries
+      if (stableCount >= 2 || tries >= maxTries) {
+        // final check via rAF to ensure painted
+        requestAnimationFrame(checkScroll);
+        return;
+      }
+
+      // schedule another check next frame (gives browser chance to layout)
+      requestAnimationFrame(measureAndMaybeRepeat);
+    }
+
+    // kick off
+    requestAnimationFrame(measureAndMaybeRepeat);
+  }
+
+  function setupObservers() {
+    const productInfo = document.querySelector(".product__info-wrapper");
+    const productExtraInfo = document.querySelector(".product__extra_info");
+    const productContainer = document.querySelector(".product");
+
+    // ResizeObserver to re-run on element resizes (images, fonts, dynamic content)
+    try {
+      const ro = new ResizeObserver(() => {
+        checkScroll();
+      });
+      if (productInfo) ro.observe(productInfo);
+      if (productExtraInfo) ro.observe(productExtraInfo);
+      if (productContainer) ro.observe(productContainer);
+    } catch (e) {
+      // ResizeObserver not available -> fallback to window resize
+      window.addEventListener("resize", checkScroll);
+    }
+
+    // Watch for DOM changes that might change layout (e.g. lazy loaded images)
+    const mo = new MutationObserver(() => {
+      // debounce small bursts
+      if (typeof window.__productInfoMutationDebounce !== "undefined") {
+        clearTimeout(window.__productInfoMutationDebounce);
+      }
+      window.__productInfoMutationDebounce = setTimeout(() => {
+        checkScroll();
+      }, 80);
+    });
+
+    mo.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
+  }
+
+  // main setup
+  (async function init() {
+    try {
+      // Wait for the anchor element you had in original code (keeps original intent)
+      await waitForElement(".avpoptions-container__v2").catch(() => null);
+
+      // Wait for full load (images, iframes) and fonts to be ready — both affect layout.
+      const loadPromise = new Promise(res => {
+        if (document.readyState === "complete") return res();
+        window.addEventListener("load", () => res(), { once: true });
+      });
+
+      const fontsPromise = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+
+      await Promise.all([loadPromise, fontsPromise]);
+
+      // small delay for edge cases (networked resources, lazy loaders)
+      await new Promise(r => setTimeout(r, 40));
+
+      // attach scroll listener for wide screens
+      if (window.matchMedia("screen and (min-width: 990px)").matches) {
+        attachScroll();
+      } else {
+        detachScroll();
+      }
+
+      // run repeated checks until stable so it behaves like a resize
+      runInitialStabilizeChecks();
+
+      // keep observers to react to later layout changes
+      setupObservers();
+
+      // also re-run when breakpoint crosses
+      window.matchMedia("screen and (min-width: 990px)").addEventListener?.("change", e => {
+        if (e.matches) attachScroll();
+        else detachScroll();
+        // re-evaluate layout immediately after breakpoint change
+        setTimeout(checkScroll, 30);
+      });
+    } catch (err) {
+      // fallback: ensure scroll listener is attached if possible
+      if (window.matchMedia("screen and (min-width: 990px)").matches) attachScroll();
+      // final attempt
+      setTimeout(checkScroll, 100);
+    }
+  })();
+
+});
+</script>
