@@ -3809,74 +3809,75 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Wait for selector (fallback resolves after timeout)
-  function waitFor(selector, timeout = 5000) {
+  function waitFor(selector, timeout = 6000) {
     return new Promise((resolve) => {
       const el = document.querySelector(selector);
       if (el) return resolve(el);
       const mo = new MutationObserver(() => {
         const e = document.querySelector(selector);
-        if (e) {
-          mo.disconnect();
-          resolve(e);
-        }
+        if (e) { mo.disconnect(); resolve(e); }
       });
       mo.observe(document.body, { childList: true, subtree: true });
       setTimeout(() => { mo.disconnect(); resolve(null); }, timeout);
     });
   }
 
+  // small helper: programmatic "nudge" to emulate a user resize/scroll
+  function nudgeToTrigger() {
+    // run check, then dispatch scroll, then schedule rechecks — harmless and invisible
+    checkScroll();
+    // force a reflow
+    void document.body.offsetWidth;
+    // dispatch a scroll event (no visual scroll)
+    window.dispatchEvent(new Event('scroll'));
+    // schedule a couple of re-checks to catch late layout changes
+    setTimeout(checkScroll, 25);
+    setTimeout(() => { window.dispatchEvent(new Event('scroll')); checkScroll(); }, 110);
+    setTimeout(checkScroll, 300);
+  }
+
   (async function init() {
     await waitFor(SELECTOR_WAIT).catch(() => null);
 
-    // ensure load & fonts ready before measuring
+    // Wait for load (images) and fonts
     await new Promise(res => {
       if (document.readyState === "complete") return res();
       window.addEventListener("load", () => res(), { once: true });
-      // also timeout in case 'load' never fires
       setTimeout(res, 1500);
     });
     if (document.fonts && document.fonts.ready) {
       try { await document.fonts.ready; } catch(e) {}
     }
 
-    // attach only on wide screens
+    // attach/detach based on breakpoint
     const mm = window.matchMedia("screen and (min-width: 990px)");
     if (mm.matches) attachScroll(); else detachScroll();
 
-    // ensure initial measurement happens after paint
+    // initial paint-aware checks
     requestAnimationFrame(() => {
-      // 1) run check
       checkScroll();
-
-      // 2) force a tiny reflow/read to ensure layout stabilises
-      void document.body.offsetHeight;
-
-      // 3) dispatch a "resize" event (this is what made it work for you manually)
-      window.dispatchEvent(new Event("resize"));
-
-      // 4) run again after small delays to catch late changes (images, injected content)
-      setTimeout(checkScroll, 30);
-      setTimeout(() => { checkScroll(); }, 120);
+      // small reflow + nudge to mimic the manual scroll/resize that previously fixed it
+      nudgeToTrigger();
     });
 
-    // react to breakpoint changes
-    mm.addEventListener?.("change", e => {
-      if (e.matches) attachScroll(); else detachScroll();
-      // re-evaluate layout shortly after change
-      setTimeout(() => { requestAnimationFrame(checkScroll); }, 40);
-    });
-
-    // observe resizes of elements that affect layout
+    // keep observers in place
     try {
       const ro = new ResizeObserver(checkScroll);
-      const nodes = [".product__info-wrapper", ".product__extra_info", ".product"].map(s => document.querySelector(s)).filter(Boolean);
-      nodes.forEach(n => ro.observe(n));
-    } catch(e){ window.addEventListener("resize", checkScroll); }
+      ['.product__info-wrapper', '.product__extra_info', '.product'].forEach(s => {
+        const n = document.querySelector(s);
+        if (n) ro.observe(n);
+      });
+    } catch(e) { window.addEventListener("resize", checkScroll); }
 
-    // observe DOM mutations that might shift layout
     const globalMO = new MutationObserver(() => { if (window.__deb) clearTimeout(window.__deb); window.__deb = setTimeout(checkScroll, 80); });
     globalMO.observe(document.body, { childList: true, subtree: true, attributes: true });
+
+    // re-evaluate on breakpoint changes
+    mm.addEventListener?.("change", e => {
+      if (e.matches) attachScroll(); else detachScroll();
+      // ensure layout recalculation after switch
+      setTimeout(() => { requestAnimationFrame(checkScroll); nudgeToTrigger(); }, 40);
+    });
   })();
 });
 </script>
