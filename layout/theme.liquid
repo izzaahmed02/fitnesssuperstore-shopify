@@ -2,7 +2,7 @@
 <html class="js" lang="{{ request.locale.iso_code }}">
   <head>
     {% render 'head-meta' %}
-     
+
     <title>
       {{ page_title | escape_once }}
       {% if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif %}
@@ -10,7 +10,7 @@
     </title>
 
     {% render 'google-tag-manager-head' %}
-    {% comment %} {% render 'schema-ld-json' %} {% endcomment %}
+    {% render 'schema-ld-json' %}
 
     {% if page_description %}
       <meta name="description" content="{{ page_description | escape }}">
@@ -34,7 +34,7 @@
 
   <body class="accessibility-mode page-width-desktop page-width-index gradient{% if settings.animations_hover_elements != 'none' %} animate--hover-{{ settings.animations_hover_elements }}{% endif %} {% if template contains 'page' %} page-{{ page.handle }}{% endif %}">
     {% render 'google-tag-manager-body' %}
-    
+
     <a class="skip-to-content-link button visually-hidden" href="#MainContent">
       {{ 'accessibility.skip_to_text' | t }}
     </a>
@@ -44,7 +44,7 @@
     {%- endif -%}
 
     {% unless template == 'page.goaffpro-create' %}
-      {% sections 'header-group' %}  
+      {% sections 'header-group' %}
     {% endunless %}
 
     {% if settings.show_sidebar_menu %}
@@ -56,7 +56,7 @@
       {%- comment -%} Template-specific modals and banners {%- endcomment -%}
       {% render 'template-modals' %}
       {% render 'template-offers' %}
-      
+
       {%- comment -%} MAIN CONTENT LAYOUT - content_for_layout MUST be in main template {%- endcomment -%}
       {% if request.page_type == 'page' and page.metafields.layout.narrow == true %}
         <div class="page-narrow-layout">
@@ -65,7 +65,7 @@
       {% elsif request.page_type == 'page' or request.page_type == 'index' or request.page_type == 'collection' or request.page_type == 'product' or request.page_type == 'search' %}
         <style>
           @media only screen and (min-width: 990px) {
-            .side-bar-comtainer { 
+            .side-bar-comtainer {
               position: relative;
               display: flex;
               gap: 0px!important;
@@ -80,7 +80,7 @@
             }
           }
         </style>
-        
+
         <div class="{% unless template == 'page.goaffpro-create' %} grid-container {% endunless %} {% if request.page_type == 'collection' or request.page_type == 'search' %} collection-layout {% endif %} {% if request.page_type == 'product' %} product-layout {% endif %} {% unless template == 'page.goaffpro-create' or page.template_suffix == 'blog' %} side-bar-comtainer {% endunless %}">
           {% unless template == 'page.goaffpro-create' or page.template_suffix == 'blog' %}
             <aside class="sidebarmenu">
@@ -89,7 +89,7 @@
           {% endunless %}
 
           <div class="inner-container {% if page.template_suffix == 'blog' %} blogPage{% endif %}">
-            {{ content_for_layout }} 
+            {{ content_for_layout }}
           </div>
         </div>
       {% else %}
@@ -120,17 +120,17 @@ setTimeout(function() {
 
 
 
-  {%- capture productTemplate -%}{% render 'globo.filter.product', themeTranslation: shop.metafields.globoFilter.themeTranslation.value[request.locale.iso_code] %}{%- endcapture -%}{%- unless productTemplate contains 'Liquid error' -%}<script id="gspfProduct" type="template/html">{{- productTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%} 
-{%- capture treeTemplate -%}{% render 'globo.filter.tree' %}{%- endcapture -%}{%- unless treeTemplate contains 'Liquid error' -%}<script id="gspfFilterTree" type="template/html">{{- treeTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%} 
-{%- capture sortTemplate -%}{% render 'globo.filter.sort' %}{%- endcapture -%}{%- unless sortTemplate contains 'Liquid error' -%}<script id="gspfFilterSort" type="template/html">{{- sortTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%} 
-{%- capture searchTemplate -%}{% render 'globo.filter.search' %}{%- endcapture -%}{%- unless searchTemplate contains 'Liquid error' -%}<script id="gspfSearchResult" type="template/html">{{- searchTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%} 
+  {%- capture productTemplate -%}{% render 'globo.filter.product', themeTranslation: shop.metafields.globoFilter.themeTranslation.value[request.locale.iso_code] %}{%- endcapture -%}{%- unless productTemplate contains 'Liquid error' -%}<script id="gspfProduct" type="template/html">{{- productTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
+{%- capture treeTemplate -%}{% render 'globo.filter.tree' %}{%- endcapture -%}{%- unless treeTemplate contains 'Liquid error' -%}<script id="gspfFilterTree" type="template/html">{{- treeTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
+{%- capture sortTemplate -%}{% render 'globo.filter.sort' %}{%- endcapture -%}{%- unless sortTemplate contains 'Liquid error' -%}<script id="gspfFilterSort" type="template/html">{{- sortTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
+{%- capture searchTemplate -%}{% render 'globo.filter.search' %}{%- endcapture -%}{%- unless searchTemplate contains 'Liquid error' -%}<script id="gspfSearchResult" type="template/html">{{- searchTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
 
     <script>
 setTimeout(function() {
   document.querySelector('.smobile-gallery-wrapper.only-mobile').style.display = 'block';
 }, 3000);
     </script>
-  
+
 <script>
 (function() {
   var ua = navigator.userAgent || "";
@@ -178,4 +178,3 @@ setTimeout(function() {
 
   </body>
 </html>
- 
