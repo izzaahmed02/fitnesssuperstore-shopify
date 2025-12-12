@@ -3636,7 +3636,7 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 })();
 </script>
 
-
+{%comment %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   function waitForElement(selector, callback) {
@@ -3742,3 +3742,76 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </script>
 
+{% endcomment %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const productInfo = document.querySelector(".product__info-wrapper");
+  const productSection = document.querySelector(".product");
+
+  if (!productInfo || !productSection) return;
+
+  const headerWrapper = document.querySelector(".header-wrapper");
+  const headerHeight = headerWrapper ? headerWrapper.offsetHeight : 0;
+
+  let scrollListenerAttached = false;
+
+  function handleScroll() {
+    const isDesktop = window.matchMedia("(min-width: 990px)").matches;
+    if (!isDesktop) {
+      productInfo.classList.remove("fixed");
+      productInfo.style.top = "";
+      return;
+    }
+
+    const sectionRect = productSection.getBoundingClientRect();
+    const infoHeight = productInfo.offsetHeight;
+    const viewportHeight = window.innerHeight;
+
+    // If section is shorter than viewport, just fix at top
+    if (sectionRect.height <= infoHeight) {
+      productInfo.classList.add("fixed");
+      productInfo.style.top = `${headerHeight}px`;
+      return;
+    }
+
+    // Stick when scrolled past section top but not past bottom
+    if (sectionRect.top - headerHeight <= 0 && sectionRect.bottom - infoHeight - headerHeight > 0) {
+      productInfo.classList.add("fixed");
+      productInfo.style.top = `${headerHeight}px`;
+      productInfo.style.position = "fixed";
+    }
+    // Stop at bottom of section
+    else if (sectionRect.bottom - infoHeight - headerHeight <= 0) {
+      productInfo.classList.remove("fixed");
+      productInfo.style.position = "absolute";
+      productInfo.style.top = `${productSection.offsetHeight - infoHeight}px`;
+    }
+    // Default position (top of section)
+    else {
+      productInfo.classList.remove("fixed");
+      productInfo.style.position = "absolute";
+      productInfo.style.top = "0px";
+    }
+  }
+
+  function setupScrollListener() {
+    const isDesktop = window.matchMedia("(min-width: 990px)").matches;
+    if (isDesktop && !scrollListenerAttached) {
+      window.addEventListener("scroll", handleScroll);
+      scrollListenerAttached = true;
+    } else if (!isDesktop && scrollListenerAttached) {
+      window.removeEventListener("scroll", handleScroll);
+      scrollListenerAttached = false;
+      productInfo.classList.remove("fixed");
+      productInfo.style.top = "";
+      productInfo.style.position = "";
+    }
+
+    handleScroll();
+  }
+
+  window.addEventListener("resize", setupScrollListener);
+  setupScrollListener();
+});
+</script>
