@@ -3745,135 +3745,102 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 <script>
-(function() {
-  'use strict';
-  
-  let scrollListenerAttached = false;
-  let resizeTimeout = null;
-  let observer = null;
-  
+document.addEventListener("DOMContentLoaded", function () {
   function waitForElement(selector, callback) {
-    const element = document.querySelector(selector);
-    if (element) {
-      callback(element);
-      return;
-    }
-    
-    if (observer) {
-      observer.disconnect();
-    }
-    
-    observer = new MutationObserver(() => {
-      const el = document.querySelector(selector);
-      if (el) {
+    const observer = new MutationObserver((mutationsList, observer) => {
+      const element = document.querySelector(selector);
+      if (element) {
         observer.disconnect();
-        callback(el);
+        callback(element);
       }
     });
-    
-    observer.observe(document.body, { 
-      childList: true, 
-      subtree: true 
-    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
-  
+
+  let scrollListenerAttached = false;
+
   function checkScroll() {
-    const headerWrapper = document.querySelector('.header-wrapper');
-    const productContainer = document.querySelector('.product');
-    const productInfo = document.querySelector('.product__info-wrapper');
-    const leftContainer = document.querySelector('.product-main-left-container');
-    const productExtraInfo = document.querySelector('.product__extra_info');
-    const fixedContainer = document.querySelector('.page-width-desktop.page-width-index');
-    
-    if (!productContainer || !productInfo || !leftContainer || !productExtraInfo) {
-      return;
-    }
-    
-    const extraInfoRect = productExtraInfo.getBoundingClientRect();
+    const headerWrapper = document.querySelector(".header-wrapper");
+    const productContainer = document.querySelector(".product");
+    const productInfo = document.querySelector(".product__info-wrapper");
+    const productExtraInfo = document.querySelector(".product__extra_info");
+    const fixedContainer = document.querySelector(".page-width-desktop.page-width-index");
+
+    if (!productContainer || !productInfo || !productExtraInfo || !headerWrapper) return;
+
     const windowHeight = window.innerHeight;
+    const scrollY = window.scrollY || window.pageYOffset;
+
     const productInfoHeight = productInfo.offsetHeight;
-    const extraInfoHeight = productExtraInfo.offsetHeight;
-    const headerHeight = headerWrapper ? headerWrapper.offsetHeight : 0;
-    
+    const extraInfoRect = productExtraInfo.getBoundingClientRect();
+    const headerHeight = headerWrapper.offsetHeight;
+
+    // Ensure product container has min-height
     productContainer.style.minHeight = `${productInfoHeight}px`;
-    
-    if (window.scrollY <= headerHeight) {
-      productInfo.classList.remove('fixed', 'absolute');
-      productInfo.style.top = '';
-      productInfo.style.right = '';
-      productInfo.style.left = '';
+
+    // Reset for top of page
+    if (scrollY <= headerHeight) {
+      productInfo.classList.remove("fixed", "absolute");
+      productInfo.style.top = "";
+      productInfo.style.left = "";
+      productInfo.style.right = "";
       return;
     }
+
+    // Check if the bottom of productInfo would reach the top of extraInfo
+    const extraInfoTop = extraInfoRect.top;
     
-    if (extraInfoRect.bottom <= windowHeight) {
-      productInfo.classList.remove('fixed');
-      productInfo.classList.add('absolute');
-      productInfo.style.top = `${extraInfoHeight + headerHeight}px`;
-      productInfo.style.left = '';
-      productInfo.style.right = '';
-      return;
-    }
-    
-    if (extraInfoRect.top <= windowHeight - productInfoHeight) {
-      productInfo.classList.add('fixed');
-      productInfo.classList.remove('absolute');
-      productInfo.style.top = '';
-      
-      if (fixedContainer) {
-        const containerRect = fixedContainer.getBoundingClientRect();
-        const leftOffset = containerRect.right - productInfo.offsetWidth - 1;
-        productInfo.style.left = `${leftOffset}px`;
-        productInfo.style.right = 'auto';
-      }
+    // Only start sticking when the bottom of product info reaches top of extra info
+    if (extraInfoTop <= productInfoHeight) {
+      // Now lock it at the end of the section (absolute positioning)
+      productInfo.classList.remove("fixed");
+      productInfo.classList.add("absolute");
+      productInfo.style.top = `${productExtraInfo.offsetTop - productInfoHeight}px`;
+      productInfo.style.left = "";
+      productInfo.style.right = "";
     } else {
-      productInfo.classList.remove('fixed', 'absolute');
-      productInfo.style.top = '';
-      productInfo.style.left = '';
-      productInfo.style.right = '';
+      // Keep it in normal flow (not sticky yet)
+      productInfo.classList.remove("fixed", "absolute");
+      productInfo.style.top = "";
+      productInfo.style.left = "";
+      productInfo.style.right = "";
     }
   }
-  
+
   function setupScrollListener() {
-    const productInfo = document.querySelector('.product__info-wrapper');
-    const isDesktop = window.matchMedia('screen and (min-width: 990px)').matches;
-    
+    const productInfo = document.querySelector(".product__info-wrapper");
+    if (!productInfo) return;
+
+    const isDesktop = window.matchMedia("(min-width: 990px)").matches;
+
     if (isDesktop) {
       if (!scrollListenerAttached) {
-        window.addEventListener('scroll', checkScroll, { passive: true });
+        window.addEventListener("scroll", checkScroll);
         scrollListenerAttached = true;
       }
       checkScroll();
     } else {
       if (scrollListenerAttached) {
-        window.removeEventListener('scroll', checkScroll);
+        window.removeEventListener("scroll", checkScroll);
         scrollListenerAttached = false;
       }
-      
-      if (productInfo) {
-        productInfo.classList.remove('fixed', 'absolute');
-        productInfo.style.top = '';
-        productInfo.style.left = '';
-        productInfo.style.right = '';
-      }
+      productInfo.classList.remove("fixed", "absolute");
+      productInfo.style.top = "";
+      productInfo.style.left = "";
+      productInfo.style.right = "";
     }
   }
-  
-  function init() {
-    waitForElement('.avpoptions-container__v2', setupScrollListener);
-    
-    window.addEventListener('resize', function() {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(setupScrollListener, 100);
-    });
-  }
-  
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
 
+  // Debounce resize for performance
+  let resizeTimeout;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(setupScrollListener, 100);
+  });
+
+  // Wait for product info to exist
+  waitForElement(".product__info-wrapper", setupScrollListener);
+});
 </script>
 
 
