@@ -3745,9 +3745,43 @@ document.addEventListener("DOMContentLoaded", function () {
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const SELECTOR_WAIT = ".avpoptions-container__v2";
+  const WAIT_SELECTOR = ".avpoptions-container__v2";
   let scrollAttached = false;
 
+  // wait for an element (fallback after timeout)
+  function waitFor(selector, timeout = 5000) {
+    return new Promise((resolve) => {
+      const el = document.querySelector(selector);
+      if (el) return resolve(el);
+      const mo = new MutationObserver(() => {
+        const e = document.querySelector(selector);
+        if (e) { mo.disconnect(); resolve(e); }
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+      setTimeout(() => { mo.disconnect(); resolve(null); }, timeout);
+    });
+  }
+
+  // compute document-space position helpers
+  function docTop(el) { return el.getBoundingClientRect().top + window.scrollY; }
+  function docBottom(el) { return el.getBoundingClientRect().bottom + window.scrollY; }
+
+  function applyPositionState(state, infoEl, extraEl, headerEl) {
+    // states: "normal", "fixed", "absolute"
+    infoEl.classList.remove("fixed", "absolute");
+    infoEl.style.top = infoEl.style.left = infoEl.style.right = "";
+    if (state === "fixed") {
+      infoEl.classList.add("fixed");
+    } else if (state === "absolute") {
+      infoEl.classList.add("absolute");
+      // anchor below the section: mimic previous behavior (adjust if needed)
+      infoEl.style.top = `${extraEl.offsetHeight + (headerEl ? headerEl.offsetHeight : 0)}px`;
+      infoEl.style.left = "";
+      infoEl.style.right = "";
+    }
+  }
+
+  // main deterministic check using document coordinates (no dependency on prior scroll events)
   function checkScroll() {
     const header = document.querySelector(".header-wrapper");
     const product = document.querySelector(".product");
@@ -3757,38 +3791,38 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!header || !product || !info || !extra) return;
 
+    // keep left column min-height
     const infoH = info.offsetHeight;
-    const extraRect = extra.getBoundingClientRect();
-    const winH = window.innerHeight;
-    const extraH = extra.offsetHeight;
-
     product.style.minHeight = `${infoH}px`;
 
-    if (window.scrollY <= (header.offsetHeight || 0)) {
-      info.classList.remove("fixed", "absolute");
-      info.style.top = info.style.left = info.style.right = "";
-      return;
-    }
+    const headerH = header.offsetHeight || 0;
+    const scrollY = window.scrollY;
+    const winH = window.innerHeight;
 
-    if (extraRect.top <= winH - infoH || (extraRect.top <= winH && extraRect.bottom > winH)) {
-      info.classList.add("fixed");
-      info.classList.remove("absolute");
-      info.style.top = "";
+    // document positions for stable decisions
+    const extraTopDoc = docTop(extra);
+    const extraBottomDoc = docBottom(extra);
+
+    // If scrolled above header threshold -> normal
+    if (scrollY <= headerH) {
+      applyPositionState("normal", info, extra, header);
+    } else if (scrollY + winH >= extraBottomDoc) {
+      // viewport bottom is past section bottom -> absolute
+      applyPositionState("absolute", info, extra, header);
+    } else if (scrollY + winH >= extraTopDoc + infoH) {
+      // viewport bottom is at/after the extra top + info height -> fixed
+      applyPositionState("fixed", info, extra, header);
+    } else if (extraTopDoc <= scrollY + winH && extraBottomDoc > scrollY + winH) {
+      // extra spans through viewport bottom -> fixed
+      applyPositionState("fixed", info, extra, header);
     } else {
-      info.classList.remove("fixed");
+      applyPositionState("normal", info, extra, header);
     }
 
-    if (extraRect.bottom <= winH) {
-      info.classList.remove("fixed");
-      info.classList.add("absolute");
-      info.style.top = `${extraH + (header.offsetHeight || 0)}px`;
-      info.style.left = info.style.right = "";
-      return;
-    }
-
-    if (fixedContainer && info.classList.contains("fixed")) {
-      const c = fixedContainer.getBoundingClientRect();
-      const leftOffset = c.right - info.offsetWidth - 1;
+    // if fixed, align to container right edge
+    if (info.classList.contains("fixed") && fixedContainer) {
+      const cRect = fixedContainer.getBoundingClientRect();
+      const leftOffset = cRect.right - info.offsetWidth - 1;
       info.style.left = `${leftOffset}px`;
       info.style.right = "auto";
     } else {
@@ -3809,74 +3843,74 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  function waitFor(selector, timeout = 6000) {
-    return new Promise((resolve) => {
-      const el = document.querySelector(selector);
-      if (el) return resolve(el);
-      const mo = new MutationObserver(() => {
-        const e = document.querySelector(selector);
-        if (e) { mo.disconnect(); resolve(e); }
-      });
-      mo.observe(document.body, { childList: true, subtree: true });
-      setTimeout(() => { mo.disconnect(); resolve(null); }, timeout);
-    });
-  }
+  // run quick rAF stabilization checks (stops early if stable)
+  function stabilizeInitialChecks(maxFrames = 8) {
+    const info = document.querySelector(".product__info-wrapper");
+    if (!info) return;
+    let lastState = info.className;
+    let frames = 0;
 
-  // small helper: programmatic "nudge" to emulate a user resize/scroll
-  function nudgeToTrigger() {
-    // run check, then dispatch scroll, then schedule rechecks — harmless and invisible
-    checkScroll();
-    // force a reflow
-    void document.body.offsetWidth;
-    // dispatch a scroll event (no visual scroll)
-    window.dispatchEvent(new Event('scroll'));
-    // schedule a couple of re-checks to catch late layout changes
-    setTimeout(checkScroll, 25);
-    setTimeout(() => { window.dispatchEvent(new Event('scroll')); checkScroll(); }, 110);
-    setTimeout(checkScroll, 300);
+    function step() {
+      checkScroll();
+      frames++;
+      const nowState = info.className;
+      if (nowState === lastState && frames >= 2) {
+        // stable
+        return;
+      }
+      lastState = nowState;
+      if (frames < maxFrames) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
   }
 
   (async function init() {
-    await waitFor(SELECTOR_WAIT).catch(() => null);
+    // wait for your anchor selector (keeps original intent)
+    await waitFor(WAIT_SELECTOR).catch(() => null);
 
-    // Wait for load (images) and fonts
+    // wait for full load and fonts (they affect layout)
     await new Promise(res => {
       if (document.readyState === "complete") return res();
       window.addEventListener("load", () => res(), { once: true });
-      setTimeout(res, 1500);
+      setTimeout(res, 1200);
     });
     if (document.fonts && document.fonts.ready) {
       try { await document.fonts.ready; } catch(e) {}
     }
 
-    // attach/detach based on breakpoint
+    // attach based on breakpoint
     const mm = window.matchMedia("screen and (min-width: 990px)");
     if (mm.matches) attachScroll(); else detachScroll();
 
-    // initial paint-aware checks
-    requestAnimationFrame(() => {
-      checkScroll();
-      // small reflow + nudge to mimic the manual scroll/resize that previously fixed it
-      nudgeToTrigger();
-    });
+    // run deterministic check immediately (no visual change)
+    checkScroll();
 
-    // keep observers in place
+    // run a short stabilization loop to catch tiny late layout shifts
+    stabilizeInitialChecks();
+
+    // observers to keep things correct later
     try {
       const ro = new ResizeObserver(checkScroll);
-      ['.product__info-wrapper', '.product__extra_info', '.product'].forEach(s => {
+      ['.product__info-wrapper', '.product__extra_info', '.product', '.header-wrapper'].forEach(s => {
         const n = document.querySelector(s);
         if (n) ro.observe(n);
       });
-    } catch(e) { window.addEventListener("resize", checkScroll); }
+    } catch (e) {
+      window.addEventListener("resize", checkScroll);
+    }
 
-    const globalMO = new MutationObserver(() => { if (window.__deb) clearTimeout(window.__deb); window.__deb = setTimeout(checkScroll, 80); });
-    globalMO.observe(document.body, { childList: true, subtree: true, attributes: true });
+    const mo = new MutationObserver(() => {
+      if (window.__deb) clearTimeout(window.__deb);
+      window.__deb = setTimeout(checkScroll, 80);
+    });
+    mo.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
 
-    // re-evaluate on breakpoint changes
+    // re-evaluate on breakpoint change
     mm.addEventListener?.("change", e => {
       if (e.matches) attachScroll(); else detachScroll();
-      // ensure layout recalculation after switch
-      setTimeout(() => { requestAnimationFrame(checkScroll); nudgeToTrigger(); }, 40);
+      // immediate deterministic re-eval + stabilize
+      checkScroll();
+      stabilizeInitialChecks();
     });
   })();
 });
