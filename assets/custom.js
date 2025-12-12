@@ -18,17 +18,6 @@ const rafBatch = (() => {
   return (fn) => { fns.push(fn); if (!queued) { queued = true; requestAnimationFrame(run); } };
 })();
 
-async function getDistanceFromBenicia(postal) {
-  try {
-    const res = await fetch(
-      `https://french-fitness-api.azurewebsites.net/api/location/distancefrombenicia/${encodeURIComponent(postal)}`,
-      { credentials: 'omit' }
-    );
-    return res.ok ? await res.json() : null;
-  } catch { return null; }
-}
-
-
 onReady(() => {
   onIdle(() => {
     const compare = document.querySelector('.compare-products-actions a');
