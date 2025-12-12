@@ -111,94 +111,121 @@ function checkScroll() {
 });
 */
 
-(function() {
-  document.addEventListener("DOMContentLoaded", function() {
+(function () {
+  document.addEventListener("DOMContentLoaded", function () {
     const StickyProduct = {
       scrollListenerAttached: false,
       resizeTimeout: null,
 
-      init() {
-        this.waitForElement(".product__info-wrapper", () => {
-          this.updatePositions();
-          this.attachEvents();
-        });
-      },
-
       waitForElement(selector, callback) {
         const el = document.querySelector(selector);
-        if (el) return callback();
+        if (el) return callback(el);
 
         const observer = new MutationObserver((mutations, obs) => {
-          if (document.querySelector(selector)) {
+          const el = document.querySelector(selector);
+          if (el) {
             obs.disconnect();
-            callback();
+            callback(el);
           }
         });
         observer.observe(document.body, { childList: true, subtree: true });
       },
 
-      attachEvents() {
-        const self = this;
+      checkScroll() {
+        window.requestAnimationFrame(() => {
+          const headerWrapper = document.querySelector(".header-wrapper");
+          const productContainer = document.querySelector(".product");
+          const productInfo = document.querySelector(".product__info-wrapper");
+          const leftContainer = document.querySelector(".product-main-left-container");
+          const productExtraInfo = document.querySelector(".product__extra_info");
+          const fixedContainer = document.querySelector(".page-width-desktop.page-width-index");
 
-        if (!this.scrollListenerAttached) {
-          window.addEventListener("scroll", self.updatePositions.bind(self), { passive: true });
-          this.scrollListenerAttached = true;
-        }
+          if (!headerWrapper || !productContainer || !productInfo || !leftContainer || !productExtraInfo) return;
 
-        window.addEventListener("resize", () => {
-          clearTimeout(self.resizeTimeout);
-          self.resizeTimeout = setTimeout(() => {
-            self.updatePositions();
-          }, 100);
+          const windowHeight = window.innerHeight;
+          const productInfoHeight = productInfo.offsetHeight;
+          const extraInfoRect = productExtraInfo.getBoundingClientRect();
+          const extraInfoHeight = productExtraInfo.offsetHeight;
+
+          // Ensure product container has min-height
+          productContainer.style.minHeight = `${productInfoHeight}px`;
+
+          // Reset at top
+          if (window.scrollY <= headerWrapper.offsetHeight) {
+            productInfo.classList.remove("fixed", "absolute");
+            productInfo.style.top = "";
+            productInfo.style.left = "";
+            productInfo.style.right = "";
+            return;
+          }
+
+          // Sticky logic
+          if (extraInfoRect.top <= windowHeight - productInfoHeight || 
+              (extraInfoRect.top <= windowHeight && extraInfoRect.bottom > windowHeight)) {
+            productInfo.classList.add("fixed");
+            productInfo.classList.remove("absolute");
+            productInfo.style.top = "";
+          } else {
+            productInfo.classList.remove("fixed");
+          }
+
+          // Absolute at bottom
+          if (extraInfoRect.bottom <= windowHeight) {
+            productInfo.classList.remove("fixed");
+            productInfo.classList.add("absolute");
+            productInfo.style.top = `${extraInfoHeight + headerWrapper.offsetHeight}px`;
+            productInfo.style.left = "";
+            productInfo.style.right = "";
+            return;
+          }
+
+          // Align left if fixed
+          if (fixedContainer && productInfo.classList.contains("fixed")) {
+            const containerRect = fixedContainer.getBoundingClientRect();
+            const leftOffset = containerRect.right - productInfo.offsetWidth - 1;
+            productInfo.style.left = `${leftOffset}px`;
+            productInfo.style.right = "auto";
+          } else {
+            productInfo.style.left = "";
+            productInfo.style.right = "";
+          }
         });
       },
 
-      updatePositions() {
+      setupScrollListener() {
         const productInfo = document.querySelector(".product__info-wrapper");
-        const productSection = document.querySelector(".product");
-        const headerWrapper = document.querySelector(".header-wrapper");
-        const fixedContainer = document.querySelector(".page-width-desktop.page-width-index");
+        const isDesktop = window.matchMedia("screen and (min-width: 990px)").matches;
 
-        if (!productInfo || !productSection || !headerWrapper) return;
+        if (isDesktop) {
+          if (!this.scrollListenerAttached) {
+            window.addEventListener("scroll", this.checkScroll.bind(this), { passive: true });
+            this.scrollListenerAttached = true;
+          }
+          this.checkScroll();
+        } else {
+          if (this.scrollListenerAttached) {
+            window.removeEventListener("scroll", this.checkScroll.bind(this));
+            this.scrollListenerAttached = false;
+          }
+          if (productInfo) {
+            productInfo.classList.remove("fixed", "absolute");
+            productInfo.style.top = "";
+            productInfo.style.left = "";
+            productInfo.style.right = "";
+          }
+        }
+      },
 
-        const headerHeight = headerWrapper.offsetHeight;
-        const infoHeight = productInfo.offsetHeight;
-        const sectionRect = productSection.getBoundingClientRect();
-        const sectionTop = window.scrollY + sectionRect.top;
-        const sectionBottom = sectionTop + productSection.offsetHeight;
-        const scrollY = window.scrollY;
-
-        // Only on desktop
-        if (!window.matchMedia("(min-width: 990px)").matches) {
-          productInfo.style.position = "";
-          productInfo.style.top = "";
-          productInfo.style.left = "";
-          productInfo.style.width = "";
-          return;
-        }
-
-        // Before sticky
-        if (scrollY + headerHeight < sectionTop) {
-          productInfo.style.position = "absolute";
-          productInfo.style.top = "0px";
-          productInfo.style.left = "0px";
-          productInfo.style.width = "auto";
-        }
-        // Sticky
-        else if (scrollY + headerHeight + infoHeight < sectionBottom) {
-          productInfo.style.position = "fixed";
-          productInfo.style.top = `${headerHeight}px`;
-          const sectionLeft = productSection.getBoundingClientRect().left;
-          productInfo.style.left = `${sectionLeft}px`;
-          productInfo.style.width = `${productSection.offsetWidth}px`;
-        }
-        // Stop at bottom
-        else {
-          productInfo.style.position = "absolute";
-          productInfo.style.top = `${productSection.offsetHeight - infoHeight}px`;
-          productInfo.style.left = "0px";
-          productInfo.style.width = `${productSection.offsetWidth}px`;
-        }
+      init() {
+        this.waitForElement(".avpoptions-container__v2", () => {
+          this.setupScrollListener();
+          window.addEventListener("resize", () => {
+            clearTimeout(this.resizeTimeout);
+            this.resizeTimeout = setTimeout(() => {
+              this.setupScrollListener();
+            }, 100);
+          });
+        });
       }
     };
 
