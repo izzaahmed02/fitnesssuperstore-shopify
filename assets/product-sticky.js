@@ -113,7 +113,7 @@ function checkScroll() {
 
 
 
-
+<script>
 (function() {
   document.addEventListener("DOMContentLoaded", function() {
     const StickyProduct = {
@@ -144,7 +144,9 @@ function checkScroll() {
         const self = this;
 
         if (!this.scrollListenerAttached) {
-          window.addEventListener("scroll", self.updatePositions.bind(self), { passive: true });
+          window.addEventListener("scroll", () => {
+            window.requestAnimationFrame(self.updatePositions.bind(self));
+          }, { passive: true });
           this.scrollListenerAttached = true;
         }
 
@@ -182,14 +184,14 @@ function checkScroll() {
 
         // --- BEFORE sticky: natural flow ---
         if (scrollY + headerHeight < sectionTop) {
-          productInfo.style.position = "absolute";
-          productInfo.style.top = "0px";
+          productInfo.style.position = "";
+          productInfo.style.top = "";
           productInfo.style.left = "";
           productInfo.style.width = "";
           return;
         }
 
-        // --- STICKY: scroll past top of section, before bottom ---
+        // --- STICKY: scroll past top of section ---
         if (scrollY + headerHeight + infoHeight < sectionBottom) {
           const sectionLeft = productSection.getBoundingClientRect().left;
           productInfo.style.position = "fixed";
@@ -210,3 +212,4 @@ function checkScroll() {
     StickyProduct.init();
   });
 })();
+</script>
