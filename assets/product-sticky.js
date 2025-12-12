@@ -170,8 +170,8 @@ function checkScroll() {
         const sectionRect = productSection.getBoundingClientRect();
         const scrollY = window.scrollY;
 
+        // Desktop only
         if (!window.matchMedia("(min-width: 990px)").matches) {
-          // Reset on mobile
           productInfo.style.position = "";
           productInfo.style.top = "";
           productInfo.style.left = "";
@@ -191,7 +191,7 @@ function checkScroll() {
           return;
         }
 
-        // --- STICKY ---
+        // --- STICKY: scroll within section ---
         if (scrollY + headerHeight + infoHeight < sectionBottom) {
           const sectionLeft = productSection.getBoundingClientRect().left;
           productInfo.style.position = "fixed";
@@ -201,12 +201,12 @@ function checkScroll() {
           return;
         }
 
-        // --- STOP at bottom of section ---
+        // --- STOP at bottom: absolute relative to section ---
         const bottomOffset = productSection.offsetHeight - infoHeight;
         productInfo.style.position = "absolute";
         productInfo.style.top = `${bottomOffset}px`;
-        productInfo.style.left = "";
-        productInfo.style.width = "";
+        productInfo.style.left = ""; // remove fixed left
+        productInfo.style.width = `${productSection.offsetWidth}px`;
       }
     };
 
