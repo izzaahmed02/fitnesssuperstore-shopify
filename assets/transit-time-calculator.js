@@ -115,7 +115,7 @@ var TransitTimeCalculator = {
         }
       }
       
-      const distanceFromBenicia = await TransitTimeCalculator.getDistanceFromBenicia(userLoc.postal, userLoc.country_code);
+      const distanceFromBenicia = 0;
       
       let deliveryOptionText = '';
       let minDeliveryTime = 0, maxDeliveryTime = 0;
@@ -268,19 +268,6 @@ var TransitTimeCalculator = {
       console.error(err);
       //TransitTimeCalculator.appendInvalidTransitTime();
     }
-  },
-  
-  getDistanceFromBenicia: async function(postal, country) {
-    if (country === 'US') {
-      try {
-        const res = await fetch(`https://french-fitness-api.azurewebsites.net/api/location/distancefrombenicia/${postal}`);
-        return await res.json();
-      } catch (err) {
-        console.error(err);
-        return null;
-      }
-    }
-    return null;
   },
 
   calculateFedexDeliveryDays: function(state) {
