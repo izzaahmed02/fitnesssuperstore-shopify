@@ -3636,7 +3636,7 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 })();
 </script>
 
-
+{%comment %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   function waitForElement(selector, callback) {
@@ -3741,6 +3741,139 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 </script>
+{%endcomment %}
 
+
+<script>
+(function() {
+  'use strict';
+  
+  let scrollListenerAttached = false;
+  let resizeTimeout = null;
+  let observer = null;
+  
+  function waitForElement(selector, callback) {
+    const element = document.querySelector(selector);
+    if (element) {
+      callback(element);
+      return;
+    }
+    
+    if (observer) {
+      observer.disconnect();
+    }
+    
+    observer = new MutationObserver(() => {
+      const el = document.querySelector(selector);
+      if (el) {
+        observer.disconnect();
+        callback(el);
+      }
+    });
+    
+    observer.observe(document.body, { 
+      childList: true, 
+      subtree: true 
+    });
+  }
+  
+  function checkScroll() {
+    const headerWrapper = document.querySelector('.header-wrapper');
+    const productContainer = document.querySelector('.product');
+    const productInfo = document.querySelector('.product__info-wrapper');
+    const leftContainer = document.querySelector('.product-main-left-container');
+    const productExtraInfo = document.querySelector('.product__extra_info');
+    const fixedContainer = document.querySelector('.page-width-desktop.page-width-index');
+    
+    if (!productContainer || !productInfo || !leftContainer || !productExtraInfo) {
+      return;
+    }
+    
+    const extraInfoRect = productExtraInfo.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    const productInfoHeight = productInfo.offsetHeight;
+    const extraInfoHeight = productExtraInfo.offsetHeight;
+    const headerHeight = headerWrapper ? headerWrapper.offsetHeight : 0;
+    
+    productContainer.style.minHeight = `${productInfoHeight}px`;
+    
+    if (window.scrollY <= headerHeight) {
+      productInfo.classList.remove('fixed', 'absolute');
+      productInfo.style.top = '';
+      productInfo.style.right = '';
+      productInfo.style.left = '';
+      return;
+    }
+    
+    if (extraInfoRect.bottom <= windowHeight) {
+      productInfo.classList.remove('fixed');
+      productInfo.classList.add('absolute');
+      productInfo.style.top = `${extraInfoHeight + headerHeight}px`;
+      productInfo.style.left = '';
+      productInfo.style.right = '';
+      return;
+    }
+    
+    if (extraInfoRect.top <= windowHeight - productInfoHeight) {
+      productInfo.classList.add('fixed');
+      productInfo.classList.remove('absolute');
+      productInfo.style.top = '';
+      
+      if (fixedContainer) {
+        const containerRect = fixedContainer.getBoundingClientRect();
+        const leftOffset = containerRect.right - productInfo.offsetWidth - 1;
+        productInfo.style.left = `${leftOffset}px`;
+        productInfo.style.right = 'auto';
+      }
+    } else {
+      productInfo.classList.remove('fixed', 'absolute');
+      productInfo.style.top = '';
+      productInfo.style.left = '';
+      productInfo.style.right = '';
+    }
+  }
+  
+  function setupScrollListener() {
+    const productInfo = document.querySelector('.product__info-wrapper');
+    const isDesktop = window.matchMedia('screen and (min-width: 990px)').matches;
+    
+    if (isDesktop) {
+      if (!scrollListenerAttached) {
+        window.addEventListener('scroll', checkScroll, { passive: true });
+        scrollListenerAttached = true;
+      }
+      checkScroll();
+    } else {
+      if (scrollListenerAttached) {
+        window.removeEventListener('scroll', checkScroll);
+        scrollListenerAttached = false;
+      }
+      
+      if (productInfo) {
+        productInfo.classList.remove('fixed', 'absolute');
+        productInfo.style.top = '';
+        productInfo.style.left = '';
+        productInfo.style.right = '';
+      }
+    }
+  }
+  
+  function init() {
+    waitForElement('.avpoptions-container__v2', setupScrollListener);
+    
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(setupScrollListener, 100);
+    });
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+</script>
 
 
