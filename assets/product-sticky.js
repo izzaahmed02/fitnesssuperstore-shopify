@@ -113,7 +113,7 @@ function checkScroll() {
 
 
 
-<script>
+
 (function() {
   document.addEventListener("DOMContentLoaded", function() {
     const StickyProduct = {
@@ -212,4 +212,4 @@ function checkScroll() {
     StickyProduct.init();
   });
 })();
-</script>
+
