@@ -112,24 +112,47 @@ function checkScroll() {
 */
 
 <script>
-(function () {
-  document.addEventListener("DOMContentLoaded", function () {
-    const StickySidebar = {
+(function() {
+  document.addEventListener("DOMContentLoaded", function() {
+    const StickyProduct = {
       scrollListenerAttached: false,
       resizeTimeout: null,
 
+      init() {
+        this.waitForElement(".product__info-wrapper", () => {
+          this.setupScrollListener();
+          this.handleResize();
+        });
+      },
+
       waitForElement(selector, callback) {
         const el = document.querySelector(selector);
-        if (el) return callback(el);
+        if (el) return callback();
 
         const observer = new MutationObserver((mutations, obs) => {
-          const el = document.querySelector(selector);
-          if (el) {
+          if (document.querySelector(selector)) {
             obs.disconnect();
-            callback(el);
+            callback();
           }
         });
         observer.observe(document.body, { childList: true, subtree: true });
+      },
+
+      handleResize() {
+        window.addEventListener("resize", () => {
+          clearTimeout(this.resizeTimeout);
+          this.resizeTimeout = setTimeout(() => {
+            this.checkScroll();
+          }, 100);
+        });
+      },
+
+      setupScrollListener() {
+        if (!this.scrollListenerAttached) {
+          window.addEventListener("scroll", this.checkScroll.bind(this), { passive: true });
+          this.scrollListenerAttached = true;
+        }
+        this.checkScroll();
       },
 
       checkScroll() {
@@ -148,58 +171,39 @@ function checkScroll() {
           productInfo.style.position = "";
           productInfo.style.top = "";
           productInfo.style.left = "";
+          productInfo.style.width = "";
           return;
         }
 
-        // Stick only after section bottom scrolls past viewport top
-        if (sectionRect.top <= headerHeight && sectionRect.bottom - infoHeight > headerHeight) {
+        const sectionTop = window.scrollY + sectionRect.top;
+        const sectionBottom = sectionTop + productSection.offsetHeight;
+        const scrollY = window.scrollY;
+
+        // Normal flow (before sticky)
+        if (scrollY + headerHeight < sectionTop) {
+          productInfo.style.position = "absolute";
+          productInfo.style.top = "0";
+          productInfo.style.left = "0";
+          productInfo.style.width = "auto";
+        }
+        // Sticky
+        else if (scrollY + headerHeight + infoHeight < sectionBottom) {
           productInfo.style.position = "fixed";
           productInfo.style.top = `${headerHeight}px`;
           productInfo.style.left = `${productSection.getBoundingClientRect().left}px`;
           productInfo.style.width = `${productSection.offsetWidth}px`;
         }
-        // Stop at bottom of section
-        else if (sectionRect.bottom - infoHeight <= headerHeight) {
+        // Stop at bottom
+        else {
           productInfo.style.position = "absolute";
           productInfo.style.top = `${productSection.offsetHeight - infoHeight}px`;
-          productInfo.style.left = "";
-          productInfo.style.width = "";
+          productInfo.style.left = "0";
+          productInfo.style.width = `${productSection.offsetWidth}px`;
         }
-        // Default (above section)
-        else {
-          productInfo.style.position = "";
-          productInfo.style.top = "";
-          productInfo.style.left = "";
-          productInfo.style.width = "";
-        }
-      },
-
-      setupScrollListener() {
-        if (!this.scrollListenerAttached) {
-          window.addEventListener("scroll", this.checkScroll, { passive: true });
-          this.scrollListenerAttached = true;
-        }
-        this.checkScroll();
-      },
-
-      init() {
-        const self = this;
-        // Handle resize
-        window.addEventListener("resize", () => {
-          clearTimeout(self.resizeTimeout);
-          self.resizeTimeout = setTimeout(() => {
-            self.checkScroll();
-          }, 100);
-        });
-
-        // Wait for product info to exist
-        self.waitForElement(".product__info-wrapper", () => {
-          self.setupScrollListener();
-        });
       }
     };
 
-    StickySidebar.init();
+    StickyProduct.init();
   });
 })();
 </script>
