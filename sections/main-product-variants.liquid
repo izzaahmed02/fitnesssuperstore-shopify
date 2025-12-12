@@ -3787,21 +3787,26 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Check if the bottom of productInfo would reach the top of extraInfo
+    // Sticky logic
+    const extraInfoBottom = extraInfoRect.bottom;
     const extraInfoTop = extraInfoRect.top;
-    
-    // Only start sticking when the bottom of product info reaches top of extra info
-    if (extraInfoTop <= productInfoHeight) {
-      // Now lock it at the end of the section (absolute positioning)
+
+    if (extraInfoBottom > windowHeight) {
+      // Stick product info
+      productInfo.classList.add("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = "0px";
+
+      if (fixedContainer) {
+        const containerRect = fixedContainer.getBoundingClientRect();
+        productInfo.style.left = `${containerRect.right - productInfo.offsetWidth - 1}px`;
+        productInfo.style.right = "auto";
+      }
+    } else {
+      // Absolute at bottom
       productInfo.classList.remove("fixed");
       productInfo.classList.add("absolute");
-      productInfo.style.top = `${productExtraInfo.offsetTop - productInfoHeight}px`;
-      productInfo.style.left = "";
-      productInfo.style.right = "";
-    } else {
-      // Keep it in normal flow (not sticky yet)
-      productInfo.classList.remove("fixed", "absolute");
-      productInfo.style.top = "";
+      productInfo.style.top = `${productExtraInfo.offsetHeight + headerHeight}px`;
       productInfo.style.left = "";
       productInfo.style.right = "";
     }
@@ -3838,8 +3843,15 @@ document.addEventListener("DOMContentLoaded", function () {
     resizeTimeout = setTimeout(setupScrollListener, 100);
   });
 
-  // Wait for product info to exist
-  waitForElement(".product__info-wrapper", setupScrollListener);
+  // Wait for product info to exist and setup immediately
+  waitForElement(".product__info-wrapper", function() {
+    setupScrollListener();
+    // Force initial check after a short delay to ensure layout is ready
+    setTimeout(function() {
+      setupScrollListener();
+      checkScroll();
+    }, 100);
+  });
 });
 </script>
 
