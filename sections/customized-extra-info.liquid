@@ -944,6 +944,52 @@ document.addEventListener("DOMContentLoaded", function() {
       <h4 class="product__extra_info-title">Downloadables</h4>
 
       <a id="download-pds" style="cursor:pointer;">Download Product Data Sheet</a>
+      {% for block in section.blocks %}
+        {% case block.type %}
+                {% when 'extra' %}
+            {% assign extra = product.metafields.custom.extra_info.value %}
+            {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
+            {% assign attachments_metafield = product.metafields.custom.attachments_and_add_ons.value %}
+            {% assign otherRigRackSystems = product.metafields.custom.recommended_products.value %}
+            <style> 
+                .extra-manuals ul {
+                    display: flex; 
+                    flex-wrap: wrap;
+                    gap:10px;
+                } 
+                .extra-manuals ul li {
+                  width: calc(50% - 10px); 
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 12px;
+                  border: 1px solid #e5e5e5;
+                  border-radius: 8px;
+                  text-align: center;
+                  font-size: 15px;
+                  line-height: 18px;
+                  flex-direction: column;
+                }
+
+                
+
+            </style>
+
+            {% if extra != blank %}
+                <div class="extra-manuals">
+                  <ul>
+                {% for link in extra.manuals.value %}
+                          <li>
+                            <a href="{{ link.url }}" target="bank">{{ link.text }}</a>
+                          </li>
+{% endfor %}
+</ul>
+</div>
+
+            {% endif %}
+            {% endcase %}
+            {% endfor %}
     </div>
  
 </div>
