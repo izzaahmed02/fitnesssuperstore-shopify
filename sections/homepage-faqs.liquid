@@ -31,27 +31,31 @@
                 <button
                         class="accordion-header"
                         type="button"
-                        aria-expanded="false"
+                        aria-expanded="{% if forloop.index == 2 %}true{% else %}false{% endif %}"
                         aria-controls="accordion-content-{{ forloop.index }}">
-                                <span class="accordion-title">
-                                  {{ block.settings.title }}
-                                </span>
+                    <span class="accordion-title">
+                        {{ block.settings.title }}
+                    </span>
                     {% render 'chevron' %}
                 </button>
                 <div
                         id="accordion-content-{{ forloop.index }}"
                         class="accordion-content"
-                        {% if forloop.index == 2 %}aria-hidden="false"{% else %}aria-hidden="true"{% endif %}
+                        aria-hidden="{% if forloop.index == 2 %}false{% else %}true{% endif %}"
                 >
-                   {% assign faq_link_start = '<a class="accordion-link" aria-label="Learn more about ' 
-  | append: block.settings.title 
-  | append: '" ' 
-%}
+                    {% assign faq_link_start = '<a class="accordion-link" aria-label="Learn more about ' 
+                        | append: block.settings.title 
+                        | append: '" tabindex="' 
+                    %}
+                    {% if forloop.index == 2 %}
+                        {% assign faq_link_start = faq_link_start | append: '0" ' %}
+                    {% else %}
+                        {% assign faq_link_start = faq_link_start | append: '-1" ' %}
+                    {% endif %}
 
-<div class="accordion-content-inner">
-  {{ block.settings.copy | replace: '<a ', faq_link_start }}
-</div>
-
+                    <div class="accordion-content-inner">
+                        {{ block.settings.copy | replace: '<a ', faq_link_start }}
+                    </div>
                 </div>
             </div>
         {% endfor %}
@@ -60,7 +64,6 @@
         {% render 'chevron-button' %}
     </a>
 </div>
-
 
 <script src="{{ 'accordion.js' | asset_url }}" defer="defer"></script>
 
