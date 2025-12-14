@@ -31,7 +31,7 @@
                 <button
                         class="accordion-header"
                         type="button"
-                        aria-expanded="{% if forloop.index == 2 %}true{% else %}false{% endif %}"
+                        aria-expanded="false"
                         aria-controls="accordion-content-{{ forloop.index }}">
                     <span class="accordion-title">
                         {{ block.settings.title }}
@@ -41,17 +41,12 @@
                 <div
                         id="accordion-content-{{ forloop.index }}"
                         class="accordion-content"
-                        aria-hidden="{% if forloop.index == 2 %}false{% else %}true{% endif %}"
+                        aria-hidden="true"
                 >
                     {% assign faq_link_start = '<a class="accordion-link" aria-label="Learn more about ' 
                         | append: block.settings.title 
-                        | append: '" tabindex="' 
+                        | append: '" tabindex="-1" ' 
                     %}
-                    {% if forloop.index == 2 %}
-                        {% assign faq_link_start = faq_link_start | append: '0" ' %}
-                    {% else %}
-                        {% assign faq_link_start = faq_link_start | append: '-1" ' %}
-                    {% endif %}
 
                     <div class="accordion-content-inner">
                         {{ block.settings.copy | replace: '<a ', faq_link_start }}
