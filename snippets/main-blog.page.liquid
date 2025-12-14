@@ -1,0 +1,285 @@
+{{ 'component-article-card.css' | asset_url | stylesheet_tag }}
+{{ 'section-main-blog.css' | asset_url | stylesheet_tag }}
+<link rel="stylesheet" href="{{ 'component-card.css' | asset_url }}" media="print" onload="this.media='all'">
+
+<style>
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  .page-header {
+    margin-bottom: 30px;
+  }
+
+  .page-header h1 {
+    margin-bottom: 15px;
+  }
+
+  .blog-search-wrapper {
+    margin-bottom: 40px;
+  }
+
+  #no-results {
+    display: none;
+    margin: 40px 0;
+    text-align: center;
+    color: #666;
+  }
+
+  .blog-section {
+    margin-bottom: 60px;
+  }
+
+  .blog-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .blog-title {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+  }
+
+  .blog-articles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+  }
+
+  @media screen and (max-width: 749px) {
+    .blog-articles {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Hide full content used for search */
+  .article-card__full-content {
+    display: none;
+  }
+</style>
+
+<div class="main-blog page-width section-{{ section.id }}-padding">
+ 
+
+  <div class="blog-search-wrapper">
+    <input
+      type="text"
+      id="blog-live-search"
+      placeholder="Search all blog posts..."
+      style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"
+    >
+    <div id="no-results">
+      <p>No articles found matching your search.</p>
+    </div>
+  </div>
+
+  <div class="all-blogs-container">
+    {% assign blog_handles = "comparisons,buying-guides,maintenance,warranty-tips,showroom,news" | split: "," %}
+    
+    {% for handle in blog_handles %}
+      {% assign current_blog = blogs[handle] %}
+      
+      {% if current_blog.articles_count > 0 %}
+        <section class="blog-section" data-blog-handle="{{ handle }}">
+          <h2 class="blog-title">
+  <a style="text-decoration: underline;" href="{{ current_blog.url }}" class="blog-title__link">
+    {{ current_blog.title }}
+  </a>
+</h2>
+          
+          <div class="blog-articles">
+            {% for article in current_blog.articles limit: 100 %}
+              <div
+                class="blog-articles__article article{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+                data-article-handle="{{ article.handle }}"
+                data-blog-name="{{ current_blog.title }}"
+                {% if settings.animations_reveal_on_scroll %}
+                  data-cascade
+                  style="--animation-order: {{ forloop.index }};"
+                {% endif %}
+              >
+                {%- render 'article-card',
+                  article: article,
+                  media_height: section.settings.image_height,
+                  media_aspect_ratio: article.image.aspect_ratio,
+                  show_image: section.settings.show_image,
+                  show_date: section.settings.show_date,
+                  show_author: section.settings.show_author,
+                  show_excerpt: section.settings.show_excerpt
+                -%}
+
+                <!-- Hidden full content for live search -->
+                <div class="article-card__full-content">
+                  {{ article.content | strip_html | escape }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.getElementById('blog-live-search');
+  const blogSections = document.querySelectorAll('.blog-section');
+  const noResults = document.getElementById('no-results');
+  
+  let allArticles = [];
+  
+  // Collect all articles from all blogs
+  blogSections.forEach(section => {
+    const articles = section.querySelectorAll('.blog-articles__article');
+    articles.forEach(article => {
+      allArticles.push({
+        element: article,
+        section: section,
+        html: article.outerHTML
+      });
+    });
+  });
+
+  function filterArticles(query) {
+    const trimmedQuery = query.trim().toLowerCase();
+    
+    if (!trimmedQuery) {
+      // Show all articles in their original sections
+      blogSections.forEach(section => {
+        section.style.display = 'block';
+        const container = section.querySelector('.blog-articles');
+        const articles = allArticles.filter(a => a.section === section);
+        container.innerHTML = articles.map(a => a.html).join('');
+      });
+      noResults.style.display = 'none';
+      return;
+    }
+
+    const keywords = trimmedQuery.split(/\s+/);
+    let foundAny = false;
+
+    blogSections.forEach(section => {
+      const container = section.querySelector('.blog-articles');
+      const sectionArticles = allArticles.filter(a => a.section === section);
+      
+      const filtered = sectionArticles.filter(item => {
+        const temp = document.createElement('div');
+        temp.innerHTML = item.html;
+        const card = temp.querySelector('.blog-articles__article');
+
+        const title = (card.querySelector('.card__heading')?.textContent || '').toLowerCase();
+        const excerpt = (card.querySelector('.article-card__excerpt')?.textContent || '').toLowerCase();
+        const fullContent = (card.querySelector('.article-card__full-content')?.textContent || '').toLowerCase();
+        const blogName = (card.getAttribute('data-blog-name') || '').toLowerCase();
+
+        const textToSearch = title + ' ' + excerpt + ' ' + fullContent + ' ' + blogName;
+
+        // All keywords must exist somewhere
+        return keywords.every(word => textToSearch.includes(word));
+      });
+
+      if (filtered.length > 0) {
+        section.style.display = 'block';
+        container.innerHTML = filtered.map(a => a.html).join('');
+        foundAny = true;
+      } else {
+        section.style.display = 'none';
+      }
+    });
+
+    noResults.style.display = foundAny ? 'none' : 'block';
+  }
+
+  searchInput.addEventListener('input', e => {
+    filterArticles(e.target.value);
+  });
+});
+</script>
+
+
+{
+  "name": "Main Blog Page",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Blog Display Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_image",
+      "default": true,
+      "label": "Show featured images"
+    },
+    {
+      "type": "select",
+      "id": "image_height",
+      "options": [
+        { "value": "adapt", "label": "Adapt to image" },
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ],
+      "default": "medium",
+      "label": "Image height"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "default": true,
+      "label": "Show article date"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "default": false,
+      "label": "Show article author"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_excerpt",
+      "default": true,
+      "label": "Show article excerpt"
+    },
+    {
+      "type": "header",
+      "content": "Section Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom",
+      "default": 36
+    }
+  ],
+  "presets": [
+    {
+      "name": "Main Blog Page"
+    }
+  ]
+}
