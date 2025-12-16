@@ -395,26 +395,6 @@ if (!customElements.get('product-customization-options')) {
             });
           });
         });
-
-        // if (this.swatches.length === 0) return;
-        // this.swatches.forEach((swatch) => {
-        //   swatch.addEventListener('click', (event) => {
-        //     event.preventDefault();
-        //     this.swatches.forEach((item) => item.classList.remove('color-selected'));
-        //     swatch.classList.add('color-selected');
-        //     if (swatch.classList.contains('swatch--custom-trigger')) {
-        //       this.colorForm.removeAttribute('style');
-        //     } else {
-        //       this.colorForm.style.display = 'none';
-        //       this.colorInput.dataset.variant = swatch.dataset.id;
-        //       this.colorInput.dataset.price = swatch.dataset.colorPrice;
-
-        //       this.swatchesActiveContainer.innerHTML = this.setColorOptionHTML(swatch, false);
-        //       if (this.closest('cart-drawer')) return;
-        //       this.updatePrice();
-        //     }
-        //   });
-        // });
       }
 
       // Nethod to add custom color using input
@@ -451,7 +431,7 @@ if (!customElements.get('product-customization-options')) {
           ${customColor ? `Custom Color: ${colorOption.value}` : `${colorOption.dataset.colorName}`}
           </div>
           <div class="option_selected-price">
-          ${customColor ? `${colorOption.dataset?.price !== '' ? `$${colorOption.dataset?.price}` : ''}` : `${colorOption.dataset.colorPrice !== '0' ? `$${colorOption.dataset.colorPrice}` : ''}`}
+          ${customColor ? `${colorOption.dataset?.price !== '' ? `$${colorOption.dataset?.price}` : ''}` : `${colorOption.dataset.colorPrice !== '0' ? `${colorOption.dataset.colorPrice}` : ''}`}
           </div>
         </p>`;
       }

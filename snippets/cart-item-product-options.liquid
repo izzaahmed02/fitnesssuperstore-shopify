@@ -1,9 +1,9 @@
 {% liquid
-  assign options = product.metafields.options.product_options.value
+  assign options = line_item.product.metafields.options.product_options.value
   assign warranty_index = 1
   assign color_index = 1
   assign assambly_index = 0
-  assign title_downcase = product.title | downcase
+  assign title_downcase = line_item.product.title | downcase
   if title_downcase contains 'remanufactured'
     assign color_index = 2
   endif
@@ -148,7 +148,7 @@
           {% for product_option in category.product_options.value %}
             {% assign title = product_option.product_option_title | downcase %}
             {% if title == 'paint color' or title == 'paint colors' or title == 'color' %}
-              {% render 'cart-item-color-picker', product: product_option.product_option_variants.value, products: product_option, color_type: 'paint', title: category.title, line_item: line_item %}
+              {% render 'cart-item-color-picker', product: product_option.product_option_variants.value, products: product_option, color_type: 'paint', title: category.title, line_item: line_item, color_counter: color_counter %}
             {% endif %}
             {% if title == 'vinyl color' or title == 'vinyl colors' %}
               {% render 'cart-item-color-picker',
