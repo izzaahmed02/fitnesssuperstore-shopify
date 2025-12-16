@@ -11,7 +11,13 @@ Now includes author name and published date.
   <div class="page-width">
     {% if section.settings.heading != blank %}
       <div class="section-header">
-        <h2 class="section-header__title">{{ section.settings.heading }}</h2>
+        <h1 class="section-header__title center">{{ section.settings.heading }}</h1>
+         {% unless section.settings.subheading == blank %}
+        <h3 class="section-header__subheading center">{{ section.settings.subheading }}</h3>
+         {% endunless %}
+          {% unless section.settings.intro == blank %}
+        <p class="section-header__intro center">{{ section.settings.intro }}</p>
+          {% endunless %}
       </div>
     {% endif %}
 
@@ -77,6 +83,13 @@ Now includes author name and published date.
     {% endunless %}
   </div>
 
+  {% if section.settings.label %}
+  <div class="rich-text-custom__wrapper">
+        <a href="{{ section.settings.url }}"
+           class="rich-text-custom__btn">{{ section.settings.label }} {% render 'chevron-right' %}</a>
+</div>
+{% endif %}
+
   <style>
     /* optional: ensure consistent image aspect */
     #RelatedBlogs-{{ section.id }} .card__media { aspect-ratio: 16/9; overflow: hidden; }
@@ -84,14 +97,45 @@ Now includes author name and published date.
     .related-articles .card__media { position:relative; }
     .publish-info { display:flex; justify-content:space-between;}
 
-  .publish-info span { margin-bottom: 12px; font-family: Lato; font-size: 12px; line-height: 18px; color: gray; text-transform: none; letter-spacing: .13rem;}
+  #RelatedBlogs-{{ section.id }} .publish-info span { margin-bottom: 12px; font-family: Lato; font-size: 12px; line-height: 18px; color: gray; text-transform: none; letter-spacing: .13rem;}
   #RelatedBlogs-{{ section.id }} .link {color: #D83D0E;}
+
+  #RelatedBlogs-{{ section.id }} h1 {
+  text-transform: uppercase;
+}
+#RelatedBlogs-{{ section.id }} h3 {
+font-size:18px;
+line-heigth:24px;
+}
+
+  .rich-text-custom__wrapper {
+    margin-top:24px;
+  display: flex;
+  justify-content:center;
+  align-items:center;
+}
+  .rich-text-custom__btn {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    background-color:#D83D0E;
+    padding: 12px 24px;
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    border: none;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   </style>
 </section>
 
 {% schema %}
 {
-  "name": "Related posts",
+  "name": "Related Blog posts",
   "class": "related-articles",
   "settings": [
     {
@@ -99,6 +143,18 @@ Now includes author name and published date.
       "type": "text",
       "label": "Section heading",
       "default": "Related posts"
+    },
+    {
+      "id": "subheading",
+      "type": "text",
+      "label": "Section Short Copy",
+      "default": "Short Copy"
+    },
+    {
+      "id": "intro",
+      "type": "text",
+      "label": "Section Intro",
+      "default": "Introduction to posts"
     },
     {
       "id": "article_1",
@@ -152,11 +208,22 @@ Now includes author name and published date.
       "unit": "px",
       "label": "Bottom padding",
       "default": 48
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "Section Button Link"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "default": "Shop remanufactured equipment",
+      "label": "Section Button Label"
     }
   ],
   "presets": [
     {
-      "name": "Related posts",
+      "name": "Related Blog posts",
       "category": "Blog"
     }
   ]
