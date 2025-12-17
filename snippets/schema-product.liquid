@@ -64,7 +64,7 @@
       },
       "weight": "{{ product.metafields.custom.product_weight_lbs | default: 'Not specified' | escape }}",
       "mpn": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
-     "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% assign condition_lower = product.metafields.custom.condition_state | downcase %}{% if condition_lower contains 'as is' %}UsedCondition{% elsif condition_lower contains 'remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
+     "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% assign condition_clean = product.metafields.custom.condition_state | remove: '"' | downcase | strip %}{% if condition_clean contains 'as is' %}UsedCondition{% elsif condition_clean contains 'remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state | remove: '"' | strip }}Condition{% endif %}{% else %}NewCondition{% endif %}",
       "offers": {
         "@id": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}#offer",
         "@type": "Offer",
