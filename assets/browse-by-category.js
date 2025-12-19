@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   $(firstSlider).slick({
-    slidesToShow: 5,
+    slidesToShow: 3,
 
     infinite: true,
     draggable: true,
