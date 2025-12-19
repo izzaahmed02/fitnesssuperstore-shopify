@@ -1,0 +1,283 @@
+<style>
+    .logo-carousel-section {
+  padding: 40px 20px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.logo-carousel__container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.logo-carousel__wrapper {
+  overflow: hidden;
+  position: relative;
+}
+
+.logo-carousel__track {
+  display: flex;
+  animation: scroll var(--autoplay-speed, 3000ms) linear infinite;
+  gap: 60px;
+}
+
+.logo-carousel__item {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.logo-carousel__item img {
+  max-height: 80px;
+  width: auto;
+  object-fit: contain;
+  filter: grayscale(100%);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.logo-carousel__item img:hover {
+  filter: grayscale(0%);
+  opacity: 1;
+}
+
+.logo-carousel__placeholder {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 40px 20px;
+}
+
+/* Pause on hover */
+.logo-carousel__wrapper:hover .logo-carousel__track {
+  animation-play-state: paused;
+}
+/* Centered Heading */
+  .logo-carousel__heading {
+    text-align: center;
+    margin: 0 auto 30px;
+    font-size: 32px;
+    font-weight: 600;
+    color: #000;
+    line-height: 1.2;
+  }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .logo-carousel__track {
+    gap: 40px;
+  }
+  
+  .logo-carousel__item img {
+    max-height: 60px;
+  }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.logo-carousel__wrapper').forEach(wrapper => {
+    const track = wrapper.querySelector('.logo-carousel__track');
+    const speed = wrapper.dataset.autoplaySpeed || 3000;
+
+    // Set CSS variable for animation duration
+    track.style.setProperty('--autoplay-speed', `${speed}ms`);
+  });
+});
+    </script>
+<div class="logo-carousel">
+  <div class="logo-carousel__inner">
+    <!-- Heading – controllable in customizer -->
+    {% if section.settings.heading != blank %}
+      <h2 class="logo-carousel__heading">
+        {{ section.settings.heading | escape }}
+      </h2>
+    {% endif %}
+    <div class="logo-carousel__track">
+      {%- if section.blocks.size > 0 -%}
+        {%- for block in section.blocks -%}
+          {%- if block.settings.image -%}
+            <div class="logo-carousel__slide" {{ block.shopify_attributes }}>
+              <div class="logo-box">
+                <img 
+                  src="{{ block.settings.image | img_url: '500x' }}"
+                  loading="lazy"
+                  alt="{{ block.settings.image.alt | escape }}"
+                  class="logo-img"
+                >
+              </div>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+
+        <!-- Duplicate set for seamless infinite scroll -->
+        {%- for block in section.blocks -%}
+          {%- if block.settings.image -%}
+            <div class="logo-carousel__slide">
+              <div class="logo-box">
+                <img 
+                  src="{{ block.settings.image | img_url: '500x' }}"
+                  loading="lazy"
+                  alt="{{ block.settings.image.alt | escape }}"
+                  class="logo-img"
+                >
+              </div>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- else -%}
+        <p style="text-align:center; padding:60px; color:#999;">
+          Add logos in the theme customizer
+        </p>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+<style>
+  .logo-carousel {
+    padding: 44px 0;
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .logo-carousel__inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .logo-carousel__track {
+    display: flex;
+    gap: 10px;
+    animation: scroll {{ section.settings.speed | default: 5000 }}ms linear infinite;
+  }
+
+  .logo-carousel__slide {
+    flex: 0 0 auto;
+  }
+
+  /* This is the magic box - all logos will be identical */
+  .logo-box {
+    width: 160px;
+    height: 80px;
+    border: 2px solid #000000;
+    background: #000000;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    cursor: pointer;
+  }
+
+  .logo-box:hover {
+    /*transform: translateY(-4px); */
+  }
+
+  .logo-img {
+    max-width: 90%;
+    max-height: 90%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+
+  }
+
+  /* Pause on hover */
+  .logo-carousel:hover .logo-carousel__track {
+    animation-play-state: paused;
+  }
+
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 768px) {
+    .logo-box {
+      width: 160px;
+      height: 60px;
+      padding: 10px;
+    }
+    .logo-carousel__track {
+      gap: 10px;
+    }
+    .logo-carousel__heading {
+    font-size: 28px;
+    line-height: 32px;
+}
+.logo-carousel {
+padding: 20px 0;
+}
+.logo-carousel__inner {
+padding-left: 0px;
+padding-right: 0px;
+}
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Logo Carousel",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Trusted by Leading Companies"
+    },
+    {
+      "type": "range",
+      "id": "speed",
+      "label": "Scroll speed (longer = slower)",
+      "min": 2000,
+      "max": 9000,
+      "step": 1000,
+      "default": 2000,
+      "unit": "ms"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "logo",
+      "name": "Logo",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Logo image (best on transparent or dark background)"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Logo Carousel",
+      "blocks": [
+        { "type": "logo" },
+        { "type": "logo" },
+        { "type": "logo" },
+        { "type": "logo" },
+        { "type": "logo" },
+        { "type": "logo" }
+      ]
+    }
+  ]
+}
+{% endschema %}
