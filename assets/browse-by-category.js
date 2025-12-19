@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       $(targetSlider).slick({
-        slidesToShow: 5,
+        slidesToShow: 3,
         slidesToScroll: 1,
         arrows: true,
         swipeToSlide: true,   
