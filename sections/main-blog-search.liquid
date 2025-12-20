@@ -53,7 +53,7 @@
   <div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
   </div>
 
-  <!-- Hidden container with all articles data -->
+  <!-- Hidden container with all articles pre-rendered -->
   <div style="display:none;" id="all-articles-container">
     {% assign handles = section.settings.blog_handles | split: "," %}
     {% for handle in handles %}
@@ -61,12 +61,16 @@
       {% assign blog = blogs[clean_handle] %}
       {% if blog %}
         {% for article in blog.articles %}
-          <div class="article-data"
-               data-title="{{ article.title | escape }}"
-               data-excerpt="{{ article.excerpt | strip_html | escape }}"
-               data-content="{{ article.content | strip_html | escape }}"
-               data-handle="{{ article.handle }}"
-               data-blog-handle="{{ clean_handle }}">
+          <div class="article-data" data-handle="{{ article.handle }}">
+            {% render 'article-card',
+              article: article,
+              media_height: section.settings.image_height,
+              media_aspect_ratio: article.image.aspect_ratio,
+              show_image: section.settings.show_image,
+              show_date: section.settings.show_date,
+              show_author: section.settings.show_author,
+              show_excerpt: true
+            %}
           </div>
         {% endfor %}
       {% endif %}
@@ -74,34 +78,20 @@
   </div>
 </div>
 
-
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('blog-live-search');
   const container = document.querySelector('.blog-articles');
   const noResults = document.getElementById('no-results');
 
-  // Read all articles from hidden container
-  const allArticles = Array.from(document.querySelectorAll('#all-articles-container .article-data')).map(el => ({
-    title: el.dataset.title,
-    excerpt: el.dataset.excerpt,
-    content: el.dataset.content,
-    handle: el.dataset.handle,
-    blogHandle: el.dataset.blogHandle
-  }));
+  // Get all pre-rendered article cards
+  const allArticles = Array.from(document.querySelectorAll('#all-articles-container .article-data'));
 
-  function createArticleCard(article) {
-    const card = document.createElement('div');
-    card.className = 'blog-articles__article article';
-    card.innerHTML = `
-      <div class="card">
-        <h2 class="card__heading">${article.title}</h2>
-        <p class="article-card__excerpt">${article.excerpt}</p>
-        <a href="/blogs/${article.blogHandle}/${article.handle}">Read More</a>
-      </div>
-    `;
-    return card;
+  function createArticleCard(articleDiv) {
+    const clone = articleDiv.cloneNode(true);
+    clone.style.display = 'block';
+    clone.classList.add('blog-articles__article');
+    return clone;
   }
 
   searchInput.addEventListener('input', () => {
@@ -110,15 +100,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let matches = 0;
 
     if (!query) {
-      // Hide articles if search is empty
       noResults.style.display = 'none';
       return;
     }
 
-    allArticles.forEach(article => {
-      const text = `${article.title} ${article.excerpt} ${article.content}`.toLowerCase();
+    allArticles.forEach(articleDiv => {
+      const text = articleDiv.textContent.toLowerCase();
       if (text.includes(query)) {
-        container.appendChild(createArticleCard(article));
+        container.appendChild(createArticleCard(articleDiv));
         matches++;
       }
     });
@@ -160,6 +149,36 @@ document.addEventListener('DOMContentLoaded', () => {
       "id": "blog_handles",
       "label": "Blog Handles (comma separated)",
       "info": "Enter the handles of the blogs you want to include in search, separated by commas."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_image",
+      "default": true,
+      "label": "Show Image"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "default": true,
+      "label": "Show Date"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "default": false,
+      "label": "Show Author"
+    },
+    {
+      "type": "select",
+      "id": "image_height",
+      "options": [
+        { "value": "adapt", "label": "Adapt" },
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ],
+      "default": "medium",
+      "label": "Image Height"
     },
     {
       "type": "range",
