@@ -32,6 +32,20 @@
 }
  
 {%- endstyle -%}
+<script>
+  const allBlogArticles = [
+    {% for article in blog.articles %}
+      {
+        handle: "{{ article.handle }}",
+        title: "{{ article.title | escape }}",
+        excerpt: "{{ article.excerpt | strip_html | escape }}",
+        content: "{{ article.content | strip_html | escape }}",
+        url: "{{ article.url }}",
+        image: "{{ article.image | img_url: 'medium' }}"
+      }{% if forloop.last == false %},{% endif %}
+    {% endfor %}
+  ];
+</script>
 
 
 <div class="main-blog page-width section-{{ section.id }}-padding">
