@@ -33,6 +33,34 @@
  
 {%- endstyle -%}
 <script>
+  const allBlogArticles = [
+    {% for article in blog.articles %}
+      {
+        handle: "{{ article.handle }}",
+        title: "{{ article.title | escape }}",
+        excerpt: "{{ article.excerpt | strip_html | escape }}",
+        content: "{{ article.content | strip_html | escape }}",
+        url: "{{ article.url }}",
+        image: "{{ article.image | img_url: 'medium' }}"
+      }{% if forloop.last == false %},{% endif %}
+    {% endfor %}
+  ];
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const allHandles = [
+    {% for article in blog.articles %}
+      "{{ article.handle }}"{% if forloop.last == false %},{% endif %}
+    {% endfor %}
+  ];
+
+  console.log("All blog handles:", allHandles);
+  alert("All blog handles:\n" + allHandles.join("\n"));
+});
+</script>
+
+<script>
 document.addEventListener('DOMContentLoaded', async () => {
   const blogHandle = "your-blog-handle"; // replace with your actual blog handle
   const searchInput = document.getElementById('blog-live-search');
@@ -56,6 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await fetchArticles();
 });
 </script>
+
 
 
 
