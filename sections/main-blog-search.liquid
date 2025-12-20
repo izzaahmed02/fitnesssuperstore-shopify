@@ -49,60 +49,60 @@
     </div>
   </div>
 
-  <!-- Container for article cards -->
+  <!-- Container for search results -->
   <div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
-    <!-- Articles will be dynamically injected here -->
   </div>
+
+  <!-- Hidden container with all articles data -->
+<div style="display:none;" id="all-articles-container">
+  {% assign handles = section.settings.blog_handles | split: "," %}
+  {% for handle in handles %}
+    {% assign clean_handle = handle | strip %}
+    {% assign blog = blogs[clean_handle] %}
+    {% if blog %}
+      {% for article in blog.articles %}
+        <div class="article-data"
+             data-title="{{ article.title | escape }}"
+             data-excerpt="{{ article.excerpt | strip_html | escape }}"
+             data-content="{{ article.content | strip_html | escape }}"
+             data-handle="{{ article.handle }}"
+             data-blog-handle="{{ clean_handle }}">
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+</div>
+
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('blog-live-search');
   const container = document.querySelector('.blog-articles');
   const noResults = document.getElementById('no-results');
 
-  let allArticles = [];
+  // Read all articles from hidden container
+  const allArticles = Array.from(document.querySelectorAll('#all-articles-container .article-data')).map(el => ({
+    title: el.dataset.title,
+    excerpt: el.dataset.excerpt,
+    content: el.dataset.content,
+    handle: el.dataset.handle,
+    blogHandle: el.dataset.blogHandle
+  }));
 
-  // Get blog handles from the customizer (comma separated)
-  const selectedBlogs = "{{ section.settings.blog_handles }}".split(",").map(h => h.trim()).filter(Boolean);
-
-  // Fetch all articles from selected blogs
-  async function fetchAllArticles() {
-    for (const handle of selectedBlogs) {
-      try {
-        const response = await fetch(`/blogs/${handle}.json?limit=250`);
-        const data = await response.json();
-        data.articles.forEach(article => {
-          allArticles.push({
-            ...article,
-            blogHandle: handle
-          });
-        });
-      } catch (err) {
-        console.warn("Failed to fetch articles for blog:", handle);
-      }
-    }
-  }
-
-  await fetchAllArticles();
-
-  // Create article card element
   function createArticleCard(article) {
     const card = document.createElement('div');
     card.className = 'blog-articles__article article';
     card.innerHTML = `
       <div class="card">
-        ${article.image ? `<img src="${article.image.src}" alt="${article.title}">` : ''}
         <h2 class="card__heading">${article.title}</h2>
-        <p class="article-card__excerpt">${article.excerpt || ''}</p>
-        <div class="article-card__full-content" style="display:none">${article.content || ''}</div>
+        <p class="article-card__excerpt">${article.excerpt}</p>
         <a href="/blogs/${article.blogHandle}/${article.handle}">Read More</a>
       </div>
     `;
     return card;
   }
 
-  // Live search
   searchInput.addEventListener('input', () => {
     const query = searchInput.value.trim().toLowerCase();
     container.innerHTML = '';
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     allArticles.forEach(article => {
-      const text = `${article.title} ${article.excerpt || ''} ${article.content || ''}`.toLowerCase();
+      const text = `${article.title} ${article.excerpt} ${article.content}`.toLowerCase();
       if (text.includes(query)) {
         container.appendChild(createArticleCard(article));
         matches++;
@@ -187,29 +187,3 @@ document.addEventListener('DOMContentLoaded', async () => {
   ]
 }
 {% endschema %}
-
-<script>
-async function fetchAllArticles() {
-  for (const handle of selectedBlogs) {
-    try {
-      console.log("Fetching blog:", handle);
-      const response = await fetch(`/blogs/${handle}.json?limit=250`);
-      if (!response.ok) {
-        console.warn("Failed to fetch blog:", handle, response.status);
-        continue;
-      }
-      const data = await response.json();
-      console.log(`Fetched ${data.articles.length} articles from`, handle);
-      data.articles.forEach(article => {
-        allArticles.push({
-          ...article,
-          blogHandle: handle
-        });
-      });
-    } catch (err) {
-      console.warn("Error fetching blog:", handle, err);
-    }
-  }
-  console.log("Total articles fetched:", allArticles.length);
-}
-</script>
