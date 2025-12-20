@@ -26,8 +26,18 @@
     display: none;
   }
 {%- endstyle -%}
+
+{%- paginate blog.articles by 9 -%}
 <div class="main-blog page-width section-{{ section.id }}-padding">
-<div class="blog-search-wrapper" style="margin-bottom: 20px;">
+  <h1 class="title--primary{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
+    {{ blog.title | escape }}
+  </h1>
+
+  {% if section.settings.description %}
+    <div class="main-blog-description">{{ section.settings.description }}</div>
+  {% endif %}
+
+  <div class="blog-search-wrapper" style="margin-bottom: 20px;">
     <input
       type="text"
       id="blog-live-search"
@@ -38,8 +48,87 @@
       <p>No articles found.</p>
     </div>
   </div>
-</div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.getElementById('blog-live-search');
+  const container = document.querySelector('.blog-articles');
+  const noResults = document.getElementById('no-results');
+  const totalPages = {{ paginate.pages | default: 1 }};
+  const blogUrl = "{{ blog.url }}";
+
+  let allArticles = [];
+  const articleHandles = new Set();
+  const originalContent = container.innerHTML;
+
+  // Add current page articles only once
+  container.querySelectorAll('.blog-articles__article').forEach(article => {
+    const handle = article.getAttribute('data-article-handle');
+    if (handle && !articleHandles.has(handle)) {
+      articleHandles.add(handle);
+      allArticles.push(article.outerHTML);
+    }
+  });
+
+  // Fetch remaining pages (page 2 onward)
+  async function fetchAllArticles() {
+    for (let i = 2; i <= totalPages; i++) {
+      try {
+        const response = await fetch(`${blogUrl}?page=${i}`);
+        const text = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        const articles = doc.querySelectorAll('.blog-articles__article');
+
+        articles.forEach(article => {
+          const handle = article.getAttribute('data-article-handle');
+          if (handle && !articleHandles.has(handle)) {
+            articleHandles.add(handle);
+            allArticles.push(article.outerHTML);
+          }
+        });
+      } catch (err) {
+        console.error('Error fetching page', i, err);
+      }
+    }
+  }
+
+  function filterArticles(query) {
+    const trimmedQuery = query.trim().toLowerCase();
+    if (!trimmedQuery) {
+      container.innerHTML = originalContent;
+      noResults.style.display = 'none';
+      return;
+    }
+
+    const keywords = trimmedQuery.split(/\s+/);
+
+    const filtered = allArticles.filter(html => {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      const card = temp.querySelector('.blog-articles__article');
+
+      const title = (card.querySelector('.card__heading')?.textContent || '').toLowerCase();
+      const excerpt = (card.querySelector('.article-card__excerpt')?.textContent || '').toLowerCase();
+      const fullContent = (card.querySelector('.article-card__full-content')?.textContent || '').toLowerCase();
+
+      const textToSearch = title + ' ' + excerpt + ' ' + fullContent;
+
+      // All keywords must exist somewhere
+      return keywords.every(word => textToSearch.includes(word));
+    });
+
+    container.innerHTML = filtered.join('');
+    noResults.style.display = filtered.length ? 'none' : 'block';
+  }
+
+  searchInput.addEventListener('input', e => {
+    filterArticles(e.target.value);
+  });
+
+  fetchAllArticles();
+});
+</script>
 
 <div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
   {%- for article in blog.articles -%}
@@ -69,7 +158,11 @@
   {%- endfor -%}
 </div>
 
+{%- if paginate.pages > 1 -%}
+  {%- render 'pagination', paginate: paginate -%}
+{%- endif -%}
 </div>
+{%- endpaginate -%}
 
 
 
