@@ -74,6 +74,24 @@
   </div>
 </div>
 
+<div id="debug-container">
+  {% assign handles = section.settings.blog_handles | split: "," %}
+  {% for handle in handles %}
+    {% assign clean_handle = handle | strip %}
+    Blog Handle: {{ clean_handle }}<br>
+    {% assign blog = blogs[clean_handle] %}
+    {% if blog %}
+      Articles: {{ blog.articles_count }}<br>
+      {% for article in blog.articles %}
+        - {{ article.title }}<br>
+      {% endfor %}
+    {% else %}
+      Blog not found!<br>
+    {% endif %}
+  {% endfor %}
+</div>
+
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('blog-live-search');
