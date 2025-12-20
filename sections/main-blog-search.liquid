@@ -1,102 +1,42 @@
 {{ 'component-article-card.css' | asset_url | stylesheet_tag }}
-{% comment %} {{ 'component-card.css' | asset_url | stylesheet_tag }} {% endcomment %}
 {{ 'section-main-blog.css' | asset_url | stylesheet_tag }}
-    <link
-      rel="stylesheet"
-      href="{{ 'component-card.css' | asset_url }}"
-      media="print"
-      onload="this.media='all'"
-    >
 
 {%- style -%}
+/* Section padding */
+.section-{{ section.id }}-padding {
+  padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+  padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+}
+
+@media screen and (min-width: 750px) {
   .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
-    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
   }
+}
 
-  @media screen and (min-width: 750px) {
-    .section-{{ section.id }}-padding {
-      padding-top: {{ section.settings.padding_top }}px;
-      padding-bottom: {{ section.settings.padding_bottom }}px;
-    }
-  }
-
-  /* Hide full content used for search */
-  .article-card__full-content {
-    display: none;
-  }
-
-  /* Hide all articles by default */
+/* Hide article cards by default */
 .blog-articles__article {
   display: none;
 }
- 
+
+#no-results {
+  display: none;
+  text-align: center;
+  margin: 20px 0;
+}
 {%- endstyle -%}
-<script>
-  const allBlogArticles = [
-    {% for article in blog.articles %}
-      {
-        handle: "{{ article.handle }}",
-        title: "{{ article.title | escape }}",
-        excerpt: "{{ article.excerpt | strip_html | escape }}",
-        content: "{{ article.content | strip_html | escape }}",
-        url: "{{ article.url }}",
-        image: "{{ article.image | img_url: 'medium' }}"
-      }{% if forloop.last == false %},{% endif %}
-    {% endfor %}
-  ];
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const allHandles = [
-    {% for article in blog.articles %}
-      "{{ article.handle }}"{% if forloop.last == false %},{% endif %}
-    {% endfor %}
-  ];
-
-  console.log("All blog handles:", allHandles);
-  alert("All blog handles:\n" + allHandles.join("\n"));
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', async () => {
-  const blogHandle = "your-blog-handle"; // replace with your actual blog handle
-  const searchInput = document.getElementById('blog-live-search');
-  const container = document.querySelector('.blog-articles');
-  const noResults = document.getElementById('no-results');
-
-  let allArticles = [];
-
-  // Fetch all articles via JSON
-  async function fetchArticles() {
-    try {
-      const response = await fetch(`/blogs/${blogHandle}.json?limit=50`);
-      const data = await response.json();
-      allArticles = data.articles; // contains all articles
-      console.log("All fetched articles:", allArticles);
-    } catch (err) {
-      console.error("Failed to fetch blog articles", err);
-    }
-  }
-
-  await fetchArticles();
-});
-</script>
-
-
-
 
 <div class="main-blog page-width section-{{ section.id }}-padding">
-  <h1 class="title--primary{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
-    {{ blog.title | escape }}
+  <h1 class="title--primary">
+    {{ section.settings.header_text | default: "Search Blog Articles" }}
   </h1>
 
   {% if section.settings.description %}
     <div class="main-blog-description">{{ section.settings.description }}</div>
   {% endif %}
 
+  <!-- Search bar -->
   <div class="blog-search-wrapper" style="margin-bottom: 20px;">
     <input
       type="text"
@@ -104,36 +44,65 @@ document.addEventListener('DOMContentLoaded', async () => {
       placeholder="Search blog posts..."
       style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"
     >
-    <div id="no-results" style="display:none; margin:20px 0; text-align:center;">
+    <div id="no-results">
       <p>No articles found.</p>
     </div>
   </div>
 
+  <!-- Container for article cards -->
+  <div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
+    <!-- Articles will be dynamically injected here -->
+  </div>
+</div>
+
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const searchInput = document.getElementById('blog-live-search');
   const container = document.querySelector('.blog-articles');
   const noResults = document.getElementById('no-results');
 
-  // Hide all articles on load
-  container.innerHTML = '';
-  noResults.style.display = 'none';
+  let allArticles = [];
 
+  // Get blog handles from the customizer (comma separated)
+  const selectedBlogs = "{{ section.settings.blog_handles }}".split(",").map(h => h.trim()).filter(Boolean);
+
+  // Fetch all articles from selected blogs
+  async function fetchAllArticles() {
+    for (const handle of selectedBlogs) {
+      try {
+        const response = await fetch(`/blogs/${handle}.json?limit=250`);
+        const data = await response.json();
+        data.articles.forEach(article => {
+          allArticles.push({
+            ...article,
+            blogHandle: handle
+          });
+        });
+      } catch (err) {
+        console.warn("Failed to fetch articles for blog:", handle);
+      }
+    }
+  }
+
+  await fetchAllArticles();
+
+  // Create article card element
   function createArticleCard(article) {
     const card = document.createElement('div');
     card.className = 'blog-articles__article article';
     card.innerHTML = `
       <div class="card">
-        ${article.image ? `<img src="${article.image}" alt="${article.title}">` : ''}
+        ${article.image ? `<img src="${article.image.src}" alt="${article.title}">` : ''}
         <h2 class="card__heading">${article.title}</h2>
-        <p class="article-card__excerpt">${article.excerpt}</p>
-        <div class="article-card__full-content" style="display:none">${article.content}</div>
-        <a href="${article.url}">Read More</a>
+        <p class="article-card__excerpt">${article.excerpt || ''}</p>
+        <div class="article-card__full-content" style="display:none">${article.content || ''}</div>
+        <a href="/blogs/${article.blogHandle}/${article.handle}">Read More</a>
       </div>
     `;
     return card;
   }
 
+  // Live search
   searchInput.addEventListener('input', () => {
     const query = searchInput.value.trim().toLowerCase();
     container.innerHTML = '';
@@ -144,8 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    allBlogArticles.forEach(article => {
-      const text = `${article.title} ${article.excerpt} ${article.content}`.toLowerCase();
+    allArticles.forEach(article => {
+      const text = `${article.title} ${article.excerpt || ''} ${article.content || ''}`.toLowerCase();
       if (text.includes(query)) {
         container.appendChild(createArticleCard(article));
         matches++;
@@ -157,127 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-
-
-<div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
-  {%- for article in blog.articles -%}
-    <div
-      class="blog-articles__article article{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
-      data-article-handle="{{ article.handle }}"
-      {% if settings.animations_reveal_on_scroll %}
-        data-cascade
-        style="--animation-order: {{ forloop.index }};"
-      {% endif %}
-    >
-      {%- render 'article-card',
-        article: article,
-        media_height: section.settings.image_height,
-        media_aspect_ratio: article.image.aspect_ratio,
-        show_image: section.settings.show_image,
-        show_date: section.settings.show_date,
-        show_author: section.settings.show_author,
-        show_excerpt: true
-      -%}
-
-      <!-- Hidden full content for live search -->
-      <div class="article-card__full-content">
-        {{ article.content | strip_html | escape }}
-      </div>
-    </div>
-  {%- endfor -%}
-</div>
-
-{%- if paginate.pages > 1 -%}
-
-{%- endif -%}
-</div>
-
-
-
-
-  <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const searchInput = document.getElementById('blog-live-search');
-  const container = document.querySelector('.blog-articles');
-  const noResults = document.getElementById('no-results');
-  const totalPages = {{ paginate.pages | default: 1 }};
-  const blogUrl = "{{ blog.url }}";
-
-  let allArticles = [];
-  const articleHandles = new Set();
-  const originalContent = container.innerHTML;
-
-  // Add current page articles only once
-  container.querySelectorAll('.blog-articles__article').forEach(article => {
-    const handle = article.getAttribute('data-article-handle');
-    if (handle && !articleHandles.has(handle)) {
-      articleHandles.add(handle);
-      allArticles.push(article.outerHTML);
-    }
-  });
-
-  // Fetch remaining pages (page 2 onward)
-  async function fetchAllArticles() {
-    for (let i = 2; i <= totalPages; i++) {
-      try {
-        const response = await fetch(`${blogUrl}?page=${i}`);
-        const text = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(text, 'text/html');
-        const articles = doc.querySelectorAll('.blog-articles__article');
-
-        articles.forEach(article => {
-          const handle = article.getAttribute('data-article-handle');
-          if (handle && !articleHandles.has(handle)) {
-            articleHandles.add(handle);
-            allArticles.push(article.outerHTML);
-          }
-        });
-      } catch (err) {
-        console.error('Error fetching page', i, err);
-      }
-    }
-  }
-
-  function filterArticles(query) {
-    const trimmedQuery = query.trim().toLowerCase();
-    if (!trimmedQuery) {
-      container.innerHTML = originalContent;
-      noResults.style.display = 'none';
-      return;
-    }
-
-    const keywords = trimmedQuery.split(/\s+/);
-
-    const filtered = allArticles.filter(html => {
-      const temp = document.createElement('div');
-      temp.innerHTML = html;
-      const card = temp.querySelector('.blog-articles__article');
-
-      const title = (card.querySelector('.card__heading')?.textContent || '').toLowerCase();
-      const excerpt = (card.querySelector('.article-card__excerpt')?.textContent || '').toLowerCase();
-      const fullContent = (card.querySelector('.article-card__full-content')?.textContent || '').toLowerCase();
-
-      const textToSearch = title + ' ' + excerpt + ' ' + fullContent;
-
-      // All keywords must exist somewhere
-      return keywords.every(word => textToSearch.includes(word));
-    });
-
-    container.innerHTML = filtered.join('');
-    noResults.style.display = filtered.length ? 'none' : 'block';
-  }
-
-  searchInput.addEventListener('input', e => {
-    filterArticles(e.target.value);
-  });
-
-  fetchAllArticles();
-});
-</script>
-
-
-
 {% schema %}
 {
   "name": "Blog Search",
@@ -285,63 +133,31 @@ document.addEventListener('DOMContentLoaded', function () {
   "class": "section",
   "settings": [
     {
-      "type": "richtext",
-      "id": "description",
-      "label": "Blog description"
+      "type": "text",
+      "id": "header_text",
+      "label": "Header Text",
+      "default": "Search Blog Articles"
     },
     {
-      "type": "header",
-      "content": "t:sections.main-blog.settings.header.content"
+      "type": "richtext",
+      "id": "description",
+      "label": "Section Description"
     },
     {
       "type": "select",
       "id": "layout",
       "options": [
-        { "value": "grid", "label": "t:sections.main-blog.settings.layout.options__1.label" },
-        { "value": "collage", "label": "t:sections.main-blog.settings.layout.options__2.label" }
+        { "value": "grid", "label": "Grid" },
+        { "value": "collage", "label": "Collage" }
       ],
-      "default": "collage",
-      "label": "t:sections.main-blog.settings.layout.label",
-      "info": "t:sections.main-blog.settings.layout.info"
+      "default": "grid",
+      "label": "Article Layout"
     },
     {
-      "type": "checkbox",
-      "id": "show_image",
-      "default": true,
-      "label": "t:sections.main-blog.settings.show_image.label"
-    },
-    {
-      "type": "select",
-      "id": "image_height",
-      "options": [
-        { "value": "adapt", "label": "t:sections.main-blog.settings.image_height.options__1.label" },
-        { "value": "small", "label": "t:sections.main-blog.settings.image_height.options__2.label" },
-        { "value": "medium", "label": "t:sections.main-blog.settings.image_height.options__3.label" },
-        { "value": "large", "label": "t:sections.main-blog.settings.image_height.options__4.label" }
-      ],
-      "default": "medium",
-      "label": "t:sections.main-blog.settings.image_height.label",
-      "info": "t:sections.main-blog.settings.image_height.info"
-    },
-    {
-      "type": "checkbox",
-      "id": "show_date",
-      "default": true,
-      "label": "t:sections.main-blog.settings.show_date.label"
-    },
-    {
-      "type": "checkbox",
-      "id": "show_author",
-      "default": false,
-      "label": "t:sections.main-blog.settings.show_author.label"
-    },
-    {
-      "type": "paragraph",
-      "content": "t:sections.main-blog.settings.paragraph.content"
-    },
-    {
-      "type": "header",
-      "content": "t:sections.all.padding.section_padding_heading"
+      "type": "text",
+      "id": "blog_handles",
+      "label": "Blog Handles (comma separated)",
+      "info": "Enter the handles of the blogs you want to include in search, separated by commas."
     },
     {
       "type": "range",
@@ -350,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function () {
       "max": 100,
       "step": 4,
       "unit": "px",
-      "label": "t:sections.all.padding.padding_top",
+      "label": "Top Padding",
       "default": 36
     },
     {
@@ -360,13 +176,13 @@ document.addEventListener('DOMContentLoaded', function () {
       "max": 100,
       "step": 4,
       "unit": "px",
-      "label": "t:sections.all.padding.padding_bottom",
+      "label": "Bottom Padding",
       "default": 36
     }
   ],
   "presets": [
     {
-      "name": "Blog Search",
+      "name": "Blog Search"
     }
   ]
 }
