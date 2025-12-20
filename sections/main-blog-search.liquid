@@ -33,30 +33,27 @@
  
 {%- endstyle -%}
 <script>
-  const allBlogArticles = [
-    {% for article in blog.articles %}
-      {
-        handle: "{{ article.handle }}",
-        title: "{{ article.title | escape }}",
-        excerpt: "{{ article.excerpt | strip_html | escape }}",
-        content: "{{ article.content | strip_html | escape }}",
-        url: "{{ article.url }}",
-        image: "{{ article.image | img_url: 'medium' }}"
-      }{% if forloop.last == false %},{% endif %}
-    {% endfor %}
-  ];
-</script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const blogHandle = "your-blog-handle"; // replace with your actual blog handle
+  const searchInput = document.getElementById('blog-live-search');
+  const container = document.querySelector('.blog-articles');
+  const noResults = document.getElementById('no-results');
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const allHandles = [
-    {% for article in blog.articles %}
-      "{{ article.handle }}"{% if forloop.last == false %},{% endif %}
-    {% endfor %}
-  ];
+  let allArticles = [];
 
-  console.log("All blog handles:", allHandles);
-  alert("All blog handles:\n" + allHandles.join("\n"));
+  // Fetch all articles via JSON
+  async function fetchArticles() {
+    try {
+      const response = await fetch(`/blogs/${blogHandle}.json?limit=50`);
+      const data = await response.json();
+      allArticles = data.articles; // contains all articles
+      console.log("All fetched articles:", allArticles);
+    } catch (err) {
+      console.error("Failed to fetch blog articles", err);
+    }
+  }
+
+  await fetchArticles();
 });
 </script>
 
