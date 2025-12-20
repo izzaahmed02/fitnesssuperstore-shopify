@@ -187,3 +187,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   ]
 }
 {% endschema %}
+
+
+async function fetchAllArticles() {
+  for (const handle of selectedBlogs) {
+    try {
+      console.log("Fetching blog:", handle);
+      const response = await fetch(`/blogs/${handle}.json?limit=250`);
+      if (!response.ok) {
+        console.warn("Failed to fetch blog:", handle, response.status);
+        continue;
+      }
+      const data = await response.json();
+      console.log(`Fetched ${data.articles.length} articles from`, handle);
+      data.articles.forEach(article => {
+        allArticles.push({
+          ...article,
+          blogHandle: handle
+        });
+      });
+    } catch (err) {
+      console.warn("Error fetching blog:", handle, err);
+    }
+  }
+  console.log("Total articles fetched:", allArticles.length);
+}
