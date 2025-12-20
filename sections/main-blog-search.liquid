@@ -72,46 +72,43 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('blog-live-search');
-  const articles = document.querySelectorAll('.blog-articles__article');
+  const container = document.querySelector('.blog-articles');
   const noResults = document.getElementById('no-results');
 
-  if (!searchInput || !articles.length) return;
+  // Hide all articles on load
+  container.innerHTML = '';
+  noResults.style.display = 'none';
 
-  function hideAllArticles() {
-    articles.forEach(article => {
-      article.style.display = 'none';
-    });
-    noResults.style.display = 'none';
+  function createArticleCard(article) {
+    const card = document.createElement('div');
+    card.className = 'blog-articles__article article';
+    card.innerHTML = `
+      <div class="card">
+        ${article.image ? `<img src="${article.image}" alt="${article.title}">` : ''}
+        <h2 class="card__heading">${article.title}</h2>
+        <p class="article-card__excerpt">${article.excerpt}</p>
+        <div class="article-card__full-content" style="display:none">${article.content}</div>
+        <a href="${article.url}">Read More</a>
+      </div>
+    `;
+    return card;
   }
-
-  // Ensure hidden on load (extra safety)
-  hideAllArticles();
 
   searchInput.addEventListener('input', () => {
     const query = searchInput.value.trim().toLowerCase();
+    container.innerHTML = '';
     let matches = 0;
 
     if (!query) {
-      // Search cleared → hide everything again
-      hideAllArticles();
+      noResults.style.display = 'none';
       return;
     }
 
-    articles.forEach(article => {
-      const title =
-        article.querySelector('.card__heading')?.textContent.toLowerCase() || '';
-      const excerpt =
-        article.querySelector('.article-card__excerpt')?.textContent.toLowerCase() || '';
-      const content =
-        article.querySelector('.article-card__full-content')?.textContent.toLowerCase() || '';
-
-      const searchableText = `${title} ${excerpt} ${content}`;
-
-      if (searchableText.includes(query)) {
-        article.style.display = '';
+    allBlogArticles.forEach(article => {
+      const text = `${article.title} ${article.excerpt} ${article.content}`.toLowerCase();
+      if (text.includes(query)) {
+        container.appendChild(createArticleCard(article));
         matches++;
-      } else {
-        article.style.display = 'none';
       }
     });
 
@@ -119,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
+
 
 
 <div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
