@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   $(firstSlider).slick({
-    slidesToShow: 3,
+    slidesToShow: 5,
 
     infinite: true,
     draggable: true,
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       $(targetSlider).slick({
-        slidesToShow: 3,
+        slidesToShow: 5,
         slidesToScroll: 1,
         arrows: true,
         swipeToSlide: true,   
