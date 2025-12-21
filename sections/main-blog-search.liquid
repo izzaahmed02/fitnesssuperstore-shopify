@@ -86,8 +86,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.querySelector('.blog-articles');
   const noResults = document.getElementById('no-results');
 
-  // All pre-rendered articles
-  const allArticles = Array.from(document.querySelectorAll('#all-articles-container .article-data'));
+  const allArticles = Array.from(
+    document.querySelectorAll('#all-articles-container .article-data')
+  );
+
+  function forceLinksToNewTab(scope) {
+    scope.querySelectorAll('a[href]').forEach(link => {
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+    });
+  }
 
   searchInput.addEventListener('input', () => {
     const query = searchInput.value.trim().toLowerCase();
@@ -95,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let matches = 0;
 
     if (!query) {
-      // Hide all articles if search is empty
       noResults.style.display = 'none';
       return;
     }
@@ -104,7 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const titleExcerptText = articleDiv.textContent.toLowerCase();
       const fullContent = articleDiv.dataset.fullContent.toLowerCase();
 
-      // Match if query is in title, excerpt, or full article content
       if (titleExcerptText.includes(query) || fullContent.includes(query)) {
         const clone = articleDiv.cloneNode(true);
         clone.style.display = 'block';
@@ -114,10 +120,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // Force article links to open in new tab
+    forceLinksToNewTab(container);
+
     noResults.style.display = matches === 0 ? 'block' : 'none';
   });
 });
 </script>
+
 
 {% schema %}
 {
