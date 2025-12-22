@@ -458,9 +458,12 @@ if (!customElements.get('product-customization-options')) {
           const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`) || this.cartDrawer?.querySelector(`[data-key-modify="${this.modifyID}"]`);
           if (!modifyButton) return;
           modifyButton.addEventListener('click', () => {
-            this.classList.add('modify-opened');
             this.toggleAccordions();
             this.dataset.stamp = this.htmlToBase64(this.innerHTML);
+            setTimeout(() => {
+              this.hideConditionalOptions();
+              this.classList.add('modify-opened');
+            }, 200);
           });
         });
       }
@@ -702,6 +705,14 @@ if (!customElements.get('product-customization-options')) {
         return productOptions;
       }
 
+      // If condistionals option is present and some elements are hidden. We hide the in modify popup
+      hideConditionalOptions() {
+        const defaultConditionalOptions = this.querySelectorAll('[data-should-be-hidden]');
+        if (defaultConditionalOptions.length === 0) return;
+        defaultConditionalOptions.forEach((option) => {
+          option.style.display = 'none';
+        });
+      }
       // Array of sections to be rerendered
 
       getSectionsToRender() {

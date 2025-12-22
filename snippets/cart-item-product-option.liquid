@@ -45,12 +45,26 @@
 %}
 
 {% if option_type == 'Accordion' %}
+  {% liquid
+    assign option_visible = true
+
+    if conditions_to_render != blank
+      if conditions_to_render contains active_conditional_option.id
+        assign option_visible = true
+      else
+        assign option_visible = false
+      endif
+    endif
+  %}
   <div
     data-type="{{ product_option.product_option_title | handleize }}"
     data-option-accordion
     class="product-options__accordion"
     {% if conditions_to_render != blank %}
       data-conditions-to-render="{{ conditions_to_render | replace_last: ',', '' | strip }}"
+      {% if option_visible == false %}
+        data-should-be-hidden
+      {% endif %}
     {% endif %}
     {% if product_option.enable_multichoice %}
       multichoice
