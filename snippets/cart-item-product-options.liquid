@@ -25,7 +25,6 @@
         assign hidden_option = true
       endif
     endfor
-    echo hidden_option
     unless category.hide_option
       unless hidden_option
         if color_title == '' and category_title_downcase != 'warranty'
@@ -148,7 +147,14 @@
           {% for product_option in category.product_options.value %}
             {% assign title = product_option.product_option_title | downcase %}
             {% if title == 'paint color' or title == 'paint colors' or title == 'color' %}
-              {% render 'cart-item-color-picker', product: product_option.product_option_variants.value, products: product_option, color_type: 'paint', title: category.title, line_item: line_item, color_counter: color_counter %}
+              {% render 'cart-item-color-picker',
+                product: product_option.product_option_variants.value,
+                products: product_option,
+                color_type: 'paint',
+                title: category.title,
+                line_item: line_item,
+                color_counter: color_counter
+              %}
             {% endif %}
             {% if title == 'vinyl color' or title == 'vinyl colors' %}
               {% render 'cart-item-color-picker',
