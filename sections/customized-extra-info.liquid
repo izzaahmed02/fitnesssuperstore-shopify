@@ -560,6 +560,44 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="product__extra_overview-list">{{ block.settings.overview }}</div>
               </div>
             {% endif %}
+
+               {% when 'video' %}
+            {% assign matched_video = null %}
+            {% assign matched_thumbnail = null %}
+
+            {%- for entry in shop.metaobjects.product_series_video.values -%}
+              {%- if product.tags contains entry.tag_name -%}
+                {% assign matched_video = entry.video_url %}
+                {% assign matched_thumbnail = entry.thumbnail %}
+                {% break %}
+              {%- endif -%}
+            {%- endfor -%}
+
+            {% if matched_video %}
+              <div class="product-video-section extra-info-width">
+                {% if block.settings.heading != blank %}
+                  <h4 class="product__extra_info-title">{{ block.settings.heading }}</h4>
+                {% endif %}
+                <div class="custom-product-video-wrapper">
+                  <video class="custom-product-video" width="100%" controls poster="{{ matched_thumbnail }}">
+                    <source src="{{ matched_video }}" type="video/mp4">
+                  </video>
+                  <div class="video-play-btn">
+                    <button class="video-play-btn-youtube" aria-label="Play" title="Play">
+                     <span class="product-video-play-icon" style=" position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  color: white;
+  text-shadow: 0 0 10px rgba(0,0,0,0.6);
+  pointer-events: none;">▶</span>
+                  </button>
+                  </div>
+
+                </div>
+              </div>
+            {% endif %} 
     
           {% when 'features' %}
             {% if block.settings.features != blank %}
