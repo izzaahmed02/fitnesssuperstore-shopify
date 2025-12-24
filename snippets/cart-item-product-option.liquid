@@ -113,9 +113,14 @@
       </h3>
       <span
         class="product-options__accordion-label"
-        data-selected-options="{{ default_values }}"
+        data-selected-options="{% if default_values != blank %}{{ default_values }}{% endif %}"
         {% if product_option.mandatory %}
           data-mandatory
+        {% endif %}
+        {% if default_values == blank and conditions_to_render != blank %}
+          {% assign price = product_option.product_option_sets_default.value.price %}
+          {% assign price_substract = product_option.product_option_sets_default.value.metafields.custom.price_reduction_value %}
+          data-should-have-default="{{ product_option.product_option_sets_default.value.id }}{% if price_substract != blank %}:::-{{price_substract}}{% endif %}{% if price > 0 %}:::{{price}}{% endif %}"
         {% endif %}
       >
         {% if default_variant_id != blank %}
@@ -144,6 +149,17 @@
               </svg>
             </p>
           {% endfor %}
+        {% elsif conditions_to_render != blank and default_variant_id == blank %}
+          <p data-option-id="{{ product_option.product_option_sets_default.value.id }}">
+            <span class="product-options__accordion-label-title" data-option-title>{{ product_option.product_option_sets_default.value.title }}</span>
+            {% if product_option.product_option_sets_default.value.price != 0 %}
+              <span class="product-options__accordion-label-price" data-option-price>{{ product_option.product_option_sets_default.value.price | money }}</span>
+            {% endif %}
+
+            <svg class="close-option" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M3.57808 3.57417C3.81239 3.33986 4.19229 3.33986 4.42661 3.57417L8.00234 7.14991L11.5781 3.57417C11.8124 3.33986 12.1923 3.33986 12.4266 3.57417C12.6609 3.80849 12.6609 4.18839 12.4266 4.4227L8.85087 7.99844L12.4266 11.5742C12.6609 11.8085 12.6609 12.1884 12.4266 12.4227C12.1923 12.657 11.8124 12.657 11.5781 12.4227L8.00234 8.84697L4.42661 12.4227C4.19229 12.657 3.81239 12.657 3.57808 12.4227C3.34377 12.1884 3.34377 11.8085 3.57808 11.5742L7.15382 7.99844L3.57808 4.4227C3.34377 4.18839 3.34377 3.80849 3.57808 3.57417Z" fill="black"/>
+            </svg>
+          </p>
         {% endif %}
       </span>
 

@@ -711,6 +711,10 @@ if (!customElements.get('product-customization-options')) {
         if (defaultConditionalOptions.length === 0) return;
         defaultConditionalOptions.forEach((option) => {
           option.style.display = 'none';
+          const defaultOptions = option.querySelector('[data-should-have-default]');
+          if (defaultOptions && defaultOptions.dataset.shouldHaveDefault !== '') {
+            defaultOptions.dataset.selectedOptions = defaultOptions.dataset.shouldHaveDefault;
+          }
         });
       }
       // Array of sections to be rerendered
