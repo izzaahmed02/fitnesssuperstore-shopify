@@ -2,6 +2,7 @@
 Related Blog Posts — Select a blog and show all articles in a swipeable slider
 Mobile: 1 slide
 Desktop: 3 slides
+Optional horizontal scrollbar (toggleable)
 {% endcomment %}
 
 <section
@@ -29,7 +30,7 @@ Desktop: 3 slides
 
     {% if blog and blog.articles_count > 0 %}
       <div class="related-slider" id="RelatedSlider-{{ section.id }}">
-        <div class="related-slider__track">
+        <div class="related-slider__track {% unless section.settings.show_scrollbar %}hide-scrollbar{% endunless %}">
           {% for article in blog.articles %}
             <div class="related-slider__slide">
               <article class="card-wrapper">
@@ -91,7 +92,7 @@ Desktop: 3 slides
   </div>
 
   <style>
-    /* === Slider Layout === */
+    /* === Slider === */
     #RelatedBlogs-{{ section.id }} .related-slider {
       overflow: hidden;
     }
@@ -102,11 +103,31 @@ Desktop: 3 slides
       overflow-x: auto;
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 8px;
+      padding-bottom: 12px; /* space for scrollbar */
     }
 
-    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar {
+    /* Scrollbar hidden (toggle OFF) */
+    #RelatedBlogs-{{ section.id }} .related-slider__track.hide-scrollbar {
+      scrollbar-width: none;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__track.hide-scrollbar::-webkit-scrollbar {
       display: none;
+    }
+
+    /* Scrollbar visible (toggle ON) */
+    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar-track {
+      background: #eee;
+      border-radius: 4px;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar-thumb {
+      background: #D83D0E;
+      border-radius: 4px;
     }
 
     #RelatedBlogs-{{ section.id }} .related-slider__slide {
@@ -144,7 +165,6 @@ Desktop: 3 slides
       line-height: 18px;
       color: gray;
       letter-spacing: .13rem;
-      text-transform: none;
     }
 
     #RelatedBlogs-{{ section.id }} .link {
@@ -210,6 +230,12 @@ Desktop: 3 slides
       "id": "blog",
       "type": "blog",
       "label": "Select blog"
+    },
+    {
+      "id": "show_scrollbar",
+      "type": "checkbox",
+      "label": "Show horizontal scrollbar",
+      "default": true
     },
     {
       "id": "show_excerpt",
