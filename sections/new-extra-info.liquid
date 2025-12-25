@@ -1,0 +1,273 @@
+<section id="product-extra-tabs">
+
+<div class="product-extra-tabs">
+
+  <!-- LEFT TABS -->
+  <ul class="extra-tab-menu">
+    {% for block in section.blocks %}
+      <li 
+        data-tab="tab-{{ block.id }}" 
+        class="{% if forloop.first %}active{% endif %}">
+        {{ block.settings.title }}
+        <span>→</span>
+      </li>
+    {% endfor %}
+  </ul>
+
+
+  <!-- RIGHT CONTENT -->
+  <div class="extra-tab-content">
+
+    {% for block in section.blocks %}
+      <div 
+        id="tab-{{ block.id }}" 
+        class="tab-pane {% if forloop.first %}active{% endif %}">
+
+        {% case block.type %}
+
+          {% when 'description' %}
+            {% if product.metafields.custom.description != blank %}
+              {{ product.metafields.custom.description }}
+            {% else %}
+              {{ product.description }}
+            {% endif %}
+
+          {% when 'manuals' %}
+            {% if product.metafields.custom.manuals != blank %}
+              {{ product.metafields.custom.manuals }}
+            {% else %}
+              {{ block.settings.content }}
+            {% endif %}
+
+          {% when 'features' %}
+            {% if product.metafields.custom.features != blank %}
+              {{ product.metafields.custom.features }}
+            {% else %}
+              {{ block.settings.content }}
+            {% endif %}
+
+          {% when 'benefits' %}
+            {% if product.metafields.custom.benefits != blank %}
+              {{ product.metafields.custom.benefits }}
+            {% else %}
+              {{ block.settings.content }}
+            {% endif %}
+
+          {% when 'tech' %}
+            {% if product.metafields.custom.tech_specs != blank %}
+              {{ product.metafields.custom.tech_specs }}
+            {% else %}
+              {{ block.settings.content }}
+            {% endif %}
+
+          {% when 'weightstacks' %}
+            {% if product.metafields.custom.weight_stacks != blank %}
+              {{ product.metafields.custom.weight_stacks }}
+            {% else %}
+              {{ block.settings.content }}
+            {% endif %}
+
+          {% when 'buyingguide' %}
+            {% if product.metafields.custom.buying_guide != blank %}
+              {{ product.metafields.custom.buying_guide }}
+            {% else %}
+              {{ block.settings.content }}
+            {% endif %}
+
+          {% when 'faq' %}
+            {% if product.metafields.custom.faq != blank %}
+              {{ product.metafields.custom.faq }}
+            {% else %}
+              {{ block.settings.content }}
+            {% endif %}
+
+          {% when 'warranty' %}
+            {% if product.metafields.custom.warranty != blank %}
+              {{ product.metafields.custom.warranty }}
+            {% else %}
+              {{ block.settings.content }}
+            {% endif %}
+
+        {% endcase %}
+      </div>
+    {% endfor %}
+
+  </div>
+
+</div>
+</section>
+
+<style>
+.product-extra-tabs{
+  display:flex;
+  gap:30px;
+}
+
+.extra-tab-menu{
+  width:260px;
+  border-right:1px solid #ddd;
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+.extra-tab-menu li{
+  padding:18px 20px;
+  border-bottom:1px solid #eee;
+  cursor:pointer;
+  font-size:18px;
+  font-weight:600;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.extra-tab-menu li.active{
+  background:#FFF3EE;
+  color:#F1592A;
+}
+
+.extra-tab-content{
+  flex:1;
+  padding:10px 10px;
+}
+
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+
+@media(max-width:768px){
+  .product-extra-tabs{
+    flex-direction:column;
+  }
+
+  .extra-tab-menu{
+    width:100%;
+    border-right:0;
+  }
+
+}
+</style>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", ()=>{
+  const tabs = document.querySelectorAll(".extra-tab-menu li");
+  const panes = document.querySelectorAll(".tab-pane");
+
+  tabs.forEach(tab=>{
+    tab.addEventListener("click", ()=>{
+
+      tabs.forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+
+      const id = tab.getAttribute("data-tab");
+
+      panes.forEach(p=>{
+        p.classList.remove("active");
+        if(p.id === id) p.classList.add("active");
+      });
+
+    });
+  });
+
+});
+</script>
+
+
+{% schema %}
+{
+  "name": "Product Extra Tabs",
+  "settings": [],
+  "blocks": [
+    {
+      "type": "description",
+      "name": "Description",
+      "settings":[
+        { "type":"text" , "id":"title" , "label":"Tab Title", "default":"Description" }
+      ]
+    },
+    {
+      "type": "manuals",
+      "name": "Manuals",
+      "settings":[
+        { "type":"text" , "id":"title" , "label":"Tab Title", "default":"Manuals" },
+        { "type":"richtext" , "id":"content" , "label":"Fallback Content" }
+      ]
+    },
+    {
+      "type": "features",
+      "name": "Features",
+      "settings":[
+        { "type":"text" , "id":"title" , "label":"Tab Title", "default":"Features" },
+        { "type":"richtext" , "id":"content" , "label":"Fallback Content" }
+      ]
+    },
+    {
+      "type": "benefits",
+      "name": "Benefits",
+      "settings":[
+        { "type":"text" , "id":"title" , "label":"Tab Title", "default":"Benefits" },
+        { "type":"richtext" , "id":"content" , "label":"Fallback Content" }
+      ]
+    },
+    {
+      "type": "tech",
+      "name": "Tech Specs",
+      "settings":[
+        { "type":"text" , "id":"title" , "label":"Tab Title", "default":"Tech Specs" },
+        { "type":"richtext" , "id":"content" , "label":"Fallback Content" }
+      ]
+    },
+    {
+      "type": "weightstacks",
+      "name": "Weight Stacks",
+      "settings":[
+        { "type":"text" , "id":"title" , "label":"Tab Title", "default":"Weight Stacks" },
+        { "type":"richtext" , "id":"content" , "label":"Fallback Content" }
+      ]
+    },
+    {
+      "type": "buyingguide",
+      "name": "Buying Guide",
+      "settings":[
+        { "type":"text" , "id":"title" , "label":"Tab Title", "default":"Buying Guide" },
+        { "type":"richtext" , "id":"content" , "label":"Fallback Content" }
+      ]
+    },
+    {
+      "type": "faq",
+      "name": "FAQ",
+      "settings":[
+        { "type":"text" , "id":"title" , "label":"Tab Title", "default":"FAQ" },
+        { "type":"richtext" , "id":"content" , "label":"Fallback Content" }
+      ]
+    },
+    {
+      "type": "warranty",
+      "name": "Warranty",
+      "settings":[
+        { "type":"text" , "id":"title" , "label":"Tab Title", "default":"Warranty" },
+        { "type":"richtext" , "id":"content" , "label":"Fallback Content" }
+      ]
+    }
+  ],
+  "presets":[
+    {
+      "name":"Product Extra Tabs",
+      "blocks":[
+        { "type":"description" },
+        { "type":"manuals" },
+        { "type":"features" },
+        { "type":"benefits" },
+        { "type":"tech" },
+        { "type":"weightstacks" },
+        { "type":"buyingguide" },
+        { "type":"faq" },
+        { "type":"warranty" }
+      ]
+    }
+  ]
+}
+{% endschema %}
+
+
