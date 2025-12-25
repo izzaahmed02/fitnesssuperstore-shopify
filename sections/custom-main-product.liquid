@@ -748,25 +748,44 @@
            
            {%- when 'custom_product_option' -%}
 
-{% if product.metafields.custom.addons %}
-  <div class="addon-wrapper">
 
-      {% for addon in product.metafields.custom.addons.value %}
-        <label class="addon-item">
-          <input 
-            type="checkbox"
-            class="addonCheck"
-            data-addon-price="{{ addon.price | times: 100 }}"
-            data-addon-title="{{ addon.title }}"
-          >
+{% if product.metafields.custom.product_bench and product.metafields.custom.product_bench.value.size > 0 %}
 
-          <span class="addon-title">{{ addon.title }}</span>
-          <span class="addon-price">{{ addon.price | money }}</span>
-        </label>
-      {% endfor %}
+<div class="bench-products-grid">
 
-  </div>
+  {% for item in product.metafields.custom.product_bench.value %}
+
+    {%- assign ref_product = item.product | default: item -%}
+
+    <div class="bench-card">
+      
+      <a href="{{ ref_product.url }}" class="bench-card-inner">
+
+        <div class="bench-img">
+          {% if item.image %}
+            <img src="{{ item.image | img_url: '400x' }}" alt="{{ ref_product.title }}">
+          {% elsif ref_product.featured_image %}
+            <img src="{{ ref_product.featured_image | img_url: '400x' }}" alt="{{ ref_product.title }}">
+          {% endif %}
+        </div>
+
+        <div class="bench-price">
+          {{ item.price | money }}
+        </div>
+
+        <div class="bench-title">
+          {{ ref_product.title }}
+        </div>
+
+      </a>
+    </div>
+
+  {% endfor %}
+
+</div>
+
 {% endif %}
+
 
 
 
