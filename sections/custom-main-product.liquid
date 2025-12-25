@@ -743,6 +743,31 @@
                     <span class="showroom-text">On Display at our Northern California Warehouse Showroom</span>
                   </div>
                 {% endif %}
+
+
+           
+              {%- when 'custom-product-option' -%}
+
+               {% if product.metafields.custom.addon_price %}
+  <div class="addon-wrapper">
+      <label>
+        <input type="checkbox" id="addonCheck"
+          data-addon-price="{{ product.metafields.custom.addon_price | times: 100 }}"
+          data-addon-title="{{ product.metafields.custom.addon_title }}">
+        {{ product.metafields.custom.addon_title }}
+        + {{ product.metafields.custom.addon_price | money }}
+      </label>
+  </div>
+{% endif %}
+
+
+
+
+
+
+
+
+
               {%- when 'text' -%}
                 <p
                   class="product__text inline-richtext{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}"
@@ -1783,6 +1808,10 @@
                 </product-recommendations>
               {%- when 'icon-with-text' -%}
                 {% render 'icon-with-text', block: block %}
+
+
+                {%- when 'custom-product-option' -%}
+                
 
             {%- endcase -%}
           {%- endfor -%}
