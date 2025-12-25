@@ -153,27 +153,26 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-{% assign faq_blocks = section.blocks | where: "type", "collapsible_row" %}
-{% if faq_blocks.size > 0 %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {% for block in faq_blocks %}
-      {
-        "@type": "Question",
-        "name": {{ block.settings.heading | default: block.settings.page.title | json }},
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": {{ block.settings.row_content | default: block.settings.page.content | strip_html | json }}
-        }
-      }{% unless forloop.last %},{% endunless %}
+    {% for block in section.blocks %}
+      {% if block.type == 'collapsible_row' %}
+        {
+          "@type": "Question",
+          "name": {{ block.settings.heading | json }},
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": {{ block.settings.row_content | strip_html | json }}
+          }
+        }{% unless forloop.last %},{% endunless %}
+      {% endif %}
     {% endfor %}
   ]
 }
 </script>
-{% endif %}
 
 {% schema %}
 {
