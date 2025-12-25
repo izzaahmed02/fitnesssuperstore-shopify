@@ -14,6 +14,9 @@
 {% else %}
   <link rel="canonical" href="{{ shop.url }}/products/{{ product.handle }}">
 {% endif %}
+ {% if request.path contains '?variant=' %}
+    <meta name="robots" content="noindex, follow">
+  {% endif %}
           {% elsif collection %}
             <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
           {% else %}
@@ -22,6 +25,11 @@
           {% if template == 'search' %}
             <meta name="robots" content="noindex,nofollow"/>
           {%- endif -%}
+
+          {% if template == 'collection' and current_page > 1 %}
+  <meta name="robots" content="noindex, follow">
+{% endif %}
+
           {%- if settings.favicon != blank -%}
           
         <link rel="shortcut icon" href="{{ settings.favicon | img_url: '32x32' }}" type="image/png">
