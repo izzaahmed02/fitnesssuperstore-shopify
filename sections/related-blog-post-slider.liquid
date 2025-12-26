@@ -1,58 +1,3 @@
-{% if blog and blog.articles_count > 0 %}
-  <div class="related-slider-wrapper" id="RelatedSliderWrapper-{{ section.id }}">
-    <button class="slider-arrow slider-arrow--left" aria-label="Previous">
-      &#10094;
-    </button>
-    <div class="related-slider" id="RelatedSlider-{{ section.id }}">
-      <div class="related-slider__track {% unless section.settings.show_scrollbar %}hide-scrollbar{% endunless %}">
-        {% for article in blog.articles %}
-          <div class="related-slider__slide">
-            <article class="card-wrapper">
-              <a href="{{ article.url }}" class="card">
-                {% if article.image %}
-                  <div class="card__media">
-                    <img
-                      src="{{ article.image | img_url: '720x' }}"
-                      alt="{{ article.image.alt | default: article.title }}"
-                      class="card__image"
-                      loading="lazy"
-                    />
-                  </div>
-                {% endif %}
-                <div class="card__content">
-                  <h3 class="card__heading">
-                    <span class="card__heading-text">{{ article.title }}</span>
-                  </h3>
-                  {% if article.published_at or article.author %}
-                    <p class="card__meta publish-info">
-                      <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
-                      {% if article.author %}
-                        <span>{{ article.author }}</span>
-                      {% endif %}
-                    </p>
-                  {% endif %}
-                  {% if section.settings.show_excerpt %}
-                    <div class="card__subtext">
-                      {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
-                    </div>
-                  {% endif %}
-                  <div class="card__actions">
-                    <span class="link">{{ section.settings.read_more_text }}</span>
-                  </div>
-                </div>
-              </a>
-            </article>
-          </div>
-        {% endfor %}
-      </div>
-    </div>
-    <button class="slider-arrow slider-arrow--right" aria-label="Next">
-      &#10095;
-    </button>
-  </div>
-{% else %}
-  <p class="note center">Please select a blog with articles.</p>
-{% endif %}
 
 
 {% comment %}
@@ -62,7 +7,7 @@ Desktop: 3 slides
 Optional horizontal scrollbar (toggleable)
 {% endcomment %}
 
-{% comment %}
+
 <section
   id="RelatedBlogs-{{ section.id }}"
   class="section related-articles"
@@ -262,7 +207,7 @@ Optional horizontal scrollbar (toggleable)
 </section>
 
 
-{% endcomment %}
+
 
 {% schema %}
 {
