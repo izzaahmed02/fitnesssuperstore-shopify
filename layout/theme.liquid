@@ -348,40 +348,61 @@ document.querySelectorAll(".option_row").forEach(row=>{
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-  /* ---------- ACCORDION ---------- */
-  document.querySelectorAll(".option_row").forEach(row => {
-    row.addEventListener("click", () => {
-      row.classList.toggle("active");
-    });
-  });
-
-  /* ---------- PRICE LOGIC ---------- */
-  const basePriceEl = document.querySelector(".price-item-fixed");
-alert(basePriceEl.innerText);
+  const basePrice = {{ product.selected_or_first_available_variant.price | money_without_currency }};
+  alert(basePrice);
   const radios = document.querySelectorAll(".addon-radio");
-  const priceBox = document.getElementById("final-price");
+  const totalBox = document.getElementById("final-price");
 
-  function updateTotal() {
-    let addonPrice = 0;
-    let addonTitle = "";
+  let selectedAddonId = null;
+  let selectedAddonPrice = 0;
+
+  function updatePrice() {
+    selectedAddonPrice = 0;
+    selectedAddonId = null;
 
     radios.forEach(radio => {
       if (radio.checked) {
-        addonPrice = parseFloat(radio.dataset.price);
-        addonTitle = radio.dataset.title;
+        selectedAddonPrice = parseFloat(radio.dataset.price);
+        selectedAddonId = radio.dataset.addonId;
       }
     });
 
-    const total = basePrice + addonPrice;
-    priceBox.innerText = "₹" + total.toFixed(2);
-
-    document.getElementById("addon-title").value = addonTitle;
-    document.getElementById("addon-price").value = addonPrice;
+    const total = basePrice + selectedAddonPrice;
+    totalBox.innerText = "₹" + total.toFixed(2);
   }
 
-  radios.forEach(r => r.addEventListener("change", updateTotal));
+  radios.forEach(r => r.addEventListener("change", updatePrice));
+  updatePrice();
 
-  /* Initial price */
-  priceBox.innerText = "₹" + basePrice.toFixed(2);
+  /* 🔥 OVERRIDE ADD TO CART */
+  const form = document.querySelector('form[action="/cart/add"]');
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const mainVariantId = {{ product.selected_or_first_available_variant.id }};
+
+    let items = [
+      { id: mainVariantId, quantity: 1 }
+    ];
+
+    if (selectedAddonId) {
+      items.push({
+        id: selectedAddonId,
+        quantity: 1
+      });
+    }
+
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items })
+    })
+    .then(() => {
+      window.location.href = "/cart";
+    });
+  });
+
 });
 </script>
+
