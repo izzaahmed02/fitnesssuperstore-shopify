@@ -1157,7 +1157,7 @@
                 </div>
 
 
-             <button class="addtocart">add to cart</button>
+             <button class="addtocart" main-varientid="{{ product.variants.first.id}}">add to cart</button>
 
            {% comment %} {%- render 'buy-button-withoption',
                   block: block,
@@ -4244,16 +4244,18 @@ document.addEventListener("DOMContentLoaded", function () {
   -------------------------- */
   function getBasePrice() {
     const el = document.querySelector(".price-item-fixed");
-    return el ? parseFloat(el.innerText.replace(/[^\d.]/g, "")) || 0 : 0;
+    if (!el) return 0;
+    const num = parseFloat(el.innerText.replace(/[^\d.]/g, ""));
+    return isNaN(num) ? 0 : num;
   }
 
   const basePrice = getBasePrice();
-  const radios = document.querySelectorAll(".addon-radio");
   const totalBox = document.getElementById("final-price");
+  const addonRadios = document.querySelectorAll(".addon-radio");
 
   function updateTotal() {
     let addonTotal = 0;
-    radios.forEach(radio => {
+    addonRadios.forEach(radio => {
       if (radio.checked) {
         addonTotal += parseFloat(radio.dataset.price) || 0;
       }
@@ -4264,11 +4266,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  radios.forEach(r => r.addEventListener("change", updateTotal));
+  addonRadios.forEach(r => r.addEventListener("change", updateTotal));
   updateTotal();
 
   /* -------------------------
-     CUSTOM ADD TO CART BUTTON
+     CUSTOM ADD TO CART
   -------------------------- */
   const addToCartBtn = document.querySelector(".addtocart");
   if (!addToCartBtn) return;
@@ -4276,16 +4278,15 @@ document.addEventListener("DOMContentLoaded", function () {
   addToCartBtn.addEventListener("click", async function (e) {
     e.preventDefault();
 
-    const mainVariantInput = document.querySelector(
-      'input[name="id"], .product-variant-id'
-    );
+    /* 👉 MAIN VARIANT ID FROM BUTTON ATTRIBUTE */
+    const mainVariantId = this.getAttribute("main-varientid");
 
-    if (!mainVariantInput || !mainVariantInput.value) {
-      alert("Main product variant not found");
+    if (!mainVariantId) {
+      alert("Main product variant ID not found");
       return;
     }
 
-    const mainVariantId = mainVariantInput.value;
+    /* Quantity (fallback = 1) */
     const qtyInput = document.querySelector('input[name="quantity"]');
     const quantity = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
 
@@ -4297,7 +4298,7 @@ document.addEventListener("DOMContentLoaded", function () {
       quantity: quantity
     });
 
-    /* Selected add-ons (ALL radio groups) */
+    /* Selected add-on radios (ALL GROUPS) */
     document.querySelectorAll(".addon-radio:checked").forEach(radio => {
       const variantId = radio.dataset.variantId;
       if (variantId) {
@@ -4329,4 +4330,5 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>
+
 
