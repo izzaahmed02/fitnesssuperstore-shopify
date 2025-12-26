@@ -1,0 +1,114 @@
+{% comment %}
+Reusable Blog Article Slider
+- Select a blog from customizer
+- Displays ALL articles from selected blog
+- Instance-safe (can repeat multiple times on same page)
+- Horizontal scroll slider (Titan-style)
+{% endcomment %}
+
+<section id="ArticleSlider-{{ section.id }}" class="article-slider section">
+  {% if section.settings.heading != blank %}
+    <h2 class="article-slider__heading">{{ section.settings.heading }}</h2>
+  {% endif %}
+
+  {% assign blog_handle = section.settings.blog %}
+  {% if blogs[blog_handle] != blank %}
+    <div class="article-slider__wrapper">
+      <button class="article-slider__arrow prev" aria-label="Previous">‹</button>
+
+      <div class="article-slider__track">
+        {% for article in blogs[blog_handle].articles %}
+          <article class="article-card">
+            <a href="{{ article.url }}">
+              {% if article.image %}
+                {{ article.image | image_url: width: 600 | image_tag: loading: 'lazy' }}
+              {% endif %}
+              <div class="article-card__content">
+                <h3>{{ article.title }}</h3>
+                <p>{{ article.excerpt | strip_html | truncate: 120 }}</p>
+              </div>
+            </a>
+          </article>
+        {% endfor %}
+      </div>
+
+      <button class="article-slider__arrow next" aria-label="Next">›</button>
+    </div>
+  {% else %}
+    <p>Please select a blog in the section settings.</p>
+  {% endif %}
+</section>
+
+<style>
+#ArticleSlider-{{ section.id }} .article-slider__wrapper {
+  position: relative;
+}
+
+#ArticleSlider-{{ section.id }} .article-slider__track {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+}
+
+#ArticleSlider-{{ section.id }} .article-card {
+  min-width: 320px;
+  scroll-snap-align: start;
+}
+
+#ArticleSlider-{{ section.id }} .article-slider__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+#ArticleSlider-{{ section.id }} .article-slider__arrow.prev { left: -16px; }
+#ArticleSlider-{{ section.id }} .article-slider__arrow.next { right: -16px; }
+</style>
+
+<script>
+(() => {
+  const section = document.getElementById('ArticleSlider-{{ section.id }}');
+  if (!section) return;
+
+  const track = section.querySelector('.article-slider__track');
+  const next = section.querySelector('.next');
+  const prev = section.querySelector('.prev');
+
+  const scrollAmount = () => track.querySelector('.article-card')?.offsetWidth || 300;
+
+  next?.addEventListener('click', () => {
+    track.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
+  });
+
+  prev?.addEventListener('click', () => {
+    track.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Blog Article Slider New",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Latest Articles"
+    },
+    {
+      "type": "blog",
+      "id": "blog",
+      "label": "Select blog"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Blog Article Slider New"
+    }
+  ]
+}
+{% endschema %}
