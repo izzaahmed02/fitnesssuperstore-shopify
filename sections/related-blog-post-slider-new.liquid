@@ -1,71 +1,138 @@
 {% comment %}
-Reusable Blog Article Slider
+Titan-style Blog Article Slider (Fixed Layout & Arrow Positioning)
 - Select a blog from customizer
 - Displays ALL articles from selected blog
 - Instance-safe (can repeat multiple times on same page)
-- Horizontal scroll slider (Titan-style)
+- Arrow behavior + positioning aligned with Titan Fitness
 {% endcomment %}
 
-<section id="ArticleSlider-{{ section.id }}" class="article-slider section">
-  {% if section.settings.heading != blank %}
-    <h2 class="article-slider__heading">{{ section.settings.heading }}</h2>
-  {% endif %}
+<section id="ArticleSlider-{{ section.id }}" class="article-slider">
+  <div class="page-width">
+    {% if section.settings.heading != blank %}
+      <h2 class="article-slider__heading">{{ section.settings.heading }}</h2>
+    {% endif %}
 
-  {% assign blog_handle = section.settings.blog %}
-  {% if blogs[blog_handle] != blank %}
-    <div class="article-slider__wrapper">
-      <button class="article-slider__arrow prev" aria-label="Previous">‹</button>
+    {% assign blog_handle = section.settings.blog %}
+    {% if blogs[blog_handle] != blank %}
+      <div class="article-slider__container">
+        <button class="article-slider__arrow prev" aria-label="Previous"></button>
 
-      <div class="article-slider__track">
-        {% for article in blogs[blog_handle].articles %}
-          <article class="article-card">
-            <a href="{{ article.url }}">
-              {% if article.image %}
-                {{ article.image | image_url: width: 600 | image_tag: loading: 'lazy' }}
-              {% endif %}
-              <div class="article-card__content">
-                <h3>{{ article.title }}</h3>
-                <p>{{ article.excerpt | strip_html | truncate: 120 }}</p>
-              </div>
-            </a>
-          </article>
-        {% endfor %}
+        <div class="article-slider__viewport">
+          <div class="article-slider__track">
+            {% for article in blogs[blog_handle].articles %}
+              <article class="article-card">
+                <a href="{{ article.url }}" class="article-card__link">
+                  {% if article.image %}
+                    <div class="article-card__image">
+                      {{ article.image | image_url: width: 720 | image_tag: loading: 'lazy' }}
+                    </div>
+                  {% endif %}
+                  <div class="article-card__content">
+                    <h3 class="article-card__title">{{ article.title }}</h3>
+                  </div>
+                </a>
+              </article>
+            {% endfor %}
+          </div>
+        </div>
+
+        <button class="article-slider__arrow next" aria-label="Next"></button>
       </div>
-
-      <button class="article-slider__arrow next" aria-label="Next">›</button>
-    </div>
-  {% else %}
-    <p>Please select a blog in the section settings.</p>
-  {% endif %}
+    {% endif %}
+  </div>
 </section>
 
 <style>
-#ArticleSlider-{{ section.id }} .article-slider__wrapper {
+/* ===== Layout ===== */
+#ArticleSlider-{{ section.id }} {
   position: relative;
+}
+
+#ArticleSlider-{{ section.id }} .article-slider__container {
+  position: relative;
+}
+
+#ArticleSlider-{{ section.id }} .article-slider__viewport {
+  overflow: hidden;
 }
 
 #ArticleSlider-{{ section.id }} .article-slider__track {
   display: flex;
   gap: 24px;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  scroll-snap-type: x mandatory;
+  transition: transform 0.4s ease;
 }
 
 #ArticleSlider-{{ section.id }} .article-card {
-  min-width: 320px;
-  scroll-snap-align: start;
+  flex: 0 0 320px;
 }
 
+/* ===== Arrows (Titan-style) ===== */
 #ArticleSlider-{{ section.id }} .article-slider__arrow {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
+  top: 38%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  cursor: pointer;
+  z-index: 5;
 }
 
-#ArticleSlider-{{ section.id }} .article-slider__arrow.prev { left: -16px; }
-#ArticleSlider-{{ section.id }} .article-slider__arrow.next { right: -16px; }
+#ArticleSlider-{{ section.id }} .article-slider__arrow::before {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid #000;
+  border-right: 2px solid #000;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+#ArticleSlider-{{ section.id }} .article-slider__arrow.prev {
+  left: -22px;
+}
+
+#ArticleSlider-{{ section.id }} .article-slider__arrow.prev::before {
+  transform: translate(-50%, -50%) rotate(-135deg);
+}
+
+#ArticleSlider-{{ section.id }} .article-slider__arrow.next {
+  right: -22px;
+}
+
+/* ===== Cards ===== */
+#ArticleSlider-{{ section.id }} .article-card__image img {
+  width: 100%;
+  display: block;
+}
+
+#ArticleSlider-{{ section.id }} .article-card__title {
+  font-size: 16px;
+  margin-top: 12px;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 768px) {
+  #ArticleSlider-{{ section.id }} .article-slider__arrow {
+    display: none;
+  }
+
+  #ArticleSlider-{{ section.id }} .article-slider__viewport {
+    overflow-x: auto;
+  }
+
+  #ArticleSlider-{{ section.id }} .article-slider__track {
+    scroll-snap-type: x mandatory;
+  }
+
+  #ArticleSlider-{{ section.id }} .article-card {
+    scroll-snap-align: start;
+  }
+}
 </style>
 
 <script>
@@ -74,17 +141,31 @@ Reusable Blog Article Slider
   if (!section) return;
 
   const track = section.querySelector('.article-slider__track');
-  const next = section.querySelector('.next');
-  const prev = section.querySelector('.prev');
+  const cards = section.querySelectorAll('.article-card');
+  const next = section.querySelector('.article-slider__arrow.next');
+  const prev = section.querySelector('.article-slider__arrow.prev');
 
-  const scrollAmount = () => track.querySelector('.article-card')?.offsetWidth || 300;
+  if (!track || !cards.length) return;
 
-  next?.addEventListener('click', () => {
-    track.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
+  let index = 0;
+  const cardWidth = cards[0].offsetWidth + 24;
+
+  const update = () => {
+    track.style.transform = `translateX(-${index * cardWidth}px)`;
+  };
+
+  next.addEventListener('click', () => {
+    if (index < cards.length - 1) {
+      index++;
+      update();
+    }
   });
 
-  prev?.addEventListener('click', () => {
-    track.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
+  prev.addEventListener('click', () => {
+    if (index > 0) {
+      index--;
+      update();
+    }
   });
 })();
 </script>
@@ -97,7 +178,7 @@ Reusable Blog Article Slider
       "type": "text",
       "id": "heading",
       "label": "Heading",
-      "default": "Latest Articles"
+      "default": "Articles"
     },
     {
       "type": "blog",
