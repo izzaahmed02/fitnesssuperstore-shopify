@@ -767,6 +767,7 @@
           type="radio"
           name="addon"
           class="addon-radio"
+            data-variant-id="{{ ref.variants.first.id }}"
           data-title="{{ ref.title }}"
           data-price="{{ item.price | money_without_currency }}"
         >
@@ -797,6 +798,7 @@
         <input
           type="radio"
           name="addon"
+            data-variant-id="{{ ref.variants.first.id }}"
           class="addon-radio"
           data-title="{{ ref.title }}"
           data-price="{{ item.price | money_without_currency }}"
@@ -829,6 +831,7 @@
         <input
           type="radio"
           name="addon"
+            data-variant-id="{{ ref.variants.first.id }}"
           class="addon-radio"
           data-title="{{ ref.title }}"
           data-price="{{ item.price | money_without_currency }}"
@@ -865,7 +868,9 @@
         <input
           type="radio"
           name="addon"
+
           class="addon-radio"
+            data-variant-id="{{ ref.variants.first.id }}"
           data-title="{{ ref.title }}"
           data-price="{{ item.price | money_without_currency }}"
         >
@@ -897,6 +902,7 @@
           type="radio"
           name="addon"
           class="addon-radio"
+            data-variant-id="{{ ref.variants.first.id }}"
           data-title="{{ ref.title }}"
           data-price="{{ item.price | money_without_currency }}"
         >
@@ -4224,3 +4230,92 @@
   ]
 }
 {% endschema %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  /* ---------------------------
+     GET BASE PRICE FROM DOM
+  ---------------------------- */
+  function getBasePrice() {
+    const el = document.querySelector(".price-item-fixed");
+    return el
+      ? parseFloat(el.innerText.replace(/[^\d.]/g, "")) || 0
+      : 0;
+  }
+
+  const basePrice = getBasePrice();
+  const addonInputs = document.querySelectorAll(".addon-input");
+  const totalBox = document.getElementById("final-price");
+
+  /* ---------------------------
+     UPDATE TOTAL (UI ONLY)
+  ---------------------------- */
+  function updateTotal() {
+    let addonTotal = 0;
+
+    addonInputs.forEach(input => {
+      if (input.checked) {
+        addonTotal += parseFloat(input.dataset.price) || 0;
+      }
+    });
+
+    if (totalBox) {
+      totalBox.innerText = "₹" + (basePrice + addonTotal).toFixed(2);
+    }
+  }
+
+  addonInputs.forEach(input =>
+    input.addEventListener("change", updateTotal)
+  );
+
+  updateTotal();
+
+  /* ---------------------------
+     INTERCEPT PRODUCT-FORM SUBMIT
+  ---------------------------- */
+  document.addEventListener("submit", async function (e) {
+
+    const form = e.target.closest('form[action*="/cart/add"]');
+    if (!form) return;
+
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const mainVariantId = formData.get("id");
+    const quantity = parseInt(formData.get("quantity")) || 1;
+
+    let items = [];
+
+    /* Main product */
+    items.push({
+      id: mainVariantId,
+      quantity: quantity
+    });
+
+    /* Selected add-ons */
+    addonInputs.forEach(input => {
+      if (input.checked) {
+        items.push({
+          id: input.dataset.variantId,
+          quantity: 1
+        });
+      }
+    });
+
+    try {
+      await fetch("/cart/add.js", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items })
+      });
+
+      window.location.href = "/cart";
+
+    } catch (err) {
+      console.error("Add to cart failed", err);
+    }
+
+  });
+
+});
+</script>
