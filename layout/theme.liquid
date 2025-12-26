@@ -344,3 +344,43 @@ document.querySelectorAll(".option_row").forEach(row=>{
  })
 })
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  /* ---------- ACCORDION ---------- */
+  document.querySelectorAll(".option_row").forEach(row => {
+    row.addEventListener("click", () => {
+      row.classList.toggle("active");
+    });
+  });
+
+  /* ---------- PRICE LOGIC ---------- */
+  const basePrice = {{ product.selected_or_first_available_variant.price | money_without_currency }};
+  const radios = document.querySelectorAll(".addon-radio");
+  const priceBox = document.getElementById("final-price");
+
+  function updateTotal() {
+    let addonPrice = 0;
+    let addonTitle = "";
+
+    radios.forEach(radio => {
+      if (radio.checked) {
+        addonPrice = parseFloat(radio.dataset.price);
+        addonTitle = radio.dataset.title;
+      }
+    });
+
+    const total = basePrice + addonPrice;
+    priceBox.innerText = "₹" + total.toFixed(2);
+
+    document.getElementById("addon-title").value = addonTitle;
+    document.getElementById("addon-price").value = addonPrice;
+  }
+
+  radios.forEach(r => r.addEventListener("change", updateTotal));
+
+  /* Initial price */
+  priceBox.innerText = "₹" + basePrice.toFixed(2);
+});
+</script>
