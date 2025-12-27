@@ -56,6 +56,15 @@
       {% endif %}
     {% endfor %}
   {% endif %}
+
+  {% if extra.other_videos != blank and extra.other_videos.value != blank %}
+    {% for link in extra.other_videos.value %}
+      {% if link.url != blank %}
+        {% assign has_any_video = true %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
 {% endif %}
 
 {% if has_any_video %}
@@ -115,6 +124,37 @@
        {%comment%}Optional: other_videos list (video or embed URLs) {% endcomment %}
       {% if extra.other_video != blank and extra.other_video.value != blank %}
         {% for link in extra.other_video.value %}
+          {% if link.url != blank %}
+            {% assign other_url = link.url %}
+            <div class="video-slide other-videos">
+              <div class="video-slide-inner">
+                <div
+                  class="video-thumbnail"
+                  data-video-url="{{ other_url }}"
+                >
+                  {%- comment -%}
+                    If other_url is an mp4, the video tag will show first frame.
+                    If it's e.g. YouTube or Drive, the tag may not load; we still use it
+                    as a visual container and let the popup handle playing properly.
+                  {%- endcomment -%}
+                  <video
+                    class="video-thumb-video"
+                    src="{{ other_url }}"
+                    muted
+                    playsinline
+                    preload="metadata"
+                  ></video>
+                  <div class="play-button">&#9658;</div>
+                </div>
+                <p>Training Video</p>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+            {% if extra.other_videos != blank and extra.other_videos.value != blank %}
+        {% for link in extra.other_videos.value %}
           {% if link.url != blank %}
             {% assign other_url = link.url %}
             <div class="video-slide other-videos">
