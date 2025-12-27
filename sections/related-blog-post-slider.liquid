@@ -18,8 +18,9 @@
     {% endif %}
 
     {% assign blog = blogs[section.settings.blog] %}
+    {% assign articles_count = blog.articles_count | plus: 0 %}
 
-    {% if blog and blog.articles_count > 0 %}
+    {% if blog and articles_count > 0 %}
       <div class="related-slider" id="RelatedSlider-{{ section.id }}">
 
         <!-- Full-width slides -->
@@ -69,7 +70,7 @@
         </div>
 
         {% if section.settings.show_arrows %}
-          <!-- Scrollbar + arrows container (narrow) -->
+          <!-- Scrollbar + arrows wrapper -->
           <div class="related-slider__scrollbar-wrapper">
             <div class="related-slider__scrollbar-track"></div>
             <div class="related-slider__controls">
@@ -95,7 +96,7 @@
   </div>
 
   <style>
-    /* === Slider === */
+    /* Slider */
     #RelatedBlogs-{{ section.id }} .related-slider {
       position: relative;
     }
@@ -150,12 +151,11 @@
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      max-width: 400px; /* scrollbar width container */
+      max-width: 400px;
       margin: 0 auto;
       gap: 8px;
     }
 
-    /* Native scrollbar inside wrapper */
     #RelatedBlogs-{{ section.id }} .related-slider__scrollbar-track {
       flex: 1;
       height: 6px;
@@ -248,3 +248,27 @@
     })();
   </script>
 </section>
+
+{% schema %}
+{
+  "name": "Related Blog posts Slider",
+  "settings": [
+    { "id": "heading", "type": "text", "label": "Heading", "default": "Related posts" },
+    { "id": "subheading", "type": "text", "label": "Subheading" },
+    { "id": "intro", "type": "text", "label": "Intro" },
+    { "id": "blog", "type": "blog", "label": "Select blog" },
+    { "id": "show_scrollbar", "type": "checkbox", "label": "Show scrollbar", "default": true },
+    { "id": "show_arrows", "type": "checkbox", "label": "Show arrows", "default": true },
+    { "id": "show_excerpt", "type": "checkbox", "label": "Show excerpt", "default": true },
+    { "id": "excerpt_length", "type": "number", "label": "Excerpt length", "default": 120 },
+    { "id": "read_more_text", "type": "text", "label": "Read more text", "default": "Read article" },
+    { "type": "range", "id": "padding_top", "min": 0, "max": 120, "step": 4, "unit": "px", "label": "Top padding", "default": 48 },
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 120, "step": 4, "unit": "px", "label": "Bottom padding", "default": 48 },
+    { "type": "url", "id": "url", "label": "Button link" },
+    { "type": "text", "id": "label", "label": "Button label", "default": "Shop remanufactured equipment" }
+  ],
+  "presets": [
+    { "name": "Related Blog posts Slider", "category": "Blog" }
+  ]
+}
+{% endschema %}
