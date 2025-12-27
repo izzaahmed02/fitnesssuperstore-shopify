@@ -24,12 +24,11 @@
       <div class="related-slider" id="RelatedSlider-{{ section.id }}">
 
         <!-- Full-width slides -->
-        <div class="related-slider__track {% unless section.settings.show_scrollbar %}hide-scrollbar{% endunless %}">
+        <div class="related-slider__track">
           {% for article in blog.articles %}
             <div class="related-slider__slide">
               <article class="card-wrapper">
                 <a href="{{ article.url }}" class="card">
-
                   {% if article.image %}
                     <div class="card__media">
                       <img
@@ -70,9 +69,11 @@
         </div>
 
         {% if section.settings.show_arrows %}
-          <!-- Scrollbar + arrows wrapper -->
+          <!-- Custom scrollbar + arrows wrapper -->
           <div class="related-slider__scrollbar-wrapper">
-            <div class="related-slider__scrollbar-track"></div>
+            <div class="custom-scrollbar-track">
+              <div class="custom-scrollbar-thumb"></div>
+            </div>
             <div class="related-slider__controls">
               <button class="related-slider__arrow related-slider__arrow--prev">‹</button>
               <button class="related-slider__arrow related-slider__arrow--next">›</button>
@@ -96,18 +97,11 @@
   </div>
 
   <style>
-    /* Slider */
-    #RelatedBlogs-{{ section.id }} .related-slider {
-      position: relative;
-    }
-
     #RelatedBlogs-{{ section.id }} .related-slider__track {
       display: flex;
       gap: 16px;
-      overflow-x: auto;
+      overflow-x: hidden; /* hide native scrollbar */
       scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 14px;
     }
 
     #RelatedBlogs-{{ section.id }} .related-slider__slide {
@@ -121,154 +115,117 @@
       }
     }
 
-    /* Cards */
-    #RelatedBlogs-{{ section.id }} .card__media {
-      aspect-ratio: 16 / 9;
-      overflow: hidden;
-    }
+    #RelatedBlogs-{{ section.id }} .card__media { aspect-ratio: 16/9; overflow:hidden; }
+    #RelatedBlogs-{{ section.id }} .card__image { width:100%; height:100%; object-fit:cover; }
 
-    #RelatedBlogs-{{ section.id }} .card__image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    /* Meta */
-    #RelatedBlogs-{{ section.id }} .publish-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: gray;
-      letter-spacing: .13rem;
-    }
-
-    #RelatedBlogs-{{ section.id }} .link {
-      color: #D83D0E;
-    }
-
-    /* Scrollbar + arrows wrapper (narrow) */
+    /* Custom scrollbar + arrows wrapper */
     #RelatedBlogs-{{ section.id }} .related-slider__scrollbar-wrapper {
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      max-width: 400px;
-      margin: 0 auto;
+      max-width: 400px; /* scrollbar width */
+      margin: 12px auto 0;
       gap: 8px;
     }
 
-    #RelatedBlogs-{{ section.id }} .related-slider__scrollbar-track {
+    .custom-scrollbar-track {
+      position: relative;
       flex: 1;
       height: 6px;
       background: #eee;
       border-radius: 4px;
-      position: relative;
+      overflow: hidden;
     }
 
-    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar-thumb {
+    .custom-scrollbar-thumb {
+      position: absolute;
+      top:0; left:0;
+      height: 100%;
+      width: 50px; /* initial width, will adjust with JS */
       background: #D83D0E;
       border-radius: 4px;
     }
 
-    /* Arrows */
-    #RelatedBlogs-{{ section.id }} .related-slider__controls {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
     #RelatedBlogs-{{ section.id }} .related-slider__arrow {
-      width: 36px;
-      height: 36px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      background: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      cursor: pointer;
+      width:36px; height:36px;
+      border:1px solid #ddd; border-radius:6px;
+      background:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px; cursor:pointer;
     }
 
-    #RelatedBlogs-{{ section.id }} .related-slider__arrow:hover {
-      background: #f5f5f5;
-    }
+    #RelatedBlogs-{{ section.id }} .related-slider__arrow:hover { background:#f5f5f5; }
 
-    @media (max-width: 749px) {
-      #RelatedBlogs-{{ section.id }} .related-slider__scrollbar-wrapper {
-        display: none;
-      }
-    }
-
-    /* Rich text button */
-    .rich-text-custom__wrapper {
-      margin-top: 24px;
-      display: flex;
-      justify-content: center;
-    }
-
+    .rich-text-custom__wrapper { margin-top:24px; display:flex; justify-content:center; }
     .rich-text-custom__btn {
-      background: #D83D0E;
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: 700;
-      display: inline-flex;
-      gap: 8px;
-      text-decoration: none;
+      background:#D83D0E; color:#fff; padding:12px 24px; border-radius:8px;
+      font-weight:700; display:inline-flex; gap:8px; text-decoration:none;
     }
   </style>
 
   <script>
-    (function () {
+    (function() {
       const section = document.getElementById('RelatedBlogs-{{ section.id }}');
       if (!section) return;
 
       const track = section.querySelector('.related-slider__track');
       const prev = section.querySelector('.related-slider__arrow--prev');
       const next = section.querySelector('.related-slider__arrow--next');
+      const scrollbarTrack = section.querySelector('.custom-scrollbar-track');
+      const scrollbarThumb = section.querySelector('.custom-scrollbar-thumb');
 
-      if (!track || !prev || !next) return;
+      if (!track || !prev || !next || !scrollbarThumb || !scrollbarTrack) return;
 
+      // Update thumb width dynamically
+      const updateThumb = () => {
+        const trackWidth = track.scrollWidth;
+        const visibleWidth = track.offsetWidth;
+        const thumbWidth = Math.max((visibleWidth / trackWidth) * scrollbarTrack.offsetWidth, 20);
+        scrollbarThumb.style.width = thumbWidth + 'px';
+      };
+
+      const updateThumbPosition = () => {
+        const scrollRatio = track.scrollLeft / (track.scrollWidth - track.offsetWidth);
+        const maxThumbLeft = scrollbarTrack.offsetWidth - scrollbarThumb.offsetWidth;
+        scrollbarThumb.style.left = scrollRatio * maxThumbLeft + 'px';
+      };
+
+      // On scroll
+      track.addEventListener('scroll', updateThumbPosition);
+      window.addEventListener('resize', () => { updateThumb(); updateThumbPosition(); });
+
+      updateThumb();
+      updateThumbPosition();
+
+      // Arrow click
       const scrollAmount = () => {
         const slide = track.querySelector('.related-slider__slide');
         return slide ? slide.offsetWidth + 16 : 300;
       };
 
-      prev.addEventListener('click', () => {
-        track.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
+      prev.addEventListener('click', () => { track.scrollBy({ left: -scrollAmount(), behavior: 'smooth' }); });
+      next.addEventListener('click', () => { track.scrollBy({ left: scrollAmount(), behavior: 'smooth' }); });
+
+      // Drag scrollbar thumb
+      let isDragging = false;
+      let startX, startScroll;
+
+      scrollbarThumb.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        startScroll = track.scrollLeft;
+        document.body.style.userSelect = 'none';
       });
 
-      next.addEventListener('click', () => {
-        track.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const deltaX = e.clientX - startX;
+        const trackWidth = track.scrollWidth - track.offsetWidth;
+        const scrollbarWidth = scrollbarTrack.offsetWidth - scrollbarThumb.offsetWidth;
+        track.scrollLeft = startScroll + (deltaX * trackWidth / scrollbarWidth);
       });
+
+      window.addEventListener('mouseup', () => { isDragging = false; document.body.style.userSelect = ''; });
     })();
   </script>
 </section>
-
-{% schema %}
-{
-  "name": "Related Blog posts Slider",
-  "settings": [
-    { "id": "heading", "type": "text", "label": "Heading", "default": "Related posts" },
-    { "id": "subheading", "type": "text", "label": "Subheading" },
-    { "id": "intro", "type": "text", "label": "Intro" },
-    { "id": "blog", "type": "blog", "label": "Select blog" },
-    { "id": "show_scrollbar", "type": "checkbox", "label": "Show scrollbar", "default": true },
-    { "id": "show_arrows", "type": "checkbox", "label": "Show arrows", "default": true },
-    { "id": "show_excerpt", "type": "checkbox", "label": "Show excerpt", "default": true },
-    { "id": "excerpt_length", "type": "number", "label": "Excerpt length", "default": 120 },
-    { "id": "read_more_text", "type": "text", "label": "Read more text", "default": "Read article" },
-    { "type": "range", "id": "padding_top", "min": 0, "max": 120, "step": 4, "unit": "px", "label": "Top padding", "default": 48 },
-    { "type": "range", "id": "padding_bottom", "min": 0, "max": 120, "step": 4, "unit": "px", "label": "Bottom padding", "default": 48 },
-    { "type": "url", "id": "url", "label": "Button link" },
-    { "type": "text", "id": "label", "label": "Button label", "default": "Shop remanufactured equipment" }
-  ],
-  "presets": [
-    { "name": "Related Blog posts Slider", "category": "Blog" }
-  ]
-}
-{% endschema %}
