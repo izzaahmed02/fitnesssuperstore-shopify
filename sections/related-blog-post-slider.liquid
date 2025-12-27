@@ -1,3 +1,13 @@
+
+
+{% comment %}
+Related Blog Posts — Select a blog and show all articles in a swipeable slider
+Mobile: 1 slide
+Desktop: 3 slides
+Optional horizontal scrollbar (toggleable)
+{% endcomment %}
+
+
 <section
   id="RelatedBlogs-{{ section.id }}"
   class="section related-articles"
@@ -8,9 +18,11 @@
     {% if section.settings.heading != blank %}
       <div class="section-header">
         <h1 class="section-header__title center">{{ section.settings.heading }}</h1>
+
         {% if section.settings.subheading != blank %}
           <h3 class="section-header__subheading center">{{ section.settings.subheading }}</h3>
         {% endif %}
+
         {% if section.settings.intro != blank %}
           <p class="section-header__intro center">{{ section.settings.intro }}</p>
         {% endif %}
@@ -18,17 +30,15 @@
     {% endif %}
 
     {% assign blog = blogs[section.settings.blog] %}
-    {% assign articles_count = blog.articles_count | plus: 0 %}
 
-    {% if blog and articles_count > 0 %}
+    {% if blog and blog.articles_count > 0 %}
       <div class="related-slider" id="RelatedSlider-{{ section.id }}">
-
-        <!-- Full-width slides -->
-        <div class="related-slider__track">
+        <div class="related-slider__track {% unless section.settings.show_scrollbar %}hide-scrollbar{% endunless %}">
           {% for article in blog.articles %}
             <div class="related-slider__slide">
               <article class="card-wrapper">
                 <a href="{{ article.url }}" class="card">
+
                   {% if article.image %}
                     <div class="card__media">
                       <img
@@ -36,7 +46,7 @@
                         alt="{{ article.image.alt | default: article.title }}"
                         class="card__image"
                         loading="lazy"
-                      >
+                      />
                     </div>
                   {% endif %}
 
@@ -45,12 +55,14 @@
                       <span class="card__heading-text">{{ article.title }}</span>
                     </h3>
 
-                    <p class="card__meta publish-info">
-                      <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
-                      {% if article.author %}
-                        <span>{{ article.author }}</span>
-                      {% endif %}
-                    </p>
+                    {% if article.published_at or article.author %}
+                      <p class="card__meta publish-info">
+                        <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                        {% if article.author %}
+                          <span>{{ article.author }}</span>
+                        {% endif %}
+                      </p>
+                    {% endif %}
 
                     {% if section.settings.show_excerpt %}
                       <div class="card__subtext">
@@ -69,18 +81,12 @@
         </div>
 
         {% if section.settings.show_arrows %}
-          <!-- Custom scrollbar + arrows wrapper -->
-          <div class="related-slider__scrollbar-wrapper">
-            <div class="custom-scrollbar-track">
-              <div class="custom-scrollbar-thumb"></div>
-            </div>
-            <div class="related-slider__controls">
-              <button class="related-slider__arrow related-slider__arrow--prev">‹</button>
-              <button class="related-slider__arrow related-slider__arrow--next">›</button>
-            </div>
-          </div>
-        {% endif %}
-
+    <div class="related-slider__controls">
+      <button class="related-slider__arrow related-slider__arrow--prev">‹</button>
+      <button class="related-slider__arrow related-slider__arrow--next">›</button>
+    </div>
+  {% endif %}
+  
       </div>
     {% else %}
       <p class="note center">Please select a blog with articles.</p>
@@ -97,11 +103,42 @@
   </div>
 
   <style>
+    /* === Slider === */
+    #RelatedBlogs-{{ section.id }} .related-slider {
+      overflow: hidden;
+    }
+
     #RelatedBlogs-{{ section.id }} .related-slider__track {
       display: flex;
       gap: 16px;
-      overflow-x: hidden; /* hide native scrollbar */
+      overflow-x: auto;
       scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 12px; /* space for scrollbar */
+    }
+
+    /* Scrollbar hidden (toggle OFF) */
+    #RelatedBlogs-{{ section.id }} .related-slider__track.hide-scrollbar {
+      scrollbar-width: none;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__track.hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Scrollbar visible (toggle ON) */
+    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar-track {
+      background: #eee;
+      border-radius: 4px;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar-thumb {
+      background: #D83D0E;
+      border-radius: 4px;
     }
 
     #RelatedBlogs-{{ section.id }} .related-slider__slide {
@@ -109,161 +146,166 @@
       scroll-snap-align: start;
     }
 
+    /* Desktop: 3 slides */
     @media (min-width: 990px) {
       #RelatedBlogs-{{ section.id }} .related-slider__slide {
         flex: 0 0 calc(33.333% - 11px);
       }
     }
 
-    #RelatedBlogs-{{ section.id }} .card__media { aspect-ratio: 16/9; overflow:hidden; }
-    #RelatedBlogs-{{ section.id }} .card__image { width:100%; height:100%; object-fit:cover; }
-
-    /* Custom scrollbar + arrows wrapper */
-    #RelatedBlogs-{{ section.id }} .related-slider__scrollbar-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      max-width: 400px; /* scrollbar width */
-      margin: 12px auto 0;
-      gap: 8px;
-    }
-
-    .custom-scrollbar-track {
-      position: relative;
-      flex: 1;
-      height: 6px;
-      background: #eee;
-      border-radius: 4px;
+    /* Image consistency */
+    #RelatedBlogs-{{ section.id }} .card__media {
+      aspect-ratio: 16 / 9;
       overflow: hidden;
     }
 
-    .custom-scrollbar-thumb {
-      position: absolute;
-      top:0; left:0;
+    #RelatedBlogs-{{ section.id }} .card__image {
+      width: 100%;
       height: 100%;
-      width: 50px; /* initial width, will adjust with JS */
-      background: #D83D0E;
-      border-radius: 4px;
+      object-fit: cover;
+      display: block;
     }
 
-    #RelatedBlogs-{{ section.id }} .related-slider__arrow {
-      width:36px; height:36px;
-      border:1px solid #ddd; border-radius:6px;
-      background:#fff;
-      display:flex; align-items:center; justify-content:center;
-      font-size:20px; cursor:pointer;
+    /* Meta */
+    #RelatedBlogs-{{ section.id }} .publish-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-family: Lato;
+      font-size: 12px;
+      line-height: 18px;
+      color: gray;
+      letter-spacing: .13rem;
     }
 
-    #RelatedBlogs-{{ section.id }} .related-slider__arrow:hover { background:#f5f5f5; }
+    #RelatedBlogs-{{ section.id }} .link {
+      color: #D83D0E;
+    }
 
-    .rich-text-custom__wrapper { margin-top:24px; display:flex; justify-content:center; }
+    #RelatedBlogs-{{ section.id }} h1 {
+      text-transform: uppercase;
+    }
+
+    #RelatedBlogs-{{ section.id }} h3 {
+      font-size: 18px;
+      line-height: 24px;
+    }
+
+    .rich-text-custom__wrapper {
+      margin-top: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     .rich-text-custom__btn {
-      background:#D83D0E; color:#fff; padding:12px 24px; border-radius:8px;
-      font-weight:700; display:inline-flex; gap:8px; text-decoration:none;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 24px;
+      background-color: #D83D0E;
+      padding: 12px 24px;
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
   </style>
-
-  <script>
-(function() {
-  const section = document.getElementById('RelatedSlider-{{ section.id }}');
-  if (!section) return;
-
-  const track = section.querySelector('.related-slider__track');
-  const prev = section.querySelector('.related-slider__arrow--prev');
-  const next = section.querySelector('.related-slider__arrow--next');
-  const scrollbarTrack = section.querySelector('.custom-scrollbar-track');
-  const scrollbarThumb = section.querySelector('.custom-scrollbar-thumb');
-
-  if (!track || !prev || !next || !scrollbarTrack || !scrollbarThumb) return;
-
-  // Update thumb width based on visible area
-  const updateThumb = () => {
-    const trackWidth = track.scrollWidth;
-    const visibleWidth = track.offsetWidth;
-    const thumbWidth = Math.max((visibleWidth / trackWidth) * scrollbarTrack.offsetWidth, 20);
-    scrollbarThumb.style.width = thumbWidth + 'px';
-    scrollbarThumb.style.transition = 'none'; // instant update
-  };
-
-  // Update thumb position based on scroll
-  const updateThumbPosition = () => {
-    const scrollRatio = track.scrollLeft / (track.scrollWidth - track.offsetWidth);
-    const maxThumbLeft = scrollbarTrack.offsetWidth - scrollbarThumb.offsetWidth;
-    scrollbarThumb.style.left = scrollRatio * maxThumbLeft + 'px';
-    scrollbarThumb.style.transition = 'none'; // instant
-  };
-
-  // Scroll events
-  track.addEventListener('scroll', updateThumbPosition);
-  window.addEventListener('resize', () => { updateThumb(); updateThumbPosition(); });
-
-  updateThumb();
-  updateThumbPosition();
-
-  // Arrow click scrolling
-  const scrollAmount = () => {
-    const slide = track.querySelector('.related-slider__slide');
-    return slide ? slide.offsetWidth + 16 : 300;
-  };
-
-  prev.addEventListener('click', () => {
-    track.scrollBy({ left: -scrollAmount(), behavior: 'auto' }); // no smooth animation if desired
-  });
-
-  next.addEventListener('click', () => {
-    track.scrollBy({ left: scrollAmount(), behavior: 'auto' });
-  });
-
-  // Dragging the scrollbar thumb
-  let isDragging = false;
-  let startX, startScroll;
-
-  scrollbarThumb.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    startX = e.clientX;
-    startScroll = track.scrollLeft;
-    document.body.style.userSelect = 'none';
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    const deltaX = e.clientX - startX;
-    const trackWidth = track.scrollWidth - track.offsetWidth;
-    const scrollbarWidth = scrollbarTrack.offsetWidth - scrollbarThumb.offsetWidth;
-    track.scrollLeft = startScroll + (deltaX * trackWidth / scrollbarWidth);
-    updateThumbPosition(); // ensure thumb moves instantly
-  });
-
-  window.addEventListener('mouseup', () => {
-    isDragging = false;
-    document.body.style.userSelect = '';
-  });
-})();
-</script>
-
 </section>
+
+
 
 
 {% schema %}
 {
   "name": "Related Blog posts Slider",
+  "class": "related-articles",
   "settings": [
-    { "id": "heading", "type": "text", "label": "Heading", "default": "Related posts" },
-    { "id": "subheading", "type": "text", "label": "Subheading" },
-    { "id": "intro", "type": "text", "label": "Intro" },
-    { "id": "blog", "type": "blog", "label": "Select blog" },
-    { "id": "show_scrollbar", "type": "checkbox", "label": "Show scrollbar", "default": true },
-    { "id": "show_arrows", "type": "checkbox", "label": "Show arrows", "default": true },
-    { "id": "show_excerpt", "type": "checkbox", "label": "Show excerpt", "default": true },
-    { "id": "excerpt_length", "type": "number", "label": "Excerpt length", "default": 120 },
-    { "id": "read_more_text", "type": "text", "label": "Read more text", "default": "Read article" },
-    { "type": "range", "id": "padding_top", "min": 0, "max": 120, "step": 4, "unit": "px", "label": "Top padding", "default": 48 },
-    { "type": "range", "id": "padding_bottom", "min": 0, "max": 120, "step": 4, "unit": "px", "label": "Bottom padding", "default": 48 },
-    { "type": "url", "id": "url", "label": "Button link" },
-    { "type": "text", "id": "label", "label": "Button label", "default": "Shop remanufactured equipment" }
+    {
+      "id": "heading",
+      "type": "text",
+      "label": "Section heading",
+      "default": "Related posts"
+    },
+    {
+      "id": "subheading",
+      "type": "text",
+      "label": "Section Short Copy",
+      "default": "Short Copy"
+    },
+    {
+      "id": "intro",
+      "type": "text",
+      "label": "Section Intro",
+      "default": "Introduction to posts"
+    },
+    {
+      "id": "blog",
+      "type": "blog",
+      "label": "Select blog"
+    },
+    {
+      "id": "show_scrollbar",
+      "type": "checkbox",
+      "label": "Show horizontal scrollbar",
+      "default": true
+    },
+    {
+      "id": "show_excerpt",
+      "type": "checkbox",
+      "label": "Show excerpt",
+      "default": true
+    },
+    {
+      "id": "excerpt_length",
+      "type": "number",
+      "label": "Excerpt length (characters)",
+      "default": 120
+    },
+    {
+      "id": "read_more_text",
+      "type": "text",
+      "label": "Read more text",
+      "default": "Read article"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "Section Button Link"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "default": "Shop remanufactured equipment",
+      "label": "Section Button Label"
+    }
   ],
   "presets": [
-    { "name": "Related Blog posts Slider", "category": "Blog" }
+    {
+      "name": "Related Blog posts Slider",
+      "category": "Blog"
+    }
   ]
 }
 {% endschema %}
