@@ -1,9 +1,12 @@
+
+
 {% comment %}
-Related Blog Posts — Swipeable Slider
+Related Blog Posts — Select a blog and show all articles in a swipeable slider
 Mobile: 1 slide
 Desktop: 3 slides
-Scrollbar + arrows inline (no overlap)
+Optional horizontal scrollbar (toggleable)
 {% endcomment %}
+
 
 <section
   id="RelatedBlogs-{{ section.id }}"
@@ -30,8 +33,6 @@ Scrollbar + arrows inline (no overlap)
 
     {% if blog and blog.articles_count > 0 %}
       <div class="related-slider" id="RelatedSlider-{{ section.id }}">
-
-        <!-- Track -->
         <div class="related-slider__track {% unless section.settings.show_scrollbar %}hide-scrollbar{% endunless %}">
           {% for article in blog.articles %}
             <div class="related-slider__slide">
@@ -45,7 +46,7 @@ Scrollbar + arrows inline (no overlap)
                         alt="{{ article.image.alt | default: article.title }}"
                         class="card__image"
                         loading="lazy"
-                      >
+                      />
                     </div>
                   {% endif %}
 
@@ -54,12 +55,14 @@ Scrollbar + arrows inline (no overlap)
                       <span class="card__heading-text">{{ article.title }}</span>
                     </h3>
 
-                    <p class="card__meta publish-info">
-                      <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
-                      {% if article.author %}
-                        <span>{{ article.author }}</span>
-                      {% endif %}
-                    </p>
+                    {% if article.published_at or article.author %}
+                      <p class="card__meta publish-info">
+                        <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                        {% if article.author %}
+                          <span>{{ article.author }}</span>
+                        {% endif %}
+                      </p>
+                    {% endif %}
 
                     {% if section.settings.show_excerpt %}
                       <div class="card__subtext">
@@ -78,16 +81,12 @@ Scrollbar + arrows inline (no overlap)
         </div>
 
         {% if section.settings.show_arrows %}
-          <div class="related-slider__controls">
-            <button class="related-slider__arrow related-slider__arrow--prev" aria-label="Previous">
-              ‹
-            </button>
-            <button class="related-slider__arrow related-slider__arrow--next" aria-label="Next">
-              ›
-            </button>
-          </div>
-        {% endif %}
-
+    <div class="related-slider__controls">
+      <button class="related-slider__arrow related-slider__arrow--prev">‹</button>
+      <button class="related-slider__arrow related-slider__arrow--next">›</button>
+    </div>
+  {% endif %}
+  
       </div>
     {% else %}
       <p class="note center">Please select a blog with articles.</p>
@@ -104,9 +103,9 @@ Scrollbar + arrows inline (no overlap)
   </div>
 
   <style>
-    /* === Slider Base === */
+    /* === Slider === */
     #RelatedBlogs-{{ section.id }} .related-slider {
-      position: relative;
+      overflow: hidden;
     }
 
     #RelatedBlogs-{{ section.id }} .related-slider__track {
@@ -115,22 +114,19 @@ Scrollbar + arrows inline (no overlap)
       overflow-x: auto;
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 14px;
-      padding-right: 96px; /* SPACE FOR ARROWS */
+      padding-bottom: 12px; /* space for scrollbar */
     }
 
-    #RelatedBlogs-{{ section.id }} .related-slider__slide {
-      flex: 0 0 100%;
-      scroll-snap-align: start;
+    /* Scrollbar hidden (toggle OFF) */
+    #RelatedBlogs-{{ section.id }} .related-slider__track.hide-scrollbar {
+      scrollbar-width: none;
     }
 
-    @media (min-width: 990px) {
-      #RelatedBlogs-{{ section.id }} .related-slider__slide {
-        flex: 0 0 calc(33.333% - 11px);
-      }
+    #RelatedBlogs-{{ section.id }} .related-slider__track.hide-scrollbar::-webkit-scrollbar {
+      display: none;
     }
 
-    /* Scrollbar */
+    /* Scrollbar visible (toggle ON) */
     #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar {
       height: 6px;
     }
@@ -145,47 +141,19 @@ Scrollbar + arrows inline (no overlap)
       border-radius: 4px;
     }
 
-    #RelatedBlogs-{{ section.id }} .hide-scrollbar {
-      scrollbar-width: none;
+    #RelatedBlogs-{{ section.id }} .related-slider__slide {
+      flex: 0 0 100%;
+      scroll-snap-align: start;
     }
 
-    #RelatedBlogs-{{ section.id }} .hide-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-
-    /* Controls inline with scrollbar */
-    #RelatedBlogs-{{ section.id }} .related-slider__controls {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 8px;
-      margin-top: -10px;
-    }
-
-    #RelatedBlogs-{{ section.id }} .related-slider__arrow {
-      width: 36px;
-      height: 36px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      background: #fff;
-      font-size: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #RelatedBlogs-{{ section.id }} .related-slider__arrow:hover {
-      background: #f5f5f5;
-    }
-
-    @media (max-width: 749px) {
-      #RelatedBlogs-{{ section.id }} .related-slider__controls {
-        display: none;
+    /* Desktop: 3 slides */
+    @media (min-width: 990px) {
+      #RelatedBlogs-{{ section.id }} .related-slider__slide {
+        flex: 0 0 calc(33.333% - 11px);
       }
     }
 
-    /* Card Media */
+    /* Image consistency */
     #RelatedBlogs-{{ section.id }} .card__media {
       aspect-ratio: 16 / 9;
       overflow: hidden;
@@ -195,12 +163,17 @@ Scrollbar + arrows inline (no overlap)
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
     }
 
+    /* Meta */
     #RelatedBlogs-{{ section.id }} .publish-info {
       display: flex;
       justify-content: space-between;
+      margin-bottom: 12px;
+      font-family: Lato;
       font-size: 12px;
+      line-height: 18px;
       color: gray;
       letter-spacing: .13rem;
     }
@@ -209,71 +182,130 @@ Scrollbar + arrows inline (no overlap)
       color: #D83D0E;
     }
 
+    #RelatedBlogs-{{ section.id }} h1 {
+      text-transform: uppercase;
+    }
+
+    #RelatedBlogs-{{ section.id }} h3 {
+      font-size: 18px;
+      line-height: 24px;
+    }
+
     .rich-text-custom__wrapper {
       margin-top: 24px;
       display: flex;
       justify-content: center;
+      align-items: center;
     }
 
     .rich-text-custom__btn {
-      background: #D83D0E;
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 8px;
+      font-size: 16px;
       font-weight: 700;
-      display: inline-flex;
-      gap: 8px;
+      line-height: 24px;
+      background-color: #D83D0E;
+      padding: 12px 24px;
+      color: #fff;
+      border-radius: 8px;
       text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
   </style>
-
-  <script>
-    (function () {
-      const section = document.getElementById('RelatedBlogs-{{ section.id }}');
-      if (!section) return;
-
-      const track = section.querySelector('.related-slider__track');
-      const prev = section.querySelector('.related-slider__arrow--prev');
-      const next = section.querySelector('.related-slider__arrow--next');
-
-      if (!track || !prev || !next) return;
-
-      const scrollAmount = () => {
-        const slide = track.querySelector('.related-slider__slide');
-        return slide ? slide.offsetWidth + 16 : 300;
-      };
-
-      prev.addEventListener('click', () => {
-        track.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
-      });
-
-      next.addEventListener('click', () => {
-        track.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
-      });
-    })();
-  </script>
 </section>
+
+
+
 
 {% schema %}
 {
   "name": "Related Blog posts Slider",
+  "class": "related-articles",
   "settings": [
-    { "id": "heading", "type": "text", "label": "Heading", "default": "Related posts" },
-    { "id": "subheading", "type": "text", "label": "Subheading" },
-    { "id": "intro", "type": "text", "label": "Intro" },
-    { "id": "blog", "type": "blog", "label": "Select blog" },
-    { "id": "show_scrollbar", "type": "checkbox", "label": "Show scrollbar", "default": true },
-    { "id": "show_arrows", "type": "checkbox", "label": "Show arrows", "default": true },
-    { "id": "show_excerpt", "type": "checkbox", "label": "Show excerpt", "default": true },
-    { "id": "excerpt_length", "type": "number", "label": "Excerpt length", "default": 120 },
-    { "id": "read_more_text", "type": "text", "label": "Read more text", "default": "Read article" },
-    { "type": "range", "id": "padding_top", "min": 0, "max": 120, "step": 4, "unit": "px", "label": "Top padding", "default": 48 },
-    { "type": "range", "id": "padding_bottom", "min": 0, "max": 120, "step": 4, "unit": "px", "label": "Bottom padding", "default": 48 },
-    { "type": "url", "id": "url", "label": "Button link" },
-    { "type": "text", "id": "label", "label": "Button label", "default": "Shop remanufactured equipment" }
+    {
+      "id": "heading",
+      "type": "text",
+      "label": "Section heading",
+      "default": "Related posts"
+    },
+    {
+      "id": "subheading",
+      "type": "text",
+      "label": "Section Short Copy",
+      "default": "Short Copy"
+    },
+    {
+      "id": "intro",
+      "type": "text",
+      "label": "Section Intro",
+      "default": "Introduction to posts"
+    },
+    {
+      "id": "blog",
+      "type": "blog",
+      "label": "Select blog"
+    },
+    {
+      "id": "show_scrollbar",
+      "type": "checkbox",
+      "label": "Show horizontal scrollbar",
+      "default": true
+    },
+    {
+      "id": "show_excerpt",
+      "type": "checkbox",
+      "label": "Show excerpt",
+      "default": true
+    },
+    {
+      "id": "excerpt_length",
+      "type": "number",
+      "label": "Excerpt length (characters)",
+      "default": 120
+    },
+    {
+      "id": "read_more_text",
+      "type": "text",
+      "label": "Read more text",
+      "default": "Read article"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "Section Button Link"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "default": "Shop remanufactured equipment",
+      "label": "Section Button Label"
+    }
   ],
   "presets": [
-    { "name": "Related Blog posts Slider", "category": "Blog" }
+    {
+      "name": "Related Blog posts Slider",
+      "category": "Blog"
+    }
   ]
 }
 {% endschema %}
