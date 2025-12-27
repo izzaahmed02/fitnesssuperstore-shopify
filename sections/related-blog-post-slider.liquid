@@ -22,61 +22,63 @@
     {% if blog and blog.articles_count > 0 %}
       <div class="related-slider" id="RelatedSlider-{{ section.id }}">
 
-        <!-- Wrapper for track + arrows -->
-        <div class="related-slider__wrapper">
-          <div class="related-slider__track {% unless section.settings.show_scrollbar %}hide-scrollbar{% endunless %}">
-            {% for article in blog.articles %}
-              <div class="related-slider__slide">
-                <article class="card-wrapper">
-                  <a href="{{ article.url }}" class="card">
+        <!-- Full-width slides -->
+        <div class="related-slider__track {% unless section.settings.show_scrollbar %}hide-scrollbar{% endunless %}">
+          {% for article in blog.articles %}
+            <div class="related-slider__slide">
+              <article class="card-wrapper">
+                <a href="{{ article.url }}" class="card">
 
-                    {% if article.image %}
-                      <div class="card__media">
-                        <img
-                          src="{{ article.image | img_url: '720x' }}"
-                          alt="{{ article.image.alt | default: article.title }}"
-                          class="card__image"
-                          loading="lazy"
-                        >
+                  {% if article.image %}
+                    <div class="card__media">
+                      <img
+                        src="{{ article.image | img_url: '720x' }}"
+                        alt="{{ article.image.alt | default: article.title }}"
+                        class="card__image"
+                        loading="lazy"
+                      >
+                    </div>
+                  {% endif %}
+
+                  <div class="card__content">
+                    <h3 class="card__heading">
+                      <span class="card__heading-text">{{ article.title }}</span>
+                    </h3>
+
+                    <p class="card__meta publish-info">
+                      <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                      {% if article.author %}
+                        <span>{{ article.author }}</span>
+                      {% endif %}
+                    </p>
+
+                    {% if section.settings.show_excerpt %}
+                      <div class="card__subtext">
+                        {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
                       </div>
                     {% endif %}
 
-                    <div class="card__content">
-                      <h3 class="card__heading">
-                        <span class="card__heading-text">{{ article.title }}</span>
-                      </h3>
-
-                      <p class="card__meta publish-info">
-                        <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
-                        {% if article.author %}
-                          <span>{{ article.author }}</span>
-                        {% endif %}
-                      </p>
-
-                      {% if section.settings.show_excerpt %}
-                        <div class="card__subtext">
-                          {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
-                        </div>
-                      {% endif %}
-
-                      <div class="card__actions">
-                        <span class="link">{{ section.settings.read_more_text }}</span>
-                      </div>
+                    <div class="card__actions">
+                      <span class="link">{{ section.settings.read_more_text }}</span>
                     </div>
-                  </a>
-                </article>
-              </div>
-            {% endfor %}
-          </div>
-
-          {% if section.settings.show_arrows %}
-            <div class="related-slider__controls">
-              <button class="related-slider__arrow related-slider__arrow--prev" aria-label="Previous">‹</button>
-              <button class="related-slider__arrow related-slider__arrow--next" aria-label="Next">›</button>
+                  </div>
+                </a>
+              </article>
             </div>
-          {% endif %}
-
+          {% endfor %}
         </div>
+
+        {% if section.settings.show_arrows %}
+          <!-- Scrollbar + arrows container (narrow) -->
+          <div class="related-slider__scrollbar-wrapper">
+            <div class="related-slider__scrollbar-track"></div>
+            <div class="related-slider__controls">
+              <button class="related-slider__arrow related-slider__arrow--prev">‹</button>
+              <button class="related-slider__arrow related-slider__arrow--next">›</button>
+            </div>
+          </div>
+        {% endif %}
+
       </div>
     {% else %}
       <p class="note center">Please select a blog with articles.</p>
@@ -93,16 +95,12 @@
   </div>
 
   <style>
-    /* === Wrapper for track + arrows === */
-    #RelatedBlogs-{{ section.id }} .related-slider__wrapper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    /* === Slider === */
+    #RelatedBlogs-{{ section.id }} .related-slider {
+      position: relative;
     }
 
-    /* Track takes full remaining width */
     #RelatedBlogs-{{ section.id }} .related-slider__track {
-      flex: 1 1 auto;
       display: flex;
       gap: 16px;
       overflow-x: auto;
@@ -122,60 +120,7 @@
       }
     }
 
-    /* Scrollbar styling */
-    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar-track {
-      background: #eee;
-      border-radius: 4px;
-    }
-
-    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar-thumb {
-      background: #D83D0E;
-      border-radius: 4px;
-    }
-
-    #RelatedBlogs-{{ section.id }} .hide-scrollbar {
-      scrollbar-width: none;
-    }
-
-    #RelatedBlogs-{{ section.id }} .hide-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-
-    /* Controls */
-    #RelatedBlogs-{{ section.id }} .related-slider__controls {
-      display: flex;
-      flex-shrink: 0;
-      gap: 8px;
-    }
-
-    #RelatedBlogs-{{ section.id }} .related-slider__arrow {
-      width: 36px;
-      height: 36px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      background: #fff;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    #RelatedBlogs-{{ section.id }} .related-slider__arrow:hover {
-      background: #f5f5f5;
-    }
-
-    @media (max-width: 749px) {
-      #RelatedBlogs-{{ section.id }} .related-slider__controls {
-        display: none;
-      }
-    }
-
-    /* Card Media */
+    /* Cards */
     #RelatedBlogs-{{ section.id }} .card__media {
       aspect-ratio: 16 / 9;
       overflow: hidden;
@@ -187,6 +132,7 @@
       object-fit: cover;
     }
 
+    /* Meta */
     #RelatedBlogs-{{ section.id }} .publish-info {
       display: flex;
       justify-content: space-between;
@@ -199,6 +145,65 @@
       color: #D83D0E;
     }
 
+    /* Scrollbar + arrows wrapper (narrow) */
+    #RelatedBlogs-{{ section.id }} .related-slider__scrollbar-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      max-width: 400px; /* scrollbar width container */
+      margin: 0 auto;
+      gap: 8px;
+    }
+
+    /* Native scrollbar inside wrapper */
+    #RelatedBlogs-{{ section.id }} .related-slider__scrollbar-track {
+      flex: 1;
+      height: 6px;
+      background: #eee;
+      border-radius: 4px;
+      position: relative;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar-thumb {
+      background: #D83D0E;
+      border-radius: 4px;
+    }
+
+    /* Arrows */
+    #RelatedBlogs-{{ section.id }} .related-slider__controls {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__arrow {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__arrow:hover {
+      background: #f5f5f5;
+    }
+
+    @media (max-width: 749px) {
+      #RelatedBlogs-{{ section.id }} .related-slider__scrollbar-wrapper {
+        display: none;
+      }
+    }
+
+    /* Rich text button */
     .rich-text-custom__wrapper {
       margin-top: 24px;
       display: flex;
@@ -243,27 +248,3 @@
     })();
   </script>
 </section>
-
-{% schema %}
-{
-  "name": "Related Blog posts Slider",
-  "settings": [
-    { "id": "heading", "type": "text", "label": "Heading", "default": "Related posts" },
-    { "id": "subheading", "type": "text", "label": "Subheading" },
-    { "id": "intro", "type": "text", "label": "Intro" },
-    { "id": "blog", "type": "blog", "label": "Select blog" },
-    { "id": "show_scrollbar", "type": "checkbox", "label": "Show scrollbar", "default": true },
-    { "id": "show_arrows", "type": "checkbox", "label": "Show arrows", "default": true },
-    { "id": "show_excerpt", "type": "checkbox", "label": "Show excerpt", "default": true },
-    { "id": "excerpt_length", "type": "number", "label": "Excerpt length", "default": 120 },
-    { "id": "read_more_text", "type": "text", "label": "Read more text", "default": "Read article" },
-    { "type": "range", "id": "padding_top", "min": 0, "max": 120, "step": 4, "unit": "px", "label": "Top padding", "default": 48 },
-    { "type": "range", "id": "padding_bottom", "min": 0, "max": 120, "step": 4, "unit": "px", "label": "Bottom padding", "default": 48 },
-    { "type": "url", "id": "url", "label": "Button link" },
-    { "type": "text", "id": "label", "label": "Button label", "default": "Shop remanufactured equipment" }
-  ],
-  "presets": [
-    { "name": "Related Blog posts Slider", "category": "Blog" }
-  ]
-}
-{% endschema %}
