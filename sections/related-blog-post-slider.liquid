@@ -164,70 +164,83 @@
   </style>
 
   <script>
-    (function() {
-      const section = document.getElementById('RelatedBlogs-{{ section.id }}');
-      if (!section) return;
+(function() {
+  const section = document.getElementById('RelatedSlider-{{ section.id }}');
+  if (!section) return;
 
-      const track = section.querySelector('.related-slider__track');
-      const prev = section.querySelector('.related-slider__arrow--prev');
-      const next = section.querySelector('.related-slider__arrow--next');
-      const scrollbarTrack = section.querySelector('.custom-scrollbar-track');
-      const scrollbarThumb = section.querySelector('.custom-scrollbar-thumb');
+  const track = section.querySelector('.related-slider__track');
+  const prev = section.querySelector('.related-slider__arrow--prev');
+  const next = section.querySelector('.related-slider__arrow--next');
+  const scrollbarTrack = section.querySelector('.custom-scrollbar-track');
+  const scrollbarThumb = section.querySelector('.custom-scrollbar-thumb');
 
-      if (!track || !prev || !next || !scrollbarThumb || !scrollbarTrack) return;
+  if (!track || !prev || !next || !scrollbarTrack || !scrollbarThumb) return;
 
-      // Update thumb width dynamically
-      const updateThumb = () => {
-        const trackWidth = track.scrollWidth;
-        const visibleWidth = track.offsetWidth;
-        const thumbWidth = Math.max((visibleWidth / trackWidth) * scrollbarTrack.offsetWidth, 20);
-        scrollbarThumb.style.width = thumbWidth + 'px';
-      };
+  // Update thumb width based on visible area
+  const updateThumb = () => {
+    const trackWidth = track.scrollWidth;
+    const visibleWidth = track.offsetWidth;
+    const thumbWidth = Math.max((visibleWidth / trackWidth) * scrollbarTrack.offsetWidth, 20);
+    scrollbarThumb.style.width = thumbWidth + 'px';
+    scrollbarThumb.style.transition = 'none'; // instant update
+  };
 
-      const updateThumbPosition = () => {
-        const scrollRatio = track.scrollLeft / (track.scrollWidth - track.offsetWidth);
-        const maxThumbLeft = scrollbarTrack.offsetWidth - scrollbarThumb.offsetWidth;
-        scrollbarThumb.style.left = scrollRatio * maxThumbLeft + 'px';
-      };
+  // Update thumb position based on scroll
+  const updateThumbPosition = () => {
+    const scrollRatio = track.scrollLeft / (track.scrollWidth - track.offsetWidth);
+    const maxThumbLeft = scrollbarTrack.offsetWidth - scrollbarThumb.offsetWidth;
+    scrollbarThumb.style.left = scrollRatio * maxThumbLeft + 'px';
+    scrollbarThumb.style.transition = 'none'; // instant
+  };
 
-      // On scroll
-      track.addEventListener('scroll', updateThumbPosition);
-      window.addEventListener('resize', () => { updateThumb(); updateThumbPosition(); });
+  // Scroll events
+  track.addEventListener('scroll', updateThumbPosition);
+  window.addEventListener('resize', () => { updateThumb(); updateThumbPosition(); });
 
-      updateThumb();
-      updateThumbPosition();
+  updateThumb();
+  updateThumbPosition();
 
-      // Arrow click
-      const scrollAmount = () => {
-        const slide = track.querySelector('.related-slider__slide');
-        return slide ? slide.offsetWidth + 16 : 300;
-      };
+  // Arrow click scrolling
+  const scrollAmount = () => {
+    const slide = track.querySelector('.related-slider__slide');
+    return slide ? slide.offsetWidth + 16 : 300;
+  };
 
-      prev.addEventListener('click', () => { track.scrollBy({ left: -scrollAmount(), behavior: 'smooth' }); });
-      next.addEventListener('click', () => { track.scrollBy({ left: scrollAmount(), behavior: 'smooth' }); });
+  prev.addEventListener('click', () => {
+    track.scrollBy({ left: -scrollAmount(), behavior: 'auto' }); // no smooth animation if desired
+  });
 
-      // Drag scrollbar thumb
-      let isDragging = false;
-      let startX, startScroll;
+  next.addEventListener('click', () => {
+    track.scrollBy({ left: scrollAmount(), behavior: 'auto' });
+  });
 
-      scrollbarThumb.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.clientX;
-        startScroll = track.scrollLeft;
-        document.body.style.userSelect = 'none';
-      });
+  // Dragging the scrollbar thumb
+  let isDragging = false;
+  let startX, startScroll;
 
-      window.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        const deltaX = e.clientX - startX;
-        const trackWidth = track.scrollWidth - track.offsetWidth;
-        const scrollbarWidth = scrollbarTrack.offsetWidth - scrollbarThumb.offsetWidth;
-        track.scrollLeft = startScroll + (deltaX * trackWidth / scrollbarWidth);
-      });
+  scrollbarThumb.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    startX = e.clientX;
+    startScroll = track.scrollLeft;
+    document.body.style.userSelect = 'none';
+  });
 
-      window.addEventListener('mouseup', () => { isDragging = false; document.body.style.userSelect = ''; });
-    })();
-  </script>
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - startX;
+    const trackWidth = track.scrollWidth - track.offsetWidth;
+    const scrollbarWidth = scrollbarTrack.offsetWidth - scrollbarThumb.offsetWidth;
+    track.scrollLeft = startScroll + (deltaX * trackWidth / scrollbarWidth);
+    updateThumbPosition(); // ensure thumb moves instantly
+  });
+
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+    document.body.style.userSelect = '';
+  });
+})();
+</script>
+
 </section>
 
 
