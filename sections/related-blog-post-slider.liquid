@@ -1,7 +1,3 @@
-{% comment %}
-Related Blog Posts — Partial full-bleed, first card inside container
-{% endcomment %}
-
 <section
   id="RelatedBlogs-{{ section.id }}"
   class="section related-articles"
@@ -28,7 +24,7 @@ Related Blog Posts — Partial full-bleed, first card inside container
   {% assign blog = blogs[section.settings.blog] %}
 
   {% if blog and blog.articles_count > 0 %}
-    <div class="related-slider partial-bleed" data-slider>
+    <div class="related-slider full-bleed-slider" data-slider>
 
       <div class="related-slider__track" data-track>
         {% for article in blog.articles %}
@@ -106,43 +102,52 @@ Related Blog Posts — Partial full-bleed, first card inside container
   {% endif %}
 
   <style>
-    /* PARTIAL FULL-BLEED SLIDER */
-    .related-slider.partial-bleed {
-      overflow-x: visible;
+    /* FULL-BLEED TRACK */
+    .full-bleed-slider {
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      overflow: hidden;
     }
 
     .related-slider__track {
       display: flex;
       gap: 16px;
+      padding: 0 24px; /* spacing at ends */
       overflow-x: auto;
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
-
-      /* align first card inside container */
-      padding-left: calc((100% - 4 * ((100% - 48px)/4 + 16px - 16px)) / 2); 
-      padding-right: 24px; /* extra space for last card */
     }
 
     .related-slider__track::-webkit-scrollbar { display: none; }
 
-    /* 4 full cards, 5th partial */
+    /* 4 cards + 5th partial */
     .related-slider__slide {
-      flex: 0 0 calc((100% - 48px)/4); /* 4 cards visible inside container */
+      flex: 0 0 calc((100vw - 48px)/4);
     }
 
-    /* allow 5th card partial */
-    .related-slider__track > .related-slider__slide:nth-child(5) {
-      flex: 0 0 calc((100% - 48px)/8); /* half of one card width */
+    .related-slider__slide:nth-child(5) {
+      flex: 0 0 calc((100vw - 48px)/8);
+    }
+
+    /* CARD STYLING */
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
 
     .card__media { aspect-ratio: 16/9; overflow: hidden; }
     .card__media img { width: 100%; height: 100%; object-fit: cover; }
 
-    .card__heading { font-size: 18px; line-height: 24px; margin-bottom: 8px; }
-    .publish-info { display: flex; justify-content: space-between; font-size: 12px; color: #777; margin-bottom: 8px; }
-    .card__excerpt { font-size: 14px; line-height: 22px; margin-bottom: 12px; }
-    .link { color: #D83D0E; font-weight: 600; }
+    .card__heading { font-size: 18px; line-height: 24px; margin: 12px; }
+    .publish-info { display: flex; justify-content: space-between; font-size: 12px; color: #777; margin: 0 12px 12px; }
+    .card__excerpt { font-size: 14px; line-height: 22px; margin: 0 12px 12px; }
+    .link { color: #D83D0E; font-weight: 600; margin: 0 12px 12px; }
 
+    /* BOTTOM BAR */
     .related-slider__bottom {
       margin-top: 16px;
       display: flex;
@@ -163,7 +168,6 @@ Related Blog Posts — Partial full-bleed, first card inside container
     @media (max-width: 1200px) { .related-slider__slide { flex: 0 0 25%; } }
     @media (max-width: 990px) { .related-slider__slide { flex: 0 0 50%; } }
     @media (max-width: 600px) { .related-slider__slide { flex: 0 0 100%; } }
-
   </style>
 
   <script>
