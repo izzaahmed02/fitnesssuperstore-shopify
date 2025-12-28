@@ -231,6 +231,59 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
     }
   </style>
 
+  <style>
+
+    /* Slider wrapper: allow visual overflow but prevent page scroll */
+.related-slider {
+  width: 100%;
+  overflow: hidden; /* hide extra content outside slider */
+  position: relative;
+}
+
+/* Track: flex row, scrollable horizontally */
+.related-slider__track {
+  display: flex;
+  gap: 16px;             /* spacing between slides */
+  overflow-x: auto;       /* horizontal scroll only inside track */
+  scroll-behavior: smooth;
+  padding-bottom: 10px;   /* optional, space for scrollbar */
+  -webkit-overflow-scrolling: touch; /* smooth scroll on mobile */
+}
+
+/* Hide default scrollbar (optional) */
+.related-slider__track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Slides: do not shrink, maintain width */
+.related-slider__slide {
+  flex: 0 0 auto;        /* fixed width per slide */
+  width: 300px;          /* adjust as needed */
+}
+
+/* Optional: arrows */
+.related-slider__arrows {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  transform: translateY(-50%);
+  pointer-events: none;  /* allow clicks to go to track except buttons */
+}
+
+.related-slider__arrows button {
+  pointer-events: all;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+  </style>
+
   <script>
     (function () {
       const slider = document.querySelector('#RelatedBlogs-{{ section.id }} [data-slider]');
