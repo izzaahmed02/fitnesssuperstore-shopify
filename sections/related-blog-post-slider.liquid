@@ -1,181 +1,153 @@
-<section
-  id="RelatedBlogs-{{ section.id }}"
-  class="section related-articles"
-  style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;"
->
-  <div class="page-width">
-    {% if section.settings.heading != blank %}
-      <div class="section-header center">
-        <h1 class="section-header__title">{{ section.settings.heading }}</h1>
+{% comment %}
+  Related Blog posts Slider Section
+{% endcomment %}
+<style>
+.c-articleCarousel__slider.swiper-horizontal { overflow: visible; }
+.swiper, .swiper-container { margin: 0 auto; position: relative; overflow: hidden; display: block; padding: 0; z-index: 1; list-style: none; }
+.swiper-wrapper { display: flex; transition-property: transform; box-sizing: content-box; }
+.c-articleCarousel__wrapper { display: flex; align-items: stretch; }
+.swiper-slide { flex-shrink: 0; width: 100%; position: relative; transition-property: transform; display: block; }
+
+/* Responsive Slide Widths */
+@media only screen and (min-width: 1292px) { .c-articleCarousel__articles { max-width: calc(32.5203% - 24px); } }
+@media only screen and (min-width: 1024px) { .c-articleCarousel__articles { max-width: calc(48.1928% - 18px); } }
+@media only screen and (min-width: 768px) { .c-articleCarousel__articles { max-width: calc(48.7804% - 12px); } }
+
+/* Article Block */
+.c-articlesBlock_imgLinkWrapper { position: relative; width: 100%; }
+.c-articlesBlock__imgWrapper { overflow: hidden; }
+.c-articlesBlock__imgTag { display: block; width: 100%; transition: all .4s ease; transform: scale(1); }
+.c-articlesBlock_imgLinkWrapper .c-articlesBlock__linkWrapper { position: absolute; top:0; right:0; bottom:0; left:0; height:100%; width:100%; }
+.c-articlesBlock__linkWrapper .c-articlesBlock__imgLink { display: block; height:100%; width:100%; }
+
+/* Hover effect */
+.c-articlesBlock:hover .c-articlesBlock__imgTag { transform: scale(1.05); }
+
+/* Scrollbar */
+.c-swiperScrollbar { height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; margin-top:16px; }
+.c-swiperScrollbar .swiper-scrollbar-drag { background: rgba(17,17,17,0.8); border-radius:3px; }
+
+/* Arrows */
+.c-swiperControls { position: absolute; top: 50%; width: 100%; display: flex; justify-content: space-between; pointer-events: none; transform: translateY(-50%); }
+.c-swiperControls__prev, .c-swiperControls__next { width: 44px; height: 44px; background: rgba(17,17,17,0.85); border-radius:50%; pointer-events: all; cursor: pointer; display:flex; align-items:center; justify-content:center; transition: background 0.3s; }
+.c-swiperControls__prev:hover, .c-swiperControls__next:hover { background: rgba(17,17,17,1); }
+.c-swiperControls__prev:disabled, .c-swiperControls__next:disabled { opacity: 0.3; cursor: default; }
+
+/* Article Info */
+.c-articlesBlock__info { padding: 16px; }
+.c-articlesBlock__title { font-size: 18px; font-weight:600; margin-bottom:8px; }
+.c-articlesBlock__titleLink { text-decoration:none; color:#111; }
+.c-articlesBlock__publishedDate { font-size:14px; color:#666; }
+.c-articlesBlock__excerpt { font-size:14px; color:#555; margin-bottom:8px; }
+.c-articlesBlock__readMore { font-size:14px; color:#111; font-weight:600; text-decoration:none; }
+
+/* Mobile Adjustments */
+@media screen and (max-width: 1024px) { .c-articleCarousel__articles { max-width: calc(48% - 16px); } }
+@media screen and (max-width: 768px) { .c-articleCarousel__articles { max-width: calc(80% - 12px); } }
+
+  </style>
+<section class="c-articleCarousel related-articles section-template--{{ section.id }}-padding" style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;">
+  <div class="o-pageWidth">
+    <articles-carousel>
+
+      <div class="c-articleCarousel__content">
+        {% if section.settings.heading != blank %}
+          <h2 class="c-articleCarousel__heading c-h3">{{ section.settings.heading }}</h2>
+        {% endif %}
         {% if section.settings.subheading != blank %}
-          <h3 class="section-header__subheading">{{ section.settings.subheading }}</h3>
+          <p class="c-articleCarousel__subheading">{{ section.settings.subheading }}</p>
         {% endif %}
         {% if section.settings.intro != blank %}
-          <p class="section-header__intro">{{ section.settings.intro }}</p>
+          <p class="c-articleCarousel__intro">{{ section.settings.intro }}</p>
         {% endif %}
       </div>
-    {% endif %}
-  </div>
 
-  {% assign blog = blogs[section.settings.blog] %}
-  {% if blog and blog.articles_count > 0 %}
-    <div class="related-slider-wrapper">
+      {% assign articles = blogs[section.settings.blog].articles | limit: 10 %}
+      <section class="c-articleCarousel__sliderContainer swiper-container" role="region" aria-label="{{ section.settings.heading | default: 'Related Posts Carousel' }}">
+        <div class="c-articleCarousel__slider swiper" data-articles-slider>
+          <div class="c-articleCarousel__wrapper swiper-wrapper">
 
-      <!-- Track container stays within page width -->
-      <div class="page-width related-slider-container">
-        <div class="related-slider" data-slider>
-          <div class="related-slider__track" data-track>
-            {% for article in blog.articles %}
-              <div class="related-slider__slide">
-                <article class="card-wrapper">
-                  <a href="{{ article.url }}" class="card">
-                    {% if article.image %}
-                      <div class="card__media">
-                        <img src="{{ article.image | img_url: '720x' }}" alt="{{ article.title }}" loading="lazy">
-                      </div>
-                    {% endif %}
-                    <div class="card__content">
-                      <h3>{{ article.title }}</h3>
-                      {% if article.published_at or article.author %}
-                        <p class="publish-info">
-                          {% if article.published_at %}<span>{{ article.published_at | date: "%b %d, %Y" }}</span>{% endif %}
-                          {% if article.author %}<span>{{ article.author }}</span>{% endif %}
+            {% for article in articles %}
+              <div class="c-articleCarousel__articles swiper-slide" tabindex="0">
+                <article class="c-articlesBlock">
+                  <div class="c-articlesBlock_imgLinkWrapper">
+                    <div class="c-articlesBlock__imgWrapper">
+                      {% if article.featured_image %}
+                        <img src="{{ article.featured_image | img_url: '600x600' }}" alt="{{ article.title }}" class="c-articlesBlock__imgTag" loading="lazy">
+                      {% endif %}
+                    </div>
+                    <div class="c-articlesBlock__linkWrapper">
+                      <a href="{{ article.url }}" class="c-articlesBlock__imgLink"></a>
+                    </div>
+                  </div>
+
+                  <div class="c-articlesBlock__info">
+                    <div class="c-articlesBlock__infoWrapper">
+                      <h3 class="c-articlesBlock__title">
+                        <a href="{{ article.url }}" class="c-articlesBlock__titleLink c-b1">{{ article.title }}</a>
+                      </h3>
+                      {% if section.settings.show_excerpt %}
+                        <p class="c-articlesBlock__excerpt">
+                          {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
                         </p>
                       {% endif %}
-                      {% if section.settings.show_excerpt %}
-                        <p class="card__excerpt">{{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}</p>
-                      {% endif %}
-                      <div class="card__actions">
-                        <span class="link">{{ section.settings.read_more_text }}</span>
-                      </div>
+                      <p class="c-articlesBlock__publishedDate c-b2">{{ article.published_at | date: "%B %d, %Y" }}</p>
+                      <a href="{{ article.url }}" class="c-articlesBlock__readMore">{{ section.settings.read_more_text }}</a>
                     </div>
-                  </a>
+                  </div>
                 </article>
               </div>
             {% endfor %}
+
+          </div>
+
+          {% if section.settings.show_scrollbar %}
+            <div class="c-swiperScrollbar c-swiperScrollbar--hasControls swiper-scrollbar-horizontal" data-swiper-scrollbar></div>
+          {% endif %}
+
+          <div class="c-swiperControls" data-swiper-controls>
+            <button class="c-swiperControls__prev" data-swiper-controls-prev aria-label="previous slide"></button>
+            <button class="c-swiperControls__next" data-swiper-controls-next aria-label="next slide"></button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Scrollbar and arrows inside page-width -->
-      <div class="page-width related-slider__bottom">
-        <div class="related-slider__scrollbar" data-scrollbar>
-          <span class="scroll-thumb" data-thumb></span>
+      {% if section.settings.url %}
+        <div class="c-articleCarousel__cta">
+          <a href="{{ section.settings.url }}" class="btn">{{ section.settings.label }}</a>
         </div>
-        <div class="related-slider__arrows">
-          <button class="arrow prev" data-prev>‹</button>
-          <button class="arrow next" data-next>›</button>
-        </div>
-      </div>
+      {% endif %}
 
-    </div>
-  {% endif %}
-
-  <style>
-    /* TRACK WRAPPER */
-    .related-slider-container { overflow-x: hidden; position: relative; }
-
-    /* SCROLLING TRACK */
-    .related-slider {
-      overflow-x: auto;
-      overflow-y: hidden;
-      padding-bottom: 12px;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .related-slider__track {
-      display: flex;
-      gap: 16px;
-      position: relative;
-      margin-left: 0; /* First card aligns with container */
-    }
-
-    /* SLIDE CARDS */
-    .related-slider__slide {
-      flex: 0 0 calc((100% - 48px)/4);
-      min-width: calc((100% - 48px)/4);
-      margin-right: -16px; /* allow cards to peek out visually */
-    }
-
-    .card {
-      background: #fff;
-      border-radius: 8px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    }
-
-    .card__media { aspect-ratio: 16/9; overflow: hidden; }
-    .card__media img { width: 100%; height: 100%; object-fit: cover; }
-
-    .card__content { padding: 12px; }
-    .publish-info { font-size: 12px; color: #777; display: flex; justify-content: space-between; margin-bottom: 8px; }
-    .card__excerpt { font-size: 14px; line-height: 22px; margin-bottom: 8px; }
-    .link { color: #D83D0E; font-weight: 600; }
-
-    /* BOTTOM BAR */
-    .related-slider__bottom { margin-top: 16px; display: flex; justify-content: flex-end; align-items: center; gap: 16px; }
-    .related-slider__scrollbar { position: relative; width: 220px; height: 6px; background: #eee; border-radius: 6px; cursor: pointer; }
-    .scroll-thumb { position: absolute; left: 0; top: 0; height: 100%; width: 40px; background: #D83D0E; border-radius: 6px; }
-    .related-slider__arrows { display: flex; gap: 8px; }
-    .arrow { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #ccc; background: #fff; cursor: pointer; }
-
-    @media (max-width: 1200px) { .related-slider__slide { flex: 0 0 25%; } }
-    @media (max-width: 990px) { .related-slider__slide { flex: 0 0 50%; } }
-    @media (max-width: 600px) { .related-slider__slide { flex: 0 0 100%; } }
-  </style>
-
-  <script>
-    (function () {
-      const slider = document.querySelector('#RelatedBlogs-{{ section.id }} [data-slider]');
-      if (!slider) return;
-
-      const track = slider.querySelector('[data-track]');
-      const scrollbar = slider.querySelector('[data-scrollbar]');
-      const thumb = slider.querySelector('[data-thumb]');
-      const prev = slider.querySelector('[data-prev]');
-      const next = slider.querySelector('[data-next]');
-
-      function syncThumb() {
-        const maxScroll = track.scrollWidth - track.clientWidth;
-        if (maxScroll <= 0) return;
-        const ratio = track.scrollLeft / maxScroll;
-        const maxLeft = scrollbar.clientWidth - thumb.clientWidth;
-        thumb.style.left = `${ratio * maxLeft}px`;
-      }
-
-      track.addEventListener('scroll', syncThumb);
-
-      function scrollByCard(dir) {
-        const card = track.querySelector('.related-slider__slide');
-        if (!card) return;
-        track.scrollBy({ left: dir * (card.offsetWidth + 16), behavior: 'smooth' });
-      }
-
-      prev.addEventListener('click', () => scrollByCard(-1));
-      next.addEventListener('click', () => scrollByCard(1));
-
-      let dragging = false;
-      thumb.addEventListener('mousedown', () => dragging = true);
-      document.addEventListener('mouseup', () => dragging = false);
-      document.addEventListener('mousemove', (e) => {
-        if (!dragging) return;
-        const rect = scrollbar.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        x = Math.max(0, Math.min(x, scrollbar.clientWidth - thumb.clientWidth));
-        const ratio = x / (scrollbar.clientWidth - thumb.clientWidth);
-        track.scrollLeft = ratio * (track.scrollWidth - track.clientWidth);
-      });
-
-      syncThumb();
-    })();
-  </script>
+    </articles-carousel>
+  </div>
 </section>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const carousels = document.querySelectorAll('[data-articles-slider]');
 
-
+  carousels.forEach(carousel => {
+    new Swiper(carousel, {
+      slidesPerView: 'auto',
+      spaceBetween: 24,
+      loop: false,
+      grabCursor: true,
+      navigation: {
+        nextEl: carousel.parentElement.querySelector('[data-swiper-controls-next]'),
+        prevEl: carousel.parentElement.querySelector('[data-swiper-controls-prev]')
+      },
+      scrollbar: {
+        el: carousel.parentElement.querySelector('[data-swiper-scrollbar]'),
+        draggable: true
+      },
+      breakpoints: {
+        768: { slidesPerView: 2 },
+        1024: { slidesPerView: 3 }
+      }
+    });
+  });
+});
+  </script>
 
 
 
