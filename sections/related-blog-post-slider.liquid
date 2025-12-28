@@ -26,51 +26,54 @@
   {% if blog and blog.articles_count > 0 %}
     <div class="related-slider partial-bleed" data-slider>
 
-      <div class="related-slider__track" data-track>
-        {% for article in blog.articles %}
-          <div class="related-slider__slide">
-            <article class="card-wrapper">
-              <a href="{{ article.url }}" class="card">
+      <!-- Overflow wrapper -->
+      <div class="related-slider__viewport">
+        <div class="related-slider__track" data-track>
+          {% for article in blog.articles %}
+            <div class="related-slider__slide">
+              <article class="card-wrapper">
+                <a href="{{ article.url }}" class="card">
 
-                {% if article.image %}
-                  <div class="card__media">
-                    <img
-                      src="{{ article.image | img_url: '720x' }}"
-                      alt="{{ article.image.alt | default: article.title }}"
-                      loading="lazy"
-                    >
-                  </div>
-                {% endif %}
-
-                <div class="card__content">
-                  <h3 class="card__heading">{{ article.title }}</h3>
-
-                  {% if article.published_at or article.author %}
-                    <p class="card__meta publish-info">
-                      {% if article.published_at %}
-                        <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
-                      {% endif %}
-                      {% if article.author %}
-                        <span>{{ article.author }}</span>
-                      {% endif %}
-                    </p>
-                  {% endif %}
-
-                  {% if section.settings.show_excerpt %}
-                    <div class="card__excerpt">
-                      {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+                  {% if article.image %}
+                    <div class="card__media">
+                      <img
+                        src="{{ article.image | img_url: '720x' }}"
+                        alt="{{ article.image.alt | default: article.title }}"
+                        loading="lazy"
+                      >
                     </div>
                   {% endif %}
 
-                  <div class="card__actions">
-                    <span class="link">{{ section.settings.read_more_text }}</span>
-                  </div>
+                  <div class="card__content">
+                    <h3 class="card__heading">{{ article.title }}</h3>
 
-                </div>
-              </a>
-            </article>
-          </div>
-        {% endfor %}
+                    {% if article.published_at or article.author %}
+                      <p class="card__meta publish-info">
+                        {% if article.published_at %}
+                          <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                        {% endif %}
+                        {% if article.author %}
+                          <span>{{ article.author }}</span>
+                        {% endif %}
+                      </p>
+                    {% endif %}
+
+                    {% if section.settings.show_excerpt %}
+                      <div class="card__excerpt">
+                        {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+                      </div>
+                    {% endif %}
+
+                    <div class="card__actions">
+                      <span class="link">{{ section.settings.read_more_text }}</span>
+                    </div>
+
+                  </div>
+                </a>
+              </article>
+            </div>
+          {% endfor %}
+        </div>
       </div>
 
       <div class="related-slider__bottom page-width">
@@ -104,25 +107,37 @@
   <style>
     /* PARTIAL FULL-BLEED SLIDER */
     .related-slider.partial-bleed {
-      overflow-x: visible;
+      overflow: visible;
+      position: relative;
+    }
+
+    /* viewport wrapper prevents page scroll */
+    .related-slider__viewport {
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-left: 0; /* first card aligns with container */
+      padding-right: 24px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      margin-left: calc(-50% + 24px); /* allow cards to move outside container visually */
+      margin-right: calc(-50% + 24px);
     }
 
     .related-slider__track {
       display: flex;
       gap: 16px;
-      overflow-x: visible; /* allow cards to move outside */
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
-      padding-left: 0; /* first card aligned inside container */
-      padding-right: 24px; /* spacing at end */
+      position: relative;
     }
 
     .related-slider__slide {
-      flex: 0 0 calc((100% - 48px)/4); /* 4 cards visible */
+      flex: 0 0 calc((100% - 48px)/4);
+      min-width: calc((100% - 48px)/4);
     }
 
+    /* 5th partial card */
     .related-slider__slide:nth-child(5) {
-      flex: 0 0 calc((100% - 48px)/8); /* 5th partial card */
+      flex: 0 0 calc((100% - 48px)/8);
+      min-width: calc((100% - 48px)/8);
     }
 
     /* CARD STYLING */
@@ -172,25 +187,26 @@
       if (!slider) return;
 
       const track = slider.querySelector('[data-track]');
+      const viewport = slider.querySelector('.related-slider__viewport');
       const scrollbar = slider.querySelector('[data-scrollbar]');
       const thumb = slider.querySelector('[data-thumb]');
       const prev = slider.querySelector('[data-prev]');
       const next = slider.querySelector('[data-next]');
 
       function syncThumb() {
-        const maxScroll = track.scrollWidth - track.clientWidth;
+        const maxScroll = viewport.scrollWidth - viewport.clientWidth;
         if (maxScroll <= 0) return;
-        const ratio = track.scrollLeft / maxScroll;
+        const ratio = viewport.scrollLeft / maxScroll;
         const maxLeft = scrollbar.clientWidth - thumb.clientWidth;
         thumb.style.left = `${ratio * maxLeft}px`;
       }
 
-      track.addEventListener('scroll', syncThumb);
+      viewport.addEventListener('scroll', syncThumb);
 
       function scrollByCard(dir) {
-        const card = track.querySelector('.related-slider__slide');
+        const card = viewport.querySelector('.related-slider__slide');
         if (!card) return;
-        track.scrollBy({ left: dir * (card.offsetWidth + 16), behavior: 'smooth' });
+        viewport.scrollBy({ left: dir * (card.offsetWidth + 16), behavior: 'smooth' });
       }
 
       prev.addEventListener('click', () => scrollByCard(-1));
@@ -205,7 +221,7 @@
         let x = e.clientX - rect.left;
         x = Math.max(0, Math.min(x, scrollbar.clientWidth - thumb.clientWidth));
         const ratio = x / (scrollbar.clientWidth - thumb.clientWidth);
-        track.scrollLeft = ratio * (track.scrollWidth - track.clientWidth);
+        viewport.scrollLeft = ratio * (viewport.scrollWidth - viewport.clientWidth);
       });
 
       syncThumb();
