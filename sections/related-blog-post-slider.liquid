@@ -1,224 +1,246 @@
-<style>
-/* -----------------------------------
-   1. HARD STOP PAGE HORIZONTAL SCROLL
------------------------------------ */
-html,
-body {
-  max-width: 100%;
-  overflow-x: hidden;
-}
+<section
+  id="RelatedBlogs-{{ section.id }}"
+  class="section related-articles"
+  style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;"
+>
 
-/* -----------------------------------
-   2. SLIDER BREAKOUT (Titan method)
------------------------------------ */
-.related-slider {
-  position: relative;
+  <!-- HEADER + BUTTONS STAY CONSTRAINED -->
+  <div class="page-width">
 
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
+    {% if section.settings.heading != blank %}
+      <div class="section-header center">
+        <h1 class="section-header__title">{{ section.settings.heading }}</h1>
 
-  overflow-x: visible;
-}
+        {% if section.settings.subheading != blank %}
+          <h3 class="section-header__subheading">{{ section.settings.subheading }}</h3>
+        {% endif %}
 
-/* -----------------------------------
-   3. SCROLLABLE TRACK
------------------------------------ */
-.related-slider__track {
-  display: flex;
-  gap: 20px;
-
-  overflow-x: auto;
-  overflow-y: hidden;
-
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-
-  padding: 0 24px 20px;
-}
-
-/* Hide native scrollbar */
-.related-slider__track::-webkit-scrollbar {
-  display: none;
-}
-
-/* -----------------------------------
-   4. SLIDES (viewport controlled)
------------------------------------ */
-.related-slider__slide {
-  flex: 0 0 auto;
-  width: 320px;
-}
-
-@media (max-width: 1024px) {
-  .related-slider__slide {
-    width: 70vw;
-  }
-}
-
-@media (max-width: 768px) {
-  .related-slider__slide {
-    width: 85vw;
-  }
-}
-
-/* -----------------------------------
-   5. CARD & IMAGE FIXES
------------------------------------ */
-.card {
-  display: block;
-  height: 100%;
-  background: #fff;
-  text-decoration: none;
-}
-
-.card__media img {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover;
-}
-
-/* -----------------------------------
-   6. ARROWS (OPTIONAL)
------------------------------------ */
-.related-slider__arrows {
-  position: absolute;
-  top: 50%;
-  width: 100%;
-  transform: translateY(-50%);
-  display: flex;
-  justify-content: space-between;
-  pointer-events: none;
-}
-
-.related-slider__arrows button {
-  pointer-events: all;
-  background: rgba(0,0,0,0.6);
-  color: #fff;
-  border: none;
-  padding: 10px 14px;
-  font-size: 18px;
-  cursor: pointer;
-}
-</style>
-
-<div class="related-slider" data-slider>
-  <div class="related-slider__track" data-track>
-
-    <!-- SLIDE -->
-    <div class="related-slider__slide">
-      <article class="card-wrapper">
-        <a href="#" class="card">
-          <div class="card__media">
-            <img src="https://via.placeholder.com/600x400" alt="">
-          </div>
-          <div class="card__content">
-            <h3 class="card__heading">Sample Article Title</h3>
-            <p class="card__meta">Nov 21, 2025 · Author</p>
-            <div class="card__actions">
-              <span class="link">Read Article</span>
-            </div>
-          </div>
-        </a>
-      </article>
-    </div>
-
-    <!-- DUPLICATE SLIDES -->
-    <div class="related-slider__slide">
-      <article class="card-wrapper">
-        <a href="#" class="card">
-          <div class="card__media">
-            <img src="https://via.placeholder.com/600x400" alt="">
-          </div>
-          <div class="card__content">
-            <h3 class="card__heading">Another Article</h3>
-            <p class="card__meta">Oct 28, 2025 · Author</p>
-            <div class="card__actions">
-              <span class="link">Read Article</span>
-            </div>
-          </div>
-        </a>
-      </article>
-    </div>
-
-    <div class="related-slider__slide">
-      <article class="card-wrapper">
-        <a href="#" class="card">
-          <div class="card__media">
-            <img src="https://via.placeholder.com/600x400" alt="">
-          </div>
-          <div class="card__content">
-            <h3 class="card__heading">Third Article</h3>
-            <p class="card__meta">Sep 16, 2025 · Author</p>
-            <div class="card__actions">
-              <span class="link">Read Article</span>
-            </div>
-          </div>
-        </a>
-      </article>
-    </div>
+        {% if section.settings.intro != blank %}
+          <p class="section-header__intro">{{ section.settings.intro }}</p>
+        {% endif %}
+      </div>
+    {% endif %}
 
   </div>
 
-  <div class="related-slider__arrows">
-    <button class="arrow prev">‹</button>
-    <button class="arrow next">›</button>
-  </div>
-</div>
+  {% assign blog = blogs[section.settings.blog] %}
 
+  {% if blog and blog.articles_count > 0 %}
 
-  <script>
-    (function () {
-      const slider = document.querySelector('#RelatedBlogs-{{ section.id }} [data-slider]');
-      if (!slider) return;
+    <!-- SLIDER BREAKS OUT TO VIEWPORT -->
+    <div class="related-slider" data-slider>
 
-      const track = slider.querySelector('[data-track]');
-      const scrollbar = slider.querySelector('[data-scrollbar]');
-      const thumb = slider.querySelector('[data-thumb]');
-      const prev = slider.querySelector('[data-prev]');
-      const next = slider.querySelector('[data-next]');
+      <div class="related-slider__track" data-track>
+        {% for article in blog.articles %}
+          <div class="related-slider__slide">
+            <article class="card-wrapper">
+              <a href="{{ article.url }}" class="card">
 
-      function syncThumb() {
-        const maxScroll = track.scrollWidth - track.clientWidth;
-        if (maxScroll <= 0) return;
-        const ratio = track.scrollLeft / maxScroll;
-        const maxLeft = scrollbar.clientWidth - thumb.clientWidth;
-        thumb.style.left = `${ratio * maxLeft}px`;
+                {% if article.image %}
+                  <div class="card__media">
+                    <img
+                      src="{{ article.image | img_url: '720x' }}"
+                      alt="{{ article.image.alt | default: article.title }}"
+                      loading="lazy"
+                    >
+                  </div>
+                {% endif %}
+
+                <div class="card__content">
+                  <h3 class="card__heading">{{ article.title }}</h3>
+
+                  {% if article.published_at or article.author %}
+                    <p class="card__meta publish-info">
+                      {% if article.published_at %}
+                        <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                      {% endif %}
+                      {% if article.author %}
+                        <span>{{ article.author }}</span>
+                      {% endif %}
+                    </p>
+                  {% endif %}
+
+                  {% if section.settings.show_excerpt %}
+                    <div class="card__excerpt">
+                      {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+                    </div>
+                  {% endif %}
+
+                  <div class="card__actions">
+                    <span class="link">{{ section.settings.read_more_text }}</span>
+                  </div>
+                </div>
+
+              </a>
+            </article>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if section.settings.show_scrollbar %}
+        <div class="related-slider__bottom page-width">
+
+          <div class="related-slider__scrollbar" data-scrollbar>
+            <span class="scroll-thumb" data-thumb></span>
+          </div>
+
+          <div class="related-slider__arrows">
+            <button class="arrow prev" data-prev aria-label="Previous">‹</button>
+            <button class="arrow next" data-next aria-label="Next">›</button>
+          </div>
+
+        </div>
+      {% endif %}
+
+    </div>
+
+  {% else %}
+    <div class="page-width">
+      <p class="note center">Please select a blog with articles.</p>
+    </div>
+  {% endif %}
+
+  {% if section.settings.label != blank %}
+    <div class="page-width">
+      <div class="rich-text-custom__wrapper">
+        <a href="{{ section.settings.url }}" class="rich-text-custom__btn">
+          {{ section.settings.label }}
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- ===================== CSS ===================== -->
+  <style>
+    /* HARD STOP PAGE SCROLL */
+    html, body {
+      overflow-x: hidden;
+    }
+
+    /* SLIDER BREAKOUT (Titan method) */
+    #RelatedBlogs-{{ section.id }} .related-slider {
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
+      overflow-x: visible;
+      position: relative;
+    }
+
+    /* TRACK SCROLLS — PAGE DOES NOT */
+    #RelatedBlogs-{{ section.id }} .related-slider__track {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 24px 16px;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* SLIDES — VIEWPORT CONTROLLED */
+    #RelatedBlogs-{{ section.id }} .related-slider__slide {
+      flex: 0 0 auto;
+      width: 320px;
+    }
+
+    @media (max-width: 1024px) {
+      #RelatedBlogs-{{ section.id }} .related-slider__slide {
+        width: 70vw;
       }
+    }
 
-      track.addEventListener('scroll', syncThumb);
-
-      function scrollByCard(dir) {
-        const card = track.querySelector('.related-slider__slide');
-        if (!card) return;
-        track.scrollBy({
-          left: dir * (card.offsetWidth + 16),
-          behavior: 'smooth'
-        });
+    @media (max-width: 768px) {
+      #RelatedBlogs-{{ section.id }} .related-slider__slide {
+        width: 85vw;
       }
+    }
 
-      prev.addEventListener('click', () => scrollByCard(-1));
-      next.addEventListener('click', () => scrollByCard(1));
+    /* MEDIA */
+    .card__media {
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+    }
 
-      let dragging = false;
+    .card__media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
 
-      thumb.addEventListener('mousedown', () => dragging = true);
-      document.addEventListener('mouseup', () => dragging = false);
+    /* TYPOGRAPHY */
+    .card__heading {
+      font-size: 18px;
+      line-height: 24px;
+      margin-bottom: 8px;
+    }
 
-      document.addEventListener('mousemove', (e) => {
-        if (!dragging) return;
-        const rect = scrollbar.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        x = Math.max(0, Math.min(x, scrollbar.clientWidth - thumb.clientWidth));
-        const ratio = x / (scrollbar.clientWidth - thumb.clientWidth);
-        track.scrollLeft = ratio * (track.scrollWidth - track.clientWidth);
-      });
+    .publish-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #777;
+      letter-spacing: 0.08em;
+    }
 
-      syncThumb();
-    })();
-  </script>
+    .card__excerpt {
+      font-size: 14px;
+      line-height: 22px;
+      margin-bottom: 12px;
+    }
+
+    .link {
+      color: #D83D0E;
+      font-weight: 600;
+    }
+
+    /* BOTTOM BAR */
+    .related-slider__bottom {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .related-slider__scrollbar {
+      flex: 1;
+      height: 6px;
+      background: #eee;
+      border-radius: 6px;
+      position: relative;
+    }
+
+    .scroll-thumb {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 40px;
+      background: #D83D0E;
+      border-radius: 6px;
+    }
+
+    .related-slider__arrows {
+      display: flex;
+      gap: 8px;
+    }
+
+    .related-slider__arrows .arrow {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: pointer;
+    }
+  </style>
+
 </section>
+
 
 
 
