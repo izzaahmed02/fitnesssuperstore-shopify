@@ -1,5 +1,5 @@
 {% comment %}
-Related Blog Posts — Full-bleed slider, 4 cards visible, 5th half-visible
+Related Blog Posts — Partial full-bleed, first card inside container
 {% endcomment %}
 
 <section
@@ -28,7 +28,7 @@ Related Blog Posts — Full-bleed slider, 4 cards visible, 5th half-visible
   {% assign blog = blogs[section.settings.blog] %}
 
   {% if blog and blog.articles_count > 0 %}
-    <div class="related-slider full-bleed" data-slider>
+    <div class="related-slider partial-bleed" data-slider>
 
       <div class="related-slider__track" data-track>
         {% for article in blog.articles %}
@@ -106,12 +106,9 @@ Related Blog Posts — Full-bleed slider, 4 cards visible, 5th half-visible
   {% endif %}
 
   <style>
-    /* TRACK FULL-BLEED */
-    .related-slider.full-bleed {
-      overflow: hidden;
-      margin-left: calc((100% - 100vw)/2);
-      margin-right: calc((100% - 100vw)/2);
-      width: 100vw;
+    /* PARTIAL FULL-BLEED SLIDER */
+    .related-slider.partial-bleed {
+      overflow-x: visible;
     }
 
     .related-slider__track {
@@ -120,30 +117,26 @@ Related Blog Posts — Full-bleed slider, 4 cards visible, 5th half-visible
       overflow-x: auto;
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 12px;
+
+      /* align first card inside container */
+      padding-left: calc((100% - 4 * ((100% - 48px)/4 + 16px - 16px)) / 2); 
+      padding-right: 24px; /* extra space for last card */
     }
 
     .related-slider__track::-webkit-scrollbar { display: none; }
 
+    /* 4 full cards, 5th partial */
     .related-slider__slide {
-      flex: 0 0 25%; /* 4 full cards visible */
+      flex: 0 0 calc((100% - 48px)/4); /* 4 cards visible inside container */
     }
 
-    /* 5th card half-visible effect */
+    /* allow 5th card partial */
     .related-slider__track > .related-slider__slide:nth-child(5) {
-      flex: 0 0 12.5%;
+      flex: 0 0 calc((100% - 48px)/8); /* half of one card width */
     }
 
-    .card__media {
-      aspect-ratio: 16/9;
-      overflow: hidden;
-    }
-
-    .card__media img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    .card__media { aspect-ratio: 16/9; overflow: hidden; }
+    .card__media img { width: 100%; height: 100%; object-fit: cover; }
 
     .card__heading { font-size: 18px; line-height: 24px; margin-bottom: 8px; }
     .publish-info { display: flex; justify-content: space-between; font-size: 12px; color: #777; margin-bottom: 8px; }
@@ -158,24 +151,8 @@ Related Blog Posts — Full-bleed slider, 4 cards visible, 5th half-visible
       gap: 16px;
     }
 
-    .related-slider__scrollbar {
-      position: relative;
-      width: 220px;
-      height: 6px;
-      background: #eee;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .scroll-thumb {
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-      width: 40px;
-      background: #D83D0E;
-      border-radius: 6px;
-    }
+    .related-slider__scrollbar { position: relative; width: 220px; height: 6px; background: #eee; border-radius: 6px; cursor: pointer; }
+    .scroll-thumb { position: absolute; left: 0; top: 0; height: 100%; width: 40px; background: #D83D0E; border-radius: 6px; }
 
     .related-slider__arrows { display: flex; gap: 8px; }
     .related-slider__arrows .arrow { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #ccc; background: #fff; cursor: pointer; }
@@ -183,17 +160,10 @@ Related Blog Posts — Full-bleed slider, 4 cards visible, 5th half-visible
     .rich-text-custom__wrapper { margin-top: 32px; display: flex; justify-content: center; }
     .rich-text-custom__btn { padding: 12px 24px; background: #D83D0E; color: #fff; border-radius: 8px; font-weight: 700; text-decoration: none; }
 
-    @media (max-width: 1200px) {
-      .related-slider__slide { flex: 0 0 25%; }
-    }
+    @media (max-width: 1200px) { .related-slider__slide { flex: 0 0 25%; } }
+    @media (max-width: 990px) { .related-slider__slide { flex: 0 0 50%; } }
+    @media (max-width: 600px) { .related-slider__slide { flex: 0 0 100%; } }
 
-    @media (max-width: 990px) {
-      .related-slider__slide { flex: 0 0 50%; }
-    }
-
-    @media (max-width: 600px) {
-      .related-slider__slide { flex: 0 0 100%; }
-    }
   </style>
 
   <script>
@@ -220,10 +190,7 @@ Related Blog Posts — Full-bleed slider, 4 cards visible, 5th half-visible
       function scrollByCard(dir) {
         const card = track.querySelector('.related-slider__slide');
         if (!card) return;
-        track.scrollBy({
-          left: dir * (card.offsetWidth + 16),
-          behavior: 'smooth'
-        });
+        track.scrollBy({ left: dir * (card.offsetWidth + 16), behavior: 'smooth' });
       }
 
       prev.addEventListener('click', () => scrollByCard(-1));
@@ -245,7 +212,6 @@ Related Blog Posts — Full-bleed slider, 4 cards visible, 5th half-visible
     })();
   </script>
 </section>
-
 
 
 
