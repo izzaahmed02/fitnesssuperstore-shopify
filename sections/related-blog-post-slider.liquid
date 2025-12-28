@@ -1,147 +1,118 @@
 {% comment %}
-  Related Blog posts Slider Section
+  Related Blog posts Slider Section - Full Replacement
 {% endcomment %}
-
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
 
+<!-- Section -->
+<section class="c-articleCarousel related-articles section-template--{{ section.id }}-padding" style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;">
+  <div class="o-pageWidth">
+
+    {% if section.settings.heading != blank %}
+      <h2 class="c-articleCarousel__heading c-h3">{{ section.settings.heading }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="c-articleCarousel__subheading">{{ section.settings.subheading }}</p>
+    {% endif %}
+    {% if section.settings.intro != blank %}
+      <p class="c-articleCarousel__intro">{{ section.settings.intro }}</p>
+    {% endif %}
+
+    {% assign blog_handle = section.settings.blog %}
+    {% assign articles = blogs[blog_handle].articles | limit: 10 %}
+
+    {% if articles.size > 0 %}
+      <div class="c-articleCarousel__sliderContainer swiper-container">
+        <div class="c-articleCarousel__wrapper swiper-wrapper">
+
+          {% for article in articles %}
+            <div class="c-articleCarousel__articles swiper-slide">
+              <article class="c-articlesBlock">
+                <div class="c-articlesBlock_imgLinkWrapper">
+                  <div class="c-articlesBlock__imgWrapper">
+                    {% if article.featured_image %}
+                      <img src="{{ article.featured_image | img_url: '600x600' }}" alt="{{ article.title }}" class="c-articlesBlock__imgTag" loading="lazy">
+                    {% endif %}
+                  </div>
+                  <div class="c-articlesBlock__linkWrapper">
+                    <a href="{{ article.url }}" class="c-articlesBlock__imgLink"></a>
+                  </div>
+                </div>
+
+                <div class="c-articlesBlock__info">
+                  <h3 class="c-articlesBlock__title">
+                    <a href="{{ article.url }}" class="c-articlesBlock__titleLink c-b1">{{ article.title }}</a>
+                  </h3>
+                  {% if section.settings.show_excerpt %}
+                    <p class="c-articlesBlock__excerpt">{{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}</p>
+                  {% endif %}
+                  <p class="c-articlesBlock__publishedDate c-b2">{{ article.published_at | date: "%B %d, %Y" }}</p>
+                  <a href="{{ article.url }}" class="c-articlesBlock__readMore">{{ section.settings.read_more_text }}</a>
+                </div>
+              </article>
+            </div>
+          {% endfor %}
+
+        </div>
+
+        {% if section.settings.show_scrollbar %}
+          <div class="c-swiperScrollbar swiper-scrollbar-horizontal"></div>
+        {% endif %}
+
+        <div class="c-swiperControls">
+          <button class="c-swiperControls__prev" aria-label="previous slide"></button>
+          <button class="c-swiperControls__next" aria-label="next slide"></button>
+        </div>
+      </div>
+    {% else %}
+      <p>No articles found for this blog.</p>
+    {% endif %}
+
+    {% if section.settings.url != blank %}
+      <div class="c-articleCarousel__cta">
+        <a href="{{ section.settings.url }}" class="btn">{{ section.settings.label }}</a>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+<!-- CSS -->
 <style>
-.c-articleCarousel__slider.swiper-horizontal { overflow: visible; }
-.swiper, .swiper-container { margin: 0 auto; position: relative; overflow: hidden; display: block; padding: 0; z-index: 1; list-style: none; }
-.swiper-wrapper { display: flex; transition-property: transform; box-sizing: content-box; }
-.c-articleCarousel__wrapper { display: flex; align-items: stretch; }
-.swiper-slide { flex-shrink: 0; width: 100%; position: relative; transition-property: transform; display: block; }
-
-/* Responsive Slide Widths */
-@media only screen and (min-width: 1292px) { .c-articleCarousel__articles { max-width: calc(32.5203% - 24px); } }
-@media only screen and (min-width: 1024px) { .c-articleCarousel__articles { max-width: calc(48.1928% - 18px); } }
-@media only screen and (min-width: 768px) { .c-articleCarousel__articles { max-width: calc(48.7804% - 12px); } }
-
-/* Article Block */
-.c-articlesBlock_imgLinkWrapper { position: relative; width: 100%; }
-.c-articlesBlock__imgWrapper { overflow: hidden; }
-.c-articlesBlock__imgTag { display: block; width: 100%; transition: all .4s ease; transform: scale(1); }
-.c-articlesBlock_imgLinkWrapper .c-articlesBlock__linkWrapper { position: absolute; top:0; right:0; bottom:0; left:0; height:100%; width:100%; }
-.c-articlesBlock__linkWrapper .c-articlesBlock__imgLink { display: block; height:100%; width:100%; }
-
-/* Hover effect */
+.c-articleCarousel__sliderContainer { position: relative; }
+.swiper-slide { flex-shrink: 0; width: 100%; display: block; }
+.c-articleCarousel__articles { margin-right: 24px; }
+.c-articlesBlock__imgTag { width: 100%; display: block; transition: transform 0.4s; }
 .c-articlesBlock:hover .c-articlesBlock__imgTag { transform: scale(1.05); }
-
-/* Scrollbar */
-.c-swiperScrollbar { height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; margin-top:16px; }
-.c-swiperScrollbar .swiper-scrollbar-drag { background: rgba(17,17,17,0.8); border-radius:3px; }
-
-/* Arrows */
-.c-swiperControls { position: absolute; top: 50%; width: 100%; display: flex; justify-content: space-between; pointer-events: none; transform: translateY(-50%); }
-.c-swiperControls__prev, .c-swiperControls__next { width: 44px; height: 44px; background: rgba(17,17,17,0.85); border-radius:50%; pointer-events: all; cursor: pointer; display:flex; align-items:center; justify-content:center; transition: background 0.3s; }
-.c-swiperControls__prev:hover, .c-swiperControls__next:hover { background: rgba(17,17,17,1); }
-.c-swiperControls__prev:disabled, .c-swiperControls__next:disabled { opacity: 0.3; cursor: default; }
-
-/* Article Info */
-.c-articlesBlock__info { padding: 16px; }
-.c-articlesBlock__title { font-size: 18px; font-weight:600; margin-bottom:8px; }
+.c-swiperControls { position: absolute; top:50%; width:100%; display:flex; justify-content:space-between; transform: translateY(-50%); pointer-events:none; }
+.c-swiperControls__prev, .c-swiperControls__next { pointer-events:all; width:44px; height:44px; background:#111; border-radius:50%; cursor:pointer; }
+.c-swiperScrollbar { height:6px; background:rgba(0,0,0,0.1); border-radius:3px; margin-top:16px; }
+.c-swiperScrollbar .swiper-scrollbar-drag { background:rgba(17,17,17,0.8); border-radius:3px; }
+.c-articlesBlock__info { padding:16px; }
+.c-articlesBlock__title { font-size:18px; font-weight:600; margin-bottom:8px; }
 .c-articlesBlock__titleLink { text-decoration:none; color:#111; }
 .c-articlesBlock__publishedDate { font-size:14px; color:#666; }
 .c-articlesBlock__excerpt { font-size:14px; color:#555; margin-bottom:8px; }
 .c-articlesBlock__readMore { font-size:14px; color:#111; font-weight:600; text-decoration:none; }
-
-/* Mobile Adjustments */
 @media screen and (max-width: 1024px) { .c-articleCarousel__articles { max-width: calc(48% - 16px); } }
 @media screen and (max-width: 768px) { .c-articleCarousel__articles { max-width: calc(80% - 12px); } }
+</style>
 
-  </style>
-<section class="c-articleCarousel related-articles section-template--{{ section.id }}-padding" style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;">
-  <div class="o-pageWidth">
-    <articles-carousel>
-
-      <div class="c-articleCarousel__content">
-        {% if section.settings.heading != blank %}
-          <h2 class="c-articleCarousel__heading c-h3">{{ section.settings.heading }}</h2>
-        {% endif %}
-        {% if section.settings.subheading != blank %}
-          <p class="c-articleCarousel__subheading">{{ section.settings.subheading }}</p>
-        {% endif %}
-        {% if section.settings.intro != blank %}
-          <p class="c-articleCarousel__intro">{{ section.settings.intro }}</p>
-        {% endif %}
-      </div>
-
-      {% assign articles = blogs[section.settings.blog].articles | limit: 10 %}
-      <section class="c-articleCarousel__sliderContainer swiper-container" role="region" aria-label="{{ section.settings.heading | default: 'Related Posts Carousel' }}">
-        <div class="c-articleCarousel__slider swiper" data-articles-slider>
-          <div class="c-articleCarousel__wrapper swiper-wrapper">
-
-            {% for article in articles %}
-              <div class="c-articleCarousel__articles swiper-slide" tabindex="0">
-                <article class="c-articlesBlock">
-                  <div class="c-articlesBlock_imgLinkWrapper">
-                    <div class="c-articlesBlock__imgWrapper">
-                      {% if article.featured_image %}
-                        <img src="{{ article.featured_image | img_url: '600x600' }}" alt="{{ article.title }}" class="c-articlesBlock__imgTag" loading="lazy">
-                      {% endif %}
-                    </div>
-                    <div class="c-articlesBlock__linkWrapper">
-                      <a href="{{ article.url }}" class="c-articlesBlock__imgLink"></a>
-                    </div>
-                  </div>
-
-                  <div class="c-articlesBlock__info">
-                    <div class="c-articlesBlock__infoWrapper">
-                      <h3 class="c-articlesBlock__title">
-                        <a href="{{ article.url }}" class="c-articlesBlock__titleLink c-b1">{{ article.title }}</a>
-                      </h3>
-                      {% if section.settings.show_excerpt %}
-                        <p class="c-articlesBlock__excerpt">
-                          {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
-                        </p>
-                      {% endif %}
-                      <p class="c-articlesBlock__publishedDate c-b2">{{ article.published_at | date: "%B %d, %Y" }}</p>
-                      <a href="{{ article.url }}" class="c-articlesBlock__readMore">{{ section.settings.read_more_text }}</a>
-                    </div>
-                  </div>
-                </article>
-              </div>
-            {% endfor %}
-
-          </div>
-
-          {% if section.settings.show_scrollbar %}
-            <div class="c-swiperScrollbar c-swiperScrollbar--hasControls swiper-scrollbar-horizontal" data-swiper-scrollbar></div>
-          {% endif %}
-
-          <div class="c-swiperControls" data-swiper-controls>
-            <button class="c-swiperControls__prev" data-swiper-controls-prev aria-label="previous slide"></button>
-            <button class="c-swiperControls__next" data-swiper-controls-next aria-label="next slide"></button>
-          </div>
-        </div>
-      </section>
-
-      {% if section.settings.url %}
-        <div class="c-articleCarousel__cta">
-          <a href="{{ section.settings.url }}" class="btn">{{ section.settings.label }}</a>
-        </div>
-      {% endif %}
-
-    </articles-carousel>
-  </div>
-</section>
-
+<!-- JS -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const carousels = document.querySelectorAll('[data-articles-slider]');
-
-  carousels.forEach(carousel => {
+  document.querySelectorAll('.swiper-container').forEach((carousel) => {
     new Swiper(carousel, {
       slidesPerView: 'auto',
       spaceBetween: 24,
       loop: false,
       grabCursor: true,
       navigation: {
-        nextEl: carousel.parentElement.querySelector('[data-swiper-controls-next]'),
-        prevEl: carousel.parentElement.querySelector('[data-swiper-controls-prev]')
+        nextEl: carousel.querySelector('.c-swiperControls__next'),
+        prevEl: carousel.querySelector('.c-swiperControls__prev')
       },
       scrollbar: {
-        el: carousel.parentElement.querySelector('[data-swiper-scrollbar]'),
+        el: carousel.querySelector('.c-swiperScrollbar'),
         draggable: true
       },
       breakpoints: {
@@ -151,99 +122,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
-  </script>
-
-
+</script>
 
 {% schema %}
 {
   "name": "Related Blog posts Slider",
   "class": "related-articles",
   "settings": [
-    {
-      "id": "heading",
-      "type": "text",
-      "label": "Section heading",
-      "default": "Related posts"
-    },
-    {
-      "id": "subheading",
-      "type": "text",
-      "label": "Section Short Copy",
-      "default": "Short Copy"
-    },
-    {
-      "id": "intro",
-      "type": "text",
-      "label": "Section Intro",
-      "default": "Introduction to posts"
-    },
-    {
-      "id": "blog",
-      "type": "blog",
-      "label": "Select blog"
-    },
-    {
-      "id": "show_scrollbar",
-      "type": "checkbox",
-      "label": "Show horizontal scrollbar",
-      "default": true
-    },
-    {
-      "id": "show_excerpt",
-      "type": "checkbox",
-      "label": "Show excerpt",
-      "default": true
-    },
-    {
-      "id": "excerpt_length",
-      "type": "number",
-      "label": "Excerpt length (characters)",
-      "default": 120
-    },
-    {
-      "id": "read_more_text",
-      "type": "text",
-      "label": "Read more text",
-      "default": "Read article"
-    },
-    {
-      "type": "range",
-      "id": "padding_top",
-      "min": 0,
-      "max": 120,
-      "step": 4,
-      "unit": "px",
-      "label": "Top padding",
-      "default": 48
-    },
-    {
-      "type": "range",
-      "id": "padding_bottom",
-      "min": 0,
-      "max": 120,
-      "step": 4,
-      "unit": "px",
-      "label": "Bottom padding",
-      "default": 48
-    },
-    {
-      "type": "url",
-      "id": "url",
-      "label": "Section Button Link"
-    },
-    {
-      "type": "text",
-      "id": "label",
-      "default": "Shop remanufactured equipment",
-      "label": "Section Button Label"
-    }
+    {"id": "heading","type": "text","label": "Section heading","default": "Related posts"},
+    {"id": "subheading","type": "text","label": "Section Short Copy","default": "Short Copy"},
+    {"id": "intro","type": "text","label": "Section Intro","default": "Introduction to posts"},
+    {"id": "blog","type": "blog","label": "Select blog"},
+    {"id": "show_scrollbar","type": "checkbox","label": "Show horizontal scrollbar","default": true},
+    {"id": "show_excerpt","type": "checkbox","label": "Show excerpt","default": true},
+    {"id": "excerpt_length","type": "number","label": "Excerpt length (characters)","default": 120},
+    {"id": "read_more_text","type": "text","label": "Read more text","default": "Read article"},
+    {"type": "range","id": "padding_top","min": 0,"max": 120,"step": 4,"unit": "px","label": "Top padding","default": 48},
+    {"type": "range","id": "padding_bottom","min": 0,"max": 120,"step": 4,"unit": "px","label": "Bottom padding","default": 48},
+    {"type": "url","id": "url","label": "Section Button Link"},
+    {"type": "text","id": "label","default": "Shop remanufactured equipment","label": "Section Button Label"}
   ],
-  "presets": [
-    {
-      "name": "Related Blog posts Slider",
-      "category": "Blog"
-    }
-  ]
+  "presets": [{"name": "Related Blog posts Slider","category": "Blog"}]
 }
 {% endschema %}
