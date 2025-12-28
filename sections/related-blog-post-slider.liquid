@@ -1,5 +1,5 @@
 {% comment %}
-Related Blog Posts — JS driven slider with synced scrollbar
+Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT RESTORED)
 {% endcomment %}
 
 <section
@@ -10,8 +10,16 @@ Related Blog Posts — JS driven slider with synced scrollbar
   <div class="page-width">
 
     {% if section.settings.heading != blank %}
-      <div class="section-header">
-        <h1 class="section-header__title center">{{ section.settings.heading }}</h1>
+      <div class="section-header center">
+        <h1 class="section-header__title">{{ section.settings.heading }}</h1>
+
+        {% if section.settings.subheading != blank %}
+          <h3 class="section-header__subheading">{{ section.settings.subheading }}</h3>
+        {% endif %}
+
+        {% if section.settings.intro != blank %}
+          <p class="section-header__intro">{{ section.settings.intro }}</p>
+        {% endif %}
       </div>
     {% endif %}
 
@@ -25,18 +33,44 @@ Related Blog Posts — JS driven slider with synced scrollbar
             <div class="related-slider__slide">
               <article class="card-wrapper">
                 <a href="{{ article.url }}" class="card">
+
                   {% if article.image %}
                     <div class="card__media">
                       <img
                         src="{{ article.image | img_url: '720x' }}"
-                        alt="{{ article.title }}"
+                        alt="{{ article.image.alt | default: article.title }}"
                         loading="lazy"
                       >
                     </div>
                   {% endif %}
 
                   <div class="card__content">
-                    <h3>{{ article.title }}</h3>
+
+                    <h3 class="card__heading">
+                      {{ article.title }}
+                    </h3>
+
+                    {% if article.published_at or article.author %}
+                      <p class="card__meta publish-info">
+                        {% if article.published_at %}
+                          <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                        {% endif %}
+                        {% if article.author %}
+                          <span>{{ article.author }}</span>
+                        {% endif %}
+                      </p>
+                    {% endif %}
+
+                    {% if section.settings.show_excerpt %}
+                      <div class="card__excerpt">
+                        {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+                      </div>
+                    {% endif %}
+
+                    <div class="card__actions">
+                      <span class="link">{{ section.settings.read_more_text }}</span>
+                    </div>
+
                   </div>
                 </a>
               </article>
@@ -44,18 +78,31 @@ Related Blog Posts — JS driven slider with synced scrollbar
           {% endfor %}
         </div>
 
-        <!-- Scrollbar + arrows -->
-        <div class="related-slider__bottom">
-          <div class="related-slider__scrollbar" data-scrollbar>
-            <span class="scroll-thumb" data-thumb></span>
-          </div>
+        {% if section.settings.show_scrollbar %}
+          <div class="related-slider__bottom">
 
-          <div class="related-slider__arrows">
-            <button class="arrow prev" data-prev>‹</button>
-            <button class="arrow next" data-next>›</button>
-          </div>
-        </div>
+            <div class="related-slider__scrollbar" data-scrollbar>
+              <span class="scroll-thumb" data-thumb></span>
+            </div>
 
+            <div class="related-slider__arrows">
+              <button class="arrow prev" data-prev aria-label="Previous">‹</button>
+              <button class="arrow next" data-next aria-label="Next">›</button>
+            </div>
+
+          </div>
+        {% endif %}
+
+      </div>
+    {% else %}
+      <p class="note center">Please select a blog with articles.</p>
+    {% endif %}
+
+    {% if section.settings.label != blank %}
+      <div class="rich-text-custom__wrapper">
+        <a href="{{ section.settings.url }}" class="rich-text-custom__btn">
+          {{ section.settings.label }}
+        </a>
       </div>
     {% endif %}
 
@@ -95,6 +142,32 @@ Related Blog Posts — JS driven slider with synced scrollbar
       object-fit: cover;
     }
 
+    .card__heading {
+      font-size: 18px;
+      line-height: 24px;
+      margin-bottom: 8px;
+    }
+
+    .publish-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #777;
+      letter-spacing: 0.08em;
+    }
+
+    .card__excerpt {
+      font-size: 14px;
+      line-height: 22px;
+      margin-bottom: 12px;
+    }
+
+    .link {
+      color: #D83D0E;
+      font-weight: 600;
+    }
+
     /* Bottom bar */
     .related-slider__bottom {
       margin-top: 16px;
@@ -104,10 +177,9 @@ Related Blog Posts — JS driven slider with synced scrollbar
       gap: 16px;
     }
 
-    /* Scrollbar */
     .related-slider__scrollbar {
       position: relative;
-      width: 100%;
+      width: 220px;
       height: 6px;
       background: #eee;
       border-radius: 6px;
@@ -124,7 +196,6 @@ Related Blog Posts — JS driven slider with synced scrollbar
       border-radius: 6px;
     }
 
-    /* Arrows */
     .related-slider__arrows {
       display: flex;
       gap: 8px;
@@ -137,6 +208,21 @@ Related Blog Posts — JS driven slider with synced scrollbar
       border: 1px solid #ccc;
       background: #fff;
       cursor: pointer;
+    }
+
+    .rich-text-custom__wrapper {
+      margin-top: 32px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .rich-text-custom__btn {
+      padding: 12px 24px;
+      background: #D83D0E;
+      color: #fff;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
     }
   </style>
 
@@ -152,32 +238,34 @@ Related Blog Posts — JS driven slider with synced scrollbar
       const next = slider.querySelector('[data-next]');
 
       function syncThumb() {
-        const scrollRatio = track.scrollLeft / (track.scrollWidth - track.clientWidth);
+        const maxScroll = track.scrollWidth - track.clientWidth;
+        if (maxScroll <= 0) return;
+        const ratio = track.scrollLeft / maxScroll;
         const maxLeft = scrollbar.clientWidth - thumb.clientWidth;
-        thumb.style.left = `${scrollRatio * maxLeft}px`;
+        thumb.style.left = `${ratio * maxLeft}px`;
       }
 
       track.addEventListener('scroll', syncThumb);
 
-      /* Arrow scrolling */
-      function scrollByCard(direction) {
+      function scrollByCard(dir) {
         const card = track.querySelector('.related-slider__slide');
         if (!card) return;
-        const amount = card.offsetWidth + 16;
-        track.scrollBy({ left: direction * amount, behavior: 'smooth' });
+        track.scrollBy({
+          left: dir * (card.offsetWidth + 16),
+          behavior: 'smooth'
+        });
       }
 
       prev.addEventListener('click', () => scrollByCard(-1));
       next.addEventListener('click', () => scrollByCard(1));
 
-      /* Drag scrollbar */
-      let isDragging = false;
+      let dragging = false;
 
-      thumb.addEventListener('mousedown', () => isDragging = true);
-      document.addEventListener('mouseup', () => isDragging = false);
+      thumb.addEventListener('mousedown', () => dragging = true);
+      document.addEventListener('mouseup', () => dragging = false);
 
       document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
+        if (!dragging) return;
         const rect = scrollbar.getBoundingClientRect();
         let x = e.clientX - rect.left;
         x = Math.max(0, Math.min(x, scrollbar.clientWidth - thumb.clientWidth));
@@ -189,6 +277,7 @@ Related Blog Posts — JS driven slider with synced scrollbar
     })();
   </script>
 </section>
+
 
 
 
