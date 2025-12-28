@@ -19,40 +19,45 @@
 
   {% assign blog = blogs[section.settings.blog] %}
   {% if blog and blog.articles_count > 0 %}
-    <div class="related-slider-container">
-      <div class="related-slider" data-slider>
-        <div class="related-slider__track" data-track>
-          {% for article in blog.articles %}
-            <div class="related-slider__slide">
-              <article class="card-wrapper">
-                <a href="{{ article.url }}" class="card">
-                  {% if article.image %}
-                    <div class="card__media">
-                      <img src="{{ article.image | img_url: '720x' }}" alt="{{ article.title }}" loading="lazy">
-                    </div>
-                  {% endif %}
-                  <div class="card__content">
-                    <h3>{{ article.title }}</h3>
-                    {% if article.published_at or article.author %}
-                      <p class="publish-info">
-                        {% if article.published_at %}<span>{{ article.published_at | date: "%b %d, %Y" }}</span>{% endif %}
-                        {% if article.author %}<span>{{ article.author }}</span>{% endif %}
-                      </p>
+    <div class="related-slider-wrapper">
+
+      <!-- Track container stays within page width -->
+      <div class="page-width related-slider-container">
+        <div class="related-slider" data-slider>
+          <div class="related-slider__track" data-track>
+            {% for article in blog.articles %}
+              <div class="related-slider__slide">
+                <article class="card-wrapper">
+                  <a href="{{ article.url }}" class="card">
+                    {% if article.image %}
+                      <div class="card__media">
+                        <img src="{{ article.image | img_url: '720x' }}" alt="{{ article.title }}" loading="lazy">
+                      </div>
                     {% endif %}
-                    {% if section.settings.show_excerpt %}
-                      <p class="card__excerpt">{{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}</p>
-                    {% endif %}
-                    <div class="card__actions">
-                      <span class="link">{{ section.settings.read_more_text }}</span>
+                    <div class="card__content">
+                      <h3>{{ article.title }}</h3>
+                      {% if article.published_at or article.author %}
+                        <p class="publish-info">
+                          {% if article.published_at %}<span>{{ article.published_at | date: "%b %d, %Y" }}</span>{% endif %}
+                          {% if article.author %}<span>{{ article.author }}</span>{% endif %}
+                        </p>
+                      {% endif %}
+                      {% if section.settings.show_excerpt %}
+                        <p class="card__excerpt">{{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}</p>
+                      {% endif %}
+                      <div class="card__actions">
+                        <span class="link">{{ section.settings.read_more_text }}</span>
+                      </div>
                     </div>
-                  </div>
-                </a>
-              </article>
-            </div>
-          {% endfor %}
+                  </a>
+                </article>
+              </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
 
+      <!-- Scrollbar and arrows inside page-width -->
       <div class="page-width related-slider__bottom">
         <div class="related-slider__scrollbar" data-scrollbar>
           <span class="scroll-thumb" data-thumb></span>
@@ -62,40 +67,55 @@
           <button class="arrow next" data-next>›</button>
         </div>
       </div>
+
     </div>
   {% endif %}
 
   <style>
-    /* Slider container keeps page width safe */
-    .related-slider-container { position: relative; overflow: visible; }
+    /* TRACK WRAPPER */
+    .related-slider-container { overflow-x: hidden; position: relative; }
 
-    .related-slider { overflow-x: visible; }
+    /* SCROLLING TRACK */
+    .related-slider {
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 12px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
 
     .related-slider__track {
       display: flex;
       gap: 16px;
-      overflow-x: visible; /* allows cards to move outside */
-      scroll-behavior: smooth;
+      position: relative;
+      margin-left: 0; /* First card aligns with container */
     }
 
+    /* SLIDE CARDS */
     .related-slider__slide {
-      flex: 0 0 calc((100% - 48px)/4); /* 4 cards visible */
+      flex: 0 0 calc((100% - 48px)/4);
       min-width: calc((100% - 48px)/4);
+      margin-right: -16px; /* allow cards to peek out visually */
     }
 
-    /* 5th card partially visible */
-    .related-slider__slide:nth-child(5) {
-      flex: 0 0 calc((100% - 48px)/8);
-      min-width: calc((100% - 48px)/8);
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
 
-    .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); display: flex; flex-direction: column; overflow: hidden; }
     .card__media { aspect-ratio: 16/9; overflow: hidden; }
     .card__media img { width: 100%; height: 100%; object-fit: cover; }
-    .publish-info { font-size: 12px; color: #777; display: flex; justify-content: space-between; margin: 0 12px 12px; }
-    .card__excerpt { font-size: 14px; line-height: 22px; margin: 0 12px 12px; }
-    .link { color: #D83D0E; font-weight: 600; margin: 0 12px 12px; }
 
+    .card__content { padding: 12px; }
+    .publish-info { font-size: 12px; color: #777; display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .card__excerpt { font-size: 14px; line-height: 22px; margin-bottom: 8px; }
+    .link { color: #D83D0E; font-weight: 600; }
+
+    /* BOTTOM BAR */
     .related-slider__bottom { margin-top: 16px; display: flex; justify-content: flex-end; align-items: center; gap: 16px; }
     .related-slider__scrollbar { position: relative; width: 220px; height: 6px; background: #eee; border-radius: 6px; cursor: pointer; }
     .scroll-thumb { position: absolute; left: 0; top: 0; height: 100%; width: 40px; background: #D83D0E; border-radius: 6px; }
