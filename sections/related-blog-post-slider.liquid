@@ -1,147 +1,378 @@
 {% comment %}
-  Related Blog posts Slider Section - Full Replacement
+Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT RESTORED)
 {% endcomment %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
 
-<!-- Section -->
-<section class="c-articleCarousel related-articles section-template--{{ section.id }}-padding" style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;">
-  <div class="o-pageWidth">
+<section
+  id="RelatedBlogs-{{ section.id }}"
+  class="section related-articles"
+  style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;"
+>
+  <div class="page-width">
 
     {% if section.settings.heading != blank %}
-      <h2 class="c-articleCarousel__heading c-h3">{{ section.settings.heading }}</h2>
+      <div class="section-header center">
+        <h1 class="section-header__title">{{ section.settings.heading }}</h1>
+
+        {% if section.settings.subheading != blank %}
+          <h3 class="section-header__subheading">{{ section.settings.subheading }}</h3>
+        {% endif %}
+
+        {% if section.settings.intro != blank %}
+          <p class="section-header__intro">{{ section.settings.intro }}</p>
+        {% endif %}
+      </div>
     {% endif %}
-    {% if section.settings.subheading != blank %}
-      <p class="c-articleCarousel__subheading">{{ section.settings.subheading }}</p>
-    {% endif %}
-    {% if section.settings.intro != blank %}
-      <p class="c-articleCarousel__intro">{{ section.settings.intro }}</p>
-    {% endif %}
 
-    {% assign blog_handle = section.settings.blog %}
-    {% assign articles = blogs[blog_handle].articles | limit: 10 %}
+    {% assign blog = blogs[section.settings.blog] %}
 
-    {% if articles.size > 0 %}
-      <div class="c-articleCarousel__sliderContainer swiper-container">
-        <div class="c-articleCarousel__wrapper swiper-wrapper">
+    {% if blog and blog.articles_count > 0 %}
+      <div class="related-slider" data-slider>
 
-          {% for article in articles %}
-            <div class="c-articleCarousel__articles swiper-slide">
-              <article class="c-articlesBlock">
-                <div class="c-articlesBlock_imgLinkWrapper">
-                  <div class="c-articlesBlock__imgWrapper">
-                    {% if article.featured_image %}
-                      <img src="{{ article.featured_image | img_url: '600x600' }}" alt="{{ article.title }}" class="c-articlesBlock__imgTag" loading="lazy">
-                    {% endif %}
-                  </div>
-                  <div class="c-articlesBlock__linkWrapper">
-                    <a href="{{ article.url }}" class="c-articlesBlock__imgLink"></a>
-                  </div>
-                </div>
+        <div class="related-slider__track" data-track>
+          {% for article in blog.articles %}
+            <div class="related-slider__slide">
+              <article class="card-wrapper">
+                <a href="{{ article.url }}" class="card">
 
-                <div class="c-articlesBlock__info">
-                  <h3 class="c-articlesBlock__title">
-                    <a href="{{ article.url }}" class="c-articlesBlock__titleLink c-b1">{{ article.title }}</a>
-                  </h3>
-                  {% if section.settings.show_excerpt %}
-                    <p class="c-articlesBlock__excerpt">{{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}</p>
+                  {% if article.image %}
+                    <div class="card__media">
+                      <img
+                        src="{{ article.image | img_url: '720x' }}"
+                        alt="{{ article.image.alt | default: article.title }}"
+                        loading="lazy"
+                      >
+                    </div>
                   {% endif %}
-                  <p class="c-articlesBlock__publishedDate c-b2">{{ article.published_at | date: "%B %d, %Y" }}</p>
-                  <a href="{{ article.url }}" class="c-articlesBlock__readMore">{{ section.settings.read_more_text }}</a>
-                </div>
+
+                  <div class="card__content">
+
+                    <h3 class="card__heading">
+                      {{ article.title }}
+                    </h3>
+
+                    {% if article.published_at or article.author %}
+                      <p class="card__meta publish-info">
+                        {% if article.published_at %}
+                          <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                        {% endif %}
+                        {% if article.author %}
+                          <span>{{ article.author }}</span>
+                        {% endif %}
+                      </p>
+                    {% endif %}
+
+                    {% if section.settings.show_excerpt %}
+                      <div class="card__excerpt">
+                        {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+                      </div>
+                    {% endif %}
+
+                    <div class="card__actions">
+                      <span class="link">{{ section.settings.read_more_text }}</span>
+                    </div>
+
+                  </div>
+                </a>
               </article>
             </div>
           {% endfor %}
-
         </div>
 
         {% if section.settings.show_scrollbar %}
-          <div class="c-swiperScrollbar swiper-scrollbar-horizontal"></div>
+          <div class="related-slider__bottom">
+
+            <div class="related-slider__scrollbar" data-scrollbar>
+              <span class="scroll-thumb" data-thumb></span>
+            </div>
+
+            <div class="related-slider__arrows">
+              <button class="arrow prev" data-prev aria-label="Previous">‹</button>
+              <button class="arrow next" data-next aria-label="Next">›</button>
+            </div>
+
+          </div>
         {% endif %}
 
-        <div class="c-swiperControls">
-          <button class="c-swiperControls__prev" aria-label="previous slide"></button>
-          <button class="c-swiperControls__next" aria-label="next slide"></button>
-        </div>
       </div>
     {% else %}
-      <p>No articles found for this blog.</p>
+      <p class="note center">Please select a blog with articles.</p>
     {% endif %}
 
-    {% if section.settings.url != blank %}
-      <div class="c-articleCarousel__cta">
-        <a href="{{ section.settings.url }}" class="btn">{{ section.settings.label }}</a>
+    {% if section.settings.label != blank %}
+      <div class="rich-text-custom__wrapper">
+        <a href="{{ section.settings.url }}" class="rich-text-custom__btn">
+          {{ section.settings.label }}
+        </a>
       </div>
     {% endif %}
 
   </div>
+ 
+
+  <style>
+    #RelatedBlogs-{{ section.id }} .related-slider__track {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar {
+      display: none;
+    }
+
+    #RelatedBlogs-{{ section.id }} .related-slider__slide {
+      flex: 0 0 100%;
+    }
+
+    @media (min-width: 990px) {
+      #RelatedBlogs-{{ section.id }} .related-slider__slide {
+        flex: 0 0 calc(33.333% - 11px);
+      }
+    }
+
+    .card__media {
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+    }
+
+    .card__media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card__heading {
+      font-size: 18px;
+      line-height: 24px;
+      margin-bottom: 8px;
+    }
+
+    .publish-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #777;
+      letter-spacing: 0.08em;
+    }
+
+    .card__excerpt {
+      font-size: 14px;
+      line-height: 22px;
+      margin-bottom: 12px;
+    }
+
+    .link {
+      color: #D83D0E;
+      font-weight: 600;
+    }
+
+    /* Bottom bar */
+    .related-slider__bottom {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .related-slider__scrollbar {
+      position: relative;
+      width: 100%;
+      height: 6px;
+      background: #eee;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .scroll-thumb {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 40px;
+      background: #D83D0E;
+      border-radius: 6px;
+    }
+
+    .related-slider__arrows {
+      display: flex;
+      gap: 8px;
+    }
+
+    .related-slider__arrows .arrow {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .rich-text-custom__wrapper {
+      margin-top: 32px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .rich-text-custom__btn {
+      padding: 12px 24px;
+      background: #D83D0E;
+      color: #fff;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+  </style>
+
+  <script>
+    (function () {
+      const slider = document.querySelector('#RelatedBlogs-{{ section.id }} [data-slider]');
+      if (!slider) return;
+
+      const track = slider.querySelector('[data-track]');
+      const scrollbar = slider.querySelector('[data-scrollbar]');
+      const thumb = slider.querySelector('[data-thumb]');
+      const prev = slider.querySelector('[data-prev]');
+      const next = slider.querySelector('[data-next]');
+
+      function syncThumb() {
+        const maxScroll = track.scrollWidth - track.clientWidth;
+        if (maxScroll <= 0) return;
+        const ratio = track.scrollLeft / maxScroll;
+        const maxLeft = scrollbar.clientWidth - thumb.clientWidth;
+        thumb.style.left = `${ratio * maxLeft}px`;
+      }
+
+      track.addEventListener('scroll', syncThumb);
+
+      function scrollByCard(dir) {
+        const card = track.querySelector('.related-slider__slide');
+        if (!card) return;
+        track.scrollBy({
+          left: dir * (card.offsetWidth + 16),
+          behavior: 'smooth'
+        });
+      }
+
+      prev.addEventListener('click', () => scrollByCard(-1));
+      next.addEventListener('click', () => scrollByCard(1));
+
+      let dragging = false;
+
+      thumb.addEventListener('mousedown', () => dragging = true);
+      document.addEventListener('mouseup', () => dragging = false);
+
+      document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const rect = scrollbar.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        x = Math.max(0, Math.min(x, scrollbar.clientWidth - thumb.clientWidth));
+        const ratio = x / (scrollbar.clientWidth - thumb.clientWidth);
+        track.scrollLeft = ratio * (track.scrollWidth - track.clientWidth);
+      });
+
+      syncThumb();
+    })();
+  </script>
 </section>
 
-<!-- CSS -->
-<style>
-.c-articleCarousel__sliderContainer { position: relative; }
-.swiper-slide { flex-shrink: 0; width: 100%; display: block; }
-.c-articleCarousel__articles { margin-right: 24px; }
-.c-articlesBlock__imgTag { width: 100%; display: block; transition: transform 0.4s; }
-.c-articlesBlock:hover .c-articlesBlock__imgTag { transform: scale(1.05); }
-.c-swiperControls { position: absolute; top:50%; width:100%; display:flex; justify-content:space-between; transform: translateY(-50%); pointer-events:none; }
-.c-swiperControls__prev, .c-swiperControls__next { pointer-events:all; width:44px; height:44px; background:#111; border-radius:50%; cursor:pointer; }
-.c-swiperScrollbar { height:6px; background:rgba(0,0,0,0.1); border-radius:3px; margin-top:16px; }
-.c-swiperScrollbar .swiper-scrollbar-drag { background:rgba(17,17,17,0.8); border-radius:3px; }
-.c-articlesBlock__info { padding:16px; }
-.c-articlesBlock__title { font-size:18px; font-weight:600; margin-bottom:8px; }
-.c-articlesBlock__titleLink { text-decoration:none; color:#111; }
-.c-articlesBlock__publishedDate { font-size:14px; color:#666; }
-.c-articlesBlock__excerpt { font-size:14px; color:#555; margin-bottom:8px; }
-.c-articlesBlock__readMore { font-size:14px; color:#111; font-weight:600; text-decoration:none; }
-@media screen and (max-width: 1024px) { .c-articleCarousel__articles { max-width: calc(48% - 16px); } }
-@media screen and (max-width: 768px) { .c-articleCarousel__articles { max-width: calc(80% - 12px); } }
-</style>
 
-<!-- JS -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.swiper-container').forEach((carousel) => {
-    new Swiper(carousel, {
-      slidesPerView: 'auto',
-      spaceBetween: 24,
-      loop: false,
-      grabCursor: true,
-      navigation: {
-        nextEl: carousel.querySelector('.c-swiperControls__next'),
-        prevEl: carousel.querySelector('.c-swiperControls__prev')
-      },
-      scrollbar: {
-        el: carousel.querySelector('.c-swiperScrollbar'),
-        draggable: true
-      },
-      breakpoints: {
-        768: { slidesPerView: 2 },
-        1024: { slidesPerView: 3 }
-      }
-    });
-  });
-});
-</script>
+
+
+
 
 {% schema %}
 {
   "name": "Related Blog posts Slider",
   "class": "related-articles",
   "settings": [
-    {"id": "heading","type": "text","label": "Section heading","default": "Related posts"},
-    {"id": "subheading","type": "text","label": "Section Short Copy","default": "Short Copy"},
-    {"id": "intro","type": "text","label": "Section Intro","default": "Introduction to posts"},
-    {"id": "blog","type": "blog","label": "Select blog"},
-    {"id": "show_scrollbar","type": "checkbox","label": "Show horizontal scrollbar","default": true},
-    {"id": "show_excerpt","type": "checkbox","label": "Show excerpt","default": true},
-    {"id": "excerpt_length","type": "number","label": "Excerpt length (characters)","default": 120},
-    {"id": "read_more_text","type": "text","label": "Read more text","default": "Read article"},
-    {"type": "range","id": "padding_top","min": 0,"max": 120,"step": 4,"unit": "px","label": "Top padding","default": 48},
-    {"type": "range","id": "padding_bottom","min": 0,"max": 120,"step": 4,"unit": "px","label": "Bottom padding","default": 48},
-    {"type": "url","id": "url","label": "Section Button Link"},
-    {"type": "text","id": "label","default": "Shop remanufactured equipment","label": "Section Button Label"}
+    {
+      "id": "heading",
+      "type": "text",
+      "label": "Section heading",
+      "default": "Related posts"
+    },
+    {
+      "id": "subheading",
+      "type": "text",
+      "label": "Section Short Copy",
+      "default": "Short Copy"
+    },
+    {
+      "id": "intro",
+      "type": "text",
+      "label": "Section Intro",
+      "default": "Introduction to posts"
+    },
+    {
+      "id": "blog",
+      "type": "blog",
+      "label": "Select blog"
+    },
+    {
+      "id": "show_scrollbar",
+      "type": "checkbox",
+      "label": "Show horizontal scrollbar",
+      "default": true
+    },
+    {
+      "id": "show_excerpt",
+      "type": "checkbox",
+      "label": "Show excerpt",
+      "default": true
+    },
+    {
+      "id": "excerpt_length",
+      "type": "number",
+      "label": "Excerpt length (characters)",
+      "default": 120
+    },
+    {
+      "id": "read_more_text",
+      "type": "text",
+      "label": "Read more text",
+      "default": "Read article"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "Section Button Link"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "default": "Shop remanufactured equipment",
+      "label": "Section Button Label"
+    }
   ],
-  "presets": [{"name": "Related Blog posts Slider","category": "Blog"}]
+  "presets": [
+    {
+      "name": "Related Blog posts Slider",
+      "category": "Blog"
+    }
+  ]
 }
 {% endschema %}
