@@ -1,10 +1,12 @@
+{% comment %}
+Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT RESTORED)
+{% endcomment %}
+
 <section
   id="RelatedBlogs-{{ section.id }}"
   class="section related-articles"
   style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;"
 >
-
-  <!-- HEADER + BUTTONS STAY CONSTRAINED -->
   <div class="page-width">
 
     {% if section.settings.heading != blank %}
@@ -21,145 +23,115 @@
       </div>
     {% endif %}
 
-  </div>
+    {% assign blog = blogs[section.settings.blog] %}
 
-  {% assign blog = blogs[section.settings.blog] %}
+    {% if blog and blog.articles_count > 0 %}
+      <div class="related-slider" data-slider>
 
-  {% if blog and blog.articles_count > 0 %}
+        <div class="related-slider__track" data-track>
+          {% for article in blog.articles %}
+            <div class="related-slider__slide">
+              <article class="card-wrapper">
+                <a href="{{ article.url }}" class="card">
 
-    <!-- SLIDER BREAKS OUT TO VIEWPORT -->
-    <div class="related-slider" data-slider>
-
-      <div class="related-slider__track" data-track>
-        {% for article in blog.articles %}
-          <div class="related-slider__slide">
-            <article class="card-wrapper">
-              <a href="{{ article.url }}" class="card">
-
-                {% if article.image %}
-                  <div class="card__media">
-                    <img
-                      src="{{ article.image | img_url: '720x' }}"
-                      alt="{{ article.image.alt | default: article.title }}"
-                      loading="lazy"
-                    >
-                  </div>
-                {% endif %}
-
-                <div class="card__content">
-                  <h3 class="card__heading">{{ article.title }}</h3>
-
-                  {% if article.published_at or article.author %}
-                    <p class="card__meta publish-info">
-                      {% if article.published_at %}
-                        <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
-                      {% endif %}
-                      {% if article.author %}
-                        <span>{{ article.author }}</span>
-                      {% endif %}
-                    </p>
-                  {% endif %}
-
-                  {% if section.settings.show_excerpt %}
-                    <div class="card__excerpt">
-                      {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+                  {% if article.image %}
+                    <div class="card__media">
+                      <img
+                        src="{{ article.image | img_url: '720x' }}"
+                        alt="{{ article.image.alt | default: article.title }}"
+                        loading="lazy"
+                      >
                     </div>
                   {% endif %}
 
-                  <div class="card__actions">
-                    <span class="link">{{ section.settings.read_more_text }}</span>
+                  <div class="card__content">
+
+                    <h3 class="card__heading">
+                      {{ article.title }}
+                    </h3>
+
+                    {% if article.published_at or article.author %}
+                      <p class="card__meta publish-info">
+                        {% if article.published_at %}
+                          <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                        {% endif %}
+                        {% if article.author %}
+                          <span>{{ article.author }}</span>
+                        {% endif %}
+                      </p>
+                    {% endif %}
+
+                    {% if section.settings.show_excerpt %}
+                      <div class="card__excerpt">
+                        {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+                      </div>
+                    {% endif %}
+
+                    <div class="card__actions">
+                      <span class="link">{{ section.settings.read_more_text }}</span>
+                    </div>
+
                   </div>
-                </div>
-
-              </a>
-            </article>
-          </div>
-        {% endfor %}
-      </div>
-
-      {% if section.settings.show_scrollbar %}
-        <div class="related-slider__bottom page-width">
-
-          <div class="related-slider__scrollbar" data-scrollbar>
-            <span class="scroll-thumb" data-thumb></span>
-          </div>
-
-          <div class="related-slider__arrows">
-            <button class="arrow prev" data-prev aria-label="Previous">‹</button>
-            <button class="arrow next" data-next aria-label="Next">›</button>
-          </div>
-
+                </a>
+              </article>
+            </div>
+          {% endfor %}
         </div>
-      {% endif %}
 
-    </div>
+        {% if section.settings.show_scrollbar %}
+          <div class="related-slider__bottom">
 
-  {% else %}
-    <div class="page-width">
+            <div class="related-slider__scrollbar" data-scrollbar>
+              <span class="scroll-thumb" data-thumb></span>
+            </div>
+
+            <div class="related-slider__arrows">
+              <button class="arrow prev" data-prev aria-label="Previous">‹</button>
+              <button class="arrow next" data-next aria-label="Next">›</button>
+            </div>
+
+          </div>
+        {% endif %}
+
+      </div>
+    {% else %}
       <p class="note center">Please select a blog with articles.</p>
-    </div>
-  {% endif %}
+    {% endif %}
 
-  {% if section.settings.label != blank %}
-    <div class="page-width">
+    {% if section.settings.label != blank %}
       <div class="rich-text-custom__wrapper">
         <a href="{{ section.settings.url }}" class="rich-text-custom__btn">
           {{ section.settings.label }}
         </a>
       </div>
-    </div>
-  {% endif %}
+    {% endif %}
 
-  <!-- ===================== CSS ===================== -->
+  </div>
+ 
+
   <style>
-    /* HARD STOP PAGE SCROLL */
-    html, body {
-      overflow-x: hidden;
-    }
-
-    /* SLIDER BREAKOUT (Titan method) */
-    #RelatedBlogs-{{ section.id }} .related-slider {
-      width: 100vw;
-      margin-left: calc(50% - 50vw);
-      margin-right: calc(50% - 50vw);
-      overflow-x: visible;
-      position: relative;
-    }
-
-    /* TRACK SCROLLS — PAGE DOES NOT */
     #RelatedBlogs-{{ section.id }} .related-slider__track {
       display: flex;
       gap: 16px;
       overflow-x: auto;
-      overflow-y: hidden;
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
-      padding: 0 24px 16px;
     }
 
     #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar {
       display: none;
     }
 
-    /* SLIDES — VIEWPORT CONTROLLED */
     #RelatedBlogs-{{ section.id }} .related-slider__slide {
-      flex: 0 0 auto;
-      width: 320px;
+      flex: 0 0 100%;
     }
 
-    @media (max-width: 1024px) {
+    @media (min-width: 990px) {
       #RelatedBlogs-{{ section.id }} .related-slider__slide {
-        width: 70vw;
+        flex: 0 0 calc(33.333% - 11px);
       }
     }
 
-    @media (max-width: 768px) {
-      #RelatedBlogs-{{ section.id }} .related-slider__slide {
-        width: 85vw;
-      }
-    }
-
-    /* MEDIA */
     .card__media {
       aspect-ratio: 16 / 9;
       overflow: hidden;
@@ -171,7 +143,10 @@
       object-fit: cover;
     }
 
-    /* TYPOGRAPHY */
+    .related-articles .section-header {
+    position: unset;
+  }
+
     .card__heading {
       font-size: 18px;
       line-height: 24px;
@@ -198,26 +173,28 @@
       font-weight: 600;
     }
 
-    /* BOTTOM BAR */
+    /* Bottom bar */
     .related-slider__bottom {
       margin-top: 16px;
       display: flex;
+      justify-content: flex-end;
       align-items: center;
       gap: 16px;
     }
 
     .related-slider__scrollbar {
-      flex: 1;
+      position: relative;
+      width: 100%;
       height: 6px;
       background: #eee;
       border-radius: 6px;
-      position: relative;
+      cursor: pointer;
     }
 
     .scroll-thumb {
       position: absolute;
-      top: 0;
       left: 0;
+      top: 0;
       height: 100%;
       width: 40px;
       background: #D83D0E;
@@ -237,10 +214,79 @@
       background: #fff;
       cursor: pointer;
     }
+
+    .rich-text-custom__wrapper {
+      margin-top: 32px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .rich-text-custom__btn {
+      padding: 12px 24px;
+      background: #D83D0E;
+      color: #fff;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+    }
   </style>
 
-</section>
+  <style>
 
+    
+  </style>
+
+  <script>
+    (function () {
+      const slider = document.querySelector('#RelatedBlogs-{{ section.id }} [data-slider]');
+      if (!slider) return;
+
+      const track = slider.querySelector('[data-track]');
+      const scrollbar = slider.querySelector('[data-scrollbar]');
+      const thumb = slider.querySelector('[data-thumb]');
+      const prev = slider.querySelector('[data-prev]');
+      const next = slider.querySelector('[data-next]');
+
+      function syncThumb() {
+        const maxScroll = track.scrollWidth - track.clientWidth;
+        if (maxScroll <= 0) return;
+        const ratio = track.scrollLeft / maxScroll;
+        const maxLeft = scrollbar.clientWidth - thumb.clientWidth;
+        thumb.style.left = `${ratio * maxLeft}px`;
+      }
+
+      track.addEventListener('scroll', syncThumb);
+
+      function scrollByCard(dir) {
+        const card = track.querySelector('.related-slider__slide');
+        if (!card) return;
+        track.scrollBy({
+          left: dir * (card.offsetWidth + 16),
+          behavior: 'smooth'
+        });
+      }
+
+      prev.addEventListener('click', () => scrollByCard(-1));
+      next.addEventListener('click', () => scrollByCard(1));
+
+      let dragging = false;
+
+      thumb.addEventListener('mousedown', () => dragging = true);
+      document.addEventListener('mouseup', () => dragging = false);
+
+      document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const rect = scrollbar.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        x = Math.max(0, Math.min(x, scrollbar.clientWidth - thumb.clientWidth));
+        const ratio = x / (scrollbar.clientWidth - thumb.clientWidth);
+        track.scrollLeft = ratio * (track.scrollWidth - track.clientWidth);
+      });
+
+      syncThumb();
+    })();
+  </script>
+</section>
 
 
 
