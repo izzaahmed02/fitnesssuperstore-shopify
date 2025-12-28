@@ -24,7 +24,7 @@
   {% assign blog = blogs[section.settings.blog] %}
 
   {% if blog and blog.articles_count > 0 %}
-    <div class="related-slider full-bleed-slider" data-slider>
+    <div class="related-slider partial-bleed" data-slider>
 
       <div class="related-slider__track" data-track>
         {% for article in blog.articles %}
@@ -102,31 +102,27 @@
   {% endif %}
 
   <style>
-    /* FULL-BLEED TRACK */
-    .full-bleed-slider {
-      width: 100vw;
-      margin-left: calc(-50vw + 50%);
-      overflow: hidden;
+    /* PARTIAL FULL-BLEED SLIDER */
+    .related-slider.partial-bleed {
+      overflow-x: visible;
     }
 
     .related-slider__track {
       display: flex;
       gap: 16px;
-      padding: 0 24px; /* spacing at ends */
-      overflow-x: auto;
+      overflow-x: visible; /* allow cards to move outside */
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
+      padding-left: 0; /* first card aligned inside container */
+      padding-right: 24px; /* spacing at end */
     }
 
-    .related-slider__track::-webkit-scrollbar { display: none; }
-
-    /* 4 cards + 5th partial */
     .related-slider__slide {
-      flex: 0 0 calc((100vw - 48px)/4);
+      flex: 0 0 calc((100% - 48px)/4); /* 4 cards visible */
     }
 
     .related-slider__slide:nth-child(5) {
-      flex: 0 0 calc((100vw - 48px)/8);
+      flex: 0 0 calc((100% - 48px)/8); /* 5th partial card */
     }
 
     /* CARD STYLING */
