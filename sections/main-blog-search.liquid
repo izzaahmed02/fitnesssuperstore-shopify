@@ -17,13 +17,21 @@
 
 /* Hide article cards by default */
 .blog-articles__article {
-  display: none;
+  display: block;
 }
 
+/* No results text */
 #no-results {
   display: none;
   text-align: center;
   margin: 20px 0;
+}
+
+/* Bottom border (hidden by default) */
+.blog-article-border {
+  border-bottom: 3px solid #e5e5e5;
+  margin-top: 24px;
+  display: none;
 }
 {%- endstyle -%}
 
@@ -33,7 +41,9 @@
   </h1>
 
   {% if section.settings.description %}
-    <div class="main-blog-description">{{ section.settings.description }}</div>
+    <div class="main-blog-description">
+      {{ section.settings.description }}
+    </div>
   {% endif %}
 
   <!-- Search bar -->
@@ -49,12 +59,12 @@
     </div>
   </div>
 
-  <!-- Container for search results -->
+  <!-- Results container -->
   <div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
     <div class="blog-article-border"></div>
   </div>
 
-  <!-- Hidden container with all articles pre-rendered and full content stored -->
+  <!-- Hidden pre-rendered articles -->
   <div style="display:none;" id="all-articles-container">
     {% assign handles = section.settings.blog_handles | split: "," %}
     {% for handle in handles %}
@@ -62,9 +72,10 @@
       {% assign blog = blogs[clean_handle] %}
       {% if blog %}
         {% for article in blog.articles %}
-          <div class="article-data"
-               data-handle="{{ article.handle }}"
-               data-full-content="{{ article.content | strip_html | escape }}">
+          <div
+            class="article-data"
+            data-full-content="{{ article.content | strip_html | escape }}"
+          >
             {% render 'article-card',
               article: article,
               media_height: section.settings.image_height,
@@ -81,7 +92,6 @@
   </div>
 </div>
 
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('blog-live-search');
@@ -93,24 +103,27 @@ document.addEventListener('DOMContentLoaded', () => {
   );
 
   function renderResults(query) {
-    container.innerHTML = '';
+    // Keep border element intact
+    container.innerHTML = '<div class="blog-article-border"></div>';
+    const border = container.querySelector('.blog-article-border');
+
     let matches = 0;
 
     if (!query) {
       noResults.style.display = 'none';
+      border.style.display = 'none';
       return;
     }
 
     allArticles.forEach(articleDiv => {
-      const titleExcerptText = articleDiv.textContent.toLowerCase();
+      const searchableText = articleDiv.textContent.toLowerCase();
       const fullContent = articleDiv.dataset.fullContent.toLowerCase();
 
       if (
-        titleExcerptText.includes(query) ||
+        searchableText.includes(query) ||
         fullContent.includes(query)
       ) {
         const clone = articleDiv.cloneNode(true);
-        clone.style.display = 'block';
         clone.classList.add('blog-articles__article');
         container.appendChild(clone);
         matches++;
@@ -118,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     noResults.style.display = matches === 0 ? 'block' : 'none';
+    border.style.display = matches > 0 ? 'block' : 'none';
   }
 
   function updateURL(query) {
@@ -130,14 +144,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.history.replaceState({}, '', url);
   }
 
-  // Handle typing
+  // Live search
   searchInput.addEventListener('input', () => {
     const query = searchInput.value.trim().toLowerCase();
     updateURL(query);
     renderResults(query);
   });
 
-  // Restore search on page load / back button
+  // Restore search on reload / back button
   const params = new URLSearchParams(window.location.search);
   const initialQuery = params.get('q');
 
@@ -147,9 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
-
-
-
 
 {% schema %}
 {
@@ -181,8 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
     {
       "type": "text",
       "id": "blog_handles",
-      "label": "Blog Handles (comma separated)",
-      "info": "Enter the handles of the blogs you want to include in search, separated by commas."
+      "label": "Blog Handles (comma separated)"
     },
     {
       "type": "checkbox",
