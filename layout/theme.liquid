@@ -451,67 +451,40 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script> {% endcomment %}
-<script>
 
+<script>
 document.addEventListener("click", async function(e){
 
-  const btn = e.target.closest("cart-remove-button, .cart-item__remove");
-  if(!btn) return;
+  const removeBtn = e.target.closest(".cart-item__remove");
+  if(!removeBtn) return;
 
   e.preventDefault();
 
-  let row = btn.closest("[data-cart-item]");
-  if(!row) return;
+  const lineIndex = Number(removeBtn.dataset.index);
 
-  let itemKey = row.getAttribute("data-cart-item");
-  if(!itemKey) return;
+  const cart = await fetch('/cart.js').then(r => r.json());
 
-  const cart = await fetch("/cart.js").then(r=>r.json());
-
-  const parent = cart.items.find(i => i.key === itemKey);
-  if(!parent){
-      location.reload();
-      return;
-  }
+  const parent = cart.items[lineIndex - 1];
+  if(!parent) return location.reload();
 
   const groupId = parent.properties?.group_id;
+  if(!groupId) return location.reload();
 
-  // normal remove
-  if(!groupId){
-      await fetch("/cart/change.js",{
-        method:"POST",
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          key:itemKey,
-          quantity:0
-        })
-      });
+  let updates = {};
 
-      location.reload();
-      return;
-  }
-
-  // Remove Group Items
-  let requests = [];
-
-  cart.items.forEach(item =>{
+  cart.items.forEach((item, i)=>{
       if(item.properties && item.properties.group_id == groupId){
-          requests.push(
-            fetch("/cart/change.js",{
-              method:"POST",
-              headers:{'Content-Type':'application/json'},
-              body: JSON.stringify({
-                key:item.key,
-                quantity:0
-              })
-            })
-          );
+          updates[i+1] = 0;
       }
   });
 
-  await Promise.all(requests);
-  location.reload();
+  await fetch('/cart/update.js',{
+      method:"POST",
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ updates })
+  });
 
+  location.reload();
 });
 
 </script>
