@@ -10,7 +10,51 @@
 <div class="carousel"
   data-flickity='{ "cellAlign": "left" }'>
   {% for article in blog.articles %}
-  <div class="carousel-cell">1</div>
+  <div class="carousel-cell">
+<article class="card-wrapper">
+                <a href="{{ article.url }}" class="card">
+
+                  {% if article.image %}
+                    <div class="card__media">
+                      <img
+                        src="{{ article.image | img_url: '720x' }}"
+                        alt="{{ article.image.alt | default: article.title }}"
+                        loading="lazy"
+                      >
+                    </div>
+                  {% endif %}
+
+                  <div class="card__content">
+
+                    <h3 class="card__heading">
+                      {{ article.title }}
+                    </h3>
+
+                    {% if article.published_at or article.author %}
+                      <p class="card__meta publish-info">
+                        {% if article.published_at %}
+                          <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                        {% endif %}
+                        {% if article.author %}
+                          <span>{{ article.author }}</span>
+                        {% endif %}
+                      </p>
+                    {% endif %}
+
+                    {% if section.settings.show_excerpt %}
+                      <div class="card__excerpt">
+                        {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+                      </div>
+                    {% endif %}
+
+                    <div class="card__actions">
+                      <span class="link">{{ section.settings.read_more_text }}</span>
+                    </div>
+
+                  </div>
+                </a>
+              </article>
+  </div>
   {% endfor %}
 </div>
 </div>
