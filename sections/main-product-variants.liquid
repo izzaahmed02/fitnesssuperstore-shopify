@@ -60,7 +60,12 @@
   {{ 'component-slider.css' | asset_url | stylesheet_tag }}
   {{ 'component-rating.css' | asset_url | stylesheet_tag }}
   {{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
-
+{%- assign enable_product_form_js = true -%}
+  <script src="{{ 'product-variants.js' | asset_url }}" defer="defer"></script>
+ <script src="{{ 'product-variants-info.js' | asset_url }}" defer="defer"></script>
+  {% if enable_product_form_js %}
+    <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
+  {% endif %}
   {% unless product.has_only_default_variant %}
     {{ 'component-product-variant-picker.css' | asset_url | stylesheet_tag }}
     {{ 'component-swatch-input.css' | asset_url | stylesheet_tag }}
@@ -90,12 +95,7 @@
     }
   {%- endstyle -%}
 
-  {%- assign enable_product_form_js = true -%}
-  <script src="{{ 'product-variants.js' | asset_url }}" defer="defer"></script>
- <script src="{{ 'product-variants-info.js' | asset_url }}" defer="defer"></script>
-  {% if enable_product_form_js %}
-    <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
-  {% endif %}
+  
   {%comment %}<script src="{{ 'product-sticky.js' | asset_url }}" defer="defer"></script> {% endcomment %}
 
   {%- if product.quantity_price_breaks_configured? -%}
