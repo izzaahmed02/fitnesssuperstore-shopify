@@ -109,13 +109,25 @@
     <script src="{{ 'theme-editor.js' | asset_url }}" defer></script>
   {% endif %}
 
-  {%- comment -%} --- Force variant selection on page load --- {%- endcomment -%}
+  {%- comment -%} --- Force variant picker and price initialization on page load --- {%- endcomment -%}
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const variantInput = document.querySelector('input[name="id"]');
-      if (variantInput) {
-        variantInput.dispatchEvent(new Event('change', { bubbles: true }));
+      if (!variantInput) return;
+
+      const form = variantInput.closest('form');
+
+      // Set initial variant from URL if present
+      const urlVariantId = new URLSearchParams(window.location.search).get('variant');
+      if (urlVariantId && variantInput.value !== urlVariantId) {
+        variantInput.value = urlVariantId;
       }
+
+      // Trigger change to update variant picker UI, price, and savings
+      variantInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+      // Dispatch Shopify variant changed event
+      form?.dispatchEvent(new Event('variant:changed', { bubbles: true }));
     });
   </script>
 
@@ -130,6 +142,7 @@
           href="{{ 'component-model-viewer-ui.css' | asset_url }}"
           media="print" onload="this.media='all'">
   {%- endif -%}
+
 
 
 
