@@ -108,22 +108,29 @@
       {% endif %}
 
       {%- comment -%} Test videos (with preview images from file reference) {%- endcomment -%}
+{%- comment -%} Test videos (with preview images from file reference) {%- endcomment -%}
 {% if extra.test != blank and extra.test.value != blank %}
   {% for video_file in extra.test.value %}
     {% if video_file != blank %}
       <div class="video-slide other-videos">
         <div class="video-slide-inner">
-          <div class="video-thumbnail" data-video-url="{{ video_file.url }}">
+          <div class="video-thumbnail" data-video-url="{{ video_file.sources[0].url }}">
             {% if video_file.preview_image %}
               <img 
                 class="video-thumb-image" 
-                src="{{ video_file.preview_image.url }}" 
+                src="{{ video_file.preview_image.src }}" 
+                alt="Video thumbnail"
+              >
+            {% elsif video_file.image %}
+              <img 
+                class="video-thumb-image" 
+                src="{{ video_file.image }}" 
                 alt="Video thumbnail"
               >
             {% else %}
               <video
                 class="video-thumb-video"
-                src="{{ video_file.url }}"
+                src="{{ video_file.sources[0].url }}"
                 muted
                 playsinline
                 preload="metadata"
@@ -236,14 +243,6 @@
 {% endif %}
 
 <style>
-
-  .extra-info-video-slider .video-thumb-image {
-  width: 100%;
-  border-radius: 12px;
-  display: block;
-  object-fit: cover;
-}
-
   .extra-info-videos .carouselHdg {
     font-family: Lato;
     font-weight: 700;
