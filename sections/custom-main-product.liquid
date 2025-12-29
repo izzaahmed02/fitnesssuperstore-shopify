@@ -4320,7 +4320,9 @@ document.addEventListener("DOMContentLoaded", function(){
 });
 </script>
 {% endcomment %}
+{% comment %}  
 <script>
+ // perfect working
 document.addEventListener("DOMContentLoaded", function(){
 
   document.querySelector(".addtocart").addEventListener("click", function(){
@@ -4368,6 +4370,51 @@ document.addEventListener("DOMContentLoaded", function(){
           alert("Something went wrong");
       });
 
+  });
+
+});
+</script> {% endcomment %}
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+  document.querySelector(".addtocart").addEventListener("click", function(){
+
+      let mainVariant = this.getAttribute("main-varientid");
+      let quantity = Number(document.querySelector("#Quantity-{{ section.id }}").value || 1);
+
+      let groupId = Date.now();   // UNIQUE GROUP ID
+
+      let items = [];
+
+      // Main Product
+      items.push({
+        id: mainVariant,
+        quantity: quantity,
+        properties:{
+            group_id: groupId
+        }
+      });
+
+      // Addons
+      document.querySelectorAll(".addon-radio:checked").forEach(function(r){
+          items.push({
+              id: r.dataset.variantId,
+              quantity: quantity,
+              properties: {
+                  group_id: groupId
+              }
+          });
+      });
+
+      fetch('/cart/add.js', {
+          method : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items })
+      })
+      .then(res => res.json())
+      .then(() => window.location.href = "/cart");
   });
 
 });

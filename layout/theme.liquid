@@ -455,41 +455,36 @@ document.addEventListener("DOMContentLoaded", function () {
 <script>
 document.addEventListener("click", async function(e){
 
-  const removeBtn = e.target.closest("cart-remove-button");
+  const removeBtn = e.target.closest(".cart-item__remove");
   if(!removeBtn) return;
 
   e.preventDefault();
 
-  const lineIndex = Number(removeBtn.getAttribute("data-index"));
+  const lineIndex = Number(removeBtn.dataset.index);
+
   const cart = await fetch('/cart.js').then(r => r.json());
+
+  const parent = cart.items[lineIndex - 1];
+  if(!parent) return location.reload();
+
+  const groupId = parent.properties?.group_id;
+  if(!groupId) return location.reload();
 
   let updates = {};
 
-  const parentItem = cart.items[lineIndex - 1];
-  if(!parentItem){
-    location.reload();
-    return;
-  }
-
-  const parentVariantId = parentItem.id;
-
-  // remove main
-  updates[lineIndex] = 0;
-
-  // remove addons linked with parent
-  cart.items.forEach((item, i) => {
-    if(item.properties && item.properties.parent == parentVariantId){
-      updates[i + 1] = 0;
-    }
+  cart.items.forEach((item, i)=>{
+      if(item.properties && item.properties.group_id == groupId){
+          updates[i+1] = 0;
+      }
   });
 
   await fetch('/cart/update.js',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ updates })
+      method:"POST",
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ updates })
   });
 
   location.reload();
-
 });
+
 </script>
