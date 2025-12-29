@@ -669,48 +669,51 @@
             </p>
         </form>
     </div>
+<script>
+document.addEventListener("click", async function(e){
 
-    {% comment %} <script>
-document.addEventListener("click", function(e){
-  const btn = e.target.closest(".cart-item__remove a");
-  if(!btn) return;
+  const removeBtn = e.target.closest(".cart-item__remove");
+  if(!removeBtn) return;
 
   e.preventDefault();
 
-  // jis item ko remove kar rahe hain wo kaun sa variant hai
-  let url = new URL(btn.href);
-  let index = url.searchParams.get('line');
+  const lineIndex = Number(removeBtn.getAttribute("data-index"));
 
-  fetch('/cart.js')
-    .then(res => res.json())
-    .then(cart => {
+  // Get full cart
+  const cart = await fetch('/cart.js').then(r => r.json());
 
-      let updates = {};
+  let updates = {};
 
-      cart.items.forEach((item, i) => {
+  const parentItem = cart.items[lineIndex - 1];
+  if(!parentItem){
+    location.reload();
+    return;
+  }
 
-        // agar ye parent product remove ho raha hai
-        if((i+1) == index){
-          updates[index] = 0;
+  const parentVariantId = parentItem.id;
 
-          // saare addons jinke properties me _parent match kare → remove
-          cart.items.forEach((child, k) => {
-            if(child.properties && child.properties._parent == item.id){
-              updates[k+1] = 0;
-            }
-          });
-        }
-      });
+  // Remove Parent
+  updates[lineIndex] = 0;
 
-      return fetch('/cart/update.js',{
-        method : 'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ updates })
-      })
-    })
-    .then(()=> location.reload());
+  // Remove all children with matching _parent
+  cart.items.forEach((item, i) => {
+    if(item.properties && item.properties._parent == parentVariantId){
+      updates[i + 1] = 0;
+    }
+  });
+
+  // Update Cart
+  await fetch('/cart/update.js',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ updates })
+  });
+
+  location.reload();
 });
-</script> {% endcomment %}
+</script>
+
+  
 
 </cart-items>
 {% comment %}Assistance Block{% endcomment %}
@@ -745,50 +748,7 @@ document.addEventListener("click", function(e){
         </div>
     </div>
 </div>
-{% comment %} <script>
-document.addEventListener("click", async function(e){
 
-  const btn = e.target.closest(".cart-item__remove");
-  if(!btn) return;
-
-  e.preventDefault();
-
-  const lineIndex = btn.getAttribute("data-index");
-
-  // Get cart
-  const cart = await fetch('/cart.js').then(r => r.json());
-
-  let updates = {};
-
-  // Parent item ki info le lo
-  const parentItem = cart.items[lineIndex - 1];
-  if(!parentItem){
-    location.reload();
-    return;
-  }
-
-  const parentVariantId = parentItem.id;
-
-  // Parent remove
-  updates[lineIndex] = 0;
-
-  // Now find all addons with _parent property
-  cart.items.forEach((child, i) => {
-    if(child.properties && child.properties._parent == parentVariantId){
-      updates[i+1] = 0;
-    }
-  });
-
-  // Update cart
-  await fetch('/cart/update.js',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({updates})
-  });
-
-  location.reload();
-});
-</script> {% endcomment %}
 
 
 {% schema %}
