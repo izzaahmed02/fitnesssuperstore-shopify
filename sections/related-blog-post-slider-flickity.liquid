@@ -1,6 +1,6 @@
 {% comment %}
 Blog Slider using Flickity
-– Full-width carousel to allow overflow/peek
+– Overflow visible for article cards (peek)
 – No page horizontal scroll
 – Shopify-safe
 {% endcomment %}
@@ -12,9 +12,7 @@ Blog Slider using Flickity
 
   {% assign blog = blogs[section.settings.blog] %}
 
-  <!-- FULL-WIDTH WRAPPER FOR OVERFLOW -->
-  <div class="carousel-fullwidth">
-
+  <div class="page-width">
     <div class="carousel js-flickity"
       data-flickity='{
         "cellAlign": "left",
@@ -61,37 +59,28 @@ Blog Slider using Flickity
 </section>
 
 <style>
-/* FULL-WIDTH OUTER WRAPPER FOR OVERFLOW */
-.carousel-fullwidth {
-  width: 100vw;               /* full viewport width */
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-  overflow: visible;           /* allows peek */
-}
-
-/* FLICKITY VIEWPORT */
+/* Allow overflow inside Flickity but do NOT scroll page */
 .carousel.js-flickity .flickity-viewport {
   overflow: visible;
 }
 
-/* CELLS */
+/* Carousel cells */
 .carousel-cell {
   width: 25%;
   margin-right: 16px;
-  border-radius: 5px;
+
+  /* Peek effect */
+  margin-left: -8px;  /* small negative margin to peek */
 }
 
 @media (max-width: 1024px) {
-  .carousel-cell { width: 40%; }
+  .carousel-cell { width: 40%; margin-left: -8px; }
 }
 @media (max-width: 768px) {
-  .carousel-cell { width: 85%; }
+  .carousel-cell { width: 85%; margin-left: -16px; }
 }
 
-/* CARD IMAGE */
+/* Card image */
 .card__media img {
   width: 100%;
   height: auto;
