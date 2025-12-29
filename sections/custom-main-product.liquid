@@ -800,20 +800,20 @@
 {% if product.metafields.custom.product_mat.value.size > 0 %}
   <div class="bench-products-grid">
     {% for item in product.metafields.custom.product_mat.value %}
-    {% assign ref = item.product | default:item %}
+    
       <label class="bench-card">
         <input
           type="radio"
           name="addon_mat"
-            data-variant-id="{{ ref.variants.first.id }}"
+            data-variant-id="{{ item.id }}"
           class="addon-radio"
-          data-title="{{ ref.title }}"
+          data-title="{{ item.product.title }} {{ item.title }}"
           data-price="{{ item.price | money_without_currency }}"
         >
         <div class="bench-img">
         <img src="{{ item.image | img_url: '400x' }}">
         </div>
-        <div class="bench-title">{{ ref.title }}</div>
+        <div class="bench-title">{{ item.title }}</div>
         <div class="bench-price">{{ item.price | money }}</div>
         <span class="checked-icon"><svg class="donesvg-icon" fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 335.765 335.765" xml:space="preserve">
 	<g>
@@ -840,20 +840,20 @@
 {% if product.metafields.custom.product_option_aluminum_pulley_upgrade.value.size > 0 %}
   <div class="bench-products-grid">
     {% for item in product.metafields.custom.product_option_aluminum_pulley_upgrade.value %}
-    {% assign ref = item.product | default:item %}
+    
       <label class="bench-card">
         <input
           type="radio"
           name="addon_pulley"
-            data-variant-id="{{ ref.variants.first.id }}"
+            data-variant-id="{{ item.id }}"
           class="addon-radio"
-          data-title="{{ ref.title }}"
+          data-title="{{ item.product.title }} {{ item.title }}"
           data-price="{{ item.price | money_without_currency }}"
         >
         <div class="bench-img">
         <img src="{{ item.image | img_url: '400x' }}">
         </div>
-        <div class="bench-title">{{ ref.title }}</div>
+        <div class="bench-title">{{ item.title }}</div>
         <div class="bench-price">{{ item.price | money }}</div>
         <span class="checked-icon"><svg class="donesvg-icon" fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 335.765 335.765" xml:space="preserve">
 	<g>
@@ -884,20 +884,20 @@
 {% if product.metafields.custom.product_option_multi_purpose_bar.value.size > 0 %}
   <div class="bench-products-grid">
     {% for item in product.metafields.custom.product_option_multi_purpose_bar.value %}
-    {% assign ref = item.product | default:item %}
+   
       <label class="bench-card">
         <input
           type="radio"
           name="addonmlutipurpose"
           class="addon-radio"
-            data-variant-id="{{ ref.variants.first.id }}"
-          data-title="{{ ref.title }}"
+            data-variant-id="{{ item.id }}"
+          data-title="{{ item.product.title }} {{ item.title }}"
           data-price="{{ item.price | money_without_currency }}"
         >
         <div class="bench-img">
         <img src="{{ item.image | img_url: '400x' }}">
         </div>
-        <div class="bench-title">{{ ref.title }}</div>
+        <div class="bench-title">{{ item.title }}</div>
         <div class="bench-price">{{ item.price | money }}</div>
         <span class="checked-icon"><svg class="donesvg-icon" fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 335.765 335.765" xml:space="preserve">
 	<g>
@@ -923,20 +923,20 @@
 {% if product.metafields.custom.product_option_pro_grip_lat_bar.value.size > 0 %}
   <div class="bench-products-grid">
     {% for item in product.metafields.custom.product_option_pro_grip_lat_bar.value %}
-    {% assign ref = item.product | default:item %}
+   
       <label class="bench-card">
         <input
           type="radio"
           name="addonprogrip"
           class="addon-radio"
-            data-variant-id="{{ ref.variants.first.id }}"
-          data-title="{{ ref.title }}"
+            data-variant-id="{{ item.id }}"
+          data-title="{{ item.product.title }} {{ item.title }}"
           data-price="{{ item.price | money_without_currency }}"
         >
         <div class="bench-img">
         <img src="{{ item.image | img_url: '400x' }}">
         </div>
-        <div class="bench-title">{{ ref.title }}</div>
+        <div class="bench-title">{{ item.title }}</div>
         <div class="bench-price">{{ item.price | money }}</div>
         <span class="checked-icon"><svg class="donesvg-icon" fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 335.765 335.765" xml:space="preserve">
 	<g>
@@ -4316,5 +4316,46 @@ document.addEventListener("DOMContentLoaded", function(){
 
   });
 
+});
+</script>
+<script>
+document.addEventListener("click", function(e){
+  const btn = e.target.closest(".cart-item__remove a");
+  if(!btn) return;
+
+  e.preventDefault();
+
+  // jis item ko remove kar rahe hain wo kaun sa variant hai
+  let url = new URL(btn.href);
+  let index = url.searchParams.get('line');
+
+  fetch('/cart.js')
+    .then(res => res.json())
+    .then(cart => {
+
+      let updates = {};
+
+      cart.items.forEach((item, i) => {
+
+        // agar ye parent product remove ho raha hai
+        if((i+1) == index){
+          updates[index] = 0;
+
+          // saare addons jinke properties me _parent match kare → remove
+          cart.items.forEach((child, k) => {
+            if(child.properties && child.properties._parent == item.id){
+              updates[k+1] = 0;
+            }
+          });
+        }
+      });
+
+      return fetch('/cart/update.js',{
+        method : 'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ updates })
+      })
+    })
+    .then(()=> location.reload());
 });
 </script>
