@@ -167,16 +167,6 @@
                                 {{ item.product.title | escape }}
                               </a>
                             {% endif %}
-                            <cart-remove-button>
-                              <button
-                                type="button"
-                                class="cart-remove-button"
-                                data-key="{{ item.key }}"
-                                aria-label="Remove {{ item.product.title }}"
-                              >
-                                {% render 'icon-remove' %}
-                              </button>
-                            </cart-remove-button>
                             {% if item.original_price != item.final_price %}
                               <div class="cart-item__discounted-prices">
                                 <s class="cart-item__old-price product-option">
@@ -193,6 +183,19 @@
                                 </div>
                               {% endunless %}
                             {% endif %}
+                            <cart-remove-button
+                              class="cart-item__remove"
+                              id="Remove-{{ item.index | plus: 1 }}"
+                              data-index="{{ item.index | plus: 1 }}"
+                            >
+                              <a
+                                href="{{ item.url_to_remove }}"
+                                class="button button--tertiary"
+                                aria-label="{{ 'sections.cart.remove_title' | t: title: item.title | escape }}"
+                              >
+                                {% render 'cart-item-remove' %}
+                              </a>
+                            </cart-remove-button>
                           </div>
                           {% assign extra_props = '' %}
                           {% for prop in item.properties %}
@@ -329,6 +332,32 @@
     {% endif %}
   </div>
 </cart-drawer>
+
+{% comment %}Confirmation Popup{% endcomment %}
+
+<div class="overlay cart-items__overlay"></div>
+<div class="cart-items__popup">
+  <div class="cart-items__popup-wrapper">
+    <a href="#" class="cart-items__popup-close">{% render 'cart-item-remove' %}</a>
+    <h5 class="cart-items__popup-title">{{ 'general.cart.cart_remove_popup_title' | t }}</h5>
+    <p class="cart-items__popup-copy">{{ 'general.cart.cart_remove_popup_copy' | t }}</p>
+    <div class="cart-items__popup-buttons">
+      <a
+        href="#"
+        class="cart-items__popup-btn cart-items__popup-btn--cancel"
+      >
+        {{ 'general.cart.cart_remove_popup_button_cancel' | t }}
+      </a>
+      <a
+        href="#"
+        class="cart-items__popup-btn cart-items__popup-btn--remove"
+      >
+        {% render 'icon-remove' %}
+        {{ 'general.cart.cart_remove_popup_button_remove' | t }}
+      </a>
+    </div>
+  </div>
+</div>
 
 {% comment %}
   TODO: delete the script below, if it is no longer needed

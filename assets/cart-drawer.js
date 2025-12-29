@@ -207,14 +207,6 @@ class CartDrawer extends HTMLElement {
         await this.updateCartItem(key, currentQty + 1);
         return;
       }
-
-      const removeBtn = e.target.closest('.cart-remove-button');
-      if (removeBtn) {
-        e.stopPropagation();
-        const key = removeBtn.dataset.key;
-        await this.updateCartItem(key, 0);
-        return;
-      }
     };
 
     document.addEventListener('click', this._cartDrawerHandler);
