@@ -21,9 +21,39 @@
       ]
     }
   ],
+  "blocks": [
+    {
+      "type": "video",
+      "name": "Video",
+      "settings": [
+        {
+          "type": "video",
+          "id": "shopify_video",
+          "label": "Shopify Video"
+        },
+        {
+          "type": "text",
+          "id": "video_title",
+          "label": "Video Title",
+          "default": "Video"
+        },
+        {
+          "type": "url",
+          "id": "external_video_url",
+          "label": "External Video URL (optional)",
+          "info": "Use this for YouTube, Vimeo, or other external videos if Shopify video is not selected"
+        }
+      ]
+    }
+  ],
   "presets": [
     {
-      "name": "Product Video Slider"
+      "name": "Product Video Slider",
+      "blocks": [
+        {
+          "type": "video"
+        }
+      ]
     }
   ]
 }
@@ -32,14 +62,17 @@
 {%- assign extra = product.metafields.custom.extra_info.value -%}
 
 {%- comment -%}
-  Check if we have at least one video:
-  - extra.instructional_video_url.value
-  - extra.assembly_video.value
-  - any link in extra.other_videos.value
+  Check if we have at least one video from blocks OR metafields
 {%- endcomment -%}
 
 {% assign has_any_video = false %}
 
+{%- comment -%} Check blocks first {%- endcomment -%}
+{% if section.blocks.size > 0 %}
+  {% assign has_any_video = true %}
+{% endif %}
+
+{%- comment -%} Check metafield videos {%- endcomment -%}
 {% if extra %}
   {% if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank %}
     {% assign has_any_video = true %}
@@ -64,7 +97,6 @@
       {% endif %}
     {% endfor %}
   {% endif %}
-
 {% endif %}
 
 {% if has_any_video %}
@@ -75,7 +107,65 @@
       class="extra-info-video-slider"
       data-videos-per-row="{{ section.settings.videos_per_row }}"
     >
-      {%- comment -%} Instructional video slide (video as thumbnail) {%- endcomment -%}
+      {%- comment -%} Render blocks (Shopify videos) first {%- endcomment -%}
+      {% for block in section.blocks %}
+        {% case block.type %}
+          {% when 'video' %}
+            {% if block.settings.shopify_video != blank %}
+              {%- comment -%} Shopify hosted video {%- endcomment -%}
+              <div class="video-slide" {{ block.shopify_attributes }}>
+                <div class="video-slide-inner">
+                  <div
+                    class="video-thumbnail shopify-video-thumb"
+                    data-video-type="shopify"
+                    data-video-sources="{{ block.settings.shopify_video.sources | json | escape }}"
+                  >
+                    {% if block.settings.shopify_video.preview_image %}
+                      <img
+                        src="{{ block.settings.shopify_video.preview_image | image_url: width: 800 }}"
+                        alt="{{ block.settings.video_title }}"
+                        class="video-thumb-image"
+                        loading="lazy"
+                      >
+                    {% else %}
+                      <video
+                        class="video-thumb-video"
+                        src="{{ block.settings.shopify_video.sources[0].url }}"
+                        muted
+                        playsinline
+                        preload="metadata"
+                      ></video>
+                    {% endif %}
+                    <div class="play-button">&#9658;</div>
+                  </div>
+                  <p>{{ block.settings.video_title }}</p>
+                </div>
+              </div>
+            {% elsif block.settings.external_video_url != blank %}
+              {%- comment -%} External video URL fallback {%- endcomment -%}
+              <div class="video-slide" {{ block.shopify_attributes }}>
+                <div class="video-slide-inner">
+                  <div
+                    class="video-thumbnail"
+                    data-video-url="{{ block.settings.external_video_url }}"
+                  >
+                    <video
+                      class="video-thumb-video"
+                      src="{{ block.settings.external_video_url }}"
+                      muted
+                      playsinline
+                      preload="metadata"
+                    ></video>
+                    <div class="play-button">&#9658;</div>
+                  </div>
+                  <p>{{ block.settings.video_title }}</p>
+                </div>
+              </div>
+            {% endif %}
+        {% endcase %}
+      {% endfor %}
+
+      {%- comment -%} Metafield videos (legacy support) {%- endcomment -%}
       {% if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank %}
         {% assign instructional_url = extra.instructional_video_url.value %}
         <div class="video-slide">
@@ -98,7 +188,6 @@
         </div>
       {% endif %}
 
-      {%- comment -%} Assembly video slide (video as thumbnail) {%- endcomment -%}
       {% if extra.assembly_video != blank and extra.assembly_video.value != blank %}
         {% assign assembly_url = extra.assembly_video.value %}
         <div class="video-slide other-videos">
@@ -121,7 +210,6 @@
         </div>
       {% endif %}
 
-       {%comment%}Optional: other_videos list (video or embed URLs) {% endcomment %}
       {% if extra.other_video != blank and extra.other_video.value != blank %}
         {% for link in extra.other_video.value %}
           {% if link.url != blank %}
@@ -132,11 +220,6 @@
                   class="video-thumbnail"
                   data-video-url="{{ other_url }}"
                 >
-                  {%- comment -%}
-                    If other_url is an mp4, the video tag will show first frame.
-                    If it's e.g. YouTube or Drive, the tag may not load; we still use it
-                    as a visual container and let the popup handle playing properly.
-                  {%- endcomment -%}
                   <video
                     class="video-thumb-video"
                     src="{{ other_url }}"
@@ -153,7 +236,7 @@
         {% endfor %}
       {% endif %}
 
-            {% if extra.other_videos != blank and extra.other_videos.value != blank %}
+      {% if extra.other_videos != blank and extra.other_videos.value != blank %}
         {% for link in extra.other_videos.value %}
           {% if link.url != blank %}
             {% assign other_url = link.url %}
@@ -163,11 +246,6 @@
                   class="video-thumbnail"
                   data-video-url="{{ other_url }}"
                 >
-                  {%- comment -%}
-                    If other_url is an mp4, the video tag will show first frame.
-                    If it's e.g. YouTube or Drive, the tag may not load; we still use it
-                    as a visual container and let the popup handle playing properly.
-                  {%- endcomment -%}
                   <video
                     class="video-thumb-video"
                     src="{{ other_url }}"
@@ -232,11 +310,17 @@
     cursor: pointer;
   }
 
-  .extra-info-video-slider .video-thumb-video {
+  .extra-info-video-slider .video-thumb-video,
+  .extra-info-video-slider .video-thumb-image {
     width: 100%;
     border-radius: 12px;
     display: block;
-    pointer-events: none; /* prevent inline play on click */
+    pointer-events: none;
+  }
+
+  .extra-info-video-slider .video-thumb-image {
+    object-fit: cover;
+    aspect-ratio: 16/9;
   }
 
   .extra-info-video-slider .play-button {
@@ -252,7 +336,6 @@
     border-radius: 50%;
   }
 
-  /* Slick arrows - make them match the customer gallery arrows */
   .extra-info-videos .slick-arrow {
     display: flex !important;
     align-items: center;
@@ -275,11 +358,9 @@
   .extra-info-videos .slick-prev { left: -8px; }
   .extra-info-videos .slick-next { right: -8px; }
 
-  /* remove built-in slick :before icons if any */
   .extra-info-videos .slick-prev:before,
   .extra-info-videos .slick-next:before { content: none !important; }
 
-  /* hide dots entirely */
   .extra-info-videos .slick-dots { display: none !important; }
 
   .video-slide-inner p {
@@ -288,7 +369,6 @@
     margin-bottom: 0px;
   }
 
-  /* Modal */
   .extra-info-videos .video-modal {
     display: none;
     align-items: center;
@@ -368,14 +448,13 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!$slider.length) return;
 
   var videosPerRow = parseInt($slider.data('videos-per-row'), 10) || 2;
-  var desktopSlides = Math.min(videosPerRow, 3); // hard cap at 3
+  var desktopSlides = Math.min(videosPerRow, 3);
 
   $slider.slick({
     slidesToShow: desktopSlides,
     slidesToScroll: 1,
     arrows: true,
-    dots: false, // <-- remove dots
-    // custom arrow HTML so they visually match the gallery buttons
+    dots: false,
     prevArrow: '<button type="button" class="slick-prev slick-arrow" aria-label="Previous">‹</button>',
     nextArrow: '<button type="button" class="slick-next slick-arrow" aria-label="Next">›</button>',
     responsive: [
@@ -391,12 +470,20 @@ document.addEventListener('DOMContentLoaded', function () {
   var $modal = $('#extraInfoVideoModal');
   var $container = $('#extraInfoVideoModalContainer');
 
-  function openVideoPopup(src) {
-    if (!src) return;
+  function openVideoPopup(src, videoSources) {
+    if (!src && !videoSources) return;
 
     var html;
 
-    if (src.indexOf('.mp4') !== -1) {
+    // Handle Shopify video with multiple sources
+    if (videoSources) {
+      var sources = JSON.parse(videoSources);
+      html = '<video controls autoplay>';
+      for (var i = 0; i < sources.length; i++) {
+        html += '<source src="' + sources[i].url + '" type="' + sources[i].mime_type + '">';
+      }
+      html += '</video>';
+    } else if (src.indexOf('.mp4') !== -1) {
       html =
         '<video controls autoplay>' +
         '<source src="' + src + '" type="video/mp4">' +
@@ -419,8 +506,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Open popup when clicking thumbnail
   $slider.on('click', '.video-thumbnail', function () {
-    var src = $(this).data('video-url');
-    openVideoPopup(src);
+    var $thumb = $(this);
+    var videoType = $thumb.data('video-type');
+    var videoSources = $thumb.data('video-sources');
+    var src = $thumb.data('video-url');
+
+    if (videoType === 'shopify' && videoSources) {
+      openVideoPopup(null, videoSources);
+    } else {
+      openVideoPopup(src);
+    }
   });
 
   $('#extraInfoVideoModalClose').on('click', function () {
