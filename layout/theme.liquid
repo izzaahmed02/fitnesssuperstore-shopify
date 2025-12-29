@@ -451,30 +451,49 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script> {% endcomment %}
-
 <script>
+
 document.addEventListener("click", async function(e){
 
-  const removeBtn = e.target.closest(".cart-item__removee");
-  if(!removeBtn) return;
+  const btn = e.target.closest("cart-remove-button");
+  if(!btn) return;
 
   e.preventDefault();
 
-  const lineIndex = Number(removeBtn.dataset.index);
+  // Find cart item wrapper
+  let cartRow = btn.closest("[data-cart-item]");
+  if(!cartRow) return;
+
+  let itemKey = cartRow.getAttribute("data-cart-item");
+  if(!itemKey) return;
 
   const cart = await fetch('/cart.js').then(r => r.json());
 
-  const parent = cart.items[lineIndex - 1];
-  if(!parent) return location.reload();
+  let parentItem = cart.items.find(i => i.key === itemKey);
+  if(!parentItem){
+      location.reload();
+      return;
+  }
 
-  const groupId = parent.properties?.group_id;
-  if(!groupId) return location.reload();
+  let groupId = parentItem.properties?.group_id;
 
+  if(!groupId){
+      // normal single item remove
+      await fetch('/cart/change.js',{
+        method:"POST",
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ key:itemKey, quantity:0 })
+      });
+      location.reload();
+      return;
+  }
+
+  // Remove Parent + All Addons
   let updates = {};
 
-  cart.items.forEach((item, i)=>{
+  cart.items.forEach(item => {
       if(item.properties && item.properties.group_id == groupId){
-          updates[i+1] = 0;
+          updates[item.key] = 0;
       }
   });
 
@@ -485,6 +504,7 @@ document.addEventListener("click", async function(e){
   });
 
   location.reload();
+
 });
 
 </script>
