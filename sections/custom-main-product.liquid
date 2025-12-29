@@ -4326,26 +4326,25 @@ document.addEventListener("DOMContentLoaded", function(){
   document.querySelector(".addtocart").addEventListener("click", function(){
 
       let mainVariant = this.getAttribute("main-varientid");
-      let quantity = document.querySelector("#Quantity-{{ section.id }}").value || 1;
+      let quantity = Number(document.querySelector("#Quantity-{{ section.id }}").value || 1);
 
       let items = [];
 
       // Main Product
       items.push({
         id: mainVariant,
-        quantity: Number(quantity)
+        quantity: quantity
       });
 
-      // All Addon Radios Selected
+      // All Selected Addons
       document.querySelectorAll(".addon-radio:checked").forEach(function(r){
           items.push({
-  id: r.dataset.variantId,
-  quantity: 1,
-  properties: {
-      _parent: mainVariant
-  }
-});
-
+              id: r.dataset.variantId,
+              quantity: quantity,   // 👈 SAME AS MAIN PRODUCT
+              properties: {
+                  _parent: mainVariant
+              }
+          });
       });
 
       if(items.length === 0){
@@ -4362,7 +4361,7 @@ document.addEventListener("DOMContentLoaded", function(){
       .then(res => res.json())
       .then(data =>{
           console.log(data);
-          window.location.href = "/cart"; // redirect cart
+          window.location.href = "/cart";
       })
       .catch(err =>{
           console.error(err);
@@ -4373,3 +4372,4 @@ document.addEventListener("DOMContentLoaded", function(){
 
 });
 </script>
+
