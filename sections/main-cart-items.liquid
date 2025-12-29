@@ -101,11 +101,6 @@
                                             {%- endif -%}
                                         {%- endfor -%}
                                         <div class="cart-item {% if item.product.tags contains 'avisplus-product-options'%}avis-option{% else %}{% endif %}" id="CartItem-{{ item.index | plus: 1 }}">
-{% for property in item.properties %}
-  <span>{{ property.first }}</span>
-  <span>{{ property.last }}</span>
-{% endfor %}
-
                                             <div class="cart-item__media">
                                                 {% if item.image %}
                                                     {% comment %} Leave empty space due to a:empty CSS display: none rule {% endcomment %}
@@ -674,7 +669,7 @@
             </p>
         </form>
     </div>
- <script>
+<script>
 document.addEventListener("click", async function(e){
 
   const removeBtn = e.target.closest(".cart-item__remove");
@@ -684,9 +679,7 @@ document.addEventListener("click", async function(e){
 
   const lineIndex = Number(removeBtn.getAttribute("data-index"));
 
- 
   const cart = await fetch('/cart.js').then(r => r.json());
-
   let updates = {};
 
   const parentItem = cart.items[lineIndex - 1];
@@ -697,9 +690,7 @@ document.addEventListener("click", async function(e){
 
   const parentVariantId = parentItem.id;
 
- 
   updates[lineIndex] = 0;
-
 
   cart.items.forEach((item, i) => {
     if(item.properties && item.properties.parent == parentVariantId){
@@ -707,7 +698,6 @@ document.addEventListener("click", async function(e){
     }
   });
 
-  
   await fetch('/cart/update.js',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -716,7 +706,7 @@ document.addEventListener("click", async function(e){
 
   location.reload();
 });
-</script> 
+</script>
 
   
 
