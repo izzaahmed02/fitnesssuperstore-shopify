@@ -1,9 +1,12 @@
 {% style %}
+  /* Main product grid */
   #shopify-section-{{ section.id }} .product-main-container{
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 54px;
   }
+
+  /* Product title */
   #shopify-section-{{ section.id }} .prod-title{
     font-size: 30px;
     line-height: 40px;
@@ -12,6 +15,7 @@
     margin-bottom: 20px;
   }
 
+  /* Right side container */
   #shopify-section-{{ section.id }} .product-main-right{
     padding-top: 20px;
     padding-left: 80px;
@@ -25,23 +29,32 @@
     margin-top: 0;
     margin-bottom: 20px;
   }
+
   #shopify-section-{{ section.id }} .mpe {
     margin-top: -20px;
     margin-bottom: 40px;
   }
 
-  
+  /* Section padding */
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+  @media screen and (min-width: 990px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
 {% endstyle %}
 
-{% if product.available == true %}
+{% if product.available %}
   <meta itemprop="availability" content="InStock">
 {% else %}
   <meta itemprop="availability" content="OutOfStock">
 {% endif %}
 
-
 {% render 'metaobjects-breadcrumbs', with product: product %}
-
 
 <product-info
   id="MainProduct-{{ section.id }}"
@@ -54,26 +67,19 @@
     data-zoom-on-hover
   {% endif %}
 >
+
+  {%- comment -%} --- CSS Assets --- {%- endcomment -%}
   {{ 'section-main-product.css' | asset_url | stylesheet_tag }}
-  {{ 'component-accordion.css' | asset_url | stylesheet_tag }}
   {{ 'component-price.css' | asset_url | stylesheet_tag }}
   {{ 'component-slider.css' | asset_url | stylesheet_tag }}
   {{ 'component-rating.css' | asset_url | stylesheet_tag }}
   {{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
-{%- assign enable_product_form_js = true -%}
-  <script src="{{ 'product-variants.js' | asset_url }}" defer="defer"></script>
- <script src="{{ 'product-variants-info.js' | asset_url }}" defer="defer"></script>
-  {% if enable_product_form_js %}
-    <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
-  {% endif %}
+
   {% unless product.has_only_default_variant %}
     {{ 'component-product-variant-picker.css' | asset_url | stylesheet_tag }}
     {{ 'component-swatch-input.css' | asset_url | stylesheet_tag }}
     {{ 'component-swatch.css' | asset_url | stylesheet_tag }}
   {% endunless %}
-  {%- if product.quantity_price_breaks_configured? -%}
-    {{ 'component-volume-pricing.css' | asset_url | stylesheet_tag }}
-  {%- endif -%}
 
   {{ 'avis-custom.css' | asset_url | stylesheet_tag }}
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
@@ -81,64 +87,51 @@
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
 
-  {%- style -%}
-    .section-{{ section.id }}-padding {
-      padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
-      padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
-    }
+  {%- comment -%} --- JS Assets (Correct Order) --- {%- endcomment -%}
+  <script src="{{ 'product-variants.js' | asset_url }}" defer></script>
+  <script src="{{ 'product-variants-info.js' | asset_url }}" defer></script>
 
-    @media screen and (min-width: 990px) {
-      .section-{{ section.id }}-padding {
-        padding-top: {{ section.settings.padding_top }}px;
-        padding-bottom: {{ section.settings.padding_bottom }}px;
-      }
-    }
-  {%- endstyle -%}
+  {% assign enable_product_form_js = true %}
+  {% if enable_product_form_js %}
+    <script src="{{ 'product-form.js' | asset_url }}" defer></script>
+  {% endif %}
 
-  
-  {%comment %}<script src="{{ 'product-sticky.js' | asset_url }}" defer="defer"></script> {% endcomment %}
-
-  {%- if product.quantity_price_breaks_configured? -%}
-    <script src="{{ 'show-more.js' | asset_url }}" defer="defer"></script>
-    <script src="{{ 'price-per-item.js' | asset_url }}" defer="defer"></script>
-  {%- endif -%}
+  {% if product.quantity_price_breaks_configured? %}
+    <script src="{{ 'show-more.js' | asset_url }}" defer></script>
+    <script src="{{ 'price-per-item.js' | asset_url }}" defer></script>
+  {% endif %}
 
   {% if section.settings.image_zoom == 'hover' %}
-    <script id="EnableZoomOnHover-main" src="{{ 'magnify.js' | asset_url }}" defer="defer"></script>
+    <script id="EnableZoomOnHover-main" src="{{ 'magnify.js' | asset_url }}" defer></script>
   {% endif %}
-  {%- if request.design_mode -%}
-    <script src="{{ 'theme-editor.js' | asset_url }}" defer="defer"></script>
-  {%- endif -%}
-  {%- for block in section.blocks -%}
-    {%- case block.type -%}
-      {%- when 'tile_calculator' -%}
-        {% if block.settings.disable_product_form_js %}
-          {%- assign enable_product_form_js = false -%}
-        {% endif %}
-    {%- endcase -%}
-  {%- endfor -%}
 
- 
+  {% if request.design_mode %}
+    <script src="{{ 'theme-editor.js' | asset_url }}" defer></script>
+  {% endif %}
 
+  {%- comment -%} --- Force variant selection on page load --- {%- endcomment -%}
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const variantInput = document.querySelector('input[name="id"]');
+      if (variantInput) {
+        variantInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  </script>
+
+  {%- comment -%} --- 3D Model assets if present --- {%- endcomment -%}
   {%- assign first_3d_model = product.media | where: 'media_type', 'model' | first -%}
   {%- if first_3d_model -%}
     {{ 'component-product-model.css' | asset_url | stylesheet_tag }}
-    <link
-      id="ModelViewerStyle"
-      rel="stylesheet"
-      href="https://cdn.shopify.com/shopifycloud/model-viewer-ui/assets/v1.0/model-viewer-ui.css"
-      media="print"
-      onload="this.media='all'"
-    >
-    <link
-      id="ModelViewerOverride"
-      rel="stylesheet"
-      href="{{ 'component-model-viewer-ui.css' | asset_url }}"
-      media="print"
-      onload="this.media='all'"
-    >
+    <link id="ModelViewerStyle" rel="stylesheet"
+          href="https://cdn.shopify.com/shopifycloud/model-viewer-ui/assets/v1.0/model-viewer-ui.css"
+          media="print" onload="this.media='all'">
+    <link id="ModelViewerOverride" rel="stylesheet"
+          href="{{ 'component-model-viewer-ui.css' | asset_url }}"
+          media="print" onload="this.media='all'">
   {%- endif -%}
-  {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
+
+
 
 
   {% comment %} pdp-page-width main-container {% endcomment %}
