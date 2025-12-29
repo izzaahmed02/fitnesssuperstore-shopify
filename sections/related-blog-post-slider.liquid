@@ -231,62 +231,103 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
       font-weight: 700;
       text-decoration: none;
     }
+
+    .related-slider__arrows .arrow.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: default;
+}
+
   </style>
 
-  <style>
-
-    
-  </style>
+ 
 
   <script>
-    (function () {
-      const slider = document.querySelector('#RelatedBlogs-{{ section.id }} [data-slider]');
-      if (!slider) return;
 
-      const track = slider.querySelector('[data-track]');
-      const scrollbar = slider.querySelector('[data-scrollbar]');
-      const thumb = slider.querySelector('[data-thumb]');
-      const prev = slider.querySelector('[data-prev]');
-      const next = slider.querySelector('[data-next]');
+  (function () {
+    const slider = document.querySelector('#RelatedBlogs-{{ section.id }} [data-slider]');
+    if (!slider) return;
 
-      function syncThumb() {
-        const maxScroll = track.scrollWidth - track.clientWidth;
-        if (maxScroll <= 0) return;
-        const ratio = track.scrollLeft / maxScroll;
-        const maxLeft = scrollbar.clientWidth - thumb.clientWidth;
-        thumb.style.left = `${ratio * maxLeft}px`;
+    const track = slider.querySelector('[data-track]');
+    const scrollbar = slider.querySelector('[data-scrollbar]');
+    const thumb = slider.querySelector('[data-thumb]');
+    const prev = slider.querySelector('[data-prev]');
+    const next = slider.querySelector('[data-next]');
+
+    function updateArrows() {
+      const maxScroll = track.scrollWidth - track.clientWidth;
+
+      // At start
+      if (track.scrollLeft <= 1) {
+        prev.classList.add('disabled');
+      } else {
+        prev.classList.remove('disabled');
       }
 
-      track.addEventListener('scroll', syncThumb);
-
-      function scrollByCard(dir) {
-        const card = track.querySelector('.related-slider__slide');
-        if (!card) return;
-        track.scrollBy({
-          left: dir * (card.offsetWidth + 16),
-          behavior: 'smooth'
-        });
+      // At end
+      if (track.scrollLeft >= maxScroll - 1) {
+        next.classList.add('disabled');
+      } else {
+        next.classList.remove('disabled');
       }
+    }
 
-      prev.addEventListener('click', () => scrollByCard(-1));
-      next.addEventListener('click', () => scrollByCard(1));
+    function syncThumb() {
+      const maxScroll = track.scrollWidth - track.clientWidth;
+      if (maxScroll <= 0) return;
 
-      let dragging = false;
+      const ratio = track.scrollLeft / maxScroll;
+      const maxLeft = scrollbar.clientWidth - thumb.clientWidth;
+      thumb.style.left = `${ratio * maxLeft}px`;
 
-      thumb.addEventListener('mousedown', () => dragging = true);
-      document.addEventListener('mouseup', () => dragging = false);
+      updateArrows();
+    }
 
-      document.addEventListener('mousemove', (e) => {
-        if (!dragging) return;
-        const rect = scrollbar.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        x = Math.max(0, Math.min(x, scrollbar.clientWidth - thumb.clientWidth));
-        const ratio = x / (scrollbar.clientWidth - thumb.clientWidth);
-        track.scrollLeft = ratio * (track.scrollWidth - track.clientWidth);
+    track.addEventListener('scroll', syncThumb);
+
+    function scrollByCard(dir) {
+      const card = track.querySelector('.related-slider__slide');
+      if (!card) return;
+
+      track.scrollBy({
+        left: dir * (card.offsetWidth + 16),
+        behavior: 'smooth'
       });
+    }
 
-      syncThumb();
-    })();
+    prev.addEventListener('click', () => {
+      if (!prev.classList.contains('disabled')) {
+        scrollByCard(-1);
+      }
+    });
+
+    next.addEventListener('click', () => {
+      if (!next.classList.contains('disabled')) {
+        scrollByCard(1);
+      }
+    });
+
+    let dragging = false;
+
+    thumb.addEventListener('mousedown', () => dragging = true);
+    document.addEventListener('mouseup', () => dragging = false);
+
+    document.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+
+      const rect = scrollbar.getBoundingClientRect();
+      let x = e.clientX - rect.left;
+      x = Math.max(0, Math.min(x, scrollbar.clientWidth - thumb.clientWidth));
+
+      const ratio = x / (scrollbar.clientWidth - thumb.clientWidth);
+      track.scrollLeft = ratio * (track.scrollWidth - track.clientWidth);
+    });
+
+    // Initial state
+    syncThumb();
+  })();
+
+
   </script>
 </section>
 
