@@ -1,139 +1,139 @@
-
-
+{% comment %}
+Blog Slider using Flickity
+– Visible overflow (peek next slide)
+– No page horizontal scroll
+– Shopify-safe
+{% endcomment %}
 
 <link rel="stylesheet" href="https://npmcdn.com/flickity@2/dist/flickity.css">
-<script src="https://npmcdn.com/flickity@2/dist/flickity.pkgd.js" defer> </script>
+<script src="https://npmcdn.com/flickity@2/dist/flickity.pkgd.js" defer></script>
+
 {% assign blog = blogs[section.settings.blog] %}
 
-<div class="page-width">
-<!-- Flickity HTML init -->
-<div class="carousel"
-  data-flickity='{ "cellAlign": "left" }'>
-  {% for article in blog.articles %}
-  <div class="carousel-cell">
-<article class="card-wrapper">
-                <a href="{{ article.url }}" class="card">
+<section class="related-articles section-{{ section.id }}">
 
-                  {% if article.image %}
-                    <div class="card__media">
-                      <img
-                        src="{{ article.image | img_url: '720x' }}"
-                        alt="{{ article.image.alt | default: article.title }}"
-                        loading="lazy"
-                      >
+  <div class="page-width">
+
+    <!-- CLIP WRAPPER (critical to stop page scroll) -->
+    <div class="carousel-clip">
+
+      <!-- Flickity -->
+      <div
+        class="carousel js-flickity"
+        data-flickity='{
+          "cellAlign": "left",
+          "contain": true,
+          "pageDots": false,
+          "prevNextButtons": true
+        }'
+      >
+
+        {% for article in blog.articles %}
+          <div class="carousel-cell">
+            <article class="card-wrapper">
+              <a href="{{ article.url }}" class="card">
+
+                {% if article.image %}
+                  <div class="card__media">
+                    <img
+                      src="{{ article.image | img_url: '720x' }}"
+                      alt="{{ article.image.alt | default: article.title }}"
+                      loading="lazy"
+                    >
+                  </div>
+                {% endif %}
+
+                <div class="card__content">
+                  <h3 class="card__heading">
+                    {{ article.title }}
+                  </h3>
+
+                  {% if article.published_at or article.author %}
+                    <p class="card__meta">
+                      {% if article.published_at %}
+                        <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                      {% endif %}
+                      {% if article.author %}
+                        <span> · {{ article.author }}</span>
+                      {% endif %}
+                    </p>
+                  {% endif %}
+
+                  {% if section.settings.show_excerpt %}
+                    <div class="card__excerpt">
+                      {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
                     </div>
                   {% endif %}
 
-                  <div class="card__content">
+                  <span class="link">
+                    {{ section.settings.read_more_text }}
+                  </span>
+                </div>
 
-                    <h3 class="card__heading">
-                      {{ article.title }}
-                    </h3>
+              </a>
+            </article>
+          </div>
+        {% endfor %}
 
-                    {% if article.published_at or article.author %}
-                      <p class="card__meta publish-info">
-                        {% if article.published_at %}
-                          <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
-                        {% endif %}
-                        {% if article.author %}
-                          <span>{{ article.author }}</span>
-                        {% endif %}
-                      </p>
-                    {% endif %}
+      </div>
+    </div>
 
-                    {% if section.settings.show_excerpt %}
-                      <div class="card__excerpt">
-                        {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
-                      </div>
-                    {% endif %}
-
-                    <div class="card__actions">
-                      <span class="link">{{ section.settings.read_more_text }}</span>
-                    </div>
-
-                  </div>
-                </a>
-              </article>
   </div>
-  {% endfor %}
-</div>
-</div>
-
+</section>
 
 <style>
-.carousel {
-  background: #FAFAFA;
-}
-
-
-.carousel-cell {
-  width: 25%;
-  height: 200px;
-  margin-right: 10px;
-  border-radius: 5px;
-  counter-increment: carousel-cell;
-}
-
-/* Prevent page-level horizontal scroll */
-.related-articles {
+/* === HARD STOP PAGE SCROLL === */
+.related-articles,
+.related-articles .page-width,
+.carousel-clip {
   overflow-x: hidden;
 }
 
-/* Allow Flickity to show partial slides */
-.flickity-viewport {
+/* === ALLOW PEEKING SLIDES === */
+.carousel-clip .flickity-viewport {
   overflow: visible;
 }
 
-/* Carousel styling */
+/* === CAROUSEL === */
 .carousel {
-  background: #fafafa;
+  width: 100%;
 }
 
+/* === SLIDES === */
 .carousel-cell {
   width: 25%;
   margin-right: 16px;
-  border-radius: 5px;
 }
 
+@media (max-width: 1024px) {
+  .carousel-cell {
+    width: 40%;
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-cell {
+    width: 85%;
+  }
+}
+
+/* === CARD IMAGE FIX === */
+.card__media img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
 </style>
-
-
-
-
 
 {% schema %}
 {
-  "name": "Blog Slider flickity",
+  "name": "Blog Slider Flickity",
   "class": "related-articles",
   "settings": [
-    {
-      "id": "heading",
-      "type": "text",
-      "label": "Section heading",
-      "default": "Related posts"
-    },
-    {
-      "id": "subheading",
-      "type": "text",
-      "label": "Section Short Copy",
-      "default": "Short Copy"
-    },
-    {
-      "id": "intro",
-      "type": "text",
-      "label": "Section Intro",
-      "default": "Introduction to posts"
-    },
     {
       "id": "blog",
       "type": "blog",
       "label": "Select blog"
-    },
-    {
-      "id": "show_scrollbar",
-      "type": "checkbox",
-      "label": "Show horizontal scrollbar",
-      "default": true
     },
     {
       "id": "show_excerpt",
@@ -144,7 +144,7 @@
     {
       "id": "excerpt_length",
       "type": "number",
-      "label": "Excerpt length (characters)",
+      "label": "Excerpt length",
       "default": 120
     },
     {
@@ -152,42 +152,11 @@
       "type": "text",
       "label": "Read more text",
       "default": "Read article"
-    },
-    {
-      "type": "range",
-      "id": "padding_top",
-      "min": 0,
-      "max": 120,
-      "step": 4,
-      "unit": "px",
-      "label": "Top padding",
-      "default": 48
-    },
-    {
-      "type": "range",
-      "id": "padding_bottom",
-      "min": 0,
-      "max": 120,
-      "step": 4,
-      "unit": "px",
-      "label": "Bottom padding",
-      "default": 48
-    },
-    {
-      "type": "url",
-      "id": "url",
-      "label": "Section Button Link"
-    },
-    {
-      "type": "text",
-      "id": "label",
-      "default": "Shop remanufactured equipment",
-      "label": "Section Button Label"
     }
   ],
   "presets": [
     {
-      "name": "Blog Slider flickity",
+      "name": "Blog Slider Flickity",
       "category": "Blog"
     }
   ]
