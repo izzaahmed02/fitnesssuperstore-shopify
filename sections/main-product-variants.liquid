@@ -87,6 +87,20 @@
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
 
+  {%- comment -%} --- Variant Picker HTML (always rendered) --- {%- endcomment -%}
+  {% unless product.has_only_default_variant %}
+    <div class="product-variant-picker">
+      {% assign selected_variant = product.selected_or_first_available_variant %}
+      {% for variant in product.variants %}
+        <label class="variant-option">
+          <input type="radio" name="id" value="{{ variant.id }}"
+            {% if variant.id == selected_variant.id %} checked {% endif %}>
+          {{ variant.title }}
+        </label>
+      {% endfor %}
+    </div>
+  {% endunless %}
+
   {%- comment -%} --- JS Assets (Correct Order) --- {%- endcomment -%}
   <script src="{{ 'product-variants.js' | asset_url }}" defer></script>
   <script src="{{ 'product-variants-info.js' | asset_url }}" defer></script>
@@ -109,18 +123,23 @@
     <script src="{{ 'theme-editor.js' | asset_url }}" defer></script>
   {% endif %}
 
-  {%- comment -%} --- Force variant picker and price initialization on page load --- {%- endcomment -%}
+  {%- comment -%} --- Force variant selection & UI initialization on page load --- {%- endcomment -%}
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const variantInput = document.querySelector('input[name="id"]');
+      const variantInput = document.querySelector('input[name="id"]:checked') ||
+                           document.querySelector('input[name="id"]');
       if (!variantInput) return;
 
       const form = variantInput.closest('form');
 
-      // Set initial variant from URL if present
+      // Ensure correct variant from URL if present
       const urlVariantId = new URLSearchParams(window.location.search).get('variant');
       if (urlVariantId && variantInput.value !== urlVariantId) {
-        variantInput.value = urlVariantId;
+        const inputFromUrl = document.querySelector(`input[name="id"][value="${urlVariantId}"]`);
+        if (inputFromUrl) {
+          inputFromUrl.checked = true;
+          variantInput = inputFromUrl;
+        }
       }
 
       // Trigger change to update variant picker UI, price, and savings
