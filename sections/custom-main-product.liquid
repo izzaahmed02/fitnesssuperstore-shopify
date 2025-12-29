@@ -4330,17 +4330,17 @@ document.addEventListener("DOMContentLoaded", function(){
 
       let items = [];
 
-      // Main Product
+     
       items.push({
         id: mainVariant,
         quantity: quantity
       });
 
-      // All Selected Addons
+     
       document.querySelectorAll(".addon-radio:checked").forEach(function(r){
           items.push({
               id: r.dataset.variantId,
-              quantity: quantity,   // 👈 SAME AS MAIN PRODUCT
+              quantity: quantity,   
               properties: {
                   parent: mainVariant
               }
@@ -4352,7 +4352,7 @@ document.addEventListener("DOMContentLoaded", function(){
         return;
       }
 
-      // AJAX Add To Cart
+    
       fetch('/cart/add.js', {
           method : 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -4403,7 +4403,7 @@ document.addEventListener("click", async function(e){
 
   // Now find all addons with _parent property
   cart.items.forEach((child, i) => {
-    if(child.properties && child.properties._parent == parentVariantId){
+    if(child.properties && child.properties.parent == parentVariantId){
       updates[i+1] = 0;
     }
   });
@@ -4446,7 +4446,7 @@ document.addEventListener("click", function(e){
 
           // saare addons jinke properties me _parent match kare → remove
           cart.items.forEach((child, k) => {
-            if(child.properties && child.properties._parent == item.id){
+            if(child.properties && child.properties.parent == item.id){
               updates[k+1] = 0;
             }
           });

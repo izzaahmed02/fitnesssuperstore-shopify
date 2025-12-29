@@ -669,7 +669,7 @@
             </p>
         </form>
     </div>
-{% comment %} <script>
+ <script>
 document.addEventListener("click", async function(e){
 
   const removeBtn = e.target.closest(".cart-item__remove");
@@ -679,7 +679,7 @@ document.addEventListener("click", async function(e){
 
   const lineIndex = Number(removeBtn.getAttribute("data-index"));
 
-  // Get full cart
+ 
   const cart = await fetch('/cart.js').then(r => r.json());
 
   let updates = {};
@@ -692,17 +692,17 @@ document.addEventListener("click", async function(e){
 
   const parentVariantId = parentItem.id;
 
-  // Remove Parent
+ 
   updates[lineIndex] = 0;
 
-  // Remove all children with matching _parent
+
   cart.items.forEach((item, i) => {
-    if(item.properties && item.properties._parent == parentVariantId){
+    if(item.properties && item.properties.parent == parentVariantId){
       updates[i + 1] = 0;
     }
   });
 
-  // Update Cart
+  
   await fetch('/cart/update.js',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -711,7 +711,7 @@ document.addEventListener("click", async function(e){
 
   location.reload();
 });
-</script> {% endcomment %}
+</script> 
 
   
 
@@ -757,7 +757,7 @@ document.addEventListener("click", async function(e) {
 
   e.preventDefault();
 
-  // Shopify Line Key / ID pick
+
   let lineKey = removeBtn.getAttribute("data-line")
       || removeBtn.getAttribute("data-index")
       || removeBtn.value
@@ -769,10 +769,9 @@ document.addEventListener("click", async function(e) {
   }
 
   try {
-    // Get current cart
+
     const cart = await fetch("/cart.js").then(res => res.json());
 
-    // Find parent line item
     const parentItem = cart.items.find(i => i.key == lineKey);
 
     if (!parentItem) {
@@ -780,19 +779,19 @@ document.addEventListener("click", async function(e) {
       return;
     }
 
-    // Find all add-ons linked to this parent
+   
     const addonItems = cart.items.filter(item =>
       item.properties &&
       item.properties.parent_key &&
       item.properties.parent_key === parentItem.key
     );
 
-    // Prepare update payload
+ 
     let updates = {};
-    updates[parentItem.key] = 0; // remove parent
+    updates[parentItem.key] = 0; 
 
     addonItems.forEach(addon => {
-      updates[addon.key] = 0; // remove addon too
+      updates[addon.key] = 0; 
     });
 
     // Apply remove request
@@ -802,7 +801,7 @@ document.addEventListener("click", async function(e) {
       body: JSON.stringify({ updates })
     });
 
-    // Refresh cart UI
+    
     window.location.reload();
 
   } catch (error) {
