@@ -748,8 +748,67 @@ document.addEventListener("click", async function(e){
         </div>
     </div>
 </div>
+<script>
+document.addEventListener("click", async function(e) {
+  const removeBtn = e.target.closest('[data-cart-remove], .cart__remove, .remove-item, button[name="remove"]');
 
+  if (!removeBtn) return;
 
+  e.preventDefault();
+
+  // Shopify Line Key / ID pick
+  let lineKey = removeBtn.getAttribute("data-line")
+      || removeBtn.getAttribute("data-index")
+      || removeBtn.value
+      || removeBtn.dataset.id;
+
+  if (!lineKey) {
+    console.warn("Parent line key not found");
+    return;
+  }
+
+  try {
+    // Get current cart
+    const cart = await fetch("/cart.js").then(res => res.json());
+
+    // Find parent line item
+    const parentItem = cart.items.find(i => i.key == lineKey);
+
+    if (!parentItem) {
+      console.warn("Parent item not found");
+      return;
+    }
+
+    // Find all add-ons linked to this parent
+    const addonItems = cart.items.filter(item =>
+      item.properties &&
+      item.properties.parent_key &&
+      item.properties.parent_key === parentItem.key
+    );
+
+    // Prepare update payload
+    let updates = {};
+    updates[parentItem.key] = 0; // remove parent
+
+    addonItems.forEach(addon => {
+      updates[addon.key] = 0; // remove addon too
+    });
+
+    // Apply remove request
+    await fetch("/cart/update.js", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ updates })
+    });
+
+    // Refresh cart UI
+    window.location.reload();
+
+  } catch (error) {
+    console.error("Addon Remove Failed", error);
+  }
+});
+</script>
 
 {% schema %}
 {
