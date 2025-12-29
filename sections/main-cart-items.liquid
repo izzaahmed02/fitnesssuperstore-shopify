@@ -670,7 +670,7 @@
         </form>
     </div>
 
-    <script>
+    {% comment %} <script>
 document.addEventListener("click", function(e){
   const btn = e.target.closest(".cart-item__remove a");
   if(!btn) return;
@@ -710,7 +710,7 @@ document.addEventListener("click", function(e){
     })
     .then(()=> location.reload());
 });
-</script>
+</script> {% endcomment %}
 
 </cart-items>
 {% comment %}Assistance Block{% endcomment %}
@@ -745,6 +745,52 @@ document.addEventListener("click", function(e){
         </div>
     </div>
 </div>
+<script>
+document.addEventListener("click", async function(e){
+
+  const btn = e.target.closest(".cart-item__remove");
+  if(!btn) return;
+
+  e.preventDefault();
+
+  const lineIndex = btn.getAttribute("data-index");
+
+  // Get cart
+  const cart = await fetch('/cart.js').then(r => r.json());
+
+  let updates = {};
+
+  // Parent item ki info le lo
+  const parentItem = cart.items[lineIndex - 1];
+  if(!parentItem){
+    location.reload();
+    return;
+  }
+
+  const parentVariantId = parentItem.id;
+
+  // Parent remove
+  updates[lineIndex] = 0;
+
+  // Now find all addons with _parent property
+  cart.items.forEach((child, i) => {
+    if(child.properties && child.properties._parent == parentVariantId){
+      updates[i+1] = 0;
+    }
+  });
+
+  // Update cart
+  await fetch('/cart/update.js',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({updates})
+  });
+
+  location.reload();
+});
+</script>
+
+
 {% schema %}
 {
   "name": "t:sections.main-cart-items.name",
