@@ -41,15 +41,6 @@
 {% assign has_any_video = false %}
 
 {% if extra %}
-
-  {% if extra.test != blank and extra.test.value != blank %}
-  {% for video_file in extra.test.value %}
-    {% if video_file != blank %}
-      {% assign has_any_video = true %}
-    {% endif %}
-  {% endfor %}
-{% endif %}
-
   {% if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank %}
     {% assign has_any_video = true %}
   {% endif %}
@@ -106,44 +97,6 @@
           </div>
         </div>
       {% endif %}
-
-      {%- comment -%} Test videos (with preview images from file reference) {%- endcomment -%}
-{%- comment -%} Test videos (with preview images from file reference) {%- endcomment -%}
-{% if extra.test != blank and extra.test.value != blank %}
-  {% for video_file in extra.test.value %}
-    {% if video_file != blank %}
-      <div class="video-slide other-videos">
-        <div class="video-slide-inner">
-          <div class="video-thumbnail" data-video-url="{{ video_file.sources[0].url }}">
-            {% if video_file.preview_image.src %}
-              <img 
-                class="video-thumb-image" 
-                src="https:{{ video_file.preview_image.src | replace: 'files/', '' | file_url }}" 
-                alt="Video thumbnail"
-              >
-            {% elsif video_file.preview_image %}
-              <img 
-                class="video-thumb-image" 
-                src="https:{{ video_file.preview_image | file_url }}" 
-                alt="Video thumbnail"
-              >
-            {% else %}
-              <video
-                class="video-thumb-video"
-                src="{{ video_file.sources[0].url }}"
-                muted
-                playsinline
-                preload="metadata"
-              ></video>
-            {% endif %}
-            <div class="play-button">&#9658;</div>
-          </div>
-          <p>{{ video_file.alt | default: "Video" }}</p>
-        </div>
-      </div>
-    {% endif %}
-  {% endfor %}
-{% endif %}
 
       {%- comment -%} Assembly video slide (video as thumbnail) {%- endcomment -%}
       {% if extra.assembly_video != blank and extra.assembly_video.value != blank %}
@@ -243,21 +196,6 @@
 {% endif %}
 
 <style>
-
-  .extra-info-video-slider .video-thumb-video {
-  width: 100%;
-  border-radius: 12px;
-  display: block;
-  pointer-events: none; /* prevent inline play on click */
-}
-
-.extra-info-video-slider .video-thumb-image {
-  width: 100%;
-  border-radius: 12px;
-  display: block;
-  object-fit: cover;
-}
-
   .extra-info-videos .carouselHdg {
     font-family: Lato;
     font-weight: 700;
