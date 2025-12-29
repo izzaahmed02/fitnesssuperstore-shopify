@@ -669,47 +669,7 @@
             </p>
         </form>
     </div>
-<script>
-document.addEventListener("click", async function(e){
 
-  const removeBtn = e.target.closest(".cart-item__remove");
-  if(!removeBtn) return;
-
-  e.preventDefault();
-
-  const cartItem = removeBtn.closest('.cart-item');
-  const lineIndex = Number(cartItem.id.replace('CartItem-', ''));
-
-  const cart = await fetch('/cart.js').then(r => r.json());
-  let updates = {};
-
-  const parentItem = cart.items[lineIndex - 1];
-  if(!parentItem){
-    location.reload();
-    return;
-  }
-
-  const parentVariantId = parentItem.id;
-
-  updates[lineIndex] = 0;
-
-  cart.items.forEach((item, i) => {
-    if(item.properties && item.properties.parent == parentVariantId){
-      updates[i + 1] = 0;
-    }
-  });
-
-  await fetch('/cart/update.js',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ updates })
-  });
-
-  location.reload();
-});
-</script>
-
-  
 
 </cart-items>
 {% comment %}Assistance Block{% endcomment %}
