@@ -98,6 +98,37 @@
         </div>
       {% endif %}
 
+      {%- comment -%} Test videos (with preview images from file reference) {%- endcomment -%}
+{% if extra.test != blank and extra.test.value != blank %}
+  {% for video_file in extra.test.value %}
+    {% if video_file != blank %}
+      <div class="video-slide other-videos">
+        <div class="video-slide-inner">
+          <div class="video-thumbnail" data-video-url="{{ video_file.url }}">
+            {% if video_file.preview_image %}
+              <img 
+                class="video-thumb-image" 
+                src="{{ video_file.preview_image.url }}" 
+                alt="Video thumbnail"
+              >
+            {% else %}
+              <video
+                class="video-thumb-video"
+                src="{{ video_file.url }}"
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
+            {% endif %}
+            <div class="play-button">&#9658;</div>
+          </div>
+          <p>{{ video_file.alt | default: "Video" }}</p>
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
       {%- comment -%} Assembly video slide (video as thumbnail) {%- endcomment -%}
       {% if extra.assembly_video != blank and extra.assembly_video.value != blank %}
         {% assign assembly_url = extra.assembly_video.value %}
