@@ -980,8 +980,8 @@
 <div class="total_with_option">
    Total with options
    <div class="total_price_quantity">
-  <div class="total-price">
-<span id="final-price"></span>
+   <div class="total-price">
+   <span id="final-price"></span>
   </div>
    <div id="Quantity-Form-{{ section.id }}"
                   class="product-form__input product-form__quantity{% if settings.inputs_shadow_vertical_offset != 0 and settings.inputs_shadow_vertical_offset < 0 %} product-form__quantity-top{% endif %}"
@@ -4396,11 +4396,10 @@ document.addEventListener("DOMContentLoaded", function(){
       let mainVariant = this.getAttribute("main-varientid");
       let quantity = Number(document.querySelector("#Quantity-{{ section.id }}").value || 1);
 
-      let groupId = Date.now();   // UNIQUE GROUP ID
+      let groupId = Date.now();
 
       let items = [];
 
-      // Main Product
       items.push({
         id: mainVariant,
         quantity: quantity,
@@ -4434,14 +4433,11 @@ document.addEventListener("DOMContentLoaded", function(){
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-  /* -----------------------------
-     GET MAIN PRODUCT BASE PRICE
-  ------------------------------ */
+  /* -----------------GET MAIN PRODUCT BASE PRICE------------------------------ */
   function getBasePrice() {
     const priceEl = document.querySelector(".price-item-fixed");
     if (!priceEl) return 0;
 
-    // ₹49,999.00 → 49999
     return parseFloat(
       priceEl.innerText.replace(/[^0-9.]/g, "")
     ) || 0;
@@ -4451,9 +4447,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const finalPriceBox = document.getElementById("final-price");
   const addonRadios = document.querySelectorAll(".addon-radio");
 
-  /* -----------------------------
-     UPDATE FINAL PRICE (UI)
-  ------------------------------ */
+  /* -----------------------------UPDATE FINAL PRICE (UI)----------------------------- */
   function updateFinalPrice() {
     let addonTotal = 0;
 
@@ -4470,14 +4464,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  /* -----------------------------
-     LISTEN TO ADD-ON SELECTION
-  ------------------------------ */
+  /* -----------------------------LISTEN TO ADD-ON SELECTION----------------------------- */
+
   addonRadios.forEach(radio => {
     radio.addEventListener("change", updateFinalPrice);
   });
 
-  /* Initial load */
+  /*--------- Initial load -----------*/
   updateFinalPrice();
 
 });
