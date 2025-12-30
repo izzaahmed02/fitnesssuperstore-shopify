@@ -4390,7 +4390,8 @@ document.addEventListener("DOMContentLoaded", function(){
 </script> {% endcomment %}
 
 
-<script>
+{% comment %} <script>
+  // perfect working with group id
 document.addEventListener("DOMContentLoaded", function(){
 
   document.querySelector(".addtocart").addEventListener("click", function(){
@@ -4431,7 +4432,64 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
 });
+</script> {% endcomment %}
+<script>
+  // add on title on cart page 
+document.addEventListener("DOMContentLoaded", function(){
+
+  document.querySelector(".addtocart").addEventListener("click", function(e){
+    e.preventDefault();
+
+    let mainVariant = this.getAttribute("main-varientid");
+    let quantity = Number(
+      document.querySelector("#Quantity-{{ section.id }}")?.value || 1
+    );
+
+    let groupId = Date.now();
+    let items = [];
+
+    /* ------------------
+       MAIN PRODUCT
+    ------------------ */
+    items.push({
+      id: mainVariant,
+      quantity: quantity,
+      properties:{
+        group_id: groupId
+      }
+    });
+
+    /* ------------------
+       ADD ON PRODUCTS
+    ------------------ */
+    document.querySelectorAll(".addon-radio:checked").forEach(function(r){
+
+      items.push({
+        id: r.dataset.variantId,
+        quantity: quantity,
+        properties: {
+          group_id: groupId,
+          "Add-on": r.dataset.title   // ⭐ IMPORTANT
+        }
+      });
+
+    });
+
+    fetch('/cart/add.js', {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items })
+    })
+    .then(() => window.location.href = "/cart");
+
+  });
+
+});
 </script>
+
+
+
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -4478,92 +4536,4 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
- {% comment %} <script>
- //  add on remove
-document.addEventListener("click", async function(e){
 
-  const btn = e.target.closest(".cart-item__remove");
-  if(!btn) return;
-
-  e.preventDefault();
-
-  const lineIndex = btn.getAttribute("data-index");
-
-  // Get cart
-  const cart = await fetch('/cart.js').then(r => r.json());
-
-  let updates = {};
-
-  // Parent item ki info le lo
-  const parentItem = cart.items[lineIndex - 1];
-  if(!parentItem){
-    location.reload();
-    return;
-  }
-
-  const parentVariantId = parentItem.id;
-
-  // Parent remove
-  updates[lineIndex] = 0;
-
-  // Now find all addons with _parent property
-  cart.items.forEach((child, i) => {
-    if(child.properties && child.properties.parent == parentVariantId){
-      updates[i+1] = 0;
-    }
-  });
-
-  // Update cart
-  await fetch('/cart/update.js',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({updates})
-  });
-
-  location.reload();
-});
-</script>  {% endcomment %}
-
-
-  {% comment %} <script>
- //  add on remove
-document.addEventListener("click", function(e){
-  const btn = e.target.closest(".cart-item__remove a");
-  if(!btn) return;
-
-  e.preventDefault();
-
-  // jis item ko remove kar rahe hain wo kaun sa variant hai
-  let url = new URL(btn.href);
-  let index = url.searchParams.get('line');
-
-  fetch('/cart.js')
-    .then(res => res.json())
-    .then(cart => {
-
-      let updates = {};
-
-      cart.items.forEach((item, i) => {
-
-        // agar ye parent product remove ho raha hai
-        if((i+1) == index){
-          updates[index] = 0;
-
-          // saare addons jinke properties me _parent match kare → remove
-          cart.items.forEach((child, k) => {
-            if(child.properties && child.properties.parent == item.id){
-              updates[k+1] = 0;
-            }
-          });
-        }
-      });
-
-      return fetch('/cart/update.js',{
-        method : 'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ updates })
-      })
-    })
-    .then(()=> location.reload());
-});
-</script>  {% endcomment %}
