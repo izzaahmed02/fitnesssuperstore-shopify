@@ -131,7 +131,9 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
+  {% assign featured_tag = 'featured:top' %}
   {%- for article in blog.articles -%}
+    {% if article.tags contains featured_tag %}
     <div
       class="blog-articles__article article{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
       data-article-handle="{{ article.handle }}"
@@ -155,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
         {{ article.content | strip_html | escape }}
       </div>
     </div>
+  {% endif %}
   {%- endfor -%}
 </div>
 
