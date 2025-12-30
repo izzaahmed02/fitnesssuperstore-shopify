@@ -834,8 +834,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script> {% endcomment %}
-
+{% comment %} 
 <script>
+  //3--12 moring js
 document.addEventListener("click", async function(e){
 
   const removeBtn = e.target.closest(".cart-item__remove");
@@ -870,4 +871,46 @@ document.addEventListener("click", async function(e){
   location.reload();
 });
 
+</script> {% endcomment %}
+
+
+<script>
+document.addEventListener("click", async function(e){
+
+  const confirmRemoveBtn = e.target.closest(".cart-items__popup-btn--remove");
+  if (!confirmRemoveBtn) return;
+
+  e.preventDefault();
+
+  const popup = document.querySelector(".cart-items__popup");
+  const lineIndex = Number(popup?.dataset.index);
+
+  if (!lineIndex) return;
+
+  const cart = await fetch("/cart.js").then(r => r.json());
+  const parentItem = cart.items[lineIndex - 1];
+
+  if (!parentItem || !parentItem.properties?.group_id) {
+    // fallback to normal remove
+    window.location.href = `/cart/change?line=${lineIndex}&quantity=0`;
+    return;
+  }
+
+  const groupId = parentItem.properties.group_id;
+  const updates = {};
+
+  cart.items.forEach((item, index) => {
+    if (item.properties?.group_id == groupId) {
+      updates[index + 1] = 0;
+    }
+  });
+
+  await fetch("/cart/update.js", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ updates })
+  });
+
+  location.reload();
+});
 </script>
