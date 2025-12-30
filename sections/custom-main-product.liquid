@@ -4419,6 +4419,57 @@ document.addEventListener("DOMContentLoaded", function(){
 
 });
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  /* -----------------------------
+     GET MAIN PRODUCT BASE PRICE
+  ------------------------------ */
+  function getBasePrice() {
+    const priceEl = document.querySelector(".price-item-fixed");
+    if (!priceEl) return 0;
+
+    // ₹49,999.00 → 49999
+    return parseFloat(
+      priceEl.innerText.replace(/[^0-9.]/g, "")
+    ) || 0;
+  }
+
+  let basePrice = getBasePrice();
+  const finalPriceBox = document.getElementById("final-price");
+  const addonRadios = document.querySelectorAll(".addon-radio");
+
+  /* -----------------------------
+     UPDATE FINAL PRICE (UI)
+  ------------------------------ */
+  function updateFinalPrice() {
+    let addonTotal = 0;
+
+    addonRadios.forEach(radio => {
+      if (radio.checked) {
+        addonTotal += parseFloat(radio.dataset.price) || 0;
+      }
+    });
+
+    const finalTotal = basePrice + addonTotal;
+
+    if (finalPriceBox) {
+      finalPriceBox.innerText = "₹" + finalTotal.toLocaleString("en-IN");
+    }
+  }
+
+  /* -----------------------------
+     LISTEN TO ADD-ON SELECTION
+  ------------------------------ */
+  addonRadios.forEach(radio => {
+    radio.addEventListener("change", updateFinalPrice);
+  });
+
+  /* Initial load */
+  updateFinalPrice();
+
+});
+</script>
 
  {% comment %} <script>
  //  add on remove
