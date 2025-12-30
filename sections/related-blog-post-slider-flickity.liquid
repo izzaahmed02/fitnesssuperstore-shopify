@@ -1,0 +1,158 @@
+{% assign blog = blogs[section.settings.blog] %}
+
+<link rel="stylesheet" href="https://npmcdn.com/flickity@2/dist/flickity.css">
+<script src="https://npmcdn.com/flickity@2/dist/flickity.pkgd.js" defer></script>
+
+<section class="related-articles section-{{ section.id }}" style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px;">
+
+  <!-- FULL-WIDTH WRAPPER -->
+  <div class="carousel-fullwidth">
+
+    <div class="carousel js-flickity"
+      data-flickity='{
+        "cellAlign": "left",
+        "contain": true,
+        "pageDots": false,
+        "prevNextButtons": true,
+        "wrapAround": false
+      }'>
+
+      {% for article in blog.articles %}
+        <div class="carousel-cell">
+          <article class="card-wrapper">
+            <a href="{{ article.url }}" class="card">
+
+              {% if article.image %}
+                <div class="card__media">
+                  <img
+                    src="{{ article.image | img_url: '720x' }}"
+                    alt="{{ article.image.alt | default: article.title }}"
+                    loading="lazy"
+                  >
+                </div>
+              {% endif %}
+
+              <div class="card__content">
+                <h3 class="card__heading">{{ article.title }}</h3>
+
+                {% if section.settings.show_excerpt %}
+                  <div class="card__excerpt">
+                    {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+                  </div>
+                {% endif %}
+
+                <span class="link">{{ section.settings.read_more_text }}</span>
+              </div>
+
+            </a>
+          </article>
+        </div>
+      {% endfor %}
+
+    </div>
+  </div>
+
+</section>
+
+<style>
+/* FULL WIDTH OUTER WRAPPER */
+.carousel-fullwidth {
+  position: relative;
+  width: 100vw; /* full viewport width */
+  left: 50%;
+  margin-left: -50vw;
+  overflow: visible; /* allow peek */
+  padding: 0 10px; /* optional spacing from edges */
+  box-sizing: border-box;
+}
+
+/* Flickity viewport */
+.carousel.js-flickity .flickity-viewport {
+  overflow: visible;
+}
+
+/* Carousel cells */
+.carousel-cell {
+  width: 25%;
+  margin-right: 16px;
+}
+
+@media (max-width: 1024px) {
+  .carousel-cell { width: 40%; }
+}
+@media (max-width: 768px) {
+  .carousel-cell { width: 85%; }
+}
+
+/* Card image */
+.card__media img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Prevent page scroll */
+body {
+  overflow-x: hidden;
+}
+</style>
+
+
+
+{% schema %}
+{
+  "name": "Blog Slider flickity",
+  "class": "related-articles",
+  "settings": [
+    {
+      "id": "blog",
+      "type": "blog",
+      "label": "Select blog"
+    },
+    {
+      "id": "show_excerpt",
+      "type": "checkbox",
+      "label": "Show excerpt",
+      "default": true
+    },
+    {
+      "id": "excerpt_length",
+      "type": "number",
+      "label": "Excerpt length",
+      "default": 120
+    },
+    {
+      "id": "read_more_text",
+      "type": "text",
+      "label": "Read more text",
+      "default": "Read article"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Blog Slider flickity",
+      "category": "Blog"
+    }
+  ]
+}
+{% endschema %}
