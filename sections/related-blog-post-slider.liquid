@@ -29,53 +29,114 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
       <div class="related-slider" data-slider>
 
         <div class="related-slider__track" data-track>
-          {% for article in blog.articles %}
-            <div class="related-slider__slide">
-              <article class="card-wrapper">
-                <a href="{{ article.url }}" class="card">
+          {% assign featured_tag = 'featured:top' %}
 
-                  {% if article.image %}
-                    <div class="card__media">
-                      <img
-                        src="{{ article.image | img_url: '720x' }}"
-                        alt="{{ article.image.alt | default: article.title }}"
-                        loading="lazy"
-                      >
-                    </div>
-                  {% endif %}
+{%- comment -%}
+1️⃣ Featured articles first
+{%- endcomment -%}
+{% for article in blog.articles %}
+  {% if article.tags contains featured_tag %}
+    <div class="related-slider__slide featured-article">
+      <article class="card-wrapper">
+        <a href="{{ article.url }}" class="card">
 
-                  <div class="card__content">
-
-                    <h3 class="card__heading">
-                      {{ article.title }}
-                    </h3>
-
-                    {% if article.published_at or article.author %}
-                      <p class="card__meta publish-info">
-                        {% if article.published_at %}
-                          <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
-                        {% endif %}
-                        {% if article.author %}
-                          <span>{{ article.author }}</span>
-                        {% endif %}
-                      </p>
-                    {% endif %}
-
-                    {% if section.settings.show_excerpt %}
-                      <div class="card__excerpt">
-                        {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
-                      </div>
-                    {% endif %}
-
-                    <div class="card__actions">
-                      <span class="link">{{ section.settings.read_more_text }}</span>
-                    </div>
-
-                  </div>
-                </a>
-              </article>
+          {% if article.image %}
+            <div class="card__media">
+              <img
+                src="{{ article.image | img_url: '720x' }}"
+                alt="{{ article.image.alt | default: article.title }}"
+                loading="lazy"
+              >
             </div>
-          {% endfor %}
+          {% endif %}
+
+          <div class="card__content">
+
+            <h3 class="card__heading">
+              {{ article.title }}
+            </h3>
+
+            {% if article.published_at or article.author %}
+              <p class="card__meta publish-info">
+                {% if article.published_at %}
+                  <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                {% endif %}
+                {% if article.author %}
+                  <span>{{ article.author }}</span>
+                {% endif %}
+              </p>
+            {% endif %}
+
+            {% if section.settings.show_excerpt %}
+              <div class="card__excerpt">
+                {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+              </div>
+            {% endif %}
+
+            <div class="card__actions">
+              <span class="link">{{ section.settings.read_more_text }}</span>
+            </div>
+
+          </div>
+        </a>
+      </article>
+    </div>
+  {% endif %}
+{% endfor %}
+
+{%- comment -%}
+2️⃣ Remaining (non-featured) articles
+{%- endcomment -%}
+{% for article in blog.articles %}
+  {% unless article.tags contains featured_tag %}
+    <div class="related-slider__slide">
+      <article class="card-wrapper">
+        <a href="{{ article.url }}" class="card">
+
+          {% if article.image %}
+            <div class="card__media">
+              <img
+                src="{{ article.image | img_url: '720x' }}"
+                alt="{{ article.image.alt | default: article.title }}"
+                loading="lazy"
+              >
+            </div>
+          {% endif %}
+
+          <div class="card__content">
+
+            <h3 class="card__heading">
+              {{ article.title }}
+            </h3>
+
+            {% if article.published_at or article.author %}
+              <p class="card__meta publish-info">
+                {% if article.published_at %}
+                  <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                {% endif %}
+                {% if article.author %}
+                  <span>{{ article.author }}</span>
+                {% endif %}
+              </p>
+            {% endif %}
+
+            {% if section.settings.show_excerpt %}
+              <div class="card__excerpt">
+                {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+              </div>
+            {% endif %}
+
+            <div class="card__actions">
+              <span class="link">{{ section.settings.read_more_text }}</span>
+            </div>
+
+          </div>
+        </a>
+      </article>
+    </div>
+  {% endunless %}
+{% endfor %}
+
         </div>
 
         {% if section.settings.show_scrollbar %}
