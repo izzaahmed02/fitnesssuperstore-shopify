@@ -968,7 +968,7 @@
 <!-- ========== SECTION 3 ========== -->
 <h2 class="section_title custom_product_option_heading"><span>3</span> Assembly & Room of Choice Installation Needed?</h2>
 
-<div class="custom_product_option">
+<div class="custom_product_option assembli_product_option">
 <select style="width:100%;padding:12px;border-radius:8px;border:1px solid #ddd;">
 {% for item in product.metafields.custom.product_option_assembly_room_of_choice_installation.value %}
 <option>
@@ -2412,238 +2412,122 @@
     }
   })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
 </script>
-{% comment %}
-  <script defer>
-    document.addEventListener("DOMContentLoaded", function () {
-      let scrollTimeout;
 
-      window.addEventListener('scroll', function () {
-          if (scrollTimeout) {
-              clearTimeout(scrollTimeout);
-          }
+{% comment %} ------addon item add to cart with main product using group id js start------ {% endcomment %}
+<script>
+document.addEventListener("DOMContentLoaded", function(){
 
-          scrollTimeout = setTimeout(() => {
-              const stickyAddToCart = document.querySelector('.sticky-add-to-cart');
-              const headerWrapper = document.querySelector('.header-wrapper');
-              const headerBottom = headerWrapper.getBoundingClientRect().bottom;
+  document.querySelector(".addtocart").addEventListener("click", function(e){
+    e.preventDefault();
 
-              if (headerBottom <= 0) {
-                  stickyAddToCart.style.display = 'block';
-              } else {
-                  stickyAddToCart.style.display = 'none';
-              }
-          }, 50);
-      });
+    let mainVariant = this.getAttribute("main-varientid");
+    let quantity = Number(
+      document.querySelector("#Quantity-{{ section.id }}")?.value || 1
+    );
 
-      const stickyQuantity = document.querySelector('.sticky-quantity');
-      const formQuantityInput = document.querySelector('.quantity__input');
+    let groupId = Date.now();
+    let items = [];
 
-      if (stickyQuantity) {
-        stickyQuantity.addEventListener('change', () => {
-          if (formQuantityInput) {
-              formQuantityInput.value = stickyQuantity.value;
-          }
-        });
-      }
+    /* ------------------
+       COLLECT ADD-ON TITLES
+    ------------------ */
+    let addonTitles = [];
 
-      formQuantityInput.addEventListener('change', () => {
-        var formQuantityValue = formQuantityInput.value;
-
-        if (formQuantityInput) {
-          stickyQuantity.value = formQuantityInput.value;
-        }
-      });
-
-      if (!window.product.available) {
-        const stickyProductActions = document.querySelector('.sticky-product-actions');
-
-        if (stickyProductActions) {
-          stickyProductActions.innerHTML = `<div class="restock-rocket-button-container"><button onclick="_RestockRocket.openModal()" class="sticky-restock-button restock-rocket-button restock-rocket-button-product restock-rocket-button-hover" style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;">Notify me when available</button></div>`
-        }
+    document.querySelectorAll(".addon-radio:checked").forEach(function(r){
+      if (r.dataset.title) {
+        addonTitles.push(r.dataset.title);
       }
     });
 
-    function addToCart() {
-      const addToCartMainButton = document.querySelector('.product-form__submit');
-
-      if (addToCartMainButton) {
-        addToCartMainButton.click();
+    /* ------------------
+       MAIN PRODUCT
+    ------------------ */
+    items.push({
+      id: mainVariant,
+      quantity: quantity,
+      properties:{
+        group_id: groupId,
+        "Included Add-Ons": addonTitles.join(", ") 
       }
-    }
-  </script>
-{% endcomment %}
+    });
 
+    /* ------------------
+       ADD ON PRODUCTS (AS SEPARATE ITEMS)
+    ------------------ */
+    document.querySelectorAll(".addon-radio:checked").forEach(function(r){
 
-{%comment %}
-  {% assign domain_origin = request.origin %}
-    <script type="application/ld+json">
-    {%- capture ld_json -%}
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@id": "https://{{ shop.domain }}{{ product.url }}#product",
-          "@type": "Product",
-          "brand": {
-            "@type": "Brand",
-            "@id": "https://{{ shop.domain }}{{ product.url }}#brand",
-            "name": "{{ product.vendor | default: shop.name | escape }}"
-          },
-          {% if product.metafields.reviews.rating.value and product.metafields.reviews.review_count %}
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "@id": "https://{{ shop.domain }}{{ product.url }}#aggregaterating",
-            "name": "{{ product.title | escape }}",
-            "ratingValue": "{{ product.metafields.reviews.rating.value | escape }}",
-            "ratingCount": "{{ product.metafields.reviews.review_count }}",
-            "reviewCount": "{{ product.metafields.reviews.review_count }}"
-          },
-          {% endif %}
-          "audience": "{{ product.metafields.custom.audience | default: 'Fitness enthusiasts and commercial gym users' | escape }}",
-          "category": "{{ product.type | default: 'Fitness Equipment' | escape }}",
-          "description": "{{ product.description | strip_html | strip_newlines | truncate: 500 | escape | default: 'High-quality fitness equipment for home or commercial use.' }}",
-          "image": [{% for image in product.images %}"{{ image.src | img_url: 'master' | split: '?' | first | escape }}"{% unless forloop.last %},{% endunless %}{% else %}"{{ 'product-placeholder.jpg' | asset_url | split: '?' | first | default: 'https://via.placeholder.com/500' | escape }}"{% endfor %}],
-          "name": "{{ product.title | escape }}",
-          "color": "{{ product.metafields.custom.product_color | default: 'Not specified' | escape }}",
-          "countryOfAssembly": "{{ product.metafields.custom.country_of_assembly | default: 'US' | escape }}",
-          "countryOfLastProcessing": "{{ product.metafields.custom.country_of_last_processing | default: 'US' | escape }}",
-          "hasMeasurement": {
-            "@type": "QuantitativeValue",
-            "@id": "https://{{ shop.domain }}{{ product.url }}#measurement",
-            "value": "Dimensions: {{product.metafields.custom.length_in | escape}} inch length x {{product.metafields.custom.width_in | escape}} inch weight x {{product.metafields.custom.height_in | escape}} inch height"
-          },
-          "keywords": [{%- assign keyword_list = product.metafields.custom.keywords.value -%}{%- if keyword_list != blank -%}{%- for keyword in keyword_list -%}"{{ keyword | strip | escape }}"{% unless forloop.last %},{% endunless %}{%- endfor -%}{%- elsif product.tags.size > 0 -%}{%- for tag in product.tags -%}"{{ tag | strip | escape }}"{% unless forloop.last %},{% endunless %}{%- endfor -%}{%- else -%}{%- assign words = product.title | split: ' ' -%}{%- for word in words -%}"{{ word | strip | escape }}"{% unless forloop.last %},{% endunless %}{%- endfor -%}{%- endif -%}],
-          "manufacturer": {
-            "@type": "Organization",
-            "@id": "https://{{ shop.domain }}{{ product.url }}#manufacturer",
-            "name": "{{ product.vendor | default: shop.name | escape }}"
-          },
-          "weight": "{{ product.metafields.custom.product_weight_lbs | default: 'Not specified' | escape }}",
-          "mpn": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
-          "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is'%}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured'%}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
-          "offers": {
-            "@id": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}#offer",
-            "@type": "Offer",
-            "availability": "https://schema.org/{% if product.selected_or_first_available_variant.available %}InStock{% else %}OutOfStock{% endif %}",
-            "price": "{{ product.price | divided_by: 100.0 | default: '0.00' }}",
-            "priceCurrency": "{{ shop.currency | default: 'USD' }}",
-            "url": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}",
-            {% if product.metafields.reviews.rating.value and product.metafields.reviews.review_count %}
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "@id": "https://{{ shop.domain }}{{ product.url }}#aggregaterating",
-              "name": "{{ product.title | escape }}",
-              "ratingValue": "{{ product.metafields.reviews.rating.value | escape }}",
-              "ratingCount": "{{ product.metafields.reviews.review_count }}",
-              "reviewCount": "{{ product.metafields.reviews.review_count }}"
-            },
-            {% endif %}
-            "offeredBy": {
-              "@type": "Organization",
-              "@id": "https://{{ shop.domain }}#seller",
-              "name": "{{ shop.name | escape }}",
-              "url": "https://{{ shop.domain }}",
-              "logo": "{{ 'logo.png' | asset_url | default: 'https://via.placeholder.com/500' }}",
-              "description": "{{ shop.description | escape | default: 'Premium fitness equipment at competitive prices.' }}",
-              "founder": "Timothy French",
-              "foundingDate": "2010",
-              "sameAs": [{% if shop.metafields.custom.social_media %}{% for link in shop.metafields.custom.social_media %}"{{ link | escape }}"{% unless forloop.last %},{% endunless %}{% endfor %}{% else %}"https://www.facebook.com/FitnessSuperstore","https://x.com/fitsuperstore","https://www.instagram.com/fitness.superstore/"{% endif %}],
-              "contactPoint": {
-                "@type": "ContactPoint",
-                "telephone": "{{ shop.phone | default: 'Not specified' | escape }}",
-                "contactType": "Customer Service",
-                "areaServed": "{{ shop.metafields.custom.area_served | default: 'US' | escape }}",
-                "availableLanguage": ["{{ shop.metafields.custom.language | default: 'English' | escape }}"]
-              },
-              "address": {
-                "@type": "PostalAddress",
-                "streetAddress": "{{ shop.address.street | default: 'Not specified' | escape }}",
-                "addressLocality": "{{ shop.address.city | default: 'Not specified' | escape }}",
-                "addressRegion": "{{ shop.address.province_code | default: 'Not specified' | escape }}",
-                "postalCode": "{{ shop.address.zip | default: 'Not specified' | escape }}",
-                "addressCountry": "{{ shop.address.country | default: 'Not specified' | escape }}"
-              },
-              "potentialAction": {
-                "@type": "SearchAction",
-                "target": "https://{{ shop.domain }}/search?q={search_term_string}",
-                "query-input": "required name=search_term_string"
-              }
-            }
-          },
-          "sku": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
-          "url": "https://{{ shop.domain }}{{ product.url }}"
-        },
-        {
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "{{ shop.name | escape }}", "item": "{{ request.origin }}/" }
-            {%- assign position = 2 -%}
-            {%- assign all_breadcrumb_objects = product.metafields.custom.breadcrumb_paths.value | sort: "priority" -%}
-            {%- assign active_path = nil -%}
-            {%- assign source_flag = "unset" -%}
-            {%- if collection -%}
-              {%- for b_path in all_breadcrumb_objects -%}
-                {%- assign b_steps = b_path.steps.value -%}
-                {%- assign latest_step = b_steps.last -%}
-                {%- if latest_step and latest_step.handle == collection.handle -%}
-                  {%- assign active_path = b_path -%}
-                  {%- assign source_flag = "metaobject" -%}
-                  {%- break -%}
-                {%- endif -%}
-              {%- endfor -%}
-            {%- endif -%}
-            {%- if active_path == nil -%}
-              {%- for fallback_path in all_breadcrumb_objects -%}
-                {%- if fallback_path.steps and fallback_path.steps.value != blank -%}
-                  {%- assign active_path = fallback_path -%}
-                  {%- assign source_flag = "metaobject" -%}
-                  {%- break -%}
-                {%- endif -%}
-              {%- endfor -%}
-            {%- endif -%}
-            {%- assign crumbs_text = product.metafields.custom.breadcrumbs.value -%}
-            {%- if active_path == nil and crumbs_text != blank -%}
-              {%- assign source_flag = "text" -%}
-            {%- endif -%}
-            {%- if source_flag == "unset" and product.collections.first -%}
-              {%- assign default_coll = product.collections.first -%}
-              {%- assign source_flag = "default" -%}
-            {%- endif -%}
-            {%- if source_flag == "metaobject" -%}
-              {%- assign nav_steps = active_path.steps.value -%}
-              {%- assign nav_titles = active_path.custom_titles.value -%}
-              {%- for nav_coll in nav_steps -%}
-                {%- if nav_coll.handle != blank -%}
-                  ,{ "@type": "ListItem", "position": {{ position }}, "name": "{{ nav_titles[forloop.index0] | default: nav_coll.title | escape }}", "item": "{{ request.origin }}/collections/{{ nav_coll.handle }}" }
-                  {%- assign position = position | plus: 1 -%}
-                {%- endif -%}
-              {%- endfor -%}
-            {%- elsif source_flag == "text" -%}
-              {%- assign parts_split = crumbs_text | split: 'Home' -%}
-              {%- assign text_parts = parts_split[1] | split: '>' -%}
-              {%- assign crumbs_size = text_parts.size | minus: 1 -%}
-              {%- for idx in (0..crumbs_size) -%}
-                {%- assign raw = text_parts[idx] | strip | handleize -%}
-                {%- assign title = text_parts[idx] | strip -%}
-                {%- if idx > 0 and raw != blank and collections[raw] -%}
-                  ,{ "@type": "ListItem", "position": {{ position }}, "name": "{{ title | escape }}", "item": "{{ request.origin }}/collections/{{ raw }}" }
-                  {%- assign position = position | plus: 1 -%}
-                {%- endif -%}
-              {%- endfor -%}
-            {%- elsif source_flag == "default" -%}
-              ,{ "@type": "ListItem", "position": {{ position }}, "name": "{{ default_coll.title | escape }}", "item": "{{ request.origin }}/collections/{{ default_coll.handle }}" }
-              {%- assign position = position | plus: 1 -%}
-            {%- endif -%}
-            ,{ "@type": "ListItem", "position": {{ position }}, "name": "{{ product.title | escape }}", "item": "{{ request.origin }}{{ product.url }}" }
-          ]
+      items.push({
+        id: r.dataset.variantId,
+        quantity: quantity,
+        properties: {
+          group_id: groupId,
+          Add_on: r.dataset.title
         }
-      ]
+      });
+
+    });
+
+    fetch('/cart/add.js', {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items })
+    })
+    .then(() => window.location.href = "/cart");
+
+  });
+
+});
+</script>
+{% comment %} --------addon item add to cart with main product  using group id js end------{% endcomment %}
+
+{% comment %} --addon item price calculate with main product price on product page js start- {% endcomment %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  /* -----------------GET MAIN PRODUCT BASE PRICE------------------------------ */
+  function getBasePrice() {
+    const priceEl = document.querySelector(".price-item-fixed");
+    if (!priceEl) return 0;
+
+    return parseFloat(
+      priceEl.innerText.replace(/[^0-9.]/g, "")
+    ) || 0;
+  }
+
+  let basePrice = getBasePrice();
+  const finalPriceBox = document.getElementById("final-price");
+  const addonRadios = document.querySelectorAll(".addon-radio");
+
+  /* -----------------------------UPDATE FINAL PRICE (UI)----------------------------- */
+  function updateFinalPrice() {
+    let addonTotal = 0;
+
+    addonRadios.forEach(radio => {
+      if (radio.checked) {
+        addonTotal += parseFloat(radio.dataset.price) || 0;
+      }
+    });
+
+    const finalTotal = basePrice + addonTotal;
+
+    if (finalPriceBox) {
+      finalPriceBox.innerText = "₹" + finalTotal.toLocaleString("en-IN");
     }
-    {%- endcapture -%}
-    {{- ld_json | strip_newlines -}}
-    </script>
-{% endcomment %}
+  }
+
+  /* -----------------------------LISTEN TO ADD-ON SELECTION----------------------------- */
+
+  addonRadios.forEach(radio => {
+    radio.addEventListener("change", updateFinalPrice);
+  });
+
+  /*--------- Initial load -----------*/
+  updateFinalPrice();
+
+});
+</script>
+{% comment %} -addon item price calculate with main product price on product page js end- {% endcomment %} 
+
 
 {% schema %}
 {
@@ -4282,270 +4166,7 @@
 {% endschema %}
 
 
-{% comment %}
-<script>
- // first code with addon not remove
-document.addEventListener("DOMContentLoaded", function(){
-
-  document.querySelector(".addtocart").addEventListener("click", function(){
-
-      let mainVariant = this.getAttribute("main-varientid");
-      let quantity = document.querySelector("#Quantity-{{ section.id }}").value || 1;
-
-      let items = [];
-
-      // Main Product
-      items.push({
-        id: mainVariant,
-        quantity: Number(quantity)
-      });
-
-      // All Addon Radios Selected
-      document.querySelectorAll(".addon-radio:checked").forEach(function(r){
-          items.push({
-              id: r.dataset.variantId,
-              quantity: 1
-          });
-      });
-
-      if(items.length === 0){
-        alert("Please select something.");
-        return;
-      }
-
-      // AJAX Add To Cart
-      fetch('/cart/add.js', {
-          method : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: items })
-      })
-      .then(res => res.json())
-      .then(data =>{
-          console.log(data);
-          window.location.href = "/cart"; // redirect cart
-      })
-      .catch(err =>{
-          console.error(err);
-          alert("Something went wrong");
-      });
-
-  });
-
-});
-</script>
-{% endcomment %}
-{% comment %}  
-<script>
- // perfect working
-document.addEventListener("DOMContentLoaded", function(){
-
-  document.querySelector(".addtocart").addEventListener("click", function(){
-
-      let mainVariant = this.getAttribute("main-varientid");
-      let quantity = Number(document.querySelector("#Quantity-{{ section.id }}").value || 1);
-
-      let items = [];
-
-     
-      items.push({
-        id: mainVariant,
-        quantity: quantity
-      });
-
-     
-      document.querySelectorAll(".addon-radio:checked").forEach(function(r){
-          items.push({
-              id: r.dataset.variantId,
-              quantity: quantity,   
-              properties: {
-                  parent: mainVariant
-              }
-          });
-      });
-
-      if(items.length === 0){
-        alert("Please select something.");
-        return;
-      }
-
-    
-      fetch('/cart/add.js', {
-          method : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: items })
-      })
-      .then(res => res.json())
-      .then(data =>{
-          console.log(data);
-          window.location.href = "/cart";
-      })
-      .catch(err =>{
-          console.error(err);
-          alert("Something went wrong");
-      });
-
-  });
-
-});
-</script> {% endcomment %}
 
 
-{% comment %} <script>
-  // perfect working with group id
-document.addEventListener("DOMContentLoaded", function(){
-
-  document.querySelector(".addtocart").addEventListener("click", function(){
-
-      let mainVariant = this.getAttribute("main-varientid");
-      let quantity = Number(document.querySelector("#Quantity-{{ section.id }}").value || 1);
-
-      let groupId = Date.now();
-
-      let items = [];
-
-      items.push({
-        id: mainVariant,
-        quantity: quantity,
-        properties:{
-            group_id: groupId
-        }
-      });
-
-      // Addons
-      document.querySelectorAll(".addon-radio:checked").forEach(function(r){
-          items.push({
-              id: r.dataset.variantId,
-              quantity: quantity,
-              properties: {
-                  group_id: groupId
-              }
-          });
-      });
-
-      fetch('/cart/add.js', {
-          method : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items })
-      })
-      .then(res => res.json())
-      .then(() => window.location.href = "/cart");
-  });
-
-});
-</script> {% endcomment %}
-<script>
-document.addEventListener("DOMContentLoaded", function(){
-
-  document.querySelector(".addtocart").addEventListener("click", function(e){
-    e.preventDefault();
-
-    let mainVariant = this.getAttribute("main-varientid");
-    let quantity = Number(
-      document.querySelector("#Quantity-{{ section.id }}")?.value || 1
-    );
-
-    let groupId = Date.now();
-    let items = [];
-
-    /* ------------------
-       COLLECT ADD-ON TITLES
-    ------------------ */
-    let addonTitles = [];
-
-    document.querySelectorAll(".addon-radio:checked").forEach(function(r){
-      if (r.dataset.title) {
-        addonTitles.push(r.dataset.title);
-      }
-    });
-
-    /* ------------------
-       MAIN PRODUCT
-    ------------------ */
-    items.push({
-      id: mainVariant,
-      quantity: quantity,
-      properties:{
-        group_id: groupId,
-        "Included Add-Ons": addonTitles.join(", ")   //MAIN LINE ITEM
-      }
-    });
-
-    /* ------------------
-       ADD ON PRODUCTS (AS SEPARATE ITEMS)
-    ------------------ */
-    document.querySelectorAll(".addon-radio:checked").forEach(function(r){
-
-      items.push({
-        id: r.dataset.variantId,
-        quantity: quantity,
-        properties: {
-          group_id: groupId,
-          Add_on: r.dataset.title
-        }
-      });
-
-    });
-
-    fetch('/cart/add.js', {
-      method : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items })
-    })
-    .then(() => window.location.href = "/cart");
-
-  });
-
-});
-</script>
-
-
-
-
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-
-  /* -----------------GET MAIN PRODUCT BASE PRICE------------------------------ */
-  function getBasePrice() {
-    const priceEl = document.querySelector(".price-item-fixed");
-    if (!priceEl) return 0;
-
-    return parseFloat(
-      priceEl.innerText.replace(/[^0-9.]/g, "")
-    ) || 0;
-  }
-
-  let basePrice = getBasePrice();
-  const finalPriceBox = document.getElementById("final-price");
-  const addonRadios = document.querySelectorAll(".addon-radio");
-
-  /* -----------------------------UPDATE FINAL PRICE (UI)----------------------------- */
-  function updateFinalPrice() {
-    let addonTotal = 0;
-
-    addonRadios.forEach(radio => {
-      if (radio.checked) {
-        addonTotal += parseFloat(radio.dataset.price) || 0;
-      }
-    });
-
-    const finalTotal = basePrice + addonTotal;
-
-    if (finalPriceBox) {
-      finalPriceBox.innerText = "₹" + finalTotal.toLocaleString("en-IN");
-    }
-  }
-
-  /* -----------------------------LISTEN TO ADD-ON SELECTION----------------------------- */
-
-  addonRadios.forEach(radio => {
-    radio.addEventListener("change", updateFinalPrice);
-  });
-
-  /*--------- Initial load -----------*/
-  updateFinalPrice();
-
-});
-</script>
 
 
