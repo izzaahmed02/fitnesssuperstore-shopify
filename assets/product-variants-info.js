@@ -29,17 +29,7 @@ if (!customElements.get('product-info')) {
         );
 
         this.initQuantityHandlers();
-
-        // --- Page load: fallback to main product default variant ---
-        this.clearVariantFromURL();
-        this.selectInitialVariant();
-
         this.dispatchEvent(new CustomEvent('product-info:loaded', { bubbles: true }));
-      }
-
-      disconnectedCallback() {
-        this.onVariantChangeUnsubscriber?.();
-        this.cartUpdateUnsubscriber?.();
       }
 
       addPreProcessCallback(callback) {
@@ -58,6 +48,11 @@ if (!customElements.get('product-info')) {
         }
       }
 
+      disconnectedCallback() {
+        this.onVariantChangeUnsubscriber?.();
+        this.cartUpdateUnsubscriber?.();
+      }
+
       initializeProductSwapUtility() {
         this.preProcessHtmlCallbacks.push((html) =>
           html.querySelectorAll('.scroll-trigger').forEach((element) => element.classList.add('scroll-trigger--cancel'))
@@ -66,47 +61,6 @@ if (!customElements.get('product-info')) {
           window?.Shopify?.PaymentButton?.init();
           window?.ProductModel?.loadShopifyXR();
         });
-      }
-
-      // -------------------------
-      // Clear variant from URL on page load
-      // -------------------------
-      clearVariantFromURL() {
-        const url = new URL(window.location.href);
-        if (url.searchParams.has('variant')) {
-          url.searchParams.delete('variant');
-          window.history.replaceState({}, '', url.pathname);
-        }
-      }
-
-      // -------------------------
-      // Select main product default variant on page load
-      // -------------------------
-      selectInitialVariant() {
-        const variantSelects = this.querySelector('variant-selects');
-        if (!variantSelects) return;
-
-        const firstEl = variantSelects.querySelector('[data-variant-id]');
-        if (!firstEl) return;
-
-        let variant = null;
-        try {
-          variant = JSON.parse(firstEl.dataset.variantJson || firstEl.innerHTML);
-        } catch (e) {
-          console.warn('Failed to parse initial variant JSON', e);
-        }
-
-        if (variant) {
-          // Update variant inputs and pickup availability on page load
-          this.updateVariantInputs(variant.id);
-          this.pickupAvailability?.update(variant);
-
-          // Run the normal update function to ensure media, quantity, and all dependent elements update
-          this.handleUpdateProductInfo(this.dataset.url)({
-            querySelector: () => variantSelects,
-            getElementById: (id) => document.getElementById(id),
-          });
-        }
       }
 
       handleOptionValueChange({ data: { event, target, selectedOptionValues } }) {
@@ -227,11 +181,20 @@ if (!customElements.get('product-info')) {
           this.updateVariantInputs(variant?.id);
           this.updateMedia(html, variant?.featured_media?.id);
 
-          ['price','Sku','Inventory','Volume','Price-Per-Item'].forEach((id)=>{
+          const updateSourceFromDestination = (id, shouldHide = (source) => false) => {
             const source = html.getElementById(`${id}-${this.sectionId}`);
-            const dest = this.querySelector(`#${id}-${this.dataset.section}`);
-            if(source && dest) dest.innerHTML = source.innerHTML;
-          });
+            const destination = this.querySelector(`#${id}-${this.dataset.section}`);
+            if (source && destination) {
+              destination.innerHTML = source.innerHTML;
+              destination.classList.toggle('hidden', shouldHide(source));
+            }
+          };
+
+          updateSourceFromDestination('price');
+          updateSourceFromDestination('Sku', ({ classList }) => classList.contains('hidden'));
+          updateSourceFromDestination('Inventory', ({ innerText }) => innerText === '');
+          updateSourceFromDestination('Volume');
+          updateSourceFromDestination('Price-Per-Item', ({ classList }) => classList.contains('hidden'));
 
           this.updateQuantityRules(this.sectionId, html);
           this.querySelector(`#Quantity-Rules-${this.dataset.section}`)?.classList.remove('hidden');
