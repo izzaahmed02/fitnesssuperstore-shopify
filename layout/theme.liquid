@@ -3,14 +3,11 @@
   <head>
     <meta name="test" content="hello world">
 
-     {%- comment -%} NOINDEX FOR PAGINATED PAGES - ADD THIS FIRST {%- endcomment -%}
-    {% if request.path contains '/collections/' and request.query_string contains 'page=' %}
-      <meta name="robots" content="noindex,follow">
-    {% elsif request.query_string contains 'variant=' %}
-      <meta name="robots" content="noindex,follow">
-    {% elsif template == 'search' %}
-      <meta name="robots" content="noindex,nofollow">
-    {% endif %}
+    {%- comment -%} NOINDEX FOR PAGINATED PAGES {%- endcomment -%}
+  {% if request.query_string contains 'page=' %}
+    <meta name="robots" content="noindex,follow">
+    <!-- DEBUG: robots tag added because query_string contains page= -->
+  {% endif %}
 
     {% render 'head-meta' %}
 
