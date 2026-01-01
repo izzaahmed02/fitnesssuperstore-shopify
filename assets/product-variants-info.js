@@ -143,13 +143,13 @@ if (!customElements.get('product-info')) {
         const selectedVariantEl = variantSelects.querySelector('[data-selected-variant]');
         if (selectedVariantEl?.innerHTML) {
           try { return JSON.parse(selectedVariantEl.innerHTML); } 
-          catch(e){ console.warn(e); }
+          catch(e){ console.warn('[product-info] Failed to parse selected variant', e); }
         }
 
         const firstVariantEl = variantSelects.querySelector('[data-variant-id]');
         if (firstVariantEl) {
           try { return JSON.parse(firstVariantEl.dataset.variantJson || firstVariantEl.innerHTML); }
-          catch(e){ console.warn(e); }
+          catch(e){ console.warn('[product-info] Failed to parse first variant', e); }
         }
 
         return null;
@@ -171,7 +171,7 @@ if (!customElements.get('product-info')) {
             const firstEl = variantSelects?.querySelector('[data-variant-id]');
             if (firstEl) {
               try { variant = JSON.parse(firstEl.dataset.variantJson || firstEl.innerHTML); }
-              catch(e){ console.warn(e); this.setUnavailable(); return; }
+              catch(e){ console.warn('[product-info] Failed to parse fallback variant', e); this.setUnavailable(); return; }
             } else { this.setUnavailable(); return; }
           }
 
@@ -247,6 +247,44 @@ if (!customElements.get('product-info')) {
             });
           }else current.innerHTML=updated.innerHTML;
         });
+      }
+
+      setQuantityBoundries() {
+        const data = {
+          cartQuantity: this.quantityInput.dataset.cartQuantity ? parseInt(this.quantityInput.dataset.cartQuantity) : 0,
+          min: this.quantityInput.dataset.min ? parseInt(this.quantityInput.dataset.min) : 1,
+          max: this.quantityInput.dataset.max ? parseInt(this.quantityInput.dataset.max) : null,
+          step: this.quantityInput.step ? parseInt(this.quantityInput.step) : 1,
+        };
+
+        let min = data.min;
+        const max = data.max === null ? data.max : data.max - data.cartQuantity;
+        if (max !== null) min = Math.min(min, max);
+        if (data.cartQuantity >= data.min) min = Math.min(min, data.step);
+
+        this.quantityInput.min = min;
+
+        if (max) this.quantityInput.max = max;
+        else this.quantityInput.removeAttribute('max');
+
+        this.quantityInput.value = min;
+
+        publish(PUB_SUB_EVENTS.quantityUpdate, undefined);
+      }
+
+      fetchQuantityRules() {
+        const currentVariantId = this.productForm?.variantIdInput?.value;
+        if (!currentVariantId) return;
+
+        this.querySelector('.loading__spinner').classList.remove('hidden');
+        fetch(`${this.dataset.url}?variant=${currentVariantId}&section_id=${this.dataset.section}`)
+          .then((response) => response.text())
+          .then((responseText) => {
+            const html = new DOMParser().parseFromString(responseText, 'text/html');
+            this.updateQuantityRules(this.dataset.section, html);
+          })
+          .catch((e) => console.error(e))
+          .finally(() => this.querySelector('.loading__spinner').classList.add('hidden'));
       }
 
       get productForm(){return this.querySelector('product-form');}
