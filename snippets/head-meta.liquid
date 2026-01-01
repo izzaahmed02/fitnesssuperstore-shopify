@@ -4,6 +4,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="">
 
+{%- comment -%} Noindex for paginated and variant URLs - Native Shopify solution {%- endcomment -%}
+{% assign url_parts = canonical_url | split: '?' %}
+{% if url_parts.size > 1 %}
+  {% assign query = url_parts[1] %}
+  {% if query contains 'page=' or query contains 'variant=' %}
+    <meta name="robots" content="noindex,follow">
+  {% endif %}
+{% endif %}
+
+{%- comment -%} Noindex search pages {%- endcomment -%}
+{% if template == 'search' %}
+  <meta name="robots" content="noindex,nofollow">
+{% endif %}
+
 {%- comment -%} Canonical URLs {%- endcomment -%}
 {% if template contains 'product' and product %}
   {% assign custom_canonical = null %}
@@ -16,35 +30,13 @@
   {% else %}
     <link rel="canonical" href="{{ shop.url }}/products/{{ product.handle }}">
   {% endif %}
-  
-  {%- comment -%} Noindex product variant URLs {%- endcomment -%}
-  {% if request.query_string contains 'variant=' %}
-    <meta name="robots" content="noindex,follow">
-  {% endif %}
 
 {% elsif template == 'collection' %}
-  {%- comment -%} For collection pages, check for pagination {%- endcomment -%}
-  {% if request.query_string contains 'page=' %}
-    {%- comment -%} Paginated collection page - noindex and canonical to page 1 {%- endcomment -%}
-    <meta name="robots" content="noindex,follow">
-    <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
-  {% else %}
-    {%- comment -%} Page 1 of collection {%- endcomment -%}
-    <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
-  {% endif %}
+  {%- comment -%} Canonical to page 1 for all collection pages {%- endcomment -%}
+  <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
   
 {% else %}
   <link rel="canonical" href="{{ canonical_url }}">
-{% endif %}
-
-{%- comment -%} Noindex search pages {%- endcomment -%}
-{% if template == 'search' %}
-  <meta name="robots" content="noindex,nofollow">
-{% endif %}
-
-{%- comment -%} Noindex any other URLs with page parameter (safety net) {%- endcomment -%}
-{% if template != 'collection' and request.query_string contains 'page=' %}
-  <meta name="robots" content="noindex,follow">
 {% endif %}
 
 {%- if settings.favicon != blank -%}
