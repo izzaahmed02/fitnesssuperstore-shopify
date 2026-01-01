@@ -1,13 +1,22 @@
 <!doctype html>
 <html class="js" lang="{{ request.locale.iso_code }}">
   <head>
-     <meta name="debug-path" content="{{ request.path }}">
-  <meta name="debug-query" content="{{ request.query_string }}">
-  <meta name="debug-template" content="{{ template }}">
-  
-  {%- comment -%} NOINDEX FOR PAGINATED PAGES {%- endcomment -%}
-  {% if request.query_string contains 'page=' %}
-    <meta name="robots" content="noindex,follow">
+      {%- comment -%} Noindex for paginated pages - JavaScript solution {%- endcomment -%}
+  <script>
+    (function() {
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('page') || urlParams.has('variant')) {
+        var meta = document.createElement('meta');
+        meta.name = 'robots';
+        meta.content = 'noindex,follow';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+      }
+    })();
+  </script>
+
+  {%- comment -%} Noindex search pages (server-side) {%- endcomment -%}
+  {% if template == 'search' %}
+    <meta name="robots" content="noindex,nofollow">
   {% endif %}
 
     {% render 'head-meta' %}
