@@ -17,7 +17,6 @@ if (!customElements.get('product-info')) {
 
       constructor() {
         super();
-
         this.quantityInput = this.querySelector('.quantity__input');
       }
 
@@ -165,9 +164,24 @@ if (!customElements.get('product-info')) {
         }
       }
 
+      // 🔹 UPDATED: fallback to first variant if none selected
       handleUpdateProductInfo(productUrl) {
         return (html) => {
-          const variant = this.getSelectedVariant(html);
+          let variant = this.getSelectedVariant(html);
+
+          // FALLBACK TO FIRST AVAILABLE VARIANT IF NONE SELECTED
+          if (!variant) {
+            try {
+              const firstVariantEl = html.querySelector('variant-selects [data-selected-variant]');
+              if (firstVariantEl) {
+                variant = JSON.parse(firstVariantEl.innerHTML);
+                this.updateVariantInputs(variant.id); // sync inputs
+                this.updateURL(productUrl, variant.id); // update URL
+              }
+            } catch (e) {
+              console.warn('[product-info] Fallback to first variant failed', e);
+            }
+          }
 
           this.pickupAvailability?.update(variant);
           this.updateOptionValues(html);
@@ -267,7 +281,6 @@ if (!customElements.get('product-info')) {
           const destinationSet = new Set(mediaGalleryDestinationItems.map(({ dataset }) => dataset.mediaId));
           let shouldRefresh = false;
 
-          // add items from new data not present in DOM
           for (let i = mediaGalleryDestinationItems.length - 1; i >= 0; i--) {
             if (!sourceSet.has(mediaGalleryDestinationItems[i].dataset.mediaId)) {
               mediaGallerySource.prepend(mediaGalleryDestinationItems[i]);
@@ -275,7 +288,6 @@ if (!customElements.get('product-info')) {
             }
           }
 
-          // remove items from DOM not present in new data
           for (let i = 0; i < mediaGallerySourceItems.length; i++) {
             if (!destinationSet.has(mediaGallerySourceItems[i].dataset.mediaId)) {
               mediaGallerySourceItems[i].remove();
@@ -283,10 +295,8 @@ if (!customElements.get('product-info')) {
             }
           }
 
-          // refresh
           if (shouldRefresh) [mediaGallerySourceItems, sourceSet, sourceMap] = refreshSourceData();
 
-          // if media galleries don't match, sort to match new data order
           mediaGalleryDestinationItems.forEach((destinationItem, destinationIndex) => {
             const sourceData = sourceMap.get(destinationItem.dataset.mediaId);
 
@@ -295,20 +305,16 @@ if (!customElements.get('product-info')) {
                 sourceData.item,
                 mediaGallerySource.querySelector(`li:nth-of-type(${destinationIndex + 1})`)
               );
-
-              // refresh source now that it has been modified
               [mediaGallerySourceItems, sourceSet, sourceMap] = refreshSourceData();
             }
           });
         }
 
-        // set featured media as active in the media gallery
         this.querySelector(`media-gallery`)?.setActiveMedia?.(
           `${this.dataset.section}-${variantFeaturedMediaId}`,
           true
         );
 
-        // update media modal
         const modalContent = this.productModal?.querySelector(`.product-media-modal__content`);
         const newModalContent = html.querySelector(`product-modal .product-media-modal__content`);
         if (modalContent && newModalContent) modalContent.innerHTML = newModalContent.innerHTML;
