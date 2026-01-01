@@ -22,12 +22,15 @@
     <meta name="robots" content="noindex,follow">
   {% endif %}
 
-{% elsif collection %}
-  <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
-  
-  {%- comment -%} Noindex paginated collection pages {%- endcomment -%}
-  {% if current_page > 1 %}
+{% elsif template == 'collection' %}
+  {%- comment -%} For collection pages, check for pagination {%- endcomment -%}
+  {% if request.query_string contains 'page=' %}
+    {%- comment -%} Paginated collection page - noindex and canonical to page 1 {%- endcomment -%}
     <meta name="robots" content="noindex,follow">
+    <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
+  {% else %}
+    {%- comment -%} Page 1 of collection {%- endcomment -%}
+    <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
   {% endif %}
   
 {% else %}
@@ -39,8 +42,8 @@
   <meta name="robots" content="noindex,nofollow">
 {% endif %}
 
-{%- comment -%} Noindex URLs with page parameter (safety net) {%- endcomment -%}
-{% if request.query_string contains 'page=' %}
+{%- comment -%} Noindex any other URLs with page parameter (safety net) {%- endcomment -%}
+{% if template != 'collection' and request.query_string contains 'page=' %}
   <meta name="robots" content="noindex,follow">
 {% endif %}
 
