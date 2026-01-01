@@ -128,7 +128,6 @@ if (!customElements.get('product-info')) {
             callback(html);
           })
           .then(() => {
-            // set focus to last clicked option value
             document.querySelector(`#${targetId}`)?.focus();
           })
           .catch((error) => {
@@ -140,20 +139,40 @@ if (!customElements.get('product-info')) {
           });
       }
 
+      // MOBILE-SAFE: always fallback to first variant if none selected
       getSelectedVariant(productInfoNode) {
-        const selectedVariant = productInfoNode.querySelector('variant-selects [data-selected-variant]')?.innerHTML;
-        return !!selectedVariant ? JSON.parse(selectedVariant) : null;
+        const variantSelects = productInfoNode.querySelector('variant-selects');
+        if (!variantSelects) return null;
+
+        // First try selected variant
+        const selectedVariantEl = variantSelects.querySelector('[data-selected-variant]');
+        if (selectedVariantEl && selectedVariantEl.innerHTML) {
+          try {
+            return JSON.parse(selectedVariantEl.innerHTML);
+          } catch (e) {
+            console.warn('[product-info] Failed to parse selected variant', e);
+          }
+        }
+
+        // Fallback: pick first variant in the list
+        const firstVariantEl = variantSelects.querySelector('[data-variant-id]');
+        if (firstVariantEl) {
+          try {
+            return JSON.parse(firstVariantEl.dataset.variantJson || firstVariantEl.innerHTML);
+          } catch (e) {
+            console.warn('[product-info] Failed to parse first variant JSON', e);
+          }
+        }
+
+        return null;
       }
 
       buildRequestUrlWithParams(url, optionValues, shouldFetchFullPage = false) {
         const params = [];
-
         !shouldFetchFullPage && params.push(`section_id=${this.sectionId}`);
-
         if (optionValues.length) {
           params.push(`option_values=${optionValues.join(',')}`);
         }
-
         return `${url}?${params.join('&')}`;
       }
 
@@ -164,22 +183,25 @@ if (!customElements.get('product-info')) {
         }
       }
 
-      // 🔹 UPDATED: fallback to first variant if none selected
       handleUpdateProductInfo(productUrl) {
         return (html) => {
           let variant = this.getSelectedVariant(html);
 
-          // FALLBACK TO FIRST AVAILABLE VARIANT IF NONE SELECTED
+          // If variant is still null, fallback to first variant to prevent hidden block
           if (!variant) {
-            try {
-              const firstVariantEl = html.querySelector('variant-selects [data-selected-variant]');
-              if (firstVariantEl) {
-                variant = JSON.parse(firstVariantEl.innerHTML);
-                this.updateVariantInputs(variant.id); // sync inputs
-                this.updateURL(productUrl, variant.id); // update URL
+            const variantSelects = html.querySelector('variant-selects');
+            const firstVariantEl = variantSelects?.querySelector('[data-variant-id]');
+            if (firstVariantEl) {
+              try {
+                variant = JSON.parse(firstVariantEl.dataset.variantJson || firstVariantEl.innerHTML);
+              } catch (e) {
+                console.warn('[product-info] Failed to parse fallback variant', e);
+                this.setUnavailable();
+                return;
               }
-            } catch (e) {
-              console.warn('[product-info] Fallback to first variant failed', e);
+            } else {
+              this.setUnavailable();
+              return;
             }
           }
 
@@ -187,12 +209,6 @@ if (!customElements.get('product-info')) {
           this.updateOptionValues(html);
           this.updateURL(productUrl, variant?.id);
           this.updateVariantInputs(variant?.id);
-
-          if (!variant) {
-            this.setUnavailable();
-            return;
-          }
-
           this.updateMedia(html, variant?.featured_media?.id);
 
           const updateSourceFromDestination = (id, shouldHide = (source) => false) => {
@@ -299,7 +315,6 @@ if (!customElements.get('product-info')) {
 
           mediaGalleryDestinationItems.forEach((destinationItem, destinationIndex) => {
             const sourceData = sourceMap.get(destinationItem.dataset.mediaId);
-
             if (sourceData && sourceData.index !== destinationIndex) {
               mediaGallerySource.insertBefore(
                 sourceData.item,
@@ -400,22 +415,6 @@ if (!customElements.get('product-info')) {
 
       get variantSelectors() {
         return this.querySelector('variant-selects');
-      }
-
-      get relatedProducts() {
-        const relatedProductsSectionId = SectionId.getIdForSection(
-          SectionId.parseId(this.sectionId),
-          'related-products'
-        );
-        return document.querySelector(`product-recommendations[data-section-id^="${relatedProductsSectionId}"]`);
-      }
-
-      get quickOrderList() {
-        const quickOrderListSectionId = SectionId.getIdForSection(
-          SectionId.parseId(this.sectionId),
-          'quick_order_list'
-        );
-        return document.querySelector(`quick-order-list[data-id^="${quickOrderListSectionId}"]`);
       }
 
       get sectionId() {
