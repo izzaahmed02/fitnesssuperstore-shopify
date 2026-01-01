@@ -1,16 +1,17 @@
 <!doctype html>
 <html class="js" lang="{{ request.locale.iso_code }}">
   <head>
-    {% render 'head-meta' %}
-    {%- comment -%} DEBUG - Remove after testing {%- endcomment -%}
-<!-- Template: {{ template }} -->
-<!-- Request path: {{ request.path }} -->
-<!-- Query string: {{ request.query_string }} -->
-{%- comment -%} END DEBUG {%- endcomment -%}
 
-{% if request.query_string contains 'page=' %}
-  <meta name="robots" content="noindex,follow">
-{% endif %}
+     {%- comment -%} NOINDEX FOR PAGINATED PAGES - ADD THIS FIRST {%- endcomment -%}
+    {% if request.path contains '/collections/' and request.query_string contains 'page=' %}
+      <meta name="robots" content="noindex,follow">
+    {% elsif request.query_string contains 'variant=' %}
+      <meta name="robots" content="noindex,follow">
+    {% elsif template == 'search' %}
+      <meta name="robots" content="noindex,nofollow">
+    {% endif %}
+    
+    {% render 'head-meta' %}
 
     <title>
       {{ page_title | escape_once }}
