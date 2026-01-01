@@ -4,14 +4,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="">
 
-<!-- DEBUG canonical: {{ canonical_url }} -->
-<!-- DEBUG request.path: {{ request.path }} -->
 
-{%- comment -%} Noindex for paginated and variant URLs - Native Shopify solution {%- endcomment -%}
 {% assign url_parts = canonical_url | split: '?' %}
 {% if url_parts.size > 1 %}
   {% assign query = url_parts[1] %}
-  {% if query contains 'page=' or query contains 'variant=' %}
+  {% if query contains 'page=' %}
     <meta name="robots" content="noindex,follow">
   {% endif %}
 {% endif %}
@@ -29,12 +26,10 @@
   </script>
 {% endif %}
 
-{%- comment -%} Noindex search pages {%- endcomment -%}
 {% if template == 'search' %}
   <meta name="robots" content="noindex,nofollow">
 {% endif %}
 
-{%- comment -%} Canonical URLs {%- endcomment -%}
 {% if template contains 'product' and product %}
   {% assign custom_canonical = null %}
   {% if product and product.metafields.custom.product_canonical_url != blank %}
@@ -48,7 +43,6 @@
   {% endif %}
 
 {% elsif template == 'collection' %}
-  {%- comment -%} Canonical to page 1 for all collection pages {%- endcomment -%}
   <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
   
 {% else %}
