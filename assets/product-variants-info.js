@@ -130,7 +130,7 @@ if (!customElements.get('product-info')) {
           })
           .then(() => {
             // set focus to last clicked option value
-            document.querySelector(#${targetId})?.focus();
+            document.querySelector(`#${targetId}`)?.focus();
           })
           .catch((error) => {
             if (error.name === 'AbortError') {
@@ -149,13 +149,13 @@ if (!customElements.get('product-info')) {
       buildRequestUrlWithParams(url, optionValues, shouldFetchFullPage = false) {
         const params = [];
 
-        !shouldFetchFullPage && params.push(section_id=${this.sectionId});
+        !shouldFetchFullPage && params.push(`section_id=${this.sectionId}`);
 
         if (optionValues.length) {
-          params.push(option_values=${optionValues.join(',')});
+          params.push(`option_values=${optionValues.join(',')}`);
         }
 
-        return ${url}?${params.join('&')};
+        return `${url}?${params.join('&')}`;
       }
 
       updateOptionValues(html) {
@@ -182,8 +182,8 @@ if (!customElements.get('product-info')) {
           this.updateMedia(html, variant?.featured_media?.id);
 
           const updateSourceFromDestination = (id, shouldHide = (source) => false) => {
-            const source = html.getElementById(${id}-${this.sectionId});
-            const destination = this.querySelector(#${id}-${this.dataset.section});
+            const source = html.getElementById(`${id}-${this.sectionId}`);
+            const destination = this.querySelector(`#${id}-${this.dataset.section}`);
             if (source && destination) {
               destination.innerHTML = source.innerHTML;
               destination.classList.toggle('hidden', shouldHide(source));
@@ -197,11 +197,11 @@ if (!customElements.get('product-info')) {
           updateSourceFromDestination('Price-Per-Item', ({ classList }) => classList.contains('hidden'));
 
           this.updateQuantityRules(this.sectionId, html);
-          this.querySelector(#Quantity-Rules-${this.dataset.section})?.classList.remove('hidden');
-          this.querySelector(#Volume-Note-${this.dataset.section})?.classList.remove('hidden');
+          this.querySelector(`#Quantity-Rules-${this.dataset.section}`)?.classList.remove('hidden');
+          this.querySelector(`#Volume-Note-${this.dataset.section}`)?.classList.remove('hidden');
 
           this.productForm?.toggleSubmitButton(
-            html.getElementById(ProductSubmitButton-${this.sectionId})?.hasAttribute('disabled') ?? true,
+            html.getElementById(`ProductSubmitButton-${this.sectionId}`)?.hasAttribute('disabled') ?? true,
             window.variantStrings.soldOut
           );
 
@@ -217,7 +217,7 @@ if (!customElements.get('product-info')) {
 
       updateVariantInputs(variantId) {
         this.querySelectorAll(
-          #product-form-${this.dataset.section}, #product-form-installment-${this.dataset.section}
+          `#product-form-${this.dataset.section}, #product-form-installment-${this.dataset.section}`
         ).forEach((productForm) => {
           const input = productForm.querySelector('input[name="id"]');
           input.value = variantId ?? '';
@@ -227,18 +227,18 @@ if (!customElements.get('product-info')) {
 
       updateURL(url, variantId) {
         this.querySelector('share-button')?.updateUrl(
-          ${window.shopUrl}${url}${variantId ? ?variant=${variantId} : ''}
+          `${window.shopUrl}${url}${variantId ? `?variant=${variantId}` : ''}`
         );
 
         if (this.dataset.updateUrl === 'false') return;
-        window.history.replaceState({}, '', ${url}${variantId ? ?variant=${variantId} : ''});
+        window.history.replaceState({}, '', `${url}${variantId ? `?variant=${variantId}` : ''}`);
       }
 
       setUnavailable() {
         this.productForm?.toggleSubmitButton(true, window.variantStrings.unavailable);
 
         const selectors = ['price', 'Inventory', 'Sku', 'Price-Per-Item', 'Volume-Note', 'Volume', 'Quantity-Rules']
-          .map((id) => #${id}-${this.dataset.section})
+          .map((id) => `#${id}-${this.dataset.section}`)
           .join(', ');
         document.querySelectorAll(selectors).forEach(({ classList }) => classList.add('hidden'));
       }
@@ -247,7 +247,7 @@ if (!customElements.get('product-info')) {
         if (!variantFeaturedMediaId) return;
 
         const mediaGallerySource = this.querySelector('media-gallery ul');
-        const mediaGalleryDestination = html.querySelector(media-gallery ul);
+        const mediaGalleryDestination = html.querySelector(`media-gallery ul`);
 
         const refreshSourceData = () => {
           if (this.hasAttribute('data-zoom-on-hover')) enableZoomOnHover(2);
@@ -293,7 +293,7 @@ if (!customElements.get('product-info')) {
             if (sourceData && sourceData.index !== destinationIndex) {
               mediaGallerySource.insertBefore(
                 sourceData.item,
-                mediaGallerySource.querySelector(li:nth-of-type(${destinationIndex + 1}))
+                mediaGallerySource.querySelector(`li:nth-of-type(${destinationIndex + 1})`)
               );
 
               // refresh source now that it has been modified
@@ -303,14 +303,14 @@ if (!customElements.get('product-info')) {
         }
 
         // set featured media as active in the media gallery
-        this.querySelector(media-gallery)?.setActiveMedia?.(
-          ${this.dataset.section}-${variantFeaturedMediaId},
+        this.querySelector(`media-gallery`)?.setActiveMedia?.(
+          `${this.dataset.section}-${variantFeaturedMediaId}`,
           true
         );
 
         // update media modal
-        const modalContent = this.productModal?.querySelector(.product-media-modal__content);
-        const newModalContent = html.querySelector(product-modal .product-media-modal__content);
+        const modalContent = this.productModal?.querySelector(`.product-media-modal__content`);
+        const newModalContent = html.querySelector(`product-modal .product-media-modal__content`);
         if (modalContent && newModalContent) modalContent.innerHTML = newModalContent.innerHTML;
       }
 
@@ -344,7 +344,7 @@ if (!customElements.get('product-info')) {
         if (!currentVariantId) return;
 
         this.querySelector('.loading__spinner').classList.remove('hidden');
-        fetch(${this.dataset.url}?variant=${currentVariantId}&section_id=${this.dataset.section})
+        fetch(`${this.dataset.url}?variant=${currentVariantId}&section_id=${this.dataset.section}`)
           .then((response) => response.text())
           .then((responseText) => {
             const html = new DOMParser().parseFromString(responseText, 'text/html');
@@ -358,7 +358,7 @@ if (!customElements.get('product-info')) {
         if (!this.quantityInput) return;
         this.setQuantityBoundries();
 
-        const quantityFormUpdated = html.getElementById(Quantity-Form-${sectionId});
+        const quantityFormUpdated = html.getElementById(`Quantity-Form-${sectionId}`);
         const selectors = ['.quantity__input', '.quantity__rules', '.quantity__label'];
         for (let selector of selectors) {
           const current = this.quantityForm.querySelector(selector);
@@ -381,15 +381,15 @@ if (!customElements.get('product-info')) {
       }
 
       get productForm() {
-        return this.querySelector(product-form);
+        return this.querySelector(`product-form`);
       }
 
       get productModal() {
-        return document.querySelector(#ProductModal-${this.dataset.section});
+        return document.querySelector(`#ProductModal-${this.dataset.section}`);
       }
 
       get pickupAvailability() {
-        return this.querySelector(pickup-availability);
+        return this.querySelector(`pickup-availability`);
       }
 
       get variantSelectors() {
@@ -401,7 +401,7 @@ if (!customElements.get('product-info')) {
           SectionId.parseId(this.sectionId),
           'related-products'
         );
-        return document.querySelector(product-recommendations[data-section-id^="${relatedProductsSectionId}"]);
+        return document.querySelector(`product-recommendations[data-section-id^="${relatedProductsSectionId}"]`);
       }
 
       get quickOrderList() {
@@ -409,7 +409,7 @@ if (!customElements.get('product-info')) {
           SectionId.parseId(this.sectionId),
           'quick_order_list'
         );
-        return document.querySelector(quick-order-list[data-id^="${quickOrderListSectionId}"]);
+        return document.querySelector(`quick-order-list[data-id^="${quickOrderListSectionId}"]`);
       }
 
       get sectionId() {
