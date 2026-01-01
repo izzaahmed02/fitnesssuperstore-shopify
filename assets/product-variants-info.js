@@ -30,10 +30,10 @@ if (!customElements.get('product-info')) {
 
         this.initQuantityHandlers();
 
-        // Always fallback to main product variant on page load
+        // --- Page load: fallback to main product default variant ---
         this.clearVariantFromURL();
         this.selectInitialVariant();
-        
+
         this.dispatchEvent(new CustomEvent('product-info:loaded', { bubbles: true }));
       }
 
@@ -80,26 +80,32 @@ if (!customElements.get('product-info')) {
       }
 
       // -------------------------
-      // Always fallback to first/default variant
+      // Select main product default variant on page load
       // -------------------------
       selectInitialVariant() {
         const variantSelects = this.querySelector('variant-selects');
         if (!variantSelects) return;
 
-        let variant = null;
-
-        // Always fallback: first variant
         const firstEl = variantSelects.querySelector('[data-variant-id]');
-        if (firstEl) {
-          try { variant = JSON.parse(firstEl.dataset.variantJson || firstEl.innerHTML); }
-          catch(e){ console.warn('Failed to parse first variant', e); }
+        if (!firstEl) return;
+
+        let variant = null;
+        try {
+          variant = JSON.parse(firstEl.dataset.variantJson || firstEl.innerHTML);
+        } catch (e) {
+          console.warn('Failed to parse initial variant JSON', e);
         }
 
         if (variant) {
+          // Update variant inputs and pickup availability on page load
           this.updateVariantInputs(variant.id);
           this.pickupAvailability?.update(variant);
-        } else {
-          this.setUnavailable();
+
+          // Run the normal update function to ensure media, quantity, and all dependent elements update
+          this.handleUpdateProductInfo(this.dataset.url)({
+            querySelector: () => variantSelects,
+            getElementById: (id) => document.getElementById(id),
+          });
         }
       }
 
@@ -205,6 +211,7 @@ if (!customElements.get('product-info')) {
       handleUpdateProductInfo(productUrl) {
         return (html) => {
           let variant = this.getSelectedVariant(html);
+
           if (!variant) {
             const variantSelects = html.querySelector('variant-selects');
             const firstEl = variantSelects?.querySelector('[data-variant-id]');
