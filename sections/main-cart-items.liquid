@@ -912,75 +912,109 @@
 </script> {% endcomment %}
 
 
+
 <script>
-document.addEventListener("DOMContentLoaded", async function () {
+   // price chnagend working with correct icon
+/* ======================================================
+        CART PAGE – MERGE MAIN PRODUCT + ADDON PRICES
+        (NO Shopify.formatMoney dependency)
+        ====================================================== */
 
-  if (typeof Shopify === "undefined") return;
+        console.log('✅ Addon price merge JS loaded');
 
-  try {
-    const cart = await fetch('/cart.js').then(res => res.json());
+        document.addEventListener("DOMContentLoaded", function () {
 
-    // 1️⃣ Group addon prices by group_id
-    const addonPriceByGroup = {};
+        // cart page check
+        if (!document.querySelector('cart-items')) return;
 
-    cart.items.forEach(item => {
-      const isAddon =
-        item.product &&
-        item.product.tags &&
-        item.product.tags.includes('avisplus-product-options');
+        mergeAddonPrices();
 
-      const groupId = item.properties?.group_id;
+        // quantity change par re-calc
+        document.addEventListener('change', function (e) {
+            if (e.target.matches('.quantity__input')) {
+            setTimeout(mergeAddonPrices, 400);
+            }
+        });
+        });
 
-      if (isAddon && groupId) {
-        if (!addonPriceByGroup[groupId]) {
-          addonPriceByGroup[groupId] = 0;
-        }
-        addonPriceByGroup[groupId] += item.line_price; // already qty * price
-      }
-    });
+        /* -----------------------------
+        SAFE MONEY FORMATTER
+        ------------------------------ */
+        function formatMoney(cents) {
+  const format = window.themeMoneyFormat || '${{amount}}';
 
-    // 2️⃣ Loop main products in DOM
-    document.querySelectorAll('.cart-item').forEach(cartItemEl => {
+  const value = (cents / 100).toFixed(2);
 
-      // addon items skip
-      if (cartItemEl.classList.contains('avis-option')) return;
-
-      // group_id from properties
-      const groupPropEl = cartItemEl.querySelector(
-        '.product-option[data-name="group_id"]'
-      );
-
-      if (!groupPropEl) return;
-
-      const groupId = groupPropEl.dataset.value;
-      const addonTotal = addonPriceByGroup[groupId] || 0;
-
-      if (!addonTotal) return;
-
-      // 3️⃣ Get original price from cart.js
-      const index = cartItemEl.id.replace('CartItem-', '') - 1;
-      const mainItem = cart.items[index];
-
-      if (!mainItem) return;
-
-      const combinedPrice = mainItem.line_price + addonTotal;
-
-      // 4️⃣ Update UI
-      const priceEl = cartItemEl.querySelector('.small-hide .price.price--end');
-      if (priceEl) {
-        priceEl.innerHTML = Shopify.formatMoney(
-          combinedPrice,
-          cart.currency.symbol + '{{amount}}'
-        );
-      }
-
-    });
-
-  } catch (e) {
-    console.error('Addon price merge failed', e);
+  return format.replace(/\{\{\s*amount\s*\}\}/, value);
   }
+
+        async function mergeAddonPrices() {
+        try {
+            const cart = await fetch('/cart.js').then(res => res.json());
+            console.log('🛒 Cart fetched');
+
+            /* --------------------------------
+            1️⃣ Collect addon totals by group_id
+            --------------------------------- */
+            const addonTotalsByGroup = {};
+
+            cart.items.forEach(item => {
+            const groupId = item.properties?.group_id;
+            const isAddon = !!item.properties?.Add_on;
+
+            if (isAddon && groupId) {
+                addonTotalsByGroup[groupId] =
+                (addonTotalsByGroup[groupId] || 0) + item.line_price;
+            }
+            });
+
+            console.log('➕ Addon totals:', addonTotalsByGroup);
+
+            /* --------------------------------
+            2️⃣ Update MAIN product prices
+            (group_id based, index-safe)
+            --------------------------------- */
+            document.querySelectorAll('.cart-item').forEach(cartItemEl => {
+
+            // addon rows skip
+            if (cartItemEl.classList.contains('avis-option')) return;
+
+            const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+            if (!groupEl) return;
+
+            const groupId = groupEl.dataset.value;
+            const addonPrice = addonTotalsByGroup[groupId];
+            if (!addonPrice) return;
+
+            // find correct main product from cart.js
+            const mainItem = cart.items.find(item =>
+                item.properties?.group_id == groupId &&
+                !item.properties?.Add_on
+            );
+            if (!mainItem) return;
+
+            const finalPrice = mainItem.line_price + addonPrice;
+
+       const priceEls = cartItemEl.querySelectorAll('.price.price--end');
+if (!priceEls.length) return;
+
+priceEls.forEach(priceEl => {
+  priceEl.innerHTML = formatMoney(finalPrice);
 });
+
+            priceEl.innerHTML = formatMoney(finalPrice);
+
+            console.log('✅ Price merged for group:', groupId);
+            });
+
+        } catch (error) {
+            console.error('❌ Addon price merge failed:', error);
+        }
+        }
+
+
 </script>
+
 
 </cart-items>
 {% comment %}Assistance Block{% endcomment %}
