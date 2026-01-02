@@ -1014,7 +1014,70 @@ priceEls.forEach(priceEl => {
 
 
 </script>
+<script>
 
+/* ======================================================
+   CART PAGE – SYNC ADDON QTY WITH MAIN PRODUCT
+   ====================================================== */
+
+document.addEventListener('change', function (e) {
+
+  // Only cart quantity input
+  if (!e.target.matches('.quantity__input')) return;
+
+  const input = e.target;
+  const newQty = parseInt(input.value, 10);
+
+  if (isNaN(newQty) || newQty < 1) return;
+
+  const cartItemEl = input.closest('.cart-item');
+  if (!cartItemEl) return;
+
+  // Skip addon rows
+  if (cartItemEl.classList.contains('avis-option')) return;
+
+  const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+  if (!groupEl) return;
+
+  const groupId = groupEl.dataset.value;
+
+  syncAddonQuantities(groupId, newQty);
+});
+
+/* -----------------------------
+   Sync addon quantities
+------------------------------ */
+async function syncAddonQuantities(groupId, qty) {
+  try {
+    const cart = await fetch('/cart.js').then(res => res.json());
+
+    const addonItems = cart.items.filter(item =>
+      item.properties?.group_id == groupId &&
+      item.properties?.Add_on
+    );
+
+    if (!addonItems.length) return;
+
+    // update addons one by one
+    for (const addon of addonItems) {
+      await fetch('/cart/change.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: addon.key,
+          quantity: qty
+        })
+      });
+    }
+
+    console.log(`🔁 Addon qty synced for group ${groupId} → ${qty}`);
+
+  } catch (err) {
+    console.error('❌ Addon qty sync failed', err);
+  }
+}
+
+</script>
 
 </cart-items>
 {% comment %}Assistance Block{% endcomment %}
