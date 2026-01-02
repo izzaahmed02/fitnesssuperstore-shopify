@@ -643,7 +643,7 @@ section#product-extra-tabs {
     display: none;
 }
 
-.reputon-card .sc-kke435-13.jbcske.reputon-bottom-part {
+.reputon-card  .sc-kke435-13.jbcske.reputon-bottom-part {
     display: none;
 }
 .reputon-carousel-static-plate-container .sc-1kplsbh-1.jVgGtB.reputon-static-plate-container {
@@ -721,8 +721,6 @@ square-placement {
 
 .customBreadcrumbs {
     padding: 28px 12px 0!important;
-}
-
 }
 @media only screen and (min-width: 990px) {
     .side-bar-comtainer .sidebarmenu {
@@ -832,42 +830,11 @@ square-placement {
     padding: 10px 0;
 }
 
-.shopify-product-option .product__info-wrapper .product__prices {
-    display: grid !important;
-    grid-template-columns: auto auto 1fr;
-    align-items: center;
-    padding-bottom: 20px;
-}
 
-.shopify-product-option .product__info-wrapper .price-container {
-    margin-bottom: 0px !important;
-    margin-top: 0px !important;
-    padding-right: 6px;
-}
 
-.shopify-product-option .price-container .price-item, .price-container .price-item-fixed {
-    font-weight: 500 !important;
-}
 
-.pr_custom_compare_price s {
-    font-size: 14px;
-}
-.pr_custom_compare_price {
-    margin-bottom: 0px !important;
-    margin-top: 10px !important;
-}
-
-.shopify-product-option .stock-badge.in {
-    padding: 4px 12px 4px 24px !important;
-}
-
-.shopify-product-option .related-shopbtn .related-shopNow-btn {
-  display: inline-flex;
-}
 
 </style>
-
-{% comment %} -----------product option accordian js start --------{% endcomment %}
 <script>
 document.querySelectorAll(".option_row").forEach(row=>{
  row.addEventListener("click",()=>{
@@ -875,9 +842,107 @@ document.querySelectorAll(".option_row").forEach(row=>{
  })
 })
 </script>
-{% comment %} -----------product option accordian js end --------{% endcomment %}
 
-{% comment %}---- addon item remove with main product from cart page js  start---- {% endcomment %}
+{% comment %} <script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const basePrice = {{ product.selected_or_first_available_variant.price | money_without_currency }};
+  alert(basePrice);
+  const radios = document.querySelectorAll(".addon-radio");
+  const totalBox = document.getElementById("final-price");
+
+  let selectedAddonId = null;
+  let selectedAddonPrice = 0;
+
+  function updatePrice() {
+    selectedAddonPrice = 0;
+    selectedAddonId = null;
+
+    radios.forEach(radio => {
+      if (radio.checked) {
+        selectedAddonPrice = parseFloat(radio.dataset.price);
+        selectedAddonId = radio.dataset.addonId;
+      }
+    });
+
+    const total = basePrice + selectedAddonPrice;
+    totalBox.innerText = "₹" + total.toFixed(2);
+  }
+
+  radios.forEach(r => r.addEventListener("change", updatePrice));
+  updatePrice();
+
+  /* 🔥 OVERRIDE ADD TO CART */
+  const form = document.querySelector('form[action="/cart/add"]');
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const mainVariantId = {{ product.selected_or_first_available_variant.id }};
+
+    let items = [
+      { id: mainVariantId, quantity: 1 }
+    ];
+
+    if (selectedAddonId) {
+      items.push({
+        id: selectedAddonId,
+        quantity: 1
+      });
+    }
+
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items })
+    })
+    .then(() => {
+      window.location.href = "/cart";
+    });
+  });
+
+});
+</script> {% endcomment %}
+{% comment %} 
+<script>
+  //3--12 moring js
+document.addEventListener("click", async function(e){
+
+  const removeBtn = e.target.closest(".cart-item__remove");
+  if(!removeBtn) return;
+
+  e.preventDefault();
+
+  const lineIndex = Number(removeBtn.dataset.index);
+
+  const cart = await fetch('/cart.js').then(r => r.json());
+
+  const parent = cart.items[lineIndex - 1];
+  if(!parent) return location.reload();
+
+  const groupId = parent.properties?.group_id;
+  if(!groupId) return location.reload();
+
+  let updates = {};
+
+  cart.items.forEach((item, i)=>{
+      if(item.properties && item.properties.group_id == groupId){
+          updates[i+1] = 0;
+      }
+  });
+
+  await fetch('/cart/update.js',{
+      method:"POST",
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ updates })
+  });
+
+  location.reload();
+});
+
+</script> {% endcomment %}
+
+
 <script>
 document.addEventListener("click", async function(e){
 
@@ -918,6 +983,94 @@ document.addEventListener("click", async function(e){
   location.reload();
 });
 </script>
-{% comment %}---- addon item remove with main product from cart page js end---- {% endcomment %}
 
- 
+
+ {% comment %} <script>
+ //  add on remove
+document.addEventListener("click", async function(e){
+
+  const btn = e.target.closest(".cart-item__remove");
+  if(!btn) return;
+
+  e.preventDefault();
+
+  const lineIndex = btn.getAttribute("data-index");
+
+  // Get cart
+  const cart = await fetch('/cart.js').then(r => r.json());
+
+  let updates = {};
+
+  // Parent item ki info le lo
+  const parentItem = cart.items[lineIndex - 1];
+  if(!parentItem){
+    location.reload();
+    return;
+  }
+
+  const parentVariantId = parentItem.id;
+
+  // Parent remove
+  updates[lineIndex] = 0;
+
+  // Now find all addons with _parent property
+  cart.items.forEach((child, i) => {
+    if(child.properties && child.properties.parent == parentVariantId){
+      updates[i+1] = 0;
+    }
+  });
+
+  // Update cart
+  await fetch('/cart/update.js',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({updates})
+  });
+
+  location.reload();
+});
+</script>  {% endcomment %}
+
+
+  {% comment %} <script>
+ //  add on remove
+document.addEventListener("click", function(e){
+  const btn = e.target.closest(".cart-item__remove a");
+  if(!btn) return;
+
+  e.preventDefault();
+
+  // jis item ko remove kar rahe hain wo kaun sa variant hai
+  let url = new URL(btn.href);
+  let index = url.searchParams.get('line');
+
+  fetch('/cart.js')
+    .then(res => res.json())
+    .then(cart => {
+
+      let updates = {};
+
+      cart.items.forEach((item, i) => {
+
+        // agar ye parent product remove ho raha hai
+        if((i+1) == index){
+          updates[index] = 0;
+
+          // saare addons jinke properties me _parent match kare → remove
+          cart.items.forEach((child, k) => {
+            if(child.properties && child.properties.parent == item.id){
+              updates[k+1] = 0;
+            }
+          });
+        }
+      });
+
+      return fetch('/cart/update.js',{
+        method : 'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ updates })
+      })
+    })
+    .then(()=> location.reload());
+});
+</script>  {% endcomment %}
