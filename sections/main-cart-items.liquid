@@ -717,18 +717,15 @@
         </form>
     </div>
 
-<script>
-    /* ======================================================
-   ADDON PRICE MERGE – CART PAGE
-   ====================================================== */
-
-/* ======================================================
-   CART PAGE – MERGE MAIN + ADDON PRICE BY group_id
+<script>/* ======================================================
+   CART PAGE – MERGE MAIN PRODUCT + ADDON PRICES
+   (NO Shopify.formatMoney dependency)
    ====================================================== */
 
 console.log('✅ Addon price merge JS loaded');
 
 document.addEventListener("DOMContentLoaded", function () {
+
   // cart page check
   if (!document.querySelector('cart-items')) return;
 
@@ -742,19 +739,28 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+/* -----------------------------
+   SAFE MONEY FORMATTER
+------------------------------ */
+function formatMoney(cents) {
+  const format = window.themeMoneyFormat || '${{amount}}';
+  const value = (cents / 100).toFixed(2);
+  return format.replace('{{amount}}', value);
+}
+
 async function mergeAddonPrices() {
   try {
     const cart = await fetch('/cart.js').then(res => res.json());
     console.log('🛒 Cart fetched');
 
-    /* ------------------------------------
-       1️⃣ Add-on total per group_id
-    ------------------------------------ */
+    /* --------------------------------
+       1️⃣ Collect addon totals by group_id
+    --------------------------------- */
     const addonTotalsByGroup = {};
 
     cart.items.forEach(item => {
       const groupId = item.properties?.group_id;
-      const isAddon = !!item.properties?.Add_on; // 👈 addon identifier
+      const isAddon = !!item.properties?.Add_on;
 
       if (isAddon && groupId) {
         addonTotalsByGroup[groupId] =
@@ -764,30 +770,27 @@ async function mergeAddonPrices() {
 
     console.log('➕ Addon totals:', addonTotalsByGroup);
 
-    /* ------------------------------------
+    /* --------------------------------
        2️⃣ Update MAIN product prices
-       (group_id based, index free)
-    ------------------------------------ */
+       (group_id based, index-safe)
+    --------------------------------- */
     document.querySelectorAll('.cart-item').forEach(cartItemEl => {
 
       // addon rows skip
       if (cartItemEl.classList.contains('avis-option')) return;
 
-      // get group_id from DOM
       const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
       if (!groupEl) return;
 
       const groupId = groupEl.dataset.value;
       const addonPrice = addonTotalsByGroup[groupId];
-
       if (!addonPrice) return;
 
-      // find correct main item from cart.js
+      // find correct main product from cart.js
       const mainItem = cart.items.find(item =>
         item.properties?.group_id == groupId &&
         !item.properties?.Add_on
       );
-
       if (!mainItem) return;
 
       const finalPrice = mainItem.line_price + addonPrice;
@@ -795,10 +798,7 @@ async function mergeAddonPrices() {
       const priceEl = cartItemEl.querySelector('.price.price--end');
       if (!priceEl) return;
 
-      priceEl.innerHTML = Shopify.formatMoney(
-        finalPrice,
-        cart.currency.symbol + '{{amount}}'
-      );
+      priceEl.innerHTML = formatMoney(finalPrice);
 
       console.log('✅ Price merged for group:', groupId);
     });
