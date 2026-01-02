@@ -188,6 +188,7 @@ if (!customElements.get('product-info')) {
 
           // Update desktop price
           updateSourceFromDestination('price');
+          updateSourceFromDestination('price-mobile');
 
           // Update mobile price container - get the entire container and replace it
           const mobileSourceContainer = html.querySelector('.product__info-container--mobile');
@@ -201,7 +202,7 @@ if (!customElements.get('product-info')) {
           updateSourceFromDestination('Sku', ({ classList }) => classList.contains('hidden'));
           updateSourceFromDestination('Inventory', ({ innerText }) => innerText === '');
           updateSourceFromDestination('Volume');
-          updateSourceFromDestination('Price-Per-Item', ({ classList }) => classList.contains('hidden'));
+          -Per-Item', ({ classList }) => classList.contains('hidden'));
 
           this.updateQuantityRules(this.sectionId, html);
           this.querySelector(`#Quantity-Rules-${this.dataset.section}`)?.classList.remove('hidden');
