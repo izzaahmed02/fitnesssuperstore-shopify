@@ -1378,6 +1378,27 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
+/* ======================================================
+   ENSURE PRICE MERGE AFTER CART UPDATE IS COMPLETE
+====================================================== */
+
+let afterQtyChangeTimer = null;
+
+document.addEventListener('click', function (e) {
+
+  // + / − button OR manual qty change
+  if (
+    e.target.closest('. cart-quantity .quantity__button') ||
+    e.target.closest('. cart-quantity .quantity__input')
+  ) {
+    if (afterQtyChangeTimer) clearTimeout(afterQtyChangeTimer);
+
+    // wait till Shopify finishes AJAX + DOM replace
+    afterQtyChangeTimer = setTimeout(() => {
+      mergeAddonPrices();
+    }, 600); // 👈 important
+  }
+});
 
 
 
