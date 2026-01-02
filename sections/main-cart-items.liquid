@@ -717,96 +717,196 @@
         </form>
     </div>
 
-<script>/* ======================================================
-   CART PAGE – MERGE MAIN PRODUCT + ADDON PRICES
-   (NO Shopify.formatMoney dependency)
-   ====================================================== */
+{% comment %} <script>
+   // price changed
+    /* ======================================================
+        CART PAGE – MERGE MAIN PRODUCT + ADDON PRICES
+        (NO Shopify.formatMoney dependency)
+        ====================================================== */
 
-console.log('✅ Addon price merge JS loaded');
+        console.log('✅ Addon price merge JS loaded');
 
-document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function () {
 
-  // cart page check
-  if (!document.querySelector('cart-items')) return;
+        // cart page check
+        if (!document.querySelector('cart-items')) return;
 
-  mergeAddonPrices();
+        mergeAddonPrices();
 
-  // quantity change par re-calc
-  document.addEventListener('change', function (e) {
-    if (e.target.matches('.quantity__input')) {
-      setTimeout(mergeAddonPrices, 400);
-    }
-  });
-});
+        // quantity change par re-calc
+        document.addEventListener('change', function (e) {
+            if (e.target.matches('.quantity__input')) {
+            setTimeout(mergeAddonPrices, 400);
+            }
+        });
+        });
 
-/* -----------------------------
-   SAFE MONEY FORMATTER
------------------------------- */
-function formatMoney(cents) {
+        /* -----------------------------
+        SAFE MONEY FORMATTER
+        ------------------------------ */
+        function formatMoney(cents) {
+        const format = window.themeMoneyFormat || '${{amount}}';
+        const value = (cents / 100).toFixed(2);
+        return format.replace('{{amount}}', value);
+        }
+
+        async function mergeAddonPrices() {
+        try {
+            const cart = await fetch('/cart.js').then(res => res.json());
+            console.log('🛒 Cart fetched');
+
+            /* --------------------------------
+            1️⃣ Collect addon totals by group_id
+            --------------------------------- */
+            const addonTotalsByGroup = {};
+
+            cart.items.forEach(item => {
+            const groupId = item.properties?.group_id;
+            const isAddon = !!item.properties?.Add_on;
+
+            if (isAddon && groupId) {
+                addonTotalsByGroup[groupId] =
+                (addonTotalsByGroup[groupId] || 0) + item.line_price;
+            }
+            });
+
+            console.log('➕ Addon totals:', addonTotalsByGroup);
+
+            /* --------------------------------
+            2️⃣ Update MAIN product prices
+            (group_id based, index-safe)
+            --------------------------------- */
+            document.querySelectorAll('.cart-item').forEach(cartItemEl => {
+
+            // addon rows skip
+            if (cartItemEl.classList.contains('avis-option')) return;
+
+            const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+            if (!groupEl) return;
+
+            const groupId = groupEl.dataset.value;
+            const addonPrice = addonTotalsByGroup[groupId];
+            if (!addonPrice) return;
+
+            // find correct main product from cart.js
+            const mainItem = cart.items.find(item =>
+                item.properties?.group_id == groupId &&
+                !item.properties?.Add_on
+            );
+            if (!mainItem) return;
+
+            const finalPrice = mainItem.line_price + addonPrice;
+
+            const priceEl = cartItemEl.querySelector('.small-hide .price.price--end');
+            if (!priceEl) return;
+
+            priceEl.innerHTML = formatMoney(finalPrice);
+
+            console.log('✅ Price merged for group:', groupId);
+            });
+
+        } catch (error) {
+            console.error('❌ Addon price merge failed:', error);
+        }
+        }
+
+
+</script> {% endcomment %}
+
+<script>
+   // price changed
+    /* ======================================================
+        CART PAGE – MERGE MAIN PRODUCT + ADDON PRICES
+        (NO Shopify.formatMoney dependency)
+        ====================================================== */
+
+        console.log('✅ Addon price merge JS loaded');
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+        // cart page check
+        if (!document.querySelector('cart-items')) return;
+
+        mergeAddonPrices();
+
+        // quantity change par re-calc
+        document.addEventListener('change', function (e) {
+            if (e.target.matches('.quantity__input')) {
+            setTimeout(mergeAddonPrices, 400);
+            }
+        });
+        });
+
+        /* -----------------------------
+        SAFE MONEY FORMATTER
+        ------------------------------ */
+        function formatMoney(cents) {
   const format = window.themeMoneyFormat || '${{amount}}';
+
   const value = (cents / 100).toFixed(2);
-  return format.replace('{{amount}}', value);
+
+  return format.replace(/\{\{\s*amount\s*\}\}/, value);
 }
 
-async function mergeAddonPrices() {
-  try {
-    const cart = await fetch('/cart.js').then(res => res.json());
-    console.log('🛒 Cart fetched');
+        async function mergeAddonPrices() {
+        try {
+            const cart = await fetch('/cart.js').then(res => res.json());
+            console.log('🛒 Cart fetched');
 
-    /* --------------------------------
-       1️⃣ Collect addon totals by group_id
-    --------------------------------- */
-    const addonTotalsByGroup = {};
+            /* --------------------------------
+            1️⃣ Collect addon totals by group_id
+            --------------------------------- */
+            const addonTotalsByGroup = {};
 
-    cart.items.forEach(item => {
-      const groupId = item.properties?.group_id;
-      const isAddon = !!item.properties?.Add_on;
+            cart.items.forEach(item => {
+            const groupId = item.properties?.group_id;
+            const isAddon = !!item.properties?.Add_on;
 
-      if (isAddon && groupId) {
-        addonTotalsByGroup[groupId] =
-          (addonTotalsByGroup[groupId] || 0) + item.line_price;
-      }
-    });
+            if (isAddon && groupId) {
+                addonTotalsByGroup[groupId] =
+                (addonTotalsByGroup[groupId] || 0) + item.line_price;
+            }
+            });
 
-    console.log('➕ Addon totals:', addonTotalsByGroup);
+            console.log('➕ Addon totals:', addonTotalsByGroup);
 
-    /* --------------------------------
-       2️⃣ Update MAIN product prices
-       (group_id based, index-safe)
-    --------------------------------- */
-    document.querySelectorAll('.cart-item').forEach(cartItemEl => {
+            /* --------------------------------
+            2️⃣ Update MAIN product prices
+            (group_id based, index-safe)
+            --------------------------------- */
+            document.querySelectorAll('.cart-item').forEach(cartItemEl => {
 
-      // addon rows skip
-      if (cartItemEl.classList.contains('avis-option')) return;
+            // addon rows skip
+            if (cartItemEl.classList.contains('avis-option')) return;
 
-      const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
-      if (!groupEl) return;
+            const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+            if (!groupEl) return;
 
-      const groupId = groupEl.dataset.value;
-      const addonPrice = addonTotalsByGroup[groupId];
-      if (!addonPrice) return;
+            const groupId = groupEl.dataset.value;
+            const addonPrice = addonTotalsByGroup[groupId];
+            if (!addonPrice) return;
 
-      // find correct main product from cart.js
-      const mainItem = cart.items.find(item =>
-        item.properties?.group_id == groupId &&
-        !item.properties?.Add_on
-      );
-      if (!mainItem) return;
+            // find correct main product from cart.js
+            const mainItem = cart.items.find(item =>
+                item.properties?.group_id == groupId &&
+                !item.properties?.Add_on
+            );
+            if (!mainItem) return;
 
-      const finalPrice = mainItem.line_price + addonPrice;
+            const finalPrice = mainItem.line_price + addonPrice;
 
-      const priceEl = cartItemEl.querySelector('.small-hide .price.price--end');
-      if (!priceEl) return;
+            const priceEl = cartItemEl.querySelector('.small-hide .price.price--end');
+            if (!priceEl) return;
 
-      priceEl.innerHTML = formatMoney(finalPrice);
+            priceEl.innerHTML = formatMoney(finalPrice);
 
-      console.log('✅ Price merged for group:', groupId);
-    });
+            console.log('✅ Price merged for group:', groupId);
+            });
 
-  } catch (error) {
-    console.error('❌ Addon price merge failed:', error);
-  }
-}
+        } catch (error) {
+            console.error('❌ Addon price merge failed:', error);
+        }
+        }
 
 
 </script>
