@@ -186,21 +186,6 @@ if (!customElements.get('product-info')) {
             }
           };
 
-          // ADD THIS NEW FUNCTION
-const updateAllPriceContainers = () => {
-  const source = html.getElementById(`price-${this.sectionId}`);
-  if (!source) return;
-  
-  // Update all price containers (desktop and mobile)
-  document.querySelectorAll(`[id^="price-"][id$="-${this.dataset.section}"]`).forEach(destination => {
-    destination.innerHTML = source.innerHTML;
-  });
-};
-
-// Then replace the price update line:
-// updateSourceFromDestination('price');  // REMOVE THIS
-updateAllPriceContainers(); 
-
           updateSourceFromDestination('price');
           updateSourceFromDestination('Sku', ({ classList }) => classList.contains('hidden'));
           updateSourceFromDestination('Inventory', ({ innerText }) => innerText === '');
