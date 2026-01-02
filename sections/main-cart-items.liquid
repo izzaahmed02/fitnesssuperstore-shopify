@@ -717,7 +717,87 @@
         </form>
     </div>
 
+<script>
+    /* ======================================================
+   ADDON PRICE MERGE – CART PAGE
+   ====================================================== */
 
+console.log('✅ Addon merge JS loaded');
+
+document.addEventListener("DOMContentLoaded", function () {
+  if (!document.querySelector('cart-items')) return;
+
+  mergeAddonPrices();
+
+  // quantity change ke baad re-run
+  document.addEventListener('change', function (e) {
+    if (e.target.matches('.quantity__input')) {
+      setTimeout(mergeAddonPrices, 400);
+    }
+  });
+});
+
+async function mergeAddonPrices() {
+  try {
+    const cart = await fetch('/cart.js').then(res => res.json());
+
+    console.log('🛒 Cart fetched');
+
+    /* -------------------------------
+       1️⃣ Collect addon totals by group_id
+    -------------------------------- */
+    const addonTotalsByGroup = {};
+
+    cart.items.forEach(item => {
+      const groupId = item.properties?.group_id;
+      const isAddon = !!item.properties?.Add_on; // 👈 reliable addon check
+
+      if (isAddon && groupId) {
+        addonTotalsByGroup[groupId] =
+          (addonTotalsByGroup[groupId] || 0) + item.line_price;
+      }
+    });
+
+    console.log('➕ Addon totals:', addonTotalsByGroup);
+
+    /* --------------------------------
+       2️⃣ Update main product prices
+    --------------------------------- */
+    document.querySelectorAll('.cart-item').forEach((cartItemEl, index) => {
+
+      // addon rows skip
+      if (cartItemEl.classList.contains('avis-option')) return;
+
+      const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+      if (!groupEl) return;
+
+      const groupId = groupEl.dataset.value;
+      const addonPrice = addonTotalsByGroup[groupId];
+
+      if (!addonPrice) return;
+
+      const mainItem = cart.items[index];
+      if (!mainItem) return;
+
+      const finalPrice = mainItem.line_price + addonPrice;
+
+      const priceEl = cartItemEl.querySelector('.price.price--end');
+      if (!priceEl) return;
+
+      priceEl.innerHTML = Shopify.formatMoney(
+        finalPrice,
+        cart.currency.symbol + '{{amount}}'
+      );
+
+      console.log('✅ Price merged for group:', groupId);
+    });
+
+  } catch (err) {
+    console.error('❌ Addon merge failed:', err);
+  }
+}
+
+</script>
 </cart-items>
 {% comment %}Assistance Block{% endcomment %}
 <div class="cart-items__assistance">
