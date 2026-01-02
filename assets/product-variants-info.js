@@ -130,7 +130,7 @@ if (!customElements.get('product-info')) {
           })
           .then(() => {
             // set focus to last clicked option value
-            document.querySelector(#${targetId})?.focus();
+            document.querySelector(`#${targetId}`)?.focus();
           })
           .catch((error) => {
             if (error.name === 'AbortError') {
