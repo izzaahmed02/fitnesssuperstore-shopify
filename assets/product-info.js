@@ -187,7 +187,7 @@ if (!customElements.get('product-info')) {
           };
 
           updateSourceFromDestination('price');
-          pdateSourceFromDestination('price-media');
+          updateSourceFromDestination('price-media');
           updateSourceFromDestination('Sku', ({ classList }) => classList.contains('hidden'));
           updateSourceFromDestination('Inventory', ({ innerText }) => innerText === '');
           updateSourceFromDestination('Volume');
