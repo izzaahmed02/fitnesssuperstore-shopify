@@ -148,7 +148,7 @@ const productForm=document.querySelector('form[action*="/cart/add"]');if(product
 
 document.addEventListener("DOMContentLoaded", function () {
   let scrollAttached = false;
-
+/*
   function checkScroll() {
     const header = document.querySelector(".header-wrapper");
     const product = document.querySelector(".product");
@@ -182,7 +182,7 @@ document.addEventListener("DOMContentLoaded", function () {
       info.style.right="auto";
     } else { info.style.left=info.style.right=""; }
   }
-
+*/
   function attachScroll() { if(!scrollAttached){ window.addEventListener("scroll", checkScroll, {passive:true}); scrollAttached=true; } }
 
   // Detect variant changes or other product JS updates
