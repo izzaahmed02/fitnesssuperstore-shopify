@@ -1081,42 +1081,43 @@ async function syncAddonQuantities(groupId, qty) {
 
 
 <script>
-
-    /* ======================================================
-   CART PAGE – REMOVE ADDONS WHEN MAIN PRODUCT REMOVED
+/* ======================================================
+   CART PAGE – MAIN REMOVE → ADDONS AUTO REMOVE
+   (Popup based remove – use this only)
    ====================================================== */
 
+let pendingRemoveGroupId = null;
+
+/* STEP 1: ❌ click par main product ka group_id store karo */
 document.addEventListener('click', function (e) {
+  const removeIcon = e.target.closest('.cart-item__remove a');
+  if (!removeIcon) return;
 
-  // Remove button detect (covers Dawn + custom themes)
-  const removeBtn = e.target.closest(
-    '.cart-items__popup-btn--remove'
-  );
-
-  if (!removeBtn) return;
-
-  const cartItemEl = removeBtn.closest('.cart-item');
+  const cartItemEl = removeIcon.closest('.cart-item');
   if (!cartItemEl) return;
 
-  // Skip addon rows
+  // addon row skip
   if (cartItemEl.classList.contains('avis-option')) return;
 
   const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
   if (!groupEl) return;
 
-  const groupId = groupEl.dataset.value;
-
-  // Delay: let Shopify start its own remove
-  setTimeout(() => {
-    removeAddonItems(groupId);
-  }, 200);
+  pendingRemoveGroupId = groupEl.dataset.value;
 });
 
+/* STEP 2: Popup ke "Remove" button par addons remove karo */
+document.addEventListener('click', function (e) {
+  const confirmBtn = e.target.closest('.cart-items__popup-btn--remove');
+  if (!confirmBtn) return;
 
-/* -----------------------------
-   Remove addons by group_id
------------------------------- */
-async function removeAddonItems(groupId) {
+  if (!pendingRemoveGroupId) return;
+
+  removeAddonItemsByGroup(pendingRemoveGroupId);
+  pendingRemoveGroupId = null;
+});
+
+/* STEP 3: Same group_id ke sab addons remove */
+async function removeAddonItemsByGroup(groupId) {
   try {
     const cart = await fetch('/cart.js').then(res => res.json());
 
@@ -1124,8 +1125,6 @@ async function removeAddonItems(groupId) {
       item.properties?.group_id == groupId &&
       item.properties?.Add_on
     );
-
-    if (!addons.length) return;
 
     for (const addon of addons) {
       await fetch('/cart/change.js', {
@@ -1138,13 +1137,12 @@ async function removeAddonItems(groupId) {
       });
     }
 
-    console.log(`❌ Addons removed for group ${groupId}`);
-
-    // optional reload (safe)
-    window.location.reload();
+    setTimeout(() => {
+      window.location.reload();
+    }, 300);
 
   } catch (err) {
-    console.error('❌ Failed to remove addons', err);
+    console.error('Addon remove failed', err);
   }
 }
 
