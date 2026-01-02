@@ -186,14 +186,17 @@ if (!customElements.get('product-info')) {
             }
           };
 
+          // Update desktop price
           updateSourceFromDestination('price');
 
-          // Update mobile price container as well
-const mobilePriceSource = html.getElementById(`price-${this.sectionId}`);
-const mobilePriceDestination = document.querySelector(`#price-mobile-${this.dataset.section}`);
-if (mobilePriceSource && mobilePriceDestination) {
-  mobilePriceDestination.innerHTML = mobilePriceSource.innerHTML;
-}
+          // Update mobile price container - get the entire container and replace it
+          const mobileSourceContainer = html.querySelector('.product__info-container--mobile');
+          const mobileDestinationContainer = this.querySelector('.product__info-container--mobile');
+          
+          if (mobileSourceContainer && mobileDestinationContainer) {
+            // Clone the source HTML to get updated content
+            mobileDestinationContainer.innerHTML = mobileSourceContainer.innerHTML;
+          }
 
           updateSourceFromDestination('Sku', ({ classList }) => classList.contains('hidden'));
           updateSourceFromDestination('Inventory', ({ innerText }) => innerText === '');
@@ -241,7 +244,7 @@ if (mobilePriceSource && mobilePriceDestination) {
       setUnavailable() {
         this.productForm?.toggleSubmitButton(true, window.variantStrings.unavailable);
 
-        const selectors = ['price', 'Inventory', 'Sku', 'Price-Per-Item', 'Volume-Note', 'Volume', 'Quantity-Rules']
+        const selectors = ['price', 'price-mobile', 'Inventory', 'Sku', 'Price-Per-Item', 'Volume-Note', 'Volume', 'Quantity-Rules']
           .map((id) => `#${id}-${this.dataset.section}`)
           .join(', ');
         document.querySelectorAll(selectors).forEach(({ classList }) => classList.add('hidden'));
