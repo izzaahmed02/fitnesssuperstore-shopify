@@ -187,6 +187,14 @@ if (!customElements.get('product-info')) {
           };
 
           updateSourceFromDestination('price');
+
+          // Update mobile price container as well
+const mobilePriceSource = html.getElementById(`price-${this.sectionId}`);
+const mobilePriceDestination = document.querySelector(`#price-mobile-${this.dataset.section}`);
+if (mobilePriceSource && mobilePriceDestination) {
+  mobilePriceDestination.innerHTML = mobilePriceSource.innerHTML;
+}
+
           updateSourceFromDestination('Sku', ({ classList }) => classList.contains('hidden'));
           updateSourceFromDestination('Inventory', ({ innerText }) => innerText === '');
           updateSourceFromDestination('Volume');
