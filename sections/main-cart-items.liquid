@@ -1079,6 +1079,76 @@ async function syncAddonQuantities(groupId, qty) {
 
 </script>
 
+
+<script>
+
+    /* ======================================================
+   CART PAGE – REMOVE ADDONS WHEN MAIN PRODUCT REMOVED
+   ====================================================== */
+
+document.addEventListener('click', function (e) {
+
+  // Remove button detect (covers Dawn + custom themes)
+  const removeBtn = e.target.closest(
+    '.cart-items__popup-btn--remove'
+  );
+
+  if (!removeBtn) return;
+
+  const cartItemEl = removeBtn.closest('.cart-item');
+  if (!cartItemEl) return;
+
+  // Skip addon rows
+  if (cartItemEl.classList.contains('avis-option')) return;
+
+  const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+  if (!groupEl) return;
+
+  const groupId = groupEl.dataset.value;
+
+  // Delay: let Shopify start its own remove
+  setTimeout(() => {
+    removeAddonItems(groupId);
+  }, 200);
+});
+
+
+/* -----------------------------
+   Remove addons by group_id
+------------------------------ */
+async function removeAddonItems(groupId) {
+  try {
+    const cart = await fetch('/cart.js').then(res => res.json());
+
+    const addons = cart.items.filter(item =>
+      item.properties?.group_id == groupId &&
+      item.properties?.Add_on
+    );
+
+    if (!addons.length) return;
+
+    for (const addon of addons) {
+      await fetch('/cart/change.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: addon.key,
+          quantity: 0
+        })
+      });
+    }
+
+    console.log(`❌ Addons removed for group ${groupId}`);
+
+    // optional reload (safe)
+    window.location.reload();
+
+  } catch (err) {
+    console.error('❌ Failed to remove addons', err);
+  }
+}
+
+</script>
 </cart-items>
 {% comment %}Assistance Block{% endcomment %}
 <div class="cart-items__assistance">
@@ -1175,7 +1245,7 @@ document.addEventListener("click", async function(e) {
 </script> {% endcomment %}
 
 
-<script>
+{% comment %} <script>
 document.addEventListener("DOMContentLoaded", async function () {
 
   if (typeof Shopify === "undefined") return;
@@ -1243,7 +1313,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     console.error('Addon price merge failed', e);
   }
 });
-</script>
+</script> {% endcomment %}
 
 {% schema %}
 {
