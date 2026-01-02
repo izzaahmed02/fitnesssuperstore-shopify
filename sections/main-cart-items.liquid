@@ -913,9 +913,10 @@
 
 
 
-<script>
+{% comment %} <script>
+// perfect workiinng
    // price chnagend working with correct icon
-/* ======================================================
+  ======================================================
         CART PAGE – MERGE MAIN PRODUCT + ADDON PRICES
         (NO Shopify.formatMoney dependency)
         ====================================================== */
@@ -998,9 +999,9 @@
        const priceEls = cartItemEl.querySelectorAll('.price.price--end');
 if (!priceEls.length) return;
 
-priceEls.forEach(priceEl => {
+ priceEls.forEach(priceEl => {
   priceEl.innerHTML = formatMoney(finalPrice);
-});
+ });
 
             priceEl.innerHTML = formatMoney(finalPrice);
 
@@ -1022,9 +1023,9 @@ priceEls.forEach(priceEl => {
    RE-RUN PRICE MERGE WHEN CART RE-RENDERS
    ====================================================== */
 
-const cartContainer = document.querySelector('cart-items');
+  cartContainer = document.querySelector('cart-items');
 
-if (cartContainer) {
+ if (cartContainer) {
   const observer = new MutationObserver(() => {
     mergeAddonPrices();
   });
@@ -1033,61 +1034,247 @@ if (cartContainer) {
     childList: true,
     subtree: true
   });
+ }
+</script>
+ {% endcomment %}
+
+
+{% comment %} <script>
+// perfect working
+        /* ======================================================
+        CART PAGE – SYNC ADDON QTY WITH MAIN PRODUCT
+        ====================================================== */
+
+        document.addEventListener('change', function (e) {
+
+        // Only cart quantity input
+        if (!e.target.matches('.quantity__input')) return;
+
+        const input = e.target;
+        const newQty = parseInt(input.value, 10);
+
+        if (isNaN(newQty) || newQty < 1) return;
+
+        const cartItemEl = input.closest('.cart-item');
+        if (!cartItemEl) return;
+
+        // Skip addon rows
+        if (cartItemEl.classList.contains('avis-option')) return;
+
+        const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+        if (!groupEl) return;
+
+        const groupId = groupEl.dataset.value;
+
+        syncAddonQuantities(groupId, newQty);
+        });
+
+        /* -----------------------------
+        Sync addon quantities
+        ------------------------------ */
+        async function syncAddonQuantities(groupId, qty) {
+        try {
+            const cart = await fetch('/cart.js').then(res => res.json());
+
+            const addonItems = cart.items.filter(item =>
+            item.properties?.group_id == groupId &&
+            item.properties?.Add_on
+            );
+
+            if (!addonItems.length) return;
+
+            // update addons one by one
+            for (const addon of addonItems) {
+            await fetch('/cart/change.js', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                id: addon.key,
+                quantity: qty
+                })
+            });
+            }
+
+            console.log(`🔁 Addon qty synced for group ${groupId} → ${qty}`);
+
+        } catch (err) {
+            console.error('❌ Addon qty sync failed', err);
+        }
+        }
+
+</script> {% endcomment %}
+
+
+{% comment %} <script>
+
+//   perfect working
+            /* ======================================================
+            CART PAGE – MAIN REMOVE → ADDONS AUTO REMOVE
+            (Popup based remove – use this only)
+            ====================================================== */
+
+            let pendingRemoveGroupId = null;
+
+            /* STEP 1: ❌ click par main product ka group_id store karo */
+            document.addEventListener('click', function (e) {
+            const removeIcon = e.target.closest('.cart-item__remove a');
+            if (!removeIcon) return;
+
+            const cartItemEl = removeIcon.closest('.cart-item');
+            if (!cartItemEl) return;
+
+            // addon row skip
+            if (cartItemEl.classList.contains('avis-option')) return;
+
+            const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+            if (!groupEl) return;
+
+            pendingRemoveGroupId = groupEl.dataset.value;
+            });
+
+            /* STEP 2: Popup ke "Remove" button par addons remove karo */
+            document.addEventListener('click', function (e) {
+            const confirmBtn = e.target.closest('.cart-items__popup-btn--remove');
+            if (!confirmBtn) return;
+
+            if (!pendingRemoveGroupId) return;
+
+            removeAddonItemsByGroup(pendingRemoveGroupId);
+            pendingRemoveGroupId = null;
+            });
+
+            /* STEP 3: Same group_id ke sab addons remove */
+            async function removeAddonItemsByGroup(groupId) {
+            try {
+                const cart = await fetch('/cart.js').then(res => res.json());
+
+                const addons = cart.items.filter(item =>
+                item.properties?.group_id == groupId &&
+                item.properties?.Add_on
+                );
+
+                for (const addon of addons) {
+                await fetch('/cart/change.js', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                    id: addon.key,
+                    quantity: 0
+                    })
+                });
+                }
+
+                setTimeout(() => {
+                window.location.reload();
+                }, 300);
+
+            } catch (err) {
+                console.error('Addon remove failed', err);
+            }
+            }
+
+</script> {% endcomment %}
+
+
+
+
+<script>
+    /* ======================================================
+   GLOBAL HELPERS
+====================================================== */
+
+/* Safe money formatter */
+function formatMoney(cents) {
+  const format = window.themeMoneyFormat || '${{amount}}';
+  const value = (cents / 100).toFixed(2);
+  return format.replace(/\{\{\s*amount\s*\}\}/, value);
 }
 
+/* ======================================================
+   PRICE MERGE (MAIN + ADDONS)
+====================================================== */
 
+async function mergeAddonPrices() {
+  try {
+    const cart = await fetch('/cart.js').then(res => res.json());
 
+    // 1️⃣ collect addon totals per group_id
+    const addonTotalsByGroup = {};
+    cart.items.forEach(item => {
+      const groupId = item.properties?.group_id;
+      const isAddon = !!item.properties?.Add_on;
 
+      if (groupId && isAddon) {
+        addonTotalsByGroup[groupId] =
+          (addonTotalsByGroup[groupId] || 0) + item.line_price;
+      }
+    });
 
+    // 2️⃣ update prices in DOM
+    document.querySelectorAll('.cart-item').forEach(cartItemEl => {
 
+      // skip addon rows
+      if (cartItemEl.classList.contains('avis-option')) return;
 
-</script>
-<script>
+      const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+      if (!groupEl) return;
+
+      const groupId = groupEl.dataset.value;
+      const addonPrice = addonTotalsByGroup[groupId];
+      if (!addonPrice) return;
+
+      const mainItem = cart.items.find(i =>
+        i.properties?.group_id == groupId &&
+        !i.properties?.Add_on
+      );
+      if (!mainItem) return;
+
+      const finalPrice = mainItem.line_price + addonPrice;
+
+      // update ALL price nodes (desktop + mobile)
+      const priceEls = cartItemEl.querySelectorAll('.price.price--end');
+      priceEls.forEach(el => {
+        el.innerHTML = formatMoney(finalPrice);
+      });
+    });
+
+  } catch (err) {
+    console.error('Price merge failed', err);
+  }
+}
 
 /* ======================================================
-   CART PAGE – SYNC ADDON QTY WITH MAIN PRODUCT
-   ====================================================== */
+   QTY SYNC (MAIN → ADDONS)
+====================================================== */
 
 document.addEventListener('change', function (e) {
-
-  // Only cart quantity input
   if (!e.target.matches('.quantity__input')) return;
 
-  const input = e.target;
-  const newQty = parseInt(input.value, 10);
+  const qty = parseInt(e.target.value, 10);
+  if (isNaN(qty) || qty < 1) return;
 
-  if (isNaN(newQty) || newQty < 1) return;
-
-  const cartItemEl = input.closest('.cart-item');
+  const cartItemEl = e.target.closest('.cart-item');
   if (!cartItemEl) return;
 
-  // Skip addon rows
+  // skip addon rows
   if (cartItemEl.classList.contains('avis-option')) return;
 
   const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
   if (!groupEl) return;
 
-  const groupId = groupEl.dataset.value;
-
-  syncAddonQuantities(groupId, newQty);
+  syncAddonQuantities(groupEl.dataset.value, qty);
 });
 
-/* -----------------------------
-   Sync addon quantities
------------------------------- */
 async function syncAddonQuantities(groupId, qty) {
   try {
     const cart = await fetch('/cart.js').then(res => res.json());
 
-    const addonItems = cart.items.filter(item =>
+    const addons = cart.items.filter(item =>
       item.properties?.group_id == groupId &&
       item.properties?.Add_on
     );
 
-    if (!addonItems.length) return;
-
-    // update addons one by one
-    for (const addon of addonItems) {
+    for (const addon of addons) {
       await fetch('/cart/change.js', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1097,26 +1284,18 @@ async function syncAddonQuantities(groupId, qty) {
         })
       });
     }
-
-    console.log(`🔁 Addon qty synced for group ${groupId} → ${qty}`);
-
   } catch (err) {
-    console.error('❌ Addon qty sync failed', err);
+    console.error('Addon qty sync failed', err);
   }
 }
 
-</script>
-
-
-<script>
 /* ======================================================
-   CART PAGE – MAIN REMOVE → ADDONS AUTO REMOVE
-   (Popup based remove – use this only)
-   ====================================================== */
+   REMOVE SYNC (POPUP BASED)
+====================================================== */
 
 let pendingRemoveGroupId = null;
 
-/* STEP 1: ❌ click par main product ka group_id store karo */
+// STEP 1: ❌ click par group_id store
 document.addEventListener('click', function (e) {
   const removeIcon = e.target.closest('.cart-item__remove a');
   if (!removeIcon) return;
@@ -1124,7 +1303,6 @@ document.addEventListener('click', function (e) {
   const cartItemEl = removeIcon.closest('.cart-item');
   if (!cartItemEl) return;
 
-  // addon row skip
   if (cartItemEl.classList.contains('avis-option')) return;
 
   const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
@@ -1133,19 +1311,18 @@ document.addEventListener('click', function (e) {
   pendingRemoveGroupId = groupEl.dataset.value;
 });
 
-/* STEP 2: Popup ke "Remove" button par addons remove karo */
+// STEP 2: popup confirm remove
 document.addEventListener('click', function (e) {
   const confirmBtn = e.target.closest('.cart-items__popup-btn--remove');
   if (!confirmBtn) return;
 
   if (!pendingRemoveGroupId) return;
 
-  removeAddonItemsByGroup(pendingRemoveGroupId);
+  removeAddonItems(pendingRemoveGroupId);
   pendingRemoveGroupId = null;
 });
 
-/* STEP 3: Same group_id ke sab addons remove */
-async function removeAddonItemsByGroup(groupId) {
+async function removeAddonItems(groupId) {
   try {
     const cart = await fetch('/cart.js').then(res => res.json());
 
@@ -1165,16 +1342,50 @@ async function removeAddonItemsByGroup(groupId) {
       });
     }
 
-    setTimeout(() => {
-      window.location.reload();
-    }, 300);
+    setTimeout(() => window.location.reload(), 300);
 
   } catch (err) {
     console.error('Addon remove failed', err);
   }
 }
 
+/* ======================================================
+   DEBOUNCED CART OBSERVER (CRITICAL FIX)
+====================================================== */
+
+let mergeTimeout = null;
+
+document.addEventListener('DOMContentLoaded', function () {
+  const cartContainer = document.querySelector('cart-items');
+  if (!cartContainer) return;
+
+  // initial run
+  mergeAddonPrices();
+
+  const observer = new MutationObserver(() => {
+    if (mergeTimeout) clearTimeout(mergeTimeout);
+
+    // wait till cart settles
+    mergeTimeout = setTimeout(() => {
+      mergeAddonPrices();
+    }, 300);
+  });
+
+  observer.observe(cartContainer, {
+    childList: true,
+    subtree: true
+  });
+});
+
 </script>
+
+
+
+
+
+
+
+
 </cart-items>
 {% comment %}Assistance Block{% endcomment %}
 <div class="cart-items__assistance">
