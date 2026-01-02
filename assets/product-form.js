@@ -5,7 +5,7 @@ if (!customElements.get('product-form')) {
       constructor() {
         super();
 
-        this.form = this.querySelector('form[data-type="add-to-cart-form"]');
+        this.form = this.querySelector('form');
         this.variantIdInput.disabled = false;
         this.form.addEventListener('submit', this.onSubmitHandler.bind(this));
         this.cart = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
@@ -15,18 +15,6 @@ if (!customElements.get('product-form')) {
         if (document.querySelector('cart-drawer')) this.submitButton.setAttribute('aria-haspopup', 'dialog');
 
         this.hideErrors = this.dataset.hideErrors === 'true';
-
-        // --- Attach option change listeners ---
-        this.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
-          input.addEventListener('change', (event) => this._onOptionChange(event));
-        });
-
-        // Store Dawn variant data from JSON
-        try {
-          this.variants = JSON.parse(this.form.dataset.variants);
-        } catch (e) {
-          this.variants = [];
-        }
       }
 
       onSubmitHandler(evt) {
@@ -78,11 +66,14 @@ if (!customElements.get('product-form')) {
               return;
             }
 
+            const startMarker = CartPerformance.createStartingMarker('add:wait-for-subscribers');
             if (!this.error)
               publish(PUB_SUB_EVENTS.cartUpdate, {
                 source: 'product-form',
                 productVariantId: formData.get('id'),
                 cartData: response,
+              }).then(() => {
+                CartPerformance.measureFromMarker('add:wait-for-subscribers', startMarker);
               });
             this.error = false;
             const quickAddModal = this.closest('quick-add-modal');
@@ -91,14 +82,18 @@ if (!customElements.get('product-form')) {
                 'modalClosed',
                 () => {
                   setTimeout(() => {
-                    this.cart.renderContents(response);
+                    CartPerformance.measure("add:paint-updated-sections", () => {
+                      this.cart.renderContents(response);
+                    });
                   });
                 },
                 { once: true }
               );
               quickAddModal.hide(true);
             } else {
-              this.cart.renderContents(response);
+              CartPerformance.measure("add:paint-updated-sections", () => {
+                this.cart.renderContents(response);
+              });
             }
           })
           .catch((e) => {
@@ -109,6 +104,8 @@ if (!customElements.get('product-form')) {
             if (this.cart && this.cart.classList.contains('is-empty')) this.cart.classList.remove('is-empty');
             if (!this.error) this.submitButton.removeAttribute('aria-disabled');
             this.querySelector('.loading__spinner').classList.add('hidden');
+
+            CartPerformance.measureFromEvent("add:user-action", evt);
           });
       }
 
@@ -139,41 +136,6 @@ if (!customElements.get('product-form')) {
 
       get variantIdInput() {
         return this.form.querySelector('[name=id]');
-      }
-
-      // --- Fully working _onOptionChange ---
-      _onOptionChange(event) {
-        const optionGroup = event.target.closest('[data-product-option]');
-        if (!optionGroup || !this.variants.length) return;
-
-        // Select first visible & enabled input in this group
-        const firstOption = Array.from(optionGroup.querySelectorAll('input[type="radio"], input[type="checkbox"]'))
-          .find(input => !input.disabled && input.offsetParent !== null);
-
-        if (!firstOption) return;
-
-        // Update input state
-        firstOption.checked = true;
-
-        // Collect selected options
-        const selectedOptions = Array.from(this.querySelectorAll('[data-product-option]'))
-          .map(group => {
-            const checked = group.querySelector('input[type="radio"]:checked, input[type="checkbox"]:checked');
-            return checked ? checked.value : null;
-          });
-
-        // Find the matching variant
-        const matchedVariant = this.variants.find(variant =>
-          variant.options.every((opt, i) => opt === selectedOptions[i])
-        );
-
-        if (matchedVariant) {
-          this.variantIdInput.value = matchedVariant.id;
-          this.submitButton.removeAttribute('disabled');
-        } else {
-          this.variantIdInput.value = '';
-          this.submitButton.setAttribute('disabled', 'disabled');
-        }
       }
     }
   );
