@@ -753,7 +753,7 @@
     </div>
 </div>
 
-
+{% comment %} 
 <div id="addon-edit-popup" class="addon-popup">
   <div class="addon-popup-overlay"></div>
 
@@ -774,6 +774,32 @@
       <button type="button" id="addon-save" class="addon-btn primary">
         Save changes
       </button>
+    </div>
+  </div>
+</div> {% endcomment %}
+<div id="addon-edit-popup" class="addon-popup" style="display:none;">
+  <div class="addon-popup-overlay"></div>
+
+  <div class="addon-popup-box">
+    <div class="addon-popup-header">
+      <h3>Modify Add-ons</h3>
+      <button class="addon-popup-close">✕</button>
+    </div>
+
+    <div class="addon-popup-content"></div>
+
+    <div class="addon-popup-footer">
+      <button type="button" id="addon-cancel" class="addon-btn secondary">
+        Cancel
+      </button>
+      <button type="button" id="addon-save" class="addon-btn primary">
+        Save changes
+      </button>
+    </div>
+
+    <!-- 🔥 POPUP LOADER -->
+    <div class="addon-popup-loader">
+      <div class="spinner"></div>
     </div>
   </div>
 </div>
@@ -1223,121 +1249,328 @@ document.addEventListener('click', function (e) {
     document.getElementById('addon-edit-popup').style.display = 'none';
   }
 </script> {% endcomment %}
+
+{% comment %} 
 <script>
+  working js without loader
+  /* ===============================
+    POPUP OPEN (Modify)
+  ================================ */
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('.cart-modify-addon');
+    if (!btn) return;
 
+    e.preventDefault();
 
-/* ===============================
-  POPUP OPEN (Modify)
-================================ */
-document.addEventListener('click', async e => {
-  const btn = e.target.closest('.cart-modify-addon');
-  if (!btn) return;
+    const groupId = btn.dataset.groupId;
+    const popup = document.getElementById('addon-edit-popup');
+    popup.dataset.groupId = groupId;
 
-  e.preventDefault();
+    const cart = await fetch('/cart.js').then(r=>r.json());
+    const mainItem = cart.items.find(
+      i => i.properties?.group_id == groupId && !i.properties?.Add_on
+    );
+    if (!mainItem) return;
 
-  const groupId = btn.dataset.groupId;
-  const popup = document.getElementById('addon-edit-popup');
-  popup.dataset.groupId = groupId;
+    const html = await fetch(mainItem.url).then(r=>r.text());
+    const doc = new DOMParser().parseFromString(html,'text/html');
+    const options = doc.querySelector('.customproduct_option');
+    if (!options) return;
 
-  const cart = await fetch('/cart.js').then(r=>r.json());
-  const mainItem = cart.items.find(
-    i => i.properties?.group_id == groupId && !i.properties?.Add_on
-  );
-  if (!mainItem) return;
+    popup.querySelector('.addon-popup-content').innerHTML = options.innerHTML;
 
-  const html = await fetch(mainItem.url).then(r=>r.text());
-  const doc = new DOMParser().parseFromString(html,'text/html');
-  const options = doc.querySelector('.customproduct_option');
-  if (!options) return;
-
-  popup.querySelector('.addon-popup-content').innerHTML = options.innerHTML;
-
-  // preselect existing addons
-  cart.items
-    .filter(i => i.properties?.group_id == groupId && i.properties?.Add_on)
-    .forEach(addon=>{
-      const input = popup.querySelector(
-        `.addon-radio[data-variant-id="${addon.variant_id}"]`
-      );
-      if (input) input.checked = true;
-    });
-
-  popup.style.display = 'block';
-});
-
-/* ===============================
-  POPUP CLOSE
-================================ */
-document.addEventListener('click', e => {
-  if (
-    e.target.matches('.addon-popup-overlay') ||
-    e.target.matches('.addon-popup-close') ||
-    e.target.matches('#addon-cancel')
-  ) {
-    document.getElementById('addon-edit-popup').style.display = 'none';
-  }
-});
-
-/* ===============================
-  SAVE CHANGES
-================================ */
-document.addEventListener('click', async e => {
-  if (!e.target.matches('#addon-save')) return;
-
-  const popup = document.getElementById('addon-edit-popup');
-  const groupId = popup.dataset.groupId;
-
-  const cart = await fetch('/cart.js').then(r=>r.json());
-  const mainItem = cart.items.find(
-    i => i.properties?.group_id == groupId && !i.properties?.Add_on
-  );
-
-  const selected = [...popup.querySelectorAll('.addon-radio:checked')];
-  const titles = selected.map(i=>i.dataset.title).join(', ');
-  const variantIds = selected.map(i=>String(i.dataset.variantId));
-
-  // remove unselected addons
-  for (const item of cart.items.filter(i=>i.properties?.Add_on && i.properties.group_id==groupId)) {
-    if (!variantIds.includes(String(item.variant_id))) {
-      await fetch('/cart/change.js',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({id:item.key,quantity:0})
+    // preselect existing addons
+    cart.items
+      .filter(i => i.properties?.group_id == groupId && i.properties?.Add_on)
+      .forEach(addon=>{
+        const input = popup.querySelector(
+          `.addon-radio[data-variant-id="${addon.variant_id}"]`
+        );
+        if (input) input.checked = true;
       });
-    }
-  }
 
-  // add new addons
-  for (const id of variantIds) {
-    if (!cart.items.find(i=>String(i.variant_id)==id && i.properties?.Add_on)) {
-      await fetch('/cart/add.js',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          items:[{
-            id,
-            quantity:1,
-            properties:{group_id:groupId,Add_on:'Yes'}
-          }]
-        })
-      });
-    }
-  }
-
-  // update title text
-  await fetch('/cart/change.js',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      id: mainItem.key,
-      properties:{
-        ...mainItem.properties,
-        'Included Add-Ons': titles
-      }
-    })
+    popup.style.display = 'block';
   });
 
-  popup.style.display = 'none';
-  setTimeout(()=>window.location.reload(),400);
+  /* ===============================
+    POPUP CLOSE
+  ================================ */
+  document.addEventListener('click', e => {
+    if (
+      e.target.matches('.addon-popup-overlay') ||
+      e.target.matches('.addon-popup-close') ||
+      e.target.matches('#addon-cancel')
+    ) {
+      document.getElementById('addon-edit-popup').style.display = 'none';
+    }
+  });
+
+  /* ===============================
+    SAVE CHANGES
+  ================================ */
+  document.addEventListener('click', async e => {
+    if (!e.target.matches('#addon-save')) return;
+
+    const popup = document.getElementById('addon-edit-popup');
+    const groupId = popup.dataset.groupId;
+
+    const cart = await fetch('/cart.js').then(r=>r.json());
+    const mainItem = cart.items.find(
+      i => i.properties?.group_id == groupId && !i.properties?.Add_on
+    );
+
+    const selected = [...popup.querySelectorAll('.addon-radio:checked')];
+    const titles = selected.map(i=>i.dataset.title).join(', ');
+    const variantIds = selected.map(i=>String(i.dataset.variantId));
+
+    // remove unselected addons
+    for (const item of cart.items.filter(i=>i.properties?.Add_on && i.properties.group_id==groupId)) {
+      if (!variantIds.includes(String(item.variant_id))) {
+        await fetch('/cart/change.js',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({id:item.key,quantity:0})
+        });
+      }
+    }
+
+    // add new addons
+    for (const id of variantIds) {
+      if (!cart.items.find(i=>String(i.variant_id)==id && i.properties?.Add_on)) {
+        await fetch('/cart/add.js',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            items:[{
+              id,
+              quantity:1,
+              properties:{group_id:groupId,Add_on:'Yes'}
+            }]
+          })
+        });
+      }
+    }
+
+    // update title text
+    await fetch('/cart/change.js',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        id: mainItem.key,
+        properties:{
+          ...mainItem.properties,
+          'Included Add-Ons': titles
+        }
+      })
+    });
+
+    popup.style.display = 'none';
+    setTimeout(()=>window.location.reload(),400);
+  });
+</script> {% endcomment %}
+
+
+<script>
+/* ======================================================
+   LOADER HELPERS (DEFINE ONCE)
+====================================================== */
+function showButtonLoader(btn) {
+  if (!btn) return;
+  btn.classList.add('loading');
+}
+
+function hideButtonLoader(btn) {
+  if (!btn) return;
+  btn.classList.remove('loading');
+}
+
+function showPopupLoader() {
+  document
+    .querySelector('.addon-popup-loader')
+    ?.classList.add('active');
+}
+
+function hidePopupLoader() {
+  document
+    .querySelector('.addon-popup-loader')
+    ?.classList.remove('active');
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  /* =========================================
+     ACCORDION (dynamic – popup + page)
+  ========================================= */
+  document.addEventListener('click', e => {
+    const row = e.target.closest('.option_row');
+    if (row) row.classList.toggle('active');
+  });
+
+  /* =========================================
+     MODIFY BUTTON CLICK
+  ========================================= */
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('.cart-modify-addon');
+    if (!btn) return;
+
+    e.preventDefault();
+
+    // 🔥 BUTTON LOADER START
+    showButtonLoader(btn);
+
+    const cartItem = btn.closest('.cart-item');
+    if (!cartItem) {
+      hideButtonLoader(btn);
+      return;
+    }
+
+    const groupEl = cartItem.querySelector('[data-name="group_id"]');
+    if (!groupEl) {
+      hideButtonLoader(btn);
+      return;
+    }
+
+    const groupId = groupEl.dataset.value;
+
+    const popup = document.getElementById('addon-edit-popup');
+    popup.dataset.groupId = groupId;
+
+    try {
+      const cart = await fetch('/cart.js').then(r => r.json());
+      const mainItem = cart.items.find(
+        i => i.properties?.group_id == groupId && !i.properties?.Add_on
+      );
+      if (!mainItem) throw 'Main item not found';
+
+      const html = await fetch(mainItem.url).then(r => r.text());
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+
+      const options = doc.querySelector('.customproduct_option');
+      if (!options) throw '.customproduct_option missing';
+
+      popup.querySelector('.addon-popup-content').innerHTML =
+        options.innerHTML;
+
+      // preselect addons
+      cart.items
+        .filter(i => i.properties?.group_id == groupId && i.properties?.Add_on)
+        .forEach(addon => {
+          const input = popup.querySelector(
+            `.addon-radio[data-variant-id="${addon.variant_id}"]`
+          );
+          if (input) input.checked = true;
+        });
+
+      // 🔥 BUTTON LOADER END
+      hideButtonLoader(btn);
+
+      popup.style.display = 'block';
+
+    } catch (err) {
+      console.error(err);
+      hideButtonLoader(btn);
+    }
+  });
+
+  /* =========================================
+     POPUP CLOSE
+  ========================================= */
+  document.addEventListener('click', e => {
+    if (
+      e.target.matches('.addon-popup-overlay') ||
+      e.target.matches('.addon-popup-close') ||
+      e.target.matches('#addon-cancel')
+    ) {
+      document.getElementById('addon-edit-popup').style.display = 'none';
+    }
+  });
+
+  /* =========================================
+     SAVE CHANGES
+  ========================================= */
+  document.addEventListener('click', async e => {
+    if (!e.target.matches('#addon-save')) return;
+
+    const popup = document.getElementById('addon-edit-popup');
+    const groupId = popup.dataset.groupId;
+
+    // 🔥 POPUP LOADER START
+    showPopupLoader();
+
+    try {
+      const cart = await fetch('/cart.js').then(r => r.json());
+
+      const mainItem = cart.items.find(
+        i => i.properties?.group_id == groupId && !i.properties?.Add_on
+      );
+
+      const selected = [
+        ...popup.querySelectorAll('.addon-radio:checked')
+      ];
+
+      const titles = selected.map(i => i.dataset.title).join(', ');
+      const variantIds = selected.map(i => String(i.dataset.variantId));
+
+      // remove unselected addons
+      for (const item of cart.items.filter(
+        i => i.properties?.Add_on && i.properties.group_id == groupId
+      )) {
+        if (!variantIds.includes(String(item.variant_id))) {
+          await fetch('/cart/change.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: item.key, quantity: 0 })
+          });
+        }
+      }
+
+      // add new addons
+      for (const id of variantIds) {
+        if (!cart.items.find(
+          i => String(i.variant_id) === id && i.properties?.Add_on
+        )) {
+          await fetch('/cart/add.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              items: [{
+                id,
+                quantity: 1,
+                properties: { group_id: groupId, Add_on: 'Yes' }
+              }]
+            })
+          });
+        }
+      }
+
+      // update Included Add-Ons title
+      await fetch('/cart/change.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: mainItem.key,
+          properties: {
+            ...mainItem.properties,
+            'Included Add-Ons': titles
+          }
+        })
+      });
+
+      // 🔥 POPUP LOADER END
+      hidePopupLoader();
+
+      popup.style.display = 'none';
+      setTimeout(() => window.location.reload(), 400);
+
+    } catch (err) {
+      console.error(err);
+      hidePopupLoader();
+    }
+  });
+
 });
 </script>
+
+
