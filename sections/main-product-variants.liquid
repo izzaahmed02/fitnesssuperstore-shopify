@@ -666,6 +666,7 @@
                       sale_price: product.metafields.custom.sale_price
                     %}
                   {% else %}
+                    <div class="price-container">
                      <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                     {%- render 'price',
                     product: product,
@@ -674,6 +675,21 @@
                     price_class: 'price--large'
                   -%}
                  </div>
+
+                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
+                      %}
+                        <span class="you-save"
+                          >You save
+                          {{
+                            product.metafields.custom.retail_price
+                            | minus: product.selected_or_first_available_variant.price
+                            | money
+                          -}}
+                        </span>
+                      {% endif %}
+
+
+                </div>
                  {%- if product.quantity_price_breaks_configured? -%}
                   <div class="volume-pricing-note" id="Volume-Note-{{ section.id }}">
                     <span>{{ 'products.product.volume_pricing.note' | t }}</span>
