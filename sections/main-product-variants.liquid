@@ -42,7 +42,82 @@
 {% comment %} {% render 'custom-breadcrumbs', with product: product %} {% endcomment %}
 {% render 'metaobjects-breadcrumbs', with product: product %}
 
+{% comment %}
+  {% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
+  {% assign first_breadcrumb = product_breadcrumbs | split: 'Home' %}
+  {% assign jp = first_breadcrumb[1] | split: '>' %}
+  {% assign length = jp.size | minus: 1 %}
 
+  <div class="custom-breadcrumbs">
+    <div class="page-width">
+      <div class="custom-breadcrumbs__wrapper">
+        <div class="custom-breadcrumbs__navigation">
+          {% for i in (0..length) %}
+            {% assign col = jp[i] | handleize %}
+
+            {% if forloop.first %}
+              <a href="/">Home</a>
+            {% else %}
+              <a href="{{ collections[col].url }}">{{- jp[i] }}</a>
+            {% endif %}
+            {% unless forloop.last %}
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M6.31051 3.64645C6.50577 3.45118 6.82235 3.45118 7.01762 3.64645L11.0176 7.64645C11.2129 7.84171 11.2129 8.15829 11.0176 8.35355L7.01762 12.3536C6.82235 12.5488 6.50577 12.5488 6.31051 12.3536C6.11525 12.1583 6.11525 11.8417 6.31051 11.6464L9.95696 8L6.31051 4.35355C6.11525 4.15829 6.11525 3.84171 6.31051 3.64645Z"
+                  fill="#DCDFE5" />
+              </svg>
+            {% endunless %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endcomment %}
+
+{% comment %}
+  <div class="sticky-add-to-cart" style="display: none;">
+    <div class="sticky-container">
+        <img src="{{ product.featured_image | img_url: 'small' }}" alt="{{ product.title }}" class="sticky-product-image" height="" width="">
+        <div class="sticky-product-info">
+            <p class="sticky-product-title">{{ product.title }}</p>
+        </div>
+        <p class="sticky-product-price">{{ product.price | money }}</p>
+        <div class="sticky-product-actions">
+          <div class="sticky-quantity-container">
+              <select name="quantity" class="sticky-quantity">
+                  {% for i in (1..10) %}
+                  <option value="{{ i }}">{{ i }}</option>
+                  {% endfor %}
+              </select>
+              <div class="sticky-arrow">
+                  <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                  </svg>
+              </div>
+            </div>
+            <button onclick="addToCart()" type="submit" name="add" class="button button--full-width button--primary sticky-add-to-cart-btn" aria-haspopup="dialog">
+              <svg class="icon icon-cart" aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.50007 3.75001H1.49998L1.00009 3.75007C0.585878 3.75012 0.250051 3.41437 0.25 3.00016C0.249949 2.58595 0.585695 2.25012 0.999908 2.25007L1.49991 2.25001L1.5 3.00001L1.50002 2.25001L1.54594 2.25L1.54594 2.25C1.88371 2.24996 2.1157 2.24993 2.33265 2.27521C3.58768 2.42143 4.68471 3.18983 5.25099 4.31935C5.34888 4.5146 5.42813 4.73264 5.54352 5.05009L5.5592 5.09324L5.61623 5.25007H17.0336L17.0773 5.25007C17.9753 5.25005 18.7102 5.25004 19.2878 5.31247C19.8799 5.37648 20.4293 5.51592 20.876 5.88873C21.2574 6.20703 21.5455 6.62269 21.7096 7.09156C21.9018 7.64074 21.8395 8.20414 21.6915 8.78104C21.5471 9.34375 21.2891 10.0319 20.9738 10.8726L20.9738 10.8726L20.9584 10.9136L20.9478 10.942C20.7035 11.5934 20.5046 12.1239 20.3055 12.5475C20.0986 12.9878 19.8706 13.3601 19.5454 13.6787C19.2426 13.9754 18.8917 14.2186 18.5075 14.3979C18.095 14.5905 17.6665 14.6733 17.1815 14.7124C16.7151 14.7501 16.1485 14.7501 15.4529 14.7501H15.4529H15.4529H15.4224H12.2026H12.1594C12.0647 14.7501 11.9717 14.7501 11.8804 14.75H6C5.30964 14.75 4.75 15.3097 4.75 16C4.75 16.6904 5.30964 17.25 6 17.25H9H17H21C21.4142 17.25 21.75 17.5858 21.75 18C21.75 18.4142 21.4142 18.75 21 18.75H19.4501C19.6419 19.125 19.75 19.5499 19.75 20C19.75 21.5188 18.5188 22.75 17 22.75C15.4812 22.75 14.25 21.5188 14.25 20C14.25 19.5499 14.3581 19.125 14.5499 18.75H11.4501C11.6419 19.125 11.75 19.5499 11.75 20C11.75 21.5188 10.5188 22.75 9 22.75C7.48122 22.75 6.25 21.5188 6.25 20C6.25 19.5499 6.35814 19.125 6.54985 18.75H6C4.48122 18.75 3.25 17.5188 3.25 16C3.25 14.4812 4.48122 13.25 6 13.25H7.14691C7.00916 13.0505 6.8859 12.8335 6.76987 12.5996C6.48068 12.0166 6.20831 11.2676 5.87372 10.3474L5.85896 10.3068L4.14951 5.60586C4.01249 5.22905 3.96389 5.09896 3.91007 4.99161C3.5703 4.3139 2.91209 3.85286 2.15907 3.76513C2.03981 3.75124 1.90095 3.75002 1.50009 3.75001H1.50007ZM14.0097 13.2501C14.0064 13.25 14.0032 13.25 14 13.25H11.9452C11.0494 13.2494 10.4099 13.2437 9.90375 13.1869C9.36922 13.1269 9.05809 13.0164 8.81046 12.843C8.56284 12.6695 8.35265 12.4149 8.11362 11.933C7.86618 11.4342 7.62158 10.7648 7.26865 9.79422L6.16168 6.75007H17.0336C17.986 6.75007 18.6393 6.75111 19.1266 6.80378C19.6087 6.8559 19.8051 6.9487 19.9149 7.04037C20.0883 7.18505 20.2192 7.37399 20.2938 7.58711C20.3411 7.72215 20.359 7.93864 20.2385 8.40835C20.1167 8.88312 19.8883 9.49514 19.5539 10.3869C19.2964 11.0736 19.1182 11.5472 18.948 11.9095C18.7826 12.2612 18.6461 12.4598 18.4957 12.6072C18.314 12.7852 18.1034 12.9312 17.8729 13.0388C17.6821 13.1279 17.4482 13.186 17.0608 13.2173C16.6618 13.2495 16.1558 13.2501 15.4224 13.2501H14.0097ZM9 18.75C8.30964 18.75 7.75 19.3097 7.75 20C7.75 20.6904 8.30964 21.25 9 21.25C9.69036 21.25 10.25 20.6904 10.25 20C10.25 19.3097 9.69036 18.75 9 18.75ZM17 18.75C16.3096 18.75 15.75 19.3097 15.75 20C15.75 20.6904 16.3096 21.25 17 21.25C17.6904 21.25 18.25 20.6904 18.25 20C18.25 19.3097 17.6904 18.75 17 18.75Z" fill="#EDEFF3"></path>
+              </svg>
+              <span>Add to Cart</span>
+              <div class="loading__spinner hidden">
+                  <svg aria-hidden="true" focusable="false" class="spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+                    <circle class="path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle>
+                  </svg>
+              </div>
+            </button>
+        </div>
+    </div>
+  </div>
+{% endcomment %}
 <product-info
   id="MainProduct-{{ section.id }}"
   class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }} prodTemplate"
@@ -101,7 +176,11 @@
   {%- endfor -%}
 
   <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
-  <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
+  {% if enable_product_form_js %}
+    <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
+  {% endif %}
+  <script src="{{ 'product-sticky.js' | asset_url }}" defer="defer"></script>
+
   {%- if product.quantity_price_breaks_configured? -%}
     <script src="{{ 'show-more.js' | asset_url }}" defer="defer"></script>
     <script src="{{ 'price-per-item.js' | asset_url }}" defer="defer"></script>
@@ -132,11 +211,11 @@
       onload="this.media='all'"
     >
   {%- endif -%}
-
   {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
-  <div class="page-width">
+
+
+  {% comment %} pdp-page-width main-container {% endcomment %}
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
-     {%comment %}
       <div class="product__info-wrapper--mobile">
         <div class="product__info-container--mobile">
           {%- for block in section.blocks -%}
@@ -208,10 +287,45 @@
           {%- endfor -%}
         </div>
       </div>
-      {%endcomment %}
 
       <div class="product-main-left-container">
-    <product-gallery data-product-title="{{ product.title | escape }}">
+        
+        {% comment %}
+          <div class="product-main-left">
+
+            <div class="thumbnail-slider">
+              {% for item in product.images %}
+                <div class="item">
+                  {{ item | image_url: width: 100 | image_tag }}
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="main-slider-wrapper">
+              <div class="main-slider-arrow--left" type="button">
+                <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M7.19635 0.46967C7.48924 0.762563 7.48924 1.23744 7.19635 1.53033L2.72668 6L7.19635 10.4697C7.48924 10.7626 7.48924 11.2374 7.19635 11.5303C6.90345 11.8232 6.42858 11.8232 6.13569 11.5303L1.13569 6.53033C0.995033 6.38968 0.916016 6.19891 0.916016 6C0.916016 5.80109 0.995033 5.61032 1.13569 5.46967L6.13569 0.46967C6.42858 0.176777 6.90345 0.176777 7.19635 0.46967Z" fill="white"/>
+                </svg>
+              </div>
+              <div class="main-slider">
+                {% for item in product.images %}
+                  <div class="item">
+                    <img
+                      src="{{ item | img_url: 'master' }}"
+                      alt="{{ product.title }}" />
+                  </div>
+                {% endfor %}
+              </div>
+              <div class="main-slider-arrow--right" type="button">
+                <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M0.803654 0.46967C1.09655 0.176777 1.57142 0.176777 1.86431 0.46967L6.86431 5.46967C7.15721 5.76256 7.15721 6.23744 6.86431 6.53033L1.86431 11.5303C1.57142 11.8232 1.09655 11.8232 0.803654 11.5303C0.510761 11.2374 0.510761 10.7626 0.803654 10.4697L5.27332 6L0.803654 1.53033C0.510761 1.23744 0.510761 0.762563 0.803654 0.46967Z" fill="white"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        {% endcomment %}
+
+        <product-gallery data-product-title="{{ product.title | escape }}">
           <div class="custom-product-gallery">
             <div class="custom-gallery-wrapper">
               <!-- Thumbnails -->
@@ -479,10 +593,25 @@
           </div>
         </mobile-gallery>
 
+        {% if section.settings.accent_text != blank %}
+          <div class="product__accesnt-text hidden lg:flex">
+            <div>
+              <p class="product__accesnt-text-text">{{ section.settings.accent_text }}</p>
+              <p>{{ section.settings.text }}</p>
+            </div>
 
-</div>
+            <a href="{{ section.settings.button_link  | default: '#' }}">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.45958 2.25002L5.52495 2.25005L5.58515 2.25003C5.91729 2.24988 6.17563 2.24977 6.41432 2.29189C7.31374 2.45061 8.07568 3.04551 8.4478 3.87958C8.54655 4.10093 8.6091 4.35157 8.68951 4.67382L8.68951 4.67383L8.68951 4.67384L8.7041 4.73225L9.11772 6.38672L9.12677 6.42291L9.12677 6.42293C9.26686 6.98319 9.38575 7.4587 9.44293 7.86157C9.5038 8.29046 9.50557 8.70021 9.36866 9.12073C9.23175 9.54125 8.9891 9.87142 8.68738 10.1823C8.40398 10.4743 8.02792 10.7886 7.58483 11.1591L7.55622 11.183L5.94399 12.5308C7.2473 14.8902 9.10778 16.7507 11.4672 18.054L12.815 16.4418L12.839 16.4132C13.2094 15.9701 13.5238 15.594 13.8157 15.3106C14.1266 15.0089 14.4568 14.7663 14.8773 14.6294C15.2978 14.4924 15.7075 14.4942 16.1364 14.5551C16.5393 14.6123 17.0148 14.7311 17.575 14.8712L17.5751 14.8712L17.5751 14.8713L17.6113 14.8803L19.2658 15.2939L19.3242 15.3085L19.3242 15.3085C19.6464 15.3889 19.8971 15.4515 20.1184 15.5502C20.9525 15.9223 21.5474 16.6843 21.7061 17.5837C21.7482 17.8224 21.7481 18.0807 21.748 18.4129L21.748 18.4731L21.748 18.5384C21.7482 18.9214 21.7484 19.2237 21.6818 19.5215C21.4397 20.6055 20.4364 21.5157 19.334 21.6514C19.0316 21.6886 18.7718 21.6632 18.4486 21.6315L18.4485 21.6315L18.4485 21.6315L18.4017 21.6269C15.7621 21.3694 13.3864 20.7099 11.3171 19.6702C8.24296 18.1256 5.87243 15.755 4.32781 12.6809C3.28809 10.6116 2.62865 8.23596 2.37111 5.5963L2.36653 5.54952C2.33484 5.22628 2.30937 4.96642 2.3466 4.66401C2.48232 3.56164 3.39252 2.55831 4.4765 2.31618C4.77435 2.24965 5.07657 2.24982 5.45958 2.25002ZM12.8556 18.7319C14.5361 19.452 16.4378 19.9282 18.5474 20.134C18.9338 20.1717 19.0296 20.1776 19.1507 20.1627C19.6235 20.1044 20.1141 19.6594 20.2179 19.1945C20.2438 19.0784 20.248 18.9515 20.248 18.4731C20.248 18.0524 20.2452 17.9363 20.2289 17.8444C20.1568 17.4355 19.8864 17.0892 19.5073 16.9201C19.422 16.882 19.31 16.8511 18.902 16.7491L17.2475 16.3355C16.6413 16.184 16.2419 16.0851 15.9257 16.0402C15.6268 15.9978 15.4677 16.0146 15.3416 16.0557C15.2156 16.0967 15.0771 16.1768 14.8605 16.387C14.6313 16.6095 14.3666 16.9245 13.9658 17.4039L12.8556 18.7319ZM5.26615 11.1424L6.59411 10.0322C7.07351 9.63137 7.38855 9.36676 7.61102 9.13755C7.82126 8.92094 7.90131 8.78242 7.94235 8.65637C7.98339 8.53032 8.00023 8.37122 7.95781 8.07235C7.91293 7.75611 7.81406 7.35674 7.6625 6.75052L7.24889 5.09605C7.14687 4.68797 7.11601 4.57604 7.07795 4.49074C6.90881 4.11162 6.56247 3.84121 6.15365 3.76907C6.06166 3.75283 5.94559 3.75005 5.52495 3.75005C5.04653 3.75005 4.91959 3.75418 4.80349 3.78011C4.3386 3.88395 3.89356 4.37452 3.83536 4.8473C3.82044 4.96843 3.82631 5.06417 3.86402 5.45064C4.06984 7.56018 4.54599 9.46194 5.26615 11.1424ZM13.2478 6.99999C13.2478 6.58578 13.5836 6.24999 13.9978 6.24999C15.0244 6.24999 15.9319 6.8889 16.5454 7.54437C16.8889 7.91141 17.18 8.32423 17.3888 8.73048C17.59 9.12199 17.7478 9.57165 17.7478 9.99999C17.7478 10.4142 17.412 10.75 16.9978 10.75C16.5836 10.75 16.2478 10.4142 16.2478 9.99999C16.2478 9.91004 16.2042 9.70708 16.0547 9.41609C15.9127 9.13983 15.7038 8.84025 15.4503 8.56942C14.954 8.03924 14.4164 7.74999 13.9978 7.74999C13.5836 7.74999 13.2478 7.41421 13.2478 6.99999ZM13.9978 3.24999C13.5836 3.24999 13.2478 3.58578 13.2478 3.99999C13.2478 4.41421 13.5836 4.74999 13.9978 4.74999C16.8973 4.74999 19.2478 7.1005 19.2478 9.99999C19.2478 10.4142 19.5836 10.75 19.9978 10.75C20.412 10.75 20.7478 10.4142 20.7478 9.99999C20.7478 6.27207 17.7258 3.24999 13.9978 3.24999Z" fill="white"/>
+              </svg>
 
-      <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+              {{ section.settings.button_text }}
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}" style="opacity: 1 !important;">
         <section
           id="ProductInfo-{{ section.id }}"
           class="product__info-container{% if section.settings.enable_sticky_info %} product__column-sticky{% endif %}"
@@ -567,19 +696,19 @@
                           {% if collection.handle contains 'shop-by-strength-product-line' %}
                             <span class="more-info" data-customfield="Shipping">(More Info)</span>
                             <script>
-                                var attachClickHandler = setInterval(function () {
-                                  var $target = $('.custom_shipping_container');
-                                  if ($target.length > 0) {
-                                    var $clickTarget = $target.parent().parent();
+  var attachClickHandler = setInterval(function () {
+    var $target = $('.custom_shipping_container');
+    if ($target.length > 0) {
+      var $clickTarget = $target.parent().parent();
 
-                                      $clickTarget.off('click.clearContent').on('click.clearContent', function () {
-                                          $('#dynamic-product-content').empty();
-                                              });
+      $clickTarget.off('click.clearContent').on('click.clearContent', function () {
+        $('#dynamic-product-content').empty();
+      });
 
-                                              clearInterval(attachClickHandler); 
-                                                    }
-                                                    }, 200);
-                                                      </script>
+      clearInterval(attachClickHandler); 
+    }
+  }, 200);
+</script>
 
 
                           {% endif %}
@@ -622,7 +751,7 @@
                   {{- block.settings.text -}}
                 </p>
               {%- when 'title' -%}
-                <div class="product__title" {{ block.shopify_attributes }}>
+                <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
                   <h1>{{ product.title | escape }}</h1>
                   <a href="{{ product.url }}" class="product__title">
                     <h2 class="h1">
@@ -630,8 +759,9 @@
                     </h2>
                   </a>
                 </div>
-              {%- when 'price' -%}
-                {% assign campaign_text = '' %}
+              {% when 'price' %}
+
+{% assign campaign_text = '' %}
 
 {% if product.title contains 'French Fitness' %}
   {% assign campaign_text = settings.sale_promo_ff %}
@@ -647,7 +777,7 @@
   </div>
 {% endunless %} 
 
-                <div class="product__prices">
+                <div class="product__prices hidden lg:block">
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                     <span class="pr_custom_compare_price"
                       >As high as:
@@ -662,14 +792,12 @@
                     %}
                   {% else %}
                     <div class="price-container">
-                     <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                       {%- render 'price',
-                      product: product,
-                      use_variant: true,
-                      show_badges: true,
-                      price_class: 'price--large'
+                        product: product,
+                        use_variant: true,
+                        show_badges: true,
+                        price_class: 'price--large'
                       -%}
-                        </div>
 
                       {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
                       %}
@@ -682,38 +810,16 @@
                           -}}
                         </span>
                       {% endif %}
-
-
                     </div>
-                 {%- if product.quantity_price_breaks_configured? -%}
-                  <div class="volume-pricing-note" id="Volume-Note-{{ section.id }}">
-                    <span>{{ 'products.product.volume_pricing.note' | t }}</span>
-                  </div>
-                 {%- endif -%}
-                 {%- if cart.taxes_included or cart.duties_included or shop.shipping_policy.body != blank -%}
-                  <div class="product__tax caption rte">
-                    {%- if cart.duties_included and cart.taxes_included -%}
-                      {{ 'products.product.duties_and_taxes_included' | t }}
-                    {%- elsif cart.taxes_included -%}
-                      {{ 'products.product.taxes_included' | t }}
-                    {%- elsif cart.duties_included -%}
-                      {{ 'products.product.duties_included' | t }}
-                    {%- endif -%}
-                    {%- if shop.shipping_policy.body != blank -%}
-                      {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}
-                    {%- endif -%}
-                  </div>
-                 {%- endif -%}
-                 <div {{ block.shopify_attributes }}>
-                  {%- assign product_form_installment_id = 'product-form-installment-' | append: section.id -%}
-                  {%- form 'product', product, id: product_form_installment_id, class: 'installment caption-large' -%}
-                    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-                    {{ form | payment_terms }}
-                  {%- endform -%}
-                 </div>
-                 {% endif %}
+                  {% endif %}
                 </div>
               {% render 'paylater-providers' %}
+              {%- when 'tile_calculator' -%}
+                {% if block.settings.show_tile_calculator %}
+                  <div class="product__tile-calculator">
+                    {% render 'product-tile-calculator', block: block %}
+                  </div>
+                {% endif %}
 
               {%- when 'price_with_option' -%}
                {% unless product.tags contains 'avisplus-product-options' %}
@@ -740,7 +846,7 @@
                   <h5 class="product_price_with_options-heading">Total with options</h5>
 
                   <div class="product_price_with_options-contaniner">
-                  {%comment %}  <div class="product_prices">
+                    <div class="product_prices">
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
                           <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}">
@@ -748,17 +854,7 @@
                           </p>
                         </div>
                       </div>
-                    </div> {%endcomment %}
-
-                      <!-- Price above gallery (updates via JS) -->
-                      <div id="price-media-{{ section.id }}" class="product__price product__price--media" role="status">
-                      {%- render 'price',
-                        product: product,
-                          use_variant: true,
-                          show_badges: true,
-                              price_class: 'price--large'
-                                -%}
-                                </div>
+                    </div>
 
                     <div class="product_price_with_options_atc">
                       <div
@@ -1146,9 +1242,10 @@
                       {%- if product.selected_or_first_available_variant.inventory_quantity
                           <= block.settings.inventory_threshold
                       -%}
-                        <span class="svg-wrapper" style="color: rgb(238, 148, 65)">
-                          {{- 'icon-inventory-status.svg' | inline_asset_content -}}
-                        </span>
+                        <svg width="15" height="15" aria-hidden="true">
+                          <circle cx="7.5" cy="7.5" r="7.5" fill="rgb(238,148,65, 0.3)"/>
+                          <circle cx="7.5" cy="7.5" r="5" stroke="rgb(255, 255, 255)" stroke-width="1" fill="rgb(238,148,65)"/>
+                        </svg>
                         {%- if block.settings.show_inventory_quantity -%}
                           {{-
                             'products.product.inventory_low_stock_show_count'
@@ -1158,9 +1255,10 @@
                           {{- 'products.product.inventory_low_stock' | t -}}
                         {%- endif -%}
                       {%- else -%}
-                        <span class="svg-wrapper" style="color: rgb(62, 214, 96)">
-                          {{- 'icon-inventory-status.svg' | inline_asset_content -}}
-                        </span>
+                        <svg width="15" height="15" aria-hidden="true">
+                          <circle cx="7.5" cy="7.5" r="7.5" fill="rgb(62,214,96, 0.3)"/>
+                          <circle cx="7.5" cy="7.5" r="5" stroke="rgb(255, 255, 255)" stroke-width="1" fill="rgb(62,214,96)"/>
+                        </svg>
                         {%- if block.settings.show_inventory_quantity -%}
                           {{-
                             'products.product.inventory_in_stock_show_count'
@@ -1172,14 +1270,16 @@
                       {%- endif -%}
                     {%- else -%}
                       {%- if product.selected_or_first_available_variant.inventory_policy == 'continue' -%}
-                        <span class="svg-wrapper" style="color: rgb(62, 214, 96)">
-                          {{- 'icon-inventory-status.svg' | inline_asset_content -}}
-                        </span>
+                        <svg width="15" height="15" aria-hidden="true">
+                          <circle cx="7.5" cy="7.5" r="7.5" fill="rgb(62,214,96, 0.3)"/>
+                          <circle cx="7.5" cy="7.5" r="5" stroke="rgb(255, 255, 255)" stroke-width="1" fill="rgb(62,214,96)"/>
+                        </svg>
                         {{- 'products.product.inventory_out_of_stock_continue_selling' | t -}}
                       {%- else -%}
-                        <span class="svg-wrapper" style="color: rgb(200, 200, 200)">
-                          {{- 'icon-inventory-status.svg' | inline_asset_content -}}
-                        </span>
+                        <svg width="15" height="15" aria-hidden="true">
+                          <circle cx="7.5" cy="7.5" r="7.5" fill="rgb(200,200,200, 0.3)"/>
+                          <circle cx="7.5" cy="7.5" r="5" stroke="rgb(255, 255, 255)" stroke-width="1" fill="rgb(200,200,200)"/>
+                        </svg>
                         {{- 'products.product.inventory_out_of_stock' | t -}}
                       {%- endif -%}
                     {%- endif -%}
@@ -1191,7 +1291,8 @@
                     {{ product.description }}
                   </div>
                 {%- endif -%}
-                {%- when 'review_widget' -%}
+
+              {%- when 'review_widget' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
                 <div class="available-wrap ">
                   <div class="sa-reviews">
@@ -1227,6 +1328,12 @@
                 </p>
               {%- when 'custom_liquid' -%}
                 {{ block.settings.custom_liquid }}
+
+              {% when 'color_picker' %}
+                <div></div>
+
+                {% render 'custom-color-picker', product: product %}
+
               {%- when 'collapsible_tab' -%}
                 <div class="product__accordion accordion quick-add-hidden" {{ block.shopify_attributes }}>
                   <details id="Details-{{ block.id }}-{{ section.id }}">
@@ -1237,7 +1344,7 @@
                           {{ block.settings.heading | default: block.settings.page.title | escape }}
                         </h2>
                       </div>
-                      {{- 'icon-caret.svg' | inline_asset_content -}}
+                      {% render 'icon-caret' %}
                     </summary>
                     <div class="accordion__content rte" id="ProductAccordion-{{ block.id }}-{{ section.id }}">
                       {{ block.settings.content }}
@@ -1257,20 +1364,9 @@
                     | item_count_for_variant: product.selected_or_first_available_variant.id
                   -%}
                   {% # theme-check-enable %}
-                  <span class="visually-hidden" id="quantity-label-{{ section.id }}">
-                    {%- if cart_qty > 0 -%}
-                      {{- 'products.product.quantity.in_cart_aria_label' | t: quantity: cart_qty -}}
-                    {%- else -%}
-                      {{- 'products.product.quantity.label' | t -}}
-                    {%- endif -%}
-                  </span>
-                  <label
-                    class="quantity__label form__label"
-                    for="Quantity-{{ section.id }}"
-                    aria-labelledby="quantity-label-{{ section.id }}"
-                  >
-                    <span aria-hidden="true">{{ 'products.product.quantity.label' | t }}</span>
-                    <span class="quantity__rules-cart{% if cart_qty == 0 %} hidden{% endif %}" aria-hidden="true">
+                  <label class="quantity__label form__label" for="Quantity-{{ section.id }}">
+                    {{ 'products.product.quantity.label' | t }}
+                    <span class="quantity__rules-cart{% if cart_qty == 0 %} hidden{% endif %}">
                       {%- render 'loading-spinner' -%}
                       <span
                         >(
@@ -1280,17 +1376,21 @@
                     </span>
                   </label>
                   <div class="price-per-item__container">
-                    <quantity-input class="quantity" data-url="{{ product.url }}" data-section="{{ section.id }}">
+                    <quantity-input
+                      class="quantity {% unless product.available %} out-of-stock{% endunless %}"
+                      data-url="{{ product.url }}"
+                      data-section="{{ section.id }}"
+                    >
                       <button class="quantity__button" name="minus" type="button">
                         <span class="visually-hidden">
                           {{- 'products.product.quantity.decrease' | t: product: product.title | escape -}}
                         </span>
-                        <span class="svg-wrapper">
-                          {{- 'icon-minus.svg' | inline_asset_content -}}
-                        </span>
+                        {% render 'icon-minus' %}
                       </button>
                       <input
                         class="quantity__input"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
                         type="number"
                         name="quantity"
                         id="Quantity-{{ section.id }}"
@@ -1309,9 +1409,7 @@
                         <span class="visually-hidden">
                           {{- 'products.product.quantity.increase' | t: product: product.title | escape -}}
                         </span>
-                        <span class="svg-wrapper">
-                          {{- 'icon-plus.svg' | inline_asset_content -}}
-                        </span>
+                        {% render 'icon-plus' %}
                       </button>
                     </quantity-input>
                     {%- liquid
@@ -1347,7 +1445,7 @@
                                 | money_with_currency
                               -%}
                               <span class="price-per-item--current">
-                                {{- 'products.product.volume_pricing.price_at_each_html' | t: price: variant_price -}}
+                                {{- 'products.product.volume_pricing.price_at_each' | t: price: variant_price -}}
                               </span>
                             {%- else -%}
                               {%- for price_break in volume_pricing_array -%}
@@ -1355,7 +1453,7 @@
                                   {%- assign price_break_price = price_break.price | money_with_currency -%}
                                   <span class="price-per-item--current">
                                     {{-
-                                      'products.product.volume_pricing.price_at_each_html'
+                                      'products.product.volume_pricing.price_at_each'
                                       | t: price: price_break_price
                                     -}}
                                   </span>
@@ -1385,16 +1483,13 @@
                                 </dt>
                                 <dd>
                                   <span class="price-per-item--current">
-                                    {{-
-                                      'products.product.volume_pricing.price_at_each_html'
-                                      | t: price: variant_price
-                                    -}}
+                                    {{- 'products.product.volume_pricing.price_at_each' | t: price: variant_price -}}
                                   </span>
                                 </dd>
                               </dl>
                             {%- else -%}
                               <span class="price-per-item--current">
-                                {{- 'products.product.volume_pricing.price_at_each_html' | t: price: variant_price -}}
+                                {{- 'products.product.volume_pricing.price_at_each' | t: price: variant_price -}}
                               </span>
                             {%- endif -%}
                           </div>
@@ -1438,7 +1533,7 @@
                             {%- assign price = product.selected_or_first_available_variant.price
                               | money_with_currency
                             -%}
-                            <span data-text="{{ 'products.product.volume_pricing.price_at_each_html' | t: price: variant_price }}">
+                            <span data-text="{{ 'products.product.volume_pricing.price_at_each' | t: price: variant_price }}">
                               {{- 'sections.quick_order_list.each' | t: money: price -}}
                             </span>
                           </li>
@@ -1449,7 +1544,7 @@
                                 {{- price_break.minimum_quantity -}}
                                 <span aria-hidden="true">+</span></span
                               >
-                              <span data-text="{{ 'products.product.volume_pricing.price_at_each_html' | t: price: price_break_price }}">
+                              <span data-text="{{ 'products.product.volume_pricing.price_at_each' | t: price: price_break_price }}">
                                 {{- 'sections.quick_order_list.each' | t: money: price_break_price -}}
                               </span>
                             </li>
@@ -1570,7 +1665,7 @@
                           {%- endif -%}
                         </div>
                         {%- if block.settings.make_collapsible_row -%}
-                          {{- 'icon-caret.svg' | inline_asset_content -}}
+                          {% render 'icon-caret' %}
                           </summary>
                         {%- endif -%}
                         <slideshow-component class="slider-mobile-gutter">
@@ -1636,9 +1731,7 @@
                                 name="previous"
                                 aria-label="{{ 'general.slider.previous_slide' | t }}"
                               >
-                                <span class="svg-wrapper">
-                                  {{- 'icon-caret.svg' | inline_asset_content -}}
-                                </span>
+                                {% render 'icon-caret' %}
                               </button>
                               <div class="slider-counter slider-counter--{{ block.settings.pagination_style }}{% if block.settings.pagination_style == 'counter' or block.settings.pagination_style == 'numbers' %} caption{% endif %}">
                                 {%- if block.settings.pagination_style == 'counter' -%}
@@ -1670,9 +1763,7 @@
                                 name="next"
                                 aria-label="{{ 'general.slider.next_slide' | t }}"
                               >
-                                <span class="svg-wrapper">
-                                  {{- 'icon-caret.svg' | inline_asset_content -}}
-                                </span>
+                                {% render 'icon-caret' %}
                               </button>
                             </div>
                           {%- endif -%}
@@ -1696,14 +1787,31 @@
           {%- endfor -%}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
             {{ 'products.product.view_full_details' | t }}
-            {{- 'icon-arrow.svg' | inline_asset_content -}}
+            {% render 'icon-arrow' %}
           </a>
         </section>
       </div>
+
+      {% if section.settings.accent_text != blank %}
+        <div class="product__accesnt-text product__accesnt-text--mobile">
+          <div>
+            <p class="product__accesnt-text-text">{{ section.settings.accent_text }}</p>
+            <p>{{ section.settings.text }}</p>
+          </div>
+          <a href="{{ section.settings.button_link | default: '#'}}">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M5.45958 2.25002L5.52495 2.25005L5.58515 2.25003C5.91729 2.24988 6.17563 2.24977 6.41432 2.29189C7.31374 2.45061 8.07568 3.04551 8.4478 3.87958C8.54655 4.10093 8.6091 4.35157 8.68951 4.67382L8.68951 4.67383L8.68951 4.67384L8.7041 4.73225L9.11772 6.38672L9.12677 6.42291L9.12677 6.42293C9.26686 6.98319 9.38575 7.4587 9.44293 7.86157C9.5038 8.29046 9.50557 8.70021 9.36866 9.12073C9.23175 9.54125 8.9891 9.87142 8.68738 10.1823C8.40398 10.4743 8.02792 10.7886 7.58483 11.1591L7.55622 11.183L5.94399 12.5308C7.2473 14.8902 9.10778 16.7507 11.4672 18.054L12.815 16.4418L12.839 16.4132C13.2094 15.9701 13.5238 15.594 13.8157 15.3106C14.1266 15.0089 14.4568 14.7663 14.8773 14.6294C15.2978 14.4924 15.7075 14.4942 16.1364 14.5551C16.5393 14.6123 17.0148 14.7311 17.575 14.8712L17.5751 14.8712L17.5751 14.8713L17.6113 14.8803L19.2658 15.2939L19.3242 15.3085L19.3242 15.3085C19.6464 15.3889 19.8971 15.4515 20.1184 15.5502C20.9525 15.9223 21.5474 16.6843 21.7061 17.5837C21.7482 17.8224 21.7481 18.0807 21.748 18.4129L21.748 18.4731L21.748 18.5384C21.7482 18.9214 21.7484 19.2237 21.6818 19.5215C21.4397 20.6055 20.4364 21.5157 19.334 21.6514C19.0316 21.6886 18.7718 21.6632 18.4486 21.6315L18.4485 21.6315L18.4485 21.6315L18.4017 21.6269C15.7621 21.3694 13.3864 20.7099 11.3171 19.6702C8.24296 18.1256 5.87243 15.755 4.32781 12.6809C3.28809 10.6116 2.62865 8.23596 2.37111 5.5963L2.36653 5.54952C2.33484 5.22628 2.30937 4.96642 2.3466 4.66401C2.48232 3.56164 3.39252 2.55831 4.4765 2.31618C4.77435 2.24965 5.07657 2.24982 5.45958 2.25002ZM12.8556 18.7319C14.5361 19.452 16.4378 19.9282 18.5474 20.134C18.9338 20.1717 19.0296 20.1776 19.1507 20.1627C19.6235 20.1044 20.1141 19.6594 20.2179 19.1945C20.2438 19.0784 20.248 18.9515 20.248 18.4731C20.248 18.0524 20.2452 17.9363 20.2289 17.8444C20.1568 17.4355 19.8864 17.0892 19.5073 16.9201C19.422 16.882 19.31 16.8511 18.902 16.7491L17.2475 16.3355C16.6413 16.184 16.2419 16.0851 15.9257 16.0402C15.6268 15.9978 15.4677 16.0146 15.3416 16.0557C15.2156 16.0967 15.0771 16.1768 14.8605 16.387C14.6313 16.6095 14.3666 16.9245 13.9658 17.4039L12.8556 18.7319ZM5.26615 11.1424L6.59411 10.0322C7.07351 9.63137 7.38855 9.36676 7.61102 9.13755C7.82126 8.92094 7.90131 8.78242 7.94235 8.65637C7.98339 8.53032 8.00023 8.37122 7.95781 8.07235C7.91293 7.75611 7.81406 7.35674 7.6625 6.75052L7.24889 5.09605C7.14687 4.68797 7.11601 4.57604 7.07795 4.49074C6.90881 4.11162 6.56247 3.84121 6.15365 3.76907C6.06166 3.75283 5.94559 3.75005 5.52495 3.75005C5.04653 3.75005 4.91959 3.75418 4.80349 3.78011C4.3386 3.88395 3.89356 4.37452 3.83536 4.8473C3.82044 4.96843 3.82631 5.06417 3.86402 5.45064C4.06984 7.56018 4.54599 9.46194 5.26615 11.1424ZM13.2478 6.99999C13.2478 6.58578 13.5836 6.24999 13.9978 6.24999C15.0244 6.24999 15.9319 6.8889 16.5454 7.54437C16.8889 7.91141 17.18 8.32423 17.3888 8.73048C17.59 9.12199 17.7478 9.57165 17.7478 9.99999C17.7478 10.4142 17.412 10.75 16.9978 10.75C16.5836 10.75 16.2478 10.4142 16.2478 9.99999C16.2478 9.91004 16.2042 9.70708 16.0547 9.41609C15.9127 9.13983 15.7038 8.84025 15.4503 8.56942C14.954 8.03924 14.4164 7.74999 13.9978 7.74999C13.5836 7.74999 13.2478 7.41421 13.2478 6.99999ZM13.9978 3.24999C13.5836 3.24999 13.2478 3.58578 13.2478 3.99999C13.2478 4.41421 13.5836 4.74999 13.9978 4.74999C16.8973 4.74999 19.2478 7.1005 19.2478 9.99999C19.2478 10.4142 19.5836 10.75 19.9978 10.75C20.412 10.75 20.7478 10.4142 20.7478 9.99999C20.7478 6.27207 17.7258 3.24999 13.9978 3.24999Z" fill="white"/>
+            </svg>
+
+            {{ section.settings.button_text }}
+          </a>
+        </div>
+      {% endif %}
     </div>
-
     {% render 'product-media-modal', variant_images: variant_images %}
-
+    <div id="icon-close-template" style="display: none;">
+      {% render 'icon-close-small' %}
+    </div>
     {% assign popups = section.blocks | where: 'type', 'popup' %}
     {%- for block in popups -%}
       <modal-dialog id="PopupModal-{{ block.id }}" class="product-popup-modal" {{ block.shopify_attributes }}>
@@ -1720,18 +1828,30 @@
             class="product-popup-modal__toggle"
             aria-label="{{ 'accessibility.close' | t }}"
           >
-            {{- 'icon-close.svg' | inline_asset_content -}}
+            {% render 'icon-close' %}
           </button>
           <div class="product-popup-modal__content-info">
-            <h1 class="h2">{{ block.settings.page.title | escape }}</h1>
+            <h2 class="h2">{{ block.settings.page.title | escape }}</h2>
             {{ block.settings.page.content }}
           </div>
         </div>
       </modal-dialog>
     {%- endfor -%}
 
+    {%- if product.media.size > 0 -%}
+      {% comment %}
+        <script src="{{ 'product-modal.js' | asset_url }}" defer="defer"></script>
+        <script src="{{ 'media-gallery.js' | asset_url }}" defer="defer"></script>
+
+        <script src="{{ 'product-media-slider.js' | asset_url }}" defer="defer"></script>
+      {% endcomment %}
+
     <script src="{{ 'product-gallery.js' | asset_url }}" defer="defer"></script>
       <script src="{{ 'product-mobile-gallery.js' | asset_url }}" defer="defer"></script> 
+
+
+      <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js" defer="defer"></script>
+    {%- endif -%}
 
     {%- if first_3d_model -%}
       <script type="application/json" id="ProductJSON-{{ product.id }}">
@@ -1747,12 +1867,309 @@
         assign seo_media = product.featured_media
       endif
     -%}
-
-    <script type="application/ld+json">
-      {{ product | structured_data }}
-    </script>
-  </div>
+  
 </product-info>
+
+<div id="product-gallery-popup" class="product-popup-overlay" hidden>
+  <div class="product-popup-backdrop"></div>
+
+  <div class="product-popup" role="dialog" aria-modal="true">
+    <button class="popup-close" type="button" aria-label="Close popup">&times;</button>
+
+    <div class="popup-tabs">
+      <button class="popup-tab is-active" data-tab="images">Images</button>
+
+      {%- assign has_videos = false -%}
+      {%- for media in product.media -%}
+        {%- if media.media_type == 'video' or media.media_type == 'external_video' -%}
+          {%- assign has_videos = true -%}
+          {%- break -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if has_videos -%}
+        <button class="popup-tab" data-tab="videos">Videos</button>
+      {%- endif -%}
+    </div>
+
+    <div class="popup-content">
+      <div class="popup-media-viewer" data-popup-viewer></div>
+
+      <div class="popup-sidebar">
+        <div class="popup-product-title" data-popup-title></div>
+        <div class="popup-thumbnails" data-tab-content="images"></div>
+        <div class="popup-thumbnails hidden" data-tab-content="videos"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="mobile-gallery-popup" class="mobile-popup-overlay" hidden>
+  <div class="mobile-popup-backdrop"></div>
+  <button class="mobile-popup-close" aria-label="Close">×</button>
+  <div class="mobile-popup-slider"></div>
+  <div class="mobile-popup-thumbnails"></div>
+  <div class="mobile-popup-dots"></div>
+</div>
+
+<style>
+  #dynamic-product-content iframe{max-width:100% !important;}
+</style>
+
+<script>
+  window.product = {{ product | json }}
+</script>
+<script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+
+<script defer type="text/javascript">
+  var sa_products_count = 3;
+  var sa_date_format = 'F j, Y';
+  var sa_product = window.product.variants[0].sku;
+  (function (w, d, t, f, o, s, a) {
+    o = 'shopperapproved';
+    if (!w[o]) {
+      w[o] = function () {
+        (w[o].arg = w[o].arg || []).push(arguments);
+      };
+      (s = d.createElement(t)), (a = d.getElementsByTagName(t)[0]);
+      s.async = 1;
+      s.src = f;
+      a.parentNode.insertBefore(s, a);
+    }
+  })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
+</script>
+{% comment %}
+  <script defer>
+    document.addEventListener("DOMContentLoaded", function () {
+      let scrollTimeout;
+
+      window.addEventListener('scroll', function () {
+          if (scrollTimeout) {
+              clearTimeout(scrollTimeout);
+          }
+
+          scrollTimeout = setTimeout(() => {
+              const stickyAddToCart = document.querySelector('.sticky-add-to-cart');
+              const headerWrapper = document.querySelector('.header-wrapper');
+              const headerBottom = headerWrapper.getBoundingClientRect().bottom;
+
+              if (headerBottom <= 0) {
+                  stickyAddToCart.style.display = 'block';
+              } else {
+                  stickyAddToCart.style.display = 'none';
+              }
+          }, 50);
+      });
+
+      const stickyQuantity = document.querySelector('.sticky-quantity');
+      const formQuantityInput = document.querySelector('.quantity__input');
+
+      if (stickyQuantity) {
+        stickyQuantity.addEventListener('change', () => {
+          if (formQuantityInput) {
+              formQuantityInput.value = stickyQuantity.value;
+          }
+        });
+      }
+
+      formQuantityInput.addEventListener('change', () => {
+        var formQuantityValue = formQuantityInput.value;
+
+        if (formQuantityInput) {
+          stickyQuantity.value = formQuantityInput.value;
+        }
+      });
+
+      if (!window.product.available) {
+        const stickyProductActions = document.querySelector('.sticky-product-actions');
+
+        if (stickyProductActions) {
+          stickyProductActions.innerHTML = `<div class="restock-rocket-button-container"><button onclick="_RestockRocket.openModal()" class="sticky-restock-button restock-rocket-button restock-rocket-button-product restock-rocket-button-hover" style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;">Notify me when available</button></div>`
+        }
+      }
+    });
+
+    function addToCart() {
+      const addToCartMainButton = document.querySelector('.product-form__submit');
+
+      if (addToCartMainButton) {
+        addToCartMainButton.click();
+      }
+    }
+  </script>
+{% endcomment %}
+
+
+{%comment %}
+  {% assign domain_origin = request.origin %}
+    <script type="application/ld+json">
+    {%- capture ld_json -%}
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@id": "https://{{ shop.domain }}{{ product.url }}#product",
+          "@type": "Product",
+          "brand": {
+            "@type": "Brand",
+            "@id": "https://{{ shop.domain }}{{ product.url }}#brand",
+            "name": "{{ product.vendor | default: shop.name | escape }}"
+          },
+          {% if product.metafields.reviews.rating.value and product.metafields.reviews.review_count %}
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "@id": "https://{{ shop.domain }}{{ product.url }}#aggregaterating",
+            "name": "{{ product.title | escape }}",
+            "ratingValue": "{{ product.metafields.reviews.rating.value | escape }}",
+            "ratingCount": "{{ product.metafields.reviews.review_count }}",
+            "reviewCount": "{{ product.metafields.reviews.review_count }}"
+          },
+          {% endif %}
+          "audience": "{{ product.metafields.custom.audience | default: 'Fitness enthusiasts and commercial gym users' | escape }}",
+          "category": "{{ product.type | default: 'Fitness Equipment' | escape }}",
+          "description": "{{ product.description | strip_html | strip_newlines | truncate: 500 | escape | default: 'High-quality fitness equipment for home or commercial use.' }}",
+          "image": [{% for image in product.images %}"{{ image.src | img_url: 'master' | split: '?' | first | escape }}"{% unless forloop.last %},{% endunless %}{% else %}"{{ 'product-placeholder.jpg' | asset_url | split: '?' | first | default: 'https://via.placeholder.com/500' | escape }}"{% endfor %}],
+          "name": "{{ product.title | escape }}",
+          "color": "{{ product.metafields.custom.product_color | default: 'Not specified' | escape }}",
+          "countryOfAssembly": "{{ product.metafields.custom.country_of_assembly | default: 'US' | escape }}",
+          "countryOfLastProcessing": "{{ product.metafields.custom.country_of_last_processing | default: 'US' | escape }}",
+          "hasMeasurement": {
+            "@type": "QuantitativeValue",
+            "@id": "https://{{ shop.domain }}{{ product.url }}#measurement",
+            "value": "Dimensions: {{product.metafields.custom.length_in | escape}} inch length x {{product.metafields.custom.width_in | escape}} inch weight x {{product.metafields.custom.height_in | escape}} inch height"
+          },
+          "keywords": [{%- assign keyword_list = product.metafields.custom.keywords.value -%}{%- if keyword_list != blank -%}{%- for keyword in keyword_list -%}"{{ keyword | strip | escape }}"{% unless forloop.last %},{% endunless %}{%- endfor -%}{%- elsif product.tags.size > 0 -%}{%- for tag in product.tags -%}"{{ tag | strip | escape }}"{% unless forloop.last %},{% endunless %}{%- endfor -%}{%- else -%}{%- assign words = product.title | split: ' ' -%}{%- for word in words -%}"{{ word | strip | escape }}"{% unless forloop.last %},{% endunless %}{%- endfor -%}{%- endif -%}],
+          "manufacturer": {
+            "@type": "Organization",
+            "@id": "https://{{ shop.domain }}{{ product.url }}#manufacturer",
+            "name": "{{ product.vendor | default: shop.name | escape }}"
+          },
+          "weight": "{{ product.metafields.custom.product_weight_lbs | default: 'Not specified' | escape }}",
+          "mpn": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
+          "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is'%}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured'%}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
+          "offers": {
+            "@id": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}#offer",
+            "@type": "Offer",
+            "availability": "https://schema.org/{% if product.selected_or_first_available_variant.available %}InStock{% else %}OutOfStock{% endif %}",
+            "price": "{{ product.price | divided_by: 100.0 | default: '0.00' }}",
+            "priceCurrency": "{{ shop.currency | default: 'USD' }}",
+            "url": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}",
+            {% if product.metafields.reviews.rating.value and product.metafields.reviews.review_count %}
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "@id": "https://{{ shop.domain }}{{ product.url }}#aggregaterating",
+              "name": "{{ product.title | escape }}",
+              "ratingValue": "{{ product.metafields.reviews.rating.value | escape }}",
+              "ratingCount": "{{ product.metafields.reviews.review_count }}",
+              "reviewCount": "{{ product.metafields.reviews.review_count }}"
+            },
+            {% endif %}
+            "offeredBy": {
+              "@type": "Organization",
+              "@id": "https://{{ shop.domain }}#seller",
+              "name": "{{ shop.name | escape }}",
+              "url": "https://{{ shop.domain }}",
+              "logo": "{{ 'logo.png' | asset_url | default: 'https://via.placeholder.com/500' }}",
+              "description": "{{ shop.description | escape | default: 'Premium fitness equipment at competitive prices.' }}",
+              "founder": "Timothy French",
+              "foundingDate": "2010",
+              "sameAs": [{% if shop.metafields.custom.social_media %}{% for link in shop.metafields.custom.social_media %}"{{ link | escape }}"{% unless forloop.last %},{% endunless %}{% endfor %}{% else %}"https://www.facebook.com/FitnessSuperstore","https://x.com/fitsuperstore","https://www.instagram.com/fitness.superstore/"{% endif %}],
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "telephone": "{{ shop.phone | default: 'Not specified' | escape }}",
+                "contactType": "Customer Service",
+                "areaServed": "{{ shop.metafields.custom.area_served | default: 'US' | escape }}",
+                "availableLanguage": ["{{ shop.metafields.custom.language | default: 'English' | escape }}"]
+              },
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "{{ shop.address.street | default: 'Not specified' | escape }}",
+                "addressLocality": "{{ shop.address.city | default: 'Not specified' | escape }}",
+                "addressRegion": "{{ shop.address.province_code | default: 'Not specified' | escape }}",
+                "postalCode": "{{ shop.address.zip | default: 'Not specified' | escape }}",
+                "addressCountry": "{{ shop.address.country | default: 'Not specified' | escape }}"
+              },
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://{{ shop.domain }}/search?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+              }
+            }
+          },
+          "sku": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
+          "url": "https://{{ shop.domain }}{{ product.url }}"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "{{ shop.name | escape }}", "item": "{{ request.origin }}/" }
+            {%- assign position = 2 -%}
+            {%- assign all_breadcrumb_objects = product.metafields.custom.breadcrumb_paths.value | sort: "priority" -%}
+            {%- assign active_path = nil -%}
+            {%- assign source_flag = "unset" -%}
+            {%- if collection -%}
+              {%- for b_path in all_breadcrumb_objects -%}
+                {%- assign b_steps = b_path.steps.value -%}
+                {%- assign latest_step = b_steps.last -%}
+                {%- if latest_step and latest_step.handle == collection.handle -%}
+                  {%- assign active_path = b_path -%}
+                  {%- assign source_flag = "metaobject" -%}
+                  {%- break -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
+            {%- if active_path == nil -%}
+              {%- for fallback_path in all_breadcrumb_objects -%}
+                {%- if fallback_path.steps and fallback_path.steps.value != blank -%}
+                  {%- assign active_path = fallback_path -%}
+                  {%- assign source_flag = "metaobject" -%}
+                  {%- break -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
+            {%- assign crumbs_text = product.metafields.custom.breadcrumbs.value -%}
+            {%- if active_path == nil and crumbs_text != blank -%}
+              {%- assign source_flag = "text" -%}
+            {%- endif -%}
+            {%- if source_flag == "unset" and product.collections.first -%}
+              {%- assign default_coll = product.collections.first -%}
+              {%- assign source_flag = "default" -%}
+            {%- endif -%}
+            {%- if source_flag == "metaobject" -%}
+              {%- assign nav_steps = active_path.steps.value -%}
+              {%- assign nav_titles = active_path.custom_titles.value -%}
+              {%- for nav_coll in nav_steps -%}
+                {%- if nav_coll.handle != blank -%}
+                  ,{ "@type": "ListItem", "position": {{ position }}, "name": "{{ nav_titles[forloop.index0] | default: nav_coll.title | escape }}", "item": "{{ request.origin }}/collections/{{ nav_coll.handle }}" }
+                  {%- assign position = position | plus: 1 -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- elsif source_flag == "text" -%}
+              {%- assign parts_split = crumbs_text | split: 'Home' -%}
+              {%- assign text_parts = parts_split[1] | split: '>' -%}
+              {%- assign crumbs_size = text_parts.size | minus: 1 -%}
+              {%- for idx in (0..crumbs_size) -%}
+                {%- assign raw = text_parts[idx] | strip | handleize -%}
+                {%- assign title = text_parts[idx] | strip -%}
+                {%- if idx > 0 and raw != blank and collections[raw] -%}
+                  ,{ "@type": "ListItem", "position": {{ position }}, "name": "{{ title | escape }}", "item": "{{ request.origin }}/collections/{{ raw }}" }
+                  {%- assign position = position | plus: 1 -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- elsif source_flag == "default" -%}
+              ,{ "@type": "ListItem", "position": {{ position }}, "name": "{{ default_coll.title | escape }}", "item": "{{ request.origin }}/collections/{{ default_coll.handle }}" }
+              {%- assign position = position | plus: 1 -%}
+            {%- endif -%}
+            ,{ "@type": "ListItem", "position": {{ position }}, "name": "{{ product.title | escape }}", "item": "{{ request.origin }}{{ product.url }}" }
+          ]
+        }
+      ]
+    }
+    {%- endcapture -%}
+    {{- ld_json | strip_newlines -}}
+    </script>
+{% endcomment %}
 
 {% schema %}
 {
@@ -1795,7 +2212,7 @@
         }
       ]
     },
-     {
+    {
       "type": "review_widget",
       "name": "Review widget",
       "limit": 1,
@@ -1807,9 +2224,13 @@
       "limit": 1
     },
     {
-      "type": "price",
-      "name": "t:sections.main-product.blocks.price.name",
+      "type": "price_with_option",
+      "name": "Price with options",
       "limit": 1
+    },
+    {
+      "type": "price",
+      "name": "t:sections.main-product.blocks.price.name"
     },
     {
       "type": "sku",
@@ -1842,10 +2263,9 @@
       "type": "product-info",
       "name": "Product info"
     },
-      {
-      "type": "price_with_option",
-      "name": "Price with options",
-      "limit": 1
+    {
+      "type": "color_picker",
+      "name": "Color variant picker"
     },
     {
       "type": "inventory",
@@ -1879,6 +2299,7 @@
           "min": 0,
           "max": 100,
           "step": 1,
+          "info": "t:sections.main-product.blocks.inventory.settings.inventory_threshold.info",
           "default": 10
         },
         {
@@ -1974,6 +2395,14 @@
           "id": "share_label",
           "label": "t:sections.main-product.blocks.share.settings.text.label",
           "default": "t:sections.main-product.blocks.share.settings.text.default"
+        },
+        {
+          "type": "paragraph",
+          "content": "t:sections.main-product.blocks.share.settings.featured_image_info.content"
+        },
+        {
+          "type": "paragraph",
+          "content": "t:sections.main-product.blocks.share.settings.title_info.content"
         }
       ]
     },
@@ -1997,6 +2426,7 @@
           "type": "text",
           "id": "heading",
           "default": "t:sections.main-product.blocks.collapsible_tab.settings.heading.default",
+          "info": "t:sections.main-product.blocks.collapsible_tab.settings.heading.info",
           "label": "t:sections.main-product.blocks.collapsible_tab.settings.heading.label"
         },
         {
@@ -2517,8 +2947,8 @@
         },
         {
           "type": "header",
-          "content": "t:sections.main-product.blocks.icon_with_text.settings.pairing_1.label",
-          "info": "t:sections.main-product.blocks.icon_with_text.settings.pairing_1.info"
+          "content": "t:sections.main-product.blocks.icon_with_text.settings.content.label",
+          "info": "t:sections.main-product.blocks.icon_with_text.settings.content.info"
         },
         {
           "type": "select",
@@ -2717,10 +3147,6 @@
           "info": "t:sections.main-product.blocks.icon_with_text.settings.heading.info"
         },
         {
-          "type": "header",
-          "content": "t:sections.main-product.blocks.icon_with_text.settings.pairing_2.label"
-        },
-        {
           "type": "select",
           "id": "icon_2",
           "options": [
@@ -2915,10 +3341,6 @@
           "default": "t:sections.main-product.blocks.icon_with_text.settings.heading_2.default",
           "label": "t:sections.main-product.blocks.icon_with_text.settings.heading_2.label",
           "info": "t:sections.main-product.blocks.icon_with_text.settings.heading.info"
-        },
-        {
-          "type": "header",
-          "content": "t:sections.main-product.blocks.icon_with_text.settings.pairing_3.label"
         },
         {
           "type": "select",
@@ -3117,6 +3539,49 @@
           "info": "t:sections.main-product.blocks.icon_with_text.settings.heading.info"
         }
       ]
+    },
+    {
+      "type": "tile_calculator",
+      "name": "t:sections.main-product.blocks.tile_calculator.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "disable_product_form_js",
+          "label": "t:sections.main-product.blocks.tile_calculator.disable_product_form_js.label",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_tile_calculator",
+          "label": "t:sections.main-product.blocks.tile_calculator.show_tile_calculator.label",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:sections.main-product.blocks.tile_calculator.heading.label",
+          "default": "How many tiles do I need?"
+        },
+        {
+          "type": "text",
+          "id": "calculate_button",
+          "label": "t:sections.main-product.blocks.tile_calculator.calculate_button.label",
+          "default": "Calculate"
+        },
+        {
+          "type": "text",
+          "id": "breakdown_heading",
+          "label": "t:sections.main-product.blocks.tile_calculator.breakdown_heading.label",
+          "default": "Select your amount:"
+        },
+        {
+          "type": "text",
+          "id": "tile_type_suffix",
+          "label": "t:sections.main-product.blocks.tile_calculator.tile_type_suffix.label",
+          "default": "Mats"
+        }
+      ]
     }
   ],
   "settings": [
@@ -3134,7 +3599,8 @@
     },
     {
       "type": "header",
-      "content": "t:sections.main-product.settings.header.content"
+      "content": "t:sections.main-product.settings.header.content",
+      "info": "t:sections.main-product.settings.header.info"
     },
     {
       "type": "select",
@@ -3154,7 +3620,8 @@
         }
       ],
       "default": "large",
-      "label": "t:sections.main-product.settings.media_size.label"
+      "label": "t:sections.main-product.settings.media_size.label",
+      "info": "t:sections.main-product.settings.media_size.info"
     },
     {
       "type": "checkbox",
@@ -3204,26 +3671,6 @@
     },
     {
       "type": "select",
-      "id": "mobile_thumbnails",
-      "options": [
-        {
-          "value": "columns",
-          "label": "t:sections.main-product.settings.mobile_thumbnails.options__1.label"
-        },
-        {
-          "value": "show",
-          "label": "t:sections.main-product.settings.mobile_thumbnails.options__2.label"
-        },
-        {
-          "value": "hide",
-          "label": "t:sections.main-product.settings.mobile_thumbnails.options__3.label"
-        }
-      ],
-      "default": "hide",
-      "label": "t:sections.main-product.settings.mobile_thumbnails.label"
-    },
-    {
-      "type": "select",
       "id": "media_position",
       "options": [
         {
@@ -3236,7 +3683,8 @@
         }
       ],
       "default": "left",
-      "label": "t:sections.main-product.settings.media_position.label"
+      "label": "t:sections.main-product.settings.media_position.label",
+      "info": "t:sections.main-product.settings.media_position.info"
     },
     {
       "type": "select",
@@ -3256,7 +3704,28 @@
         }
       ],
       "default": "lightbox",
-      "label": "t:sections.main-product.settings.image_zoom.label"
+      "label": "t:sections.main-product.settings.image_zoom.label",
+      "info": "t:sections.main-product.settings.image_zoom.info"
+    },
+    {
+      "type": "select",
+      "id": "mobile_thumbnails",
+      "options": [
+        {
+          "value": "columns",
+          "label": "t:sections.main-product.settings.mobile_thumbnails.options__1.label"
+        },
+        {
+          "value": "show",
+          "label": "t:sections.main-product.settings.mobile_thumbnails.options__2.label"
+        },
+        {
+          "value": "hide",
+          "label": "t:sections.main-product.settings.mobile_thumbnails.options__3.label"
+        }
+      ],
+      "default": "hide",
+      "label": "t:sections.main-product.settings.mobile_thumbnails.label"
     },
     {
       "type": "checkbox",
@@ -3269,6 +3738,30 @@
       "id": "enable_video_looping",
       "default": false,
       "label": "t:sections.main-product.settings.enable_video_looping.label"
+    },
+    {
+      "type": "header",
+      "content": "Information under slider"
+    },
+    {
+      "type": "text",
+      "id": "accent_text",
+      "label": "Accesnt text"
+    },
+    {
+      "type": "text",
+      "id": "text",
+      "label": "Text"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
     },
     {
       "type": "header",
