@@ -1224,141 +1224,127 @@ document.addEventListener('click', function (e) {
     document.getElementById('addon-edit-popup').style.display = 'none';
   }
 </script> {% endcomment %}
-
 <script>
-/* ======================================================
-   HELPERS
-====================================================== */
+/* ===============================
+  ACCORDION (dynamic safe)
+================================ */
+document.addEventListener('click', e => {
+  const row = e.target.closest('.option_row');
+  if (row) row.classList.toggle('active');
+});
 
-/* Collect selected addon titles from popup */
-function getSelectedAddonTitles(popupEl) {
-  const titles = [];
+/* ===============================
+  POPUP OPEN (Modify)
+================================ */
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('.cart-modify-addon');
+  if (!btn) return;
 
-  popupEl.querySelectorAll('.addon-radio:checked').forEach(input => {
-    if (input.dataset.title) {
-      titles.push(input.dataset.title);
-    }
-  });
+  e.preventDefault();
 
-  return titles.join(', ');
-}
+  const groupId = btn.dataset.groupId;
+  const popup = document.getElementById('addon-edit-popup');
+  popup.dataset.groupId = groupId;
 
-/* Fetch main cart item using group_id */
-async function getMainItemByGroupId(groupId) {
-  const cart = await fetch('/cart.js').then(r => r.json());
-
-  return cart.items.find(item =>
-    item.properties?.group_id == groupId &&
-    !item.properties?.Add_on
+  const cart = await fetch('/cart.js').then(r=>r.json());
+  const mainItem = cart.items.find(
+    i => i.properties?.group_id == groupId && !i.properties?.Add_on
   );
-}
-
-/* ======================================================
-   UPDATE LINE ITEM PROPERTY (Included Add-Ons)
-====================================================== */
-
-async function updateIncludedAddons(groupId, addonsText) {
-  const mainItem = await getMainItemByGroupId(groupId);
   if (!mainItem) return;
 
-  await fetch('/cart/change.js', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id: mainItem.key,
-      properties: {
-        ...mainItem.properties,
-        'Included Add-Ons': addonsText || ''
-      }
-    })
-  });
-}
+  const html = await fetch(mainItem.url).then(r=>r.text());
+  const doc = new DOMParser().parseFromString(html,'text/html');
+  const options = doc.querySelector('.customproduct_option');
+  if (!options) return;
 
-/* ======================================================
-   ADD / REMOVE ADDON ITEMS BASED ON POPUP
-====================================================== */
+  popup.querySelector('.addon-popup-content').innerHTML = options.innerHTML;
 
-async function syncAddonsWithPopup(groupId, popupEl) {
-  const cart = await fetch('/cart.js').then(r => r.json());
+  // preselect existing addons
+  cart.items
+    .filter(i => i.properties?.group_id == groupId && i.properties?.Add_on)
+    .forEach(addon=>{
+      const input = popup.querySelector(
+        `.addon-radio[data-variant-id="${addon.variant_id}"]`
+      );
+      if (input) input.checked = true;
+    });
 
-  const selectedVariantIds = Array.from(
-    popupEl.querySelectorAll('.addon-radio:checked')
-  ).map(el => el.dataset.variantId);
+  popup.style.display = 'block';
+});
 
-  const existingAddons = cart.items.filter(item =>
-    item.properties?.group_id == groupId &&
-    item.properties?.Add_on
+/* ===============================
+  POPUP CLOSE
+================================ */
+document.addEventListener('click', e => {
+  if (
+    e.target.matches('.addon-popup-overlay') ||
+    e.target.matches('.addon-popup-close') ||
+    e.target.matches('#addon-cancel')
+  ) {
+    document.getElementById('addon-edit-popup').style.display = 'none';
+  }
+});
+
+/* ===============================
+  SAVE CHANGES
+================================ */
+document.addEventListener('click', async e => {
+  if (!e.target.matches('#addon-save')) return;
+
+  const popup = document.getElementById('addon-edit-popup');
+  const groupId = popup.dataset.groupId;
+
+  const cart = await fetch('/cart.js').then(r=>r.json());
+  const mainItem = cart.items.find(
+    i => i.properties?.group_id == groupId && !i.properties?.Add_on
   );
 
-  /* REMOVE unselected addons */
-  for (const addon of existingAddons) {
-    if (!selectedVariantIds.includes(String(addon.variant_id))) {
-      await fetch('/cart/change.js', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: addon.key,
-          quantity: 0
-        })
+  const selected = [...popup.querySelectorAll('.addon-radio:checked')];
+  const titles = selected.map(i=>i.dataset.title).join(', ');
+  const variantIds = selected.map(i=>String(i.dataset.variantId));
+
+  // remove unselected addons
+  for (const item of cart.items.filter(i=>i.properties?.Add_on && i.properties.group_id==groupId)) {
+    if (!variantIds.includes(String(item.variant_id))) {
+      await fetch('/cart/change.js',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id:item.key,quantity:0})
       });
     }
   }
 
-  /* ADD newly selected addons */
-  for (const variantId of selectedVariantIds) {
-    const exists = existingAddons.find(
-      a => String(a.variant_id) === String(variantId)
-    );
-
-    if (!exists) {
-      await fetch('/cart/add.js', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: [{
-            id: variantId,
-            quantity: 1,
-            properties: {
-              group_id: groupId,
-              Add_on: 'Yes'
-            }
+  // add new addons
+  for (const id of variantIds) {
+    if (!cart.items.find(i=>String(i.variant_id)==id && i.properties?.Add_on)) {
+      await fetch('/cart/add.js',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          items:[{
+            id,
+            quantity:1,
+            properties:{group_id:groupId,Add_on:'Yes'}
           }]
         })
       });
     }
   }
-}
 
-/* ======================================================
-   SAVE BUTTON – FINAL CONNECTOR
-====================================================== */
+  // update title text
+  await fetch('/cart/change.js',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      id: mainItem.key,
+      properties:{
+        ...mainItem.properties,
+        'Included Add-Ons': titles
+      }
+    })
+  });
 
-document.addEventListener('click', async function (e) {
-  const saveBtn = e.target.closest('#addon-save');
-  if (!saveBtn) return;
-
-  e.preventDefault();
-
-  const popup = document.getElementById('addon-edit-popup');
-  const groupId = popup.dataset.groupId;
-  if (!groupId) return;
-
-  saveBtn.disabled = true;
-  saveBtn.innerText = 'Saving...';
-
-  /* 1️⃣ Sync addon items */
-  await syncAddonsWithPopup(groupId, popup);
-
-  /* 2️⃣ Update Included Add-Ons text */
-  const addonsText = getSelectedAddonTitles(popup);
-  await updateIncludedAddons(groupId, addonsText);
-
-  /* 3️⃣ Close popup + refresh cart */
   popup.style.display = 'none';
-
-  setTimeout(() => {
-    window.location.reload();
-  }, 400);
+  setTimeout(()=>window.location.reload(),400);
 });
 </script>
-
