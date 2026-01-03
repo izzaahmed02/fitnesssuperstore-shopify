@@ -1030,16 +1030,12 @@ document.addEventListener('click', function (e) {
 </script>
 
 <script>
-
-  let activeGroupId = null;
-let activeMainVariantId = null;
-
-/* ===============================
-   OPEN MODIFY POPUP
-================================ */
 document.addEventListener('click', async function (e) {
   const btn = e.target.closest('.cart-modify-addon');
   if (!btn) return;
+
+  e.preventDefault();
+  e.stopPropagation();
 
   const cartItemEl = btn.closest('.cart-item');
   if (!cartItemEl) return;
@@ -1050,98 +1046,39 @@ document.addEventListener('click', async function (e) {
   activeGroupId = groupEl.dataset.value;
   activeMainVariantId = btn.dataset.variantId;
 
-  // 1️⃣ Load product page addon section
-  const productHandle = cartItemEl.querySelector('a.cart-item__name')
-    ?.getAttribute('href')
-    ?.split('/products/')[1];
+  const productUrl = cartItemEl
+    .querySelector('.cart-item__name')
+    ?.getAttribute('href');
 
-  if (!productHandle) return;
+  if (!productUrl) return;
 
-  const html = await fetch(`/products/${productHandle}?view=addons`)
-    .then(res => res.text());
+  /* 1️⃣ Fetch product page */
+  const response = await fetch(productUrl);
+  const htmlText = await response.text();
 
-  document.querySelector('.addon-popup-content').innerHTML = html;
+  /* 2️⃣ Parse HTML */
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlText, 'text/html');
 
-  // 2️⃣ Preselect already selected addons
+  /* 3️⃣ Extract ONLY addon section */
+  const addonSection = doc.querySelector('.customproduct_option');
+
+  if (!addonSection) {
+    console.error('Addon section not found');
+    return;
+  }
+
+  /* 4️⃣ Inject into popup */
+  document.querySelector('.addon-popup-content').innerHTML =
+    addonSection.innerHTML;
+
+  /* 5️⃣ Re-init accordion */
+  initAddonAccordions();
+
+  /* 6️⃣ Preselect existing addons */
   preselectExistingAddons(activeGroupId);
 
   document.getElementById('addon-edit-popup').style.display = 'block';
-});
-
-/* ===============================
-   PRESELECT EXISTING ADDONS
-================================ */
-async function preselectExistingAddons(groupId) {
-  const cart = await fetch('/cart.js').then(res => res.json());
-
-  const existingAddons = cart.items.filter(item =>
-    item.properties?.group_id == groupId &&
-    item.properties?.Add_on
-  );
-
-  existingAddons.forEach(addon => {
-    const checkbox = document.querySelector(
-      `[data-variant-id="${addon.variant_id}"]`
-    );
-    if (checkbox) checkbox.checked = true;
-  });
-}
-
-/* ===============================
-   SAVE CHANGES
-================================ */
-document.getElementById('addon-save').addEventListener('click', async function () {
-
-  const cart = await fetch('/cart.js').then(res => res.json());
-
-  // 1️⃣ Remove old addons
-  const oldAddons = cart.items.filter(item =>
-    item.properties?.group_id == activeGroupId &&
-    item.properties?.Add_on
-  );
-
-  for (const item of oldAddons) {
-    await fetch('/cart/change.js', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: item.key, quantity: 0 })
-    });
-  }
-
-  // 2️⃣ Add newly selected addons
-  const selectedAddons = document.querySelectorAll(
-    '.addon-popup-content input[type="radio"]:checked, input[type="checkbox"]:checked'
-  );
-
-  const items = [];
-
-  selectedAddons.forEach(el => {
-    items.push({
-      id: el.dataset.variantId,
-      quantity: 1,
-      properties: {
-        group_id: activeGroupId,
-        Add_on: el.dataset.title
-      }
-    });
-  });
-
-  if (items.length) {
-    await fetch('/cart/add.js', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items })
-    });
-  }
-
-  location.reload();
-});
-
-/* ===============================
-   CANCEL
-================================ */
-document.getElementById('addon-cancel').addEventListener('click', function () {
-  document.getElementById('addon-edit-popup').style.display = 'none';
 });
 
 </script>
