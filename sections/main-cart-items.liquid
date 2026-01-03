@@ -434,9 +434,14 @@
 {%- endfor -%}
  </dl>
 
-<button type="button" class="cart-modify-addon" data-variant-id="{{ item.variant.id }}">
+<button
+  type="button"
+  class="cart-modify-addon"
+  data-variant-id="{{ item.variant.id }}"
+>
   ✏️ Modify
 </button>
+
    
  <p class="product-option">{{ item.selling_plan_allocation.selling_plan.name }}</p>
                                                 {%- endif -%}
@@ -750,15 +755,21 @@
 </div>
 
 
-<div id="addon-edit-popup" style="display:none;">
-  <div class="addon-popup-inner">
+<div id="addon-edit-popup" class="addon-popup" style="display:none;">
+  <div class="addon-popup-overlay"></div>
+
+  <div class="addon-popup-box">
+    <button class="addon-popup-close">×</button>
+
     <div class="addon-popup-content"></div>
+
     <div class="addon-popup-actions">
-      <button id="addon-cancel">Cancel</button>
-      <button id="addon-save">Save changes</button>
+      <button type="button" id="addon-cancel">Cancel</button>
+      <button type="button" id="addon-save">Save changes</button>
     </div>
   </div>
 </div>
+
 
 {% schema %}
 {
@@ -1028,8 +1039,24 @@ document.addEventListener('click', function (e) {
   }
 });
 </script>
-
 <script>
+/* ======================================================
+   GLOBAL HELPERS
+====================================================== */
+function formatMoney(cents) {
+  const format = window.themeMoneyFormat || '${{amount}}';
+  return format.replace(
+    /\{\{\s*amount\s*\}\}/,
+    (cents / 100).toFixed(2)
+  );
+}
+
+let activeGroupId = null;
+let activeMainVariantId = null;
+
+/* ======================================================
+   OPEN MODIFY POPUP
+====================================================== */
 document.addEventListener('click', async function (e) {
   const btn = e.target.closest('.cart-modify-addon');
   if (!btn) return;
@@ -1052,33 +1079,136 @@ document.addEventListener('click', async function (e) {
 
   if (!productUrl) return;
 
-  /* 1️⃣ Fetch product page */
-  const response = await fetch(productUrl);
-  const htmlText = await response.text();
+  /* Fetch product page */
+  const htmlText = await fetch(productUrl).then(r => r.text());
 
-  /* 2️⃣ Parse HTML */
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(htmlText, 'text/html');
+  /* Parse HTML */
+  const doc = new DOMParser().parseFromString(htmlText, 'text/html');
 
-  /* 3️⃣ Extract ONLY addon section */
+  /* Extract ONLY .customproduct_option */
   const addonSection = doc.querySelector('.customproduct_option');
-
   if (!addonSection) {
-    console.error('Addon section not found');
+    console.error('.customproduct_option not found');
     return;
   }
 
-  /* 4️⃣ Inject into popup */
+  /* Inject */
   document.querySelector('.addon-popup-content').innerHTML =
     addonSection.innerHTML;
 
-  /* 5️⃣ Re-init accordion */
+  /* Init accordion */
   initAddonAccordions();
 
-  /* 6️⃣ Preselect existing addons */
-  preselectExistingAddons(activeGroupId);
+  /* Preselect already selected addons */
+  await preselectExistingAddons(activeGroupId);
 
   document.getElementById('addon-edit-popup').style.display = 'block';
 });
 
+/* ======================================================
+   ACCORDION INIT (GENERIC)
+====================================================== */
+function initAddonAccordions() {
+  document
+    .querySelectorAll('.customproduct_option .accordion-header')
+    .forEach(header => {
+      header.addEventListener('click', function () {
+        this.classList.toggle('active');
+        const body = this.nextElementSibling;
+        if (body) {
+          body.style.maxHeight = body.style.maxHeight
+            ? null
+            : body.scrollHeight + 'px';
+        }
+      });
+    });
+}
+
+/* ======================================================
+   PRESELECT EXISTING ADDONS
+====================================================== */
+async function preselectExistingAddons(groupId) {
+  const cart = await fetch('/cart.js').then(r => r.json());
+
+  const addons = cart.items.filter(item =>
+    item.properties?.group_id == groupId &&
+    item.properties?.Add_on
+  );
+
+  addons.forEach(addon => {
+    const input = document.querySelector(
+      `.addon-popup-content [data-variant-id="${addon.variant_id}"]`
+    );
+    if (input) input.checked = true;
+  });
+}
+
+/* ======================================================
+   SAVE CHANGES
+====================================================== */
+document.getElementById('addon-save').addEventListener('click', async function () {
+  try {
+    const cart = await fetch('/cart.js').then(r => r.json());
+
+    /* 1️⃣ Remove old addons */
+    const oldAddons = cart.items.filter(item =>
+      item.properties?.group_id == activeGroupId &&
+      item.properties?.Add_on
+    );
+
+    for (const item of oldAddons) {
+      await fetch('/cart/change.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: item.key, quantity: 0 })
+      });
+    }
+
+    /* 2️⃣ Add newly selected addons */
+    const selected = document.querySelectorAll(
+      '.addon-popup-content input[type="checkbox"]:checked, ' +
+      '.addon-popup-content input[type="radio"]:checked'
+    );
+
+    const items = [];
+    selected.forEach(el => {
+      items.push({
+        id: el.dataset.variantId,
+        quantity: 1,
+        properties: {
+          group_id: activeGroupId,
+          Add_on: el.dataset.title
+        }
+      });
+    });
+
+    if (items.length) {
+      await fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items })
+      });
+    }
+
+    location.reload();
+
+  } catch (err) {
+    console.error('Addon save failed', err);
+  }
+});
+
+/* ======================================================
+   CLOSE POPUP
+====================================================== */
+document
+  .querySelector('.addon-popup-close')
+  .addEventListener('click', closeAddonPopup);
+
+document
+  .getElementById('addon-cancel')
+  .addEventListener('click', closeAddonPopup);
+
+function closeAddonPopup() {
+  document.getElementById('addon-edit-popup').style.display = 'none';
+}
 </script>
