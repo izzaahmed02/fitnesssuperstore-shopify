@@ -1049,176 +1049,316 @@ document.addEventListener('click', function (e) {
   }
 });
 </script>
+{% comment %} 
 <script>
-/* ======================================================
-   GLOBAL HELPERS
-====================================================== */
-function formatMoney(cents) {
-  const format = window.themeMoneyFormat || '${{amount}}';
-  return format.replace(
-    /\{\{\s*amount\s*\}\}/,
-    (cents / 100).toFixed(2)
-  );
-}
-
-let activeGroupId = null;
-let activeMainVariantId = null;
-
-/* ======================================================
-   OPEN MODIFY POPUP
-====================================================== */
-document.addEventListener('click', async function (e) {
-  const btn = e.target.closest('.cart-modify-addon');
-  if (!btn) return;
-
-  e.preventDefault();
-  e.stopPropagation();
-
-  const cartItemEl = btn.closest('.cart-item');
-  if (!cartItemEl) return;
-
-  const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
-  if (!groupEl) return;
-
-  activeGroupId = groupEl.dataset.value;
-  activeMainVariantId = btn.dataset.variantId;
-
-  const productUrl = cartItemEl
-    .querySelector('.cart-item__name')
-    ?.getAttribute('href');
-
-  if (!productUrl) return;
-
-  /* Fetch product page */
-  const htmlText = await fetch(productUrl).then(r => r.text());
-
-  /* Parse HTML */
-  const doc = new DOMParser().parseFromString(htmlText, 'text/html');
-
-  /* Extract ONLY .customproduct_option */
-  const addonSection = doc.querySelector('.customproduct_option');
-  if (!addonSection) {
-    console.error('.customproduct_option not found');
-    return;
+  // addon modify popup js working js
+  /* ======================================================
+    GLOBAL HELPERS
+  ====================================================== */
+  function formatMoney(cents) {
+    const format = window.themeMoneyFormat || '${{amount}}';
+    return format.replace(
+      /\{\{\s*amount\s*\}\}/,
+      (cents / 100).toFixed(2)
+    );
   }
 
-  /* Inject */
-  document.querySelector('.addon-popup-content').innerHTML =
-    addonSection.innerHTML;
+  let activeGroupId = null;
+  let activeMainVariantId = null;
 
-  /* Init accordion */
-  initAddonAccordions();
+  /* ======================================================
+    OPEN MODIFY POPUP
+  ====================================================== */
+  document.addEventListener('click', async function (e) {
+    const btn = e.target.closest('.cart-modify-addon');
+    if (!btn) return;
 
-  /* Preselect already selected addons */
-  await preselectExistingAddons(activeGroupId);
+    e.preventDefault();
+    e.stopPropagation();
 
-  document.getElementById('addon-edit-popup').style.display = 'block';
-});
+    const cartItemEl = btn.closest('.cart-item');
+    if (!cartItemEl) return;
 
-/* ======================================================
-   ACCORDION INIT (GENERIC)
-====================================================== */
-function initAddonAccordions() {
-  document
-    .querySelectorAll('.customproduct_option .accordion-header')
-    .forEach(header => {
-      header.addEventListener('click', function () {
-        this.classList.toggle('active');
-        const body = this.nextElementSibling;
-        if (body) {
-          body.style.maxHeight = body.style.maxHeight
-            ? null
-            : body.scrollHeight + 'px';
-        }
+    const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+    if (!groupEl) return;
+
+    activeGroupId = groupEl.dataset.value;
+    activeMainVariantId = btn.dataset.variantId;
+
+    const productUrl = cartItemEl
+      .querySelector('.cart-item__name')
+      ?.getAttribute('href');
+
+    if (!productUrl) return;
+
+    /* Fetch product page */
+    const htmlText = await fetch(productUrl).then(r => r.text());
+
+    /* Parse HTML */
+    const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+
+    /* Extract ONLY .customproduct_option */
+    const addonSection = doc.querySelector('.customproduct_option');
+    if (!addonSection) {
+      console.error('.customproduct_option not found');
+      return;
+    }
+
+    /* Inject */
+    document.querySelector('.addon-popup-content').innerHTML =
+      addonSection.innerHTML;
+
+    /* Init accordion */
+    initAddonAccordions();
+
+    /* Preselect already selected addons */
+    await preselectExistingAddons(activeGroupId);
+
+    document.getElementById('addon-edit-popup').style.display = 'block';
+  });
+
+  /* ======================================================
+    ACCORDION INIT (GENERIC)
+  ====================================================== */
+  function initAddonAccordions() {
+    document
+      .querySelectorAll('.customproduct_option .accordion-header')
+      .forEach(header => {
+        header.addEventListener('click', function () {
+          this.classList.toggle('active');
+          const body = this.nextElementSibling;
+          if (body) {
+            body.style.maxHeight = body.style.maxHeight
+              ? null
+              : body.scrollHeight + 'px';
+          }
+        });
       });
+  }
+
+  /* ======================================================
+    PRESELECT EXISTING ADDONS
+  ====================================================== */
+  async function preselectExistingAddons(groupId) {
+    const cart = await fetch('/cart.js').then(r => r.json());
+
+    const addons = cart.items.filter(item =>
+      item.properties?.group_id == groupId &&
+      item.properties?.Add_on
+    );
+
+    addons.forEach(addon => {
+      const input = document.querySelector(
+        `.addon-popup-content [data-variant-id="${addon.variant_id}"]`
+      );
+      if (input) input.checked = true;
     });
+  }
+
+  /* ======================================================
+    SAVE CHANGES
+  ====================================================== */
+  document.getElementById('addon-save').addEventListener('click', async function () {
+    try {
+      const cart = await fetch('/cart.js').then(r => r.json());
+
+      /* 1️⃣ Remove old addons */
+      const oldAddons = cart.items.filter(item =>
+        item.properties?.group_id == activeGroupId &&
+        item.properties?.Add_on
+      );
+
+      for (const item of oldAddons) {
+        await fetch('/cart/change.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: item.key, quantity: 0 })
+        });
+      }
+
+      /* 2️⃣ Add newly selected addons */
+      const selected = document.querySelectorAll(
+        '.addon-popup-content input[type="checkbox"]:checked, ' +
+        '.addon-popup-content input[type="radio"]:checked'
+      );
+
+      const items = [];
+      selected.forEach(el => {
+        items.push({
+          id: el.dataset.variantId,
+          quantity: 1,
+          properties: {
+            group_id: activeGroupId,
+            Add_on: el.dataset.title
+          }
+        });
+      });
+
+      if (items.length) {
+        await fetch('/cart/add.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items })
+        });
+      }
+
+      location.reload();
+
+    } catch (err) {
+      console.error('Addon save failed', err);
+    }
+  });
+
+  /* ======================================================
+    CLOSE POPUP
+  ====================================================== */
+  document
+    .querySelector('.addon-popup-close')
+    .addEventListener('click', closeAddonPopup);
+
+  document
+    .getElementById('addon-cancel')
+    .addEventListener('click', closeAddonPopup);
+
+  function closeAddonPopup() {
+    document.getElementById('addon-edit-popup').style.display = 'none';
+  }
+</script> {% endcomment %}
+
+<script>
+/* ======================================================
+   HELPERS
+====================================================== */
+
+/* Collect selected addon titles from popup */
+function getSelectedAddonTitles(popupEl) {
+  const titles = [];
+
+  popupEl.querySelectorAll('.addon-radio:checked').forEach(input => {
+    if (input.dataset.title) {
+      titles.push(input.dataset.title);
+    }
+  });
+
+  return titles.join(', ');
+}
+
+/* Fetch main cart item using group_id */
+async function getMainItemByGroupId(groupId) {
+  const cart = await fetch('/cart.js').then(r => r.json());
+
+  return cart.items.find(item =>
+    item.properties?.group_id == groupId &&
+    !item.properties?.Add_on
+  );
 }
 
 /* ======================================================
-   PRESELECT EXISTING ADDONS
+   UPDATE LINE ITEM PROPERTY (Included Add-Ons)
 ====================================================== */
-async function preselectExistingAddons(groupId) {
-  const cart = await fetch('/cart.js').then(r => r.json());
 
-  const addons = cart.items.filter(item =>
-    item.properties?.group_id == groupId &&
-    item.properties?.Add_on
-  );
+async function updateIncludedAddons(groupId, addonsText) {
+  const mainItem = await getMainItemByGroupId(groupId);
+  if (!mainItem) return;
 
-  addons.forEach(addon => {
-    const input = document.querySelector(
-      `.addon-popup-content [data-variant-id="${addon.variant_id}"]`
-    );
-    if (input) input.checked = true;
+  await fetch('/cart/change.js', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: mainItem.key,
+      properties: {
+        ...mainItem.properties,
+        'Included Add-Ons': addonsText || ''
+      }
+    })
   });
 }
 
 /* ======================================================
-   SAVE CHANGES
+   ADD / REMOVE ADDON ITEMS BASED ON POPUP
 ====================================================== */
-document.getElementById('addon-save').addEventListener('click', async function () {
-  try {
-    const cart = await fetch('/cart.js').then(r => r.json());
 
-    /* 1️⃣ Remove old addons */
-    const oldAddons = cart.items.filter(item =>
-      item.properties?.group_id == activeGroupId &&
-      item.properties?.Add_on
-    );
+async function syncAddonsWithPopup(groupId, popupEl) {
+  const cart = await fetch('/cart.js').then(r => r.json());
 
-    for (const item of oldAddons) {
+  const selectedVariantIds = Array.from(
+    popupEl.querySelectorAll('.addon-radio:checked')
+  ).map(el => el.dataset.variantId);
+
+  const existingAddons = cart.items.filter(item =>
+    item.properties?.group_id == groupId &&
+    item.properties?.Add_on
+  );
+
+  /* REMOVE unselected addons */
+  for (const addon of existingAddons) {
+    if (!selectedVariantIds.includes(String(addon.variant_id))) {
       await fetch('/cart/change.js', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: item.key, quantity: 0 })
+        body: JSON.stringify({
+          id: addon.key,
+          quantity: 0
+        })
       });
     }
+  }
 
-    /* 2️⃣ Add newly selected addons */
-    const selected = document.querySelectorAll(
-      '.addon-popup-content input[type="checkbox"]:checked, ' +
-      '.addon-popup-content input[type="radio"]:checked'
+  /* ADD newly selected addons */
+  for (const variantId of selectedVariantIds) {
+    const exists = existingAddons.find(
+      a => String(a.variant_id) === String(variantId)
     );
 
-    const items = [];
-    selected.forEach(el => {
-      items.push({
-        id: el.dataset.variantId,
-        quantity: 1,
-        properties: {
-          group_id: activeGroupId,
-          Add_on: el.dataset.title
-        }
-      });
-    });
-
-    if (items.length) {
+    if (!exists) {
       await fetch('/cart/add.js', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items })
+        body: JSON.stringify({
+          items: [{
+            id: variantId,
+            quantity: 1,
+            properties: {
+              group_id: groupId,
+              Add_on: 'Yes'
+            }
+          }]
+        })
       });
     }
-
-    location.reload();
-
-  } catch (err) {
-    console.error('Addon save failed', err);
   }
-});
+}
 
 /* ======================================================
-   CLOSE POPUP
+   SAVE BUTTON – FINAL CONNECTOR
 ====================================================== */
-document
-  .querySelector('.addon-popup-close')
-  .addEventListener('click', closeAddonPopup);
 
-document
-  .getElementById('addon-cancel')
-  .addEventListener('click', closeAddonPopup);
+document.addEventListener('click', async function (e) {
+  const saveBtn = e.target.closest('#addon-save');
+  if (!saveBtn) return;
 
-function closeAddonPopup() {
-  document.getElementById('addon-edit-popup').style.display = 'none';
-}
+  e.preventDefault();
+
+  const popup = document.getElementById('addon-edit-popup');
+  const groupId = popup.dataset.groupId;
+  if (!groupId) return;
+
+  saveBtn.disabled = true;
+  saveBtn.innerText = 'Saving...';
+
+  /* 1️⃣ Sync addon items */
+  await syncAddonsWithPopup(groupId, popup);
+
+  /* 2️⃣ Update Included Add-Ons text */
+  const addonsText = getSelectedAddonTitles(popup);
+  await updateIncludedAddons(groupId, addonsText);
+
+  /* 3️⃣ Close popup + refresh cart */
+  popup.style.display = 'none';
+
+  setTimeout(() => {
+    window.location.reload();
+  }, 400);
+});
 </script>
+
