@@ -2485,7 +2485,7 @@ document.addEventListener("DOMContentLoaded", function(){
 {% comment %} --------addon item add to cart with main product  using group id js end------{% endcomment %}
 
 {% comment %} --addon item price calculate with main product price on product page js start- {% endcomment %}
-<script>
+{% comment %} <script>
 document.addEventListener("DOMContentLoaded", function () {
 
   /* -----------------GET MAIN PRODUCT BASE PRICE------------------------------ */
@@ -2529,7 +2529,73 @@ document.addEventListener("DOMContentLoaded", function () {
   updateFinalPrice();
 
 });
+</script> {% endcomment %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  /* =========================
+     BASE PRICE
+  ========================= */
+  function getBasePrice() {
+    const priceEl = document.querySelector(".price-item-fixed");
+    if (!priceEl) return 0;
+
+    return parseFloat(
+      priceEl.innerText.replace(/[^0-9.]/g, "")
+    ) || 0;
+  }
+
+  let basePrice = getBasePrice();
+  const finalPriceBox = document.getElementById("final-price");
+
+  /* =========================
+     UPDATE FINAL PRICE
+  ========================= */
+  function updateFinalPrice() {
+    let addonTotal = 0;
+
+    document.querySelectorAll(".addon-radio:checked").forEach(radio => {
+      addonTotal += parseFloat(radio.dataset.price) || 0;
+    });
+
+    const finalTotal = basePrice + addonTotal;
+
+    if (finalPriceBox) {
+      finalPriceBox.innerText = "₹" + finalTotal.toLocaleString("en-IN");
+    }
+  }
+
+  /* =========================
+     RADIO CHANGE (ADD-ON SELECT)
+  ========================= */
+  document.addEventListener("change", function (e) {
+    if (!e.target.matches(".addon-radio")) return;
+
+    updateFinalPrice();
+  });
+
+  /* =========================
+     CROSS (✕) CLICK → PRICE UPDATE
+  ========================= */
+  document.addEventListener("click", function (e) {
+    const removeBtn = e.target.closest(".addon-remove");
+    if (!removeBtn) return;
+
+    // wait till radio is unchecked by your other JS
+    setTimeout(() => {
+      updateFinalPrice();
+    }, 0);
+  });
+
+  /* =========================
+     INITIAL LOAD
+  ========================= */
+  updateFinalPrice();
+
+});
 </script>
+
 {% comment %} -addon item price calculate with main product price on product page js end- {% endcomment %} 
 
 <script>
@@ -2550,10 +2616,6 @@ document.addEventListener('change', function (e) {
 
   const titleBox = optionRow.querySelector('.selected_addon_title');
 
-  if (titleBox) {
-  titleBox.style.border = "1px solid #0000003";
-}
-  
   if (!titleBox) return;
 
   // radio unchecked (rare case)
