@@ -432,14 +432,13 @@
 
   {%- endif -%}
 {%- endfor -%}
+ </dl>
 
-
-
-
-
-                                                    </dl>
-
-                                                    <p class="product-option">{{ item.selling_plan_allocation.selling_plan.name }}</p>
+<button class="cart-modify-addon" data-variant-id="{{ item.variant.id }}">
+  ✏️ Modify
+</button>
+   
+ <p class="product-option">{{ item.selling_plan_allocation.selling_plan.name }}</p>
                                                 {%- endif -%}
 
                                                 <ul
@@ -750,6 +749,17 @@
     </div>
 </div>
 
+
+<div id="addon-edit-popup" style="display:none;">
+  <div class="addon-popup-inner">
+    <div class="addon-popup-content"></div>
+    <div class="addon-popup-actions">
+      <button id="addon-cancel">Cancel</button>
+      <button id="addon-save">Save changes</button>
+    </div>
+  </div>
+</div>
+
 {% schema %}
 {
   "name": "t:sections.main-cart-items.name",
@@ -1017,4 +1027,121 @@ document.addEventListener('click', function (e) {
     }, 600);
   }
 });
+</script>
+
+<script>
+
+  let activeGroupId = null;
+let activeMainVariantId = null;
+
+/* ===============================
+   OPEN MODIFY POPUP
+================================ */
+document.addEventListener('click', async function (e) {
+  const btn = e.target.closest('.cart-modify-addon');
+  if (!btn) return;
+
+  const cartItemEl = btn.closest('.cart-item');
+  if (!cartItemEl) return;
+
+  const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+  if (!groupEl) return;
+
+  activeGroupId = groupEl.dataset.value;
+  activeMainVariantId = btn.dataset.variantId;
+
+  // 1️⃣ Load product page addon section
+  const productHandle = cartItemEl.querySelector('a.cart-item__name')
+    ?.getAttribute('href')
+    ?.split('/products/')[1];
+
+  if (!productHandle) return;
+
+  const html = await fetch(`/products/${productHandle}?view=addons`)
+    .then(res => res.text());
+
+  document.querySelector('.addon-popup-content').innerHTML = html;
+
+  // 2️⃣ Preselect already selected addons
+  preselectExistingAddons(activeGroupId);
+
+  document.getElementById('addon-edit-popup').style.display = 'block';
+});
+
+/* ===============================
+   PRESELECT EXISTING ADDONS
+================================ */
+async function preselectExistingAddons(groupId) {
+  const cart = await fetch('/cart.js').then(res => res.json());
+
+  const existingAddons = cart.items.filter(item =>
+    item.properties?.group_id == groupId &&
+    item.properties?.Add_on
+  );
+
+  existingAddons.forEach(addon => {
+    const checkbox = document.querySelector(
+      `[data-variant-id="${addon.variant_id}"]`
+    );
+    if (checkbox) checkbox.checked = true;
+  });
+}
+
+/* ===============================
+   SAVE CHANGES
+================================ */
+document.getElementById('addon-save').addEventListener('click', async function () {
+
+  const cart = await fetch('/cart.js').then(res => res.json());
+
+  // 1️⃣ Remove old addons
+  const oldAddons = cart.items.filter(item =>
+    item.properties?.group_id == activeGroupId &&
+    item.properties?.Add_on
+  );
+
+  for (const item of oldAddons) {
+    await fetch('/cart/change.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: item.key, quantity: 0 })
+    });
+  }
+
+  // 2️⃣ Add newly selected addons
+  const selectedAddons = document.querySelectorAll(
+    '.addon-popup-content input[type="radio"]:checked, input[type="checkbox"]:checked'
+  );
+
+  const items = [];
+
+  selectedAddons.forEach(el => {
+    items.push({
+      id: el.dataset.variantId,
+      quantity: 1,
+      properties: {
+        group_id: activeGroupId,
+        Add_on: el.dataset.title
+      }
+    });
+  });
+
+  if (items.length) {
+    await fetch('/cart/add.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items })
+    });
+  }
+
+  location.reload();
+});
+
+/* ===============================
+   CANCEL
+================================ */
+document.getElementById('addon-cancel').addEventListener('click', function () {
+  document.getElementById('addon-edit-popup').style.display = 'none';
+});
+
 </script>
