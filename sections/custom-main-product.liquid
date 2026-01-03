@@ -747,6 +747,7 @@
 <div class="custom_product_option">
 <div class="option_row">
   <div class="left_lbl">Bench</div>
+  <span class="selected_addon_title"></span>
   <span class="arrow"> {%- render 'custom_product_arrow_svg' %}</span>
 </div>
 
@@ -788,6 +789,7 @@
 <div class="custom_product_option">
 <div class="option_row">
   <div class="left_lbl">Mat</div>
+  <span class="selected_addon_title"></span>
   <span class="arrow">{%- render 'custom_product_arrow_svg' %}</span>
 </div>
 
@@ -830,6 +832,7 @@
 <div class="custom_product_option">
 <div class="option_row">
   <div class="left_lbl">Aluminum Pulley Upgrade</div>
+  <span class="selected_addon_title"></span>
   <span class="arrow">{%- render 'custom_product_arrow_svg' %}</span>
 </div>
 
@@ -876,6 +879,7 @@
 <div class="custom_product_option custom_multi_purpose">
 <div class="option_row">
   <div class="left_lbl">Multi Purpose Bar</div>
+  <span class="selected_addon_title"></span>
   <span class="arrow">{%- render 'custom_product_arrow_svg' %}</span>
 </div>
 
@@ -918,6 +922,7 @@
 <div class="custom_product_option">
 <div class="option_row">
   <div class="left_lbl">Pro-Grip Lat Bar</div>
+  <span class="selected_addon_title"></span>
   <span class="arrow">{%- render 'custom_product_arrow_svg' %}</span>
 </div>
 
@@ -2526,6 +2531,69 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 {% comment %} -addon item price calculate with main product price on product page js end- {% endcomment %} 
+ 
+<script>
+/* ======================================================
+   ADDON TITLE DISPLAY + REMOVE (SAFE)
+====================================================== */
+
+document.addEventListener('change', function (e) {
+  const input = e.target.closest('.addon-radio');
+  if (!input) return;
+
+  // find closest option block
+  const optionContent = input.closest('.option_content');
+  if (!optionContent) return;
+
+  const optionRow = optionContent.previousElementSibling;
+  if (!optionRow || !optionRow.classList.contains('option_row')) return;
+
+  const titleBox = optionRow.querySelector('.selected_addon_title');
+  if (!titleBox) return;
+
+  // radio unchecked (rare case)
+  if (!input.checked) {
+    titleBox.innerHTML = '';
+    return;
+  }
+
+  const title = input.dataset.title || '';
+  const price = input.dataset.price ? `$${input.dataset.price}` : '';
+
+  titleBox.innerHTML = `
+    <span class="addon-text">${title} <strong>${price}</strong></span>
+    <span class="addon-remove" data-radio-name="${input.name}">✕</span>
+  `;
+});
+
+/* ======================================================
+   REMOVE ICON CLICK → UNCHECK RADIO
+====================================================== */
+
+document.addEventListener('click', function (e) {
+  const removeBtn = e.target.closest('.addon-remove');
+  if (!removeBtn) return;
+
+  const optionRow = removeBtn.closest('.option_row');
+  if (!optionRow) return;
+
+  const optionContent = optionRow.nextElementSibling;
+  if (!optionContent) return;
+
+  const radioName = removeBtn.dataset.radioName;
+
+  const checkedRadio = optionContent.querySelector(
+    `.addon-radio[name="${radioName}"]:checked`
+  );
+
+  if (checkedRadio) {
+    checkedRadio.checked = false;
+  }
+
+  const titleBox = optionRow.querySelector('.selected_addon_title');
+  if (titleBox) titleBox.innerHTML = '';
+});
+</script>
 
 
 {% schema %}
