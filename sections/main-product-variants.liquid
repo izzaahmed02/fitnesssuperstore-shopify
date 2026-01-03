@@ -39,10 +39,9 @@
   <meta itemprop="availability" content="OutOfStock">
 {% endif %}
 
-
 <product-info
   id="MainProduct-{{ section.id }}"
-  class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }}"
+  class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }} prodTemplate"
   data-section="{{ section.id }}"
   data-product-id="{{ product.id }}"
   data-update-url="true"
@@ -53,12 +52,10 @@
 >
   {{ 'section-main-product.css' | asset_url | stylesheet_tag }}
   {{ 'component-accordion.css' | asset_url | stylesheet_tag }}
-  {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
   {{ 'component-price.css' | asset_url | stylesheet_tag }}
   {{ 'component-slider.css' | asset_url | stylesheet_tag }}
   {{ 'component-rating.css' | asset_url | stylesheet_tag }}
   {{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
-  {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
 
   {% unless product.has_only_default_variant %}
     {{ 'component-product-variant-picker.css' | asset_url | stylesheet_tag }}
@@ -69,13 +66,19 @@
     {{ 'component-volume-pricing.css' | asset_url | stylesheet_tag }}
   {%- endif -%}
 
+  {{ 'avis-custom.css' | asset_url | stylesheet_tag }}
+  {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
+  {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
+  {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
+  {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
+
   {%- style -%}
     .section-{{ section.id }}-padding {
       padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
       padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
     }
 
-    @media screen and (min-width: 750px) {
+    @media screen and (min-width: 990px) {
       .section-{{ section.id }}-padding {
         padding-top: {{ section.settings.padding_top }}px;
         padding-bottom: {{ section.settings.padding_bottom }}px;
@@ -83,14 +86,15 @@
     }
   {%- endstyle -%}
 
-  {% if product.available == true %}
-  <meta itemprop="availability" content="InStock">
-{% else %}
-  <meta itemprop="availability" content="OutOfStock">
-{% endif %}
-
-{% comment %} {% render 'custom-breadcrumbs', with product: product %} {% endcomment %}
-{% render 'metaobjects-breadcrumbs', with product: product %}
+  {%- assign enable_product_form_js = true -%}
+  {%- for block in section.blocks -%}
+    {%- case block.type -%}
+      {%- when 'tile_calculator' -%}
+        {% if block.settings.disable_product_form_js %}
+          {%- assign enable_product_form_js = false -%}
+        {% endif %}
+    {%- endcase -%}
+  {%- endfor -%}
 
   <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
   <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
