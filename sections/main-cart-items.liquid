@@ -1999,13 +1999,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 </script> {% endcomment %}
-
 <script>
 /* ======================================================
    ADDON TITLE DISPLAY + REMOVE
-   (PRODUCT PAGE + CART MODIFY POPUP)
+   (RADIO + ASSEMBLY | PRODUCT PAGE + CART POPUP)
 ====================================================== */
 
+/* =========================
+   RADIO ADD-ON CHANGE
+========================= */
 document.addEventListener('change', function (e) {
   const input = e.target.closest('.addon-radio');
   if (!input) return;
@@ -2019,14 +2021,15 @@ document.addEventListener('change', function (e) {
   const titleBox = optionRow.querySelector('.selected_addon_title');
   if (!titleBox) return;
 
-  // If unchecked
   if (!input.checked) {
     titleBox.innerHTML = '';
     return;
   }
 
   const title = input.dataset.title || '';
-  const price = input.dataset.price ? ` ($${input.dataset.price})` : '';
+  const price = input.dataset.price
+    ? ` ($${input.dataset.price})`
+    : '';
 
   titleBox.innerHTML = `
     <span class="addon-text">${title}${price}</span>
@@ -2034,12 +2037,11 @@ document.addEventListener('change', function (e) {
   `;
 });
 
-/* ======================================================
-   REMOVE ICON CLICK → UNCHECK RADIO + UPDATE UI
-====================================================== */
-
+/* =========================
+   RADIO REMOVE (✕)
+========================= */
 document.addEventListener('click', function (e) {
-  const removeBtn = e.target.closest('.addon-remove');
+  const removeBtn = e.target.closest('.addon-remove:not(.addon-remove-assembly)');
   if (!removeBtn) return;
 
   const optionRow = removeBtn.closest('.option_row');
@@ -2066,30 +2068,93 @@ document.addEventListener('click', function (e) {
 });
 
 /* ======================================================
-   PREFILL SELECTED ADDON TITLES
-   (CALL THIS AFTER POPUP CONTENT IS INSERTED)
+   ASSEMBLY SELECT CHANGE
 ====================================================== */
+document.addEventListener('change', function (e) {
+  const select = e.target.closest(
+    '.assembli_product_option select'
+  );
+  if (!select) return;
 
+  const wrapper = select.closest('.assembli_product_option');
+  if (!wrapper) return;
+
+  const titleBox = wrapper.querySelector('.selected_addon_title');
+  if (!titleBox) return;
+
+  const text =
+    select.options[select.selectedIndex]?.text?.trim();
+
+  if (!text) {
+    titleBox.innerHTML = '';
+    return;
+  }
+
+  titleBox.innerHTML = `
+    <span class="addon-text">Assembly: ${text}</span>
+    <span class="addon-remove addon-remove-assembly">✕</span>
+  `;
+});
+
+/* =========================
+   ASSEMBLY REMOVE (✕)
+========================= */
+document.addEventListener('click', function (e) {
+  const removeBtn = e.target.closest('.addon-remove-assembly');
+  if (!removeBtn) return;
+
+  const wrapper = removeBtn.closest('.assembli_product_option');
+  if (!wrapper) return;
+
+  const select = wrapper.querySelector('select');
+  if (!select) return;
+
+  select.selectedIndex = 0;
+  select.dispatchEvent(
+    new Event('change', { bubbles: true })
+  );
+
+  const titleBox = wrapper.querySelector('.selected_addon_title');
+  if (titleBox) titleBox.innerHTML = '';
+});
+
+/* ======================================================
+   PREFILL TITLES (FOR CART MODIFY POPUP)
+   👉 CALL AFTER POPUP HTML INSERT
+====================================================== */
 function refreshSelectedAddonTitles(scopeEl) {
   if (!scopeEl) return;
 
+  /* --- RADIO ADDONS --- */
   scopeEl.querySelectorAll('.addon-radio:checked').forEach(input => {
     const optionContent = input.closest('.option_content');
     if (!optionContent) return;
 
     const optionRow = optionContent.previousElementSibling;
-    if (!optionRow || !optionRow.classList.contains('option_row')) return;
+    if (!optionRow) return;
 
     const titleBox = optionRow.querySelector('.selected_addon_title');
     if (!titleBox) return;
 
     const title = input.dataset.title || '';
-    const price = input.dataset.price ? ` ($${input.dataset.price})` : '';
+    const price = input.dataset.price
+      ? ` ($${input.dataset.price})`
+      : '';
 
     titleBox.innerHTML = `
       <span class="addon-text">${title}${price}</span>
       <span class="addon-remove" data-radio-name="${input.name}">✕</span>
     `;
   });
+
+  /* --- ASSEMBLY --- */
+  const assemblySelect =
+    scopeEl.querySelector('.assembli_product_option select');
+
+  if (assemblySelect) {
+    assemblySelect.dispatchEvent(
+      new Event('change', { bubbles: true })
+    );
+  }
 }
 </script>
