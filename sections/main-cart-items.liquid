@@ -1619,7 +1619,7 @@ document.addEventListener('click', function (e) {
 </script> {% endcomment %}
 
 
-
+{% comment %} 
 <script>
  // cart modification buttin
 document.addEventListener('DOMContentLoaded', () => {
@@ -1822,183 +1822,10 @@ popup.style.display = 'block';
     .querySelector('.addon-popup-loader')
     ?.classList.remove('active');
 }
-
-
-
-
-});
-</script>
-
-{% comment %}   
-<script>
-  // 5-1-26 cart modification
-document.addEventListener('DOMContentLoaded', () => {
-
-  /* ==================================================
-     MODIFY BUTTON CLICK
-  ================================================== */
-  document.addEventListener('click', async e => {
-    const btn = e.target.closest('.cart-modify-addon');
-    if (!btn) return;
-
-    e.preventDefault();
-    showButtonLoader(btn);
-
-    const cartItem = btn.closest('.cart-item');
-    const groupEl = cartItem?.querySelector('[data-name="group_id"]');
-    if (!groupEl) {
-      hideButtonLoader(btn);
-      return;
-    }
-
-    const groupId = groupEl.dataset.value;
-    const popup = document.getElementById('addon-edit-popup');
-    popup.dataset.groupId = groupId;
-
-    try {
-      const cart = await fetch('/cart.js').then(r => r.json());
-
-      const mainItem = cart.items.find(
-        i => i.properties?.group_id == groupId && !i.properties?.Add_on
-      );
-      if (!mainItem) throw 'Main item missing';
-
-      const html = await fetch(mainItem.url).then(r => r.text());
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-
-      const options = doc.querySelector('.custom_product_option');
-      if (!options) throw 'Options missing';
-
-      popup.querySelector('.addon-popup-content').innerHTML =
-        options.innerHTML;
-
-      /* -------- PRESELECT ADDONS -------- */
-      cart.items
-        .filter(i => i.properties?.group_id == groupId && i.properties?.Add_on)
-        .forEach(addon => {
-          const input = popup.querySelector(
-            `.addon-radio[data-variant-id="${addon.variant_id}"]`
-          );
-          if (input) input.checked = true;
-        });
-
-      /* -------- PRESELECT ASSEMBLY -------- */
-      if (mainItem.properties?.['Assembly Option']) {
-        const select = popup.querySelector(
-          '.assembli_product_option select'
-        );
-        if (select) {
-          select.value = mainItem.properties['Assembly Option'];
-        }
-      }
-
-      hideButtonLoader(btn);
-      popup.style.display = 'block';
-
-    } catch (err) {
-      console.error(err);
-      hideButtonLoader(btn);
-    }
-  });
-
-  /* ==================================================
-     POPUP CLOSE
-  ================================================== */
-  document.addEventListener('click', e => {
-    if (
-      e.target.matches('.addon-popup-overlay') ||
-      e.target.matches('.addon-popup-close') ||
-      e.target.matches('#addon-cancel')
-    ) {
-      document.getElementById('addon-edit-popup').style.display = 'none';
-    }
-  });
-
-  /* ==================================================
-     SAVE CHANGES
-  ================================================== */
-  document.addEventListener('click', async e => {
-    if (!e.target.matches('#addon-save')) return;
-
-    const popup = document.getElementById('addon-edit-popup');
-    const groupId = popup.dataset.groupId;
-
-    showPopupLoader();
-
-    try {
-      const cart = await fetch('/cart.js').then(r => r.json());
-
-      const mainItem = cart.items.find(
-        i => i.properties?.group_id == groupId && !i.properties?.Add_on
-      );
-
-      /* -------- SELECTED ADDONS -------- */
-      const selected = [...popup.querySelectorAll('.addon-radio:checked')];
-      const titles = selected.map(i => i.dataset.title).join(', ');
-      const variantIds = selected.map(i => String(i.dataset.variantId));
-
-      /* -------- REMOVE UNSELECTED -------- */
-      for (const item of cart.items.filter(
-        i => i.properties?.Add_on && i.properties.group_id == groupId
-      )) {
-        if (!variantIds.includes(String(item.variant_id))) {
-          await fetch('/cart/change.js', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: item.key, quantity: 0 })
-          });
-        }
-      }
-
-      /* -------- ADD NEW -------- */
-      for (const id of variantIds) {
-        if (!cart.items.find(i =>
-          String(i.variant_id) === id && i.properties?.Add_on
-        )) {
-          await fetch('/cart/add.js', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              items: [{
-                id,
-                quantity: 1,
-                properties: { group_id: groupId, Add_on: 'Yes' }
-              }]
-            })
-          });
-        }
-      }
-
-      /* -------- ASSEMBLY VALUE -------- */
-      const assemblyValue =
-        popup.querySelector('.assembli_product_option select')?.value || "";
-
-      /* -------- UPDATE MAIN ITEM -------- */
-      await fetch('/cart/change.js', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: mainItem.key,
-          properties: {
-            ...mainItem.properties,
-            'Included Add-Ons': titles,
-            'Assembly Option': assemblyValue
-          }
-        })
-      });
-
-      hidePopupLoader();
-      popup.style.display = 'none';
-      setTimeout(() => window.location.reload(), 400);
-
-    } catch (err) {
-      console.error(err);
-      hidePopupLoader();
-    }
-  });
-
 });
 </script> {% endcomment %}
+
+
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -2225,4 +2052,336 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+</script>
+
+{% comment %}   
+<script>
+  // 5-1-26 cart modification
+document.addEventListener('DOMContentLoaded', () => {
+
+  /* ==================================================
+     MODIFY BUTTON CLICK
+  ================================================== */
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('.cart-modify-addon');
+    if (!btn) return;
+
+    e.preventDefault();
+    showButtonLoader(btn);
+
+    const cartItem = btn.closest('.cart-item');
+    const groupEl = cartItem?.querySelector('[data-name="group_id"]');
+    if (!groupEl) {
+      hideButtonLoader(btn);
+      return;
+    }
+
+    const groupId = groupEl.dataset.value;
+    const popup = document.getElementById('addon-edit-popup');
+    popup.dataset.groupId = groupId;
+
+    try {
+      const cart = await fetch('/cart.js').then(r => r.json());
+
+      const mainItem = cart.items.find(
+        i => i.properties?.group_id == groupId && !i.properties?.Add_on
+      );
+      if (!mainItem) throw 'Main item missing';
+
+      const html = await fetch(mainItem.url).then(r => r.text());
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+
+      const options = doc.querySelector('.custom_product_option');
+      if (!options) throw 'Options missing';
+
+      popup.querySelector('.addon-popup-content').innerHTML =
+        options.innerHTML;
+
+      /* -------- PRESELECT ADDONS -------- */
+      cart.items
+        .filter(i => i.properties?.group_id == groupId && i.properties?.Add_on)
+        .forEach(addon => {
+          const input = popup.querySelector(
+            `.addon-radio[data-variant-id="${addon.variant_id}"]`
+          );
+          if (input) input.checked = true;
+        });
+
+      /* -------- PRESELECT ASSEMBLY -------- */
+      if (mainItem.properties?.['Assembly Option']) {
+        const select = popup.querySelector(
+          '.assembli_product_option select'
+        );
+        if (select) {
+          select.value = mainItem.properties['Assembly Option'];
+        }
+      }
+
+      hideButtonLoader(btn);
+      popup.style.display = 'block';
+
+    } catch (err) {
+      console.error(err);
+      hideButtonLoader(btn);
+    }
+  });
+
+  /* ==================================================
+     POPUP CLOSE
+  ================================================== */
+  document.addEventListener('click', e => {
+    if (
+      e.target.matches('.addon-popup-overlay') ||
+      e.target.matches('.addon-popup-close') ||
+      e.target.matches('#addon-cancel')
+    ) {
+      document.getElementById('addon-edit-popup').style.display = 'none';
+    }
+  });
+
+  /* ==================================================
+     SAVE CHANGES
+  ================================================== */
+  document.addEventListener('click', async e => {
+    if (!e.target.matches('#addon-save')) return;
+
+    const popup = document.getElementById('addon-edit-popup');
+    const groupId = popup.dataset.groupId;
+
+    showPopupLoader();
+
+    try {
+      const cart = await fetch('/cart.js').then(r => r.json());
+
+      const mainItem = cart.items.find(
+        i => i.properties?.group_id == groupId && !i.properties?.Add_on
+      );
+
+      /* -------- SELECTED ADDONS -------- */
+      const selected = [...popup.querySelectorAll('.addon-radio:checked')];
+      const titles = selected.map(i => i.dataset.title).join(', ');
+      const variantIds = selected.map(i => String(i.dataset.variantId));
+
+      /* -------- REMOVE UNSELECTED -------- */
+      for (const item of cart.items.filter(
+        i => i.properties?.Add_on && i.properties.group_id == groupId
+      )) {
+        if (!variantIds.includes(String(item.variant_id))) {
+          await fetch('/cart/change.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: item.key, quantity: 0 })
+          });
+        }
+      }
+
+      /* -------- ADD NEW -------- */
+      for (const id of variantIds) {
+        if (!cart.items.find(i =>
+          String(i.variant_id) === id && i.properties?.Add_on
+        )) {
+          await fetch('/cart/add.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              items: [{
+                id,
+                quantity: 1,
+                properties: { group_id: groupId, Add_on: 'Yes' }
+              }]
+            })
+          });
+        }
+      }
+
+      /* -------- ASSEMBLY VALUE -------- */
+      const assemblyValue =
+        popup.querySelector('.assembli_product_option select')?.value || "";
+
+      /* -------- UPDATE MAIN ITEM -------- */
+      await fetch('/cart/change.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: mainItem.key,
+          properties: {
+            ...mainItem.properties,
+            'Included Add-Ons': titles,
+            'Assembly Option': assemblyValue
+          }
+        })
+      });
+
+      hidePopupLoader();
+      popup.style.display = 'none';
+      setTimeout(() => window.location.reload(), 400);
+
+    } catch (err) {
+      console.error(err);
+      hidePopupLoader();
+    }
+  });
+
+});
+</script> {% endcomment %}
+
+
+<script>
+/* ======================================================
+   ADDON TITLE DISPLAY + REMOVE
+   (RADIO + ASSEMBLY | PRODUCT PAGE + CART POPUP)
+====================================================== */
+
+/* =========================
+   RADIO ADD-ON CHANGE
+========================= */
+document.addEventListener('change', function (e) {
+  const input = e.target.closest('.addon-radio');
+  if (!input) return;
+
+  const optionContent = input.closest('.option_content');
+  if (!optionContent) return;
+
+  const optionRow = optionContent.previousElementSibling;
+  if (!optionRow || !optionRow.classList.contains('option_row')) return;
+
+  const titleBox = optionRow.querySelector('.selected_addon_title');
+  if (!titleBox) return;
+
+  if (!input.checked) {
+    titleBox.innerHTML = '';
+    return;
+  }
+
+  const title = input.dataset.title || '';
+  const price = input.dataset.price
+    ? ` ($${input.dataset.price})`
+    : '';
+
+  titleBox.innerHTML = `
+    <span class="addon-text">${title}${price}</span>
+    <span class="addon-remove" data-radio-name="${input.name}">✕</span>
+  `;
+});
+
+/* =========================
+   RADIO REMOVE (✕)
+========================= */
+document.addEventListener('click', function (e) {
+  const removeBtn = e.target.closest('.addon-remove:not(.addon-remove-assembly)');
+  if (!removeBtn) return;
+
+  const optionRow = removeBtn.closest('.option_row');
+  if (!optionRow) return;
+
+  const optionContent = optionRow.nextElementSibling;
+  if (!optionContent) return;
+
+  const radioName = removeBtn.dataset.radioName;
+
+  const checkedRadio = optionContent.querySelector(
+    `.addon-radio[name="${radioName}"]:checked`
+  );
+
+  if (checkedRadio) {
+    checkedRadio.checked = false;
+    checkedRadio.dispatchEvent(
+      new Event('change', { bubbles: true })
+    );
+  }
+
+  const titleBox = optionRow.querySelector('.selected_addon_title');
+  if (titleBox) titleBox.innerHTML = '';
+});
+
+/* ======================================================
+   ASSEMBLY SELECT CHANGE
+====================================================== */
+document.addEventListener('change', function (e) {
+  const select = e.target.closest(
+    '.assembli_product_option select'
+  );
+  if (!select) return;
+
+  const wrapper = select.closest('.assembli_product_option');
+  if (!wrapper) return;
+
+  const titleBox = wrapper.querySelector('.selected_addon_title');
+  if (!titleBox) return;
+
+  const text =
+    select.options[select.selectedIndex]?.text?.trim();
+
+  if (!text) {
+    titleBox.innerHTML = '';
+    return;
+  }
+
+  titleBox.innerHTML = `
+    <span class="addon-text">Assembly: ${text}</span>
+    <span class="addon-remove addon-remove-assembly">✕</span>
+  `;
+});
+
+/* =========================
+   ASSEMBLY REMOVE (✕)
+========================= */
+document.addEventListener('click', function (e) {
+  const removeBtn = e.target.closest('.addon-remove-assembly');
+  if (!removeBtn) return;
+
+  const wrapper = removeBtn.closest('.assembli_product_option');
+  if (!wrapper) return;
+
+  const select = wrapper.querySelector('select');
+  if (!select) return;
+
+  select.selectedIndex = 0;
+  select.dispatchEvent(
+    new Event('change', { bubbles: true })
+  );
+
+  const titleBox = wrapper.querySelector('.selected_addon_title');
+  if (titleBox) titleBox.innerHTML = '';
+});
+
+/* ======================================================
+   PREFILL TITLES (FOR CART MODIFY POPUP)
+   👉 CALL AFTER POPUP HTML INSERT
+====================================================== */
+function refreshSelectedAddonTitles(scopeEl) {
+  if (!scopeEl) return;
+
+  /* --- RADIO ADDONS --- */
+  scopeEl.querySelectorAll('.addon-radio:checked').forEach(input => {
+    const optionContent = input.closest('.option_content');
+    if (!optionContent) return;
+
+    const optionRow = optionContent.previousElementSibling;
+    if (!optionRow) return;
+
+    const titleBox = optionRow.querySelector('.selected_addon_title');
+    if (!titleBox) return;
+
+    const title = input.dataset.title || '';
+    const price = input.dataset.price
+      ? ` ($${input.dataset.price})`
+      : '';
+
+    titleBox.innerHTML = `
+      <span class="addon-text">${title}${price}</span>
+      <span class="addon-remove" data-radio-name="${input.name}">✕</span>
+    `;
+  });
+
+  /* --- ASSEMBLY --- */
+  const assemblySelect =
+    scopeEl.querySelector('.assembli_product_option select');
+
+  if (assemblySelect) {
+    assemblySelect.dispatchEvent(
+      new Event('change', { bubbles: true })
+    );
+  }
+}
 </script>
