@@ -1680,6 +1680,13 @@ document.addEventListener('DOMContentLoaded', () => {
           if (input) input.checked = true;
         });
 
+refreshSelectedAddonTitles(popup);
+
+popup.style.display = 'block';
+
+
+
+
       // 🔥 BUTTON LOADER END
       hideButtonLoader(btn);
 
@@ -1992,3 +1999,97 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 </script> {% endcomment %}
+
+<script>
+/* ======================================================
+   ADDON TITLE DISPLAY + REMOVE
+   (PRODUCT PAGE + CART MODIFY POPUP)
+====================================================== */
+
+document.addEventListener('change', function (e) {
+  const input = e.target.closest('.addon-radio');
+  if (!input) return;
+
+  const optionContent = input.closest('.option_content');
+  if (!optionContent) return;
+
+  const optionRow = optionContent.previousElementSibling;
+  if (!optionRow || !optionRow.classList.contains('option_row')) return;
+
+  const titleBox = optionRow.querySelector('.selected_addon_title');
+  if (!titleBox) return;
+
+  // If unchecked
+  if (!input.checked) {
+    titleBox.innerHTML = '';
+    return;
+  }
+
+  const title = input.dataset.title || '';
+  const price = input.dataset.price ? ` ($${input.dataset.price})` : '';
+
+  titleBox.innerHTML = `
+    <span class="addon-text">${title}${price}</span>
+    <span class="addon-remove" data-radio-name="${input.name}">✕</span>
+  `;
+});
+
+/* ======================================================
+   REMOVE ICON CLICK → UNCHECK RADIO + UPDATE UI
+====================================================== */
+
+document.addEventListener('click', function (e) {
+  const removeBtn = e.target.closest('.addon-remove');
+  if (!removeBtn) return;
+
+  const optionRow = removeBtn.closest('.option_row');
+  if (!optionRow) return;
+
+  const optionContent = optionRow.nextElementSibling;
+  if (!optionContent) return;
+
+  const radioName = removeBtn.dataset.radioName;
+
+  const checkedRadio = optionContent.querySelector(
+    `.addon-radio[name="${radioName}"]:checked`
+  );
+
+  if (checkedRadio) {
+    checkedRadio.checked = false;
+    checkedRadio.dispatchEvent(
+      new Event('change', { bubbles: true })
+    );
+  }
+
+  const titleBox = optionRow.querySelector('.selected_addon_title');
+  if (titleBox) titleBox.innerHTML = '';
+});
+
+/* ======================================================
+   PREFILL SELECTED ADDON TITLES
+   (CALL THIS AFTER POPUP CONTENT IS INSERTED)
+====================================================== */
+
+function refreshSelectedAddonTitles(scopeEl) {
+  if (!scopeEl) return;
+
+  scopeEl.querySelectorAll('.addon-radio:checked').forEach(input => {
+    const optionContent = input.closest('.option_content');
+    if (!optionContent) return;
+
+    const optionRow = optionContent.previousElementSibling;
+    if (!optionRow || !optionRow.classList.contains('option_row')) return;
+
+    const titleBox = optionRow.querySelector('.selected_addon_title');
+    if (!titleBox) return;
+
+    const title = input.dataset.title || '';
+    const price = input.dataset.price ? ` ($${input.dataset.price})` : '';
+
+    titleBox.innerHTML = `
+      <span class="addon-text">${title}${price}</span>
+      <span class="addon-remove" data-radio-name="${input.name}">✕</span>
+    `;
+  });
+}
+</script>
