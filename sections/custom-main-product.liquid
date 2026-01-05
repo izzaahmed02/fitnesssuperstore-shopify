@@ -2418,7 +2418,7 @@
 </script>
 
 {% comment %} ------addon item add to cart with main product using group id js start------ {% endcomment %}
-<script>
+{% comment %} <script>
 document.addEventListener("DOMContentLoaded", function(){
 
   document.querySelector(".addtocart").addEventListener("click", function(e){
@@ -2481,7 +2481,114 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
 });
+</script> {% endcomment %}
+
+
+
+<script>
+  // 05-1-26 assembly default select in cluded js
+  
+document.addEventListener("DOMContentLoaded", function () {
+
+  /* ==================================================
+     DEFAULT ASSEMBLY SELECTION (CURBSIDE)
+  ================================================== */
+  const assemblySelect = document.querySelector(
+    '.assembli_product_option select'
+  );
+
+  if (assemblySelect) {
+    const curbside = assemblySelect.querySelector('.assembli_curbside');
+    if (curbside) {
+      assemblySelect.value = curbside.value;
+      assemblySelect.dispatchEvent(
+        new Event('change', { bubbles: true })
+      );
+    }
+  }
+
+  /* ==================================================
+     ADD TO CART
+  ================================================== */
+  document.querySelector(".addtocart")?.addEventListener("click", function(e){
+    e.preventDefault();
+
+    const mainVariant = this.getAttribute("main-varientid");
+
+    const quantity = Number(
+      document.querySelector("#Quantity-{{ section.id }}")?.value || 1
+    );
+
+    const groupId = Date.now();
+    const items = [];
+
+    /* ------------------
+       WARRANTY & PROCESSING
+    ------------------ */
+    const warrantyText =
+      document.querySelector(".info_warranty_text")?.innerText.trim() || "";
+
+    const processingTimeText =
+      document.querySelector(".info_processing_time_text")?.innerText.trim() || "";
+
+    /* ------------------
+       ASSEMBLY OPTION
+    ------------------ */
+    const assemblyValue =
+      document.querySelector('.assembli_product_option select')?.value || "";
+
+    /* ------------------
+       ADD-ON TITLES
+    ------------------ */
+    const addonTitles = [];
+    document.querySelectorAll(".addon-radio:checked").forEach(r => {
+      if (r.dataset.title) addonTitles.push(r.dataset.title);
+    });
+
+    /* ------------------
+       MAIN PRODUCT
+    ------------------ */
+    items.push({
+      id: mainVariant,
+      quantity: quantity,
+      properties: {
+        group_id: groupId,
+        "Included Add-Ons": addonTitles.join(", "),
+        "Assembly Option": assemblyValue,
+        "Warranty": warrantyText,
+        "Processing Time": processingTimeText
+      }
+    });
+
+    /* ------------------
+       ADD-ON PRODUCTS
+    ------------------ */
+    document.querySelectorAll(".addon-radio:checked").forEach(r => {
+      items.push({
+        id: r.dataset.variantId,
+        quantity: quantity,
+        properties: {
+          group_id: groupId,
+          Add_on: r.dataset.title
+        }
+      });
+    });
+
+    /* ------------------
+       SEND TO CART
+    ------------------ */
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items })
+    })
+    .then(() => window.location.href = "/cart");
+
+  });
+
+});
 </script>
+
 {% comment %} --------addon item add to cart with main product  using group id js end------{% endcomment %}
 
 {% comment %} --addon item price calculate with main product price on product page js start- {% endcomment %}
