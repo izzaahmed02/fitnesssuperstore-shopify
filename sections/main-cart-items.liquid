@@ -880,9 +880,207 @@
 }
 {% endschema %}
 
+{% comment %} price update code js start {% endcomment %}
+{% comment %} <script>
+  // perfect working without select option update
+/*--------------------GLOBAL HELPERS--------------------- */
+
+      function formatMoney(cents) {
+        const format = window.themeMoneyFormat || '${{amount}}';
+        const value = (cents / 100).toFixed(2);
+        return format.replace(/\{\{\s*amount\s*\}\}/, value);
+      }
+
+      /* ----------------PRICE MERGE (MAIN + ADDONS)--------------- */
+
+      async function mergeAddonPrices() {
+        try {
+          const cart = await fetch('/cart.js').then(res => res.json());
+
+          const addonTotalsByGroup = {};
+          cart.items.forEach(item => {
+            const groupId = item.properties?.group_id;
+            if (groupId && item.properties?.Add_on) {
+              addonTotalsByGroup[groupId] =
+                (addonTotalsByGroup[groupId] || 0) + item.line_price;
+            }
+          });
+
+          document.querySelectorAll('.cart-item').forEach(cartItemEl => {
+            if (cartItemEl.classList.contains('avis-option')) return;
+
+            const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+            if (!groupEl) return;
+
+            const groupId = groupEl.dataset.value;
+            const addonPrice = addonTotalsByGroup[groupId];
+            if (!addonPrice) return;
+
+            const mainItem = cart.items.find(i =>
+              i.properties?.group_id == groupId && !i.properties?.Add_on
+            );
+            if (!mainItem) return;
+
+            const finalPrice = mainItem.line_price + addonPrice;
+
+            cartItemEl.querySelectorAll('.price.price--end').forEach(el => {
+              el.innerHTML = formatMoney(finalPrice);
+            });
+          });
+
+        } catch (err) {
+          console.error('Price merge failed', err);
+        }
+      }
+
+      /* ----------------  SUMMARY TOTAL UPDATE (CRITICAL FIX)--------------- */
+
+      async function updateSummaryTotal() {
+        try {
+          const cart = await fetch('/cart.js').then(res => res.json());
+
+          const summaryEl =
+            document.querySelector('.summary__subtotal') ||
+            document.querySelector('.totals__subtotal-value') ||
+            document.querySelector('.cart__subtotal .money') ||
+            document.querySelector('[data-cart-total]');
+
+          if (summaryEl) {
+            summaryEl.innerHTML = formatMoney(cart.total_price);
+          }
+        } catch (err) {
+          console.error('Summary update failed', err);
+        }
+      }
+
+      /* ----------------QTY SYNC (MAIN → ADDONS) --------------- */
+
+      document.addEventListener('change', function (e) {
+        if (!e.target.matches('.quantity__input')) return;
+
+        const qty = parseInt(e.target.value, 10);
+        if (!qty || qty < 1) return;
+
+        const cartItemEl = e.target.closest('.cart-item');
+        if (!cartItemEl || cartItemEl.classList.contains('avis-option')) return;
+
+        const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+        if (!groupEl) return;
+
+        syncAddonQuantities(groupEl.dataset.value, qty);
+      });
+
+      async function syncAddonQuantities(groupId, qty) {
+        try {
+          const cart = await fetch('/cart.js').then(res => res.json());
+
+          const addons = cart.items.filter(item =>
+            item.properties?.group_id == groupId && item.properties?.Add_on
+          );
+
+          for (const addon of addons) {
+            await fetch('/cart/change.js', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: addon.key, quantity: qty })
+            });
+          }
+        } catch (err) {
+          console.error('Addon qty sync failed', err);
+        }
+      }
+
+      /*----------------REMOVE SYNC (POPUP BASED)--------------- */
+
+      let pendingRemoveGroupId = null;
+
+      document.addEventListener('click', function (e) {
+        const removeIcon = e.target.closest('.cart-item__remove a');
+        if (!removeIcon) return;
+
+        const cartItemEl = removeIcon.closest('.cart-item');
+        if (!cartItemEl || cartItemEl.classList.contains('avis-option')) return;
+
+        const groupEl = cartItemEl.querySelector('[data-name="group_id"]');
+        if (!groupEl) return;
+
+        pendingRemoveGroupId = groupEl.dataset.value;
+      });
+
+      document.addEventListener('click', function (e) {
+        const confirmBtn = e.target.closest('.cart-items__popup-btn--remove');
+        if (!confirmBtn || !pendingRemoveGroupId) return;
+
+        removeAddonItems(pendingRemoveGroupId);
+        pendingRemoveGroupId = null;
+      });
+
+      async function removeAddonItems(groupId) {
+        try {
+          const cart = await fetch('/cart.js').then(res => res.json());
+
+          const addons = cart.items.filter(item =>
+            item.properties?.group_id == groupId && item.properties?.Add_on
+          );
+
+          for (const addon of addons) {
+            await fetch('/cart/change.js', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: addon.key, quantity: 0 })
+            });
+          }
+
+          setTimeout(() => location.reload(), 300);
+        } catch (err) {
+          console.error('Addon remove failed', err);
+        }
+      }
+
+      /* ----------------  DEBOUNCED CART OBSERVER----------------- */
+
+      let mergeTimeout = null;
+
+      document.addEventListener('DOMContentLoaded', function () {
+        const cartContainer = document.querySelector('cart-items');
+        if (!cartContainer) return;
+
+        mergeAddonPrices();
+        updateSummaryTotal();
+
+        const observer = new MutationObserver(() => {
+          clearTimeout(mergeTimeout);
+          mergeTimeout = setTimeout(() => {
+            mergeAddonPrices();
+            updateSummaryTotal();
+          }, 300);
+        });
+
+        observer.observe(cartContainer, { childList: true, subtree: true });
+      });
+
+      /* ---------------- ENSURE MERGE AFTER +/- QTY BUTTON CLICK------------------ */
+
+      let afterQtyTimer = null;
+
+      document.addEventListener('click', function (e) {
+        if (
+          e.target.closest('.quantity__button') ||
+          e.target.closest('.quantity__input')
+        ) {
+          clearTimeout(afterQtyTimer);
+          afterQtyTimer = setTimeout(() => {
+            mergeAddonPrices();
+            updateSummaryTotal();
+          }, 600);
+        }
+      });
+</script> {% endcomment %}
 
 <script>
-/*--------------------GLOBAL HELPERS--------------------- */
+/* ======================================================
+   GLOBAL HELPERS
+====================================================== */
 
 function formatMoney(cents) {
   const format = window.themeMoneyFormat || '${{amount}}';
@@ -890,12 +1088,31 @@ function formatMoney(cents) {
   return format.replace(/\{\{\s*amount\s*\}\}/, value);
 }
 
-/* ----------------PRICE MERGE (MAIN + ADDONS)--------------- */
+/* ======================================================
+   ASSEMBLY PRICE EXTRACT (FROM Included Add-Ons)
+   Expected format:
+   "Assembly: Garage Installation ($599)"
+====================================================== */
+function getAssemblyPriceFromItem(item) {
+  const text = item.properties?.['Included Add-Ons'];
+  if (!text) return 0;
 
+  const match = text.match(/Assembly:[^$₹]*([$₹]\s?[\d,]+)/i);
+  if (!match) return 0;
+
+  return (
+    parseFloat(match[1].replace(/[^0-9.]/g, '')) * 100
+  ) || 0; // cents
+}
+
+/* ======================================================
+   PRICE MERGE (MAIN + ADDON PRODUCTS + ASSEMBLY)
+====================================================== */
 async function mergeAddonPrices() {
   try {
     const cart = await fetch('/cart.js').then(res => res.json());
 
+    /* collect addon totals per group */
     const addonTotalsByGroup = {};
     cart.items.forEach(item => {
       const groupId = item.properties?.group_id;
@@ -912,19 +1129,23 @@ async function mergeAddonPrices() {
       if (!groupEl) return;
 
       const groupId = groupEl.dataset.value;
-      const addonPrice = addonTotalsByGroup[groupId];
-      if (!addonPrice) return;
+      const addonPrice = addonTotalsByGroup[groupId] || 0;
 
-      const mainItem = cart.items.find(i =>
-        i.properties?.group_id == groupId && !i.properties?.Add_on
+      const mainItem = cart.items.find(
+        i => i.properties?.group_id == groupId && !i.properties?.Add_on
       );
       if (!mainItem) return;
 
-      const finalPrice = mainItem.line_price + addonPrice;
+      const assemblyPrice = getAssemblyPriceFromItem(mainItem);
 
-      cartItemEl.querySelectorAll('.price.price--end').forEach(el => {
-        el.innerHTML = formatMoney(finalPrice);
-      });
+      const finalPrice =
+        mainItem.line_price + addonPrice + assemblyPrice;
+
+      cartItemEl
+        .querySelectorAll('.price.price--end')
+        .forEach(el => {
+          el.innerHTML = formatMoney(finalPrice);
+        });
     });
 
   } catch (err) {
@@ -932,11 +1153,21 @@ async function mergeAddonPrices() {
   }
 }
 
-/* ----------------  SUMMARY TOTAL UPDATE (CRITICAL FIX)--------------- */
-
+/* ======================================================
+   SUMMARY SUBTOTAL UPDATE (INCLUDES ASSEMBLY)
+====================================================== */
 async function updateSummaryTotal() {
   try {
     const cart = await fetch('/cart.js').then(res => res.json());
+
+    let total = cart.total_price;
+
+    /* add assembly prices (not part of cart.total_price) */
+    cart.items.forEach(item => {
+      if (!item.properties?.Add_on) {
+        total += getAssemblyPriceFromItem(item);
+      }
+    });
 
     const summaryEl =
       document.querySelector('.summary__subtotal') ||
@@ -945,15 +1176,16 @@ async function updateSummaryTotal() {
       document.querySelector('[data-cart-total]');
 
     if (summaryEl) {
-      summaryEl.innerHTML = formatMoney(cart.total_price);
+      summaryEl.innerHTML = formatMoney(total);
     }
   } catch (err) {
     console.error('Summary update failed', err);
   }
 }
 
-/* ----------------QTY SYNC (MAIN → ADDONS) --------------- */
-
+/* ======================================================
+   QTY SYNC (MAIN → ADDONS)
+====================================================== */
 document.addEventListener('change', function (e) {
   if (!e.target.matches('.quantity__input')) return;
 
@@ -989,8 +1221,9 @@ async function syncAddonQuantities(groupId, qty) {
   }
 }
 
-/*----------------REMOVE SYNC (POPUP BASED)--------------- */
-
+/* ======================================================
+   REMOVE SYNC (POPUP BASED)
+====================================================== */
 let pendingRemoveGroupId = null;
 
 document.addEventListener('click', function (e) {
@@ -1036,8 +1269,9 @@ async function removeAddonItems(groupId) {
   }
 }
 
-/* ----------------  DEBOUNCED CART OBSERVER----------------- */
-
+/* ======================================================
+   OBSERVER + DEBOUNCE
+====================================================== */
 let mergeTimeout = null;
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -1055,11 +1289,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 300);
   });
 
-  observer.observe(cartContainer, { childList: true, subtree: true });
+  observer.observe(cartContainer, {
+    childList: true,
+    subtree: true
+  });
 });
 
-/* ---------------- ENSURE MERGE AFTER +/- QTY BUTTON CLICK------------------ */
-
+/* ======================================================
+   ENSURE UPDATE AFTER +/- BUTTON
+====================================================== */
 let afterQtyTimer = null;
 
 document.addEventListener('click', function (e) {
@@ -1075,6 +1313,16 @@ document.addEventListener('click', function (e) {
   }
 });
 </script>
+
+
+
+
+
+
+
+
+
+
 {% comment %} 
 <script>
   // addon modify popup js working js
