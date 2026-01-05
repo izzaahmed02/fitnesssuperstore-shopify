@@ -2487,7 +2487,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
 <script>
   // 05-1-26 assembly default select in cluded js
-  
 document.addEventListener("DOMContentLoaded", function () {
 
   /* ==================================================
@@ -2529,13 +2528,9 @@ document.addEventListener("DOMContentLoaded", function () {
       document.querySelector(".info_warranty_text")?.innerText.trim() || "";
 
     const processingTimeText =
-      document.querySelector(".info_processing_time_text")?.innerText.trim() || "";
+      document.querySelector(".info_proceesing_time_text")?.innerText.trim() || "";
 
-    /* ------------------
-       ASSEMBLY OPTION
-    ------------------ */
-    const assemblyValue =
-      document.querySelector('.assembli_product_option select')?.value || "";
+    
 
     /* ------------------
        ADD-ON TITLES
@@ -2545,6 +2540,17 @@ document.addEventListener("DOMContentLoaded", function () {
       if (r.dataset.title) addonTitles.push(r.dataset.title);
     });
 
+
+    /* ------------------
+       ASSEMBLY (MERGED)
+    ------------------ */
+    const assemblySelect =
+      document.querySelector('.assembli_product_option select');
+
+    if (assemblySelect && assemblySelect.value) {
+      addonTitles.push(`Assembly: ${assemblySelect.value}`);
+    }
+    
     /* ------------------
        MAIN PRODUCT
     ------------------ */
@@ -2554,7 +2560,6 @@ document.addEventListener("DOMContentLoaded", function () {
       properties: {
         group_id: groupId,
         "Included Add-Ons": addonTitles.join(", "),
-        "Assembly Option": assemblyValue,
         "Warranty": warrantyText,
         "Processing Time": processingTimeText
       }
