@@ -463,6 +463,7 @@ if (!customElements.get('product-customization-options')) {
             setTimeout(() => {
               this.hideConditionalOptions();
               this.classList.add('modify-opened');
+              document.body.style.overflow = 'hidden';
             }, 200);
           });
         });
@@ -476,6 +477,8 @@ if (!customElements.get('product-customization-options')) {
           button.addEventListener('click', () => {
             this.classList.remove('modify-opened');
             this.dataset.stamp = 'none';
+              document.body.style.overflow = 'auto';
+
           });
         });
       }
