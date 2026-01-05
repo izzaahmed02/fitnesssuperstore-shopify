@@ -2597,6 +2597,7 @@ document.addEventListener("DOMContentLoaded", function () {
 {% comment %} --------addon item add to cart with main product  using group id js end------{% endcomment %}
 
 {% comment %} --addon item price calculate with main product price on product page js start- {% endcomment %}
+
 {% comment %} <script>
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -2641,9 +2642,11 @@ document.addEventListener("DOMContentLoaded", function () {
   updateFinalPrice();
 
 });
-</script> {% endcomment %}
+</script> 
+{% endcomment %}
 
-<script>
+{% comment %} <script>
+  //without select option price
 document.addEventListener("DOMContentLoaded", function () {
 
   /* =========================
@@ -2698,6 +2701,97 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(() => {
       updateFinalPrice();
     }, 0);
+  });
+
+  /* =========================
+     INITIAL LOAD
+  ========================= */
+  updateFinalPrice();
+
+});
+</script> {% endcomment %}
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  /* =========================
+     BASE PRICE
+  ========================= */
+  function getBasePrice() {
+    const priceEl = document.querySelector(".price-item-fixed");
+    if (!priceEl) return 0;
+
+    return parseFloat(
+      priceEl.innerText.replace(/[^0-9.]/g, "")
+    ) || 0;
+  }
+
+  let basePrice = getBasePrice();
+  const finalPriceBox = document.getElementById("final-price");
+
+  /* =========================
+     GET ASSEMBLY PRICE
+  ========================= */
+  function getAssemblyPrice() {
+    const select = document.querySelector(
+      '.assembli_product_option select'
+    );
+    if (!select) return 0;
+
+    const text = select.options[select.selectedIndex]?.text || '';
+
+    // extract price like ($599) or ₹599
+    const match = text.match(/[\₹$]\s?([\d,]+)/);
+    if (!match) return 0;
+
+    return parseFloat(match[1].replace(/,/g, '')) || 0;
+  }
+
+  /* =========================
+     UPDATE FINAL PRICE
+  ========================= */
+  function updateFinalPrice() {
+    let addonTotal = 0;
+
+    // ADDON RADIOS
+    document.querySelectorAll(".addon-radio:checked").forEach(radio => {
+      addonTotal += parseFloat(radio.dataset.price) || 0;
+    });
+
+    // ASSEMBLY PRICE
+    addonTotal += getAssemblyPrice();
+
+    const finalTotal = basePrice + addonTotal;
+
+    if (finalPriceBox) {
+      finalPriceBox.innerText =
+        "₹" + finalTotal.toLocaleString("en-IN");
+    }
+  }
+
+  /* =========================
+     ADD-ON RADIO CHANGE
+  ========================= */
+  document.addEventListener("change", function (e) {
+    if (e.target.matches(".addon-radio")) {
+      updateFinalPrice();
+    }
+
+    // ASSEMBLY SELECT CHANGE
+    if (e.target.closest('.assembli_product_option select')) {
+      updateFinalPrice();
+    }
+  });
+
+  /* =========================
+     CROSS (✕) CLICK
+  ========================= */
+  document.addEventListener("click", function (e) {
+    const removeBtn = e.target.closest(".addon-remove");
+    if (!removeBtn) return;
+
+    setTimeout(updateFinalPrice, 0);
   });
 
   /* =========================
