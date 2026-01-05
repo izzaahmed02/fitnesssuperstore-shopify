@@ -1999,162 +1999,230 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 </script> {% endcomment %}
+
 <script>
-/* ======================================================
-   ADDON TITLE DISPLAY + REMOVE
-   (RADIO + ASSEMBLY | PRODUCT PAGE + CART POPUP)
-====================================================== */
+document.addEventListener('DOMContentLoaded', () => {
 
-/* =========================
-   RADIO ADD-ON CHANGE
-========================= */
-document.addEventListener('change', function (e) {
-  const input = e.target.closest('.addon-radio');
-  if (!input) return;
+  /* =========================================
+     MODIFY BUTTON CLICK
+  ========================================= */
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('.cart-modify-addon');
+    if (!btn) return;
 
-  const optionContent = input.closest('.option_content');
-  if (!optionContent) return;
+    e.preventDefault();
+    showButtonLoader(btn);
 
-  const optionRow = optionContent.previousElementSibling;
-  if (!optionRow || !optionRow.classList.contains('option_row')) return;
+    const cartItem = btn.closest('.cart-item');
+    if (!cartItem) {
+      hideButtonLoader(btn);
+      return;
+    }
 
-  const titleBox = optionRow.querySelector('.selected_addon_title');
-  if (!titleBox) return;
+    const groupEl = cartItem.querySelector('[data-name="group_id"]');
+    if (!groupEl) {
+      hideButtonLoader(btn);
+      return;
+    }
 
-  if (!input.checked) {
-    titleBox.innerHTML = '';
-    return;
-  }
+    const groupId = groupEl.dataset.value;
+    const popup = document.getElementById('addon-edit-popup');
+    popup.dataset.groupId = groupId;
 
-  const title = input.dataset.title || '';
-  const price = input.dataset.price
-    ? ` ($${input.dataset.price})`
-    : '';
+    try {
+      const cart = await fetch('/cart.js').then(r => r.json());
 
-  titleBox.innerHTML = `
-    <span class="addon-text">${title}${price}</span>
-    <span class="addon-remove" data-radio-name="${input.name}">✕</span>
-  `;
-});
+      const mainItem = cart.items.find(
+        i => i.properties?.group_id == groupId && !i.properties?.Add_on
+      );
+      if (!mainItem) throw 'Main item not found';
 
-/* =========================
-   RADIO REMOVE (✕)
-========================= */
-document.addEventListener('click', function (e) {
-  const removeBtn = e.target.closest('.addon-remove:not(.addon-remove-assembly)');
-  if (!removeBtn) return;
+      const html = await fetch(mainItem.url).then(r => r.text());
+      const doc = new DOMParser().parseFromString(html, 'text/html');
 
-  const optionRow = removeBtn.closest('.option_row');
-  if (!optionRow) return;
+      const options = doc.querySelector('.customproduct_option');
+      if (!options) throw '.customproduct_option missing';
 
-  const optionContent = optionRow.nextElementSibling;
-  if (!optionContent) return;
+      popup.querySelector('.addon-popup-content').innerHTML =
+        options.innerHTML;
 
-  const radioName = removeBtn.dataset.radioName;
+      /* ---------- PRESELECT RADIO ADDONS ---------- */
+      cart.items
+        .filter(i => i.properties?.group_id == groupId && i.properties?.Add_on)
+        .forEach(addon => {
+          const input = popup.querySelector(
+            `.addon-radio[data-variant-id="${addon.variant_id}"]`
+          );
+          if (input) input.checked = true;
+        });
 
-  const checkedRadio = optionContent.querySelector(
-    `.addon-radio[name="${radioName}"]:checked`
-  );
+      /* ---------- PREFILL ASSEMBLY FROM Included Add-Ons ---------- */
+      const included = mainItem.properties?.['Included Add-Ons'] || '';
+      const assemblyMatch = included.match(/Assembly:\s*([^,]+)/i);
 
-  if (checkedRadio) {
-    checkedRadio.checked = false;
-    checkedRadio.dispatchEvent(
-      new Event('change', { bubbles: true })
-    );
-  }
+      if (assemblyMatch) {
+        const assemblyText = assemblyMatch[1].trim();
+        const select = popup.querySelector(
+          '.assembli_product_option select'
+        );
 
-  const titleBox = optionRow.querySelector('.selected_addon_title');
-  if (titleBox) titleBox.innerHTML = '';
-});
+        if (select) {
+          [...select.options].forEach(opt => {
+            if (opt.text.trim() === assemblyText) {
+              select.value = opt.value;
+            }
+          });
+        }
+      }
 
-/* ======================================================
-   ASSEMBLY SELECT CHANGE
-====================================================== */
-document.addEventListener('change', function (e) {
-  const select = e.target.closest(
-    '.assembli_product_option select'
-  );
-  if (!select) return;
+      /* ---------- REFRESH TITLES ---------- */
+      refreshSelectedAddonTitles(popup);
 
-  const wrapper = select.closest('.assembli_product_option');
-  if (!wrapper) return;
+      hideButtonLoader(btn);
+      popup.style.display = 'block';
 
-  const titleBox = wrapper.querySelector('.selected_addon_title');
-  if (!titleBox) return;
-
-  const text =
-    select.options[select.selectedIndex]?.text?.trim();
-
-  if (!text) {
-    titleBox.innerHTML = '';
-    return;
-  }
-
-  titleBox.innerHTML = `
-    <span class="addon-text">Assembly: ${text}</span>
-    <span class="addon-remove addon-remove-assembly">✕</span>
-  `;
-});
-
-/* =========================
-   ASSEMBLY REMOVE (✕)
-========================= */
-document.addEventListener('click', function (e) {
-  const removeBtn = e.target.closest('.addon-remove-assembly');
-  if (!removeBtn) return;
-
-  const wrapper = removeBtn.closest('.assembli_product_option');
-  if (!wrapper) return;
-
-  const select = wrapper.querySelector('select');
-  if (!select) return;
-
-  select.selectedIndex = 0;
-  select.dispatchEvent(
-    new Event('change', { bubbles: true })
-  );
-
-  const titleBox = wrapper.querySelector('.selected_addon_title');
-  if (titleBox) titleBox.innerHTML = '';
-});
-
-/* ======================================================
-   PREFILL TITLES (FOR CART MODIFY POPUP)
-   👉 CALL AFTER POPUP HTML INSERT
-====================================================== */
-function refreshSelectedAddonTitles(scopeEl) {
-  if (!scopeEl) return;
-
-  /* --- RADIO ADDONS --- */
-  scopeEl.querySelectorAll('.addon-radio:checked').forEach(input => {
-    const optionContent = input.closest('.option_content');
-    if (!optionContent) return;
-
-    const optionRow = optionContent.previousElementSibling;
-    if (!optionRow) return;
-
-    const titleBox = optionRow.querySelector('.selected_addon_title');
-    if (!titleBox) return;
-
-    const title = input.dataset.title || '';
-    const price = input.dataset.price
-      ? ` ($${input.dataset.price})`
-      : '';
-
-    titleBox.innerHTML = `
-      <span class="addon-text">${title}${price}</span>
-      <span class="addon-remove" data-radio-name="${input.name}">✕</span>
-    `;
+    } catch (err) {
+      console.error(err);
+      hideButtonLoader(btn);
+    }
   });
 
-  /* --- ASSEMBLY --- */
-  const assemblySelect =
-    scopeEl.querySelector('.assembli_product_option select');
+  /* =========================================
+     POPUP CLOSE
+  ========================================= */
+  document.addEventListener('click', e => {
+    if (
+      e.target.matches('.addon-popup-overlay') ||
+      e.target.matches('.addon-popup-close') ||
+      e.target.matches('#addon-cancel')
+    ) {
+      document.getElementById('addon-edit-popup').style.display = 'none';
+    }
+  });
 
-  if (assemblySelect) {
-    assemblySelect.dispatchEvent(
-      new Event('change', { bubbles: true })
-    );
+  /* =========================================
+     SAVE CHANGES (🔥 FIXED)
+  ========================================= */
+  document.addEventListener('click', async e => {
+    if (!e.target.matches('#addon-save')) return;
+
+    const popup = document.getElementById('addon-edit-popup');
+    const groupId = popup.dataset.groupId;
+
+    showPopupLoader();
+
+    try {
+      const cart = await fetch('/cart.js').then(r => r.json());
+
+      const mainItem = cart.items.find(
+        i => i.properties?.group_id == groupId && !i.properties?.Add_on
+      );
+      if (!mainItem) throw 'Main item missing';
+
+      /* ---------- RADIO ADDONS ---------- */
+      const selectedRadios = [
+        ...popup.querySelectorAll('.addon-radio:checked')
+      ];
+
+      let titlesArr = selectedRadios
+        .map(i => i.dataset.title)
+        .filter(Boolean);
+
+      const variantIds = selectedRadios.map(i =>
+        String(i.dataset.variantId)
+      );
+
+      /* ---------- ASSEMBLY SELECT ---------- */
+      const assemblySelect =
+        popup.querySelector('.assembli_product_option select');
+
+      if (assemblySelect && assemblySelect.value) {
+        const assemblyText =
+          assemblySelect.options[assemblySelect.selectedIndex]
+            ?.text?.trim();
+
+        if (assemblyText) {
+          titlesArr.push(`Assembly: ${assemblyText}`);
+        }
+      }
+
+      const titles = titlesArr.join(', ');
+
+      /* ---------- REMOVE UNSELECTED ADDONS ---------- */
+      for (const item of cart.items.filter(
+        i => i.properties?.Add_on && i.properties.group_id == groupId
+      )) {
+        if (!variantIds.includes(String(item.variant_id))) {
+          await fetch('/cart/change.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: item.key, quantity: 0 })
+          });
+        }
+      }
+
+      /* ---------- ADD NEW ADDONS ---------- */
+      for (const id of variantIds) {
+        if (!cart.items.find(
+          i => String(i.variant_id) === id && i.properties?.Add_on
+        )) {
+          await fetch('/cart/add.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              items: [{
+                id,
+                quantity: 1,
+                properties: { group_id: groupId, Add_on: 'Yes' }
+              }]
+            })
+          });
+        }
+      }
+
+      /* ---------- UPDATE Included Add-Ons ---------- */
+      await fetch('/cart/change.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: mainItem.key,
+          properties: {
+            ...mainItem.properties,
+            'Included Add-Ons': titles
+          }
+        })
+      });
+
+      hidePopupLoader();
+      popup.style.display = 'none';
+      setTimeout(() => window.location.reload(), 400);
+
+    } catch (err) {
+      console.error(err);
+      hidePopupLoader();
+    }
+  });
+
+  /* =========================================
+     LOADER HELPERS
+  ========================================= */
+  function showButtonLoader(btn) {
+    if (btn) btn.classList.add('loading');
   }
-}
+
+  function hideButtonLoader(btn) {
+    if (btn) btn.classList.remove('loading');
+  }
+
+  function showPopupLoader() {
+    document.querySelector('.addon-popup-loader')
+      ?.classList.add('active');
+  }
+
+  function hidePopupLoader() {
+    document.querySelector('.addon-popup-loader')
+      ?.classList.remove('active');
+  }
+
+});
 </script>
