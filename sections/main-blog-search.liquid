@@ -1,0 +1,198 @@
+{{ 'component-article-card.css' | asset_url | stylesheet_tag }}
+{{ 'section-main-blog.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+/* Section padding */
+.section-{{ section.id }}-padding {
+  padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+  padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+}
+
+@media screen and (min-width: 750px) {
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+}
+
+{%- endstyle -%}
+
+<div class="main-blog page-width section-{{ section.id }}-padding">
+  <h1 class="title--primary">
+    {{ section.settings.header_text | default: "Search Blog Articles" }}
+  </h1>
+
+  {% if section.settings.description %}
+    <div class="main-blog-description">
+      {{ section.settings.description }}
+    </div>
+  {% endif %}
+
+  <!-- Search bar -->
+  <div class="blog-search-wrapper" style="margin-bottom: 20px;">
+    <input
+      type="text"
+      id="blog-live-search"
+      placeholder="Search blog posts..."
+      style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"
+    >
+    <div id="no-results">
+      <p>No articles found.</p>
+    </div>
+  </div>
+
+  <!-- Search results -->
+  <div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
+  </div>
+
+  <!-- Divider BELOW results -->
+  <div class="blog-search-divider"></div>
+
+  <!-- Hidden articles -->
+  <div style="display:none;" id="all-articles-container">
+    {% assign handles = section.settings.blog_handles | split: "," %}
+    {% for handle in handles %}
+      {% assign clean_handle = handle | strip %}
+      {% assign blog = blogs[clean_handle] %}
+      {% if blog %}
+        {% for article in blog.articles %}
+          <div
+            class="article-data"
+            data-full-content="{{ article.content | strip_html | escape }}"
+          >
+            {% render 'article-card',
+              article: article,
+              media_height: section.settings.image_height,
+              media_aspect_ratio: article.image.aspect_ratio,
+              show_image: section.settings.show_image,
+              show_date: section.settings.show_date,
+              show_author: section.settings.show_author,
+              show_excerpt: true
+            %}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('blog-live-search');
+  const container = document.querySelector('.blog-articles');
+  const noResults = document.getElementById('no-results');
+  const divider = document.querySelector('.blog-search-divider');
+
+  const allArticles = Array.from(
+    document.querySelectorAll('#all-articles-container .article-data')
+  );
+
+  function renderResults(query) {
+    container.innerHTML = '';
+    let matches = 0;
+
+    if (!query) {
+      noResults.style.display = 'none';
+      divider.style.display = 'none';
+      return;
+    }
+
+    allArticles.forEach(articleDiv => {
+      const searchableText = articleDiv.textContent.toLowerCase();
+      const fullContent = articleDiv.dataset.fullContent.toLowerCase();
+
+      if (
+        searchableText.includes(query) ||
+        fullContent.includes(query)
+      ) {
+        const clone = articleDiv.cloneNode(true);
+        container.appendChild(clone);
+        matches++;
+      }
+    });
+
+    noResults.style.display = matches === 0 ? 'block' : 'none';
+    divider.style.display = matches > 0 ? 'block' : 'none';
+  }
+
+  function updateURL(query) {
+    const url = new URL(window.location);
+    query ? url.searchParams.set('q', query) : url.searchParams.delete('q');
+    window.history.replaceState({}, '', url);
+  }
+
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.trim().toLowerCase();
+    updateURL(query);
+    renderResults(query);
+  });
+
+  // Restore on back / reload
+  const params = new URLSearchParams(window.location.search);
+  const initialQuery = params.get('q');
+
+  if (initialQuery) {
+    searchInput.value = initialQuery;
+    renderResults(initialQuery.toLowerCase());
+  }
+});
+</script>
+
+{% schema %}
+{
+  "name": "Blog Search",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    { "type": "text", "id": "header_text", "label": "Header Text", "default": "Search Blog Articles" },
+    { "type": "richtext", "id": "description", "label": "Section Description" },
+    {
+      "type": "select",
+      "id": "layout",
+      "options": [
+        { "value": "grid", "label": "Grid" },
+        { "value": "collage", "label": "Collage" }
+      ],
+      "default": "grid",
+      "label": "Article Layout"
+    },
+    { "type": "text", "id": "blog_handles", "label": "Blog Handles (comma separated)" },
+    { "type": "checkbox", "id": "show_image", "default": true, "label": "Show Image" },
+    { "type": "checkbox", "id": "show_date", "default": true, "label": "Show Date" },
+    { "type": "checkbox", "id": "show_author", "default": false, "label": "Show Author" },
+    {
+      "type": "select",
+      "id": "image_height",
+      "options": [
+        { "value": "adapt", "label": "Adapt" },
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ],
+      "default": "medium",
+      "label": "Image Height"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top Padding",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom Padding",
+      "default": 36
+    }
+  ],
+  "presets": [{ "name": "Blog Search" }]
+}
+{% endschema %}

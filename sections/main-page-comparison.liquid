@@ -2,9 +2,80 @@
 {{ 'comparison-item.css' | asset_url | stylesheet_tag }}
 
 <div class="page-width">
-<div class="main-comparison__wrapper">
+
+<div class="main-comparison__searchbar-wrapper" style="text-align:center; margin-bottom: 2rem;">
+  <input
+    type="text"
+    id="comparisonSearch"
+    placeholder="Search comparisons..."
+    style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;"
+  >
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('comparisonSearch');
+  const items = document.querySelectorAll('.main-comparison__item-outer');
+  searchInput.addEventListener('input', function() {
+    const query = this.value.trim().toLowerCase();
+    items.forEach(item => {
+      const title = (item.getAttribute('data-title') || '').toLowerCase();
+      if (!query || title.includes(query)) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  });
+  // Typing animation for placeholder
+  const staticText = "Compare between our ";
+  const keywords = ["Adjustable Crossovers", "Home Gym Equipment", "Rowers", "Treadmills/Treadclimbers", "Home Gym", "Fitness Bikes", "Leg Press Machines"];
+  let keywordIndex = 0;
+  let charIndex = 0;
+  let typing = true;
+  function typePlaceholder() {
+    const currentWord = keywords[keywordIndex];
+    if (typing) {
+      if (charIndex <= currentWord.length) {
+        searchInput.placeholder = staticText + currentWord.slice(0, charIndex);
+        charIndex++;
+        setTimeout(typePlaceholder, 100);
+      } else {
+        typing = false;
+        setTimeout(typePlaceholder, 1200); // Pause before erasing
+      }
+    } else {
+      if (charIndex > 0) {
+        charIndex--;
+        searchInput.placeholder = staticText + currentWord.slice(0, charIndex);
+        setTimeout(typePlaceholder, 50);
+      } else {
+        typing = true;
+        keywordIndex = (keywordIndex + 1) % keywords.length;
+        setTimeout(typePlaceholder, 400);
+      }
+    }
+  }
+  typePlaceholder();
+});
+</script>
+
+<style>
+.main-comparison__item-outer{
+    display: contents;
+}
+</style>
+
+<div class="main-comparison__wrapper" style="
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
+">
     {% for block in section.blocks %}
+<div class="main-comparison__item-outer" data-title="{{ block.settings.title | escape }}">
         {% render 'comparison-item', block: block %}
+</div>
     {% endfor %}
 </div>
 </div>

@@ -20,7 +20,11 @@
   }
 </style>
 
-<article class="article-template section-{{ section.id }}-padding">
+{% assign handleDown = blog.handle | downcase %}
+{% if handleDown contains 'video-watch-pages' %}
+  <div class="article-template section-{{ section.id }}-padding">
+{%  else  %}
+<article class="article-template section-{{ section.id }}-padding">{% endif %}
   {%- for block in section.blocks -%}
     {%- case block.type -%}
       {%- when '@app' -%}
@@ -300,7 +304,11 @@
       </div>
     </div>
   {%- endif -%}
+  {% if handleDown contains 'video-watch-pages' %}
+  </div>
+{% else  %}
 </article>
+{% endif %}
 
 <script type="application/ld+json">
   {{ article | structured_data }}

@@ -1,222 +1,4 @@
-const STOREFRONT_API_URL = '/api/2023-07/graphql.json'; // Adjust API version
-const STOREFRONT_ACCESS_TOKEN = 'c58409094793cba2fc6ce881d45d39f5';
-
-function debounce(fn, delay) {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => fn.apply(this, args), delay);
-  };
-}
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-
-
-class PredictiveSearch extends SearchForm {
-  constructor() {
-    super(); 
-    this.cachedResults = {};
-    this.predictiveSearchResults = this.querySelector('[data-predictive-search]');
-    this.allPredictiveSearchInstances = document.querySelectorAll('predictive-search');
-    this.isOpen = false;
-    this.abortController = new AbortController();
-    this.searchTerm = '';
-
-    this.setupEventListeners();
-  }
-
-  setupEventListeners() {
-    this.input.form.addEventListener('submit', this.onFormSubmit.bind(this));
-
-    this.input.addEventListener('focus', this.onFocus.bind(this));
-    this.addEventListener('focusout', this.onFocusOut.bind(this));
-    this.addEventListener('keyup', this.onKeyup.bind(this));
-    this.addEventListener('keydown', this.onKeydown.bind(this));
-    this.input.addEventListener('input', debounce(this.onChange.bind(this), 250));
-this.input.addEventListener('paste', () => {
-  setTimeout(() => this.onChange(), 0);
-});
-  }
-
-  getQuery() {
-    return this.input.value.trim();
-  }
-
-  onChange() {
-    super.onChange();
-    const newSearchTerm = this.getQuery();
-    if (!this.searchTerm || !newSearchTerm.startsWith(this.searchTerm)) {
-      // Remove the results when they are no longer relevant for the new search term
-      // so they don't show up when the dropdown opens again
-      this.querySelector('#predictive-search-results-groups-wrapper')?.remove();
-    }
-
-    // Update the term asap, don't wait for the predictive search query to finish loading
-    this.updateSearchForTerm(this.searchTerm, newSearchTerm);
-
-    this.searchTerm = newSearchTerm;
-
-    if (!this.searchTerm.length) {
-      this.close(true);
-      return;
-    }
-
-    this.getSearchResults(this.searchTerm);
-  }
-
-  onFormSubmit(event) {
-    if (!this.getQuery().length || this.querySelector('[aria-selected="true"] a')) event.preventDefault();
-  }
-
-  onFormReset(event) {
-    super.onFormReset(event);
-    if (super.shouldResetForm()) {
-      this.searchTerm = '';
-      this.abortController.abort();
-      this.abortController = new AbortController();
-      this.closeResults(true);
-    }
-  }
-
-  onFocus() {
-    const currentSearchTerm = this.getQuery();
-
-    if (!currentSearchTerm.length) return;
-
-    if (this.searchTerm !== currentSearchTerm) {
-      // Search term was changed from other search input, treat it as a user change
-      this.onChange();
-    } else if (this.getAttribute('results') === 'true') {
-      this.open();
-    } else {
-      this.getSearchResults(this.searchTerm);
-    }
-  }
-
-  onFocusOut() {
-    setTimeout(() => {
-      if (!this.contains(document.activeElement)) this.close();
-    });
-  }
-
-  onKeyup(event) {
-    if (!this.getQuery().length) this.close(true);
-    event.preventDefault();
-
-    switch (event.code) {
-      case 'ArrowUp':
-        this.switchOption('up');
-        break;
-      case 'ArrowDown':
-        this.switchOption('down');
-        break;
-      case 'Enter':
-        this.selectOption();
-        break;
-    }
-  }
-
-  onKeydown(event) {
-    // Prevent the cursor from moving in the input when using the up and down arrow keys
-    if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-      event.preventDefault();
-    }
-  }
-
-  updateSearchForTerm(previousTerm, newTerm) {
-  const searchForTextElement = this.querySelector('[data-predictive-search-search-for-text]');
-  const currentButtonText = searchForTextElement?.innerText;
-  if (currentButtonText) {
-    const safePrevTerm = escapeRegExp(previousTerm);
-const matches = currentButtonText.match(new RegExp(safePrevTerm, 'gi'));
-    if (matches && matches.length > 1) {
-      // The new term matches part of the button text and not just the search term, do not replace to avoid mistakes
-      return;
-    }
-    const newButtonText = currentButtonText.replace(previousTerm, newTerm);
-    searchForTextElement.innerText = newButtonText;
-  }
-}
-
-  switchOption(direction) {
-    if (!this.getAttribute('open')) return;
-
-    const moveUp = direction === 'up';
-    const selectedElement = this.querySelector('[aria-selected="true"]');
-
-    // Filter out hidden elements (duplicated page and article resources) thanks
-    // to this https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetParent
-    const allVisibleElements = Array.from(this.querySelectorAll('li, button.predictive-search__item')).filter(
-      (element) => element.offsetParent !== null
-    );
-    let activeElementIndex = 0;
-
-    if (moveUp && !selectedElement) return;
-
-    let selectedElementIndex = -1;
-    let i = 0;
-
-    while (selectedElementIndex === -1 && i <= allVisibleElements.length) {
-      if (allVisibleElements[i] === selectedElement) {
-        selectedElementIndex = i;
-      }
-      i++;
-    }
-
-    this.statusElement.textContent = '';
-
-    if (!moveUp && selectedElement) {
-      activeElementIndex = selectedElementIndex === allVisibleElements.length - 1 ? 0 : selectedElementIndex + 1;
-    } else if (moveUp) {
-      activeElementIndex = selectedElementIndex === 0 ? allVisibleElements.length - 1 : selectedElementIndex - 1;
-    }
-
-    if (activeElementIndex === selectedElementIndex) return;
-
-    const activeElement = allVisibleElements[activeElementIndex];
-
-    activeElement.setAttribute('aria-selected', true);
-    if (selectedElement) selectedElement.setAttribute('aria-selected', false);
-
-    this.input.setAttribute('aria-activedescendant', activeElement.id);
-  }
-
-  selectOption() {
-    const selectedOption = this.querySelector('[aria-selected="true"] a, button[aria-selected="true"]');
-
-    if (selectedOption) selectedOption.click();
-  }
-
-  getSearchResults(searchTerm) {
-  const queryKey = searchTerm.replace(' ', '-').toLowerCase();
-  this.setLiveRegionLoadingState();
-
-  if (this.cachedResults[queryKey]) {
-    this.renderSearchResults(this.cachedResults[queryKey]);
-    return;
-  }
-
-  // --- Shopify Predictive Search ---
-  const predictiveFetch = fetch(`${routes.predictive_search_url}?q=${encodeURIComponent(searchTerm)}&section_id=predictive-search`, {
-    signal: this.abortController.signal,
-  })
-  .then((response) => {
-    if (!response.ok) throw new Error(response.status);
-    return response.text();
-  })
-  .then((text) => {
-    const section = new DOMParser()
-      .parseFromString(text, 'text/html')
-      .querySelector('#shopify-section-predictive-search');
-
-    if (!section) return '';
-    return section.innerHTML;
-  });
-
-  // --- Storefront API SKU Search ---
-  const skuQuery = `
+const STOREFRONT_API_URL="/api/2023-07/graphql.json",STOREFRONT_ACCESS_TOKEN="c58409094793cba2fc6ce881d45d39f5";function debounce(e,t){let i;return(...s)=>{clearTimeout(i),i=setTimeout(()=>e.apply(this,s),t)}}function escapeRegExp(e){return e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}class PredictiveSearch extends SearchForm{constructor(){super(),this.cachedResults={},this.predictiveSearchResults=this.querySelector("[data-predictive-search]"),this.allPredictiveSearchInstances=document.querySelectorAll("predictive-search"),this.isOpen=!1,this.abortController=new AbortController,this.searchTerm="",this.setupEventListeners()}setupEventListeners(){this.input.form.addEventListener("submit",this.onFormSubmit.bind(this)),this.input.addEventListener("focus",this.onFocus.bind(this)),this.addEventListener("focusout",this.onFocusOut.bind(this)),this.addEventListener("keyup",this.onKeyup.bind(this)),this.addEventListener("keydown",this.onKeydown.bind(this)),this.input.addEventListener("input",debounce(this.onChange.bind(this),250)),this.input.addEventListener("paste",()=>{setTimeout(()=>this.onChange(),0)})}getQuery(){return this.input.value.trim()}onChange(){super.onChange();let e=this.getQuery();if(this.searchTerm&&e.startsWith(this.searchTerm)||this.querySelector("#predictive-search-results-groups-wrapper")?.remove(),this.updateSearchForTerm(this.searchTerm,e),this.searchTerm=e,!this.searchTerm.length){this.close(!0);return}this.getSearchResults(this.searchTerm)}onFormSubmit(e){(!this.getQuery().length||this.querySelector('[aria-selected="true"] a'))&&e.preventDefault()}onFormReset(e){super.onFormReset(e),super.shouldResetForm()&&(this.searchTerm="",this.abortController.abort(),this.abortController=new AbortController,this.closeResults(!0))}onFocus(){let e=this.getQuery();e.length&&(this.searchTerm!==e?this.onChange():"true"===this.getAttribute("results")?this.open():this.getSearchResults(this.searchTerm))}onFocusOut(){setTimeout(()=>{this.contains(document.activeElement)||this.close()})}onKeyup(e){switch(this.getQuery().length||this.close(!0),e.preventDefault(),e.code){case"ArrowUp":this.switchOption("up");break;case"ArrowDown":this.switchOption("down");break;case"Enter":this.selectOption()}}onKeydown(e){("ArrowUp"===e.code||"ArrowDown"===e.code)&&e.preventDefault()}updateSearchForTerm(e,t){let i=this.querySelector("[data-predictive-search-search-for-text]"),s=i?.innerText;if(s){let r=escapeRegExp(e),a=s.match(RegExp(r,"gi"));if(a&&a.length>1)return;let n=s.replace(e,t);i.innerText=n}}switchOption(e){if(!this.getAttribute("open"))return;let t="up"===e,i=this.querySelector('[aria-selected="true"]'),s=Array.from(this.querySelectorAll("li, button.predictive-search__item")).filter(e=>null!==e.offsetParent),r=0;if(t&&!i)return;let a=-1,n=0;for(;-1===a&&n<=s.length;)s[n]===i&&(a=n),n++;if(this.statusElement.textContent="",!t&&i?r=a===s.length-1?0:a+1:t&&(r=0===a?s.length-1:a-1),r===a)return;let c=s[r];c.setAttribute("aria-selected",!0),i&&i.setAttribute("aria-selected",!1),this.input.setAttribute("aria-activedescendant",c.id)}selectOption(){let e=this.querySelector('[aria-selected="true"] a, button[aria-selected="true"]');e&&e.click()}getSearchResults(e){let t=e.replace(" ","-").toLowerCase();if(this.setLiveRegionLoadingState(),this.cachedResults[t]){this.renderSearchResults(this.cachedResults[t]);return}let i=fetch(`${routes.predictive_search_url}?q=${encodeURIComponent(e)}&section_id=predictive-search`,{signal:this.abortController.signal}).then(e=>{if(!e.ok)throw Error(e.status);return e.text()}).then(e=>{let t=new DOMParser().parseFromString(e,"text/html").querySelector("#shopify-section-predictive-search");return t?t.innerHTML:""}),s=`
   query($term: String!) {
     products(first: 5, query: $term) {
       edges {
@@ -245,204 +27,28 @@ const matches = currentButtonText.match(new RegExp(safePrevTerm, 'gi'));
       }
     }
   }
-`;
-
-
-  const skuFetch = fetch(STOREFRONT_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Shopify-Storefront-Access-Token': STOREFRONT_ACCESS_TOKEN
-    },
-    body: JSON.stringify({
-      query: skuQuery,
-      variables: { term: `sku:${searchTerm.toUpperCase()}` } // 🔑 normalize to uppercase
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-  if (!data.data?.products?.edges.length) return '';
-
-  const excludedTypes = [
-    "Avis-add-charge",
-    "Custom Field More Info",
-    "Option Category",
-    "Product (Hidden)"
-  ];
-
-  const excludedTags = [
-    "hidden",
-    "draft",
-    "avisplus-product-options",
-    "about_option_categories"
-  ];
-
-  // Filter products
-  const filteredProducts = data.data.products.edges.filter(({ node }) => {
-    if (excludedTypes.includes(node.productType)) return false;
-    if (node.tags.some(tag => excludedTags.includes(tag.toLowerCase()))) return false;
-    return true;
-  });
-
-  if (!filteredProducts.length) return '';
-  return this.renderSkuResults(filteredProducts);
-});
-
-  // --- Merge Results ---
-  Promise.all([predictiveFetch, skuFetch])
-  .then(([predictiveMarkup, skuMarkup]) => {
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = predictiveMarkup || '';
-
-    // Collect product handles already present in predictive search
-    const seenHandles = new Set(
-      Array.from(wrapper.querySelectorAll('#predictive-search-results-products-list li a'))
-        .map(a => {
-          const href = a.getAttribute('href') || '';
-          return normalizeHandle(href);
-        })
-    );
-
-    if (skuMarkup) {
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = skuMarkup;
-
-      // Filter out duplicates by normalized handle
-      const skuItems = Array.from(tempDiv.querySelectorAll('li')).filter(li => {
-        const link = li.querySelector('a');
-        if (!link) return false;
-        const handle = normalizeHandle(link.getAttribute('href'));
-        if (seenHandles.has(handle)) {
-          return false; // already included from predictive search
-        }
-        seenHandles.add(handle);
-        return true;
-      });
-
-      if (skuItems.length) {
-        let productsList = wrapper.querySelector('#predictive-search-results-products-list');
-        if (productsList) {
-          skuItems.forEach(item => productsList.appendChild(item));
-        } else {
-          const newList = document.createElement('ul');
-          newList.id = 'predictive-search-results-products-list';
-          newList.className = 'predictive-search__list predictive-search__list--products';
-          skuItems.forEach(item => newList.appendChild(item));
-          wrapper.appendChild(newList);
-        }
-      }
-    }
-
-    const combinedMarkup = wrapper.innerHTML;
-
-    this.allPredictiveSearchInstances.forEach((instance) => {
-      instance.cachedResults[queryKey] = combinedMarkup;
-    });
-
-    this.renderSearchResults(combinedMarkup);
-  })
-
-  .catch((error) => {
-    if (error?.code === 20) return; // aborted
-    this.close();
-    throw error;
-  });
-}
-
-
-
-  setLiveRegionLoadingState() {
-    this.statusElement = this.statusElement || this.querySelector('.predictive-search-status');
-    this.loadingText = this.loadingText || this.getAttribute('data-loading-text');
-
-    this.setLiveRegionText(this.loadingText);
-    this.setAttribute('loading', true);
-  }
-
-  setLiveRegionText(statusText) {
-    this.statusElement.setAttribute('aria-hidden', 'false');
-    this.statusElement.textContent = statusText;
-
-    setTimeout(() => {
-      this.statusElement.setAttribute('aria-hidden', 'true');
-    }, 1000);
-  }
-
-  renderSearchResults(resultsMarkup) {
-    this.predictiveSearchResults.innerHTML = resultsMarkup;
-    this.setAttribute('results', true);
-
-    this.setLiveRegionResults();
-    this.open();
-  }
-
-  setLiveRegionResults() {
-    this.removeAttribute('loading');
-    this.setLiveRegionText(this.querySelector('[data-predictive-search-live-region-count-value]').textContent);
-  }
-
-  getResultsMaxHeight() {
-    this.resultsMaxHeight =
-      window.innerHeight - document.querySelector('.section-header').getBoundingClientRect().bottom;
-    return this.resultsMaxHeight;
-  }
-
-  open() {
-    this.predictiveSearchResults.style.maxHeight = this.resultsMaxHeight || `${this.getResultsMaxHeight()}px`;
-    this.setAttribute('open', true);
-    this.input.setAttribute('aria-expanded', true);
-    this.isOpen = true;
-  }
-
-  close(clearSearchTerm = false) {
-    this.closeResults(clearSearchTerm);
-    this.isOpen = false;
-  }
-
-  closeResults(clearSearchTerm = false) {
-    if (clearSearchTerm) {
-      this.input.value = '';
-      this.removeAttribute('results');
-    }
-    const selected = this.querySelector('[aria-selected="true"]');
-
-    if (selected) selected.setAttribute('aria-selected', false);
-
-    this.input.setAttribute('aria-activedescendant', '');
-    this.removeAttribute('loading');
-    this.removeAttribute('open');
-    this.input.setAttribute('aria-expanded', false);
-    this.resultsMaxHeight = false;
-    this.predictiveSearchResults.removeAttribute('style');
-  }
-  renderSkuResults(products) {
-  let html = '';
-
-  products.forEach(({ node }, index) => {
-    const variant = node.variants.edges[0]?.node;
-
-    html += `
-      <li id="predictive-search-option-sku-${index}" 
+`,r=fetch("/api/2023-07/graphql.json",{method:"POST",headers:{"Content-Type":"application/json","X-Shopify-Storefront-Access-Token":"c58409094793cba2fc6ce881d45d39f5"},body:JSON.stringify({query:s,variables:{term:`sku:${e.toUpperCase()}`}})}).then(e=>e.json()).then(e=>{if(!e.data?.products?.edges.length)return"";let t=["Avis-add-charge","Custom Field More Info","Option Category","Product (Hidden)"],i=["hidden","draft","avisplus-product-options","about_option_categories"],s=e.data.products.edges.filter(({node:e})=>!(t.includes(e.productType)||e.tags.some(e=>i.includes(e.toLowerCase()))));return s.length?this.renderSkuResults(s):""});Promise.all([i,r]).then(([e,i])=>{let s=document.createElement("div");s.innerHTML=e||"";let r=new Set(Array.from(s.querySelectorAll("#predictive-search-results-products-list li a")).map(e=>{let t=e.getAttribute("href")||"";return normalizeHandle(t)}));if(i){let a=document.createElement("div");a.innerHTML=i;let n=Array.from(a.querySelectorAll("li")).filter(e=>{let t=e.querySelector("a");if(!t)return!1;let i=normalizeHandle(t.getAttribute("href"));return!r.has(i)&&(r.add(i),!0)});if(n.length){let c=s.querySelector("#predictive-search-results-products-list");if(c)n.forEach(e=>c.appendChild(e));else{let l=document.createElement("ul");l.id="predictive-search-results-products-list",l.className="predictive-search__list predictive-search__list--products",n.forEach(e=>l.appendChild(e)),s.appendChild(l)}}}let h=s.innerHTML;this.allPredictiveSearchInstances.forEach(e=>{e.cachedResults[t]=h}),this.renderSearchResults(h)}).catch(e=>{if(e?.code!==20)throw this.close(),e})}setLiveRegionLoadingState(){this.statusElement=this.statusElement||this.querySelector(".predictive-search-status"),this.loadingText=this.loadingText||this.getAttribute("data-loading-text"),this.setLiveRegionText(this.loadingText),this.setAttribute("loading",!0)}setLiveRegionText(e){this.statusElement.setAttribute("aria-hidden","false"),this.statusElement.textContent=e,setTimeout(()=>{this.statusElement.setAttribute("aria-hidden","true")},1e3)}renderSearchResults(e){this.predictiveSearchResults.innerHTML=e,this.setAttribute("results",!0),this.setLiveRegionResults(),this.open()}setLiveRegionResults(){this.removeAttribute("loading"),this.setLiveRegionText(this.querySelector("[data-predictive-search-live-region-count-value]").textContent)}getResultsMaxHeight(){return this.resultsMaxHeight=window.innerHeight-document.querySelector(".section-header").getBoundingClientRect().bottom,this.resultsMaxHeight}open(){this.predictiveSearchResults.style.maxHeight=this.resultsMaxHeight||`${this.getResultsMaxHeight()}px`,this.setAttribute("open",!0),this.input.setAttribute("aria-expanded",!0),this.isOpen=!0}close(e=!1){this.closeResults(e),this.isOpen=!1}closeResults(e=!1){e&&(this.input.value="",this.removeAttribute("results"));let t=this.querySelector('[aria-selected="true"]');t&&t.setAttribute("aria-selected",!1),this.input.setAttribute("aria-activedescendant",""),this.removeAttribute("loading"),this.removeAttribute("open"),this.input.setAttribute("aria-expanded",!1),this.resultsMaxHeight=!1,this.predictiveSearchResults.removeAttribute("style")}renderSkuResults(e){let t="";return e.forEach(({node:e},i)=>{let s=e.variants.edges[0]?.node;t+=`
+      <li id="predictive-search-option-sku-${i}" 
           class="predictive-search__list-item" 
           role="option" aria-selected="false">
-        <a href="/products/${node.handle}" 
+        <a href="/products/${e.handle}" 
            class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text" 
            tabindex="-1">
-          ${node.featuredImage ? `
+          ${e.featuredImage?`
             <img class="predictive-search__image" 
-                 src="${node.featuredImage.url}&width=150" 
-                 alt="${node.featuredImage.altText || node.title}" 
-                 width="50" />` : ''}
+                 src="${e.featuredImage.url}&width=150" 
+                 alt="${e.featuredImage.altText||e.title}" 
+                 width="50" />`:""}
 
           <div class="predictive-search__item-content">
-            <p class="predictive-search__item-heading h5">${node.title}</p>
-            <div class="predictive-search__item-vendor">SKU: ${variant?.sku || ''}</div>
+            <p class="predictive-search__item-heading h5">${e.title}</p>
+            <div class="predictive-search__item-vendor">SKU: ${s?.sku||""}</div>
             <div class="price">
               <div class="price__container">
                 <div class="price__regular">
                   <span class="visually-hidden visually-hidden--inline">Regular price</span>
                   <span class="price-item-fixed">
-                    ${variant?.price?.amount ? `$${parseFloat(variant.price.amount).toLocaleString()} ${variant.price.currencyCode}` : ''}
+                    ${s?.price?.amount?`$${parseFloat(s.price.amount).toLocaleString()} ${s.price.currencyCode}`:""}
                   </span>
                 </div>
               </div>
@@ -450,39 +56,28 @@ const matches = currentButtonText.match(new RegExp(safePrevTerm, 'gi'));
           </div>
         </a>
       </li>
-    `;
-  });
-
-  return html;
-}
-renderSkuResultsFromVariants(variants) {
-  let html = '';
-
-  variants.forEach(({ node }, index) => {
-    const product = node.product;
-
-    html += `
-      <li id="predictive-search-option-sku-${index}" 
+    `}),t}renderSkuResultsFromVariants(e){let t="";return e.forEach(({node:e},i)=>{let s=e.product;t+=`
+      <li id="predictive-search-option-sku-${i}" 
           class="predictive-search__list-item" 
           role="option" aria-selected="false">
-        <a href="/products/${product.handle}" 
+        <a href="/products/${s.handle}" 
            class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text" 
            tabindex="-1">
-          ${product.featuredImage ? `
+          ${s.featuredImage?`
             <img class="predictive-search__image" 
-                 src="${product.featuredImage.url}&width=150" 
-                 alt="${product.featuredImage.altText || product.title}" 
-                 width="50" />` : ''}
+                 src="${s.featuredImage.url}&width=150" 
+                 alt="${s.featuredImage.altText||s.title}" 
+                 width="50" />`:""}
 
           <div class="predictive-search__item-content">
-            <p class="predictive-search__item-heading h5">${product.title}</p>
-            <div class="predictive-search__item-vendor">SKU: ${node.sku}</div>
+            <p class="predictive-search__item-heading h5">${s.title}</p>
+            <div class="predictive-search__item-vendor">SKU: ${e.sku}</div>
             <div class="price">
               <div class="price__container">
                 <div class="price__regular">
                   <span class="visually-hidden visually-hidden--inline">Regular price</span>
                   <span class="price-item-fixed">
-                    ${node.price?.amount ? `$${parseFloat(node.price.amount).toLocaleString()} ${node.price.currencyCode}` : ''}
+                    ${e.price?.amount?`$${parseFloat(e.price.amount).toLocaleString()} ${e.price.currencyCode}`:""}
                   </span>
                 </div>
               </div>
@@ -490,23 +85,4 @@ renderSkuResultsFromVariants(variants) {
           </div>
         </a>
       </li>
-    `;
-  });
-
-  return html;
-}
-
-
-
-}
-function normalizeHandle(href) {
-  try {
-    // Remove query params, anchors, and leading `/products/`
-    const url = new URL(href, window.location.origin);
-    return url.pathname.replace(/^\/products\//, '').replace(/\/$/, '');
-  } catch {
-    return href.replace(/^\/products\//, '').split('?')[0].replace(/\/$/, '');
-  }
-}
-
-customElements.define('predictive-search', PredictiveSearch);
+    `}),t}}function normalizeHandle(e){try{let t=new URL(e,window.location.origin);return t.pathname.replace(/^\/products\//,"").replace(/\/$/,"")}catch{return e.replace(/^\/products\//,"").split("?")[0].replace(/\/$/,"")}}customElements.define("predictive-search",PredictiveSearch);

@@ -120,12 +120,25 @@
       {%- for block in section.blocks -%}
         {%- case block.type -%}
           {%- when 'heading' -%}
-            <h2
-              class="banner__heading inline-richtext {{ block.settings.heading_size }}"
-              {{ block.shopify_attributes }}
-            >
-              {{ block.settings.heading }}
-            </h2>
+
+
+              {% if block.settings.h1 %}
+                    <h1 class="banner__heading inline-richtext {{ block.settings.heading_size }}">{{ block.settings.heading }}</h1>
+                {% else %}
+                    <h2 class="banner__heading inline-richtext {{ block.settings.heading_size }}">{{ block.settings.heading }}</h2>
+                {% endif %}
+
+
+          
+
+            {%- when 'subheading' -%}
+      <p
+        class="banner__subheading inline-richtext {{ block.settings.subheading_size }}"
+        {{ block.shopify_attributes }}
+      >
+        {{ block.settings.subheading }}
+      </p>
+
           {%- when 'text' -%}
             <div class="banner__text rte {{ block.settings.text_style }}" {{ block.shopify_attributes }}>
               <p>{{ block.settings.text }}</p>
@@ -373,6 +386,12 @@
           "default": "t:sections.image-banner.blocks.heading.settings.heading.default",
           "label": "t:sections.image-banner.blocks.heading.settings.heading.label"
         },
+         {
+      "type": "checkbox",
+      "id": "h1",
+      "label": "Use h1",
+      "default": false
+    },
         {
           "type": "select",
           "id": "heading_size",
@@ -403,6 +422,40 @@
         }
       ]
     },
+        {
+      "type": "subheading",
+      "name": "Subheading",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "inline_richtext",
+          "id": "subheading",
+          "default": "Your subheading text",
+          "label": "Subheading"
+        },
+        {
+          "type": "select",
+          "id": "subheading_size",
+          "options": [
+            {
+              "value": "subtitle",
+              "label": "Subtitle"
+            },
+            {
+              "value": "body",
+              "label": "Body"
+            },
+            {
+              "value": "caption-with-letter-spacing",
+              "label": "Caption"
+            }
+          ],
+          "default": "subtitle",
+          "label": "Subheading size"
+        }
+      ]
+    },
+
     {
       "type": "text",
       "name": "t:sections.image-banner.blocks.text.name",

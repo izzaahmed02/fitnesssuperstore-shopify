@@ -96,8 +96,15 @@
                 <span class="circle-divider">{{ article.published_at | time_tag: format: 'date' }}</span>
               {%- endif -%}
               {%- if show_author -%}
+                {% if article.metafields.custom.author_name %}
+  {% if article.metafields.custom.author_url %}<a style="z-index: 2;text-decoration: underline;" target="_blank" href="{{ article.metafields.custom.author_url }}"> {% endif %}
+    <span>{{ article.metafields.custom.author_name }}</span>
+ {% if article.metafields.custom.author_url %} </a> {% endif %}
+                {% else %}
+
                 <span>{{ article.author }}</span>
               {%- endif -%}
+            {% endif %}
             </div>
 
             <h3 class="card__heading{% if show_excerpt %} h2{% endif %}">
@@ -124,7 +131,7 @@
             {%- endif -%}
           </div>
 
-          <a href="{{ article.url }}" class="article-see-all-link">See more {% render 'icon-link-arrow' %}</a>
+          <a href="{{ article.url }}" aria-label="Learn more about Article" class="article-see-all-link">See more {% render 'icon-link-arrow' %}</a>
         </div>
 
         {%- if show_badge -%}
