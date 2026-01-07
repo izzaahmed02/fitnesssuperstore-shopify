@@ -17,7 +17,10 @@ class CartRemoveButton extends HTMLElement {
     }
     e.classList.add('active'), t.classList.add('active'), document.querySelector('html, body').classList.add('overflow-hidden'), (e.dataset.index = this.dataset.index);
     let n = () => {
-        this.removeItem(), s();
+        this.removeItem(),
+          setTimeout(() => {
+            s();
+          }, 350);
       },
       s = () => {
         e.classList.remove('active'), t.classList.remove('active'), document.querySelector('html, body').classList.remove('overflow-hidden'), r.removeEventListener('click', n);
