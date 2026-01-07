@@ -8,7 +8,7 @@ if (!customElements.get('product-customization-options')) {
         this.customizationOptions = this.querySelectorAll('[data-customization-option]');
         this.openPopupButtons = this.querySelectorAll('[data-popup-open]');
         this.closePopupButtons = document.querySelectorAll('[data-close-popup]');
-        this.priceElement = document.querySelector('[data-price-container]');
+        this.priceElement = document.querySelector('.pr_custom_price');
         this.colorGroups = this.querySelectorAll('.color_options_container');
         this.swatches = this.querySelectorAll('[data-color-name]');
         this.swatchesActiveContainers = this.querySelectorAll('[data-selected-color-option]');
@@ -351,7 +351,7 @@ if (!customElements.get('product-customization-options')) {
           }
         }
 
-        // this.priceHelper(priceAdjustment);
+        this.priceHelper(priceAdjustment);
       }
 
       // Helper to create corect price HTML
