@@ -351,6 +351,8 @@ if (!customElements.get('product-customization-options')) {
           }
         }
 
+        console.log(priceAdjustment);
+
         this.priceHelper(priceAdjustment);
       }
 
@@ -477,8 +479,7 @@ if (!customElements.get('product-customization-options')) {
           button.addEventListener('click', () => {
             this.classList.remove('modify-opened');
             this.dataset.stamp = 'none';
-              document.body.style.overflow = 'auto';
-
+            document.body.style.overflow = 'auto';
           });
         });
       }

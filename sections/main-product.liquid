@@ -145,7 +145,6 @@
     {{ 'component-volume-pricing.css' | asset_url | stylesheet_tag }}
   {%- endif -%}
 
-  {{ 'avis-custom.css' | asset_url | stylesheet_tag }}
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
@@ -866,7 +865,7 @@
                     <div class="product_prices">
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}">
+                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | divided_by: 100 }}" data-currency="{{cart.currency.symbol }}">
                             {{ product.selected_or_first_available_variant.price | money }}
                           </p>
                         </div>
@@ -1937,7 +1936,6 @@
 <script>
   window.product = {{ product | json }}
 </script>
-{% comment %} <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script> {% endcomment %}
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
 {% unless hide_product_options %}
   <script src="{{'product-custom-options.js' | asset_url }}" defer></script>
