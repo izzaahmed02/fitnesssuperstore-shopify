@@ -351,6 +351,8 @@ if (!customElements.get('product-customization-options')) {
           }
         }
 
+        console.log(priceAdjustment);
+
         this.priceHelper(priceAdjustment);
       }
 
