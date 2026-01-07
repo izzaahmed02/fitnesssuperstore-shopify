@@ -3708,22 +3708,6 @@ document.addEventListener("click",function(e){
   }
 },true);
 
-const popupEl=document.getElementById("product-gallery-popup");
-if(popupEl){
-  const obs=new MutationObserver(()=>{
-    if(
-      Date.now()<suppressPopupUntil &&
-      !popupEl.hasAttribute("hidden")
-    ){
-      popupEl.setAttribute("hidden","");
-    }
-  });
-  obs.observe(popupEl,{
-    attributes:true,
-    attributeFilter:["hidden"]
-  });
-}
-
 /* ===============================
   Desktop renderer (UNCHANGED)
 ================================ */
@@ -3757,14 +3741,11 @@ function renderMainFromManifest(media){
 }
 
 /* =====================================================
-  ✅ MOBILE FIX — ONLY FUNCTION THAT CHANGED
+  ✅ MOBILE FIX — SCROLL SNAP SAFE
 ===================================================== */
 
 function activateMobileById(id){
-  const slider=document.querySelector(".mobile-gallery-slider");
-  if(!slider) return;
-
-  const slide=slider.querySelector(
+  const slide=document.querySelector(
     '.mobile-gallery-slide[data-media-id="'+id+'"]'
   );
   if(!slide) return;
@@ -3772,28 +3753,26 @@ function activateMobileById(id){
   const wrap=slide.closest(".mobile-gallery-slide-wrap");
   if(!wrap) return;
 
-  /* SAFE mobile scroll math */
-  const sliderRect=slider.getBoundingClientRect();
-  const wrapRect=wrap.getBoundingClientRect();
-
-  const targetLeft=
-    slider.scrollLeft + (wrapRect.left - sliderRect.left);
-
-  slider.scrollTo({
-    left: targetLeft,
-    behavior: "instant"
+  /* Native snap-safe scrolling */
+  wrap.scrollIntoView({
+    behavior: "auto",
+    inline: "start",
+    block: "nearest"
   });
 
-  slider
-    .querySelectorAll(".mobile-gallery-slide-wrap")
-    .forEach(el =>
-      el.classList.remove("is-active","active","current")
-    );
+  const slider=document.querySelector(".mobile-gallery-slider");
+  if(slider){
+    slider
+      .querySelectorAll(".mobile-gallery-slide-wrap")
+      .forEach(el =>
+        el.classList.remove("is-active","active","current")
+      );
+  }
 
   wrap.classList.add("is-active");
 
   const dots=document.querySelector(".mobile-gallery-dots");
-  if(dots){
+  if(dots && slider){
     const wraps=[
       ...slider.querySelectorAll(".mobile-gallery-slide-wrap")
     ];
@@ -3810,7 +3789,7 @@ function activateMobileById(id){
 }
 
 /* ===============================
-  Variant → media logic (UNCHANGED)
+  Variant logic (UNCHANGED)
 ================================ */
 
 function resolveMediaIdFromVariant(variant){
