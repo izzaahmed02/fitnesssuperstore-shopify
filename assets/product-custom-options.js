@@ -8,7 +8,7 @@ if (!customElements.get('product-customization-options')) {
         this.customizationOptions = this.querySelectorAll('[data-customization-option]');
         this.openPopupButtons = this.querySelectorAll('[data-popup-open]');
         this.closePopupButtons = document.querySelectorAll('[data-close-popup]');
-        this.priceElement = document.querySelector('.pr_custom_price');
+        this.priceElement = document.querySelector('[data-price-container]');
         this.colorGroups = this.querySelectorAll('.color_options_container');
         this.swatches = this.querySelectorAll('[data-color-name]');
         this.swatchesActiveContainers = this.querySelectorAll('[data-selected-color-option]');
@@ -477,8 +477,7 @@ if (!customElements.get('product-customization-options')) {
           button.addEventListener('click', () => {
             this.classList.remove('modify-opened');
             this.dataset.stamp = 'none';
-              document.body.style.overflow = 'auto';
-
+            document.body.style.overflow = 'auto';
           });
         });
       }
