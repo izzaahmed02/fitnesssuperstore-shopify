@@ -29,21 +29,15 @@
 }
 {% endschema %}
 
-{%- assign extra = product.metafields.custom.extra_info.value -%}
+{%- assign extra = collection.metafields.custom.extra_info.value -%}
 
-{%- comment -%}
-  Check if we have at least one video:
-  - extra.instructional_video_url.value
-  - extra.assembly_video.value
-  - any link in extra.other_videos.value
-{%- endcomment -%}
 
 {% assign has_any_video = false %}
 
 {% if extra %}
 
-  {% if extra.product_videos != blank and extra.product_videos.value != blank %}
-  {% for video_file in extra.product_videos.value %}
+  {% if extra.collection_videos != blank and extra.collection_videos.value != blank %}
+  {% for video_file in extra.collection_videos.value %}
     {% if video_file != blank %}
       {% assign has_any_video = true %}
     {% endif %}
@@ -84,32 +78,10 @@
       class="extra-info-video-slider"
       data-videos-per-row="{{ section.settings.videos_per_row }}"
     >
-      {%- comment -%} Instructional video slide (video as thumbnail) {%- endcomment -%}
-      {% if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank %}
-        {% assign instructional_url = extra.instructional_video_url.value %}
-        <div class="video-slide">
-          <div class="video-slide-inner">
-            <div
-              class="video-thumbnail"
-              data-video-url="{{ instructional_url }}"
-            >
-              <video
-                class="video-thumb-video"
-                src="{{ instructional_url }}"
-                muted
-                playsinline
-                preload="metadata"
-              ></video>
-              <div class="play-button">&#9658;</div>
-            </div>
-            <p>Instructional Video</p>
-          </div>
-        </div>
-      {% endif %}
-
+      
      
-{% if extra.product_videos != blank and extra.product_videos.value != blank %}
-  {% for video_file in extra.product_videos.value %}
+{% if extra.collection_videos != blank and extra.collection_videos.value != blank %}
+  {% for video_file in extra.collection_videos.value %}
     {% if video_file != blank %}
       <div class="video-slide other-videos">
         <div class="video-slide-inner">
@@ -144,93 +116,7 @@
   {% endfor %}
 {% endif %}
 
-      {%- comment -%} Assembly video slide (video as thumbnail) {%- endcomment -%}
-      {% if extra.assembly_video != blank and extra.assembly_video.value != blank %}
-        {% assign assembly_url = extra.assembly_video.value %}
-        <div class="video-slide other-videos">
-          <div class="video-slide-inner">
-            <div
-              class="video-thumbnail"
-              data-video-url="{{ assembly_url }}"
-            >
-              <video
-                class="video-thumb-video"
-                src="{{ assembly_url }}"
-                muted
-                playsinline
-                preload="metadata"
-              ></video>
-              <div class="play-button">&#9658;</div>
-            </div>
-            <p>Assembly Video</p>
-          </div>
-        </div>
-      {% endif %}
-
-       {%comment%}Optional: other_videos list (video or embed URLs) {% endcomment %}
-      {% if extra.other_video != blank and extra.other_video.value != blank %}
-        {% for link in extra.other_video.value %}
-          {% if link.url != blank %}
-            {% assign other_url = link.url %}
-            <div class="video-slide other-videos">
-              <div class="video-slide-inner">
-                <div
-                  class="video-thumbnail"
-                  data-video-url="{{ other_url }}"
-                >
-                  {%- comment -%}
-                    If other_url is an mp4, the video tag will show first frame.
-                    If it's e.g. YouTube or Drive, the tag may not load; we still use it
-                    as a visual container and let the popup handle playing properly.
-                  {%- endcomment -%}
-                  <video
-                    class="video-thumb-video"
-                    src="{{ other_url }}"
-                    muted
-                    playsinline
-                    preload="metadata"
-                  ></video>
-                  <div class="play-button">&#9658;</div>
-                </div>
-                <p>Training Video</p>
-              </div>
-            </div>
-          {% endif %}
-        {% endfor %}
-      {% endif %}
-
-            {% if extra.other_videos != blank and extra.other_videos.value != blank %}
-        {% for link in extra.other_videos.value %}
-          {% if link.url != blank %}
-            {% assign other_url = link.url %}
-            <div class="video-slide other-videos">
-              <div class="video-slide-inner">
-                <div
-                  class="video-thumbnail"
-                  data-video-url="{{ other_url }}"
-                >
-                  {%- comment -%}
-                    If other_url is an mp4, the video tag will show first frame.
-                    If it's e.g. YouTube or Drive, the tag may not load; we still use it
-                    as a visual container and let the popup handle playing properly.
-                  {%- endcomment -%}
-                  <video
-                    class="video-thumb-video"
-                    src="{{ other_url }}"
-                    muted
-                    playsinline
-                    preload="metadata"
-                  ></video>
-                  <div class="play-button">&#9658;</div>
-                </div>
-                <p>{{ link.text }}</p>
-              </div>
-            </div>
-          {% endif %}
-        {% endfor %}
-      {% endif %} 
-    </div>
-
+      
     {%- comment -%} Popup modal (plays video) {%- endcomment -%}
     <div class="video-modal" id="extraInfoVideoModal">
       <div class="modal-content">
