@@ -31,26 +31,31 @@
 
 {% assign extra = collection.metafields.custom.extra_info %}
 
-<div style="border:2px solid orange; padding:12px;">
+<div style="border:2px solid blue; padding:12px;">
   <p>DEBUG: Collection Video Slider</p>
 
-  <p>Collection exists: ✅ YES</p>
-  <p>Metafield extra_info exists: {% if extra %}✅ YES{% else %}❌ NO{% endif %}</p>
+  {% if extra %}
+    <p>Metaobject exists: ✅ YES</p>
 
-  <p>Trying: extra.value.collection_videos</p>
-  {% if extra.value.collection_videos %}
-    <p>collection_videos exists: ✅ YES</p>
-    <p>Number of videos: {{ extra.value.collection_videos.size }}</p>
-    {% for v in extra.value.collection_videos %}
-      <p>Video {{ forloop.index }} URL: {{ v.sources[0].url }}</p>
-      {% if v.preview_image %}
-        <p>Thumbnail exists</p>
-      {% else %}
-        <p>No thumbnail</p>
-      {% endif %}
-    {% endfor %}
+    {% assign videos = extra.metafields.custom.collection_videos.value %}
+    {% if videos %}
+      <p>collection_videos exists: ✅ YES</p>
+      <p>Number of videos: {{ videos.size }}</p>
+
+      {% for v in videos %}
+        <p>Video {{ forloop.index }} URL: {{ v.sources[0].url }}</p>
+        {% if v.preview_image %}
+          <p>Thumbnail exists</p>
+        {% else %}
+          <p>No thumbnail</p>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <p>collection_videos exists: ❌ NO</p>
+    {% endif %}
+
   {% else %}
-    <p>collection_videos exists: ❌ NO</p>
+    <p>Metaobject exists: ❌ NO</p>
   {% endif %}
 </div>
 
