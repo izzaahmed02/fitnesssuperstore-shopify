@@ -1,0 +1,285 @@
+{{ 'homepage-reviews.css' | asset_url | stylesheet_tag }}
+
+<div class="page-width">
+    <div class="homepage-reviews__wrapper">
+        <div class="homepage-reviews__top">
+            <div class="homepage-reviews__top-left">
+                <h2 class="homepage-reviews__title">
+                    {{ section.settings.title }}
+                </h2>
+                <div class="homepage-reviews__rating-summary">
+                    <div class="homepage-reviews__stars">
+                        {% for i in (1..5) %}
+                            {% render 'review-star' %}
+                        {% endfor %}
+                    </div>
+                    <span class="homepage-reviews__rating-text">{{ section.settings.rating_text }}</span>
+                </div>
+                <div class="homepage-reviews__copy">{{ section.settings.copy }}</div>
+            </div>
+            <a aria-label="Reviews Page" href="{{ section.settings.url }}"
+               class="homepage-reviews__btn button button--secondary">
+                {{ section.settings.label }}
+                {% render 'chevron-button' %}
+            </a>
+        </div>
+
+        <div class="homepage-reviews__tabs">
+            <div class="swiper homepage-reviews__swiper">
+                <div class="swiper-wrapper">
+                    {% for block in section.blocks %}
+                        <div class="swiper-slide homepage-reviews__item">
+                            <div class="homepage-reviews__item-content">
+                                {% if block.settings.review_image != blank %}
+                                    <div class="homepage-reviews__item-image">
+                                        {{ block.settings.review_image | image_url: width: 234 | image_tag: loading: 'lazy' }}
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="homepage-reviews__item-text">
+                                    {% assign star_count = block.settings.stars %}
+                                    {% if star_count > 5 %}
+                                        {% assign star_count = 5 %}
+                                    {% endif %}
+                                    <div class="homepage-reviews__item-rating">
+                                        {% for i in (1..star_count) %}
+                                            {% render 'review-star' %}
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    {% if block.settings.title != blank %}
+                                        <h6 class="homepage-reviews__item-title">{{ block.settings.title }}</h6>
+                                    {% endif %}
+                                    
+                                    {% if block.settings.copy != blank %}
+                                        <p class="homepage-reviews__item-copy">
+                                            {{ block.settings.copy }}
+                                        </p>
+                                        <a href="#" aria-label="Read Full Review" class="homepage-reviews__item-copy-btn">Read More</a>
+                                    {% endif %}
+                                    
+                                    <div class="homepage-reviews__item-author-wrapper">
+                                        <span class="homepage-reviews__item-author">~{{ block.settings.author }}</span>
+                                        <span class="homepage-reviews__item-separator">|</span>
+                                        <div class="homepage-reviews__item-label">
+                                            {% render 'verified-icon' %}
+                                            <span class="homepage-reviews__item-label-text">Verified buyer</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if block.settings.product != blank %}
+                                {% assign product = block.settings.product %}
+                                <div class="homepage-reviews__item-product">
+                                    {% if product.featured_image %}
+                                        <div class="homepage-reviews__item-product-image">
+                                            {{ product.featured_image | image_url: width: 80 | image_tag: loading: 'lazy', alt: product.title }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="homepage-reviews__item-product-info">
+                                        <h6 class="homepage-reviews__item-product-title">{{ product.title }}</h6>
+                                    </div>
+                                    <a href="{{ product.url }}" class="homepage-reviews__item-product-link" aria-label="View {{ product.title }}">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="#F1592A"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="swiper-pagination"></div>
+            </div>
+            <div class="homepage-reviews__swiper-controls">
+                <div class="swiper-button-prev">
+                    {% render 'chevron-button-prev' %}
+                </div>
+                <div class="swiper-button-next">
+                    {% render 'chevron-button-next' %}
+                </div>
+            </div>
+        </div>
+        
+        <a href="{{ section.settings.url }}"
+           class="homepage-reviews__btn homepage-reviews__btn--mobile button button--secondary">
+            {{ section.settings.label }}
+            {% render 'chevron-button' %}
+        </a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const swiper = new Swiper('.homepage-reviews__swiper', {
+        slidesPerView: 1.2,
+        spaceBetween: 16,
+        loop: false,
+        navigation: {
+            nextEl: '.homepage-reviews__swiper-controls .swiper-button-next',
+            prevEl: '.homepage-reviews__swiper-controls .swiper-button-prev',
+        },
+        pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+        },
+        breakpoints: {
+            576: {
+                slidesPerView: 1.5,
+                spaceBetween: 10,
+            },
+            768: {
+                slidesPerView: 2,
+                spaceBetween: 10,
+            },
+            1024: {
+                slidesPerView: 2,
+                spaceBetween: 10,
+            },
+            1280: {
+                slidesPerView: 2.2,
+                spaceBetween: 10,
+            }
+        }
+    });
+
+    // Read More functionality
+    document.querySelectorAll('.homepage-reviews__item-copy-btn').forEach(btn => {
+        const copyText = btn.previousElementSibling;
+        
+        if (copyText && copyText.scrollHeight > copyText.clientHeight) {
+            copyText.classList.add('hide');
+            btn.classList.add('active');
+            
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (copyText.classList.contains('hide')) {
+                    copyText.classList.remove('hide');
+                    btn.textContent = 'Read Less';
+                } else {
+                    copyText.classList.add('hide');
+                    btn.textContent = 'Read More';
+                }
+            });
+        }
+    });
+});
+</script>
+
+{% schema %}
+{
+  "name": "Homepage Homepage Reviews",
+  "tag": "section",
+  "class": "section homepage-homepage-reviews",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section Title",
+      "default": "WHAT OUR CLIENTS SAY"
+    },
+    {
+      "type": "text",
+      "id": "rating_text",
+      "label": "Rating Text",
+      "default": "Rated 4.9/5 by 2,000+ verified customers."
+    },
+    {
+      "type": "richtext",
+      "id": "copy",
+      "label": "Section Copy",
+      "default": "<p>With thousands of 5-star reviews, our customers consistently recognize the exceptional quality of our products and service!</p>"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Section Button Label",
+      "default": "See More"
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "Section Button URL"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "review",
+      "name": "Review",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "review_image",
+          "label": "Review Image"
+        },
+        {
+          "type": "select",
+          "id": "stars",
+          "label": "Stars Quantity",
+          "options": [
+            {
+              "value": "1",
+              "label": "1"
+            },
+            {
+              "value": "2",
+              "label": "2"
+            },
+            {
+              "value": "3",
+              "label": "3"
+            },
+            {
+              "value": "4",
+              "label": "4"
+            },
+            {
+              "value": "5",
+              "label": "5"
+            }
+          ],
+          "default": "5"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Review Title",
+          "default": "Excellent product and service!"
+        },
+        {
+          "type": "text",
+          "id": "copy",
+          "label": "Review Copy",
+          "default": "We bought an elliptical from Fitness Superstore and had it shipped to us in..."
+        },
+        {
+          "type": "text",
+          "id": "author",
+          "label": "Review Author",
+          "default": "Ryan Tolley"
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Featured Product"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Homepage Homepage Reviews"
+    }
+  ]
+}
+{% endschema %}
