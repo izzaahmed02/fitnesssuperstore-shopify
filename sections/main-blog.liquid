@@ -27,7 +27,7 @@
   }
 {%- endstyle -%}
 
-{%- paginate blog.articles by 9 -%}
+{%- paginate blog.articles by 15 -%}
 <div class="main-blog page-width section-{{ section.id }}-padding">
   <h1 class="title--primary{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
     {{ blog.title | escape }}
@@ -131,7 +131,9 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <div class="blog-articles {% if section.settings.layout == 'collage' %}blog-articles--collage{% endif %}">
+  {% assign featured_tag = 'featured:top' %}
   {%- for article in blog.articles -%}
+    {% if article.tags contains featured_tag %}
     <div
       class="blog-articles__article article{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
       data-article-handle="{{ article.handle }}"
@@ -155,6 +157,34 @@ document.addEventListener('DOMContentLoaded', function () {
         {{ article.content | strip_html | escape }}
       </div>
     </div>
+  {% endif %}
+  {%- endfor -%}
+  {%- for article in blog.articles -%}
+    {% unless article.tags contains featured_tag %}
+    <div
+      class="blog-articles__article article{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+      data-article-handle="{{ article.handle }}"
+      {% if settings.animations_reveal_on_scroll %}
+        data-cascade
+        style="--animation-order: {{ forloop.index }};"
+      {% endif %}
+    >
+      {%- render 'article-card',
+        article: article,
+        media_height: section.settings.image_height,
+        media_aspect_ratio: article.image.aspect_ratio,
+        show_image: section.settings.show_image,
+        show_date: section.settings.show_date,
+        show_author: section.settings.show_author,
+        show_excerpt: true
+      -%}
+
+      <!-- Hidden full content for live search -->
+      <div class="article-card__full-content">
+        {{ article.content | strip_html | escape }}
+      </div>
+    </div>
+  {% endunless %}
   {%- endfor -%}
 </div>
 
@@ -169,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function () {
 {
   "name": "t:sections.main-blog.name",
   "tag": "section",
-  "class": "section",
+  "class": "section testing",
   "settings": [
     {
       "type": "richtext",

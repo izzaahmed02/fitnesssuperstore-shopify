@@ -1,0 +1,99 @@
+{{ 'homepage-homepage-offers.css' | asset_url | stylesheet_tag }}
+
+<div class="we-offer">
+  <div class="tab-header">
+    {% if section.settings.heading != blank %}
+      <h2>{{ section.settings.heading }}</h2>
+    {% endif %}
+  </div>
+
+  <div class="category-tab-content">
+    {% for block in section.blocks %}
+      {%- assign desktop_image = block.settings.image -%}
+      {%- assign mobile_image = block.settings.mobile_image -%}
+
+      {%- assign page_handle = block.settings.link | split: '/' | last -%}
+      {%- assign linked_page = pages[page_handle] -%}
+
+      {% assign page_title = linked_page.title | default: page_handle %}
+
+      <div class="category-card">
+        <a href="{{ block.settings.link }}" aria-label="Navigate to {{ page_title }} page">
+          <div class="card-image-wrapper">
+            <picture>
+              {% if mobile_image != blank %}
+                <source
+                  media="(max-width: 768px)"
+                  srcset="{{ mobile_image | image_url: width: 600 }}"
+                >
+              {% endif %}
+              <img
+                src="{{ desktop_image | image_url: width: 800 }}"
+                alt="{{ desktop_image.alt }}"
+                loading="lazy"
+                width="{{ desktop_image.width }}"
+                height="{{ desktop_image.height }}"
+                decoding="async"
+              >
+            </picture>
+            <div class="image-title">
+              <h3>{{ block.settings.title }}</h3>
+              
+            </div>
+          </div>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+
+{% schema %}
+{
+  "name": "Homepage Homepage Offers",
+  "class": "homepage-homepage-offers",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Section Heading",
+      "default": "We Offer"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "card",
+      "name": "Category Card",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Card Image"
+        },
+        {
+          "type": "image_picker",
+          "id": "mobile_image",
+          "label": "Mobile Image (optional)"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Category Title"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link URL"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Homepage Homepage Offers",
+      "category": "Custom"
+    }
+  ]
+}
+{% endschema %}

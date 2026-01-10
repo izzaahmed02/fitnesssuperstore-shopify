@@ -1,163 +1,176 @@
-
-
 <meta charset="utf-8">
 <title>Site Map</title>
 <meta name="robots" content="index,follow" />
+
 <style>
+.sitemapMain{padding:16px 12px}
+.sitemapMain li{list-style:inherit!important}
+.sitemapMain .root>li{list-style:disc!important}
+.sitemapMain>li.mainHdg:first-child{list-style:none!important}
+.sitemapMain .root>li>ul>li>ul{list-style:square!important}
+.sitemapMain .root>li>ul{list-style:circle!important}
+.sitemapMain .card h2{font-size:16px;font-family:Lato;line-height:normal}
+.sitemapMain a{text-decoration:underline}
 
-    .sitemapMain{
-padding: 16px 12px;
+:root{
+  --fg:#1a1a1a;
+  --muted:#667085;
+  --border:#e5e7eb;
+  --bg:#ffffff;
+  --card:#ffffff;
+  --highlight:#fff3a3;
 }
+*{box-sizing:border-box}
 
-.sitemapMain li{
-  list-style: inherit !important;
+.sitemapMain .muted{color:var(--muted);font-size:.9rem}
+.sitemapMain .sitemap-toolbar{
+  position:sticky;
+  top:var(--header-height,0);
+  z-index:1;
+  background:var(--bg);
+  padding:10px 0 14px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:10px;
 }
-
-  .sitemapMain .root > li {
-        list-style: disc !important;
-    }
-
-    .sitemapMain > li.mainHdg:first-child {
-        list-style: none !important;
-    }
-
-    .sitemapMain .root > li > ul > li > ul {
-        list-style: square !important;
-       
-    }
-
-     .sitemapMain .root > li > ul {
-        list-style: circle !important;  
-    }
-
-  
-   .sitemapMain .card h2{
-  font-size: 16px;
-  font-family: 'Lato';
-      line-height: normal;
-  }
-
-  .sitemapMain a{
-  text-decoration: underline;
-  }
-
-
-  :root{ --fg:#1a1a1a; --muted:#667085; --border:#e5e7eb; --bg:#ffffff; --card:#ffffff; --highlight:#fff3a3; }
-  *{box-sizing:border-box}
- 
-  .sitemapMain .muted{color:var(--muted);font-size:.9rem;}
-  .sitemapMain .sitemap-toolbar{position:sticky;top: var(--header-height, 0px);z-index:1;background:var(--bg);padding:10px 0 14px;border-bottom:1px solid var(--border);margin-bottom:10px;}
-  .sitemapMain .search-wrap{display:flex;gap:10px;align-items:center;}
-  .sitemapMain .search-wrap input{flex:1;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:16px;background:#fff;outline:none;}
-  .sitemapMain .search-wrap input:focus{box-shadow:0 0 0 3px rgba(255,106,0,.15);border-color:#f4a261;}
-  .search-meta{font-size:.9rem;color:var(--muted);margin-top:6px;}
-  .sitemapMain .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;margin-top:12px;}
-  @media (max-width:1080px){ .grid{grid-template-columns:1fr;} }
-  .sitemapMain .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(16,24,40,.04);}
-  .sitemapMain ul{margin:0 0 .6rem 2.05rem;padding:0;list-style:inherit;}
-  .sitemapMain li{margin:.25rem 0;}
-  .sitemapMain .root > li > a, .sitemapMain .root > li{font-weight:700;}
-  .sitemapMain mark{background:var(--highlight);padding:0 .1em;border-radius:3px;}
-  .sitemapMain .is-hidden{display:none!important;}
+.sitemapMain .search-wrap{display:flex;gap:10px;align-items:center}
+.sitemapMain .search-wrap input{
+  flex:1;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:16px;
+}
+.sitemapMain .grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:22px;
+  margin-top:12px;
+}
+@media(max-width:1080px){.grid{grid-template-columns:1fr}}
+.sitemapMain .card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+}
+.sitemapMain ul{margin:0 0 .6rem 2.05rem;padding:0;list-style:inherit;}
+.sitemapMain li{margin:.25rem 0}
+.sitemapMain .root>li>a,
+.sitemapMain .root>li{font-weight:700}
+.sitemapMain mark{background:var(--highlight);padding:0 .1em;border-radius:3px}
+.sitemapMain .is-hidden{display:none!important}
 </style>
 
-
 <div class="sitemapMain">
+
   <div class="sitemap-toolbar">
     <div class="search-wrap">
-      <input id="sitemap-search" type="search" placeholder="Search the sitemap (titles only)..." aria-label="Search the sitemap" autocomplete="off">
+      <input id="sitemap-search" type="search" placeholder="Search the sitemap..." autocomplete="off">
     </div>
-    <div class="search-meta" id="search-meta" aria-live="polite"></div>
+    <div class="search-meta" id="search-meta"></div>
   </div>
 
   <div class="grid">
-    <section class="card">
-  
-<!-- Metaobject Site Menu -->
-{% comment %} Get the root metaobject by handle {% endcomment %}
-{% assign root_menu = shop.metaobjects.sitemap_menu_1['main-sitemap-root'] %}
 
-{% if root_menu and root_menu.children1.value %}
-  <nav class="sitemap-menu">
-    <ul class="root" id="sitemap-left">
-      {% for child in root_menu.children1.value %}
-        <li>
-          <a href="{{ child.link | split: '"url":"' | last | split: '"' | first }}">{{ child.title.value }}</a>
-          
-          {% assign level2_children = child.children1.value %}
-          
-          {% if level2_children %}
-            <ul class="level-2">
-              {% for child2 in level2_children %}
-                <li>
-                  <a href="{{ child2.link | split: '"url":"' | last | split: '"' | first }}">{{ child2.title.value }}</a>
-                  
-                  {% assign level3_children = child2.children1.value %}
-                  
-                  {% if level3_children %}
-                    <ul class="level-3">
-                      {% for child3 in level3_children %}
-                        <li>
-                          <a href="{{ child3.link | split: '"url":"' | last | split: '"' | first }}">{{ child3.title.value }}</a>
-                          
-                          {% assign level4_children = child3.children1.value %}
-                          
-                          {% if level4_children %}
-                            <ul class="level-4">
-                              {% for child4 in level4_children %}
-                                <li>
-                                  <a href="{{ child4.link | split: '"url":"' | last | split: '"' | first }}">{{ child4.title.value }}</a>
-                                  
-                                  {% assign level5_children = child4.children1.value %}
-                                  
-                                  {% if level5_children %}
-                                    <ul class="level-5">
-                                      {% for child5 in level5_children %}
-                                        <li>
-                                          <a href="{{ child5.link | split: '"url":"' | last | split: '"' | first }}">{{ child5.title.value }}</a>
-                                        </li>
-                                      {% endfor %}
-                                    </ul>
-                                  {% endif %}
-                                </li>
-                              {% endfor %}
-                            </ul>
-                          {% endif %}
-                        </li>
+    <!-- LEFT: METAOBJECT SITEMAP -->
+    <section class="card">
+      {% assign root_menu = shop.metaobjects.sitemap_menu_1['main-sitemap-root'] %}
+      {% if root_menu and root_menu.children1.value %}
+      <nav>
+        <ul class="root" id="sitemap-left">
+
+          {% for item1 in root_menu.children1.value %}
+          <li>
+            {% if item1.link.value %}
+              <a href="{{ item1.link.value.url }}">{{ item1.title.value }}</a>
+            {% endif %}
+
+            {% if item1.children1.value %}
+            <ul>
+              {% for item2 in item1.children1.value %}
+              <li>
+                {% if item2.link.value %}
+                  <a href="{{ item2.link.value.url }}">{{ item2.title.value }}</a>
+                {% endif %}
+
+                {% if item2.children1.value %}
+                <ul>
+                  {% for item3 in item2.children1.value %}
+                  <li>
+                    {% if item3.link.value %}
+                      <a href="{{ item3.link.value.url }}">{{ item3.title.value }}</a>
+                    {% endif %}
+
+                    {% if item3.children1.value %}
+                    <ul>
+                      {% for item4 in item3.children1.value %}
+                      <li>
+                        {% if item4.link.value %}
+                          <a href="{{ item4.link.value.url }}">{{ item4.title.value }}</a>
+                        {% endif %}
+
+                        {% if item4.children1.value %}
+                        <ul>
+                          {% for item5 in item4.children1.value %}
+                          <li>
+                            {% if item5.link.value %}
+                              <a href="{{ item5.link.value.url }}">{{ item5.title.value }}</a>
+                            {% endif %}
+                          </li>
+                          {% endfor %}
+                        </ul>
+                        {% endif %}
+
+                      </li>
                       {% endfor %}
                     </ul>
-                  {% endif %}
-                </li>
+                    {% endif %}
+
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+
+              </li>
               {% endfor %}
             </ul>
+            {% endif %}
+
+          </li>
+          {% endfor %}
+
+        </ul>
+      </nav>
+      {% endif %}
+    </section>
+
+    <!-- RIGHT: MENU SITEMAP -->
+    <section class="card">
+      <ul class="root" id="sitemap-right">
+        {% for link in linklists.sitemap-menu-2.links %}
+        <li>
+          <a href="{{ link.url }}">{{ link.title }}</a>
+          {% if link.links.size > 0 %}
+          <ul>
+            {% for child in link.links %}
+            <li>
+              <a href="{{ child.url }}">{{ child.title }}</a>
+              {% if child.links.size > 0 %}
+              <ul>
+                {% for grandchild in child.links %}
+                <li><a href="{{ grandchild.url }}">{{ grandchild.title }}</a></li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
           {% endif %}
         </li>
-      {% endfor %}
-    </ul>
-  </nav>
-{% endif %}
-
-    </section>
-    <section class="card">
-
-<ul class="root" id="sitemap-right">
-{% for link in linklists.sitemap-menu-2.links %}
-  <li>
-    <a href="{{ link.url }}">{{ link.title }}</a>
-
-    {% if link.links.size > 0 %}
-      <ul>
-        {% for child_link in link.links %}
-          <li><a href="{{ child_link.url }}">{{ child_link.title }}</a></li>
         {% endfor %}
       </ul>
-    {% endif %}
-  </li>
-{% endfor %}
-
-</ul>
-
     </section>
+
   </div>
 </div>
 
@@ -165,78 +178,39 @@ padding: 16px 12px;
 (function(){
   const input=document.getElementById('sitemap-search');
   const meta=document.getElementById('search-meta');
-  const lists=[document.getElementById('sitemap-left'), document.getElementById('sitemap-right')];
+  const lists=[document.getElementById('sitemap-left'),document.getElementById('sitemap-right')];
 
   function label(li){
-    const a=li.querySelector(':scope > a');
-    return (a?a.textContent:(li.firstChild && li.firstChild.nodeType===3 ? li.firstChild.nodeValue : '')).trim();
-  }
-  function clearMarks(el){
-    el.querySelectorAll('mark').forEach(m=>{const t=document.createTextNode(m.textContent);m.parentNode.replaceChild(t,m);});
-  }
-  function highlight(li,q){
-    const a=li.querySelector(':scope > a'), target=a||li;
-    target.childNodes.forEach(n=>{
-      if(n.nodeType!==3) return;
-      const t=n.nodeValue, i=t.toLowerCase().indexOf(q.toLowerCase()); if(i===-1) return;
-      const span=document.createElement('span');
-      span.appendChild(document.createTextNode(t.slice(0,i)));
-      const mark=document.createElement('mark'); mark.textContent=t.slice(i,i+q.length);
-      span.appendChild(mark); span.appendChild(document.createTextNode(t.slice(i+q.length)));
-      n.parentNode.replaceChild(span,n);
-    });
+    const a=li.querySelector(':scope>a');
+    return(a?a.textContent:'').trim();
   }
   function filterNode(li,q){
-    const title=label(li), selfMatch=q?title.toLowerCase().includes(q.toLowerCase()):true;
-    const ul=li.querySelector(':scope > ul'); let anyChild=false;
-    if(ul){ [...ul.children].forEach(ch=>{ const s=filterNode(ch,q); ch.classList.toggle('is-hidden',!s); anyChild=anyChild||s; }); }
-    const show=q?(selfMatch||anyChild):true;
+    const title=label(li).toLowerCase();
+    const match=!q||title.includes(q);
+    let childMatch=false;
+    const ul=li.querySelector(':scope>ul');
+    if(ul){
+      [...ul.children].forEach(c=>{
+        const s=filterNode(c,q);
+        c.classList.toggle('is-hidden',!s);
+        childMatch=childMatch||s;
+      });
+    }
+    const show=match||childMatch;
     li.classList.toggle('is-hidden',!show);
-    clearMarks(li); if(q&&selfMatch) highlight(li,q);
     return show;
   }
-  function filterList(ul,q){
-    let total=0; if(!ul) return 0;
-    [...ul.children].forEach(li=>{ const s=filterNode(li,q); if(s) total++; });
-    return total;
-  }
   function run(){
-    const q=(input&&input.value||'').trim(); let total=0;
-    lists.forEach(ul=> total+=filterList(ul,q));
-    meta.textContent = q ? ("Showing " + total + " matching items") : "";
-     
-  }
-  if(input) input.addEventListener('input', run, {passive:true});
-})();
-
-
-(function(){
-  const toolbar = document.querySelector('.sitemap-toolbar');
-  const header = document.querySelector('.header-wrapper');
-
-  function updateToolbarOffset() {
-    if (header && toolbar) {
-      const headerHeight = header.offsetHeight;
-      toolbar.style.setProperty('--header-height', headerHeight + 'px');
-    }
-  }
-
-  // Run on load + resize
-  window.addEventListener('load', updateToolbarOffset);
-  window.addEventListener('resize', updateToolbarOffset);
-})();
-
- document.addEventListener("DOMContentLoaded", function () {
-    const searchInput = document.getElementById("sitemap-search");
-
-    searchInput.addEventListener("input", function () {
-      // Smooth scroll to very top
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
+    const q=input.value.trim().toLowerCase();
+    let total=0;
+    lists.forEach(ul=>{
+      if(!ul) return;
+      [...ul.children].forEach(li=>{
+        if(filterNode(li,q)) total++;
       });
     });
-  });
+    meta.textContent=q?`Showing ${total} results`:'';
+  }
+  input.addEventListener('input',run);
+})();
 </script>
-
-
