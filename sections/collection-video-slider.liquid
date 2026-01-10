@@ -31,31 +31,18 @@
 
 {% assign extra = collection.metafields.custom.extra_info %}
 
-<div style="border:2px solid blue; padding:12px;">
-  <p>DEBUG: Collection Video Slider</p>
+<div style="border:2px solid red; padding:12px;">
+  <p>DEBUG: Listing all fields in metaobject</p>
 
   {% if extra %}
-    <p>Metaobject exists: ✅ YES</p>
+    <p>Metaobject exists ✅</p>
 
-    {% assign videos = extra.metafields.custom.collection_videos.value %}
-    {% if videos %}
-      <p>collection_videos exists: ✅ YES</p>
-      <p>Number of videos: {{ videos.size }}</p>
-
-      {% for v in videos %}
-        <p>Video {{ forloop.index }} URL: {{ v.sources[0].url }}</p>
-        {% if v.preview_image %}
-          <p>Thumbnail exists</p>
-        {% else %}
-          <p>No thumbnail</p>
-        {% endif %}
-      {% endfor %}
-    {% else %}
-      <p>collection_videos exists: ❌ NO</p>
-    {% endif %}
+    {% for f in extra.metafields %}
+      <p>Field namespace: {{ f[0] }}, Field key/value: {{ f[1] }}</p>
+    {% endfor %}
 
   {% else %}
-    <p>Metaobject exists: ❌ NO</p>
+    <p>Metaobject missing ❌</p>
   {% endif %}
 </div>
 
