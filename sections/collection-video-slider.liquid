@@ -29,6 +29,37 @@
 }
 {% endschema %}
 
+{% assign extra = collection.metafields.custom.extra_info %}
+
+<div style="border:2px solid purple; padding:12px;">
+  <p>DEBUG: Collection Video Slider</p>
+
+  <p>Collection exists: ✅ YES</p>
+
+  {% if extra %}
+    <p>Metafield extra_info exists: ✅ YES</p>
+  {% else %}
+    <p>Metafield extra_info exists: ❌ NO</p>
+  {% endif %}
+
+  {% if extra.collection_videos %}
+    <p>collection_videos exists: ✅ YES</p>
+    <p>Number of videos: {{ extra.collection_videos.size }}</p>
+
+    {% for v in extra.collection_videos %}
+      <p>Video {{ forloop.index }} URL: {{ v.sources[0].url }}</p>
+      {% if v.preview_image %}
+        <p>Thumbnail exists</p>
+      {% else %}
+        <p>No thumbnail</p>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <p>collection_videos exists: ❌ NO</p>
+  {% endif %}
+</div>
+
+
 {%- assign extra = collection.metafields.custom.extra_info -%}
 
 {% assign has_any_video = false %}
