@@ -1,33 +1,3 @@
-<div style="border:2px solid red; padding:12px; margin:12px 0;">
-  <strong>DEBUG: Collection Video Slider</strong><br><br>
-
-  Collection exists:
-  {% if collection %} ✅ YES {% else %} ❌ NO {% endif %}<br><br>
-
-  Metafields available:
-  {% if collection.metafields.custom %} ✅ custom namespace exists {% else %} ❌ custom namespace missing {% endif %}<br><br>
-
-  extra_info metafield:
-  {% if collection.metafields.custom.extra_info %}
-    ✅ FOUND
-  {% else %}
-    ❌ NOT FOUND
-  {% endif %}
-</div>
-{%- assign extra = collection.metafields.custom.extra_info -%}
-
-<div style="border:2px dashed blue; padding:12px; margin:12px 0;">
-  <strong>DEBUG: extra object</strong><br><br>
-
-  extra == blank?
-  {% if extra == blank %} ❌ YES {% else %} ✅ NO {% endif %}<br><br>
-
-  RAW extra JSON:<br>
-  <pre style="white-space:pre-wrap; font-size:12px;">
-{{ extra | json }}
-  </pre>
-</div>
-
 
 {% schema %}
 {
@@ -74,31 +44,6 @@
     {% endif %}
   {% endfor %}
 {% endif %}
-
-  {% if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank %}
-    {% assign has_any_video = true %}
-  {% endif %}
-
-  {% if extra.assembly_video != blank and extra.assembly_video.value != blank %}
-    {% assign has_any_video = true %}
-  {% endif %}
-
-  {% if extra.other_video != blank and extra.other_video.value != blank %}
-    {% for link in extra.other_video.value %}
-      {% if link.url != blank %}
-        {% assign has_any_video = true %}
-      {% endif %}
-    {% endfor %}
-  {% endif %}
-
-  {% if extra.other_videos != blank and extra.other_videos.value != blank %}
-    {% for link in extra.other_videos.value %}
-      {% if link.url != blank %}
-        {% assign has_any_video = true %}
-      {% endif %}
-    {% endfor %}
-  {% endif %}
-
 {% endif %}
 
 {% if has_any_video %}
