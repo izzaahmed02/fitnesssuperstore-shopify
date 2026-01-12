@@ -1,165 +1,81 @@
 {%- style -%}
+/* Main section padding */
+.section-{{ section.id }}-padding {
+  padding-top: {{ section.settings.padding_top | times: 0.5 | round: 0 }}px;
+  padding-bottom: {{ section.settings.padding_bottom | times: 0.5 | round: 0 }}px;
+}
+
+/* Table wrapper */
+.comparing-table__table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Flex layout for header and rows */
+.comparing-table__table-header,
+.comparing-table__table-item {
+  display: flex;
+  min-width: 100%;
+}
+
+.comparing-table__table-header > div,
+.comparing-table__table-item > div {
+  flex: 1 0 auto;
+  padding: 12px;
+  border-right: 1px solid #e5e5e5;
+}
+
+/* Sticky first column on mobile */
+.comparing-table__table-header > div:first-child,
+.comparing-table__table-item > div:first-child {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 2;
+  box-shadow: 3px 0 6px rgba(0,0,0,0.05);
+}
+
+/* Titles */
+.section-{{ section.id }}-padding .title {
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-family: "Lato";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 36px;
+  color: #23232B;
+}
+
+/* Caption blocks */
+.section-{{ section.id }}-padding .caption-block {
+  display: none;
+  position: absolute;
+  top: 50px;
+  left: 0;
+  padding: 8px;
+  background: #fff;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: #393940;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.section-{{ section.id }}-padding .header-title:hover .caption-block {
+  display: block;
+}
+
+/* Desktop overrides */
+@media screen and (min-width: 750px) {
   .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.padding_top | times: 0.5 | round: 0 }}px;
-    padding-bottom: {{ section.settings.padding_bottom | times: 0.5 | round: 0 }}px;
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
   }
-
-  .section-{{ section.id }}-padding .comparing-table__table-item > div:first-child,
-  .section-{{ section.id }}-padding .comparing-table__table-header > div:first-child {
-    width: calc((100% / {{ section.settings.columns }}) * 1.25);
-  }
-
-  .section-{{ section.id }}-padding .comparing-table__table-item > div:not(:first-child),
-  .section-{{ section.id }}-padding .comparing-table__table-header > div:not(:first-child) {
-    width: calc((100% - ((100% / {{ section.settings.columns }}) * 1.25)) / ({{ section.settings.columns | minus: 1 }}));
-  }
-
-  .section-{{ section.id }}-padding .title{
-    margin-top: 0;
-    margin-bottom: 24px;
-    font-family: "Lato";
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 36px;
-    color: #23232B;
-    text-transform: none;
-  }
-
-  .section-{{ section.id }}-padding .header-title{
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-
-  .section-{{ section.id }}-padding .comparing-table__table-item > div:last-child{
-    border-right: 0;
-  }
-  .section-{{ section.id }}-padding .header-title svg{
-    margin-left: 4px;
-  }
-  .section-{{ section.id }}-padding .caption-block{
-    position: absolute;
-    top: 60px;
-    left: 0px;
-    display: none;
-    padding: 16px;
-    background: #ffffff;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 400;
-    line-height: 18px;
-    color: #393940;
-    filter: drop-shadow(5px 5px 20px #c4c4c4);
-    width: 210px;
-    max-width: 210px;
-  }
-
-  .section-{{ section.id }}-padding .header-title:hover .caption-block{
-    display: block;
-  }
-
-  @media screen and (min-width: 750px) {
-    .section-{{ section.id }}-padding {
-      padding-top: {{ section.settings.padding_top }}px;
-      padding-bottom: {{ section.settings.padding_bottom }}px;
-    }
-  }
-
-  @media screen and (max-width: 750px) {
-    .comparing-table__table-wrapper {
-        width: auto;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
-    }
-
-    .section-{{ section.id }}-padding .comparing-table__table-item > div:first-child,
-    .section-{{ section.id }}-padding .comparing-table__table-header > div:first-child {
-      width: calc((100% / {{ section.settings.columns }}) * 1.17);
-      min-width: 100px;
-      position: sticky;
-      left: 0;
-      z-index: 3;
-      background: #fff;
-      box-shadow: 4px 0 12px rgba(0,0,0,.08);
-    }
-
-    .section-{{ section.id }}-padding .comparing-table__table-item > div:not(:first-child),
-    .section-{{ section.id }}-padding .comparing-table__table-header > div:not(:first-child) {
-      width: calc((100% - ((100% / {{ section.settings.columns }}) * 1.17)) / ({{ section.settings.columns | minus: 1 }}));
-      min-width: 196px;
-    }
-
-    .comparing-table__container .title {
-      font-size: 18px;
-      line-height: 24px;
-      text-align: start;
-      margin-bottom: 16px;
-    }
-
-    .section-{{ section.id }}-padding .caption-block{
-      top: 50px;
-      left: -48%;
-      padding: 8px;
-      width: 140px;
-      max-width: 140px;
-    }
-
-    .section-{{ section.id }}-padding .header-title:last-child .caption-block {
-      left: auto;
-      right: 0;
-    }
-  }
-
-  {% if section.settings.show_table_borders %}
-    .section-{{ section.id }}-padding .header-title{
-      border-right: 1px solid #E5E5E5;
-    }
-    .section-{{ section.id }}-padding .comparing-table__table-item > div{
-      border-right: 1px solid #E5E5E5;
-    }
-  {% endif %}
-
-  {% if section.settings.mobile_layout == 'scroll' %}
-      .comparing-table__table-item > div:first-child, 
-      .header-title:first-child {
-        position: sticky;
-        left: 0;
-        z-index: 1;
-        box-shadow: 0px 0px 12px 0px #0000001A;
-      }
-  {% endif %}
+}
 {%- endstyle -%}
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.innerWidth > 750) return;
-
-  const wrapper = document.querySelector('.section-{{ section.id }}-padding .comparing-table__table-wrapper');
-  if (!wrapper) return;
-
-  const headerCols = wrapper.querySelectorAll('.comparing-table__table-header > div');
-  if (headerCols.length < 2) return;
-
-  const firstColWidth = headerCols[0].offsetWidth;
-  const colWidth = headerCols[1].offsetWidth;
-
-  let isScrolling;
-  wrapper.addEventListener('scroll', () => {
-    window.clearTimeout(isScrolling);
-    isScrolling = setTimeout(() => {
-      const scrollLeft = wrapper.scrollLeft;
-      const adjustedScroll = scrollLeft - firstColWidth;
-      if (adjustedScroll < 0) return;
-      const snapIndex = Math.round(adjustedScroll / colWidth);
-      const snapPosition = firstColWidth + snapIndex * colWidth;
-      wrapper.scrollTo({ left: snapPosition, behavior: 'smooth' });
-    }, 90);
-  });
-});
-</script>
-
-<div class="comparing-table section-{{ section.id }}-padding scroll-trigger animate--slide-in" id="comparing-table">
+<div class="comparing-table section-{{ section.id }}-padding">
   <div class="page-width comparing-table__container">
     {% if section.settings.title != blank %}
       <h2 class="h2">{{ section.settings.title }}</h2>
@@ -167,39 +83,40 @@ document.addEventListener('DOMContentLoaded', () => {
     {% if section.settings.title2 != blank %}
       <h2 class="title">{{ section.settings.title2 }}</h2>
     {% endif %}
-    <div class="comparing-table__table">
-      <div class="comparing-table__table-wrapper">
-        <div class="comparing-table__table-header">
-          {% for i in (1..7) %}
-            {% assign key = "text_" | append: i %}
-            {% assign caption_key = "caption_" | append: i %}
-            {% assign text = section.settings[key] %}
-            {% assign caption = section.settings[caption_key] %}
-            {% if text != blank %}
-              <div class="header-title">
-                {{ text }}
-                {% if caption != blank %}
-                  <svg width="16" height="16" ...>...</svg>
-                  <div class="caption-block">{{ caption }}</div>
-                {% endif %}
-              </div>
-            {% endif %}
-          {% endfor %}
-        </div>
 
-        <div class="comparing-table__table-body">
-          {% for block in section.blocks %}
-            <div class="comparing-table__table-item {% if block.settings.background %}show-background{% endif %}">
-              {% for i in (1..7) %}
-                {% assign key = "text_" | append: i %}
-                {% assign text = block.settings[key] %}
-                {% if text != blank %}
-                  <div><div>{{ text }}</div></div>
-                {% endif %}
-              {% endfor %}
+    <div class="comparing-table__table-wrapper">
+      <div class="comparing-table__table-header">
+        {% for i in (1..7) %}
+          {% assign key = "text_" | append: i %}
+          {% assign caption_key = "caption_" | append: i %}
+          {% assign text = section.settings[key] %}
+          {% assign caption = section.settings[caption_key] %}
+          {% if text != blank %}
+            <div class="header-title">
+              {{ text }}
+              {% if caption != blank %}
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 2.5C4.96243 2.5 2.5 4.96243 2.5 8C2.5 11.0376 4.96243 13.5 8 13.5C11.0376 13.5 13.5 11.0376 13.5 8C13.5 4.96243 11.0376 2.5 8 2.5ZM8.66667 10.6667C8.66667 11.0349 8.36819 11.3333 8 11.3333C7.63181 11.3333 7.33333 11.0349 7.33333 10.6667C7.33333 10.2985 7.63181 10 8 10C8.36819 10 8.66667 10.2985 8.66667 10.6667ZM7.16667 6.66667C7.16667 6.20643 7.53976 5.83333 8 5.83333C8.46024 5.83333 8.83333 6.20643 8.83333 6.66667V6.74755C8.83333 6.99001 8.73701 7.22255 8.56557 7.39399L7.64645 8.31311C7.45118 8.50838 7.45118 8.82496 7.64645 9.02022C7.84171 9.21548 8.15829 9.21548 8.35355 9.02022L9.27267 8.1011C9.63166 7.74212 9.83333 7.25523 9.83333 6.74755V6.66667C9.83333 5.65414 9.01252 4.83333 8 4.83333C6.98748 4.83333 6.16667 5.65414 6.16667 6.66667V7C6.16667 7.27614 6.39052 7.5 6.66667 7.5C6.94281 7.5 7.16667 7.27614 7.16667 7V6.66667Z" fill="#808080"/>
+                </svg>
+                <div class="caption-block">{{ caption }}</div>
+              {% endif %}
             </div>
-          {% endfor %}
-        </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="comparing-table__table-body">
+        {% for block in section.blocks %}
+          <div class="comparing-table__table-item {% if block.settings.background %}show-background{% endif %}">
+            {% for i in (1..7) %}
+              {% assign key = "text_" | append: i %}
+              {% assign text = block.settings[key] %}
+              {% if text != blank %}
+                <div>{{ text }}</div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endfor %}
       </div>
     </div>
   </div>
@@ -209,41 +126,43 @@ document.addEventListener('DOMContentLoaded', () => {
 {
   "name": "Comparing table",
   "settings": [
-    { "type": "text", "id": "title", "label": "Title" },
-    { "type": "text", "id": "title2", "label": "Title 2" },
-    { "type": "header", "content": "Table header" },
-    { "type": "textarea", "id": "text_1", "label": "Text 1" },
-    { "type": "textarea", "id": "caption_1", "label": "Caption 1" },
-    { "type": "textarea", "id": "text_2", "label": "Text 2" },
-    { "type": "textarea", "id": "caption_2", "label": "Caption 2" },
-    { "type": "textarea", "id": "text_3", "label": "Text 3" },
-    { "type": "textarea", "id": "caption_3", "label": "Caption 3" },
-    { "type": "textarea", "id": "text_4", "label": "Text 4" },
-    { "type": "textarea", "id": "caption_4", "label": "Caption 4" },
-    { "type": "textarea", "id": "text_5", "label": "Text 5" },
-    { "type": "textarea", "id": "caption_5", "label": "Caption 5" },
-    { "type": "textarea", "id": "text_6", "label": "Text 6" },
-    { "type": "textarea", "id": "caption_6", "label": "Caption 6" },
-    { "type": "textarea", "id": "text_7", "label": "Text 7" },
-    { "type": "textarea", "id": "caption_7", "label": "Caption 7" },
-    { "type": "range", "id": "columns", "min": 1, "max": 7, "step": 1, "unit": "pcs", "label": "Columns", "default": 7 },
-    { "type": "select", "id": "mobile_layout", "label": "Mobile layout", "options":[{"label":"Scroll","value":"scroll"},{"label":"Fit screen width","value":"fit"}], "default": "fit" },
-    { "type": "checkbox", "id": "show_table_borders", "label": "Show table inner borders", "default": true },
-    { "type": "range", "id": "padding_top", "min": 0, "max": 100, "step": 4, "unit": "px", "label": "Padding top", "default": 36 },
-    { "type": "range", "id": "padding_bottom", "min": 0, "max": 100, "step": 4, "unit": "px", "label": "Padding bottom", "default": 36 }
+    {"type":"text","id":"title","label":"Title"},
+    {"type":"text","id":"title2","label":"Title 2"},
+    {"type":"range","id":"columns","label":"Columns","min":1,"max":7,"step":1,"unit":"pcs","default":7},
+    {"type":"checkbox","id":"show_table_borders","label":"Show table inner borders","default":true},
+    {"type":"range","id":"padding_top","label":"Padding top","min":0,"max":100,"step":4,"unit":"px","default":36},
+    {"type":"range","id":"padding_bottom","label":"Padding bottom","min":0,"max":100,"step":4,"unit":"px","default":36},
+    {"type":"textarea","id":"text_1","label":"Text 1"},
+    {"type":"textarea","id":"caption_1","label":"Caption 1"},
+    {"type":"textarea","id":"text_2","label":"Text 2"},
+    {"type":"textarea","id":"caption_2","label":"Caption 2"},
+    {"type":"textarea","id":"text_3","label":"Text 3"},
+    {"type":"textarea","id":"caption_3","label":"Caption 3"},
+    {"type":"textarea","id":"text_4","label":"Text 4"},
+    {"type":"textarea","id":"caption_4","label":"Caption 4"},
+    {"type":"textarea","id":"text_5","label":"Text 5"},
+    {"type":"textarea","id":"caption_5","label":"Caption 5"},
+    {"type":"textarea","id":"text_6","label":"Text 6"},
+    {"type":"textarea","id":"caption_6","label":"Caption 6"},
+    {"type":"textarea","id":"text_7","label":"Text 7"},
+    {"type":"textarea","id":"caption_7","label":"Caption 7"}
   ],
   "blocks": [
-    { "type": "item", "name": "Item", "settings": [
-      { "type": "checkbox", "id": "background", "label": "Show background color" },
-      { "type": "textarea", "id": "text_1", "label": "Text 1" },
-      { "type": "textarea", "id": "text_2", "label": "Text 2" },
-      { "type": "textarea", "id": "text_3", "label": "Text 3" },
-      { "type": "textarea", "id": "text_4", "label": "Text 4" },
-      { "type": "textarea", "id": "text_5", "label": "Text 5" },
-      { "type": "textarea", "id": "text_6", "label": "Text 6" },
-      { "type": "textarea", "id": "text_7", "label": "Text 7" }
-    ]}
+    {
+      "type":"item",
+      "name":"Item",
+      "settings":[
+        {"type":"checkbox","id":"background","label":"Show background color"},
+        {"type":"textarea","id":"text_1","label":"Text 1"},
+        {"type":"textarea","id":"text_2","label":"Text 2"},
+        {"type":"textarea","id":"text_3","label":"Text 3"},
+        {"type":"textarea","id":"text_4","label":"Text 4"},
+        {"type":"textarea","id":"text_5","label":"Text 5"},
+        {"type":"textarea","id":"text_6","label":"Text 6"},
+        {"type":"textarea","id":"text_7","label":"Text 7"}
+      ]
+    }
   ],
-  "presets": [{"name": "Comparing table"}]
+  "presets":[{"name":"Comparing table"}]
 }
 {% endschema %}
