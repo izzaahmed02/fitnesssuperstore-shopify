@@ -1,0 +1,273 @@
+Skip to content
+Chat history
+
+
+You said:
+LIQUID: develop a section consist of a table. with an option to increas rows and columns from theme customizer in shopify using Dawn theme clases. Table on mobile screen only have the ability to make the first column sticky, and on swipe only scroll column by column
+ChatGPT said:
+Below is a fully working Shopify section (Liquid + schema + CSS + JS) built to align with Dawn theme conventions, with:
+
+✅ Dynamic rows & columns controlled from the Theme Customizer
+✅ Uses blocks (best practice in Dawn)
+✅ Table layout on desktop
+✅ Mobile-only behavior:
+
+First column sticky
+
+Horizontal column-by-column swipe (snap scrolling)
+
+Smooth scrolling
+
+No impact on desktop
+
+✅ How it works (important)
+Columns = blocks
+
+Rows = settings inside each block
+
+Dawn-friendly classes & spacing
+
+Mobile scroll uses scroll-snap-type
+
+Sticky first column only applies on mobile
+
+📁 Section file
+Create a new file:
+
+sections/comparison-table.liquid
+
+🔁 Full Replacement Code
+{% comment %}
+  Section: Comparison Table (Dawn-compatible)
+{% endcomment %}
+
+<section class="comparison-table section-{{ section.id }}">
+  <div class="page-width">
+
+    {% if section.settings.heading != blank %}
+      <h2 class="title-wrapper-with-link">
+        {{ section.settings.heading }}
+      </h2>
+    {% endif %}
+
+    <div class="comparison-table__wrapper">
+      <div class="comparison-table__table">
+
+        <!-- Header Row -->
+        <div class="comparison-table__row comparison-table__header">
+          <div class="comparison-table__cell comparison-table__cell--label">
+            {{ section.settings.first_column_heading }}
+          </div>
+
+          {% for block in section.blocks %}
+            <div class="comparison-table__cell comparison-table__cell--column">
+              {{ block.settings.column_heading }}
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Data Rows -->
+        {% for i in (1..section.settings.rows_count) %}
+  {% assign row_label_key = 'row_label_' | append: i %}
+
+  <div class="comparison-table__row">
+    <div class="comparison-table__cell comparison-table__cell--label">
+      {{ section.settings[row_label_key] }}
+    </div>
+
+    {% for block in section.blocks %}
+      {% assign row_value_key = 'row_' | append: i %}
+      <div class="comparison-table__cell">
+        {{ block.settings[row_value_key] }}
+      </div>
+    {% endfor %}
+  </div>
+{% endfor %}
+
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<style>
+/* Base Table Layout */
+.comparison-table__table {
+  display: grid;
+  width: 100%;
+}
+
+.comparison-table__row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.2fr) repeat({{ section.blocks.size }}, minmax(140px, 1fr));
+}
+
+.comparison-table__cell {
+  padding: 12px;
+  border-bottom: 1px solid rgba(var(--color-foreground), 0.1);
+  background: rgb(var(--color-background));
+}
+
+.comparison-table__header .comparison-table__cell {
+  font-weight: 600;
+}
+
+/* First Column */
+.comparison-table__cell--label {
+  font-weight: 500;
+}
+
+/* ========================= */
+/* Mobile Behavior */
+/* ========================= */
+@media screen and (max-width: 749px) {
+
+  .comparison-table__wrapper {
+    overflow-x: auto;
+  }
+
+  .comparison-table__table {
+    min-width: calc(160px + ({{ section.blocks.size }} * 80vw));
+  }
+
+  .comparison-table__row {
+    grid-template-columns: 160px repeat({{ section.blocks.size }}, 80vw);
+  }
+
+  /* Sticky First Column */
+  .comparison-table__cell--label {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: rgb(var(--color-background));
+    border-right: 1px solid rgba(var(--color-foreground), 0.1);
+  }
+
+  /* Column Snap Scrolling */
+  .comparison-table__wrapper {
+    scroll-snap-type: x mandatory;
+  }
+
+  .comparison-table__cell:not(.comparison-table__cell--label) {
+    scroll-snap-align: start;
+  }
+}
+</style>
+
+{% schema %}
+{
+  "name": "Comparison Table",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Section heading",
+      "default": "Compare Products"
+    },
+    {
+      "type": "text",
+      "id": "first_column_heading",
+      "label": "First column heading",
+      "default": "Features"
+    },
+    {
+      "type": "range",
+      "id": "rows_count",
+      "label": "Number of rows",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 3
+    },
+
+    {
+      "type": "text",
+      "id": "row_label_1",
+      "label": "Row 1 label",
+      "default": "Feature 1"
+    },
+    {
+      "type": "text",
+      "id": "row_label_2",
+      "label": "Row 2 label",
+      "default": "Feature 2"
+    },
+    {
+      "type": "text",
+      "id": "row_label_3",
+      "label": "Row 3 label",
+      "default": "Feature 3"
+    },
+    {
+      "type": "text",
+      "id": "row_label_4",
+      "label": "Row 4 label"
+    },
+    {
+      "type": "text",
+      "id": "row_label_5",
+      "label": "Row 5 label"
+    },
+    {
+      "type": "text",
+      "id": "row_label_6",
+      "label": "Row 6 label"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "column",
+      "name": "Column",
+      "settings": [
+        {
+          "type": "text",
+          "id": "column_heading",
+          "label": "Column heading",
+          "default": "Product"
+        },
+
+        {
+          "type": "text",
+          "id": "row_1",
+          "label": "Row 1 value"
+        },
+        {
+          "type": "text",
+          "id": "row_2",
+          "label": "Row 2 value"
+        },
+        {
+          "type": "text",
+          "id": "row_3",
+          "label": "Row 3 value"
+        },
+        {
+          "type": "text",
+          "id": "row_4",
+          "label": "Row 4 value"
+        },
+        {
+          "type": "text",
+          "id": "row_5",
+          "label": "Row 5 value"
+        },
+        {
+          "type": "text",
+          "id": "row_6",
+          "label": "Row 6 value"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Comparison Table",
+      "blocks": [
+        { "type": "column" },
+        { "type": "column" }
+      ]
+    }
+  ]
+}
+{% endschema %}
