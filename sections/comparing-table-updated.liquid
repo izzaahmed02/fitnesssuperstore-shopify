@@ -1,3 +1,7 @@
+{% comment %}
+  Section: Comparison Table (Dawn-compatible, slider-style mobile)
+{% endcomment %}
+
 <section class="comparison-table section-{{ section.id }}">
   <div class="page-width">
 
@@ -7,7 +11,7 @@
       </h2>
     {% endif %}
 
-    <div class="comparison-table__wrapper">
+    <div class="comparison-table__wrapper" data-column-slider>
       <div class="comparison-table__table">
 
         <!-- Header Row -->
@@ -25,22 +29,21 @@
 
         <!-- Data Rows -->
         {% for i in (1..section.settings.rows_count) %}
-            {% assign row_label_key = 'row_label_' | append: i %}
+          {% assign row_label_key = 'row_label_' | append: i %}
 
-                <div class="comparison-table__row">
-                    <div class="comparison-table__cell comparison-table__cell--label">
-                        {{ section.settings[row_label_key] }}
-                    </div>
+          <div class="comparison-table__row">
+            <div class="comparison-table__cell comparison-table__cell--label">
+              {{ section.settings[row_label_key] }}
+            </div>
 
-                        {% for block in section.blocks %}
-                            {% assign row_value_key = 'row_' | append: i %}
-                            <div class="comparison-table__cell">
-                                {{ block.settings[row_value_key] }}
-                            </div>
-                        {% endfor %}
-                </div>
+            {% for block in section.blocks %}
+              {% assign row_value_key = 'row_' | append: i %}
+              <div class="comparison-table__cell">
+                {{ block.settings[row_value_key] }}
+              </div>
+            {% endfor %}
+          </div>
         {% endfor %}
-
 
       </div>
     </div>
@@ -49,7 +52,14 @@
 </section>
 
 <style>
-/* Base Table Layout */
+/* ========================= */
+/* Base Layout (Desktop) */
+/* ========================= */
+
+.comparison-table__wrapper {
+  overflow-x: visible;
+}
+
 .comparison-table__table {
   display: grid;
   width: 100%;
@@ -57,11 +67,11 @@
 
 .comparison-table__row {
   display: grid;
-  grid-template-columns: minmax(160px, 1.2fr) repeat({{ section.blocks.size }}, minmax(140px, 1fr));
+  grid-template-columns: minmax(180px, 1.2fr) repeat({{ section.blocks.size }}, 1fr);
 }
 
 .comparison-table__cell {
-  padding: 12px;
+  padding: 14px;
   border-bottom: 1px solid rgba(var(--color-foreground), 0.1);
   background: rgb(var(--color-background));
 }
@@ -70,60 +80,92 @@
   font-weight: 600;
 }
 
-/* First Column */
 .comparison-table__cell--label {
   font-weight: 500;
 }
 
 /* ========================= */
-/* Mobile Behavior */
+/* Mobile Slider Behavior */
 /* ========================= */
+
 @media screen and (max-width: 749px) {
 
   .comparison-table__wrapper {
-    overflow-x: auto;
+    overflow-x: hidden; /* prevent free scroll */
+    touch-action: pan-y;
+    position: relative;
   }
 
   .comparison-table__table {
-    min-width: calc(160px + ({{ section.blocks.size }} * 80vw));
+    min-width: calc(180px + ({{ section.blocks.size }} * 80vw));
   }
 
   .comparison-table__row {
-    grid-template-columns: 160px repeat({{ section.blocks.size }}, 80vw);
+    grid-template-columns: 180px repeat({{ section.blocks.size }}, 80vw);
   }
 
-  /* Sticky First Column */
+  /* Sticky first column */
   .comparison-table__cell--label {
     position: sticky;
     left: 0;
-    z-index: 2;
+    z-index: 3;
     background: rgb(var(--color-background));
     border-right: 1px solid rgba(var(--color-foreground), 0.1);
   }
-
-  /* Column Snap Scrolling */
-
-
-  .comparison-table__wrapper {
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding-left: 160px; /* width of sticky column */
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Make ONLY header columns snap */
-  .comparison-table__header
-  .comparison-table__cell--column {
-    scroll-snap-align: start;
-  }
-
-  /* Prevent free momentum scrolling */
-  .comparison-table__wrapper::-webkit-scrollbar {
-    display: none;
-  }
-
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.innerWidth > 749) return;
+
+  const wrapper = document.querySelector('[data-column-slider]');
+  if (!wrapper) return;
+
+  const firstColumnWidth = 180;
+  const column = wrapper.querySelector('.comparison-table__cell--column');
+  if (!column) return;
+
+  const columnWidth = column.offsetWidth;
+  let startX = 0;
+  let isSwiping = false;
+
+  wrapper.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    isSwiping = true;
+  }, { passive: true });
+
+  wrapper.addEventListener('touchend', (e) => {
+    if (!isSwiping) return;
+
+    const endX = e.changedTouches[0].clientX;
+    const deltaX = startX - endX;
+
+    if (Math.abs(deltaX) < 40) {
+      isSwiping = false;
+      return;
+    }
+
+    const direction = deltaX > 0 ? 1 : -1;
+
+    const currentIndex = Math.round(
+      (wrapper.scrollLeft - firstColumnWidth) / columnWidth
+    );
+
+    const nextIndex = Math.max(
+      0,
+      Math.min(currentIndex + direction, {{ section.blocks.size }} - 1)
+    );
+
+    wrapper.scrollTo({
+      left: firstColumnWidth + (nextIndex * columnWidth),
+      behavior: 'smooth'
+    });
+
+    isSwiping = false;
+  }, { passive: true });
+});
+</script>
 
 {% schema %}
 {
@@ -150,83 +192,25 @@
       "step": 1,
       "default": 3
     },
-
-    {
-      "type": "text",
-      "id": "row_label_1",
-      "label": "Row 1 label",
-      "default": "Feature 1"
-    },
-    {
-      "type": "text",
-      "id": "row_label_2",
-      "label": "Row 2 label",
-      "default": "Feature 2"
-    },
-    {
-      "type": "text",
-      "id": "row_label_3",
-      "label": "Row 3 label",
-      "default": "Feature 3"
-    },
-    {
-      "type": "text",
-      "id": "row_label_4",
-      "label": "Row 4 label"
-    },
-    {
-      "type": "text",
-      "id": "row_label_5",
-      "label": "Row 5 label"
-    },
-    {
-      "type": "text",
-      "id": "row_label_6",
-      "label": "Row 6 label"
-    }
+    { "type": "text", "id": "row_label_1", "label": "Row 1 label" },
+    { "type": "text", "id": "row_label_2", "label": "Row 2 label" },
+    { "type": "text", "id": "row_label_3", "label": "Row 3 label" },
+    { "type": "text", "id": "row_label_4", "label": "Row 4 label" },
+    { "type": "text", "id": "row_label_5", "label": "Row 5 label" },
+    { "type": "text", "id": "row_label_6", "label": "Row 6 label" }
   ],
   "blocks": [
     {
       "type": "column",
       "name": "Column",
       "settings": [
-        {
-          "type": "text",
-          "id": "column_heading",
-          "label": "Column heading",
-          "default": "Product"
-        },
-
-        {
-          "type": "text",
-          "id": "row_1",
-          "label": "Row 1 value"
-        },
-        {
-          "type": "text",
-          "id": "row_2",
-          "label": "Row 2 value"
-        },
-        {
-          "type": "text",
-          "id": "row_3",
-          "label": "Row 3 value"
-        },
-        {
-          "type": "text",
-          "id": "row_4",
-          "label": "Row 4 value"
-        },
-        {
-          "type": "text",
-          "id": "row_5",
-          "label": "Row 5 value"
-        },
-        {
-          "type": "text",
-          "id": "row_6",
-          "label": "Row 6 value"
-        }
+        { "type": "text", "id": "column_heading", "label": "Column heading" },
+        { "type": "text", "id": "row_1", "label": "Row 1 value" },
+        { "type": "text", "id": "row_2", "label": "Row 2 value" },
+        { "type": "text", "id": "row_3", "label": "Row 3 value" },
+        { "type": "text", "id": "row_4", "label": "Row 4 value" },
+        { "type": "text", "id": "row_5", "label": "Row 5 value" },
+        { "type": "text", "id": "row_6", "label": "Row 6 value" }
       ]
     }
   ],
