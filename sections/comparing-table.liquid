@@ -250,6 +250,51 @@
 
 {%- endstyle -%}
 
+<script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.innerWidth > 750) return;
+
+  const wrapper = document.querySelector(
+    '.section-{{ section.id }}-padding .comparing-table__table-wrapper'
+  );
+  if (!wrapper) return;
+
+  const headerCols = wrapper.querySelectorAll(
+    '.comparing-table__table-header > div'
+  );
+
+  if (headerCols.length < 2) return;
+
+  const firstColWidth = headerCols[0].offsetWidth;
+  const colWidth = headerCols[1].offsetWidth;
+
+  let isScrolling;
+  wrapper.addEventListener('scroll', () => {
+    window.clearTimeout(isScrolling);
+
+    isScrolling = setTimeout(() => {
+      const scrollLeft = wrapper.scrollLeft;
+
+      /* ignore sticky column width */
+      const adjustedScroll = scrollLeft - firstColWidth;
+      if (adjustedScroll < 0) return;
+
+      const snapIndex = Math.round(adjustedScroll / colWidth);
+      const snapPosition =
+        firstColWidth + snapIndex * colWidth;
+
+      wrapper.scrollTo({
+        left: snapPosition,
+        behavior: 'smooth'
+      });
+    }, 90);
+  });
+});
+</script>
+
+  </script>
+
 <div class="comparing-table section-{{ section.id }}-padding scroll-trigger animate--slide-in" id="comparing-table">
   <div class="page-width comparing-table__container">
     {% if section.settings.title != blank %}
