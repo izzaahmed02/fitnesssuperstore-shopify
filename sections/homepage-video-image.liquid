@@ -1,5 +1,5 @@
-{{ 'homepage-video-section.css' | asset_url | stylesheet_tag }}
-{{ 'homepage-component-deferred-media.css' | asset_url | stylesheet_tag }}
+{{ 'video-section.css' | asset_url | stylesheet_tag }}
+{{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
 
 {%- style -%}
   .section-{{ section.id }}-padding {
@@ -38,7 +38,7 @@
   {%- endif %}
 {%- endcapture -%}
 
-<div class="color-{{ section.settings.color_scheme }} gradient homepage-video-image">
+<div class="color-{{ section.settings.color_scheme }} gradient video-image">
   <div class="video-section isolate{% unless section.settings.full_width %} page-width{% endunless %} section-{{ section.id }}-padding">
     <div
       {% if section.settings.full_width %}
@@ -50,17 +50,26 @@
           <h2 class="title inline-richtext {{ section.settings.heading_size }}">{{ section.settings.heading }}</h2>
         </div>
       {%- endunless -%}
+      
+      {% comment %}
  {%- unless section.settings.subheading == blank -%}
-      <p class="video-para">{{ section.settings.subheading }}</p>
- {% endunless %}
+     {{ section.settings.subheading }}
+{% endunless %} 
+{% endcomment %}
+     <p class="video-para">See how we remanufacture commercial fitness equipment and assemble new French Fitness machines in our 63,500 sq ft Benicia warehouses, shipping coast-to-coast.</p>
+      
+     <p>Filmed at our Benicia, California facilities — Serving Customers Nationwide.</p>
+
     </div>
     <div class="video-section__media-wrapper">
       <deferred-media
           class="video-section__media deferred-media gradient global-media-settings{% if section.settings.full_width %} global-media-settings--full-width{% endif %}{% if fix_ratio %} media-fit-cover{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
           data-media-id="{{ video_id }}"
+          {% comment %}
           {% if poster != null %}
             style="--ratio-percent: {{ 0.75 | divided_by: poster.aspect_ratio | times: 100 }}%;"
           {% endif %}
+           {%- endcomment -%}
       >
         <button
             id="Deferred-Poster-Modal-{{ video_id }}"
@@ -120,59 +129,50 @@
         </template>
       </deferred-media>
     </div>
+    {% comment %}
     <div class="map-image-wrapper">
-<img src="{{ 'map.webp' | asset_url }}">
-        </div>
+<img src="{{ 'map.png' | asset_url }}">
+        </div> {% endcomment %}
   </div>
 </div>
 
 <style>
-    .homepage-video-image {
+    .video-image {
     background: #faf9f9;
 }
-.homepage-video-image .map-image-wrapper {
+.map-image-wrapper {
     text-align: center;
     margin-top: 16px;
 }
-.homepage-video-image .map-image-wrapper img {
+.map-image-wrapper img {
 width: 664px;
 max-width: 100%;
 margin: 0 auto;
 }
-.homepage-video-image .video-section {
+.video-image .video-section {
 padding: 40px 16px;
 }
-.homepage-video-image .video-section__media-wrapper {
+.video-image .video-section__media-wrapper {
     border-radius: 0px;
 }
-.homepage-video-image .title-wrapper {
+.video-image .title-wrapper {
 margin-bottom: 0px;
 }
-.homepage-video-image .title-wrapper h2 {
+.video-image .title-wrapper h2 {
 margin-bottom: 0px;
-font-size: 38px;
-line-height: 50px;
 }
-.homepage-video-image .video-para {
+.video-image .video-para {
 margin-top: 5px;
 margin-bottom: 26px;
 color: #797979;
-}
-
-
-@media (max-width: 767px) {
-.homepage-video-image .title-wrapper h2 {
-font-size: 20px;
-line-height: 26px;
-}
 }
 </style>
 
 {% schema %}
 {
-  "name": "Homepage Video and Image",
+  "name": "Homepage Video Image",
   "tag": "section",
-  "class": "section homepage-video-section",
+  "class": "section",
   "disabled_on": {
     "groups": ["header", "footer"]
   },
@@ -212,9 +212,9 @@ line-height: 26px;
       "label": "t:sections.all.heading_size.label"
     },
     {
-      "type": "inline_richtext",
+      "type": "richtext",
       "id": "subheading",
-      "default": "Subheading",
+      "default": "<p>See how we remanufacture commercial fitness equipment and assemble new French Fitness machines in our 63,500 sq ft Benicia warehouses, shipping coast-to-coast.</p><p>Filmed at our Benicia, California facilities — Serving Customers Nationwide.</p>",
       "label": "Subheading"
     },
     {
@@ -302,7 +302,7 @@ line-height: 26px;
   ],
   "presets": [
     {
-      "name": "Homepage Video and Image"
+      "name": "Homepage Video Image"
     }
   ]
 }
