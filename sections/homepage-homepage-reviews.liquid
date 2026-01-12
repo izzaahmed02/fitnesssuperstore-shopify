@@ -81,9 +81,10 @@
                                         <h6 class="homepage-reviews__item-product-title">{{ product.title }}</h6>
                                     </div>
                                     <a href="{{ product.url }}" class="homepage-reviews__item-product-link" aria-label="View {{ product.title }}">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="#F1592A"/>
-                                        </svg>
+                                       <svg width="20" height="15" viewBox="0 0 20 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M19.5363 6.55264L13.2363 0.252641C13.0666 0.0886988 12.8392 -0.00201656 12.6032 3.40222e-05C12.3673 0.0020846 12.1415 0.0967369 11.9747 0.263604C11.8078 0.430472 11.7131 0.656203 11.7111 0.89218C11.709 1.12816 11.7998 1.3555 11.9637 1.52524L16.7274 6.28894H0.9C0.661305 6.28894 0.432387 6.38376 0.263604 6.55255C0.0948211 6.72133 0 6.95025 0 7.18894C0 7.42764 0.0948211 7.65655 0.263604 7.82534C0.432387 7.99412 0.661305 8.08894 0.9 8.08894H16.7274L11.9637 12.8526C11.8777 12.9357 11.8092 13.035 11.762 13.1448C11.7148 13.2546 11.69 13.3727 11.689 13.4922C11.6879 13.6117 11.7107 13.7302 11.756 13.8408C11.8012 13.9514 11.868 14.0519 11.9525 14.1364C12.037 14.2209 12.1375 14.2877 12.2481 14.333C12.3587 14.3782 12.4773 14.401 12.5968 14.4C12.7163 14.3989 12.8344 14.3741 12.9442 14.3269C13.054 14.2798 13.1533 14.2112 13.2363 14.1252L19.5363 7.82524C19.705 7.65647 19.7998 7.42759 19.7998 7.18894C19.7998 6.95029 19.705 6.72142 19.5363 6.55264Z" fill="white"/>
+</svg>
+
                                     </a>
                                 </div>
                             {% endif %}
@@ -147,26 +148,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Read More functionality
-    document.querySelectorAll('.homepage-reviews__item-copy-btn').forEach(btn => {
-        const copyText = btn.previousElementSibling;
+   // Read More functionality
+document.querySelectorAll('.homepage-reviews__item-copy').forEach(copyText => {
+    const btn = copyText.nextElementSibling;
+    
+    // Check if this element is actually followed by a read more button
+    if (btn && btn.classList.contains('homepage-reviews__item-copy-btn')) {
+        // First, ensure the text starts in hidden state
+        copyText.classList.add('hide');
         
-        if (copyText && copyText.scrollHeight > copyText.clientHeight) {
-            copyText.classList.add('hide');
-            btn.classList.add('active');
-            
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (copyText.classList.contains('hide')) {
-                    copyText.classList.remove('hide');
-                    btn.textContent = 'Read Less';
-                } else {
-                    copyText.classList.add('hide');
-                    btn.textContent = 'Read More';
-                }
-            });
-        }
-    });
+        // Small delay to ensure rendering is complete
+        setTimeout(() => {
+            // Check if content is actually truncated
+            if (copyText.scrollHeight > copyText.clientHeight) {
+                btn.classList.add('active');
+                
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (copyText.classList.contains('hide')) {
+                        copyText.classList.remove('hide');
+                        btn.textContent = 'Read Less';
+                    } else {
+                        copyText.classList.add('hide');
+                        btn.textContent = 'Read More';
+                    }
+                });
+            } else {
+                // If content is not truncated, remove hide class
+                copyText.classList.remove('hide');
+            }
+        }, 50);
+    }
+});
 });
 </script>
 
@@ -174,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
 {
   "name": "Homepage Homepage Reviews",
   "tag": "section",
-  "class": "section homepage-homepage-reviews",
+  "class": "section homepage-reviews",
   "disabled_on": {
     "groups": [
       "header",
