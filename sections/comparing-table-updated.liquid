@@ -122,11 +122,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const wrapper = document.querySelector('[data-column-slider]');
   if (!wrapper) return;
 
-  const firstColumnWidth = 180;
-  const column = wrapper.querySelector('.comparison-table__cell--column');
-  if (!column) return;
+  const stickyCol = wrapper.querySelector('.comparison-table__cell--label');
+  const firstDataCol = wrapper.querySelector('.comparison-table__cell--column');
+  if (!stickyCol || !firstDataCol) return;
 
-  const columnWidth = column.offsetWidth;
+  const firstColumnWidth = stickyCol.offsetWidth;
+  const columnWidth = firstDataCol.offsetWidth;
+
   let startX = 0;
   let isSwiping = false;
 
@@ -141,24 +143,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const endX = e.changedTouches[0].clientX;
     const deltaX = startX - endX;
 
-    if (Math.abs(deltaX) < 40) {
+    if (Math.abs(deltaX) < 30) { // ignore tiny swipe
       isSwiping = false;
       return;
     }
 
     const direction = deltaX > 0 ? 1 : -1;
 
-    const currentIndex = Math.round(
-      (wrapper.scrollLeft - firstColumnWidth) / columnWidth
-    );
+    // Current column index relative to first sticky column
+    const currentIndex = Math.round((wrapper.scrollLeft - firstColumnWidth) / columnWidth);
 
-    const nextIndex = Math.max(
-      0,
-      Math.min(currentIndex + direction, {{ section.blocks.size }} - 1)
-    );
+    // Next column index
+    const nextIndex = Math.max(0, Math.min(currentIndex + direction, {{ section.blocks.size }} -1));
 
+    // Scroll exactly so column aligns next to sticky column
     wrapper.scrollTo({
-      left: firstColumnWidth + (nextIndex * columnWidth),
+      left: firstColumnWidth + (columnWidth * nextIndex),
       behavior: 'smooth'
     });
 
