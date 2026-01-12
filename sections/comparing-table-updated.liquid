@@ -1,46 +1,3 @@
-Skip to content
-Chat history
-
-
-You said:
-LIQUID: develop a section consist of a table. with an option to increas rows and columns from theme customizer in shopify using Dawn theme clases. Table on mobile screen only have the ability to make the first column sticky, and on swipe only scroll column by column
-ChatGPT said:
-Below is a fully working Shopify section (Liquid + schema + CSS + JS) built to align with Dawn theme conventions, with:
-
-✅ Dynamic rows & columns controlled from the Theme Customizer
-✅ Uses blocks (best practice in Dawn)
-✅ Table layout on desktop
-✅ Mobile-only behavior:
-
-First column sticky
-
-Horizontal column-by-column swipe (snap scrolling)
-
-Smooth scrolling
-
-No impact on desktop
-
-✅ How it works (important)
-Columns = blocks
-
-Rows = settings inside each block
-
-Dawn-friendly classes & spacing
-
-Mobile scroll uses scroll-snap-type
-
-Sticky first column only applies on mobile
-
-📁 Section file
-Create a new file:
-
-sections/comparison-table.liquid
-
-🔁 Full Replacement Code
-{% comment %}
-  Section: Comparison Table (Dawn-compatible)
-{% endcomment %}
-
 <section class="comparison-table section-{{ section.id }}">
   <div class="page-width">
 
@@ -68,21 +25,21 @@ sections/comparison-table.liquid
 
         <!-- Data Rows -->
         {% for i in (1..section.settings.rows_count) %}
-  {% assign row_label_key = 'row_label_' | append: i %}
+            {% assign row_label_key = 'row_label_' | append: i %}
 
-  <div class="comparison-table__row">
-    <div class="comparison-table__cell comparison-table__cell--label">
-      {{ section.settings[row_label_key] }}
-    </div>
+                <div class="comparison-table__row">
+                    <div class="comparison-table__cell comparison-table__cell--label">
+                        {{ section.settings[row_label_key] }}
+                    </div>
 
-    {% for block in section.blocks %}
-      {% assign row_value_key = 'row_' | append: i %}
-      <div class="comparison-table__cell">
-        {{ block.settings[row_value_key] }}
-      </div>
-    {% endfor %}
-  </div>
-{% endfor %}
+                        {% for block in section.blocks %}
+                            {% assign row_value_key = 'row_' | append: i %}
+                            <div class="comparison-table__cell">
+                                {{ block.settings[row_value_key] }}
+                            </div>
+                        {% endfor %}
+                </div>
+        {% endfor %}
 
 
       </div>
