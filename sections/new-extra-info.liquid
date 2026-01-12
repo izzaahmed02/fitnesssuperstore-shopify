@@ -587,48 +587,36 @@
 }
 
 
-/* ===========================
-   MOBILE TABS → ACCORDION
-=========================== */
+/* MOBILE ONLY */
 @media (max-width: 768px) {
 
   .product-extra-tabs {
     display: block;
   }
 
-  /* Hide desktop right content */
+  /* Hide right panel on mobile */
   .extra-tab-content {
     display: none;
   }
 
-  /* Tabs list full width */
-  .extra-tab-menu {
-    width: 100%;
-    padding: 0;
-    margin: 0;
-  }
-
   .extra-tab-menu li {
-    list-style: none;
     border-bottom: 1px solid #eee;
     padding: 16px;
     cursor: pointer;
     position: relative;
   }
 
-  .extra-tab-menu li span {
+  .extra-tab-menu li::after {
+    content: "›";
     position: absolute;
     right: 16px;
-    top: 50%;
-    transform: translateY(-50%) rotate(0deg);
     transition: transform 0.3s ease;
   }
 
-  .extra-tab-menu li.active span {
-    transform: translateY(-50%) rotate(90deg);
+  .extra-tab-menu li.active::after {
+    transform: rotate(90deg);
   }
 
-  /* Mobile accordion content */
   .mobile-tab-content {
     display: none;
     padding: 16px;
@@ -639,6 +627,7 @@
     display: block;
   }
 }
+
 
 </style>
 
@@ -668,43 +657,41 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener("DOMContentLoaded", function () {
 
-  if (window.innerWidth > 768) return;
+    if (window.innerWidth > 768) return;
 
-  const tabs = document.querySelectorAll(".extra-tab-menu li");
-  const desktopContents = document.querySelectorAll(".tab-pane");
+    const tabs = document.querySelectorAll(".extra-tab-menu li");
 
-  tabs.forEach(tab => {
-    const tabId = tab.getAttribute("data-tab");
-    const content = document.getElementById(tabId);
+    tabs.forEach(tab => {
+      const tabId = tab.getAttribute("data-tab");
+      const content = document.getElementById(tabId);
 
-    if (!content) return;
+      if (!content) return;
 
-    // Create mobile content container
-    const mobileContent = document.createElement("div");
-    mobileContent.classList.add("mobile-tab-content");
-    mobileContent.innerHTML = content.innerHTML;
+      // Clone right-side content for mobile
+      const mobileContent = document.createElement("div");
+      mobileContent.className = "mobile-tab-content";
+      mobileContent.innerHTML = content.innerHTML;
 
-    tab.after(mobileContent);
+      tab.after(mobileContent);
 
-    tab.addEventListener("click", () => {
+      tab.addEventListener("click", () => {
 
-      // Close others
-      document.querySelectorAll(".mobile-tab-content").forEach(c => {
-        if (c !== mobileContent) c.classList.remove("active");
+        document.querySelectorAll(".mobile-tab-content").forEach(c => {
+          if (c !== mobileContent) c.classList.remove("active");
+        });
+
+        document.querySelectorAll(".extra-tab-menu li").forEach(t => {
+          if (t !== tab) t.classList.remove("active");
+        });
+
+        tab.classList.toggle("active");
+        mobileContent.classList.toggle("active");
       });
-
-      document.querySelectorAll(".extra-tab-menu li").forEach(t => {
-        if (t !== tab) t.classList.remove("active");
-      });
-
-      tab.classList.toggle("active");
-      mobileContent.classList.toggle("active");
     });
-  });
 
-});
+  });
 </script>
 
 
