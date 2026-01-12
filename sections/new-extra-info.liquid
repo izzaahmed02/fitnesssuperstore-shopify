@@ -9,7 +9,11 @@
         data-tab="tab-{{ block.id }}" 
         class="{% if forloop.first %}active{% endif %}">
         {{ block.settings.title }}
-        <span>→</span>
+        <span>
+          <svg width="31" height="15" viewBox="0 0 31 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M30.7071 8.07088C31.0976 7.68035 31.0976 7.04719 30.7071 6.65667L24.3431 0.292704C23.9526 -0.0978206 23.3195 -0.0978206 22.9289 0.292704C22.5384 0.683228 22.5384 1.31639 22.9289 1.70692L28.5858 7.36377L22.9289 13.0206C22.5384 13.4112 22.5384 14.0443 22.9289 14.4348C23.3195 14.8254 23.9526 14.8254 24.3431 14.4348L30.7071 8.07088ZM0 7.36377L-8.74228e-08 8.36377L30 8.36377L30 7.36377L30 6.36377L8.74228e-08 6.36377L0 7.36377Z" fill="#F1592A"/>
+          </svg>
+        </span>
       </li>
     {% endfor %}
   </ul>
@@ -333,11 +337,11 @@
 
             {% assign otherTechSpecs = product.metafields.custom.features_specs.value.other_tech_specs.value %}
 
-          {% if otherTechSpecs != blank %}
+            {% if otherTechSpecs != blank %}
               <div class="product__extra_tech extra-info-width">
                 <div>{{ otherTechSpecs }}</div>
               </div>
-          {% endif %}
+            {% endif %}
 
           {% when 'weightstacks' %}
 
@@ -349,7 +353,7 @@
             {% endif %}
 
           {% when 'buyingguide' %}
-          {% assign buyingGuide = product.metafields.custom.features_specs.value.buying_guide.value %}
+            {% assign buyingGuide = product.metafields.custom.features_specs.value.buying_guide.value %}
             {% if buyingGuide != blank %}
               <div class="product_extra_buyingguide product__extra_tech extra-info-width">
                 <div>{{ buyingGuide }}</div>
@@ -375,124 +379,124 @@
               </div>
             {% endif %}
 
-          {% if attachments_metafield != blank %}
-              {% assign attachments_object = attachments_metafield %}
-              {% if attachments_object.rig_frame_pieces_customize_your_rig_for_sale != blank %}
+            {% if attachments_metafield != blank %}
+                {% assign attachments_object = attachments_metafield %}
+                {% if attachments_object.rig_frame_pieces_customize_your_rig_for_sale != blank %}
 
-              {%- assign rig_frame_pieces_count = 0 -%}
-              {%- for media in attachments_object.rig_frame_pieces_customize_your_rig_for_sale.value -%}
-                {%- assign rig_frame_pieces_count = rig_frame_pieces_count | plus: 1 -%}
-              {%- endfor -%}         
-              <section class="rig-attachments-section">
-                  <h4 class="product__extra_info-title">Rig Frame Pieces (Customize Your Rig) for Sale ({{ rig_frame_pieces_count }})</h4>
-                  <div class="rig-product-grid">
-                    {% for product_ref in attachments_object.rig_frame_pieces_customize_your_rig_for_sale.value %}
-                      <div class="rig-product-card">
-                        <div class="rig-product-image-wrap">
-                          {% if product_ref.featured_image %}
-                            <img 
-                              src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
-                              alt="{{ product_ref.featured_image.alt | escape }}" 
-                              class="rig-product-image"
-                            >
-                          {% endif %}
-                        </div>
-                        <div class="rig-product-details">
-                          <p class="rig-product-price">
-                            {{ product_ref.price | money }}
-                          </p>
-                          <h3 class="rig-product-name">{{ product_ref.title }}</h3>
-                          <a target="_blank"
-                            class="rig-quickview-btn" 
-                            href="{{ product_ref.url }}"
-                          >
-                            Quick view 
-                            <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
-                          </a>
-                        </div>
-                      </div>
-                    {% endfor %}
-                  </div>            
-              </section>
-              {% endif %}
-              {% if attachments_object.rig_attachments_accessories_for_sale != blank %}
-                {%- assign rig_attachments_count = 0 -%}
-                {%- for media in attachments_object.rig_attachments_accessories_for_sale.value -%}
-                  {%- assign rig_attachments_count = rig_attachments_count | plus: 1 -%}
-                {%- endfor -%} 
+                {%- assign rig_frame_pieces_count = 0 -%}
+                {%- for media in attachments_object.rig_frame_pieces_customize_your_rig_for_sale.value -%}
+                  {%- assign rig_frame_pieces_count = rig_frame_pieces_count | plus: 1 -%}
+                {%- endfor -%}         
                 <section class="rig-attachments-section">
-                  <h4 class="product__extra_info-title">Rig Attachments & Accessories for Sale ({{ rig_attachments_count }})</h4>
-                  <div class="rig-product-grid">
-                    {% for product_ref in attachments_object.rig_attachments_accessories_for_sale.value %}
-                      <div class="rig-product-card">
-                        <div class="rig-product-image-wrap">
-                          {% if product_ref.featured_image %}
-                            <img 
-                              src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
-                              alt="{{ product_ref.featured_image.alt | escape }}" 
-                              class="rig-product-image"
+                    <h4 class="product__extra_info-title">Rig Frame Pieces (Customize Your Rig) for Sale ({{ rig_frame_pieces_count }})</h4>
+                    <div class="rig-product-grid">
+                      {% for product_ref in attachments_object.rig_frame_pieces_customize_your_rig_for_sale.value %}
+                        <div class="rig-product-card">
+                          <div class="rig-product-image-wrap">
+                            {% if product_ref.featured_image %}
+                              <img 
+                                src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
+                                alt="{{ product_ref.featured_image.alt | escape }}" 
+                                class="rig-product-image"
+                              >
+                            {% endif %}
+                          </div>
+                          <div class="rig-product-details">
+                            <p class="rig-product-price">
+                              {{ product_ref.price | money }}
+                            </p>
+                            <h3 class="rig-product-name">{{ product_ref.title }}</h3>
+                            <a target="_blank"
+                              class="rig-quickview-btn" 
+                              href="{{ product_ref.url }}"
                             >
-                          {% endif %}
+                              Quick view 
+                              <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
+                            </a>
+                          </div>
                         </div>
-                        <div class="rig-product-details">
-                          <p class="rig-product-price">
-                            {{ product_ref.price | money }}
-                          </p>
-                          <h3 class="rig-product-name">{{ product_ref.title }}</h3>
+                      {% endfor %}
+                    </div>            
+                </section>
+                {% endif %}
+                {% if attachments_object.rig_attachments_accessories_for_sale != blank %}
+                  {%- assign rig_attachments_count = 0 -%}
+                  {%- for media in attachments_object.rig_attachments_accessories_for_sale.value -%}
+                    {%- assign rig_attachments_count = rig_attachments_count | plus: 1 -%}
+                  {%- endfor -%} 
+                  <section class="rig-attachments-section">
+                    <h4 class="product__extra_info-title">Rig Attachments & Accessories for Sale ({{ rig_attachments_count }})</h4>
+                    <div class="rig-product-grid">
+                      {% for product_ref in attachments_object.rig_attachments_accessories_for_sale.value %}
+                        <div class="rig-product-card">
+                          <div class="rig-product-image-wrap">
+                            {% if product_ref.featured_image %}
+                              <img 
+                                src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
+                                alt="{{ product_ref.featured_image.alt | escape }}" 
+                                class="rig-product-image"
+                              >
+                            {% endif %}
+                          </div>
+                          <div class="rig-product-details">
+                            <p class="rig-product-price">
+                              {{ product_ref.price | money }}
+                            </p>
+                            <h3 class="rig-product-name">{{ product_ref.title }}</h3>
+                            <a target="_blank"
+                              class="rig-quickview-btn" 
+                              href="{{ product_ref.url }}"
+                            >
+                              Quick view 
+                              <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
+                            </a>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>            
+                </section>
+                {% endif %}
+            {% endif %}
+
+            {% if otherRigRackSystems != blank %}
+              <section class="other-rig-rack-systems-section">
+                <h4 class="product__extra_info-title">Other French Fitness Rig & Rack Systems</h4>
+                <div class="other-rig-rack-systems-cards">
+                  {% for product_ref in otherRigRackSystems.other_french_fitness_rig_rack_systems.value %}
+                    <div class="rig-product-card">
+                      <div class="rig-product-image-wrap">
+                        {% if product_ref.featured_image %}
+                          <img 
+                            src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
+                            alt="{{ product_ref.featured_image.alt | escape }}" 
+                            class="rig-product-image"
+                          >
+                        {% endif %}
+                      </div>
+                      <div class="rig-product-details">
+                        <h3 class="rig-product-name">{{ product_ref.title }}</h3>
+                        <div class="rig-lower-details">
+                          <div class="rig-product-price">
+                            {% if product_ref.metafields.custom.retail_price != blank %}
+                              <s>MSRP: {{ product_ref.metafields.custom.retail_price | money -}}</s>
+                            {% endif %}
+                            <p>{{ product_ref.price | money }}</p>
+                          </div>
                           <a target="_blank"
                             class="rig-quickview-btn" 
                             href="{{ product_ref.url }}"
                           >
-                            Quick view 
+                            View details 
                             <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
                           </a>
                         </div>
                       </div>
-                    {% endfor %}
-                  </div>            
+                    </div>
+                  {% endfor %}            
+                </div>
               </section>
-              {% endif %}
-          {% endif %}
-
-          {% if otherRigRackSystems != blank %}
-            <section class="other-rig-rack-systems-section">
-              <h4 class="product__extra_info-title">Other French Fitness Rig & Rack Systems</h4>
-              <div class="other-rig-rack-systems-cards">
-                {% for product_ref in otherRigRackSystems.other_french_fitness_rig_rack_systems.value %}
-                  <div class="rig-product-card">
-                    <div class="rig-product-image-wrap">
-                      {% if product_ref.featured_image %}
-                        <img 
-                          src="{{ product_ref.featured_image.src | img_url: '253x303' }}" 
-                          alt="{{ product_ref.featured_image.alt | escape }}" 
-                          class="rig-product-image"
-                        >
-                      {% endif %}
-                    </div>
-                    <div class="rig-product-details">
-                      <h3 class="rig-product-name">{{ product_ref.title }}</h3>
-                      <div class="rig-lower-details">
-                        <div class="rig-product-price">
-                          {% if product_ref.metafields.custom.retail_price != blank %}
-                            <s>MSRP: {{ product_ref.metafields.custom.retail_price | money -}}</s>
-                          {% endif %}
-                          <p>{{ product_ref.price | money }}</p>
-                        </div>
-                        <a target="_blank"
-                          class="rig-quickview-btn" 
-                          href="{{ product_ref.url }}"
-                        >
-                          View details 
-                          <img src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/arrow-right-vector.png?v=1744034732" height="11" width="13" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                {% endfor %}            
-              </div>
-            </section>
-          {% endif %}
-          {% render 'new-prop65' %}
+            {% endif %}
+            {% render 'new-prop65' %}
 
         {% endcase %}
       </div>
@@ -581,6 +585,61 @@
   }
 
 }
+
+
+/* ===========================
+   MOBILE TABS → ACCORDION
+=========================== */
+@media (max-width: 768px) {
+
+  .product-extra-tabs {
+    display: block;
+  }
+
+  /* Hide desktop right content */
+  .extra-tab-content {
+    display: none;
+  }
+
+  /* Tabs list full width */
+  .extra-tab-menu {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  .extra-tab-menu li {
+    list-style: none;
+    border-bottom: 1px solid #eee;
+    padding: 16px;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .extra-tab-menu li span {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform 0.3s ease;
+  }
+
+  .extra-tab-menu li.active span {
+    transform: translateY(-50%) rotate(90deg);
+  }
+
+  /* Mobile accordion content */
+  .mobile-tab-content {
+    display: none;
+    padding: 16px;
+    background: #fafafa;
+  }
+
+  .mobile-tab-content.active {
+    display: block;
+  }
+}
+
 </style>
 
 
@@ -602,6 +661,46 @@ document.addEventListener("DOMContentLoaded", ()=>{
         if(p.id === id) p.classList.add("active");
       });
 
+    });
+  });
+
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  if (window.innerWidth > 768) return;
+
+  const tabs = document.querySelectorAll(".extra-tab-menu li");
+  const desktopContents = document.querySelectorAll(".tab-pane");
+
+  tabs.forEach(tab => {
+    const tabId = tab.getAttribute("data-tab");
+    const content = document.getElementById(tabId);
+
+    if (!content) return;
+
+    // Create mobile content container
+    const mobileContent = document.createElement("div");
+    mobileContent.classList.add("mobile-tab-content");
+    mobileContent.innerHTML = content.innerHTML;
+
+    tab.after(mobileContent);
+
+    tab.addEventListener("click", () => {
+
+      // Close others
+      document.querySelectorAll(".mobile-tab-content").forEach(c => {
+        if (c !== mobileContent) c.classList.remove("active");
+      });
+
+      document.querySelectorAll(".extra-tab-menu li").forEach(t => {
+        if (t !== tab) t.classList.remove("active");
+      });
+
+      tab.classList.toggle("active");
+      mobileContent.classList.toggle("active");
     });
   });
 
