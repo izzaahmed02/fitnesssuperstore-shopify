@@ -924,6 +924,15 @@
                           <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}">
                             {{ product.selected_or_first_available_variant.price | money }}
                           </p>
+                          <p class="pr_addon_custom_compare_price">{{ product.metafields.custom.retail_price | money -}}</p>
+                          <span class="pr_addon_custom_saving_price you-save">
+                            Save
+                            {{
+                              product.metafields.custom.retail_price
+                              | minus: product.selected_or_first_available_variant.price
+                              | money
+                            -}}
+                          </span>
                         </div>
                         {% render 'paylater-providers' %}
                         {% if product.metafields.custom.backorder == true %}
@@ -3937,7 +3946,8 @@
   font-weight: 800;
   color: #23232B;
 }
-.price-container .you-save {
+.price-container .you-save,.pr_addon_custom_saving_price.you-save {
+  font-size: 13px;
   display: flex;
   align-items: center;
   padding: 4px 8px;
@@ -3947,6 +3957,14 @@
 .pr_custom_compare_price{
   font-size:14px;
   margin-bottom:0;
+}
+.pr_addon_custom_compare_price{
+  font-size:14px;
+  font-weight: 400;
+  line-height: 24px;
+  color: grey;
+  margin: 0;
+  text-decoration: line-through;
 }
 .sa_jump_to_reviews{
   font-size: 14px;
@@ -4032,6 +4050,9 @@
 product-gallery{
   display:block;
 }
+.popup-content{
+  flex-direction: column;
+}
 .custom-gallery-thumbnails.only-desktop, .popup-thumbnails.hidden {
   display: flex;
   gap: 8px;
@@ -4064,6 +4085,19 @@ product-gallery{
 }
 .sa-reviews {
   display: flex !important;
+}
+.contact-box {
+  justify-content: center;
+}
+.fsr-comparison-data th:first-child, .fsr-comparison-data td:first-child{
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background-color: white;
+}
+.fsr-comparison-data thead th:first-child {
+  border-top-left-radius: 0px !important;
+  background-color: #EDEFF3;
 }
 }
 </style>

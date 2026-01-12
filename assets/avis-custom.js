@@ -68,4 +68,48 @@ const container=document.getElementById("dynamic-product-content"),modalWrapper=
       <div class="product-details-container"></div>
       <div class="product-details-description-body"></div>
     </div>
-  `;return t+=r,t+="</div>"}function removeEmptyElements(e){let t=e.querySelectorAll("p, div");t.forEach(e=>{(!e.textContent.trim()&&0===e.children.length||"<br>"===e.innerHTML.trim()||"<br><br>"===e.innerHTML.trim()||!e.textContent.trim()&&e.innerHTML.trim().match(/^<br\s*\/?>$/i))&&e.remove()});let r=e.querySelectorAll("h5");r.forEach(e=>e.remove());let l=e.querySelectorAll("h6");l.forEach(e=>e.remove())}function clearImages(e){let t=e.querySelectorAll("img");t.forEach(e=>{e.parentElement?e.parentElement.remove():e.remove()})}if(document.addEventListener("DOMContentLoaded",()=>{let e=setInterval(()=>{document.querySelector(".avpoptions-container__v2")&&(window.location.pathname.includes("products")&&(renderCustomAvisOptions(),window.product.available||document.querySelectorAll(".avp-select").forEach(e=>{e.style.background="#F2F2F2",e.querySelector("select").disabled=!0,e.querySelector("select").style.color="#808080"}),document.querySelectorAll(".money.apo-money").forEach(e=>{let t=e.textContent.replace(/[()+]/g,"").trim();e.parentElement&&"option"===e.parentElement.tagName.toLowerCase()?e.textContent=`[Add ${t}]`:e.textContent=t})),document.querySelectorAll(".ap-options__swatch-container").forEach(e=>{let t=e.querySelector(".ap-label-tooltip .apo-title");(t&&"Paint Color"===t.textContent.trim()||t&&"Vinyl Color"===t.textContent.trim()||t&&"Upholstery Color"===t.textContent.trim())&&!window.location.pathname.includes("cart")&&(e.style.display="none")}),clearInterval(e))},100)}),document.addEventListener("click",function(e){if(e.target.classList.contains("read-more-btn")){let t=e.target,r=t.closest(".product-card");if(!r)return;let l=r.querySelector(".product-card__description");l&&(l.classList.contains("expanded")?(l.style.maxHeight="0",l.classList.remove("expanded"),t.textContent="Read more"):(l.style.maxHeight=l.scrollHeight+"px",l.classList.add("expanded"),t.textContent="Read Less"))}}),"/cart"===window.location.pathname){let e=!1,t=new MutationObserver(()=>{let t=document.querySelector(".avis-cartOptionsPopup .ap-options__select-container");t&&"none"!==t.style.display?e||(e=!0,document.querySelector("html").style.overflowY="hidden",renderCustomAvisOptions(),document.querySelectorAll(".money.apo-money").forEach(e=>{let t=e.textContent.replace(/[()+]/g,"").trim();e.parentElement&&"option"===e.parentElement.tagName.toLowerCase()?e.textContent=`[Add ${t}]`:e.textContent=t})):e=!1});t.observe(document.body,{childList:!0,subtree:!0,attributes:!0,attributeFilter:["style","class"]})}function setupPopupHeaderCloseDelegate(){document.addEventListener("click",e=>{let t=e.target.closest(".avis-popupHeader-close, .avis-cartOptionsBackdrop, .avis-popupFooter-cancel");t&&(document.documentElement.style.overflowY="")})}function updateCustomPrice(){setTimeout(()=>{let e=document.querySelector(".pr_custom_price");if(!e)return;let t=e.innerText.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0].replace(/,/g,"").replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0+$/,""),r=parseFloat(t),l=selectedNegativePrices.reduce((e,t)=>e+(t.value||0),0),o=(r-l).toLocaleString("en-US",{style:"currency",currency:"USD"});document.querySelectorAll(".pr_custom_price").forEach(e=>{e.innerText=o})},100)}function toSlug(e){return e.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")}setupPopupHeaderCloseDelegate();
+  `;return t+=r,t+="</div>"}function removeEmptyElements(e){let t=e.querySelectorAll("p, div");t.forEach(e=>{(!e.textContent.trim()&&0===e.children.length||"<br>"===e.innerHTML.trim()||"<br><br>"===e.innerHTML.trim()||!e.textContent.trim()&&e.innerHTML.trim().match(/^<br\s*\/?>$/i))&&e.remove()});let r=e.querySelectorAll("h5");r.forEach(e=>e.remove());let l=e.querySelectorAll("h6");l.forEach(e=>e.remove())}function clearImages(e){let t=e.querySelectorAll("img");t.forEach(e=>{e.parentElement?e.parentElement.remove():e.remove()})}if(document.addEventListener("DOMContentLoaded",()=>{let e=setInterval(()=>{document.querySelector(".avpoptions-container__v2")&&(window.location.pathname.includes("products")&&(renderCustomAvisOptions(),window.product.available||document.querySelectorAll(".avp-select").forEach(e=>{e.style.background="#F2F2F2",e.querySelector("select").disabled=!0,e.querySelector("select").style.color="#808080"}),document.querySelectorAll(".money.apo-money").forEach(e=>{let t=e.textContent.replace(/[()+]/g,"").trim();e.parentElement&&"option"===e.parentElement.tagName.toLowerCase()?e.textContent=`[Add ${t}]`:e.textContent=t})),document.querySelectorAll(".ap-options__swatch-container").forEach(e=>{let t=e.querySelector(".ap-label-tooltip .apo-title");(t&&"Paint Color"===t.textContent.trim()||t&&"Vinyl Color"===t.textContent.trim()||t&&"Upholstery Color"===t.textContent.trim())&&!window.location.pathname.includes("cart")&&(e.style.display="none")}),clearInterval(e))},100)}),document.addEventListener("click",function(e){if(e.target.classList.contains("read-more-btn")){let t=e.target,r=t.closest(".product-card");if(!r)return;let l=r.querySelector(".product-card__description");l&&(l.classList.contains("expanded")?(l.style.maxHeight="0",l.classList.remove("expanded"),t.textContent="Read more"):(l.style.maxHeight=l.scrollHeight+"px",l.classList.add("expanded"),t.textContent="Read Less"))}}),"/cart"===window.location.pathname){let e=!1,t=new MutationObserver(()=>{let t=document.querySelector(".avis-cartOptionsPopup .ap-options__select-container");t&&"none"!==t.style.display?e||(e=!0,document.querySelector("html").style.overflowY="hidden",renderCustomAvisOptions(),document.querySelectorAll(".money.apo-money").forEach(e=>{let t=e.textContent.replace(/[()+]/g,"").trim();e.parentElement&&"option"===e.parentElement.tagName.toLowerCase()?e.textContent=`[Add ${t}]`:e.textContent=t})):e=!1});t.observe(document.body,{childList:!0,subtree:!0,attributes:!0,attributeFilter:["style","class"]})}function setupPopupHeaderCloseDelegate(){document.addEventListener("click",e=>{let t=e.target.closest(".avis-popupHeader-close, .avis-cartOptionsBackdrop, .avis-popupFooter-cancel");t&&(document.documentElement.style.overflowY="")})}function updateCustomPrice(){setTimeout(()=>{let e=document.querySelector(".pr_custom_price");if(!e)return;let t=e.innerText.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0].replace(/,/g,"").replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0+$/,""),r=parseFloat(t),l=selectedNegativePrices.reduce((e,t)=>e+(t.value||0),0),o=(r-l).toLocaleString("en-US",{style:"currency",currency:"USD"});document.querySelectorAll(".pr_custom_price").forEach(e=>{e.innerText=o});updateComparePrice();},100)}function toSlug(e){return e.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")}setupPopupHeaderCloseDelegate();
+  function parsePrice(text) {
+  if (!text) return 0;
+
+  const match = text.match(/\d+(?:,\d{3})*(?:\.\d+)?/);
+  if (!match) return 0;
+
+  return parseFloat(
+    match[0]
+      .replace(/,/g, "")
+      .replace(/(\.\d*?[1-9])0+$/, "$1")
+      .replace(/\.0+$/, "")
+  );
+}
+
+const formatUSD = value =>
+  Math.max(0, value).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
+
+function updateComparePrice() {
+  const productPrice = (window.product.price/ 100).toFixed(2);
+  const priceEl = document.querySelector(".pr_custom_price");
+  const compareEl = document.querySelector(".product__prices .pr_custom_compare_price");
+  const addonCompareEl = document.querySelector(".apo-variant-price .pr_addon_custom_compare_price");
+  const addonSavingEl = document.querySelector(".apo-variant-price .pr_addon_custom_saving_price");
+
+  if (!priceEl || !compareEl || !addonCompareEl || !addonSavingEl) return;
+
+  const basePrice = parsePrice(priceEl.innerText);
+  const comparePrice = parsePrice(compareEl.innerText);
+
+  const discountTotal = selectedNegativePrices.reduce(
+    (sum, item) => sum + (item.value || 0),
+    0
+  );
+
+  const updatedPriceDiff = basePrice - discountTotal-productPrice;
+  const addonCompare = comparePrice + updatedPriceDiff;
+  const addonSaving = addonCompare - basePrice;
+  addonCompareEl.textContent  = formatUSD(addonCompare);
+  addonSavingEl.innerText = `Save ${formatUSD(addonSaving)}`;
+
+}
