@@ -609,6 +609,150 @@
         >
           {%- assign product_form_id = 'product-form-' | append: section.id -%}
 
+
+
+{%- for block in section.blocks -%}
+     {%- case block.type -%}
+
+{%- when 'title' -%}
+                <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
+                  {% if product.tags contains 'new' %}<span class="product_versiontitle">New</span>{% endif %}
+                  <h1>{{ product.title | escape }}</h1>
+                  <a href="{{ product.url }}" class="product__title">
+                    <h2 class="h1">
+                      {{ product.title | escape }}
+                    </h2>
+                  </a>
+                </div>
+              {% when 'price' %}
+
+                {% assign campaign_text = '' %}
+
+                {% if product.title contains 'French Fitness' %}
+                  {% assign campaign_text = settings.sale_promo_ff %}
+                {% elsif product.title contains 'Remanufactured' %}
+                  {% assign campaign_text = settings.sale_promo_reman %}
+                {% else %}
+                  {% assign campaign_text = settings.sale_promo_default %}
+                {% endif %}
+
+                {% unless campaign_text == blank %}
+                  <div class="campaign-sale-container hide-on-mobile">
+                    <p>{{ campaign_text | escape }}</p>
+                  </div>
+                {% endunless %} 
+
+                <div class="product__prices hidden lg:block">                 
+                  {% if product.metafields.custom.saleprice_name != blank %}
+                    {% render 'super-sale',
+                      sale_name: product.metafields.custom.saleprice_name,
+                      current_price: product.selected_or_first_available_variant.compare_at_price,
+                      sale_price: product.metafields.custom.sale_price
+                    %}
+                  {% else %}
+                    <div class="price-container">
+                      {%- render 'price',
+                        product: product,
+                        use_variant: true,
+                        show_badges: true,
+                        price_class: 'price--large'
+                      -%}
+
+                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
+                      %}
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                    <span class="pr_custom_compare_price">
+                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
+                    </span>
+                  {% endif %}
+                  {% if product.metafields.custom.backorder == true %}
+                    <div class="badge backorder-badge stock-badge">
+                       <span>Available to Pre-Order</span>
+                    </div>
+                  {% else %}
+                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
+                      {% if product.available == true %}
+                        <span>Available to Order</span>
+                      {% else %}
+                        <span>Out of stock</span>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                
+              {% render 'paylater-providers' %}
+
+                        
+{% when 'review_rating_widget' %}
+  <div class="review_rating_widget">
+    <div class="review_rating_star">
+      {{ block.settings.review_rating_star }}
+    </div>
+    <div class="review_rating_number">
+      {{ block.settings.review_rating_number }}
+    </div>
+     <div class="review_rating_number_customer">
+      {{ block.settings.review_rating_number_customer}}
+    </div>
+  </div>
+
+{%- endcase -%}
+ {%- endfor -%}
+
+
+
+<div class="custom-review-widget">
+  {% for block in section.blocks %}
+    {% case block.type %}
+
+    {% when 'custom_review_widget' %}
+     
+        <div class="custom_review_block">
+          <div class="custom_review_star_wrapper">
+            {% if block.settings.custom_review_star != blank %}
+             <div class="custom_review_star">
+              {{ block.settings.custom_review_star }}
+             </div>
+             {% endif %}
+             <div class="">
+            <svg width="30" height="25" viewBox="0 0 30 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M17.093 24.9419V16.2209C17.093 12.0349 18.1395 8.4593 20.2326 5.49418C22.3256 2.52906 25.5814 0.697672 30 0V5.40697C27.4419 5.7558 25.6977 6.65697 24.7674 8.11046C23.8953 9.50581 23.4593 11.5116 23.4593 14.1279L19.186 13.2558H29.8256V24.9419H17.093ZM0 24.9419V16.2209C0 12.0349 1.04651 8.4593 3.13953 5.49418C5.23256 2.52906 8.48837 0.697672 12.907 0V5.40697C10.3488 5.7558 8.60465 6.65697 7.67442 8.11046C6.80233 9.50581 6.36628 11.5116 6.36628 14.1279L2.09302 13.2558H12.7326V24.9419H0Z" fill="#E0E0E0"/>
+</svg>
+
+             </div>
+            </div>
+            
+
+            {% if block.settings.custom_review_text != blank %}
+             <div class="custom_review_text">
+              {{ block.settings.custom_review_text }}
+             </div>
+            {% endif %}
+
+            {% if block.settings.custom_review_customername != blank %}
+             <div class="custom_review_customername">
+              {{ block.settings.custom_review_customername }}
+             </div>
+            {% endif %}
+        </div>
+
+    {% endcase %}
+  {% endfor %}
+</div>
+
+
+
+
+
+
+
+
+
+
           {%- for block in section.blocks -%}
             {%- case block.type -%}
               {%- when '@app' -%}
@@ -1237,77 +1381,7 @@
                 >
                   {{- block.settings.text -}}
                 </p>
-              {%- when 'title' -%}
-                <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
-                  {% if product.tags contains 'new' %}<span class="product_versiontitle">New</span>{% endif %}
-                  <h1>{{ product.title | escape }}</h1>
-                  <a href="{{ product.url }}" class="product__title">
-                    <h2 class="h1">
-                      {{ product.title | escape }}
-                    </h2>
-                  </a>
-                </div>
-              {% when 'price' %}
-
-                {% assign campaign_text = '' %}
-
-                {% if product.title contains 'French Fitness' %}
-                  {% assign campaign_text = settings.sale_promo_ff %}
-                {% elsif product.title contains 'Remanufactured' %}
-                  {% assign campaign_text = settings.sale_promo_reman %}
-                {% else %}
-                  {% assign campaign_text = settings.sale_promo_default %}
-                {% endif %}
-
-                {% unless campaign_text == blank %}
-                  <div class="campaign-sale-container hide-on-mobile">
-                    <p>{{ campaign_text | escape }}</p>
-                  </div>
-                {% endunless %} 
-
-                <div class="product__prices hidden lg:block">                 
-                  {% if product.metafields.custom.saleprice_name != blank %}
-                    {% render 'super-sale',
-                      sale_name: product.metafields.custom.saleprice_name,
-                      current_price: product.selected_or_first_available_variant.compare_at_price,
-                      sale_price: product.metafields.custom.sale_price
-                    %}
-                  {% else %}
-                    <div class="price-container">
-                      {%- render 'price',
-                        product: product,
-                        use_variant: true,
-                        show_badges: true,
-                        price_class: 'price--large'
-                      -%}
-
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
-                      %}
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-                    <span class="pr_custom_compare_price">
-                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-                    </span>
-                  {% endif %}
-                  {% if product.metafields.custom.backorder == true %}
-                    <div class="badge backorder-badge stock-badge">
-                       <span>Available to Pre-Order</span>
-                    </div>
-                  {% else %}
-                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                      {% if product.available == true %}
-                        <span>Available to Order</span>
-                      {% else %}
-                        <span>Out of stock</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-
-                
-              {% render 'paylater-providers' %}
+              
               {%- when 'tile_calculator' -%}
                 {% if block.settings.show_tile_calculator %}
                   <div class="product__tile-calculator">
@@ -2280,19 +2354,7 @@
 
              
 
-                
-{% when 'review_rating_widget' %}
-  <div class="review_rating_widget">
-    <div class="review_rating_star">
-      {{ block.settings.review_rating_star }}
-    </div>
-    <div class="review_rating_number">
-      {{ block.settings.review_rating_number }}
-    </div>
-     <div class="review_rating_number_customer">
-      {{ block.settings.review_rating_number_customer}}
-    </div>
-  </div>
+ 
         
                 
 
@@ -2304,44 +2366,6 @@
 
 
 
-<div class="custom-review-widget">
-  {% for block in section.blocks %}
-    {% case block.type %}
-
-    {% when 'custom_review_widget' %}
-     
-        <div class="custom_review_block">
-          <div class="custom_review_star_wrapper">
-            {% if block.settings.custom_review_star != blank %}
-             <div class="custom_review_star">
-              {{ block.settings.custom_review_star }}
-             </div>
-             {% endif %}
-             <div class="">
-            <svg width="30" height="25" viewBox="0 0 30 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M17.093 24.9419V16.2209C17.093 12.0349 18.1395 8.4593 20.2326 5.49418C22.3256 2.52906 25.5814 0.697672 30 0V5.40697C27.4419 5.7558 25.6977 6.65697 24.7674 8.11046C23.8953 9.50581 23.4593 11.5116 23.4593 14.1279L19.186 13.2558H29.8256V24.9419H17.093ZM0 24.9419V16.2209C0 12.0349 1.04651 8.4593 3.13953 5.49418C5.23256 2.52906 8.48837 0.697672 12.907 0V5.40697C10.3488 5.7558 8.60465 6.65697 7.67442 8.11046C6.80233 9.50581 6.36628 11.5116 6.36628 14.1279L2.09302 13.2558H12.7326V24.9419H0Z" fill="#E0E0E0"/>
-</svg>
-
-             </div>
-            </div>
-            
-
-            {% if block.settings.custom_review_text != blank %}
-             <div class="custom_review_text">
-              {{ block.settings.custom_review_text }}
-             </div>
-            {% endif %}
-
-            {% if block.settings.custom_review_customername != blank %}
-             <div class="custom_review_customername">
-              {{ block.settings.custom_review_customername }}
-             </div>
-            {% endif %}
-        </div>
-
-    {% endcase %}
-  {% endfor %}
-</div>
 
 
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
