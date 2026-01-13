@@ -2284,6 +2284,40 @@
 
             {%- endcase -%}
           {%- endfor -%}
+
+
+
+<div class="custom-review-widget">
+  {% for block in section.blocks %}
+    {% case block.type %}
+
+    {% when 'custom_review_widget' %}
+     
+        <div class="custom_review_block">
+            {% if block.settings.custom_review_star != blank %}
+             <div class="custom_review_star">
+              {{ block.settings.custom_review_star }}
+             </div>
+            {% endif %}
+
+            {% if block.settings.custom_review_text != blank %}
+             <div class="custom_review_text">
+              {{ block.settings.custom_review_text }}
+             </div>
+            {% endif %}
+
+            {% if block.settings.custom_review_customername != blank %}
+             <div class="custom_review_customername">
+              {{ block.settings.custom_review_customername }}
+             </div>
+            {% endif %}
+        </div>
+
+    {% endcase %}
+  {% endfor %}
+</div>
+
+
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
             {{ 'products.product.view_full_details' | t }}
             {% render 'icon-arrow' %}
@@ -2436,6 +2470,9 @@
       a.parentNode.insertBefore(s, a);
     }
   })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
+</script>
+<script>
+  $(".custom-review-widget").slick({dots:!0,infinite:!0,draggable:!0,cssEase:"linear",swipeToSlide:!0,touchThreshold:8,slidesToShow:5,slidesToScroll:1,responsive:[{breakpoint:1300,settings:{slidesToShow:4}},{breakpoint:1024,settings:{slidesToShow:3}},{breakpoint:989,settings:{slidesToShow:2,swipeToSlide:!0,touchThreshold:8}}]});
 </script>
 
 {% comment %} ------addon item add to cart with main product using group id js start------ {% endcomment %}
@@ -4339,7 +4376,30 @@ document.addEventListener('click', function (e) {
           "default": "Mats"
         }
       ]
+    },
+   {
+      "type": "custom_review_widget",
+      "name": "custom review widget",
+      "limit": 1,
+      "settings":[
+        {
+        "type": "html",
+          "id": "custom_review_star",
+          "label": "custom review star"
+        },
+        {
+          "type": "richtext",
+          "id": "custom_review_text",
+          "label": "custom review text"
+        },
+        {
+          "type": "text",
+          "id": "custom_review_customername",
+          "label": "custom review customer name"
+        }
+      ]
     }
+
   ],
   "settings": [
     {
