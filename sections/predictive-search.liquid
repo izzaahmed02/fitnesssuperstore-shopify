@@ -7,7 +7,7 @@
         id="predictive-search-results-groups-wrapper"
         class="predictive-search__results-groups-wrapper{% unless predictive_search.resources.products.size > 0 %} predictive-search__results-groups-wrapper--no-products{% endunless %}{% unless predictive_search.resources.queries.size > 0 %} predictive-search__results-groups-wrapper--no-suggestions{% endunless %}"
       >
-    {%- endif -%} 
+    {%- endif -%}
     {%- if first_column_results_size > 0 -%}
       <div class="predictive-search__result-group">
         {%- if predictive_search.resources.queries.size > 0 -%}
@@ -112,59 +112,40 @@
               role="group"
               aria-labelledby="predictive-search-products"
             >
-             {%- for product in predictive_search.resources.products -%}
-  {% assign excluded_types = "Avis-add-charge,Custom Field More Info,Option Category,Product (Hidden)" | split: "," %}
-  {% assign excluded_tags  = "hidden,draft,avisplus-product-options,about_option_categories" | split: "," %}
-
-  {% assign skip_product = false %}
-
-  {%- if excluded_types contains product.type -%}
-    {% assign skip_product = true %}
-  {%- endif -%}
-
-  {%- for tag in product.tags -%}
-    {% if excluded_tags contains tag %}
-      {% assign skip_product = true %}
-    {% endif %}
-  {%- endfor -%}
-
-  {% unless skip_product %}
-    <li
-      id="predictive-search-option-product-{{ forloop.index }}"
-      class="predictive-search__list-item"
-      role="option"
-      aria-selected="false"
-    >
-      <a
-        href="{{ product.url }}"
-        class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text"
-        tabindex="-1"
-      >
-        {%- if product.featured_media != blank -%}
-          <img
-            class="predictive-search__image"
-            src="{{ product.featured_media | image_url: width: 150 }}"
-            alt="{{ product.featured_media.alt }}"
-            width="50"
-            height="{{ 50 | divided_by: product.featured_media.preview_image.aspect_ratio }}"
-          >
-        {%- endif -%}
-        <div class="predictive-search__item-content{% unless settings.predictive_search_show_vendor or settings.predictive_search_show_price %} predictive-search__item-content--centered{% endunless %}">
-          <p class="predictive-search__item-heading h5">{{ product.title | escape }}</p>
-          <span class="visually-hidden">{{ 'accessibility.vendor' | t }}</span>
-          <div class="predictive-search__item-vendor">
-            {{ product.vendor }}
-          </div>
-          {%- if settings.predictive_search_show_price -%}
-            {% render 'price', product: product, use_variant: true, show_badges: false %}
-          {%- endif -%}
-        </div>
-      </a>
-    </li>
-  {% endunless %}
-{%- endfor -%}
-
-
+              {%- for product in predictive_search.resources.products limit:6 -%}
+                <li
+                  id="predictive-search-option-product-{{ forloop.index }}"
+                  class="predictive-search__list-item"
+                  role="option"
+                  aria-selected="false"
+                >
+                  <a
+                    href="{{ product.url }}"
+                    class="predictive-search__item predictive-search__item--link-with-thumbnail link link--text"
+                    tabindex="-1"
+                  >
+                    {%- if product.featured_media != blank -%}
+                      <img
+                        class="predictive-search__image"
+                        src="{{ product.featured_media | image_url: width: 150 }}"
+                        alt="{{ product.featured_media.alt }}"
+                        width="50"
+                        height="{{ 50 | divided_by: product.featured_media.preview_image.aspect_ratio }}"
+                      >
+                    {%- endif -%}
+                    <div class="predictive-search__item-content{% unless settings.predictive_search_show_vendor or settings.predictive_search_show_price %} predictive-search__item-content--centered{% endunless %}">
+                      <p class="predictive-search__item-heading h5">{{ product.title | escape }}</p>
+                      <span class="visually-hidden">{{ 'accessibility.vendor' | t }}</span>
+                      <div class="predictive-search__item-vendor">
+                        {{ product.vendor }}
+                      </div>
+                      {%- if settings.predictive_search_show_price -%}
+                        {% render 'price', product: product, use_variant: true, show_badges: false %}
+                      {%- endif -%}
+                    </div>
+                  </a>
+                </li>
+              {%- endfor -%}
             </ul>
           </div>
         {%- endif -%}
@@ -182,7 +163,7 @@
               role="group"
               aria-labelledby="predictive-search-collections"
             >
-              {%- for collection in predictive_search.resources.collections -%}
+              {%- for collection in predictive_search.resources.collections limit:6 -%}
                 <li
                   id="predictive-search-option-collection-{{ forloop.index }}"
                   class="predictive-search__list-item"
