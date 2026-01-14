@@ -45,7 +45,7 @@
   }
 
   .prodsHeader .bannerBtn{
-    color: #D83D0E;
+    color: #ca4b23;
     font-size: 16px;
     font-weight: 700;
     text-decoration: underline;
@@ -100,7 +100,6 @@
     right: 0 !important;
     bottom: 0 !important;
     width: 100% !important;
-    max-width: 100%!important;
     z-index: 2147483647 !important;
     overflow: auto !important;
     background: #f8f9fa !important;
@@ -195,41 +194,50 @@
     line-height: 64px;
     color: #000 !important;
   }
-  .search-modal__content .search__input.field__input::selection {
-    background:rgba(129, 129, 129, 0.3);
-  }
-
-
-
-.customSearch__icon {
-  display: inline-flex;
-  margin-right: 8px;
-}
-
-.customSearch__placeholder {
-  flex: 1;
-  color: #b3b3b3;
-}
-
 </style>
 
 <details-modal class="header__search gl-fullscreen-search">
   <details>
-  
-    <summary aria-label="I'm looking for..." role="button" tabindex="0" class="customSearch" aria-label="{{ 'general.search.search' | t }}">
-  <div class="custom-header-search">
-    <span class="custom-header-search-icon" aria-hidden="true"></span>
-  
-    <span class="customSearch__placeholder">{{ 'general.search.search' | t }}</span>
-    {%- if settings.predictive_search_enabled -%}
+    <summary class="customSearch">
+      <form action="{{ routes.search_url }}" method="get" role="search" class="search custom-header-search">
+        <input
+          class="custom-header-search--input"
+          id="{{ input_id }}"
+          type="search"
+          name="q"
+          value=""
+          placeholder="{{ 'general.search.search' | t }}"
+          {%- if settings.predictive_search_enabled -%}
+            role="combobox"
+            aria-expanded="false"
+            aria-owns="predictive-search-results"
+            aria-controls="predictive-search-results"
+            aria-haspopup="listbox"
+            aria-autocomplete="list"
+            autocorrect="off"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+          {%- endif -%}
+        >
+        <input type="hidden" name="options[prefix]" value="last">
+        <button
+          type="reset"
+          class="reset__button field__button{% if search.terms == blank %} hidden{% endif %}"
+          aria-label="{{ 'general.search.reset' | t }}"
+        >
+          <span class="svg-wrapper">
+            {{- 'icon-reset.svg' | inline_asset_content -}}
+          </span>
+        </button>
+        {%- if settings.predictive_search_enabled -%}
           <div class="predictive-search predictive-search--header" tabindex="-1" data-predictive-search>
             {%- render 'loading-spinner', class: 'predictive-search__loading-state' -%}
           </div>
           <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
         {%- endif -%}
-  </div>
-</summary>
-
+      </form>
+    </summary>
 
     <div
       class="search-modal modal__content gl-search-fullscreen"
