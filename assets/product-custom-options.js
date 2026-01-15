@@ -113,7 +113,6 @@ if (!customElements.get('product-customization-options')) {
             }
             if (this.closest('cart-drawer')) return;
             this.updatePrice();
-            this.closeAccordion(optionContainer);
           });
         });
       }
