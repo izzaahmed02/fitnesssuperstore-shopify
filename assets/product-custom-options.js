@@ -463,9 +463,9 @@ if (!customElements.get('product-customization-options')) {
               this.hideConditionalOptions();
               this.classList.add('modify-opened');
               document.body.style.overflow = 'hidden';
-            }, 300);
+            }, 200);
           });
-        });
+        }, 150);
       }
 
       // Method to close Modify popup in Cart
