@@ -573,6 +573,7 @@ if (!customElements.get('product-customization-options')) {
 
             this.classList.remove('modify-opened');
             this.dataset.stamp = 'none';
+            document.body.style.overflow = 'auto';
           }
         } catch (error) {
           console.error(error);
