@@ -57,6 +57,26 @@
   {% endunless %}
 
   {% for category in options %}
+    {% liquid
+      assign color_counter = 0
+      assign color_title = ''
+      assign color_group = ''
+      assign category_title_downcase = category.title | downcase
+      assign hidden_option = false
+      for product_option in category.product_options.value
+        assign title = product_option.product_option_title | downcase
+        if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
+          assign color_counter = color_counter | plus: 1
+          assign color_title = product_option.product_option_title
+          assign color_group = title | handleize
+        else
+          assign color_title = ''
+        endif
+        if product_option.hide_values
+          assign hidden_option = true
+        endif
+      endfor
+    %}
     {% assign color_counter = 0 %}
     {% assign color_title = '' %}
     {% assign color_group = '' %}
