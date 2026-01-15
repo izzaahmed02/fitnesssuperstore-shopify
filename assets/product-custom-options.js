@@ -22,6 +22,8 @@ if (!customElements.get('product-customization-options')) {
         this.cartDrawer = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
       }
 
+      #accordionToggleAdded = false;
+
       get modifyID() {
         return this.dataset.productId;
       }
