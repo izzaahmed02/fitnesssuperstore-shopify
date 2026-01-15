@@ -460,8 +460,6 @@ if (!customElements.get('product-customization-options')) {
           modifyButton.addEventListener('click', () => {
             if(!this.#accordionToggleAdded) {
               this.toggleAccordions();
-              console.log(this.#accordionToggleAdded);
-              
               this.#accordionToggleAdded = true;
             }
             this.dataset.stamp = this.htmlToBase64(this.innerHTML);
