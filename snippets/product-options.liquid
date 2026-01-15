@@ -13,7 +13,7 @@
 
   for category in options
     assign category_title_downcase = category.title | downcase
-    if category_title_downcase contains 'color' or  category_title_downcase contains 'colors'
+    if category_title_downcase contains 'color' or category_title_downcase contains 'colors'
       assign has_color_option = true
     endif
     assign color_title = ''
@@ -44,12 +44,17 @@
   class="product-options"
   id="product-options"
   data-product="default"
-  
 >
-      {% unless has_color_option %}
-        {% assign index = 0 %}
-        {% assign assambly_index = assambly_index | minus: 1 %}
-      {% endunless %}
+  {% liquid
+    unless has_color_option
+      assign index = 0
+      assign assambly_index = assambly_index | minus: 1
+    endunless
+  %}
+  {% unless has_color_option %}
+    {% assign index = 0 %}
+    {% assign assambly_index = assambly_index | minus: 1 %}
+  {% endunless %}
 
   {% for category in options %}
     {% assign color_counter = 0 %}
