@@ -830,6 +830,18 @@
                 {% endif %}
 
               {%- when 'price_with_option' -%}
+
+                {%- comment -%} Inject bundle selector for target collection {%- endcomment -%}
+              {%- assign target_collection = 'selectorized-cable-cross-functional-trainers' -%}
+              {%- assign is_target_collection = false -%}
+              {%- for collection in product.collections -%}
+                {%- if collection.handle == target_collection -%}
+                  {%- assign is_target_collection = true -%}
+                  {%- break -%}
+                {%- endif -%}
+              {%- endfor -%}
+              
+
                {% unless product.tags contains 'avisplus-product-options' %}
                 <product-form
                   class="product-form"
@@ -837,6 +849,85 @@
                   data-section-id="{{ section.id }}"
                 >
                   <div class="installation-group"></div>
+{%- if is_target_collection -%}
+                    <details class="bundle-selector-dropdown" data-section-id="{{ section.id }}">
+                      <summary class="bundle-selector-summary">
+                        <span class="bundle-selector-summary__title">Cable Attachments</span>
+                      </summary>
+                      <div class="bundle-selector-dropdown__content">
+                        <div class="bundle-selector-container" data-section-id="{{ section.id }}">
+                          <div class="bundle-cards-wrapper">
+                            <div class="bundle-card" data-bundle-set="A">
+                              <div class="bundle-card__image">
+                                <img src="{{ product.featured_image | image_url: width: 300 }}" alt="3-Piece Base Kit" width="300" height="300" loading="lazy">
+                              </div>
+                              <div class="bundle-card__content">
+                              <h4 class="bundle-card__title">French Fitness Cable Machine Attachment 3-Piece Base Kit (New)</h4>
+                              <a href="#" class="bundle-card__link" data-bundle-set="A">See What's Included</a>
+                              <div class="bundle-card__price">
+                                <span class="bundle-price-current">$59.00 USD</span>
+                                <span class="bundle-price-original">$79.00 USD</span>
+                              </div>
+                              </div>
+                            </div>
+                            <div class="bundle-card" data-bundle-set="B">
+                              <div class="bundle-card__image">
+                                <img src="{{ product.featured_image | image_url: width: 300 }}" alt="5-Piece Complete Set" width="300" height="300" loading="lazy">
+                              </div>
+                              <div class="bundle-card__content">
+                              <h4 class="bundle-card__title">French Fitness Cable Machine Attachment 5-Piece Complete Set (New)</h4>
+                              <a href="#" class="bundle-card__link" data-bundle-set="B">See What's Included</a>
+                              <div class="bundle-card__price">
+                                <span class="bundle-price-current">$149.00 USD</span>
+                                <span class="bundle-price-original">$199.00 USD</span>
+                              </div>
+                              </div>
+                            </div>
+                            <div class="bundle-card" data-bundle-set="C">
+                              <div class="bundle-badge">Best Value</div>
+                              <div class="bundle-card__image">
+                                <img src="{{ product.featured_image | image_url: width: 300 }}" alt="12-Piece Ultimate Bundle" width="300" height="300" loading="lazy">
+                              </div>
+                              <div class="bundle-card__content">
+                              <h4 class="bundle-card__title">French Fitness Cable Machine Attachment 12-Piece Ultimate Bundle (New)</h4>
+                              <a href="#" class="bundle-card__link" data-bundle-set="C">See What's Included</a>
+                              <div class="bundle-card__price">
+                                <span class="bundle-price-current">$399.00 USD</span>
+                                <span class="bundle-price-original">$519.00 USD</span>
+                              </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+                    <div id="bundle-modal" class="bundle-modal" hidden style="display: none;">
+                      <div class="bundle-modal__backdrop"></div>
+                      <div class="bundle-modal__content">
+                        <button class="bundle-modal__close" aria-label="Close modal">&times;</button>
+                        <div class="bundle-modal__header">
+                          <h2 class="bundle-modal__title">ABOUT THIS BUNDLE</h2>
+                        </div>
+                        <div class="bundle-modal__body">
+                          <div class="bundle-modal__main-product">
+                            <div class="bundle-modal__product-image">
+                              <img id="bundle-main-image" src="" alt="" width="200" height="200" loading="lazy">
+                            </div>
+                            <div class="bundle-modal__product-info">
+                              <h3 id="bundle-main-title" class="bundle-modal__product-title"></h3>
+                              <div class="bundle-modal__rating" id="bundle-main-rating"></div>
+                              <p id="bundle-main-description" class="bundle-modal__product-description"></p>
+                            </div>
+                          </div>
+                          <div class="bundle-modal__included-section">
+                            <h4 class="bundle-modal__included-title">The set includes the following:</h4>
+                            <div class="bundle-modal__products-grid" id="bundle-products-grid"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {%- endif -%}
+
                   <div class="product-form__error-message-wrapper" role="alert" hidden>
                     <svg
                       aria-hidden="true"
@@ -1927,6 +2018,7 @@
   window.product = {{ product | json }}
 </script>
 <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'bundle-selector.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
 
 <script defer type="text/javascript">
