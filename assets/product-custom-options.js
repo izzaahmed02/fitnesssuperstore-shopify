@@ -22,6 +22,8 @@ if (!customElements.get('product-customization-options')) {
         this.cartDrawer = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
       }
 
+      #accordionToggleAdded = false;
+
       get modifyID() {
         return this.dataset.productId;
       }
@@ -113,7 +115,6 @@ if (!customElements.get('product-customization-options')) {
             }
             if (this.closest('cart-drawer')) return;
             this.updatePrice();
-            this.closeAccordion(optionContainer);
           });
         });
       }
@@ -350,9 +351,6 @@ if (!customElements.get('product-customization-options')) {
             priceAdjustment += Number(colorPrice || 0);
           }
         }
-
-        console.log(priceAdjustment);
-
         this.priceHelper(priceAdjustment);
       }
 
@@ -460,7 +458,10 @@ if (!customElements.get('product-customization-options')) {
           const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`) || this.cartDrawer?.querySelector(`[data-key-modify="${this.modifyID}"]`);
           if (!modifyButton) return;
           modifyButton.addEventListener('click', () => {
-            this.toggleAccordions();
+            if(!this.#accordionToggleAdded) {
+              this.toggleAccordions();
+              this.#accordionToggleAdded = true;
+            }
             this.dataset.stamp = this.htmlToBase64(this.innerHTML);
             setTimeout(() => {
               this.hideConditionalOptions();
@@ -468,7 +469,7 @@ if (!customElements.get('product-customization-options')) {
               document.body.style.overflow = 'hidden';
             }, 200);
           });
-        });
+        }, 150);
       }
 
       // Method to close Modify popup in Cart
@@ -576,6 +577,8 @@ if (!customElements.get('product-customization-options')) {
 
             this.classList.remove('modify-opened');
             this.dataset.stamp = 'none';
+            document.body.style.overflow = 'auto';
+             this.#accordionToggleAdded = false;
           }
         } catch (error) {
           console.error(error);
