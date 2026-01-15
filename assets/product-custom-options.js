@@ -463,7 +463,7 @@ if (!customElements.get('product-customization-options')) {
               this.hideConditionalOptions();
               this.classList.add('modify-opened');
               document.body.style.overflow = 'hidden';
-            }, 200);
+            }, 300);
           });
         });
       }
