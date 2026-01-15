@@ -458,7 +458,10 @@ if (!customElements.get('product-customization-options')) {
           const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`) || this.cartDrawer?.querySelector(`[data-key-modify="${this.modifyID}"]`);
           if (!modifyButton) return;
           modifyButton.addEventListener('click', () => {
-            this.toggleAccordions();
+            if(!this.#accordionToggleAdded) {
+              this.toggleAccordions();
+              this.#accordionToggleAdded = true;
+            }
             this.dataset.stamp = this.htmlToBase64(this.innerHTML);
             setTimeout(() => {
               this.hideConditionalOptions();
