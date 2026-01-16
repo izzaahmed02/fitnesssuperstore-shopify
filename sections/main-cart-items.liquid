@@ -737,6 +737,7 @@
 </div>
 
 {% if show_product_options %}
+  {% assign has_info = false %}
   {% for item in cart.items %}
     {% for property in item.properties %}
       {% if property.first == '_functionOperation' %}
@@ -746,7 +747,6 @@
     {% endfor %}
     {% if item.product.id == product.id %}
       {% assign options = item.product.metafields.options.product_options.value %}
-      {% assign has_info = false %}
       {% for category in options %}
         {% if category.help_text.value != blank %}
           {% liquid
@@ -784,7 +784,9 @@
       {% endfor %}
     {% endif %}
   {% endfor %}
-
+  {% if has_info %}
+    {{ 'avis-custom.css' | asset_url | stylesheet_tag }}
+  {% endif %}
   <script src="{{ 'product-custom-options.js' | asset_url }}" defer></script>
 {% endif %}
 <script src="{{ 'cart.js' | asset_url }}" defer></script>
