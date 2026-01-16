@@ -2025,77 +2025,12 @@
         assign related_products = content.related_products.value
         assign has_info = true
       %}
-      <div class="option-popup" data-popup="{{ product_option.product_option_title }}">
-        <div class="option-popup__overlay" data-close-popup="{{ product_option.product_option_title }}"></div>
-        <div class="option-popup__container">
-          <div class="option-popup__header">
-            {% if title != blank %}
-              <h3>
-                {{ title }}
-              </h3>
-            {% endif %}
-            <svg
-              data-close-popup="{{ product_option.product_option_title }}"
-              aria-hidden="true"
-              focusable="false"
-              width="12"
-              height="13"
-              class="icon icon-close-small"
-              viewBox="0 0 12 13"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M8.48627 9.32917L2.82849 3.67098" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
-              <path d="M2.88539 9.38504L8.42932 3.61524" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
-          </div>
-          <div class="option-popup__content">
-            {% if related_products != blank %}
-              <div class="product-cards">
-                {% for product in related_products %}
-                  <div class="product-card{% if forloop.first %} active{% endif %}" data-product-id="{{ product.id }}">
-                    <div class="product-card__img">
-                      {{ product.featured_image | image_url: width: 300 | image_tag: loading: 'lazy', width: 200, height: 120 }}
-                    </div>
-                    <h4 class="product-card__title">{{ product.title }}</h4>
-                    <div class="product-card__mid">
-                      <span class="product-card__code">{{ product.metafields.custom.product_code }}</span>
-                      <span class="product-card__price">
-                        {{ product.price | money }}
-                      </span>
-                    </div>
-                    <p class="product-card__description">{{ product.description | strip_html | truncate: 150 }}</p>
-                    <a href="{{ product.url }}" class="read-more-btn" data-id="{{ product.id }}">Read more</a>
-                  </div>
-                {% endfor %}
-              </div>
-              {% for product in related_products %}
-                <div class="product-details" style="display:{% if forloop.first %} flex{% else %} none{% endif %};" data-details-id="{{ product.id }}">
-                  <div class="product-details-container">
-                    <div class="product-details__product-image">
-                      {{ product.featured_image | image_url: width: 600 | image_tag: loading: 'lazy', width: 200, height: 120 }}
-                    </div>
-                    <div class="product-details__product-info">
-                      <h2 class="product-details__title">{{ product.title }}</h2>
-                      <p class="product-details__short_description">{{product.metafields.custom.short_description }}</p>
-                    </div>
-                  </div>
-                  <div class="product-details-description-body">
-                    {% if product.description contains '<ul>' %}
-                      <ul>
-                        {{ product.description | split: '<ul>' | last | split: '</ul>' | first }}
-                      </ul>
-                    {% endif %}
-                  </div>
-                </div>
-              {% endfor %}
-            {% endif %}
-            <div class="option-popup__text">
-              {{ text }}
-            </div>
-          </div>
-        </div>
-      </div>
+      {% render 'related-products-popup-for-options', 
+        popup_id: product_option.product_option_title,
+        title: title,
+        related_products: related_products,
+        text: text
+      %}
     {% endif %}
   {% endfor %}
 {% endfor %}
