@@ -327,6 +327,8 @@ if (!customElements.get('product-customization-options')) {
 
       relatedProductsSwitcher() {
         const relatedProducts = document.querySelectorAll('[data-product-related-id]');
+        const relatedProductsDetails = document.querySelectorAll('[data-related-details-id]');
+
         if (relatedProducts.length === 0) return;
         relatedProducts.forEach((product) => {
           product.addEventListener('click', () => {
