@@ -56,20 +56,6 @@
     <button class="product-options__accordion-header" aria-expanded="false" aria-controls="{{ accordion_id }}" data-open-accordion>
       <h3 class="product-options__subcategory-title" data-option-title>
         {{ product_option.product_option_title }}
-        {% assign has_related_products = false %}
-        {% for variant in product_option.product_option_variants.value %}
-          {% if variant.product.metafields.custom.related_products.value %}
-            {% assign has_related_products = true %}
-            {% assign first_variant_with_related = variant %}
-            {% break %}
-          {% else %}
-            {% if variant.product.description != blank %}
-              {% assign has_related_products = true %}
-            {% endif %}
-
-            {% assign first_variant_with_related = variant %}
-          {% endif %}
-        {% endfor %}
         {% if product_option.help_text.value != blank %}
           {% liquid
             render 'related-products-button', product_id: first_variant_with_related.product.id, option_title: product_option.product_option_title
