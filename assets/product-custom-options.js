@@ -336,6 +336,7 @@ if (!customElements.get('product-customization-options')) {
             const activeId = product.dataset.productRelatedId;
             const activeDetail = document.querySelector(`[data-related-details-id="${activeId}"]`);
             product.classList.add('active');
+            if (activeDetail) activeDetail.style.display = 'flex';
           });
         });
       }
