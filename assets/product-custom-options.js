@@ -41,6 +41,7 @@ if (!customElements.get('product-customization-options')) {
         this.setDefaultOptionsListener();
         this.handleQuantity();
         this.handlePopupHelper();
+        this.relatedProductsSwitcher();
         this.colorSwatchHandler();
         this.addCustomColorHandler();
         this.closeColorPopupHandler();
@@ -323,6 +324,24 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
+      // Related products popup helper to select necessary product
+
+      relatedProductsSwitcher() {
+        const relatedProducts = document.querySelectorAll('[data-product-related-id]');
+        const relatedProductsDetails = document.querySelectorAll('[data-related-details-id]');
+        if (relatedProducts.length === 0) return;
+        relatedProducts.forEach((product) => {
+          product.addEventListener('click', () => {
+            relatedProducts.forEach((product) => product.classList.remove('active'));
+            relatedProductsDetails.forEach((detail) => (detail.style.display = 'none'));
+            const activeId = product.dataset.productRelatedId;
+            const activeDetail = document.querySelector(`[data-related-details-id="${activeId}"]`);
+            product.classList.add('active');
+            if (activeDetail) activeDetail.style.display = 'block';
+          });
+        });
+      }
+
       // Method to update price when options are selected (increase/decrease)
 
       updatePrice() {
@@ -458,7 +477,7 @@ if (!customElements.get('product-customization-options')) {
           const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`) || this.cartDrawer?.querySelector(`[data-key-modify="${this.modifyID}"]`);
           if (!modifyButton) return;
           modifyButton.addEventListener('click', () => {
-            if(!this.#accordionToggleAdded) {
+            if (!this.#accordionToggleAdded) {
               this.toggleAccordions();
               this.#accordionToggleAdded = true;
             }
@@ -578,7 +597,7 @@ if (!customElements.get('product-customization-options')) {
             this.classList.remove('modify-opened');
             this.dataset.stamp = 'none';
             document.body.style.overflow = 'auto';
-             this.#accordionToggleAdded = false;
+            this.#accordionToggleAdded = false;
           }
         } catch (error) {
           console.error(error);
