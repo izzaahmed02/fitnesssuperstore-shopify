@@ -1993,14 +1993,20 @@
   {% endif %}
 
   {% for product_option in category.product_options.value %}
-    {% if product_option.info_page.value != blank %}
+    {% if product_option.help_text.value != blank %}
+      {% liquid
+        assign content = product_option.help_text.value
+        assign title = content.title
+        assign text = content.help_text
+        assign related_products = content.related_products.value
+      %}
       <div class="option-popup" data-popup="{{ product_option.product_option_title }}">
         <div class="option-popup__overlay" data-close-popup="{{ product_option.product_option_title }}"></div>
         <div class="option-popup__container">
           <div class="option-popup__header">
-            {% if product_option.info_page.value.title != blank %}
+            {% if title != blank %}
               <h3>
-                {{ product_option.info_page.value.title }}
+                {{ title }}
               </h3>
             {% endif %}
             <svg
