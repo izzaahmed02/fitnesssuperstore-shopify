@@ -31,50 +31,52 @@
     {% endif %}
   {% endfor %}
   {% if request.page_type != 'product' %}
-  {% assign options = product.metafields.options.product_options.value %}
-  {% assign has_info = false %}
-  {% for category in options %}
-    {% if category.help_text.value != blank %}
-      {% liquid
-        assign content = category.help_text.value
-        assign title = content.title
-        assign text = content.help_text
-        assign related_products = content.related_products.value
-        assign has_info = true
-      %}
-      {% render 'related-products-popup-for-options', 
-        popup_id: category.title,
-        title: title,
-        related_products: related_products,
-        text: text
-      %}
-    {% endif %}
-
-    {% for product_option in category.product_options.value %}
-      {% if product_option.help_text.value != blank %}
+    {% assign options = item.product.metafields.options.product_options.value %}
+    {% assign has_info = false %}
+    {% for category in options %}
+      {% if category.help_text.value != blank %}
         {% liquid
-          assign content = product_option.help_text.value
+          assign content = category.help_text.value
           assign title = content.title
           assign text = content.help_text
           assign related_products = content.related_products.value
           assign has_info = true
         %}
         {% render 'related-products-popup-for-options', 
-          popup_id: product_option.product_option_title,
+          popup_id: category.title,
           title: title,
           related_products: related_products,
           text: text
         %}
       {% endif %}
-    {% endfor %}
-  {% endfor %}
 
+      {% for product_option in category.product_options.value %}
+        {% if product_option.help_text.value != blank %}
+          {% liquid
+            assign content = product_option.help_text.value
+            assign title = content.title
+            assign text = content.help_text
+            assign related_products = content.related_products.value
+            assign has_info = true
+          %}
+          {% render 'related-products-popup-for-options', 
+            popup_id: product_option.product_option_title,
+            title: title,
+            related_products: related_products,
+            text: text
+          %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+
+
+  {% endif %}
+{% endfor %}
+{% if request.page_type != 'product' %}
   {% if has_info %}
     {{ 'avis-custom.css' | asset_url | stylesheet_tag }}
   {% endif %}
 {% endif %}
-{% endfor %}
-
 {% if show_product_options %}
   {{ 'product-options.css' | asset_url | stylesheet_tag }}
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
