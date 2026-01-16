@@ -41,6 +41,7 @@ if (!customElements.get('product-customization-options')) {
         this.setDefaultOptionsListener();
         this.handleQuantity();
         this.handlePopupHelper();
+        this.relatedProductsSwitcher();
         this.colorSwatchHandler();
         this.addCustomColorHandler();
         this.closeColorPopupHandler();
