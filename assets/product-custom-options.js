@@ -323,6 +323,8 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
+      // Related products popup helper to select necessary product
+
       // Method to update price when options are selected (increase/decrease)
 
       updatePrice() {
@@ -458,7 +460,7 @@ if (!customElements.get('product-customization-options')) {
           const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`) || this.cartDrawer?.querySelector(`[data-key-modify="${this.modifyID}"]`);
           if (!modifyButton) return;
           modifyButton.addEventListener('click', () => {
-            if(!this.#accordionToggleAdded) {
+            if (!this.#accordionToggleAdded) {
               this.toggleAccordions();
               this.#accordionToggleAdded = true;
             }
@@ -578,7 +580,7 @@ if (!customElements.get('product-customization-options')) {
             this.classList.remove('modify-opened');
             this.dataset.stamp = 'none';
             document.body.style.overflow = 'auto';
-             this.#accordionToggleAdded = false;
+            this.#accordionToggleAdded = false;
           }
         } catch (error) {
           console.error(error);
