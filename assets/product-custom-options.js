@@ -333,7 +333,7 @@ if (!customElements.get('product-customization-options')) {
         relatedProducts.forEach((product) => {
           product.addEventListener('click', () => {
             relatedProducts.forEach((product) => product.classList.remove('active'));
-            relatedProductsDetails.forEach((detail) => (detail.style.display = none));
+            relatedProductsDetails.forEach((detail) => (detail.style.display = 'none'));
             const activeId = product.dataset.productRelatedId;
             const activeDetail = document.querySelector(`[data-related-details-id="${activeId}"]`);
             product.classList.add('active');
