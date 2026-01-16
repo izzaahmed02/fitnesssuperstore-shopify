@@ -325,6 +325,16 @@ if (!customElements.get('product-customization-options')) {
 
       // Related products popup helper to select necessary product
 
+      relatedProductsSwitcher() {
+        const relatedProducts = document.querySelectorAll('[data-product-related-id]');
+        if (relatedProducts.length === 0) return;
+        relatedProducts.forEach((product) => {
+          product.addEventListener('click', () => {
+            relatedProducts.forEach((product) => product.classList.remove('active'));
+          });
+        });
+      }
+
       // Method to update price when options are selected (increase/decrease)
 
       updatePrice() {
