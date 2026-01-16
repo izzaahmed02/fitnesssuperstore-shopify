@@ -126,7 +126,14 @@
                 {% endunless -%}
               </span>
               {{- category.title }}
-
+              {% if category.help_text.value != blank %}
+                {% render 'related-products-button',
+                  product_id: product.id,
+                  product_handle: product.handle,
+                  product_category: product.metafields.custom.option_category_id.value,
+                  option_title: product_option.product_option_title
+                %}
+              {% endif %}
               {% if color_counter == 1 %}
                 {% for product_option in category.product_options.value %}
                   {% assign title = product_option.product_option_title | downcase %}
