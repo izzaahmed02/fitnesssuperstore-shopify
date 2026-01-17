@@ -338,6 +338,11 @@
         
         const ratingEl = modal.querySelector('#bundle-main-rating');
         if (ratingEl) {
+          console.log("Full bundleProduct object:", bundleProduct);
+  console.log("Metafields:", bundleProduct.metafields);
+  console.log("Reviews metafield:", bundleProduct.metafields?.reviews);
+  console.log("Rating metafield:", bundleProduct.metafields?.reviews?.rating);
+  console.log("Rating value:", bundleProduct.metafields?.reviews?.rating?.value);
           if (bundleProduct.metafields?.reviews?.rating?.value) {
             console.log("Usman! I am in the rating check");
             const rating = bundleProduct.metafields.reviews.rating.value.rating;
