@@ -338,7 +338,7 @@
         
         const ratingEl = modal.querySelector('#bundle-main-rating');
         if (ratingEl) {
-          if (bundleProduct.metafields?.reviews?.rating?) {
+          if (bundleProduct.metafields?.reviews?.rating?.value) {
             console.log("Usman! I am in the rating check");
             const rating = bundleProduct.metafields.reviews.rating.value.rating;
             const reviewCount = bundleProduct.metafields.reviews.rating_count || 0;
