@@ -207,22 +207,22 @@
     }
 
     // Fetch product details via API
-async function fetchProductDetails(handle) {
-  try {
-    // Use the custom view to get metafields
-    const response = await fetch(`/products/${handle}?view=bundle-json`);
-    if (!response.ok) {
-      console.log(`[Bundle Selector] Product ${handle} not found (${response.status})`);
-      return null;
+    async function fetchProductDetails(handle) {
+      try {
+        // Use the custom view to get metafields
+        const response = await fetch(`/products/${handle}?view=bundle-json`);
+        if (!response.ok) {
+          console.log(`[Bundle Selector] Product ${handle} not found (${response.status})`);
+          return null;
+        }
+        const data = await response.json();
+        console.log(`[Bundle Selector] Fetched product ${handle}:`, data.title);
+        return data;
+      } catch (error) {
+        console.error(`[Bundle Selector] Error fetching product ${handle}:`, error);
+        return null;
+      }
     }
-    const data = await response.json();
-    console.log(`[Bundle Selector] Fetched product ${handle}:`, data.title);
-    return data;
-  } catch (error) {
-    console.error(`[Bundle Selector] Error fetching product ${handle}:`, error);
-    return null;
-  }
-}
 
     // Find product by SKU using Shopify API
     async function findProductBySKU(sku) {
@@ -248,7 +248,8 @@ async function fetchProductDetails(handle) {
                     price: variant.price,
                     compare_at_price: variant.compare_at_price,
                     variant_id: variant.id,
-                    sku: sku
+                    sku: sku,
+                    metafields: product.metafields
                   };
                 }
               }
@@ -278,7 +279,8 @@ async function fetchProductDetails(handle) {
                     price: variant.price,
                     compare_at_price: variant.compare_at_price,
                     variant_id: variant.id,
-                    sku: sku
+                    sku: sku,
+                    metafields: product.metafields
                   };
                 }
               }
@@ -338,38 +340,45 @@ async function fetchProductDetails(handle) {
         }
         
         const ratingEl = modal.querySelector('#bundle-main-rating');
-if (ratingEl) {
-  // Check if we have metafields with rating data
-  const ratingData = bundleProduct.metafields?.reviews?.rating;
-  const ratingCountData = bundleProduct.metafields?.reviews?.rating_count;
-  
-  if (ratingData && typeof ratingData === 'number') {
-    // Rating is available as a number
-    const rating = ratingData;
-    const reviewCount = ratingCountData || 0;
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    
-    ratingEl.innerHTML = `
-      <div class="rating-stars">${'★'.repeat(fullStars)}${hasHalfStar ? '½' : ''}${'☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0))}</div>
-      <span>${reviewCount} reviews</span>
-    `;
-  } else if (ratingData && typeof ratingData === 'object' && ratingData.value) {
-    // Rating might be nested in value object
-    const rating = ratingData.value;
-    const reviewCount = ratingCountData || 0;
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    
-    ratingEl.innerHTML = `
-      <div class="rating-stars">${'★'.repeat(fullStars)}${hasHalfStar ? '½' : ''}${'☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0))}</div>
-      <span>${reviewCount} reviews</span>
-    `;
-  } else {
-    // Default fallback
-    ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
-  }
-}
+        if (ratingEl) {
+          // Check if we have metafields with rating data
+          const ratingData = bundleProduct.metafields?.reviews?.rating;
+          const ratingCountData = bundleProduct.metafields?.reviews?.rating_count;
+          
+          if (ratingData && typeof ratingData === 'number') {
+            // Rating is available as a number
+            const rating = ratingData;
+            const reviewCount = ratingCountData || 0;
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            
+            ratingEl.innerHTML = `
+              <div class="rating-stars">${'★'.repeat(fullStars)}${hasHalfStar ? '½' : ''}${'☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0))}</div>
+              <span>${reviewCount} reviews</span>
+            `;
+          } else if (ratingData && typeof ratingData === 'object' && ratingData.value) {
+            // Rating might be nested in value object
+            const rating = ratingData.value;
+            const reviewCount = ratingCountData || 0;
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            
+            ratingEl.innerHTML = `
+              <div class="rating-stars">${'★'.repeat(fullStars)}${hasHalfStar ? '½' : ''}${'☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0))}</div>
+              <span>${reviewCount} reviews</span>
+            `;
+          } else {
+            // Default fallback
+            ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
+          }
+        }
+      } else {
+        // Fallback display when bundle product is not found
+        if (mainTitle) mainTitle.textContent = config.title;
+        if (mainDesc) mainDesc.innerHTML = 'Premium cable machine attachments bundle designed for comprehensive full-body training.';
+        const ratingEl = modal.querySelector('#bundle-main-rating');
+        if (ratingEl) ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
+      }
 
       // Fetch and display individual products
       if (!productsGrid) return;
@@ -404,7 +413,11 @@ if (ratingEl) {
         
         const price = product?.price ? (product.price / 100).toFixed(2) : 'N/A';
         const comparePrice = product?.compare_at_price ? (product.compare_at_price / 100).toFixed(2) : null;
-        const rating = product?.metafields?.reviews?.rating?.value?.rating || 4.9;
+        
+        // Handle rating data flexibly
+        const ratingData = product?.metafields?.reviews?.rating;
+        const rating = typeof ratingData === 'number' ? ratingData : 
+                       (typeof ratingData === 'object' && ratingData?.value) ? ratingData.value : 4.9;
         const reviewCount = product?.metafields?.reviews?.rating_count || 31;
 
         productCard.innerHTML = `
@@ -415,7 +428,7 @@ if (ratingEl) {
             <div class="bundle-product-card__sku">#${sku}</div>
             <h5 class="bundle-product-card__title">${name}${product ? '' : ' (New)'}</h5>
             <div class="bundle-product-card__rating">
-              <span class="rating-stars">${'★'.repeat(Math.floor(rating))}</span>
+              <span class="rating-stars">${'★'.repeat(Math.floor(rating))}${'☆'.repeat(5 - Math.floor(rating))}</span>
               <span class="review-count">${reviewCount} reviews</span>
             </div>
             <div class="bundle-product-card__price">
