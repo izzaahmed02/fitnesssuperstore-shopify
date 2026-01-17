@@ -202,7 +202,9 @@ window.addEventListener('DOMContentLoaded', async () => {
 				if(document.querySelector('.product__info-container .available-wrap .sa-reviews')) {
 					document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
 				}
-				document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
+				if(document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews')) {
+					document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
+				}
 			} 
 		}
       }, 500);
