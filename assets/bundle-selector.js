@@ -338,12 +338,13 @@
         
         const ratingEl = modal.querySelector('#bundle-main-rating');
         if (ratingEl) {
-          if (bundleProduct.metafields?.reviews?.rating?.value) {
+          if (bundleProduct.metafields?.reviews?.rating?) {
             console.log("Usman! I am in the rating check");
             const rating = bundleProduct.metafields.reviews.rating.value.rating;
             const reviewCount = bundleProduct.metafields.reviews.rating_count || 0;
             ratingEl.innerHTML = `<div class="rating-stars">${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}</div><span>${reviewCount} reviews</span>`;
           } else {
+            console.log("Usman! I am in else statement");
             ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
           }
         }
