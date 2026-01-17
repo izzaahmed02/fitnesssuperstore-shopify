@@ -76,7 +76,11 @@
             const titleEl = card.querySelector('.bundle-card__title');
             
             if (imageEl && product.featured_image) {
-              imageEl.src = product.featured_image;
+              let imgSrc = product.featured_image;
+              if (imgSrc.startsWith('//')) {
+                imgSrc = 'https:' + imgSrc;
+              }
+              imageEl.src = imgSrc;
               imageEl.alt = product.title;
             }
             if (titleEl && product.title) {
@@ -209,12 +213,20 @@
     // Fetch product details via API
     async function fetchProductDetails(handle) {
       try {
-        // Use the custom view to get metafields
-        const response = await fetch(`/products/${handle}?view=bundle-json`);
+        // Try custom view first (with metafields)
+        let response = await fetch(`/products/${handle}?view=bundle-json`);
+        
+        // If custom view fails, fallback to standard .js endpoint
+        if (!response.ok) {
+          console.log(`[Bundle Selector] Custom view not found for ${handle}, using standard .js`);
+          response = await fetch(`/products/${handle}.js`);
+        }
+        
         if (!response.ok) {
           console.log(`[Bundle Selector] Product ${handle} not found (${response.status})`);
           return null;
         }
+        
         const data = await response.json();
         console.log(`[Bundle Selector] Fetched product ${handle}:`, data.title);
         return data;
@@ -330,7 +342,11 @@
       // If bundle product found, display it
       const mainImage = modal.querySelector('#bundle-main-image');
       if (bundleProduct && mainImage) {
-        const imageUrl = bundleProduct.featured_image || (bundleProduct.images && bundleProduct.images[0]) || '';
+        let imageUrl = bundleProduct.featured_image || (bundleProduct.images && bundleProduct.images[0]) || '';
+        // Ensure URL has protocol
+        if (imageUrl && imageUrl.startsWith('//')) {
+          imageUrl = 'https:' + imageUrl;
+        }
         mainImage.src = imageUrl;
         mainImage.alt = bundleProduct.title || config.title;
         if (mainTitle) mainTitle.textContent = bundleProduct.title || config.title;
