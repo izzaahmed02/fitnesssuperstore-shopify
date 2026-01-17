@@ -76,11 +76,7 @@
             const titleEl = card.querySelector('.bundle-card__title');
             
             if (imageEl && product.featured_image) {
-              let imgSrc = product.featured_image;
-              if (imgSrc.startsWith('//')) {
-                imgSrc = 'https:' + imgSrc;
-              }
-              imageEl.src = imgSrc;
+              imageEl.src = product.featured_image;
               imageEl.alt = product.title;
             }
             if (titleEl && product.title) {
@@ -213,20 +209,11 @@
     // Fetch product details via API
     async function fetchProductDetails(handle) {
       try {
-        // Try custom view first (with metafields)
-        let response = await fetch(`/products/${handle}?view=bundle-json`);
-        
-        // If custom view fails, fallback to standard .js endpoint
-        if (!response.ok) {
-          console.log(`[Bundle Selector] Custom view not found for ${handle}, using standard .js`);
-          response = await fetch(`/products/${handle}.js`);
-        }
-        
+        const response = await fetch(`/products/${handle}.js`);
         if (!response.ok) {
           console.log(`[Bundle Selector] Product ${handle} not found (${response.status})`);
           return null;
         }
-        
         const data = await response.json();
         console.log(`[Bundle Selector] Fetched product ${handle}:`, data.title);
         return data;
@@ -260,8 +247,7 @@
                     price: variant.price,
                     compare_at_price: variant.compare_at_price,
                     variant_id: variant.id,
-                    sku: sku,
-                    metafields: product.metafields
+                    sku: sku
                   };
                 }
               }
@@ -291,8 +277,7 @@
                     price: variant.price,
                     compare_at_price: variant.compare_at_price,
                     variant_id: variant.id,
-                    sku: sku,
-                    metafields: product.metafields
+                    sku: sku
                   };
                 }
               }
@@ -342,11 +327,7 @@
       // If bundle product found, display it
       const mainImage = modal.querySelector('#bundle-main-image');
       if (bundleProduct && mainImage) {
-        let imageUrl = bundleProduct.featured_image || (bundleProduct.images && bundleProduct.images[0]) || '';
-        // Ensure URL has protocol
-        if (imageUrl && imageUrl.startsWith('//')) {
-          imageUrl = 'https:' + imageUrl;
-        }
+        const imageUrl = bundleProduct.featured_image || (bundleProduct.images && bundleProduct.images[0]) || '';
         mainImage.src = imageUrl;
         mainImage.alt = bundleProduct.title || config.title;
         if (mainTitle) mainTitle.textContent = bundleProduct.title || config.title;
@@ -357,39 +338,18 @@
         
         const ratingEl = modal.querySelector('#bundle-main-rating');
         if (ratingEl) {
-          // Check if we have metafields with rating data
-          const ratingData = bundleProduct.metafields?.reviews?.rating;
-          const ratingCountData = bundleProduct.metafields?.reviews?.rating_count;
-          
-          if (ratingData && typeof ratingData === 'number') {
-            // Rating is available as a number
-            const rating = ratingData;
-            const reviewCount = ratingCountData || 0;
-            const fullStars = Math.floor(rating);
-            const hasHalfStar = rating % 1 >= 0.5;
-            
-            ratingEl.innerHTML = `
-              <div class="rating-stars">${'★'.repeat(fullStars)}${hasHalfStar ? '½' : ''}${'☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0))}</div>
-              <span>${reviewCount} reviews</span>
-            `;
-          } else if (ratingData && typeof ratingData === 'object' && ratingData.value) {
-            // Rating might be nested in value object
-            const rating = ratingData.value;
-            const reviewCount = ratingCountData || 0;
-            const fullStars = Math.floor(rating);
-            const hasHalfStar = rating % 1 >= 0.5;
-            
-            ratingEl.innerHTML = `
-              <div class="rating-stars">${'★'.repeat(fullStars)}${hasHalfStar ? '½' : ''}${'☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0))}</div>
-              <span>${reviewCount} reviews</span>
-            `;
+          if (bundleProduct.metafields?.reviews?.rating?.value) {
+            console.log("Usman! I am in the rating check");
+            const rating = bundleProduct.metafields.reviews.rating.value.rating;
+            const reviewCount = bundleProduct.metafields.reviews.rating_count || 0;
+            ratingEl.innerHTML = `<div class="rating-stars">${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}</div><span>${reviewCount} reviews</span>`;
           } else {
-            // Default fallback
+            console.log("Usman! I am in else statement");
             ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
           }
         }
       } else {
-        // Fallback display when bundle product is not found
+        // Fallback display
         if (mainTitle) mainTitle.textContent = config.title;
         if (mainDesc) mainDesc.innerHTML = 'Premium cable machine attachments bundle designed for comprehensive full-body training.';
         const ratingEl = modal.querySelector('#bundle-main-rating');
@@ -429,11 +389,7 @@
         
         const price = product?.price ? (product.price / 100).toFixed(2) : 'N/A';
         const comparePrice = product?.compare_at_price ? (product.compare_at_price / 100).toFixed(2) : null;
-        
-        // Handle rating data flexibly
-        const ratingData = product?.metafields?.reviews?.rating;
-        const rating = typeof ratingData === 'number' ? ratingData : 
-                       (typeof ratingData === 'object' && ratingData?.value) ? ratingData.value : 4.9;
+        const rating = product?.metafields?.reviews?.rating?.value?.rating || 4.9;
         const reviewCount = product?.metafields?.reviews?.rating_count || 31;
 
         productCard.innerHTML = `
@@ -444,7 +400,7 @@
             <div class="bundle-product-card__sku">#${sku}</div>
             <h5 class="bundle-product-card__title">${name}${product ? '' : ' (New)'}</h5>
             <div class="bundle-product-card__rating">
-              <span class="rating-stars">${'★'.repeat(Math.floor(rating))}${'☆'.repeat(5 - Math.floor(rating))}</span>
+              <span class="rating-stars">${'★'.repeat(Math.floor(rating))}</span>
               <span class="review-count">${reviewCount} reviews</span>
             </div>
             <div class="bundle-product-card__price">
