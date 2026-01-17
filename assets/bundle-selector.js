@@ -290,6 +290,73 @@
       return null;
     }
 
+    // Initialize Slick carousel for mobile
+    function initProductsCarousel(gridElement) {
+      // Check if window width is mobile (adjust breakpoint as needed)
+      const isMobile = window.innerWidth <= 768;
+      
+      if (isMobile) {
+        $(gridElement).slick({
+          dots: true,
+          arrows: true,
+          infinite: false,
+          speed: 300,
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          adaptiveHeight: true,
+          centerMode: true,
+          centerPadding: '60px',
+          prevArrow: '<button type="button" class="slick-prev">←</button>',
+          nextArrow: '<button type="button" class="slick-next">→</button>',
+          responsive: [
+            {
+              breakpoint: 480,
+              settings: {
+                centerPadding: '40px'
+              }
+            }
+          ]
+        });
+        console.log('[Bundle Selector] Slick carousel initialized for mobile');
+      }
+      
+      // Re-initialize on window resize
+      let resizeTimer;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+          const nowMobile = window.innerWidth <= 768;
+          const isSlickInit = $(gridElement).hasClass('slick-initialized');
+          
+          if (nowMobile && !isSlickInit) {
+            $(gridElement).slick({
+              dots: true,
+              arrows: true,
+              infinite: false,
+              speed: 300,
+              slidesToShow: 1,
+              slidesToScroll: 1,
+              adaptiveHeight: true,
+              centerMode: true,
+              centerPadding: '60px',
+              prevArrow: '<button type="button" class="slick-prev">←</button>',
+              nextArrow: '<button type="button" class="slick-next">→</button>',
+              responsive: [
+                {
+                  breakpoint: 480,
+                  settings: {
+                    centerPadding: '40px'
+                  }
+                }
+              ]
+            });
+          } else if (!nowMobile && isSlickInit) {
+            $(gridElement).slick('unslick');
+          }
+        }, 250);
+      });
+    }
+
     // Render bundle modal
     async function renderBundleModal(bundleSet) {
       console.log('[Bundle Selector] Opening modal for bundle', bundleSet);
@@ -331,7 +398,6 @@
         mainImage.src = imageUrl;
         mainImage.alt = bundleProduct.title || config.title;
         if (mainTitle) mainTitle.textContent = bundleProduct.title || config.title;
-        // Render HTML description properly
         if (mainDesc) {
           mainDesc.innerHTML = bundleProduct.description || 'Premium cable machine attachments bundle.';
         }
@@ -339,17 +405,14 @@
         const ratingEl = modal.querySelector('#bundle-main-rating');
         if (ratingEl) {
           if (bundleProduct.metafields?.reviews?.rating?.value) {
-            console.log("Usman! I am in the rating check");
             const rating = bundleProduct.metafields.reviews.rating.value.rating;
             const reviewCount = bundleProduct.metafields.reviews.rating_count || 0;
             ratingEl.innerHTML = `<div class="rating-stars">${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}</div><span>${reviewCount} reviews</span>`;
           } else {
-            console.log("Usman! I am in else statement");
             ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
           }
         }
       } else {
-        // Fallback display
         if (mainTitle) mainTitle.textContent = config.title;
         if (mainDesc) mainDesc.innerHTML = 'Premium cable machine attachments bundle designed for comprehensive full-body training.';
         const ratingEl = modal.querySelector('#bundle-main-rating');
@@ -358,6 +421,12 @@
 
       // Fetch and display individual products
       if (!productsGrid) return;
+      
+      // Destroy existing Slick instance if it exists
+      if ($(productsGrid).hasClass('slick-initialized')) {
+        $(productsGrid).slick('unslick');
+      }
+      
       productsGrid.innerHTML = '';
 
       const productPromises = config.skus.map(async (sku, index) => {
@@ -377,11 +446,9 @@
         const productCard = document.createElement('div');
         productCard.className = 'bundle-product-card';
         
-        // Get image URL - try multiple sources
         let imageUrl = '/assets/no-image.png';
         if (product) {
           imageUrl = product.image || product.featured_image || (product.images && product.images[0]) || imageUrl;
-          // Convert Shopify image URL if needed
           if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
             imageUrl = `https:${imageUrl}`;
           }
@@ -415,6 +482,9 @@
       
       if (products.filter(p => p.product).length === 0) {
         productsGrid.innerHTML = '<div class="loading">No products found. Please check SKU availability.</div>';
+      } else {
+        // Initialize Slick carousel for mobile only
+        initProductsCarousel(productsGrid);
       }
       
       console.log('[Bundle Selector] Modal rendered');
@@ -423,6 +493,13 @@
     // Close modal function
     function closeModal() {
       console.log('[Bundle Selector] Closing modal');
+      const productsGrid = modal.querySelector('#bundle-products-grid');
+      
+      // Destroy Slick instance before closing
+      if (productsGrid && $(productsGrid).hasClass('slick-initialized')) {
+        $(productsGrid).slick('unslick');
+      }
+      
       modal.hidden = true;
       modal.style.display = 'none';
       document.body.style.overflow = '';
