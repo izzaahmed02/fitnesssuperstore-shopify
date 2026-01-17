@@ -207,21 +207,22 @@
     }
 
     // Fetch product details via API
-    async function fetchProductDetails(handle) {
-      try {
-        const response = await fetch(`/products/${handle}.js`);
-        if (!response.ok) {
-          console.log(`[Bundle Selector] Product ${handle} not found (${response.status})`);
-          return null;
-        }
-        const data = await response.json();
-        console.log(`[Bundle Selector] Fetched product ${handle}:`, data.title);
-        return data;
-      } catch (error) {
-        console.error(`[Bundle Selector] Error fetching product ${handle}:`, error);
-        return null;
-      }
+async function fetchProductDetails(handle) {
+  try {
+    // Use the custom view to get metafields
+    const response = await fetch(`/products/${handle}?view=bundle-json`);
+    if (!response.ok) {
+      console.log(`[Bundle Selector] Product ${handle} not found (${response.status})`);
+      return null;
     }
+    const data = await response.json();
+    console.log(`[Bundle Selector] Fetched product ${handle}:`, data.title);
+    return data;
+  } catch (error) {
+    console.error(`[Bundle Selector] Error fetching product ${handle}:`, error);
+    return null;
+  }
+}
 
     // Find product by SKU using Shopify API
     async function findProductBySKU(sku) {
@@ -337,29 +338,38 @@
         }
         
         const ratingEl = modal.querySelector('#bundle-main-rating');
-        if (ratingEl) {
-          console.log("Full bundleProduct object:", bundleProduct);
-  console.log("Metafields:", bundleProduct.metafields);
-  console.log("Reviews metafield:", bundleProduct.metafields?.reviews);
-  console.log("Rating metafield:", bundleProduct.metafields?.reviews?.rating);
-  console.log("Rating value:", bundleProduct.metafields?.reviews?.rating?.value);
-          if (bundleProduct.metafields?.reviews?.rating?.value) {
-            console.log("Usman! I am in the rating check");
-            const rating = bundleProduct.metafields.reviews.rating.value.rating;
-            const reviewCount = bundleProduct.metafields.reviews.rating_count || 0;
-            ratingEl.innerHTML = `<div class="rating-stars">${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}</div><span>${reviewCount} reviews</span>`;
-          } else {
-            console.log("Usman! I am in else statement");
-            ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
-          }
-        }
-      } else {
-        // Fallback display
-        if (mainTitle) mainTitle.textContent = config.title;
-        if (mainDesc) mainDesc.innerHTML = 'Premium cable machine attachments bundle designed for comprehensive full-body training.';
-        const ratingEl = modal.querySelector('#bundle-main-rating');
-        if (ratingEl) ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
-      }
+if (ratingEl) {
+  // Check if we have metafields with rating data
+  const ratingData = bundleProduct.metafields?.reviews?.rating;
+  const ratingCountData = bundleProduct.metafields?.reviews?.rating_count;
+  
+  if (ratingData && typeof ratingData === 'number') {
+    // Rating is available as a number
+    const rating = ratingData;
+    const reviewCount = ratingCountData || 0;
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    
+    ratingEl.innerHTML = `
+      <div class="rating-stars">${'★'.repeat(fullStars)}${hasHalfStar ? '½' : ''}${'☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0))}</div>
+      <span>${reviewCount} reviews</span>
+    `;
+  } else if (ratingData && typeof ratingData === 'object' && ratingData.value) {
+    // Rating might be nested in value object
+    const rating = ratingData.value;
+    const reviewCount = ratingCountData || 0;
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    
+    ratingEl.innerHTML = `
+      <div class="rating-stars">${'★'.repeat(fullStars)}${hasHalfStar ? '½' : ''}${'☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0))}</div>
+      <span>${reviewCount} reviews</span>
+    `;
+  } else {
+    // Default fallback
+    ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
+  }
+}
 
       // Fetch and display individual products
       if (!productsGrid) return;
