@@ -1,523 +1,501 @@
 window.addEventListener('DOMContentLoaded', async () => {
-  _affirm_config = {
-    public_api_key: 'DDKLC4NZ9P7UTRIX',
-    script: 'https://cdn1.affirm.com/js/v2/affirm.js',
-  };
-  (function (l, g, m, e, a, f, b) {
-    var d,
-      c = l[m] || {},
-      h = document.createElement(f),
-      n = document.getElementsByTagName(f)[0],
-      k = function (a, b, c) {
-        return function () {
-          a[b]._.push([c, arguments]);
-        };
-      };
-    c[e] = k(c, e, 'set');
-    d = c[e];
-    c[a] = {};
-    c[a]._ = [];
-    d._ = [];
-    c[a][b] = k(c, a, b);
-    a = 0;
-    for (b = 'set add save post open empty reset on off trigger ready setProduct'.split(' '); a < b.length; a++) d[b[a]] = k(c, e, b[a]);
-    a = 0;
-    for (b = ['get', 'token', 'url', 'items']; a < b.length; a++) d[b[a]] = function () {};
-    h.async = !0;
-    h.src = g[f];
-    n.parentNode.insertBefore(h, n);
-    delete g[f];
-    d(g);
-    l[m] = c;
-  })(window, _affirm_config, 'affirm', 'checkout', 'ui', 'script', 'ready');
+	
+	_affirm_config = {
+      public_api_key:  "DDKLC4NZ9P7UTRIX",
+       script:          "https://cdn1.affirm.com/js/v2/affirm.js"
+    };
+    (function(l,g,m,e,a,f,b){var d,c=l[m]||{},h=document.createElement(f),n=document.getElementsByTagName(f)[0],k=function(a,b,c){return function(){a[b]._.push([c,arguments])}};c[e]=k(c,e,"set");d=c[e];c[a]={};c[a]._=[];d._=[];c[a][b]=k(c,a,b);a=0;for(b="set add save post open empty reset on off trigger ready setProduct".split(" ");a<b.length;a++)d[b[a]]=k(c,e,b[a]);a=0;for(b=["get","token","url","items"];a<b.length;a++)d[b[a]]=function(){};h.async=!0;h.src=g[f];n.parentNode.insertBefore(h,n);delete g[f];d(g);l[m]=c})(window,_affirm_config,"affirm","checkout","ui","script","ready");
 
-  observeModalVisibility();
+	observeModalVisibility();
+	
+	function checkForElements() {
+		const shippingType = document.querySelector(
+			'.avp-option.ap-options__select-container:has(select[name^="Full Assembly & Installation"])'
+		);
+		const warranty = document.querySelector(
+			'.avp-option.ap-options__select-container:has(select[name^="Warranty"])'
+		);
 
-  function checkForElements() {
-    const shippingType = document.querySelector('.avp-option.ap-options__select-container:has(select[name^="Full Assembly & Installation"])');
-    const warranty = document.querySelector('.avp-option.ap-options__select-container:has(select[name^="Warranty"])');
+		const customerLocationForm = document.querySelector(
+			'.customer-location-container'
+		);
 
-    const customerLocationForm = document.querySelector('.customer-location-container');
+			if (shippingType) {
+                shippingType.querySelector('.avp-option-title .apo-title').innerText = 'Assembly & Room of Choice Installation Needed?'
+				customerLocationForm.parentElement.insertAdjacentElement('beforebegin', shippingType);
+				shippingType.style.display = 'block';
 
-    if (shippingType) {
-      shippingType.querySelector('.avp-option-title .apo-title').innerText = 'Assembly & Room of Choice Installation Needed?';
-      customerLocationForm.parentElement.insertAdjacentElement('beforebegin', shippingType);
-      shippingType.style.display = 'block';
+				const apoTitle = shippingType.querySelector('.apo-title');
+				if (apoTitle) {
+					apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
+				}
 
-      const apoTitle = shippingType.querySelector('.apo-title');
-      if (apoTitle) {
-        apoTitle.setAttribute('style', 'font-size: 12px !important; margin-bottom: 6px;');
-      }
+				if (shippingType.querySelector('select').options[0] && 	shippingType.querySelector('select').options[0].text.includes('Curbside')) {
+					shippingType.querySelector('select').options[0].text = 'No, Curbside Delivery Only';
+				}
 
-      if (shippingType.querySelector('select').options[0] && shippingType.querySelector('select').options[0].text.includes('Curbside')) {
-        shippingType.querySelector('select').options[0].text = 'No, Curbside Delivery Only';
-      }
+				const avisInputInstallationHidden = document.querySelector(`input[temp-name="Full Assembly & Installation"]`);
 
-      const avisInputInstallationHidden = document.querySelector(`input[temp-name="Full Assembly & Installation"]`);
+				if (avisInputInstallationHidden) {
+					avisInputInstallationHidden.value = 'No, Curbside Delivery Only';
+				}
 
-      if (avisInputInstallationHidden) {
-        avisInputInstallationHidden.value = 'No, Curbside Delivery Only';
-      }
+				shippingType.addEventListener('change', (event) => {
+					const selectedOption = event.target.options[event.target.selectedIndex];
 
-      shippingType.addEventListener('change', (event) => {
-        const selectedOption = event.target.options[event.target.selectedIndex];
+					if (selectedOption) {
+						if (selectedOption.value.includes('Curbside')) {
+							avisInputInstallationHidden.value = 'No, Curbside Delivery Only';
+							return;
+						}
 
-        if (selectedOption) {
-          if (selectedOption.value.includes('Curbside')) {
-            avisInputInstallationHidden.value = 'No, Curbside Delivery Only';
-            return;
-          }
+						const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
+						
+						if (moneyHTML) {
+							setTimeout(() => {	
+								if (avisInputInstallationHidden) {
+									if (!avisInputInstallationHidden.value.includes('Add')) {
+										avisInputInstallationHidden.value = `${avisInputInstallationHidden.value} ${moneyHTML}`
+									} 
+								}
+							});
+						}
+					}
+				});
 
-          const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
+				warranty.addEventListener('change', (event) => {
+					const selectedOption = event.target.options[event.target.selectedIndex];
 
-          if (moneyHTML) {
-            setTimeout(() => {
-              if (avisInputInstallationHidden) {
-                if (!avisInputInstallationHidden.value.includes('Add')) {
-                  avisInputInstallationHidden.value = `${avisInputInstallationHidden.value} ${moneyHTML}`;
-                }
-              }
-            });
-          }
-        }
+                    if (selectedOption) {
+						const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
+					
+						if (moneyHTML) {
+							const avisInputWarrantyHidden = document.querySelector(`input[temp-name="Warranty"]`);
+	
+							if (avisInputWarrantyHidden) {
+								if (!avisInputWarrantyHidden.value.includes('Add')) {
+									avisInputWarrantyHidden.value = `${avisInputWarrantyHidden.value} ${moneyHTML}`
+								} 
+							}
+						}
+					}
+			});
+
+			clearInterval(pollingInterval);
+		}
+	}
+
+	function getFormDataAndDisplay(cityInput, zipInput, shippingInfo) {
+		const city = cityInput.value || localStorage.getItem('city') || 'Not entered';
+		const zip = zipInput.value || localStorage.getItem('zip') || 'Not entered';
+		const shippingData = document.querySelector('.shipping-data');
+		const resultText = `${city}, ${zip}`;
+
+		if (shippingData) {
+			shippingData.innerHTML = resultText;
+			shippingInfo.appendChild(shippingData);
+		} else {
+			const shippingData = document.createElement('span');
+			shippingData.classList.add('shipping-data');
+
+			shippingData.innerHTML = resultText;
+			shippingInfo.appendChild(shippingData);
+		}
+	}
+
+	const pollingInterval = setInterval(checkForElements, 500);
+
+	let currentPageIndex = 0; 
+    
+    function attachArrowHandlers() {
+      document.querySelector('.next-arrow').addEventListener('click', () => {
+		var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
+		currentPageIndex = activeIndex; 
+        saOpenPage(currentPageIndex, sa_start_sort); 
       });
 
-      warranty.addEventListener('change', (event) => {
-        const selectedOption = event.target.options[event.target.selectedIndex];
-
-        if (selectedOption) {
-          const moneyHTML = selectedOption.querySelector('.money')?.innerHTML;
-
-          if (moneyHTML) {
-            const avisInputWarrantyHidden = document.querySelector(`input[temp-name="Warranty"]`);
-
-            if (avisInputWarrantyHidden) {
-              if (!avisInputWarrantyHidden.value.includes('Add')) {
-                avisInputWarrantyHidden.value = `${avisInputWarrantyHidden.value} ${moneyHTML}`;
-              }
-            }
-          }
-        }
+      document.querySelector('.prev-arrow').addEventListener('click', () => {
+		var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
+		currentPageIndex = activeIndex - 2; 
+		saOpenPage(currentPageIndex, sa_start_sort);
       });
-
-      clearInterval(pollingInterval);
     }
-  }
 
-  function getFormDataAndDisplay(cityInput, zipInput, shippingInfo) {
-    const city = cityInput.value || localStorage.getItem('city') || 'Not entered';
-    const zip = zipInput.value || localStorage.getItem('zip') || 'Not entered';
-    const shippingData = document.querySelector('.shipping-data');
-    const resultText = `${city}, ${zip}`;
-
-    if (shippingData) {
-      shippingData.innerHTML = resultText;
-      shippingInfo.appendChild(shippingData);
-    } else {
-      const shippingData = document.createElement('span');
-      shippingData.classList.add('shipping-data');
-
-      shippingData.innerHTML = resultText;
-      shippingInfo.appendChild(shippingData);
-    }
-  }
-
-  const pollingInterval = setInterval(checkForElements, 500);
-
-  let currentPageIndex = 0;
-
-  function attachArrowHandlers() {
-    document.querySelector('.next-arrow').addEventListener('click', () => {
-      var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
-      currentPageIndex = activeIndex;
-      saOpenPage(currentPageIndex, sa_start_sort);
-    });
-
-    document.querySelector('.prev-arrow').addEventListener('click', () => {
-      var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
-      currentPageIndex = activeIndex - 2;
-      saOpenPage(currentPageIndex, sa_start_sort);
-    });
-  }
-
-  function addPaginationArrows() {
-    const paginationContainer = document.getElementById('sa_review_paging');
-
-    if (paginationContainer) {
-      if (!paginationContainer.querySelector('.prev-arrow') && !paginationContainer.querySelector('.next-arrow')) {
-        const prevArrow = document.createElement('button');
-        prevArrow.className = 'arrow custom prev-arrow';
-        prevArrow.innerHTML = `
+    function addPaginationArrows() {
+      const paginationContainer = document.getElementById("sa_review_paging");
+  
+      if (paginationContainer) {
+        if (!paginationContainer.querySelector(".prev-arrow") && !paginationContainer.querySelector(".next-arrow")) {
+          const prevArrow = document.createElement("button");
+          prevArrow.className = "arrow custom prev-arrow";
+          prevArrow.innerHTML = `
             <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M7.53033 0.46967C7.82322 0.762563 7.82322 1.23744 7.53033 1.53033L2.06066 7L7.53033 12.4697C7.82322 12.7626 7.82322 13.2374 7.53033 13.5303C7.23744 13.8232 6.76256 13.8232 6.46967 13.5303L0.46967 7.53033C0.176777 7.23744 0.176777 6.76256 0.46967 6.46967L6.46967 0.46967C6.76256 0.176777 7.23744 0.176777 7.53033 0.46967Z" fill="#CCCCCC"/>
             </svg>
           `;
-
-        const nextArrow = document.createElement('button');
-        nextArrow.className = 'arrow custom next-arrow';
-        nextArrow.innerHTML = `
+  
+          const nextArrow = document.createElement("button");
+          nextArrow.className = "arrow custom next-arrow";
+          nextArrow.innerHTML = `
             <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.23744 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#D83D0E"/>
             </svg>
           `;
+  
+          paginationContainer.prepend(prevArrow); 
+          paginationContainer.appendChild(nextArrow);
 
-        paginationContainer.prepend(prevArrow);
-        paginationContainer.appendChild(nextArrow);
-
-        attachArrowHandlers();
+          attachArrowHandlers();
+        }
       }
     }
-  }
 
-  function addCustomActions() {
-    const dropdownContainer = document.createElement('div');
-    dropdownContainer.classList.add('sa-reviews-dropdown-container');
+    function addCustomActions() {
+      const dropdownContainer = document.createElement('div');
+      dropdownContainer.classList.add('sa-reviews-dropdown-container');
 
-    const sortByDropdown = document.createElement('select');
-    sortByDropdown.setAttribute('id', 'sortByDropdown');
-    sortByDropdown.innerHTML = `
+      const sortByDropdown = document.createElement('select');
+      sortByDropdown.setAttribute('id', 'sortByDropdown');
+      sortByDropdown.innerHTML = `
         <option value="high">Sort by: Highest to Lowest</option>
         <option value="low">Sort by: Lowest to Highest</option>
         <option value="new">Sort by: Newest to Oldest</option>
         <option value="old">Sort by: Oldest to Newest</option>
         <option value="featured">Sort by: Favorite Reviews</option>
       `;
-    dropdownContainer.appendChild(sortByDropdown);
-
-    const showContainer = document.createElement('div');
-    showContainer.setAttribute('class', 'show-dropdown-container');
-
-    dropdownContainer.appendChild(showContainer);
-
-    const writeReviewButton = document.createElement('a');
-    writeReviewButton.setAttribute('id', 'writeReviewButton');
-    writeReviewButton.setAttribute('href', 'https://www.shopperapproved.com/reviews/fitnesssuperstore.com#reviews');
-    writeReviewButton.setAttribute('target', '_blank');
-    writeReviewButton.setAttribute('rel', 'noopener noreferrer');
-    writeReviewButton.textContent = 'Write a Review';
-    writeReviewButton.classList.add('write-review-btn');
-    dropdownContainer.appendChild(writeReviewButton);
-
-    const productPage = document.querySelector('#product_page');
-    const reviewHeader = document.querySelector('#review_header');
-    const existingDropdownContainer = document.querySelector('.sa-reviews-dropdown-container');
-
-    if (productPage && reviewHeader && !existingDropdownContainer) {
-      productPage.parentNode.insertBefore(dropdownContainer, productPage);
+      dropdownContainer.appendChild(sortByDropdown);
+      
+      const showContainer = document.createElement('div');
+      showContainer.setAttribute('class', 'show-dropdown-container');
+      
+      dropdownContainer.appendChild(showContainer);
+       
+      const writeReviewButton = document.createElement('a');
+      writeReviewButton.setAttribute('id', 'writeReviewButton');
+      writeReviewButton.setAttribute('href', 'https://www.shopperapproved.com/reviews/fitnesssuperstore.com#reviews');
+      writeReviewButton.setAttribute('target', '_blank'); 
+      writeReviewButton.setAttribute('rel', 'noopener noreferrer'); 
+      writeReviewButton.textContent = 'Write a Review';
+      writeReviewButton.classList.add('write-review-btn');
+      dropdownContainer.appendChild(writeReviewButton); 
+     
+	  const productPage = document.querySelector('#product_page');
+	  const reviewHeader = document.querySelector('#review_header');
+	  const existingDropdownContainer = document.querySelector('.sa-reviews-dropdown-container');
+	  
+	  if (productPage && reviewHeader && !existingDropdownContainer) {
+		productPage.parentNode.insertBefore(dropdownContainer, productPage);
+	  }
     }
-  }
+  
+    function registerSAReviewsPolling() {
+      const interval = setInterval(async function () {
+        const reviewSection = document.querySelector("#sa_review_paging");
+		if (reviewSection) {
+			addCustomActions();
 
-  function registerSAReviewsPolling() {
-    const interval = setInterval(async function () {
-      const reviewSection = document.querySelector('#sa_review_paging');
-      if (reviewSection) {
-        addCustomActions();
+			if (Object.keys(sa_product_reviews.high).length > sa_products_count) {
+				addPaginationArrows();
+			}
 
-        if (Object.keys(sa_product_reviews.high).length > sa_products_count) {
-          addPaginationArrows();
-        }
+			if (!document.querySelector('.merchantheader')) {
+				if(document.querySelector('.product__info-container .available-wrap .sa-reviews')) {
+					document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
+				}
+				document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
+			} 
+		}
+      }, 500);
+    }
 
-        if (!document.querySelector('.merchantheader')) {
-          if (document.querySelector('.product__info-container .available-wrap .sa-reviews')) {
-            document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
-          }
-          document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
-        }
-      }
-    }, 500);
-  }
+	function registerProductReviewsPolling() {
+		const interval = setInterval(async function() {
+			const reviewSection = document.querySelector('.product_review');
 
-  function registerProductReviewsPolling() {
-    const interval = setInterval(async function () {
-      const reviewSection = document.querySelector('.product_review');
+			if (reviewSection) {			
+				clearInterval(interval);
+				const productInfoContainer = document.querySelector('.product__info-container');
 
-      if (reviewSection) {
-        clearInterval(interval);
-        const productInfoContainer = document.querySelector('.product__info-container');
+				const starsReview =  productInfoContainer.querySelector('#product_just_stars .on');
 
-        const starsReview = productInfoContainer.querySelector('#product_just_stars .on');
+				if (!starsReview) {
+					var saTotalStars = await getShopperApprovedTotalReviewsCount();
 
-        if (!starsReview) {
-          var saTotalStars = await getShopperApprovedTotalReviewsCount();
+					if (saTotalStars) {
+						productInfoContainer.querySelector('#product_just_stars').innerHTML = `<span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="ind_cnt med"><a class="sa_jump_to_reviews" href="#review_header">${saTotalStars} <span class="ind_cnt_desc">reviews</span></a></span>`
+						productInfoContainer.querySelector('.sa-reviews').style.display = 'flex';
+					}
+				}
+			}
+		});
+	}
 
-          if (saTotalStars) {
-            productInfoContainer.querySelector(
-              '#product_just_stars'
-            ).innerHTML = `<span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="ind_cnt med"><a class="sa_jump_to_reviews" href="#review_header">${saTotalStars} <span class="ind_cnt_desc">reviews</span></a></span>`;
-            productInfoContainer.querySelector('.sa-reviews').style.display = 'flex';
-          }
-        }
-      }
-    });
-  }
+    function registerCustomActionEvent() {
+		setTimeout(() => {
+			let sortByDropDownCurrentValue = '';
+			let showDropDownCurrentValue = '';
+	
+			const sortByDropdown = document.getElementById('sortByDropdown');
+			const saSort = document.getElementById('sa_sort');
+			var showDropdownSelect = document.getElementById('showDropdown');
+	
+			if (sortByDropdown) {
+				sortByDropDownCurrentValue = sortByDropdown.value;
+			}
+	
+			if (sortByDropdown && saSort) {
+			  const newSortByDropdown = sortByDropdown.cloneNode(true);
+	
+			  sortByDropdown.value = saSort.value;
 
-  function registerCustomActionEvent() {
-    setTimeout(() => {
-      let sortByDropDownCurrentValue = '';
-      let showDropDownCurrentValue = '';
+			  sortByDropdown.parentNode.replaceChild(newSortByDropdown, sortByDropdown);
+		
+			  if (sortByDropDownCurrentValue) {
+				newSortByDropdown.value = sortByDropDownCurrentValue;
+			  }
 
-      const sortByDropdown = document.getElementById('sortByDropdown');
-      const saSort = document.getElementById('sa_sort');
-      var showDropdownSelect = document.getElementById('showDropdown');
+			  newSortByDropdown.addEventListener('change', () => {
+				if (saJQ('#review_header').length > 0) {
+					saJQ('html, body').animate({
+						scrollTop: saJQ('#review_header').offset().top
+					});
+				}
+				saJQ('#product_page').toggleClass('sa_loading_bg', true);
+				saJQ('#sa_review_section').animate({
+					opacity: 0
+				}, 300);
+				sort = newSortByDropdown.value;
+				var reverse = (typeof (sa_productreverse) == 'undefined') ? '' : '&reverse=' + sa_productreverse;
+				var productId = (typeof (sa_product) != 'undefined') ? sa_product : sa_productid;
+				saLoadScript(sa_host + 'widgets/' + sa_page + '.php?siteid=' + sa_siteid + '&productid=' + productId + '&page=0&sort=' + sort + reverse + '&loadnow=1' + '&rtype=' + sa_rtype);
+				registerCustomActionEvent();
+			  });
+			}
+		}, 1000);
+    }
+    
+    registerSAReviewsPolling();
+	registerCustomActionEvent(); 
+	registerProductReviewsPolling();
 
-      if (sortByDropdown) {
-        sortByDropDownCurrentValue = sortByDropdown.value;
-      }
+	document.querySelector('#download-pds').addEventListener('click', () => {
+		const product = window.product;
+		var pdsUrl = `https://fs-child-products.azurewebsites.net/api/pdf/${product.id}/${product.variants[0].sku}`; 
+		window.open(pdsUrl, "_blank"); 
+	})
 
-      if (sortByDropdown && saSort) {
-        const newSortByDropdown = sortByDropdown.cloneNode(true);
-
-        sortByDropdown.value = saSort.value;
-
-        sortByDropdown.parentNode.replaceChild(newSortByDropdown, sortByDropdown);
-
-        if (sortByDropDownCurrentValue) {
-          newSortByDropdown.value = sortByDropDownCurrentValue;
-        }
-
-        newSortByDropdown.addEventListener('change', () => {
-          if (saJQ('#review_header').length > 0) {
-            saJQ('html, body').animate({
-              scrollTop: saJQ('#review_header').offset().top,
-            });
-          }
-          saJQ('#product_page').toggleClass('sa_loading_bg', true);
-          saJQ('#sa_review_section').animate(
-            {
-              opacity: 0,
-            },
-            300
-          );
-          sort = newSortByDropdown.value;
-          var reverse = typeof sa_productreverse == 'undefined' ? '' : '&reverse=' + sa_productreverse;
-          var productId = typeof sa_product != 'undefined' ? sa_product : sa_productid;
-          saLoadScript(sa_host + 'widgets/' + sa_page + '.php?siteid=' + sa_siteid + '&productid=' + productId + '&page=0&sort=' + sort + reverse + '&loadnow=1' + '&rtype=' + sa_rtype);
-          registerCustomActionEvent();
-        });
-      }
-    }, 1000);
-  }
-
-  registerSAReviewsPolling();
-  registerCustomActionEvent();
-  registerProductReviewsPolling();
-
-  document.querySelector('#download-pds').addEventListener('click', () => {
-    const product = window.product;
-    var pdsUrl = `https://fs-child-products.azurewebsites.net/api/pdf/${product.id}/${product.variants[0].sku}`;
-    window.open(pdsUrl, '_blank');
-  });
-
-  document.querySelector('.compare-products-actions a')?.setAttribute('href', '');
+	document.querySelector('.compare-products-actions a')?.setAttribute('href', '');
 });
 
+
 try {
-  document.addEventListener('DOMContentLoaded', (event) => {
-    document.querySelectorAll('.metainfo-wrapper .more-info').forEach((element) => {
-      element.addEventListener('click', async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        var currentProduct = window.product;
+	document.addEventListener('DOMContentLoaded', (event) => {	
+		document.querySelectorAll('.metainfo-wrapper .more-info').forEach(element => {
+			element.addEventListener('click', async (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				var currentProduct = window.product;
 
-        if (currentProduct) {
-          var customFieldvalue = element.dataset.customfield;
-          var brand = currentProduct.vendor;
+				if (currentProduct) {
+					var customFieldvalue = element.dataset.customfield;	
+					var brand = currentProduct.vendor
 
-          if (customFieldvalue) {
-            if (customFieldvalue === 'Warranty' || (customFieldvalue == 'Shipping' && brand === 'French Fitness')) {
-              console.log('I am in custom field');
-              customFieldvalue = `${brand} ${customFieldvalue} Custom Field`;
-            } else {
-              if (customFieldvalue === 'Warranty' && window.product.title.includes('Remanufactured')) {
-                console.log('I am in remanufactured custom field');
-                customFieldvalue = `${customFieldvalue} Remanufactured Custom Field`;
-              } else if (customFieldvalue === 'Condition' && window.product.title.includes('Remanufactured')) {
-                window.open('/pages/remanufactured-gym-equipment', '_blank');
-                return;
-              } else {
-                customFieldvalue += ' Custom Field';
-              }
-            }
+					if (customFieldvalue) {			
+						if (customFieldvalue === 'Warranty' || customFieldvalue == 'Shipping' && brand === 'French Fitness') {
+							console.log("I am in custom field");
+							customFieldvalue = `${brand} ${customFieldvalue} Custom Field`
+						} else {
+							if (customFieldvalue === 'Warranty' && window.product.title.includes('Remanufactured')) {
+								console.log("I am in remanufactured custom field");
+								customFieldvalue = `${customFieldvalue} Remanufactured Custom Field`
+							} else if (customFieldvalue === 'Condition' && window.product.title.includes('Remanufactured')) {
+								window.open("/pages/remanufactured-gym-equipment", "_blank");
+								return;
+							} 
+							else {
+								customFieldvalue += ' Custom Field';
+							}
+						}
 
-            console.log('Custom Field Value is ' + customFieldvalue);
+						console.log("Custom Field Value is "+ customFieldvalue);
+						
+						var product = await fetchProductByTitle(customFieldvalue);
+                      
+                        if (!product && customFieldvalue.includes('Warranty')) {
+							console.log("I am in Warranty 30");
+							customFieldvalue = 'Warranty (30)';
+							product = await fetchProductByTitle(customFieldvalue);
+						}
+						if (product) {
+							document.querySelector('#dynamic-product-content').style.width = "auto";
+							modalWrapper.style.display = 'flex';
+							const tempDiv = document.createElement('div');
+							tempDiv.innerHTML = product.body_html;
+							const mainContent = tempDiv;
+							container.innerHTML = mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
+	
+							const closeModalButton = container.querySelector('.modal-close');
+	
+							closeModalButton.addEventListener('click', () => {
+								modalWrapper.style.display = 'none';
+                              $('#dynamic-product-content').empty();
+							});
+						};
+					}
+				}
+			});
+		});
 
-            var product = await fetchProductByTitle(customFieldvalue);
+		modalWrapper.addEventListener('click', () => {
+			modalWrapper.style.display = 'none';
+		});
 
-            if (!product && customFieldvalue.includes('Warranty')) {
-              console.log('I am in Warranty 30');
-              customFieldvalue = 'Warranty (30)';
-              product = await fetchProductByTitle(customFieldvalue);
-            }
-            if (product) {
-              document.querySelector('#dynamic-product-content').style.width = 'auto';
-              modalWrapper.style.display = 'flex';
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = product.body_html;
-              const mainContent = tempDiv;
-              container.innerHTML = mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
+		container.addEventListener('click', (event) => {
+			event.stopPropagation();
+		});
 
-              const closeModalButton = container.querySelector('.modal-close');
-
-              closeModalButton.addEventListener('click', () => {
-                modalWrapper.style.display = 'none';
-                $('#dynamic-product-content').empty();
-              });
-            }
-          }
-        }
-      });
-    });
-
-    modalWrapper.addEventListener('click', () => {
-      modalWrapper.style.display = 'none';
-    });
-
-    container.addEventListener('click', (event) => {
-      event.stopPropagation();
-    });
-
-    /*var afterPayIntervalTrigger = setInterval(() => {
+		/*var afterPayIntervalTrigger = setInterval(() => {
 			hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
 		}, 100);*/
 
-    var affirmPayIntervalTrigger = setInterval(() => {
-      hideOrShowAffirmLogo(() => clearInterval(affirmPayIntervalTrigger));
-    }, 100);
+		var affirmPayIntervalTrigger = setInterval(() => {
+			hideOrShowAffirmLogo(() => clearInterval(affirmPayIntervalTrigger));
+		}, 100)
 
-    const waitForPayLaterDependency = setInterval(() => {
-      const payLaterText = generatePayLaterText();
-      const affirmElement = document.querySelector('.affirm-as-low-as');
-      const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
+		const waitForPayLaterDependency = setInterval(() => {
+		  const payLaterText = generatePayLaterText();
+		  const affirmElement = document.querySelector('.affirm-as-low-as');
+		  const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
 
-      if (affirmElement || afterPayElement) {
-        document.querySelectorAll('.paylater-container').forEach((container) => {
-          container.style.display = 'block';
-        });
-        document.querySelectorAll('.paylater-text').forEach((container) => {
-          container.innerHTML = getPaylaterModal(payLaterText);
-        });
-
-        clearInterval(waitForPayLaterDependency);
-      }
-    }, 100);
-  });
+		  if (affirmElement || afterPayElement) {
+			 document.querySelectorAll('.paylater-container').forEach(container => {
+				container.style.display = 'block';
+			 });
+			 document.querySelectorAll('.paylater-text').forEach(container => {
+				 container.innerHTML = getPaylaterModal(payLaterText);
+			 });
+				
+			 clearInterval(waitForPayLaterDependency);
+			}
+		  }, 100);
+	});
 } catch (error) {
-  console.log(error);
+	console.log(error)
 }
 
 function getPaylaterModal(payLaterText) {
-  return `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+	return `<span>${payLaterText}</span><svg onclick="showPayLaterModal()" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
 				<path fill-rule="evenodd" clip-rule="evenodd" d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z" fill="#D83D0E"></path>
-			</svg>`;
+			</svg>`
 }
 
 function generatePayLaterText() {
-  let payLaterText = '';
-  const productPrice = getProductPrice();
-  document.querySelector('square-placement').setAttribute('data-amount', productPrice);
+	let payLaterText = '';
+	const productPrice = getProductPrice();	
+	document.querySelector('square-placement').setAttribute('data-amount', productPrice);
 
-  let afterPayRate = null;
-  if (document.querySelector('square-placement').length > 0) {
-    afterPayRate = parseFloat(document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML.replace('$', '').replace('/mo.', ''));
-  }
-  const affirm24MosRate = computeAffirmLoanDetails(productPrice, 24).MonthlyPaymentAmount;
-  const rates = [afterPayRate, affirm24MosRate].map((rate) => parseFloat(rate)).filter((rate) => !isNaN(rate));
+	let afterPayRate = null;
+	if (document.querySelector('square-placement').length > 0) {
+		afterPayRate = parseFloat(document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML.replace('$', '').replace('/mo.', ''));
+	}
+	const affirm24MosRate = computeAffirmLoanDetails(productPrice, 24).MonthlyPaymentAmount;
+	const rates = [afterPayRate, affirm24MosRate]
+	.map(rate => parseFloat(rate))
+	.filter(rate => !isNaN(rate));
+  
+    const lowestRate = rates.length ? Math.min(...rates) : 0;  
 
-  const lowestRate = rates.length ? Math.min(...rates) : 0;
+	payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
+		style: 'currency',
+		currency: 'USD',
+		})}/mo. / 24 interest-free payment`
 
-  payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  })}/mo. / 24 interest-free payment`;
-
-  return payLaterText;
+	return payLaterText;
 }
 
 function toggleTransitTimeForm() {
-  const transitTimeForm = document.querySelector('.transit-time-form');
-  const locationDisplayHeader = document.querySelector('.location-header .location-display');
-  if (transitTimeForm.style.display === 'block') {
-    transitTimeForm.style.display = 'none';
-    locationDisplayHeader.style.color = '#D83D0E';
-  } else {
-    transitTimeForm.style.display = 'block';
-    locationDisplayHeader.style.color = '#57200F';
-  }
+	const transitTimeForm = document.querySelector('.transit-time-form');
+	const locationDisplayHeader = document.querySelector('.location-header .location-display');
+	if (transitTimeForm.style.display === 'block') {
+		transitTimeForm.style.display = 'none';
+		locationDisplayHeader.style.color = '#D83D0E'
+	} else {
+		transitTimeForm.style.display = 'block';
+		locationDisplayHeader.style.color = '#57200F'
+	}
 }
 
 function computeAfterPayLoanDetails(principal, monthlyPayment, numPayments, newTerm = null) {
-  function aprEquation(rate) {
-    return (principal * rate) / (1 - Math.pow(1 + rate, -numPayments)) - monthlyPayment;
-  }
-
-  function solveAPR() {
-    let lower = 0.0001,
-      upper = 1,
-      guess;
-
-    while (upper - lower > 1e-6) {
-      guess = (lower + upper) / 2;
-      if (aprEquation(guess) > 0) {
-        upper = guess;
-      } else {
-        lower = guess;
-      }
+	function aprEquation(rate) {
+        return (principal * rate) / (1 - Math.pow(1 + rate, -numPayments)) - monthlyPayment;
     }
-    return guess;
-  }
 
-  let monthlyRate = solveAPR();
-  let apr = (monthlyRate * 12 * 100).toFixed(2);
+    function solveAPR() {
+        let lower = 0.0001,
+            upper = 1, 
+            guess;
 
-  let newMonthlyPayment = null;
-  let totalPaymentsOriginal = monthlyPayment * numPayments;
-  let totalPaymentsNewTerm = null;
+        while ((upper - lower) > 1e-6) { 
+            guess = (lower + upper) / 2;
+            if (aprEquation(guess) > 0) {
+                upper = guess;
+            } else {
+                lower = guess;
+            }
+        }
+        return guess;
+    }
 
-  if (newTerm) {
-    newMonthlyPayment = ((principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -newTerm))).toFixed(2);
-    totalPaymentsNewTerm = newMonthlyPayment * newTerm;
-  }
+    let monthlyRate = solveAPR();
+    let apr = (monthlyRate * 12 * 100).toFixed(2); 
 
-  return {
-    APR: apr + '%',
-    MonthlyPaymentForNewTerm: newTerm ? `$${newMonthlyPayment}` : 'N/A',
-    TotalPaymentsOriginalTerm: `${parseFloat(totalPaymentsOriginal).toLocaleString('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    })}`,
-    TotalPaymentsNewTerm: newTerm
-      ? `${parseFloat(totalPaymentsOriginal).toLocaleString('en-US', {
-          style: 'currency',
-          currency: 'USD',
-        })}`
-      : 'N/A',
-  };
+    let newMonthlyPayment = null;
+    let totalPaymentsOriginal = (monthlyPayment * numPayments);
+    let totalPaymentsNewTerm = null;
+
+    if (newTerm) {
+        newMonthlyPayment = ((principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -newTerm))).toFixed(2);
+        totalPaymentsNewTerm = (newMonthlyPayment * newTerm);
+    }
+
+    return {
+        APR: apr + "%",
+        MonthlyPaymentForNewTerm: newTerm ? `$${newMonthlyPayment}` : "N/A",
+        TotalPaymentsOriginalTerm: `${parseFloat(totalPaymentsOriginal).toLocaleString('en-US', {
+			style: 'currency',
+			currency: 'USD',
+		  })}`,
+        TotalPaymentsNewTerm: newTerm ? `${parseFloat(totalPaymentsOriginal).toLocaleString('en-US', {
+			style: 'currency',
+			currency: 'USD',
+		  })}` : "N/A"
+    };
 }
 
 function showPayLaterModal() {
-  const payLaterAggregateHTML = generatePayLaterAggregate();
+	const payLaterAggregateHTML = generatePayLaterAggregate();
 
-  if (generatePayLaterAggregate) {
-    modalWrapper.style.display = 'flex';
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = payLaterAggregateHTML;
-    const mainContent = tempDiv;
-    container.innerHTML = mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
+	if (generatePayLaterAggregate) {
+		modalWrapper.style.display = 'flex';
+		const tempDiv = document.createElement('div');
+		tempDiv.innerHTML = payLaterAggregateHTML;
+		const mainContent = tempDiv;
+		container.innerHTML = mainContent.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
 
-    const closeModalButton = container.querySelector('.modal-close');
+		const closeModalButton = container.querySelector('.modal-close');
 
-    closeModalButton.addEventListener('click', () => {
-      modalWrapper.style.display = 'none';
-    });
+		closeModalButton.addEventListener('click', () => {
+			modalWrapper.style.display = 'none';
+		});
 
-    document.querySelector('#dynamic-product-content').style.width = '600px';
-  }
+		document.querySelector('#dynamic-product-content').style.width = "600px";
+	}
 }
 
 function generatePayLaterAggregate() {
-  const priceElement = document.querySelector('.pr_custom_price');
-  const cleanedPrice = priceElement.textContent.replace(/[^\d,\.]/g, '');
-  let buyNowPayLaterHTML = `<div class="buy-now-pay-later">
+	const priceElement = document.querySelector('.pr_custom_price');
+	const cleanedPrice = priceElement.textContent.replace(/[^\d,\.]/g, '');
+	let buyNowPayLaterHTML = `<div class="buy-now-pay-later">
 	<h1 class="title">BUY NOW. PAY LATER.</h1>
 	<p class="price">Purchase price: <strong>$${cleanedPrice}</strong>
 	</p>
@@ -545,18 +523,18 @@ function generatePayLaterAggregate() {
 	</div>
 	<div class="options">${combinedPayLater()}</div>
 
-  </div>`;
+  </div>`
 
   return buyNowPayLaterHTML;
 }
 
 function combinedPayLater() {
-  let payLaterOptions = '';
+	let payLaterOptions = '';
 
-  /*payLaterOptions += generateAfterPayPaymentTerms();*/
-  payLaterOptions += generateAffirmPaymentTerms();
+	/*payLaterOptions += generateAfterPayPaymentTerms();*/
+	payLaterOptions += generateAffirmPaymentTerms();
 
-  return payLaterOptions;
+	return payLaterOptions;
 }
 /*
 function generateAfterPayPaymentTerms() {
@@ -585,9 +563,9 @@ function generateAfterPayPaymentTerms() {
 }
 */
 function generateAfterPayOptionHTML(term, rate) {
-  const { MonthlyPaymentForNewTerm, APR, TotalPaymentsNewTerm } = rate;
+	const { MonthlyPaymentForNewTerm, APR, TotalPaymentsNewTerm } = rate;
 
-  return `
+	return `
 		<div class="option">
 			<div class="option-details">
 				<p class="payment-info">
@@ -616,19 +594,19 @@ function generateAfterPayOptionHTML(term, rate) {
 }
 
 function generateAffirmPaymentTerms() {
-  if (!document.querySelector('.affirm-as-low-as')) return '';
+	if (!document.querySelector('.affirm-as-low-as')) return '';
 
-  let productPrice = getProductPrice();
+	let productPrice = getProductPrice();  
 
-  if (productPrice) {
-    let terms = [6, 12, 24];
-    let affirmTermsHTML = '';
+	if (productPrice) {
+		let terms = [6, 12, 24];
+		let affirmTermsHTML = '';
 
-    terms.forEach((term) => {
-      let rate = computeAffirmLoanDetails(productPrice, term);
+		terms.forEach(term => {
+			let rate = computeAffirmLoanDetails(productPrice, term);
 
-      if (rate) {
-        affirmTermsHTML += `
+			if (rate) {
+				affirmTermsHTML += `
 					<div class="option affirm">
 						<div class="option-details">
 							<p class="payment-info">
@@ -647,34 +625,33 @@ function generateAffirmPaymentTerms() {
                           </span>
 						</a>
 					</div>`;
-      }
-    });
+			}
+		});
 
-    return affirmTermsHTML;
+		return affirmTermsHTML;
+	}
   }
-}
 
-function computeAffirmLoanDetails(productPrice, months) {
-  const monthly = (productPrice / months).toFixed(2);
-  return {
-    MonthlyPaymentAmount: productPrice / months,
-    MonthlyPayment: `$${monthly}`,
-    APR: '0.00%',
-    TotalPayment: `$${productPrice.toFixed(2)}`,
-  };
-}
+  function computeAffirmLoanDetails(productPrice, months) {
+	const monthly = (productPrice / months).toFixed(2);
+	return {
+		MonthlyPaymentAmount: (productPrice / months),
+		MonthlyPayment: `$${monthly}`,
+		APR: '0.00%',
+		TotalPayment: `$${productPrice.toFixed(2)}`
+	};
+  }
 
-function getProductPrice() {
-  const priceElement = document.querySelector('.pr_custom_price').innerText;
+  function getProductPrice() {
+    const priceElement = document.querySelector('.pr_custom_price').innerText;
 
-  const formattedProductPrice = priceElement
-    .match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]
-    .replace(/,/g, '')
-    .replace(/(\.\d*?[1-9])0+$/, '$1')
-    .replace(/\.0+$/, '');
-  const productPrice = parseFloat(formattedProductPrice);
-  return productPrice;
-}
+	const formattedProductPrice = priceElement.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]  
+	.replace(/,/g, '') 
+	.replace(/(\.\d*?[1-9])0+$/, '$1') 
+	.replace(/\.0+$/, ''); 
+	const productPrice = parseFloat(formattedProductPrice);
+	return productPrice;
+  }
 /*
   function hideOrShowAfterPayLogo(callback) {
 	var afterPayModalContainer = document.querySelector('afterpay-modal');
@@ -694,59 +671,60 @@ function getProductPrice() {
 	}
   }*/
 
-function hideOrShowAffirmLogo(callback) {
-  var affirmElement = document.querySelector('.affirm-as-low-as');
+  function hideOrShowAffirmLogo(callback) {
+	var affirmElement = document.querySelector('.affirm-as-low-as');
 
-  document.querySelectorAll('.affirm-logo').forEach((element) => {
-    if (affirmElement && element) {
-      element.style.display = 'block';
-    } else {
-      element.style.display = 'none';
-    }
-  });
+	document.querySelectorAll('.affirm-logo').forEach(element => {
+		if (affirmElement && element) {
+			element.style.display = 'block';
+		} else {
+			element.style.display = 'none';
+		}
+	});
 
-  if (affirmElement && callback) {
-    callback();
+	if (affirmElement && callback) {
+		callback();
+	}
   }
-}
 
-function observeModalVisibility(modalSelector = '.modal-wrapper') {
-  const observer = new MutationObserver(() => {
-    const anyModalOpen = Array.from(document.querySelectorAll(modalSelector)).some((modal) => {
-      const style = window.getComputedStyle(modal);
-      return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+  function observeModalVisibility(modalSelector = '.modal-wrapper') {
+    const observer = new MutationObserver(() => {
+        const anyModalOpen = Array.from(document.querySelectorAll(modalSelector))
+            .some(modal => {
+                const style = window.getComputedStyle(modal);
+                return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+            });
+
+        document.body.classList.toggle('modal-open', anyModalOpen);
     });
 
-    document.body.classList.toggle('modal-open', anyModalOpen);
-  });
+    const modals = document.querySelectorAll(modalSelector);
 
-  const modals = document.querySelectorAll(modalSelector);
-
-  modals.forEach((modal) => {
-    observer.observe(modal, {
-      attributes: true,
-      attributeFilter: ['style', 'class'],
-      subtree: false,
+    modals.forEach(modal => {
+        observer.observe(modal, {
+            attributes: true,
+            attributeFilter: ['style', 'class'],
+            subtree: false,
+        });
     });
-  });
 }
 
 async function getShopperApprovedTotalReviewsCount() {
-  const apiUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/reviews/reviewscount`;
+	const apiUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/reviews/reviewscount`;
 
-  try {
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-    });
+	try {
+		const response = await fetch(apiUrl, {
+			method: 'GET'
+		});
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch API fetchShopperApprovedTotalReviews');
-    }
+		if (!response.ok) {
+			throw new Error('Failed to fetch API fetchShopperApprovedTotalReviews');
+		}
 
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching API fetchShopperApprovedTotalReviews', error);
-    return null;
-  }
+        const data = await response.json();
+		return data;
+	} catch (error) {
+		console.error('Error fetching API fetchShopperApprovedTotalReviews', error);
+		return null;
+	}
 }
