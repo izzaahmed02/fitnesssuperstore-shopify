@@ -121,7 +121,7 @@
         skus: ['FF-NTR2', 'BSLDTS31', 'FFRG-28RCB'],
         productNames: [
           'French Fitness NTR2 Nylon Tricep Rope',
-          'Body-Solid TS31 Combo Thigh/Ankle Strap',
+          'Body-Solid TS31 Combo Thigh/Ankle Strap (New)',
           'French Fitness 28" Rubber Grip Revolving Curl Bar'
         ]
       },
@@ -130,7 +130,7 @@
         skus: ['FF-NTR2', 'BSLDTS31', 'FFRG-28RCB', 'FFRG-TPB12', 'FFC-42SB'],
         productNames: [
           'French Fitness NTR2 Nylon Tricep Rope',
-          'Body-Solid TS31 Combo Thigh/Ankle Strap',
+          'Body-Solid TS31 Combo Thigh/Ankle Strap (New)',
           'French Fitness 28" Rubber Grip Revolving Curl Bar',
           'French Fitness 12" Rubber Grip Tricep Pressdown Bar',
           'French Fitness Chrome 42" Dual Hook Straight Bar'
