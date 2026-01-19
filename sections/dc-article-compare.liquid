@@ -576,65 +576,36 @@ document.addEventListener("DOMContentLoaded", function () {
   const allLeftBtns = document.querySelectorAll(".scroll-btn.left");
   const allRightBtns = document.querySelectorAll(".scroll-btn.right");
 
-  // Calculate number of columns and set widths dynamically
-  const productColumns = document.querySelectorAll(".col-product");
-  const productCount = productColumns.length;
-  const totalColumns = productCount + 1; // +1 for feature column
-  
-  console.log('Number of product columns:', productCount);
-  console.log('Total columns (including feature):', totalColumns);
-
-  // Dynamic width calculation
-  const containerWidth = scrollableContent.offsetWidth;
-  const featureColumnWidth = 193; // Base width for feature column
-  const availableWidth = containerWidth - featureColumnWidth;
-  const productColumnWidth = Math.max(163.6, availableWidth / productCount);
-
-  // Apply dynamic widths
-  document.querySelectorAll('.col-feature').forEach(col => {
-    col.style.width = featureColumnWidth + 'px';
-  });
-  
-  document.querySelectorAll('.col-product').forEach(col => {
-    col.style.width = productColumnWidth + 'px';
-  });
-
-  // Also update th/td max-widths
-  const style = document.createElement('style');
-  style.textContent = `
-    .compareChart .comparison-table th:not(.feature-col),
-    .compareChart .comparison-table td:not(.feature-label),
-    .compareChart .sticky-header th:not(.feature-col) {
-      max-width: ${productColumnWidth}px !important;
-      width: ${productColumnWidth}px !important;
-    }
-  `;
-  document.head.appendChild(style);
-
-  // Check if we should show sticky arrows (4+ products = 5+ columns total)
-  const shouldShowStickyArrows = productCount >= 4;
+  // Check if we have 5 or more columns (products + feature column)
+  const productCount = document.querySelectorAll(".col-product").length;
+  const shouldShowStickyArrows = productCount >= 4; // 4+ products = 5+ columns total
 
   if (shouldShowStickyArrows) {
     stickyScrollArrows.style.display = "flex";
     bottomScrollArrows.classList.add("hidden");
   }
 
-  // Handle sticky header visibility and positioning
+  // Handle sticky header visibility and positioning based on page scroll
   function handleStickyHeader() {
     const scrollContainer = document.querySelector('.scroll-container');
     const scrollContainerRect = scrollContainer.getBoundingClientRect();
     const tableRect = mainTable.getBoundingClientRect();
     const tableBottom = tableRect.bottom;
     
+    // Get section header height dynamically
     const sectionHeader = document.querySelector('.section-header');
     const sectionHeaderHeight = sectionHeader ? sectionHeader.offsetHeight : 0;
     
+    // Show sticky header when:
+    // 1. scroll-container top reaches or goes above the section header bottom
+    // 2. We haven't scrolled past the entire table
     const shouldShowSticky = scrollContainerRect.top <= sectionHeaderHeight && tableBottom > (sectionHeaderHeight + 100);
     
     if (shouldShowSticky) {
       if (!stickyHeader.classList.contains('visible')) {
         stickyHeader.classList.add('visible');
         
+        // Get the exact position of the scrollable content area
         const scrollableRect = scrollableContent.getBoundingClientRect();
         stickyHeader.style.left = scrollableRect.left + 'px';
         stickyHeader.style.width = scrollableRect.width + 'px';
@@ -695,22 +666,20 @@ document.addEventListener("DOMContentLoaded", function () {
     btn.addEventListener("click", () => scrollContentBy(200));
   });
 
+  // Listen to horizontal scroll on the table container
   scrollableContent.addEventListener("scroll", () => {
     updateArrowStates();
     syncHorizontalScroll();
   });
   
+  // Listen to page scroll for sticky header
   window.addEventListener("scroll", handleStickyHeader);
-  window.addEventListener("resize", () => {
-    updateArrowStates();
-    handleStickyHeader();
-  });
+  window.addEventListener("resize", updateArrowStates);
 
-  updateArrowStates();
-  handleStickyHeader();
+  updateArrowStates(); // Initial call
+  handleStickyHeader(); // Initial call
 });
 
-// Equalize product title heights
 document.addEventListener("DOMContentLoaded", function () {
   const titles = document.querySelectorAll(".product-title");
   let maxHeight = 0;
