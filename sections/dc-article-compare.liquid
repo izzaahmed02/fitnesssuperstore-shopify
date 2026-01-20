@@ -430,6 +430,13 @@ background: #fff;
   }
 </style>
 
+<!-- Calculate product count once -->
+{% assign products = page.metafields.custom.comparison_products.value %}
+{% assign product_count = products.size %}
+
+<!-- Determine column class based on count -->
+{% assign column_class = 'cols-' | append: product_count %}
+
 <div class="comparisonDescp">
   <h1 class="main-page-title page-title customTitle{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
       {{ page.title | escape }}
@@ -438,7 +445,7 @@ background: #fff;
 </div>
 
 <!-- Sticky header that appears when scrolling -->
-<div class="compareChart sticky-header" id="stickyHeader">
+<div class="compareChart sticky-header {{ column_class }}" id="stickyHeader">
   <table>
     <colgroup>
       <col class="col-feature">
@@ -471,7 +478,7 @@ background: #fff;
   </table>
 </div>
 
-<div class="comparison-chart-outer compareChart">
+<div class="comparison-chart-outer compareChart {{ column_class }}">
 
   <div class="scroll-arrows sticky" id="stickyScrollArrows" style="display: none;">
     <button class="scroll-btn left" aria-label="Scroll left">&larr;</button>
