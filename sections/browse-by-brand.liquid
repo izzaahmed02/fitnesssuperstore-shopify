@@ -20,29 +20,35 @@
   
  
     <div class="category-tab-content">     
-        {% for block in section.blocks %}  
-         {% assign collection_handle = block.settings.link | split: '/' | last %}
-  {% assign linked_collection = collections[collection_handle] %}
+      {% for block in section.blocks %}  
+      {% assign collection_handle = block.settings.link | split: '/' | last %}
+      {% assign linked_collection = collections[collection_handle] %}
 
-  <a aria-label="View {{ linked_collection.title | default: collection_handle }} collection" href="{{ block.settings.link }}">
- 
-      <div class="main-card">
+      {%- comment -%} Wrap the link in a div so Slick applies roles to the div, not the link {%- endcomment -%}
+      <div class="slide-wrapper">
+        <a aria-label="View {{ linked_collection.title | default: collection_handle }} collection" 
+           href="{{ block.settings.link }}"
+           class="brand-card-link">
+          <div class="main-card">
             <div class="category-card">
-              
-                {% if block.settings.image != blank %}
-                  <img class="brand-image ss" src="{{ block.settings.image | img_url: "master" }}" alt="{{ block.settings.image.alt }}" decoding="async">
-                {% endif %}
-              
+              {% if block.settings.image != blank %}
+                <img class="brand-image ss" 
+                     src="{{ block.settings.image | img_url: 'master' }}" 
+                     alt="{{ block.settings.image.alt }}" 
+                     decoding="async">
+              {% endif %}
             </div>
 
-            
-                {% if block.settings.logo != blank %}
-                 <img class="brand-logo" src="{{ block.settings.logo | image_url }}" alt="{{ block.settings.logo.alt }}" decoding="async">
-                {% endif %}
-             
+            {% if block.settings.logo != blank %}
+              <img class="brand-logo" 
+                   src="{{ block.settings.logo | image_url }}" 
+                   alt="{{ block.settings.logo.alt }}" 
+                   decoding="async">
+            {% endif %}
           </div>
         </a>
-        {% endfor %}
+      </div>
+    {% endfor %}
       </div>
 </div>
 
