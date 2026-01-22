@@ -39,32 +39,46 @@ $(document).ready(function() {
   
   // Function to clean ARIA attributes
   function cleanAriaAttributes() {
-    // Remove invalid role from all anchor slides
-    $carousel.find('a.slick-slide').each(function() {
-      $(this).removeAttr('role').removeAttr('aria-describedby');
+    // Clean the dots navigation - remove tab-related roles
+    $('.slick-dots').each(function() {
+      // Remove tablist role from the dots container
+      $(this).removeAttr('role');
+      
+      // Clean each list item
+      $(this).find('li').each(function() {
+        $(this).removeAttr('role');
+      });
+      
+      // Clean each button - remove tab role and controls
+      $(this).find('button').each(function() {
+        $(this).removeAttr('role');
+        $(this).removeAttr('aria-controls');
+        $(this).removeAttr('aria-selected');
+      });
     });
     
-    // Clean up dots
-    $carousel.siblings('.slick-dots').each(function() {
+    // Also clean any remaining role attributes from anchor slides
+    $carousel.find('a.slick-slide').each(function() {
       $(this).removeAttr('role');
-      $(this).find('li').removeAttr('role');
-      $(this).find('button').each(function() {
-        $(this).removeAttr('role').removeAttr('aria-controls').removeAttr('aria-selected');
-      });
+      $(this).removeAttr('aria-describedby');
     });
   }
   
   // Clean attributes immediately after init
-  cleanAriaAttributes();
+  setTimeout(function() {
+    cleanAriaAttributes();
+  }, 100);
   
   // Clean attributes after slide changes (Slick re-adds them)
   $carousel.on('afterChange', function(event, slick, currentSlide) {
     cleanAriaAttributes();
   });
   
-  // Also clean on init event
-  $carousel.on('init', function(event, slick) {
-    cleanAriaAttributes();
+  // Also clean on breakpoint changes
+  $carousel.on('breakpoint', function(event, slick, breakpoint) {
+    setTimeout(function() {
+      cleanAriaAttributes();
+    }, 100);
   });
   
 });
