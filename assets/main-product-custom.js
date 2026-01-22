@@ -158,6 +158,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
       const sortByDropdown = document.createElement('select');
       sortByDropdown.setAttribute('id', 'sortByDropdown');
+	  sortByDropdown.setAttribute('aria-label', 'Sort reviews');
       sortByDropdown.innerHTML = `
         <option value="high">Sort by: Highest to Lowest</option>
         <option value="low">Sort by: Lowest to Highest</option>
