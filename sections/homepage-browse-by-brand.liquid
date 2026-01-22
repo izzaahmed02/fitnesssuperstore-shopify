@@ -17,42 +17,31 @@
 </div>
   
  
-  <div class="category-tab-content">
-  {% for block in section.blocks %}
-    {% assign collection_handle = block.settings.link | split: '/' | last %}
-    {% assign linked_collection = collections[collection_handle] %}
+    <div class="category-tab-content">     
+        {% for block in section.blocks %}  
+         {% assign collection_handle = block.settings.link | split: '/' | last %}
+  {% assign linked_collection = collections[collection_handle] %}
 
-    <div class="brand-slide">
-      <a
-        aria-label="View {{ linked_collection.title | default: collection_handle }} collection"
-        href="{{ block.settings.link }}"
-      >
-        <div class="main-card">
-          <div class="category-card">
-            {% if block.settings.image != blank %}
-              <img
-                class="brand-image ss"
-                src="{{ block.settings.image | img_url: "master" }}"
-                alt="{{ block.settings.image.alt | escape }}"
-                decoding="async"
-              >
-            {% endif %}
+  <a aria-label="View {{ linked_collection.title | default: collection_handle }} collection" href="{{ block.settings.link }}">
+ 
+      <div class="main-card">
+            <div class="category-card">
+              
+                {% if block.settings.image != blank %}
+                  <img class="brand-image ss" src="{{ block.settings.image | img_url: "master" }}" alt="{{ image.alt }}" decoding="async">
+                {% endif %}
+              
+            </div>
+
+            
+                {% if block.settings.logo != blank %}
+                 <img class="brand-logo" src="{{ block.settings.logo | image_url }}" alt="{{ image.alt }}" decoding="async">
+                {% endif %}
+             
           </div>
-
-          {% if block.settings.logo != blank %}
-            <img
-              class="brand-logo"
-              src="{{ block.settings.logo | image_url }}"
-              alt="{{ block.settings.logo.alt | escape }}"
-              decoding="async"
-            >
-          {% endif %}
-        </div>
-      </a>
-    </div>
-  {% endfor %}
-</div>
-
+        </a>
+        {% endfor %}
+      </div>
 </div>
 
 <script src="{{ 'homepage-browse-by-brand.js' | asset_url }}" defer="defer"></script>
