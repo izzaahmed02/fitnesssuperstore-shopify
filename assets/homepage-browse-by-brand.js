@@ -1,3 +1,4 @@
+// Initialize Slick first
 $(".homepage-browse-brand .category-tab-content").slick({
   dots: true,
   infinite: true,
@@ -7,11 +8,6 @@ $(".homepage-browse-brand .category-tab-content").slick({
   touchThreshold: 8,
   slidesToShow: 5,
   slidesToScroll: 1,
-  // Add these accessibility settings to fix the role issue
-  accessibility: true,
-  slidesPerRow: 1,
-  // Remove the tabpanel role that Slick adds by default
-  slide: 'a',
   responsive: [
     {
       breakpoint: 1300,
@@ -36,5 +32,10 @@ $(".homepage-browse-brand .category-tab-content").slick({
   ]
 });
 
-// After initialization, remove the invalid role attributes
-$(".homepage-browse-brand .category-tab-content .slick-slide").removeAttr("role");
+// Clean up ARIA attributes immediately after initialization
+setTimeout(function() {
+  $('.homepage-browse-brand .slick-slide').removeAttr('role aria-describedby');
+  $('.homepage-browse-brand .slick-dots').removeAttr('role');
+  $('.homepage-browse-brand .slick-dots li').removeAttr('role');
+  $('.homepage-browse-brand .slick-dots button').removeAttr('role aria-controls aria-selected');
+}, 100);
