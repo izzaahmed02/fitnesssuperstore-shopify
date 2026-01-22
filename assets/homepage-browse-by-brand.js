@@ -1,1 +1,37 @@
-$(".homepage-browse-brand .category-tab-content").slick({dots:!0,infinite:!0,draggable:!0,cssEase:"linear",swipeToSlide:!0,touchThreshold:8,slidesToShow:5,slidesToScroll:1,responsive:[{breakpoint:1300,settings:{slidesToShow:4}},{breakpoint:1024,settings:{slidesToShow:3}},{breakpoint:989,settings:{slidesToShow:2,swipeToSlide:!0,touchThreshold:8}}]});
+const $brandSlider = $(".homepage-browse-brand .category-tab-content");
+
+$brandSlider.on("init reInit afterChange", function () {
+  $(this)
+    .find('a[role="tabpanel"]')
+    .removeAttr("role")
+    .removeAttr("aria-describedby");
+});
+
+$brandSlider.slick({
+  dots: true,
+  infinite: true,
+  draggable: true,
+  cssEase: "linear",
+  swipeToSlide: true,
+  touchThreshold: 8,
+  slidesToShow: 5,
+  slidesToScroll: 1,
+  responsive: [
+    {
+      breakpoint: 1300,
+      settings: { slidesToShow: 4 }
+    },
+    {
+      breakpoint: 1024,
+      settings: { slidesToShow: 3 }
+    },
+    {
+      breakpoint: 989,
+      settings: {
+        slidesToShow: 2,
+        swipeToSlide: true,
+        touchThreshold: 8
+      }
+    }
+  ]
+});
