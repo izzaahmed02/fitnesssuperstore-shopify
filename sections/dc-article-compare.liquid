@@ -1,5 +1,12 @@
 
 <style>
+
+
+  .compareChart.cols-4 .col-product{
+  width: 205px;
+  }
+
+
 .belowfoldCharts {
 padding: 0 16px;
 margin-bottom: 50px;
@@ -177,7 +184,6 @@ background: #fff;
     .compareChart .scroll-arrows.sticky {
       right: 10px;
       padding: 5px;
-      z-index: 9999;
     }
 
     .compareChart .scroll-arrows.sticky .scroll-btn {
@@ -353,7 +359,9 @@ background: #fff;
   .compareChart .customTitle{
     font-family: Oswald;
     font-weight: 600;
+    font-size: 48px;
     margin-bottom: 52px;
+    line-height: 68px;
     letter-spacing: 0;
     text-align: center;
     text-transform: uppercase;
@@ -406,7 +414,9 @@ background: #fff;
     .compareChart .customTitle{
       font-family: Oswald;
       font-weight: 600;
+      font-size: 24px;
       margin-bottom: 20px;
+      line-height: 32px;
       letter-spacing: 0;
       text-align: center;
       text-transform: uppercase;
@@ -427,6 +437,13 @@ background: #fff;
   }
 </style>
 
+<!-- Calculate product count once -->
+{% assign products = page.metafields.custom.comparison_products.value %}
+{% assign product_count = products.size %}
+
+<!-- Determine column class based on count -->
+{% assign column_class = 'cols-' | append: product_count %}
+
 <div class="comparisonDescp">
   <h1 class="main-page-title page-title customTitle{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
       {{ page.title | escape }}
@@ -435,8 +452,8 @@ background: #fff;
 </div>
 
 <!-- Sticky header that appears when scrolling -->
-<div class="compareChart sticky-header" id="stickyHeader">
-  <table style="width:100%">
+<div class="compareChart sticky-header {{ column_class }}" id="stickyHeader">
+  <table>
     <colgroup>
       <col class="col-feature">
       {% assign products = page.metafields.custom.comparison_products.value %}
@@ -468,7 +485,7 @@ background: #fff;
   </table>
 </div>
 
-<div class="comparison-chart-outer compareChart">
+<div class="comparison-chart-outer compareChart {{ column_class }}">
 
   <div class="scroll-arrows sticky" id="stickyScrollArrows" style="display: none;">
     <button class="scroll-btn left" aria-label="Scroll left">&larr;</button>
