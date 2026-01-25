@@ -1,8 +1,12 @@
-// Bundle Selector functionality for Cable Attachments
+// Bundle Selector functionality for Cable Attachments - OPTIMIZED
 (function() {
   'use strict';
   
   console.log('[Bundle Selector] Script loaded');
+  
+  // Cache for product lookups to avoid redundant API calls
+  const productCache = new Map();
+  const skuCache = new Map();
   
   function initBundleSelector() {
     console.log('[Bundle Selector] Initializing...');
@@ -206,8 +210,14 @@
       }
     }
 
-    // Fetch product details via API
+    // OPTIMIZED: Fetch product details via API with caching
     async function fetchProductDetails(handle) {
+      // Check cache first
+      if (productCache.has(handle)) {
+        console.log(`[Bundle Selector] Using cached product ${handle}`);
+        return productCache.get(handle);
+      }
+      
       try {
         const response = await fetch(`/products/${handle}.js`);
         if (!response.ok) {
@@ -216,6 +226,10 @@
         }
         const data = await response.json();
         console.log(`[Bundle Selector] Fetched product ${handle}:`, data.title);
+        
+        // Cache the result
+        productCache.set(handle, data);
+        
         return data;
       } catch (error) {
         console.error(`[Bundle Selector] Error fetching product ${handle}:`, error);
@@ -223,79 +237,108 @@
       }
     }
 
-    // Find product by SKU using Shopify API
-    async function findProductBySKU(sku) {
+    // OPTIMIZED: Batch fetch products by SKU with improved caching
+    async function findProductsBySKUs(skus) {
+      console.log(`[Bundle Selector] Batch fetching ${skus.length} products...`);
+      const results = [];
+      
+      // Check cache first for all SKUs
+      const uncachedSKUs = [];
+      const cachedResults = [];
+      
+      skus.forEach(sku => {
+        if (skuCache.has(sku)) {
+          cachedResults.push(skuCache.get(sku));
+        } else {
+          uncachedSKUs.push(sku);
+        }
+      });
+      
+      console.log(`[Bundle Selector] Found ${cachedResults.length} cached, fetching ${uncachedSKUs.length} new`);
+      
+      // Process uncached SKUs in parallel with limit to avoid overwhelming the server
+      const BATCH_SIZE = 5; // Fetch 5 products at a time
+      const uncachedResults = [];
+      
+      for (let i = 0; i < uncachedSKUs.length; i += BATCH_SIZE) {
+        const batch = uncachedSKUs.slice(i, i + BATCH_SIZE);
+        const batchPromises = batch.map(sku => findProductBySKUOptimized(sku));
+        const batchResults = await Promise.all(batchPromises);
+        uncachedResults.push(...batchResults);
+      }
+      
+      // Combine cached and new results in original order
+      let cachedIndex = 0;
+      let uncachedIndex = 0;
+      
+      skus.forEach(sku => {
+        if (skuCache.has(sku)) {
+          results.push(cachedResults[cachedIndex++]);
+        } else {
+          const result = uncachedResults[uncachedIndex++];
+          skuCache.set(sku, result); // Cache the new result
+          results.push(result);
+        }
+      });
+      
+      console.log(`[Bundle Selector] Batch fetch complete: ${results.filter(r => r).length}/${skus.length} found`);
+      return results;
+    }
+
+    // OPTIMIZED: Simplified product finder with single strategy
+    async function findProductBySKUOptimized(sku) {
       try {
-        const searchUrl = `/search?q=${encodeURIComponent(sku)}&type=product&options[unavailable_products]=last&options[prefix]=none`;
+        // Try direct search first (fastest method)
+        const searchUrl = `/search?q=${encodeURIComponent(sku)}&type=product&options[unavailable_products]=last`;
+        const searchResponse = await fetch(searchUrl);
         
-        try {
-          const jsonResponse = await fetch(`${searchUrl}&view=json`);
-          if (jsonResponse.ok) {
-            const jsonData = await jsonResponse.json();
-            if (jsonData.results && jsonData.results.length > 0) {
-              const productHandle = jsonData.results[0].handle;
-              const product = await fetchProductDetails(productHandle);
-              if (product && product.variants) {
-                const variant = product.variants.find(v => v.sku === sku || v.sku === sku.toUpperCase());
-                if (variant) {
-                  return {
-                    id: product.id,
-                    title: product.title,
-                    handle: product.handle,
-                    description: product.description,
-                    image: product.featured_image || (product.images && product.images[0]),
-                    price: variant.price,
-                    compare_at_price: variant.compare_at_price,
-                    variant_id: variant.id,
-                    sku: sku
-                  };
-                }
-              }
-            }
-          }
-        } catch (e) {
-          const searchResponse = await fetch(searchUrl);
-          const searchText = await searchResponse.text();
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(searchText, 'text/html');
-          const productLinks = doc.querySelectorAll('a[href*="/products/"]');
-          
-          for (const link of productLinks) {
-            const href = link.getAttribute('href');
-            const handleMatch = href.match(/\/products\/([^\/\?]+)/);
-            if (handleMatch) {
-              const product = await fetchProductDetails(handleMatch[1]);
-              if (product && product.variants) {
-                const variant = product.variants.find(v => v.sku === sku || v.sku === sku.toUpperCase());
-                if (variant) {
-                  return {
-                    id: product.id,
-                    title: product.title,
-                    handle: product.handle,
-                    description: product.description,
-                    image: product.featured_image || (product.images && product.images[0]),
-                    price: variant.price,
-                    compare_at_price: variant.compare_at_price,
-                    variant_id: variant.id,
-                    sku: sku
-                  };
-                }
+        if (!searchResponse.ok) {
+          console.log(`[Bundle Selector] Search failed for SKU ${sku}`);
+          return null;
+        }
+        
+        const searchText = await searchResponse.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(searchText, 'text/html');
+        const productLinks = doc.querySelectorAll('a[href*="/products/"]');
+        
+        // Try to find product from search results
+        for (const link of productLinks) {
+          const href = link.getAttribute('href');
+          const handleMatch = href.match(/\/products\/([^\/\?]+)/);
+          if (handleMatch) {
+            const product = await fetchProductDetails(handleMatch[1]);
+            if (product && product.variants) {
+              const variant = product.variants.find(v => 
+                v.sku && (v.sku.toUpperCase() === sku.toUpperCase())
+              );
+              if (variant) {
+                return {
+                  id: product.id,
+                  title: product.title,
+                  handle: product.handle,
+                  description: product.description,
+                  image: product.featured_image || (product.images && product.images[0]),
+                  price: variant.price,
+                  compare_at_price: variant.compare_at_price,
+                  variant_id: variant.id,
+                  sku: sku
+                };
               }
             }
           }
         }
       } catch (error) {
-        console.error('[Bundle Selector] Error in findProductBySKU:', error);
+        console.error(`[Bundle Selector] Error finding SKU ${sku}:`, error);
       }
       return null;
     }
 
     // Initialize Slick carousel for mobile
     function initProductsCarousel(gridElement) {
-      // Check if window width is mobile (adjust breakpoint as needed)
       const isMobile = window.innerWidth <= 768;
       
-      if (isMobile) {
+      if (isMobile && typeof $ !== 'undefined' && $.fn.slick) {
         $(gridElement).slick({
           dots: true,
           arrows: true,
@@ -320,11 +363,12 @@
         console.log('[Bundle Selector] Slick carousel initialized for mobile');
       }
       
-      // Re-initialize on window resize
       let resizeTimer;
       window.addEventListener('resize', function() {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(function() {
+          if (typeof $ === 'undefined' || !$.fn.slick) return;
+          
           const nowMobile = window.innerWidth <= 768;
           const isSlickInit = $(gridElement).hasClass('slick-initialized');
           
@@ -357,7 +401,7 @@
       });
     }
 
-    // Render bundle modal
+    // OPTIMIZED: Render bundle modal with progressive loading
     async function renderBundleModal(bundleSet) {
       console.log('[Bundle Selector] Opening modal for bundle', bundleSet);
       const config = bundleConfig[bundleSet];
@@ -366,83 +410,78 @@
         return;
       }
 
-      // Show loading state
       const mainTitle = modal.querySelector('#bundle-main-title');
       const mainDesc = modal.querySelector('#bundle-main-description');
+      const mainImage = modal.querySelector('#bundle-main-image');
       const productsGrid = modal.querySelector('#bundle-products-grid');
+      const ratingEl = modal.querySelector('#bundle-main-rating');
       
-      if (mainTitle) mainTitle.textContent = config.title;
-      if (mainDesc) mainDesc.textContent = 'Loading...';
-      if (productsGrid) productsGrid.innerHTML = '<div class="loading">Loading products...</div>';
-      
-      // Show modal
+      // Show modal immediately with loading state
       modal.hidden = false;
       modal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
       document.body.classList.add('bundle-modal-open');
-
-      // Fetch bundle product (main product)
-      const bundleProductHandle = `french-fitness-cable-machine-attachment-${bundleSet === 'A' ? '3-piece-base-kit' : bundleSet === 'B' ? '5-piece-complete-set' : '12-piece-ultimate-bundle'}-new`;
-      let bundleProduct = null;
       
-      try {
-        bundleProduct = await fetchProductDetails(bundleProductHandle);
-      } catch (e) {
-        console.log('[Bundle Selector] Could not fetch bundle product, using fallback');
-      }
+      if (mainTitle) mainTitle.textContent = config.title;
+      if (mainDesc) mainDesc.textContent = 'Loading bundle details...';
+      if (productsGrid) productsGrid.innerHTML = '<div class="loading">Loading products...</div>';
 
-      // If bundle product found, display it
-      const mainImage = modal.querySelector('#bundle-main-image');
-      if (bundleProduct && mainImage) {
-        const imageUrl = bundleProduct.featured_image || (bundleProduct.images && bundleProduct.images[0]) || '';
-        mainImage.src = imageUrl;
-        mainImage.alt = bundleProduct.title || config.title;
-        if (mainTitle) mainTitle.textContent = bundleProduct.title || config.title;
-        if (mainDesc) {
-          mainDesc.innerHTML = bundleProduct.description || 'Premium cable machine attachments bundle.';
-        }
-        
-        const ratingEl = modal.querySelector('#bundle-main-rating');
-        if (ratingEl) {
-          if (bundleProduct.metafields?.reviews?.rating?.value) {
-            const rating = bundleProduct.metafields.reviews.rating.value.rating;
-            const reviewCount = bundleProduct.metafields.reviews.rating_count || 0;
-            ratingEl.innerHTML = `<div class="rating-stars">${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}</div><span>${reviewCount} reviews</span>`;
-          } else {
-            ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
+      // Fetch bundle product in parallel with individual products
+      const bundleProductHandle = `french-fitness-cable-machine-attachment-${bundleSet === 'A' ? '3-piece-base-kit' : bundleSet === 'B' ? '5-piece-complete-set' : '12-piece-ultimate-bundle'}-new`;
+      
+      // Start both fetches in parallel
+      const bundleProductPromise = fetchProductDetails(bundleProductHandle);
+      const individualProductsPromise = findProductsBySKUs(config.skus);
+      
+      // Handle bundle product when ready
+      bundleProductPromise.then(bundleProduct => {
+        if (bundleProduct) {
+          const imageUrl = bundleProduct.featured_image || (bundleProduct.images && bundleProduct.images[0]) || '';
+          if (mainImage) {
+            mainImage.src = imageUrl;
+            mainImage.alt = bundleProduct.title || config.title;
           }
+          if (mainTitle) mainTitle.textContent = bundleProduct.title || config.title;
+          if (mainDesc) {
+            mainDesc.innerHTML = bundleProduct.description || 'Premium cable machine attachments bundle.';
+          }
+          
+          if (ratingEl) {
+            if (bundleProduct.metafields?.reviews?.rating?.value) {
+              const rating = bundleProduct.metafields.reviews.rating.value.rating;
+              const reviewCount = bundleProduct.metafields.reviews.rating_count || 0;
+              ratingEl.innerHTML = `<div class="rating-stars">${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}</div><span>${reviewCount} reviews</span>`;
+            } else {
+              ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
+            }
+          }
+        } else {
+          if (mainDesc) mainDesc.innerHTML = 'Premium cable machine attachments bundle designed for comprehensive full-body training.';
+          if (ratingEl) ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
         }
-      } else {
-        if (mainTitle) mainTitle.textContent = config.title;
-        if (mainDesc) mainDesc.innerHTML = 'Premium cable machine attachments bundle designed for comprehensive full-body training.';
-        const ratingEl = modal.querySelector('#bundle-main-rating');
-        if (ratingEl) ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
-      }
+      }).catch(e => {
+        console.log('[Bundle Selector] Could not fetch bundle product:', e);
+      });
 
-      // Fetch and display individual products
+      // Handle individual products when ready
+      const products = await individualProductsPromise;
+      
       if (!productsGrid) return;
       
       // Destroy existing Slick instance if it exists
-      if ($(productsGrid).hasClass('slick-initialized')) {
+      if (typeof $ !== 'undefined' && $.fn.slick && $(productsGrid).hasClass('slick-initialized')) {
         $(productsGrid).slick('unslick');
       }
       
       productsGrid.innerHTML = '';
-
-      const productPromises = config.skus.map(async (sku, index) => {
-        const product = await findProductBySKU(sku);
-        return {
-          product,
-          name: config.productNames[index] || sku,
-          sku
-        };
-      });
-
-      const products = await Promise.all(productPromises);
       
-      console.log('[Bundle Selector] Products fetched:', products.filter(p => p.product).length, 'out of', config.skus.length);
+      console.log('[Bundle Selector] Rendering products:', products.filter(p => p).length, 'out of', config.skus.length);
 
-      products.forEach(({ product, name, sku }) => {
+      // Render products
+      products.forEach((product, index) => {
+        const name = config.productNames[index] || config.skus[index];
+        const sku = config.skus[index];
+        
         const productCard = document.createElement('div');
         productCard.className = 'bundle-product-card';
         
@@ -480,7 +519,7 @@
         productsGrid.appendChild(productCard);
       });
       
-      if (products.filter(p => p.product).length === 0) {
+      if (products.filter(p => p).length === 0) {
         productsGrid.innerHTML = '<div class="loading">No products found. Please check SKU availability.</div>';
       } else {
         // Initialize Slick carousel for mobile only
@@ -496,7 +535,7 @@
       const productsGrid = modal.querySelector('#bundle-products-grid');
       
       // Destroy Slick instance before closing
-      if (productsGrid && $(productsGrid).hasClass('slick-initialized')) {
+      if (productsGrid && typeof $ !== 'undefined' && $.fn.slick && $(productsGrid).hasClass('slick-initialized')) {
         $(productsGrid).slick('unslick');
       }
       
@@ -532,7 +571,7 @@
       });
     }
 
-    // Handle bundle selection (selection only; add with main product on ATC)
+    // Handle bundle selection
     bundleCards.forEach(card => {
       card.addEventListener('click', (e) => {
         if (e.target.closest('.bundle-card__link')) return;
