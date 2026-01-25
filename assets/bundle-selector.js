@@ -334,68 +334,72 @@
       return null;
     }
 
-    // Initialize Slick carousel for mobile
+    // Initialize Slick carousel for both mobile and desktop
     function initProductsCarousel(gridElement) {
-      const isMobile = window.innerWidth <= 768;
-      
-      if (isMobile && typeof $ !== 'undefined' && $.fn.slick) {
-        $(gridElement).slick({
-          dots: true,
-          arrows: true,
-          infinite: false,
-          speed: 300,
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          adaptiveHeight: true,
-          centerMode: true,
-          centerPadding: '60px',
-          prevArrow: '<button type="button" class="slick-prev">←</button>',
-          nextArrow: '<button type="button" class="slick-next">→</button>',
-          responsive: [
-            {
-              breakpoint: 480,
-              settings: {
-                centerPadding: '40px'
-              }
-            }
-          ]
-        });
-        console.log('[Bundle Selector] Slick carousel initialized for mobile');
+      if (typeof $ === 'undefined' || !$.fn.slick) {
+        console.warn('[Bundle Selector] Slick carousel not available');
+        return;
       }
       
+      // Destroy existing instance if present
+      if ($(gridElement).hasClass('slick-initialized')) {
+        $(gridElement).slick('unslick');
+      }
+      
+      $(gridElement).slick({
+        dots: true,
+        arrows: true,
+        infinite: false,
+        speed: 300,
+        slidesToShow: 3.5, // Show 3 and a half slides on desktop
+        slidesToScroll: 1,
+        adaptiveHeight: false,
+        prevArrow: '<button type="button" class="slick-prev" aria-label="Previous"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>',
+        nextArrow: '<button type="button" class="slick-next" aria-label="Next"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>',
+        responsive: [
+          {
+            breakpoint: 1200,
+            settings: {
+              slidesToShow: 2.5,
+              slidesToScroll: 1
+            }
+          },
+          {
+            breakpoint: 992,
+            settings: {
+              slidesToShow: 2,
+              slidesToScroll: 1
+            }
+          },
+          {
+            breakpoint: 768,
+            settings: {
+              slidesToShow: 1,
+              slidesToScroll: 1,
+              centerMode: true,
+              centerPadding: '60px'
+            }
+          },
+          {
+            breakpoint: 480,
+            settings: {
+              slidesToShow: 1,
+              slidesToScroll: 1,
+              centerMode: true,
+              centerPadding: '40px'
+            }
+          }
+        ]
+      });
+      console.log('[Bundle Selector] Slick carousel initialized');
+      
+      // Handle window resize
       let resizeTimer;
       window.addEventListener('resize', function() {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(function() {
-          if (typeof $ === 'undefined' || !$.fn.slick) return;
-          
-          const nowMobile = window.innerWidth <= 768;
-          const isSlickInit = $(gridElement).hasClass('slick-initialized');
-          
-          if (nowMobile && !isSlickInit) {
-            $(gridElement).slick({
-              dots: true,
-              arrows: true,
-              infinite: false,
-              speed: 300,
-              slidesToShow: 1,
-              slidesToScroll: 1,
-              adaptiveHeight: true,
-              centerMode: true,
-              centerPadding: '60px',
-              prevArrow: '<button type="button" class="slick-prev">←</button>',
-              nextArrow: '<button type="button" class="slick-next">→</button>',
-              responsive: [
-                {
-                  breakpoint: 480,
-                  settings: {
-                    centerPadding: '40px'
-                  }
-                }
-              ]
-            });
-          } else if (!nowMobile && isSlickInit) {
-            $(gridElement).slick('unslick');
+          if ($(gridElement).hasClass('slick-initialized')) {
+            $(gridElement).slick('refresh');
           }
         }, 250);
       });
