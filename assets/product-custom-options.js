@@ -49,7 +49,7 @@ if (!customElements.get('product-customization-options')) {
         this.closeModifyHandler();
         this.handleItemUpdate();
         console.log('test');
-        
+        subscribe(PUB_SUB_EVENTS.quantityUpdate, (e) => console.log(e));
       }
 
       // Method for Accordion state
@@ -80,7 +80,7 @@ if (!customElements.get('product-customization-options')) {
             const option = select.selectedOptions[0]?.dataset.selectVariantTitle;
             select.dataset.selectOption = option;
             this.updatePrice();
-          })
+          }),
         );
       }
 
@@ -480,7 +480,7 @@ if (!customElements.get('product-customization-options')) {
           if (!modifyButton) return;
           modifyButton.addEventListener('click', () => {
             console.log('test2');
-            
+
             if (!this.#accordionToggleAdded) {
               this.toggleAccordions();
               this.#accordionToggleAdded = true;
@@ -780,6 +780,6 @@ if (!customElements.get('product-customization-options')) {
           .join('');
         return btoa(binary);
       }
-    }
+    },
   );
 }
