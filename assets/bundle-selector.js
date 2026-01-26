@@ -507,7 +507,7 @@
             <img src="${imageUrl}" alt="${name}" width="120" height="120" loading="lazy" onerror="this.src='/assets/no-image.png'">
           </div>
           <div class="bundle-product-card__info">
-            <div class="bundle-product-card__sku">#${sku}</div>
+            <div class="bundle-product-card__sku">SKU: ${sku}</div>
             <h5 class="bundle-product-card__title">${name}${product ? '' : ' (New)'}</h5>
             <div class="bundle-product-card__rating">
               <span class="rating-stars">${'★'.repeat(Math.floor(rating))}</span>
