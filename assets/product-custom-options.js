@@ -35,7 +35,9 @@ if (!customElements.get('product-customization-options')) {
       connectedCallback() {
         this.init();
         subscribe(PUB_SUB_EVENTS.cartUpdate, () => {
-          this.init();
+          if (window.location.href.includes('/cart')) {
+            this.init();
+          }
         });
       }
 
