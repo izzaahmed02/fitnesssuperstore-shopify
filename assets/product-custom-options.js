@@ -33,6 +33,13 @@ if (!customElements.get('product-customization-options')) {
       }
 
       connectedCallback() {
+        this.init();
+        subscribe(PUB_SUB_EVENTS.cartUpdate, () => {
+          console.log('test');
+        });
+      }
+
+      init() {
         if (!window.location.href.includes('/cart') && !this.closest('cart-notification') && !this.closest('cart-drawer')) {
           this.toggleAccordions();
         }
@@ -48,9 +55,6 @@ if (!customElements.get('product-customization-options')) {
         this.openModifyHandler();
         this.closeModifyHandler();
         this.handleItemUpdate();
-        subscribe(PUB_SUB_EVENTS.cartUpdate, () => {
-          console.log('test');
-        });
       }
 
       // Method for Accordion state
