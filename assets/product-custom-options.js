@@ -486,8 +486,6 @@ if (!customElements.get('product-customization-options')) {
           const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`) || this.cartDrawer?.querySelector(`[data-key-modify="${this.modifyID}"]`);
           if (!modifyButton) return;
           modifyButton.addEventListener('click', () => {
-            console.log('test2');
-
             if (!this.#accordionToggleAdded) {
               this.toggleAccordions();
               this.#accordionToggleAdded = true;
