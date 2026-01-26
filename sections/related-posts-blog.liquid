@@ -45,7 +45,7 @@ Now includes author name and published date.
                     <h3 class="card__heading">
                       <span class="card__heading-text">{{ article.title }}</span>
                     </h3>
-
+{% comment %}
                     {% if article.author or article.published_at %}
                       <p class="card__meta publish-info" style="font-size: 0.9em; color: var(--color-foreground-secondary); margin-bottom: 0.5em;">
                         <span>
@@ -59,6 +59,20 @@ Now includes author name and published date.
                       </span>
                       </p>
                     {% endif %}
+
+                    {% endcomment %}
+
+                    {% assign author_name = article.metafields.custom.author_name %}
+{% if article.published_at or author_name %}
+  <p class="card__meta publish-info">
+    {% if article.published_at %}
+      <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+    {% endif %}
+    {% if author_name %}
+      <span>{{ author_name }}</span>
+    {% endif %}
+  </p>
+{% endif %}
 
                     {% if section.settings.show_excerpt %}
                       <div class="card__subtext">
