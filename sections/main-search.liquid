@@ -1,7 +1,6 @@
-{% render 'rapid-search-results-template' %}
-{% render 'rapid-search-results-template-v2' %}
 {{ 'template-collection.css' | asset_url | stylesheet_tag }}
 {{ 'component-card.css' | asset_url | stylesheet_tag }}
+{{ 'colln-grid-cards.css' | asset_url | stylesheet_tag }}
 {{ 'component-price.css' | asset_url | stylesheet_tag }}
 
 {{ 'collection-section.css' | asset_url | stylesheet_tag }}
@@ -37,17 +36,10 @@
             margin-bottom: 5rem;
         }
 
-      .collection-wrapper{
-        gap: 16px;
-      }
-
-    .facets__form-vertical {
-        display: flex;
-        flex-direction: column;
-        max-width: 248px!important;
-        width: 248px!important;
-        margin-right: 0px!important;
-    }
+       .collection-wrapper{
+        gap: 0;
+      } 
+   
 
       .filterSearchInput, #search-input, #search-input-mobile{
         width: auto!important;
@@ -58,7 +50,7 @@
         max-width: 100%!important;
       }
       .tempSearch{
-        padding: 24px 12px!important;
+        padding: 24px 0px !important
       }
 
       .facet-checkbox{
@@ -70,11 +62,20 @@
     .search__button .icon {
         height: 1.8rem;
     }
+
+    .collnGrid .product-item .image-wrap {
+    box-shadow: 0px 0px 12px 0px #0000001A;
+  
+}
+
+.collnGrid .product-item .slick-dots li{
+width: 6px!important;
+}
 </style>
 
 <div class="page-width tempSearch">
     <h1>Search Results for "{{ search.terms }}"</h1>
-    <div id="ProductGridContainer" class="collection-wrapper">
+    <div id="ProductGridContainer" class="collection-wrapper facets-vertical">
         <div class="collection-filter-wrapper">
             {{ 'component-facets.css' | asset_url | stylesheet_tag }}
             <aside
@@ -260,7 +261,7 @@
                                  xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                       d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z"
-                                      fill="{% if paginate.previous %}#F1592A{% else %}#CCCCCC{% endif %}"/>
+                                      fill="{% if paginate.previous %}#D83D0E{% else %}#CCCCCC{% endif %}"/>
                             </svg>
                         </a>
                         {% for part in paginate.parts %}
@@ -275,7 +276,7 @@
                                  xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                       d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z"
-                                      fill="{% if paginate.next %}#F1592A{% else %}#CCCCCC{% endif %}"/>
+                                      fill="{% if paginate.next %}#D83D0E{% else %}#CCCCCC{% endif %}"/>
                             </svg>
                         </a>
                     </div>
@@ -384,7 +385,7 @@ $(document).ready(function() {
     if (totalPages <= 1) return;
 
     // Prev button
-    var $prev = $('<a href="#"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" fill="#F1592A"></path></svg></a>').on("click", function(e) {
+    var $prev = $('<a href="#"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5303 5.46967C14.8232 5.76256 14.8232 6.23744 14.5303 6.53033L9.06066 12L14.5303 17.4697C14.8232 17.7626 14.8232 18.2374 14.5303 18.5303C14.2374 18.8232 13.7626 18.8232 13.4697 18.5303L7.46967 12.5303C7.17678 12.2374 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967C13.7626 5.17678 14.2374 5.17678 14.5303 5.46967Z" fill="#D83D0E"></path></svg></a>').on("click", function(e) {
       e.preventDefault();
       if (currentPage > 1) render(currentPage - 1);
     });
@@ -406,7 +407,7 @@ $(document).ready(function() {
     }
 
     // Next button
-    var $next = $('<a href="#"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="#F1592A"></path></svg></a>').on("click", function(e) {
+    var $next = $('<a href="#"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z" fill="#D83D0E"></path></svg></a>').on("click", function(e) {
       e.preventDefault();
       if (currentPage < totalPages) render(currentPage + 1);
     });
