@@ -48,7 +48,9 @@ if (!customElements.get('product-customization-options')) {
         this.openModifyHandler();
         this.closeModifyHandler();
         this.handleItemUpdate();
-        window.addEventListener('cart-update', () => console.log('test-update'));
+        subscribe(PUB_SUB_EVENTS.cartUpdate, () => {
+          console.log('test');
+        });
       }
 
       // Method for Accordion state
