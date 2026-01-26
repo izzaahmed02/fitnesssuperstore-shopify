@@ -511,7 +511,6 @@
             <h5 class="bundle-product-card__title">${name}${product ? '' : ' (New)'}</h5>
             <div class="bundle-product-card__rating">
               <span class="rating-stars">${'★'.repeat(Math.floor(rating))}</span>
-              <span class="review-count">${reviewCount} reviews</span>
             </div>
             <div class="bundle-product-card__price">
               ${comparePrice ? `<span class="price-compare">As high as: $${comparePrice}</span>` : ''}
