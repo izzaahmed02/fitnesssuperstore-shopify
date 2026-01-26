@@ -1,8 +1,477 @@
-class ProductGallery extends HTMLElement{constructor(){super(),this.mediaData=[],this.wrapper=null,this.main=null,this.zoomEnabled=!1,this.lastMouseX=0,this.lastMouseY=0,document.addEventListener("mousemove",e=>{this.lastMouseX=e.clientX,this.lastMouseY=e.clientY})}connectedCallback(){let e=this.querySelector("[data-product-media]");if(!e)return;try{this.mediaData=JSON.parse(e.innerHTML.trim())}catch(t){console.error("ConnectedCallback: Invalid JSON in [data-product-media] element.",t);return}if(this.wrapper=this.querySelector(".custom-product-gallery"),this.main=this.querySelector("[data-main-media-wrapper]"),!this.wrapper||!this.main){console.error("ConnectedCallback: Missing .custom-product-gallery or [data-main-media-wrapper]. Exiting.");return}this.initThumbnails();let i=this.querySelector(".thumbnail-btn.is-active");if(!i&&this.mediaData.length>0)this.setActiveMedia(this.mediaData[0].id);else if(i){this.activeMediaId=i.getAttribute("data-media-id");let a=this.mediaData.find(e=>e.id==this.activeMediaId),s=this.main?.querySelector("[data-zoom-container]");if(s&&a&&"image"===a.media_type&&a.preview_image){let o=s.querySelector("img");o&&o.complete?this.initZoom(s,a,!0):o&&(o.onload=()=>{s.querySelector(".image-skeleton-wrapper")?.classList.add("loaded"),this.initZoom(s,a,!0)})}}window.addEventListener("resize",this.handleResize.bind(this)),this.main.addEventListener("click",e=>{let t=e.target.closest(".main-image-container");if(t){let i=this.mediaData.find(e=>e.id==this.activeMediaId),a=document.getElementById("product-gallery-popup");i&&"model"!==i.media_type&&a&&a.hidden?this.openPopup(this.activeMediaId):i&&"model"===i.media_type?console.log("Main image click: Media type is model, not opening popup."):a&&!a.hidden?console.log("Main image click: Popup is already open, not re-opening."):console.log("Main image click: Conditions not met to open popup.")}})}handleResize(){let e=this.activeMediaId,t=this.main?.querySelector("[data-zoom-container]"),i=this.mediaData.find(t=>t.id==e);if(!t||!i||"image"!==i.media_type||!i.preview_image)return;let a=t.querySelector(".zoom-result"),s=t.querySelector(".zoom-lens");a&&a.remove(),s&&s.remove(),t.dataset.zoomInitialized="false";let o=t.querySelector("img");o&&(o.onload=null,requestAnimationFrame(()=>{this.isDesktop()?o.complete?this.initZoom(t,i):o.onload=()=>{this.initZoom(t,i)}:console.log("handleResize: Not desktop, not initializing zoom.")}))}initThumbnails(){let e=this.querySelectorAll(".thumbnail-btn");e.forEach(e=>{let t=e.getAttribute("data-media-id"),i=this.mediaData.find(e=>e.id==t),a=i&&("video"===i.media_type||"external_video"===i.media_type);e.addEventListener("click",e=>{a||this.activeMediaId===t?this.openPopup(t):this.setActiveMedia(t)});let s;e.addEventListener("mouseenter",()=>{this.activeMediaId!==t&&!a&&(s=setTimeout(()=>{this.setActiveMedia(t)},150))}),e.addEventListener("mouseleave",()=>{clearTimeout(s)})})}setActiveMedia(e){if(this.activeMediaId==e)return;this.activeMediaId=e;let t=this.mediaData.find(t=>t.id==e);if(!t||!this.main){console.error(`setActiveMedia: Media or main element not found for ID: ${e}`);return}this.main.innerHTML="";let i=this.main.querySelector(".main-image-container");i&&(i.dataset.zoomInitialized="false");let a=document.createElement("div");if(a.className="main-image-container",a.setAttribute("data-media-id",e),"image"==t.media_type||"video"===t.media_type||"external_video"===t.media_type){if(a.setAttribute("data-zoom-container",""),("video"===t.media_type||"external_video"===t.media_type)&&a.classList.add("is-video-preview"),this.main.appendChild(a),"image"===t.media_type&&t.preview_image){let s=document.createElement("img"),o=document.createElement("div");s.alt=t.alt||"",s.className="main-product-image",o.className="image-skeleton-wrapper",s.src=t.preview_image.src,s.sizes=t.preview_image.sizes||"",s.width=t.preview_image.width||"",s.height=t.preview_image.height||"",s.loading="lazy",a.appendChild(o),o.appendChild(s),s.onload=()=>{o.classList.add("loaded"),this.initZoom(a,t,!0)}}}else if("model"==t.media_type){this.main.appendChild(a);let l=document.createElement("model-viewer");l.src=t.url,l.setAttribute("alt",t.alt),l.setAttribute("camera-controls","true"),l.setAttribute("camera-orbit","0deg 75deg 2m"),l.setAttribute("data-shopify-feature","1.12"),a.appendChild(l)}let d=this.querySelectorAll(".thumbnail-btn");d.forEach(t=>{let i=t.getAttribute("data-media-id"),a=i==String(e);t.classList.toggle("is-active",a)})}isDesktop(){return window.matchMedia("(min-width: 990px)").matches}initZoom(e,t,i=!1){if(!this.isDesktop())return;let a=e.querySelector("img");if(!a||!t.preview_image||"true"===e.dataset.zoomInitialized||this.activeMediaId!=t.id)return;e.dataset.zoomInitialized="true";let s=document.createElement("div");s.className="zoom-result",e.appendChild(s);let o=document.createElement("div");o.className="zoom-lens",o.style.zIndex="100",e.appendChild(o);let l=new Image,d=t.preview_image.width||a.naturalWidth,r=t.preview_image.height||a.naturalHeight;l.src=t.preview_image.src.replace(/width=\d+/,"width=1600").replace(/height=\d+/,`height=${Math.round(1600/(d/r))}`),l.style.transform="scale(0.5)",l.style.transformOrigin="center",s.appendChild(l),l.onload=()=>{let t=l.naturalWidth/a.clientWidth;if(l.naturalWidth<750||t<1.2){s.remove(),o.remove();return}let n=d>r,p=l.naturalWidth/a.clientWidth,m=l.naturalHeight/a.clientHeight;requestAnimationFrame(()=>{let e=s.style.display,t=s.style.visibility;s.style.visibility="hidden",s.style.display="block";let i=s.offsetWidth,l=s.offsetHeight;if(s.style.display=e,s.style.visibility=t,!i||!l){console.warn("initZoom: Zoom result width or height is zero. Skipping further setup.");return}o.style.width=`${Math.min(i/p,a.clientWidth)}px`,o.style.height=`${Math.min(l/m,a.clientHeight)}px`;let d=document.querySelector(".announcement-bar-section"),r=document.querySelector(".header-wrapper"),c=()=>{let e=(d?.offsetHeight||0)+(r?.offsetHeight||0);document.documentElement.style.setProperty("--header-height",`${e}px`),n?(s.style.top="",s.style.height=""):(s.style.top="14px",s.style.height=`calc(98vh - ${e}px)`)};window.removeEventListener("scroll",c),window.addEventListener("scroll",c,{passive:!0})});let c,u=e=>{c&&cancelAnimationFrame(c),c=requestAnimationFrame(()=>{let t=a.getBoundingClientRect(),i=e.clientX-t.left,d=e.clientY-t.top,r=o.offsetWidth/2,n=o.offsetHeight/2,p=i-r,m=d-n;p=Math.max(0,Math.min(p,a.clientWidth-o.offsetWidth)),m=Math.max(0,Math.min(m,a.clientHeight-o.offsetHeight)),o.style.left=`${p}px`,o.style.top=`${m}px`;let c=l.naturalWidth/a.clientWidth,u=l.naturalHeight/a.clientHeight;s.scrollLeft=(p+r)*c-s.clientWidth/2,s.scrollTop=(m+n)*u-s.clientHeight/2})};if(e.removeEventListener("mousemove",u),e.addEventListener("mousemove",u),e.removeEventListener("mouseenter",this._handleZoomMouseEnter),this._handleZoomMouseEnter=()=>{s.style.display="block",o.style.display="block"},e.addEventListener("mouseenter",this._handleZoomMouseEnter),e.removeEventListener("mouseleave",this._handleZoomMouseLeave),this._handleZoomMouseLeave=()=>{s.style.display="none",o.style.display="none"},e.addEventListener("mouseleave",this._handleZoomMouseLeave),s.removeEventListener("mouseenter",this._handleZoomResultMouseEnter),this._handleZoomResultMouseEnter=()=>{s.style.display="none",o.style.display="none"},s.addEventListener("mouseenter",this._handleZoomResultMouseEnter),i&&this.lastMouseX&&this.lastMouseY){let h=a.getBoundingClientRect(),v=this.lastMouseX>h.left&&this.lastMouseX<h.right&&this.lastMouseY>h.top&&this.lastMouseY<h.bottom;v&&(s.style.display="block",o.style.display="block",u({clientX:this.lastMouseX,clientY:this.lastMouseY}))}}}renderPopup(){if(!document.getElementById("product-gallery-popup")){let e=document.createElement("div");e.innerHTML=`
+class ProductGallery extends HTMLElement {
+  constructor() {
+    super();
+    this.mediaData = [];
+    this.wrapper = null;
+    this.main = null;
+    this.zoomEnabled = false;
+    this.lastMouseX = 0;
+    this.lastMouseY = 0;
+    this.defaultCameraOrbit = '24deg 74deg 10m';
+
+    document.addEventListener('mousemove', (e) => {
+      this.lastMouseX = e.clientX;
+      this.lastMouseY = e.clientY;
+    });
+  }
+
+  connectedCallback() {
+    const attrOrbit = this.getAttribute('data-default-camera-orbit');
+    if (attrOrbit) {
+      this.defaultCameraOrbit = attrOrbit;
+    }
+    const raw = this.querySelector('[data-product-media]');
+    if (!raw) {
+      
+      return;
+    }
+
+    try {
+      this.mediaData = JSON.parse(raw.innerHTML.trim());
+     
+    } catch (err) {
+      console.error('ConnectedCallback: Invalid JSON in [data-product-media] element.', err);
+      return;
+    }
+
+    this.wrapper = this.querySelector('.custom-product-gallery');
+    this.main = this.querySelector('[data-main-media-wrapper]');
+    if (!this.wrapper || !this.main) {
+      console.error('ConnectedCallback: Missing .custom-product-gallery or [data-main-media-wrapper]. Exiting.');
+      return;
+    }
+  
+
+    this.initThumbnails();
+   
+
+    const currentActiveThumbnail = this.querySelector('.thumbnail-btn.is-active');
+
+    if (!currentActiveThumbnail && this.mediaData.length > 0) {
+    
+      this.setActiveMedia(this.mediaData[0].id);
+    } else if (currentActiveThumbnail) {
+      this.activeMediaId = currentActiveThumbnail.getAttribute('data-media-id');
+     
+
+      const firstMedia = this.mediaData.find(m => m.id == this.activeMediaId);
+      const mainImageContainer = this.main?.querySelector('[data-zoom-container]');
+
+      if (mainImageContainer && firstMedia && firstMedia.media_type === 'image' && firstMedia.preview_image) {
+        const img = mainImageContainer.querySelector('img');
+        if (img && img.complete) {
+         
+          this.initZoom(mainImageContainer, firstMedia, true);
+        } else if (img) {
+          
+          img.onload = () => {
+            mainImageContainer.querySelector('.image-skeleton-wrapper')?.classList.add('loaded');
+            this.initZoom(mainImageContainer, firstMedia, true);
+          };
+        }
+      }
+    }
+
+    window.addEventListener('resize', this.handleResize.bind(this));
+  
+
+    this.main.addEventListener('click', (e) => {
+     
+      const container = e.target.closest('.main-image-container');
+      if (container) {
+        const media = this.mediaData.find((m) => m.id == this.activeMediaId);
+        const popup = document.getElementById('product-gallery-popup');
+        if (media && media.media_type !== 'model' && popup && popup.hidden) {
+         
+          this.openPopup(this.activeMediaId);
+        } else if (media && media.media_type === 'model') {
+          console.log('Main image click: Media type is model, not opening popup.');
+        } else if (popup && !popup.hidden) {
+          console.log('Main image click: Popup is already open, not re-opening.');
+        } else {
+          console.log('Main image click: Conditions not met to open popup.');
+        }
+      }
+    });
+  }
+
+  handleResize() {
+   
+    const activeId = this.activeMediaId;
+    const container = this.main?.querySelector('[data-zoom-container]');
+    const media = this.mediaData.find((m) => m.id == activeId);
+
+    if (!container || !media || media.media_type !== 'image' || !media.preview_image) {
+     
+      return;
+    }
+
+    const oldResult = container.querySelector('.zoom-result');
+    const oldLens = container.querySelector('.zoom-lens');
+    if (oldResult) oldResult.remove();
+    if (oldLens) oldLens.remove();
+
+    container.dataset.zoomInitialized = 'false';
+   
+
+    const img = container.querySelector('img');
+    if (!img) return;
+
+    img.onload = null;
+   
+
+    requestAnimationFrame(() => {
+      if (this.isDesktop()) {
+        if (img.complete) {
+         
+          this.initZoom(container, media);
+        } else {
+          
+          img.onload = () => {
+            this.initZoom(container, media);
+          };
+        }
+      } else {
+        console.log('handleResize: Not desktop, not initializing zoom.');
+      }
+    });
+  }
+
+  initThumbnails() {
+  
+    const buttons = this.querySelectorAll('.thumbnail-btn');
+    buttons.forEach((btn) => {
+      const mediaId = btn.getAttribute('data-media-id');
+      const media = this.mediaData.find(m => m.id == mediaId);
+      const isVideoThumb = media && (media.media_type === 'video' || media.media_type === 'external_video');
+
+     
+
+      btn.addEventListener('click', (e) => {
+        
+        if (isVideoThumb || this.activeMediaId === mediaId) {
+         
+          this.openPopup(mediaId);
+        } else {
+         
+          this.setActiveMedia(mediaId);
+        }
+      });
+
+      let hoverTimer;
+      btn.addEventListener('mouseenter', () => {
+        
+        if (this.activeMediaId === mediaId || isVideoThumb) {
+         
+          return;
+        }
+        hoverTimer = setTimeout(() => {
+         
+          this.setActiveMedia(mediaId);
+        }, 150);
+      });
+
+      btn.addEventListener('mouseleave', () => {
+       
+        clearTimeout(hoverTimer);
+      });
+    });
+  }
+
+  setActiveMedia(id) {
+    
+    if (this.activeMediaId == id) {
+     
+      return;
+    }
+    this.activeMediaId = id;
+    const media = this.mediaData.find((m) => m.id == id);
+    if (!media || !this.main) {
+      console.error(`setActiveMedia: Media or main element not found for ID: ${id}`);
+      return;
+    }
+
+    this.main.innerHTML = '';
+
+    const existingMainContainer = this.main.querySelector('.main-image-container');
+    if (existingMainContainer) {
+      existingMainContainer.dataset.zoomInitialized = 'false';
+    }
+
+    const container = document.createElement('div');
+    container.className = 'main-image-container';
+    container.setAttribute('data-media-id', id);
+
+    if (media.media_type == 'image' || media.media_type === 'video' || media.media_type === 'external_video') {
+      container.setAttribute('data-zoom-container', '');
+      if (media.media_type === 'video' || media.media_type === 'external_video') {
+        container.classList.add('is-video-preview');
+      }
+      this.main.appendChild(container);
+     
+
+      if (media.media_type === 'image' && media.preview_image) {
+        const img = document.createElement('img');
+        const skeletonWrapper = document.createElement('div');
+        img.alt = media.alt || '';
+        img.className = 'main-product-image';
+        skeletonWrapper.className = 'image-skeleton-wrapper';
+        img.src = media.preview_image.src;
+        img.sizes = media.preview_image.sizes || '';
+        img.width = media.preview_image.width || '';
+        img.height = media.preview_image.height || '';
+        img.loading = 'lazy';
+        container.appendChild(skeletonWrapper);
+        skeletonWrapper.appendChild(img);
+        
+
+        img.onload = () => {
+          
+          skeletonWrapper.classList.add('loaded');
+          this.initZoom(container, media, true);
+        };
+      }
+    } else if (media.media_type == 'model') {
+      this.main.appendChild(container);
+      container.classList.add('threeD-image');
+
+      const template = this.querySelector(`#ModelViewerTemplate-${id}`);
+      if (template) {
+        const content = template.content.cloneNode(true);
+        const viewer = content.querySelector('model-viewer');
+        if (viewer && viewer.id) {
+          viewer.removeAttribute('id');
+        }
+        container.appendChild(content);
+
+        const templateOrbit = viewer?.getAttribute('camera-orbit') || '';
+        console.debug('[ProductGallery] Rendering model media via template', {
+          mediaId: id,
+          cameraOrbitFromTemplate: templateOrbit
+        });
+      } else {
+        const thumbnailBtn = this.querySelector(`.thumbnail-btn[data-media-id="${id}"]`);
+        const cameraOrbit =
+          thumbnailBtn?.dataset.cameraOrbit ||
+          media.camera_orbit ||
+          this.defaultCameraOrbit;
+        console.debug('[ProductGallery] Rendering model media fallback', {
+          mediaId: id,
+          cameraOrbitFromThumb: thumbnailBtn?.dataset.cameraOrbit,
+          cameraOrbitFromMedia: media.camera_orbit,
+          defaultCameraOrbit: this.defaultCameraOrbit,
+          resolvedCameraOrbit: cameraOrbit
+        });
+
+        const model = document.createElement('model-viewer');
+        model.src = media.url;
+        model.setAttribute('alt', media.alt);
+        model.setAttribute('camera-controls', 'true');
+        model.setAttribute('reveal', 'auto');
+        model.setAttribute('interaction-prompt', 'auto');
+        model.setAttribute('camera-orbit', cameraOrbit);
+        model.setAttribute('data-shopify-feature', '1.12');
+        container.appendChild(model);
+      }
+    }
+
+    const buttons = this.querySelectorAll('.thumbnail-btn');
+    buttons.forEach((btn) => {
+      const btnId = btn.getAttribute('data-media-id');
+      const isActive = btnId == String(id);
+      btn.classList.toggle('is-active', isActive);
+      if (isActive) {
+       
+      }
+    });
+   
+  }
+
+  isDesktop() {
+    return window.matchMedia('(min-width: 990px)').matches;
+  }
+
+  initZoom(container, media, forceStart = false) {
+    
+    if (!this.isDesktop()) {
+    
+      return;
+    }
+    const img = container.querySelector('img');
+    if (!img || !media.preview_image || container.dataset.zoomInitialized === 'true') {
+     
+      return;
+    }
+
+    if (this.activeMediaId != media.id) {
+       
+        return;
+    }
+
+    container.dataset.zoomInitialized = 'true';
+   
+
+    const zoomResult = document.createElement('div');
+    zoomResult.className = 'zoom-result';
+    container.appendChild(zoomResult);
+
+    const lens = document.createElement('div');
+    lens.className = 'zoom-lens';
+    lens.style.zIndex = '100';
+    container.appendChild(lens);
+
+    const zoomImg = new Image();
+    const imgWidth = media.preview_image.width || img.naturalWidth;
+    const imgHeight = media.preview_image.height || img.naturalHeight;
+
+    const imgAspect = imgWidth / imgHeight;
+    const zoomWidth = 1600;
+    const zoomHeight = Math.round(zoomWidth / imgAspect);
+    zoomImg.src = media.preview_image.src.replace(/width=\d+/, `width=${zoomWidth}`).replace(/height=\d+/, `height=${zoomHeight}`);
+    zoomImg.style.transform = 'scale(0.5)';
+    zoomImg.style.transformOrigin = 'center';
+    zoomResult.appendChild(zoomImg);
+
+    zoomImg.onload = () => {
+     
+      const minZoomRatio = 1.2;
+      const zoomRatio = zoomImg.naturalWidth / img.clientWidth;
+      if (zoomImg.naturalWidth < 100) {
+       console.log("Natural width is low");
+        zoomResult.remove();
+        lens.remove();
+        return;
+      }
+
+      const isLandscape = imgWidth > imgHeight;
+      const scaleX = zoomImg.naturalWidth / img.clientWidth;
+      const scaleY = zoomImg.naturalHeight / img.clientHeight;
+
+      requestAnimationFrame(() => {
+        const prevDisplay = zoomResult.style.display;
+        const prevVisibility = zoomResult.style.visibility;
+        zoomResult.style.visibility = 'hidden';
+        zoomResult.style.display = 'block';
+
+        const zoomW = zoomResult.offsetWidth;
+        const zoomH = zoomResult.offsetHeight;
+
+        zoomResult.style.display = prevDisplay;
+        zoomResult.style.visibility = prevVisibility;
+
+        if (!zoomW || !zoomH) {
+          console.warn('initZoom: Zoom result width or height is zero. Skipping further setup.');
+          return;
+        }
+
+        const lensW = zoomW / scaleX;
+        const lensH = zoomH / scaleY;
+
+        lens.style.width = `${Math.min(lensW, img.clientWidth)}px`;
+        lens.style.height = `${Math.min(lensH, img.clientHeight)}px`;
+       
+
+        const announcementBarSection = document.querySelector('.announcement-bar-section');
+        const headerWrapper = document.querySelector('.header-wrapper');
+
+        const updateZoomTop = () => {
+          const threshold = (announcementBarSection?.offsetHeight || 0) + (headerWrapper?.offsetHeight || 0);
+          document.documentElement.style.setProperty('--header-height', `${threshold}px`);
+
+          if (!isLandscape) {
+            zoomResult.style.top = '14px';
+            zoomResult.style.height = `calc(98vh - ${threshold}px)`;
+          } else {
+            zoomResult.style.top = '';
+            zoomResult.style.height = '';
+          }
+         
+        };
+
+        window.removeEventListener('scroll', updateZoomTop);
+        window.addEventListener('scroll', updateZoomTop, { passive: true });
+      });
+
+      let frameId;
+      const moveLens = (e) => {
+        if (frameId) cancelAnimationFrame(frameId);
+        frameId = requestAnimationFrame(() => {
+          const rect = img.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const lensHalfW = lens.offsetWidth / 2;
+          const lensHalfH = lens.offsetHeight / 2;
+          let left = x - lensHalfW;
+          let top = y - lensHalfH;
+
+          left = Math.max(0, Math.min(left, img.clientWidth - lens.offsetWidth));
+          top = Math.max(0, Math.min(top, img.clientHeight - lens.offsetHeight));
+
+          lens.style.left = `${left}px`;
+          lens.style.top = `${top}px`;
+
+          const scaleX = zoomImg.naturalWidth / img.clientWidth;
+          const scaleY = zoomImg.naturalHeight / img.clientHeight;
+
+          zoomResult.scrollLeft = (left + lensHalfW) * scaleX - zoomResult.clientWidth / 2;
+          zoomResult.scrollTop = (top + lensHalfH) * scaleY - zoomResult.clientHeight / 2;
+        });
+      };
+
+      container.removeEventListener('mousemove', moveLens);
+      container.addEventListener('mousemove', moveLens);
+
+      container.removeEventListener('mouseenter', this._handleZoomMouseEnter);
+      this._handleZoomMouseEnter = () => {
+        
+        zoomResult.style.display = 'block';
+        lens.style.display = 'block';
+      };
+      container.addEventListener('mouseenter', this._handleZoomMouseEnter);
+
+      container.removeEventListener('mouseleave', this._handleZoomMouseLeave);
+      this._handleZoomMouseLeave = () => {
+       
+        zoomResult.style.display = 'none';
+        lens.style.display = 'none';
+      };
+      container.addEventListener('mouseleave', this._handleZoomMouseLeave);
+
+      zoomResult.removeEventListener('mouseenter', this._handleZoomResultMouseEnter);
+      this._handleZoomResultMouseEnter = () => {
+        
+        zoomResult.style.display = 'none';
+        lens.style.display = 'none';
+      };
+      zoomResult.addEventListener('mouseenter', this._handleZoomResultMouseEnter);
+
+      if (forceStart && this.lastMouseX && this.lastMouseY) {
+       
+        const rect = img.getBoundingClientRect();
+        const inside = this.lastMouseX > rect.left && this.lastMouseX < rect.right && this.lastMouseY > rect.top && this.lastMouseY < rect.bottom;
+        if (inside) {
+         
+          zoomResult.style.display = 'block';
+          lens.style.display = 'block';
+          moveLens({ clientX: this.lastMouseX, clientY: this.lastMouseY });
+        } else {
+          
+        }
+      }
+    };
+  }
+
+  // --- Start of modified renderPopup ---
+  renderPopup() {
+    // Only append the popup HTML if it doesn't already exist in the DOM
+    if (!document.getElementById('product-gallery-popup')) {
+      
+      const popupHTML = document.createElement('div');
+      popupHTML.innerHTML = `
         <div id="product-gallery-popup" class="product-popup-overlay" hidden>
           <div class="product-popup-backdrop"></div>
           <div class="product-popup" role="dialog" aria-modal="true">
-            <button class="popup-close" type="button" aria-label="Close popup">\xd7</button>
+            <button class="popup-close" type="button" aria-label="Close popup">×</button>
             <div class="popup-content">
               <div class="popup-media-viewer" data-popup-viewer></div>
               <div class="popup-sidebar">
@@ -16,11 +485,568 @@ class ProductGallery extends HTMLElement{constructor(){super(),this.mediaData=[]
             </div>
           </div>
         </div>
-      `,document.body.appendChild(e.firstElementChild)}}openPopup(e){this.renderPopup();let t=document.getElementById("product-gallery-popup"),i=t.querySelector("[data-popup-viewer]"),a=t.querySelector('[data-tab-content="images"]'),s=t.querySelector('[data-tab-content="videos"]'),o=t.querySelectorAll(".popup-tab");if(!t||!i||0===o.length){console.warn("openPopup: Required popup elements not found, cannot proceed.");return}let l=t.querySelector("[data-popup-title]");l&&(l.textContent=this.getAttribute("data-product-title")||"");let d=this.mediaData.find(t=>t.id==e),r=d&&("video"===d.media_type||"external_video"===d.media_type)?"videos":"images";if(!t.hidden){this.renderPopupViewer(e,i),this.updatePopupThumbActive(e);return}t.hidden=!1,document.body.style.overflow="hidden",this.renderPopupViewer(e,i),""===a.innerHTML&&""===s.innerHTML&&(this.mediaData.forEach(e=>{let o;if("image"===e.media_type&&e.preview_image){(o=document.createElement("button")).className="popup-thumb",o.type="button",o.setAttribute("data-media-id",e.id);let l=document.createElement("div"),d=document.createElement("img");d.src=e.preview_image.src,d.alt=e.alt||"",d.width=e.preview_image.width,d.height=e.preview_image.height,l.className="image-skeleton-wrapper",o.appendChild(l),l.appendChild(d),d.onload=()=>{l.classList.add("loaded")},o.addEventListener("click",()=>{let a=t.querySelector(".popup-media-viewer.is-zoomed-simple");if(a){a.classList.remove("is-zoomed-simple");let s=a.querySelector(".popup-media-inner");s&&(s.style.left="0px",s.style.top="0px")}this.renderPopupViewer(e.id,i),this.updatePopupThumbActive(e.id)}),a.appendChild(o)}else("video"===e.media_type||"external_video"===e.media_type)&&((o=this.renderVideoThumbItem(e)).addEventListener("click",()=>{this.renderPopupViewer(e.id,document.querySelector("[data-popup-viewer]")),this.updatePopupThumbActive(e.id)}),s.appendChild(o))}),o.forEach(e=>{e.removeEventListener("click",this._handlePopupTabClick),this._handlePopupTabClick=()=>{o.forEach(e=>e.classList.remove("is-active")),e.classList.add("is-active");let l=e.dataset.tab;a.classList.toggle("hidden","images"!==l),s.classList.toggle("hidden","videos"!==l);let d=t.querySelector(".popup-media-viewer.is-zoomed-simple");if(d){d.classList.remove("is-zoomed-simple");let r=d.querySelector(".popup-media-inner");r&&(r.style.left="0px",r.style.top="0px")}let n=null;"images"===l?n=this.mediaData.find(e=>"image"===e.media_type):"videos"===l&&(n=this.mediaData.find(e=>"video"===e.media_type||"external_video"===e.media_type)),n&&(this.renderPopupViewer(n.id,i),this.updatePopupThumbActive(n.id))},e.addEventListener("click",this._handlePopupTabClick)})),o.forEach(e=>{let t=e.dataset.tab===r;e.classList.toggle("is-active",t)}),a.classList.toggle("hidden","images"!==r),s.classList.toggle("hidden","videos"!==r),this.updatePopupThumbActive(e),t.querySelector(".popup-close").onclick=this.closePopup.bind(this),t.querySelector(".product-popup-backdrop").onclick=this.closePopup.bind(this),document.addEventListener("keydown",this.handleEscClose)}renderPopupViewer(e,t){let i=this.mediaData.find(t=>t.id==e);if(!i){console.error(`renderPopupViewer: Media not found for ID: ${e}`);return}let a=t.firstElementChild;if(a){if("VIDEO"===a.tagName)a.pause(),a.currentTime=0;else if("IFRAME"===a.tagName)try{a.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}',"*"),a.contentWindow.postMessage('{ "method": "pause" }',"*")}catch(s){console.warn("Failed to send pause message to iframe:",s)}else"MODEL-VIEWER"===a.tagName&&a.pause();a.remove()}t.classList.remove("popup-media-viewer-media-zoom-img"),t.classList.remove("is-zoomed-simple");let o;if("image"===i.media_type){t.classList.add("popup-media-viewer-media-zoom-img");let l=document.createElement("div");l.className="popup-media-inner";let d=document.createElement("div");d.className="image-skeleton-wrapper";let r=document.createElement("img");r.src=i.preview_image?.src?i.preview_image.src.replace(/width=\d+/,"width=1600"):"",r.alt=i.alt||"",r.loading="eager",r.className="popup-media-zoom-img",r.style.transition="transform 0.3s ease, transform-origin 0.1s ease",r.style.transform="scale(1)",r.style.transformOrigin="center center",d.appendChild(r),l.appendChild(d),o=l,r.onload=()=>{d.classList.add("loaded")};let n=!1;t.removeEventListener("mousemove",this._handlePopupMouseMove),this._handlePopupMouseMove=e=>{if(!n)return;let i=t.getBoundingClientRect(),a=(e.clientX-i.left)/i.width*100,s=(e.clientY-i.top)/i.height*100;r.style.transformOrigin=`${a}% ${s}%`},t.addEventListener("mousemove",this._handlePopupMouseMove),t.removeEventListener("click",this._handlePopupClick),this._handlePopupClick=()=>{n=!n,t.classList.toggle("is-zoomed-simple",n);let e=!r.naturalWidth||!r.naturalHeight||r.naturalWidth>r.naturalHeight;r.style.transform=n?`scale(${e?1.5:1.2})`:"scale(1)"},t.addEventListener("click",this._handlePopupClick)}else if("external_video"===i.media_type&&i.external_id&&i.host){let p="";if("youtube"===i.host?p=`https://www.youtube.com/embed/${i.external_id}`:"vimeo"===i.host&&(p=`https://player.vimeo.com/video/${i.external_id}`),p){let m=document.createElement("iframe");m.src=p+"?autoplay=1&rel=0",m.allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",m.allowFullscreen=!0,m.frameBorder="0",m.style.width="100%",m.style.aspectRatio="16/9",o=m}}else if("video"===i.media_type){let c=document.createElement("video");c.controls=!0,c.autoplay=!0,c.muted=!0,c.loop=!0,c.playsInline=!0,c.style.maxWidth="100%",c.style.maxHeight="100%";let u=(i.sources||[]).find(e=>e.mime_type?.includes("mp4"));if(u){let h=document.createElement("source");h.src=u.url,h.type=u.mime_type,c.appendChild(h),o=c}else(o=document.createElement("p")).textContent="Video format not supported or no valid source found.",console.warn(`renderPopupViewer: No valid video source found for ID: ${i.id}`)}else if("model"===i.media_type){let v=document.createElement("model-viewer");v.src=i.url,v.setAttribute("alt",i.alt||"3D model"),v.setAttribute("camera-controls","true"),v.setAttribute("camera-orbit","0deg 75deg 2m"),v.setAttribute("data-shopify-feature","1.12"),v.style.width="100%",v.style.height="100%",o=v}else(o=document.createElement("p")).textContent="Unsupported media type.",console.warn(`renderPopupViewer: Unsupported media type for ID: ${i.id}`);o&&t.appendChild(o)}renderVideoThumbItem(e){let t=document.createElement("button");t.className="popup-thumb video-thumb-item",t.type="button",t.setAttribute("data-media-id",e.id);let i=e.preview_image?.src||"",a=e.alt||"Untitled video";return t.innerHTML=`
+      `;
+      document.body.appendChild(popupHTML.firstElementChild);
+      
+    } else {
+     
+    }
+  }
+  // --- End of modified renderPopup ---
+
+  // --- Start of modified openPopup ---
+  openPopup(mediaId) {
+   
+    // Ensure the popup HTML structure is in the DOM
+    this.renderPopup();
+    
+    const popup = document.getElementById('product-gallery-popup');
+    const viewer = popup.querySelector('[data-popup-viewer]');
+    const tabImages = popup.querySelector('[data-tab-content="images"]');
+    const tabVideos = popup.querySelector('[data-tab-content="videos"]');
+    const tabs = popup.querySelectorAll('.popup-tab');
+
+    if (!popup || !viewer || tabs.length === 0) {
+      console.warn('openPopup: Required popup elements not found, cannot proceed.');
+      return;
+    }
+
+    const titleContainer = popup.querySelector('[data-popup-title]');
+    if (titleContainer) {
+      titleContainer.textContent = this.getAttribute('data-product-title') || '';
+    }
+
+    const clickedMedia = this.mediaData.find((m) => m.id == mediaId);
+    const defaultTab = clickedMedia && (clickedMedia.media_type === 'video' || clickedMedia.media_type === 'external_video') ? 'videos' : 'images';
+   
+
+    // If popup is already open, just update its content and return
+    if (!popup.hidden) {
+            this.renderPopupViewer(mediaId, viewer);
+      this.updatePopupThumbActive(mediaId);
+      return;
+    }
+
+    // First, make the popup visible
+    popup.hidden = false;
+    document.body.style.overflow = 'hidden';
+   
+
+    // Then, render the initial viewer content
+    this.renderPopupViewer(mediaId, viewer);
+    
+
+    // Populate thumbnails and set up tabs only once when opening for the first time
+    // or if they were cleared/not populated (e.g., if popup was removed from DOM)
+    if (tabImages.innerHTML === '' && tabVideos.innerHTML === '') {
+     
+      this.mediaData.forEach((media) => {
+        let btn;
+
+        if (media.media_type === 'image' && media.preview_image) {
+          btn = document.createElement('button');
+          btn.className = 'popup-thumb';
+          btn.type = 'button';
+          btn.setAttribute('data-media-id', media.id);
+
+          const skeletonWrapper = document.createElement('div');
+          const img = document.createElement('img');
+          img.src = media.preview_image.src;
+          img.alt = media.alt || '';
+          img.width = media.preview_image.width;
+          img.height = media.preview_image.height;
+          skeletonWrapper.className = 'image-skeleton-wrapper';
+
+          btn.appendChild(skeletonWrapper);
+          skeletonWrapper.appendChild(img);
+
+          img.onload = () => {
+            skeletonWrapper.classList.add('loaded');
+          };
+
+          btn.addEventListener('click', () => {
+           
+            const zoomedViewer = popup.querySelector(
+              '.popup-media-viewer.is-zoomed-simple',
+            );
+
+            if (zoomedViewer) {
+             
+              zoomedViewer.classList.remove('is-zoomed-simple');
+              const inner = zoomedViewer.querySelector('.popup-media-inner');
+              if (inner) {
+                inner.style.left = '0px';
+                inner.style.top = '0px';
+              }
+            }
+
+            this.renderPopupViewer(media.id, viewer);
+            this.updatePopupThumbActive(media.id);
+           
+          });
+
+          tabImages.appendChild(btn);
+        } else if (
+          media.media_type === 'video' ||
+          media.media_type === 'external_video'
+        ) {
+          btn = this.renderVideoThumbItem(media);
+          btn.addEventListener('click', () => {
+           
+            this.renderPopupViewer(
+              media.id,
+              document.querySelector('[data-popup-viewer]')
+            );
+            this.updatePopupThumbActive(media.id);
+          });
+          tabVideos.appendChild(btn);
+        } else if (media.media_type === 'model' && media.preview_image) {
+          // Render 3D model thumbnail ONLY here, not as image
+          btn = document.createElement('button');
+          btn.className = 'popup-thumb popup-thumb-3d';
+          btn.type = 'button';
+          btn.setAttribute('data-media-id', media.id);
+          
+          console.debug('[ProductGallery] openPopup: Creating popup thumbnail for model', {
+            mediaId: media.id,
+            cameraOrbitFromMedia: media.camera_orbit,
+            hasCameraOrbit: !!media.camera_orbit
+          });
+          
+          if (media.camera_orbit) {
+            btn.setAttribute('data-camera-orbit', media.camera_orbit);
+            console.debug('[ProductGallery] openPopup: Set data-camera-orbit on popup thumbnail', {
+              mediaId: media.id,
+              cameraOrbit: media.camera_orbit,
+              attributeValue: btn.getAttribute('data-camera-orbit'),
+              datasetValue: btn.dataset.cameraOrbit
+            });
+          } else {
+            console.debug('[ProductGallery] openPopup: No camera_orbit in media data, not setting attribute', {
+              mediaId: media.id
+            });
+          }
+
+          const skeletonWrapper = document.createElement('div');
+          skeletonWrapper.className = 'image-skeleton-wrapper';
+
+          const img = document.createElement('img');
+          img.src = media.preview_image.src;
+          img.alt = media.alt || '3D preview';
+          img.width = media.preview_image.width;
+          img.height = media.preview_image.height;
+
+          skeletonWrapper.appendChild(img);
+
+          // Add 3D icon overlay
+          const icon3d = document.createElement('span');
+          icon3d.className = 'icon-3d thumb';
+          icon3d.innerHTML = `<svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          xmlns:xlink="http://www.w3.org/1999/xlink"
+                          fill="#000000"
+                          height="800px"
+                          width="800px"
+                          version="1.1"
+                          id="Layer_1"
+                          viewBox="0 0 480 480"
+                          xml:space="preserve"
+                        >
+                          <g>
+                            <g>
+                              <g>
+                                <path d="M391.502,210.725c-5.311-1.52-10.846,1.555-12.364,6.865c-1.519,5.31,1.555,10.846,6.864,12.364     C431.646,243.008,460,261.942,460,279.367c0,12.752-15.51,26.749-42.552,38.402c-29.752,12.82-71.958,22.2-118.891,26.425     l-40.963-0.555c-0.047,0-0.093-0.001-0.139-0.001c-5.46,0-9.922,4.389-9.996,9.865c-0.075,5.522,4.342,10.06,9.863,10.134     l41.479,0.562c0.046,0,0.091,0.001,0.136,0.001c0.297,0,0.593-0.013,0.888-0.039c49.196-4.386,93.779-14.339,125.538-28.024     C470.521,316.676,480,294.524,480,279.367C480,251.424,448.57,227.046,391.502,210.725z"/>
+                                <path d="M96.879,199.333c-5.522,0-10,4.477-10,10c0,5.523,4.478,10,10,10H138v41.333H96.879c-5.522,0-10,4.477-10,10     s4.478,10,10,10H148c5.523,0,10-4.477,10-10V148c0-5.523-4.477-10-10-10H96.879c-5.522,0-10,4.477-10,10s4.478,10,10,10H138     v41.333H96.879z"/>
+                                <path d="M188.879,280.667h61.334c5.522,0,10-4.477,10-10v-61.333c0-5.523-4.477-10-10-10h-51.334V158H240c5.523,0,10-4.477,10-10     s-4.477-10-10-10h-51.121c-5.523,0-10,4.477-10,10v122.667C178.879,276.19,183.356,280.667,188.879,280.667z M198.879,219.333     h41.334v41.333h-41.334V219.333z"/>
+                                <path d="M291.121,280.667h61.334c5.522,0,10-4.477,10-10V148c0-5.523-4.478-10-10-10h-61.334c-5.522,0-10,4.477-10,10v122.667     C281.121,276.19,285.599,280.667,291.121,280.667z M301.121,158h41.334v102.667h-41.334V158z"/>
+                                <path d="M182.857,305.537c-3.567-4.216-9.877-4.743-14.093-1.176c-4.217,3.567-4.743,9.876-1.177,14.093l22.366,26.44     c-47.196-3.599-89.941-12.249-121.37-24.65C37.708,308.06,20,293.162,20,279.367c0-16.018,23.736-33.28,63.493-46.176     c5.254-1.704,8.131-7.344,6.427-12.598c-1.703-5.253-7.345-8.13-12.597-6.427c-23.129,7.502-41.47,16.427-54.515,26.526     C7.674,252.412,0,265.423,0,279.367c0,23.104,21.178,43.671,61.242,59.48c32.564,12.849,76.227,21.869,124.226,25.758     l-19.944,22.104c-3.7,4.1-3.376,10.424,0.725,14.123c1.912,1.726,4.308,2.576,6.696,2.576c2.731,0,5.453-1.113,7.427-3.301     l36.387-40.325c1.658-1.837,2.576-4.224,2.576-6.699v-0.764c0-2.365-0.838-4.653-2.365-6.458L182.857,305.537z"/>
+                                <path d="M381.414,137.486h40.879c5.522,0,10-4.477,10-10V86.592c0-5.523-4.478-10-10-10h-40.879c-5.522,0-10,4.477-10,10v40.894     C371.414,133.009,375.892,137.486,381.414,137.486z M391.414,96.592h20.879v20.894h-20.879V96.592z"/>
+                              </g>
+                            </g>
+                          </g>
+                        </svg>`;
+          skeletonWrapper.appendChild(icon3d);
+
+          btn.appendChild(skeletonWrapper);
+
+          img.onload = () => {
+            skeletonWrapper.classList.add('loaded');
+          };
+
+          btn.addEventListener('click', () => {
+            const zoomedViewer = popup.querySelector('.popup-media-viewer.is-zoomed-simple');
+            if (zoomedViewer) {
+              zoomedViewer.classList.remove('is-zoomed-simple');
+              const inner = zoomedViewer.querySelector('.popup-media-inner');
+              if (inner) {
+                inner.style.left = '0px';
+                inner.style.top = '0px';
+              }
+            }
+            this.renderPopupViewer(media.id, viewer);
+            this.updatePopupThumbActive(media.id);
+          });
+
+          tabImages.appendChild(btn);
+        }
+      });
+     
+
+      // Setup tab listeners
+      tabs.forEach((tab) => {
+        tab.removeEventListener('click', this._handlePopupTabClick); // Ensure no duplicate listeners
+        this._handlePopupTabClick = () => {
+         
+          tabs.forEach((t) => t.classList.remove('is-active'));
+          tab.classList.add('is-active');
+
+          const type = tab.dataset.tab;
+          tabImages.classList.toggle('hidden', type !== 'images');
+          tabVideos.classList.toggle('hidden', type !== 'videos');
+
+          const zoomedViewer = popup.querySelector(
+            '.popup-media-viewer.is-zoomed-simple',
+          );
+
+          if (zoomedViewer) {
+           
+            zoomedViewer.classList.remove('is-zoomed-simple');
+            const inner = zoomedViewer.querySelector('.popup-media-inner');
+            if (inner) {
+              inner.style.left = '0px';
+              inner.style.top = '0px';
+            }
+          }
+
+          let firstMedia = null;
+          if (type === 'images') {
+            firstMedia = this.mediaData.find((m) => m.media_type === 'image');
+          } else if (type === 'videos') {
+            firstMedia = this.mediaData.find(
+              (m) =>
+                m.media_type === 'video' || m.media_type === 'external_video',
+            );
+          }
+
+          if (firstMedia) {
+            
+            this.renderPopupViewer(firstMedia.id, viewer);
+            this.updatePopupThumbActive(firstMedia.id);
+          } else {
+           
+          }
+        };
+        tab.addEventListener('click', this._handlePopupTabClick);
+      });
+    }
+
+    // Set active tab based on clicked media
+    tabs.forEach((tab) => {
+      const isMatch = tab.dataset.tab === defaultTab;
+      tab.classList.toggle('is-active', isMatch);
+    });
+    tabImages.classList.toggle('hidden', defaultTab !== 'images');
+    tabVideos.classList.toggle('hidden', defaultTab !== 'videos');
+   
+
+    this.updatePopupThumbActive(mediaId);
+   
+
+    popup.querySelector('.popup-close').onclick = this.closePopup.bind(this);
+    popup.querySelector('.product-popup-backdrop').onclick = this.closePopup.bind(this);
+    document.addEventListener('keydown', this.handleEscClose);
+   
+  }
+  // --- End of modified openPopup ---
+
+
+  renderPopupViewer(mediaId, viewer) {
+   
+    const media = this.mediaData.find((m) => m.id == mediaId);
+    if (!media) {
+      console.error(`renderPopupViewer: Media not found for ID: ${mediaId}`);
+      return;
+    }
+
+    // Stop and remove current media before adding new one
+    const currentMediaElement = viewer.firstElementChild;
+    if (currentMediaElement) {
+        if (currentMediaElement.tagName === 'VIDEO') {
+            currentMediaElement.pause();
+            currentMediaElement.currentTime = 0;
+        } else if (currentMediaElement.tagName === 'IFRAME') {
+            try {
+                currentMediaElement.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                currentMediaElement.contentWindow.postMessage('{ "method": "pause" }', '*');
+            } catch (e) {
+                console.warn("Failed to send pause message to iframe:", e);
+            }
+        } else if (currentMediaElement.tagName === 'MODEL-VIEWER') {
+            currentMediaElement.pause();
+        }
+        currentMediaElement.remove(); // This is the crucial change: only remove the media element
+    }
+
+    viewer.classList.remove('popup-media-viewer-media-zoom-img');
+    viewer.classList.remove('is-zoomed-simple');
+
+    let newMediaElement; // Declare a variable to hold the new media element
+
+    if (media.media_type === 'image') {
+      
+      viewer.classList.add('popup-media-viewer-media-zoom-img');
+
+      const inner = document.createElement('div');
+      inner.className = 'popup-media-inner';
+
+      const skeletonWrapper = document.createElement('div');
+      skeletonWrapper.className = 'image-skeleton-wrapper';
+
+      const img = document.createElement('img');
+      img.src = media.preview_image?.src ? media.preview_image.src.replace(/width=\d+/, 'width=1600') : '';
+      img.alt = media.alt || '';
+      img.loading = 'eager';
+      img.className = 'popup-media-zoom-img';
+
+      img.style.transition = 'transform 0.3s ease, transform-origin 0.1s ease';
+      img.style.transform = 'scale(1)';
+      img.style.transformOrigin = 'center center';
+
+      skeletonWrapper.appendChild(img);
+      inner.appendChild(skeletonWrapper);
+      newMediaElement = inner; // Assign the new image container to newMediaElement
+     
+
+      img.onload = () => {
+        skeletonWrapper.classList.add('loaded');
+       
+      };
+
+      let isZoomed = false;
+
+      viewer.removeEventListener('mousemove', this._handlePopupMouseMove);
+      this._handlePopupMouseMove = (e) => {
+        if (!isZoomed) return;
+
+        const rect = viewer.getBoundingClientRect();
+        const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+        const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+
+        img.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+      };
+      viewer.addEventListener('mousemove', this._handlePopupMouseMove);
+
+      viewer.removeEventListener('click', this._handlePopupClick);
+      this._handlePopupClick = () => {
+        isZoomed = !isZoomed;
+        viewer.classList.toggle('is-zoomed-simple', isZoomed);
+       
+
+        const isLandscape = img.naturalWidth && img.naturalHeight ? img.naturalWidth > img.naturalHeight : true;
+        const zoomLevel = isLandscape ? 1.5 : 1.2;
+
+        img.style.transform = isZoomed ? `scale(${zoomLevel})` : 'scale(1)';
+      };
+      viewer.addEventListener('click', this._handlePopupClick);
+
+    } else if (
+      media.media_type === 'external_video' &&
+      media.external_id &&
+      media.host
+    ) {
+      
+      let embedUrl = '';
+      if (media.host === 'youtube') {
+        embedUrl = `https://www.youtube.com/embed/${media.external_id}`; // Corrected YouTube URL
+      } else if (media.host === 'vimeo') {
+        embedUrl = `https://player.vimeo.com/video/${media.external_id}`;
+      }
+
+      if (embedUrl) {
+        const iframe = document.createElement('iframe');
+        iframe.src = embedUrl + '?autoplay=1&rel=0';
+        iframe.allow =
+          'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
+        iframe.allowFullscreen = true;
+        iframe.frameBorder = '0';
+        iframe.style.width = '100%';
+        iframe.style.aspectRatio = '16/9';
+        newMediaElement = iframe; // Assign the new iframe to newMediaElement
+       
+      }
+    } else if (media.media_type === 'video') {
+      
+      const video = document.createElement('video');
+      video.controls = true;
+      video.autoplay = true;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.style.maxWidth = '100%';
+      video.style.maxHeight = '100%';
+
+      const validSource = (media.sources || []).find((s) =>
+        s.mime_type?.includes('mp4')
+      );
+
+      if (validSource) {
+        const source = document.createElement('source');
+        source.src = validSource.url;
+        source.type = validSource.mime_type;
+        video.appendChild(source);
+        newMediaElement = video; // Assign the new video to newMediaElement
+       
+      } else {
+        newMediaElement = document.createElement('p');
+        newMediaElement.textContent = 'Video format not supported or no valid source found.';
+        console.warn(`renderPopupViewer: No valid video source found for ID: ${media.id}`);
+      }
+    } else if (media.media_type === 'model') {
+      
+      const popup = document.getElementById('product-gallery-popup');
+      const popupThumbnail = popup?.querySelector(`[data-media-id="${mediaId}"]`);
+      
+      // Check template first (like main view does)
+      const template = this.querySelector(`#ModelViewerTemplate-${mediaId}`);
+      let cameraOrbit;
+      
+      if (template) {
+        const tempViewer = template.content.querySelector('model-viewer');
+        const templateOrbit = tempViewer?.getAttribute('camera-orbit') || '';
+        cameraOrbit = templateOrbit || this.defaultCameraOrbit;
+        
+        console.debug('[ProductGallery] renderPopupViewer: Using template camera orbit', {
+          mediaId: mediaId,
+          cameraOrbitFromTemplate: templateOrbit,
+          resolvedCameraOrbit: cameraOrbit
+        });
+      } else {
+        // Fallback: check main gallery thumbnail button (which has the data-camera-orbit from Liquid)
+        const mainThumbnailBtn = this.querySelector(`.thumbnail-btn[data-media-id="${mediaId}"]`);
+        cameraOrbit =
+          mainThumbnailBtn?.dataset.cameraOrbit ||
+          popupThumbnail?.dataset.cameraOrbit ||
+          media.camera_orbit ||
+          this.defaultCameraOrbit;
+        
+        console.debug('[ProductGallery] renderPopupViewer: Using fallback camera orbit', {
+          mediaId: mediaId,
+          cameraOrbitFromMainThumb: mainThumbnailBtn?.dataset.cameraOrbit,
+          cameraOrbitFromPopupThumb: popupThumbnail?.dataset.cameraOrbit,
+          cameraOrbitFromMedia: media.camera_orbit,
+          defaultCameraOrbit: this.defaultCameraOrbit,
+          resolvedCameraOrbit: cameraOrbit
+        });
+      }
+      
+      const model = document.createElement('model-viewer');
+      model.src = media.url;
+      model.setAttribute('alt', media.alt || '3D model');
+      model.setAttribute('camera-controls', 'true');
+      model.setAttribute('camera-orbit', cameraOrbit);
+      model.setAttribute('data-shopify-feature', '1.12');
+      model.style.width = '100%';
+      model.style.height = '100%';
+      newMediaElement = model; // Assign the new model-viewer to newMediaElement
+     
+    } else {
+      newMediaElement = document.createElement('p');
+      newMediaElement.textContent = 'Unsupported media type.';
+      console.warn(`renderPopupViewer: Unsupported media type for ID: ${media.id}`);
+    }
+
+    if (newMediaElement) {
+        viewer.appendChild(newMediaElement); // Append the newly created media element
+        
+    }
+  }
+
+  renderVideoThumbItem(media) {
+    
+    const btn = document.createElement('button');
+    btn.className = 'popup-thumb video-thumb-item';
+    btn.type = 'button';
+    btn.setAttribute('data-media-id', media.id);
+
+    const thumbnailSrc = media.preview_image?.src || '';
+    const videoTitle = media.alt || 'Untitled video';
+
+    btn.innerHTML = `
       <div class="video-thumb-image">
-        <img src="${i}" width="130" height="80" loading="lazy" alt="${a}" />
+        <img src="${thumbnailSrc}" width="130" height="80" loading="lazy" alt="${videoTitle}" />
       </div>
       <div class="video-thumb-meta">
-        <p class="video-title">${a}</p>
+        <p class="video-title">${videoTitle}</p>
       </div>
-    `,t}updatePopupThumbActive(e){let t=document.getElementById("product-gallery-popup");if(!t){console.warn("updatePopupThumbActive: Popup not found.");return}let i=t.querySelectorAll("[data-media-id]");i.forEach(t=>{let i=t.getAttribute("data-media-id"),a=i==String(e);t.classList.toggle("is-active",a),a&&t.scrollIntoView({behavior:"smooth",block:"nearest"})})}closePopup(){let e=document.getElementById("product-gallery-popup"),t=e?.querySelector("[data-popup-viewer]");if(t){let i=t.firstElementChild;if(i){if("VIDEO"===i.tagName)i.pause(),i.currentTime=0;else if("IFRAME"===i.tagName)try{i.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}',"*"),i.contentWindow.postMessage('{ "method": "pause" }',"*")}catch(a){console.warn("Failed to send pause message to iframe on close:",a)}else"MODEL-VIEWER"===i.tagName&&i.pause();i.remove()}t.classList.remove("is-zoomed-simple"),t.classList.remove("popup-media-viewer-media-zoom-img"),t.removeEventListener("mousemove",this._handlePopupMouseMove),t.removeEventListener("click",this._handlePopupClick)}e&&(e.hidden=!0),document.body.style.overflow="",document.removeEventListener("keydown",this.handleEscClose)}handleEscClose=e=>{"Escape"===e.key&&this.closePopup()}}customElements.define("product-gallery",ProductGallery);
+    `;
+
+    return btn;
+  }
+
+  updatePopupThumbActive(mediaId) {
+   
+    const popup = document.getElementById('product-gallery-popup');
+    if (!popup) {
+      console.warn('updatePopupThumbActive: Popup not found.');
+      return;
+    }
+    const thumbs = popup.querySelectorAll('[data-media-id]');
+
+    thumbs.forEach((thumb) => {
+      const thumbId = thumb.getAttribute('data-media-id');
+      const isActive = thumbId == String(mediaId);
+      thumb.classList.toggle('is-active', isActive);
+      if (isActive) {
+        thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+       
+      }
+    });
+  }
+
+  closePopup() {
+
+    const popup = document.getElementById('product-gallery-popup');
+    const viewer = popup?.querySelector('[data-popup-viewer]');
+
+    if (viewer) {
+        // Stop and remove current media when closing
+        const currentMediaElement = viewer.firstElementChild;
+        if (currentMediaElement) {
+            if (currentMediaElement.tagName === 'VIDEO') {
+                currentMediaElement.pause();
+                currentMediaElement.currentTime = 0;
+            } else if (currentMediaElement.tagName === 'IFRAME') {
+                try {
+                    currentMediaElement.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                    currentMediaElement.contentWindow.postMessage('{ "method": "pause" }', '*');
+                } catch (e) {
+                    console.warn("Failed to send pause message to iframe on close:", e);
+                }
+            } else if (currentMediaElement.tagName === 'MODEL-VIEWER') {
+                currentMediaElement.pause();
+            }
+            currentMediaElement.remove();
+        }
+
+      viewer.classList.remove('is-zoomed-simple');
+      viewer.classList.remove('popup-media-viewer-media-zoom-img');
+      viewer.removeEventListener('mousemove', this._handlePopupMouseMove);
+      viewer.removeEventListener('click', this._handlePopupClick);
+    }
+
+    if (popup) popup.hidden = true;
+    document.body.style.overflow = '';
+   
+
+    document.removeEventListener('keydown', this.handleEscClose);
+  }
+
+  handleEscClose = (e) => {
+    if (e.key === 'Escape') {
+      
+      this.closePopup();
+    }
+  };
+}
+
+customElements.define('product-gallery', ProductGallery);

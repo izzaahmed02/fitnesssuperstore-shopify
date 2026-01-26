@@ -1,0 +1,368 @@
+{{ 'homepage-section-hero.css' | asset_url | stylesheet_tag: preload: true }}
+
+<div class="hero-section">
+  <div class="image-wrapper">
+    <picture>
+      {%- comment -%} Serve WebP first with PNG/JPEG fallback {%- endcomment -%}
+      <source srcset="{{ section.settings.background_image | image_url: width: 1000, format: 'webp' }}" type="image/webp">
+      <img 
+        src="{{ section.settings.background_image | image_url: width: 1000 }}" 
+        alt="{{ section.settings.title_text | escape }}" 
+        class="hero-bg"
+        loading="eager" 
+        fetchpriority="high"
+        width="1030"
+        height="auto"
+      >
+    </picture>
+
+    <div class="overlay"></div> 
+
+    <div class="content">
+      <div class="description">
+        {% if section.settings.rating_link != blank %}
+        <a class="rating-button-link" target="_blank" href="{{ section.settings.rating_link }}">
+        {% endif %}
+          <div class="ratingBlock">
+            <div class="rating">
+              {% render 'rating' %}
+            </div>
+            <span>{{ section.settings.rating_text }}</span>
+          </div>
+        {% if section.settings.rating_link != blank %}
+        </a>
+        {% endif %}
+        <a href="{{ section.settings.button_link }}" class="bannerBtn mobile button button--secondary">
+            {{ section.settings.button_text }}
+            {% render 'chevron-button' %}
+        </a>
+        <a href="{{ section.settings.button_link_1 }}" class="bannerBtn mobile button button--primary">
+            {{ section.settings.button_text_1 }}
+            {% render 'chevron-button' %}
+        </a>
+      </div>
+
+      <div class="title">
+        <h1>{{ section.settings.title_text }}</h1>
+        <p class="copyText">{{ section.settings.copy_text }}</p>
+      </div>
+
+      <div class="btn-container">
+
+      <a href="{{ section.settings.button_link }}" class="bannerBtn desktop button button--secondary">
+        {{ section.settings.button_text }}
+        {% render 'chevron-button' %}
+      </a>
+      <a href="{{ section.settings.button_link_1 }}" class="bannerBtn desktop button button--primary">
+        {{ section.settings.button_text_1 }}
+        {% render 'chevron-button' %}
+      </a>
+      
+      </div>
+      <div class="cta-description">
+        {{section.settings.cta_description}}
+      </div>
+    </div>
+  </div>
+
+  <div class="questions">
+    <div class="benefit-card">
+      <div class="text">
+        <div class="benefits-img">
+           <img src="{{'benefit3.png' | asset_url  }}"/>
+          </div>
+        <h2>French Fitness Warranty</h2>
+        <p>{{ section.settings.why_choose_us }}</p>
+      </div>
+      <div class="learn-more"><a class="button" href="/pages/warranty">Learn More →</a></div>
+    </div>
+    <div class="benefit-card">
+      <div class="text">
+        <div class="benefits-img">
+           <img src="{{'benefit1.png' | asset_url  }}"/>
+          </div>
+        <h2>Remanufactured in Northern California</h2>
+        <p>{{ section.settings.warranty_text }}</p>
+      </div>
+      <div class="learn-more"><a class="button" href="/pages/remanufactured-gym-equipment">Learn More →</a></div>
+    </div>
+    <div class="benefit-card">
+      <div class="text">
+        <div class="benefits-img">
+           <img src="{{'benefit2.png' | asset_url  }}"/>
+          </div>
+        <h2>Nationwide Delivery & Local Showroom</h2>
+        <p>{{ section.settings.mission_text }}</p>
+      </div>
+      <div class="learn-more"><a class="button" href="/pages/warehouse-page">Learn More →</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    function initHeroCarousel() {
+      const $questions = $('.homepageHeroSection .questions');
+      
+      if (window.innerWidth <= 768) {
+        // Initialize Slick only on mobile
+        if (!$questions.hasClass('slick-initialized')) {
+          $questions.slick({
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            centerMode: true,
+            centerPadding: '40px',
+            arrows: false,
+            dots: true,
+            infinite: true,
+            autoplay: false,
+            responsive: [
+              {
+                breakpoint: 480,
+                settings: {
+                  centerPadding: '30px'
+                }
+              }
+            ]
+          });
+        }
+      } else {
+        // Destroy Slick on desktop
+        if ($questions.hasClass('slick-initialized')) {
+          $questions.slick('unslick');
+        }
+      }
+    }
+
+    // Initialize on load
+    initHeroCarousel();
+
+    // Re-initialize on window resize
+    let resizeTimer;
+    $(window).on('resize', function() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function() {
+        initHeroCarousel();
+      }, 250);
+    });
+  });
+</script>
+
+<style>
+ .homepageHeroSection .btn-container {
+  display: flex;
+  order: 3;
+  gap: 8px;
+}
+.homepageHeroSection .benefit-card .learn-more {
+order: 2;
+display: block;
+width: 100%;
+
+}
+body .homepageHeroSection .learn-more .button {
+text-align: center;
+display: block;
+background-color: #D83D0E33 !Important;
+color: #D83D0E;
+border-top: 1px solid #D83D0E33;
+border-top-left-radius: 0px !Important;
+border-top-right-radius: 0px !Important;
+}
+.homepageHeroSection .benefit-card {
+padding: 0px;
+justify-content: space-between;
+}
+.homepageHeroSection .benefit-card .text {
+padding: 24px;
+padding-bottom: 0px;
+}
+.homepageHeroSection .text h2 {
+text-transform: initial;
+}
+.homepageHeroSection .benefits-img {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+.homepageHeroSection .benefits-img img {
+width: 60px;
+margin: 0 auto;
+}
+.homepageHeroSection .cta-description {
+order: 4;
+font-size: 14px;
+color: #B0B0B0;
+}
+.homepageHeroSection .cta-description span {
+color: #D83D0E;
+margin-left: 3px;
+margin-right: 3px;
+}
+.homepageHeroSection .benefit-card .text span {
+  color: #D83D0E;
+  margin-left: 3px;
+  margin-right: 3px;
+}
+.homepageHeroSection .cta-description p {
+margin-top: 0px;
+margin-bottom: 0px;
+}
+.homepageHeroSection .btn-container .bannerBtn.button--primary {
+  background-color: #fff !important;
+    color: #D83D0E;
+}
+.homepageHeroSection .content .description .bannerBtn.button--secondary {
+  background-color: #fff !important;
+    color: #D83D0E;
+}
+.homepageHeroSection .content .description .bannerBtn.button--primary svg path {
+  fill: #fff;
+}
+.homepageHeroSection .content .description .bannerBtn.button--secondary svg path {
+  fill: #D83D0E;
+}
+
+.homepageHeroSection .button--primary svg path {
+  fill: #D83D0E;
+}
+  .homepageHeroSection .image-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    overflow: hidden;
+    width: 100%;
+  }
+  .homepageHeroSection .image-wrapper picture {
+    width:100%;
+    position: absolute;
+    top: 0;
+    height: 100%;
+}
+
+  .homepageHeroSection .hero-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+
+  .homepageHeroSection .image-wrapper .content {
+    position: relative;
+    z-index: 2;
+    color: white;
+    padding: 43px 20px;
+    width: 100%;
+    background: linear-gradient(180deg, rgba(35, 35, 43, 0) 0%, rgba(35, 35, 43, 0.4) 50%), linear-gradient(269.75deg, rgba(35, 35, 43, 0) 1.15%, rgba(35, 35, 43, 0.3) 68.4%);
+  }
+
+  @media screen and (max-width: 767px) {
+  .homepageHeroSection .cta-description p {
+    text-align: center;
+    }
+  }
+</style>
+
+
+
+{% schema %}
+{
+  "name": "Homepage Hero Section",
+  "class": "homepageHeroSection",
+  "settings": [
+    {
+      "type": "text",
+      "id": "rating_text",
+      "label": "Rating Text",
+      "default": "4.9/5 by Thousands of happy customers"
+    },
+    {
+      "type": "url",
+      "id": "rating_link",
+      "label": "Rating Link"
+    },
+    {
+      "type": "text",
+      "id": "title_text",
+      "label": "Title Text",
+      "default": "Elevate Your Fitness. Buy Top Quality Gym Equipment."
+    },
+     {
+      "type": "text",
+      "id": "copy_text",
+      "label": "Text",
+      "default": "Transform your space with new, used, or remanufactured top gym equipment from brands like Precor, Life Fitness & more. Fitness Superstore offers 5-star service, nationwide delivery, and industry-leading warranties, giving unmatched value for home or commercial setups."
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button Text",
+      "default": "Shop Now"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button Link",
+      "default": "/collections/all"
+    },
+    {
+      "type": "text",
+      "id": "button_text_1",
+      "label": "Second Button Text",
+      "default": "Shop French Fitness"
+    },
+    {
+      "type": "url",
+      "id": "button_link_1",
+      "label": "Second Button Link",
+      "default": "/collections/all"
+    },
+    {
+      "type": "html",
+      "id": "cta_description",
+      "label": "CTA Description",
+      "default": "<p>Ships Nationwide <span>•</span> Financing Available <span>•</span> Lifetime Warranty Options.</p>"
+    },
+    {
+      "type": "html",
+      "id": "why_choose_us",
+      "label": "Why Choose Us Text",
+      "default": "<p>Get biggest savings - up to 50% off MSRP. Shop new and remanufactured equipment, global shipping and full delivery service options available</p>"
+    },
+    {
+      "type": "html",
+      "id": "warranty_text",
+      "label": "Warranty Text",
+      "default": "<p>Enjoy best warranty in the industry. French Fitness equipment: 10 year warranty for +1 year labor, Remanufactured equipment: 1 year parts and labor + extend to 5 years</p>"
+    },
+    {
+      "type": "html",
+      "id": "mission_text",
+      "label": "Mission Text",
+      "default": "<p>Our mission is to ensure every customer is satisfied and sees the customer value in their purchase</p>"
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background Image"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Homepage Hero Section",
+      "settings": {
+        "rating_text": "4.9/5 by Thousands of happy customers",
+        "title_text": "Elevate Your Fitness. Buy Top Quality Gym Equipment.",
+        "button_text": "Shop Now",
+        "button_link": "/collections/all",
+        "why_choose_us": "<p>Get biggest savings - up to 50% off MSRP. Shop new and remanufactured equipment, global shipping and full delivery service options available</p>",
+        "warranty_text": "<p>Enjoy best warranty in the industry. French Fitness equipment: 10 year warranty for +1 year labor, Remanufactured equipment: 1 year parts and labor + extend to 5 years</p>",
+        "mission_text": "<p>Our mission is to ensure every customer is satisfied and sees the customer value in their purchase</p>"
+      }
+    }
+  ]
+}
+{% endschema %}

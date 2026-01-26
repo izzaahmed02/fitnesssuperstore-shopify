@@ -128,6 +128,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (!paginationContainer.querySelector(".prev-arrow") && !paginationContainer.querySelector(".next-arrow")) {
           const prevArrow = document.createElement("button");
           prevArrow.className = "arrow custom prev-arrow";
+		  prevArrow.setAttribute("aria-label", "Previous slide");
           prevArrow.innerHTML = `
             <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M7.53033 0.46967C7.82322 0.762563 7.82322 1.23744 7.53033 1.53033L2.06066 7L7.53033 12.4697C7.82322 12.7626 7.82322 13.2374 7.53033 13.5303C7.23744 13.8232 6.76256 13.8232 6.46967 13.5303L0.46967 7.53033C0.176777 7.23744 0.176777 6.76256 0.46967 6.46967L6.46967 0.46967C6.76256 0.176777 7.23744 0.176777 7.53033 0.46967Z" fill="#CCCCCC"/>
@@ -136,6 +137,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   
           const nextArrow = document.createElement("button");
           nextArrow.className = "arrow custom next-arrow";
+		  nextArrow.setAttribute("aria-label", "Next slide");
           nextArrow.innerHTML = `
             <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.23744 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#D83D0E"/>
@@ -156,6 +158,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
       const sortByDropdown = document.createElement('select');
       sortByDropdown.setAttribute('id', 'sortByDropdown');
+	  sortByDropdown.setAttribute('aria-label', 'Sort reviews');
       sortByDropdown.innerHTML = `
         <option value="high">Sort by: Highest to Lowest</option>
         <option value="low">Sort by: Lowest to Highest</option>

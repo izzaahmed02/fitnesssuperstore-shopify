@@ -1,5 +1,5 @@
 {% comment %}
-Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT RESTORED)
+Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT RESTORED + FAST DRAG FIX)
 {% endcomment %}
 
 <section
@@ -179,8 +179,8 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
       display: flex;
       gap: 16px;
       overflow-x: auto;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
+      -webkit-overflow-scrolling: touch; /* mobile momentum */
+      scroll-behavior: auto; /* instant for drag */
     }
 
     #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar {
@@ -209,8 +209,8 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
     }
 
     .related-articles .section-header {
-    position: unset;
-  }
+      position: unset;
+    }
 
     .card__heading {
       font-size: 18px;
@@ -264,6 +264,7 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
       width: 40px;
       background: #D83D0E;
       border-radius: 6px;
+      transition: none; /* no delay during drag */
     }
 
     .related-slider__arrows {
@@ -296,17 +297,13 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
     }
 
     .related-slider__arrows .arrow.disabled {
-  opacity: 0.4;
-  pointer-events: none;
-  cursor: default;
-}
-
+      opacity: 0.4;
+      pointer-events: none;
+      cursor: default;
+    }
   </style>
 
- 
-
   <script>
-
   (function () {
     const slider = document.querySelector('#RelatedBlogs-{{ section.id }} [data-slider]');
     if (!slider) return;
@@ -317,41 +314,31 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
     const prev = slider.querySelector('[data-prev]');
     const next = slider.querySelector('[data-next]');
 
+    // Update arrows state
     function updateArrows() {
       const maxScroll = track.scrollWidth - track.clientWidth;
-
-      // At start
-      if (track.scrollLeft <= 1) {
-        prev.classList.add('disabled');
-      } else {
-        prev.classList.remove('disabled');
-      }
-
-      // At end
-      if (track.scrollLeft >= maxScroll - 1) {
-        next.classList.add('disabled');
-      } else {
-        next.classList.remove('disabled');
-      }
+      prev.classList.toggle('disabled', track.scrollLeft <= 1);
+      next.classList.toggle('disabled', track.scrollLeft >= maxScroll - 1);
     }
 
+    // Sync thumb instantly
     function syncThumb() {
       const maxScroll = track.scrollWidth - track.clientWidth;
       if (maxScroll <= 0) return;
 
       const ratio = track.scrollLeft / maxScroll;
       const maxLeft = scrollbar.clientWidth - thumb.clientWidth;
-      thumb.style.left = `${ratio * maxLeft}px`;
 
+      thumb.style.left = ratio * maxLeft + 'px';
       updateArrows();
     }
 
     track.addEventListener('scroll', syncThumb);
 
+    // Arrow click
     function scrollByCard(dir) {
       const card = track.querySelector('.related-slider__slide');
       if (!card) return;
-
       track.scrollBy({
         left: dir * (card.offsetWidth + 16),
         behavior: 'smooth'
@@ -359,45 +346,51 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
     }
 
     prev.addEventListener('click', () => {
-      if (!prev.classList.contains('disabled')) {
-        scrollByCard(-1);
-      }
+      if (!prev.classList.contains('disabled')) scrollByCard(-1);
     });
-
     next.addEventListener('click', () => {
-      if (!next.classList.contains('disabled')) {
-        scrollByCard(1);
-      }
+      if (!next.classList.contains('disabled')) scrollByCard(1);
     });
 
+    // Drag & click functionality
     let dragging = false;
+    let startX = 0;
+    let startScrollLeft = 0;
 
-    thumb.addEventListener('mousedown', () => dragging = true);
+    thumb.addEventListener('mousedown', (e) => {
+      dragging = true;
+      startX = e.clientX;
+      startScrollLeft = track.scrollLeft;
+      e.preventDefault();
+    });
+
     document.addEventListener('mouseup', () => dragging = false);
 
     document.addEventListener('mousemove', (e) => {
       if (!dragging) return;
+      const dx = e.clientX - startX;
+      const maxScroll = track.scrollWidth - track.clientWidth;
+      const maxThumbMove = scrollbar.clientWidth - thumb.clientWidth;
+      if (maxThumbMove <= 0) return;
+      const scrollPerPixel = maxScroll / maxThumbMove;
+      track.scrollLeft = startScrollLeft + dx * scrollPerPixel;
+      syncThumb();
+    });
 
+    // Click scrollbar to jump
+    scrollbar.addEventListener('mousedown', (e) => {
+      if (e.target === thumb) return;
       const rect = scrollbar.getBoundingClientRect();
-      let x = e.clientX - rect.left;
+      let x = e.clientX - rect.left - thumb.clientWidth / 2;
       x = Math.max(0, Math.min(x, scrollbar.clientWidth - thumb.clientWidth));
-
       const ratio = x / (scrollbar.clientWidth - thumb.clientWidth);
       track.scrollLeft = ratio * (track.scrollWidth - track.clientWidth);
     });
 
-    // Initial state
+    // Initial sync
     syncThumb();
   })();
-
-
   </script>
-</section>
-
-
-
-
-
 
 {% schema %}
 {

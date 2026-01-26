@@ -1,158 +1,1349 @@
-{{ 'dc-warranty-content.css' | asset_url | stylesheet_tag }}
-
 {%- style -%}
-  .section-{{ section.id }}-padding {
-    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
-    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
-  }
+  @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght@400;500;600&display=swap');
+
+  .ffw-list li { list-style-type: disc; }
+  .ffw-list { padding-left: 20px !important; }
 
   #shopify-section-{{ section.id }} {
-    background-color: {{ section.settings.bg }};
+    --ffw-bg: {{ section.settings.color_bg }};
+    --ffw-card: {{ section.settings.color_card }};
+    --ffw-surface: {{ section.settings.color_surface }};
+    --ffw-muted: {{ section.settings.color_muted }};
+    --ffw-text: {{ section.settings.color_text }};
+    --ffw-accent: {{ section.settings.color_accent }};
+    --ffw-accent-2: {{ section.settings.color_accent_2 }};
+    --ffw-accent-soft: {{ section.settings.color_accent_soft }};
+    --ffw-shadow: 0 25px 60px rgba(15, 21, 37, 0.08);
+    --ffw-max: {{ section.settings.max_width }}px;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    color: var(--ffw-text);
   }
 
-  @media screen and (min-width: 750px) {
-    .section-{{ section.id }}-padding {
-      padding-top: {{ section.settings.padding_top }}px;
-      padding-bottom: {{ section.settings.padding_bottom }}px;
-    }
+  #shopify-section-{{ section.id }} .ffw-icon {
+    font-family: 'Material Symbols Rounded';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 30px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24;
   }
 
-  @media screen and (max-width: 750px) {
-    #shopify-section-{{ section.id }} .multicolumn-card {
-      text-align: start;
+  #shopify-section-{{ section.id }} .ffw-icon-fill {
+    font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-root {
+    background: radial-gradient(circle at top, rgba(241, 89, 42, 0.08), transparent 45%),
+      linear-gradient(180deg, #fffdfa 0%, #fffbf6 60%, #fff);
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+        margin-top: 8px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-wrapper {
+    width: 100%;
+    max-width: var(--ffw-max);
+    background: var(--ffw-card);
+    border-radius: 32px;
+    padding: 20px;
+    border: 1px solid rgba(241, 89, 42, 0.12);
+    box-shadow: var(--ffw-shadow);
+  }
+
+  @media (max-width: 900px) {
+    #shopify-section-{{ section.id }} .ffw-wrapper { padding: 10px; }
+    #shopify-section-{{ section.id }} .ffw-root { padding: 10px; }
+    #shopify-section-{{ section.id }} .ffw-trust-badge { flex-direction: row !important; }
+    #shopify-section-{{ section.id }} .ffw-hero-main { padding: 10px!important; }
+  }
+
+  /* Policy timeline */
+  #shopify-section-{{ section.id }} .ffw-policy-grid {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 28px;
+  }
+
+  @media (max-width: 960px) {
+    #shopify-section-{{ section.id }} .ffw-policy-grid { grid-template-columns: 1fr; }
+  }
+
+   #shopify-section-{{ section.id }} .ffw-policy-card {
+    border-radius: 26px;
+    background: var(--ffw-card);
+    border: 1px solid rgba(31, 36, 50, 0.08);
+    padding: 20px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06);
+    position: sticky;
+    top: 22vh;
+    align-self: start;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 1024px) {
+    #shopify-section-{{ section.id }} .ffw-policy-card {
+      position: static;
+      top: auto;
     }
+    #shopify-section-{{ section.id }} .ffw-hero { grid-template-columns: 1fr; }
+    #shopify-section-{{ section.id }} .ffw-side-stack { position: static !important; top: auto !important; }
+  }
+
+  #shopify-section-{{ section.id }} .ffw-hero-main {
+    background: linear-gradient(150deg, rgba(255, 139, 91, 0.12), rgba(255, 255, 255, 0.85));
+    border-radius: 26px;
+    padding: 20px;
+    border: 1px solid rgba(241, 89, 42, 0.12);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-hero-main::after {
+    content: '';
+    position: absolute;
+    inset: 18% auto auto 55%;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(241, 89, 42, 0.16), transparent 60%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-hero-main > * { position: relative; z-index: 1; }
+
+  #shopify-section-{{ section.id }} .ffw-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 15px;
+    background: #fff;
+    border: 1px solid rgba(241, 89, 42, 0.22);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #1f2432;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-glow-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--ffw-accent);
+    box-shadow: 0 0 12px rgba(241, 89, 42, 0.7);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-eyebrow {
+    color: var(--ffw-accent);
+    font-size: 14px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-title {
+    font-size: clamp(32px, 4vw, 48px);
+    margin: 0;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--ffw-text);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-lead {
+    color: var(--ffw-muted);
+    font-size: 16px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-lead p {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    color: var(--ffw-muted);
+  }
+
+
+  #shopify-section-{{ section.id }} .ffw-title-wrap p, #shopify-section-{{ section.id }} .ffw-hero-main p{
+    color: var(--ffw-muted);
+  }
+  
+
+  #shopify-section-{{ section.id }} .ffw-trust-badges {
+    display: flex;
+    gap: 16px;
+    margin: 24px 0 20px;
+    flex-wrap: no-wrap;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-trust-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--ffw-card);
+    border-radius: 16px;
+    padding: 14px 18px;
+    border: 1px solid rgba(31, 36, 50, 0.08);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-trust-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-trust-badge-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: rgba(241, 89, 42, 0.15);
+    color: var(--ffw-accent);
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-trust-badge-icon .ffw-icon {
+    display: inline-flex;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-trust-badge:hover .ffw-trust-badge-icon .ffw-icon {
+    animation: ffw-bounce 0.9s ease-in-out infinite;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-trust-badge-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ffw-text);
+    line-height: 1.3;
+  }
+
+  @media (max-width: 640px) {
+    #shopify-section-{{ section.id }} .ffw-trust-badges { flex-direction: column; }
+    #shopify-section-{{ section.id }} .ffw-trust-badge { min-width: 100%; }
+    #shopify-section-{{ section.id }} .ffw-feature-grid { flex-direction: column !important; }
+    #shopify-section-{{ section.id }} .ffw-title {
+   font-size: 30px;
+        line-height: 32px;
+  }
+  }
+
+  #shopify-section-{{ section.id }} .ffw-feature-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 18px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-feature-card {
+    background: var(--ffw-card);
+    border-radius: 18px;
+    padding: 18px;
+    border: 1px solid rgba(31, 36, 50, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 150px;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: rgba(241, 89, 42, 0.15);
+    color: var(--ffw-accent);
+    font-size: 18px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-feature-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ffw-text);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-feature-text {
+    margin: 0;
+    color: var(--ffw-muted);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  @keyframes ffw-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  #shopify-section-{{ section.id }} .ffw-side-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: sticky;
+    top: 22vh;
+    align-self: start;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-side-card {
+    border-radius: 22px;
+    padding: 15px;
+    background: var(--ffw-surface);
+    border: 1px solid rgba(241, 89, 42, 0.16);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    box-shadow: 0 18px 40px rgba(241, 89, 42, 0.08);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-side-icon {
+    max-width: 58px;
+    max-height: 58px;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    color: var(--ffw-accent);
+  }
+
+   #shopify-section-{{ section.id }} .ffw-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 18px;
+    font-size: 14px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-table th,
+  #shopify-section-{{ section.id }} .ffw-table td {
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(31, 36, 50, 0.08);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-table th {
+    color: var(--ffw-muted);
+    font-weight: 500;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-side-icon .ffw-icon {
+    display: inline-flex;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-side-card:hover .ffw-side-icon .ffw-icon {
+    animation: ffw-bounce 0.9s ease-in-out infinite;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-section {
+    margin-top: 40px;
+    border-radius: 24px;
+    padding: 20px;
+    background: linear-gradient(125deg, rgba(255, 139, 91, 0.12), rgba(255, 220, 205, 0.35));
+    border: 1px solid rgba(241, 89, 42, 0.16);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-highlight-alt {
+    border-radius: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-highlight-card {
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 18px;
+    padding: 18px;
+    border: 1px solid rgba(241, 89, 42, 0.18);
+    box-shadow: 0 12px 24px rgba(241, 89, 42, 0.08);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-highlight-card h4 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    color: var(--ffw-text);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-highlight-card p {
+    margin: 0;
+    color: var(--ffw-muted);
+    font-size: 13px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-origin,
+  #shopify-section-{{ section.id }} .ffw-standbehind {
+    margin-top: 36px;
+    border-radius: 26px;
+    background: var(--ffw-card);
+    border: 1px solid rgba(31, 36, 50, 0.08);
+    padding: 20px;
+    box-shadow: 0 18px 42px rgba(15, 21, 37, 0.06);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-origin h3,
+  #shopify-section-{{ section.id }} .ffw-standbehind h3 {
+    margin: 0 0 14px;
+    font-size: 26px;
+    color: var(--ffw-text);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-origin p,
+  #shopify-section-{{ section.id }} .ffw-standbehind p {
+    margin: 0 0 14px;
+    color: var(--ffw-muted);
+    line-height: 1.6;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-highlight {
+    margin-top: 40px;
+    border-radius: 24px;
+    padding: 20px;
+    background: linear-gradient(125deg, rgba(255, 139, 91, 0.12), rgba(255, 220, 205, 0.35));
+    border: 1px solid rgba(241, 89, 42, 0.16);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-standbehind-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin-top: 24px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-standbehind-card {
+    border-radius: 18px;
+    border: 1px solid rgba(241, 89, 42, 0.16);
+    padding: 18px;
+    background: var(--ffw-surface);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-standbehind-card h4 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--ffw-text);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-standbehind-card ul {
+    margin: 0;
+    color: var(--ffw-muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-pill-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fff;
+    border: 0.75px solid rgba(241, 89, 42, 0.22);
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 10px;
+    line-height: normal;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #1f2432;
+    margin-bottom: 8px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-cta-standalone {
+    margin: 20px 24px;
+    display: flex;
+    justify-content: start;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-btn {
+    border-radius: 16px;
+    padding: 15px 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    font-size: 12px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-btn-primary {
+    background: linear-gradient(120deg, var(--ffw-accent), var(--ffw-accent-2));
+    color: #fff;
+    box-shadow: 0 18px 36px rgba(241, 89, 42, 0.25);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-btn:hover { transform: translateY(-2px); }
+
+  #shopify-section-{{ section.id }} .ffw-small, #shopify-section-{{ section.id }} .ffw-small b {
+    font-size: 13px;
+    color: var(--ffw-muted);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-link, #shopify-section-{{ section.id }} a {
+    color: var(--ffw-accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(31, 36, 50, 0.08);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--ffw-muted);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-footer-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(31, 36, 50, 0.12);
+    background: rgba(241, 89, 42, 0.08);
+    color: var(--ffw-accent);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-policy-grid {
+    margin-top: 40px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-details {
+    border: 1px solid rgba(31, 36, 50, 0.08);
+    border-radius: 20px;
+    background: var(--ffw-card);
+    overflow: hidden;
+    box-shadow: 0 14px 24px rgba(15, 23, 42, 0.05);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-summary {
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--ffw-text);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-summary-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--ffw-accent-soft);
+    color: var(--ffw-accent);
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-summary-arrow {
+    margin-left: auto;
+    color: var(--ffw-muted);
+    transition: transform 0.2s ease;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-details[open] .ffw-summary-arrow {
+    transform: rotate(90deg);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-details-content {
+    padding: 0px 24px 10px;
+    color: var(--ffw-muted);
+    font-size: 14px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-list,
+  #shopify-section-{{ section.id }} .ffw-ol {
+    padding: 0;
+    line-height: 1.5;
+    color: var(--ffw-muted);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-list li,
+  #shopify-section-{{ section.id }} .ffw-ol li {
+    margin-bottom: 10px;
   }
 {%- endstyle -%}
 
+<section class="ffw-root">
+  <div class="ffw-wrapper">
+    <div class="ffw-hero">
+      <div class="ffw-hero-main">
+        <div class="ffw-pill">
+          <span class="ffw-glow-dot"></span>
+          {{ section.settings.hero_pill_text }}
+        </div>
 
-<div class="dc-warranty">
-  <div
-    class="page-width-dc multicolumn-padding section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
-    {% if settings.animations_reveal_on_scroll %}
-      data-cascade
-    {% endif %}
-  >
-    {%- unless section.settings.title == blank -%}
-      <h1 class="dc-warranty-title">
-        {{ section.settings.title }}
-      </h1>
-    {%- endunless -%}
+        <div class="ffw-title-wrap">
+          <span class="ffw-eyebrow">{{ section.settings.hero_eyebrow }}</span>
+          <h1 class="ffw-title">{{ section.settings.hero_title }}</h1>
 
-    {% if section.settings.text != blank %}
-      <div class="dc-warranty-content">
-        {{ section.settings.text }}
-      </div>
-    {% endif %}
-
-    <div class="dc-warranty-bottom">
-      <div class="dc-warranty-bottom-left">
-        <img src="{{ section.settings.image_left | img_url:'master' }}">
-      </div>
-
-      <div class="dc-warranty-bottom-right">
-        {% for block in section.blocks %}
-          <div class="right-item">
-            <div class="right-item-icon">
-              <span>
-                {{ block.settings.svg }}
-              </span>
-            </div>
-
-            <div class="right-item-text">
-              {{ block.settings.text }}
-            </div>
+          <div class="ffw-trust-badges">
+            {% for block in section.blocks %}
+              {% if block.type == 'trust_badge' %}
+                <div class="ffw-trust-badge">
+                  <div class="ffw-trust-badge-icon">
+                    <span class="ffw-icon ffw-icon-fill" style="font-size: 40px;">{{ block.settings.icon }}</span>
+                  </div>
+                  <h4 class="ffw-trust-badge-title">{{ block.settings.title }}</h4>
+                </div>
+              {% endif %}
+            {% endfor %}
           </div>
+
+          <div class="ffw-lead">{{ section.settings.hero_intro }}</div>
+          <p class="ffw-lead">{{ section.settings.hero_priorities_intro }}</p>
+        </div>
+
+        <div class="ffw-feature-grid">
+          {% for block in section.blocks %}
+            {% if block.type == 'feature_card' %}
+              <div class="ffw-feature-card">
+                <div class="ffw-feature-icon">
+                  <span class="ffw-icon ffw-icon-fill" style="font-size: 50px;">{{ block.settings.icon }}</span>
+                </div>
+                <h4 class="ffw-feature-title">{{ block.settings.title }}</h4>
+                <p class="ffw-feature-text">{{ block.settings.description }}</p>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <p class="ffw-lead" style="margin-top:20px;">{{ section.settings.hero_closing }}</p>
+      </div>
+
+      <div class="ffw-side-stack">
+        {% for block in section.blocks %}
+          {% if block.type == 'side_card' %}
+            <div class="ffw-side-card">
+              <div class="ffw-side-icon"><span class="ffw-icon ffw-icon-fill">{{ block.settings.icon }}</span></div>
+              <div>
+                <div class="ffw-eyebrow" style="letter-spacing:0.15em">{{ block.settings.eyebrow }}</div>
+                <h4 style="margin:0 0 8px;font-size:20px;">{{ block.settings.title }}</h4>
+                <p class="ffw-lead" style="margin:0;font-size:14px;">{{ block.settings.description }}</p>
+              </div>
+            </div>
+          {% endif %}
         {% endfor %}
       </div>
     </div>
-    
+
+    <div class="ffw-section">
+      <div class="ffw-highlight-alt">
+        {% for block in section.blocks %}
+          {% if block.type == 'warranty_highlight' %}
+            <div class="ffw-highlight-card">
+              <h4>{{ block.settings.title }}</h4>
+              <p>{{ block.settings.description }}</p>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <p class="ffw-small" style="margin-top:0;">{{ section.settings.cosmetic_note }}</p>
+    </div>
+
+    <section class="ffw-origin">
+      <h3>{{ section.settings.origin_title }}</h3>
+      {{ section.settings.origin_content }}
+    </section>
+
+    <section class="ffw-highlight" style="margin-top:36px;">
+      {% for block in section.blocks %}
+        {% if block.type == 'coverage_card' %}
+          <div class="ffw-highlight-card">
+            <div class="ffw-feature-icon" style="margin-bottom:12px;">
+              <span class="ffw-icon ffw-icon-fill" style="font-size:40px;">{{ block.settings.icon }}</span>
+            </div>
+            <h4 style="font-size:17px; margin-bottom:8px;">{{ block.settings.title }}</h4>
+            <p>{{ block.settings.description }}</p>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </section>
+
+    <section class="ffw-standbehind">
+      <h3>{{ section.settings.standbehind_title }}</h3>
+      {{ section.settings.standbehind_intro }}
+      
+      <div class="ffw-standbehind-grid">
+        {% for block in section.blocks %}
+          {% if block.type == 'standbehind_card' %}
+            <div class="ffw-standbehind-card">
+              <h4>{{ block.settings.title }}</h4>
+              {% if block.settings.show_badge %}
+                <div class="ffw-pill-info">
+                  <span class="ffw-icon ffw-icon-fill" style="font-size:10px;">{{ block.settings.badge_icon }}</span>
+                  {{ block.settings.badge_text }}
+                </div>
+              {% endif %}
+              {{ block.settings.content }}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <p class="ffw-small" style="margin-top:12px;">{{ section.settings.standbehind_note }}</p>
+    </section>
+
+  
+
+    <div class="ffw-policy-grid" id="ffw-policy">
+      <div class="ffw-policy-card">
+        <div class="ffw-pill" style="margin-bottom:14px;">
+          <span class="ffw-glow-dot"></span>
+          Coverage summary
+        </div>
+        <h3 style="margin:0 0 8px;font-size:26px;">USA &amp; Canada coverage</h3>
+        <p style="color:var(--ffw-muted);margin:0 0 16px;">
+          Labor extensions: $50/yr racks · $100/yr strength · $150/yr cardio.
+        </p>
+        <table class="ffw-table">
+          <tbody>
+            <tr>
+              <th>Frame</th>
+              <td>Lifetime</td>
+            </tr>
+            <tr>
+              <th>Parts</th>
+              <td>10 Years</td>
+            </tr>
+            <tr>
+              <th>Labor</th>
+              <td>1 Year</td>
+            </tr>
+            <tr>
+              <th>Accessories &amp; flooring</th>
+              <td>1 Year (limited parts)</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:18px;color:var(--ffw-muted);font-size:14px;">
+          Technician assignment is usually coordinated within one to two weeks, depending on location and service
+          volume. Labor, dispatch, and scheduling are coordinated through National Gym Service, our warranty‑dispatch
+          partner.
+        </div>
+      </div>
+      <div class="ffw-accordion">
+        {% for block in section.blocks %}
+          {% if block.type == 'accordion' %}
+            <details class="ffw-details" {% if block.settings.open_default %}open{% endif %}>
+              <summary class="ffw-summary">
+                <span class="ffw-summary-badge">{{ block.settings.badge }}</span>
+                {{ block.settings.title }}
+                <span class="ffw-summary-arrow">›</span>
+              </summary>
+              <div class="ffw-details-content">
+                {{ block.settings.content }}
+              </div>
+            </details>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+      <div class="ffw-cta-standalone">
+      <a class="ffw-btn ffw-btn-primary" href="{{ section.settings.cta_url }}">
+        <span class="ffw-icon ffw-icon-fill" style="font-size: 15px;">fitness_center</span>
+        {{ section.settings.cta_text }}
+      </a>
+    </div>
+
+    <div class="ffw-footer">
+      <div>
+        <span class="ffw-icon ffw-icon-fill" style="color:var(--ffw-accent);font-size:20px;">flag</span> 
+        {{ section.settings.footer_text }}
+      </div>
+      <div class="ffw-footer-pill">
+        <span class="ffw-icon ffw-icon-fill" style="color:var(--ffw-accent);font-size:20px;">calendar_month</span>
+        {{ section.settings.footer_date }}
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
 {% schema %}
+
 {
-  "name": "dc Warranty content",
-  "class": "section",
-  "tag": "section",
-  "disabled_on": {
-    "groups": ["header", "footer"]
-  },
+  "name": "French Fitness Warranty",
   "settings": [
     {
-      "type": "color",
-      "id": "bg",
-      "label": "Background color",
-      "default": "#fff"
+      "type": "header",
+      "content": "🎨 Colors"
     },
     {
-      "type": "inline_richtext",
-      "id": "title",
-      "default": "t:sections.multicolumn.settings.title.default",
-      "label": "t:sections.multicolumn.settings.title.label"
+      "type": "color",
+      "id": "color_bg",
+      "label": "Background",
+      "default": "#fffdf8"
+    },
+    {
+      "type": "color",
+      "id": "color_card",
+      "label": "Card Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "color_surface",
+      "label": "Surface",
+      "default": "#fff8f3"
+    },
+    {
+      "type": "color",
+      "id": "color_muted",
+      "label": "Muted Text",
+      "default": "#525665"
+    },
+    {
+      "type": "color",
+      "id": "color_text",
+      "label": "Primary Text",
+      "default": "#1f2432"
+    },
+    {
+      "type": "color",
+      "id": "color_accent",
+      "label": "Accent Color",
+      "default": "#f1592a"
+    },
+    {
+      "type": "color",
+      "id": "color_accent_2",
+      "label": "Accent Color 2",
+      "default": "#ff8b5b"
+    },
+    {
+      "type": "color",
+      "id": "color_accent_soft",
+      "label": "Accent Soft",
+      "default": "rgba(241, 89, 42, 0.15)"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Max Width (px)",
+      "min": 1000,
+      "max": 1400,
+      "step": 50,
+      "default": 1200
+    },
+    {
+      "type": "header",
+      "content": "🎯 Hero Section"
+    },
+    {
+      "type": "text",
+      "id": "hero_pill_text",
+      "label": "Pill Text",
+      "default": "U.S. Assembly + Lifetime Promise"
+    },
+    {
+      "type": "text",
+      "id": "hero_eyebrow",
+      "label": "Eyebrow Text",
+      "default": "French Fitness"
+    },
+    {
+      "type": "text",
+      "id": "hero_title",
+      "label": "Main Title",
+      "default": "French Fitness Warranty & Quality Promise"
     },
     {
       "type": "richtext",
-      "id": "text",
-      "label": "Content"
+      "id": "hero_intro",
+      "label": "Hero Introduction",
+      "default": "<p>You shouldn't need an expensive gym membership or a luxury budget to train on serious equipment. French Fitness makes high-quality, commercial-grade gear accessible at prices that don't break the bank— turning any space into a place you actually want to train, with stable, safe equipment that inspires confidence every time you use it.</p>"
+    },
+    {
+      "type": "richtext",
+      "id": "hero_priorities_intro",
+      "label": "Priorities Introduction",
+      "default": "<p>That confidence starts with how we build. French Fitness equipment is engineered around three core priorities:</p>"
+    },
+    {
+      "type": "richtext",
+      "id": "hero_closing",
+      "label": "Hero Closing Text",
+      "default": "<p>Our product development team tests materials, drawing on years of commercial remanufacturing experience, and oversees U.S. assembly so everything feels stable, smooth, and consistent whenever you reach for it.</p>"
     },
     {
       "type": "header",
-      "content": "t:sections.all.padding.section_padding_heading"
+      "content": "📝 Warranty Terms"
     },
     {
-      "type": "range",
-      "id": "padding_top",
-      "min": 0,
-      "max": 100,
-      "step": 4,
-      "unit": "px",
-      "label": "t:sections.all.padding.padding_top",
-      "default": 36
-    },
-    {
-      "type": "range",
-      "id": "padding_bottom",
-      "min": 0,
-      "max": 100,
-      "step": 4,
-      "unit": "px",
-      "label": "t:sections.all.padding.padding_bottom",
-      "default": 36
+      "type": "text",
+      "id": "cosmetic_note",
+      "label": "Cosmetic Defects Note",
+      "default": "Please note that cosmetic defects (such as chunks of rubber missing), gashes and other wear and tear are not covered unless reported within <strong>7 days of receipt of items.</strong>"
     },
     {
       "type": "header",
-      "content": "Content"
+      "content": "📜 Origin Story"
     },
     {
-      "type": "image_picker",
-      "id": "image_left",
-      "label": "Left Image"
+      "type": "text",
+      "id": "origin_title",
+      "label": "Origin Section Title",
+      "default": "Built on U.S. Assembly & Remanufacturing Expertise"
+    },
+    {
+      "type": "richtext",
+      "id": "origin_content",
+      "label": "Origin Content",
+      "default": "<p>Before creating French Fitness, Fitness Superstore spent years remanufacturing elite gym equipment from brands like Precor, Life Fitness, and Technogym. Tearing down and rebuilding these machines gave our team real insight into what holds up in the toughest environments.</p><p>That expertise now drives the design of brand-new, U.S.-assembled French Fitness equipment. Every frame, component choice, and engineering decision reflects lessons learned from rebuilding the industry's best—resulting in stronger designs, smarter construction, and machines built to perform for years.</p>"
+    },
+    {
+      "type": "header",
+      "content": "🛡️ Stand Behind Section"
+    },
+    {
+      "type": "text",
+      "id": "standbehind_title",
+      "label": "Section Title",
+      "default": "How We Stand Behind Your Equipment"
+    },
+    {
+      "type": "richtext",
+      "id": "standbehind_intro",
+      "label": "Introduction",
+      "default": "<p>When you choose French Fitness, you're not just buying gear—you're buying confidence. For most French Fitness strength and cardio equipment, your standard coverage in the USA & Canada includes:</p>"
+    },
+    {
+      "type": "text",
+      "id": "standbehind_note",
+      "label": "Bottom Note",
+      "default": "Cosmetic issues for all French Fitness products are covered if reported within <strong>7 days of delivery</strong>."
+    },
+    {
+      "type": "header",
+      "content": "🔗 Call to Action"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "Button Text",
+      "default": "Build Your Gym With Lifetime Protection →"
+    },
+      {
+      "type": "url",
+      "id": "cta_url",
+      "label": "Button URL"
+    },
+    {
+      "type": "header",
+      "content": "📄 Footer"
+    },
+    {
+      "type": "text",
+      "id": "footer_text",
+      "label": "Footer Text",
+      "default": "French Fitness frames covered by this warranty are assembled in California and backed for life by a team that knows high-quality gear down to the last bolt."
+    },
+    {
+      "type": "text",
+      "id": "footer_date",
+      "label": "Updated Date",
+      "default": "Updated: Jan 11, 2026"
     }
   ],
   "blocks": [
     {
-      "type": "item",
-      "name": "Right item",
+      "type": "trust_badge",
+      "name": "Trust Badge",
       "settings": [
         {
-          "type": "textarea",
-          "id": "text",
-          "label": "Text"
+          "type": "text",
+          "id": "icon",
+          "label": "Material Icon Name",
+          "default": "verified",
+          "info": "Use Material Symbols icon names"
         },
         {
-          "type": "html",
-          "id": "svg",
-          "label": "SVG Icon"
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Lifetime Frame"
+        }
+      ]
+    },
+    {
+      "type": "feature_card",
+      "name": "Feature Card",
+      "settings": [
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "Material Icon Name",
+          "default": "shield_person"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Safety"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "Description",
+          "default": "Smart geometry, controlled movement paths, and intuitive adjustments that keep you supported and in control."
+        }
+      ]
+    },
+    {
+      "type": "side_card",
+      "name": "Side Info Card",
+      "settings": [
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "Material Icon Name",
+          "default": "factory"
+        },
+        {
+          "type": "text",
+          "id": "eyebrow",
+          "label": "Eyebrow",
+          "default": "Assembly"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Benicia, California"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "Description",
+          "default": "Remanufacturing heritage informs every weld, finish, and QC checkpoint."
+        }
+      ]
+    },
+    {
+      "type": "warranty_highlight",
+      "name": "Warranty Highlight",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Lifetime Frame"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "Description",
+          "default": "Structural frame & welds are covered for as long as you own the unit."
+        }
+      ]
+    },
+    {
+      "type": "coverage_card",
+      "name": "Coverage Card",
+      "settings": [
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "Material Icon Name",
+          "default": "power"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Complete Issue Coverage"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "Description",
+          "default": "Any mechanical or electronic issues, which are causing the machine to not work like new"
+        }
+      ]
+    },
+    {
+      "type": "standbehind_card",
+      "name": "Stand Behind Card",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Core Coverage"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_badge",
+          "label": "Show Badge",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "badge_icon",
+          "label": "Badge Icon",
+          "default": "verified"
+        },
+        {
+          "type": "text",
+          "id": "badge_text",
+          "label": "Badge Text",
+          "default": "Gets core coverage"
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "Content",
+          "default": "<ul><li>Lifetime Frame Warranty — structural frame & welds</li><li>10 Years Parts — functional components</li><li>1 Year Labor — technician service and repairs</li></ul>"
+        }
+      ]
+    },
+    {
+      "type": "accordion",
+      "name": "Accordion Item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "badge",
+          "label": "Badge Number",
+          "default": "01"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Usage categories"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_default",
+          "label": "Open by Default",
+          "default": false
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "Content",
+          "default": "<p><strong>Commercial Grade Product Warranty:</strong> Intended for gyms, health clubs, and fitness centers where equipment is designed for up to <strong>8–12 hours of use per day</strong> with a high volume of users.</p>"
         }
       ]
     }
   ],
   "presets": [
     {
-      "name": "dc Warranty Content",
+      "name": "French Fitness Warranty",
       "blocks": [
+        {
+          "type": "trust_badge",
+          "settings": {
+            "icon": "verified",
+            "title": "Lifetime Frame"
+          }
+        },
+        {
+          "type": "trust_badge",
+          "settings": {
+            "icon": "settings",
+            "title": "10-Year Parts"
+          }
+        },
+        {
+          "type": "trust_badge",
+          "settings": {
+            "icon": "build",
+            "title": "1-Year Labor"
+          }
+        },
+        {
+          "type": "feature_card",
+          "settings": {
+            "icon": "shield_person",
+            "title": "Safety",
+            "description": "Smart geometry, controlled movement paths, and intuitive adjustments that keep you supported and in control."
+          }
+        },
+        {
+          "type": "feature_card",
+          "settings": {
+            "icon": "handyman",
+            "title": "Durability",
+            "description": "Commercial-grade frames, welds, and components chosen and tested to handle everyday use in homes and shared spaces."
+          }
+        },
+        {
+          "type": "feature_card",
+          "settings": {
+            "icon": "lightbulb",
+            "title": "Innovation",
+            "description": "Ongoing R&D that prototypes, tests, and refines new designs so each generation is more user-friendly and rewarding to use."
+          }
+        },
+        {
+          "type": "side_card",
+          "settings": {
+            "icon": "factory",
+            "eyebrow": "Assembly",
+            "title": "Benicia, California",
+            "description": "Remanufacturing heritage informs every weld, finish, and QC checkpoint."
+          }
+        },
+        {
+          "type": "side_card",
+          "settings": {
+            "icon": "headset_mic",
+            "eyebrow": "Support Hours",
+            "title": "Mon–Fri, 8 a.m.–4 p.m. PST",
+            "description": "Real people to triage your claim, dispatch techs, and overnight parts."
+          }
+        },
+        {
+          "type": "side_card",
+          "settings": {
+            "icon": "mail",
+            "eyebrow": "Contact",
+            "title": "support@frenchfitness.com",
+            "description": "(925) 430-6111 — Phone & email coverage."
+          }
+        },
+        {
+          "type": "warranty_highlight",
+          "settings": {
+            "title": "Lifetime Frame",
+            "description": "Structural frame & welds are covered for as long as you own the unit."
+          }
+        },
+        {
+          "type": "warranty_highlight",
+          "settings": {
+            "title": "10 Years Parts",
+            "description": "All key functional mechanical and electrical components and other moving parts."
+          }
+        },
+        {
+          "type": "warranty_highlight",
+          "settings": {
+            "title": "1 Year Labor",
+            "description": "On-site technician dispatch anywhere in the USA & Canada."
+          }
+        },
+        {
+          "type": "warranty_highlight",
+          "settings": {
+            "title": "Accessories & Free Weights",
+            "description": "1-year limited parts warranty (breakage or failure)"
+          }
+        },
+        {
+          "type": "coverage_card",
+          "settings": {
+            "icon": "power",
+            "title": "Complete Issue Coverage",
+            "description": "Any mechanical or electronic issues, which are causing the machine to not work like new"
+          }
+        },
+        {
+          "type": "coverage_card",
+          "settings": {
+            "icon": "handyman",
+            "title": "Full Labor And Repairs",
+            "description": "Covers 100% labor costs and unlimited on-site technician diagnostic and repair visits"
+          }
+        },
+        {
+          "type": "coverage_card",
+          "settings": {
+            "icon": "battery_full",
+            "title": "Full Parts Replacement",
+            "description": "Covers 100% parts replacement including structural moving parts such as bearings, pulleys, cables, motors, and batteries, etc."
+          }
+        },
+        {
+          "type": "coverage_card",
+          "settings": {
+            "icon": "monitor_heart",
+            "title": "Wearable Parts Coverage",
+            "description": "Covers wearable parts such as heart rate monitors, pedals, treadmill decks, running belts, and track wheels, etc"
+          }
+        },
+        {
+          "type": "coverage_card",
+          "settings": {
+            "icon": "warning",
+            "title": "Software Issues Coverage",
+            "description": "Software issues including error screen messages, program malfunctions, and console resets"
+          }
+        },
+        {
+          "type": "standbehind_card",
+          "settings": {
+            "title": "Core Coverage",
+            "show_badge": false,
+            "content": "<ul><li>Lifetime Frame Warranty — structural frame & welds</li><li>10 Years Parts — functional components</li><li>1 Year Labor — technician service and repairs</li></ul>"
+          }
+        },
+        {
+          "type": "standbehind_card",
+          "settings": {
+            "title": "Covered Categories",
+            "show_badge": true,
+            "badge_icon": "verified",
+            "badge_text": "Gets core coverage",
+            "content": "<ul><li><strong>10-Year Parts + 1-Year Labor:</strong></li><li>French Fitness Benches</li><li>French Fitness Cardio</li><li>French Fitness Gym Systems</li><li>French Fitness Plate Loaded</li><li>French Fitness Racks and Cages</li><li>French Fitness Selectorized (Pin Loaded)</li><li>French Fitness Storage Racks</li></ul>"
+          }
+        },
+        {
+          "type": "standbehind_card",
+          "settings": {
+            "title": "Accessories & Flooring",
+            "show_badge": true,
+            "badge_icon": "info",
+            "badge_text": "Separate coverage",
+            "content": "<ul><li><strong>1-Year Limited Parts:</strong></li><li>French Fitness Free Weights</li><li>French Fitness Gym Accessories</li><li>French Fitness Flooring</li></ul>"
+          }
+        },
+        {
+          "type": "accordion",
+          "settings": {
+            "badge": "01",
+            "title": "Usage categories",
+            "open_default": true,
+            "content": "<p><strong>Commercial Grade Product Warranty:</strong> Intended for gyms, health clubs, and fitness centers where equipment is designed for up to <strong>8–12 hours of use per day</strong> with a high volume of users.</p><p><strong>Light Commercial Product Warranty:</strong> Intended for schools, police & fire stations, hospitals, rehab centers, and hotels where average usage runs 2–4 hours per day. Coverage is void if these products are used in full commercial environments.</p><p><strong>Home Use Product Warranty:</strong> Tailored for personal or home settings with usage under one hour per day. Coverage is void if used in light-commercial or commercial settings.</p>"
+          }
+        }
       ]
     }
   ]
 }
+
 {% endschema %}

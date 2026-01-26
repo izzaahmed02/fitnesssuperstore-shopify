@@ -1,0 +1,1 @@
+$(".homepage-browse-brand .category-tab-content").slick({dots:!0,infinite:!0,draggable:!0,cssEase:"linear",swipeToSlide:!0,touchThreshold:8,slidesToShow:5,slidesToScroll:1,responsive:[{breakpoint:1300,settings:{slidesToShow:4}},{breakpoint:1024,settings:{slidesToShow:3}},{breakpoint:989,settings:{slidesToShow:2,swipeToSlide:!0,touchThreshold:8}}]});
