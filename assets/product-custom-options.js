@@ -48,6 +48,8 @@ if (!customElements.get('product-customization-options')) {
         this.openModifyHandler();
         this.closeModifyHandler();
         this.handleItemUpdate();
+        console.log('test');
+        
       }
 
       // Method for Accordion state
