@@ -499,7 +499,7 @@
         
         const price = product?.price ? (product.price / 100).toFixed(2) : 'N/A';
         const comparePrice = product?.compare_at_price ? (product.compare_at_price / 100).toFixed(2) : null;
-        const rating = product?.metafields?.reviews?.rating?.value?.rating || 4.9;
+        const rating = product?.metafields?.reviews?.rating?.value?.rating || 5;
         const reviewCount = product?.metafields?.reviews?.rating_count || 31;
 
         productCard.innerHTML = `
