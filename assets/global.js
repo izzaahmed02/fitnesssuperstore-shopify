@@ -185,7 +185,7 @@ function throttle(e, t) {
 function fetchConfig(e = 'json') {
   return { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: `application/${e}` } };
 }
-// (customElements.define('quantity-input', QuantityInput),
+(customElements.define('quantity-input', QuantityInput),
   void 0 === window.Shopify && (window.Shopify = {}),
   (Shopify.bind = function (e, t) {
     return function () {
