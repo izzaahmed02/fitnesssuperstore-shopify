@@ -386,6 +386,8 @@ if (!customElements.get('product-customization-options')) {
 
       priceHelper(priceAdjustment) {
         if (!this.priceElement) return;
+        console.log(this.priceElement);
+        
         const currentPrice = this.priceElement.dataset?.priceValue;
         const finalPrice = Number(currentPrice) + priceAdjustment;
         const formattedPrice = finalPrice.toLocaleString('en-US', {
