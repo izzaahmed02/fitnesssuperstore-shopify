@@ -456,12 +456,12 @@
               const reviewCount = bundleProduct.metafields.reviews.rating_count || 0;
               ratingEl.innerHTML = `<div class="rating-stars">${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}</div><span>${reviewCount} reviews</span>`;
             } else {
-              ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
+              ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div>';
             }
           }
         } else {
           if (mainDesc) mainDesc.innerHTML = 'Premium cable machine attachments bundle designed for comprehensive full-body training.';
-          if (ratingEl) ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div><span>31 reviews</span>';
+          if (ratingEl) ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div>';
         }
       }).catch(e => {
         console.log('[Bundle Selector] Could not fetch bundle product:', e);
