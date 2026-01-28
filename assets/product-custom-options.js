@@ -385,10 +385,9 @@ if (!customElements.get('product-customization-options')) {
       // Helper to create corect price HTML
 
       priceHelper(priceAdjustment) {
-        if (!this.priceElement) return;
-        console.log(this.priceElement);
+        if (!this.priceElement.length) return;
         
-        const currentPrice = this.priceElement.dataset?.priceValue;
+        const currentPrice = this.priceElement[0].dataset?.priceValue;
         const finalPrice = Number(currentPrice) + priceAdjustment;
         const formattedPrice = finalPrice.toLocaleString('en-US', {
           minimumFractionDigits: 2,
