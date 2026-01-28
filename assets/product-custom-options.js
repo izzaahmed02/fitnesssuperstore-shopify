@@ -8,7 +8,6 @@ if (!customElements.get('product-customization-options')) {
         this.customizationOptions = this.querySelectorAll('[data-customization-option]');
         this.openPopupButtons = this.querySelectorAll('[data-popup-open]');
         this.closePopupButtons = document.querySelectorAll('[data-close-popup]');
-        this.priceElement = document.querySelector('.pr_custom_price');
         this.colorGroups = this.querySelectorAll('.color_options_container');
         this.swatches = this.querySelectorAll('[data-color-name]');
         this.swatchesActiveContainers = this.querySelectorAll('[data-selected-color-option]');
@@ -385,14 +384,18 @@ if (!customElements.get('product-customization-options')) {
       // Helper to create corect price HTML
 
       priceHelper(priceAdjustment) {
-        if (!this.priceElement) return;
-        const currentPrice = this.priceElement.dataset?.priceValue;
+        const priceElement = document.querySelectorAll('.pr_custom_price');
+        if (priceElement.length === 0) return;
+        
+        const currentPrice = priceElement[0].dataset?.priceValue;
         const finalPrice = Number(currentPrice) + priceAdjustment;
         const formattedPrice = finalPrice.toLocaleString('en-US', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
-        this.priceElement.innerText = `${this.priceElement.dataset?.currency}${formattedPrice}`;
+        priceElement.forEach(el => {
+          el.innerText = `${priceElement[0].dataset?.currency}${formattedPrice}`;
+        })
       }
 
       // Method to select color
