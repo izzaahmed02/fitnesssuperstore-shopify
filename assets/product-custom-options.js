@@ -393,7 +393,9 @@ if (!customElements.get('product-customization-options')) {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
-        this.priceElement.innerText = `${this.priceElement.dataset?.currency}${formattedPrice}`;
+          this.priceElement.forEach(el => {
+            el.innerText = `${this.priceElement[0].dataset?.currency}${formattedPrice}`;
+          })
       }
 
       // Method to select color
