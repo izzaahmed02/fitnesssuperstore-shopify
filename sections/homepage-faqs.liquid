@@ -33,9 +33,9 @@
                         type="button"
                         aria-expanded="false"
                         aria-controls="accordion-content-{{ forloop.index }}">
-                    <span class="accordion-title">
-                        {{ block.settings.title }}
-                    </span>
+                                <span class="accordion-title">
+                                  {{ block.settings.title }}
+                                </span>
                     {% render 'chevron' %}
                 </button>
                 <div
@@ -43,22 +43,20 @@
                         class="accordion-content"
                         aria-hidden="true"
                 >
-                    {% assign faq_link_start = '<a class="accordion-link" aria-label="Learn more about ' 
-                        | append: block.settings.title 
-                        | append: '" tabindex="-1" ' 
-                    %}
-
                     <div class="accordion-content-inner">
-                        {{ block.settings.copy | replace: '<a ', faq_link_start }}
+                        {{ block.settings.copy | replace: '<a ', '<a tabindex="-1" ' }}
                     </div>
                 </div>
             </div>
         {% endfor %}
     </div>
+    {% if section.settings.url %}
     <a href="{{ section.settings.url }}" class="homepage-faqs__link">{{ section.settings.label }}
         {% render 'chevron-button' %}
     </a>
+  {% endif %}
 </div>
+
 
 <script src="{{ 'accordion.js' | asset_url }}" defer="defer"></script>
 
