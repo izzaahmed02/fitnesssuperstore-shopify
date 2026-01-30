@@ -3,6 +3,45 @@
 
 {%- style -%}
 .collection-hero__description { position: relative; }
+
+.clamp-text { 
+  overflow: hidden; 
+  position: relative;
+}
+
+/* removed gradient fade */
+.clamp-text::after { 
+  content: none; 
+}
+
+/* read toggle */
+.read-toggle {
+  color: #0d7a3c;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline;
+  margin-left: 0.25rem;
+  white-space: nowrap;
+}
+
+/* inline paragraph ensures link stays same line */
+.clamp-text p {
+  display: inline;
+}
+
+#short-description-desktop p,
+#short-description-mobile p {
+  margin-top: 0px;
+}
+
+/* responsive visibility */
+.desktop-only { display: block; }
+.mobile-only { display: none; }
+
+@media (max-width: 767px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block; }
+}
 {%- endstyle -%}
 
 <div class="collection-hero{% if section.settings.show_collection_image and collection.image %} collection-hero--with-image{% endif %} color-{{ section.settings.color_scheme }}">
@@ -12,7 +51,22 @@
 
       {% if section.settings.show_collection_description and collection.description != blank %}
         <div class="collection-hero__description">
-          {{ collection.description }}
+          <div id="collection-description">
+            <!-- Desktop -->
+            <div class="desktop-only">
+              <div id="short-description-desktop" class="clamp-text"></div>
+              <div id="full-description-desktop" style="display:none;"></div>
+            </div>
+
+            <!-- Mobile -->
+            <div class="mobile-only">
+              <div id="short-description-mobile" class="clamp-text"></div>
+              <div id="full-description-mobile" style="display:none;"></div>
+            </div>
+
+            <!-- hidden source -->
+            <div id="full-description-source" style="display:none;">{{ collection.description }}</div>
+          </div>
         </div>
       {% endif %}
 
@@ -103,3 +157,126 @@
   ]
 }
 {% endschema %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const source = document.getElementById("full-description-source");
+  if (!source) return;
+
+  const raw = source.innerHTML.trim();
+  if (!raw) return;
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(raw, "text/html");
+
+  // Remove HTML comments
+  doc.querySelectorAll("*").forEach(el => {
+    for (const n of Array.from(el.childNodes)) {
+      if (n.nodeType === Node.COMMENT_NODE) n.remove();
+    }
+  });
+
+  // Split content
+  const nodes = Array.from(doc.body.childNodes).filter(
+    n => n.nodeType === Node.ELEMENT_NODE || (n.nodeType === Node.TEXT_NODE && n.textContent.trim() !== "")
+  );
+  const firstPIndex = nodes.findIndex(n => n.nodeType === Node.ELEMENT_NODE && n.tagName === "P");
+
+  let beforeHTML = "", firstPHTML = "", afterHTML = "";
+  if (firstPIndex !== -1) {
+    beforeHTML = nodes.slice(0, firstPIndex).map(n => n.outerHTML || n.textContent).join("");
+    firstPHTML = nodes[firstPIndex].outerHTML;
+    afterHTML = nodes.slice(firstPIndex + 1).map(n => n.outerHTML || n.textContent).join("");
+  } else {
+    firstPHTML = raw;
+  }
+
+  // Create a truncated version once, for both desktop and mobile
+  const tmp = document.createElement("div");
+  tmp.innerHTML = firstPHTML;
+  const p = tmp.querySelector("p") || tmp;
+  const visibleWordCount = 40;
+  let currentWordCount = 0, done = false;
+
+  function cloneNodeWithLimit(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const words = node.textContent.split(/\s+/);
+      if (currentWordCount + words.length <= visibleWordCount) {
+        currentWordCount += words.length;
+        return document.createTextNode(node.textContent);
+      } else {
+        const remaining = visibleWordCount - currentWordCount - 1; // reserve for button
+        currentWordCount = visibleWordCount;
+        done = true;
+        return document.createTextNode(words.slice(0, Math.max(0, remaining)).join(" ") + "…");
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const clone = node.cloneNode(false);
+      for (const child of node.childNodes) {
+        if (done) break;
+        const c = cloneNodeWithLimit(child);
+        if (c) clone.appendChild(c);
+      }
+      return clone;
+    }
+    return null;
+  }
+
+  const shortP = document.createElement("p");
+  for (const child of Array.from(p.childNodes)) {
+    if (done) break;
+    const c = cloneNodeWithLimit(child);
+    if (c) shortP.appendChild(c);
+  }
+
+  const shortCombinedHTML = beforeHTML + shortP.outerHTML;
+  const fullCombinedHTML = beforeHTML + firstPHTML + afterHTML;
+
+  // Apply same content for both
+  const shortDesktop = document.getElementById("short-description-desktop");
+  const shortMobile = document.getElementById("short-description-mobile");
+  const fullDesktop = document.getElementById("full-description-desktop");
+  const fullMobile = document.getElementById("full-description-mobile");
+
+  // Add inline buttons
+  shortDesktop.innerHTML = shortCombinedHTML + ' <a href="#" id="toggle-desktop" class="read-toggle" style="display:none;">Read More</a>';
+  shortMobile.innerHTML = shortCombinedHTML + ' <a href="#" id="toggle-mobile" class="read-toggle" style="display:none;">Read More</a>';
+  fullDesktop.innerHTML = fullCombinedHTML + ' <a href="#" id="toggle-desktop-less" class="read-toggle" style="display:none;">Read Less</a>';
+  fullMobile.innerHTML = fullCombinedHTML + ' <a href="#" id="toggle-mobile-less" class="read-toggle" style="display:none;">Read Less</a>';
+
+  const isLong = currentWordCount >= visibleWordCount;
+  if (!isLong) return;
+
+  // Cache buttons
+  const toggleDesktop = document.getElementById("toggle-desktop");
+  const toggleMobile = document.getElementById("toggle-mobile");
+  const toggleDesktopLess = document.getElementById("toggle-desktop-less");
+  const toggleMobileLess = document.getElementById("toggle-mobile-less");
+
+  // Initial visibility
+  toggleDesktop.style.display = "inline";
+  toggleMobile.style.display = "inline";
+  toggleDesktopLess.style.display = "none";
+  toggleMobileLess.style.display = "none";
+
+  let expanded = false;
+  function updateState(isExpanded) {
+    expanded = isExpanded;
+
+    shortDesktop.style.display = expanded ? "none" : "block";
+    shortMobile.style.display = expanded ? "none" : "block";
+    fullDesktop.style.display = expanded ? "block" : "none";
+    fullMobile.style.display = expanded ? "block" : "none";
+
+    toggleDesktop.style.display = expanded ? "none" : "inline";
+    toggleMobile.style.display = expanded ? "none" : "inline";
+    toggleDesktopLess.style.display = expanded ? "inline" : "none";
+    toggleMobileLess.style.display = expanded ? "inline" : "none";
+  }
+
+  toggleDesktop.addEventListener("click", e => { e.preventDefault(); updateState(true); });
+  toggleMobile.addEventListener("click", e => { e.preventDefault(); updateState(true); });
+  toggleDesktopLess.addEventListener("click", e => { e.preventDefault(); updateState(false); });
+  toggleMobileLess.addEventListener("click", e => { e.preventDefault(); updateState(false); });
+});
+</script>
