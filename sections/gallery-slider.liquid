@@ -1,3 +1,4 @@
+{% comment %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -48,8 +49,60 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+{% endcomment %}
+
+<script>
+$slider.slick({
+  dots: false,
+  infinite: true,
+  slidesToShow: 1, // ✅ only 1 full slide
+  slidesToScroll: 1,
+  centerMode: true, // ✅ enable center mode
+  centerPadding: '260px', // ✅ controls half-visible slides
+  arrows: true,
+
+  appendArrows: $('#shopify-section-' + sectionId + ' .gallery-slider-nav'),
+
+  responsive: [
+    {
+      breakpoint: 750,
+      settings: {
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        centerMode: false, // ✅ keep mobile unchanged
+        centerPadding: '0px',
+        arrows: true,
+      },
+    },
+  ],
+});
+</script>
+
 
 {%- style -%}
+@media screen and (min-width: 750px) {
+  #shopify-section-{{ section.id }} .slick-slide {
+    padding: 0 12px; /* spacing between slides */
+  }
+
+  #shopify-section-{{ section.id }} .slick-center .item {
+    transform: scale(1); /* center image full size */
+    transition: 0.3s ease;
+  }
+
+  #shopify-section-{{ section.id }} .slick-slide:not(.slick-center) .item {
+    transform: scale(0.92); /* side images slightly smaller */
+    opacity: 0.8;
+  }
+}
+
+
+
+
+
+
+
+
   #shopify-section-{{ section.id }} {
     padding-top: {{ section.settings.padding_top }}px;
     padding-bottom: {{ section.settings.padding_bottom }}px;
@@ -262,3 +315,5 @@ document.addEventListener('DOMContentLoaded', () => {
   ]
 }
 {% endschema %}
+
+
