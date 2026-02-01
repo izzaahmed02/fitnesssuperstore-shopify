@@ -1396,9 +1396,25 @@ class FrequentlyBoughtTogether {
   async getCart() {
     try {
       const response = await fetch('/cart.js');
-      return await response.json();
+      const cart = await response.json();
+      
+      // Debug: Log first cart item structure to understand what's available
+      if (cart.items && cart.items.length > 0) {
+        console.log('[Frequently Bought] Sample cart item structure:', {
+          handle: cart.items[0].handle,
+          product_id: cart.items[0].product_id,
+          has_product_tags: !!cart.items[0].product_tags,
+          has_tags: !!cart.items[0].tags,
+          has_properties: !!cart.items[0].properties,
+          properties: cart.items[0].properties,
+          // Show first few keys to understand structure
+          available_keys: Object.keys(cart.items[0]).slice(0, 15)
+        });
+      }
+      
+      return cart;
     } catch (error) {
-      console.error('Error fetching cart:', error);
+      console.error('[Frequently Bought] Error fetching cart:', error);
       return null;
     }
   }
@@ -1410,31 +1426,67 @@ class FrequentlyBoughtTogether {
   async getCollectionProducts(cart) {
     try {
       console.log('[Frequently Bought] Getting collection products from cart');
+      console.log('[Frequently Bought] Cart items count:', cart.items.length);
+      
+      // Helper function to check if item is an option product
+      const isOptionProduct = (item) => {
+        // Check properties
+        if (item.properties) {
+          if (item.properties._apo_option || item.properties._functionOperation) {
+            return true;
+          }
+        }
+        
+        // Check title
+        if (item.product_title && (
+          item.product_title.includes('avisplus') || 
+          item.product_title.toLowerCase().includes('option')
+        )) {
+          return true;
+        }
+        
+        // Check tags - handle different possible locations
+        const tags = item.product_tags || item.tags || [];
+        if (Array.isArray(tags) && tags.some(tag => 
+          tag.includes('avisplus-product-options') || 
+          tag.includes('avisplus')
+        )) {
+          return true;
+        }
+        
+        return false;
+      };
       
       // Get all product IDs currently in cart (to exclude them)
       const cartProductIds = cart.items
-        .filter(item => !item.product.tags.includes('avisplus-product-options'))
+        .filter(item => !isOptionProduct(item))
         .map(item => item.product_id);
 
       console.log('[Frequently Bought] Cart product IDs to exclude:', cartProductIds);
+      console.log('[Frequently Bought] Valid items in cart:', cartProductIds.length);
 
       // Get the first main product in cart
-      const firstCartItem = cart.items.find(item => 
-        !item.product.tags.includes('avisplus-product-options')
-      );
+      const firstCartItem = cart.items.find(item => !isOptionProduct(item));
 
       if (!firstCartItem) {
         console.log('[Frequently Bought] No valid cart item found');
         return [];
       }
 
-      console.log('[Frequently Bought] First cart item:', firstCartItem.handle);
+      console.log('[Frequently Bought] First cart item handle:', firstCartItem.handle);
+      console.log('[Frequently Bought] First cart item product_id:', firstCartItem.product_id);
 
       // Fetch the product to get its collections
       const productResponse = await fetch(`/products/${firstCartItem.handle}.js`);
+      
+      if (!productResponse.ok) {
+        console.error('[Frequently Bought] Failed to fetch product:', productResponse.status);
+        return await this.getRecommendedProducts(firstCartItem.product_id, cartProductIds);
+      }
+      
       const productData = await productResponse.json();
 
-      console.log('[Frequently Bought] Product data:', productData);
+      console.log('[Frequently Bought] Product title:', productData.title);
       console.log('[Frequently Bought] Product collections:', productData.collections);
 
       if (!productData.collections || productData.collections.length === 0) {
@@ -1454,15 +1506,19 @@ class FrequentlyBoughtTogether {
       if (collectionProducts.length < 3) {
         console.log('[Frequently Bought] Not enough collection products, fetching recommendations');
         const recommendations = await this.getRecommendedProducts(firstCartItem.product_id, cartProductIds);
+        console.log('[Frequently Bought] Recommendations found:', recommendations.length);
+        
         // Combine and deduplicate
         const combined = [...collectionProducts, ...recommendations];
         const uniqueProducts = this.deduplicateProducts(combined);
+        console.log('[Frequently Bought] Combined unique products:', uniqueProducts.length);
         return uniqueProducts.slice(0, 6); // Max 6 products
       }
 
       return collectionProducts.slice(0, 6); // Max 6 products
     } catch (error) {
-      console.error('[Frequently Bought] Error fetching collection products:', error);
+      console.error('[Frequently Bought] Error in getCollectionProducts:', error);
+      console.error('[Frequently Bought] Error stack:', error.stack);
       return [];
     }
   }
@@ -1472,24 +1528,63 @@ class FrequentlyBoughtTogether {
    */
   async fetchCollectionProducts(collectionHandle, excludeProductIds = []) {
     try {
+      console.log('[Frequently Bought] Fetching from collection:', collectionHandle);
+      console.log('[Frequently Bought] Excluding product IDs:', excludeProductIds);
+      
       // Fetch collection with products (using the products.json endpoint)
-      const response = await fetch(`/collections/${collectionHandle}/products.json?limit=20`);
+      const url = `/collections/${collectionHandle}/products.json?limit=20`;
+      console.log('[Frequently Bought] Fetching URL:', url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        console.error('[Frequently Bought] Collection fetch failed:', response.status, response.statusText);
+        return [];
+      }
+      
       const data = await response.json();
+      console.log('[Frequently Bought] Raw products from collection:', data.products ? data.products.length : 0);
 
       if (!data.products || data.products.length === 0) {
+        console.log('[Frequently Bought] No products in collection');
         return [];
       }
 
       // Filter out products already in cart and format them
       const products = data.products
-        .filter(product => !excludeProductIds.includes(product.id))
-        .filter(product => !product.tags.includes('avisplus-product-options'))
-        .filter(product => product.available) // Only show available products
-        .map(product => this.formatProductData(product));
+        .filter(product => {
+          const isExcluded = excludeProductIds.includes(product.id);
+          if (isExcluded) {
+            console.log('[Frequently Bought] Excluding product (in cart):', product.title);
+          }
+          return !isExcluded;
+        })
+        .filter(product => {
+          const hasAvisTag = product.tags && product.tags.some(tag => 
+            tag.includes('avisplus-product-options') || tag.includes('avisplus')
+          );
+          if (hasAvisTag) {
+            console.log('[Frequently Bought] Excluding product (avisplus):', product.title);
+          }
+          return !hasAvisTag;
+        })
+        .filter(product => {
+          if (!product.available) {
+            console.log('[Frequently Bought] Excluding product (not available):', product.title);
+          }
+          return product.available;
+        })
+        .map(product => {
+          const formatted = this.formatProductData(product);
+          console.log('[Frequently Bought] Including product:', formatted.title);
+          return formatted;
+        });
 
+      console.log('[Frequently Bought] Final filtered products:', products.length);
       return products;
     } catch (error) {
-      console.error('Error fetching collection products:', error);
+      console.error('[Frequently Bought] Error fetching collection products:', error);
+      console.error('[Frequently Bought] Error stack:', error.stack);
       return [];
     }
   }
