@@ -1428,36 +1428,44 @@ class FrequentlyBoughtTogether {
       console.log('[Frequently Bought] Getting collection products from cart');
       console.log('[Frequently Bought] Cart items count:', cart.items.length);
       
-      // Helper function to check if item is an option product
+      // Helper function to check if item is an OPTION product (not a regular product with options)
+      // We only want to exclude the extra option items that are added by the app, not the main products
       const isOptionProduct = (item) => {
-        // Check properties
-        if (item.properties) {
-          if (item.properties._apo_option || item.properties._functionOperation) {
-            return true;
-          }
-        }
-        
-        // Check title
-        if (item.product_title && (
-          item.product_title.includes('avisplus') || 
-          item.product_title.toLowerCase().includes('option')
+        // The key indicator is if the item itself is an option product
+        // Check if title indicates it's an option item
+        if (item.title && (
+          item.title.toLowerCase().includes('warranty only') ||
+          item.title.toLowerCase().includes('assembly only') ||
+          item.title.toLowerCase().includes('installation only')
         )) {
           return true;
         }
         
-        // Check tags - handle different possible locations
-        const tags = item.product_tags || item.tags || [];
-        if (Array.isArray(tags) && tags.some(tag => 
-          tag.includes('avisplus-product-options') || 
-          tag.includes('avisplus')
-        )) {
+        // Check if properties indicate this is ONLY an option (not a main product)
+        if (item.properties && item.properties._apo_option === true) {
           return true;
         }
         
+        // Check product_type if it's available
+        if (item.product_type && item.product_type.toLowerCase().includes('option')) {
+          return true;
+        }
+        
+        // If none of the above, it's a regular product (even if it has customization options)
         return false;
       };
       
       // Get all product IDs currently in cart (to exclude them)
+      const allItems = cart.items.map((item, index) => ({
+        index,
+        title: item.title,
+        handle: item.handle,
+        product_id: item.product_id,
+        isOption: isOptionProduct(item)
+      }));
+      
+      console.log('[Frequently Bought] All cart items:', allItems);
+      
       const cartProductIds = cart.items
         .filter(item => !isOptionProduct(item))
         .map(item => item.product_id);
@@ -1469,12 +1477,15 @@ class FrequentlyBoughtTogether {
       const firstCartItem = cart.items.find(item => !isOptionProduct(item));
 
       if (!firstCartItem) {
-        console.log('[Frequently Bought] No valid cart item found');
+        console.log('[Frequently Bought] No valid cart item found - all items are option products');
         return [];
       }
 
-      console.log('[Frequently Bought] First cart item handle:', firstCartItem.handle);
-      console.log('[Frequently Bought] First cart item product_id:', firstCartItem.product_id);
+      console.log('[Frequently Bought] First cart item:', {
+        title: firstCartItem.title,
+        handle: firstCartItem.handle,
+        product_id: firstCartItem.product_id
+      });
 
       // Fetch the product to get its collections
       const productResponse = await fetch(`/products/${firstCartItem.handle}.js`);
