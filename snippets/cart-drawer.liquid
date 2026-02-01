@@ -24,7 +24,7 @@
 
   /* Frequently Bought Together Styles - Desktop */
   .frequently-bought-wrapper {
-    width: 296px;
+    width: 400px;
     background: #fff;
     overflow-y: auto;
     padding: 30px 20px;
@@ -46,7 +46,6 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding-left: 24px;
   }
 
   .frequently-bought-title {
@@ -969,11 +968,14 @@
       event.preventDefault();
       const button = event.currentTarget;
       const variantId = button.getAttribute('data-variant-id');
+      const productTitle = button.getAttribute('data-product-title');
       
       button.disabled = true;
+      const originalHTML = button.innerHTML;
       button.innerHTML = 'Adding...';
 
       try {
+        // Add to cart
         const response = await fetch('/cart/add.js', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -982,16 +984,93 @@
 
         if (!response.ok) throw new Error('Failed to add');
 
+        // Get updated cart
+        const cartResponse = await fetch('/cart.js');
+        const cart = await cartResponse.json();
+
+        // Update cart count in header
+        const cartCountBubble = document.querySelector('.cart-count-bubble');
+        if (cartCountBubble) {
+          const countSpan = cartCountBubble.querySelector('span');
+          if (countSpan) {
+            countSpan.textContent = cart.item_count;
+            cartCountBubble.classList.remove('hidden');
+          }
+        }
+
+        // Update drawer heading count
+        const drawerHeadingSpan = document.querySelector('.drawer__heading span');
+        if (drawerHeadingSpan) {
+          drawerHeadingSpan.textContent = cart.item_count;
+          drawerHeadingSpan.setAttribute('data-count', cart.item_count);
+        }
+
+        // Update cart total
+        const cartTotal = document.querySelector('.cart-total');
+        if (cartTotal) {
+          cartTotal.textContent = this.formatMoney(cart.total_price);
+        }
+
+        // Refresh cart items section
+        await this.refreshCartItems();
+
+        // Update frequently bought (remove added product)
+        this.products = this.products.filter(p => p.variantId !== variantId);
+        if (this.products.length === 0) {
+          this.hideContainers();
+        } else {
+          this.renderProducts();
+        }
+
+        // Show success message
         button.innerHTML = '✓ Added';
-        setTimeout(() => location.reload(), 1500);
+        setTimeout(() => {
+          button.innerHTML = originalHTML;
+          button.disabled = false;
+        }, 2000);
+
+        // Trigger cart update event for other scripts
+        document.dispatchEvent(new CustomEvent('cart:updated', { detail: cart }));
+
       } catch (error) {
-        console.error('Error:', error);
+        console.error('[Frequently Bought] Error adding to cart:', error);
         button.innerHTML = 'Error';
         setTimeout(() => {
-          button.innerHTML = 'Add To Cart';
+          button.innerHTML = originalHTML;
           button.disabled = false;
         }, 2000);
       }
+    }
+
+    async refreshCartItems() {
+      try {
+        // Fetch the cart drawer HTML
+        const response = await fetch('/?section_id=cart-drawer');
+        const html = await response.text();
+        
+        // Create a temporary div to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Get the new cart items
+        const newCartItems = tempDiv.querySelector('.drawer__cart-items-wrapper');
+        const currentCartItems = document.querySelector('.drawer__cart-items-wrapper');
+        
+        if (newCartItems && currentCartItems) {
+          currentCartItems.innerHTML = newCartItems.innerHTML;
+        }
+
+        // Re-initialize any cart item scripts if needed
+        if (typeof window.reinitializeCartItems === 'function') {
+          window.reinitializeCartItems();
+        }
+      } catch (error) {
+        console.error('[Frequently Bought] Error refreshing cart items:', error);
+      }
+    }
+
+    formatMoney(cents) {
+      return '$' + (cents / 100).toFixed(2);
     }
 
     setupMobileCarousel() {
