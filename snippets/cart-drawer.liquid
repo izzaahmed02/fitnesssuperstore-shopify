@@ -909,17 +909,25 @@
     }
 
     renderProducts() {
+      console.log('[Frequently Bought] Rendering products:', this.products.length);
+      console.log('[Frequently Bought] Desktop container:', this.desktopContainer);
+      console.log('[Frequently Bought] Mobile container:', this.mobileContainer);
+      
       const productsHTML = this.products.map(product => this.createProductCard(product)).join('');
+      console.log('[Frequently Bought] Generated HTML length:', productsHTML.length);
 
       if (this.desktopContainer) {
         this.desktopContainer.innerHTML = productsHTML;
+        console.log('[Frequently Bought] Desktop products rendered');
       }
 
       if (this.mobileContainer) {
         this.mobileContainer.innerHTML = productsHTML;
+        console.log('[Frequently Bought] Mobile products rendered');
       }
 
       this.attachEventListeners();
+      console.log('[Frequently Bought] Event listeners attached');
     }
 
     createProductCard(product) {
@@ -987,6 +995,7 @@
         // Get updated cart
         const cartResponse = await fetch('/cart.js');
         const cart = await cartResponse.json();
+        console.log('[Frequently Bought] Cart updated:', cart);
 
         // Update cart count in header
         const cartCountBubble = document.querySelector('.cart-count-bubble');
@@ -1011,26 +1020,22 @@
           cartTotal.textContent = this.formatMoney(cart.total_price);
         }
 
-        // Refresh cart items section
-        await this.refreshCartItems();
-
-        // Update frequently bought (remove added product)
-        this.products = this.products.filter(p => p.variantId !== variantId);
-        if (this.products.length === 0) {
-          this.hideContainers();
-        } else {
-          this.renderProducts();
-        }
-
         // Show success message
         button.innerHTML = '✓ Added';
+        
+        // Trigger Shopify theme cart update (if your theme has this)
+        if (typeof Shopify !== 'undefined' && Shopify.theme && Shopify.theme.cart) {
+          Shopify.theme.cart.refresh();
+        }
+
+        // Trigger cart update event for other scripts
+        document.dispatchEvent(new CustomEvent('cart:updated', { detail: cart }));
+        
+        // Reset button after delay
         setTimeout(() => {
           button.innerHTML = originalHTML;
           button.disabled = false;
         }, 2000);
-
-        // Trigger cart update event for other scripts
-        document.dispatchEvent(new CustomEvent('cart:updated', { detail: cart }));
 
       } catch (error) {
         console.error('[Frequently Bought] Error adding to cart:', error);
@@ -1039,33 +1044,6 @@
           button.innerHTML = originalHTML;
           button.disabled = false;
         }, 2000);
-      }
-    }
-
-    async refreshCartItems() {
-      try {
-        // Fetch the cart drawer HTML
-        const response = await fetch('/?section_id=cart-drawer');
-        const html = await response.text();
-        
-        // Create a temporary div to parse the HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
-        
-        // Get the new cart items
-        const newCartItems = tempDiv.querySelector('.drawer__cart-items-wrapper');
-        const currentCartItems = document.querySelector('.drawer__cart-items-wrapper');
-        
-        if (newCartItems && currentCartItems) {
-          currentCartItems.innerHTML = newCartItems.innerHTML;
-        }
-
-        // Re-initialize any cart item scripts if needed
-        if (typeof window.reinitializeCartItems === 'function') {
-          window.reinitializeCartItems();
-        }
-      } catch (error) {
-        console.error('[Frequently Bought] Error refreshing cart items:', error);
       }
     }
 
