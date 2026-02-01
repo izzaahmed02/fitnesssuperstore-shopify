@@ -866,3 +866,448 @@
 {% if show_product_options %}
   <script src="{{ 'product-custom-options.js' | asset_url }}" defer></script>
 {% endif %}
+
+<style>
+  /* Frequently Bought Together Styles */
+
+/* Desktop Sidebar Styles */
+.frequently-bought-wrapper {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 400px;
+  background: #fff;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 999;
+  overflow-y: auto;
+  padding: 30px 20px;
+  transition: transform 0.3s ease;
+}
+
+.frequently-bought-wrapper.hidden {
+  transform: translateX(-100%);
+}
+
+.frequently-bought-title {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 30px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.4;
+  color: #000;
+}
+
+.frequently-bought-products {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Product Card Styles */
+.frequently-bought-item {
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: box-shadow 0.3s ease;
+}
+
+.frequently-bought-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.frequently-bought-item__image {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  background: #fff;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.frequently-bought-item__image img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  max-height: 200px;
+}
+
+.frequently-bought-item__title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #000;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Rating Styles */
+.frequently-bought-item__rating {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+}
+
+.frequently-bought-item__rating svg {
+  width: 16px;
+  height: 16px;
+  fill: #ffc107;
+  flex-shrink: 0;
+}
+
+.frequently-bought-item__rating-count {
+  color: #666;
+}
+
+/* Price Styles */
+.frequently-bought-item__prices {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.frequently-bought-item__compare-price {
+  font-size: 13px;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.frequently-bought-item__price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff5722;
+}
+
+/* Add to Cart Button */
+.frequently-bought-item__add-btn {
+  background: #ff5722;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.frequently-bought-item__add-btn:hover {
+  background: #e64a19;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 87, 34, 0.3);
+}
+
+.frequently-bought-item__add-btn:active {
+  transform: translateY(0);
+}
+
+.frequently-bought-item__add-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.frequently-bought-item__add-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* Adjust cart drawer when frequently bought is visible */
+.cart-drawer__inner-with-frequently {
+  margin-left: 400px;
+  transition: margin-left 0.3s ease;
+}
+
+/* Hide mobile version on desktop */
+.frequently-bought-mobile {
+  display: none;
+}
+
+/* Carousel Navigation - Hidden on Desktop */
+.frequently-bought-carousel__nav {
+  display: none;
+}
+
+/* Mobile Styles */
+@media screen and (max-width: 989px) {
+  /* Hide desktop sidebar on mobile */
+  .frequently-bought-wrapper:not(.frequently-bought-mobile) {
+    display: none;
+  }
+
+  /* Show mobile version */
+  .frequently-bought-mobile {
+    display: block;
+    position: relative;
+    width: 100%;
+    left: auto;
+    top: auto;
+    bottom: auto;
+    box-shadow: none;
+    border-top: 1px solid #e5e5e5;
+    padding: 20px 15px;
+    transform: none !important;
+  }
+
+  .frequently-bought-mobile.hidden {
+    display: none;
+  }
+
+  .frequently-bought-title {
+    font-size: 18px;
+    text-align: left;
+    margin-bottom: 20px;
+  }
+
+  /* Horizontal Carousel - Slick Slider */
+  .frequently-bought-carousel {
+    position: relative;
+    padding: 0;
+  }
+
+  .frequently-bought-products {
+    position: relative;
+    flex-direction: row;
+    gap: 0;
+  }
+
+  /* Slick Slider Overrides */
+  .frequently-bought-products.slick-slider {
+    display: block;
+  }
+
+  .frequently-bought-products .slick-list {
+    margin: 0 -7.5px;
+  }
+
+  .frequently-bought-products .slick-slide {
+    padding: 0 7.5px;
+  }
+
+  .frequently-bought-item {
+    width: 100%;
+    max-width: none;
+  }
+
+  .frequently-bought-item__image img {
+    max-height: 150px;
+  }
+
+  /* Slick Navigation Arrows */
+  .frequently-bought-products .slick-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+    font-size: 0;
+  }
+
+  .frequently-bought-products .slick-arrow:hover {
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  .frequently-bought-products .slick-arrow:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+
+  .frequently-bought-products .slick-arrow:before {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 20px;
+    border-top: 2px solid #333;
+    border-right: 2px solid #333;
+    opacity: 1;
+  }
+
+  .frequently-bought-products .slick-prev {
+    left: -10px;
+  }
+
+  .frequently-bought-products .slick-prev:before {
+    transform: rotate(-135deg);
+    margin-left: 3px;
+  }
+
+  .frequently-bought-products .slick-next {
+    right: -10px;
+  }
+
+  .frequently-bought-products .slick-next:before {
+    transform: rotate(45deg);
+    margin-right: 3px;
+  }
+
+  .frequently-bought-products .slick-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* Slick Dots */
+  .frequently-bought-products .slick-dots {
+    bottom: -30px;
+    display: flex !important;
+    justify-content: center;
+    gap: 8px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .frequently-bought-products .slick-dots li {
+    margin: 0;
+    width: 8px;
+    height: 8px;
+  }
+
+  .frequently-bought-products .slick-dots li button {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: #ddd;
+    font-size: 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .frequently-bought-products .slick-dots li button:before {
+    display: none;
+  }
+
+  .frequently-bought-products .slick-dots li.slick-active button {
+    background: #ff5722;
+    width: 20px;
+    border-radius: 4px;
+  }
+
+  /* No margin adjustment on mobile */
+  .cart-drawer__inner-with-frequently {
+    margin-left: 0;
+  }
+
+  /* Adjust drawer contents height */
+  .drawer__contents {
+    max-height: 50vh;
+  }
+}
+
+/* Tablet Adjustments */
+@media screen and (min-width: 750px) and (max-width: 989px) {
+  .frequently-bought-item {
+    /* Slick will handle sizing */
+  }
+
+  .frequently-bought-carousel {
+    padding: 0;
+  }
+
+  .frequently-bought-products .slick-arrow {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+/* Small Mobile Adjustments */
+@media screen and (max-width: 449px) {
+  .frequently-bought-item__title {
+    font-size: 13px;
+  }
+
+  .frequently-bought-item__price {
+    font-size: 18px;
+  }
+
+  .frequently-bought-carousel {
+    padding: 0;
+  }
+
+  .frequently-bought-products .slick-arrow {
+    width: 35px;
+    height: 35px;
+  }
+
+  .frequently-bought-products .slick-arrow:before {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Animations */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.frequently-bought-wrapper:not(.hidden) {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+/* Loading State */
+.frequently-bought-item__add-btn.loading {
+  position: relative;
+  color: transparent;
+}
+
+.frequently-bought-item__add-btn.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Success State */
+.frequently-bought-item__add-btn.success {
+  background: #4caf50;
+}
+
+.frequently-bought-item__add-btn.success:hover {
+  background: #45a049;
+}
+</style>
