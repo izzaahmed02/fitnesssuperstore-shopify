@@ -878,25 +878,35 @@
 
 
 <style>
-  /* Frequently Bought Together Styles */
+/* Frequently Bought Together Styles */
+
+/* Desktop Layout */
+.cart-drawer__container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.cart-drawer__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0; /* Important for flex child */
+}
 
 /* Desktop Sidebar Styles */
 .frequently-bought-wrapper {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
   width: 400px;
+  flex-shrink: 0;
   background: #fff;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 999;
   overflow-y: auto;
   padding: 30px 20px;
-  transition: transform 0.3s ease;
+  border-right: 1px solid #e5e5e5;
 }
 
 .frequently-bought-wrapper.hidden {
-  transform: translateX(-100%);
+  display: none;
 }
 
 .frequently-bought-title {
@@ -1041,24 +1051,17 @@
   fill: currentColor;
 }
 
-/* Adjust cart drawer when frequently bought is visible */
-.cart-drawer__inner-with-frequently {
-  margin-left: 400px;
-  transition: margin-left 0.3s ease;
-}
-
 /* Hide mobile version on desktop */
 .frequently-bought-mobile {
   display: none;
 }
 
-/* Carousel Navigation - Hidden on Desktop */
-.frequently-bought-carousel__nav {
-  display: none;
-}
-
 /* Mobile Styles */
 @media screen and (max-width: 989px) {
+  .cart-drawer__container {
+    flex-direction: column;
+  }
+
   /* Hide desktop sidebar on mobile */
   .frequently-bought-wrapper:not(.frequently-bought-mobile) {
     display: none;
@@ -1067,7 +1070,13 @@
   /* Show mobile version */
   .frequently-bought-mobile {
     display: block;
-    position: relative;
+    width: 100%;
+    flex-shrink: 0;
+    box-shadow: none;
+    border-top: 1px solid #e5e5e5;
+    border-right: none;
+    padding: 20px 15px;
+  }
     width: 100%;
     left: auto;
     top: auto;
@@ -1351,25 +1360,32 @@ class FrequentlyBoughtTogether {
    */
   async loadProducts() {
     try {
+      console.log('[Frequently Bought] Starting to load products...');
+      
       // Get current cart
       const cart = await this.getCart();
+      console.log('[Frequently Bought] Cart data:', cart);
       
       if (!cart || cart.items.length === 0) {
+        console.log('[Frequently Bought] Cart is empty, hiding containers');
         this.hideContainers();
         return;
       }
 
       // Get products from same collection, excluding cart items
       this.products = await this.getCollectionProducts(cart);
+      console.log('[Frequently Bought] Fetched products:', this.products);
 
       if (this.products.length === 0) {
+        console.log('[Frequently Bought] No products found, hiding containers');
         this.hideContainers();
         return;
       }
 
+      console.log('[Frequently Bought] Rendering', this.products.length, 'products');
       this.renderProducts();
     } catch (error) {
-      console.error('Error loading frequently bought products:', error);
+      console.error('[Frequently Bought] Error loading products:', error);
       this.hideContainers();
     }
   }
@@ -1393,10 +1409,14 @@ class FrequentlyBoughtTogether {
    */
   async getCollectionProducts(cart) {
     try {
+      console.log('[Frequently Bought] Getting collection products from cart');
+      
       // Get all product IDs currently in cart (to exclude them)
       const cartProductIds = cart.items
         .filter(item => !item.product.tags.includes('avisplus-product-options'))
         .map(item => item.product_id);
+
+      console.log('[Frequently Bought] Cart product IDs to exclude:', cartProductIds);
 
       // Get the first main product in cart
       const firstCartItem = cart.items.find(item => 
@@ -1404,26 +1424,35 @@ class FrequentlyBoughtTogether {
       );
 
       if (!firstCartItem) {
+        console.log('[Frequently Bought] No valid cart item found');
         return [];
       }
+
+      console.log('[Frequently Bought] First cart item:', firstCartItem.handle);
 
       // Fetch the product to get its collections
       const productResponse = await fetch(`/products/${firstCartItem.handle}.js`);
       const productData = await productResponse.json();
 
+      console.log('[Frequently Bought] Product data:', productData);
+      console.log('[Frequently Bought] Product collections:', productData.collections);
+
       if (!productData.collections || productData.collections.length === 0) {
-        console.warn('Product has no collections, falling back to recommendations');
+        console.warn('[Frequently Bought] Product has no collections, falling back to recommendations');
         return await this.getRecommendedProducts(firstCartItem.product_id, cartProductIds);
       }
 
       // Get the first collection
       const collectionHandle = productData.collections[0].handle;
+      console.log('[Frequently Bought] Using collection:', collectionHandle);
 
       // Fetch products from the collection
       const collectionProducts = await this.fetchCollectionProducts(collectionHandle, cartProductIds);
+      console.log('[Frequently Bought] Collection products found:', collectionProducts.length);
 
       // If not enough products from collection, supplement with recommendations
       if (collectionProducts.length < 3) {
+        console.log('[Frequently Bought] Not enough collection products, fetching recommendations');
         const recommendations = await this.getRecommendedProducts(firstCartItem.product_id, cartProductIds);
         // Combine and deduplicate
         const combined = [...collectionProducts, ...recommendations];
@@ -1433,7 +1462,7 @@ class FrequentlyBoughtTogether {
 
       return collectionProducts.slice(0, 6); // Max 6 products
     } catch (error) {
-      console.error('Error fetching collection products:', error);
+      console.error('[Frequently Bought] Error fetching collection products:', error);
       return [];
     }
   }
