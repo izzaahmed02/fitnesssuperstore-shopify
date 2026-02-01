@@ -24,7 +24,7 @@
 
   /* Frequently Bought Together Styles - Desktop */
   .frequently-bought-wrapper {
-    width: 296px;
+    width: 400px;
     background: #fff;
     overflow-y: auto;
     padding: 30px 20px;
@@ -699,10 +699,7 @@
 		updateCartCount(totalContentCount);
 
     // Load Frequently Bought Together products
-    loadFrequentlyBoughtProducts();
-
-    // Setup mobile carousel navigation
-    setupMobileCarousel();
+    new FrequentlyBoughtTogether();
 	});
 
 	// Function to update the cart count in the drawer and header
@@ -717,1306 +714,326 @@
     }
 	}
 
-  // Function to load frequently bought together products
-  function loadFrequentlyBoughtProducts() {
-    // Sample data - Replace this with your actual product data or API call
-    const frequentlyBoughtProducts = [
-      {
-        id: 'product-1',
-        title: 'French Fitness FF-FIB 0-90 Degree Adjustable Bench (New)',
-        image: 'https://via.placeholder.com/300x300', // Replace with actual image URL
-        rating: 4.6,
-        reviewCount: 129,
-        comparePrice: 980.00,
-        price: 299.00,
-        variantId: '123456789' // Replace with actual variant ID
-      },
-      {
-        id: 'product-2',
-        title: 'French Fitness FF-FIB 0-90 Degree Adjustable Bench (New)',
-        image: 'https://via.placeholder.com/300x300', // Replace with actual image URL
-        rating: 4.9,
-        reviewCount: 230,
-        comparePrice: 999.00,
-        price: 349.99,
-        variantId: '987654321' // Replace with actual variant ID
-      },
-      {
-        id: 'product-3',
-        title: 'Olympic Barbell Set',
-        image: 'https://via.placeholder.com/300x300', // Replace with actual image URL
-        rating: 4.7,
-        reviewCount: 156,
-        comparePrice: 599.00,
-        price: 449.99,
-        variantId: '456789123' // Replace with actual variant ID
+  /**
+   * Frequently Bought Together Class
+   */
+  class FrequentlyBoughtTogether {
+    constructor() {
+      this.desktopContainer = document.getElementById('FrequentlyBoughtProducts');
+      this.mobileContainer = document.getElementById('FrequentlyBoughtProductsMobile');
+      this.products = [];
+      this.init();
+    }
+
+    init() {
+      if (!this.desktopContainer && !this.mobileContainer) {
+        console.warn('[Frequently Bought] Containers not found');
+        return;
       }
-    ];
+      this.loadProducts();
+      this.setupMobileCarousel();
+    }
 
-    const desktopContainer = document.getElementById('FrequentlyBoughtProducts');
-    const mobileContainer = document.getElementById('FrequentlyBoughtProductsMobile');
+    async loadProducts() {
+      try {
+        console.log('[Frequently Bought] Starting to load products...');
+        
+        const cart = await this.getCart();
+        console.log('[Frequently Bought] Cart data:', cart);
+        
+        if (!cart || cart.items.length === 0) {
+          console.log('[Frequently Bought] Cart is empty');
+          this.hideContainers();
+          return;
+        }
 
-    if (!desktopContainer || !mobileContainer) return;
+        this.products = await this.getCollectionProducts(cart);
+        console.log('[Frequently Bought] Fetched products:', this.products);
 
-    const productsHTML = frequentlyBoughtProducts.map(product => {
+        if (this.products.length === 0) {
+          console.log('[Frequently Bought] No products found');
+          this.hideContainers();
+          return;
+        }
+
+        console.log('[Frequently Bought] Rendering', this.products.length, 'products');
+        this.renderProducts();
+      } catch (error) {
+        console.error('[Frequently Bought] Error:', error);
+        this.hideContainers();
+      }
+    }
+
+    async getCart() {
+      try {
+        const response = await fetch('/cart.js');
+        const cart = await response.json();
+        
+        if (cart.items && cart.items.length > 0) {
+          console.log('[Frequently Bought] Sample cart item:', {
+            handle: cart.items[0].handle,
+            product_id: cart.items[0].product_id,
+            title: cart.items[0].title
+          });
+        }
+        
+        return cart;
+      } catch (error) {
+        console.error('[Frequently Bought] Error fetching cart:', error);
+        return null;
+      }
+    }
+
+    async getCollectionProducts(cart) {
+      try {
+        console.log('[Frequently Bought] Getting collection products');
+        
+        const cartProductIds = cart.items.map(item => item.product_id);
+        console.log('[Frequently Bought] Excluding IDs:', cartProductIds);
+
+        const firstCartItem = cart.items[0];
+        if (!firstCartItem) {
+          console.log('[Frequently Bought] No cart item found');
+          return [];
+        }
+
+        console.log('[Frequently Bought] Using item:', firstCartItem.handle);
+
+        const productResponse = await fetch(`/products/${firstCartItem.handle}.js`);
+        if (!productResponse.ok) {
+          console.error('[Frequently Bought] Product fetch failed:', productResponse.status);
+          return await this.getRecommendedProducts(firstCartItem.product_id, cartProductIds);
+        }
+        
+        const productData = await productResponse.json();
+        console.log('[Frequently Bought] Product collections:', productData.collections);
+
+        if (!productData.collections || productData.collections.length === 0) {
+          console.warn('[Frequently Bought] No collections, using recommendations');
+          return await this.getRecommendedProducts(firstCartItem.product_id, cartProductIds);
+        }
+
+        const collectionHandle = productData.collections[0].handle;
+        console.log('[Frequently Bought] Collection:', collectionHandle);
+
+        const collectionProducts = await this.fetchCollectionProducts(collectionHandle, cartProductIds);
+        console.log('[Frequently Bought] Found', collectionProducts.length, 'products');
+
+        if (collectionProducts.length < 3) {
+          const recommendations = await this.getRecommendedProducts(firstCartItem.product_id, cartProductIds);
+          const combined = [...collectionProducts, ...recommendations];
+          return this.deduplicateProducts(combined).slice(0, 6);
+        }
+
+        return collectionProducts.slice(0, 6);
+      } catch (error) {
+        console.error('[Frequently Bought] Error:', error);
+        return [];
+      }
+    }
+
+    async fetchCollectionProducts(collectionHandle, excludeProductIds = []) {
+      try {
+        const url = `/collections/${collectionHandle}/products.json?limit=20`;
+        console.log('[Frequently Bought] Fetching:', url);
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+          console.error('[Frequently Bought] Fetch failed:', response.status);
+          return [];
+        }
+        
+        const data = await response.json();
+        console.log('[Frequently Bought] Raw products:', data.products?.length || 0);
+
+        if (!data.products || data.products.length === 0) {
+          return [];
+        }
+
+        const products = data.products
+          .filter(product => !excludeProductIds.includes(product.id))
+          .filter(product => product.available)
+          .map(product => this.formatProductData(product));
+
+        console.log('[Frequently Bought] Filtered to:', products.length);
+        return products;
+      } catch (error) {
+        console.error('[Frequently Bought] Fetch error:', error);
+        return [];
+      }
+    }
+
+    async getRecommendedProducts(productId, excludeProductIds = []) {
+      try {
+        const response = await fetch(`/recommendations/products.json?product_id=${productId}&limit=6`);
+        const data = await response.json();
+
+        if (!data.products || data.products.length === 0) {
+          return [];
+        }
+
+        return data.products
+          .filter(product => !excludeProductIds.includes(product.id))
+          .filter(product => product.available)
+          .map(product => this.formatProductData(product));
+      } catch (error) {
+        console.error('[Frequently Bought] Recommendations error:', error);
+        return [];
+      }
+    }
+
+    formatProductData(product) {
+      const variant = product.variants.find(v => v.available) || product.variants[0];
+      const comparePrice = variant.compare_at_price ? variant.compare_at_price / 100 : null;
+      const price = variant.price / 100;
+      const image = product.featured_image || product.images[0] || 'https://via.placeholder.com/300x300';
+
+      return {
+        id: `product-${product.id}`,
+        productId: product.id,
+        handle: product.handle,
+        title: product.title,
+        image: image,
+        rating: null,
+        reviewCount: 0,
+        comparePrice: comparePrice,
+        price: price,
+        variantId: variant.id.toString(),
+        available: variant.available
+      };
+    }
+
+    renderProducts() {
+      const productsHTML = this.products.map(product => this.createProductCard(product)).join('');
+
+      if (this.desktopContainer) {
+        this.desktopContainer.innerHTML = productsHTML;
+      }
+
+      if (this.mobileContainer) {
+        this.mobileContainer.innerHTML = productsHTML;
+      }
+
+      this.attachEventListeners();
+    }
+
+    createProductCard(product) {
+      const comparePrice = product.comparePrice 
+        ? `<span class="frequently-bought-item__compare-price">As high as: $${product.comparePrice.toFixed(2)}</span>`
+        : '';
+
+      const rating = product.rating 
+        ? `<div class="frequently-bought-item__rating">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+            </svg>
+            <span>${product.rating.toFixed(1)}</span>
+            ${product.reviewCount > 0 ? `<span class="frequently-bought-item__rating-count">(${product.reviewCount} reviews)</span>` : ''}
+          </div>`
+        : '';
+
       return `
         <div class="frequently-bought-item" data-product-id="${product.id}">
           <div class="frequently-bought-item__image">
             <img src="${product.image}" alt="${product.title}" loading="lazy">
           </div>
           <h4 class="frequently-bought-item__title">${product.title}</h4>
-          <div class="frequently-bought-item__rating">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-            </svg>
-            <span>${product.rating}</span>
-            <span class="frequently-bought-item__rating-count">(${product.reviewCount} reviews)</span>
-          </div>
+          ${rating}
           <div class="frequently-bought-item__prices">
-            <span class="frequently-bought-item__compare-price">As high as: $${product.comparePrice.toFixed(2)}</span>
+            ${comparePrice}
             <span class="frequently-bought-item__price">$${product.price.toFixed(2)}</span>
           </div>
-          <button class="frequently-bought-item__add-btn" data-variant-id="${product.variantId}">
+          <button class="frequently-bought-item__add-btn" data-variant-id="${product.variantId}" data-product-title="${product.title}">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.70711 15.2929C4.07714 15.9229 4.52331 17 5.41421 17H17M17 17C15.8954 17 15 17.8954 15 19C15 20.1046 15.8954 21 17 21C18.1046 21 19 20.1046 19 19C19 17.8954 18.1046 17 17 17ZM9 19C9 20.1046 8.10457 21 7 21C5.89543 21 5 20.1046 5 19C5 17.8954 5.89543 17 7 17C8.10457 17 9 17.8954 9 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.70711 15.2929C4.07714 15.9229 4.52331 17 5.41421 17H17M17 17C15.8954 17 15 17.8954 15 19C15.8954 21 17 21C18.1046 21 19 20.1046 19 19C19 17.8954 18.1046 17 17 17ZM9 19C9 20.1046 8.10457 21 7 21C5.89543 21 5 20.1046 5 19C5 17.8954 5.89543 17 7 17C8.10457 17 9 17.8954 9 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             Add To Cart
           </button>
         </div>
       `;
-    }).join('');
+    }
 
-    desktopContainer.innerHTML = productsHTML;
-    mobileContainer.innerHTML = productsHTML;
-
-    // Add click event listeners to Add to Cart buttons
-    document.querySelectorAll('.frequently-bought-item__add-btn').forEach(button => {
-      button.addEventListener('click', async function(e) {
-        e.preventDefault();
-        const variantId = this.getAttribute('data-variant-id');
-        await addToCart(variantId, this);
+    attachEventListeners() {
+      document.querySelectorAll('.frequently-bought-item__add-btn').forEach(button => {
+        button.addEventListener('click', (e) => this.handleAddToCart(e));
       });
-    });
-  }
+    }
 
-  // Function to add product to cart
-  async function addToCart(variantId, button) {
-    button.disabled = true;
-    button.innerHTML = 'Adding...';
+    async handleAddToCart(event) {
+      event.preventDefault();
+      const button = event.currentTarget;
+      const variantId = button.getAttribute('data-variant-id');
+      
+      button.disabled = true;
+      button.innerHTML = 'Adding...';
 
-    try {
-      const response = await fetch('/cart/add.js', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: variantId,
-          quantity: 1
-        })
-      });
+      try {
+        const response = await fetch('/cart/add.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: variantId, quantity: 1 })
+        });
 
-      if (response.ok) {
-        // Refresh cart
-        const cartResponse = await fetch('/cart.js');
-        const cart = await cartResponse.json();
-        
-        // Update cart UI
+        if (!response.ok) throw new Error('Failed to add');
+
         button.innerHTML = '✓ Added';
+        setTimeout(() => location.reload(), 1500);
+      } catch (error) {
+        console.error('Error:', error);
+        button.innerHTML = 'Error';
         setTimeout(() => {
-          button.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.70711 15.2929C4.07714 15.9229 4.52331 17 5.41421 17H17M17 17C15.8954 17 15 17.8954 15 19C15 20.1046 15.8954 21 17 21C18.1046 21 19 20.1046 19 19C19 17.8954 18.1046 17 17 17ZM9 19C9 20.1046 8.10457 21 7 21C5.89543 21 5 20.1046 5 19C5 17.8954 5.89543 17 7 17C8.10457 17 9 17.8954 9 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Add To Cart
-          `;
+          button.innerHTML = 'Add To Cart';
           button.disabled = false;
         }, 2000);
-
-        // Trigger cart update event
-        document.dispatchEvent(new CustomEvent('cart:updated'));
-        
-        // Reload the cart drawer to show updated items
-        location.reload();
-      } else {
-        throw new Error('Failed to add to cart');
       }
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      button.innerHTML = 'Error - Try Again';
-      button.disabled = false;
+    }
+
+    setupMobileCarousel() {
+      if (!this.mobileContainer || typeof jQuery === 'undefined' || typeof jQuery.fn.slick === 'undefined') {
+        console.log('[Frequently Bought] Slick not available');
+        return;
+      }
+
+      setTimeout(() => {
+        const $container = jQuery(this.mobileContainer);
+        
+        if ($container.hasClass('slick-initialized')) {
+          $container.slick('unslick');
+        }
+
+        $container.slick({
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          arrows: true,
+          dots: true,
+          infinite: false,
+          speed: 300,
+          adaptiveHeight: true
+        });
+      }, 100);
+    }
+
+    deduplicateProducts(products) {
+      const seen = new Set();
+      return products.filter(product => {
+        if (seen.has(product.productId)) return false;
+        seen.add(product.productId);
+        return true;
+      });
+    }
+
+    hideContainers() {
+      if (this.desktopContainer) {
+        this.desktopContainer.closest('.frequently-bought-wrapper')?.classList.add('hidden');
+      }
+      if (this.mobileContainer) {
+        this.mobileContainer.closest('.frequently-bought-wrapper')?.classList.add('hidden');
+      }
     }
   }
 
-  // Setup mobile carousel navigation
-  function setupMobileCarousel() {
-    const prevBtn = document.querySelector('.frequently-bought-carousel__nav--prev');
-    const nextBtn = document.querySelector('.frequently-bought-carousel__nav--next');
-    const container = document.getElementById('FrequentlyBoughtProductsMobile');
-
-    if (!prevBtn || !nextBtn || !container) return;
-
-    prevBtn.addEventListener('click', () => {
-      container.scrollBy({
-        left: -220,
-        behavior: 'smooth'
-      });
-    });
-
-    nextBtn.addEventListener('click', () => {
-      container.scrollBy({
-        left: 220,
-        behavior: 'smooth'
-      });
-    });
-  }
 </script>
 
 {% if show_product_options %}
   <script src="{{ 'product-custom-options.js' | asset_url }}" defer></script>
 {% endif %}
-
-
-<style>
-/* Frequently Bought Together Styles */
-
-/* Desktop Layout */
-.cart-drawer__container {
-  display: flex;
-  height: 100%;
-  width: 100%;
-}
-
-.cart-drawer__main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0; /* Important for flex child */
-}
-
-/* Desktop Sidebar Styles */
-.frequently-bought-wrapper {
-  width: 296px;
-  flex-shrink: 0;
-  background: #fff;
-  overflow-y: auto;
-  padding: 30px 20px;
-  border-right: 1px solid #e5e5e5;
-}
-
-.frequently-bought-wrapper.hidden {
-  display: none;
-}
-
-.frequently-bought-title {
-  font-size: 16px;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 30px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  line-height: 1.4;
-  color: #000;
-}
-
-.frequently-bought-products {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* Product Card Styles */
-.frequently-bought-item {
-  background: #f8f8f8;
-  border-radius: 8px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  transition: box-shadow 0.3s ease;
-}
-
-.frequently-bought-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.frequently-bought-item__image {
-  width: 100%;
-  height: auto;
-  border-radius: 4px;
-  background: #fff;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.frequently-bought-item__image img {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  max-height: 200px;
-}
-
-.frequently-bought-item__title {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: #000;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Rating Styles */
-.frequently-bought-item__rating {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 13px;
-}
-
-.frequently-bought-item__rating svg {
-  width: 16px;
-  height: 16px;
-  fill: #ffc107;
-  flex-shrink: 0;
-}
-
-.frequently-bought-item__rating-count {
-  color: #666;
-}
-
-/* Price Styles */
-.frequently-bought-item__prices {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.frequently-bought-item__compare-price {
-  font-size: 13px;
-  color: #999;
-  text-decoration: line-through;
-}
-
-.frequently-bought-item__price {
-  font-size: 20px;
-  font-weight: 700;
-  color: #ff5722;
-}
-
-/* Add to Cart Button */
-.frequently-bought-item__add-btn {
-  background: #ff5722;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.frequently-bought-item__add-btn:hover {
-  background: #e64a19;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(255, 87, 34, 0.3);
-}
-
-.frequently-bought-item__add-btn:active {
-  transform: translateY(0);
-}
-
-.frequently-bought-item__add-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.frequently-bought-item__add-btn svg {
-  width: 16px;
-  height: 16px;
-  fill: currentColor;
-}
-
-/* Hide mobile version on desktop */
-.frequently-bought-mobile {
-  display: none;
-}
-
-/* Mobile Styles */
-@media screen and (max-width: 989px) {
-  .cart-drawer__container {
-    flex-direction: column;
-  }
-
-  /* Hide desktop sidebar on mobile */
-  .frequently-bought-wrapper:not(.frequently-bought-mobile) {
-    display: none;
-  }
-
-  /* Show mobile version */
-  .frequently-bought-mobile {
-    display: block;
-    width: 100%;
-    flex-shrink: 0;
-    box-shadow: none;
-    border-top: 1px solid #e5e5e5;
-    border-right: none;
-    padding: 20px 15px;
-  }
-    width: 100%;
-    left: auto;
-    top: auto;
-    bottom: auto;
-    box-shadow: none;
-    border-top: 1px solid #e5e5e5;
-    padding: 20px 15px;
-    transform: none !important;
-  }
-
-  .frequently-bought-mobile.hidden {
-    display: none;
-  }
-
-  .frequently-bought-title {
-    font-size: 18px;
-    text-align: left;
-    margin-bottom: 20px;
-  }
-
-  /* Horizontal Carousel - Slick Slider */
-  .frequently-bought-carousel {
-    position: relative;
-    padding: 0;
-  }
-
-  .frequently-bought-products {
-    position: relative;
-    flex-direction: row;
-    gap: 0;
-  }
-
-  /* Slick Slider Overrides */
-  .frequently-bought-products.slick-slider {
-    display: block;
-  }
-
-  .frequently-bought-products .slick-list {
-    margin: 0 -7.5px;
-  }
-
-  .frequently-bought-products .slick-slide {
-    padding: 0 7.5px;
-  }
-
-  .frequently-bought-item {
-    width: 100%;
-    max-width: none;
-  }
-
-  .frequently-bought-item__image img {
-    max-height: 150px;
-  }
-
-  /* Slick Navigation Arrows */
-  .frequently-bought-products .slick-arrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid #ddd;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 2;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    transition: all 0.3s ease;
-    font-size: 0;
-  }
-
-  .frequently-bought-products .slick-arrow:hover {
-    background: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  }
-
-  .frequently-bought-products .slick-arrow:active {
-    transform: translateY(-50%) scale(0.95);
-  }
-
-  .frequently-bought-products .slick-arrow:before {
-    content: '';
-    display: block;
-    width: 20px;
-    height: 20px;
-    border-top: 2px solid #333;
-    border-right: 2px solid #333;
-    opacity: 1;
-  }
-
-  .frequently-bought-products .slick-prev {
-    left: -10px;
-  }
-
-  .frequently-bought-products .slick-prev:before {
-    transform: rotate(-135deg);
-    margin-left: 3px;
-  }
-
-  .frequently-bought-products .slick-next {
-    right: -10px;
-  }
-
-  .frequently-bought-products .slick-next:before {
-    transform: rotate(45deg);
-    margin-right: 3px;
-  }
-
-  .frequently-bought-products .slick-disabled {
-    opacity: 0.5;
-    pointer-events: none;
-  }
-
-  /* Slick Dots */
-  .frequently-bought-products .slick-dots {
-    bottom: -30px;
-    display: flex !important;
-    justify-content: center;
-    gap: 8px;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-  }
-
-  .frequently-bought-products .slick-dots li {
-    margin: 0;
-    width: 8px;
-    height: 8px;
-  }
-
-  .frequently-bought-products .slick-dots li button {
-    width: 8px;
-    height: 8px;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: #ddd;
-    font-size: 0;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .frequently-bought-products .slick-dots li button:before {
-    display: none;
-  }
-
-  .frequently-bought-products .slick-dots li.slick-active button {
-    background: #ff5722;
-    width: 20px;
-    border-radius: 4px;
-  }
-
-  /* No margin adjustment on mobile */
-  .cart-drawer__inner-with-frequently {
-    margin-left: 0;
-  }
-
-  /* Adjust drawer contents height */
-  .drawer__contents {
-    max-height: 50vh;
-  }
-}
-
-/* Tablet Adjustments */
-@media screen and (min-width: 750px) and (max-width: 989px) {
-  .frequently-bought-item {
-    /* Slick will handle sizing */
-  }
-
-  .frequently-bought-carousel {
-    padding: 0;
-  }
-
-  .frequently-bought-products .slick-arrow {
-    width: 45px;
-    height: 45px;
-  }
-}
-
-/* Small Mobile Adjustments */
-@media screen and (max-width: 449px) {
-  .frequently-bought-item__title {
-    font-size: 13px;
-  }
-
-  .frequently-bought-item__price {
-    font-size: 18px;
-  }
-
-  .frequently-bought-carousel {
-    padding: 0;
-  }
-
-  .frequently-bought-products .slick-arrow {
-    width: 35px;
-    height: 35px;
-  }
-
-  .frequently-bought-products .slick-arrow:before {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-/* Animations */
-@keyframes slideInLeft {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-.frequently-bought-wrapper:not(.hidden) {
-  animation: slideInLeft 0.3s ease-out;
-}
-
-/* Loading State */
-.frequently-bought-item__add-btn.loading {
-  position: relative;
-  color: transparent;
-}
-
-.frequently-bought-item__add-btn.loading::after {
-  content: '';
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  border-top-color: transparent;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Success State */
-.frequently-bought-item__add-btn.success {
-  background: #4caf50;
-}
-
-.frequently-bought-item__add-btn.success:hover {
-  background: #45a049;
-}
-</style>
-<script>
-/**
- * Frequently Bought Together - Cart Drawer Enhancement
- * Handles loading, displaying, and managing frequently bought products
- */
-
-class FrequentlyBoughtTogether {
-  constructor() {
-    this.desktopContainer = document.getElementById('FrequentlyBoughtProducts');
-    this.mobileContainer = document.getElementById('FrequentlyBoughtProductsMobile');
-    this.products = [];
-    this.init();
-  }
-
-  init() {
-    if (!this.desktopContainer && !this.mobileContainer) {
-      console.warn('Frequently Bought Together containers not found');
-      return;
-    }
-
-    this.loadProducts();
-    this.setupMobileCarousel();
-  }
-
-  /**
-   * Load frequently bought products
-   * Automatically fetches products from the same collection as cart items
-   */
-  async loadProducts() {
-    try {
-      console.log('[Frequently Bought] Starting to load products...');
-      
-      // Get current cart
-      const cart = await this.getCart();
-      console.log('[Frequently Bought] Cart data:', cart);
-      
-      if (!cart || cart.items.length === 0) {
-        console.log('[Frequently Bought] Cart is empty, hiding containers');
-        this.hideContainers();
-        return;
-      }
-
-      // Get products from same collection, excluding cart items
-      this.products = await this.getCollectionProducts(cart);
-      console.log('[Frequently Bought] Fetched products:', this.products);
-
-      if (this.products.length === 0) {
-        console.log('[Frequently Bought] No products found, hiding containers');
-        this.hideContainers();
-        return;
-      }
-
-      console.log('[Frequently Bought] Rendering', this.products.length, 'products');
-      this.renderProducts();
-    } catch (error) {
-      console.error('[Frequently Bought] Error loading products:', error);
-      this.hideContainers();
-    }
-  }
-
-  /**
-   * Get current cart data
-   */
-  async getCart() {
-    try {
-      const response = await fetch('/cart.js');
-      const cart = await response.json();
-      
-      // Debug: Log first cart item structure to understand what's available
-      if (cart.items && cart.items.length > 0) {
-        console.log('[Frequently Bought] Sample cart item structure:', {
-          handle: cart.items[0].handle,
-          product_id: cart.items[0].product_id,
-          has_product_tags: !!cart.items[0].product_tags,
-          has_tags: !!cart.items[0].tags,
-          has_properties: !!cart.items[0].properties,
-          properties: cart.items[0].properties,
-          // Show first few keys to understand structure
-          available_keys: Object.keys(cart.items[0]).slice(0, 15)
-        });
-      }
-      
-      return cart;
-    } catch (error) {
-      console.error('[Frequently Bought] Error fetching cart:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Get products from the same collection as items in cart
-   * Excludes products already in cart
-   */
-  async getCollectionProducts(cart) {
-    try {
-      console.log('[Frequently Bought] Getting collection products from cart');
-      console.log('[Frequently Bought] Cart items count:', cart.items.length);
-      
-      // Simply get all product IDs in cart to exclude them
-      const cartProductIds = cart.items.map(item => item.product_id);
-
-      console.log('[Frequently Bought] Cart product IDs to exclude:', cartProductIds);
-
-      // Get the first item in cart
-      const firstCartItem = cart.items[0];
-
-      if (!firstCartItem) {
-        console.log('[Frequently Bought] No cart item found');
-        return [];
-      }
-
-      console.log('[Frequently Bought] First cart item:', {
-        title: firstCartItem.title,
-        handle: firstCartItem.handle,
-        product_id: firstCartItem.product_id
-      });
-
-      // Fetch the product to get its collections
-      const productResponse = await fetch(`/products/${firstCartItem.handle}.js`);
-      
-      if (!productResponse.ok) {
-        console.error('[Frequently Bought] Failed to fetch product:', productResponse.status);
-        return await this.getRecommendedProducts(firstCartItem.product_id, cartProductIds);
-      }
-      
-      const productData = await productResponse.json();
-
-      console.log('[Frequently Bought] Product title:', productData.title);
-      console.log('[Frequently Bought] Product collections:', productData.collections);
-
-      if (!productData.collections || productData.collections.length === 0) {
-        console.warn('[Frequently Bought] Product has no collections, falling back to recommendations');
-        return await this.getRecommendedProducts(firstCartItem.product_id, cartProductIds);
-      }
-
-      // Get the first collection
-      const collectionHandle = productData.collections[0].handle;
-      console.log('[Frequently Bought] Using collection:', collectionHandle);
-
-      // Fetch products from the collection
-      const collectionProducts = await this.fetchCollectionProducts(collectionHandle, cartProductIds);
-      console.log('[Frequently Bought] Collection products found:', collectionProducts.length);
-
-      // If not enough products from collection, supplement with recommendations
-      if (collectionProducts.length < 3) {
-        console.log('[Frequently Bought] Not enough collection products, fetching recommendations');
-        const recommendations = await this.getRecommendedProducts(firstCartItem.product_id, cartProductIds);
-        console.log('[Frequently Bought] Recommendations found:', recommendations.length);
-        
-        // Combine and deduplicate
-        const combined = [...collectionProducts, ...recommendations];
-        const uniqueProducts = this.deduplicateProducts(combined);
-        console.log('[Frequently Bought] Combined unique products:', uniqueProducts.length);
-        return uniqueProducts.slice(0, 6); // Max 6 products
-      }
-
-      return collectionProducts.slice(0, 6); // Max 6 products
-    } catch (error) {
-      console.error('[Frequently Bought] Error in getCollectionProducts:', error);
-      console.error('[Frequently Bought] Error stack:', error.stack);
-      return [];
-    }
-  }
-
-  /**
-   * Fetch products from a specific collection
-   */
-  async fetchCollectionProducts(collectionHandle, excludeProductIds = []) {
-    try {
-      console.log('[Frequently Bought] Fetching from collection:', collectionHandle);
-      console.log('[Frequently Bought] Excluding product IDs:', excludeProductIds);
-      
-      // Fetch collection with products (using the products.json endpoint)
-      const url = `/collections/${collectionHandle}/products.json?limit=20`;
-      console.log('[Frequently Bought] Fetching URL:', url);
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        console.error('[Frequently Bought] Collection fetch failed:', response.status, response.statusText);
-        return [];
-      }
-      
-      const data = await response.json();
-      console.log('[Frequently Bought] Raw products from collection:', data.products ? data.products.length : 0);
-
-      if (!data.products || data.products.length === 0) {
-        console.log('[Frequently Bought] No products in collection');
-        return [];
-      }
-
-      // Filter out products already in cart and format them
-      const products = data.products
-        .filter(product => {
-          const isExcluded = excludeProductIds.includes(product.id);
-          if (isExcluded) {
-            console.log('[Frequently Bought] Excluding product (in cart):', product.title);
-          }
-          return !isExcluded;
-        })
-        .filter(product => {
-          if (!product.available) {
-            console.log('[Frequently Bought] Excluding product (not available):', product.title);
-          }
-          return product.available;
-        })
-        .map(product => {
-          const formatted = this.formatProductData(product);
-          console.log('[Frequently Bought] Including product:', formatted.title);
-          return formatted;
-        });
-
-      console.log('[Frequently Bought] Final filtered products:', products.length);
-      return products;
-    } catch (error) {
-      console.error('[Frequently Bought] Error fetching collection products:', error);
-      console.error('[Frequently Bought] Error stack:', error.stack);
-      return [];
-    }
-  }
-
-  /**
-   * Get recommended products using Shopify's recommendations API
-   */
-  async getRecommendedProducts(productId, excludeProductIds = []) {
-    try {
-      const response = await fetch(`/recommendations/products.json?product_id=${productId}&limit=6`);
-      const data = await response.json();
-
-      if (!data.products || data.products.length === 0) {
-        return [];
-      }
-
-      // Filter and format products
-      const products = data.products
-        .filter(product => !excludeProductIds.includes(product.id))
-        .filter(product => product.available)
-        .map(product => this.formatProductData(product));
-
-      return products;
-    } catch (error) {
-      console.error('[Frequently Bought] Error fetching recommended products:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Format product data from Shopify API to our format
-   */
-  formatProductData(product) {
-    // Get the first available variant
-    const variant = product.variants.find(v => v.available) || product.variants[0];
-    
-    // Get compare at price (if exists)
-    const comparePrice = variant.compare_at_price 
-      ? variant.compare_at_price / 100 
-      : null;
-
-    // Get product price
-    const price = variant.price / 100;
-
-    // Get featured image
-    const image = product.featured_image || product.images[0] || '';
-
-    // Try to get rating from metafields (if you have a review app)
-    const rating = this.getProductRating(product);
-    const reviewCount = this.getProductReviewCount(product);
-
-    return {
-      id: `product-${product.id}`,
-      productId: product.id,
-      handle: product.handle,
-      title: product.title,
-      image: image,
-      rating: rating,
-      reviewCount: reviewCount,
-      comparePrice: comparePrice,
-      price: price,
-      variantId: variant.id.toString(),
-      available: variant.available,
-      tags: product.tags || []
-    };
-  }
-
-  /**
-   * Get product rating from metafields or product data
-   * Customize this based on your review app
-   */
-  getProductRating(product) {
-    // Example for Judge.me
-    if (product.metafields?.judgeme?.rating) {
-      return parseFloat(product.metafields.judgeme.rating);
-    }
-    
-    // Example for Shopify Product Reviews
-    if (product.metafields?.reviews?.rating) {
-      return parseFloat(product.metafields.reviews.rating);
-    }
-
-    // Example for Yotpo
-    if (product.metafields?.yotpo?.rating) {
-      return parseFloat(product.metafields.yotpo.rating);
-    }
-
-    // Default fallback - you can set a default or return null
-    return null; // Return null to hide rating if not available
-  }
-
-  /**
-   * Get product review count from metafields
-   */
-  getProductReviewCount(product) {
-    // Example for Judge.me
-    if (product.metafields?.judgeme?.review_count) {
-      return parseInt(product.metafields.judgeme.review_count);
-    }
-    
-    // Example for Shopify Product Reviews
-    if (product.metafields?.reviews?.review_count) {
-      return parseInt(product.metafields.reviews.review_count);
-    }
-
-    // Example for Yotpo
-    if (product.metafields?.yotpo?.reviews_count) {
-      return parseInt(product.metafields.yotpo.reviews_count);
-    }
-
-    return 0;
-  }
-
-  /**
-   * Remove duplicate products based on product ID
-   */
-  deduplicateProducts(products) {
-    const seen = new Set();
-    return products.filter(product => {
-      if (seen.has(product.productId)) {
-        return false;
-      }
-      seen.add(product.productId);
-      return true;
-    });
-  }
-
-  /**
-   * Render products in both desktop and mobile containers
-   */
-  renderProducts() {
-    if (this.products.length === 0) {
-      this.hideContainers();
-      return;
-    }
-
-    const productsHTML = this.products.map(product => this.createProductCard(product)).join('');
-
-    if (this.desktopContainer) {
-      this.desktopContainer.innerHTML = productsHTML;
-    }
-
-    if (this.mobileContainer) {
-      this.mobileContainer.innerHTML = productsHTML;
-    }
-
-    this.attachEventListeners();
-  }
-
-  /**
-   * Create HTML for a single product card
-   */
-  createProductCard(product) {
-    const comparePrice = product.comparePrice 
-      ? `<span class="frequently-bought-item__compare-price">As high as: $${this.formatPrice(product.comparePrice)}</span>`
-      : '';
-
-    return `
-      <div class="frequently-bought-item" data-product-id="${product.id}">
-        <div class="frequently-bought-item__image">
-          <img 
-            src="${product.image}" 
-            alt="${this.escapeHtml(product.title)}" 
-            loading="lazy"
-            onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'"
-          >
-        </div>
-        <h4 class="frequently-bought-item__title">${this.escapeHtml(product.title)}</h4>
-        ${this.createRatingHTML(product.rating, product.reviewCount)}
-        <div class="frequently-bought-item__prices">
-          ${comparePrice}
-          <span class="frequently-bought-item__price">$${this.formatPrice(product.price)}</span>
-        </div>
-        <button 
-          class="frequently-bought-item__add-btn" 
-          data-variant-id="${product.variantId}"
-          data-product-title="${this.escapeHtml(product.title)}"
-        >
-          ${this.getCartIcon()}
-          Add To Cart
-        </button>
-      </div>
-    `;
-  }
-
-  /**
-   * Create rating stars HTML
-   */
-  createRatingHTML(rating, reviewCount) {
-    if (!rating || rating === 0) return ''; // Don't show rating if not available
-
-    return `
-      <div class="frequently-bought-item__rating">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-        </svg>
-        <span>${rating.toFixed(1)}</span>
-        ${reviewCount > 0 ? `<span class="frequently-bought-item__rating-count">(${reviewCount} reviews)</span>` : ''}
-      </div>
-    `;
-  }
-
-  /**
-   * Get cart icon SVG
-   */
-  getCartIcon() {
-    return `
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.70711 15.2929C4.07714 15.9229 4.52331 17 5.41421 17H17M17 17C15.8954 17 15 17.8954 15 19C15 20.1046 15.8954 21 17 21C18.1046 21 19 20.1046 19 19C19 17.8954 18.1046 17 17 17ZM9 19C9 20.1046 8.10457 21 7 21C5.89543 21 5 20.1046 5 19C5 17.8954 5.89543 17 7 17C8.10457 17 9 17.8954 9 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    `;
-  }
-
-  /**
-   * Attach event listeners to add to cart buttons
-   */
-  attachEventListeners() {
-    const buttons = document.querySelectorAll('.frequently-bought-item__add-btn');
-    buttons.forEach(button => {
-      button.addEventListener('click', (e) => this.handleAddToCart(e));
-    });
-  }
-
-  /**
-   * Handle add to cart button click
-   */
-  async handleAddToCart(event) {
-    event.preventDefault();
-    const button = event.currentTarget;
-    const variantId = button.getAttribute('data-variant-id');
-    const productTitle = button.getAttribute('data-product-title');
-
-    if (!variantId) {
-      console.error('No variant ID found');
-      return;
-    }
-
-    await this.addToCart(variantId, button, productTitle);
-  }
-
-  /**
-   * Add product to cart
-   */
-  async addToCart(variantId, button, productTitle) {
-    // Disable button and show loading state
-    button.disabled = true;
-    button.classList.add('loading');
-    const originalHTML = button.innerHTML;
-    button.innerHTML = 'Adding...';
-
-    try {
-      const response = await fetch('/cart/add.js', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: variantId,
-          quantity: 1
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add to cart');
-      }
-
-      const result = await response.json();
-      
-      // Show success state
-      button.classList.remove('loading');
-      button.classList.add('success');
-      button.innerHTML = '✓ Added';
-
-      // Update cart count and total
-      await this.updateCartUI();
-
-      // Show success notification (optional)
-      this.showNotification(`${productTitle} added to cart`, 'success');
-
-      // Reset button after delay
-      setTimeout(() => {
-        button.classList.remove('success');
-        button.innerHTML = originalHTML;
-        button.disabled = false;
-      }, 2000);
-
-      // Reload cart drawer to show updated items
-      setTimeout(() => {
-        location.reload();
-      }, 1500);
-
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      
-      // Show error state
-      button.classList.remove('loading');
-      button.innerHTML = 'Error - Try Again';
-      
-      // Show error notification
-      this.showNotification('Failed to add to cart. Please try again.', 'error');
-
-      // Reset button after delay
-      setTimeout(() => {
-        button.innerHTML = originalHTML;
-        button.disabled = false;
-      }, 2000);
-    }
-  }
-
-  /**
-   * Update cart UI elements (count, total, etc.)
-   */
-  async updateCartUI() {
-    try {
-      const response = await fetch('/cart.js');
-      const cart = await response.json();
-
-      // Update cart count
-      const cartCountElements = document.querySelectorAll('.cart-count-bubble span, .drawer__heading span');
-      cartCountElements.forEach(element => {
-        element.textContent = cart.item_count;
-      });
-
-      // Update cart total
-      const cartTotalElements = document.querySelectorAll('.cart-total');
-      cartTotalElements.forEach(element => {
-        element.textContent = this.formatMoney(cart.total_price);
-      });
-
-      // Dispatch custom event for other scripts
-      document.dispatchEvent(new CustomEvent('cart:updated', { detail: cart }));
-
-    } catch (error) {
-      console.error('Error updating cart UI:', error);
-    }
-  }
-
-  /**
-   * Setup mobile carousel with Slick
-   */
-  setupMobileCarousel() {
-    if (!this.mobileContainer) return;
-
-    // Check if Slick is available
-    if (typeof jQuery === 'undefined' || typeof jQuery.fn.slick === 'undefined') {
-      console.warn('Slick Carousel not found. Please ensure jQuery and Slick are loaded.');
-      return;
-    }
-
-    // Wait for products to be rendered
-    setTimeout(() => {
-      const $mobileContainer = jQuery(this.mobileContainer);
-      
-      // Destroy existing slick instance if any
-      if ($mobileContainer.hasClass('slick-initialized')) {
-        $mobileContainer.slick('unslick');
-      }
-
-      // Initialize Slick Carousel
-      $mobileContainer.slick({
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        arrows: true,
-        dots: true,
-        infinite: false,
-        speed: 300,
-        cssEase: 'ease-in-out',
-        adaptiveHeight: true,
-        prevArrow: '<button type="button" class="slick-prev">Previous</button>',
-        nextArrow: '<button type="button" class="slick-next">Next</button>',
-        responsive: [
-          {
-            breakpoint: 750,
-            settings: {
-              slidesToShow: 1,
-              slidesToScroll: 1,
-              dots: true
-            }
-          },
-          {
-            breakpoint: 550,
-            settings: {
-              slidesToShow: 1,
-              slidesToScroll: 1,
-              dots: true,
-              arrows: true
-            }
-          }
-        ]
-      });
-
-      // Track slide changes for analytics (optional)
-      $mobileContainer.on('afterChange', (event, slick, currentSlide) => {
-        console.log('Viewing product:', currentSlide + 1, 'of', slick.slideCount);
-      });
-    }, 100);
-  }
-
-  /**
-   * Update navigation button visibility - Not needed with Slick
-   * Slick handles this automatically
-   */
-  updateNavButtons(container, prevBtn, nextBtn) {
-    // This method is no longer needed with Slick
-    // Slick automatically manages arrow states
-  }
-
-  /**
-   * Hide containers if no products
-   */
-  hideContainers() {
-    if (this.desktopContainer) {
-      this.desktopContainer.closest('.frequently-bought-wrapper')?.classList.add('hidden');
-    }
-    if (this.mobileContainer) {
-      this.mobileContainer.closest('.frequently-bought-wrapper')?.classList.add('hidden');
-    }
-  }
-
-  /**
-   * Show notification message
-   */
-  showNotification(message, type = 'success') {
-    // You can implement a custom notification system here
-    // For now, we'll use a simple console log
-    console.log(`[${type.toUpperCase()}] ${message}`);
-    
-    // Optional: Show browser notification
-    // if ('Notification' in window && Notification.permission === 'granted') {
-    //   new Notification('Cart Update', { body: message });
-    // }
-  }
-
-  /**
-   * Format price with 2 decimal places
-   */
-  formatPrice(price) {
-    return parseFloat(price).toFixed(2);
-  }
-
-  /**
-   * Format money in shop currency format
-   */
-  formatMoney(cents) {
-    const dollars = cents / 100;
-    return `$${dollars.toFixed(2)}`;
-  }
-
-  /**
-   * Escape HTML to prevent XSS
-   */
-  escapeHtml(text) {
-    const map = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, m => map[m]);
-  }
-}
-
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  new FrequentlyBoughtTogether();
-});
-
-// Export for use in other scripts
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = FrequentlyBoughtTogether;
-}
-</script>
