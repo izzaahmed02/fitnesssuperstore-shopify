@@ -1311,3 +1311,474 @@
   background: #45a049;
 }
 </style>
+<script>
+  /**
+ * Frequently Bought Together - Cart Drawer Enhancement
+ * Handles loading, displaying, and managing frequently bought products
+ */
+
+class FrequentlyBoughtTogether {
+  constructor() {
+    this.desktopContainer = document.getElementById('FrequentlyBoughtProducts');
+    this.mobileContainer = document.getElementById('FrequentlyBoughtProductsMobile');
+    this.products = [];
+    this.init();
+  }
+
+  init() {
+    if (!this.desktopContainer && !this.mobileContainer) {
+      console.warn('Frequently Bought Together containers not found');
+      return;
+    }
+
+    this.loadProducts();
+    this.setupMobileCarousel();
+  }
+
+  /**
+   * Load frequently bought products
+   * You can modify this method to fetch products from your API or backend
+   */
+  async loadProducts() {
+    try {
+      // Option 1: Fetch from a custom endpoint (recommended)
+      // const response = await fetch('/apps/frequently-bought-together');
+      // const data = await response.json();
+      // this.products = data.products;
+
+      // Option 2: Use hardcoded product data (for testing)
+      this.products = await this.getSampleProducts();
+
+      // Option 3: Fetch related products based on cart items
+      // this.products = await this.getRelatedProducts();
+
+      this.renderProducts();
+    } catch (error) {
+      console.error('Error loading frequently bought products:', error);
+    }
+  }
+
+  /**
+   * Sample products for demonstration
+   * Replace with your actual product data
+   */
+  async getSampleProducts() {
+    return [
+      {
+        id: 'product-1',
+        handle: 'adjustable-bench',
+        title: 'French Fitness FF-FIB 0-90 Degree Adjustable Bench (New)',
+        image: 'https://via.placeholder.com/300x300',
+        rating: 4.6,
+        reviewCount: 129,
+        comparePrice: 980.00,
+        price: 299.00,
+        variantId: '123456789'
+      },
+      {
+        id: 'product-2',
+        handle: 'olympic-plates',
+        title: 'French Fitness Olympic Bumper Plate Set 190 lbs - Crumb Rubber (New)',
+        image: 'https://via.placeholder.com/300x300',
+        rating: 4.9,
+        reviewCount: 230,
+        comparePrice: 999.00,
+        price: 349.99,
+        variantId: '987654321'
+      },
+      {
+        id: 'product-3',
+        handle: 'barbell-set',
+        title: 'Olympic Barbell Set with Chrome Finish',
+        image: 'https://via.placeholder.com/300x300',
+        rating: 4.7,
+        reviewCount: 156,
+        comparePrice: 599.00,
+        price: 449.99,
+        variantId: '456789123'
+      }
+    ];
+  }
+
+  /**
+   * Get related products based on current cart items
+   * This is a placeholder - implement your own logic
+   */
+  async getRelatedProducts() {
+    try {
+      const cartResponse = await fetch('/cart.js');
+      const cart = await cartResponse.json();
+      
+      // Get product IDs from cart
+      const productIds = cart.items.map(item => item.product_id);
+      
+      // Fetch recommendations based on these products
+      // This would typically call your backend API
+      const recommendations = await this.fetchRecommendations(productIds);
+      
+      return recommendations;
+    } catch (error) {
+      console.error('Error fetching related products:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch product recommendations from backend
+   * Implement this based on your recommendation engine
+   */
+  async fetchRecommendations(productIds) {
+    // Example API call
+    // const response = await fetch(`/apps/recommendations?products=${productIds.join(',')}`);
+    // return await response.json();
+    
+    // For now, return sample data
+    return this.getSampleProducts();
+  }
+
+  /**
+   * Render products in both desktop and mobile containers
+   */
+  renderProducts() {
+    if (this.products.length === 0) {
+      this.hideContainers();
+      return;
+    }
+
+    const productsHTML = this.products.map(product => this.createProductCard(product)).join('');
+
+    if (this.desktopContainer) {
+      this.desktopContainer.innerHTML = productsHTML;
+    }
+
+    if (this.mobileContainer) {
+      this.mobileContainer.innerHTML = productsHTML;
+    }
+
+    this.attachEventListeners();
+  }
+
+  /**
+   * Create HTML for a single product card
+   */
+  createProductCard(product) {
+    const comparePrice = product.comparePrice 
+      ? `<span class="frequently-bought-item__compare-price">As high as: $${this.formatPrice(product.comparePrice)}</span>`
+      : '';
+
+    return `
+      <div class="frequently-bought-item" data-product-id="${product.id}">
+        <div class="frequently-bought-item__image">
+          <img 
+            src="${product.image}" 
+            alt="${this.escapeHtml(product.title)}" 
+            loading="lazy"
+            onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'"
+          >
+        </div>
+        <h4 class="frequently-bought-item__title">${this.escapeHtml(product.title)}</h4>
+        ${this.createRatingHTML(product.rating, product.reviewCount)}
+        <div class="frequently-bought-item__prices">
+          ${comparePrice}
+          <span class="frequently-bought-item__price">$${this.formatPrice(product.price)}</span>
+        </div>
+        <button 
+          class="frequently-bought-item__add-btn" 
+          data-variant-id="${product.variantId}"
+          data-product-title="${this.escapeHtml(product.title)}"
+        >
+          ${this.getCartIcon()}
+          Add To Cart
+        </button>
+      </div>
+    `;
+  }
+
+  /**
+   * Create rating stars HTML
+   */
+  createRatingHTML(rating, reviewCount) {
+    if (!rating || !reviewCount) return '';
+
+    return `
+      <div class="frequently-bought-item__rating">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+        </svg>
+        <span>${rating}</span>
+        <span class="frequently-bought-item__rating-count">(${reviewCount} reviews)</span>
+      </div>
+    `;
+  }
+
+  /**
+   * Get cart icon SVG
+   */
+  getCartIcon() {
+    return `
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.70711 15.2929C4.07714 15.9229 4.52331 17 5.41421 17H17M17 17C15.8954 17 15 17.8954 15 19C15 20.1046 15.8954 21 17 21C18.1046 21 19 20.1046 19 19C19 17.8954 18.1046 17 17 17ZM9 19C9 20.1046 8.10457 21 7 21C5.89543 21 5 20.1046 5 19C5 17.8954 5.89543 17 7 17C8.10457 17 9 17.8954 9 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+  }
+
+  /**
+   * Attach event listeners to add to cart buttons
+   */
+  attachEventListeners() {
+    const buttons = document.querySelectorAll('.frequently-bought-item__add-btn');
+    buttons.forEach(button => {
+      button.addEventListener('click', (e) => this.handleAddToCart(e));
+    });
+  }
+
+  /**
+   * Handle add to cart button click
+   */
+  async handleAddToCart(event) {
+    event.preventDefault();
+    const button = event.currentTarget;
+    const variantId = button.getAttribute('data-variant-id');
+    const productTitle = button.getAttribute('data-product-title');
+
+    if (!variantId) {
+      console.error('No variant ID found');
+      return;
+    }
+
+    await this.addToCart(variantId, button, productTitle);
+  }
+
+  /**
+   * Add product to cart
+   */
+  async addToCart(variantId, button, productTitle) {
+    // Disable button and show loading state
+    button.disabled = true;
+    button.classList.add('loading');
+    const originalHTML = button.innerHTML;
+    button.innerHTML = 'Adding...';
+
+    try {
+      const response = await fetch('/cart/add.js', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: variantId,
+          quantity: 1
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add to cart');
+      }
+
+      const result = await response.json();
+      
+      // Show success state
+      button.classList.remove('loading');
+      button.classList.add('success');
+      button.innerHTML = '✓ Added';
+
+      // Update cart count and total
+      await this.updateCartUI();
+
+      // Show success notification (optional)
+      this.showNotification(`${productTitle} added to cart`, 'success');
+
+      // Reset button after delay
+      setTimeout(() => {
+        button.classList.remove('success');
+        button.innerHTML = originalHTML;
+        button.disabled = false;
+      }, 2000);
+
+      // Reload cart drawer to show updated items
+      setTimeout(() => {
+        location.reload();
+      }, 1500);
+
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      
+      // Show error state
+      button.classList.remove('loading');
+      button.innerHTML = 'Error - Try Again';
+      
+      // Show error notification
+      this.showNotification('Failed to add to cart. Please try again.', 'error');
+
+      // Reset button after delay
+      setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.disabled = false;
+      }, 2000);
+    }
+  }
+
+  /**
+   * Update cart UI elements (count, total, etc.)
+   */
+  async updateCartUI() {
+    try {
+      const response = await fetch('/cart.js');
+      const cart = await response.json();
+
+      // Update cart count
+      const cartCountElements = document.querySelectorAll('.cart-count-bubble span, .drawer__heading span');
+      cartCountElements.forEach(element => {
+        element.textContent = cart.item_count;
+      });
+
+      // Update cart total
+      const cartTotalElements = document.querySelectorAll('.cart-total');
+      cartTotalElements.forEach(element => {
+        element.textContent = this.formatMoney(cart.total_price);
+      });
+
+      // Dispatch custom event for other scripts
+      document.dispatchEvent(new CustomEvent('cart:updated', { detail: cart }));
+
+    } catch (error) {
+      console.error('Error updating cart UI:', error);
+    }
+  }
+
+  /**
+   * Setup mobile carousel with Slick
+   */
+  setupMobileCarousel() {
+    if (!this.mobileContainer) return;
+
+    // Check if Slick is available
+    if (typeof jQuery === 'undefined' || typeof jQuery.fn.slick === 'undefined') {
+      console.warn('Slick Carousel not found. Please ensure jQuery and Slick are loaded.');
+      return;
+    }
+
+    // Wait for products to be rendered
+    setTimeout(() => {
+      const $mobileContainer = jQuery(this.mobileContainer);
+      
+      // Destroy existing slick instance if any
+      if ($mobileContainer.hasClass('slick-initialized')) {
+        $mobileContainer.slick('unslick');
+      }
+
+      // Initialize Slick Carousel
+      $mobileContainer.slick({
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        arrows: true,
+        dots: true,
+        infinite: false,
+        speed: 300,
+        cssEase: 'ease-in-out',
+        adaptiveHeight: true,
+        prevArrow: '<button type="button" class="slick-prev">Previous</button>',
+        nextArrow: '<button type="button" class="slick-next">Next</button>',
+        responsive: [
+          {
+            breakpoint: 750,
+            settings: {
+              slidesToShow: 1,
+              slidesToScroll: 1,
+              dots: true
+            }
+          },
+          {
+            breakpoint: 550,
+            settings: {
+              slidesToShow: 1,
+              slidesToScroll: 1,
+              dots: true,
+              arrows: true
+            }
+          }
+        ]
+      });
+
+      // Track slide changes for analytics (optional)
+      $mobileContainer.on('afterChange', (event, slick, currentSlide) => {
+        console.log('Viewing product:', currentSlide + 1, 'of', slick.slideCount);
+      });
+    }, 100);
+  }
+
+  /**
+   * Update navigation button visibility - Not needed with Slick
+   * Slick handles this automatically
+   */
+  updateNavButtons(container, prevBtn, nextBtn) {
+    // This method is no longer needed with Slick
+    // Slick automatically manages arrow states
+  }
+
+  /**
+   * Hide containers if no products
+   */
+  hideContainers() {
+    if (this.desktopContainer) {
+      this.desktopContainer.closest('.frequently-bought-wrapper')?.classList.add('hidden');
+    }
+    if (this.mobileContainer) {
+      this.mobileContainer.closest('.frequently-bought-wrapper')?.classList.add('hidden');
+    }
+  }
+
+  /**
+   * Show notification message
+   */
+  showNotification(message, type = 'success') {
+    // You can implement a custom notification system here
+    // For now, we'll use a simple console log
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    
+    // Optional: Show browser notification
+    // if ('Notification' in window && Notification.permission === 'granted') {
+    //   new Notification('Cart Update', { body: message });
+    // }
+  }
+
+  /**
+   * Format price with 2 decimal places
+   */
+  formatPrice(price) {
+    return parseFloat(price).toFixed(2);
+  }
+
+  /**
+   * Format money in shop currency format
+   */
+  formatMoney(cents) {
+    const dollars = cents / 100;
+    return `$${dollars.toFixed(2)}`;
+  }
+
+  /**
+   * Escape HTML to prevent XSS
+   */
+  escapeHtml(text) {
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+  }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  new FrequentlyBoughtTogether();
+});
+
+// Export for use in other scripts
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = FrequentlyBoughtTogether;
+}
+</script>
