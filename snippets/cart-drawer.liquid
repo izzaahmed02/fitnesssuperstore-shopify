@@ -24,21 +24,28 @@
 
   /* Frequently Bought Together Styles - Desktop */
   .frequently-bought-wrapper {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
     width: 400px;
     background: #fff;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    z-index: 999;
     overflow-y: auto;
     padding: 30px 20px;
-    transition: transform 0.3s ease;
+    border-right: 1px solid #e5e5e5;
   }
 
   .frequently-bought-wrapper.hidden {
-    transform: translateX(-100%);
+    display: none;
+  }
+
+  /* Cart drawer layout with frequently bought */
+  .cart-drawer__container {
+    display: flex;
+    height: 100%;
+  }
+
+  .cart-drawer__main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .frequently-bought-title {
@@ -154,27 +161,21 @@
     fill: currentColor;
   }
 
-  /* Adjust cart drawer when frequently bought is visible */
-  .cart-drawer__inner-with-frequently {
-    margin-left: 400px;
-  }
-
   /* Mobile Styles */
   @media screen and (max-width: 989px) {
-    .frequently-bought-wrapper {
-      position: relative;
-      width: 100%;
-      left: auto;
-      top: auto;
-      bottom: auto;
-      box-shadow: none;
-      border-top: 1px solid #e5e5e5;
-      padding: 20px 15px;
-      transform: none !important;
+    /* Hide desktop sidebar on mobile */
+    .frequently-bought-wrapper:not(.frequently-bought-mobile) {
+      display: none;
     }
 
-    .frequently-bought-wrapper.hidden {
-      display: none;
+    /* Show mobile version */
+    .frequently-bought-mobile {
+      display: block;
+      width: 100%;
+      box-shadow: none;
+      border-top: 1px solid #e5e5e5;
+      border-right: none;
+      padding: 20px 15px;
     }
 
     .frequently-bought-title {
@@ -276,23 +277,27 @@
   <div id="CartDrawer" class="cart-drawer">
     <div id="CartDrawer-Overlay" class="cart-drawer__overlay"></div>
 
-    <!-- Frequently Bought Together Section - Desktop (Sidebar) -->
-    {% unless cart == empty %}
-      <div class="frequently-bought-wrapper" id="FrequentlyBought">
-        <h3 class="frequently-bought-title">Frequently Bought<br>Together</h3>
-        <div class="frequently-bought-products" id="FrequentlyBoughtProducts">
-          <!-- Products will be loaded here dynamically -->
-        </div>
-      </div>
-    {% endunless %}
-
     <div
-      class="drawer__inner gradient color-{{ settings.cart_color_scheme }}{% unless cart == empty %} cart-drawer__inner-with-frequently{% endunless %}"
+      class="drawer__inner gradient color-{{ settings.cart_color_scheme }}"
       role="dialog"
       aria-modal="true"
       aria-label="{{ 'sections.cart.title' | t }}"
       tabindex="-1"
     >
+      {% unless cart == empty %}
+        <!-- Cart Drawer Container with Frequently Bought Together -->
+        <div class="cart-drawer__container">
+          <!-- Frequently Bought Together Section - Desktop (Left Sidebar) -->
+          <div class="frequently-bought-wrapper" id="FrequentlyBought">
+            <h3 class="frequently-bought-title">Frequently Bought<br>Together</h3>
+            <div class="frequently-bought-products" id="FrequentlyBoughtProducts">
+              <!-- Products will be loaded here dynamically -->
+            </div>
+          </div>
+
+          <!-- Main Cart Content -->
+          <div class="cart-drawer__main">
+      {% endunless %}
       {% if cart == empty %}
         <div class="drawer__inner-empty">
           <div class="cart-drawer__warnings center{% if settings.cart_drawer_collection != blank %} cart-drawer__warnings--has-collection{% endif %}">
@@ -585,7 +590,11 @@
           <a class="cart-link" href="/cart">View/Edit cart</a>
         </div>
       </div>
-    </div>
+      {% unless cart == empty %}
+          </div><!-- Close cart-drawer__main -->
+        </div><!-- Close cart-drawer__container -->
+      {% endunless %}
+    </div><!-- Close drawer__inner -->
     {% if show_product_options %}
       {% for item in cart.items %}
         {% for property in item.properties %}
@@ -866,6 +875,7 @@
 {% if show_product_options %}
   <script src="{{ 'product-custom-options.js' | asset_url }}" defer></script>
 {% endif %}
+
 
 <style>
   /* Frequently Bought Together Styles */
