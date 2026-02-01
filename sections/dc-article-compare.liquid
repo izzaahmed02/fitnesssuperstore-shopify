@@ -1,476 +1,481 @@
-
 <style>
 
-
-  .compareChart.cols-3 .col-product{
+  /* ─── Column-width classes for all possible counts ─── */
+  .compareChart.cols-3 .col-product {
     width: 365.6px;
     max-width: 365.6px;
     min-width: 365.6px;
   }
-
-  .compareChart.cols-4 .col-product{
+  .compareChart.cols-4 .col-product {
     width: 273.6px;
     max-width: 273.6px;
     min-width: 273.6px;
   }
-
-  .compareChart.cols-5 .col-product{
+  .compareChart.cols-5 .col-product {
     width: 219.6px;
     max-width: 219.6px;
     min-width: 219.6px;
   }
-
-  .compareChart.cols-6 .col-product{
+  .compareChart.cols-6 .col-product {
     width: 182.6px;
     max-width: 182.6px;
     min-width: 182.6px;
   }
+  .compareChart.cols-7 .col-product {
+    width: 156.6px;
+    max-width: 156.6px;
+    min-width: 156.6px;
+  }
+
+
+  /* Also apply matching widths inside the sticky header */
+  .compareChart.cols-3 .sticky-header th:not(.feature-col) { width: 365.6px; max-width: 365.6px; min-width: 365.6px; }
+  .compareChart.cols-4 .sticky-header th:not(.feature-col) { width: 273.6px; max-width: 273.6px; min-width: 273.6px; }
+  .compareChart.cols-5 .sticky-header th:not(.feature-col) { width: 219.6px; max-width: 219.6px; min-width: 219.6px; }
+  .compareChart.cols-6 .sticky-header th:not(.feature-col) { width: 182.6px; max-width: 182.6px; min-width: 182.6px; }
+  .compareChart.cols-7 .sticky-header th:not(.feature-col) { width: 156.6px; max-width: 156.6px; min-width: 156.6px; }
+
 
 
 .belowfoldCharts {
-padding: 0 16px;
-margin-bottom: 50px;
+  padding: 0 16px;
+  margin-bottom: 50px;
 }
 .belowfoldCharts h3 {
-margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 .belowfoldCharts p {
-margin-top: 0px;
+  margin-top: 0px;
 }
 .belowfoldCharts a {
-color: #D83D0E;
+  color: #D83D0E;
 }
 .belowfoldCharts li {
-list-style: disc;
+  list-style: disc;
 }
 .belowfoldCharts ul {
-padding-left: 35px;
+  padding-left: 35px;
 }
-  .compareChart .comparison-table a{
+
+.compareChart .comparison-table a {
   text-decoration: underline;
 }
-
-.compareChart .comparison-table li{
-list-style: disc;
-margin-left: 5px;
+.compareChart .comparison-table li {
+  list-style: disc;
+  margin-left: 5px;
+}
+.compareChart .comparison-table p {
+  margin: 0;
 }
 
-.compareChart .comparison-table p{
-margin: 0;
-}
-
-
-  .compareChart .sticky-header { 
-  /* existing styles... */
+/* ─── Sticky header scrollbar hidden ─── */
+.compareChart .sticky-header {
   scrollbar-width: none; /* Firefox */
 }
-
 .compareChart .sticky-header::-webkit-scrollbar {
   display: none; /* Chrome, Safari */
 }
 
+/* ─── Scroll arrow buttons ─── */
+.compareChart .scroll-btn.disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.compareChart .scroll-btn:not(.disabled):hover {
+  background-color: #444;
+}
+.compareChart .scroll-arrows {
+  display: flex;
+  justify-content: right;
+  margin: 12px 0;
+  gap: 8px;
+}
 
-  .compareChart .scroll-btn.disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    opacity: 0.6;
+/* Sticky scroll arrows (shown for large column counts) */
+.compareChart .scroll-arrows.sticky {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  flex-direction: column;
+  margin: 0;
+}
+
+.compareChart .scroll-btn {
+  background-color: #D83D0E;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  font-size: 20px;
+  transition: background-color 0.3s ease;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 1;
+}
+.compareChart .scroll-btn:hover {
+  background-color: #444;
+}
+
+/* ─── Feature column (sticky left) ─── */
+.compareChart .col-feature {
+  width: 150px !important;
+  max-width: 150px !important;
+  min-width: 150px !important;
+}
+
+/* ─── Sticky header: fixed bar that mirrors the main thead ─── */
+.compareChart .sticky-header {
+  position: fixed;
+  top: 0;
+  z-index: 2000;
+  background: #EDEFF3;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Start invisible */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+.compareChart .sticky-header.visible {
+  background: #fff;
+  opacity: 1;
+  visibility: visible;
+}
+
+.compareChart .sticky-header table {
+  width: max-content;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 0;
+}
+.compareChart .sticky-header th {
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  text-align: center;
+  vertical-align: top;
+  word-wrap: break-word;
+  white-space: normal;
+  background: #EDEFF3 !important;
+}
+.compareChart .sticky-header .feature-col {
+  position: sticky;
+  left: 0;
+  z-index: 2001;
+  background: #EDEFF3 !important;
+  width: 150px !important;
+  max-width: 150px !important;
+  min-width: 150px !important;
+}
+
+/* ─── Responsive overrides ─── */
+@media (max-width: 768px) {
+  .compareChart .col-feature {
+    width: 100px !important;
+    max-width: 100px !important;
+    min-width: 100px !important;
+  }
+  .compareChart .sticky-header .feature-col {
+    width: 150px !important;
+    max-width: 150px !important;
+    min-width: 150px !important;
+  }
+  .compareChart .feature-col {
+    width: 100px !important;
+    max-width: 100px !important;
+    min-width: 100px !important;
+  }
+  .compareChart .feature-label {
+    width: 100px !important;
+    max-width: 100px !important;
+    min-width: 100px !important;
   }
 
-  .compareChart .scroll-btn:not(.disabled):hover {
-    background-color: #444;
+  .compareChart .col-product {
+    width: 155px !important;
+    max-width: 155px !important;
+    min-width: 155px !important;
+  }
+  /* Override all cols-N product widths on mobile */
+  .compareChart[class*="cols-"] .col-product,
+  .compareChart[class*="cols-"] .comparison-table th:not(.feature-col),
+  .compareChart[class*="cols-"] .comparison-table td:not(.feature-label),
+  .compareChart[class*="cols-"] .sticky-header th:not(.feature-col) {
+    width: 155px !important;
+    max-width: 155px !important;
+    min-width: 155px !important;
   }
 
-  .compareChart .scroll-arrows {
-    display: flex;
-    justify-content: right;
-    margin: 12px 0;
-    gap: 8px;
+  .compareChart .comparison-chart-wrapper,
+  .compareChart .scroll-container {
+    overflow-y: hidden !important;
+    max-height: 100% !important;
   }
-
-  /* Sticky scroll arrows when there are 5+ columns */
+  .compareChart .custom-scrollbar.vertical {
+    display: none !important;
+  }
   .compareChart .scroll-arrows.sticky {
-    position: fixed;
-    top: 50%;
-    right: 20px;
-    transform: translateY(-50%);
-    z-index: 1000;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    flex-direction: column;
-    margin: 0;
+    right: 10px;
+    padding: 5px;
   }
-
-  .compareChart .scroll-btn {
-    background-color: #D83D0E;
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    font-size: 20px;
-    transition: background-color 0.3s ease;
-    border-radius: 4px;
-    cursor: pointer;
-    z-index: 1;
+  .compareChart .scroll-arrows.sticky .scroll-btn {
+    padding: 6px 12px;
+    font-size: 16px;
   }
+}
 
-  .compareChart .scroll-btn:hover {
-    background-color: #444;
-  }
-
- .compareChart .col-feature {
+@media (max-width: 500px) {
+  .compareChart .col-feature,
+  .compareChart .sticky-header .feature-col,
+  .compareChart .feature-label {
     width: 150px !important;
     max-width: 150px !important;
     min-width: 150px !important;
   }
 
   .compareChart .col-product {
-    max-width: 156.6px;
-    min-width: 156.6px;
-    width: 156.6px;
+    width: 140px !important;
+    max-width: 140px !important;
+    min-width: 140px !important;
   }
+  .compareChart[class*="cols-"] .col-product,
+  .compareChart[class*="cols-"] .comparison-table th:not(.feature-col),
+  .compareChart[class*="cols-"] .comparison-table td:not(.feature-label),
+  .compareChart[class*="cols-"] .sticky-header th:not(.feature-col) {
+    width: 140px !important;
+    max-width: 140px !important;
+    min-width: 140px !important;
+  }
+}
 
-  /* Sticky header that sticks to viewport */
-  .compareChart .sticky-header {
-  /*  position: fixed;
-    top: 0;
-    z-index: 2000;
-    background: #EDEFF3;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    transform: translateY(-100%);
-    transition: transform 0.3s ease;
-    overflow-x: auto;
-    overflow-y: hidden;
-    transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
-  opacity: 0;
-  visibility: hidden; */
-  position: fixed;
-  top: 0; /* Change this to match .section-header height */
-  z-index: 2000;
-  background: #EDEFF3;
-
+/* ─── Scroll container & wrapper ─── */
+.compareChart .scroll-container {
+  position: relative;
+  width: 100%;
+  max-height: 100%;
+}
+.compareChart .comparison-chart-wrapper {
+  height: auto;
+  width: 100%;
+  border-radius: 12px;
   overflow-x: auto;
-  overflow-y: hidden;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.15s ease, visibility 0.15s ease;
-  }
+  overflow-y: visible;
+  scroll-behavior: smooth;
+  position: relative;
+}
 
-  .compareChart .sticky-header.visible {
-background: #fff;
+/* ─── Custom scrollbar track (visual only) ─── */
+.compareChart .custom-scrollbar {
+  position: absolute;
+  background: #999;
   opacity: 1;
-  visibility: visible;
-  }
+  z-index: 20;
+  pointer-events: none;
+}
+.compareChart .custom-scrollbar.horizontal {
+  height: 5px;
+  top: 0;
+  left: 0;
+  border-radius: 4px;
+  background: #aaa;
+  z-index: 1;
+}
+.compareChart .custom-scrollbar.vertical {
+  width: 5px;
+  top: 0;
+  right: 0;
+  border-radius: 4px;
+  background: #aaa;
+  z-index: 1;
+}
+.compareChart .scrollbar-container {
+  position: relative;
+}
 
-  .compareChart .sticky-header table {
-    width: max-content;
-    border-collapse: collapse;
-    table-layout: fixed;
-    margin: 0;
-  }
+/* ─── Outer wrapper ─── */
+.compareChart .comparison-chart-outer {
+  padding: 0px 16px;
+  width: 100%;
+  overflow-y: visible;
+  position: relative;
+  margin-bottom: 50px;
+}
 
-  .compareChart .sticky-header th {
-    padding: 12px;
-    border: 1px solid #e5e5e5;
-    text-align: center;
-    vertical-align: top;
+/* ─── Main table ─── */
+.compareChart .comparison-table {
+  width: max-content;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.compareChart .comparison-table th {
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  text-align: center;
+  vertical-align: top;
+  word-wrap: break-word;
+  white-space: normal;
+  width: 156.6px;
+  max-width: 156.6px;
+  min-width: 156.6px;
+  background: #EDEFF3 !important;
+}
+.compareChart .comparison-table td {
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  text-align: left;
+  vertical-align: top;
+  word-wrap: break-word;
+  white-space: normal;
+  width: 156.6px;
+  max-width: 156.6px;
+  min-width: 156.6px;
+}
 
-    word-wrap: break-word;
-    white-space: normal;
-    background: #EDEFF3 !important;
-  }
+/* ─── Feature label (sticky left column) ─── */
+.compareChart .feature-col {
+  width: 150px !important;
+  max-width: 150px !important;
+  min-width: 150px !important;
+  font-weight: 600;
+  text-align: left;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+.compareChart .feature-label {
+  text-align: left;
+  color: #000;
+  font-family: Lato;
+  font-weight: 700;
+  font-style: Bold;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0;
+  vertical-align: middle;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  width: 150px !important;
+  max-width: 150px !important;
+  min-width: 150px !important;
+}
 
-.compareChart .sticky-header .feature-col {
-    position: sticky;
-    left: 0;
-    z-index: 2001;
-    background: #EDEFF3 !important;
-    width: 150px !important;
-    max-width: 150px !important;
-    min-width: 150px !important;
-  }
+/* ─── Row alternating backgrounds ─── */
+.compareChart thead,
+.compareChart .even-class {
+  background: #EDEFF3;
+}
+.compareChart .even-class .feature-label {
+  background-color: #EDEFF3;
+}
+.compareChart .odd-class .feature-label {
+  background-color: #fff;
+}
 
-  @media (max-width: 768px) {
-    .compareChart .col-feature {
-      width: 100px;
-    }
+/* ─── Feature value cells ─── */
+.compareChart .feature-value {
+  color: #000;
+  font-family: Lato;
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0px;
+  vertical-align: middle;
+}
 
-    .compareChart .col-product {
-      width: 155px;
-    }
+/* ─── Product header ─── */
+.compareChart .product-header {
+  text-align: center;
+}
+.compareChart .product-title {
+  font-family: Lato;
+  font-weight: 700;
+  font-style: Bold;
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: 0px;
+  text-align: center;
+  color: #000;
+  margin-bottom: 12px;
+}
+.compareChart .product-header-image img {
+  max-width: 100px;
+  width: 91px;
+  height: 120px;
+  object-fit: contain;
+}
 
-    .compareChart .comparison-chart-wrapper, .compareChart .scroll-container {
-      overflow-y: hidden !important;
-      max-height: 100%!important;
-    }
+/* ─── Page title & description ─── */
+.compareChart .customTitle {
+  font-family: Oswald;
+  font-weight: 600;
+  font-size: 48px;
+  margin-bottom: 52px;
+  line-height: 68px;
+  letter-spacing: 0;
+  text-align: center;
+  text-transform: uppercase;
+  margin-top: 0px;
+}
+.compareChart .comparisonDescp {
+  max-width: 100%;
+  margin: 0 15px;
+}
+.compareChart .customContent {
+  font-family: Lato;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0px;
+  text-align: left;
+  padding-bottom: 12px;
+}
 
-    .compareChart .custom-scrollbar.vertical {
-      display: none !important;
-    }
+/* ─── Animated right arrow ─── */
+.compareChart .right_arrow svg {
+  width: 20px;
+  animation: move 1s linear infinite;
+  transform-origin: center;
+}
+.compareChart .right_arrow {
+  text-align: right;
+  margin-right: 10px;
+}
+@keyframes move {
+  0%   { transform: translateX(0); }
+  50%  { transform: translateX(5px); }
+  100% { transform: translateX(0); }
+}
 
-    .compareChart .scroll-arrows.sticky {
-      right: 10px;
-      padding: 5px;
-    }
-
-    .compareChart .scroll-arrows.sticky .scroll-btn {
-      padding: 6px 12px;
-      font-size: 16px;
-    }
-  }
-
-  @media (max-width: 500px) {
-    .compareChart .col-feature {
-      width: 80px;
-    }
-
-    .compareChart .col-product {
-      width: 140px;
-    }
-  }
-
-  .compareChart .scroll-container {
-    position: relative;
-    width: 100%;
-    max-height: 100%;
-  }
-
-  .compareChart .comparison-chart-wrapper {
-    height: auto;
-    width: 100%;  
-    border-radius: 12px;
-    overflow-x: auto;
-    overflow-y: visible;
-    scroll-behavior: smooth;
-    position: relative;
-  }
-
-  .compareChart .custom-scrollbar {
-    position: absolute;
-    background: #999;
-    opacity: 1;
-    z-index: 20;
-    pointer-events: none;
-  }
-
-  .compareChart .custom-scrollbar.horizontal {
-    height: 5px;
-    top: 0;
-    left: 0;
-    border-radius: 4px;
-    background: #aaa;
-    z-index: 1;
-  }
-
-  .compareChart .custom-scrollbar.vertical {
-    width: 5px;
-    top: 0;
-    right: 0;
-    border-radius: 4px;
-    background: #aaa;
-    z-index: 1;
-  }
-
-  .compareChart .scrollbar-container {
-    position: relative;
-  }
-
-  .compareChart .comparison-chart-outer{
-    padding: 0px 16px;
-  }
-
-  .compareChart .feature-col{
-    width: 150px !important;
-    max-width: 150px !important;
-    min-width: 150px !important;
-    font-weight: 600;
-    text-align: left;
-    position: sticky;
-    left: 0;
-    z-index: 2;
-  }
-
-  .compareChart thead, .compareChart .even-class{
-    background: #EDEFF3;
-  }
-
-  .compareChart .comparison-chart-outer {
-    width: 100%;
-    overflow-y: visible;
-    position: relative;
-    margin-bottom: 50px;
-  }
-
-  .compareChart .comparison-table {
-    width: max-content;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
-
-  .compareChart .comparison-table th{
-    padding: 12px;
-    border: 1px solid #e5e5e5;
-    text-align: center;
-    vertical-align: top;
-    word-wrap: break-word;
-    white-space: normal;
-    width: 156.6px;
-    max-width: 156.6px;
-    min-width: 156.6px;
-    background: #EDEFF3 !important;
-  }
-
-  .compareChart .comparison-table td {
-    padding: 12px;
-    border: 1px solid #e5e5e5;
-    text-align: left;
-    vertical-align: top;
-    word-wrap: break-word;
-    white-space: normal;
-    width: 156.6px;
-    max-width: 156.6px;
-    min-width: 156.6px;
-  }
-
-  .compareChart .feature-label {
-    text-align: left;
-    color: #000;
-    font-family: Lato;
-    font-weight: 700;
-    font-style: Bold;
-    font-size: 16px;
-    line-height: 24px;
-    letter-spacing: 0;
-    vertical-align: middle;
-    position: sticky;
-    left: 0;
-    z-index: 2;
-     width: 150px !important;
-    max-width: 150px !important;
-    min-width: 150px !important;
-  }
-
-  .compareChart .even-class .feature-label {
-    background-color: #EDEFF3;
-  }
-
-  .compareChart .odd-class .feature-label {
-    background-color: #fff;
-  }
-
-  .compareChart .feature-value {
-    color: #000;
-    font-family: Lato;
-    font-weight: 400;
-    font-style: Regular;
-    font-size: 16px;
-    line-height: 24px;
-    letter-spacing: 0px;
-    vertical-align: middle;
-  }
-
-  .compareChart .product-header {
-    text-align: center;
-  }
-
-  .compareChart .product-title {
-    font-family: Lato;
-    font-weight: 700;
-    font-style: Bold;
-    font-size: 18px;
-    line-height: 24px;
-    letter-spacing: 0px;
-    text-align: center;
-    color: #000;
-    margin-bottom: 12px;
-  }
-
-  .compareChart .product-header-image img {
-    max-width: 100px;
-    width: 91px;
-    height: 120px;
-    object-fit: contain;
-  }
-
-  .compareChart .customTitle{
+@media (max-width: 768px) {
+  .compareChart .customTitle {
     font-family: Oswald;
     font-weight: 600;
-    font-size: 48px;
-    margin-bottom: 52px;
-    line-height: 68px;
+    font-size: 24px;
+    margin-bottom: 20px;
+    line-height: 32px;
     letter-spacing: 0;
     text-align: center;
     text-transform: uppercase;
-    margin-top: 0px;
   }
-
-  .compareChart .comparisonDescp{
-    max-width: 100%;
-    margin: 0 15px;
+  .compareChart .comparisonDescp {
+    padding: 0;
   }
-
-  .compareChart .customContent{
-    font-family: Lato;
-    font-weight: 400;
-    font-size: 16px;
-    line-height: 24px;
-    letter-spacing: 0px;
-    text-align: left;
-    padding-bottom: 12px;
+  .compareChart .product-header-image img {
+    max-width: 80px;
   }
+}
 
-  .compareChart .right_arrow svg {
-    width: 20px;
-    animation: move 1s linear infinite;
-    transform-origin: center;
-  }
-
-  .compareChart .right_arrow{
-    text-align: right;
-    margin-right: 10px;
-  }
-
-  @keyframes move {
-    0% {
-      transform: translateX(0);
-    }
-    50% {
-      transform: translateX(5px);
-    }
-    100% {
-      transform: translateX(0);
-    }
-  }
-
-  @media (max-width: 768px) {
-
-    .compareChart .feature-col{
-    min-width: 109px;
-    }
-    .compareChart .customTitle{
-      font-family: Oswald;
-      font-weight: 600;
-      font-size: 24px;
-      margin-bottom: 20px;
-      line-height: 32px;
-      letter-spacing: 0;
-      text-align: center;
-      text-transform: uppercase;
-    }
-
-    .compareChart .comparisonDescp {
-      padding: 0;
-    }
-    
-    .compareChart .product-header-image img {
-      max-width: 80px;
-    }
-  }
-
-  /* Hide bottom arrows when sticky arrows are active */
-  .compareChart .bottom-arrows.hidden {
-    display: none;
-  }
+/* Hide bottom arrows when sticky arrows are active */
+.compareChart .bottom-arrows.hidden {
+  display: none;
+}
 </style>
 
 <!-- Calculate product count once -->
@@ -626,11 +631,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const allLeftBtns = document.querySelectorAll(".scroll-btn.left");
   const allRightBtns = document.querySelectorAll(".scroll-btn.right");
 
-  // Check if we have 5 or more columns (products + feature column)
-const productCount = document.querySelectorAll("#mainTable .col-product").length;
-  const shouldShowStickyArrows = productCount > 7; // 4+ products = 5+ columns total
-
- 
+  const productCount = document.querySelectorAll("#mainTable .col-product").length;
+  const shouldShowStickyArrows = productCount > 7;
 
   if (shouldShowStickyArrows) {
     stickyScrollArrows.style.display = "flex";
@@ -639,119 +641,162 @@ const productCount = document.querySelectorAll("#mainTable .col-product").length
     bottomScrollArrows.classList.add("hidden");
   }
 
-  // Handle sticky header visibility and positioning based on page scroll
+  // ─── Detect the fixed/sticky site header height reliably ───
+  // Tries common Shopify theme selectors in order; falls back to 0.
+  function getSiteHeaderHeight() {
+    const candidates = [
+      '.sticky-header--stick',          // Dawn / sticky state
+      'header.header',                  // Dawn default
+      '.site-header',                   // Flavor / older themes
+      '.section-header',                // Some custom themes
+      '[id^="shopify-section-header"]', // Shopify section wrapper
+    ];
+    for (const sel of candidates) {
+      const el = document.querySelector(sel);
+      // Only count it if it's actually fixed/sticky at the top
+      if (el) {
+        const style = getComputedStyle(el);
+        if (style.position === 'fixed' || style.position === 'sticky') {
+          return el.getBoundingClientRect().height;
+        }
+        // If nothing is fixed, use the first match as a fallback
+        if (!getSiteHeaderHeight._fallback) {
+          getSiteHeaderHeight._fallback = el;
+        }
+      }
+    }
+    // Last resort: use the first matched element's height even if not fixed
+    return getSiteHeaderHeight._fallback
+      ? getSiteHeaderHeight._fallback.getBoundingClientRect().height
+      : 0;
+  }
+
+  // ─── Recalculate and apply sticky header position & size ───
+  const mainTheadThs  = mainTable.querySelectorAll('thead th');
+  const stickyThs     = stickyHeader.querySelectorAll('table thead th');
+
+  function repositionStickyHeader() {
+    const siteHeaderH    = getSiteHeaderHeight();
+    const scrollableRect = scrollableContent.getBoundingClientRect();
+
+    // Position: sit directly below the site header, span the scroll area
+    stickyHeader.style.top   = siteHeaderH + 'px';
+    stickyHeader.style.left  = scrollableRect.left  + 'px';
+    stickyHeader.style.width = scrollableRect.width + 'px';
+
+    // Copy each column's actual rendered width from the real thead
+    mainTheadThs.forEach((th, i) => {
+      if (stickyThs[i]) {
+        const w = th.getBoundingClientRect().width + 'px';
+        stickyThs[i].style.width    = w;
+        stickyThs[i].style.minWidth = w;
+        stickyThs[i].style.maxWidth = w;
+      }
+    });
+  }
+
+  // ─── Show / hide the sticky header based on scroll position ───
   function handleStickyHeader() {
-    const scrollContainer = document.querySelector('.scroll-container');
-    const scrollContainerRect = scrollContainer.getBoundingClientRect();
-    const tableRect = mainTable.getBoundingClientRect();
-    const tableBottom = tableRect.bottom;
-    
-    // Get section header height dynamically
-    const sectionHeader = document.querySelector('.section-header');
-    const sectionHeaderHeight = sectionHeader ? sectionHeader.offsetHeight : 0;
-    
-    // Show sticky header when:
-    // 1. scroll-container top reaches or goes above the section header bottom
-    // 2. We haven't scrolled past the entire table
-    const shouldShowSticky = scrollContainerRect.top <= sectionHeaderHeight && tableBottom > (sectionHeaderHeight + 100);
-    
+    const siteHeaderH   = getSiteHeaderHeight();
+    const tableRect     = mainTable.getBoundingClientRect();
+    const theadRect     = mainTable.querySelector('thead').getBoundingClientRect();
+
+    // Show when the real thead has scrolled above the site header
+    // Hide when the bottom of the table has scrolled past
+    const shouldShowSticky =
+      theadRect.bottom <= siteHeaderH &&
+      tableRect.bottom  > siteHeaderH + 50;
+
     if (shouldShowSticky) {
-      if (!stickyHeader.classList.contains('visible')) {
-        stickyHeader.classList.add('visible');
-        
-        // Get the exact position of the scrollable content area
-        const scrollableRect = scrollableContent.getBoundingClientRect();
-        stickyHeader.style.left = scrollableRect.left + 'px';
-        stickyHeader.style.width = scrollableRect.width + 'px';
-        stickyHeader.style.top = sectionHeaderHeight + 'px';
-      }
+      repositionStickyHeader();
+      stickyHeader.classList.add('visible');
     } else {
-      if (stickyHeader.classList.contains('visible')) {
-        stickyHeader.classList.remove('visible');
-      }
+      stickyHeader.classList.remove('visible');
     }
   }
 
-  // Sync horizontal scroll between main table and sticky header
+  // ─── Keep sticky header scrolled in sync with the main table ───
   function syncHorizontalScroll() {
-    const stickyTable = stickyHeader.querySelector('table');
-    if (stickyTable) {
-      stickyHeader.scrollLeft = scrollableContent.scrollLeft;
-    }
+    stickyHeader.scrollLeft = scrollableContent.scrollLeft;
   }
 
+  // ─── Enable / disable arrow buttons based on scroll position ───
   function updateArrowStates() {
     const scrollLeft = scrollableContent.scrollLeft;
     const maxScrollLeft = scrollableContent.scrollWidth - scrollableContent.clientWidth;
 
     allLeftBtns.forEach(btn => {
-      if (scrollLeft <= 0) {
-        btn.disabled = true;
-        btn.classList.add("disabled");
-      } else {
-        btn.disabled = false;
-        btn.classList.remove("disabled");
-      }
+      const atStart = scrollLeft <= 0;
+      btn.disabled = atStart;
+      btn.classList.toggle("disabled", atStart);
     });
 
     allRightBtns.forEach(btn => {
-      if (scrollLeft >= maxScrollLeft - 1) {
-        btn.disabled = true;
-        btn.classList.add("disabled");
-      } else {
-        btn.disabled = false;
-        btn.classList.remove("disabled");
-      }
+      const atEnd = scrollLeft >= maxScrollLeft - 1;
+      btn.disabled = atEnd;
+      btn.classList.toggle("disabled", atEnd);
     });
   }
 
   function scrollContentBy(amount) {
-    scrollableContent.scrollBy({
-      left: amount,
-      behavior: "smooth"
-    });
+    scrollableContent.scrollBy({ left: amount, behavior: "smooth" });
   }
 
-  allLeftBtns.forEach(btn => {
-    btn.addEventListener("click", () => scrollContentBy(-200));
-  });
+  allLeftBtns.forEach(btn  => btn.addEventListener("click", () => scrollContentBy(-200)));
+  allRightBtns.forEach(btn => btn.addEventListener("click", () => scrollContentBy(200)));
 
-  allRightBtns.forEach(btn => {
-    btn.addEventListener("click", () => scrollContentBy(200));
-  });
-
-  // Listen to horizontal scroll on the table container
+  // ─── Event listeners ───
+  // Horizontal scroll on the table wrapper
   scrollableContent.addEventListener("scroll", () => {
     updateArrowStates();
     syncHorizontalScroll();
   });
-  
-  // Listen to page scroll for sticky header
-  window.addEventListener("scroll", handleStickyHeader);
-  window.addEventListener("resize", updateArrowStates);
 
-  updateArrowStates(); // Initial call
-  handleStickyHeader(); // Initial call
+  // Page scroll — check sticky visibility + reposition every frame
+  window.addEventListener("scroll", () => {
+    handleStickyHeader();
+    syncHorizontalScroll();   // keep sync even on vertical-only scrolls
+  });
+
+  // Resize / orientation change — recalculate everything
+  // Use a single rAF-debounced handler so we don't fire 60 times in one frame
+  let resizeTimer = null;
+  function onResize() {
+    if (resizeTimer) cancelAnimationFrame(resizeTimer);
+    resizeTimer = requestAnimationFrame(() => {
+      repositionStickyHeader();   // update left / width / top
+      handleStickyHeader();       // re-evaluate visibility
+      updateArrowStates();        // scroll position may have changed
+      syncHorizontalScroll();     // scroll offset is still valid, just re-sync
+    });
+  }
+  window.addEventListener("resize", onResize);
+  // orientationchange fires on mobile rotation; also triggers a resize
+  // shortly after, but firing our handler immediately avoids a visible lag
+  window.addEventListener("orientationchange", () => {
+    // Small delay because the browser hasn't finished repainting yet
+    setTimeout(onResize, 100);
+  });
+
+  // ─── Initial setup ───
+  repositionStickyHeader();  // sync column widths before first scroll
+  updateArrowStates();
+  handleStickyHeader();
 });
 
+// ─── Equalise product-title heights so columns line up ───
 document.addEventListener("DOMContentLoaded", function () {
   const titles = document.querySelectorAll(".product-title");
   let maxHeight = 0;
 
   titles.forEach(title => {
-    const height = title.offsetHeight;
-    if (height > maxHeight) {
-      maxHeight = title.offsetHeight;
-    }
+    if (title.offsetHeight > maxHeight) maxHeight = title.offsetHeight;
   });
-
   titles.forEach(title => {
     title.style.height = maxHeight + "px";
   });
 });
 </script>
-
-
 
 
 {% schema %}
