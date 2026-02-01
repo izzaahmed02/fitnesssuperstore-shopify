@@ -1421,63 +1421,23 @@ class FrequentlyBoughtTogether {
 
   /**
    * Get products from the same collection as items in cart
-   * Excludes products already in cart and 'avisplus-product-options'
+   * Excludes products already in cart
    */
   async getCollectionProducts(cart) {
     try {
       console.log('[Frequently Bought] Getting collection products from cart');
       console.log('[Frequently Bought] Cart items count:', cart.items.length);
       
-      // Helper function to check if item is an OPTION product (not a regular product with options)
-      // We only want to exclude the extra option items that are added by the app, not the main products
-      const isOptionProduct = (item) => {
-        // The key indicator is if the item itself is an option product
-        // Check if title indicates it's an option item
-        if (item.title && (
-          item.title.toLowerCase().includes('warranty only') ||
-          item.title.toLowerCase().includes('assembly only') ||
-          item.title.toLowerCase().includes('installation only')
-        )) {
-          return true;
-        }
-        
-        // Check if properties indicate this is ONLY an option (not a main product)
-        if (item.properties && item.properties._apo_option === true) {
-          return true;
-        }
-        
-        // Check product_type if it's available
-        if (item.product_type && item.product_type.toLowerCase().includes('option')) {
-          return true;
-        }
-        
-        // If none of the above, it's a regular product (even if it has customization options)
-        return false;
-      };
-      
-      // Get all product IDs currently in cart (to exclude them)
-      const allItems = cart.items.map((item, index) => ({
-        index,
-        title: item.title,
-        handle: item.handle,
-        product_id: item.product_id,
-        isOption: isOptionProduct(item)
-      }));
-      
-      console.log('[Frequently Bought] All cart items:', allItems);
-      
-      const cartProductIds = cart.items
-        .filter(item => !isOptionProduct(item))
-        .map(item => item.product_id);
+      // Simply get all product IDs in cart to exclude them
+      const cartProductIds = cart.items.map(item => item.product_id);
 
       console.log('[Frequently Bought] Cart product IDs to exclude:', cartProductIds);
-      console.log('[Frequently Bought] Valid items in cart:', cartProductIds.length);
 
-      // Get the first main product in cart
-      const firstCartItem = cart.items.find(item => !isOptionProduct(item));
+      // Get the first item in cart
+      const firstCartItem = cart.items[0];
 
       if (!firstCartItem) {
-        console.log('[Frequently Bought] No valid cart item found - all items are option products');
+        console.log('[Frequently Bought] No cart item found');
         return [];
       }
 
@@ -1571,15 +1531,6 @@ class FrequentlyBoughtTogether {
           return !isExcluded;
         })
         .filter(product => {
-          const hasAvisTag = product.tags && product.tags.some(tag => 
-            tag.includes('avisplus-product-options') || tag.includes('avisplus')
-          );
-          if (hasAvisTag) {
-            console.log('[Frequently Bought] Excluding product (avisplus):', product.title);
-          }
-          return !hasAvisTag;
-        })
-        .filter(product => {
           if (!product.available) {
             console.log('[Frequently Bought] Excluding product (not available):', product.title);
           }
@@ -1615,13 +1566,12 @@ class FrequentlyBoughtTogether {
       // Filter and format products
       const products = data.products
         .filter(product => !excludeProductIds.includes(product.id))
-        .filter(product => !product.tags.includes('avisplus-product-options'))
         .filter(product => product.available)
         .map(product => this.formatProductData(product));
 
       return products;
     } catch (error) {
-      console.error('Error fetching recommended products:', error);
+      console.error('[Frequently Bought] Error fetching recommended products:', error);
       return [];
     }
   }
