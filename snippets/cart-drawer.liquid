@@ -1020,6 +1020,9 @@
           cartTotal.textContent = this.formatMoney(cart.total_price);
         }
 
+        // Refresh cart items without breaking frequently bought
+        await this.updateCartItemsList(cart);
+
         // Show success message
         button.innerHTML = '✓ Added';
         
@@ -1044,6 +1047,50 @@
           button.innerHTML = originalHTML;
           button.disabled = false;
         }, 2000);
+      }
+    }
+
+    async updateCartItemsList(cart) {
+      try {
+        console.log('[Frequently Bought] Updating cart items list');
+        
+        // Fetch the cart section HTML to get updated cart items
+        const response = await fetch(window.location.pathname + '?section_id=cart-drawer');
+        const html = await response.text();
+        
+        // Parse the HTML
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Get the new cart items table
+        const newCartItemsWrapper = doc.querySelector('.drawer__cart-items-wrapper');
+        const currentCartItemsWrapper = document.querySelector('.drawer__cart-items-wrapper');
+        
+        if (newCartItemsWrapper && currentCartItemsWrapper) {
+          // Replace only the cart items table
+          currentCartItemsWrapper.innerHTML = newCartItemsWrapper.innerHTML;
+          console.log('[Frequently Bought] Cart items list updated');
+          
+          // Re-run the cart items initialization script if it exists
+          const cartItems = document.querySelectorAll('.cart-item-new');
+          if (cartItems.length > 0) {
+            // Re-initialize show-extra buttons
+            document.querySelectorAll('.cart-item-new .show-extra').forEach(button => {
+              button.addEventListener('click', () => {
+                button.classList.toggle('active');
+                let nextElement = button.closest('.cart-item-new')?.nextElementSibling;
+                while (nextElement && !nextElement.classList.contains('cart-item-new')) {
+                  if (nextElement.classList.contains('extra-option-item')) {
+                    nextElement.classList.toggle('toggle');
+                  }
+                  nextElement = nextElement.nextElementSibling;
+                }
+              });
+            });
+          }
+        }
+      } catch (error) {
+        console.error('[Frequently Bought] Error updating cart items list:', error);
       }
     }
 
