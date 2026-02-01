@@ -1312,7 +1312,7 @@
 }
 </style>
 <script>
-  /**
+/**
  * Frequently Bought Together - Cart Drawer Enhancement
  * Handles loading, displaying, and managing frequently bought products
  */
@@ -1337,103 +1337,246 @@ class FrequentlyBoughtTogether {
 
   /**
    * Load frequently bought products
-   * You can modify this method to fetch products from your API or backend
+   * Automatically fetches products from the same collection as cart items
    */
   async loadProducts() {
     try {
-      // Option 1: Fetch from a custom endpoint (recommended)
-      // const response = await fetch('/apps/frequently-bought-together');
-      // const data = await response.json();
-      // this.products = data.products;
+      // Get current cart
+      const cart = await this.getCart();
+      
+      if (!cart || cart.items.length === 0) {
+        this.hideContainers();
+        return;
+      }
 
-      // Option 2: Use hardcoded product data (for testing)
-      this.products = await this.getSampleProducts();
+      // Get products from same collection, excluding cart items
+      this.products = await this.getCollectionProducts(cart);
 
-      // Option 3: Fetch related products based on cart items
-      // this.products = await this.getRelatedProducts();
+      if (this.products.length === 0) {
+        this.hideContainers();
+        return;
+      }
 
       this.renderProducts();
     } catch (error) {
       console.error('Error loading frequently bought products:', error);
+      this.hideContainers();
     }
   }
 
   /**
-   * Sample products for demonstration
-   * Replace with your actual product data
+   * Get current cart data
    */
-  async getSampleProducts() {
-    return [
-      {
-        id: 'product-1',
-        handle: 'adjustable-bench',
-        title: 'French Fitness FF-FIB 0-90 Degree Adjustable Bench (New)',
-        image: 'https://via.placeholder.com/300x300',
-        rating: 4.6,
-        reviewCount: 129,
-        comparePrice: 980.00,
-        price: 299.00,
-        variantId: '123456789'
-      },
-      {
-        id: 'product-2',
-        handle: 'olympic-plates',
-        title: 'French Fitness Olympic Bumper Plate Set 190 lbs - Crumb Rubber (New)',
-        image: 'https://via.placeholder.com/300x300',
-        rating: 4.9,
-        reviewCount: 230,
-        comparePrice: 999.00,
-        price: 349.99,
-        variantId: '987654321'
-      },
-      {
-        id: 'product-3',
-        handle: 'barbell-set',
-        title: 'Olympic Barbell Set with Chrome Finish',
-        image: 'https://via.placeholder.com/300x300',
-        rating: 4.7,
-        reviewCount: 156,
-        comparePrice: 599.00,
-        price: 449.99,
-        variantId: '456789123'
-      }
-    ];
+  async getCart() {
+    try {
+      const response = await fetch('/cart.js');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+      return null;
+    }
   }
 
   /**
-   * Get related products based on current cart items
-   * This is a placeholder - implement your own logic
+   * Get products from the same collection as items in cart
+   * Excludes products already in cart and 'avisplus-product-options'
    */
-  async getRelatedProducts() {
+  async getCollectionProducts(cart) {
     try {
-      const cartResponse = await fetch('/cart.js');
-      const cart = await cartResponse.json();
-      
-      // Get product IDs from cart
-      const productIds = cart.items.map(item => item.product_id);
-      
-      // Fetch recommendations based on these products
-      // This would typically call your backend API
-      const recommendations = await this.fetchRecommendations(productIds);
-      
-      return recommendations;
+      // Get all product IDs currently in cart (to exclude them)
+      const cartProductIds = cart.items
+        .filter(item => !item.product.tags.includes('avisplus-product-options'))
+        .map(item => item.product_id);
+
+      // Get the first main product in cart
+      const firstCartItem = cart.items.find(item => 
+        !item.product.tags.includes('avisplus-product-options')
+      );
+
+      if (!firstCartItem) {
+        return [];
+      }
+
+      // Fetch the product to get its collections
+      const productResponse = await fetch(`/products/${firstCartItem.handle}.js`);
+      const productData = await productResponse.json();
+
+      if (!productData.collections || productData.collections.length === 0) {
+        console.warn('Product has no collections, falling back to recommendations');
+        return await this.getRecommendedProducts(firstCartItem.product_id, cartProductIds);
+      }
+
+      // Get the first collection
+      const collectionHandle = productData.collections[0].handle;
+
+      // Fetch products from the collection
+      const collectionProducts = await this.fetchCollectionProducts(collectionHandle, cartProductIds);
+
+      // If not enough products from collection, supplement with recommendations
+      if (collectionProducts.length < 3) {
+        const recommendations = await this.getRecommendedProducts(firstCartItem.product_id, cartProductIds);
+        // Combine and deduplicate
+        const combined = [...collectionProducts, ...recommendations];
+        const uniqueProducts = this.deduplicateProducts(combined);
+        return uniqueProducts.slice(0, 6); // Max 6 products
+      }
+
+      return collectionProducts.slice(0, 6); // Max 6 products
     } catch (error) {
-      console.error('Error fetching related products:', error);
+      console.error('Error fetching collection products:', error);
       return [];
     }
   }
 
   /**
-   * Fetch product recommendations from backend
-   * Implement this based on your recommendation engine
+   * Fetch products from a specific collection
    */
-  async fetchRecommendations(productIds) {
-    // Example API call
-    // const response = await fetch(`/apps/recommendations?products=${productIds.join(',')}`);
-    // return await response.json();
+  async fetchCollectionProducts(collectionHandle, excludeProductIds = []) {
+    try {
+      // Fetch collection with products (using the products.json endpoint)
+      const response = await fetch(`/collections/${collectionHandle}/products.json?limit=20`);
+      const data = await response.json();
+
+      if (!data.products || data.products.length === 0) {
+        return [];
+      }
+
+      // Filter out products already in cart and format them
+      const products = data.products
+        .filter(product => !excludeProductIds.includes(product.id))
+        .filter(product => !product.tags.includes('avisplus-product-options'))
+        .filter(product => product.available) // Only show available products
+        .map(product => this.formatProductData(product));
+
+      return products;
+    } catch (error) {
+      console.error('Error fetching collection products:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get recommended products using Shopify's recommendations API
+   */
+  async getRecommendedProducts(productId, excludeProductIds = []) {
+    try {
+      const response = await fetch(`/recommendations/products.json?product_id=${productId}&limit=6`);
+      const data = await response.json();
+
+      if (!data.products || data.products.length === 0) {
+        return [];
+      }
+
+      // Filter and format products
+      const products = data.products
+        .filter(product => !excludeProductIds.includes(product.id))
+        .filter(product => !product.tags.includes('avisplus-product-options'))
+        .filter(product => product.available)
+        .map(product => this.formatProductData(product));
+
+      return products;
+    } catch (error) {
+      console.error('Error fetching recommended products:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Format product data from Shopify API to our format
+   */
+  formatProductData(product) {
+    // Get the first available variant
+    const variant = product.variants.find(v => v.available) || product.variants[0];
     
-    // For now, return sample data
-    return this.getSampleProducts();
+    // Get compare at price (if exists)
+    const comparePrice = variant.compare_at_price 
+      ? variant.compare_at_price / 100 
+      : null;
+
+    // Get product price
+    const price = variant.price / 100;
+
+    // Get featured image
+    const image = product.featured_image || product.images[0] || '';
+
+    // Try to get rating from metafields (if you have a review app)
+    const rating = this.getProductRating(product);
+    const reviewCount = this.getProductReviewCount(product);
+
+    return {
+      id: `product-${product.id}`,
+      productId: product.id,
+      handle: product.handle,
+      title: product.title,
+      image: image,
+      rating: rating,
+      reviewCount: reviewCount,
+      comparePrice: comparePrice,
+      price: price,
+      variantId: variant.id.toString(),
+      available: variant.available,
+      tags: product.tags || []
+    };
+  }
+
+  /**
+   * Get product rating from metafields or product data
+   * Customize this based on your review app
+   */
+  getProductRating(product) {
+    // Example for Judge.me
+    if (product.metafields?.judgeme?.rating) {
+      return parseFloat(product.metafields.judgeme.rating);
+    }
+    
+    // Example for Shopify Product Reviews
+    if (product.metafields?.reviews?.rating) {
+      return parseFloat(product.metafields.reviews.rating);
+    }
+
+    // Example for Yotpo
+    if (product.metafields?.yotpo?.rating) {
+      return parseFloat(product.metafields.yotpo.rating);
+    }
+
+    // Default fallback - you can set a default or return null
+    return null; // Return null to hide rating if not available
+  }
+
+  /**
+   * Get product review count from metafields
+   */
+  getProductReviewCount(product) {
+    // Example for Judge.me
+    if (product.metafields?.judgeme?.review_count) {
+      return parseInt(product.metafields.judgeme.review_count);
+    }
+    
+    // Example for Shopify Product Reviews
+    if (product.metafields?.reviews?.review_count) {
+      return parseInt(product.metafields.reviews.review_count);
+    }
+
+    // Example for Yotpo
+    if (product.metafields?.yotpo?.reviews_count) {
+      return parseInt(product.metafields.yotpo.reviews_count);
+    }
+
+    return 0;
+  }
+
+  /**
+   * Remove duplicate products based on product ID
+   */
+  deduplicateProducts(products) {
+    const seen = new Set();
+    return products.filter(product => {
+      if (seen.has(product.productId)) {
+        return false;
+      }
+      seen.add(product.productId);
+      return true;
+    });
   }
 
   /**
@@ -1498,15 +1641,15 @@ class FrequentlyBoughtTogether {
    * Create rating stars HTML
    */
   createRatingHTML(rating, reviewCount) {
-    if (!rating || !reviewCount) return '';
+    if (!rating || rating === 0) return ''; // Don't show rating if not available
 
     return `
       <div class="frequently-bought-item__rating">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
         </svg>
-        <span>${rating}</span>
-        <span class="frequently-bought-item__rating-count">(${reviewCount} reviews)</span>
+        <span>${rating.toFixed(1)}</span>
+        ${reviewCount > 0 ? `<span class="frequently-bought-item__rating-count">(${reviewCount} reviews)</span>` : ''}
       </div>
     `;
   }
