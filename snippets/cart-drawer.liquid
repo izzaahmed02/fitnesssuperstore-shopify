@@ -703,8 +703,61 @@
 		// Update total cart count in the UI
 		updateCartCount(totalContentCount);
 
-    // Load Frequently Bought Together products
-    new FrequentlyBoughtTogether();
+    // Initialize Frequently Bought Together
+    frequentlyBoughtInstance = new FrequentlyBoughtTogether();
+
+    // Listen for cart updates (from remove buttons, etc.)
+    document.addEventListener('cart:updated', () => {
+      console.log('[Frequently Bought] Cart updated event received');
+      if (frequentlyBoughtInstance) {
+        setTimeout(() => {
+          frequentlyBoughtInstance.refresh();
+        }, 300); // Small delay to let cart update complete
+      }
+    });
+
+    // Also watch for changes to the cart items wrapper (catches removals)
+    const cartItemsWrapper = document.querySelector('.drawer__cart-items-wrapper');
+    if (cartItemsWrapper) {
+      const observer = new MutationObserver((mutations) => {
+        console.log('[Frequently Bought] Cart items changed, refreshing...');
+        if (frequentlyBoughtInstance) {
+          setTimeout(() => {
+            frequentlyBoughtInstance.refresh();
+          }, 500); // Delay to let cart fully update
+        }
+      });
+
+      observer.observe(cartItemsWrapper, {
+        childList: true,
+        subtree: true
+      });
+    }
+
+    // Listen for cart drawer opening (in case it was updated while closed)
+    const cartDrawer = document.querySelector('cart-drawer');
+    if (cartDrawer) {
+      const drawerObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === 'class') {
+            const isOpen = cartDrawer.classList.contains('active') || 
+                          cartDrawer.classList.contains('is-open') ||
+                          !cartDrawer.classList.contains('is-empty');
+            if (isOpen && frequentlyBoughtInstance) {
+              console.log('[Frequently Bought] Drawer opened, refreshing...');
+              setTimeout(() => {
+                frequentlyBoughtInstance.refresh();
+              }, 300);
+            }
+          }
+        });
+      });
+
+      drawerObserver.observe(cartDrawer, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    }
 	});
 
 	// Function to update the cart count in the drawer and header
@@ -718,6 +771,9 @@
       }
     }
 	}
+
+  // Store instance globally so we can refresh it
+  let frequentlyBoughtInstance = null;
 
   /**
    * Frequently Bought Together Class
@@ -737,6 +793,12 @@
       }
       this.loadProducts();
       this.setupMobileCarousel();
+    }
+
+    // Method to refresh products (called after cart updates)
+    refresh() {
+      console.log('[Frequently Bought] Refreshing products...');
+      this.loadProducts();
     }
 
     async loadProducts() {
