@@ -384,9 +384,9 @@ if (!customElements.get('product-customization-options')) {
       // Helper to create corect price HTML
 
       priceHelper(priceAdjustment) {
-        const priceElement = document.querySelectorAll('.pr_custom_price');
+        const priceElement = document.querySelectorAll('.product-price-main, .pr_custom_price');
         if (priceElement.length === 0) return;
-        
+
         const currentPrice = priceElement[0].dataset?.priceValue;
         const finalPrice = Number(currentPrice) + priceAdjustment;
         const formattedPrice = finalPrice.toLocaleString('en-US', {
