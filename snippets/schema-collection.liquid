@@ -50,7 +50,8 @@
               "priceCurrency": "USD",
               "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"
             }
-            {% if product.metafields.reviews.rating %}
+           
+            {% if product.metafields.reviews.rating and product.metafields.reviews.count %}
             ,
             "aggregateRating": {
               "@type": "AggregateRating",
@@ -61,6 +62,7 @@
               "reviewCount": "{{ product.metafields.reviews.count }}"
             }
             {% endif %}
+           
           }{% unless forloop.last %},{% endunless %}
         {% endfor %}
         
