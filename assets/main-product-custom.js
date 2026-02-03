@@ -105,7 +105,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 	const pollingInterval = setInterval(checkForElements, 500);
 
-	let currentPageIndex = 0; 
+
 
 
 
