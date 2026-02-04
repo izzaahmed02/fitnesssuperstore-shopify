@@ -1,4 +1,4 @@
-// Bundle Selector functionality for Cable Attachments - OPTIMIZED with Judge.me Integration
+// Bundle Selector functionality for Cable Attachments - OPTIMIZED
 (function() {
   'use strict';
   
@@ -334,20 +334,6 @@
       return null;
     }
 
-    // Initialize Judge.me widgets for a specific container
-    function initJudgemeWidgets(container) {
-      if (typeof window.jdgm !== 'undefined' && typeof window.jdgm.customBadge === 'function') {
-        console.log('[Bundle Selector] Initializing Judge.me widgets');
-        try {
-          window.jdgm.customBadge(container);
-        } catch (e) {
-          console.warn('[Bundle Selector] Judge.me widget initialization failed:', e);
-        }
-      } else {
-        console.warn('[Bundle Selector] Judge.me not available');
-      }
-    }
-
     // Initialize Slick carousel for both mobile and desktop
     function initProductsCarousel(gridElement) {
       if (typeof $ === 'undefined' || !$.fn.slick) {
@@ -419,7 +405,7 @@
       });
     }
 
-    // OPTIMIZED: Render bundle modal with progressive loading and Judge.me integration
+    // OPTIMIZED: Render bundle modal with progressive loading
     async function renderBundleModal(bundleSet) {
       console.log('[Bundle Selector] Opening modal for bundle', bundleSet);
       const config = bundleConfig[bundleSet];
@@ -464,18 +450,20 @@
             mainDesc.innerHTML = bundleProduct.description || 'Premium cable machine attachments bundle.';
           }
           
-          // Use Judge.me widget for bundle rating
           if (ratingEl) {
-            ratingEl.innerHTML = '';
-            ratingEl.className = 'jdgm-widget jdgm-preview-badge';
-            ratingEl.setAttribute('data-id', bundleProduct.id);
-            
-            // Initialize Judge.me for this specific element
-            initJudgemeWidgets(ratingEl);
+            if (bundleProduct.metafields?.reviews?.rating?.value) {
+              console.log("Value is available");
+              const rating = bundleProduct.metafields.reviews.rating.value.rating;
+              const reviewCount = bundleProduct.metafields.reviews.rating_count || 0;
+              ratingEl.innerHTML = `<div class="rating-stars">${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}</div><span>${reviewCount} reviews</span>`;
+            } else {
+              console.log("Value not available");
+              ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div>';
+            }
           }
         } else {
           if (mainDesc) mainDesc.innerHTML = 'Premium cable machine attachments bundle designed for comprehensive full-body training.';
-          if (ratingEl) ratingEl.innerHTML = ''; // No fallback stars
+          if (ratingEl) ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div>';
         }
       }).catch(e => {
         console.log('[Bundle Selector] Could not fetch bundle product:', e);
@@ -513,8 +501,11 @@
         
         const price = product?.price ? (product.price / 100).toFixed(2) : 'N/A';
         const comparePrice = product?.compare_at_price ? (product.compare_at_price / 100).toFixed(2) : null;
+        const rating = product?.metafields?.reviews?.rating?.value?.rating || 5;
+        const reviewCount = product?.metafields?.reviews?.rating_count || 31;
 
-        // Build the HTML with Judge.me widget placeholder
+        console.log("Review Count is "+reviewCount);
+
         productCard.innerHTML = `
           <div class="bundle-product-card__image">
             <img src="${imageUrl}" alt="${name}" width="120" height="120" loading="lazy" onerror="this.src='/assets/no-image.png'">
@@ -522,7 +513,9 @@
           <div class="bundle-product-card__info">
             <div class="bundle-product-card__sku">SKU: ${sku}</div>
             <h5 class="bundle-product-card__title">${name}${product ? '' : ' (New)'}</h5>
-            ${product ? `<div class="bundle-product-card__rating jdgm-widget jdgm-preview-badge" data-id="${product.id}"></div>` : '<div class="bundle-product-card__rating"></div>'}
+            <div class="bundle-product-card__rating">
+              <span class="rating-stars">${'★'.repeat(Math.floor(rating))}</span>
+            </div>
             <div class="bundle-product-card__price">
               ${comparePrice ? `<span class="price-compare">As high as: $${comparePrice}</span>` : ''}
               <span class="price-current">$${price} USD</span>
@@ -536,14 +529,8 @@
       if (products.filter(p => p).length === 0) {
         productsGrid.innerHTML = '<div class="loading">No products found. Please check SKU availability.</div>';
       } else {
-        // Initialize Slick carousel
+        // Initialize Slick carousel for mobile only
         initProductsCarousel(productsGrid);
-        
-        // Initialize Judge.me widgets for all product cards
-        // Need to wait a brief moment for DOM to settle after Slick initialization
-        setTimeout(() => {
-          initJudgemeWidgets(productsGrid);
-        }, 100);
       }
       
       console.log('[Bundle Selector] Modal rendered');
