@@ -457,6 +457,7 @@
               const reviewCount = bundleProduct.metafields.reviews.rating_count || 0;
               ratingEl.innerHTML = `<div class="rating-stars">${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}</div><span>${reviewCount} reviews</span>`;
             } else {
+              console.log("Value not available");
               ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div>';
             }
           }
@@ -502,6 +503,8 @@
         const comparePrice = product?.compare_at_price ? (product.compare_at_price / 100).toFixed(2) : null;
         const rating = product?.metafields?.reviews?.rating?.value?.rating || 5;
         const reviewCount = product?.metafields?.reviews?.rating_count || 31;
+
+        console.log("Review Count is "+reviewCount);
 
         productCard.innerHTML = `
           <div class="bundle-product-card__image">
