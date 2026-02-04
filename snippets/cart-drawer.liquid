@@ -82,9 +82,7 @@
             {% render 'drawer-close' %}
           </button>
         </div>
-        {% comment %} <div data-count="{{ cart.item_count }}" class="cart-drawer__subheading">
-          You have <span>{{ cart.item_count }}</span> items in your cart
-        </div> {% endcomment %}
+       
         <cart-drawer-items {% if cart == empty %} class="is-empty" {% endif %}>
           <form action="{{ routes.cart_url }}"
                   id="CartDrawer-Form"
@@ -97,15 +95,7 @@
                   <table class="cart-items" role="table">
                     <div role="rowgroup">
                       {% for item in cart.items %}
-                        {% comment %}
-                        {% if item.product.title != 'Warranty' and
-                            item.product.title != 'Full Assembly & Installation' and
-                            item.product.title != 'Color' and 
-                            item.product.title != 'Custom Color' and 
-                            item.product.title != 'Custom Paint Color' and 
-                            item.product.title != 'Custom Vinyl Color' and 
-                            item.product.title != 'Custom Upholstery Color' %}
-                        {% endcomment %}
+                       
                             <tr
                               id="CartDrawer-Item-{{ forloop.index }}"
                               class="cart-item
@@ -155,16 +145,16 @@
                                 </cart-remove-button>
                               </div>
                                        {% if item.product.template_suffix contains 'variants' %}
-                                {% if item.product.metafields.custom.warranty %}
- <dl style="margin-bottom: 2px;">
-     <div class="product-option">
-  <dt> Warranty</dt>
-  <dd>  {{ item.product.metafields.custom.warranty }}</dd>
-  </div>
-  </dl>
+                                          {% if item.product.metafields.custom.warranty %}
+                                              <dl style="margin-bottom: 2px;">
+                                                  <div class="product-option">
+                                                <dt> Warranty</dt>
+                                                <dd>  {{ item.product.metafields.custom.warranty }}</dd>
+                                                </div>
+                                                </dl>
 
-{% endif %}
-                              {%- if item.product.has_only_default_variant == false
+                                          {% endif %}
+                                          {%- if item.product.has_only_default_variant == false
                                                 or item.properties.size != 0
                                                 or item.selling_plan_allocation != null
                                                 -%}
@@ -181,7 +171,7 @@
                                                         {%- endif -%}
                                                     </dl>
                                                   {%- endif  -%}
-{% endif %}
+                                          {% endif %}
                               {% assign extra_props = "" %}
                               {% for prop in item.properties %}
                                 {% assign p_name = prop.first %}
@@ -190,15 +180,7 @@
                                 {% if p_name == blank or p_value == blank or first_char == '_' %}
                                     {% continue %}
                                 {% endif %}
-                                {% comment %}
-                                {% if p_name contains "Warranty"
-                                or p_name contains "Processing Time"
-                                or p_name contains "Full Assembly & Installation"
-                                or p_name contains "Color"
-                                or p_name contains "Paint Color"
-                                or p_name contains "Vinyl Color" 
-                                or p_name contains "Upholstery Color" %}
-                                {% endcomment %}
+                                
                                   {%- capture extra_props -%}
                                       {{ extra_props }}
                                       <div class="product-option">
@@ -206,9 +188,7 @@
                                           <dd>{{ p_value }}</dd>
                                       </div>
                                   {%- endcapture -%}
-                                {% comment %}
-                                {% endif %}
-                                {% endcomment %}
+                               
                               {% endfor %}
                               {% if extra_props != "" %}
                                 <dl>
@@ -226,46 +206,9 @@
                               <quantity-popover class="cart-quantity-price {% if item.properties._apo_option and item.properties._apo_order %} apo-hide-item{% endif %}">
                                 <div class="cart-item__quantity-wrapper quantity-popover-wrapper">
                                   <span class="quantity-text">QTY: </span>
-                                  {% comment %}
-                                  <a type="button"
-                                      class="quantity-btn quantity-btn--minus"
-                                      data-key="{{ item.key }}"
-                                      data-variantId={{ item.variant.id }}
-                                      {% if item.quantity == 1 %}
-                                        disabled="disabled"
-                                      {% endif %}
-                                  >
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                      fill="none" xmlns="http://www.w3.org/2000/svg">
-                                      <rect x="0.5" y="0.5" width="23" height="23"
-                                          rx="11.5" fill="white"/>
-                                      <rect x="0.5" y="0.5" width="23" height="23"
-                                          rx="11.5" stroke="#D3D9E5"/>
-                                      <path fill-rule="evenodd" clip-rule="evenodd"
-                                          d="M7.25 12C7.25 11.5858 7.58579 11.25 8 11.25H12H16C16.4142 11.25 16.75 11.5858 16.75 12C16.75 12.4142 16.4142 12.75 16 12.75H12H8C7.58579 12.75 7.25 12.4142 7.25 12Z"
-                                          fill="black"/>
-                                    </svg>
-                                  </a>
-                                  {% endcomment %}
+                                
                                   <span class="quantity-text">{{ item.quantity }}</span>
-                                  {% comment %}
-                                  <a type="button"
-                                    class="quantity-btn quantity-btn--plus"
-                                    data-key="{{ item.key }}"
-                                    data-variantId="{{ item.variant.id }}"
-                                  >
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                      fill="none" xmlns="http://www.w3.org/2000/svg">
-                                      <rect x="0.5" y="0.5" width="23" height="23"
-                                        rx="11.5" fill="white"/>
-                                      <rect x="0.5" y="0.5" width="23" height="23"
-                                        rx="11.5" stroke="#D3D9E5"/>
-                                      <path fill-rule="evenodd" clip-rule="evenodd"
-                                        d="M12.0004 7.39844C12.3318 7.39844 12.6004 7.66707 12.6004 7.99844V11.3984H16.0004C16.3318 11.3984 16.6004 11.6671 16.6004 11.9984C16.6004 12.3298 16.3318 12.5984 16.0004 12.5984H12.6004V15.9984C12.6004 16.3298 12.3318 16.5984 12.0004 16.5984C11.669 16.5984 11.4004 16.3298 11.4004 15.9984V12.5984H8.00039C7.66902 12.5984 7.40039 12.3298 7.40039 11.9984C7.40039 11.6671 7.66902 11.3984 8.00039 11.3984H11.4004V7.99844C11.4004 7.66707 11.669 7.39844 12.0004 7.39844Z"
-                                        fill="#23232B"/>
-                                    </svg>
-                                  </a>
-                                  {% endcomment %}
+                                
                                 </div>
                                 {% if item.original_price != item.final_price %}
                                   <div class="cart-item__discounted-prices">
@@ -286,9 +229,7 @@
                               </quantity-popover>
                             </td>
                           </tr>
-                      {% comment %}
-                        {% endif %}
-                      {% endcomment %}
+                     
                       {% endfor %}
                     </div>
                   </table>
@@ -299,7 +240,7 @@
                   {{ 'accessibility.loading' | t }}
               </p>
             </div>
-            {% comment %} <div id="CartDrawer-CartErrors" role="alert"></div> {% endcomment %}
+           
           </form>
         </cart-drawer-items>
         <div class="drawer__footer">
