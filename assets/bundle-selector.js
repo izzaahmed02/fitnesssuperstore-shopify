@@ -452,6 +452,7 @@
           
           if (ratingEl) {
             if (bundleProduct.metafields?.reviews?.rating?.value) {
+              console.log("Value is available");
               const rating = bundleProduct.metafields.reviews.rating.value.rating;
               const reviewCount = bundleProduct.metafields.reviews.rating_count || 0;
               ratingEl.innerHTML = `<div class="rating-stars">${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}</div><span>${reviewCount} reviews</span>`;
