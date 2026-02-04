@@ -1,15 +1,30 @@
-// Bundle Selector functionality for Cable Attachments - OPTIMIZED with Judge.me Integration
+// Bundle Selector - Version with Judge.me Load Detection
 (function() {
   'use strict';
   
-  console.log('[Bundle Selector] Script loaded');
+  console.log('[Bundle Selector] Script loaded - Waiting for Judge.me...');
   
   // Cache for product lookups to avoid redundant API calls
   const productCache = new Map();
   const skuCache = new Map();
   
-  function initBundleSelector() {
-    console.log('[Bundle Selector] Initializing...');
+  // Check if Judge.me is available with retries
+  function waitForJudgeme(callback, maxAttempts = 30, attempt = 0) {
+    console.log(`[Bundle Selector] Checking for Judge.me... (attempt ${attempt + 1}/${maxAttempts})`);
+    
+    if (typeof window.jdgm !== 'undefined') {
+      console.log('[Bundle Selector] ✅ Judge.me detected!', window.jdgm);
+      callback(true);
+    } else if (attempt < maxAttempts) {
+      setTimeout(() => waitForJudgeme(callback, maxAttempts, attempt + 1), 500);
+    } else {
+      console.warn('[Bundle Selector] ⚠️ Judge.me not available after 15 seconds. Proceeding without reviews.');
+      callback(false);
+    }
+  }
+  
+  function initBundleSelector(judgemeAvailable) {
+    console.log('[Bundle Selector] Initializing... (Judge.me:', judgemeAvailable ? 'Available' : 'Not Available', ')');
     
     const bundleSelector = document.querySelector('.bundle-selector-container');
     if (!bundleSelector) {
@@ -334,17 +349,28 @@
       return null;
     }
 
-    // Initialize Judge.me widgets for a specific container
+    // Initialize Judge.me widgets - only if available
     function initJudgemeWidgets(container) {
-      if (typeof window.jdgm !== 'undefined' && typeof window.jdgm.customBadge === 'function') {
-        console.log('[Bundle Selector] Initializing Judge.me widgets');
-        try {
+      if (!judgemeAvailable) {
+        console.log('[Bundle Selector] Skipping Judge.me (not available)');
+        return false;
+      }
+      
+      console.log('[Bundle Selector] Initializing Judge.me widgets...');
+      
+      try {
+        if (typeof window.jdgm !== 'undefined' && typeof window.jdgm.customBadge === 'function') {
+          console.log('[Bundle Selector] Calling jdgm.customBadge()');
           window.jdgm.customBadge(container);
-        } catch (e) {
-          console.warn('[Bundle Selector] Judge.me widget initialization failed:', e);
+          console.log('[Bundle Selector] ✅ Judge.me initialized');
+          return true;
+        } else {
+          console.warn('[Bundle Selector] Judge.me methods not available');
+          return false;
         }
-      } else {
-        console.warn('[Bundle Selector] Judge.me not available');
+      } catch (e) {
+        console.error('[Bundle Selector] Judge.me initialization error:', e);
+        return false;
       }
     }
 
@@ -365,7 +391,7 @@
         arrows: true,
         infinite: false,
         speed: 300,
-        slidesToShow: 3.5, // Show 3 and a half slides on desktop
+        slidesToShow: 3.5,
         slidesToScroll: 1,
         adaptiveHeight: false,
         prevArrow: '<button type="button" class="slick-prev" aria-label="Previous"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>',
@@ -419,7 +445,7 @@
       });
     }
 
-    // OPTIMIZED: Render bundle modal with progressive loading and Judge.me integration
+    // Render bundle modal with progressive loading
     async function renderBundleModal(bundleSet) {
       console.log('[Bundle Selector] Opening modal for bundle', bundleSet);
       const config = bundleConfig[bundleSet];
@@ -464,18 +490,23 @@
             mainDesc.innerHTML = bundleProduct.description || 'Premium cable machine attachments bundle.';
           }
           
-          // Use Judge.me widget for bundle rating
-          if (ratingEl) {
+          // Use Judge.me widget for bundle rating if available
+          if (ratingEl && bundleProduct.id && judgemeAvailable) {
+            console.log('[Bundle Selector] Setting up Judge.me for bundle product:', bundleProduct.id);
             ratingEl.innerHTML = '';
             ratingEl.className = 'jdgm-widget jdgm-preview-badge';
             ratingEl.setAttribute('data-id', bundleProduct.id);
             
-            // Initialize Judge.me for this specific element
-            initJudgemeWidgets(ratingEl);
+            // Initialize with retries
+            setTimeout(() => initJudgemeWidgets(ratingEl), 100);
+            setTimeout(() => initJudgemeWidgets(ratingEl), 500);
+            setTimeout(() => initJudgemeWidgets(ratingEl), 1000);
+          } else if (ratingEl) {
+            ratingEl.innerHTML = ''; // Clear rating if Judge.me not available
           }
         } else {
           if (mainDesc) mainDesc.innerHTML = 'Premium cable machine attachments bundle designed for comprehensive full-body training.';
-          if (ratingEl) ratingEl.innerHTML = ''; // No fallback stars
+          if (ratingEl) ratingEl.innerHTML = '';
         }
       }).catch(e => {
         console.log('[Bundle Selector] Could not fetch bundle product:', e);
@@ -514,7 +545,7 @@
         const price = product?.price ? (product.price / 100).toFixed(2) : 'N/A';
         const comparePrice = product?.compare_at_price ? (product.compare_at_price / 100).toFixed(2) : null;
 
-        // Build the HTML with Judge.me widget placeholder
+        // Build the HTML with Judge.me widget placeholder (only if available)
         productCard.innerHTML = `
           <div class="bundle-product-card__image">
             <img src="${imageUrl}" alt="${name}" width="120" height="120" loading="lazy" onerror="this.src='/assets/no-image.png'">
@@ -522,7 +553,10 @@
           <div class="bundle-product-card__info">
             <div class="bundle-product-card__sku">SKU: ${sku}</div>
             <h5 class="bundle-product-card__title">${name}${product ? '' : ' (New)'}</h5>
-            ${product ? `<div class="bundle-product-card__rating jdgm-widget jdgm-preview-badge" data-id="${product.id}"></div>` : '<div class="bundle-product-card__rating"></div>'}
+            ${product && product.id && judgemeAvailable ? 
+              `<div class="bundle-product-card__rating jdgm-widget jdgm-preview-badge" data-id="${product.id}"></div>` 
+              : '<div class="bundle-product-card__rating"></div>'
+            }
             <div class="bundle-product-card__price">
               ${comparePrice ? `<span class="price-compare">As high as: $${comparePrice}</span>` : ''}
               <span class="price-current">$${price} USD</span>
@@ -539,11 +573,13 @@
         // Initialize Slick carousel
         initProductsCarousel(productsGrid);
         
-        // Initialize Judge.me widgets for all product cards
-        // Need to wait a brief moment for DOM to settle after Slick initialization
-        setTimeout(() => {
-          initJudgemeWidgets(productsGrid);
-        }, 100);
+        // Initialize Judge.me widgets if available
+        if (judgemeAvailable) {
+          console.log('[Bundle Selector] Initializing Judge.me for product cards...');
+          setTimeout(() => initJudgemeWidgets(productsGrid), 200);
+          setTimeout(() => initJudgemeWidgets(productsGrid), 600);
+          setTimeout(() => initJudgemeWidgets(productsGrid), 1200);
+        }
       }
       
       console.log('[Bundle Selector] Modal rendered');
@@ -603,10 +639,12 @@
     console.log('[Bundle Selector] Initialization complete');
   }
 
-  // Initialize when DOM is ready
+  // Wait for DOM and Judge.me, then initialize
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initBundleSelector);
+    document.addEventListener('DOMContentLoaded', () => {
+      waitForJudgeme(initBundleSelector);
+    });
   } else {
-    initBundleSelector();
+    waitForJudgeme(initBundleSelector);
   }
 })();
