@@ -322,6 +322,65 @@ function showPayLaterModal() {
 	}
 }
 
+function showShopPayModal() {
+	let nativeShopPayTrigger = null;
+
+	const shopifyPaymentTerms = document.querySelector('shopify-payment-terms');
+	if (shopifyPaymentTerms && shopifyPaymentTerms.shadowRoot) {
+		nativeShopPayTrigger = shopifyPaymentTerms.shadowRoot.querySelector('#shopify-installments-cta') ||
+			shopifyPaymentTerms.shadowRoot.querySelector('button');
+	}
+
+	if (!nativeShopPayTrigger) {
+		nativeShopPayTrigger = document.querySelector('.installment a') ||
+			document.querySelector('.installment button');
+	}
+
+	if (nativeShopPayTrigger) {
+		nativeShopPayTrigger.click();
+	}
+}
+
+function generateShopPayModalContent() {
+	const priceElement = document.querySelector('.pr_custom_price');
+	const cleanedPrice = priceElement.textContent.replace(/[^\d,\.]/g, '');
+	const shopPayLogo = `<svg xmlns="http://www.w3.org/2000/svg" role="img" viewBox="0 0 38 24" width="76" height="48" aria-labelledby="pi-shopify_pay"><title id="pi-shopify_pay">Shop Pay</title><path opacity=".07" d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z" fill="#000"></path><path d="M35.889 0C37.05 0 38 .982 38 2.182v19.636c0 1.2-.95 2.182-2.111 2.182H2.11C.95 24 0 23.018 0 21.818V2.182C0 .982.95 0 2.111 0H35.89z" fill="#5A31F4"></path><path d="M9.35 11.368c-1.017-.223-1.47-.31-1.47-.705 0-.372.306-.558.92-.558.54 0 .934.238 1.225.704a.079.079 0 00.104.03l1.146-.584a.082.082 0 00.032-.114c-.475-.831-1.353-1.286-2.51-1.286-1.52 0-2.464.755-2.464 1.956 0 1.275 1.15 1.597 2.17 1.82 1.02.222 1.474.31 1.474.705 0 .396-.332.582-.993.582-.612 0-1.065-.282-1.34-.83a.08.08 0 00-.107-.035l-1.143.57a.083.083 0 00-.036.111c.454.92 1.384 1.437 2.627 1.437 1.583 0 2.539-.742 2.539-1.98s-1.155-1.598-2.173-1.82v-.003zM15.49 8.855c-.65 0-1.224.232-1.636.646a.04.04 0 01-.069-.03v-2.64a.08.08 0 00-.08-.081H12.27a.08.08 0 00-.08.082v8.194a.08.08 0 00.08.082h1.433a.08.08 0 00.081-.082v-3.594c0-.695.528-1.227 1.239-1.227.71 0 1.226.521 1.226 1.227v3.594a.08.08 0 00.081.082h1.433a.08.08 0 00.081-.082v-3.594c0-1.51-.981-2.577-2.355-2.577zM20.753 8.62c-.778 0-1.507.24-2.03.588a.082.082 0 00-.027.109l.632 1.088a.08.08 0 00.11.03 2.5 2.5 0 011.318-.366c1.25 0 2.17.891 2.17 2.068 0 1.003-.736 1.745-1.669 1.745-.76 0-1.288-.446-1.288-1.077 0-.361.152-.657.548-.866a.08.08 0 00.032-.113l-.596-1.018a.08.08 0 00-.098-.035c-.799.299-1.359 1.018-1.359 1.984 0 1.46 1.152 2.55 2.76 2.55 1.877 0 3.227-1.313 3.227-3.195 0-2.018-1.57-3.492-3.73-3.492zM28.675 8.843c-.724 0-1.373.27-1.845.746-.026.027-.069.007-.069-.029v-.572a.08.08 0 00-.08-.082h-1.397a.08.08 0 00-.08.082v8.182a.08.08 0 00.08.081h1.433a.08.08 0 00.081-.081v-2.683c0-.036.043-.054.069-.03a2.6 2.6 0 001.808.7c1.682 0 2.993-1.373 2.993-3.157s-1.313-3.157-2.993-3.157zm-.271 4.929c-.956 0-1.681-.768-1.681-1.783s.723-1.783 1.681-1.783c.958 0 1.68.755 1.68 1.783 0 1.027-.713 1.783-1.681 1.783h.001z" fill="#fff"></path></svg>`;
+
+	let shopPayHTML = `<div class="buy-now-pay-later shoppay-modal">
+	<div class="shoppay-header">
+		${shopPayLogo}
+		<h1 class="title">Shop Pay Installments</h1>
+	</div>
+	<p class="price">Purchase price: <strong>$${cleanedPrice}</strong></p>
+	<p class="description">Split your purchase into flexible installments with Shop Pay. Choose Shop Pay at checkout to pay over time.</p>
+	<div class="steps-container">
+		<div class="step">
+			<div class="step-circle">1</div>
+			<div class="step-text">Add items to your cart</div>
+		</div>
+		<div class="step-connector"></div>
+		<div class="step">
+			<div class="step-circle">2</div>
+			<div class="step-text">Select Shop Pay at checkout</div>
+		</div>
+		<div class="step-connector"></div>
+		<div class="step">
+			<div class="step-circle">3</div>
+			<div class="step-text">Choose your payment plan</div>
+		</div>
+		<div class="step-connector"></div>
+		<div class="step">
+			<div class="step-circle">4</div>
+			<div class="step-text">Complete your purchase</div>
+		</div>
+	</div>
+	<div class="options">${generateShopPayTerms()}</div>
+	<p class="shoppay-disclaimer">Subject to eligibility check. Terms may vary based on purchase amount and creditworthiness. Shop Pay Installments are issued by Affirm.</p>
+</div>`;
+
+	return shopPayHTML;
+}
+
 function generatePayLaterAggregate() {
 	const priceElement = document.querySelector('.pr_custom_price');
 	const cleanedPrice = priceElement.textContent.replace(/[^\d,\.]/g, '');
@@ -363,6 +422,7 @@ function combinedPayLater() {
 
 	/*payLaterOptions += generateAfterPayPaymentTerms();*/
 	payLaterOptions += generateAffirmPaymentTerms();
+	payLaterOptions += generateShopPayTerms();
 
 	return payLaterOptions;
 }
@@ -445,6 +505,103 @@ function generateAffirmPaymentTerms() {
 		APR: '0.00%',
 		TotalPayment: `$${productPrice.toFixed(2)}`
 	};
+  }
+
+  function generateShopPayTerms() {
+	let productPrice = getProductPrice();
+
+	// Shop Pay supports orders $35-$30,000 (from shopify-meta on shopify-payment-terms element)
+	if (!productPrice || productPrice < 35 || productPrice > 30000) return '';
+
+	let shopPayTermsHTML = '';
+	const shopPayLogo = `<svg xmlns="http://www.w3.org/2000/svg" role="img" viewBox="0 0 38 24" width="57" height="36" aria-labelledby="pi-shopify_pay"><title id="pi-shopify_pay">Shop Pay</title><path opacity=".07" d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z" fill="#000"></path><path d="M35.889 0C37.05 0 38 .982 38 2.182v19.636c0 1.2-.95 2.182-2.111 2.182H2.11C.95 24 0 23.018 0 21.818V2.182C0 .982.95 0 2.111 0H35.89z" fill="#5A31F4"></path><path d="M9.35 11.368c-1.017-.223-1.47-.31-1.47-.705 0-.372.306-.558.92-.558.54 0 .934.238 1.225.704a.079.079 0 00.104.03l1.146-.584a.082.082 0 00.032-.114c-.475-.831-1.353-1.286-2.51-1.286-1.52 0-2.464.755-2.464 1.956 0 1.275 1.15 1.597 2.17 1.82 1.02.222 1.474.31 1.474.705 0 .396-.332.582-.993.582-.612 0-1.065-.282-1.34-.83a.08.08 0 00-.107-.035l-1.143.57a.083.083 0 00-.036.111c.454.92 1.384 1.437 2.627 1.437 1.583 0 2.539-.742 2.539-1.98s-1.155-1.598-2.173-1.82v-.003zM15.49 8.855c-.65 0-1.224.232-1.636.646a.04.04 0 01-.069-.03v-2.64a.08.08 0 00-.08-.081H12.27a.08.08 0 00-.08.082v8.194a.08.08 0 00.08.082h1.433a.08.08 0 00.081-.082v-3.594c0-.695.528-1.227 1.239-1.227.71 0 1.226.521 1.226 1.227v3.594a.08.08 0 00.081.082h1.433a.08.08 0 00.081-.082v-3.594c0-1.51-.981-2.577-2.355-2.577zM20.753 8.62c-.778 0-1.507.24-2.03.588a.082.082 0 00-.027.109l.632 1.088a.08.08 0 00.11.03 2.5 2.5 0 011.318-.366c1.25 0 2.17.891 2.17 2.068 0 1.003-.736 1.745-1.669 1.745-.76 0-1.288-.446-1.288-1.077 0-.361.152-.657.548-.866a.08.08 0 00.032-.113l-.596-1.018a.08.08 0 00-.098-.035c-.799.299-1.359 1.018-1.359 1.984 0 1.46 1.152 2.55 2.76 2.55 1.877 0 3.227-1.313 3.227-3.195 0-2.018-1.57-3.492-3.73-3.492zM28.675 8.843c-.724 0-1.373.27-1.845.746-.026.027-.069.007-.069-.029v-.572a.08.08 0 00-.08-.082h-1.397a.08.08 0 00-.08.082v8.182a.08.08 0 00.08.081h1.433a.08.08 0 00.081-.081v-2.683c0-.036.043-.054.069-.03a2.6 2.6 0 001.808.7c1.682 0 2.993-1.373 2.993-3.157s-1.313-3.157-2.993-3.157zm-.271 4.929c-.956 0-1.681-.768-1.681-1.783s.723-1.783 1.681-1.783c.958 0 1.68.755 1.68 1.783 0 1.027-.713 1.783-1.681 1.783h.001z" fill="#fff"></path></svg>`;
+
+	const shopPayPlans = getShopPayFinancingPlans(productPrice);
+
+	shopPayPlans.forEach(plan => {
+		const { term, apr, monthlyPayment, totalPayment, interest } = plan;
+		const aprText = apr === 0 ? '0% APR' : `${apr}% APR`;
+		const interestText = apr === 0 ? '$0.00' : `$${interest.toFixed(2)}`;
+
+		shopPayTermsHTML += `
+			<div class="option shoppay">
+				<div class="option-details">
+					<p class="payment-info">
+						<strong>$${monthlyPayment.toFixed(2)} every month</strong> for ${term} months
+					</p>
+					<p class="apr">Interest (${aprText})<span style="float:right;">${interestText}</span></p>
+					<p class="total">Total<span style="float:right;">$${totalPayment.toFixed(2)}</span></p>
+				</div>
+				<a href="#" class="terms-link shoppay-terms-link" onclick="event.preventDefault(); event.stopPropagation(); showShopPayModal();">
+					${shopPayLogo}
+					<span>See terms: <strong><u>Shop Pay</u></strong></span>
+				</a>
+			</div>`;
+	});
+
+	return shopPayTermsHTML;
+  }
+
+  function getShopPayFinancingPlans(productPrice) {
+	const plans = [];
+
+	if (productPrice >= 50 && productPrice < 150) {
+		plans.push({
+			term: 4,
+			apr: 0,
+			monthlyPayment: productPrice / 4,
+			totalPayment: productPrice,
+			interest: 0,
+			frequency: 'bi-weekly'
+		});
+	} else if (productPrice >= 150 && productPrice < 1000) {
+		plans.push({
+			term: 6,
+			apr: 0,
+			monthlyPayment: productPrice / 6,
+			totalPayment: productPrice,
+			interest: 0
+		});
+		const interest12 = calculateInterest(productPrice, 15, 12);
+		plans.push({
+			term: 12,
+			apr: 15,
+			monthlyPayment: (productPrice + interest12) / 12,
+			totalPayment: productPrice + interest12,
+			interest: interest12
+		});
+	} else if (productPrice >= 1000 && productPrice <= 30000) {
+		plans.push({
+			term: 6,
+			apr: 0,
+			monthlyPayment: productPrice / 6,
+			totalPayment: productPrice,
+			interest: 0
+		});
+		plans.push({
+			term: 12,
+			apr: 0,
+			monthlyPayment: productPrice / 12,
+			totalPayment: productPrice,
+			interest: 0
+		});
+		const interest24 = calculateInterest(productPrice, 15, 24);
+		plans.push({
+			term: 24,
+			apr: 15,
+			monthlyPayment: (productPrice + interest24) / 24,
+			totalPayment: productPrice + interest24,
+			interest: interest24
+		});
+	}
+
+	return plans;
+  }
+
+  function calculateInterest(principal, annualRate, months) {
+	const monthlyRate = annualRate / 100 / 12;
+	const totalInterest = principal * monthlyRate * months;
+	return totalInterest;
   }
 
   function getProductPrice() {
