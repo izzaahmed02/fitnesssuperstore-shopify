@@ -238,7 +238,7 @@ function generatePayLaterText() {
 	payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
 		style: 'currency',
 		currency: 'USD',
-		})}/mo. / 24 interest-free payment`
+		})}/mo (options at checkout)`
 
 	return payLaterText;
 }
