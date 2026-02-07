@@ -628,16 +628,20 @@
                       </div>
                     </div>
                   {% endif %}
-                  {% if product.metafields.custom.processing_time != blank %}
-                    <div class="item">
-                      <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
-                      <div class="item__text">
-                        <span class="title">Processing Time:</span>
-                        {{ product.metafields.custom.processing_time_long }}
-                        <span class="more-info" data-customfield="Processing Time" data-processingtime="{{ product.metafields.custom.processing_time }}">(More Info)</span>
-                      </div>
-                    </div>
-                  {% endif %}
+                {% assign current_variant = product.selected_or_first_available_variant %}
+{% if current_variant.metafields.custom.processing_time_long_variant != blank or product.metafields.custom.processing_time_long != blank %}
+  <div class="item">
+    <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
+    <div class="item__text">
+      <span class="title">Processing Time:</span>
+      <span id="ProcessingTime-{{ section.id }}" data-sku="{{ current_variant.sku }}">
+        {{ current_variant.metafields.custom.processing_time_long_variant | default: product.metafields.custom.processing_time_long }}
+      </span>
+      <span class="more-info" data-customfield="Processing Time" data-processingtime="{{ current_variant.metafields.custom.processing_time_long_variant }}">(More Info)</span>
+    </div>
+  </div>
+{% endif %}
+
                   {% if product.metafields.custom.product_code != blank %}
                     <div class="item">
                       <div class="item__icon-wrap">{% render 'icon-hashtag' %}</div>
@@ -1830,6 +1834,78 @@
 </script>
 <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const skuElement = document.querySelector('[id^="Sku-"]');
+  const processingTimeElement = document.querySelector('[id^="ProcessingTime-"]');
+  
+  if (!skuElement || !processingTimeElement) {
+    console.log('SKU or Processing Time element not found');
+    return;
+  }
+  
+  // Create variant metafields lookup indexed by SKU
+  const variantMetafields = {
+    {% for variant in product.variants %}
+      "{{ variant.sku }}": {
+        "processing_time": {{ variant.metafields.custom.processing_time_long_variant | json }},
+        "sku": "{{ variant.sku }}"
+      }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  };
+  
+  const productProcessingTime = {{ product.metafields.custom.processing_time_long | json }};
+  
+  function updateProcessingTime() {
+    const newSku = skuElement.textContent.trim();
+    
+    if (!newSku) return;
+    
+    const variantData = variantMetafields[newSku];
+    const newProcessingTime = variantData?.processing_time || productProcessingTime;
+    
+    if (newProcessingTime) {
+      const currentText = processingTimeElement.textContent.trim();
+      
+      if (newProcessingTime !== currentText) {
+        processingTimeElement.textContent = newProcessingTime;
+        processingTimeElement.setAttribute('data-sku', newSku);
+        
+        // Update more info attribute
+        const moreInfo = processingTimeElement.nextElementSibling;
+        if (moreInfo && moreInfo.classList.contains('more-info')) {
+          if (variantData?.processing_time) {
+            moreInfo.setAttribute('data-processingtime', variantData.processing_time);
+          } else {
+            moreInfo.setAttribute('data-processingtime', productProcessingTime || '');
+          }
+        }
+        
+        console.log('Processing time updated to:', newProcessingTime);
+      }
+    }
+  }
+  
+  // Watch for SKU changes using MutationObserver
+  const observer = new MutationObserver(function(mutations) {
+    updateProcessingTime();
+  });
+  
+  observer.observe(skuElement, {
+    childList: true,
+    characterData: true,
+    subtree: true
+  });
+  
+  // Also update on initial load
+  updateProcessingTime();
+  
+  console.log('Processing time updater initialized');
+});
+</script>
+
+
 
 <script defer type="text/javascript">
   var sa_products_count = 3;
