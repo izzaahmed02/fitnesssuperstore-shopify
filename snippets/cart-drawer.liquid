@@ -173,19 +173,27 @@
                                                   {%- endif  -%}
                                           {% endif %}
 
-                                                                        {% comment %} ========== PROCESSING TIME ADDITION ========== {% endcomment %}
-                              {% unless item.product.tags contains 'avisplus-product-options' %}
-                                {% if item.variant.metafields.custom.processing_time_long_variant != blank or item.product.metafields.custom.processing_time_long != blank %}
-                                  <dl style="margin-bottom: 2px;">
-                                    <div class="product-option">
-                                      <dt>Processing Time:</dt>
-                                      <dd>{{ item.variant.metafields.custom.processing_time_long_variant | default: item.product.metafields.custom.processing_time_long }}</dd>
-                                    </div>
-                                  </dl>
-                                {% endif %}
-                              {% endunless %}
-                              {% comment %} ========== END PROCESSING TIME ========== {% endcomment %}
-                               
+                               {% comment %} ========== PROCESSING TIME ADDITION ========== {% endcomment %}
+{% unless item.product.tags contains 'avisplus-product-options' %}
+  {% comment %} Only show processing time if this is NOT an extra option item {% endcomment %}
+  {% if item.variant.metafields.custom.processing_time_long_variant != blank or item.product.metafields.custom.processing_time_long != blank %}
+    {% assign is_option_item = false %}
+    {% if item.properties._apo_option and item.properties._apo_order %}
+      {% assign is_option_item = true %}
+    {% endif %}
+    
+    {% unless is_option_item %}
+      <dl style="margin-bottom: 2px;">
+        <div class="product-option">
+          <dt>Processing Time:</dt>
+          <dd>{{ item.variant.metafields.custom.processing_time_long_variant | default: item.product.metafields.custom.processing_time_long }}</dd>
+        </div>
+      </dl>
+    {% endunless %}
+  {% endif %}
+{% endunless %}
+{% comment %} ========== END PROCESSING TIME ========== {% endcomment %}
+
                               {% assign extra_props = "" %}
                               {% for prop in item.properties %}
                                 {% assign p_name = prop.first %}
