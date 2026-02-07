@@ -1845,6 +1845,18 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
   
+  // Helper function to extract just the SKU text (excluding the visually-hidden label)
+  function getSkuText(element) {
+    // Clone the element to avoid modifying the DOM
+    const clone = element.cloneNode(true);
+    // Remove the visually-hidden span
+    const hiddenSpan = clone.querySelector('.visually-hidden');
+    if (hiddenSpan) {
+      hiddenSpan.remove();
+    }
+    return clone.textContent.trim();
+  }
+  
   // Create variant metafields lookup indexed by SKU
   const variantMetafields = {
     {% for variant in product.variants %}
@@ -1858,12 +1870,17 @@ document.addEventListener('DOMContentLoaded', function() {
   const productProcessingTime = {{ product.metafields.custom.processing_time_long | json }};
   
   function updateProcessingTime() {
-    const newSku = skuElement.textContent.trim();
+    const newSku = getSkuText(skuElement);
+    
+    console.log('SKU detected:', newSku);
     
     if (!newSku) return;
     
     const variantData = variantMetafields[newSku];
     const newProcessingTime = variantData?.processing_time || productProcessingTime;
+    
+    console.log('Variant data:', variantData);
+    console.log('New processing time:', newProcessingTime);
     
     if (newProcessingTime) {
       const currentText = processingTimeElement.textContent.trim();
@@ -1882,13 +1899,16 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
         
-        console.log('Processing time updated to:', newProcessingTime);
+        console.log('✅ Processing time updated to:', newProcessingTime);
+      } else {
+        console.log('Processing time already correct');
       }
     }
   }
   
   // Watch for SKU changes using MutationObserver
   const observer = new MutationObserver(function(mutations) {
+    console.log('SKU element changed, updating processing time...');
     updateProcessingTime();
   });
   
@@ -1901,10 +1921,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Also update on initial load
   updateProcessingTime();
   
-  console.log('Processing time updater initialized');
+  console.log('✅ Processing time updater initialized');
+  console.log('Available variants:', variantMetafields);
 });
 </script>
-
 
 
 <script defer type="text/javascript">
