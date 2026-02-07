@@ -427,6 +427,26 @@
                 }{% unless forloop.last %},{% endunless %}
               {% endfor %}
             ]
+
+
+            <script type="application/json" id="product-variants-with-metafields">
+  {
+    "variants": [
+      {% for variant in product.variants %}
+        {
+          "id": {{ variant.id | json }},
+          "title": {{ variant.title | json }},
+          "price": {{ variant.price | json }},
+          "metafields": {
+            "custom": {
+              "processing_time_long_variant": {{ variant.metafields.custom.processing_time_long_variant | json }}
+            }
+          }
+        }{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    ]
+  }
+</script>
           </script>
         </product-gallery>
 
@@ -3849,6 +3869,82 @@ if(productForm && !productForm.__variantSyncBound){
 }
 
 })();
+
+
+
+
+
+(function() {
+  // Load variant metafields
+  let variantMetafields = {};
+  try {
+    const metaScript = document.querySelector('#product-variants-with-metafields');
+    if (metaScript) {
+      const data = JSON.parse(metaScript.textContent);
+      data.variants.forEach(v => {
+        variantMetafields[v.id] = v.metafields;
+      });
+    }
+  } catch(e) {
+    console.error('Failed to parse variant metafields:', e);
+  }
+  
+  // Update processing time on variant change
+  function updateProcessingTime(variant) {
+    if (!variant) return;
+    
+    const processingTimeEl = document.querySelector('.variant-processing-time');
+    if (!processingTimeEl) return;
+    
+    // Get the variant-specific processing time from our metafields object
+    const variantMeta = variantMetafields[variant.id];
+    const variantProcessingTime = variantMeta?.custom?.processing_time_long_variant;
+    const productProcessingTime = {{ product.metafields.custom.processing_time_long | json }};
+    
+    const newProcessingTime = variantProcessingTime || productProcessingTime;
+    
+    if (newProcessingTime) {
+      processingTimeEl.textContent = newProcessingTime;
+    }
+    
+    // Also update the "More Info" data attribute if it exists
+    const moreInfoEl = document.querySelector('.more-info[data-customfield="Processing Time"]');
+    if (moreInfoEl && variantProcessingTime) {
+      moreInfoEl.setAttribute('data-processingtime', variantProcessingTime);
+    }
+  }
+  
+  // Listen for variant change events
+  document.addEventListener('variant:change', function(e) {
+    const variant = e?.detail?.variant || e?.detail || null;
+    updateProcessingTime(variant);
+  });
+  
+  document.addEventListener('variant-change', function(e) {
+    const variant = e?.detail?.variant || e?.detail || null;
+    updateProcessingTime(variant);
+  });
+  
+  // Form change fallback
+  const productForm = document.querySelector('form[action*="/cart/add"]');
+  if (productForm && !productForm.__processingTimeListenerBound) {
+    productForm.__processingTimeListenerBound = true;
+    
+    productForm.addEventListener('change', function() {
+      setTimeout(() => {
+        const idEl = productForm.querySelector('.product-variant-id');
+        if (!idEl) return;
+        
+        const variant = window.product?.variants?.find(
+          v => String(v.id) === String(idEl.value)
+        );
+        
+        updateProcessingTime(variant);
+      }, 50);
+    });
+  }
+})();
+
 </script>
 
 
