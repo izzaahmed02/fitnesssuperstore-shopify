@@ -173,18 +173,7 @@
                                                   {%- endif  -%}
                                           {% endif %}
 
-                               {% comment %} 
-  PROCESSING TIME - ADD THIS SECTION IN YOUR CART DRAWER
-  Place this AFTER the warranty section and BEFORE the extra_props section
-{% endcomment %}
-
-{% comment %} ========== OPTION 1: SIMPLE - JUST REMOVE THIS ENTIRE SECTION ========== {% endcomment %}
-{% comment %}
-  If processing time is showing twice, simply DELETE this entire processing time section.
-  It's likely already being added through your properties loop below.
-{% endcomment %}
-
-{% comment %} ========== OPTION 2: SMART - CHECK FOR DUPLICATES ========== {% endcomment %}
+{% comment %} ========== PROCESSING TIME - FIXED VERSION ========== {% endcomment %}
 {% unless item.product.tags contains 'avisplus-product-options' %}
   {% comment %} Check if processing time is already in custom properties {% endcomment %}
   {% assign has_processing_time_property = false %}
@@ -196,19 +185,38 @@
     {% endif %}
   {% endfor %}
   
-  {% comment %} Only show if NOT already in properties AND item has metafield {% endcomment %}
+  {% comment %} Only show if NOT already in properties {% endcomment %}
   {% unless has_processing_time_property %}
-    {% if item.variant.metafields.custom.processing_time_long_variant != blank or item.product.metafields.custom.processing_time_long != blank %}
+    {% comment %} Get the correct variant for THIS cart item {% endcomment %}
+    {% assign cart_item_variant = null %}
+    {% for variant in item.product.variants %}
+      {% if variant.id == item.variant_id %}
+        {% assign cart_item_variant = variant %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+    
+    {% comment %} Get processing time from variant first, then fall back to product {% endcomment %}
+    {% assign processing_time_to_show = null %}
+    {% if cart_item_variant.metafields.custom.processing_time_long_variant != blank %}
+      {% assign processing_time_to_show = cart_item_variant.metafields.custom.processing_time_long_variant %}
+    {% elsif item.product.metafields.custom.processing_time_long != blank %}
+      {% assign processing_time_to_show = item.product.metafields.custom.processing_time_long %}
+    {% endif %}
+    
+    {% comment %} Only display if we have a processing time to show {% endcomment %}
+    {% if processing_time_to_show != blank %}
       <dl style="margin-bottom: 2px;">
         <div class="product-option">
           <dt>Processing Time:</dt>
-          <dd>{{ item.variant.metafields.custom.processing_time_long_variant | default: item.product.metafields.custom.processing_time_long }}</dd>
+          <dd>{{ processing_time_to_show }}</dd>
         </div>
       </dl>
     {% endif %}
   {% endunless %}
 {% endunless %}
 {% comment %} ========== END PROCESSING TIME ========== {% endcomment %}
+
 
                                
                               {% assign extra_props = "" %}
