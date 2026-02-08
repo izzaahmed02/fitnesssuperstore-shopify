@@ -125,6 +125,38 @@
                                                 <a href="{{ item.url }}"
                                                    class="cart-item__name h4 break">{{ item.product.title | escape }}</a>
 
+                                                   {% comment %} ===== Processing time (from selected variant) ===== {% endcomment %}
+{% unless item.product.tags contains 'avisplus-product-options' %}
+
+  {% assign has_processing_time_property = false %}
+  {% for prop in item.properties %}
+    {% assign p_name = prop.first | downcase %}
+    {% if p_name contains 'processing' or p_name contains 'ships' %}
+      {% assign has_processing_time_property = true %}
+      {% break %}
+    {% endif %}
+  {% endfor %}
+
+  {% unless has_processing_time_property %}
+    {% assign processing_time_to_show = item.variant.metafields.custom.processing_time_long_variant %}
+    {% if processing_time_to_show == blank %}
+      {% assign processing_time_to_show = item.product.metafields.custom.processing_time_long %}
+    {% endif %}
+
+    {% if processing_time_to_show != blank %}
+      <dl style="margin-bottom: 2px;">
+        <div class="product-option">
+          <dt>Processing Time:</dt>
+          <dd>{{ processing_time_to_show }}</dd>
+        </div>
+      </dl>
+    {% endif %}
+  {% endunless %}
+
+{% endunless %}
+{% comment %} ===== End processing time ===== {% endcomment %}
+
+
                                                 <div class="cart-item__totals right medium-hide large-up-hide">
                                                     {%- render 'loading-spinner' -%}
                                                     <div class="cart-item__price-wrapper">
