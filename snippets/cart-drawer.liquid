@@ -219,39 +219,39 @@
 
 
                                
-                              {% assign extra_props = "" %}
-                              {% for prop in item.properties %}
-                                {% assign p_name = prop.first %}
-                                {% assign p_value = prop.last %}
-                                {% assign first_char = p_name | slice: 0, 1 %}
-                                {% if p_name == blank or p_value == blank or first_char == '_' %}
-                                    {% continue %}
-                                {% endif %}
-                                
-                                  {%- capture extra_props -%}
-                                      {{ extra_props }}
-                                      <div class="product-option">
-                                          <dt>{{ p_name }}:</dt>
-                                          <dd>{{ p_value }}</dd>
-                                      </div>
-                                  {%- endcapture -%}
-                               
-                              {% endfor %}
-                              {% if extra_props != "" %}
-                                <dl>
-                                  {% comment %}
-                                  {%- for option in item.options_with_values -%}
-                                    {% unless option.name == "Title" %}
-                                      <div class="product-option">
-                                        <dt>{{ option.name }}:</dt>
-                                        <dd>{{ option.value }}</dd>
-                                      </div>
-                                    {% endunless %}
-                                  {%- endfor -%}
-                                  {% endcomment %}
-                                  {{ extra_props }}
-                                </dl>
-                              {% endif %}
+                            {% assign extra_props = "" %}
+{% for prop in item.properties %}
+  {% assign p_name = prop.first %}
+  {% assign p_name_lower = p_name | downcase %}
+  {% assign p_value = prop.last %}
+  {% assign first_char = p_name | slice: 0, 1 %}
+  
+  {% comment %} Skip empty, hidden, and processing time properties {% endcomment %}
+  {% if p_name == blank or p_value == blank or first_char == '_' %}
+    {% continue %}
+  {% endif %}
+  
+  {% comment %} Skip if property name contains processing or ships {% endcomment %}
+  {% if p_name_lower contains 'processing' or p_name_lower contains 'ships from' or p_name_lower contains 'processing time' %}
+    {% continue %}
+  {% endif %}
+  
+  {% comment %} Add this property to the output {% endcomment %}
+  {%- capture extra_props -%}
+    {{ extra_props }}
+    <div class="product-option">
+      <dt>{{ p_name }}:</dt>
+      <dd>{{ p_value }}</dd>
+    </div>
+  {%- endcapture -%}
+{% endfor %}
+
+{% comment %} Display filtered properties {% endcomment %}
+{% if extra_props != "" %}
+  <dl>
+    {{ extra_props }}
+  </dl>
+{% endif %}
                               <quantity-popover class="cart-quantity-price {% if item.properties._apo_option and item.properties._apo_order %} apo-hide-item{% endif %}">
                                 <div class="cart-item__quantity-wrapper quantity-popover-wrapper">
                                   <span class="quantity-text">QTY: </span>
