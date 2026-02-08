@@ -173,9 +173,9 @@
                                                   {%- endif  -%}
                                           {% endif %}
 
-{% comment %} ========== PROCESSING TIME ========== {% endcomment %}
+{% comment %} ========== PROCESSING TIME - FIXED VERSION ========== {% endcomment %}
 {% unless item.product.tags contains 'avisplus-product-options' %}
-  {% comment %} Check if processing time is NOT already in properties {% endcomment %}
+  {% comment %} Check if processing time is already in custom properties {% endcomment %}
   {% assign has_processing_time_property = false %}
   {% for prop in item.properties %}
     {% assign p_name = prop.first | downcase %}
@@ -187,15 +187,24 @@
   
   {% comment %} Only show if NOT already in properties {% endcomment %}
   {% unless has_processing_time_property %}
-    {% comment %} Get processing time - variant takes priority over product {% endcomment %}
-    {% assign processing_time_to_show = null %}
+    {% comment %} Get the correct variant for THIS cart item {% endcomment %}
+    {% assign cart_item_variant = null %}
+    {% for variant in item.product.variants %}
+      {% if variant.id == item.variant_id %}
+        {% assign cart_item_variant = variant %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
     
-    {% if item.variant.metafields.custom.processing_time_long_variant != blank %}
-      {% assign processing_time_to_show = item.variant.metafields.custom.processing_time_long_variant %}
+    {% comment %} Get processing time from variant first, then fall back to product {% endcomment %}
+    {% assign processing_time_to_show = null %}
+    {% if cart_item_variant.metafields.custom.processing_time_long_variant != blank %}
+      {% assign processing_time_to_show = cart_item_variant.metafields.custom.processing_time_long_variant %}
     {% elsif item.product.metafields.custom.processing_time_long != blank %}
       {% assign processing_time_to_show = item.product.metafields.custom.processing_time_long %}
     {% endif %}
     
+    {% comment %} Only display if we have a processing time to show {% endcomment %}
     {% if processing_time_to_show != blank %}
       <dl style="margin-bottom: 2px;">
         <div class="product-option">
