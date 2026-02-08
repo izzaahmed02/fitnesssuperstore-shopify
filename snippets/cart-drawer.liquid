@@ -173,9 +173,9 @@
                                                   {%- endif  -%}
                                           {% endif %}
 
-{% comment %} ========== PROCESSING TIME - FIXED VERSION ========== {% endcomment %}
+{% comment %} ========== PROCESSING TIME ========== {% endcomment %}
 {% unless item.product.tags contains 'avisplus-product-options' %}
-  {% comment %} Check if processing time is already in custom properties {% endcomment %}
+  {% comment %} Check if processing time is NOT already in properties {% endcomment %}
   {% assign has_processing_time_property = false %}
   {% for prop in item.properties %}
     {% assign p_name = prop.first | downcase %}
@@ -190,15 +190,12 @@
     {% comment %} Get processing time - variant takes priority over product {% endcomment %}
     {% assign processing_time_to_show = null %}
     
-    {% comment %} First try to get from variant metafield {% endcomment %}
     {% if item.variant.metafields.custom.processing_time_long_variant != blank %}
       {% assign processing_time_to_show = item.variant.metafields.custom.processing_time_long_variant %}
-    {% comment %} Fall back to product metafield {% endcomment %}
     {% elsif item.product.metafields.custom.processing_time_long != blank %}
       {% assign processing_time_to_show = item.product.metafields.custom.processing_time_long %}
     {% endif %}
     
-    {% comment %} Only display if we have a processing time to show {% endcomment %}
     {% if processing_time_to_show != blank %}
       <dl style="margin-bottom: 2px;">
         <div class="product-option">
