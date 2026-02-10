@@ -1,7 +1,4 @@
-{% comment %}
-{%- assign gallery_metafield = product.metafields.custom.customer_photo_gallery -%}
-
-{% if gallery_metafield and gallery_metafield.value != blank %}
+{% if section.blocks.size > 0 %}
 <section id="customer-photo-gallery-{{ section.id }}" class="customer-photo-gallery">
   <div class="customer-photo-gallery__header">
     <h4>Customer's Photo Gallery</h4>
@@ -12,258 +9,19 @@
   <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--right" aria-label="Next image">›</button>
 
   <div class="customer-photo-gallery__slider">
-    {% for image in gallery_metafield.value %}
-      {% assign thumb = image | image_url: width: 900 %}
-      {% assign full  = image | image_url: width: 2400 %}
-      <div class="customer-photo-gallery__slide">
-        <img
-          src="{{ thumb }}"
-          data-full="{{ full }}"
-          alt="Customer photo {{ forloop.index }}"
-          loading="lazy"
-        >
-      </div>
-    {% endfor %}
-  </div>
-
-  <!-- Lightbox -->
-  <div class="customer-photo-gallery__lightbox" aria-hidden="true">
-    <div class="customer-photo-gallery__lightbox-inner">
-      <button type="button" class="customer-photo-gallery__lightbox-close" aria-label="Close">&times;</button>
-      <img src="" alt="Expanded customer photo">
-    </div>
-  </div>
-</section>
-{% endif %}
-
-<style>
-/* -----------------------------
-   BASE
-------------------------------- */
-.customer-photo-gallery {
-  margin: 40px 0;
-  padding: 0 16px;
-  position: relative;
-}
-
-.customer-photo-gallery__header {
-  margin-bottom: 16px;
-}
-
-.customer-photo-gallery__header h4 {
-  font-family: Lato;
-  font-weight: 700;
-}
-
-/* -----------------------------
-   SLIDER (ALL DEVICES)
-------------------------------- */
-.customer-photo-gallery__slider {
-  display: flex;
-  gap: 0px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-}
-
-.customer-photo-gallery__slider::-webkit-scrollbar {
-  display: none;
-}
-
-.customer-photo-gallery__slide {
-  flex: 0 0 80%;
-  scroll-snap-align: start;
-  padding:4px;
-}
-
-.customer-photo-gallery__slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: transform .2s ease;
-}
-
-.customer-photo-gallery__slide img:hover {
-  transform: scale(1.03);
-}
-
-/* -----------------------------
-   DESKTOP SIZING
-------------------------------- */
-@media screen and (min-width: 990px) {
-  .customer-photo-gallery__slide {
-    flex: 0 0 25%;
-    padding:8px;
-  }
-
-  .customer-photo-gallery__slide img {
-    height: 100%;
-  }
-}
-
-/* -----------------------------
-   ARROWS
-------------------------------- */
-.customer-photo-gallery__arrow {
-  position: absolute;
-  top: 60%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.45);
-  color: #fff;
-  border: none;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  font-size: 22px;
-  cursor: pointer;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.customer-photo-gallery__arrow--left { left: 10px; }
-.customer-photo-gallery__arrow--right { right: 10px; }
-
-/* -----------------------------
-   LIGHTBOX
-------------------------------- */
-.customer-photo-gallery__lightbox {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.8);
-  opacity: 0;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: .2s ease;
-  z-index: 999;
-}
-
-.customer-photo-gallery__lightbox--active {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.customer-photo-gallery__lightbox-inner {
-  max-width: 700px;
-  max-height: auto;
-  position: relative;
-}
-
-.customer-photo-gallery__lightbox-inner img {
-  max-width: 100%;
-  max-height: 100%;
-  display: block;
-}
-
-.customer-photo-gallery__lightbox-close {
-  position: absolute;
-  top: -36px;
-  right: -6px;
-  font-size: 32px;
-  background: none;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-}
-</style>
-
-<script>
-(function () {
-  var section = document.getElementById('customer-photo-gallery-{{ section.id }}');
-  if (!section) return;
-
-  var slider = section.querySelector('.customer-photo-gallery__slider');
-  var slides = section.querySelectorAll('.customer-photo-gallery__slide img');
-  var prev = section.querySelector('.customer-photo-gallery__arrow--left');
-  var next = section.querySelector('.customer-photo-gallery__arrow--right');
-
-  // ----- LIGHTBOX -----
-  var lightbox = section.querySelector('.customer-photo-gallery__lightbox');
-  var lightboxImg = lightbox.querySelector('img');
-  var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
-
-  slides.forEach(function (img) {
-    img.addEventListener('click', function () {
-      lightboxImg.src = img.dataset.full || img.src;
-      lightbox.classList.add('customer-photo-gallery__lightbox--active');
-    });
-  });
-
-  closeBtn.addEventListener('click', function () {
-    lightbox.classList.remove('customer-photo-gallery__lightbox--active');
-  });
-
-  lightbox.addEventListener('click', function (e) {
-    if (e.target === lightbox) {
-      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
-    }
-  });
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
-    }
-  });
-
-  // ----- SLIDER ARROWS -----
-  function scrollSlider(dir) {
-    var slideWidth = slider.querySelector('.customer-photo-gallery__slide').offsetWidth + 16;
-    slider.scrollBy({
-      left: dir === 'next' ? slideWidth : -slideWidth,
-      behavior: 'smooth'
-    });
-  }
-
-  prev.addEventListener('click', function () { scrollSlider('prev'); });
-  next.addEventListener('click', function () { scrollSlider('next'); });
-
-})();
-</script>
-
-{% schema %}
-{
-  "name": "Customer photo gallery",
-  "templates": ["product"],
-  "settings": [],
-  "presets": [
-    {
-      "name": "Customer photo gallery"
-    }
-  ]
-}
-{% endschema %}
-
-{% endcomment %}
-
-{%- assign gallery_metafield = product.metafields.custom.customer_photo_gallery -%}
-
-{% if gallery_metafield and gallery_metafield.value != blank %}
-<section id="customer-photo-gallery-{{ section.id }}" class="customer-photo-gallery">
-  <div class="customer-photo-gallery__header">
-    <h4>Customer's Photo Gallery</h4>
-  </div>
-
-  <!-- Arrows -->
-  <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--left" aria-label="Previous image">‹</button>
-  <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--right" aria-label="Next image">›</button>
-
-  <div class="customer-photo-gallery__slider">
-    {% for image in gallery_metafield.value %}
-      {% assign thumb = image | image_url: width: 900 %}
-      {% assign full  = image | image_url: width: 2400 %}
-      <div class="customer-photo-gallery__slide">
-        <img
-          src="{{ thumb }}"
-          data-full="{{ full }}"
-          alt="Customer photo {{ forloop.index }}"
-          loading="lazy"
-        >
-      </div>
+    {% for block in section.blocks %}
+      {% if block.settings.image != blank %}
+        {% assign thumb = block.settings.image | image_url: width: 900 %}
+        {% assign full  = block.settings.image | image_url: width: 2400 %}
+        <div class="customer-photo-gallery__slide" {{ block.shopify_attributes }}>
+          <img
+            src="{{ thumb }}"
+            data-full="{{ full }}"
+            alt="Customer photo {{ forloop.index }}"
+            loading="lazy"
+          >
+        </div>
+      {% endif %}
     {% endfor %}
   </div>
 
@@ -480,11 +238,37 @@
 {
   "name": "Photo gallery",
   "settings": [],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Gallery Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        }
+      ]
+    }
+  ],
   "presets": [
     {
-      "name": "Photo gallery"
+      "name": "Photo gallery",
+      "blocks": [
+        {
+          "type": "image"
+        },
+        {
+          "type": "image"
+        },
+        {
+          "type": "image"
+        },
+        {
+          "type": "image"
+        }
+      ]
     }
   ]
 }
 {% endschema %}
-
