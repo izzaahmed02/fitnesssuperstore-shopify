@@ -3944,7 +3944,200 @@ if(productForm && !productForm.__variantSyncBound){
 }
 
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Auto-select first available weight variant when "Single or Set" option changes
+ * This script monitors changes to the first variant option and automatically
+ * selects the first available weight option.
+ */
+
+(function() {
+  'use strict';
+
+  // Wait for DOM to be ready
+  function init() {
+    const productForm = document.querySelector('form[action*="/cart/add"]');
+    if (!productForm) {
+      console.warn('Product form not found');
+      return;
+    }
+
+    // Find the "Single or Set" option inputs
+    const singleOrSetInputs = productForm.querySelectorAll('input[name="option1"]');
+    if (!singleOrSetInputs.length) {
+      console.warn('Single or Set option inputs not found');
+      return;
+    }
+
+    // Attach change listener to each "Single or Set" option
+    singleOrSetInputs.forEach(input => {
+      input.addEventListener('change', handleSingleOrSetChange);
+    });
+
+    console.log('✅ Auto-select weight variant listener initialized');
+  }
+
+  function handleSingleOrSetChange(event) {
+    const selectedValue = event.target.value;
+    console.log('Single or Set changed to:', selectedValue);
+
+    // Get the product data
+    const productData = window.product;
+    if (!productData || !productData.variants) {
+      console.warn('Product data not available');
+      return;
+    }
+
+    // Find the first available variant that matches the selected "Single or Set" option
+    const matchingVariant = productData.variants.find(variant => {
+      return variant.option1 === selectedValue && variant.available;
+    });
+
+    if (matchingVariant) {
+      console.log('Found matching variant:', matchingVariant);
+      
+      // Auto-select the weight option (option2)
+      const weightValue = matchingVariant.option2;
+      selectWeightOption(weightValue);
+      
+      // Update the variant ID in the form
+      updateVariantId(matchingVariant.id);
+      
+      // Trigger variant change event for other scripts
+      triggerVariantChangeEvent(matchingVariant);
+    } else {
+      console.warn('No available variant found for:', selectedValue);
+      // If no available variant, still try to select the first weight option
+      selectFirstWeightOption(selectedValue);
+    }
+  }
+
+  function selectWeightOption(weightValue) {
+    const productForm = document.querySelector('form[action*="/cart/add"]');
+    if (!productForm) return;
+
+    // Try to find and click the weight option button/input
+    const weightInputs = productForm.querySelectorAll('input[name="option2"]');
+    
+    for (const input of weightInputs) {
+      if (input.value === weightValue) {
+        // Check or click the input
+        if (input.type === 'radio') {
+          input.checked = true;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+          input.click();
+        }
+        
+        // Also trigger visual selection on the label/button
+        const label = input.closest('label') || 
+                     input.parentElement?.querySelector('label') ||
+                     document.querySelector(`label[for="${input.id}"]`);
+        
+        if (label) {
+          // Remove active class from all weight options
+          const allWeightLabels = productForm.querySelectorAll('[name="option2"]')
+            .forEach(inp => {
+              const lbl = inp.closest('label') || 
+                         inp.parentElement?.querySelector('label') ||
+                         document.querySelector(`label[for="${inp.id}"]`);
+              if (lbl) {
+                lbl.classList.remove('is-active', 'active', 'selected');
+              }
+            });
+          
+          // Add active class to selected weight option
+          label.classList.add('is-active', 'active', 'selected');
+        }
+        
+        console.log('✅ Auto-selected weight:', weightValue);
+        break;
+      }
+    }
+  }
+
+  function selectFirstWeightOption(singleOrSetValue) {
+    const productData = window.product;
+    if (!productData || !productData.variants) return;
+
+    // Get all unique weight values for this Single or Set option
+    const weightOptions = productData.variants
+      .filter(v => v.option1 === singleOrSetValue)
+      .map(v => v.option2)
+      .filter((value, index, self) => self.indexOf(value) === index); // unique values
+
+    if (weightOptions.length > 0) {
+      selectWeightOption(weightOptions[0]);
+    }
+  }
+
+  function updateVariantId(variantId) {
+    const productForm = document.querySelector('form[action*="/cart/add"]');
+    if (!productForm) return;
+
+    const variantIdInput = productForm.querySelector('.product-variant-id, input[name="id"]');
+    if (variantIdInput) {
+      variantIdInput.value = variantId;
+      variantIdInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
+  function triggerVariantChangeEvent(variant) {
+    // Dispatch custom event for other scripts that listen to variant changes
+    document.dispatchEvent(new CustomEvent('variant:change', {
+      detail: { variant: variant },
+      bubbles: true
+    }));
+
+    document.dispatchEvent(new CustomEvent('variant-change', {
+      detail: { variant: variant },
+      bubbles: true
+    }));
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Re-initialize on dynamic content changes (for AJAX-loaded products)
+  if (window.MutationObserver) {
+    const observer = new MutationObserver(() => {
+      const form = document.querySelector('form[action*="/cart/add"]');
+      if (form && !form.__autoSelectWeightInitialized) {
+        form.__autoSelectWeightInitialized = true;
+        init();
+      }
+    });
+
+    if (document.body) {
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+    }
+  }
+})();
 </script>
+
+
 
 
 
