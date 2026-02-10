@@ -3948,3 +3948,78 @@ if(productForm && !productForm.__variantSyncBound){
 
 
 
+<script>
+(function () {
+  function getFirstAvailableVariant() {
+    const variants = window.product?.variants || [];
+    return variants.find(v => v.available) || variants[0] || null;
+  }
+
+  function getCurrentVariantFromIdInput(form) {
+    const idEl = form.querySelector(".product-variant-id");
+    const id = idEl?.value || idEl?.getAttribute("value");
+    if (!id) return null;
+    return (window.product?.variants || []).find(v => String(v.id) === String(id)) || null;
+  }
+
+  function forceSelectVariant(form, variant) {
+    if (!variant) return;
+
+    // update hidden id
+    const idEl = form.querySelector(".product-variant-id");
+    if (idEl) {
+      idEl.value = variant.id;
+      idEl.setAttribute("value", variant.id);
+      idEl.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    // (optional) also set option inputs if they exist
+    ["option1","option2","option3"].forEach((optName, i) => {
+      const val = variant[optName];
+      if (!val) return;
+
+      // selects
+      const sel = form.querySelector(`select[name="${optName}"]`);
+      if (sel) {
+        sel.value = val;
+        sel.dispatchEvent(new Event("change", { bubbles: true }));
+        return;
+      }
+
+      // radios
+      const radio = form.querySelector(`input[type="radio"][name="${optName}"][value="${CSS.escape(val)}"]`);
+      if (radio && !radio.checked) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    });
+
+    // tell theme listeners
+    document.dispatchEvent(new CustomEvent("variant:change", { detail: { variant } }));
+    document.dispatchEvent(new CustomEvent("variant-change", { detail: { variant } }));
+  }
+
+  function ensureVariantSelected() {
+    const form = document.querySelector('form[action*="/cart/add"]');
+    if (!form) return;
+
+    // If current is null/invalid => select first available
+    const current = getCurrentVariantFromIdInput(form);
+    if (!current) {
+      const firstAvail = getFirstAvailableVariant();
+      forceSelectVariant(form, firstAvail);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", ensureVariantSelected);
+  if (document.readyState !== "loading") ensureVariantSelected();
+
+  // also re-check when option changes (your picker might wipe the id)
+  document.addEventListener("change", function (e) {
+    const n = e.target?.name;
+    if (n === "option1" || n === "option2" || n === "option3") {
+      setTimeout(ensureVariantSelected, 30);
+    }
+  }, true);
+})();
+</script>
