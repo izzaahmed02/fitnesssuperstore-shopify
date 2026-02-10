@@ -748,7 +748,7 @@
               {%- when 'price_with_option' -%}
                {% unless product.tags contains 'avisplus-product-options' %}
                 <product-form
-                  class="product-form abc"
+                  class="product-form"
                   data-hide-errors="{{ gift_card_recipient_feature_active }}"
                   data-section-id="{{ section.id }}"
                 >
@@ -3948,35 +3948,56 @@ if(productForm && !productForm.__variantSyncBound){
 
 
 
-
 <script>
 (function () {
-  const DISABLED_TEXT = "Select options";   // <-- put your disabled text here
-  const ENABLED_TEXT  = "Add to cart";      // <-- put your enabled text here
+  const SHOW_VALUE = "Sets";
 
-  function updateBtnText(btn) {
-    const label = btn.querySelector("span");
-    if (!label) return;
+  function getOption1Value(form) {
+    if (!form) return null;
 
-    const isDisabled = btn.disabled || btn.hasAttribute("disabled") || btn.getAttribute("aria-disabled") === "true";
+    // select
+    const sel = form.querySelector('select[name="option1"]');
+    if (sel) return sel.value;
 
-    label.textContent = isDisabled ? DISABLED_TEXT : ENABLED_TEXT;
+    // radio
+    const radio = form.querySelector('input[name="option1"]:checked');
+    if (radio) return radio.value;
+
+    // button-based pickers (aria-pressed / active)
+    const btn =
+      form.querySelector('[data-option-position="1"] .is-active') ||
+      form.querySelector('[data-option-position="1"] [aria-pressed="true"]');
+
+    return btn ? btn.textContent.trim() : null;
+  }
+
+  function toggleExtras(form) {
+    const option1 = getOption1Value(form);
+
+    const show = option1 === SHOW_VALUE;
+
+    document
+      .querySelectorAll(".installation-group, .avpoptions-container__v2")
+      .forEach(el => {
+        el.style.display = show ? "" : "none";
+      });
   }
 
   function init() {
-    const btn = document.querySelector('[id^="ProductSubmitButton-"]');
-    if (!btn) return;
+    const form = document.querySelector('form[action*="/cart/add"]');
+    if (!form) return;
 
-    // initial
-    updateBtnText(btn);
+    // Initial state
+    toggleExtras(form);
 
-    // watch attribute changes (disabled toggles)
-    const obs = new MutationObserver(() => updateBtnText(btn));
-    obs.observe(btn, { attributes: true, attributeFilter: ["disabled", "aria-disabled", "class"] });
+    // React to option changes
+    form.addEventListener("change", () => {
+      setTimeout(() => toggleExtras(form), 0);
+    });
 
-    // also update on variant changes (some themes don’t mutate attributes in a simple way)
-    document.addEventListener("variant:change", () => updateBtnText(btn));
-    document.addEventListener("variant-change", () => updateBtnText(btn));
+    // Also catch custom variant events
+    document.addEventListener("variant:change", () => toggleExtras(form));
+    document.addEventListener("variant-change", () => toggleExtras(form));
   }
 
   document.addEventListener("DOMContentLoaded", init);
