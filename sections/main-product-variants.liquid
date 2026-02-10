@@ -1032,26 +1032,156 @@
                                     assign quantity_rule_soldout = true
                                   endif
                                 -%}
-                                <button
-                                  id="ProductSubmitButton-{{ section.id }}"
-                                  type="submit"
-                                  name="add"
-                                  class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
-                                >
-                                  {% render 'icon-cart' %}
-                                  <span {{ product.selected_or_first_available_variant}} {{ product.selected_or_first_available_variant.available }} >
-                                    {%- if product.selected_or_first_available_variant == null -%}
-                                      {{ 'products.product.unavailable' | t }}
-                                    {%- elsif product.selected_or_first_available_variant.available == false
-                                      or quantity_rule_soldout
-                                    -%}
-                                      {{ 'products.product.sold_out' | t }}
-                                    {%- else -%}
-                                      {{ 'products.product.add_to_cart' | t }}
-                                    {%- endif -%}
-                                  </span>
-                                  {%- render 'loading-spinner' -%}
-                                </button>
+                              <!-- COMPLETE IMPLEMENTATION GUIDE -->
+
+<!-- STEP 1: Replace the Add to Cart button section (around line 1100-1150) -->
+
+<button
+  id="ProductSubmitButton-{{ section.id }}"
+  type="submit"
+  name="add"
+  class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
+  data-add-to-cart-button
+  {% if product.selected_or_first_available_variant == null %}
+    disabled
+  {% elsif product.selected_or_first_available_variant.available == false or quantity_rule_soldout %}
+    disabled
+  {% endif %}
+>
+  {% render 'icon-cart' %}
+  <span data-button-text>
+    {%- if product.selected_or_first_available_variant == null -%}
+      Choose Variant
+    {%- elsif product.selected_or_first_available_variant.available == false or quantity_rule_soldout -%}
+      Unavailable
+    {%- else -%}
+      {{ 'products.product.add_to_cart' | t }}
+    {%- endif -%}
+  </span>
+  {%- render 'loading-spinner' -%}
+</button>
+
+
+<!-- STEP 2: Add this JavaScript at the bottom of your template (before the closing </product-info> tag) -->
+
+<script>
+(function() {
+  'use strict';
+
+  // Get all necessary elements
+  const addToCartButton = document.querySelector('[data-add-to-cart-button]');
+  const buttonText = document.querySelector('[data-button-text]');
+  const variantIdInput = document.querySelector('.product-variant-id');
+  const productForm = document.querySelector('form[action*="/cart/add"]');
+
+  if (!addToCartButton || !buttonText || !window.product) {
+    console.warn('Required elements not found for button logic');
+    return;
+  }
+
+  // Create variant lookup map
+  const variantsById = new Map(
+    window.product.variants.map(v => [String(v.id), v])
+  );
+
+  /**
+   * Update button state based on selected variant
+   */
+  function updateButtonState() {
+    // Get current variant ID
+    let variantId = null;
+    
+    if (variantIdInput) {
+      variantId = variantIdInput.value || variantIdInput.getAttribute('value');
+    }
+
+    // Find the variant
+    const selectedVariant = variantId ? variantsById.get(String(variantId)) : null;
+
+    // Update button based on variant state
+    if (!selectedVariant) {
+      // No variant selected
+      buttonText.textContent = 'Choose Variant';
+      addToCartButton.disabled = true;
+      addToCartButton.classList.add('button--disabled');
+    } else if (!selectedVariant.available) {
+      // Variant exists but is out of stock
+      buttonText.textContent = 'Unavailable';
+      addToCartButton.disabled = true;
+      addToCartButton.classList.add('button--disabled');
+    } else {
+      // Variant is available
+      buttonText.textContent = 'Add to Cart';
+      addToCartButton.disabled = false;
+      addToCartButton.classList.remove('button--disabled');
+    }
+  }
+
+  // Listen for variant changes
+  document.addEventListener('variant:change', function(e) {
+    updateButtonState();
+  });
+
+  document.addEventListener('variant-change', function(e) {
+    updateButtonState();
+  });
+
+  // Listen for form changes (fallback)
+  if (productForm) {
+    productForm.addEventListener('change', function(e) {
+      const target = e.target;
+      if (target && (target.name.includes('option') || target.name === 'id')) {
+        setTimeout(updateButtonState, 50);
+      }
+    });
+  }
+
+  // Watch for variant ID input changes (using MutationObserver)
+  if (variantIdInput) {
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+          updateButtonState();
+        }
+      });
+    });
+
+    observer.observe(variantIdInput, {
+      attributes: true,
+      attributeFilter: ['value']
+    });
+
+    // Also watch for value changes via input event
+    variantIdInput.addEventListener('input', updateButtonState);
+    variantIdInput.addEventListener('change', updateButtonState);
+  }
+
+  // Initial state
+  updateButtonState();
+
+  console.log('✅ Button state logic initialized');
+})();
+</script>
+
+
+<!-- STEP 3: Optional - Add CSS for better visual feedback -->
+
+<style>
+  .button--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .product-form__submit[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .product-form__submit:not([disabled]) {
+    cursor: pointer;
+  }
+</style>
+
                               </div>
                             {%- endform -%}
                           {%- else -%}
