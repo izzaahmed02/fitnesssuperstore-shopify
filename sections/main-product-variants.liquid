@@ -3949,3 +3949,110 @@ if(productForm && !productForm.__variantSyncBound){
 
 
 
+<script>
+(function () {
+  let autoPicking = false;
+
+  function getValue(form, name) {
+    const sel = form.querySelector(`select[name="${name}"]`);
+    if (sel) return sel.value;
+
+    const radio = form.querySelector(`input[name="${name}"]:checked`);
+    if (radio) return radio.value;
+
+    const input = form.querySelector(`input[name="${name}"]`);
+    return input ? input.value : null;
+  }
+
+  function setValue(form, name, value) {
+    const sel = form.querySelector(`select[name="${name}"]`);
+    if (sel) {
+      sel.value = value;
+      sel.dispatchEvent(new Event("change", { bubbles: true }));
+      return;
+    }
+
+    const radio = form.querySelector(
+      `input[type="radio"][name="${name}"][value="${CSS.escape(value)}"]`
+    );
+    if (radio) {
+      radio.checked = true;
+      radio.dispatchEvent(new Event("change", { bubbles: true }));
+      return;
+    }
+
+    const input = form.querySelector(`input[name="${name}"]`);
+    if (input) {
+      input.value = value;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+
+  function setVariantId(form, id) {
+    const el = form.querySelector(".product-variant-id");
+    if (!el) return;
+    el.value = id;
+    el.setAttribute("value", id);
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function pickFirstAvailableWeight(form) {
+    if (!window.product?.variants) return;
+
+    const option1 = getValue(form, "option1"); // Single or Set
+    const option3 = getValue(form, "option3"); // Condition
+
+    if (!option1) return;
+
+    const match = window.product.variants.find(v =>
+      v.available &&
+      v.option1 === option1 &&
+      (!option3 || v.option3 === option3)
+    );
+
+    if (!match) return;
+
+    autoPicking = true;
+
+    // Auto-pick WEIGHT
+    setValue(form, "option2", match.option2);
+
+    // Sync variant ID
+    setVariantId(form, match.id);
+
+    // Let your existing listeners react
+    document.dispatchEvent(
+      new CustomEvent("variant:change", { detail: { variant: match } })
+    );
+    document.dispatchEvent(
+      new CustomEvent("variant-change", { detail: { variant: match } })
+    );
+
+    setTimeout(() => (autoPicking = false), 0);
+  }
+
+  function bind(form) {
+    if (!form || form.__autoWeightBound) return;
+    form.__autoWeightBound = true;
+
+    form.addEventListener("change", e => {
+      if (autoPicking) return;
+      if (e.target.name === "option1") {
+        pickFirstAvailableWeight(form);
+      }
+    });
+
+    // Initial enforcement on page load
+    pickFirstAvailableWeight(form);
+  }
+
+  function init() {
+    document
+      .querySelectorAll('form[action*="/cart/add"]')
+      .forEach(bind);
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+  if (document.readyState !== "loading") init();
+})();
+</script>
