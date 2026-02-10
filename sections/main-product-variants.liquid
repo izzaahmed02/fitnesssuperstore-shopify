@@ -1781,6 +1781,160 @@
         assign seo_media = product.featured_media
       endif
     -%}
+
+
+    <script>
+/**
+ * Auto-select weight variant when Single or Set changes
+ * Hooks into Shopify's PUB_SUB_EVENTS system
+ */
+
+(function() {
+  'use strict';
+
+  console.log('🚀 Auto-select weight variant initializing...');
+
+  // Wait for PUB_SUB_EVENTS to be available
+  function waitForPubSub() {
+    if (typeof subscribe === 'undefined' || typeof PUB_SUB_EVENTS === 'undefined') {
+      setTimeout(waitForPubSub, 100);
+      return;
+    }
+
+    console.log('✅ PUB_SUB system found');
+    init();
+  }
+
+  function init() {
+    // Subscribe to option value changes
+    subscribe(PUB_SUB_EVENTS.optionValueSelectionChange, handleOptionChange);
+    console.log('✅ Subscribed to option value changes');
+  }
+
+  let isAutoSelecting = false;
+
+  function handleOptionChange({ data }) {
+    if (isAutoSelecting) {
+      console.log('🔄 Skipping - auto-selection in progress');
+      return;
+    }
+
+    const { event, target, selectedOptionValues } = data;
+    
+    console.log('📢 Option changed:', {
+      target: target?.dataset?.optionIndex,
+      selectedValues: selectedOptionValues
+    });
+
+    // Check if this is option1 (Single or Set)
+    if (!target || target.dataset.optionIndex !== '0') {
+      console.log('⏭️ Not option1, skipping');
+      return;
+    }
+
+    const productData = window.product;
+    if (!productData || !productData.variants) {
+      console.warn('⚠️ Product data not available');
+      return;
+    }
+
+    // Get the selected Single or Set value
+    const singleOrSetValue = selectedOptionValues[0];
+    console.log('🎯 Single or Set value:', singleOrSetValue);
+
+    // Find first available variant for this option
+    const matchingVariant = productData.variants.find(variant => {
+      return variant.option1 === singleOrSetValue && variant.available;
+    });
+
+    if (matchingVariant) {
+      console.log('✅ Found matching variant:', {
+        id: matchingVariant.id,
+        weight: matchingVariant.option2,
+        available: matchingVariant.available
+      });
+
+      // Auto-select the weight option
+      selectWeightOption(matchingVariant.option2);
+    } else {
+      console.log('⚠️ No available variant, selecting first weight');
+      selectFirstWeightOption(singleOrSetValue);
+    }
+  }
+
+  function selectWeightOption(weightValue) {
+    console.log('🎯 Auto-selecting weight:', weightValue);
+
+    isAutoSelecting = true;
+
+    // Find all option2 inputs
+    const weightInputs = document.querySelectorAll(
+      'input[name="option2"], fieldset input[type="radio"]'
+    );
+
+    let found = false;
+
+    weightInputs.forEach(input => {
+      if (input.value === weightValue) {
+        found = true;
+        
+        // Uncheck all weight options first
+        weightInputs.forEach(inp => {
+          inp.checked = false;
+          const label = inp.closest('label') || document.querySelector(`label[for="${inp.id}"]`);
+          if (label) {
+            label.classList.remove('is-active', 'active', 'selected');
+          }
+        });
+
+        // Check the target input
+        input.checked = true;
+        
+        // Add active class to label
+        const label = input.closest('label') || document.querySelector(`label[for="${input.id}"]`);
+        if (label) {
+          label.classList.add('is-active', 'active', 'selected');
+        }
+
+        // Trigger change event
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        input.dispatchEvent(new Event('click', { bubbles: true }));
+
+        console.log('✅ Weight option selected:', weightValue);
+      }
+    });
+
+    if (!found) {
+      console.warn('⚠️ Weight input not found for:', weightValue);
+    }
+
+    // Reset flag after a delay
+    setTimeout(() => {
+      isAutoSelecting = false;
+    }, 500);
+  }
+
+  function selectFirstWeightOption(singleOrSetValue) {
+    const productData = window.product;
+    if (!productData || !productData.variants) return;
+
+    const weightOptions = productData.variants
+      .filter(v => v.option1 === singleOrSetValue)
+      .map(v => v.option2)
+      .filter((value, index, self) => self.indexOf(value) === index);
+
+    if (weightOptions.length > 0) {
+      console.log('📋 First weight option:', weightOptions[0]);
+      selectWeightOption(weightOptions[0]);
+    }
+  }
+
+  // Start the initialization
+  waitForPubSub();
+
+  console.log('✅ Auto-select weight script loaded');
+})();
+</script>
   
 </product-info>
 
