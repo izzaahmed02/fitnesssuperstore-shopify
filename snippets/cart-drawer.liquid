@@ -703,8 +703,86 @@
 		// Update total cart count in the UI
 		updateCartCount(totalContentCount);
 
-    // Load Frequently Bought Together products
-    new FrequentlyBoughtTogether();
+    // Initialize Frequently Bought Together
+    frequentlyBoughtInstance = new FrequentlyBoughtTogether();
+
+    // Listen for cart updates (from remove buttons, etc.)
+    document.addEventListener('cart:updated', () => {
+      console.log('[Frequently Bought] Cart updated event received');
+      if (frequentlyBoughtInstance) {
+        setTimeout(() => {
+          frequentlyBoughtInstance.refresh();
+        }, 300); // Small delay to let cart update complete
+      }
+    });
+
+    // Also watch for changes to the cart items wrapper (catches removals)
+    const cartItemsWrapper = document.querySelector('.drawer__cart-items-wrapper');
+    if (cartItemsWrapper) {
+      const observer = new MutationObserver((mutations) => {
+        console.log('[Frequently Bought] Cart items changed, checking...');
+        
+        // Check if containers still exist
+        const desktopExists = document.getElementById('FrequentlyBoughtProducts');
+        const mobileExists = document.getElementById('FrequentlyBoughtProductsMobile');
+        
+        console.log('[Frequently Bought] Desktop container exists:', !!desktopExists);
+        console.log('[Frequently Bought] Mobile container exists:', !!mobileExists);
+        
+        if (!desktopExists && !mobileExists) {
+          console.log('[Frequently Bought] Containers removed, waiting for recreation...');
+          // Containers were removed, wait a bit and try to reinitialize
+          setTimeout(() => {
+            const newDesktop = document.getElementById('FrequentlyBoughtProducts');
+            const newMobile = document.getElementById('FrequentlyBoughtProductsMobile');
+            
+            if (newDesktop || newMobile) {
+              console.log('[Frequently Bought] Containers recreated, reinitializing...');
+              frequentlyBoughtInstance = new FrequentlyBoughtTogether();
+            } else {
+              console.log('[Frequently Bought] Containers still not found');
+            }
+          }, 1000);
+        } else if (frequentlyBoughtInstance) {
+          // Containers exist, just refresh
+          setTimeout(() => {
+            frequentlyBoughtInstance.refresh();
+          }, 500);
+        }
+      });
+
+      observer.observe(cartItemsWrapper, {
+        childList: true,
+        subtree: true
+      });
+      
+      console.log('[Frequently Bought] MutationObserver attached to cart items');
+    }
+
+    // Listen for cart drawer opening (in case it was updated while closed)
+    const cartDrawer = document.querySelector('cart-drawer');
+    if (cartDrawer) {
+      const drawerObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === 'class') {
+            const isOpen = cartDrawer.classList.contains('active') || 
+                          cartDrawer.classList.contains('is-open') ||
+                          !cartDrawer.classList.contains('is-empty');
+            if (isOpen && frequentlyBoughtInstance) {
+              console.log('[Frequently Bought] Drawer opened, refreshing...');
+              setTimeout(() => {
+                frequentlyBoughtInstance.refresh();
+              }, 300);
+            }
+          }
+        });
+      });
+
+      drawerObserver.observe(cartDrawer, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    }
 	});
 
 	// Function to update the cart count in the drawer and header
@@ -718,6 +796,9 @@
       }
     }
 	}
+
+  // Store instance globally so we can refresh it
+  let frequentlyBoughtInstance = null;
 
   /**
    * Frequently Bought Together Class
@@ -737,6 +818,34 @@
       }
       this.loadProducts();
       this.setupMobileCarousel();
+    }
+
+    // Method to refresh products (called after cart updates)
+    refresh() {
+      console.log('[Frequently Bought] Refreshing products...');
+      
+      // Re-get containers in case they were replaced in DOM
+      this.desktopContainer = document.getElementById('FrequentlyBoughtProducts');
+      this.mobileContainer = document.getElementById('FrequentlyBoughtProductsMobile');
+      
+      console.log('[Frequently Bought] Desktop container found:', !!this.desktopContainer);
+      console.log('[Frequently Bought] Mobile container found:', !!this.mobileContainer);
+      
+      if (!this.desktopContainer && !this.mobileContainer) {
+        console.warn('[Frequently Bought] Containers not found after refresh');
+        return;
+      }
+      
+      // Clear existing content
+      if (this.desktopContainer) {
+        this.desktopContainer.innerHTML = '';
+      }
+      if (this.mobileContainer) {
+        this.mobileContainer.innerHTML = '';
+      }
+      
+      // Reload products
+      this.loadProducts();
     }
 
     async loadProducts() {
