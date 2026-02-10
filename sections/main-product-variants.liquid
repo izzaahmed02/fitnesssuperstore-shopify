@@ -1832,6 +1832,29 @@
 <script>
   window.product = {{ product | json }}
 </script>
+<script>
+(function () {
+  // Only run on product pages
+  if (!window.product || !Array.isArray(window.product.variants)) return;
+
+  const url = new URL(window.location.href);
+
+  // If variant already present, do nothing
+  if (url.searchParams.has("variant")) return;
+
+  // Find first available variant
+  const firstAvailable =
+    window.product.variants.find(v => v.available) ||
+    window.product.variants[0];
+
+  if (!firstAvailable) return;
+
+  // Redirect with variant param (replace, not push)
+  url.searchParams.set("variant", firstAvailable.id);
+  window.location.replace(url.toString());
+})();
+</script>
+
 <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
 
