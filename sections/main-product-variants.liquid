@@ -3951,108 +3951,133 @@ if(productForm && !productForm.__variantSyncBound){
 
 <script>
 (function () {
-  let autoPicking = false;
+  let running = false;
 
-  function getValue(form, name) {
-    const sel = form.querySelector(`select[name="${name}"]`);
-    if (sel) return sel.value;
+  function isEnabledOption(el) {
+    if (!el) return false;
 
-    const radio = form.querySelector(`input[name="${name}"]:checked`);
-    if (radio) return radio.value;
-
-    const input = form.querySelector(`input[name="${name}"]`);
-    return input ? input.value : null;
-  }
-
-  function setValue(form, name, value) {
-    const sel = form.querySelector(`select[name="${name}"]`);
-    if (sel) {
-      sel.value = value;
-      sel.dispatchEvent(new Event("change", { bubbles: true }));
-      return;
-    }
-
-    const radio = form.querySelector(
-      `input[type="radio"][name="${name}"][value="${CSS.escape(value)}"]`
-    );
-    if (radio) {
-      radio.checked = true;
-      radio.dispatchEvent(new Event("change", { bubbles: true }));
-      return;
-    }
-
-    const input = form.querySelector(`input[name="${name}"]`);
-    if (input) {
-      input.value = value;
-      input.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-  }
-
-  function setVariantId(form, id) {
-    const el = form.querySelector(".product-variant-id");
-    if (!el) return;
-    el.value = id;
-    el.setAttribute("value", id);
-    el.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-
-  function pickFirstAvailableWeight(form) {
-    if (!window.product?.variants) return;
-
-    const option1 = getValue(form, "option1"); // Single or Set
-    const option3 = getValue(form, "option3"); // Condition
-
-    if (!option1) return;
-
-    const match = window.product.variants.find(v =>
-      v.available &&
-      v.option1 === option1 &&
-      (!option3 || v.option3 === option3)
-    );
-
-    if (!match) return;
-
-    autoPicking = true;
-
-    // Auto-pick WEIGHT
-    setValue(form, "option2", match.option2);
-
-    // Sync variant ID
-    setVariantId(form, match.id);
-
-    // Let your existing listeners react
-    document.dispatchEvent(
-      new CustomEvent("variant:change", { detail: { variant: match } })
-    );
-    document.dispatchEvent(
-      new CustomEvent("variant-change", { detail: { variant: match } })
-    );
-
-    setTimeout(() => (autoPicking = false), 0);
-  }
-
-  function bind(form) {
-    if (!form || form.__autoWeightBound) return;
-    form.__autoWeightBound = true;
-
-    form.addEventListener("change", e => {
-      if (autoPicking) return;
-      if (e.target.name === "option1") {
-        pickFirstAvailableWeight(form);
+    // If it's an input itself
+    if (el.matches("input")) {
+      if (el.disabled) return false;
+      const wrap = el.closest("label, button, .swatch, .pill, .option, .variant-option");
+      if (wrap) {
+        if (wrap.classList.contains("disabled")) return false;
+        if (wrap.getAttribute("aria-disabled") === "true") return false;
       }
+      return true;
+    }
+
+    // If it's a button/label wrapper
+    if (el.matches("button, label")) {
+      if (el.disabled) return false;
+      if (el.classList.contains("disabled")) return false;
+      if (el.getAttribute("aria-disabled") === "true") return false;
+      const input = el.querySelector("input");
+      if (input && input.disabled) return false;
+      return true;
+    }
+
+    return false;
+  }
+
+  function pickFirstEnabledWeight(form) {
+    if (!form) return;
+
+    // 1) If weight is a SELECT (option2)
+    const weightSelect =
+      form.querySelector('select[name="option2"]') ||
+      form.querySelector('select[data-option-position="2"]');
+
+    if (weightSelect) {
+      const opts = Array.from(weightSelect.options);
+      const firstEnabled = opts.find(o => !o.disabled && o.value && o.value.trim() !== "");
+      if (firstEnabled && weightSelect.value !== firstEnabled.value) {
+        weightSelect.value = firstEnabled.value;
+        weightSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      return;
+    }
+
+    // 2) If weight is radios / pill buttons
+    // Try to locate the "Weight / option2" group by common patterns
+    const weightGroup =
+      form.querySelector('[data-option-position="2"]') ||
+      form.querySelector('fieldset[data-option-position="2"]') ||
+      form.querySelector('fieldset[name="option2"]') ||
+      form.querySelector('[id*="option-2"], [class*="option-2"], [data-index="2"]');
+
+    const scope = weightGroup || form;
+
+    // Find candidate clickable items for weight
+    // (labels wrapping inputs, or direct buttons)
+    const candidates = Array.from(
+      scope.querySelectorAll(
+        'input[name="option2"], input[data-option-position="2"], fieldset input[type="radio"], label, button'
+      )
+    );
+
+    // Prefer actual radio inputs for option2 if present
+    const radioInputs = candidates.filter(el =>
+      el.matches('input[type="radio"]') &&
+      (el.name === "option2" || el.getAttribute("data-option-position") === "2")
+    );
+
+    const firstEnabledRadio = radioInputs.find(isEnabledOption);
+    if (firstEnabledRadio) {
+      if (!firstEnabledRadio.checked) {
+        firstEnabledRadio.click();
+      }
+      return;
+    }
+
+    // Otherwise, click first enabled label/button that contains a radio
+    const clickable = candidates
+      .map(el => el.closest("label, button") || el)
+      .filter((v, i, arr) => v && arr.indexOf(v) === i); // uniq
+
+    const firstEnabledClickable = clickable.find(el => {
+      // must correspond to a weight option (has radio inside OR looks like option pill)
+      const hasRadio = !!el.querySelector('input[type="radio"]');
+      const looksLikePill = el.classList.toString().match(/pill|swatch|option|variant/i);
+      return (hasRadio || looksLikePill) && isEnabledOption(el);
     });
 
-    // Initial enforcement on page load
-    pickFirstAvailableWeight(form);
+    if (firstEnabledClickable) {
+      // Avoid re-clicking already selected
+      const selectedInput = firstEnabledClickable.querySelector('input[type="radio"]');
+      if (!selectedInput || !selectedInput.checked) {
+        firstEnabledClickable.click();
+      }
+    }
   }
 
-  function init() {
-    document
-      .querySelectorAll('form[action*="/cart/add"]')
-      .forEach(bind);
+  function onSingleSetChanged(e) {
+    if (running) return;
+
+    // We only want when option1 changes ("Single or Set")
+    const t = e.target;
+    const isOption1 =
+      t?.name === "option1" ||
+      t?.getAttribute?.("data-option-position") === "1" ||
+      t?.closest?.('[data-option-position="1"]');
+
+    if (!isOption1) return;
+
+    const form = t.closest('form[action*="/cart/add"]') || document.querySelector('form[action*="/cart/add"]');
+    if (!form) return;
+
+    running = true;
+
+    // Let theme/Shopify update disabled states first
+    setTimeout(() => {
+      pickFirstEnabledWeight(form);
+      running = false;
+    }, 80);
   }
 
-  document.addEventListener("DOMContentLoaded", init);
-  if (document.readyState !== "loading") init();
+  // Catch both select changes and pill clicks
+  document.addEventListener("change", onSingleSetChanged, true);
+  document.addEventListener("click", onSingleSetChanged, true);
+
 })();
 </script>
