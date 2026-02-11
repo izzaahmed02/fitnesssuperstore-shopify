@@ -1901,7 +1901,128 @@
 })();
 </script>
 
-
+<script>
+(function() {
+  'use strict';
+  
+  console.log('🔵 Installation options script starting...');
+  
+  function init() {
+    const installationGroup = document.querySelector('.installation-group');
+    const avoptionsContainer = document.querySelector('.avpoptions-container__v2');
+    
+    console.log('installationGroup found:', !!installationGroup);
+    console.log('avoptionsContainer found:', !!avoptionsContainer);
+    
+    if (!installationGroup && !avoptionsContainer) {
+      console.log('❌ Neither element found, exiting');
+      return;
+    }
+    
+    // Hide both by default
+    if (installationGroup) {
+      installationGroup.style.display = 'none';
+    }
+    if (avoptionsContainer) {
+      avoptionsContainer.style.display = 'none';
+    }
+    
+    function checkForSetsOption() {
+      console.log('🔍 Checking for "Sets" option...');
+      
+      // Get the variant picker form
+      const form = document.querySelector('form[action*="/cart/add"]');
+      if (!form) {
+        console.log('❌ Form not found');
+        return;
+      }
+      
+      let setsSelected = false;
+      
+      // Check all variant options
+      const variantPickers = form.querySelectorAll('.product-form__input');
+      
+      variantPickers.forEach(function(picker) {
+        // Check for radio buttons
+        const radios = picker.querySelectorAll('input[type="radio"]');
+        radios.forEach(function(radio) {
+          if (radio.checked) {
+            const label = radio.closest('label');
+            const labelText = label ? label.textContent.trim() : '';
+            const radioValue = radio.value;
+            
+            console.log('Checked radio:', radioValue, 'Label:', labelText);
+            
+            if (radioValue.toLowerCase().includes('set') || 
+                labelText.toLowerCase().includes('set')) {
+              setsSelected = true;
+              console.log('✅ "Sets" option detected!');
+            }
+          }
+        });
+        
+        // Check for select dropdowns
+        const selects = picker.querySelectorAll('select');
+        selects.forEach(function(select) {
+          const selectedOption = select.options[select.selectedIndex];
+          if (selectedOption) {
+            const value = selectedOption.value;
+            const text = selectedOption.textContent.trim();
+            
+            console.log('Selected dropdown:', value, 'Text:', text);
+            
+            if (value.toLowerCase().includes('set') || 
+                text.toLowerCase().includes('set')) {
+              setsSelected = true;
+              console.log('✅ "Sets" option detected in dropdown!');
+            }
+          }
+        });
+      });
+      
+      console.log('Final decision - setsSelected:', setsSelected);
+      
+      // Show or hide based on selection
+      if (installationGroup) {
+        installationGroup.style.display = setsSelected ? 'block' : 'none';
+        console.log('installationGroup display:', setsSelected ? 'block' : 'none');
+      }
+      if (avoptionsContainer) {
+        avoptionsContainer.style.display = setsSelected ? 'block' : 'none';
+        console.log('avoptionsContainer display:', setsSelected ? 'block' : 'none');
+      }
+    }
+    
+    // Listen for changes on the entire form
+    const form = document.querySelector('form[action*="/cart/add"]');
+    if (form) {
+      form.addEventListener('change', function(e) {
+        console.log('🔄 Form changed:', e.target.name, e.target.value);
+        setTimeout(checkForSetsOption, 50);
+      });
+      
+      // Also listen for click events (for radio buttons)
+      form.addEventListener('click', function(e) {
+        if (e.target.type === 'radio') {
+          console.log('🔄 Radio clicked:', e.target.value);
+          setTimeout(checkForSetsOption, 50);
+        }
+      });
+    }
+    
+    // Initial check after a delay to ensure DOM is ready
+    setTimeout(checkForSetsOption, 500);
+    
+    console.log('✅ Installation options script initialized');
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
 </product-info>
 
 <div id="product-gallery-popup" class="product-popup-overlay" hidden>
