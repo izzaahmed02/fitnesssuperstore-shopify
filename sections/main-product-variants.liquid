@@ -2023,6 +2023,56 @@
   }
 })();
 </script>
+
+<script>
+(function() {
+  'use strict';
+  
+  console.log('📋 DIAGNOSTIC: Checking all variant options...');
+  
+  setTimeout(function() {
+    const form = document.querySelector('form[action*="/cart/add"]');
+    if (!form) {
+      console.log('❌ Form not found');
+      return;
+    }
+    
+    console.log('✅ Form found');
+    
+    // Check all input elements
+    const allInputs = form.querySelectorAll('input, select');
+    console.log('Total inputs/selects found:', allInputs.length);
+    
+    allInputs.forEach(function(input, index) {
+      if (input.name && input.name.includes('option')) {
+        console.log('---');
+        console.log('Input #' + index);
+        console.log('  Type:', input.type || input.tagName);
+        console.log('  Name:', input.name);
+        console.log('  Value:', input.value);
+        
+        if (input.type === 'radio') {
+          const label = input.closest('label');
+          if (label) {
+            console.log('  Label text:', label.textContent.trim());
+          }
+          console.log('  Checked:', input.checked);
+        } else if (input.tagName === 'SELECT') {
+          console.log('  Options:');
+          Array.from(input.options).forEach(function(opt) {
+            console.log('    -', opt.value, '|', opt.textContent.trim());
+          });
+        }
+      }
+    });
+    
+    // Also check for custom variant pickers
+    const customPickers = document.querySelectorAll('[data-option-value], .variant-input, .product-form__input fieldset');
+    console.log('Custom picker elements found:', customPickers.length);
+    
+  }, 1000);
+})();
+</script>
 </product-info>
 
 <div id="product-gallery-popup" class="product-popup-overlay" hidden>
