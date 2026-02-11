@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function () {
       browseCategory1.querySelectorAll(".category-tabs1 button").forEach(btn => btn.classList.remove("active"));
       this.classList.add("active");
 
-      browseCategory1.querySelectorAll(".category-tab-content").forEach(tab => tab.classList.remove("active"));
+      browseCategory1.querySelectorAll(".category-tab-content1").forEach(tab => tab.classList.remove("active"));
       const targetTab1 = browseCategory1.querySelector(`#${tabId}`);
       targetTab.classList.add("active");
 
