@@ -1,6 +1,6 @@
 {{ 'browse-by-category.css' | asset_url | stylesheet_tag }}
 
-<div class="browse-by-category">
+<div class="browse-by-category" data-section-id="{{ section.id }}">
 <div class="tab-header">
   {% if section.settings.heading != blank %}
     <h2>{{ section.settings.heading }}</h2>
@@ -25,7 +25,7 @@
       {% assign parts = tab | split: "::" %}
       {% assign handle = parts[0] %}
       {% assign title = parts[1] %}
-      <button type="button" class="{% if forloop.first %}active{% endif %}" data-tab="tab-{{ handle }}">
+      <button type="button" class="{% if forloop.first %}active{% endif %}" data-tab="tab-{{ section.id }}-{{ handle }}">
         {{ title }}
       </button>
     {% endfor %}
@@ -35,8 +35,8 @@
   {% for tab in tab_list %}
     {% assign parts = tab | split: "::" %}
     {% assign handle = parts[0] %}
-    <div class="category-tab-content {% if forloop.first %}active{% endif %}" id="tab-{{ handle }}">
-      <div class="slider-tab-{{ handle }}">
+    <div class="category-tab-content {% if forloop.first %}active{% endif %}" id="tab-{{ section.id }}-{{ handle }}">
+      <div class="slider-tab-{{ section.id }}-{{ handle }}">
         {% for block in section.blocks %}
           {% assign card_handle = block.settings.tab_handle | handleize %}
           {% if card_handle == handle %}
