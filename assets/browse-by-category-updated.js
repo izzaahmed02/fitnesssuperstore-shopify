@@ -1,1 +1,80 @@
-document.addEventListener("DOMContentLoaded",function(){let e=document.querySelector(".browse-category-updated");if(!e)return;let t=e.querySelector(".category-tab-content.active"),s=t.querySelector('[class*="slider-tab-"]');function o(e){let t=e.querySelectorAll(".category-card"),s=0;t.forEach(e=>e.style.minHeight="auto"),t.forEach(e=>{let t=e.offsetHeight;t>s&&(s=t)}),t.forEach(e=>e.style.minHeight=`${s}px`)}$(s).on("setPosition",function(){o(t)}),$(s).slick({slidesToShow:5,infinite:!0,draggable:!0,cssEase:"linear",swipeToSlide:!0,touchThreshold:8,slidesToScroll:1,arrows:!0,dots:!0,responsive:[{breakpoint:1300,settings:{slidesToShow:4}},{breakpoint:1024,settings:{slidesToShow:3}},{breakpoint:989,settings:{slidesToShow:2}}]}),e.querySelectorAll(".category-tabs button").forEach(t=>{t.addEventListener("click",function(){let t=this.getAttribute("data-tab");e.querySelectorAll(".category-tabs button").forEach(e=>e.classList.remove("active")),this.classList.add("active"),e.querySelectorAll(".category-tab-content").forEach(e=>e.classList.remove("active"));let s=e.querySelector(`#${t}`);s.classList.add("active");let i=s.querySelector('[class*="slider-tab-"]');$(i).hasClass("slick-initialized")&&$(i).slick("unslick"),$(i).on("setPosition",function(){o(s)}),$(i).slick({slidesToShow:5,slidesToScroll:1,arrows:!0,swipeToSlide:!0,touchThreshold:8,dots:!0,infinite:!0,draggable:!0,cssEase:"linear",responsive:[{breakpoint:1300,settings:{slidesToShow:4}},{breakpoint:1024,settings:{slidesToShow:3}},{breakpoint:989,settings:{slidesToShow:2}}]})})})});
+document.addEventListener("DOMContentLoaded", function () {
+  const browseCategory = document.querySelector(".browse-category-updated");
+  if (!browseCategory) return;
+
+  const firstTab = browseCategory.querySelector(".category-tab-content.active");
+  const firstSlider = firstTab.querySelector('[class*="slider-tab-"]');
+
+  $(firstSlider).on("setPosition", function () {
+    setEqualCardHeights(firstTab);
+  });
+
+  $(firstSlider).slick({
+    slidesToShow: 5,
+
+    infinite: true,
+    draggable: true,
+    cssEase: 'linear',
+    swipeToSlide: true,   
+  touchThreshold: 8,  
+ 
+    slidesToScroll: 1,
+    arrows: true,
+    dots: true,
+    responsive: [
+      { breakpoint: 1300, settings: { slidesToShow: 4 }},
+      { breakpoint: 1024, settings: { slidesToShow: 3 }},
+      { breakpoint: 989,  settings: { slidesToShow: 2 }}
+    ]
+  });
+
+  function setEqualCardHeights(container) {
+    const cards = container.querySelectorAll(".category-card");
+    let maxHeight = 0;
+    cards.forEach(card => card.style.minHeight = "auto");
+    cards.forEach(card => {
+      const height = card.offsetHeight;
+      if (height > maxHeight) maxHeight = height;
+    });
+    cards.forEach(card => card.style.minHeight = `${maxHeight}px`);
+  }
+
+  browseCategory.querySelectorAll(".category-tabs button").forEach(button => {
+    button.addEventListener("click", function () {
+      const tabId = this.getAttribute("data-tab");
+
+      browseCategory.querySelectorAll(".category-tabs button").forEach(btn => btn.classList.remove("active"));
+      this.classList.add("active");
+
+      browseCategory.querySelectorAll(".category-tab-content").forEach(tab => tab.classList.remove("active"));
+      const targetTab = browseCategory.querySelector(`#${tabId}`);
+      targetTab.classList.add("active");
+
+      const targetSlider = targetTab.querySelector('[class*="slider-tab-"]');
+      if ($(targetSlider).hasClass("slick-initialized")) {
+        $(targetSlider).slick("unslick");
+      }
+
+      $(targetSlider).on("setPosition", function () {
+        setEqualCardHeights(targetTab);
+      });
+
+      $(targetSlider).slick({
+        slidesToShow: 5,
+        slidesToScroll: 1,
+        arrows: true,
+        swipeToSlide: true,   
+        touchThreshold: 8,  
+        dots: true,
+        infinite: true,
+        draggable: true,
+        cssEase: 'linear',
+        responsive: [
+          { breakpoint: 1300, settings: { slidesToShow: 4 }},
+          { breakpoint: 1024, settings: { slidesToShow: 3 }},
+          { breakpoint: 989,  settings: { slidesToShow: 2 }}
+        ]
+      });
+    });
+  });
+});
