@@ -50,16 +50,16 @@ document.addEventListener("DOMContentLoaded", function () {
       const targetTab1 = browseCategory1.querySelector(`#${tabId}`);
       targetTab.classList.add("active");
 
-      const targetSlider1 = targetTab.querySelector('[class*="slider-tab-"]');
-      if ($(targetSlider).hasClass("slick-initialized")) {
-        $(targetSlider).slick("unslick");
+      const targetSlider1 = targetTab1.querySelector('[class*="slider-tab-"]');
+      if ($(targetSlider1).hasClass("slick-initialized")) {
+        $(targetSlider1).slick("unslick");
       }
 
-      $(targetSlider).on("setPosition", function () {
-        setEqualCardHeights(targetTab);
+      $(targetSlider1).on("setPosition", function () {
+        setEqualCardHeights(targetTab1);
       });
 
-      $(targetSlider).slick({
+      $(targetSlider1).slick({
         slidesToShow: 5,
         slidesToScroll: 1,
         arrows: true,
