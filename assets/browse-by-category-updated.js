@@ -1,15 +1,15 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const browseCategory = document.querySelector(".browse-category-updated");
-  if (!browseCategory) return;
+  const browseCategory1 = document.querySelector(".browse-category-updated");
+  if (!browseCategory1) return;
 
-  const firstTab = browseCategory.querySelector(".category-tab-content.active");
-  const firstSlider = firstTab.querySelector('[class*="slider-tab-"]');
+  const firstTab1 = browseCategory1.querySelector(".category-tab-content.active");
+  const firstSlider1 = firstTab1.querySelector('[class*="slider-tab-"]');
 
-  $(firstSlider).on("setPosition", function () {
-    setEqualCardHeights(firstTab);
+  $(firstSlider1).on("setPosition", function () {
+    setEqualCardHeights(firstTab1);
   });
 
-  $(firstSlider).slick({
+  $(firstSlider1).slick({
     slidesToShow: 5,
 
     infinite: true,
@@ -28,29 +28,29 @@ document.addEventListener("DOMContentLoaded", function () {
     ]
   });
 
-  function setEqualCardHeights(container) {
-    const cards = container.querySelectorAll(".category-card");
-    let maxHeight = 0;
-    cards.forEach(card => card.style.minHeight = "auto");
-    cards.forEach(card => {
-      const height = card.offsetHeight;
-      if (height > maxHeight) maxHeight = height;
+  function setEqualCardHeights1(container) {
+    const cards1 = container.querySelectorAll(".category-card1");
+    let maxHeight1 = 0;
+    cards1.forEach(card1 => card1.style.minHeight = "auto");
+    cards1.forEach(card1 => {
+      const height1 = card1.offsetHeight;
+      if (height1 > maxHeight1) maxHeight1 = height1;
     });
-    cards.forEach(card => card.style.minHeight = `${maxHeight}px`);
+    cards1.forEach(card1 => card1.style.minHeight = `${maxHeight1}px`);
   }
 
-  browseCategory.querySelectorAll(".category-tabs button").forEach(button => {
+  browseCategory1.querySelectorAll(".category-tabs1 button").forEach(button => {
     button.addEventListener("click", function () {
-      const tabId = this.getAttribute("data-tab");
+      const tabId1 = this.getAttribute("data-tab");
 
-      browseCategory.querySelectorAll(".category-tabs button").forEach(btn => btn.classList.remove("active"));
+      browseCategory1.querySelectorAll(".category-tabs1 button").forEach(btn => btn.classList.remove("active"));
       this.classList.add("active");
 
-      browseCategory.querySelectorAll(".category-tab-content").forEach(tab => tab.classList.remove("active"));
-      const targetTab = browseCategory.querySelector(`#${tabId}`);
+      browseCategory1.querySelectorAll(".category-tab-content").forEach(tab => tab.classList.remove("active"));
+      const targetTab1 = browseCategory1.querySelector(`#${tabId}`);
       targetTab.classList.add("active");
 
-      const targetSlider = targetTab.querySelector('[class*="slider-tab-"]');
+      const targetSlider1 = targetTab.querySelector('[class*="slider-tab-"]');
       if ($(targetSlider).hasClass("slick-initialized")) {
         $(targetSlider).slick("unslick");
       }
