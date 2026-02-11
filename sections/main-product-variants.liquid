@@ -1901,74 +1901,7 @@
 })();
 </script>
 
-<script>
-(function() {
-  'use strict';
-  
-  function init() {
-    const installationGroup = document.querySelector('.installation-group');
-    const avoptionsContainer = document.querySelector('.avpoptions-container__v2');
-    
-    if (!installationGroup && !avoptionsContainer) {
-      return;
-    }
-    
-    // Hide both by default
-    if (installationGroup) {
-      installationGroup.style.display = 'none';
-    }
-    if (avoptionsContainer) {
-      avoptionsContainer.style.display = 'none';
-    }
-    
-    function checkForSetsOption() {
-      // Look for any option input with "sets" in the value (case insensitive)
-      const allOptions = document.querySelectorAll('input[name^="option"], select[name^="option"]');
-      let setsSelected = false;
-      
-      allOptions.forEach(function(option) {
-        if (option.type === 'radio' || option.type === 'checkbox') {
-          if (option.checked && option.value && option.value.toLowerCase().includes('sets')) {
-            setsSelected = true;
-          }
-        } else if (option.tagName === 'SELECT') {
-          if (option.value && option.value.toLowerCase().includes('sets')) {
-            setsSelected = true;
-          }
-        }
-      });
-      
-      // Show or hide based on selection
-      if (installationGroup) {
-        installationGroup.style.display = setsSelected ? 'block' : 'none';
-      }
-      if (avoptionsContainer) {
-        avoptionsContainer.style.display = setsSelected ? 'block' : 'none';
-      }
-    }
-    
-    // Listen for changes
-    const form = document.querySelector('form[action*="/cart/add"]');
-    if (form) {
-      form.addEventListener('change', function(e) {
-        const name = e.target.name || '';
-        if (name.includes('option')) {
-          setTimeout(checkForSetsOption, 50);
-        }
-      });
-    }
-    
-    // Initial check
-    checkForSetsOption();
-  }
-  
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
-</script>
+
 </product-info>
 
 <div id="product-gallery-popup" class="product-popup-overlay" hidden>
