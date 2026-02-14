@@ -122,30 +122,35 @@
     justify-content: center;
     gap: 8px;
     margin-top: 20px;
+    padding-bottom: 16px;
   }
 
   .dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: #ccc;
+    background-color: #D1D1D1;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
   }
 
   .dot.active {
-    background-color: #333;
+    background-color: #53565A;
+    transform: scale(1.25);
   }
 
   @media (max-width: 768px) {
     .questions-wrapper {
       display: flex;
-      overflow-x: auto;
+      overflow-x: scroll;
+      overflow-y: hidden;
       scroll-snap-type: x mandatory;
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
       -ms-overflow-style: none;
+      gap: 16px;
+      padding: 24px 16px;
     }
 
     .questions-wrapper::-webkit-scrollbar {
@@ -153,28 +158,42 @@
     }
 
     .questions-wrapper .benefit-card {
-      flex: 0 0 100%;
-      scroll-snap-align: start;
+      flex: 0 0 calc(100% - 32px);
+      min-width: calc(100% - 32px);
+      scroll-snap-align: center;
+      scroll-snap-stop: always;
+      margin: 0;
     }
 
     .carousel-dots {
       display: flex;
     }
   }
+
+  @media (max-width: 480px) {
+    .questions-wrapper .benefit-card {
+      flex: 0 0 calc(100% - 32px);
+      min-width: calc(100% - 32px);
+    }
+  }
 </style>
 
 <script>
   (function() {
+    if (window.innerWidth > 768) return; // Only run on mobile
+    
     const questionsWrapper = document.querySelector('.questions-wrapper');
     const dots = document.querySelectorAll('.carousel-dots .dot');
     const cards = document.querySelectorAll('.benefit-card');
 
     if (!questionsWrapper || !dots.length) return;
 
+    let isScrolling;
+
     // Update active dot based on scroll position
     function updateActiveDot() {
       const scrollLeft = questionsWrapper.scrollLeft;
-      const cardWidth = cards[0].offsetWidth;
+      const cardWidth = cards[0].offsetWidth + 16; // Include gap
       const activeIndex = Math.round(scrollLeft / cardWidth);
 
       dots.forEach((dot, index) => {
@@ -185,7 +204,7 @@
     // Scroll to card when dot is clicked
     dots.forEach((dot, index) => {
       dot.addEventListener('click', () => {
-        const cardWidth = cards[0].offsetWidth;
+        const cardWidth = cards[0].offsetWidth + 16; // Include gap
         questionsWrapper.scrollTo({
           left: cardWidth * index,
           behavior: 'smooth'
@@ -193,8 +212,21 @@
       });
     });
 
-    // Update dots on scroll
-    questionsWrapper.addEventListener('scroll', updateActiveDot);
+    // Update dots on scroll with debounce
+    questionsWrapper.addEventListener('scroll', () => {
+      window.clearTimeout(isScrolling);
+      isScrolling = setTimeout(() => {
+        updateActiveDot();
+      }, 50);
+    });
+
+    // Ensure proper snap on touch end
+    questionsWrapper.addEventListener('touchend', () => {
+      setTimeout(updateActiveDot, 100);
+    });
+
+    // Initialize first dot as active
+    updateActiveDot();
   })();
 </script>
 
