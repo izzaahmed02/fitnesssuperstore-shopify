@@ -1,0 +1,489 @@
+{% schema %}
+{
+  "name": "Product Video Slider",
+  "class": "video-carousel prodVideoSlider",
+  "settings": [
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Product videos"
+    },
+    {
+      "type": "select",
+      "id": "videos_per_row",
+      "label": "Videos per row (desktop)",
+      "default": "2",
+      "options": [
+        { "label": "1", "value": "1" },
+        { "label": "2", "value": "2" },
+        { "label": "3", "value": "3" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Video Slider"
+    }
+  ]
+}
+{% endschema %}
+
+{%- assign extra = product.metafields.custom.extra_info.value -%}
+
+{% assign has_any_video = false %}
+
+{% if extra %}
+
+  {% if extra.product_videos != blank and extra.product_videos.value != blank %}
+  {% for video_file in extra.product_videos.value %}
+    {% if video_file != blank %}
+      {% assign has_any_video = true %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+  {% if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank %}
+    {% assign has_any_video = true %}
+  {% endif %}
+
+  {% if extra.assembly_video != blank and extra.assembly_video.value != blank %}
+    {% assign has_any_video = true %}
+  {% endif %}
+
+  {% if extra.other_video != blank and extra.other_video.value != blank %}
+    {% for link in extra.other_video.value %}
+      {% if link.url != blank %}
+        {% assign has_any_video = true %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% if extra.other_videos != blank and extra.other_videos.value != blank %}
+    {% for link in extra.other_videos.value %}
+      {% if link.url != blank %}
+        {% assign has_any_video = true %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+{% endif %}
+
+{% if has_any_video %}
+  <div class="video-carousel-section extra-info-videos">
+    <h2 class="carouselHdg">{{ section.settings.heading }}</h2>
+
+    <div
+      class="extra-info-video-slider"
+      data-videos-per-row="{{ section.settings.videos_per_row }}"
+    >
+      {%- comment -%} Instructional video slide (video as thumbnail) {%- endcomment -%}
+      {% if extra.instructional_video_url != blank and extra.instructional_video_url.value != blank %}
+        {% assign instructional_url = extra.instructional_video_url.value %}
+        <div class="video-slide">
+          <div class="video-slide-inner">
+            <div
+              class="video-thumbnail"
+              data-video-url="{{ instructional_url }}"
+            >
+              <video
+                class="video-thumb-video"
+                src="{{ instructional_url }}"
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
+              <div class="play-button">&#9658;</div>
+            </div>
+            <p>Instructional Video</p>
+          </div>
+        </div>
+      {% endif %}
+
+
+{% if extra.product_videos != blank and extra.product_videos.value != blank %}
+  {% for video_file in extra.product_videos.value %}
+    {% if video_file != blank %}
+      <div class="video-slide other-videos">
+        <div class="video-slide-inner">
+          <div class="video-thumbnail" data-video-url="{{ video_file.sources[0].url }}">
+            {% if video_file.preview_image.src %}
+              <img 
+                class="video-thumb-image" 
+                src="https:{{ video_file.preview_image.src | replace: 'files/', '' | file_url }}" 
+                alt="Video thumbnail"
+              >
+            {% elsif video_file.preview_image %}
+              <img 
+                class="video-thumb-image" 
+                src="https:{{ video_file.preview_image | file_url }}" 
+                alt="Video thumbnail"
+              >
+            {% else %}
+              <video
+                class="video-thumb-video"
+                src="{{ video_file.sources[0].url }}"
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
+            {% endif %}
+            <div class="play-button">&#9658;</div>
+          </div>
+          <p>{{ video_file.alt | default: "Video" }}</p>
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+      {%- comment -%} Assembly video slide (video as thumbnail) {%- endcomment -%}
+      {% if extra.assembly_video != blank and extra.assembly_video.value != blank %}
+        {% assign assembly_url = extra.assembly_video.value %}
+        <div class="video-slide other-videos">
+          <div class="video-slide-inner">
+            <div
+              class="video-thumbnail"
+              data-video-url="{{ assembly_url }}"
+            >
+              <video
+                class="video-thumb-video"
+                src="{{ assembly_url }}"
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
+              <div class="play-button">&#9658;</div>
+            </div>
+            <p>Assembly Video</p>
+          </div>
+        </div>
+      {% endif %}
+
+       {%comment%}Optional: other_videos list (video or embed URLs) {% endcomment %}
+      {% if extra.other_video != blank and extra.other_video.value != blank %}
+        {% for link in extra.other_video.value %}
+          {% if link.url != blank %}
+            {% assign other_url = link.url %}
+            <div class="video-slide other-videos">
+              <div class="video-slide-inner">
+                <div
+                  class="video-thumbnail"
+                  data-video-url="{{ other_url }}"
+                >
+                  {%- comment -%}
+                    If other_url is an mp4, the video tag will show first frame.
+                    If it's e.g. YouTube or Drive, the tag may not load; we still use it
+                    as a visual container and let the popup handle playing properly.
+                  {%- endcomment -%}
+                  <video
+                    class="video-thumb-video"
+                    src="{{ other_url }}"
+                    muted
+                    playsinline
+                    preload="metadata"
+                  ></video>
+                  <div class="play-button">&#9658;</div>
+                </div>
+                <p>Training Video</p>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+            {% if extra.other_videos != blank and extra.other_videos.value != blank %}
+        {% for link in extra.other_videos.value %}
+          {% if link.url != blank %}
+            {% assign other_url = link.url %}
+            <div class="video-slide other-videos">
+              <div class="video-slide-inner">
+                <div
+                  class="video-thumbnail"
+                  data-video-url="{{ other_url }}"
+                >
+                  {%- comment -%}
+                    If other_url is an mp4, the video tag will show first frame.
+                    If it's e.g. YouTube or Drive, the tag may not load; we still use it
+                    as a visual container and let the popup handle playing properly.
+                  {%- endcomment -%}
+                  <video
+                    class="video-thumb-video"
+                    src="{{ other_url }}"
+                    muted
+                    playsinline
+                    preload="metadata"
+                  ></video>
+                  <div class="play-button">&#9658;</div>
+                </div>
+                <p>{{ link.text }}</p>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %} 
+    </div>
+
+    {%- comment -%} Popup modal (plays video) {%- endcomment -%}
+    <div class="video-modal" id="extraInfoVideoModal">
+      <div class="modal-content">
+        <span class="close-modal" id="extraInfoVideoModalClose">&times;</span>
+        <div id="extraInfoVideoModalContainer"></div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<style>
+
+ .prodVideoSlider .extra-info-video-slider .video-thumb-video {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+  pointer-events: none; /* prevent inline play on click */
+}
+
+.prodVideoSlider .extra-info-video-slider .video-thumb-image {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+  object-fit: cover;
+}
+
+  .prodVideoSlider .extra-info-videos .carouselHdg {
+    font-family: Lato;
+    font-weight: 700;
+    letter-spacing: normal;
+    font-size: 28px;
+    line-height: 1.3;
+    text-transform: none;
+    text-align: left;
+    margin-bottom: 24px;
+  }
+
+  .prodVideoSlider .extra-info-videos {
+    max-width: 1320px;
+    padding: 20px 12px;
+    margin: 0 auto;
+  }
+
+  .prodVideoSlider .extra-info-video-slider .video-slide {
+    padding: 0 12px;
+    box-sizing: border-box;
+  }
+
+  .prodVideoSlider .extra-info-video-slider .video-slide-inner {
+    border-radius: 16px;
+    background: #f7f7f7;
+    padding: 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .prodVideoSlider .extra-info-video-slider .video-thumbnail {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .prodVideoSlider .extra-info-video-slider .video-thumb-video {
+    width: 100%;
+    border-radius: 12px;
+    display: block;
+    pointer-events: none; /* prevent inline play on click */
+  }
+
+  .prodVideoSlider .extra-info-video-slider .play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 22px;
+    color: white;
+    backdrop-filter: blur(6px);
+    background: #23232B4D;
+    padding: 12px 16px;
+    border-radius: 50%;
+  }
+
+  /* Slick arrows - make them match the customer gallery arrows */
+  .prodVideoSlider .extra-info-videos .slick-arrow {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 45%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    border: none;
+    z-index: 99;
+    cursor: pointer;
+  }
+
+  .prodVideoSlider .extra-info-videos .slick-prev { left: -8px; }
+  .prodVideoSlider .extra-info-videos .slick-next { right: -8px; }
+
+  /* remove built-in slick :before icons if any */
+  .prodVideoSlider .extra-info-videos .slick-prev:before,
+  .prodVideoSlider .extra-info-videos .slick-next:before { content: none !important; }
+
+  /* hide dots entirely */
+  .prodVideoSlider .extra-info-videos .slick-dots { display: none !important; }
+
+  .prodVideoSlider .video-slide-inner p {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 0px;
+  }
+
+  /* Modal */
+  .prodVideoSlider .extra-info-videos .video-modal {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.8);
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .prodVideoSlider .extra-info-videos .modal-content {
+    position: relative;
+    max-width: 1280px;
+    max-height: calc(100vh - 40px);
+    background: transparent;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .prodVideoSlider .extra-info-videos .modal-content iframe,
+  .prodVideoSlider .extra-info-videos .modal-content video {
+    max-height: calc(100vh - 40px - 60px);
+    border-radius: 16px;
+    border: none;
+    background: #000;
+  }
+
+  .prodVideoSlider .extra-info-videos .close-modal {
+    position: absolute;
+    top: -52px;
+    right: 0;
+    font-size: 28px;
+    background: #616166;
+    cursor: pointer;
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media (max-width: 749px) {
+    .prodVideoSlider .extra-info-videos {
+      padding: 16px;
+    }
+
+    .prodVideoSlider .extra-info-videos .carouselHdg {
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    .prodVideoSlider .extra-info-videos .slick-arrow {
+      width: 32px;
+      height: 32px;
+      font-size: 18px;
+      top: 45%;
+      transform: translateY(-50%);
+    }
+
+    .prodVideoSlider .extra-info-videos .slick-prev { left: 0; }
+    .prodVideoSlider .extra-info-videos .slick-next { right: 0; }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var $slider = $('.extra-info-video-slider');
+  if (!$slider.length) return;
+
+  var videosPerRow = parseInt($slider.data('videos-per-row'), 10) || 2;
+  var desktopSlides = Math.min(videosPerRow, 3); // hard cap at 3
+
+  $slider.slick({
+    slidesToShow: desktopSlides,
+    slidesToScroll: 1,
+    arrows: true,
+    dots: false, // <-- remove dots
+    // custom arrow HTML so they visually match the gallery buttons
+    prevArrow: '<button type="button" class="slick-prev slick-arrow" aria-label="Previous">‹</button>',
+    nextArrow: '<button type="button" class="slick-next slick-arrow" aria-label="Next">›</button>',
+    responsive: [
+      {
+        breakpoint: 750,
+        settings: {
+          slidesToShow: 1
+        }
+      }
+    ]
+  });
+
+  var $modal = $('#extraInfoVideoModal');
+  var $container = $('#extraInfoVideoModalContainer');
+
+  function openVideoPopup(src) {
+    if (!src) return;
+
+    var html;
+
+    if (src.indexOf('.mp4') !== -1) {
+      html =
+        '<video controls autoplay>' +
+        '<source src="' + src + '" type="video/mp4">' +
+        '</video>';
+    } else {
+      html =
+        '<iframe src="' + src + '"' +
+        ' frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
+        ' allowfullscreen></iframe>';
+    }
+
+    $container.html(html);
+    $modal.css('display', 'flex');
+  }
+
+  function closeVideoPopup() {
+    $modal.css('display', 'none');
+    $container.html('');
+  }
+
+  // Open popup when clicking thumbnail
+  $slider.on('click', '.video-thumbnail', function () {
+    var src = $(this).data('video-url');
+    openVideoPopup(src);
+  });
+
+  $('#extraInfoVideoModalClose').on('click', function () {
+    closeVideoPopup();
+  });
+
+  $modal.on('click', function (e) {
+    if (e.target.id === 'extraInfoVideoModal') {
+      closeVideoPopup();
+    }
+  });
+});
+</script>
