@@ -902,52 +902,52 @@ class ProductGallery extends HTMLElement {
         console.warn(`renderPopupViewer: No valid video source found for ID: ${media.id}`);
       }
     } else if (media.media_type === 'model') {
-      
-      const popup = document.getElementById('product-gallery-popup');
-      const popupThumbnail = popup?.querySelector(`[data-media-id="${mediaId}"]`);
-      
-      // Check template first (like main view does)
-      const template = this.querySelector(`#ModelViewerTemplate-${mediaId}`);
-      let cameraOrbit;
-      
-      if (template) {
-        const tempViewer = template.content.querySelector('model-viewer');
-        const templateOrbit = tempViewer?.getAttribute('camera-orbit') || '';
-        cameraOrbit = templateOrbit || this.defaultCameraOrbit;
-        
-        console.debug('[ProductGallery] renderPopupViewer: Using template camera orbit', {
-          mediaId: mediaId,
-          cameraOrbitFromTemplate: templateOrbit,
-          resolvedCameraOrbit: cameraOrbit
-        });
-      } else {
-        // Fallback: check main gallery thumbnail button (which has the data-camera-orbit from Liquid)
-        const mainThumbnailBtn = this.querySelector(`.thumbnail-btn[data-media-id="${mediaId}"]`);
-        cameraOrbit =
-          mainThumbnailBtn?.dataset.cameraOrbit ||
-          popupThumbnail?.dataset.cameraOrbit ||
-          media.camera_orbit ||
-          this.defaultCameraOrbit;
-        
-        console.debug('[ProductGallery] renderPopupViewer: Using fallback camera orbit', {
-          mediaId: mediaId,
-          cameraOrbitFromMainThumb: mainThumbnailBtn?.dataset.cameraOrbit,
-          cameraOrbitFromPopupThumb: popupThumbnail?.dataset.cameraOrbit,
-          cameraOrbitFromMedia: media.camera_orbit,
-          defaultCameraOrbit: this.defaultCameraOrbit,
-          resolvedCameraOrbit: cameraOrbit
-        });
-      }
-      
-      const model = document.createElement('model-viewer');
-      model.src = media.url;
-      model.setAttribute('alt', media.alt || '3D model');
-      model.setAttribute('camera-controls', 'true');
-      model.setAttribute('camera-orbit', cameraOrbit);
-      model.setAttribute('data-shopify-feature', '1.12');
-      model.style.width = '100%';
-      model.style.height = '100%';
-      newMediaElement = model; // Assign the new model-viewer to newMediaElement
+  const popup = document.getElementById('product-gallery-popup');
+  const popupThumbnail = popup?.querySelector(`[data-media-id="${mediaId}"]`);
+  
+  // Check template first (like main view does)
+  const template = this.querySelector(`#ModelViewerTemplate-${mediaId}`);
+  let cameraOrbit;
+  
+  if (template) {
+    const tempViewer = template.content.querySelector('model-viewer');
+    const templateOrbit = tempViewer?.getAttribute('camera-orbit') || '';
+    cameraOrbit = templateOrbit || this.defaultCameraOrbit;
+  } else {
+    const mainThumbnailBtn = this.querySelector(`.thumbnail-btn[data-media-id="${mediaId}"]`);
+    cameraOrbit =
+      mainThumbnailBtn?.dataset.cameraOrbit ||
+      popupThumbnail?.dataset.cameraOrbit ||
+      media.camera_orbit ||
+      this.defaultCameraOrbit;
+  }
+  
+  // Create a container div for better size control
+  const modelContainer = document.createElement('div');
+  modelContainer.className = 'popup-model-container';
+  modelContainer.style.cssText = `
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 700px;
+  `;
+  
+  const model = document.createElement('model-viewer');
+  model.src = media.url;
+  model.setAttribute('alt', media.alt || '3D model');
+  model.setAttribute('camera-controls', 'true');
+  model.setAttribute('camera-orbit', cameraOrbit);
+  model.setAttribute('data-shopify-feature', '1.12');
+  model.style.cssText = `
+    width: 100%;
+    height: 100%;
+    min-height: 700px;
+  `;
+  
+  modelContainer.appendChild(model);
+  newMediaElement = modelContainer; // Container instead of bare model
      
     } else {
       newMediaElement = document.createElement('p');
