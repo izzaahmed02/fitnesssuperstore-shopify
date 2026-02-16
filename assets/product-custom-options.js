@@ -39,6 +39,7 @@ if (!customElements.get('product-customization-options')) {
           }
         });
         subscribe(PUB_SUB_EVENTS.variantChange, () => {
+          console.log('testtt');
           this.init();
         });
       }
