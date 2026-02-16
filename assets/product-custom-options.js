@@ -46,7 +46,7 @@ if (!customElements.get('product-customization-options')) {
         }
         this.setCustomizationOption();
         this.optionSelectListener();
-        // this.optionInputListener();
+        this.optionInputListener();
         this.setDefaultOptionsListener();
         this.handleQuantity();
         this.handlePopupHelper();
