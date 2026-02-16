@@ -242,6 +242,22 @@ if (!customElements.get('product-form-with-options')) {
           });
         }
 
+        const quantityOptions = this.productContainer.querySelectorAll('[data-quantity-option-input]');
+        if (selectOptions.length > 0) {
+          selectOptions.forEach((select) => {
+            const variantID = select.value.includes(':::') ? `gid://shopify/ProductVariant/${select.value.split(':::')[0].trim()}` : `gid://shopify/ProductVariant/${select.value.trim()}`;
+            const variantPrice = select.value.includes(':::') ? Number(select.value.split(':::')[1].trim()) : 0;
+            const productOption = {
+              variantId: variantID,
+              priceAdjustment: variantPrice,
+              quantity: 1,
+              groupHandle: select.name,
+              defaultValues: variantID.split('ProductVariant/')[1],
+            };
+            productOptions.push(productOption);
+          });
+        }
+
         return productOptions;
       }
 
