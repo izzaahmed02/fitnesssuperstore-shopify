@@ -75,6 +75,14 @@
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
+  {% assign hide_product_options = false %}
+  {% for item in cart.items %}
+    {% for property in item.properties %}
+      {% if property.first == '_functionOperation' %}
+        {% assign hide_product_options = true %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
 
   {%- style -%}
     .section-{{ section.id }}-padding {
