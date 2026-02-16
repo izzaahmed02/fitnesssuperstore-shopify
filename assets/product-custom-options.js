@@ -291,9 +291,10 @@ if (!customElements.get('product-customization-options')) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
           const inputValue = Number(input.value);
-          const maxInputValue = Number(input.max);
           const minInputValue = Number(input.min);
+          const maxInputValue = Number(input.max);
           if (inputValue - 1 === 0 && option === 'decrease') return;
+          if(minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
           const optionContainer = el.closest('[data-option-accordion]').querySelector('[data-customization-option]');
