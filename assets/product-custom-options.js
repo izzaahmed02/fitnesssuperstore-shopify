@@ -394,6 +394,7 @@ if (!customElements.get('product-customization-options')) {
               price = Number(value) * Number(option.dataset?.quantityOptionVariantPrice);
             }
           }
+          console.log(priceAdjustment);
 
           priceAdjustment += price;
         });
