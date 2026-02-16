@@ -92,7 +92,7 @@ if (!customElements.get('product-customization-options')) {
       }
 
       optionInputListener() {
-        const optionQuantitySelector = this.querySelectorAll('[data-quantity-selector]');
+        const optionQuantitySelector = this.querySelectorAll('[data-quantity-option]');
         if (optionQuantitySelector.length === 0) return;
         console.log(optionQuantitySelector);
 
