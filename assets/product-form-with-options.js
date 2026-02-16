@@ -246,11 +246,11 @@ if (!customElements.get('product-form-with-options')) {
         if (quantityOptions.length > 0) {
           quantityOptions.forEach((option) => {
             const variantID = `gid://shopify/ProductVariant/${option.dataset.quantityOptionVariant.trim()}`;
-            const variantPrice = select.value.includes(':::') ? Number(select.value.split(':::')[1].trim()) : 0;
+            const variantPrice = option.dataset.quantityOptionVariantPrice.tirm();
             const productOption = {
               variantId: variantID,
               priceAdjustment: variantPrice,
-              quantity: 1,
+              quantity: Number(option.value),
               groupHandle: select.name,
               defaultValues: variantID.split('ProductVariant/')[1],
             };
