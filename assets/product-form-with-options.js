@@ -43,6 +43,9 @@ if (!customElements.get('product-form-with-options')) {
           ...this.prepareOptions(),
           _functionOperation: this.prepareFunctionalProperties(),
         };
+
+        console.log(productProperties, 'properties');
+
         const bodyRequest = {
           items: [
             {
