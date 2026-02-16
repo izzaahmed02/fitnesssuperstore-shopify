@@ -94,14 +94,13 @@ if (!customElements.get('product-customization-options')) {
       optionInputListener() {
         const optionQuantitySelector = this.querySelectorAll('[data-quantity-option]');
         if (optionQuantitySelector.length === 0) return;
-        console.log(optionQuantitySelector);
 
         optionQuantitySelector.forEach((option) => {
           const input = option.querySelector('[data-quantity-option-input]');
           const buttonIncrease = option.querySelector('[data-quantity-option-increase]');
           const buttonDecrease = option.querySelector('[data-quantity-option-decrease]');
-          this.addQuantityListener(buttonIncrease, 'increase', input);
-          this.addQuantityListener(buttonDecrease, 'decrease', input);
+          this.addQuantityListener(buttonIncrease, 'increase', input, true);
+          this.addQuantityListener(buttonDecrease, 'decrease', input, true);
         });
       }
 
