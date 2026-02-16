@@ -1850,7 +1850,6 @@
 </div>
 
 {% assign options = product.metafields.options.product_options.value %}
-{% assign has_info = false %}
 {% for category in options %}
   {% if category.help_text.value != blank %}
     {% liquid
@@ -1894,7 +1893,13 @@
 </script>
 {% comment %} <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script> {% endcomment %}
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+{% unless hide_product_options %}
+  <script src="{{'product-custom-options.js' | asset_url }}" defer></script>
+{% endunless %}
 
+{% if custom_product_options_block.size > 0 %}
+  <script src="{{'product-form-with-options.js' | asset_url }}" defer></script>
+{% endif %}
 <script defer type="text/javascript">
   var sa_products_count = 3;
   var sa_date_format = 'F j, Y';
