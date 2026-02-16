@@ -101,7 +101,6 @@ customElements.get('product-info') ||
             let a = e.getElementById(`${t}-${this.sectionId}`),
               r = this.querySelector(`#${t}-${this.dataset.section}`);
             a && r && ((r.innerHTML = a.innerHTML), r.classList.toggle('hidden', i(a)));
-            console.log(a);
           };
           (a('price'),
             a('Sku', ({ classList: t }) => t.contains('hidden')),
