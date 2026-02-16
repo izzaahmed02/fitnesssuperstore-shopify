@@ -90,6 +90,14 @@ if (!customElements.get('product-customization-options')) {
         );
       }
 
+      optionInputListener() {
+        const optionQuantitySelector = this.querySelectorAll('[data-quantity-selector]');
+        if (optionQuantitySelector.length === 0) return;
+        optionQuantitySelector.forEach((option) => {
+          const input = option.querySelector('[data-quantity-option-input]');
+        });
+      }
+
       closeAccordion(parent) {
         if (parent.hasAttribute('multichoice') || parent.querySelector('[data-quantity-selector]')) return;
         const openButton = parent.querySelector('[data-open-accordion]') || parent.closest('[data-open-accordion]');
@@ -393,9 +401,9 @@ if (!customElements.get('product-customization-options')) {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
-        priceElement.forEach(el => {
+        priceElement.forEach((el) => {
           el.innerText = `${priceElement[0].dataset?.currency}${formattedPrice}`;
-        })
+        });
       }
 
       // Method to select color
