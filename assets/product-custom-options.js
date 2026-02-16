@@ -287,6 +287,7 @@ if (!customElements.get('product-customization-options')) {
           this.addQuantityListener(btnDecrease, 'decrease', qunatityInput);
           qunatityInput.addEventListener('input', () => {
             if (qunatityInput.max && qunatityInput.value > qunatityInput.max) qunatityInput.value = qunatityInput.max;
+            if (qunatityInput.min && qunatityInput.value < qunatityInput.min) qunatityInput.value = qunatityInput.min;
           });
         });
       }
