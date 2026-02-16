@@ -194,8 +194,6 @@ if (!customElements.get('product-form-with-options')) {
             const parent = option.closest('[data-option-accordion]');
             const values = option.dataset.selectedOptions.split(',');
             values.forEach((value) => {
-              console.log(value);
-
               const variantID = value.includes(':::') ? `gid://shopify/ProductVariant/${value.split(':::')[0].trim()}` : `gid://shopify/ProductVariant/${value.trim()}`;
               const variantPrice = value.includes(':::') ? Number(value.split(':::')[1].trim()) : 0;
               const inputIdValue = value.includes(':::') ? value.split(':::')[0].trim() : value.trim();
@@ -264,6 +262,8 @@ if (!customElements.get('product-form-with-options')) {
             productOptions.push(productOption);
           });
         }
+
+        console.log(productOptions);
 
         return productOptions;
       }
