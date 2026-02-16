@@ -137,7 +137,7 @@ if (!customElements.get('product-customization-options')) {
               this.multichoice(optionHandler, option);
             }
             if (this.closest('cart-drawer')) return;
-            this.updatePrice();
+            // this.updatePrice();
           });
         });
       }
