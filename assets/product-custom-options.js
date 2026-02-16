@@ -301,6 +301,8 @@ if (!customElements.get('product-customization-options')) {
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+          optionContainer.checked = true;
+          optionContainer.dispatchEvent(new Event('input', { bubbles: true }));
           const optionContainer = el.closest('[data-option-accordion]').querySelector('[data-customization-option]');
           if (!optionContainer) return;
           const priceContainer = el.closest('[data-option-accordion]').querySelector('[avis-price]');
@@ -318,8 +320,6 @@ if (!customElements.get('product-customization-options')) {
               }
             });
           }
-          optionContainer.checked = true;
-          optionContainer.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
 
