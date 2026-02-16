@@ -286,6 +286,8 @@ if (!customElements.get('product-customization-options')) {
           this.addQuantityListener(btnIncrease, 'increase', qunatityInput);
           this.addQuantityListener(btnDecrease, 'decrease', qunatityInput);
           qunatityInput.addEventListener('input', () => {
+            console.log('testt');
+
             if (qunatityInput.max && qunatityInput.value > qunatityInput.max) qunatityInput.value = qunatityInput.max;
             if (qunatityInput.min && qunatityInput.value < qunatityInput.min) qunatityInput.value = qunatityInput.min;
           });
