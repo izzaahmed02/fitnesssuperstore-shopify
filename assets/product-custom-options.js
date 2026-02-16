@@ -4,6 +4,19 @@ if (!customElements.get('product-customization-options')) {
     class ProductCustomizationOptions extends HTMLElement {
       constructor() {
         super();
+      }
+
+      #accordionToggleAdded = false;
+
+      get modifyID() {
+        return this.dataset.productId;
+      }
+
+      get quantityInput() {
+        return document.querySelector(`[data-quantity-variant-id="${this.dataset.variantId}"]`);
+      }
+
+      connectedCallback() {
         this.accordions = this.querySelectorAll('[data-option-accordion]');
         this.customizationOptions = this.querySelectorAll('[data-customization-option]');
         this.openPopupButtons = this.querySelectorAll('[data-popup-open]');
@@ -19,28 +32,11 @@ if (!customElements.get('product-customization-options')) {
         this.applyChangesButton = this.querySelector('[data-apply-changes]');
         this.cartItems = document.querySelector('cart-items');
         this.cartDrawer = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
-      }
-
-      #accordionToggleAdded = false;
-
-      get modifyID() {
-        return this.dataset.productId;
-      }
-
-      get quantityInput() {
-        return document.querySelector(`[data-quantity-variant-id="${this.dataset.variantId}"]`);
-      }
-
-      connectedCallback() {
         this.init();
         subscribe(PUB_SUB_EVENTS.cartUpdate, () => {
           if (window.location.href.includes('/cart')) {
             this.init();
           }
-        });
-        subscribe(PUB_SUB_EVENTS.variantChange, () => {
-          console.log('testtt');
-          this.init();
         });
       }
 
