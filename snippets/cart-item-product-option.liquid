@@ -196,7 +196,7 @@
       </div>
     </div>
   </div>
-{% else %}
+{% elsif option_type == 'Select' %}
   <select
     name="{{ product_option.product_option_title | handleize }}"
     class="product-options__select"
@@ -260,4 +260,42 @@
       </option>
     {% endfor %}
   </select>
+{% else %}
+  <div class="product-options__quantity-option" data-quantity-option>
+    {% for variant in product_option.product_option_variants.value %}
+      <div class="product-options__quantity-option--header">
+        {{ variant.product.title }}
+        {% if product_option.help_text.value != blank %}
+          {% render 'related-products-button',
+            product_id: product.id,
+            product_handle: product.handle,
+            product_category: product.metafields.custom.option_category_id.value,
+            option_title: product_option.product_option_title
+          %}
+        {% endif %}
+      </div>
+
+      <div class="product-options__quantity-option--input-wrapper">
+        {{ variant.metafields.custom.option_input_label }}
+
+        <div class="product-options__quantity-option--input-field">
+          <button class="product-options__quantity-option--input-decrease" data-quantity-option-decrease>{% render 'product-option-minus' %}</button>
+          <input
+            type="number"
+            data-quantity-option-variant="{{ variant.id }}"
+            data-quantity-option-input
+            data-quantity-option-variant-price="{{ variant.price | money_without_currency }}"
+            data-quantity-option-variant-title="{{ variant.product.title }}"
+            data-quantity-option-group="{{ product_option.product_option_title | handleize }}"
+            value="{{ variant.metafields.custom.option_input_min_quantity | default: 1 }}"
+            min="{{ variant.metafields.custom.option_input_min_quantity | default: 1 }}"
+            {% if variant.metafields.custom.option_input_max_quantity %}
+              max="{{ variant.metafields.custom.option_input_max_quantity }}"
+            {% endif %}
+          >
+          <button class="product-options__quantity-option--input-increase" data-quantity-option-increase>{% render 'product-option-plus' %}</button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
 {% endif %}
