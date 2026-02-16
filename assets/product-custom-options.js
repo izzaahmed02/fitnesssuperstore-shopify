@@ -393,6 +393,8 @@ if (!customElements.get('product-customization-options')) {
             }
           }
 
+          console.log(price, 'price');
+
           priceAdjustment += price;
         });
 
