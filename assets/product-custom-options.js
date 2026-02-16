@@ -321,8 +321,8 @@ if (!customElements.get('product-customization-options')) {
               }
             });
           }
-          optionContainer.checked = true;
-          optionContainer.dispatchEvent(new Event('input', { bubbles: true }));
+          customizationOption.checked = true;
+          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
 
