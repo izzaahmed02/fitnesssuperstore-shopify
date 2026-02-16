@@ -303,8 +303,9 @@ if (!customElements.get('product-customization-options')) {
           if (updatePrice) {
             this.updatePrice();
           }
-          const optionContainer = el.closest('[data-option-accordion]').querySelector('[data-customization-option]');
+          const optionContainer = el.closest('[data-option-accordion]');
           if (!optionContainer) return;
+          const customizationOption = optionContainer.querySelector('[data-customization-option]');
           const priceContainer = el.closest('[data-option-accordion]').querySelector('[avis-price]');
           if (priceContainer) {
             const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
