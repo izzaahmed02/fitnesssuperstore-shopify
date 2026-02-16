@@ -111,6 +111,8 @@ customElements.get('product-info') ||
             this.querySelector(`#Quantity-Rules-${this.dataset.section}`)?.classList.remove('hidden'),
             this.querySelector(`#Volume-Note-${this.dataset.section}`)?.classList.remove('hidden'),
             this.productForm?.toggleSubmitButton(e.getElementById(`ProductSubmitButton-${this.sectionId}`)?.hasAttribute('disabled') ?? !0, window.variantStrings.soldOut),
+            console.log(a('price'));
+            
             publish(PUB_SUB_EVENTS.variantChange, { data: { sectionId: this.sectionId, html: e, variant: i } }));
         };
       }
