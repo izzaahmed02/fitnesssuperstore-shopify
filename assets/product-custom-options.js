@@ -95,9 +95,10 @@ if (!customElements.get('product-customization-options')) {
         if (optionQuantitySelector.length === 0) return;
         optionQuantitySelector.forEach((option) => {
           const input = option.querySelector('[data-quantity-option-input]');
-          const buttonDecrease = option.querySelector('[data-quantity-option-decrease]');
           const buttonIncrease = option.querySelector('[data-quantity-option-increase]');
-          buttonIncrease.
+          const buttonDecrease = option.querySelector('[data-quantity-option-decrease]');
+          this.addQuantityListener(buttonIncrease, 'increase', input);
+          this.addQuantityListener(buttonDecrease, 'decrease', input);
         });
       }
 
@@ -294,7 +295,7 @@ if (!customElements.get('product-customization-options')) {
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
           if (inputValue - 1 === 0 && option === 'decrease') return;
-          if(minInputValue && inputValue === minInputValue && option === 'decrease') return;
+          if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
           const optionContainer = el.closest('[data-option-accordion]').querySelector('[data-customization-option]');
