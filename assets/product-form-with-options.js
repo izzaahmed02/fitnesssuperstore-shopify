@@ -251,8 +251,8 @@ if (!customElements.get('product-form-with-options')) {
               variantId: variantID,
               priceAdjustment: variantPrice,
               quantity: Number(option.value),
-              groupHandle: select.name,
-              defaultValues: variantID.split('ProductVariant/')[1],
+              groupHandle: option.dataset.quantityOptionGroup,
+              defaultValues: variantID,
             };
             productOptions.push(productOption);
           });
