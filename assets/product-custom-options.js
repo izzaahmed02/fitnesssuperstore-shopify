@@ -389,7 +389,9 @@ if (!customElements.get('product-customization-options')) {
               price = Number(value.split(':::')[1]);
             }
           } else {
-            price = Number(value) * Number(option.dataset?.quantityOptionVariantPrice);
+            if (option.dataset?.quantityOptionVariantPrice) {
+              price = Number(value) * Number(option.dataset?.quantityOptionVariantPrice);
+            }
           }
 
           priceAdjustment += price;
