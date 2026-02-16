@@ -23,12 +23,13 @@ if (!customElements.get('product-form-with-options')) {
 
       connectedCallback() {
         if (!this.form) return;
+        console.log(this.form);
+
         this.form.addEventListener('submit', this.handleAddToCart.bind(this));
       }
 
       async handleAddToCart(event) {
         event.preventDefault();
-        console.log('event');
 
         if (this.submitButton.getAttribute('aria-disabled') === 'true') return;
         if (!this.checkMandatoryFields()) return alert('Please select your options before adding this item to cart');
