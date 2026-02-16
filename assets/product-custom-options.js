@@ -101,6 +101,10 @@ if (!customElements.get('product-customization-options')) {
           const buttonDecrease = option.querySelector('[data-quantity-option-decrease]');
           this.addQuantityListener(buttonIncrease, 'increase', input, true);
           this.addQuantityListener(buttonDecrease, 'decrease', input, true);
+          input.addEventListener('input', () => {
+            if (input.max && input.value > input.max) input.value = input.max;
+            if (input.min && input.value < input.min) input.value = input.min;
+          });
         });
       }
 
@@ -285,12 +289,6 @@ if (!customElements.get('product-customization-options')) {
           const btnDecrease = quantitySelectorContainer.querySelector('[data-decrease-quantity]');
           this.addQuantityListener(btnIncrease, 'increase', qunatityInput);
           this.addQuantityListener(btnDecrease, 'decrease', qunatityInput);
-          qunatityInput.addEventListener('input', () => {
-            console.log('testt');
-
-            if (qunatityInput.max && qunatityInput.value > qunatityInput.max) qunatityInput.value = qunatityInput.max;
-            if (qunatityInput.min && qunatityInput.value < qunatityInput.min) qunatityInput.value = qunatityInput.min;
-          });
         });
       }
 
