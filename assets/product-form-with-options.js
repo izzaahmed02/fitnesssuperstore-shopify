@@ -22,6 +22,8 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       connectedCallback() {
+        console.log('try to get form');
+
         if (!this.form) return;
         console.log(this.form);
 
