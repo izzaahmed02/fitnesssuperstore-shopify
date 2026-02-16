@@ -97,6 +97,7 @@ if (!customElements.get('product-customization-options')) {
           const input = option.querySelector('[data-quantity-option-input]');
           const buttonDecrease = option.querySelector('[data-quantity-option-decrease]');
           const buttonIncrease = option.querySelector('[data-quantity-option-increase]');
+          buttonIncrease.
         });
       }
 
@@ -291,7 +292,7 @@ if (!customElements.get('product-customization-options')) {
           event.preventDefault();
           const inputValue = Number(input.value);
           const maxInputValue = Number(input.max);
-
+          const minInputValue = Number(input.min);
           if (inputValue - 1 === 0 && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
