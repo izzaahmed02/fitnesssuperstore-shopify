@@ -388,8 +388,11 @@ if (!customElements.get('product-customization-options')) {
             } else {
               price = Number(value.split(':::')[1]);
             }
-            priceAdjustment += price;
+          } else {
+            price = Number(value) * Number(option.dataset?.quantityOptionVariantPrice);
           }
+
+          priceAdjustment += price;
         });
 
         const colorVariantInput = this.querySelector('[data-color-variant-input]');
