@@ -269,7 +269,7 @@ if (!customElements.get('product-customization-options')) {
           if (!optionHandler) return;
           this.addRemoveListener(optionHandler, option);
           if (this.closest('cart-drawer')) return;
-          // this.updatePrice();
+          this.updatePrice();
         });
       }
 
