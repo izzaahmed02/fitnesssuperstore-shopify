@@ -104,6 +104,7 @@ customElements.get('product-info') ||
             console.log(a);
           };
           (a('price'),
+            a('product-options'),
             a('Sku', ({ classList: t }) => t.contains('hidden')),
             a('Inventory', ({ innerText: t }) => '' === t),
             a('Volume'),
