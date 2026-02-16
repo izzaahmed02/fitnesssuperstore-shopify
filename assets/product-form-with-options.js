@@ -25,8 +25,6 @@ if (!customElements.get('product-form-with-options')) {
         console.log('try to get form');
 
         if (!this.form) return;
-        console.log(this.form);
-
         this.form.addEventListener('submit', this.handleAddToCart.bind(this));
       }
 
@@ -48,8 +46,6 @@ if (!customElements.get('product-form-with-options')) {
           ...this.prepareOptions(),
           _functionOperation: this.prepareFunctionalProperties(),
         };
-
-        console.log(productProperties, 'properties');
 
         const bodyRequest = {
           items: [
@@ -179,8 +175,6 @@ if (!customElements.get('product-form-with-options')) {
             lineItemProperties[optionTitle] = option.value;
           });
         }
-
-        console.log(lineItemProperties);
 
         return lineItemProperties;
       }
