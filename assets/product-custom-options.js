@@ -285,6 +285,9 @@ if (!customElements.get('product-customization-options')) {
           const btnDecrease = quantitySelectorContainer.querySelector('[data-decrease-quantity]');
           this.addQuantityListener(btnIncrease, 'increase', qunatityInput);
           this.addQuantityListener(btnDecrease, 'decrease', qunatityInput);
+          qunatityInput.addEventListener('input', () => {
+            if (qunatityInput.max && qunatityInput.value > qunatityInput.max) qunatityInput.value = qunatityInput.max;
+          });
         });
       }
 
