@@ -371,7 +371,7 @@ if (!customElements.get('product-customization-options')) {
       updatePrice() {
         let priceAdjustment = 0;
         let price = 0;
-        const activeOptions = this.querySelectorAll('[data-customization-option]:checked, [data-select-option]');
+        const activeOptions = this.querySelectorAll('[data-customization-option]:checked, [data-select-option], [data-quantity-option-input]');
         if (activeOptions.length === 0) return;
         activeOptions.forEach((option) => {
           const value = option.value;
