@@ -255,8 +255,6 @@ if (!customElements.get('product-form-with-options')) {
           });
         }
 
-        console.log(productOptions);
-
         return productOptions;
       }
 
