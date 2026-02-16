@@ -767,6 +767,22 @@ if (!customElements.get('product-customization-options')) {
           });
         }
 
+        const quantityOptions = this.querySelectorAll('[data-quantity-option-input]');
+        if (quantityOptions.length > 0) {
+          quantityOptions.forEach((option) => {
+            const variantID = `gid://shopify/ProductVariant/${option.dataset.quantityOptionVariant.trim()}`;
+            const variantPrice = option.dataset.quantityOptionVariantPrice.trim();
+            const productOption = {
+              variantId: variantID,
+              priceAdjustment: Number(variantPrice),
+              quantity: Number(option.value),
+              groupHandle: option.dataset.quantityOptionGroup,
+              defaultValues: variantID,
+            };
+            productOptions.push(productOption);
+          });
+        }
+
         return productOptions;
       }
 
