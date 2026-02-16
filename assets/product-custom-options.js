@@ -38,6 +38,9 @@ if (!customElements.get('product-customization-options')) {
             this.init();
           }
         });
+        subscribe(PUB_SUB_EVENTS.variantChange, () => {
+          this.init();
+        });
       }
 
       init() {
