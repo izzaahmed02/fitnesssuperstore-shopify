@@ -402,7 +402,7 @@ if (!customElements.get('product-customization-options')) {
           }
         }
 
-        this.priceHelper(priceAdjustment);
+        // this.priceHelper(priceAdjustment);
       }
 
       // Helper to create corect price HTML
