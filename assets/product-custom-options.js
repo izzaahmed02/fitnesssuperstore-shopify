@@ -404,6 +404,9 @@ if (!customElements.get('product-customization-options')) {
             priceAdjustment += Number(colorPrice || 0);
           }
         }
+
+        console.log(priceAdjustment);
+
         this.priceHelper(priceAdjustment);
       }
 
