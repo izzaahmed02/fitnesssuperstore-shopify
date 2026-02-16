@@ -107,7 +107,7 @@ customElements.get('product-info') ||
             a('Inventory', ({ innerText: t }) => '' === t),
             a('Volume'),
             a('Price-Per-Item', ({ classList: t }) => t.contains('hidden')),
-            a('product-options', ({ classList: t }) => t.contains('hidden')),
+            a('Product-Options', ({ classList: t }) => t.contains('hidden')),
             this.updateQuantityRules(this.sectionId, e),
             this.querySelector(`#Quantity-Rules-${this.dataset.section}`)?.classList.remove('hidden'),
             this.querySelector(`#Volume-Note-${this.dataset.section}`)?.classList.remove('hidden'),
