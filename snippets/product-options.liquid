@@ -62,7 +62,7 @@
       assign color_group = ''
       assign category_title_downcase = category.title | downcase
       assign hidden_option = false
-      for product_option in category.product_options.value.product_option_title
+      for product_option in category.product_options.value
         assign title = product_option.product_option_title | downcase
         if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
           assign color_counter = color_counter | plus: 1
@@ -90,7 +90,7 @@
     <div
       class="product-option__item"
       {% unless category.hide_option %}
-        {{ category.product_options.value[0] }}
+        {{ category.product_options.value[0].product_option_title }}
         style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif category.product_options.value[0].option_type == 'Quantity input' %}0{% else %}{{ index }}{% endif %};"
       {% endunless %}
     >
