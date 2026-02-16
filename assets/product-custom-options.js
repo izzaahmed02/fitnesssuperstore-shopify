@@ -94,6 +94,8 @@ if (!customElements.get('product-customization-options')) {
       optionInputListener() {
         const optionQuantitySelector = this.querySelectorAll('[data-quantity-selector]');
         if (optionQuantitySelector.length === 0) return;
+        console.log(optionQuantitySelector);
+
         optionQuantitySelector.forEach((option) => {
           const input = option.querySelector('[data-quantity-option-input]');
           const buttonIncrease = option.querySelector('[data-quantity-option-increase]');
