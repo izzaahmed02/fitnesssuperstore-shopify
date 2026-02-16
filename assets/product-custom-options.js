@@ -95,6 +95,7 @@ if (!customElements.get('product-customization-options')) {
         if (optionQuantitySelector.length === 0) return;
         optionQuantitySelector.forEach((option) => {
           const input = option.querySelector('[data-quantity-option-input]');
+          const buttonDecrease = option.querySelector('[data-quantity-option-decrease]');
         });
       }
 
