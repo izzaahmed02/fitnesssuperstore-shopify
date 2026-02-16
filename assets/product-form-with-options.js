@@ -28,6 +28,7 @@ if (!customElements.get('product-form-with-options')) {
 
       async handleAddToCart(event) {
         event.preventDefault();
+
         if (this.submitButton.getAttribute('aria-disabled') === 'true') return;
         if (!this.checkMandatoryFields()) return alert('Please select your options before adding this item to cart');
 
@@ -43,6 +44,7 @@ if (!customElements.get('product-form-with-options')) {
           ...this.prepareOptions(),
           _functionOperation: this.prepareFunctionalProperties(),
         };
+
         const bodyRequest = {
           items: [
             {
@@ -164,7 +166,13 @@ if (!customElements.get('product-form-with-options')) {
           });
         }
 
-        console.log(lineItemProperties);
+        const quanityOptions = this.productContainer.querySelectorAll('[data-quantity-option-input]');
+        if (quanityOptions.length > 0) {
+          quanityOptions.forEach((option) => {
+            const optionTitle = option.dataset.quantityOptionVariantTitle;
+            lineItemProperties[optionTitle] = option.value;
+          });
+        }
 
         return lineItemProperties;
       }
@@ -178,8 +186,6 @@ if (!customElements.get('product-form-with-options')) {
             const parent = option.closest('[data-option-accordion]');
             const values = option.dataset.selectedOptions.split(',');
             values.forEach((value) => {
-              console.log(value);
-
               const variantID = value.includes(':::') ? `gid://shopify/ProductVariant/${value.split(':::')[0].trim()}` : `gid://shopify/ProductVariant/${value.trim()}`;
               const variantPrice = value.includes(':::') ? Number(value.split(':::')[1].trim()) : 0;
               const inputIdValue = value.includes(':::') ? value.split(':::')[0].trim() : value.trim();
@@ -233,6 +239,22 @@ if (!customElements.get('product-form-with-options')) {
           });
         }
 
+        const quantityOptions = this.productContainer.querySelectorAll('[data-quantity-option-input]');
+        if (quantityOptions.length > 0) {
+          quantityOptions.forEach((option) => {
+            const variantID = `gid://shopify/ProductVariant/${option.dataset.quantityOptionVariant.trim()}`;
+            const variantPrice = option.dataset.quantityOptionVariantPrice.trim();
+            const productOption = {
+              variantId: variantID,
+              priceAdjustment: Number(variantPrice),
+              quantity: Number(option.value),
+              groupHandle: option.dataset.quantityOptionGroup,
+              defaultValues: variantID,
+            };
+            productOptions.push(productOption);
+          });
+        }
+
         return productOptions;
       }
 
@@ -251,6 +273,6 @@ if (!customElements.get('product-form-with-options')) {
 
         return errorCounter > 0 ? false : true;
       }
-    }
+    },
   );
 }

@@ -46,6 +46,7 @@ if (!customElements.get('product-customization-options')) {
         }
         this.setCustomizationOption();
         this.optionSelectListener();
+        this.optionInputListener();
         this.setDefaultOptionsListener();
         this.handleQuantity();
         this.handlePopupHelper();
@@ -88,6 +89,23 @@ if (!customElements.get('product-customization-options')) {
             this.updatePrice();
           }),
         );
+      }
+
+      optionInputListener() {
+        const optionQuantitySelector = this.querySelectorAll('[data-quantity-option]');
+        if (optionQuantitySelector.length === 0) return;
+
+        optionQuantitySelector.forEach((option) => {
+          const input = option.querySelector('[data-quantity-option-input]');
+          const buttonIncrease = option.querySelector('[data-quantity-option-increase]');
+          const buttonDecrease = option.querySelector('[data-quantity-option-decrease]');
+          this.addQuantityListener(buttonIncrease, 'increase', input, true);
+          this.addQuantityListener(buttonDecrease, 'decrease', input, true);
+          input.addEventListener('input', () => {
+            if (input.max && input.value > input.max) input.value = input.max;
+            if (input.min && input.value < input.min) input.value = input.min;
+          });
+        });
       }
 
       closeAccordion(parent) {
@@ -276,17 +294,24 @@ if (!customElements.get('product-customization-options')) {
 
       // Helper to incease/decrease quanity
 
-      addQuantityListener(el, option, input) {
+      addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
           const inputValue = Number(input.value);
+          const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
-
           if (inputValue - 1 === 0 && option === 'decrease') return;
+          if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
-          const optionContainer = el.closest('[data-option-accordion]').querySelector('[data-customization-option]');
+          if (updatePrice) {
+            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
+            this.updatePrice();
+          }
+          const optionContainer = el.closest('[data-option-accordion]');
           if (!optionContainer) return;
+          const customizationOption = optionContainer.querySelector('[data-customization-option]');
+          if (!customizationOption) return;
           const priceContainer = el.closest('[data-option-accordion]').querySelector('[avis-price]');
           if (priceContainer) {
             const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
@@ -302,8 +327,8 @@ if (!customElements.get('product-customization-options')) {
               }
             });
           }
-          optionContainer.checked = true;
-          optionContainer.dispatchEvent(new Event('input', { bubbles: true }));
+          customizationOption.checked = true;
+          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
 
@@ -354,19 +379,21 @@ if (!customElements.get('product-customization-options')) {
 
       updatePrice() {
         let priceAdjustment = 0;
-        let price = 0;
-        const activeOptions = this.querySelectorAll('[data-customization-option]:checked, [data-select-option]');
+        const activeOptions = this.querySelectorAll('[data-customization-option]:checked, [data-select-option], [data-quantity-option-input]');
         if (activeOptions.length === 0) return;
         activeOptions.forEach((option) => {
           const value = option.value;
           if (value.includes(':::')) {
             const quantityInput = this.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
             if (quantityInput) {
-              price = Number(value.split(':::')[1]) * Number(quantityInput.value);
+              priceAdjustment += Number(value.split(':::')[1]) * Number(quantityInput.value);
             } else {
-              price = Number(value.split(':::')[1]);
+              priceAdjustment += Number(value.split(':::')[1]);
             }
-            priceAdjustment += price;
+          } else {
+            if (option.dataset?.quantityOptionVariantPrice) {
+              priceAdjustment += Number(value) * Number(option.dataset?.quantityOptionVariantPrice);
+            }
           }
         });
 
@@ -378,6 +405,7 @@ if (!customElements.get('product-customization-options')) {
             priceAdjustment += Number(colorPrice || 0);
           }
         }
+
         this.priceHelper(priceAdjustment);
       }
 
@@ -393,9 +421,9 @@ if (!customElements.get('product-customization-options')) {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
-        priceElement.forEach(el => {
+        priceElement.forEach((el) => {
           el.innerText = `${priceElement[0].dataset?.currency}${formattedPrice}`;
-        })
+        });
       }
 
       // Method to select color
@@ -674,6 +702,14 @@ if (!customElements.get('product-customization-options')) {
           });
         }
 
+        const quanityOptions = this.querySelectorAll('[data-quantity-option-input]');
+        if (quanityOptions.length > 0) {
+          quanityOptions.forEach((option) => {
+            const optionTitle = option.dataset.quantityOptionVariantTitle;
+            lineItemProperties[optionTitle] = option.value;
+          });
+        }
+
         return lineItemProperties;
       }
 
@@ -735,6 +771,22 @@ if (!customElements.get('product-customization-options')) {
               quantity: 1,
               groupHandle: select.name,
               defaultValues: variantID.split('ProductVariant/')[1],
+            };
+            productOptions.push(productOption);
+          });
+        }
+
+        const quantityOptions = this.querySelectorAll('[data-quantity-option-input]');
+        if (quantityOptions.length > 0) {
+          quantityOptions.forEach((option) => {
+            const variantID = `gid://shopify/ProductVariant/${option.dataset.quantityOptionVariant.trim()}`;
+            const variantPrice = option.dataset.quantityOptionVariantPrice.trim();
+            const productOption = {
+              variantId: variantID,
+              priceAdjustment: Number(variantPrice),
+              quantity: Number(option.value),
+              groupHandle: option.dataset.quantityOptionGroup,
+              defaultValues: variantID,
             };
             productOptions.push(productOption);
           });

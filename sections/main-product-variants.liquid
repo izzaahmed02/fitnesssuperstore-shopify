@@ -75,6 +75,19 @@
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
+  
+  {% assign hide_product_options = false %}
+  {% for item in cart.items %}
+    {% for property in item.properties %}
+      {% if property.first == '_functionOperation' %}
+        {% assign hide_product_options = true %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  {% unless hide_product_options %}
+    {{ 'product-options.css' | asset_url | stylesheet_tag }}
+  {% endunless %}
 
   {%- style -%}
     .section-{{ section.id }}-padding {
@@ -747,7 +760,12 @@
 
               {%- when 'price_with_option' -%}
                {% unless product.tags contains 'avisplus-product-options' %}
-                <product-form
+                {% assign tag = 'product-form' %}
+                {% assign custom_product_options_block = section.blocks | where: 'type', 'product_options' %}
+                {% if custom_product_options_block.size > 0 %}
+                  {% assign tag = 'product-form-with-options' %}
+                {% endif %}
+                <{{ tag }}
                   class="product-form"
                   data-hide-errors="{{ gift_card_recipient_feature_active }}"
                   data-section-id="{{ section.id }}"
@@ -773,7 +791,7 @@
                     <div class="product_prices">
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}">
+                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | divided_by: 100 }}" data-currency="{{cart.currency.symbol }}">
                             {{ product.selected_or_first_available_variant.price | money }}
                           </p>
                         </div>
@@ -1152,7 +1170,7 @@
                     </div>
                   {% endif %}
                 {% render 'paylater-providers' %}
-                </product-form>
+                </{{tag}}>
                {% endunless %}
               {%- when 'inventory' -%}
                 <p
@@ -1707,6 +1725,8 @@
                 </product-recommendations>
               {%- when 'icon-with-text' -%}
                 {% render 'icon-with-text', block: block %}
+              {% when 'product_options' %}
+                {% render 'product-options', product: product %}  
             {%- endcase -%}
           {%- endfor -%}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
@@ -1829,6 +1849,41 @@
   <div class="mobile-popup-dots"></div>
 </div>
 
+{% assign options = product.metafields.options.product_options.value %}
+{% for category in options %}
+  {% if category.help_text.value != blank %}
+    {% liquid
+      assign content = category.help_text.value
+      assign title = content.title
+      assign text = content.help_text
+      assign related_products = content.related_products.value
+    %}
+    {% render 'related-products-popup-for-options', 
+      popup_id: category.title,
+      title: title,
+      related_products: related_products,
+      text: text
+    %}
+  {% endif %}
+
+  {% for product_option in category.product_options.value %}
+    {% if product_option.help_text.value != blank %}
+      {% liquid
+        assign content = product_option.help_text.value
+        assign title = content.title
+        assign text = content.help_text
+        assign related_products = content.related_products.value
+      %}
+      {% render 'related-products-popup-for-options', 
+        popup_id: product_option.product_option_title,
+        title: title,
+        related_products: related_products,
+        text: text
+      %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
 <style>
   #dynamic-product-content iframe{max-width:100% !important;}
 </style>
@@ -1838,7 +1893,13 @@
 </script>
 {% comment %} <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script> {% endcomment %}
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+{% unless hide_product_options %}
+  <script src="{{'product-custom-options.js' | asset_url }}" defer></script>
+{% endunless %}
 
+{% if custom_product_options_block.size > 0 %}
+  <script src="{{'product-form-with-options.js' | asset_url }}" defer></script>
+{% endif %}
 <script defer type="text/javascript">
   var sa_products_count = 3;
   var sa_date_format = 'F j, Y';
@@ -1913,6 +1974,10 @@
       "type": "price_with_option",
       "name": "Price with options",
       "limit": 1
+    },
+    {
+      "type": "product_options",
+      "name": "Product options"
     },
     {
       "type": "price",
@@ -3268,7 +3333,8 @@
           "default": "Mats"
         }
       ]
-    }
+    },
+    
   ],
   "settings": [
     {

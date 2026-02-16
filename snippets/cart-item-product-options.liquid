@@ -70,6 +70,7 @@
           assign color_group = ''
           assign category_title_downcase = category.title | downcase
           assign hidden_option = false
+          assign quantity_option = false
           for product_option in category.product_options.value
             assign title = product_option.product_option_title | downcase
             if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
@@ -81,6 +82,9 @@
             endif
             if product_option.hide_values
               assign hidden_option = true
+            endif
+            if product_option.option_type == 'Quantity input'
+              assign quantity_option = true
             endif
           endfor
           unless category.hide_option
@@ -98,7 +102,7 @@
         <div
           class="product-option__item"
           {% unless category.hide_option %}
-            style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% else %}{{ index }}{% endif %};"
+            style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
           {% endunless %}
         >
           {% if category.title != blank %}
