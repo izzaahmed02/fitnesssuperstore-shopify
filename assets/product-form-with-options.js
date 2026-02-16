@@ -243,9 +243,9 @@ if (!customElements.get('product-form-with-options')) {
         }
 
         const quantityOptions = this.productContainer.querySelectorAll('[data-quantity-option-input]');
-        if (selectOptions.length > 0) {
-          selectOptions.forEach((select) => {
-            const variantID = select.value.includes(':::') ? `gid://shopify/ProductVariant/${select.value.split(':::')[0].trim()}` : `gid://shopify/ProductVariant/${select.value.trim()}`;
+        if (quantityOptions.length > 0) {
+          quantityOptions.forEach((option) => {
+            const variantID = `gid://shopify/ProductVariant/${option.dataset.quantityOptionVariant.trim()}`;
             const variantPrice = select.value.includes(':::') ? Number(select.value.split(':::')[1].trim()) : 0;
             const productOption = {
               variantId: variantID,
