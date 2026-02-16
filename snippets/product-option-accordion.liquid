@@ -183,6 +183,40 @@
 {% else %}
   <div class="product-options__quantity-option">
     {% for variant in product_option.product_option_variants.value %}
+      {% liquid
+        assign is_default_variant = variant.product.has_only_default_variant
+        if is_default_variant
+          assign product_title = variant.product.title
+        else
+          assign product_title = variant.title
+        endif
+        assign cleaned_title = product_title
+        if product_title contains '($' or product_title contains '(+$'
+          assign parts = product_title | split: ')'
+          if parts.size > 1
+            assign first_part = parts | first | append: ')'
+            if first_part contains '$'
+              assign cleaned_title = product_title | remove_first: first_part | strip
+            endif
+          endif
+        endif
+
+        if cleaned_title contains '($' or cleaned_title contains '(+$'
+          assign last_bracket_index = cleaned_title | split: '(' | size | minus: 1
+          if last_bracket_index > 0
+            assign parts = cleaned_title | split: '('
+            assign last_part = '(' | append: parts[last_bracket_index]
+            if last_part contains '$' and last_part contains ')'
+              assign cleaned_title = cleaned_title | remove: last_part | strip
+            endif
+          endif
+        endif
+
+        if product_title contains '(-$'
+          assign cleaned_title = product_title | split: '(-$' | first
+        endif
+      %}
+      {{ cleaned_title }}
     {% endfor %}
   </div>
 {% endif %}
