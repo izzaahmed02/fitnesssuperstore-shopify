@@ -169,7 +169,7 @@ if (!customElements.get('product-form-with-options')) {
           quanityOptions.forEach((option) => {
             const optionTitle = select.dataset.quantityOptionVariantTitle;
             const option = select.selectedOptions[0]?.dataset.selectVariantTitle;
-            lineItemProperties[selectOptionTitle] = option;
+            lineItemProperties[optionTitle] = option.value;
           });
         }
 
