@@ -28,6 +28,8 @@ if (!customElements.get('product-form-with-options')) {
 
       async handleAddToCart(event) {
         event.preventDefault();
+        console.log('event');
+
         if (this.submitButton.getAttribute('aria-disabled') === 'true') return;
         if (!this.checkMandatoryFields()) return alert('Please select your options before adding this item to cart');
 
