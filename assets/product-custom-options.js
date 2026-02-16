@@ -377,7 +377,6 @@ if (!customElements.get('product-customization-options')) {
 
       updatePrice() {
         let priceAdjustment = 0;
-        let price = 0;
         const activeOptions = this.querySelectorAll('[data-customization-option]:checked, [data-select-option], [data-quantity-option-input]');
         if (activeOptions.length === 0) return;
         activeOptions.forEach((option) => {
@@ -394,9 +393,6 @@ if (!customElements.get('product-customization-options')) {
               priceAdjustment += Number(value) * Number(option.dataset?.quantityOptionVariantPrice);
             }
           }
-          console.log(priceAdjustment);
-
-          // priceAdjustment += price;
         });
 
         const colorVariantInput = this.querySelector('[data-color-variant-input]');
