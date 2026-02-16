@@ -319,7 +319,7 @@ if (!customElements.get('product-customization-options')) {
             });
           }
           optionContainer.checked = true;
-          optionContainer.dispatchEvent(new Event('input', { bubbles: true }));
+          // optionContainer.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
 
