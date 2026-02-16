@@ -385,18 +385,18 @@ if (!customElements.get('product-customization-options')) {
           if (value.includes(':::')) {
             const quantityInput = this.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
             if (quantityInput) {
-              price = Number(value.split(':::')[1]) * Number(quantityInput.value);
+              priceAdjustment += Number(value.split(':::')[1]) * Number(quantityInput.value);
             } else {
-              price = Number(value.split(':::')[1]);
+              priceAdjustment += Number(value.split(':::')[1]);
             }
           } else {
             if (option.dataset?.quantityOptionVariantPrice) {
-              price = Number(value) * Number(option.dataset?.quantityOptionVariantPrice);
+              priceAdjustment += Number(value) * Number(option.dataset?.quantityOptionVariantPrice);
             }
           }
           console.log(priceAdjustment);
 
-          priceAdjustment += price;
+          // priceAdjustment += price;
         });
 
         const colorVariantInput = this.querySelector('[data-color-variant-input]');
