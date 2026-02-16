@@ -701,6 +701,14 @@ if (!customElements.get('product-customization-options')) {
           });
         }
 
+        const quanityOptions = this.productContainer.querySelectorAll('[data-quantity-option-input]');
+        if (quanityOptions.length > 0) {
+          quanityOptions.forEach((option) => {
+            const optionTitle = option.dataset.quantityOptionVariantTitle;
+            lineItemProperties[optionTitle] = option.value;
+          });
+        }
+
         return lineItemProperties;
       }
 
