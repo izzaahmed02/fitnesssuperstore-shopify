@@ -22,8 +22,6 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       connectedCallback() {
-        console.log('try to get form');
-
         if (!this.form) return;
         this.form.addEventListener('submit', this.handleAddToCart.bind(this));
       }
@@ -248,7 +246,7 @@ if (!customElements.get('product-form-with-options')) {
             const variantPrice = option.dataset.quantityOptionVariantPrice.trim();
             const productOption = {
               variantId: variantID,
-              priceAdjustment: variantPrice,
+              priceAdjustment: Number(variantPrice),
               quantity: Number(option.value),
               groupHandle: option.dataset.quantityOptionGroup,
               defaultValues: variantID,
