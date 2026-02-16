@@ -166,8 +166,8 @@ if (!customElements.get('product-form-with-options')) {
 
         const quanityOptions = this.productContainer.querySelectorAll('[data-quantity-option-input]');
         if (quanityOptions.length > 0) {
-          selectOptions.forEach((select) => {
-            const selectOptionTitle = select.dataset.selectTitle;
+          quanityOptions.forEach((option) => {
+            const optionTitle = select.dataset.quantityOptionVariantTitle;
             const option = select.selectedOptions[0]?.dataset.selectVariantTitle;
             lineItemProperties[selectOptionTitle] = option;
           });
