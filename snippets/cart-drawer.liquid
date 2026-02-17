@@ -267,7 +267,7 @@
                               </a>
                             </cart-remove-button>
                           </div>
-                          {% if item.product.metafields.custom.warranty %}
+                          {% if item.product.metafields.custom.warranty and item.product.metafields.options.product_options == blank and item.variant.metafields.options.product_options == blank %}
                             <dl>
                               <div style="margin-top: 0px;" class="product-option">
                                 <dt>Warranty</dt>
@@ -277,18 +277,16 @@
                           {% endif %}
                           {%- if item.product.has_only_default_variant == false or item.properties.size != 0 or item.selling_plan_allocation != null -%}
                             <dl>
-                              {% comment %}
-                                {%- if item.product.has_only_default_variant == false -%}
-                                    {%- for option in item.options_with_values -%}
-                                        {% unless custom_color_found and option.name == 'Color' %}
-                                            <div class="product-option">
-                                                <dt>{{ option.name }}:</dt>
-                                                <dd>{{ option.value }}</dd>
-                                            </div>
-                                        {% endunless %}
-                                    {%- endfor -%}
-                                {%- endif -%}
-                              {% endcomment %}
+                              {%- if item.product.has_only_default_variant == false -%}
+                                {%- for option in item.options_with_values -%}
+                                  {% unless custom_color_found and option.name == 'Color' %}
+                                    <div class="product-option">
+                                      <dt>{{ option.name }}:</dt>
+                                      <dd>{{ option.value }}</dd>
+                                    </div>
+                                  {% endunless %}
+                                {%- endfor -%}
+                              {%- endif -%}
                             </dl>
                           {%- endif -%}
                           {% assign extra_props = '' %}
