@@ -62,6 +62,7 @@
           assign index = 0
           assign assambly_index = assambly_index | minus: 1
         endunless
+        assign quantity_option = false
       %}
       {% for category in options %}
         {% liquid
@@ -70,7 +71,6 @@
           assign color_group = ''
           assign category_title_downcase = category.title | downcase
           assign hidden_option = false
-          assign quantity_option = false
           for product_option in category.product_options.value
             assign title = product_option.product_option_title | downcase
             if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
@@ -85,6 +85,8 @@
             endif
             if product_option.option_type == 'Quantity input'
               assign quantity_option = true
+            else
+              assign quantity_option = false
             endif
           endfor
           unless category.hide_option
