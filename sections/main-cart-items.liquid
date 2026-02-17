@@ -4,7 +4,7 @@
 {{ 'component-price.css' | asset_url | stylesheet_tag }}
 {{ 'component-discounts.css' | asset_url | stylesheet_tag }}
 {% comment %} {{ 'quantity-popover.css' | asset_url | stylesheet_tag }} {% endcomment %}
- <link
+<link
   rel="stylesheet"
   href="{{ 'quantity-popover.css' | asset_url }}"
   media="print"
@@ -381,12 +381,15 @@
                             </quantity-popover>
                           </div>
                         </div>
-                        {% if item.product.template_suffix contains 'variants' %}
+                        {% if item.product.template_suffix contains 'variants'
+                          and item.product.metafields.options.product_options == blank
+                          and item.variant.metafields.options.product_options == blank
+                        %}
                           {% if item.product.metafields.custom.warranty %}
                             <dl style="margin-bottom: 2px;">
                               <div class="product-option">
-                                <dt>Warranty </dt>
-                                <dd> {{ item.product.metafields.custom.warranty }}</dd>
+                                <dt>Warranty</dt>
+                                <dd>{{ item.product.metafields.custom.warranty }}</dd>
                               </div>
                             </dl>
                           {% endif %}
@@ -755,42 +758,31 @@
         {% break %}
       {% endif %}
     {% endfor %}
-      {% assign options = item.product.metafields.options.product_options.value %}
-      {% for category in options %}
-        {% if category.help_text.value != blank %}
+    {% assign options = item.product.metafields.options.product_options.value %}
+    {% for category in options %}
+      {% if category.help_text.value != blank %}
+        {% liquid
+          assign content = category.help_text.value
+          assign title = content.title
+          assign text = content.help_text
+          assign related_products = content.related_products.value
+          assign has_info = true
+        %}
+        {% render 'related-products-popup-for-options', popup_id: category.title, title: title, related_products: related_products, text: text %}
+      {% endif %}
+      {% for product_option in category.product_options.value %}
+        {% if product_option.help_text.value != blank %}
           {% liquid
-            assign content = category.help_text.value
+            assign content = product_option.help_text.value
             assign title = content.title
             assign text = content.help_text
             assign related_products = content.related_products.value
             assign has_info = true
           %}
-          {% render 'related-products-popup-for-options', 
-            popup_id: category.title,
-            title: title,
-            related_products: related_products,
-            text: text
-          %}
+          {% render 'related-products-popup-for-options', popup_id: product_option.product_option_title, title: title, related_products: related_products, text: text %}
         {% endif %}
-        {% for product_option in category.product_options.value %}
-          {% if product_option.help_text.value != blank %}
-            {% liquid
-              assign content = product_option.help_text.value
-              assign title = content.title
-              assign text = content.help_text
-              assign related_products = content.related_products.value
-              assign has_info = true
-            %}
-            {% render 'related-products-popup-for-options', 
-              popup_id: product_option.product_option_title,
-              title: title,
-              related_products: related_products,
-              text: text
-            %}
-          {% endif %}
-        {% endfor %}
       {% endfor %}
-
+    {% endfor %}
   {% endfor %}
   {% if has_info %}
     {{ 'avis-custom.css' | asset_url | stylesheet_tag }}
