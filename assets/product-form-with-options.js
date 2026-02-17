@@ -174,8 +174,6 @@ if (!customElements.get('product-form-with-options')) {
           });
         }
 
-        console.log(lineItemProperties);
-
         return lineItemProperties;
       }
 
