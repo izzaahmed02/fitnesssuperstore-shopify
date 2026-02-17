@@ -3,6 +3,7 @@
   if product.selected_or_first_available_variant.metafields.options.product_options.value != blank
     assign options = product.selected_or_first_available_variant.metafields.options.product_options.value
   endif
+  assign quantity_index = 0
   assign warranty_index = 1
   assign color_index = 1
   assign assambly_index = 0
@@ -53,6 +54,7 @@
         assign index = 0
         assign assambly_index = assambly_index | minus: 1
       endunless
+      assign quantity_option = false
     %}
 
     {% for category in options %}
@@ -62,7 +64,7 @@
         assign color_group = ''
         assign category_title_downcase = category.title | downcase
         assign hidden_option = false
-        assign quantity_option = false
+
         for product_option in category.product_options.value
           assign title = product_option.product_option_title | downcase
           if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
@@ -77,6 +79,8 @@
           endif
           if product_option.option_type == 'Quantity input'
             assign quantity_option = true
+          else
+            assign quantity_option = false
           endif
         endfor
         unless category.hide_option
@@ -89,6 +93,11 @@
         if index == assambly_index
           assign index = index | minus: 1
         endif
+
+        if quantity_option
+          assign quantity_index = 1
+          assign color_index = color_index | plus: 1
+        endif
       %}
 
       <div
@@ -97,7 +106,7 @@
           style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
         {% endunless %}
       >
-        {% if category.title != blank and quantity_option == false %}
+        {% if category.title != blank %}
           <h2
             class="product-options__category-title"
             {% if color_counter == 1 %}
@@ -110,7 +119,9 @@
           >
             <span>
               {% unless category.hide_option %}
-                {%- if color_title != blank -%}
+                {% if quantity_option %}
+                  {{ quantity_index }}
+                {%- elsif color_title != blank -%}
                   {{- color_index -}}
                 {%- elsif category_title_downcase == 'warranty' -%}
                   {{- warranty_index -}}
