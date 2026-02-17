@@ -169,12 +169,12 @@ if (!customElements.get('product-form-with-options')) {
         const quanityOptions = this.productContainer.querySelectorAll('[data-quantity-option-input]');
         if (quanityOptions.length > 0) {
           quanityOptions.forEach((option) => {
-            console.log(option);
-
             const optionTitle = option.dataset.quantityOptionVariantTitle;
             lineItemProperties[optionTitle] = option.value;
           });
         }
+
+        console.log(lineItemProperties);
 
         return lineItemProperties;
       }
