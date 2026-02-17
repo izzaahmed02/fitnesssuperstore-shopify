@@ -54,6 +54,7 @@
         assign index = 0
         assign assambly_index = assambly_index | minus: 1
       endunless
+      assign quantity_option = false
     %}
 
     {% for category in options %}
@@ -63,7 +64,7 @@
         assign color_group = ''
         assign category_title_downcase = category.title | downcase
         assign hidden_option = false
-        assign quantity_option = false
+
         for product_option in category.product_options.value
           assign title = product_option.product_option_title | downcase
           if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
@@ -92,7 +93,6 @@
         endif
 
         if quantity_option
-          echo 'alarm'
           assign quantity_index = 1
           assign warranty_index = warranty_index | plus: 1
           assign color_index = color_index | plus: 1
@@ -120,7 +120,7 @@
           >
             <span>
               {% unless category.hide_option %}
-                {% if quantity_index != 0 and color_title == blank and category_title_downcase != 'warranty' and category_title_downcase == 'assembly & room of choice installation needed?' %}
+                {% if category.product_options.value[0] != 0 %}
                   {{ quantity_index }}
                 {%- elsif color_title != blank -%}
                   {{- color_index -}}
