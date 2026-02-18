@@ -41,7 +41,6 @@ customElements.get('product-info') ||
         if (!this.contains(t.target)) return;
         this.resetProductFormState();
         let a = e.dataset.productUrl || this.pendingRequestUrl || this.dataset.url;
-        console.log(e);
         this.pendingRequestUrl = a;
         let r = this.dataset.url !== a,
           s = 'true' === this.dataset.updateUrl && r;
@@ -70,6 +69,8 @@ customElements.get('product-info') ||
             .then((t) => {
               this.pendingRequestUrl = null;
               let e = new DOMParser().parseFromString(t, 'text/html');
+              console.log(e);
+              
               i(e);
             })
             .then(() => {
