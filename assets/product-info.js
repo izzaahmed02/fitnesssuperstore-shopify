@@ -62,7 +62,6 @@ customElements.get('product-info') ||
         };
       }
       renderProductInfo({ requestUrl: t, targetId: e, callback: i }) {
-        console.log(t);
         
         (this.abortController?.abort(),
           (this.abortController = new AbortController()),
@@ -93,6 +92,8 @@ customElements.get('product-info') ||
         e && HTMLUpdateUtility.viewTransition(this.variantSelectors, e, this.preProcessHtmlCallbacks);
       }
       handleUpdateProductInfo(t) {
+        console.log('test');
+        
         return (e) => {
           let i = this.getSelectedVariant(e);
           if ((this.pickupAvailability?.update(i), this.updateOptionValues(e), this.updateURL(t, i?.id), this.updateVariantInputs(i?.id), !i)) {
