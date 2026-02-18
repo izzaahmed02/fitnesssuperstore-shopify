@@ -92,7 +92,16 @@ customElements.get('product-info') ||
         e && HTMLUpdateUtility.viewTransition(this.variantSelectors, e, this.preProcessHtmlCallbacks);
       }
       handleUpdateProductInfo(t) {
-        console.log(t);
+        const options = this.querySelectorAll('[data-options]');
+        if(options.length > 0) {
+          options.forEach(option => {
+            const activeOption = option.querySelector('input:checked');
+            if(!activeOption) {
+              const shouldBeActive = option.querySelector(input);
+              shouldBeActive.dispatchEvent(new Event('input'))
+            }
+          })
+        }
         
         return (e) => {
           let i = this.getSelectedVariant(e);
