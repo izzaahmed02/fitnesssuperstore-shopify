@@ -37,7 +37,6 @@ customElements.get('product-info') ||
           }));
       }
       handleOptionValueChange({ data: { event: t, target: e, selectedOptionValues: i } }) {
-        
         if (!this.contains(t.target)) return;
         this.resetProductFormState();
         let a = e.dataset.productUrl || this.pendingRequestUrl || this.dataset.url;
@@ -62,7 +61,6 @@ customElements.get('product-info') ||
         };
       }
       renderProductInfo({ requestUrl: t, targetId: e, callback: i }) {
-        
         (this.abortController?.abort(),
           (this.abortController = new AbortController()),
           fetch(t, { signal: this.abortController.signal })
