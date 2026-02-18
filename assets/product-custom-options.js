@@ -38,6 +38,12 @@ if (!customElements.get('product-customization-options')) {
             this.init();
           }
         });
+
+        subscribe(PUB_SUB_EVENTS.variantChange, (event)=> {
+          if(!event) return;
+          const variant = event.data.variant;
+          !variant ? this.classList.add('hidden') : this.classList.remove('hidden');
+        });
       }
 
       init() {
