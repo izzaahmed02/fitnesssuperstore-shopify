@@ -62,6 +62,8 @@ customElements.get('product-info') ||
         };
       }
       renderProductInfo({ requestUrl: t, targetId: e, callback: i }) {
+        console.log(t);
+        
         (this.abortController?.abort(),
           (this.abortController = new AbortController()),
           fetch(t, { signal: this.abortController.signal })
@@ -69,8 +71,6 @@ customElements.get('product-info') ||
             .then((t) => {
               this.pendingRequestUrl = null;
               let e = new DOMParser().parseFromString(t, 'text/html');
-              console.log(e);
-              
               i(e);
             })
             .then(() => {
@@ -86,8 +86,6 @@ customElements.get('product-info') ||
       }
       buildRequestUrlWithParams(t, e, i = !1) {
         let a = [];
-        console.log(i);
-        
         return (i || a.push(`section_id=${this.sectionId}`), e.length && a.push(`option_values=${e.join(',')}`), `${t}?${a.join('&')}`);
       }
       updateOptionValues(t) {
