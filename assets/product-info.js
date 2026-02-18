@@ -37,11 +37,11 @@ customElements.get('product-info') ||
           }));
       }
       handleOptionValueChange({ data: { event: t, target: e, selectedOptionValues: i } }) {
-        console.log(data);
         
         if (!this.contains(t.target)) return;
         this.resetProductFormState();
         let a = e.dataset.productUrl || this.pendingRequestUrl || this.dataset.url;
+        console.log(e);
         this.pendingRequestUrl = a;
         let r = this.dataset.url !== a,
           s = 'true' === this.dataset.updateUrl && r;
