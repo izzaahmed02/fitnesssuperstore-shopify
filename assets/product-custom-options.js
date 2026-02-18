@@ -41,7 +41,9 @@ if (!customElements.get('product-customization-options')) {
 
         subscribe(PUB_SUB_EVENTS.variantChange, (event)=> {
           if(!event) return;
-          const variant = this.dataset.variant
+          const variant = this.dataset.variant;
+          console.log(variant);
+          
           !variant ? this.classList.add('hidden') : this.classList.remove('hidden');
         });
       }
