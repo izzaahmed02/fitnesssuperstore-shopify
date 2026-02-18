@@ -86,6 +86,8 @@ customElements.get('product-info') ||
       }
       buildRequestUrlWithParams(t, e, i = !1) {
         let a = [];
+        console.log(a);
+        
         return (i || a.push(`section_id=${this.sectionId}`), e.length && a.push(`option_values=${e.join(',')}`), `${t}?${a.join('&')}`);
       }
       updateOptionValues(t) {
