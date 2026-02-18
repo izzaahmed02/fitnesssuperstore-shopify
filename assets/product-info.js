@@ -74,6 +74,18 @@ customElements.get('product-info') ||
             })
             .then(() => {
               document.querySelector(`#${e}`)?.focus();
+              const options = this.querySelectorAll('[data-options]');
+              if(options.length > 0) {
+                options.forEach(option => {
+                  const activeOption = option.querySelector('input:checked');
+                  console.log(activeOption);
+                  
+                  if(!activeOption) {
+                    const shouldBeActive = option.querySelector(input);
+                    shouldBeActive.dispatchEvent(new Event('input'))
+                  }
+                })
+              }
             })
             .catch((t) => {
               'AbortError' === t.name ? console.log('Fetch aborted by user') : console.error(t);
