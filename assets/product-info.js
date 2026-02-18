@@ -96,7 +96,6 @@ customElements.get('product-info') ||
           let i = this.getSelectedVariant(e);
           if ((this.pickupAvailability?.update(i), this.updateOptionValues(e), this.updateURL(t, i?.id), this.updateVariantInputs(i?.id), !i)) {
             this.setUnavailable();
-
           }
           this.updateMedia(e, i?.featured_media?.id);
           let a = (t, i = (t) => !1) => {
