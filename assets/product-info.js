@@ -45,19 +45,6 @@ customElements.get('product-info') ||
         let r = this.dataset.url !== a,
           s = 'true' === this.dataset.updateUrl && r;
         this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: r ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
-
-        const options = this.querySelectorAll('[data-options]');
-        if(options.length > 0) {
-          options.forEach(option => {
-            const activeOption = option.querySelector('input:checked');
-            console.log(activeOption);
-            
-            if(!activeOption) {
-              const shouldBeActive = option.querySelector(input);
-              shouldBeActive.dispatchEvent(new Event('input'))
-            }
-          })
-        }
       }
       resetProductFormState() {
         let t = this.productForm;
