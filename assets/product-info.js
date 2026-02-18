@@ -96,6 +96,8 @@ customElements.get('product-info') ||
         if(options.length > 0) {
           options.forEach(option => {
             const activeOption = option.querySelector('input:checked');
+            console.log(activeOption);
+            
             if(!activeOption) {
               const shouldBeActive = option.querySelector(input);
               shouldBeActive.dispatchEvent(new Event('input'))
