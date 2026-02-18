@@ -122,6 +122,8 @@ customElements.get('product-info') ||
         });
       }
       updateURL(t, e) {
+        console.log(e);
+        
         (this.querySelector('share-button')?.updateUrl(`${window.shopUrl}${t}${e ? `?variant=${e}` : ''}`),
           'false' !== this.dataset.updateUrl && window.history.replaceState({}, '', `${t}${e ? `?variant=${e}` : ''}`));
       }
