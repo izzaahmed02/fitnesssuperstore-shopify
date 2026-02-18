@@ -92,6 +92,7 @@ customElements.get('product-info') ||
         e && HTMLUpdateUtility.viewTransition(this.variantSelectors, e, this.preProcessHtmlCallbacks);
       }
       handleUpdateProductInfo(t) {
+        console.log(t);
         
         return (e) => {
           let i = this.getSelectedVariant(e);
@@ -101,7 +102,6 @@ customElements.get('product-info') ||
           }
           this.updateMedia(e, i?.featured_media?.id);
           let a = (t, i = (t) => !1) => {
-            console.log('test');
             let a = e.getElementById(`${t}-${this.sectionId}`),
               r = this.querySelector(`#${t}-${this.dataset.section}`);
             a && r && ((r.innerHTML = a.innerHTML), r.classList.toggle('hidden', i(a)));
@@ -115,10 +115,9 @@ customElements.get('product-info') ||
             this.updateQuantityRules(this.sectionId, e),
             this.querySelector(`#Quantity-Rules-${this.dataset.section}`)?.classList.remove('hidden'),
             this.querySelector(`#Volume-Note-${this.dataset.section}`)?.classList.remove('hidden'),
-            this.productForm?.toggleSubmitButton(e.getElementById(`ProductSubmitButton-${this.sectionId}`)?.hasAttribute('disabled') ?? !0, window.variantStrings.soldOut)
-            );
-          };
-          publish(PUB_SUB_EVENTS.variantChange, { data: { sectionId: this.sectionId, html: e, variant: i } })
+            this.productForm?.toggleSubmitButton(e.getElementById(`ProductSubmitButton-${this.sectionId}`)?.hasAttribute('disabled') ?? !0, window.variantStrings.soldOut),
+            publish(PUB_SUB_EVENTS.variantChange, { data: { sectionId: this.sectionId, html: e, variant: i } }));
+        };
       }
       updateVariantInputs(t) {
         this.querySelectorAll(`#product-form-${this.dataset.section}, #product-form-installment-${this.dataset.section}`).forEach((e) => {
