@@ -39,8 +39,10 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        subscribe(PUB_SUB_EVENTS.variantChange, (e)=> {
-          console.log(e);
+        subscribe(PUB_SUB_EVENTS.variantChange, (event)=> {
+          if(!event) return;
+          const variant = this.dataset.variant
+          !variant ? this.classList.add('hidden') : this.classList.remove('hidden');
         });
       }
 
