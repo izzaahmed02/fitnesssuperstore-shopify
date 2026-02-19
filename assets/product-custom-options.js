@@ -208,7 +208,7 @@ if (!customElements.get('product-customization-options')) {
             quantitylimit += Number(optionQuantityInput.value);
           }
         });
-        if(notSelectedOptions.length > 0) {
+ 
           if(selectedValues.length === limit) {
             notSelectedOptions.forEach(option => option.disabled = true);
           } else if(optionQuantityInput) {
@@ -219,7 +219,7 @@ if (!customElements.get('product-customization-options')) {
           } else {
             notSelectedOptions.forEach(option => option.disabled = false); 
           }
-        }
+        
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
