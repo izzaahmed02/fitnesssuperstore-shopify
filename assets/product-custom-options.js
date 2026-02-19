@@ -309,8 +309,8 @@ if (!customElements.get('product-customization-options')) {
       handleQuantity() {
         if (this.accordions.length === 0) return;
         this.accordions.forEach((accordion) => {
-          const quantitySelectorContainer = accordion.querySelector('[data-quantity-selector]');
-          if (!quantitySelectorContainer) return;
+          const quantitySelectorContainers = accordion.querySelectorAll('[data-quantity-selector]');
+          if (quantitySelectorContainers.length === 0) return;
           const qunatityInput = quantitySelectorContainer.querySelector('[data-input-quantity]');
           const btnIncrease = quantitySelectorContainer.querySelector('[data-increase-quantity]');
           const btnDecrease = quantitySelectorContainer.querySelector('[data-decrease-quantity]');
