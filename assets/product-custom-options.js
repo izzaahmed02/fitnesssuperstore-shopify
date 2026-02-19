@@ -203,13 +203,18 @@ if (!customElements.get('product-customization-options')) {
      
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => selectedValues.push(choice.value));
-        if(selectedValues.length === limit && notSelectedOptions.length > 0) {
+        if(notSelectedOptions.length > 0) {
+        if(selectedValues.length === limit) {
           notSelectedOptions.forEach(option => option.disabled = true);
         } else if(optionQuantityInput) {
           const currentQuantity = Number(optionQuantityInput.value);
-
+          if(currentQuantity === 0) {
+            
+          }
           
         }
+        }
+
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
