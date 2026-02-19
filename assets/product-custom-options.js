@@ -197,14 +197,14 @@ if (!customElements.get('product-customization-options')) {
           if(noThanksOptionSelected) noThanksOptionSelected.remove();
         }
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+        const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
+
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => selectedValues.push(choice.value));
         if(selectedValues.length === limit) {
           
-          const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
           if(notSelectedOptions.length > 0) {
- notSelectedOptions.forEach(option => option.disabled = true);
-
+            notSelectedOptions.forEach(option => option.disabled = true);
           }
         }
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
