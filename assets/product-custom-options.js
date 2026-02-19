@@ -199,7 +199,9 @@ if (!customElements.get('product-customization-options')) {
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => selectedValues.push(choice.value));
-        if(selectedValues.length === limit) return;
+        if(selectedValues.length === limit) {
+          const notSelectedOptions = 
+        }
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
