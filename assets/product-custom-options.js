@@ -205,7 +205,7 @@ if (!customElements.get('product-customization-options')) {
           selectedValues.push(choice.value)
           const optionQuantityInput = choice.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
           if(optionQuantityInput) {
-
+            quantitylimit += Number(optionQuantityInput.value);
           }
         });
         if(notSelectedOptions.length > 0) {
