@@ -74,7 +74,7 @@ if (!customElements.get('product-customization-options')) {
           if (!openButton) return;
           const controlElementID = openButton.getAttribute('aria-controls');
           const accordionBody = this.querySelector(`#${controlElementID}`);
-          const height = accordionBody.scrollHeight;
+          const height = accordionBody.firstElementChild.clientHeight;
           openButton.addEventListener('click', (event) => {
             event.preventDefault();
             if (!controlElementID) return;
@@ -177,8 +177,17 @@ if (!customElements.get('product-customization-options')) {
       // Helper, for options multichoice
 
       multichoice(optionHandler, option) {
-        let selctedValues = [];
+        let limit = null;
+        let quantityLimit = 0;
+        let selectedValues = [];
+        const parent = optionHandler.closest('[data-option-accordion]');
+        if(parent && parent.hasAttribute('data-multichoice-limit')) {
+          limit = Number(parent.getAttribute('data-multichoice-limit'))
+        }
         const optionName = option.name;
+        const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+        const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
+        
         if (option.dataset.fieldName !== 'No Thanks') {
           const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
           if (noThanksOption) {
@@ -186,10 +195,30 @@ if (!customElements.get('product-customization-options')) {
             noThanksOption.disabled = true;
           }
         }
-        const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
-        if (multiChoiceOptions.length === 0) selctedValues = [];
-        multiChoiceOptions.forEach((choice) => selctedValues.push(choice.value));
-        optionHandler.dataset.selectedOptions = selctedValues.join(',');
+        if(option.hasAttribute('data-field-price')) {
+          const noThanksOptionSelected = optionHandler.querySelector('[data-option-variant-name="No Thanks"]');
+          if(noThanksOptionSelected) noThanksOptionSelected.remove();
+        }
+     
+        if (multiChoiceOptions.length === 0) selectedValues = [];
+        multiChoiceOptions.forEach((choice) => {
+          
+          selectedValues.push(choice.value)
+          const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+          if(optionQuantityInput) {
+            quantityLimit += Number(optionQuantityInput.value);
+          }
+        });
+
+        if(selectedValues.length === limit) {
+          notSelectedOptions.forEach(option => option.disabled = true);
+        } else if(quantityLimit === limit) {
+          notSelectedOptions.forEach(option => option.disabled = true);
+        } else {
+          notSelectedOptions.forEach(option => option.disabled = false); 
+        }
+
+        optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
           addedOption.remove();
@@ -288,13 +317,15 @@ if (!customElements.get('product-customization-options')) {
       handleQuantity() {
         if (this.accordions.length === 0) return;
         this.accordions.forEach((accordion) => {
-          const quantitySelectorContainer = accordion.querySelector('[data-quantity-selector]');
-          if (!quantitySelectorContainer) return;
-          const qunatityInput = quantitySelectorContainer.querySelector('[data-input-quantity]');
-          const btnIncrease = quantitySelectorContainer.querySelector('[data-increase-quantity]');
-          const btnDecrease = quantitySelectorContainer.querySelector('[data-decrease-quantity]');
-          this.addQuantityListener(btnIncrease, 'increase', qunatityInput);
-          this.addQuantityListener(btnDecrease, 'decrease', qunatityInput);
+          const quantitySelectorContainers = accordion.querySelectorAll('[data-quantity-selector]');
+          if (quantitySelectorContainers.length === 0) return;
+          quantitySelectorContainers.forEach(container => {            
+            const qunatityInput = container.querySelector('[data-input-quantity]');
+            const btnIncrease = container.querySelector('[data-increase-quantity]');
+            const btnDecrease = container.querySelector('[data-decrease-quantity]');
+            this.addQuantityListener(btnIncrease, 'increase', qunatityInput);
+            this.addQuantityListener(btnDecrease, 'decrease', qunatityInput);
+          })
         });
       }
 
@@ -316,9 +347,9 @@ if (!customElements.get('product-customization-options')) {
           }
           const optionContainer = el.closest('[data-option-accordion]');
           if (!optionContainer) return;
-          const customizationOption = optionContainer.querySelector('[data-customization-option]');
+          const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
-          const priceContainer = el.closest('[data-option-accordion]').querySelector('[avis-price]');
+          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
             const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
             const formattedPrice = price.toLocaleString('en-US', {
@@ -327,8 +358,9 @@ if (!customElements.get('product-customization-options')) {
             });
             priceContainer.innerHTML = `$${formattedPrice}`;
             setTimeout(() => {
-              const selectedOptionPrice = el.closest('[data-option-accordion]').querySelector('[data-option-price]');
-              if (selectedOptionPrice) {
+              const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
+              if (selectedOption) {
+                const selectedOptionPrice = selectedOption.querySelector('[data-option-price]')
                 selectedOptionPrice.innerHTML = `$${formattedPrice}`;
               }
             });
