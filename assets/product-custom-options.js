@@ -178,7 +178,7 @@ if (!customElements.get('product-customization-options')) {
 
       multichoice(optionHandler, option) {
         let limit = null;
-        let quantitylimit = null;
+        let quantitylimit = 0;
         let selectedValues = [];
         const parent = optionHandler.closest('[data-option-accordion]');
         if(parent && parent.hasAttribute('data-multichoice-limit')) {
@@ -203,7 +203,10 @@ if (!customElements.get('product-customization-options')) {
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => {
           selectedValues.push(choice.value)
-          const optionQuantityInputs = choice.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+          const optionQuantityInput = choice.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+          if(optionQuantityInput) {
+
+          }
         });
         if(notSelectedOptions.length > 0) {
           if(selectedValues.length === limit) {
