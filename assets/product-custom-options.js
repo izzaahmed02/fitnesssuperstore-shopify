@@ -352,7 +352,7 @@ if (!customElements.get('product-customization-options')) {
           if (!optionContainer) return;
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
-          const priceContainer = el.closest('[data-option-accordion]').querySelector('[avis-price]');
+          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
             const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
             const formattedPrice = price.toLocaleString('en-US', {
