@@ -190,7 +190,6 @@ if (!customElements.get('product-customization-options')) {
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => selectedValues.push(choice.value));
-        console.log(selectedValues);
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
@@ -223,6 +222,8 @@ if (!customElements.get('product-customization-options')) {
       // Need to add lister, because element not in DOM on Page Load
 
       addRemoveListener(optionHandler, originalOption) {
+        console.log(optionHandler);
+        
         if (!optionHandler || optionHandler.hasAttribute('data-mandatory')) return;
         const selectedOptions = optionHandler.querySelectorAll('[data-option-id]');
         if (selectedOptions.length === 0) return;
