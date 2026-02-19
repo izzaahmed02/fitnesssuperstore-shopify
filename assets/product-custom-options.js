@@ -212,7 +212,7 @@ if (!customElements.get('product-customization-options')) {
               notSelectedOptions.forEach(option => option.disabled = true); 
             }
           } else {
-              notSelectedOptions.forEach(option => option.disabled = true); 
+            notSelectedOptions.forEach(option => option.disabled = false); 
           }
         }
 
