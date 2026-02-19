@@ -177,7 +177,7 @@ if (!customElements.get('product-customization-options')) {
       // Helper, for options multichoice
 
       multichoice(optionHandler, option) {
-        let limit;
+        let limit = null;
         let selectedValues = [];
         const parent = optionHandler.closest('[data-option-accordion]');
         if(parent && parent.hasAttribute('data-multichoice-limit')) {
