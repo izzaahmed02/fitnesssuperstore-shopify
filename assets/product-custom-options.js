@@ -206,7 +206,10 @@ if (!customElements.get('product-customization-options')) {
           if(notSelectedOptions.length > 0) {
             notSelectedOptions.forEach(option => option.disabled = true);
           }
-        } else if()
+        } else if(optionQuantityInput) {
+          console.log('worki');
+          
+        }
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
