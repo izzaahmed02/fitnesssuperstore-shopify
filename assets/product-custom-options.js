@@ -321,6 +321,8 @@ if (!customElements.get('product-customization-options')) {
           const quantitySelectorContainers = accordion.querySelectorAll('[data-quantity-selector]');
           if (quantitySelectorContainers.length === 0) return;
           quantitySelectorContainers.forEach(container => {
+            console.log(container);
+            
             const qunatityInput = container.querySelector('[data-input-quantity]');
             const btnIncrease = container.querySelector('[data-increase-quantity]');
             const btnDecrease = container.querySelector('[data-decrease-quantity]');
