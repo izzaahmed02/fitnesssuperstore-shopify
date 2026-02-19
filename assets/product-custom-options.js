@@ -183,7 +183,6 @@ if (!customElements.get('product-customization-options')) {
         if(parent && parent.hasAttribute('data-multichoice-limit')) {
           limit = Number(parent.getAttribute('data-multichoice-limit'))
         }
-        console.log(limit);
         const optionName = option.name;
 
         if (option.dataset.fieldName !== 'No Thanks') {
@@ -200,6 +199,7 @@ if (!customElements.get('product-customization-options')) {
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => selectedValues.push(choice.value));
+        if(selectedValues.length === limit) return;
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
