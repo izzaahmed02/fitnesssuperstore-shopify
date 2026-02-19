@@ -200,9 +200,9 @@ if (!customElements.get('product-customization-options')) {
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => selectedValues.push(choice.value));
         if(selectedValues.length === limit) {
-          console.log('test');
           
           const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
+          console.log(notSelectedOptions);
           if(notSelectedOptions.length > 0) {
             notSelectedOptions.disabled = true;
           }
