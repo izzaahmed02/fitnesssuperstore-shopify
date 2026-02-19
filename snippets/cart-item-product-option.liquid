@@ -69,6 +69,9 @@
     {% if product_option.enable_multichoice %}
       multichoice
     {% endif %}
+    {% if product_option.multichoice_limit != blank %}
+      data-multichoice-limit="{{ product_option.multichoice_limit }}"
+    {% endif %}
     {% if product_option.hide_values %}
       style="display: none !important;"
     {% endif %}
@@ -106,7 +109,7 @@
         {% if default_values == blank and conditions_to_render != blank %}
           {% assign price = product_option.product_option_sets_default.value.price %}
           {% assign price_substract = product_option.product_option_sets_default.value.metafields.custom.price_reduction_value %}
-          data-should-have-default="{{ product_option.product_option_sets_default.value.id }}{% if price_substract != blank %}:::-{{price_substract}}{% endif %}{% if price > 0 %}:::{{price}}{% endif %}"
+          data-should-have-default="{{ product_option.product_option_sets_default.value.id }}{% if price_substract != blank %}:::-{{price_substract}}{% endif %}{% if price > 0 %}:::{{price | money_without_currency }}{% endif %}"
         {% endif %}
       >
         {% if default_variant_id != blank %}
@@ -116,7 +119,7 @@
             {% assign price = value | split: ':::' | last | plus: 0 %}
             {% assign price_formated = value | split: ':::' | last %}
 
-            <p data-option-id="{{ id }}">
+            <p data-option-id="{{ id }}" data-option-variant-name="{{ product_option.product_option_sets_default.value.title }}">
               {% for variant in product_option.product_option_variants.value %}
                 {% if variant.id == id %}
                   <span class="product-options__accordion-label-title" data-option-title>
@@ -138,7 +141,7 @@
             </p>
           {% endfor %}
         {% elsif conditions_to_render != blank and default_variant_id == blank %}
-          <p data-option-id="{{ product_option.product_option_sets_default.value.id }}">
+          <p data-option-id="{{ product_option.product_option_sets_default.value.id }}"  data-option-variant-name="{{ product_option.product_option_sets_default.value.title }}">
             <span class="product-options__accordion-label-title" data-option-title>{{ product_option.product_option_sets_default.value.title }}</span>
             {% if product_option.product_option_sets_default.value.price != 0 %}
               <span class="product-options__accordion-label-price" data-option-price>{{ product_option.product_option_sets_default.value.price | money }}</span>
