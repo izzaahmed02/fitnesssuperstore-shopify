@@ -184,6 +184,8 @@ if (!customElements.get('product-customization-options')) {
           limit = Number(parent.getAttribute('data-multichoice-limit'))
         }
         const optionName = option.name;
+        const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+        const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
 
         if (option.dataset.fieldName !== 'No Thanks') {
           const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
@@ -196,17 +198,14 @@ if (!customElements.get('product-customization-options')) {
           const noThanksOptionSelected = optionHandler.querySelector('[data-option-variant-name="No Thanks"]');
           if(noThanksOptionSelected) noThanksOptionSelected.remove();
         }
-        const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
-        const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
-
+     
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => selectedValues.push(choice.value));
         if(selectedValues.length === limit) {
-          
           if(notSelectedOptions.length > 0) {
             notSelectedOptions.forEach(option => option.disabled = true);
           }
-        }
+        } else if()
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
