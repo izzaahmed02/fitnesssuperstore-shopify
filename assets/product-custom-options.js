@@ -203,8 +203,8 @@ if (!customElements.get('product-customization-options')) {
           
           const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
           if(notSelectedOptions.length > 0) {
-            console.log(notSelectedOptions);
-            notSelectedOptions.disabled = true;
+ notSelectedOptions.forEach(option => option.disabled = true);
+
           }
         }
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
