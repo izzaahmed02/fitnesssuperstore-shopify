@@ -74,7 +74,7 @@ if (!customElements.get('product-customization-options')) {
           if (!openButton) return;
           const controlElementID = openButton.getAttribute('aria-controls');
           const accordionBody = this.querySelector(`#${controlElementID}`);
-          const height = accordionBody.offseHeight;
+          const height = accordionBody.clientHeight;
           openButton.addEventListener('click', (event) => {
             event.preventDefault();
             if (!controlElementID) return;
