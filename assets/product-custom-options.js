@@ -202,8 +202,8 @@ if (!customElements.get('product-customization-options')) {
         if(selectedValues.length === limit) {
           
           const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
-          console.log(notSelectedOptions);
           if(notSelectedOptions.length > 0) {
+            console.log(notSelectedOptions);
             notSelectedOptions.disabled = true;
           }
         }
