@@ -178,7 +178,7 @@ if (!customElements.get('product-customization-options')) {
 
       multichoice(optionHandler, option) {
         let limit = null;
-        let quantitylimit = 0;
+        let quantityLimit = 0;
         let selectedValues = [];
         const parent = optionHandler.closest('[data-option-accordion]');
         if(parent && parent.hasAttribute('data-multichoice-limit')) {
@@ -205,21 +205,23 @@ if (!customElements.get('product-customization-options')) {
           selectedValues.push(choice.value)
           const optionQuantityInput = choice.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
           if(optionQuantityInput) {
-            quantitylimit += Number(optionQuantityInput.value);
+            quantityLimit += Number(optionQuantityInput.value);
           }
         });
- 
-          if(selectedValues.length === limit) {
-            notSelectedOptions.forEach(option => option.disabled = true);
-          } else if(optionQuantityInput) {
-            const currentQuantity = Number(optionQuantityInput.value);
-            if(currentQuantity === limit) {
-              notSelectedOptions.forEach(option => option.disabled = true); 
-            }
-          } else {
-            notSelectedOptions.forEach(option => option.disabled = false); 
-          }
+
+        console.log(quantityLimit);
         
+ 
+        if(selectedValues.length === limit) {
+          notSelectedOptions.forEach(option => option.disabled = true);
+        } else if(optionQuantityInput) {
+          const currentQuantity = Number(optionQuantityInput.value);
+          if(currentQuantity === limit) {
+            notSelectedOptions.forEach(option => option.disabled = true); 
+          }
+        } else {
+          notSelectedOptions.forEach(option => option.disabled = false); 
+        }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
