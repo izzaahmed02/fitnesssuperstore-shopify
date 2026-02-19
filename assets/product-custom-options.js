@@ -311,11 +311,13 @@ if (!customElements.get('product-customization-options')) {
         this.accordions.forEach((accordion) => {
           const quantitySelectorContainers = accordion.querySelectorAll('[data-quantity-selector]');
           if (quantitySelectorContainers.length === 0) return;
-          const qunatityInput = quantitySelectorContainer.querySelector('[data-input-quantity]');
-          const btnIncrease = quantitySelectorContainer.querySelector('[data-increase-quantity]');
-          const btnDecrease = quantitySelectorContainer.querySelector('[data-decrease-quantity]');
-          this.addQuantityListener(btnIncrease, 'increase', qunatityInput);
-          this.addQuantityListener(btnDecrease, 'decrease', qunatityInput);
+          quantitySelectorContainers.forEach(container => {
+            const qunatityInput = container.querySelector('[data-input-quantity]');
+            const btnIncrease = container.querySelector('[data-increase-quantity]');
+            const btnDecrease = container.querySelector('[data-decrease-quantity]');
+            this.addQuantityListener(btnIncrease, 'increase', qunatityInput);
+            this.addQuantityListener(btnDecrease, 'decrease', qunatityInput);
+          })
         });
       }
 
