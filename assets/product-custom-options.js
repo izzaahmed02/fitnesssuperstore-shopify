@@ -178,16 +178,15 @@ if (!customElements.get('product-customization-options')) {
 
       multichoice(optionHandler, option) {
         let limit = null;
+        let quantitylimit = null;
         let selectedValues = [];
         const parent = optionHandler.closest('[data-option-accordion]');
         if(parent && parent.hasAttribute('data-multichoice-limit')) {
           limit = Number(parent.getAttribute('data-multichoice-limit'))
         }
         const optionName = option.name;
-        const optionId = option.dataset.customizationOption;
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
-        const optionQuantityInput = parent.querySelector(`[data-input-quantity="${optionId}"]`);
         
         if (option.dataset.fieldName !== 'No Thanks') {
           const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
@@ -202,7 +201,10 @@ if (!customElements.get('product-customization-options')) {
         }
      
         if (multiChoiceOptions.length === 0) selectedValues = [];
-        multiChoiceOptions.forEach((choice) => selectedValues.push(choice.value));
+        multiChoiceOptions.forEach((choice) => {
+          selectedValues.push(choice.value)
+          const optionQuantityInputs = choice.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+        });
         if(notSelectedOptions.length > 0) {
           if(selectedValues.length === limit) {
             notSelectedOptions.forEach(option => option.disabled = true);
