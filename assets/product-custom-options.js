@@ -200,7 +200,10 @@ if (!customElements.get('product-customization-options')) {
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => selectedValues.push(choice.value));
         if(selectedValues.length === limit) {
-          const notSelectedOptions = 
+          const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
+          if(notSelectedOptions.length > 0) {
+            notSelectedOptions.disabled = true;
+          }
         }
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
