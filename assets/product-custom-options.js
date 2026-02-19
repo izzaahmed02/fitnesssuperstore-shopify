@@ -203,12 +203,11 @@ if (!customElements.get('product-customization-options')) {
      
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => selectedValues.push(choice.value));
-        if(selectedValues.length === limit) {
-          if(notSelectedOptions.length > 0) {
-            notSelectedOptions.forEach(option => option.disabled = true);
-          }
+        if(selectedValues.length === limit && notSelectedOptions.length > 0) {
+          notSelectedOptions.forEach(option => option.disabled = true);
         } else if(optionQuantityInput) {
-          console.log('worki');
+          const currentQuantity = Number(optionQuantityInput.value);
+
           
         }
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
