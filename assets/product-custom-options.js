@@ -210,10 +210,11 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        console.log(quantityLimit);
         
  
         if(selectedValues.length === limit) {
+          notSelectedOptions.forEach(option => option.disabled = true);
+        } else if(quantityLimit === limit) {
           notSelectedOptions.forEach(option => option.disabled = true);
         } else {
           notSelectedOptions.forEach(option => option.disabled = false); 
