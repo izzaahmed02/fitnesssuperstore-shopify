@@ -249,7 +249,7 @@ if (!customElements.get('product-customization-options')) {
       // Add Event Lister to newly create Option Badge.
       // Need to add lister, because element not in DOM on Page Load
 
-      addRemoveListener(optionHandler, originalOption) {        
+      addRemoveListener(optionHandler, originalOption) {
         if (!optionHandler || optionHandler.hasAttribute('data-mandatory')) return;
         const selectedOptions = optionHandler.querySelectorAll('[data-option-id]');
         if (selectedOptions.length === 0) return;
