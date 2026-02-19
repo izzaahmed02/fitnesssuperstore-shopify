@@ -186,7 +186,10 @@ if (!customElements.get('product-customization-options')) {
             noThanksOption.disabled = true;
           }
         }
-        
+        if(option.hasAttribute('data-field-price')) {
+          const noThanksOptionSelected = optionHandler.querySelector('[data-option-variant-name="No Thanks"]');
+          if(noThanksOptionSelected) noThanksOptionSelected.remove();
+        }
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => selectedValues.push(choice.value));
