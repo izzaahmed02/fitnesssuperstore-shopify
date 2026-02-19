@@ -361,8 +361,9 @@ if (!customElements.get('product-customization-options')) {
             });
             priceContainer.innerHTML = `$${formattedPrice}`;
             setTimeout(() => {
-              const selectedOptionPrice = el.closest('[data-option-accordion]').querySelector('[data-option-price]');
-              if (selectedOptionPrice) {
+              const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
+              if (selectedOption) {
+                const selectedOptionPrice = selectedOption.querySelector('[data-option-price]')
                 selectedOptionPrice.innerHTML = `$${formattedPrice}`;
               }
             });
