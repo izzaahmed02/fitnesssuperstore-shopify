@@ -177,8 +177,15 @@ if (!customElements.get('product-customization-options')) {
       // Helper, for options multichoice
 
       multichoice(optionHandler, option) {
+        let limit;
         let selectedValues = [];
+        const parent = optionHandler.closest('[data-option-accordion]');
+        if(parent && parent.hasAttribute('data-multichoice-limit')) {
+          limit = Number(parent.getAttribute('data-multichoice-limit'))
+        }
+        console.log(limit);
         const optionName = option.name;
+
         if (option.dataset.fieldName !== 'No Thanks') {
           const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
           if (noThanksOption) {
