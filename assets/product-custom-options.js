@@ -216,11 +216,6 @@ if (!customElements.get('product-customization-options')) {
  
         if(selectedValues.length === limit) {
           notSelectedOptions.forEach(option => option.disabled = true);
-        } else if(optionQuantityInput) {
-          const currentQuantity = Number(optionQuantityInput.value);
-          if(currentQuantity === limit) {
-            notSelectedOptions.forEach(option => option.disabled = true); 
-          }
         } else {
           notSelectedOptions.forEach(option => option.disabled = false); 
         }
