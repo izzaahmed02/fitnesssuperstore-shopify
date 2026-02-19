@@ -184,6 +184,7 @@ if (!customElements.get('product-customization-options')) {
           limit = Number(parent.getAttribute('data-multichoice-limit'))
         }
         const optionName = option.name;
+        const optionId = option.dataset.customizationOption;
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
 
