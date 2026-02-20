@@ -26,6 +26,7 @@ customElements.get('product-info') ||
           const variantOptionContainers = document.querySelectorAll('[data-variant-options]');
           if(variantOptionContainers.length === 0) return;
           variantOptionContainers.forEach(variantOption => {
+            const activeNotDisabledOption = variantOption.querySelector('[data-option-value-id]:ckecked:not(:disabled)');
             const values = variantOption.querySelectorAll('[data-option-value-id]');
             console.log(values);
             
