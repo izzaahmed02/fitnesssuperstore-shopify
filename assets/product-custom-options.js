@@ -455,6 +455,8 @@ if (!customElements.get('product-customization-options')) {
 
         const currentPrice = priceElement[0].dataset?.priceValue;
         const finalPrice = Number(currentPrice) + priceAdjustment;
+        console.log(finalPrice);
+        
         const formattedPrice = finalPrice.toLocaleString('en-US', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
