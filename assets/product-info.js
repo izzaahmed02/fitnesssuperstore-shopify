@@ -23,11 +23,10 @@ customElements.get('product-info') ||
           const variant = event.data.variant;
           if(variant) return;
           
-          const variantOptionContainers = this.querySelectorAll('[data-variant-options]');
-          console.log(variantOptionContainers);
+          const variantOptionContainers = document.querySelectorAll('[data-variant-options]');
           if(variantOptionContainers.length === 0) return;
           variantOptionContainers.forEach(variantOption => {
-            const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]');
+            const values = variantOption.querySelectorAll('[data-option-value-id]');
             console.log(values);
             
           })
