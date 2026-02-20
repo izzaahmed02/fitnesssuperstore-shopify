@@ -30,7 +30,8 @@ customElements.get('product-info') ||
             
             if(!activeNotDisabledOption) {
               const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true]');
-              console.log(values);
+
+              console.log(values[0]);
             }
           })
           console.log(event);
