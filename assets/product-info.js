@@ -32,7 +32,8 @@ customElements.get('product-info') ||
               const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]');
               if(values.length > 0) {
                 const firstAvailableValue = values[0];
-                firstAvailableValue.dispatchEvent(new Event('input'));
+                const firstAvailableValuetarget = document.querySelector(`label[for="${firstAvailableValue.id}"]`)
+                // firstAvailableValue.dispatchEvent(new Event('input'));
                 // firstAvailableValue.checked = true;
               }
             }
