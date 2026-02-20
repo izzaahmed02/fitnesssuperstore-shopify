@@ -15,7 +15,11 @@ customElements.get('product-info') ||
       }
       connectedCallback() {
         (this.initializeProductSwapUtility(),
-          (this.onVariantChangeUnsubscriber = subscribe(PUB_SUB_EVENTS.optionValueSelectionChange, this.handleOptionValueChange.bind(this))),
+          (this.onVariantChangeUnsubscriber = subscribe(PUB_SUB_EVENTS.optionValueSelectionChange,(e) => {
+            console.log(e);
+            
+            this.handleOptionValueChange.bind(this)
+          })),
           this.initQuantityHandlers(),
           this.dispatchEvent(new CustomEvent('product-info:loaded', { bubbles: !0 })));
       }
