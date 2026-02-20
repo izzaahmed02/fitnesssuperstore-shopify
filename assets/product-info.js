@@ -19,6 +19,10 @@ customElements.get('product-info') ||
           this.initQuantityHandlers(),
           this.dispatchEvent(new CustomEvent('product-info:loaded', { bubbles: !0 })));
         subscribe(PUB_SUB_EVENTS.variantChange, (event)=> {
+          if(!event) return;
+          const variant = event.data.variant
+          if(variant) return;
+          const variantOptionContainers = document.querySelectorAll('[data-variant-options]');
           console.log(event);
         });  
       }
