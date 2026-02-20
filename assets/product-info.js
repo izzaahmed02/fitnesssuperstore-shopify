@@ -18,7 +18,7 @@ customElements.get('product-info') ||
           (this.onVariantChangeUnsubscriber = subscribe(PUB_SUB_EVENTS.optionValueSelectionChange,(e) => {
             console.log(e);
             
-            this.handleOptionValueChange.bind(this)
+            this.handleOptionValueChange()
           })),
           this.initQuantityHandlers(),
           this.dispatchEvent(new CustomEvent('product-info:loaded', { bubbles: !0 })));
