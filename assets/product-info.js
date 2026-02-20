@@ -23,6 +23,10 @@ customElements.get('product-info') ||
           const variant = event.data.variant
           if(variant) return;
           const variantOptionContainers = document.querySelectorAll('[data-variant-options]');
+          if(variantOptionContainers.length === 0) return;
+          variantOptionContainers.forEach(variantOption => {
+            const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)')
+          })
           console.log(event);
         });  
       }
