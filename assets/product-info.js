@@ -33,10 +33,11 @@ customElements.get('product-info') ||
               if(values.length > 0) {
                 const firstAvailableValue = values[0];
                 const firstAvailableValueTarget = document.querySelector(`label[for="${firstAvailableValue.id}"]`);
-                console.log(firstAvailableValueTarget);
+                if(firstAvailableValueTarget) firstAvailableValueTarget.click();
+                // console.log(firstAvailableValueTarget);
                 
-                // firstAvailableValue.dispatchEvent(new Event('input'));
                 // firstAvailableValue.checked = true;
+                // firstAvailableValue.dispatchEvent(new Event('input'));
               }
             }
           })
