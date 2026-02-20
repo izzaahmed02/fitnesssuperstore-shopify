@@ -32,7 +32,9 @@ customElements.get('product-info') ||
               const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]');
               if(values.length > 0) {
                 const firstAvailableValue = values[0];
-                const firstAvailableValuetarget = document.querySelector(`label[for="${firstAvailableValue.id}"]`)
+                const firstAvailableValueTarget = document.querySelector(`label[for="${firstAvailableValue.id}"]`);
+                console.log(firstAvailableValueTarget);
+                
                 // firstAvailableValue.dispatchEvent(new Event('input'));
                 // firstAvailableValue.checked = true;
               }
