@@ -25,6 +25,7 @@ customElements.get('product-info') ||
           
           const variantOptionContainers = document.querySelectorAll('[data-variant-options]');
           if(variantOptionContainers.length === 0) return;
+
           variantOptionContainers.forEach(variantOption => {
             const activeNotDisabledOption = variantOption.querySelector('[data-option-value-id]:checked:not(.disabled)');
             
@@ -37,7 +38,6 @@ customElements.get('product-info') ||
               }
             }
           })
-          console.log(event);
         });  
       }
       addPreProcessCallback(t) {
