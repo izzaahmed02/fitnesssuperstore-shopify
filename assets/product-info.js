@@ -29,11 +29,11 @@ customElements.get('product-info') ||
             const activeNotDisabledOption = variantOption.querySelector('[data-option-value-id]:checked:not(.disabled)');
             
             if(!activeNotDisabledOption) {
-              console.log(variantOption);
-              
               const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]');
-
-              console.log(values[0]);
+              if(values.length > 0) {
+                const firstAvailableValue = values[0];
+                values[0].checked = true;
+              }
             }
           })
           console.log(event);
