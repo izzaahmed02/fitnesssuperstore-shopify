@@ -23,7 +23,7 @@ customElements.get('product-info') ||
           const variant = event.data.variant;
           if(variant) return;
           
-          const variantOptionContainers = document.querySelectorAll('[data-variant-options]');
+          const variantOptionContainers = this.querySelectorAll('[data-variant-options]');
           console.log(variantOptionContainers);
           if(variantOptionContainers.length === 0) return;
           variantOptionContainers.forEach(variantOption => {
