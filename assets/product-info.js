@@ -18,9 +18,8 @@ customElements.get('product-info') ||
           (this.onVariantChangeUnsubscriber = subscribe(PUB_SUB_EVENTS.optionValueSelectionChange, this.handleOptionValueChange.bind(this))),
           this.initQuantityHandlers(),
           this.dispatchEvent(new CustomEvent('product-info:loaded', { bubbles: !0 })));
-         subscribe(PUB_SUB_EVENTS.variantChange, (event)=> {
+        subscribe(PUB_SUB_EVENTS.variantChange, (event)=> {
           console.log(event);
-          
         });  
       }
       addPreProcessCallback(t) {
