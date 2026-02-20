@@ -18,6 +18,27 @@ customElements.get('product-info') ||
           (this.onVariantChangeUnsubscriber = subscribe(PUB_SUB_EVENTS.optionValueSelectionChange, this.handleOptionValueChange.bind(this))),
           this.initQuantityHandlers(),
           this.dispatchEvent(new CustomEvent('product-info:loaded', { bubbles: !0 })));
+        subscribe(PUB_SUB_EVENTS.variantChange, (event)=> {
+          if(!event) return;
+          const variant = event.data.variant;
+          if(variant) return;
+          
+          const variantOptionContainers = document.querySelectorAll('[data-variant-options]');
+          if(variantOptionContainers.length === 0) return;
+
+          variantOptionContainers.forEach(variantOption => {
+            const activeNotDisabledOption = variantOption.querySelector('[data-option-value-id]:checked:not(.disabled)');
+            
+            if(!activeNotDisabledOption) {
+              const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]');
+              if(values.length > 0) {
+                const firstAvailableValue = values[0];
+                const firstAvailableValueTarget = document.querySelector(`label[for="${firstAvailableValue.id}"]`);
+                if(firstAvailableValueTarget) firstAvailableValueTarget.click();
+              }
+            }
+          })
+        });  
       }
       addPreProcessCallback(t) {
         this.preProcessHtmlCallbacks.push(t);
