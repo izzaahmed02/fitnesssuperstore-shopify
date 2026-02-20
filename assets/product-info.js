@@ -33,6 +33,7 @@ customElements.get('product-info') ||
               if(values.length > 0) {
                 const firstAvailableValue = values[0];
                 firstAvailableValue.checked = true;
+                firstAvailableValue.dispatchEvent(new Event('change'));
               }
             }
           })
