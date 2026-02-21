@@ -385,6 +385,17 @@ if (!customElements.get('product-customization-options')) {
               }
             });
           }
+
+          if (option === 'increase') {
+            if (customizationOption.checked) {
+              input.value = inputValue + 1;
+            } else {
+              customizationOption.checked = true;
+              customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          } else {
+            input.value = inputValue - 1;
+          }
           option === 'increase' ? (input.value = el.disabled ? inputValue : inputValue + 1) : (input.value = inputValue - 1);
           if (updatePrice) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
