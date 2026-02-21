@@ -367,28 +367,77 @@ if (!customElements.get('product-customization-options')) {
         return total;
       }
 
-addQuantityListener(el, direction, input, updatePrice) {
-  el.addEventListener('click', (event) => {
-    event.preventDefault();
+      addQuantityListener(el, direction, input, updatePrice) {
+        el.addEventListener('click', (event) => {
+          event.preventDefault();
 
-    const inputValue = Number(input.value);
-    const minInputValue = Number(input.min);
-    if (inputValue - 1 === 0 && direction === 'decrease') return;
-    if (minInputValue && inputValue === minInputValue && direction === 'decrease') return;
+          const inputValue = Number(input.value);
+          const minInputValue = Number(input.min);
+          if (inputValue - 1 === 0 && direction === 'decrease') return;
+          if (minInputValue && inputValue === minInputValue && direction === 'decrease') return;
 
-    if (direction === 'increase') {
-      const optionContainer = el.closest('[data-option-accordion]');
-      if (optionContainer?.hasAttribute('data-multichoice-limit')) {
-        const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-        const inputQuantityKey = input.dataset.inputQuantity;
-        const thisOption = inputQuantityKey
-          ? optionContainer.querySelector(`[data-customization-option="${inputQuantityKey}"]`)
-          : null;
-        const optionName = thisOption?.name;
-        if (optionName) {
-          const currentTotal = this.getTotalQuantityForGroup(optionContainer, optionName);
-          if (currentTotal + 1 > limit) {
-            el.setAttribute('disabled', 'true
+          if (direction === 'increase') {
+            const optionContainer = el.closest('[data-option-accordion]');
+            if (optionContainer?.hasAttribute('data-multichoice-limit')) {
+              const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+              const inputQuantityKey = input.dataset.inputQuantity;
+              const thisOption = inputQuantityKey ? optionContainer.querySelector(`[data-customization-option="${inputQuantityKey}"]`) : null;
+              const optionName = thisOption?.name;
+              if (optionName) {
+                const currentTotal = this.getTotalQuantityForGroup(optionContainer, optionName);
+                if (currentTotal + 1 > limit) {
+                  el.setAttribute('disabled', 'true');
+                  el.style.pointerEvents = 'none';
+                  el.style.opacity = '0.4';
+                  return;
+                }
+              }
+            }
+          }
+
+          direction === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+
+          if (updatePrice) {
+            direction === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
+            this.updatePrice();
+          }
+
+          const optionContainer = el.closest('[data-option-accordion]');
+          if (!optionContainer) return;
+          const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
+          if (!customizationOption) return;
+
+          if (direction === 'increase' && customizationOption.hasAttribute('data-has-multichoice') && !customizationOption.checked) {
+            input.value = 1;
+            if (updatePrice) input.dataset.value = 1;
+            customizationOption.checked = true;
+            const optionHandler = optionContainer.querySelector('[data-selected-options]');
+            if (optionHandler) this.createOptionHTML(optionHandler, customizationOption);
+          }
+
+          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
+          if (priceContainer) {
+            const rawPrice = parseFloat(priceContainer.getAttribute('avis-price'));
+            if (!isNaN(rawPrice)) {
+              const price = rawPrice * Number(input.value);
+              const formattedPrice = price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              priceContainer.innerHTML = `$${formattedPrice}`;
+              setTimeout(() => {
+                const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
+                if (selectedOption) {
+                  const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
+                  if (selectedOptionPrice) selectedOptionPrice.innerHTML = `$${formattedPrice}`;
+                }
+              });
+            }
+          }
+
+          if (customizationOption.hasAttribute('data-has-multichoice')) {
+            const optionHandler = optionContainer.querySelector('[data-selected-options]');
+            if (optionHandler) this.multichoice(optionHandler, customizationOption);
+          }
+        });
+      }
       // Tooltip popup handler
 
       handlePopupHelper() {
