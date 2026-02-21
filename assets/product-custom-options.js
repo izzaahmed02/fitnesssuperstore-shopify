@@ -403,9 +403,9 @@ if (!customElements.get('product-customization-options')) {
                 if (limit && quantityLimit) {
                   if (inputValue + quantityLimit >= limit) {
                     console.log('tete');
+                  } else {
+                    input.value = inputValue + 1;
                   }
-                } else {
-                  input.value = inputValue + 1;
                 }
               } else {
                 input.value = inputValue - 1;
