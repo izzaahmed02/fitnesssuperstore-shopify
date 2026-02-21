@@ -370,11 +370,11 @@ if (!customElements.get('product-customization-options')) {
                 total += Number(inputQuantity.value);
               }
             });
-            if (option === 'increase') {
-              total = total + 1;
-            } else {
-              total = total - 1;
-            }
+            // if (option === 'increase') {
+            //   total = total + 1;
+            // } else {
+            //   total = total - 1;
+            // }
 
             console.log(total);
 
