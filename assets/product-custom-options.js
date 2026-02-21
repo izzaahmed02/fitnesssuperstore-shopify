@@ -349,6 +349,13 @@ if (!customElements.get('product-customization-options')) {
                 total += Number(inputQuantity.value);
               }
             });
+            option === 'increase' {
+total = total +1
+            } else {
+              total = total - 1
+            }
+
+     
 
             console.log(total);
 
