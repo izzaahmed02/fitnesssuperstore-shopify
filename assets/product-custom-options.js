@@ -333,6 +333,7 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
+          const optionContainer = el.closest('[data-option-accordion]');
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
@@ -344,7 +345,6 @@ if (!customElements.get('product-customization-options')) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
             this.updatePrice();
           }
-          const optionContainer = el.closest('[data-option-accordion]');
           if (!optionContainer) return;
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
