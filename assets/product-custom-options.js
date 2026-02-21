@@ -362,6 +362,9 @@ if (!customElements.get('product-customization-options')) {
                 customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
               }
             }
+            if (optionContainer.hasAttribute('optionContainer')) {
+              const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]');
+            }
           }
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
           if (updatePrice) {
