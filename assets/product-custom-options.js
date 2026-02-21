@@ -330,6 +330,81 @@ if (!customElements.get('product-customization-options')) {
 
       // Helper to incease/decrease quanity
 
+      multichoice(optionHandler, option) {
+        let limit = null;
+        let totalQuantity = 0;
+        let selectedValues = [];
+        const parent = optionHandler.closest('[data-option-accordion]');
+        if (parent && parent.hasAttribute('data-multichoice-limit')) {
+          limit = Number(parent.getAttribute('data-multichoice-limit'));
+        }
+        const optionName = option.name;
+        const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+        const uncheckedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
+
+        if (option.dataset.fieldName !== 'No Thanks') {
+          const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
+          if (noThanksOption) {
+            noThanksOption.checked = false;
+            noThanksOption.disabled = true;
+          }
+        }
+        if (option.hasAttribute('data-field-price')) {
+          const noThanksOptionSelected = optionHandler.querySelector('[data-option-variant-name="No Thanks"]');
+          if (noThanksOptionSelected) noThanksOptionSelected.remove();
+        }
+
+        checkedOptions.forEach((choice) => {
+          selectedValues.push(choice.value);
+          const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+          totalQuantity += qInput ? Number(qInput.value) : 1;
+        });
+
+        const limitReached = limit !== null && totalQuantity >= limit;
+
+        // Update unchecked cards — checkbox and + button
+        uncheckedOptions.forEach((opt) => {
+          opt.disabled = limitReached;
+          const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
+          if (!qInput) return;
+          const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
+          if (!increaseBtn) return;
+          if (limitReached) {
+            increaseBtn.setAttribute('disabled', 'true');
+            increaseBtn.style.pointerEvents = 'none';
+            increaseBtn.style.opacity = '0.4';
+          } else {
+            increaseBtn.removeAttribute('disabled');
+            increaseBtn.style.pointerEvents = '';
+            increaseBtn.style.opacity = '';
+          }
+        });
+
+        // Update checked cards — only disable + if adding 1 more would exceed limit
+        checkedOptions.forEach((choice) => {
+          const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+          if (!qInput) return;
+          const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
+          if (!increaseBtn) return;
+          const currentValue = Number(qInput.value);
+          const otherTotal = totalQuantity - currentValue;
+          const canIncrease = limit === null || otherTotal + currentValue + 1 <= limit;
+          if (canIncrease) {
+            increaseBtn.removeAttribute('disabled');
+            increaseBtn.style.pointerEvents = '';
+            increaseBtn.style.opacity = '';
+          } else {
+            increaseBtn.setAttribute('disabled', 'true');
+            increaseBtn.style.pointerEvents = 'none';
+            increaseBtn.style.opacity = '0.4';
+          }
+        });
+
+        optionHandler.dataset.selectedOptions = selectedValues.join(',');
+        const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
+        if (!option.checked && addedOption) addedOption.remove();
+      }
+
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
@@ -340,53 +415,76 @@ if (!customElements.get('product-customization-options')) {
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
 
+          // Hard limit gate for multichoice
+          if (option === 'increase') {
+            const optionContainer = el.closest('[data-option-accordion]');
+            if (optionContainer?.hasAttribute('data-multichoice-limit')) {
+              const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+              const inputQuantityKey = input.dataset.inputQuantity;
+              const thisOption = inputQuantityKey ? optionContainer.querySelector(`[data-customization-option="${inputQuantityKey}"]`) : null;
+              const optionName = thisOption?.name;
+              if (optionName) {
+                const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+                let currentTotal = 0;
+                checkedOptions.forEach((choice) => {
+                  const qInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+                  currentTotal += qInput ? Number(qInput.value) : 1;
+                });
+                // If this card is not yet checked, it will contribute 1 when auto-selected
+                const isUnchecked = thisOption && !thisOption.checked;
+                const projectedTotal = isUnchecked ? currentTotal + 1 : currentTotal + 1;
+                if (projectedTotal > limit) {
+                  el.setAttribute('disabled', 'true');
+                  el.style.pointerEvents = 'none';
+                  el.style.opacity = '0.4';
+                  return;
+                }
+              }
+            }
+          }
+
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+
           if (updatePrice) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
             this.updatePrice();
           }
+
           const optionContainer = el.closest('[data-option-accordion]');
           if (!optionContainer) return;
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
+
+          // Update card display price × quantity
           const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
-            const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
-            const formattedPrice = price.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
-            priceContainer.innerHTML = `$${formattedPrice}`;
-            setTimeout(() => {
-              const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
-              if (selectedOption) {
-                const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
-                selectedOptionPrice.innerHTML = `$${formattedPrice}`;
-              }
-            });
-          }
-          customizationOption.checked = true;
-          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
-          const selected = optionContainer.querySelectorAll('[data-customization-option]:checked');
-          const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-          const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
-          if (selected.length > 1) {
-            let quantityLimit = 0;
-            selected.forEach((choice) => {
-              const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-              if (optionQuantityInput) {
-                quantityLimit += Number(optionQuantityInput.value);
-              }
-            });
-            console.log(quantityLimit, option);
-
-            if (quantityLimit > limit) {
-              input.value = inputValue;
-              increaseButtons.forEach((btn) => (btn.disabled = true));
-            } else {
-              increaseButtons.forEach((btn) => (btn.disabled = false));
+            const basePrice = Number(priceContainer.getAttribute('avis-price'));
+            if (!isNaN(basePrice) && basePrice > 0) {
+              // Auto-selected new card should show price × 1, not × 2
+              const displayQty = !customizationOption.checked && option === 'increase' ? 1 : Number(input.value);
+              const formattedPrice = (basePrice * displayQty).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              });
+              priceContainer.innerHTML = `$${formattedPrice}`;
+              setTimeout(() => {
+                const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
+                if (selectedOption) {
+                  const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
+                  if (selectedOptionPrice) selectedOptionPrice.innerHTML = `$${formattedPrice}`;
+                }
+              });
             }
           }
+
+          // Auto-select on + click — reset to 1 so new card enters with qty 1
+          if (option === 'increase' && !customizationOption.checked) {
+            input.value = 1;
+            if (updatePrice) input.dataset.value = 1;
+          }
+
+          customizationOption.checked = true;
+          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
 
