@@ -198,7 +198,6 @@ if (!customElements.get('product-customization-options')) {
         const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const uncheckedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
 
-        // Live recount of total quantity across all checked cards
         let totalQuantity = 0;
         let selectedValues = [];
         checkedOptions.forEach((choice) => {
@@ -207,22 +206,36 @@ if (!customElements.get('product-customization-options')) {
           totalQuantity += qInput ? Number(qInput.value) : 1;
         });
 
-        // ✅ FIX: Use quantity-only limit (not card count) for disabling new cards
+        // ✅ Quantity-only limit
         const limitReached = totalQuantity >= limit;
-        uncheckedOptions.forEach((opt) => (opt.disabled = limitReached));
 
-        // ✅ FIX: Re-evaluate EVERY checked card's increase button using live totalQuantity
+        // ✅ Disable/enable unchecked cards AND their + buttons
+        uncheckedOptions.forEach((opt) => {
+          opt.disabled = limitReached;
+          const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
+          if (!qInput) return;
+          const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
+          if (!increaseBtn) return;
+          if (limitReached) {
+            increaseBtn.setAttribute('disabled', 'true');
+            increaseBtn.style.pointerEvents = 'none';
+            increaseBtn.style.opacity = '0.4';
+          } else {
+            increaseBtn.removeAttribute('disabled');
+            increaseBtn.style.pointerEvents = '';
+            increaseBtn.style.opacity = '';
+          }
+        });
+
+        // ✅ Re-evaluate every checked card's + button using live total
         checkedOptions.forEach((choice) => {
           const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
           if (!qInput) return;
           const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
           if (!increaseBtn) return;
-
           const currentValue = Number(qInput.value);
-          const otherTotal = totalQuantity - currentValue; // everyone else's total
-          // ✅ This card can increase only if everyone else + (this + 1) fits within limit
+          const otherTotal = totalQuantity - currentValue;
           const canIncrease = otherTotal + currentValue + 1 <= limit;
-
           if (canIncrease) {
             increaseBtn.removeAttribute('disabled');
             increaseBtn.style.pointerEvents = '';
