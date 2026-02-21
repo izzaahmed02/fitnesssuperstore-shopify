@@ -415,23 +415,6 @@ if (!customElements.get('product-customization-options')) {
             if (optionHandler) this.createOptionHTML(optionHandler, customizationOption);
           }
 
-          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
-          if (priceContainer) {
-            const rawPrice = parseFloat(priceContainer.getAttribute('avis-price'));
-            if (!isNaN(rawPrice) && rawPrice > 0) {
-              const price = rawPrice * Number(input.value);
-              const formattedPrice = price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-              priceContainer.innerHTML = `$${formattedPrice}`;
-              setTimeout(() => {
-                const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
-                if (selectedOption) {
-                  const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
-                  if (selectedOptionPrice) selectedOptionPrice.innerHTML = `$${formattedPrice}`;
-                }
-              });
-            }
-          }
-
           if (customizationOption.hasAttribute('data-has-multichoice')) {
             const optionHandler = optionContainer.querySelector('[data-selected-options]');
             if (optionHandler) this.multichoice(optionHandler, customizationOption);
