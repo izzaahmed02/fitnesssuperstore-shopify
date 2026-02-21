@@ -208,6 +208,8 @@ if (!customElements.get('product-customization-options')) {
             quantityLimit += optionQuantityInput ? Number(optionQuantityInput.value) : 1;
           }
         });
+        const limitReached = limit !== null && (selectedValues.length >= limit || quantityLimit >= limit);
+        notSelectedOptions.forEach((option) => (option.disabled = limitReached));
 
         if (selectedValues.length === limit) {
           notSelectedOptions.forEach((option) => (option.disabled = true));
