@@ -346,25 +346,17 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
-                    customizationOption.checked = true;
-          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
-          if (inputValue - 1 === 0 && option === 'decrease') return;
-          if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
-          if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
-          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
-          if (updatePrice) {
-            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
-            this.updatePrice();
-          }
           const optionContainer = el.closest('[data-option-accordion]');
-          if (!optionContainer) return;
-          const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
-          if (!customizationOption) return;
-          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
-          if (priceContainer) {
+          if (optionContainer) {
+            const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
+            if (customizationOption) {
+              customizationOption.checked = true;
+              customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
+              const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
+       if (priceContainer) {
             const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
             const formattedPrice = price.toLocaleString('en-US', {
               minimumFractionDigits: 2,
@@ -378,6 +370,18 @@ if (!customElements.get('product-customization-options')) {
                 selectedOptionPrice.innerHTML = `$${formattedPrice}`;
               }
             });
+          }
+            };
+
+          };
+
+          if (inputValue - 1 === 0 && option === 'decrease') return;
+          if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
+          if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
+          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+          if (updatePrice) {
+            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
+            this.updatePrice();
           }
         });
       }
