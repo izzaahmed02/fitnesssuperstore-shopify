@@ -368,6 +368,8 @@ if (!customElements.get('product-customization-options')) {
             }
           }
 
+          const inputs = optionContainer.querySelectorAll('[data-input-quantity]');
+
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
 
           if (updatePrice) {
