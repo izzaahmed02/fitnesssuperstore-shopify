@@ -366,6 +366,7 @@ if (!customElements.get('product-customization-options')) {
               customizationOption.checked = true;
               customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
             }
+            let quantityLimit = null;
             const limit = optionContainer.hasAttribute('data-multichoice-limit') ? Number(optionContainer.getAttribute('data-multichoice-limit')) : null;
             const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
             if (multiChoiceOptions.length > 0 && limit) {
