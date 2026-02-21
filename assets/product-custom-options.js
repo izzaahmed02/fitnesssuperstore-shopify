@@ -363,7 +363,7 @@ if (!customElements.get('product-customization-options')) {
               btnIncrease.forEach((btn) => (btn.disabled = false));
             }
 
-            console.log(total);
+            console.log(total, option);
           }
           option === 'increase' ? (input.value = el.disabled ? inputValue : inputValue + 1) : (input.value = inputValue - 1);
           if (updatePrice) {
