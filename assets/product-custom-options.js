@@ -383,13 +383,13 @@ if (!customElements.get('product-customization-options')) {
               }
             });
             const btnIncrease = optionContainer.querySelectorAll('[data-increase-quantity]');
-            if (option == 'increase') {
-              if (optionsChecked.length > 1) {
-                total = total + 1;
-              }
-            } else {
-              total = total - 1;
-            }
+            // if (option == 'increase') {
+            //   if (optionsChecked.length > 1) {
+            //     total = total + 1;
+            //   }
+            // } else {
+            //   total = total - 1;
+            // }
             if (total >= Number(optionContainer.dataset.multichoiceLimit)) {
               btnIncrease.forEach((btn) => (btn.disabled = true));
             } else {
