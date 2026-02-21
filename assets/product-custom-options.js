@@ -339,11 +339,6 @@ if (!customElements.get('product-customization-options')) {
           if (inputValue - 1 === 0 && option === 'decrease') return;
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
-          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
-          if (updatePrice) {
-            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
-            this.updatePrice();
-          }
           const optionContainer = el.closest('[data-option-accordion]');
           if (optionContainer) {
             const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
@@ -368,27 +363,12 @@ if (!customElements.get('product-customization-options')) {
               }
             }
           }
-          if (!optionContainer) return;
-          const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
-          if (!customizationOption) return;
-          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
-          if (priceContainer) {
-            const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
-            const formattedPrice = price.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
-            priceContainer.innerHTML = `$${formattedPrice}`;
-            setTimeout(() => {
-              const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
-              if (selectedOption) {
-                const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
-                selectedOptionPrice.innerHTML = `$${formattedPrice}`;
-              }
-            });
+          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+          if (updatePrice) {
+            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
+            this.updatePrice();
           }
-          customizationOption.checked = true;
-          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
+
           if (optionContainer.hasAttribute('optionContainer')) {
             const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]');
           }
