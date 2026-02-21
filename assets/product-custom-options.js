@@ -360,7 +360,8 @@ if (!customElements.get('product-customization-options')) {
                 });
               }
             }
-            if (optionContainer.hasAttribute('optionContainer')) {
+            if (optionContainer.hasAttribute('data-multichoice-limit')) {
+              let limit  = Number(optionContainer.getAttribute('data-multichoice-limit'));
               let quantityLimit = 0;
               const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
               if (multiChoiceOptions.length > 0) {
@@ -371,6 +372,7 @@ if (!customElements.get('product-customization-options')) {
                   }
                 });
               }
+              if()
             }
             customizationOption.checked = true;
             customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
