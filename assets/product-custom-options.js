@@ -382,14 +382,12 @@ if (!customElements.get('product-customization-options')) {
                       quantityLimit += Number(optionQuantityInput.value) + 1;
                     } else {
                       quantityLimit += Number(optionQuantityInput.value) - 1;
-
-                      increaseDisabled = quantityLimit - 1 >= limit;
                     }
                   }
                 });
               }
 
-              increaseDisabled = quantityLimit + 1 >= limit;
+              increaseDisabled = quantityLimit >= limit;
 
               console.log(quantityLimit);
 
