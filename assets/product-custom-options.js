@@ -382,6 +382,13 @@ if (!customElements.get('product-customization-options')) {
                   }
                 });
               }
+              if (option === 'increase') {
+                increaseDisabled = quantityLimit + 1 >= limit;
+              } else {
+                increaseDisabled = quantityLimit >= limit;
+              }
+
+              console.log(quantityLimit);
 
               increaseDisabled = option === 'increase' ? quantityLimit + 1 >= limit : quantityLimit >= limit;
               increaseButtons.forEach((button) => (button.disabled = increaseDisabled));
