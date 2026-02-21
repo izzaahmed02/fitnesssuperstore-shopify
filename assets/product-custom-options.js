@@ -378,13 +378,14 @@ if (!customElements.get('product-customization-options')) {
                 multiChoiceOptions.forEach((choice) => {
                   const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
                   if (optionQuantityInput) {
-                    if (option === 'increase') {
-                      quantityLimit += Number(optionQuantityInput.value) + 1;
-                    } else {
-                      quantityLimit += Number(optionQuantityInput.value) - 1;
-                    }
+                    quantityLimit += Number(optionQuantityInput.value);
                   }
                 });
+              }
+              if (option === 'increase') {
+                quantityLimit = quantityLimit + 1;
+              } else {
+                quantityLimit = quantityLimit - 1;
               }
 
               increaseDisabled = quantityLimit >= limit;
