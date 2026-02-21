@@ -346,6 +346,8 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
+                    customizationOption.checked = true;
+          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
@@ -377,8 +379,6 @@ if (!customElements.get('product-customization-options')) {
               }
             });
           }
-          customizationOption.checked = true;
-          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
 
