@@ -386,10 +386,9 @@ if (!customElements.get('product-customization-options')) {
                 if (quantityLimit + 1 > limit) {
                   if (increaseButtons.length > 0) {
                     increaseButtons.forEach((button) => (button.disabled = true));
+                  }
+                  if (notSelectedOptions.length > 0) {
                     notSelectedOptions.forEach((option) => (option.disabled = true));
-
-                    return;
-                  } else {
                   }
                 }
               }
