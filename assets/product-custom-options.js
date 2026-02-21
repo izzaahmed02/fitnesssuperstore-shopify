@@ -214,10 +214,13 @@ if (!customElements.get('product-customization-options')) {
 
         if(selectedValues.length <= limit) {
           notSelectedOptions.forEach(option => option.disabled = false);
+          increaseButtons.forEach(button => button.disabled = false);
         } else if(quantityLimit <= limit) {
           notSelectedOptions.forEach(option => option.disabled = false);
+          increaseButtons.forEach(button => button.disabled = false);
         } else {
           notSelectedOptions.forEach(option => option.disabled = true); 
+          increaseButtons.forEach(button => button.disabled = true);
         }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
