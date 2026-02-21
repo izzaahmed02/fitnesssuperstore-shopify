@@ -359,7 +359,6 @@ if (!customElements.get('product-customization-options')) {
           totalQuantity += qInput ? Number(qInput.value) : 1;
         });
 
-        // ✅ Reset quantity and price for unchecked cards
         uncheckedOptions.forEach((opt) => {
           const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
           if (qInput && Number(qInput.value) !== 1) {
