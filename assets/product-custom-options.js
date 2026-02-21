@@ -349,27 +349,29 @@ if (!customElements.get('product-customization-options')) {
             this.updatePrice();
           }
           const optionContainer = el.closest('[data-option-accordion]');
-          if (!optionContainer) return;
-          const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
-          if (!customizationOption) return;
-          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
-          if (priceContainer) {
-            const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
-            const formattedPrice = price.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
-            priceContainer.innerHTML = `$${formattedPrice}`;
-            setTimeout(() => {
-              const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
-              if (selectedOption) {
-                const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
-                selectedOptionPrice.innerHTML = `$${formattedPrice}`;
+          if (optionContainer) {
+            const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
+            if (customizationOption) {
+              const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
+              if (priceContainer) {
+                const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
+                const formattedPrice = price.toLocaleString('en-US', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                });
+                priceContainer.innerHTML = `$${formattedPrice}`;
+                setTimeout(() => {
+                  const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
+                  if (selectedOption) {
+                    const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
+                    selectedOptionPrice.innerHTML = `$${formattedPrice}`;
+                  }
+                });
               }
-            });
+              customizationOption.checked = true;
+              customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
+            }
           }
-          customizationOption.checked = true;
-          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
 
