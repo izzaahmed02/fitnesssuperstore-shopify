@@ -357,6 +357,9 @@ if (!customElements.get('product-customization-options')) {
             this.updatePrice();
           }
           const optionContainer = el.closest('[data-option-accordion]');
+          if (optionContainer.hasAttribute('data-multichoice-limit')) {
+            limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+          }
           if (!optionContainer) return;
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
