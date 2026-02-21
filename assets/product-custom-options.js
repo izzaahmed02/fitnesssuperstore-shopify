@@ -340,6 +340,7 @@ if (!customElements.get('product-customization-options')) {
         const optionName = option.name;
         const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const uncheckedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
+        const limitReached = limit !== null && totalQuantity >= limit;
 
         if (option.dataset.fieldName !== 'No Thanks') {
           const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
@@ -378,7 +379,6 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        const limitReached = limit !== null && totalQuantity >= limit;
         uncheckedOptions.forEach((opt) => {
           opt.disabled = limitReached;
           const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
