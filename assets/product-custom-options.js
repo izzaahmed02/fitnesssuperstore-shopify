@@ -377,11 +377,11 @@ if (!customElements.get('product-customization-options')) {
                 quantityLimit += Number(optionQuantityInput.value);
               }
             });
-          }
-          if (quantityLimit >= limit) {
-            input.value = inputValue - 1;
-            const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
-            increaseButtons.forEach((btn) => (btn.disabled = true));
+            if (quantityLimit >= limit) {
+              input.value = inputValue - 1;
+              const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
+              increaseButtons.forEach((btn) => (btn.disabled = true));
+            }
           }
         });
       }
