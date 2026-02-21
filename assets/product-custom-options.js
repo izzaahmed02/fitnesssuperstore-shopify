@@ -359,8 +359,6 @@ if (!customElements.get('product-customization-options')) {
                 const projectedTotal = isUnchecked ? currentTotal + 1 : currentTotal + 1;
                 if (projectedTotal > limit) {
                   el.setAttribute('disabled', 'true');
-                  el.style.pointerEvents = 'none';
-                  el.style.opacity = '0.4';
                   return;
                 }
               }
@@ -379,7 +377,6 @@ if (!customElements.get('product-customization-options')) {
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
 
-          // Update card display price × quantity
           const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
             const basePrice = Number(priceContainer.getAttribute('avis-price'));
