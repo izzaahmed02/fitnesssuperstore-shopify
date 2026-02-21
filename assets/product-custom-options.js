@@ -222,7 +222,7 @@ if (!customElements.get('product-customization-options')) {
         //   if(increaseButtons.length > 0) {
         //     increaseButtons.forEach(button => button.disabled = true);
         //   }
-        // } 
+        } 
         else {
           notSelectedOptions.forEach(option => option.disabled = false); 
           if(increaseButtons.length > 0) {
