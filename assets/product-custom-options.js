@@ -178,16 +178,19 @@ if (!customElements.get('product-customization-options')) {
 
       multichoice(optionHandler, option) {
         let limit = null;
-        let quantityLimit = 0;
-        let selectedValues = [];
         const parent = optionHandler.closest('[data-option-accordion]');
         if (parent && parent.hasAttribute('data-multichoice-limit')) {
           limit = Number(parent.getAttribute('data-multichoice-limit'));
         }
+        if (limit === null) return;
+
         const optionName = option.name;
+
+        // Always re-query fresh from DOM at the moment of execution
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
 
+        // No Thanks logic
         if (option.dataset.fieldName !== 'No Thanks') {
           const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
           if (noThanksOption) {
@@ -200,44 +203,50 @@ if (!customElements.get('product-customization-options')) {
           if (noThanksOptionSelected) noThanksOptionSelected.remove();
         }
 
-        // Step 1: calculate total quantity across all checked options
+        // Step 1: fresh recount of total quantity from actual DOM input values
+        let quantityLimit = 0;
+        let selectedValues = [];
         multiChoiceOptions.forEach((choice) => {
           selectedValues.push(choice.value);
           const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
           quantityLimit += optionQuantityInput ? Number(optionQuantityInput.value) : 1;
         });
 
-        // Step 2: disable unchecked options if limit reached
-        const limitReached = limit !== null && (selectedValues.length >= limit || quantityLimit >= limit);
+        // Step 2: enforce per-option max based on what others are using
+        multiChoiceOptions.forEach((choice) => {
+          const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+          if (!optionQuantityInput) return;
+
+          const currentValue = Number(optionQuantityInput.value);
+          const otherQuantities = quantityLimit - currentValue;
+          const remaining = limit - otherQuantities;
+
+          // Clamp if somehow over (safety net)
+          if (currentValue > remaining) {
+            optionQuantityInput.value = remaining;
+            quantityLimit = quantityLimit - currentValue + remaining; // adjust total
+          }
+
+          optionQuantityInput.max = remaining;
+
+          const increaseBtn = optionQuantityInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
+          if (!increaseBtn) return;
+          if (Number(optionQuantityInput.value) >= remaining) {
+            increaseBtn.setAttribute('disabled', 'true');
+            increaseBtn.style.pointerEvents = 'none';
+            increaseBtn.style.opacity = '0.4';
+          } else {
+            increaseBtn.removeAttribute('disabled');
+            increaseBtn.style.pointerEvents = '';
+            increaseBtn.style.opacity = '';
+          }
+        });
+
+        // Step 3: disable unchecked options if total limit reached
+        const limitReached = selectedValues.length >= limit || quantityLimit >= limit;
         notSelectedOptions.forEach((opt) => (opt.disabled = limitReached));
 
-        // Step 3: for each checked option, set its personal max and update + button state
-        if (limit !== null) {
-          multiChoiceOptions.forEach((choice) => {
-            const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-            if (!optionQuantityInput) return;
-
-            const currentValue = Number(optionQuantityInput.value);
-            const otherQuantities = quantityLimit - currentValue; // everyone else's total
-            const remaining = limit - otherQuantities; // max this one can reach
-
-            optionQuantityInput.max = remaining;
-
-            const increaseBtn = optionQuantityInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
-            if (!increaseBtn) return;
-
-            if (currentValue >= remaining) {
-              increaseBtn.setAttribute('disabled', 'true');
-              increaseBtn.style.pointerEvents = 'none';
-              increaseBtn.style.opacity = '0.4';
-            } else {
-              increaseBtn.removeAttribute('disabled');
-              increaseBtn.style.pointerEvents = '';
-              increaseBtn.style.opacity = '';
-            }
-          });
-        }
-
+        // Step 4: update selected values and badge
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
