@@ -178,7 +178,6 @@ if (!customElements.get('product-customization-options')) {
 
       multichoice(optionHandler, option) {
         let limit = null;
-        let quantityLimit = 0;
         let selectedValues = [];
         const parent = optionHandler.closest('[data-option-accordion]');
         if (parent && parent.hasAttribute('data-multichoice-limit')) {
@@ -371,6 +370,8 @@ if (!customElements.get('product-customization-options')) {
             if (optionContainer.hasAttribute('data-multichoice-limit')) {
               const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
               const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
+              const notSelectedOptions = optionContainer.querySelectorAll(`[data-customization-option]:not(:checked)`);
+
               const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
               let quantityLimit = 0;
               if (multiChoiceOptions.length > 0) {
