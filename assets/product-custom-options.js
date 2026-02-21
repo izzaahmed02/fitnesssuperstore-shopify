@@ -214,11 +214,15 @@ if (!customElements.get('product-customization-options')) {
 
         if(selectedValues.length == limit) {
           notSelectedOptions.forEach(option => option.disabled = true);
+          console.log(increaseButtons.length);
+          
           if(increaseButtons.length > 0) {
             increaseButtons.forEach(button => button.disabled = true);
           }
         } else if(quantityLimit == limit) {
           notSelectedOptions.forEach(option => option.disabled = true);
+          console.log(increaseButtons.length);
+
           if(increaseButtons.length > 0) {
             increaseButtons.forEach(button => button.disabled = true);
           }
