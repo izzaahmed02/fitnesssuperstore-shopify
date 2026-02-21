@@ -353,7 +353,7 @@ if (!customElements.get('product-customization-options')) {
             const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
             if (customizationOption) {
               customizationOption.checked = true;
-              // customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
+              customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
               const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
               if (priceContainer) {
                 const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
