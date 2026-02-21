@@ -210,18 +210,18 @@ if (!customElements.get('product-customization-options')) {
           }
           console.log(increaseButton);
           
-          increaseButton.disabled = quantityLimit == limit;
+          increaseButton.disabled != quantityLimit <= limit;
         });
 
         console.log(quantityLimit);
         
 
-        if(selectedValues.length == limit) {
-          notSelectedOptions.forEach(option => option.disabled = true);
-        } else if(quantityLimit == limit) {
-          notSelectedOptions.forEach(option => option.disabled = true);
+        if(selectedValues.length <= limit) {
+          notSelectedOptions.forEach(option => option.disabled = false);
+        } else if(quantityLimit <= limit) {
+          notSelectedOptions.forEach(option => option.disabled = false);
         } else {
-          notSelectedOptions.forEach(option => option.disabled = false); 
+          notSelectedOptions.forEach(option => option.disabled = true); 
         }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
