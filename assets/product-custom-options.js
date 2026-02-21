@@ -185,8 +185,6 @@ if (!customElements.get('product-customization-options')) {
         if (limit === null) return;
 
         const optionName = option.name;
-
-        // Always re-query fresh from DOM at the moment of execution
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
 
@@ -203,7 +201,7 @@ if (!customElements.get('product-customization-options')) {
           if (noThanksOptionSelected) noThanksOptionSelected.remove();
         }
 
-        // Step 1: fresh recount of total quantity from actual DOM input values
+        // Step 1: fresh recount from DOM
         let quantityLimit = 0;
         let selectedValues = [];
         multiChoiceOptions.forEach((choice) => {
@@ -212,7 +210,7 @@ if (!customElements.get('product-customization-options')) {
           quantityLimit += optionQuantityInput ? Number(optionQuantityInput.value) : 1;
         });
 
-        // Step 2: enforce per-option max based on what others are using
+        // Step 2: set max and update + button state per checked option — NO clamping
         multiChoiceOptions.forEach((choice) => {
           const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
           if (!optionQuantityInput) return;
@@ -221,17 +219,12 @@ if (!customElements.get('product-customization-options')) {
           const otherQuantities = quantityLimit - currentValue;
           const remaining = limit - otherQuantities;
 
-          // Clamp if somehow over (safety net)
-          if (currentValue > remaining) {
-            optionQuantityInput.value = remaining;
-            quantityLimit = quantityLimit - currentValue + remaining; // adjust total
-          }
-
           optionQuantityInput.max = remaining;
 
           const increaseBtn = optionQuantityInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
           if (!increaseBtn) return;
-          if (Number(optionQuantityInput.value) >= remaining) {
+
+          if (currentValue >= remaining) {
             increaseBtn.setAttribute('disabled', 'true');
             increaseBtn.style.pointerEvents = 'none';
             increaseBtn.style.opacity = '0.4';
@@ -242,11 +235,11 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        // Step 3: disable unchecked options if total limit reached
-        const limitReached = selectedValues.length >= limit || quantityLimit >= limit;
+        // Step 3: disable/enable unchecked options based on whether limit is reached
+        const limitReached = quantityLimit >= limit || selectedValues.length >= limit;
         notSelectedOptions.forEach((opt) => (opt.disabled = limitReached));
 
-        // Step 4: update selected values and badge
+        // Step 4: update badge
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
