@@ -394,6 +394,8 @@ if (!customElements.get('product-customization-options')) {
                     increaseButtons.forEach((button) => (button.disabled = quantityLimit >= limit));
                   }
                 }
+
+                console.log(quantityLimit);
               }
             }
           }
