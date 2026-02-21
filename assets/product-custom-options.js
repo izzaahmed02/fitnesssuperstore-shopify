@@ -342,11 +342,11 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
-           let limit = null;
+          let limit = null;
           let quantityLimit = null;
-            if (optionContainer.hasAttribute('data-multichoice-limit')) {
-limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-            }
+          if (optionContainer.hasAttribute('data-multichoice-limit')) {
+            limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+          }
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
@@ -357,7 +357,7 @@ limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           if (option === 'increase') {
             if (quantityLimit) {
-              if
+              if (inputValue + 1 + quantityLimit >= limit) return;
             } else {
               input.value = inputValue + 1;
             }
