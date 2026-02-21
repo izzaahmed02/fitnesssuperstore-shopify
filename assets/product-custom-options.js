@@ -392,7 +392,6 @@ if (!customElements.get('product-customization-options')) {
           });
         }
 
-        // Update checked cards — only disable + if adding 1 more would exceed limit
         checkedOptions.forEach((choice) => {
           const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
           if (!qInput) return;
@@ -403,12 +402,8 @@ if (!customElements.get('product-customization-options')) {
           const canIncrease = limit === null || otherTotal + currentValue + 1 <= limit;
           if (canIncrease) {
             increaseBtn.removeAttribute('disabled');
-            increaseBtn.style.pointerEvents = '';
-            increaseBtn.style.opacity = '';
           } else {
             increaseBtn.setAttribute('disabled', 'true');
-            increaseBtn.style.pointerEvents = 'none';
-            increaseBtn.style.opacity = '0.4';
           }
         });
 
