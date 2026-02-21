@@ -340,6 +340,13 @@ if (!customElements.get('product-customization-options')) {
           if (inputValue - 1 === 0 && option === 'decrease') return;
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
+          const optionsChecked = optionContainer.querySelector('[data-customization-option]:checked');
+          if (optionsChecked.length > 0) {
+            let total = 0;
+            optionsChecked.forEach((option) => {
+              const inputQuantity = optionContainer.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+            });
+          }
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
           if (updatePrice) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
