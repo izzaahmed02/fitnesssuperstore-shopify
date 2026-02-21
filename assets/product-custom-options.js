@@ -340,7 +340,7 @@ if (!customElements.get('product-customization-options')) {
           if (inputValue - 1 === 0 && option === 'decrease') return;
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
-          const optionsChecked = optionContainer.querySelector('[data-customization-option]:checked');
+          const optionsChecked = optionContainer.querySelectorAll('[data-customization-option]:checked');
           if (optionsChecked.length > 0) {
             let total = 0;
             optionsChecked.forEach((option) => {
