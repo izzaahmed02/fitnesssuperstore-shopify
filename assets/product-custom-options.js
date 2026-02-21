@@ -361,6 +361,9 @@ if (!customElements.get('product-customization-options')) {
           });
         }
 
+        if (uncheckedOptions.length > 0) {
+        }
+
         uncheckedOptions.forEach((opt) => {
           const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
           if (qInput && Number(qInput.value) !== 1) {
