@@ -383,9 +383,9 @@ if (!customElements.get('product-customization-options')) {
                 });
               }
               if (option === 'increase') {
-                increaseDisabled = quantityLimit + 1 == limit;
+                increaseDisabled = quantityLimit + 1 >= limit;
               } else {
-                increaseDisabled = quantityLimit - 1 == limit;
+                increaseDisabled = quantityLimit - 1 >= limit;
               }
               console.log(quantityLimit + 1, 'limit');
 
@@ -398,7 +398,6 @@ if (!customElements.get('product-customization-options')) {
           if (option === 'increase') {
             if (el.disabled) {
               console.log('test');
-              return;
             }
           }
 
