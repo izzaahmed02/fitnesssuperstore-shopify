@@ -376,7 +376,7 @@ if (!customElements.get('product-customization-options')) {
               let quantityLimit = 0;
               if (multiChoiceOptions.length > 0) {
                 multiChoiceOptions.forEach((choice) => {
-                  const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+                  const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
                   if (optionQuantityInput) {
                     quantityLimit += Number(optionQuantityInput.value);
                   }
