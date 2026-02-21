@@ -366,18 +366,19 @@ if (!customElements.get('product-customization-options')) {
               customizationOption.checked = true;
               customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
             }
+
+            const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
+            if (multiChoiceOptions.length > 0) {
+              multiChoiceOptions.forEach((choice) => {
+                const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+                if (optionQuantityInput) {
+                  quantityLimit += Number(optionQuantityInput.value);
+                }
+              });
+            }
           }
 
-          const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
-          if (multiChoiceOptions.length > 0) {
-            multiChoiceOptions.forEach((choice) => {
-              const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-              if (optionQuantityInput) {
-                quantityLimit += Number(optionQuantityInput.value);
-              }
-            });
-          }
-          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+          if (option === 'increase') option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
 
           if (updatePrice) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
