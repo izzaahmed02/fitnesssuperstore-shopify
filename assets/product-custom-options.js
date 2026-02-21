@@ -352,6 +352,10 @@ if (!customElements.get('product-customization-options')) {
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           if (option === 'increase') {
+            if (quantityLimit) {
+            } else {
+              input.value = inputValue + 1;
+            }
           } else {
             input.value = inputValue - 1;
           }
