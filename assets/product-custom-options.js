@@ -367,11 +367,14 @@ if (!customElements.get('product-customization-options')) {
               customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
             }
           }
-          let total = 0;
+          let quantityLimit = 0;
           const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
-          const inputs = optionContainer.querySelectorAll('[data-input-quantity]');
-          inputs.forEach((input) => {
-            total += Number(input.value);
+          multiChoiceOptions.forEach((choice) => {
+            selectedValues.push(choice.value);
+            const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+            if (optionQuantityInput) {
+              quantityLimit += Number(optionQuantityInput.value);
+            }
           });
 
           if (option === 'increse') option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
