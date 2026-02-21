@@ -375,6 +375,10 @@ if (!customElements.get('product-customization-options')) {
               const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
 
               if (multiChoiceOptions.length > 0) {
+                const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+                if (optionQuantityInput) {
+                  quantityLimit += Number(optionQuantityInput.value);
+                }
               }
             }
           }
