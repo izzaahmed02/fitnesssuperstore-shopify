@@ -386,9 +386,8 @@ if (!customElements.get('product-customization-options')) {
               console.log(quantityLimit);
 
               increaseDisabled = quantityLimit >= limit;
+              increaseButtons.forEach((button) => (button.disabled = increaseDisabled));
             }
-
-            increaseButtons.forEach((button) => (button.disabled = increaseDisabled));
           }
 
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
