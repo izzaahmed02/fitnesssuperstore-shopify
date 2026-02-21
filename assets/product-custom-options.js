@@ -206,12 +206,26 @@ if (!customElements.get('product-customization-options')) {
           totalQuantity += qInput ? Number(qInput.value) : 1;
         });
 
+        // Helper to find price container for any option input
+        const getPriceContainer = (opt) => {
+          const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
+          if (qInput) {
+            const quantitySelector = qInput.closest('[data-quantity-selector]');
+            if (quantitySelector) {
+              // Go up to card wrapper and search within it
+              const card = quantitySelector.parentElement;
+              return card?.querySelector('[avis-price]');
+            }
+          }
+          return opt.parentElement?.querySelector('[avis-price]');
+        };
+
         // ✅ Reset quantity and price for unchecked cards
         uncheckedOptions.forEach((opt) => {
           const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
           if (qInput && Number(qInput.value) !== 1) {
             qInput.value = 1;
-            const priceContainer = opt.parentElement.querySelector('[avis-price]');
+            const priceContainer = getPriceContainer(opt);
             if (priceContainer) {
               const basePrice = Number(priceContainer.getAttribute('avis-price'));
               if (!isNaN(basePrice) && basePrice > 0) {
@@ -245,8 +259,8 @@ if (!customElements.get('product-customization-options')) {
         checkedOptions.forEach((choice) => {
           const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
 
-          // ✅ Update price display based on current quantity
-          const priceContainer = choice.parentElement.querySelector('[avis-price]');
+          // ✅ Update price display using robust container search
+          const priceContainer = getPriceContainer(choice);
           if (priceContainer) {
             const basePrice = Number(priceContainer.getAttribute('avis-price'));
             if (!isNaN(basePrice) && basePrice > 0) {
