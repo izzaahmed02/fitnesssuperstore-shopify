@@ -208,7 +208,7 @@ if (!customElements.get('product-customization-options')) {
         });
 
         // Disable unchecked cards when total quantity OR card count hits limit
-        const limitReached = totalQuantity >= limit || checkedOptions.length >= limit;
+        const limitReached = totalQuantity >= limit;
         uncheckedOptions.forEach((opt) => (opt.disabled = limitReached));
 
         // Per checked card: disable + if adding 1 more would exceed limit
