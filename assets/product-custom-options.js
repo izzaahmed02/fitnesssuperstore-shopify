@@ -355,8 +355,9 @@ if (!customElements.get('product-customization-options')) {
           const optionContainer = el.closest('[data-option-accordion]');
           if (optionContainer.hasAttribute('data-multichoice-limit')) {
             limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-               let quantityLimit = 0;
-                      
+            let quantityLimit = 0;
+          }
+
           const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
           multiChoiceOptions.forEach((choice) => {
             const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
@@ -364,7 +365,6 @@ if (!customElements.get('product-customization-options')) {
               quantityLimit += Number(optionQuantityInput.value);
             }
           });
-   
 
           if (!optionContainer) return;
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
