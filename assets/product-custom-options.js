@@ -367,7 +367,6 @@ if (!customElements.get('product-customization-options')) {
               customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
             }
           }
-          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
 
           const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
           if (multiChoiceOptions.length > 0) {
@@ -378,9 +377,7 @@ if (!customElements.get('product-customization-options')) {
               }
             });
           }
-          option === 'increase'
-            ? (optionContainer.dataset.currentTotal = Number(optionContainer.dataset.currentTotal) + Number(input.value))
-            : (optionContainer.dataset.currentTotal = Number(optionContainer.dataset.currentTotal) - Number(input.value));
+          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
 
           if (updatePrice) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
