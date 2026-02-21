@@ -215,14 +215,13 @@ if (!customElements.get('product-customization-options')) {
             const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
             if (optionQuantityInput) {
               const currentValue = Number(optionQuantityInput.value);
-              const otherQuantities = quantityLimit - currentValue; // sum of all OTHER checked options
-              const remaining = limit - otherQuantities; // max this option can go up to
+              const otherQuantities = quantityLimit - currentValue;
+              const remaining = limit - otherQuantities;
 
               optionQuantityInput.max = remaining;
 
               const increaseBtn = optionQuantityInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
               if (increaseBtn) {
-                // *** FIX: disable only when current value has reached its personal max ***
                 if (currentValue >= remaining) {
                   increaseBtn.setAttribute('disabled', 'true');
                   increaseBtn.style.pointerEvents = 'none';
@@ -232,10 +231,6 @@ if (!customElements.get('product-customization-options')) {
                   increaseBtn.style.pointerEvents = '';
                   increaseBtn.style.opacity = '';
                 }
-              }
-
-              if (currentValue > remaining) {
-                optionQuantityInput.value = remaining;
               }
             }
           });
