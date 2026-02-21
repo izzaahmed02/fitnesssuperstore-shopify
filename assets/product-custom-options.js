@@ -374,6 +374,11 @@ if (!customElements.get('product-customization-options')) {
             if (optionContainer.hasAttribute('data-multichoice-limit')) {
               optionContainer.datasetCurrentTotal = inputValue + 1;
             }
+          } else {
+            input.value = inputValue - 1;
+            if (optionContainer.hasAttribute('data-multichoice-limit')) {
+              optionContainer.datasetCurrentTotal = inputValue - 1;
+            }
           }
 
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
