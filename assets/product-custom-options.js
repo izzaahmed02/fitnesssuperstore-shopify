@@ -368,14 +368,15 @@ if (!customElements.get('product-customization-options')) {
             const optionContainer = el.closest('[data-option-accordion]');
             if (optionContainer?.hasAttribute('data-multichoice-limit')) {
               const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-              // Find the associated checkbox by data-input-quantity matching input's data-input-quantity
               const inputQuantityKey = input.dataset.inputQuantity;
               const thisOption = inputQuantityKey ? optionContainer.querySelector(`[data-customization-option="${inputQuantityKey}"]`) : null;
               const optionName = thisOption?.name;
 
               if (optionName) {
                 const currentTotal = this.getTotalQuantityForGroup(optionContainer, optionName);
-                // +1 accounts for this click (whether auto-select or increment)
+                // If this card is NOT yet checked, it's not in currentTotal yet.
+                // Adding it will contribute 1 (we'll reset it to 1 below).
+                // If it IS checked, it's already in currentTotal, so +1 must still fit.
                 if (currentTotal + 1 > limit) return;
               }
             }
@@ -395,6 +396,11 @@ if (!customElements.get('product-customization-options')) {
 
           // Auto-select on + click if not already checked
           if (direction === 'increase' && customizationOption.hasAttribute('data-has-multichoice') && !customizationOption.checked) {
+            // ✅ FIX: Reset to 1 before selecting — card should enter the group with qty 1,
+            // not the incremented value, since the limit gate only allowed room for 1 more.
+            input.value = 1;
+            if (updatePrice) input.dataset.value = 1;
+
             customizationOption.checked = true;
             const optionHandler = optionContainer.querySelector('[data-selected-options]');
             if (optionHandler) this.createOptionHTML(optionHandler, customizationOption);
@@ -403,7 +409,10 @@ if (!customElements.get('product-customization-options')) {
           const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
             const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
-            const formattedPrice = price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const formattedPrice = price.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            });
             priceContainer.innerHTML = `$${formattedPrice}`;
             setTimeout(() => {
               const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
