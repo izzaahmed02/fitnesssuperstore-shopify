@@ -401,6 +401,8 @@ if (!customElements.get('product-customization-options')) {
                   } else {
                     input.value = inputValue + 1;
                   }
+                } else {
+                  input.value = inputValue + 1;
                 }
               } else {
                 input.value = inputValue - 1;
