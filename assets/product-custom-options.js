@@ -371,25 +371,21 @@ if (!customElements.get('product-customization-options')) {
                 });
               }
               if (optionContainer.hasAttribute('data-multichoice-limit')) {
-                setTimeout(() => {
-                  const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-                  const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
-                  const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
+                const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+                const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
+                const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
 
-                  if (multiChoiceOptions.length > 0) {
-                    multiChoiceOptions.forEach((choice) => {
-                      const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-                      if (optionQuantityInput) {
-                        quantityLimit += inputValue;
-                      }
-                    });
-
-                    console.log(quantityLimit);
-                    if (increaseButtons.length > 0) {
-                      increaseButtons.forEach((button) => (button.disabled = quantityLimit >= limit));
+                if (multiChoiceOptions.length > 0) {
+                  multiChoiceOptions.forEach((choice) => {
+                    const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+                    if (optionQuantityInput) {
+                      quantityLimit += inputValue;
                     }
+                  });
+                  if (increaseButtons.length > 0) {
+                    increaseButtons.forEach((button) => (button.disabled = quantityLimit >= limit));
                   }
-                });
+                }
               }
             }
           }
