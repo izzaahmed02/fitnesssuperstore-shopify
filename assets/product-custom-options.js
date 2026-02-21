@@ -345,7 +345,12 @@ if (!customElements.get('product-customization-options')) {
             let total = 0;
             optionsChecked.forEach((option) => {
               const inputQuantity = optionContainer.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+              if (inputQuantity) {
+                total += Number(inputQuantity.value);
+              }
             });
+
+            console.log(total);
           }
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
           if (updatePrice) {
