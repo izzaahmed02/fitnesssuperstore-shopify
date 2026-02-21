@@ -348,8 +348,6 @@ if (!customElements.get('product-customization-options')) {
           const maxInputValue = Number(input.max);
           const optionContainer = el.closest('[data-option-accordion]');
 
-          console.log(quantityLimit);
-
           if (inputValue - 1 === 0 && option === 'decrease') return;
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
