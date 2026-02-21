@@ -387,10 +387,12 @@ if (!customElements.get('product-customization-options')) {
               } else {
                 increaseDisabled = quantityLimit >= limit;
               }
+
+              console.log(quantityLimit);
+
               increaseButtons.forEach((button) => (button.disabled = increaseDisabled));
             }
           }
-
           option === 'increase' ? (input.value = el.disabled ? inputValue : inputValue + 1) : (input.value = inputValue - 1);
           if (updatePrice) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
