@@ -366,50 +366,6 @@ if (!customElements.get('product-customization-options')) {
               customizationOption.checked = true;
               customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
             }
-            let quantityLimit = null;
-            const limit = optionContainer.hasAttribute('data-multichoice-limit') ? Number(optionContainer.getAttribute('data-multichoice-limit')) : null;
-            const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
-            const notSelectedOptions = optionContainer.querySelectorAll(`[data-customization-option]:not(:checked)`);
-
-            const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
-
-            if (limit) {
-              if (multiChoiceOptions.length > 0) {
-                multiChoiceOptions.forEach((choice) => {
-                  const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-                  if (optionQuantityInput) {
-                    quantityLimit += Number(optionQuantityInput.value);
-                  }
-                });
-              }
-              if (option === 'increase') {
-                if (quantityLimit + 1 > limit) {
-                  console.log('test');
-
-                  if (increaseButtons.length > 0) {
-                    increaseButtons.forEach((button) => (button.disabled = true));
-                  }
-                  if (notSelectedOptions.length > 0) {
-                    notSelectedOptions.forEach((option) => (option.disabled = true));
-                  }
-                  return;
-                } else {
-                  if (increaseButtons.length > 0) {
-                    increaseButtons.forEach((button) => (button.disabled = false));
-                  }
-                  if (notSelectedOptions.length > 0) {
-                    notSelectedOptions.forEach((option) => (option.disabled = false));
-                  }
-                }
-              } else {
-                if (increaseButtons.length > 0) {
-                  increaseButtons.forEach((button) => (button.disabled = false));
-                }
-                if (notSelectedOptions.length > 0) {
-                  notSelectedOptions.forEach((option) => (option.disabled = false));
-                }
-              }
-            }
           }
 
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
