@@ -351,36 +351,26 @@ if (!customElements.get('product-customization-options')) {
 
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
-          const maxInputValue = Number(input.max);
           if (inputValue - 1 === 0 && option === 'decrease') return;
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
-          if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
 
-          // GATE: hard-check limit before allowing increase
+          // Hard gate for increase: recount total right now and reject if at limit
           if (option === 'increase') {
             const optionContainer = el.closest('[data-option-accordion]');
-            if (optionContainer && optionContainer.hasAttribute('data-multichoice-limit')) {
+            if (optionContainer?.hasAttribute('data-multichoice-limit')) {
               const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
               const thisOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
-
-              if (thisOption && thisOption.hasAttribute('data-has-multichoice')) {
-                const optionName = thisOption.name;
-                const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
-
-                let currentTotal = 0;
+              if (thisOption?.hasAttribute('data-has-multichoice')) {
+                const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${thisOption.name}"]:checked`);
+                let total = 0;
                 checkedOptions.forEach((choice) => {
                   const qInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-                  currentTotal += qInput ? Number(qInput.value) : 1;
+                  total += qInput ? Number(qInput.value) : 1;
                 });
-
-                // If this option is NOT yet checked, it will contribute 1 when auto-selected
-                if (!thisOption.checked) currentTotal += 1;
-                // If it IS checked, the new value will be inputValue + 1,
-                // but currentTotal already includes inputValue, so just add 1
-                else currentTotal += 1;
-
-                // currentTotal now reflects state AFTER the click — reject if over limit
-                if (currentTotal > limit) return;
+                if (!thisOption.checked)
+                  total += 1; // auto-select will add this card
+                else total += 1; // increasing existing card by 1
+                if (total > limit) return; // hard stop
               }
             }
           }
@@ -397,8 +387,8 @@ if (!customElements.get('product-customization-options')) {
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
 
-          // Auto-select if not already checked
-          if (customizationOption.hasAttribute('data-has-multichoice') && !customizationOption.checked) {
+          // Auto-select on + click if not already checked
+          if (option === 'increase' && customizationOption.hasAttribute('data-has-multichoice') && !customizationOption.checked) {
             customizationOption.checked = true;
             const optionHandler = optionContainer.querySelector('[data-selected-options]');
             if (optionHandler) this.createOptionHTML(optionHandler, customizationOption);
@@ -407,10 +397,7 @@ if (!customElements.get('product-customization-options')) {
           const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
             const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
-            const formattedPrice = price.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
+            const formattedPrice = price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             priceContainer.innerHTML = `$${formattedPrice}`;
             setTimeout(() => {
               const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
@@ -421,6 +408,7 @@ if (!customElements.get('product-customization-options')) {
             });
           }
 
+          // Always re-evaluate multichoice state after any quantity change
           if (customizationOption.hasAttribute('data-has-multichoice')) {
             const optionHandler = optionContainer.querySelector('[data-selected-options]');
             if (optionHandler) this.multichoice(optionHandler, customizationOption);
