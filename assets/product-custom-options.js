@@ -340,7 +340,6 @@ if (!customElements.get('product-customization-options')) {
         const optionName = option.name;
         const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const uncheckedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
-        const limitReached = limit !== null && totalQuantity >= limit;
 
         if (option.dataset.fieldName !== 'No Thanks') {
           const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
@@ -365,34 +364,33 @@ if (!customElements.get('product-customization-options')) {
         const limitReached = limit !== null && totalQuantity >= limit;
 
         if (uncheckedOptions.length > 0) {
-        }
-
-        uncheckedOptions.forEach((opt) => {
-          const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
-          if (qInput && Number(qInput.value) !== 1) {
-            qInput.value = 1;
-            const priceContainer = opt.parentElement.querySelector('[avis-price]');
-            if (priceContainer) {
-              const basePrice = Number(priceContainer.getAttribute('avis-price'));
-              if (!isNaN(basePrice) && basePrice > 0) {
-                priceContainer.innerHTML = `$${basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          uncheckedOptions.forEach((opt) => {
+            const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
+            if (qInput && Number(qInput.value) !== 1) {
+              qInput.value = 1;
+              const priceContainer = opt.parentElement.querySelector('[avis-price]');
+              if (priceContainer) {
+                const basePrice = Number(priceContainer.getAttribute('avis-price'));
+                if (!isNaN(basePrice) && basePrice > 0) {
+                  priceContainer.innerHTML = `$${basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                }
               }
             }
-          }
-        });
+          });
 
-        uncheckedOptions.forEach((opt) => {
-          opt.disabled = limitReached;
-          const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
-          if (!qInput) return;
-          const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
-          if (!increaseBtn) return;
-          if (limitReached) {
-            increaseBtn.disabled = true;
-          } else {
-            increaseBtn.disabled = false;
-          }
-        });
+          uncheckedOptions.forEach((opt) => {
+            opt.disabled = limitReached;
+            const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
+            if (!qInput) return;
+            const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
+            if (!increaseBtn) return;
+            if (limitReached) {
+              increaseBtn.disabled = true;
+            } else {
+              increaseBtn.disabled = false;
+            }
+          });
+        }
 
         // Update checked cards — only disable + if adding 1 more would exceed limit
         checkedOptions.forEach((choice) => {
