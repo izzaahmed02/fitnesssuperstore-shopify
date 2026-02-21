@@ -381,7 +381,12 @@ if (!customElements.get('product-customization-options')) {
                 });
               }
               if (option === 'increase') {
-                if (quantityLimit + 1 > limit) return;
+                if (quantityLimit + 1 > limit) {
+                  if (increaseButtons.length > 0) {
+                    increaseButtons.forEach((button) => (button.disabled = true));
+                  }
+                  return;
+                }
               }
             }
           }
