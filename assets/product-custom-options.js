@@ -370,29 +370,31 @@ if (!customElements.get('product-customization-options')) {
             }
 
             if (optionContainer.hasAttribute('data-multichoice-limit')) {
-              const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-              const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
-              const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
-              let quantityLimit = 0;
-              if (multiChoiceOptions.length > 0) {
-                multiChoiceOptions.forEach((choice) => {
-                  const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-                  if (optionQuantityInput) {
-                    quantityLimit += Number(optionQuantityInput.value);
-                  }
-                });
-              }
-              // if (option === 'increase') {
-              //   quantityLimit = quantityLimit + 1;
-              // } else {
-              //   quantityLimit = quantityLimit - 1;
-              // }
+              setTimeout(() => {
+                const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+                const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
+                const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
+                let quantityLimit = 0;
+                if (multiChoiceOptions.length > 0) {
+                  multiChoiceOptions.forEach((choice) => {
+                    const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+                    if (optionQuantityInput) {
+                      quantityLimit += Number(optionQuantityInput.value);
+                    }
+                  });
+                }
+                // if (option === 'increase') {
+                //   quantityLimit = quantityLimit + 1;
+                // } else {
+                //   quantityLimit = quantityLimit - 1;
+                // }
 
-              increaseDisabled = quantityLimit >= limit;
+                increaseDisabled = quantityLimit >= limit;
 
-              console.log(quantityLimit);
+                console.log(quantityLimit);
 
-              increaseButtons.forEach((button) => (button.disabled = increaseDisabled));
+                increaseButtons.forEach((button) => (button.disabled = increaseDisabled));
+              });
             }
           }
           option === 'increase' ? (input.value = el.disabled ? inputValue : inputValue + 1) : (input.value = inputValue - 1);
