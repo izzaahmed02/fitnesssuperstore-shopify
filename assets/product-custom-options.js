@@ -383,6 +383,8 @@ if (!customElements.get('product-customization-options')) {
                   }
                 });
               }
+
+              increaseDisabled = quantityLimit >= limit;
             }
           }
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
