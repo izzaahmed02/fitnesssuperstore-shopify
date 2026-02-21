@@ -350,6 +350,10 @@ if (!customElements.get('product-customization-options')) {
               }
             });
 
+            if (total >= Number(optionContainer.dataset.multichoiceLimit)) {
+              console.log('test');
+            }
+
             console.log(total);
           }
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
