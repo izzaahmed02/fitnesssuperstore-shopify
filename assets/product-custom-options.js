@@ -389,8 +389,6 @@ if (!customElements.get('product-customization-options')) {
             console.log(total);
           }
           if (customizationOption.checked) {
-            console.log(test);
-
             option === 'increase' ? (input.value = el.disabled ? inputValue : inputValue + 1) : (input.value = inputValue - 1);
           }
           if (updatePrice) {
