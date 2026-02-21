@@ -373,12 +373,15 @@ if (!customElements.get('product-customization-options')) {
               const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
               const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
               const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
-
+              let quantityLimit = 0;
               if (multiChoiceOptions.length > 0) {
-                const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-                if (optionQuantityInput) {
-                  quantityLimit += Number(optionQuantityInput.value);
-                }
+                multiChoiceOptions.forEach((choice) => {
+                  selectedValues.push(choice.value);
+                  const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+                  if (optionQuantityInput) {
+                    quantityLimit += Number(optionQuantityInput.value);
+                  }
+                });
               }
             }
           }
