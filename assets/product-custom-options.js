@@ -353,11 +353,13 @@ if (!customElements.get('product-customization-options')) {
           if (noThanksOptionSelected) noThanksOptionSelected.remove();
         }
 
-        checkedOptions.forEach((choice) => {
-          selectedValues.push(choice.value);
-          const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-          totalQuantity += qInput ? Number(qInput.value) : 1;
-        });
+        if (checkedOptions.length > 0) {
+          checkedOptions.forEach((choice) => {
+            selectedValues.push(choice.value);
+            const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+            totalQuantity += qInput ? Number(qInput.value) : 1;
+          });
+        }
 
         uncheckedOptions.forEach((opt) => {
           const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
