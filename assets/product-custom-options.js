@@ -367,10 +367,12 @@ if (!customElements.get('product-customization-options')) {
               customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
             }
           }
-
+          let total = 0;
           const inputs = optionContainer.querySelectorAll('[data-input-quantity]');
-
-          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+          inputs.forEach((input) => {
+            total += Number(input.value);
+          });
+          if (option === 'increse') option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
 
           if (updatePrice) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
