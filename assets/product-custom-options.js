@@ -344,6 +344,7 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
+          let quantityLimit = 0;
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
@@ -370,7 +371,6 @@ if (!customElements.get('product-customization-options')) {
                 });
               }
               if (optionContainer.hasAttribute('data-multichoice-limit')) {
-                let quantityLimit = 0;
                 setTimeout(() => {
                   const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
                   const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
