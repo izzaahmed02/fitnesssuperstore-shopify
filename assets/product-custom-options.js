@@ -363,7 +363,7 @@ if (!customElements.get('product-customization-options')) {
           if (inputValue - 1 === 0 && direction === 'decrease') return;
           if (minInputValue && inputValue === minInputValue && direction === 'decrease') return;
 
-          // Hard limit gate
+          // Hard limit gate — always recount live from DOM
           if (direction === 'increase') {
             const optionContainer = el.closest('[data-option-accordion]');
             if (optionContainer?.hasAttribute('data-multichoice-limit')) {
@@ -373,11 +373,17 @@ if (!customElements.get('product-customization-options')) {
               const optionName = thisOption?.name;
 
               if (optionName) {
+                // Live recount every click — no stale state
                 const currentTotal = this.getTotalQuantityForGroup(optionContainer, optionName);
-                // If this card is NOT yet checked, it's not in currentTotal yet.
-                // Adding it will contribute 1 (we'll reset it to 1 below).
-                // If it IS checked, it's already in currentTotal, so +1 must still fit.
-                if (currentTotal + 1 > limit) return;
+                const isNewCard = thisOption && !thisOption.checked;
+                // New card contributes 1; existing card contributes +1 on top of current total
+                if (currentTotal + 1 > limit) {
+                  // Ensure button is disabled so UI stays consistent
+                  el.setAttribute('disabled', 'true');
+                  el.style.pointerEvents = 'none';
+                  el.style.opacity = '0.4';
+                  return;
+                }
               }
             }
           }
@@ -396,8 +402,7 @@ if (!customElements.get('product-customization-options')) {
 
           // Auto-select on + click if not already checked
           if (direction === 'increase' && customizationOption.hasAttribute('data-has-multichoice') && !customizationOption.checked) {
-            // ✅ FIX: Reset to 1 before selecting — card should enter the group with qty 1,
-            // not the incremented value, since the limit gate only allowed room for 1 more.
+            // ✅ Reset to 1 — new card enters the group with qty 1, not 2
             input.value = 1;
             if (updatePrice) input.dataset.value = 1;
 
