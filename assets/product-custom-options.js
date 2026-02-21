@@ -395,6 +395,8 @@ if (!customElements.get('product-customization-options')) {
               if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
               if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
               if (option === 'increase') {
+                console.log(limit, 'limit');
+
                 console.log(quantityLimit, 'quantityLimit');
 
                 console.log(inputValue + 1 + quantityLimit);
