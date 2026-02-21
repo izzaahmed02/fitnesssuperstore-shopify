@@ -204,20 +204,29 @@ if (!customElements.get('product-customization-options')) {
         multiChoiceOptions.forEach((choice) => {
           selectedValues.push(choice.value);
           const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-          if (optionQuantityInput) {
-            quantityLimit += optionQuantityInput ? Number(optionQuantityInput.value) : 1;
-          }
+          quantityLimit += optionQuantityInput ? Number(optionQuantityInput.value) : 1;
         });
+
+        // Disable unchecked options if limit reached
         const limitReached = limit !== null && (selectedValues.length >= limit || quantityLimit >= limit);
         notSelectedOptions.forEach((option) => (option.disabled = limitReached));
 
-        // if (selectedValues.length === limit) {
-        //   notSelectedOptions.forEach((option) => (option.disabled = true));
-        // } else if (quantityLimit === limit) {
-        //   notSelectedOptions.forEach((option) => (option.disabled = true));
-        // } else {
-        //   notSelectedOptions.forEach((option) => (option.disabled = false));
-        // }
+        // *** KEY FIX: update max on each checked option's quantity input ***
+        if (limit !== null) {
+          multiChoiceOptions.forEach((choice) => {
+            const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+            if (optionQuantityInput) {
+              // This option can go up by however many slots are still free
+              const otherQuantities = quantityLimit - Number(optionQuantityInput.value);
+              const remaining = limit - otherQuantities;
+              optionQuantityInput.max = remaining;
+              // If current value exceeds new max, clamp it down
+              if (Number(optionQuantityInput.value) > remaining) {
+                optionQuantityInput.value = remaining;
+              }
+            }
+          });
+        }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
