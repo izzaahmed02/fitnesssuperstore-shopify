@@ -347,7 +347,6 @@ if (!customElements.get('product-customization-options')) {
       }
 
       // Helper to incease/decrease quanity
-
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
@@ -358,6 +357,7 @@ if (!customElements.get('product-customization-options')) {
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+
           if (updatePrice) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
             this.updatePrice();
@@ -368,12 +368,6 @@ if (!customElements.get('product-customization-options')) {
 
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
-
-          // *** ADD THIS: re-evaluate multichoice limits after quantity change ***
-          if (customizationOption.hasAttribute('data-has-multichoice') && customizationOption.checked) {
-            const optionHandler = optionContainer.querySelector('[data-selected-options]');
-            if (optionHandler) this.multichoice(optionHandler, customizationOption);
-          }
 
           const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
@@ -387,13 +381,16 @@ if (!customElements.get('product-customization-options')) {
               const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
               if (selectedOption) {
                 const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
-                selectedOptionPrice.innerHTML = `$${formattedPrice}`;
+                if (selectedOptionPrice) selectedOptionPrice.innerHTML = `$${formattedPrice}`;
               }
             });
           }
 
-          customizationOption.checked = true;
-          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
+          // *** Call multichoice directly AFTER all value updates, NO dispatchEvent ***
+          if (customizationOption.hasAttribute('data-has-multichoice') && customizationOption.checked) {
+            const optionHandler = optionContainer.querySelector('[data-selected-options]');
+            if (optionHandler) this.multichoice(optionHandler, customizationOption);
+          }
         });
       }
 
