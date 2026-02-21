@@ -198,7 +198,7 @@ if (!customElements.get('product-customization-options')) {
         const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const uncheckedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
 
-        // Fresh recount from DOM
+        // Live recount of total quantity across all checked cards
         let totalQuantity = 0;
         let selectedValues = [];
         checkedOptions.forEach((choice) => {
@@ -207,11 +207,11 @@ if (!customElements.get('product-customization-options')) {
           totalQuantity += qInput ? Number(qInput.value) : 1;
         });
 
-        // Disable unchecked cards when total quantity OR card count hits limit
+        // ✅ FIX: Use quantity-only limit (not card count) for disabling new cards
         const limitReached = totalQuantity >= limit;
         uncheckedOptions.forEach((opt) => (opt.disabled = limitReached));
 
-        // Per checked card: disable + if adding 1 more would exceed limit
+        // ✅ FIX: Re-evaluate EVERY checked card's increase button using live totalQuantity
         checkedOptions.forEach((choice) => {
           const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
           if (!qInput) return;
@@ -219,8 +219,8 @@ if (!customElements.get('product-customization-options')) {
           if (!increaseBtn) return;
 
           const currentValue = Number(qInput.value);
-          const otherTotal = totalQuantity - currentValue;
-          // Can increase only if (everyone else) + (this + 1) is still within limit
+          const otherTotal = totalQuantity - currentValue; // everyone else's total
+          // ✅ This card can increase only if everyone else + (this + 1) fits within limit
           const canIncrease = otherTotal + currentValue + 1 <= limit;
 
           if (canIncrease) {
