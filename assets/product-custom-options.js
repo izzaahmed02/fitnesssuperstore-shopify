@@ -223,7 +223,10 @@ if (!customElements.get('product-customization-options')) {
             option.parentNode.classList.add('not-allowed');
           });
         } else {
-          notSelectedOptions.forEach(option => option.disabled = false); 
+          notSelectedOptions.forEach(option => {
+            option.disabled = false;
+            option.parentNode.classList.remove('not-allowed');
+          }); 
         }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
