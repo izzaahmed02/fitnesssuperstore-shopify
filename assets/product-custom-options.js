@@ -372,12 +372,13 @@ if (!customElements.get('product-customization-options')) {
           if (option === 'increase') {
             input.value = inputValue + 1;
             if (optionContainer.hasAttribute('data-multichoice-limit')) {
-              optionContainer.dataset.currentTotal = optionContainer.dataset.currentTotal + inputValue + 1;
+              optionContainer.dataset.currentTotal = Number(optionContainer.dataset.currentTotal) + inputValue + 1;
+              optionContainer.setAttribute('current-total', data - multichoice - limit);
             }
           } else {
             input.value = inputValue - 1;
             if (optionContainer.hasAttribute('data-multichoice-limit')) {
-              optionContainer.dataset.currentTotal = inputValue - 1;
+              optionContainer.dataset.currentTotal = Number(optionContainer.dataset.currentTotal) + inputValue + 1;
             }
           }
 
