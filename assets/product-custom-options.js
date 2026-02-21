@@ -358,8 +358,9 @@ if (!customElements.get('product-customization-options')) {
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           if (option === 'increase') {
             if (limit && quantityLimit) {
-              if (inputValue + 1 + quantityLimit >= limit) {
-              }
+              console.log(inputValue + 1 + quantityLimit);
+
+              if (inputValue + 1 + quantityLimit >= limit) return;
             } else {
               input.value = inputValue + 1;
             }
