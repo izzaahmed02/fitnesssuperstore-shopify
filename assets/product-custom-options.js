@@ -359,11 +359,11 @@ if (!customElements.get('product-customization-options')) {
 
             const btnIncrease = optionContainer.querySelectorAll('[data-increase-quantity]');
 
-            // if (total >= Number(optionContainer.dataset.multichoiceLimit)) {
-            //   btnIncrease.forEach((btn) => (btn.disabled = true));
-            // } else {
-            //   btnIncrease.forEach((btn) => (btn.disabled = false));
-            // }
+            if (total >= Number(optionContainer.dataset.multichoiceLimit)) {
+              btnIncrease.forEach((btn) => (btn.disabled = true));
+            } else {
+              btnIncrease.forEach((btn) => (btn.disabled = false));
+            }
 
             console.log(total);
           }
