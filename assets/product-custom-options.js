@@ -177,16 +177,10 @@ if (!customElements.get('product-customization-options')) {
       // Helper, for options multichoice
 
       multichoice(optionHandler, option) {
-        let limit = null;
         const parent = optionHandler.closest('[data-option-accordion]');
-        if (parent && parent.hasAttribute('data-multichoice-limit')) {
-          limit = Number(parent.getAttribute('data-multichoice-limit'));
-        }
-        if (limit === null) return;
-
+        if (!parent || !parent.hasAttribute('data-multichoice-limit')) return;
+        const limit = Number(parent.getAttribute('data-multichoice-limit'));
         const optionName = option.name;
-        const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
-        const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
 
         // No Thanks logic
         if (option.dataset.fieldName !== 'No Thanks') {
@@ -201,70 +195,50 @@ if (!customElements.get('product-customization-options')) {
           if (noThanksOptionSelected) noThanksOptionSelected.remove();
         }
 
-        // Step 1: fresh recount from DOM
-        let quantityLimit = 0;
+        // Recount everything fresh from DOM
+        const allOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]`);
+        const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+        const uncheckedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
+
+        let totalQuantity = 0;
         let selectedValues = [];
-        multiChoiceOptions.forEach((choice) => {
+
+        checkedOptions.forEach((choice) => {
           selectedValues.push(choice.value);
-          const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-          quantityLimit += optionQuantityInput ? Number(optionQuantityInput.value) : 1;
+          const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+          totalQuantity += qInput ? Number(qInput.value) : 1;
         });
 
-        // Step 2: set max and update + button state per checked option — NO clamping
-        // Step 2: set max and update + button state for ALL checked options
-        multiChoiceOptions.forEach((choice) => {
-          const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+        const limitReached = checkedOptions.length >= limit || totalQuantity >= limit;
 
-          // Handle options WITH a quantity input
-          if (optionQuantityInput) {
-            const currentValue = Number(optionQuantityInput.value);
-            const otherQuantities = quantityLimit - currentValue;
-            const remaining = limit - otherQuantities;
-            optionQuantityInput.max = remaining;
+        // Disable/enable unchecked checkboxes
+        uncheckedOptions.forEach((opt) => (opt.disabled = limitReached));
 
-            const increaseBtn = optionQuantityInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
-            if (!increaseBtn) return;
-            if (currentValue >= remaining) {
-              increaseBtn.setAttribute('disabled', 'true');
-              increaseBtn.style.pointerEvents = 'none';
-              increaseBtn.style.opacity = '0.4';
-            } else {
-              increaseBtn.removeAttribute('disabled');
-              increaseBtn.style.pointerEvents = '';
-              increaseBtn.style.opacity = '';
-            }
+        // For each checked option: update its + button based on remaining slots
+        checkedOptions.forEach((choice) => {
+          const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+          if (!qInput) return;
+          const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
+          if (!increaseBtn) return;
+
+          const currentValue = Number(qInput.value);
+          const otherTotal = totalQuantity - currentValue;
+          const canIncrease = otherTotal + currentValue + 1 <= limit;
+
+          if (canIncrease) {
+            increaseBtn.removeAttribute('disabled');
+            increaseBtn.style.pointerEvents = '';
+            increaseBtn.style.opacity = '';
           } else {
-            // Handle options WITHOUT a quantity input — they count as 1, always disable their +
-            const choiceContainer =
-              choice.closest('[data-quantity-selector]') || parent.querySelector(`[data-quantity-selector]:has([data-customization-option="${choice.dataset.customizationOption}"])`);
-            const increaseBtn = choiceContainer?.querySelector('[data-increase-quantity]');
-            if (!increaseBtn) return;
-            // These always consume exactly 1 slot, disable + since they can't go higher
             increaseBtn.setAttribute('disabled', 'true');
             increaseBtn.style.pointerEvents = 'none';
             increaseBtn.style.opacity = '0.4';
           }
         });
 
-        // Step 3: also re-enable + buttons on unchecked options when limit NOT reached
-        // (in case they were previously disabled by a stale multichoice call)
-        if (!limitReached) {
-          notSelectedOptions.forEach((choice) => {
-            const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-            if (!optionQuantityInput) return;
-            const increaseBtn = optionQuantityInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
-            if (!increaseBtn) return;
-            increaseBtn.removeAttribute('disabled');
-            increaseBtn.style.pointerEvents = '';
-            increaseBtn.style.opacity = '';
-          });
-        }
-        // Step 4: update badge
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
-        if (!option.checked && addedOption) {
-          addedOption.remove();
-        }
+        if (!option.checked && addedOption) addedOption.remove();
       }
       // Helper for creating option badge
 
