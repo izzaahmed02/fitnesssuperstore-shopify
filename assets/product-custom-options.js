@@ -214,16 +214,42 @@ if (!customElements.get('product-customization-options')) {
           multiChoiceOptions.forEach((choice) => {
             const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
             if (optionQuantityInput) {
-              // This option can go up by however many slots are still free
               const otherQuantities = quantityLimit - Number(optionQuantityInput.value);
               const remaining = limit - otherQuantities;
-              optionQuantityInput.max = remaining;
-              // If current value exceeds new max, clamp it down
+              optionQuantityInput.max = remaining; // naturally clamps to current value when fully consumed
+
+              // *** FIX: also disable the + button directly when no remaining slots ***
+              const increaseBtn = optionQuantityInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
+              if (increaseBtn) {
+                if (remaining <= Number(optionQuantityInput.value)) {
+                  increaseBtn.setAttribute('disabled', true);
+                  increaseBtn.style.pointerEvents = 'none';
+                  increaseBtn.style.opacity = '0.4';
+                } else {
+                  increaseBtn.removeAttribute('disabled');
+                  increaseBtn.style.pointerEvents = '';
+                  increaseBtn.style.opacity = '';
+                }
+              }
+
               if (Number(optionQuantityInput.value) > remaining) {
                 optionQuantityInput.value = remaining;
               }
             }
           });
+
+          // *** FIX: also re-enable + buttons on checked options when limit is NOT reached ***
+          if (!limitReached) {
+            multiChoiceOptions.forEach((choice) => {
+              const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+              const increaseBtn = optionQuantityInput?.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
+              if (increaseBtn) {
+                increaseBtn.removeAttribute('disabled');
+                increaseBtn.style.pointerEvents = '';
+                increaseBtn.style.opacity = '';
+              }
+            });
+          }
         }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
