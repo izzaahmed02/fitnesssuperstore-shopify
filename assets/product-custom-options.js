@@ -383,7 +383,7 @@ if (!customElements.get('product-customization-options')) {
                 });
               }
               if (option === 'increase') {
-                increaseDisabled = quantityLimit + 2 >= limit;
+                increaseDisabled = quantityLimit + 1 >= limit;
               } else {
                 increaseDisabled = quantityLimit - 1 >= limit;
               }
