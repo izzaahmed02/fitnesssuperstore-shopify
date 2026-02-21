@@ -418,7 +418,7 @@ if (!customElements.get('product-customization-options')) {
           const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
             const rawPrice = parseFloat(priceContainer.getAttribute('avis-price'));
-            if (!isNaN(rawPrice)) {
+            if (!isNaN(rawPrice) && rawPrice > 0) {
               const price = rawPrice * Number(input.value);
               const formattedPrice = price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
               priceContainer.innerHTML = `$${formattedPrice}`;
