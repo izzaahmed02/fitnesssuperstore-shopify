@@ -381,7 +381,6 @@ if (!customElements.get('product-customization-options')) {
           if (priceContainer) {
             const basePrice = Number(priceContainer.getAttribute('avis-price'));
             if (!isNaN(basePrice) && basePrice > 0) {
-              // Auto-selected new card should show price × 1, not × 2
               const displayQty = !customizationOption.checked && option === 'increase' ? 1 : Number(input.value);
               const formattedPrice = (basePrice * displayQty).toLocaleString('en-US', {
                 minimumFractionDigits: 2,
@@ -397,7 +396,6 @@ if (!customElements.get('product-customization-options')) {
               });
             }
           }
-
           // Auto-select on + click — reset to 1 so new card enters with qty 1
           if (option === 'increase' && !customizationOption.checked) {
             input.value = 1;
