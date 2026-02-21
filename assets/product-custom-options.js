@@ -175,109 +175,121 @@ if (!customElements.get('product-customization-options')) {
       }
 
       // Helper, for options multichoice
-const getPriceContainer = (opt) => {
-  return opt.closest('label')?.querySelector('[avis-price]');
-};
- multichoice(optionHandler, option) {
-  let limit = null;
-  let totalQuantity = 0;
-  let selectedValues = [];
-  const parent = optionHandler.closest('[data-option-accordion]');
-  if (parent && parent.hasAttribute('data-multichoice-limit')) {
-    limit = Number(parent.getAttribute('data-multichoice-limit'));
-  }
-  const optionName = option.name;
-  const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
-  const uncheckedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
 
-  if (option.dataset.fieldName !== 'No Thanks') {
-    const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
-    if (noThanksOption) {
-      noThanksOption.checked = false;
-      noThanksOption.disabled = true;
-    }
-  }
-  if (option.hasAttribute('data-field-price')) {
-    const noThanksOptionSelected = optionHandler.querySelector('[data-option-variant-name="No Thanks"]');
-    if (noThanksOptionSelected) noThanksOptionSelected.remove();
-  }
-
-  checkedOptions.forEach((choice) => {
-    selectedValues.push(choice.value);
-    const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-    totalQuantity += qInput ? Number(qInput.value) : 1;
-  });
-
-  // ✅ Reset quantity and price for unchecked cards
-  uncheckedOptions.forEach((opt) => {
-    const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
-    if (qInput && Number(qInput.value) !== 1) {
-      qInput.value = 1;
-      const priceContainer = opt.closest('label')?.querySelector('[avis-price]');
-      if (priceContainer) {
-        const basePrice = parseFloat(priceContainer.getAttribute('avis-price').replace(',', ''));
-        if (!isNaN(basePrice) && basePrice > 0) {
-          priceContainer.innerHTML = `$${basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      multichoice(optionHandler, option) {
+        let limit = null;
+        let totalQuantity = 0;
+        let selectedValues = [];
+        const parent = optionHandler.closest('[data-option-accordion]');
+        if (parent && parent.hasAttribute('data-multichoice-limit')) {
+          limit = Number(parent.getAttribute('data-multichoice-limit'));
         }
+        const optionName = option.name;
+        const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+        const uncheckedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
+
+        if (option.dataset.fieldName !== 'No Thanks') {
+          const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
+          if (noThanksOption) {
+            noThanksOption.checked = false;
+            noThanksOption.disabled = true;
+          }
+        }
+        if (option.hasAttribute('data-field-price')) {
+          const noThanksOptionSelected = optionHandler.querySelector('[data-option-variant-name="No Thanks"]');
+          if (noThanksOptionSelected) noThanksOptionSelected.remove();
+        }
+
+        checkedOptions.forEach((choice) => {
+          selectedValues.push(choice.value);
+          const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+          totalQuantity += qInput ? Number(qInput.value) : 1;
+        });
+
+        // Helper to find price container for any option input
+        const getPriceContainer = (opt) => {
+          const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
+          if (qInput) {
+            const quantitySelector = qInput.closest('[data-quantity-selector]');
+            if (quantitySelector) {
+              // Go up to card wrapper and search within it
+              const card = quantitySelector.parentElement;
+              return card?.querySelector('[avis-price]');
+            }
+          }
+          return opt.parentElement?.querySelector('[avis-price]');
+        };
+
+        // ✅ Reset quantity and price for unchecked cards
+        uncheckedOptions.forEach((opt) => {
+          const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
+          if (qInput && Number(qInput.value) !== 1) {
+            qInput.value = 1;
+            const priceContainer = getPriceContainer(opt);
+            if (priceContainer) {
+              const basePrice = Number(priceContainer.getAttribute('avis-price'));
+              if (!isNaN(basePrice) && basePrice > 0) {
+                priceContainer.innerHTML = `$${basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+              }
+            }
+          }
+        });
+
+        const limitReached = limit !== null && totalQuantity >= limit;
+
+        // Update unchecked cards — checkbox and + button
+        uncheckedOptions.forEach((opt) => {
+          opt.disabled = limitReached;
+          const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
+          if (!qInput) return;
+          const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
+          if (!increaseBtn) return;
+          if (limitReached) {
+            increaseBtn.setAttribute('disabled', 'true');
+            increaseBtn.style.pointerEvents = 'none';
+            increaseBtn.style.opacity = '0.4';
+          } else {
+            increaseBtn.removeAttribute('disabled');
+            increaseBtn.style.pointerEvents = '';
+            increaseBtn.style.opacity = '';
+          }
+        });
+
+        // Update checked cards — price display and + button state
+        checkedOptions.forEach((choice) => {
+          const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+
+          // ✅ Update price display using robust container search
+          const priceContainer = getPriceContainer(choice);
+          if (priceContainer) {
+            const basePrice = Number(priceContainer.getAttribute('avis-price'));
+            if (!isNaN(basePrice) && basePrice > 0) {
+              const qty = qInput ? Number(qInput.value) : 1;
+              priceContainer.innerHTML = `$${(basePrice * qty).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+          }
+
+          if (!qInput) return;
+          const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
+          if (!increaseBtn) return;
+          const currentValue = Number(qInput.value);
+          const otherTotal = totalQuantity - currentValue;
+          const canIncrease = limit === null || otherTotal + currentValue + 1 <= limit;
+          if (canIncrease) {
+            increaseBtn.removeAttribute('disabled');
+            increaseBtn.style.pointerEvents = '';
+            increaseBtn.style.opacity = '';
+          } else {
+            increaseBtn.setAttribute('disabled', 'true');
+            increaseBtn.style.pointerEvents = 'none';
+            increaseBtn.style.opacity = '0.4';
+          }
+        });
+
+        optionHandler.dataset.selectedOptions = selectedValues.join(',');
+        const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
+        if (!option.checked && addedOption) addedOption.remove();
       }
-    }
-  });
-
-  const limitReached = limit !== null && totalQuantity >= limit;
-
-  // Update unchecked cards — checkbox and + button
-  uncheckedOptions.forEach((opt) => {
-    opt.disabled = limitReached;
-    const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
-    if (!qInput) return;
-    const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
-    if (!increaseBtn) return;
-    if (limitReached) {
-      increaseBtn.setAttribute('disabled', 'true');
-      increaseBtn.style.pointerEvents = 'none';
-      increaseBtn.style.opacity = '0.4';
-    } else {
-      increaseBtn.removeAttribute('disabled');
-      increaseBtn.style.pointerEvents = '';
-      increaseBtn.style.opacity = '';
-    }
-  });
-
-  // Update checked cards — price display and + button state
-  checkedOptions.forEach((choice) => {
-    const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-
-    // ✅ Update price using correct label-scoped selector
-    const priceContainer = choice.closest('label')?.querySelector('[avis-price]');
-    if (priceContainer) {
-      const basePrice = parseFloat(priceContainer.getAttribute('avis-price').replace(',', ''));
-      if (!isNaN(basePrice) && basePrice > 0) {
-        const qty = qInput ? Number(qInput.value) : 1;
-        priceContainer.innerHTML = `$${(basePrice * qty).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      }
-    }
-
-    if (!qInput) return;
-    const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
-    if (!increaseBtn) return;
-    const currentValue = Number(qInput.value);
-    const otherTotal = totalQuantity - currentValue;
-    const canIncrease = limit === null || otherTotal + currentValue + 1 <= limit;
-    if (canIncrease) {
-      increaseBtn.removeAttribute('disabled');
-      increaseBtn.style.pointerEvents = '';
-      increaseBtn.style.opacity = '';
-    } else {
-      increaseBtn.setAttribute('disabled', 'true');
-      increaseBtn.style.pointerEvents = 'none';
-      increaseBtn.style.opacity = '0.4';
-    }
-  });
-
-  optionHandler.dataset.selectedOptions = selectedValues.join(',');
-  const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
-  if (!option.checked && addedOption) addedOption.remove();
-}
       // Helper for creating option badge
 
       createOptionHTML(optionHandler, option) {
