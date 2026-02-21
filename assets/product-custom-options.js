@@ -352,7 +352,7 @@ if (!customElements.get('product-customization-options')) {
             if (option === 'increase') {
               total = total + 1;
             } else {
-              total = total - 1;
+              total = total - 2;
             }
 
             console.log(total);
