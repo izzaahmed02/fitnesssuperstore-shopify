@@ -209,21 +209,24 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        if (selectedValues.length >= limit) {
+        console.log(quantityLimit);
+
+        if (selectedValues.length == limit) {
           notSelectedOptions.forEach((option) => (option.disabled = true));
-          // if (increaseButtons.length > 0) {
-          //   increaseButtons.forEach((button) => (button.disabled = true));
-          // }
-          // } else if(quantityLimit >= limit) {
-          //   notSelectedOptions.forEach(option => option.disabled = true);
-          //   if(increaseButtons.length > 0) {
-          //     increaseButtons.forEach(button => button.disabled = true);
-          //   }
+          if (increaseButtons.length > 0) {
+            increaseButtons.forEach((button) => (button.disabled = true));
+          }
+        } else if (quantityLimit == limit) {
+          notSelectedOptions.forEach((option) => (option.disabled = true));
+
+          if (increaseButtons.length > 0) {
+            increaseButtons.forEach((button) => (button.disabled = true));
+          }
         } else {
           notSelectedOptions.forEach((option) => (option.disabled = false));
-          // if (increaseButtons.length > 0) {
-          //   increaseButtons.forEach((button) => (button.disabled = false));
-          // }
+          if (increaseButtons.length > 0) {
+            increaseButtons.forEach((button) => (button.disabled = false));
+          }
         }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
@@ -342,78 +345,39 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
-          let limit = null;
-          let quantityLimit = null;
-
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
+          if (inputValue - 1 === 0 && option === 'decrease') return;
+          if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
+          if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
+          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+          if (updatePrice) {
+            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
+            this.updatePrice();
+          }
           const optionContainer = el.closest('[data-option-accordion]');
-          if (optionContainer.hasAttribute('data-multichoice-limit')) {
-            limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+          if (!optionContainer) return;
+          const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
+          if (!customizationOption) return;
+          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
+          if (priceContainer) {
+            const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
+            const formattedPrice = price.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            });
+            priceContainer.innerHTML = `$${formattedPrice}`;
+            setTimeout(() => {
+              const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
+              if (selectedOption) {
+                const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
+                selectedOptionPrice.innerHTML = `$${formattedPrice}`;
+              }
+            });
           }
-
-          if (optionContainer) {
-            const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
-            if (customizationOption) {
-              customizationOption.checked = true;
-              customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
-              const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
-              if (priceContainer) {
-                const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
-                const formattedPrice = price.toLocaleString('en-US', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                });
-                priceContainer.innerHTML = `$${formattedPrice}`;
-                setTimeout(() => {
-                  const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
-                  if (selectedOption) {
-                    const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
-                    selectedOptionPrice.innerHTML = `$${formattedPrice}`;
-                  }
-                });
-              }
-              if (optionContainer.hasAttribute('data-multichoice-limit')) {
-                const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
-                const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
-
-                if (multiChoiceOptions.length > 0) {
-                  multiChoiceOptions.forEach((choice) => {
-                    const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-                    if (optionQuantityInput) {
-                      quantityLimit += Number(optionQuantityInput.value);
-                    }
-                  });
-                  if (increaseButtons.length > 0) {
-                    increaseButtons.forEach((button) => (button.disabled = quantityLimit >= limit));
-                  }
-                }
-              }
-
-              if (inputValue - 1 === 0 && option === 'decrease') return;
-              if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
-              if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
-              if (option === 'increase') {
-                if (limit && quantityLimit) {
-                  if (quantityLimit >= limit) {
-                    console.log('tete');
-                  } else {
-                    input.value = inputValue + 1;
-                  }
-                } else {
-                  input.value = inputValue + 1;
-                }
-              } else {
-                input.value = inputValue - 1;
-              }
-              // option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
-              if (updatePrice) {
-                option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
-                this.updatePrice();
-              }
-            }
-          }
+          customizationOption.checked = true;
+          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
 
