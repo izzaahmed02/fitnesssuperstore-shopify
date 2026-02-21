@@ -208,25 +208,18 @@ if (!customElements.get('product-customization-options')) {
           if(optionQuantityInput) {
             quantityLimit += Number(optionQuantityInput.value);
           }
-          increaseButton.disabled = quantityLimit >= limit;
+          increaseButton.disabled = quantityLimit == limit;
         });
+
+        console.log(quantityLimit);
         
 
-        if(selectedValues.length >= limit) {
-          notSelectedOptions.forEach(option => {
-            option.disabled = true;
-            option.parentNode.classList.add('not-allowed');
-          });
-        } else if(quantityLimit >= limit) {
-          notSelectedOptions.forEach(option => {
-            option.disabled = true;
-            option.parentNode.classList.add('not-allowed');
-          });
+        if(selectedValues.length == limit) {
+          notSelectedOptions.forEach(option => option.disabled = true);
+        } else if(quantityLimit == limit) {
+          notSelectedOptions.forEach(option => option.disabled = true);
         } else {
-          notSelectedOptions.forEach(option => {
-            option.disabled = false;
-            option.parentNode.classList.remove('not-allowed');
-          }); 
+          notSelectedOptions.forEach(option => option.disabled = false); 
         }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
