@@ -340,6 +340,7 @@ if (!customElements.get('product-customization-options')) {
           if (inputValue - 1 === 0 && option === 'decrease') return;
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
+
           const optionsChecked = optionContainer.querySelectorAll('[data-customization-option]:checked');
           if (optionsChecked.length > 0) {
             let total = 0;
@@ -370,27 +371,6 @@ if (!customElements.get('product-customization-options')) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
             this.updatePrice();
           }
-          if (!optionContainer) return;
-          const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
-          if (!customizationOption) return;
-          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
-          if (priceContainer) {
-            const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
-            const formattedPrice = price.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
-            priceContainer.innerHTML = `$${formattedPrice}`;
-            setTimeout(() => {
-              const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
-              if (selectedOption) {
-                const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
-                selectedOptionPrice.innerHTML = `$${formattedPrice}`;
-              }
-            });
-          }
-          customizationOption.checked = true;
-          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
 
