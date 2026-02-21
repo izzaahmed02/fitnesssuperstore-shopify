@@ -214,11 +214,14 @@ if (!customElements.get('product-customization-options')) {
 
         if(selectedValues.length >= limit) {
           notSelectedOptions.forEach(option => {
+            option.disabled = true;
             option.parentNode.classList.add('not-allowed');
-            option.disabled = true
           });
         } else if(quantityLimit >= limit) {
-          notSelectedOptions.forEach(option => option.disabled = true);
+          notSelectedOptions.forEach(option => {
+            option.disabled = true;
+            option.parentNode.classList.add('not-allowed');
+          });
         } else {
           notSelectedOptions.forEach(option => option.disabled = false); 
         }
