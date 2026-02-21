@@ -344,6 +344,7 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
+          let limit = null;
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
