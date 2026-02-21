@@ -337,7 +337,6 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
-          let total;
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
@@ -370,10 +369,10 @@ if (!customElements.get('product-customization-options')) {
           }
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
 
-          const multiChoiceOptions = this.querySelectorAll(`[data-customization-option]:checked`);
+          const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
           if (multiChoiceOptions.length > 0) {
             multiChoiceOptions.forEach((choice) => {
-              const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+              const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
               if (optionQuantityInput) {
                 quantityLimit += Number(optionQuantityInput.value);
               }
