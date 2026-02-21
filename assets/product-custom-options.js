@@ -207,11 +207,9 @@ if (!customElements.get('product-customization-options')) {
           quantityLimit += optionQuantityInput ? Number(optionQuantityInput.value) : 1;
         });
 
-        // Disable unchecked options if limit reached
         const limitReached = limit !== null && (selectedValues.length >= limit || quantityLimit >= limit);
         notSelectedOptions.forEach((option) => (option.disabled = limitReached));
 
-        // *** KEY FIX: update max on each checked option's quantity input ***
         if (limit !== null) {
           multiChoiceOptions.forEach((choice) => {
             const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
