@@ -362,6 +362,8 @@ if (!customElements.get('product-customization-options')) {
           });
         }
 
+        const limitReached = limit !== null && totalQuantity >= limit;
+
         if (uncheckedOptions.length > 0) {
         }
 
