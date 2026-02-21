@@ -377,6 +377,8 @@ if (!customElements.get('product-customization-options')) {
                 quantityLimit += Number(optionQuantityInput.value);
               }
             });
+            console.log(quantityLimit);
+
             if (quantityLimit >= limit) {
               input.value = inputValue;
               const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
