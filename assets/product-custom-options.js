@@ -365,11 +365,7 @@ if (!customElements.get('product-customization-options')) {
 
             console.log(total, option);
           }
-          option === 'increase' ? (input.value = el.disabled ? inputValue : inputValue + 1) : (input.value = inputValue - 1);
-          if (updatePrice) {
-            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
-            this.updatePrice();
-          }
+
           if (!optionContainer) return;
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
@@ -388,6 +384,11 @@ if (!customElements.get('product-customization-options')) {
                 selectedOptionPrice.innerHTML = `$${formattedPrice}`;
               }
             });
+          }
+          option === 'increase' ? (input.value = el.disabled ? inputValue : inputValue + 1) : (input.value = inputValue - 1);
+          if (updatePrice) {
+            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
+            this.updatePrice();
           }
           customizationOption.checked = true;
           customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
