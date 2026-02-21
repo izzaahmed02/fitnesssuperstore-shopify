@@ -390,6 +390,14 @@ if (!customElements.get('product-customization-options')) {
                   if (notSelectedOptions.length > 0) {
                     notSelectedOptions.forEach((option) => (option.disabled = true));
                   }
+                  return;
+                } else {
+                  if (increaseButtons.length > 0) {
+                    increaseButtons.forEach((button) => (button.disabled = false));
+                  }
+                  if (notSelectedOptions.length > 0) {
+                    notSelectedOptions.forEach((option) => (option.disabled = false));
+                  }
                 }
               }
             }
