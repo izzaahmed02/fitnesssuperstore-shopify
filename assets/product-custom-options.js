@@ -369,11 +369,10 @@ if (!customElements.get('product-customization-options')) {
             }
           }
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
-          option === 'increase' ? (optionContainer.dataset.currentTotal = Number(optionContainer.dataset.currentTotal) + Number(input.value);) : (input.value = inputValue - 1);
+          option === 'increase'
+            ? (optionContainer.dataset.currentTotal = Number(optionContainer.dataset.currentTotal) + Number(input.value))
+            : (optionContainer.dataset.currentTotal = Number(optionContainer.dataset.currentTotal) - Number(input.value));
 
-          if (optionContainer.hasAttribute('data-multichoice-limit')) {
-            optionContainer.dataset.currentTotal = Number(optionContainer.dataset.currentTotal) + Number(input.value);
-          }
           if (updatePrice) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
             this.updatePrice();
