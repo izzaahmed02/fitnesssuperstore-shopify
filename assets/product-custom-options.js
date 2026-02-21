@@ -204,7 +204,7 @@ if (!customElements.get('product-customization-options')) {
         multiChoiceOptions.forEach((choice) => {
           selectedValues.push(choice.value);
           const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-          const increaseButtons = parent.querySelector(`[data-increase-quantity="${choice.dataset.customizationOption}"]`);
+          const increaseButton = parent.querySelector(`[data-increase-quantity="${choice.dataset.customizationOption}"]`);
 
           if(optionQuantityInput) {
             quantityLimit += Number(optionQuantityInput.value);
@@ -212,6 +212,8 @@ if (!customElements.get('product-customization-options')) {
 
           if (quantityLimit >= limit) {
             optionQuantityInput.disabled = true;
+            increaseButton.disabled = true;
+
           }
 
         });
