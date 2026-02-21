@@ -401,8 +401,8 @@ if (!customElements.get('product-customization-options')) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
             this.updatePrice();
           }
-          customizationOption.checked = true;
-          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
+          // customizationOption.checked = true;
+          // customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
 
