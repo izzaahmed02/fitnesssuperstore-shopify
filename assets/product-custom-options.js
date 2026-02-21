@@ -368,7 +368,10 @@ if (!customElements.get('product-customization-options')) {
             }
           }
           let quantityLimit = 0;
+          const limit = optionContainer.getAttribute('[data-multichoice-limit]');
           const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+          const increaseButtons = parent.querySelectorAll('[data-increase-quantity]');
+
           multiChoiceOptions.forEach((choice) => {
             selectedValues.push(choice.value);
             const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
@@ -377,7 +380,13 @@ if (!customElements.get('product-customization-options')) {
             }
           });
 
-          if (option === 'increse') option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+          if (option === 'increase') {
+            if (quantityLimit + 1 >= Number(limit)) {
+              increaseButtons.forEach((button) => (button.disabled = true));
+            }
+          }
+
+          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
 
           if (updatePrice) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
