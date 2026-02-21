@@ -347,6 +347,16 @@ if (!customElements.get('product-customization-options')) {
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
           const optionContainer = el.closest('[data-option-accordion]');
+
+          if (inputValue - 1 === 0 && option === 'decrease') return;
+          if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
+          if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
+          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+          if (updatePrice) {
+            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
+            this.updatePrice();
+          }
+
           if (optionContainer) {
             const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
             if (customizationOption) {
@@ -388,14 +398,6 @@ if (!customElements.get('product-customization-options')) {
                 console.log(quantityLimit);
               }
             }
-          }
-          if (inputValue - 1 === 0 && option === 'decrease') return;
-          if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
-          if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
-          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
-          if (updatePrice) {
-            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
-            this.updatePrice();
           }
         });
       }
