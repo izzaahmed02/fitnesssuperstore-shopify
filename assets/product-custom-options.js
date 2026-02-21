@@ -344,19 +344,20 @@ if (!customElements.get('product-customization-options')) {
           event.preventDefault();
           let limit = null;
           let quantityLimit = null;
-          if (optionContainer.hasAttribute('data-multichoice-limit')) {
-            limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-          }
+
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
           const optionContainer = el.closest('[data-option-accordion]');
+          if (optionContainer.hasAttribute('data-multichoice-limit')) {
+            limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+          }
 
           if (inputValue - 1 === 0 && option === 'decrease') return;
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           if (option === 'increase') {
-            if (quantityLimit) {
+            if (limit && quantityLimit) {
               if (inputValue + 1 + quantityLimit >= limit) return;
             } else {
               input.value = inputValue + 1;
