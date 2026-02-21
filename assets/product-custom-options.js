@@ -383,6 +383,8 @@ if (!customElements.get('product-customization-options')) {
               input.value = inputValue;
               const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
               increaseButtons.forEach((btn) => (btn.disabled = true));
+            } else {
+              increaseButtons.forEach((btn) => (btn.disabled = false));
             }
           }
         });
