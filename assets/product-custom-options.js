@@ -209,7 +209,7 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        if (selectedValues.length >= limit || quantityLimit >= limit) {
+        if (selectedValues.length >= limit) {
           notSelectedOptions.forEach((option) => (option.disabled = true));
           // if (increaseButtons.length > 0) {
           //   increaseButtons.forEach((button) => (button.disabled = true));
