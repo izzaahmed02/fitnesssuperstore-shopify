@@ -351,11 +351,7 @@ if (!customElements.get('product-customization-options')) {
           if (inputValue - 1 === 0 && option === 'decrease') return;
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
-          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
-          if (updatePrice) {
-            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
-            this.updatePrice();
-          }
+
           const optionContainer = el.closest('[data-option-accordion]');
           if (optionContainer.hasAttribute('data-multichoice-limit')) {
             limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
@@ -378,6 +374,11 @@ if (!customElements.get('product-customization-options')) {
                 selectedOptionPrice.innerHTML = `$${formattedPrice}`;
               }
             });
+          }
+          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+          if (updatePrice) {
+            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
+            this.updatePrice();
           }
           customizationOption.checked = true;
           customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
