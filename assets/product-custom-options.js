@@ -350,10 +350,10 @@ if (!customElements.get('product-customization-options')) {
               }
             });
             const btnIncrease = optionContainer.querySelectorAll('[data-increase-quantity]');
-            if (option == 'increase') {
-              total = total + 1;
-            } else {
-            }
+            // if (option == 'increase') {
+            //   total = total + 1;
+            // } else {
+            // }
             if (total >= Number(optionContainer.dataset.multichoiceLimit)) {
               btnIncrease.forEach((btn) => (btn.disabled = true));
             } else {
