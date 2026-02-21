@@ -207,7 +207,7 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        if (selectedValues.length >= limit || quantityLimit >= limit) {
+        if (selectedValues.length >= limit) {
           notSelectedOptions.forEach((option) => (option.disabled = true));
           // if (increaseButtons.length > 0) {
           //   increaseButtons.forEach((button) => (button.disabled = true));
@@ -387,7 +387,7 @@ if (!customElements.get('product-customization-options')) {
               } else {
                 increaseDisabled = quantityLimit - 1 >= limit;
               }
-
+              notSelectedOptions.forEach((option) => (option.disabled = increaseDisabled));
               increaseButtons.forEach((button) => (button.disabled = increaseDisabled));
             }
           }
