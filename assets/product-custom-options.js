@@ -370,23 +370,23 @@ if (!customElements.get('product-customization-options')) {
                   }
                 });
               }
-              if (optionContainer.hasAttribute('data-multichoice-limit')) {
-                const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-                const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
-                const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
+              // if (optionContainer.hasAttribute('data-multichoice-limit')) {
+              //   const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+              //   const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
+              //   const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
 
-                if (multiChoiceOptions.length > 0) {
-                  multiChoiceOptions.forEach((choice) => {
-                    const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-                    if (optionQuantityInput) {
-                      quantityLimit += Number(optionQuantityInput.value);
-                    }
-                  });
-                  if (increaseButtons.length > 0) {
-                    increaseButtons.forEach((button) => (button.disabled = quantityLimit >= limit));
-                  }
-                }
-              }
+              //   if (multiChoiceOptions.length > 0) {
+              //     multiChoiceOptions.forEach((choice) => {
+              //       const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+              //       if (optionQuantityInput) {
+              //         quantityLimit += Number(optionQuantityInput.value);
+              //       }
+              //     });
+              //     if (increaseButtons.length > 0) {
+              //       increaseButtons.forEach((button) => (button.disabled = quantityLimit >= limit));
+              //     }
+              //   }
+              // }
             }
           }
           if (inputValue - 1 === 0 && option === 'decrease') return;
@@ -396,29 +396,6 @@ if (!customElements.get('product-customization-options')) {
           if (updatePrice) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
             this.updatePrice();
-          }
-
-          if (optionContainer && optionContainer.hasAttribute('data-multichoice-limit')) {
-            let quantityLimit = 0;
-            setTimeout(() => {
-              const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-              const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
-              const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
-
-              if (multiChoiceOptions.length > 0) {
-                multiChoiceOptions.forEach((choice) => {
-                  const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-                  if (optionQuantityInput) {
-                    quantityLimit += Number(optionQuantityInput.value);
-                  }
-                });
-
-                console.log(quantityLimit);
-                if (increaseButtons.length > 0) {
-                  increaseButtons.forEach((button) => (button.disabled = quantityLimit >= limit));
-                }
-              }
-            });
           }
         });
       }
