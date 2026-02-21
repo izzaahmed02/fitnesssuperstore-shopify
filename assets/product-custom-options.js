@@ -361,8 +361,9 @@ if (!customElements.get('product-customization-options')) {
               }
             }
             if (optionContainer.hasAttribute('data-multichoice-limit')) {
-              let limit  = Number(optionContainer.getAttribute('data-multichoice-limit'));
+              let limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
               let quantityLimit = 0;
+              const btnsIncrease = optionContainer.querySelectorAll('[data-increase-quantity]');
               const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
               if (multiChoiceOptions.length > 0) {
                 multiChoiceOptions.forEach((choice) => {
@@ -372,7 +373,8 @@ if (!customElements.get('product-customization-options')) {
                   }
                 });
               }
-              if()
+              if (quantityLimit + 1 >= limit) {
+              }
             }
             customizationOption.checked = true;
             customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
