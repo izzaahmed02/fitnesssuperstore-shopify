@@ -384,6 +384,8 @@ if (!customElements.get('product-customization-options')) {
               }
               if (option === 'increase') {
                 if (quantityLimit + 1 > limit) {
+                  console.log('test');
+
                   if (increaseButtons.length > 0) {
                     increaseButtons.forEach((button) => (button.disabled = true));
                   }
