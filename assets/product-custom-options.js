@@ -367,86 +367,28 @@ if (!customElements.get('product-customization-options')) {
         return total;
       }
 
-      addQuantityListener(el, direction, input, updatePrice) {
-        el.addEventListener('click', (event) => {
-          event.preventDefault();
+addQuantityListener(el, direction, input, updatePrice) {
+  el.addEventListener('click', (event) => {
+    event.preventDefault();
 
-          const inputValue = Number(input.value);
-          const minInputValue = Number(input.min);
-          if (inputValue - 1 === 0 && direction === 'decrease') return;
-          if (minInputValue && inputValue === minInputValue && direction === 'decrease') return;
+    const inputValue = Number(input.value);
+    const minInputValue = Number(input.min);
+    if (inputValue - 1 === 0 && direction === 'decrease') return;
+    if (minInputValue && inputValue === minInputValue && direction === 'decrease') return;
 
-          // Hard limit gate — always recount live from DOM
-          if (direction === 'increase') {
-            const optionContainer = el.closest('[data-option-accordion]');
-            if (optionContainer?.hasAttribute('data-multichoice-limit')) {
-              const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-              const inputQuantityKey = input.dataset.inputQuantity;
-              const thisOption = inputQuantityKey ? optionContainer.querySelector(`[data-customization-option="${inputQuantityKey}"]`) : null;
-              const optionName = thisOption?.name;
-
-              if (optionName) {
-                // Live recount every click — no stale state
-                const currentTotal = this.getTotalQuantityForGroup(optionContainer, optionName);
-                const isNewCard = thisOption && !thisOption.checked;
-                // New card contributes 1; existing card contributes +1 on top of current total
-                if (currentTotal + 1 > limit) {
-                  // Ensure button is disabled so UI stays consistent
-                  el.setAttribute('disabled', 'true');
-                  el.style.pointerEvents = 'none';
-                  el.style.opacity = '0.4';
-                  return;
-                }
-              }
-            }
-          }
-
-          direction === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
-
-          if (updatePrice) {
-            direction === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
-            this.updatePrice();
-          }
-
-          const optionContainer = el.closest('[data-option-accordion]');
-          if (!optionContainer) return;
-          const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
-          if (!customizationOption) return;
-
-          // Auto-select on + click if not already checked
-          if (direction === 'increase' && customizationOption.hasAttribute('data-has-multichoice') && !customizationOption.checked) {
-            // ✅ Reset to 1 — new card enters the group with qty 1, not 2
-            input.value = 1;
-            if (updatePrice) input.dataset.value = 1;
-
-            customizationOption.checked = true;
-            const optionHandler = optionContainer.querySelector('[data-selected-options]');
-            if (optionHandler) this.createOptionHTML(optionHandler, customizationOption);
-          }
-
-          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
-          if (priceContainer) {
-            const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
-            const formattedPrice = price.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
-            priceContainer.innerHTML = `$${formattedPrice}`;
-            setTimeout(() => {
-              const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
-              if (selectedOption) {
-                const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
-                if (selectedOptionPrice) selectedOptionPrice.innerHTML = `$${formattedPrice}`;
-              }
-            });
-          }
-
-          if (customizationOption.hasAttribute('data-has-multichoice')) {
-            const optionHandler = optionContainer.querySelector('[data-selected-options]');
-            if (optionHandler) this.multichoice(optionHandler, customizationOption);
-          }
-        });
-      }
+    if (direction === 'increase') {
+      const optionContainer = el.closest('[data-option-accordion]');
+      if (optionContainer?.hasAttribute('data-multichoice-limit')) {
+        const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+        const inputQuantityKey = input.dataset.inputQuantity;
+        const thisOption = inputQuantityKey
+          ? optionContainer.querySelector(`[data-customization-option="${inputQuantityKey}"]`)
+          : null;
+        const optionName = thisOption?.name;
+        if (optionName) {
+          const currentTotal = this.getTotalQuantityForGroup(optionContainer, optionName);
+          if (currentTotal + 1 > limit) {
+            el.setAttribute('disabled', 'true
       // Tooltip popup handler
 
       handlePopupHelper() {
