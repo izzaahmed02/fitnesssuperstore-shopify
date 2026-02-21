@@ -371,6 +371,14 @@ if (!customElements.get('product-customization-options')) {
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
 
           const multiChoiceOptions = this.querySelectorAll(`[data-customization-option]:checked`);
+          if (multiChoiceOptions.length > 0) {
+            multiChoiceOptions.forEach((choice) => {
+              const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+              if (optionQuantityInput) {
+                quantityLimit += Number(optionQuantityInput.value);
+              }
+            });
+          }
           option === 'increase'
             ? (optionContainer.dataset.currentTotal = Number(optionContainer.dataset.currentTotal) + Number(input.value))
             : (optionContainer.dataset.currentTotal = Number(optionContainer.dataset.currentTotal) - Number(input.value));
