@@ -187,6 +187,7 @@ if (!customElements.get('product-customization-options')) {
         const optionName = option.name;
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
+        const increaseButtons = parent.querySelectorAll('[data-increase-quanity]');
         if (option.dataset.fieldName !== 'No Thanks') {
           const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
           if (noThanksOption) {
@@ -203,16 +204,8 @@ if (!customElements.get('product-customization-options')) {
         multiChoiceOptions.forEach((choice) => {
           selectedValues.push(choice.value);
           const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-          const increaseButton = parent.querySelector(`[data-increase-quantity="${choice.dataset.customizationOption}"]`);
-
           if(optionQuantityInput) {
             quantityLimit += Number(optionQuantityInput.value);
-          }
-          console.log(increaseButton);
-          if(quantityLimit <= limit) {
-            increaseButton.disabled = false;
-          } else {
-            increaseButton.disabled = true;
           }
         });
 
