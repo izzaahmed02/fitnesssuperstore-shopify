@@ -210,7 +210,7 @@ if (!customElements.get('product-customization-options')) {
           }
           console.log(increaseButton);
           
-          increaseButton.disabled != quantityLimit <= limit;
+          !increaseButton.disabled = quantityLimit <= limit;
         });
 
         console.log(quantityLimit);
