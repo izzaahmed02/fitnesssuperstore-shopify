@@ -396,7 +396,7 @@ if (!customElements.get('product-customization-options')) {
 
               console.log(quantityLimit);
               if (increaseButtons.length > 0) {
-                increaseButtons.forEach((button) => (button.disabled = quantityLimit + 1 >= limit));
+                increaseButtons.forEach((button) => (button.disabled = quantityLimit >= limit));
               }
             }
           }
