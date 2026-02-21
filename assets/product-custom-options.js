@@ -415,7 +415,34 @@ if (!customElements.get('product-customization-options')) {
             if (optionHandler) this.createOptionHTML(optionHandler, customizationOption);
           }
 
+          // ✅ Update card price and selected badge price based on base price × quantity
           if (customizationOption.hasAttribute('data-has-multichoice')) {
+            const card = customizationOption.closest('[data-quantity-selector]')?.closest('li, div[class]') || customizationOption.parentElement;
+            const priceContainer = card.querySelector('[avis-price]');
+
+            if (priceContainer) {
+              const basePrice = parseFloat(priceContainer.getAttribute('avis-base-price') || priceContainer.getAttribute('avis-price'));
+              if (!isNaN(basePrice) && basePrice > 0) {
+                // Store base price on first encounter so we always multiply from original
+                if (!priceContainer.getAttribute('avis-base-price')) {
+                  priceContainer.setAttribute('avis-base-price', basePrice);
+                }
+                const newQty = Number(input.value);
+                const totalPrice = basePrice * newQty;
+                const formattedPrice = totalPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                priceContainer.innerHTML = `$${formattedPrice}`;
+
+                // Also update the selected badge price
+                setTimeout(() => {
+                  const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
+                  if (selectedOption) {
+                    const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
+                    if (selectedOptionPrice) selectedOptionPrice.innerHTML = `$${formattedPrice}`;
+                  }
+                });
+              }
+            }
+
             const optionHandler = optionContainer.querySelector('[data-selected-options]');
             if (optionHandler) this.multichoice(optionHandler, customizationOption);
           }
