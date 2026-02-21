@@ -206,28 +206,14 @@ if (!customElements.get('product-customization-options')) {
           totalQuantity += qInput ? Number(qInput.value) : 1;
         });
 
-        // Helper to find price container for any option input
-        const getPriceContainer = (opt) => {
-          const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
-          if (qInput) {
-            const quantitySelector = qInput.closest('[data-quantity-selector]');
-            if (quantitySelector) {
-              // Go up to card wrapper and search within it
-              const card = quantitySelector.parentElement;
-              return card?.querySelector('[avis-price]');
-            }
-          }
-          return opt.parentElement?.querySelector('[avis-price]');
-        };
-
         // ✅ Reset quantity and price for unchecked cards
         uncheckedOptions.forEach((opt) => {
           const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
           if (qInput && Number(qInput.value) !== 1) {
             qInput.value = 1;
-            const priceContainer = getPriceContainer(opt);
+            const priceContainer = opt.closest('label')?.querySelector('[avis-price]');
             if (priceContainer) {
-              const basePrice = Number(priceContainer.getAttribute('avis-price'));
+              const basePrice = parseFloat(priceContainer.getAttribute('avis-price').replace(',', ''));
               if (!isNaN(basePrice) && basePrice > 0) {
                 priceContainer.innerHTML = `$${basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
               }
@@ -259,10 +245,10 @@ if (!customElements.get('product-customization-options')) {
         checkedOptions.forEach((choice) => {
           const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
 
-          // ✅ Update price display using robust container search
-          const priceContainer = getPriceContainer(choice);
+          // ✅ Update price using correct label-scoped selector
+          const priceContainer = choice.closest('label')?.querySelector('[avis-price]');
           if (priceContainer) {
-            const basePrice = Number(priceContainer.getAttribute('avis-price'));
+            const basePrice = parseFloat(priceContainer.getAttribute('avis-price').replace(',', ''));
             if (!isNaN(basePrice) && basePrice > 0) {
               const qty = qInput ? Number(qInput.value) : 1;
               priceContainer.innerHTML = `$${(basePrice * qty).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -314,84 +300,35 @@ if (!customElements.get('product-customization-options')) {
       // Add Event Lister to newly create Option Badge.
       // Need to add lister, because element not in DOM on Page Load
 
-      addQuantityListener(el, option, input, updatePrice) {
-        el.addEventListener('click', (event) => {
-          event.preventDefault();
-          const inputValue = Number(input.value);
-          const minInputValue = Number(input.min);
-          const maxInputValue = Number(input.max);
-          if (inputValue - 1 === 0 && option === 'decrease') return;
-          if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
-          if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
+      addRemoveListener(optionHandler, originalOption) {
+        if (!optionHandler || optionHandler.hasAttribute('data-mandatory')) return;
+        const selectedOptions = optionHandler.querySelectorAll('[data-option-id]');
+        if (selectedOptions.length === 0) return;
+        selectedOptions.forEach((option) => {
+          const removeButton = option.querySelector('.close-option');
+          if (!removeButton) return;
 
-          // Hard limit gate for multichoice
-          if (option === 'increase') {
-            const optionContainer = el.closest('[data-option-accordion]');
-            if (optionContainer?.hasAttribute('data-multichoice-limit')) {
-              const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-              const inputQuantityKey = input.dataset.inputQuantity;
-              const thisOption = inputQuantityKey ? optionContainer.querySelector(`[data-customization-option="${inputQuantityKey}"]`) : null;
-              const optionName = thisOption?.name;
-              if (optionName) {
-                const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
-                let currentTotal = 0;
-                checkedOptions.forEach((choice) => {
-                  const qInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-                  currentTotal += qInput ? Number(qInput.value) : 1;
-                });
-                if (currentTotal + 1 > limit) {
-                  el.setAttribute('disabled', 'true');
-                  el.style.pointerEvents = 'none';
-                  el.style.opacity = '0.4';
-                  return;
-                }
+          removeButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const id = option.dataset?.optionId;
+            const selectedValues = optionHandler.dataset.selectedOptions.split(',');
+            const filteredOptions = selectedValues.filter((item) => !item.includes(id));
+            optionHandler.dataset.selectedOptions = filteredOptions.join(',');
+            option.remove();
+            const input = this.querySelector(`[data-customization-option="${id}"]`);
+            if (!input) return;
+            input.checked = false;
+            if (optionHandler.dataset.selectedOptions === '') {
+              optionHandler.style.display = 'none';
+              const noThanksOriginalOption = this.querySelector(`[data-customization-option][name="${originalOption.name}"][data-field-name="No Thanks"]`);
+              if (noThanksOriginalOption) {
+                noThanksOriginalOption.disabled = false;
               }
             }
-          }
-
-          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
-
-          if (updatePrice) {
-            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
+            if (this.closest('cart-drawer')) return;
             this.updatePrice();
-          }
-
-          const optionContainer = el.closest('[data-option-accordion]');
-          if (!optionContainer) return;
-          const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
-          if (!customizationOption) return;
-
-          // ✅ Update card price display — avis-price may contain commas e.g. "1,499.00"
-          const priceContainer = customizationOption.closest('label')?.querySelector('[avis-price]');
-          if (priceContainer) {
-            const basePrice = parseFloat(priceContainer.getAttribute('avis-price').replace(/,/g, ''));
-            if (!isNaN(basePrice) && basePrice > 0) {
-              const newQty = Number(input.value);
-              const formattedPrice = (basePrice * newQty).toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              });
-              priceContainer.innerHTML = `$${formattedPrice}`;
-
-              // Also update the selected badge price in the top list
-              setTimeout(() => {
-                const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
-                if (selectedOption) {
-                  const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
-                  if (selectedOptionPrice) selectedOptionPrice.innerHTML = `$${formattedPrice}`;
-                }
-              });
-            }
-          }
-
-          // Auto-select on + click if not already checked
-          if (option === 'increase' && !customizationOption.checked) {
-            input.value = 1;
-            if (updatePrice) input.dataset.value = 1;
-          }
-
-          customizationOption.checked = true;
-          customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
+          });
         });
       }
 
