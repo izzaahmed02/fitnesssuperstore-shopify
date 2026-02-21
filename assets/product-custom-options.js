@@ -195,26 +195,23 @@ if (!customElements.get('product-customization-options')) {
           if (noThanksOptionSelected) noThanksOptionSelected.remove();
         }
 
-        // Recount everything fresh from DOM
-        const allOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]`);
         const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const uncheckedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
 
+        // Fresh recount from DOM
         let totalQuantity = 0;
         let selectedValues = [];
-
         checkedOptions.forEach((choice) => {
           selectedValues.push(choice.value);
           const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
           totalQuantity += qInput ? Number(qInput.value) : 1;
         });
 
-        const limitReached = checkedOptions.length >= limit || totalQuantity >= limit;
-
-        // Disable/enable unchecked checkboxes
+        // Disable unchecked cards when total quantity OR card count hits limit
+        const limitReached = totalQuantity >= limit || checkedOptions.length >= limit;
         uncheckedOptions.forEach((opt) => (opt.disabled = limitReached));
 
-        // For each checked option: update its + button based on remaining slots
+        // Per checked card: disable + if adding 1 more would exceed limit
         checkedOptions.forEach((choice) => {
           const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
           if (!qInput) return;
@@ -223,6 +220,7 @@ if (!customElements.get('product-customization-options')) {
 
           const currentValue = Number(qInput.value);
           const otherTotal = totalQuantity - currentValue;
+          // Can increase only if (everyone else) + (this + 1) is still within limit
           const canIncrease = otherTotal + currentValue + 1 <= limit;
 
           if (canIncrease) {
