@@ -368,10 +368,12 @@ if (!customElements.get('product-customization-options')) {
             }
           }
           let total = 0;
+          const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
           const inputs = optionContainer.querySelectorAll('[data-input-quantity]');
           inputs.forEach((input) => {
             total += Number(input.value);
           });
+
           if (option === 'increse') option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
 
           if (updatePrice) {
