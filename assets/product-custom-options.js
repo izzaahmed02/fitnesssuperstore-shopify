@@ -387,6 +387,9 @@ if (!customElements.get('product-customization-options')) {
               } else {
                 increaseDisabled = quantityLimit - 1 >= limit;
               }
+
+              console.log(increaseDisabled);
+
               increaseButtons.forEach((button) => (button.disabled = increaseDisabled));
             }
           }
