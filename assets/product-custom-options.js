@@ -209,8 +209,11 @@ if (!customElements.get('product-customization-options')) {
             quantityLimit += Number(optionQuantityInput.value);
           }
           console.log(increaseButton);
-          
-          !increaseButton.disabled = quantityLimit <= limit;
+          if(quantityLimit <= limit) {
+            increaseButton.disabled = false;
+          } else {
+            increaseButton.disabled = true;
+          }
         });
 
         console.log(quantityLimit);
