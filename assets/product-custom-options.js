@@ -353,27 +353,6 @@ if (!customElements.get('product-customization-options')) {
             limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
           }
 
-          if (inputValue - 1 === 0 && option === 'decrease') return;
-          if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
-          if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
-          if (option === 'increase') {
-            console.log(quantityLimit, 'quantityLimit');
-
-            console.log(inputValue + 1 + quantityLimit);
-            if (limit && quantityLimit) {
-              if (inputValue + 1 + quantityLimit >= limit) return;
-            } else {
-              input.value = inputValue + 1;
-            }
-          } else {
-            input.value = inputValue - 1;
-          }
-          // option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
-          if (updatePrice) {
-            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
-            this.updatePrice();
-          }
-
           if (optionContainer) {
             const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
             if (customizationOption) {
@@ -410,6 +389,27 @@ if (!customElements.get('product-customization-options')) {
                     increaseButtons.forEach((button) => (button.disabled = quantityLimit >= limit));
                   }
                 }
+              }
+
+              if (inputValue - 1 === 0 && option === 'decrease') return;
+              if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
+              if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
+              if (option === 'increase') {
+                console.log(quantityLimit, 'quantityLimit');
+
+                console.log(inputValue + 1 + quantityLimit);
+                if (limit && quantityLimit) {
+                  if (inputValue + 1 + quantityLimit >= limit) return;
+                } else {
+                  input.value = inputValue + 1;
+                }
+              } else {
+                input.value = inputValue - 1;
+              }
+              // option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+              if (updatePrice) {
+                option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
+                this.updatePrice();
               }
             }
           }
