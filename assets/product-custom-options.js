@@ -214,15 +214,17 @@ if (!customElements.get('product-customization-options')) {
           multiChoiceOptions.forEach((choice) => {
             const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
             if (optionQuantityInput) {
-              const otherQuantities = quantityLimit - Number(optionQuantityInput.value);
-              const remaining = limit - otherQuantities;
-              optionQuantityInput.max = remaining; // naturally clamps to current value when fully consumed
+              const currentValue = Number(optionQuantityInput.value);
+              const otherQuantities = quantityLimit - currentValue; // sum of all OTHER checked options
+              const remaining = limit - otherQuantities; // max this option can go up to
 
-              // *** FIX: also disable the + button directly when no remaining slots ***
+              optionQuantityInput.max = remaining;
+
               const increaseBtn = optionQuantityInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
               if (increaseBtn) {
-                if (remaining <= Number(optionQuantityInput.value)) {
-                  increaseBtn.setAttribute('disabled', true);
+                // *** FIX: disable only when current value has reached its personal max ***
+                if (currentValue >= remaining) {
+                  increaseBtn.setAttribute('disabled', 'true');
                   increaseBtn.style.pointerEvents = 'none';
                   increaseBtn.style.opacity = '0.4';
                 } else {
@@ -232,26 +234,12 @@ if (!customElements.get('product-customization-options')) {
                 }
               }
 
-              if (Number(optionQuantityInput.value) > remaining) {
+              if (currentValue > remaining) {
                 optionQuantityInput.value = remaining;
               }
             }
           });
-
-          // *** FIX: also re-enable + buttons on checked options when limit is NOT reached ***
-          if (!limitReached) {
-            multiChoiceOptions.forEach((choice) => {
-              const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-              const increaseBtn = optionQuantityInput?.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
-              if (increaseBtn) {
-                increaseBtn.removeAttribute('disabled');
-                increaseBtn.style.pointerEvents = '';
-                increaseBtn.style.opacity = '';
-              }
-            });
-          }
         }
-
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
