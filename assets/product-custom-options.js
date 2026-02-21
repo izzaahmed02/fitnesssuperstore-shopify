@@ -390,6 +390,9 @@ if (!customElements.get('product-customization-options')) {
             } else {
               optionContainer.dataset.currentTotal = quantityLimit;
             }
+          } else {
+            optionContainer.dataset.currentTotal = quantityLimit;
+            increaseButtons.forEach((button) => (button.disabled = false));
           }
 
           option === 'increase' ? (input.value = el.disabled ? inputValue : inputValue + 1) : (input.value = inputValue - 1);
