@@ -218,8 +218,14 @@ if (!customElements.get('product-customization-options')) {
           }
         } else if (quantityLimit >= limit) {
           notSelectedOptions.forEach((option) => (option.disabled = true));
+          if (increaseButtons.length) {
+            increaseButtons.forEach((button) => (button.disabled = true));
+          }
         } else {
           notSelectedOptions.forEach((option) => (option.disabled = false));
+          if (increaseButtons.length) {
+            increaseButtons.forEach((button) => (button.disabled = false));
+          }
         }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
