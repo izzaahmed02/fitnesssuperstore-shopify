@@ -355,6 +355,7 @@ if (!customElements.get('product-customization-options')) {
                 total = total + 1;
               }
             } else {
+              total = total - 1;
             }
             if (total >= Number(optionContainer.dataset.multichoiceLimit)) {
               btnIncrease.forEach((btn) => (btn.disabled = true));
