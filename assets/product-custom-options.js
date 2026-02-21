@@ -382,26 +382,31 @@ if (!customElements.get('product-customization-options')) {
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
 
-          // *** GATE: check multichoice limit BEFORE changing value ***
+          // GATE: hard-check limit before allowing increase
           if (option === 'increase') {
             const optionContainer = el.closest('[data-option-accordion]');
             if (optionContainer && optionContainer.hasAttribute('data-multichoice-limit')) {
               const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-              const optionName = input.dataset.inputQuantity ? optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`)?.name : null;
+              const thisOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
 
-              if (optionName) {
+              if (thisOption && thisOption.hasAttribute('data-has-multichoice')) {
+                const optionName = thisOption.name;
                 const checkedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+
                 let currentTotal = 0;
                 checkedOptions.forEach((choice) => {
                   const qInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
                   currentTotal += qInput ? Number(qInput.value) : 1;
                 });
-                // Also count this option if it's not yet checked (auto-select case)
-                const thisOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
-                const alreadyCounted = thisOption?.checked;
-                if (!alreadyCounted) currentTotal += 1; // will become 1 on auto-select
 
-                if (currentTotal >= limit) return; // hard stop
+                // If this option is NOT yet checked, it will contribute 1 when auto-selected
+                if (!thisOption.checked) currentTotal += 1;
+                // If it IS checked, the new value will be inputValue + 1,
+                // but currentTotal already includes inputValue, so just add 1
+                else currentTotal += 1;
+
+                // currentTotal now reflects state AFTER the click — reject if over limit
+                if (currentTotal > limit) return;
               }
             }
           }
@@ -415,7 +420,6 @@ if (!customElements.get('product-customization-options')) {
 
           const optionContainer = el.closest('[data-option-accordion]');
           if (!optionContainer) return;
-
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
 
