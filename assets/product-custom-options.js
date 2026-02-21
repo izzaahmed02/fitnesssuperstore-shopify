@@ -187,6 +187,7 @@ if (!customElements.get('product-customization-options')) {
         const optionName = option.name;
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
+        const increaseButtons = this.querySelectorAll(`[data-increase-quantity="${option.dataset.customizationOption}"]`);
 
         if (option.dataset.fieldName !== 'No Thanks') {
           const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
@@ -214,8 +215,6 @@ if (!customElements.get('product-customization-options')) {
         if (selectedValues.length >= limit) {
           notSelectedOptions.forEach((option) => (option.disabled = true));
         } else if (quantityLimit >= limit) {
-          console.log(quantityLimit);
-
           notSelectedOptions.forEach((option) => (option.disabled = true));
         } else {
           notSelectedOptions.forEach((option) => (option.disabled = false));
