@@ -382,11 +382,11 @@ if (!customElements.get('product-customization-options')) {
                   }
                 });
               }
-              if (option === 'increase') {
-                quantityLimit = quantityLimit + 1;
-              } else {
-                quantityLimit = quantityLimit - 1;
-              }
+              // if (option === 'increase') {
+              //   quantityLimit = quantityLimit + 1;
+              // } else {
+              //   quantityLimit = quantityLimit - 1;
+              // }
 
               increaseDisabled = quantityLimit >= limit;
 
