@@ -377,6 +377,9 @@ if (!customElements.get('product-customization-options')) {
               }
             });
           }
+          if (quantityLimit >= limit) {
+            input.value = inputValue - 1;
+          }
         });
       }
 
