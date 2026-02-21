@@ -201,10 +201,6 @@ if (!customElements.get('product-customization-options')) {
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => {
           selectedValues.push(choice.value);
-          const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-          if (optionQuantityInput) {
-            quantityLimit += Number(optionQuantityInput.value);
-          }
         });
 
         if (selectedValues.length >= limit) {
