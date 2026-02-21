@@ -341,30 +341,6 @@ if (!customElements.get('product-customization-options')) {
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           const optionsChecked = optionContainer.querySelectorAll('[data-customization-option]:checked');
-          if (optionsChecked.length > 0) {
-            let total = 0;
-            optionsChecked.forEach((option) => {
-              const inputQuantity = optionContainer.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
-              if (inputQuantity) {
-                total += Number(inputQuantity.value);
-              }
-            });
-            const btnIncrease = optionContainer.querySelectorAll('[data-increase-quantity]');
-            if (option == 'increase') {
-              if (optionsChecked.length > 1) {
-                total = total + 1;
-              }
-            } else {
-              total = total - 1;
-            }
-            if (total >= Number(optionContainer.dataset.multichoiceLimit)) {
-              btnIncrease.forEach((btn) => (btn.disabled = true));
-            } else {
-              btnIncrease.forEach((btn) => (btn.disabled = false));
-            }
-
-            console.log(total, option);
-          }
 
           if (!optionContainer) return;
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
@@ -397,12 +373,35 @@ if (!customElements.get('product-customization-options')) {
             input.value = inputValue - 1;
           }
           option === 'increase' ? (input.value = el.disabled ? inputValue : inputValue + 1) : (input.value = inputValue - 1);
+
+          if (optionsChecked.length > 0) {
+            let total = 0;
+            optionsChecked.forEach((option) => {
+              const inputQuantity = optionContainer.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+              if (inputQuantity) {
+                total += Number(inputQuantity.value);
+              }
+            });
+            const btnIncrease = optionContainer.querySelectorAll('[data-increase-quantity]');
+            if (option == 'increase') {
+              if (optionsChecked.length > 1) {
+                total = total + 1;
+              }
+            } else {
+              total = total - 1;
+            }
+            if (total >= Number(optionContainer.dataset.multichoiceLimit)) {
+              btnIncrease.forEach((btn) => (btn.disabled = true));
+            } else {
+              btnIncrease.forEach((btn) => (btn.disabled = false));
+            }
+
+            console.log(total, option);
+          }
           if (updatePrice) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
             this.updatePrice();
           }
-          // customizationOption.checked = true;
-          // customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
 
