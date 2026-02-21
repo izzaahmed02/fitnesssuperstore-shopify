@@ -200,48 +200,50 @@ if (!customElements.get('product-customization-options')) {
           if (noThanksOptionSelected) noThanksOptionSelected.remove();
         }
 
-        if (multiChoiceOptions.length === 0) selectedValues = [];
+        // Step 1: calculate total quantity across all checked options
         multiChoiceOptions.forEach((choice) => {
           selectedValues.push(choice.value);
           const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
           quantityLimit += optionQuantityInput ? Number(optionQuantityInput.value) : 1;
         });
 
+        // Step 2: disable unchecked options if limit reached
         const limitReached = limit !== null && (selectedValues.length >= limit || quantityLimit >= limit);
-        notSelectedOptions.forEach((option) => (option.disabled = limitReached));
+        notSelectedOptions.forEach((opt) => (opt.disabled = limitReached));
 
+        // Step 3: for each checked option, set its personal max and update + button state
         if (limit !== null) {
           multiChoiceOptions.forEach((choice) => {
             const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-            if (optionQuantityInput) {
-              const currentValue = Number(optionQuantityInput.value);
-              const otherQuantities = quantityLimit - currentValue;
-              const remaining = limit - otherQuantities;
+            if (!optionQuantityInput) return;
 
-              optionQuantityInput.max = remaining;
+            const currentValue = Number(optionQuantityInput.value);
+            const otherQuantities = quantityLimit - currentValue; // everyone else's total
+            const remaining = limit - otherQuantities; // max this one can reach
 
-              const increaseBtn = optionQuantityInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
-              if (increaseBtn) {
-                if (currentValue >= remaining) {
-                  increaseBtn.setAttribute('disabled', 'true');
-                  increaseBtn.style.pointerEvents = 'none';
-                  increaseBtn.style.opacity = '0.4';
-                } else {
-                  increaseBtn.removeAttribute('disabled');
-                  increaseBtn.style.pointerEvents = '';
-                  increaseBtn.style.opacity = '';
-                }
-              }
+            optionQuantityInput.max = remaining;
+
+            const increaseBtn = optionQuantityInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
+            if (!increaseBtn) return;
+
+            if (currentValue >= remaining) {
+              increaseBtn.setAttribute('disabled', 'true');
+              increaseBtn.style.pointerEvents = 'none';
+              increaseBtn.style.opacity = '0.4';
+            } else {
+              increaseBtn.removeAttribute('disabled');
+              increaseBtn.style.pointerEvents = '';
+              increaseBtn.style.opacity = '';
             }
           });
         }
+
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
           addedOption.remove();
         }
       }
-
       // Helper for creating option badge
 
       createOptionHTML(optionHandler, option) {
