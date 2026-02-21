@@ -349,6 +349,7 @@ if (!customElements.get('product-customization-options')) {
                 total += Number(inputQuantity.value);
               }
             });
+            const btnIncrease = optionContainer.querySelectorAll('[data-increase-quantity]');
 
             if (total >= Number(optionContainer.dataset.multichoiceLimit)) {
               console.log('test');
