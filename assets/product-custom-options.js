@@ -378,7 +378,7 @@ if (!customElements.get('product-customization-options')) {
                 quantityLimit += Number(optionQuantityInput.value);
               }
             });
-            console.log(quantityLimit);
+            console.log(quantityLimit, option);
 
             if (quantityLimit > limit) {
               input.value = inputValue;
