@@ -368,8 +368,7 @@ if (!customElements.get('product-customization-options')) {
             }
           }
           let quantityLimit = 0;
-          const limit = optionContainer.getAttribute('[data-multichoice-limit]');
-          console.log(limit, 'test');
+          const limit = optionContainer.getAttribute('data-multichoice-limit');
 
           const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
           const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
