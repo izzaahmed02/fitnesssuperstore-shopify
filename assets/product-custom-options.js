@@ -342,7 +342,11 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
+           let limit = null;
           let quantityLimit = null;
+            if (optionContainer.hasAttribute('data-multichoice-limit')) {
+limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+            }
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
@@ -353,6 +357,7 @@ if (!customElements.get('product-customization-options')) {
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
           if (option === 'increase') {
             if (quantityLimit) {
+              if
             } else {
               input.value = inputValue + 1;
             }
@@ -387,7 +392,6 @@ if (!customElements.get('product-customization-options')) {
                 });
               }
               if (optionContainer.hasAttribute('data-multichoice-limit')) {
-                const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
                 const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
                 const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
 
@@ -402,8 +406,6 @@ if (!customElements.get('product-customization-options')) {
                     increaseButtons.forEach((button) => (button.disabled = quantityLimit >= limit));
                   }
                 }
-
-                console.log(quantityLimit);
               }
             }
           }
