@@ -209,11 +209,11 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        if (selectedValues.length >= limit || quantityLimit >= limit) {
+        if (selectedValues.length >= limit) {
           notSelectedOptions.forEach((option) => (option.disabled = true));
-          if (increaseButtons.length > 0) {
-            increaseButtons.forEach((button) => (button.disabled = true));
-          }
+          // if (increaseButtons.length > 0) {
+          //   increaseButtons.forEach((button) => (button.disabled = true));
+          // }
           // } else if(quantityLimit >= limit) {
           //   notSelectedOptions.forEach(option => option.disabled = true);
           //   if(increaseButtons.length > 0) {
@@ -221,9 +221,9 @@ if (!customElements.get('product-customization-options')) {
           //   }
         } else {
           notSelectedOptions.forEach((option) => (option.disabled = false));
-          if (increaseButtons.length > 0) {
-            increaseButtons.forEach((button) => (button.disabled = false));
-          }
+          // if (increaseButtons.length > 0) {
+          //   increaseButtons.forEach((button) => (button.disabled = false));
+          // }
         }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
