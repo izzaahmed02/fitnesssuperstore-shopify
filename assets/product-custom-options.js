@@ -369,6 +369,8 @@ if (!customElements.get('product-customization-options')) {
             let quantityLimit = null;
             const limit = optionContainer.hasAttribute('data-multichoice-limit') ? Number(optionContainer.getAttribute('data-multichoice-limit')) : null;
             const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
+            const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
+
             if (limit) {
               if (multiChoiceOptions.length > 0) {
                 multiChoiceOptions.forEach((choice) => {
@@ -379,8 +381,7 @@ if (!customElements.get('product-customization-options')) {
                 });
               }
               if (option === 'increase') {
-                if (quantityLimit + 1 >= limit) {
-                }
+                if (quantityLimit + 1 >= limit) return;
               }
             }
           }
