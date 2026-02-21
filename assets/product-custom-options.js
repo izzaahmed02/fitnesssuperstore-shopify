@@ -372,8 +372,8 @@ if (!customElements.get('product-customization-options')) {
             });
             const btnIncrease = optionContainer.querySelectorAll('[data-increase-quantity]');
             if (option == 'increase') {
-              total = total + 1;
               if (optionsChecked.length > 1) {
+                total = total + 1;
               }
             } else {
               total = total - 1;
