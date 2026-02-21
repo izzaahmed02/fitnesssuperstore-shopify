@@ -375,8 +375,6 @@ if (!customElements.get('product-customization-options')) {
         });
 
         const limitReached = limit !== null && totalQuantity >= limit;
-
-        // Update unchecked cards — checkbox and + button
         uncheckedOptions.forEach((opt) => {
           opt.disabled = limitReached;
           const qInput = parent.querySelector(`[data-input-quantity="${opt.dataset.customizationOption}"]`);
@@ -384,13 +382,9 @@ if (!customElements.get('product-customization-options')) {
           const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
           if (!increaseBtn) return;
           if (limitReached) {
-            increaseBtn.setAttribute('disabled', 'true');
-            increaseBtn.style.pointerEvents = 'none';
-            increaseBtn.style.opacity = '0.4';
+            increaseBtn.disabled = true;
           } else {
-            increaseBtn.removeAttribute('disabled');
-            increaseBtn.style.pointerEvents = '';
-            increaseBtn.style.opacity = '';
+            increaseBtn.disabled = false;
           }
         });
 
