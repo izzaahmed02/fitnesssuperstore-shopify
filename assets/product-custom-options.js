@@ -371,6 +371,15 @@ if (!customElements.get('product-customization-options')) {
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
 
+          // Auto-select option if not already checked
+          if (customizationOption.hasAttribute('data-has-multichoice') && !customizationOption.checked) {
+            customizationOption.checked = true;
+            const optionHandler = optionContainer.querySelector('[data-selected-options]');
+            if (optionHandler) {
+              this.createOptionHTML(optionHandler, customizationOption);
+            }
+          }
+
           const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
             const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
@@ -388,14 +397,13 @@ if (!customElements.get('product-customization-options')) {
             });
           }
 
-          // *** Call multichoice directly AFTER all value updates, NO dispatchEvent ***
-          if (customizationOption.hasAttribute('data-has-multichoice') && customizationOption.checked) {
+          // Re-evaluate multichoice limits after all updates
+          if (customizationOption.hasAttribute('data-has-multichoice')) {
             const optionHandler = optionContainer.querySelector('[data-selected-options]');
             if (optionHandler) this.multichoice(optionHandler, customizationOption);
           }
         });
       }
-
       // Tooltip popup handler
 
       handlePopupHelper() {
