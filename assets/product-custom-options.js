@@ -381,6 +381,8 @@ if (!customElements.get('product-customization-options')) {
                     if (option === 'increase') {
                       quantityLimit += Number(optionQuantityInput.value) + 1;
                     } else {
+                      quantityLimit += Number(optionQuantityInput.value) - 1;
+
                       increaseDisabled = quantityLimit - 1 >= limit;
                     }
                   }
