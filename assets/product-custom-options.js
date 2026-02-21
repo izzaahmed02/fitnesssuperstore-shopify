@@ -365,9 +365,7 @@ if (!customElements.get('product-customization-options')) {
                   const qInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
                   total += qInput ? Number(qInput.value) : 1;
                 });
-                if (!thisOption.checked)
-                  total += 1; // auto-select will add this card
-                else total += 1; // increasing existing card by 1
+                total += 1; // this click will add 1 regardless of checked state
                 if (total > limit) return; // hard stop
               }
             }
