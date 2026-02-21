@@ -344,7 +344,7 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
-          let quantityLimit = 0;
+          let quantityLimit = null;
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
@@ -370,23 +370,23 @@ if (!customElements.get('product-customization-options')) {
                   }
                 });
               }
-              // if (optionContainer.hasAttribute('data-multichoice-limit')) {
-              //   const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-              //   const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
-              //   const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
+              if (optionContainer.hasAttribute('data-multichoice-limit')) {
+                const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+                const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
+                const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
 
-              //   if (multiChoiceOptions.length > 0) {
-              //     multiChoiceOptions.forEach((choice) => {
-              //       const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-              //       if (optionQuantityInput) {
-              //         quantityLimit += Number(optionQuantityInput.value);
-              //       }
-              //     });
-              //     if (increaseButtons.length > 0) {
-              //       increaseButtons.forEach((button) => (button.disabled = quantityLimit >= limit));
-              //     }
-              //   }
-              // }
+                if (multiChoiceOptions.length > 0) {
+                  multiChoiceOptions.forEach((choice) => {
+                    const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+                    if (optionQuantityInput) {
+                      quantityLimit += Number(optionQuantityInput.value);
+                    }
+                  });
+                  if (increaseButtons.length > 0) {
+                    increaseButtons.forEach((button) => (button.disabled = quantityLimit >= limit));
+                  }
+                }
+              }
             }
           }
           if (inputValue - 1 === 0 && option === 'decrease') return;
