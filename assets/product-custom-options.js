@@ -369,6 +369,7 @@ if (!customElements.get('product-customization-options')) {
           customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
           const selected = optionContainer.querySelectorAll('[data-customization-option]:checked');
           const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+          const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
           if (selected.length > 1) {
             let quantityLimit = 0;
             selected.forEach((choice) => {
@@ -381,7 +382,6 @@ if (!customElements.get('product-customization-options')) {
 
             if (quantityLimit > limit) {
               input.value = inputValue;
-              const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
               increaseButtons.forEach((btn) => (btn.disabled = true));
             } else {
               increaseButtons.forEach((btn) => (btn.disabled = false));
