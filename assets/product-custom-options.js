@@ -369,6 +369,8 @@ if (!customElements.get('product-customization-options')) {
             let quantityLimit = null;
             const limit = optionContainer.hasAttribute('data-multichoice-limit') ? Number(optionContainer.getAttribute('data-multichoice-limit')) : null;
             const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
+            const notSelectedOptions = optionContainer.querySelectorAll(`[data-customization-option]:not(:checked)`);
+
             const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
 
             if (limit) {
