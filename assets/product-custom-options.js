@@ -178,6 +178,7 @@ if (!customElements.get('product-customization-options')) {
 
       multichoice(optionHandler, option) {
         let limit = null;
+        let quantityLimit = 0;
         let selectedValues = [];
         const parent = optionHandler.closest('[data-option-accordion]');
         if (parent && parent.hasAttribute('data-multichoice-limit')) {
@@ -186,6 +187,7 @@ if (!customElements.get('product-customization-options')) {
         const optionName = option.name;
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
+        const increaseButtons = parent.querySelectorAll('[data-increase-quantity]');
         if (option.dataset.fieldName !== 'No Thanks') {
           const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
           if (noThanksOption) {
@@ -201,18 +203,22 @@ if (!customElements.get('product-customization-options')) {
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => {
           selectedValues.push(choice.value);
+          const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+          if (optionQuantityInput) {
+            quantityLimit += Number(optionQuantityInput.value);
+          }
         });
 
-        if (selectedValues.length >= limit) {
+        if (selectedValues.length >= limit || quantityLimit >= limit) {
           notSelectedOptions.forEach((option) => (option.disabled = true));
-          // if (increaseButtons.length > 0) {
-          //   increaseButtons.forEach((button) => (button.disabled = true));
-          // }
+          if (increaseButtons.length > 0) {
+            increaseButtons.forEach((button) => (button.disabled = true));
+          }
         } else {
           notSelectedOptions.forEach((option) => (option.disabled = false));
-          // if (increaseButtons.length > 0) {
-          //   increaseButtons.forEach((button) => (button.disabled = false));
-          // }
+          if (increaseButtons.length > 0) {
+            increaseButtons.forEach((button) => (button.disabled = false));
+          }
         }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
@@ -366,8 +372,6 @@ if (!customElements.get('product-customization-options')) {
             if (optionContainer.hasAttribute('data-multichoice-limit')) {
               const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
               const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
-              const notSelectedOptions = optionContainer.querySelectorAll(`[data-customization-option]:not(:checked)`);
-
               const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
               let quantityLimit = 0;
               if (multiChoiceOptions.length > 0) {
@@ -383,7 +387,6 @@ if (!customElements.get('product-customization-options')) {
               } else {
                 increaseDisabled = quantityLimit - 1 >= limit;
               }
-              notSelectedOptions.forEach((option) => (option.disabled = increaseDisabled));
               increaseButtons.forEach((button) => (button.disabled = increaseDisabled));
             }
           }
