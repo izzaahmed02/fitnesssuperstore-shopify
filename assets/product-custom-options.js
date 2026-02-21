@@ -358,13 +358,13 @@ if (!customElements.get('product-customization-options')) {
                     selectedOptionPrice.innerHTML = `$${formattedPrice}`;
                   }
                 });
-                customizationOption.checked = true;
-                customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
               }
             }
             if (optionContainer.hasAttribute('optionContainer')) {
-              const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]');
+              const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
             }
+            customizationOption.checked = true;
+            customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
           }
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
           if (updatePrice) {
