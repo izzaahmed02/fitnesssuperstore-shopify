@@ -377,7 +377,7 @@ if (!customElements.get('product-customization-options')) {
               const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
               if (multiChoiceOptions.length > 0) {
                 multiChoiceOptions.forEach((choice) => {
-                  const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+                  const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
                   if (optionQuantityInput) {
                     quantityLimit += Number(optionQuantityInput.value);
                   }
