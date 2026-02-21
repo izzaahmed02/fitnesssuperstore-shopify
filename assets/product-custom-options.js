@@ -373,9 +373,11 @@ if (!customElements.get('product-customization-options')) {
                   }
                 });
               }
-              if (multiChoiceOptions.length > 1 && quantityLimit + 1 >= limit) {
-                if (btnsIncrease.length > 0) {
-                  btnsIncrease.forEach((btn) => (btn.disabled = true));
+              if (multiChoiceOptions.length > 1) {
+                if (quantityLimit + 1 >= limit) {
+                  if (btnsIncrease.length > 0) {
+                    btnsIncrease.forEach((btn) => (btn.disabled = true));
+                  }
                 }
               }
             }
