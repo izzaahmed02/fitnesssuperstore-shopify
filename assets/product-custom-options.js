@@ -388,6 +388,7 @@ if (!customElements.get('product-customization-options')) {
                     notSelectedOptions.forEach((option) => (option.disabled = true));
                     increaseButtons.forEach((button) => (button.disabled = true));
                     return;
+                  } else {
                   }
                 }
               }
