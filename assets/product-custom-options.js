@@ -369,6 +369,8 @@ if (!customElements.get('product-customization-options')) {
             }
           }
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+
+          const multiChoiceOptions = this.querySelectorAll(`[data-customization-option]:checked`);
           option === 'increase'
             ? (optionContainer.dataset.currentTotal = Number(optionContainer.dataset.currentTotal) + Number(input.value))
             : (optionContainer.dataset.currentTotal = Number(optionContainer.dataset.currentTotal) - Number(input.value));
