@@ -381,7 +381,7 @@ if (!customElements.get('product-customization-options')) {
                 });
               }
               if (option === 'increase') {
-                if (quantityLimit + 1 >= limit) return;
+                if (quantityLimit + 1 > limit) return;
               }
             }
           }
