@@ -383,6 +383,9 @@ if (!customElements.get('product-customization-options')) {
           if (option === 'increase') {
             if (quantityLimit + 1 >= Number(limit)) {
               increaseButtons.forEach((button) => (button.disabled = true));
+              optionContainer.dataset.currentTotal = limit;
+            } else {
+              optionContainer.dataset.currentTotal = quantityLimit;
             }
           }
 
