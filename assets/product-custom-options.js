@@ -392,20 +392,22 @@ if (!customElements.get('product-customization-options')) {
           });
         }
 
-        checkedOptions.forEach((choice) => {
-          const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-          if (!qInput) return;
-          const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
-          if (!increaseBtn) return;
-          const currentValue = Number(qInput.value);
-          const otherTotal = totalQuantity - currentValue;
-          const canIncrease = limit === null || otherTotal + currentValue + 1 <= limit;
-          if (canIncrease) {
-            increaseBtn.removeAttribute('disabled');
-          } else {
-            increaseBtn.setAttribute('disabled', 'true');
-          }
-        });
+        if (checkedOptions.length > 0) {
+          checkedOptions.forEach((choice) => {
+            const qInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+            if (!qInput) return;
+            const increaseBtn = qInput.closest('[data-quantity-selector]')?.querySelector('[data-increase-quantity]');
+            if (!increaseBtn) return;
+            const currentValue = Number(qInput.value);
+            const otherTotal = totalQuantity - currentValue;
+            const canIncrease = limit === null || otherTotal + currentValue + 1 <= limit;
+            if (canIncrease) {
+              increaseBtn.removeAttribute('disabled');
+            } else {
+              increaseBtn.setAttribute('disabled', 'true');
+            }
+          });
+        }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
