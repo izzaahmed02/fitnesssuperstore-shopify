@@ -372,6 +372,10 @@ if (!customElements.get('product-customization-options')) {
             if (optionContainer.hasAttribute('data-multichoice-limit')) {
               const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
               const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
+              const increaseButtons = optionContainer.querySelectorAll('[data-increase-quantity]');
+
+              if (multiChoiceOptions.length > 0) {
+              }
             }
           }
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
