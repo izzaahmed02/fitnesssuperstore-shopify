@@ -346,10 +346,19 @@ if (!customElements.get('product-customization-options')) {
             option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
             this.updatePrice();
           }
+
           const optionContainer = el.closest('[data-option-accordion]');
           if (!optionContainer) return;
+
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
+
+          // *** ADD THIS: re-evaluate multichoice limits after quantity change ***
+          if (customizationOption.hasAttribute('data-has-multichoice') && customizationOption.checked) {
+            const optionHandler = optionContainer.querySelector('[data-selected-options]');
+            if (optionHandler) this.multichoice(optionHandler, customizationOption);
+          }
+
           const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
             const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
@@ -366,6 +375,7 @@ if (!customElements.get('product-customization-options')) {
               }
             });
           }
+
           customizationOption.checked = true;
           customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
