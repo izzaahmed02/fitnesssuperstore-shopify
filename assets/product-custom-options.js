@@ -337,6 +337,7 @@ if (!customElements.get('product-customization-options')) {
       addQuantityListener(el, option, input, updatePrice) {
         el.addEventListener('click', (event) => {
           event.preventDefault();
+          let increaseDisabled = false;
           const inputValue = Number(input.value);
           const minInputValue = Number(input.min);
           const maxInputValue = Number(input.max);
@@ -367,6 +368,8 @@ if (!customElements.get('product-customization-options')) {
               customizationOption.checked = true;
               customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
             }
+
+            if(optionContainer.hasAttribute('data-multichoice-limit'))
           }
           option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
           if (updatePrice) {
