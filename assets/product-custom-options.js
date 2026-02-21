@@ -352,7 +352,7 @@ if (!customElements.get('product-customization-options')) {
             const btnIncrease = optionContainer.querySelectorAll('[data-increase-quantity]');
 
             if (total >= Number(optionContainer.dataset.multichoiceLimit)) {
-              console.log('test');
+              btnIncrease.forEach((btn) => (btn.disabled = true));
             }
 
             console.log(total);
