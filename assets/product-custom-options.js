@@ -157,42 +157,34 @@ if (!customElements.get('product-customization-options')) {
       conditionalChoice(option) {
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
         if (optionsToRender.length === 0) return;
+        const rule = option.getAttribute('data-has-conditions');
+        if (option.checked) {
+          optionsToRender.forEach((option) => {
+            const optionRules = option.dataset.conditionsToRender;
+            if (optionRules.includes(rule)) {
+              option.style.display = 'block';
+            }
+          });
+        }
         const hasConditions = this.querySelectorAll('[data-has-conditions]');
-        // hasConditions.forEach((condition) => {
-        //   const rule = condition.dataset.hasConditions;
-        //   if (condition.checked) {
-        //     optionsToRender.forEach((option) => {
-        //       const optionRules = option.dataset.conditionsToRender;
-        //       if (optionRules.includes(rule)) {
-        //         option.style.display = 'block';
-        //       }
-        //     });
-        //   } else {
-        //     optionsToRender.forEach((option) => {
-        //       const optionRules = option.dataset.conditionsToRender;
-        //       if (optionRules.includes(rule)) {
-        //         option.style.display = 'none';
-        //       }
-        //     });
-        //   }
-        // });
-
-        // optionsToRender.forEach((renderOption) => {
-        //   const conditionsToRender = renderOption.dataset.conditionsToRender;
-        //   const selectedOptionsValue = renderOption.querySelector('[data-selected-options]');
-
-        //   if (conditionsToRender.includes(option.dataset.hasConditions)) {
-        //     renderOption.style.display = 'block';
-        //     const selectedOptions = renderOption.querySelectorAll('[data-customization-option]:checked');
-        //     if (selectedOptions.length === 0) return;
-
-        //     selectedOptionsValue.dataset.selectedOptions = [...selectedOptions].map((option) => option.value).join(',');
-        //   } else {
-        //     renderOption.style.display = 'none';
-        //     if (!selectedOptionsValue) return;
-        //     selectedOptionsValue.dataset.selectedOptions = '';
-        //   }
-        // });
+        hasConditions.forEach((condition) => {
+          const rule = condition.dataset.hasConditions;
+          if (condition.checked) {
+            optionsToRender.forEach((option) => {
+              const optionRules = option.dataset.conditionsToRender;
+              if (optionRules.includes(rule)) {
+                option.style.display = 'block';
+              }
+            });
+          } else {
+            optionsToRender.forEach((option) => {
+              const optionRules = option.dataset.conditionsToRender;
+              if (optionRules.includes(rule)) {
+                option.style.display = 'none';
+              }
+            });
+          }
+        });
       }
 
       checkDefaultConditionsToRender() {
