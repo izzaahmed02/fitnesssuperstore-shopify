@@ -242,7 +242,7 @@ if (!customElements.get('product-customization-options')) {
           if (!customizationOption) return;
           const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
-            const price = Number(priceContainer.getAttribute('avis-price')) * Number(optionQuantityInput.value);
+            const price = Number(priceContainer.getAttribute('avis-price').replace(',', '')) * Number(optionQuantityInput.value);
             const formattedPrice = price.toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
