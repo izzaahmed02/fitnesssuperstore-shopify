@@ -167,10 +167,7 @@ if (!customElements.get('product-customization-options')) {
               const optionRules = option.dataset.conditionsToRender;
 
               if (optionRules.includes(rule)) {
-                console.log('tetst');
                 option.style.display = 'block';
-              } else {
-                option.style.display = 'none';
               }
             });
           }
