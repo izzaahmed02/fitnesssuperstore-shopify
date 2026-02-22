@@ -139,6 +139,7 @@ if (!customElements.get('product-customization-options')) {
             const optionHandler = optionContainer.querySelector('[data-selected-options]');
             if (!optionHandler) return;
 
+            optionHandler.dataset.selectedOptions = option.value;
             if (option.hasAttribute('data-has-conditions')) {
               this.conditionalChoice(option);
             }
@@ -146,7 +147,6 @@ if (!customElements.get('product-customization-options')) {
               this.multichoice(optionHandler, option);
             }
             this.createOptionHTML(optionHandler, option);
-            optionHandler.dataset.selectedOptions = option.value;
             if (this.closest('cart-drawer')) return;
             this.updatePrice();
           });
