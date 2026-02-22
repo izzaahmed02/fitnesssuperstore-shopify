@@ -135,9 +135,9 @@
 
                   {% if price > 0 and price != variant.id %}
                     {% liquid
-                      assign default_quantity = ''
+                      assign default_quantity = 0
                       for item in options_data
-                        if item.defaultValues contains variant.id
+                        if item.variantId contains variant.id
                           assign default_quantity = item.quantity | plus: 0
                           break
                         endif
@@ -203,7 +203,6 @@
                 default_values: default_values | split: ',',
                 product_option: product_option,
                 hide_quantity: product_option.hide_quantity,
-                default_quantity: default_quantity,
                 line_item: line_item,
                 options_data: options_data
               %}
