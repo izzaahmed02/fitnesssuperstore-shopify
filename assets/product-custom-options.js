@@ -195,6 +195,8 @@ if (!customElements.get('product-customization-options')) {
             noThanksOption.disabled = true;
           }
         } else {
+          console.log('test');
+
           optionHandler.dataset.selectedOptions = option.dataCustomizationOption;
           const addedOptions = parent.querySelectorAll(`[data-option-id]`);
           if (addedOptions.length > 0) {
