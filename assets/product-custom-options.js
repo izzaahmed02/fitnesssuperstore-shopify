@@ -173,25 +173,6 @@ if (!customElements.get('product-customization-options')) {
             }
           });
         }
-        // const hasConditions = this.querySelectorAll('[data-has-conditions]');
-        // hasConditions.forEach((condition) => {
-        //   const rule = condition.dataset.hasConditions;
-        //   if (condition.checked) {
-        //     optionsToRender.forEach((option) => {
-        //       const optionRules = option.dataset.conditionsToRender;
-        //       if (optionRules.includes(rule)) {
-        //         option.style.display = 'block';
-        //       }
-        //     });
-        //   } else {
-        //     optionsToRender.forEach((option) => {
-        //       const optionRules = option.dataset.conditionsToRender;
-        //       if (optionRules.includes(rule)) {
-        //         option.style.display = 'none';
-        //       }
-        //     });
-        //   }
-        // });
       }
 
       checkDefaultConditionsToRender() {
