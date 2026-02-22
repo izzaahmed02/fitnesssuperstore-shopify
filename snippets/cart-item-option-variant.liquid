@@ -83,18 +83,17 @@
       assign price = variant.price
       if default_quantity != blank and default_quantity != '0' and default_quantity != 0
       assign default_quantity = default_quantity | plus: 0
+      assign price = price  | times: default_quantity
+      
       endif
     %}
-    {% assign price = variant.price %}
-    {% if default_quantity != blank and default_quantity != '0' and default_quantity != 0 %}
 
-    {% endif %}
     <span
       avis-price="{{ variant.price | money_without_currency }}"
       avis-price-compare="0"
       class="product-options__swatch-price"
     >
-      {{- variant.price | money -}}
+      {{- price | money -}}
     </span>
   {% endif %}
 
