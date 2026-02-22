@@ -161,10 +161,11 @@ if (!customElements.get('product-customization-options')) {
         hasConditions.forEach((condition) => {
           if (condition.checked) {
             const rule = condition.dataset.hasConditions;
-            console.log(rule);
 
             optionsToRender.forEach((option) => {
               const optionRules = option.dataset.conditionsToRender;
+              console.log(optionRules);
+
               if (optionRules.includes(rule)) {
                 option.style.display = 'block';
               } else {
