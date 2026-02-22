@@ -200,6 +200,8 @@ if (!customElements.get('product-form-with-options')) {
               };
 
               productOptions.push(productOption);
+
+              console.log(productOptions);
             });
           }
         });
