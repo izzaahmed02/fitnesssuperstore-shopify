@@ -40,6 +40,9 @@
   if product_title contains '(-$'
     assign cleaned_title = product_title | split: '(-$' | first
   endif
+  if product_option.multichoice_limit != blank
+    assign limit = product_option.multichoice_limit
+  endif
 %}
 
 <label
@@ -83,7 +86,7 @@
       assign price = variant.price
       if default_quantity != blank and default_quantity != '0' and default_quantity != 0
         assign default_quantity = default_quantity | plus: 0
-        assign price = price  | times: default_quantity
+        assign price = price | times: default_quantity
       endif
     %}
 
