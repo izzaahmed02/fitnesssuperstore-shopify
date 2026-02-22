@@ -116,11 +116,17 @@
           {% assign values = default_values | split: ',' %}
           {% for value in values %}
             {% liquid
+              assign default_variant_title = ''
               assign id = value | split: ':::' | first | plus: 0
               assign price = value | split: ':::' | last | plus: 0
+              for variant in product_option.product_option_variants.value
+                if variant.id == id
+                  assign default_variant_title = variant.title
+                endif
+              endfor
             %}
 
-            <p data-option-id="{{ id }}" data-option-variant-name="{{ product_option.product_option_sets_default.value.title }}">
+            <p data-option-id="{{ id }}" data-option-variant-name="{{ default_variant_title }}">
               {% for variant in product_option.product_option_variants.value %}
                 {% if variant.id == id %}
                   <span class="product-options__accordion-label-title" data-option-title>
