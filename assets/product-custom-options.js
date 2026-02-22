@@ -235,9 +235,9 @@ if (!customElements.get('product-customization-options')) {
         if (!option.checked) {
           const optionQuantityInput = document.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
           if (optionQuantityInput) optionQuantityInput.value = 1;
-          const optionContainer = el.closest('[data-option-accordion]');
+          const optionContainer = option.closest('[data-option-accordion]');
           if (!optionContainer) return;
-          const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
+          const customizationOption = optionContainer.querySelector(`[data-customization-option="${option.dataset.customizationOption}"]`);
           if (!customizationOption) return;
           const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
