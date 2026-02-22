@@ -512,59 +512,59 @@ function clearImages(e) {
     e.parentElement ? e.parentElement.remove() : e.remove();
   });
 }
-if (
-  (document.addEventListener('DOMContentLoaded', () => {
-    let e = setInterval(() => {
-      document.querySelector('.avpoptions-container__v2') &&
-        (window.location.pathname.includes('products') &&
-          (renderCustomAvisOptions(),
-          window.product.available ||
-            document.querySelectorAll('.avp-select').forEach((e) => {
-              ((e.style.background = '#F2F2F2'), (e.querySelector('select').disabled = !0), (e.querySelector('select').style.color = '#808080'));
-            }),
-          document.querySelectorAll('.money.apo-money').forEach((e) => {
-            let t = e.textContent.replace(/[()+]/g, '').trim();
-            e.parentElement && 'option' === e.parentElement.tagName.toLowerCase() ? (e.textContent = `[Add ${t}]`) : (e.textContent = t);
-          })),
-        document.querySelectorAll('.ap-options__swatch-container').forEach((e) => {
-          let t = e.querySelector('.ap-label-tooltip .apo-title');
-          ((t && 'Paint Color' === t.textContent.trim()) || (t && 'Vinyl Color' === t.textContent.trim()) || (t && 'Upholstery Color' === t.textContent.trim())) &&
-            !window.location.pathname.includes('cart') &&
-            (e.style.display = 'none');
-        }),
-        clearInterval(e));
-    }, 100);
-  }),
-  document.addEventListener('click', function (e) {
-    if (e.target.classList.contains('read-more-btn')) {
-      let t = e.target,
-        r = t.closest('.product-card');
-      if (!r) return;
-      let l = r.querySelector('.product-card__description');
-      l &&
-        (l.classList.contains('expanded')
-          ? ((l.style.maxHeight = '0'), l.classList.remove('expanded'), (t.textContent = 'Read more'))
-          : ((l.style.maxHeight = l.scrollHeight + 'px'), l.classList.add('expanded'), (t.textContent = 'Read Less')));
-    }
-  }),
-  '/cart' === window.location.pathname)
-) {
-  let e = !1,
-    t = new MutationObserver(() => {
-      let t = document.querySelector('.avis-cartOptionsPopup .ap-options__select-container');
-      t && 'none' !== t.style.display
-        ? e ||
-          ((e = !0),
-          (document.querySelector('html').style.overflowY = 'hidden'),
-          renderCustomAvisOptions(),
-          document.querySelectorAll('.money.apo-money').forEach((e) => {
-            let t = e.textContent.replace(/[()+]/g, '').trim();
-            e.parentElement && 'option' === e.parentElement.tagName.toLowerCase() ? (e.textContent = `[Add ${t}]`) : (e.textContent = t);
-          }))
-        : (e = !1);
-    });
-  t.observe(document.body, { childList: !0, subtree: !0, attributes: !0, attributeFilter: ['style', 'class'] });
-}
+// if (
+//   (document.addEventListener('DOMContentLoaded', () => {
+//     let e = setInterval(() => {
+//       document.querySelector('.avpoptions-container__v2') &&
+//         (window.location.pathname.includes('products') &&
+//           (renderCustomAvisOptions(),
+//           window.product.available ||
+//             document.querySelectorAll('.avp-select').forEach((e) => {
+//               ((e.style.background = '#F2F2F2'), (e.querySelector('select').disabled = !0), (e.querySelector('select').style.color = '#808080'));
+//             }),
+//           document.querySelectorAll('.money.apo-money').forEach((e) => {
+//             let t = e.textContent.replace(/[()+]/g, '').trim();
+//             e.parentElement && 'option' === e.parentElement.tagName.toLowerCase() ? (e.textContent = `[Add ${t}]`) : (e.textContent = t);
+//           })),
+//         document.querySelectorAll('.ap-options__swatch-container').forEach((e) => {
+//           let t = e.querySelector('.ap-label-tooltip .apo-title');
+//           ((t && 'Paint Color' === t.textContent.trim()) || (t && 'Vinyl Color' === t.textContent.trim()) || (t && 'Upholstery Color' === t.textContent.trim())) &&
+//             !window.location.pathname.includes('cart') &&
+//             (e.style.display = 'none');
+//         }),
+//         clearInterval(e));
+//     }, 100);
+//   }),
+//   document.addEventListener('click', function (e) {
+//     if (e.target.classList.contains('read-more-btn')) {
+//       let t = e.target,
+//         r = t.closest('.product-card');
+//       if (!r) return;
+//       let l = r.querySelector('.product-card__description');
+//       l &&
+//         (l.classList.contains('expanded')
+//           ? ((l.style.maxHeight = '0'), l.classList.remove('expanded'), (t.textContent = 'Read more'))
+//           : ((l.style.maxHeight = l.scrollHeight + 'px'), l.classList.add('expanded'), (t.textContent = 'Read Less')));
+//     }
+//   }),
+//   '/cart' === window.location.pathname)
+// ) {
+//   let e = !1,
+//     t = new MutationObserver(() => {
+//       let t = document.querySelector('.avis-cartOptionsPopup .ap-options__select-container');
+//       t && 'none' !== t.style.display
+//         ? e ||
+//           ((e = !0),
+//           (document.querySelector('html').style.overflowY = 'hidden'),
+//           renderCustomAvisOptions(),
+//           document.querySelectorAll('.money.apo-money').forEach((e) => {
+//             let t = e.textContent.replace(/[()+]/g, '').trim();
+//             e.parentElement && 'option' === e.parentElement.tagName.toLowerCase() ? (e.textContent = `[Add ${t}]`) : (e.textContent = t);
+//           }))
+//         : (e = !1);
+//     });
+//   t.observe(document.body, { childList: !0, subtree: !0, attributes: !0, attributeFilter: ['style', 'class'] });
+// }
 function setupPopupHeaderCloseDelegate() {
   document.addEventListener('click', (e) => {
     let t = e.target.closest('.avis-popupHeader-close, .avis-cartOptionsBackdrop, .avis-popupFooter-cancel');
