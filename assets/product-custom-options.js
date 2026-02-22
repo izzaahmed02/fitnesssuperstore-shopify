@@ -160,12 +160,17 @@ if (!customElements.get('product-customization-options')) {
         const hasConditions = this.querySelectorAll('[data-has-conditions]');
         let count = 0;
         hasConditions.forEach((condition) => {
+          const rule = condition.dataset.hasConditions;
           if (condition.checked) {
-            const rule = condition.dataset.hasConditions;
-            count += 1;
             optionsToRender.forEach((option) => {
               const optionRules = option.dataset.conditionsToRender;
-
+              if (optionRules.includes(rule)) {
+                option.style.display = 'block';
+              }
+            });
+          } else {
+            optionsToRender.forEach((option) => {
+              const optionRules = option.dataset.conditionsToRender;
               if (optionRules.includes(rule)) {
                 option.style.display = 'block';
               }
