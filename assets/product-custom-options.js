@@ -193,9 +193,10 @@ if (!customElements.get('product-customization-options')) {
             noThanksOption.disabled = true;
           }
         } else {
-          console.log('test');
           const selectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
-          multiChoiceOptions.forEach((choice) => choice.checked == false);
+          if (selectedOptions.length > 0) {
+            selectedOptions.forEach((choice) => choice.checked == false);
+          }
           optionHandler.dataset.selectedOptions = option.dataCustomizationOption;
           option.checked = true;
           const addedOptions = parent.querySelectorAll(`[data-option-id]`);
