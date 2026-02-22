@@ -262,7 +262,6 @@ if (!customElements.get('product-customization-options')) {
 
       setDefaultDisabledOptions() {
         let quantityLimit = 0;
-        if (!this.closest('cart-drawer') || !window.location.href.includes('/cart')) return;
         const optionWithMultichoicelimit = this.querySelectorAll('[data-multichoice-limit]');
         if (optionWithMultichoicelimit.length === 0) return;
         optionWithMultichoicelimit.forEach((option) => {
