@@ -45,8 +45,10 @@
     assign limit = product_option.multichoice_limit
     assign selected_quanity = 0
     for item in options_data
-      assign default_quantity = item.quantity | plus: 0
-      assign selected_quanity = selected_quanity | plus: default_quantity
+      if item.defaultValues contains variant.id
+        assign default_quantity = item.quantity | plus: 0
+        assign selected_quanity = selected_quanity | plus: default_quantity
+      endif
     endfor
   endif
 
