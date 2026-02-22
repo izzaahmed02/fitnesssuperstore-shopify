@@ -733,3 +733,71 @@ async function getShopperApprovedTotalReviewsCount() {
 		return null;
 	}
 }
+
+async function fetchProductByTitle(e) {
+  let t = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbytitle?title=${encodeURIComponent(e)}`;
+  try {
+    let r = await fetch(t, { method: 'GET' });
+    if (!r.ok) throw Error('Failed to fetch product by title');
+    let l = await r.json();
+    return l.products[0];
+  } catch (o) {
+    return (console.error('Error fetching product by title:', o), null);
+  }
+}
+async function fetchProductByOptionCategory(e, t) {
+  let r = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbyoptioncategory?optionCategoryId=${e}&title=${t}`;
+  try {
+    let l = await fetch(r, { method: 'GET' });
+    if (!l.ok) throw Error('Failed to fetch product by title');
+    let o = await l.json();
+    return o[0];
+  } catch (a) {
+    return (console.error('Error fetching product by title:', a), null);
+  }
+}
+async function fetchProductMetafields(e) {
+  let t = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${e}/`;
+  try {
+    let r = await fetch(t, { method: 'GET' });
+    if (!r.ok) throw Error('Failed to fetch product metafields');
+    let l = await r.json();
+    return l.metafields;
+  } catch (o) {
+    return (console.error('Error fetching product metafields:', o), null);
+  }
+}
+async function fetchProductDetails(e) {
+  let t = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${e}`;
+  try {
+    let r = await fetch(t, { method: 'GET' });
+    if (!r.ok) throw Error('Failed to fetch product details');
+    let l = await r.json();
+    return l.product;
+  } catch (o) {
+    return (console.error('Error fetching product details:', o), null);
+  }
+}
+async function fetchProductDetailsWithMetafields(e) {
+  let t = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${e}`,
+    r = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${e}/`;
+  try {
+    let [l, o] = await Promise.all([fetch(t, { method: 'GET' }), fetch(r, { method: 'GET' })]);
+    if (!l.ok || !o.ok) throw Error('Failed to fetch product details or metafields');
+    let a = await l.json(),
+      i = await o.json();
+    return ((a.product.metafields = i.metafields), a.product);
+  } catch (n) {
+    return (console.error('Error fetching product details with metafields:', n), null);
+  }
+}
+async function fetchProductMetaObject(e) {
+  let t = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metaobject?metaobjectId=${e}`;
+  try {
+    let r = await fetch(t, { method: 'GET' });
+    if (!r.ok) throw Error('Failed to fetch metaobject');
+    return await r.json();
+  } catch (l) {
+    return (console.error('Error fetching meta object:', l), null);
+  }
+}
