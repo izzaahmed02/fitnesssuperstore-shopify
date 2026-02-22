@@ -364,6 +364,8 @@ if (!customElements.get('product-customization-options')) {
               }
             });
           }
+          customizationOption.checked = true;
+
           if (optionContainer.hasAttribute('data-multichoice-limit')) {
             let quantityLimit = 0;
             const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
@@ -384,7 +386,6 @@ if (!customElements.get('product-customization-options')) {
               console.log(input.value);
             }
           }
-          customizationOption.checked = true;
           customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
