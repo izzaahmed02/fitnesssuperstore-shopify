@@ -230,10 +230,13 @@ if (!customElements.get('product-customization-options')) {
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
           const optionQuantityInput = document.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+
+          // addedOption.remove();
+        }
+
+        if (!option.checked) {
+          const optionQuantityInput = document.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
           if (optionQuantityInput) optionQuantityInput.value = 1;
-          console.log(optionQuantityInput);
-          addedOption.remove();
-          console.log('hsbvjhsnjdkv');
         }
       }
 
