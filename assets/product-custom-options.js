@@ -377,6 +377,8 @@ if (!customElements.get('product-customization-options')) {
               });
             }
 
+            console.log(quantityLimit, 'quantityLimit');
+
             if (quantityLimit > limit) {
               input.value = Number(input.value) - 1;
               console.log(input.value);
