@@ -1,598 +1,71 @@
-const container = document.getElementById('dynamic-product-content'),
-  modalWrapper = document.querySelector('.modal-wrapper'),
-  closeIconTemplate = document.getElementById('icon-close-template').innerHTML;
-let optionProductsPopup = [],
-  selectedNegativePrices = [];
-function createAssemblySelect() {
-  if (document.getElementById('double-assembly-input') || document.querySelector('select[field-name="Full Assembly & Installation"]')) return;
-  let e = document.querySelectorAll('.handle-491, .installation-needed')[0];
-  if (!e) return;
-  let t = e.querySelectorAll('.ap-options__swatch label'),
-    r = document.createElement('div');
-  ((r.innerHTML = '<h2 id="double-assembly-header" class="avp-heading ap-options__heading ">Assembly &amp; Room of Choice Installation Needed?</h2>'),
-    document.querySelectorAll('product-form')[0].before(r));
-  let l = document.createElement('select');
-  (l.setAttribute('id', 'double-assembly-input'), l.setAttribute('aria-labelledby', 'double-assembly-header'), document.querySelectorAll('product-form')[0].before(l));
-  let o = document.querySelectorAll('.custom-color-group')[0];
-  o && e.after(o);
-  let a = document.querySelector('select[name="Warranty"]');
-  if (a) {
-    let i = a.closest('.ap-options__select-container');
-    i && e.after(i);
-  }
-  l &&
-    (t.forEach((e) => {
-      let t = e.querySelector('.swatch-variant-title').innerHTML,
-        r = e.querySelector('input').getAttribute('value'),
-        o = l.appendChild(document.createElement('option'));
-      ((o.innerHTML = t),
-        o.setAttribute('name', r),
-        e.addEventListener('change', (e) => {
-          l.querySelectorAll(`option[name="${e.target.value}"]`)[0].selected = !0;
-        }));
-    }),
-    l.addEventListener('change', (t) => {
-      e.querySelectorAll('input')[t.target.selectedIndex].parentElement.click();
-    }),
-    document.querySelector('.installation-group').prepend(l),
-    document.querySelector('.installation-group').prepend(r));
-}
-function renderCustomAvisOptions() {
-  let e = document.querySelector('select[name="Warranty"]');
-  if (e) {
-    let t = e.closest('.ap-options__select-container');
-    if (t) {
-      let r = t.querySelector('select').options.length;
-      r > 1 && ((t.style.display = 'block'), t.querySelector('.ap-label-tooltip').classList.add('ap-options__heading'));
-    }
-  }
-  let l = document.querySelectorAll('.ap-options__swatch-container');
-  l.forEach((e) => {
-    let t = e.querySelector('.ap-label-tooltip'),
-      r = e.querySelector('.ap-options__swatch'),
-      l = e.previousElementSibling;
-    for (; l && !l.classList.contains('ap-options__heading-container'); ) l = l.previousElementSibling;
-    (l && e.classList.add(toSlug(l.querySelector('.avp-heading')?.innerText)),
-      t &&
-        r &&
-        t.addEventListener('click', () => {
-          (r.classList.toggle('show'), t.classList.toggle('open'));
-        }));
-  });
-  // let o = document.querySelectorAll('.option-avis-arrow-select');
-  // (o.forEach((e) => {
-  //   e.addEventListener('click', () => {
-  //     'rotate(45deg)' === e.style.transform ? e.setAttribute('style', 'transform: rotate(225deg) !important') : e.setAttribute('style', 'transform: rotate(45deg) !important');
-  //   });
-  // }),
-  //   setupOptionsPopup(),
-  //   setupOptionsHandler(),
-  //   setupOptions());
-//   let a = document.querySelector('.avis-cartOptionsPopup .avis-popupBox');
-//   (a && (a.style.display = 'flex'),
-//     window.location.pathname.includes('products') &&
-//       (createAssemblySelect(),
-//       document.querySelectorAll('input').forEach((e) => {
-//         e.checked ? (e.setAttribute('data-checked', 1), e.parentElement.setAttribute('style', 'border: 1px solid #D83D0E !important;')) : e.setAttribute('data-checked', 0);
-//       })));
-// }
-// function selectedOptionHTML(e, t) {
-//   let r = Array.from(e?.querySelectorAll('input[type="radio"]')),
-//     l = r.indexOf(t),
-//     o = t.value,
-//     a;
-//   if (
-//     ((a = t?.parentElement?.querySelector('.swatch-variant-title .money')?.innerText.replace('(', '').replace(')', '').replace('+', '')),
-//     'No Thanks' != o || a.includes('-$') || (a = 'USD' === Shopify.currency.active ? '$0' : ''),
-//     'Weight Stack' === t.getAttribute('field-name'))
-//   ) {
-//     let i = document.querySelector('fieldset.weight-stack');
-//     if (i) {
-//       let n = [...optionContainer.querySelectorAll('.avp-productoptionswatchwrapper')].indexOf(wrapper),
-//         c = i.querySelectorAll('label')[n];
-//       c && c.click();
-//     }
-//   }
-//   return `<div class="option_selected-container">
-//     <p class="option_selected">${o}</p>
-//     ${a ? `<span class="option_selected-price">${a}</span>` : ''}
-//     <svg class="remove-icon" data-group-name="${t.name}" data-value="${l}" width="16" height="16" fill="none"
-//         xmlns="http://www.w3.org/2000/svg">
-//       <path fill-rule="evenodd" clip-rule="evenodd"
-//             d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
-//             fill="black"/>
-//     </svg>
-//   </div>`;
-// }
-// function updateOption(e, t, r) {
-//   let l = t.querySelector('.selected_options_container'),
-//     o = r.parentElement;
-//   ((l.innerHTML = e),
-//     Array.from(l.children).forEach((e) => {
-//       e.style.display = 'flex';
-//     }),
-//     t.querySelectorAll('.ap-options__swatch .avp-productoptionswatchwrapper').forEach((e) => {
-//       e.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
-//     }),
-//     o.setAttribute('style', 'border: 1px solid #D83D0E !important;'),
-//     t.querySelectorAll('.remove-icon').forEach((e) => {
-//       e.addEventListener('click', (r) => {
-//         r.stopPropagation();
-//         let l = r.target.closest('.option_selected-container');
-//         if (l) {
-//           let a = parseInt(e.getAttribute('data-value')),
-//             i = t.querySelectorAll('.avp-productoptionswatchwrapper input[type="radio"]')[a];
-//           i && ((i.checked = !1), i.dispatchEvent(new Event('change', { bubbles: !0 })), l.remove(), o.setAttribute('style', 'border: 1px solid #E5E5E5 !important;'));
-//           let n = e.dataset.groupName;
-//           n && ((selectedNegativePrices = selectedNegativePrices.filter((e) => e.target !== n)), updateCustomPrice());
-//         }
-//       });
-//     }));
-// }
-// function setupOptions() {
-//   let e = document.querySelectorAll(`#cart #${window.avisModifyButton} .cart-product__details div.product-option`),
-//     t = document.querySelector('.avis-cartOptionsPopup');
-//   e.forEach((e) => {
-//     let r = e.getAttribute('data-name');
-//     if (r && !r.toLowerCase().includes('warranty') && !r.toLowerCase().includes('processing time')) {
-//       let l = e.querySelector('dd').innerText,
-//         o = l.indexOf('[Add '),
-//         a = l;
-//       -1 != o && (a = l.substring(0, o).trimEnd());
-//       let i = t.querySelectorAll(`input[field-name='${r}']`);
-//       i.forEach((e) => {
-//         let t = e.getAttribute('value');
-//         if (a === t) {
-//           if (e.checked) {
-//             let r = e.parentNode.parentNode,
-//               l = selectedOptionHTML(r, e);
-//             updateOption(l, r.parentElement, e);
-//           } else e.parentNode.click();
-//         }
-//       });
-//     }
-//   });
-// }
-// function setupOptionsPopup() {
-//   document.querySelectorAll('.ap-label-tooltip, .group-color .apo-title').forEach((e) => {
-//     if (e.dataset.initialized) return;
-//     let t = e.closest('[class^="handle-"]'),
-//       r = e.querySelector('svg');
-//     if ((e.classList.contains('apo-title') && Array.from(e.classList).filter((e) => e.includes('handle')).length > 0 && (t = e), !t)) return;
-//     e.dataset.initialized = !0;
-//     let l = document.createElement('style');
-//     ((l.textContent = '.ap-label-tooltip::after { display: none !important; }'),
-//       document.head.appendChild(l),
-//       r ||
-//         (window.location.pathname.includes('products')
-//           ? window.product.available
-//             ? (e.innerHTML += `
-// 			  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
-// 				   xmlns="http://www.w3.org/2000/svg">
-// 				<path fill-rule="evenodd" clip-rule="evenodd"
-// 					  d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z"
-// 					  fill="#D83D0E"/>
-// 			  </svg>`)
-//             : (e.innerHTML += `
-// 			  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
-// 				   xmlns="http://www.w3.org/2000/svg">
-// 				<path fill-rule="evenodd" clip-rule="evenodd"
-// 					  d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z"
-// 					  fill="#B3B3B3"/>
-// 			  </svg>`)
-//           : (e.innerHTML += `
-// 			<svg width="18" height="18" viewBox="0 0 18 18" fill="none"
-// 				 xmlns="http://www.w3.org/2000/svg">
-// 			  <path fill-rule="evenodd" clip-rule="evenodd"
-// 					d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z"
-// 					fill="#D83D0E"/>
-// 			</svg>`)));
-//     let o = e.querySelector('svg');
-//     o &&
-//       o.addEventListener('click', async (e) => {
-//         (e.preventDefault(), e.stopPropagation());
-//         let r = t.previousElementSibling;
-//         for (; r && !r.classList.contains('ap-options__heading-container'); ) r = r.previousElementSibling;
-//         let l = '';
-//         r && (l = r.querySelector('.avp-heading')?.innerText);
-//         let o = Array.from(t.classList).find((e) => e.startsWith('handle-')),
-//           a;
-//         (o && (a = o.split('-')[1]), (document.querySelector('#dynamic-product-content').style.width = 'auto'), (modalWrapper.style.display = 'flex'), (container.innerHTML = ''));
-//         let i = t.querySelector('.apo-title')?.innerText,
-//           n = '';
-//         (productTitleSearch = l ? `${i} - ${l} (${a})` : `${i} (${a})`).includes('Warranty') && (productTitleSearch = `Warranty (${a})`);
-//         let c = encodeURIComponent(productTitleSearch),
-//           s = await fetchProductByOptionCategory(a, c);
-//         if (s && (n = s.relatedProducts && 0 !== s.relatedProducts.length ? renderOptionPopupProducts(s) : s.descriptionHtml)) {
-//           let _ = document.createElement('div');
-//           _.innerHTML = n;
-//           let d = _;
-//           if (d) {
-//             container.innerHTML = d.innerHTML + `<span class="modal-close">${closeIconTemplate}</span>`;
-//             let p = document.querySelector('.modal-close');
-//             p.addEventListener('click', () => {
-//               modalWrapper.style.display = 'none';
-//             });
-//             let u = d.querySelectorAll('script');
-//             u.forEach((e) => {
-//               let t = document.createElement('script');
-//               (e.src ? (t.src = e.src) : (t.textContent = e.textContent), document.body.appendChild(t));
-//             });
-//             let $ = container.querySelectorAll('#dynamic-product-content img');
-//             $.forEach((e) => {
-//               let t = e.src,
-//                 r = t.split('/').pop(),
-//                 l = `https://cdn.shopify.com/s/files/1/0884/2012/2940/files/${r}`;
-//               e.src = l;
-//             });
-//             let h = document.querySelectorAll('.product-card');
-//             h &&
-//               (h.forEach((e) => {
-//                 let t = e.getAttribute('data-product-id'),
-//                   r = s.relatedProducts.find((e) => e.id === t);
-//                 r &&
-//                   e.addEventListener('click', (e) => {
-//                     let t = e.currentTarget,
-//                       l = [...t.parentElement.children].filter((e) => e !== t.parentElement);
-//                     (l.forEach((e) => e.classList.remove('active')), t.classList.add('active'));
-//                     let o = r.shortDescription,
-//                       a = `
-// 					<div class="product-details__product-image">
-// 					  <img src="${r.imageUrl}" alt="${r.title}">
-// 					</div>
-// 					<div class="product-details__product-info">
-// 					  <h2 class="product-details__title">${r.title}</h2>
-// 					  <p class="product-details__short_description">${o}</p>
-// 					</div>`,
-//                       i = document.querySelector('.product-details-container'),
-//                       n = document.querySelector('.product-details-description-body');
-//                     ((i.style.display = 'flex'), (n.style.display = 'block'), (i.innerHTML = a));
-//                     let c = document.createElement('div');
-//                     ((c.innerHTML = r.descriptionHtml.replace(o, '')), removeEmptyElements(c), clearImages(c), (n.innerHTML = c.innerHTML));
-//                   });
-//               }),
-//               h[0]?.click());
-//           } else console.error('MainContent not found in the fetched HTML.');
-//         }
-//       });
-//   });
-// }
-// function setupOptionsHandler() {
-//   let e = document.querySelectorAll('.avp-option');
-//   (e.forEach((e) => {
-//     let t = e.querySelector('.ap-label-tooltip');
-//     if (t) {
-//       let r = document.createElement('div');
-//       (r.classList.add('selected_options_container'), t.append(r));
-//     }
-//     let l = e.querySelector('.ap-options__swatch');
-//     e.querySelectorAll('.avp-productoptionswatchwrapper').forEach((t) => {
-//       let r = t.querySelector('input[type="radio"]');
-//       t.addEventListener('click', (o) => {
-//         if (window.location.pathname.includes('products') && !window.product.available) {
-//           o.preventDefault();
-//           return;
-//         }
-//         let a = Array.from(l?.querySelectorAll('input[type="radio"]')),
-//           i = a.indexOf(r),
-//           n = r.value,
-//           c;
-//         if (
-//           ((c = r?.parentElement?.querySelector('.swatch-variant-title .money')?.innerText.replace('(', '').replace(')', '').replace('+', '')),
-//           'No Thanks' != n || c.includes('-$') || (c = 'USD' === Shopify.currency.active ? '$0' : ''),
-//           'Weight Stack' === r.getAttribute('field-name'))
-//         ) {
-//           let s = document.querySelector('fieldset.weight-stack');
-//           if (s) {
-//             let _ = [...e.querySelectorAll('.avp-productoptionswatchwrapper')].indexOf(t),
-//               d = s.querySelectorAll('label')[_];
-//             d && d.click();
-//           }
-//         }
-//         let p = `
-//           <div class="option_selected-container">
-//             <p class="option_selected">${n}</p>
-//             ${c ? `<span class="option_selected-price">${c}</span>` : ''}
-//             <svg class="remove-icon" data-group-name="${r.name}" data-value="${i}" width="16" height="16" fill="none"
-//                  xmlns="http://www.w3.org/2000/svg">
-//               <path fill-rule="evenodd" clip-rule="evenodd"
-//                     d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
-//                     fill="black"/>
-//             </svg>
-//           </div>`;
-//         setTimeout(() => {
-//           let e = document.querySelector(`[name="properties[${CSS.escape(r.getAttribute('field-name').replace('&quot;', '"'))}]"]`);
-//           e && r.checked && c && (c.includes('-$') ? e.value.includes('Subtract') || (e.value = e.value + ` [Subtract ${c}]`) : e.value.includes('Add') || (e.value = e.value + ` [Add +${c}]`));
-//         });
-//         let u = t.parentElement.parentElement.querySelector('.selected_options_container');
-//         if (r.checked)
-//           (u?.querySelector(`[data-value="${i}"]`) || (u.innerHTML = p),
-//             Array.from(u.children).forEach((e) => {
-//               e.style.display = 'flex';
-//             }),
-//             e.querySelectorAll('.avp-productoptionswatchwrapper').forEach((e) => {
-//               e.setAttribute('style', 'border: 1px solid #E5E5E5 !important;');
-//             }),
-//             t.setAttribute('style', 'border: 1px solid #D83D0E !important;'),
-//             e.querySelectorAll('.remove-icon').forEach((r) => {
-//               r.addEventListener('click', (l) => {
-//                 l.stopPropagation();
-//                 let o = l.target.closest('.option_selected-container');
-//                 if (o) {
-//                   let a = parseInt(r.getAttribute('data-value')),
-//                     i = e.querySelectorAll('.avp-productoptionswatchwrapper input[type="radio"]')[a];
-//                   i &&
-//                     ((i.checked = !1),
-//                     i.dispatchEvent(new Event('change', { bubbles: !0 })),
-//                     o.remove(),
-//                     t.setAttribute('style', 'border: 1px solid #E5E5E5 !important;'),
-//                     'Full Assembly & Installation' === r.getAttribute('data-group-name') &&
-//                       document.querySelectorAll('.handle-491, .installation-needed')[0].querySelectorAll('.ap-options__swatch label')[0].click());
-//                   let n = r.dataset.groupName;
-//                   n && ((selectedNegativePrices = selectedNegativePrices.filter((e) => e.target !== n)), updateCustomPrice());
-//                 }
-//               });
-//             }));
-//         else {
-//           let $ = u.querySelector(`[data-value="${i}"]`);
-//           ($ && $.closest('.option_selected-container').remove(), t.setAttribute('style', 'border: 1px solid #E5E5E5 !important;'));
-//         }
-//       });
-//     });
-//   }),
-//     document.querySelectorAll('.avp-productoptionswatchwrapper').forEach((e) => {
-//       e.addEventListener('click', (t) => {
-//         let r = e.querySelector('input'),
-//           l = r.value;
-//         ((inputMoneyValue = r?.parentElement?.querySelector('.swatch-variant-title .money')?.innerText.replace('(', '').replace(')', '').replace('+', '')),
-//           'No Thanks' != l || inputMoneyValue.includes('-$') || (inputMoneyValue = 'USD' === Shopify.currency.active ? '$0' : ''));
-//         let o = r.checked;
-//         if (o) {
-//           if (selectedNegativePrices && inputMoneyValue && inputMoneyValue.includes('-$')) {
-//             let a = parseFloat(inputMoneyValue.replace('-$', ''));
-//             -1 === selectedNegativePrices.findIndex((e) => e.target == r.name)
-//               ? selectedNegativePrices.push({ target: r.name, value: a })
-//               : selectedNegativePrices.forEach((e) => {
-//                   e.target === r.name && (e.value = a);
-//                 });
-//           }
-//           // updateCustomPrice();
-//         } else {
-//           let i = r.name;
-//           selectedNegativePrices = selectedNegativePrices.filter((e) => e.target !== i);
-//         }
-//       });
-//       let t = e.querySelector('.option-value-des');
-//       if (t) {
-//         let r = t.querySelector('.apo-value-help-text');
-//         if (r && r.innerText.includes('-$')) {
-//           let l = t.querySelector('.apo-money');
-//           if (l) {
-//             let o = l.innerText;
-//             if (o) {
-//               let a = r.innerText.replace('Subtract ', '');
-//               ((l.innerText = a), (r.style.display = 'none'));
-//             }
-//           }
-//         }
-//       }
-//     }));
-// }
-async function fetchProductByHandle(e) {
-  let t = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/option/${e}`;
-  try {
-    let r = await fetch(t, { method: 'GET' });
-    if (!r.ok) throw Error('Failed to fetch product by handle');
-    let l = await r.json();
-    return l.products[0];
-  } catch (o) {
-    return (console.error('Error fetching product by handle:', o), null);
-  }
-}
-async function fetchProductByTitle(e) {
-  let t = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbytitle?title=${encodeURIComponent(e)}`;
-  try {
-    let r = await fetch(t, { method: 'GET' });
-    if (!r.ok) throw Error('Failed to fetch product by title');
-    let l = await r.json();
-    return l.products[0];
-  } catch (o) {
-    return (console.error('Error fetching product by title:', o), null);
-  }
-}
-async function fetchProductByOptionCategory(e, t) {
-  let r = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbyoptioncategory?optionCategoryId=${e}&title=${t}`;
-  try {
-    let l = await fetch(r, { method: 'GET' });
-    if (!l.ok) throw Error('Failed to fetch product by title');
-    let o = await l.json();
-    return o[0];
-  } catch (a) {
-    return (console.error('Error fetching product by title:', a), null);
-  }
-}
-async function fetchProductMetafields(e) {
-  let t = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${e}/`;
-  try {
-    let r = await fetch(t, { method: 'GET' });
-    if (!r.ok) throw Error('Failed to fetch product metafields');
-    let l = await r.json();
-    return l.metafields;
-  } catch (o) {
-    return (console.error('Error fetching product metafields:', o), null);
-  }
-}
-async function fetchProductDetails(e) {
-  let t = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${e}`;
-  try {
-    let r = await fetch(t, { method: 'GET' });
-    if (!r.ok) throw Error('Failed to fetch product details');
-    let l = await r.json();
-    return l.product;
-  } catch (o) {
-    return (console.error('Error fetching product details:', o), null);
-  }
-}
-async function fetchProductDetailsWithMetafields(e) {
-  let t = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${e}`,
-    r = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${e}/`;
-  try {
-    let [l, o] = await Promise.all([fetch(t, { method: 'GET' }), fetch(r, { method: 'GET' })]);
-    if (!l.ok || !o.ok) throw Error('Failed to fetch product details or metafields');
-    let a = await l.json(),
-      i = await o.json();
-    return ((a.product.metafields = i.metafields), a.product);
-  } catch (n) {
-    return (console.error('Error fetching product details with metafields:', n), null);
-  }
-}
-async function fetchProductMetaObject(e) {
-  let t = `https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metaobject?metaobjectId=${e}`;
-  try {
-    let r = await fetch(t, { method: 'GET' });
-    if (!r.ok) throw Error('Failed to fetch metaobject');
-    return await r.json();
-  } catch (l) {
-    return (console.error('Error fetching meta object:', l), null);
-  }
-}
-function renderOptionPopupProducts(e) {
-  let t = `
+const container=document.getElementById("dynamic-product-content"),modalWrapper=document.querySelector(".modal-wrapper"),closeIconTemplate=document.getElementById("icon-close-template").innerHTML;let optionProductsPopup=[],selectedNegativePrices=[];function createAssemblySelect(){if(document.getElementById("double-assembly-input")||document.querySelector('select[field-name="Full Assembly & Installation"]'))return;let e=document.querySelectorAll(".handle-491, .installation-needed")[0];if(!e)return;let t=e.querySelectorAll(".ap-options__swatch label"),r=document.createElement("div");r.innerHTML='<h2 id="double-assembly-header" class="avp-heading ap-options__heading ">Assembly &amp; Room of Choice Installation Needed?</h2>',document.querySelectorAll("product-form")[0].before(r);let l=document.createElement("select");l.setAttribute("id","double-assembly-input"),l.setAttribute("aria-labelledby","double-assembly-header"),document.querySelectorAll("product-form")[0].before(l);let o=document.querySelectorAll(".custom-color-group")[0];o&&e.after(o);let a=document.querySelector('select[name="Warranty"]');if(a){let i=a.closest(".ap-options__select-container");i&&e.after(i)}l&&(t.forEach(e=>{let t=e.querySelector(".swatch-variant-title").innerHTML,r=e.querySelector("input").getAttribute("value"),o=l.appendChild(document.createElement("option"));o.innerHTML=t,o.setAttribute("name",r),e.addEventListener("change",e=>{l.querySelectorAll(`option[name="${e.target.value}"]`)[0].selected=!0})}),l.addEventListener("change",t=>{e.querySelectorAll("input")[t.target.selectedIndex].parentElement.click()}),document.querySelector(".installation-group").prepend(l),document.querySelector(".installation-group").prepend(r))}function renderCustomAvisOptions(){let e=document.querySelector('select[name="Warranty"]');if(e){let t=e.closest(".ap-options__select-container");if(t){let r=t.querySelector("select").options.length;r>1&&(t.style.display="block",t.querySelector(".ap-label-tooltip").classList.add("ap-options__heading"))}}let l=document.querySelectorAll(".ap-options__swatch-container");l.forEach(e=>{let t=e.querySelector(".ap-label-tooltip"),r=e.querySelector(".ap-options__swatch"),l=e.previousElementSibling;for(;l&&!l.classList.contains("ap-options__heading-container");)l=l.previousElementSibling;l&&e.classList.add(toSlug(l.querySelector(".avp-heading")?.innerText)),t&&r&&t.addEventListener("click",()=>{r.classList.toggle("show"),t.classList.toggle("open")})});let o=document.querySelectorAll(".option-avis-arrow-select");o.forEach(e=>{e.addEventListener("click",()=>{"rotate(45deg)"===e.style.transform?e.setAttribute("style","transform: rotate(225deg) !important"):e.setAttribute("style","transform: rotate(45deg) !important")})}),setupOptionsPopup(),setupOptionsHandler(),setupOptions();let a=document.querySelector(".avis-cartOptionsPopup .avis-popupBox");a&&(a.style.display="flex"),window.location.pathname.includes("products")&&(createAssemblySelect(),document.querySelectorAll("input").forEach(e=>{e.checked?(e.setAttribute("data-checked",1),e.parentElement.setAttribute("style","border: 1px solid #D83D0E !important;")):e.setAttribute("data-checked",0)}))}function selectedOptionHTML(e,t){let r=Array.from(e?.querySelectorAll('input[type="radio"]')),l=r.indexOf(t),o=t.value,a;if(a=t?.parentElement?.querySelector(".swatch-variant-title .money")?.innerText.replace("(","").replace(")","").replace("+",""),"No Thanks"!=o||a.includes("-$")||(a="USD"===Shopify.currency.active?"$0":""),"Weight Stack"===t.getAttribute("field-name")){let i=document.querySelector("fieldset.weight-stack");if(i){let n=[...optionContainer.querySelectorAll(".avp-productoptionswatchwrapper")].indexOf(wrapper),c=i.querySelectorAll("label")[n];c&&c.click()}}return`<div class="option_selected-container">
+    <p class="option_selected">${o}</p>
+    ${a?`<span class="option_selected-price">${a}</span>`:""}
+    <svg class="remove-icon" data-group-name="${t.name}" data-value="${l}" width="16" height="16" fill="none"
+        xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
+            fill="black"/>
+    </svg>
+  </div>`}function updateOption(e,t,r){let l=t.querySelector(".selected_options_container"),o=r.parentElement;l.innerHTML=e,Array.from(l.children).forEach(e=>{e.style.display="flex"}),t.querySelectorAll(".ap-options__swatch .avp-productoptionswatchwrapper").forEach(e=>{e.setAttribute("style","border: 1px solid #E5E5E5 !important;")}),o.setAttribute("style","border: 1px solid #D83D0E !important;"),t.querySelectorAll(".remove-icon").forEach(e=>{e.addEventListener("click",r=>{r.stopPropagation();let l=r.target.closest(".option_selected-container");if(l){let a=parseInt(e.getAttribute("data-value")),i=t.querySelectorAll('.avp-productoptionswatchwrapper input[type="radio"]')[a];i&&(i.checked=!1,i.dispatchEvent(new Event("change",{bubbles:!0})),l.remove(),o.setAttribute("style","border: 1px solid #E5E5E5 !important;"));let n=e.dataset.groupName;n&&(selectedNegativePrices=selectedNegativePrices.filter(e=>e.target!==n),updateCustomPrice())}})})}function setupOptions(){let e=document.querySelectorAll(`#cart #${window.avisModifyButton} .cart-product__details div.product-option`),t=document.querySelector(".avis-cartOptionsPopup");e.forEach(e=>{let r=e.getAttribute("data-name");if(r&&!r.toLowerCase().includes("warranty")&&!r.toLowerCase().includes("processing time")){let l=e.querySelector("dd").innerText,o=l.indexOf("[Add "),a=l;-1!=o&&(a=l.substring(0,o).trimEnd());let i=t.querySelectorAll(`input[field-name='${r}']`);i.forEach(e=>{let t=e.getAttribute("value");if(a===t){if(e.checked){let r=e.parentNode.parentNode,l=selectedOptionHTML(r,e);updateOption(l,r.parentElement,e)}else e.parentNode.click()}})}})}function setupOptionsPopup(){document.querySelectorAll(".ap-label-tooltip, .group-color .apo-title").forEach(e=>{if(e.dataset.initialized)return;let t=e.closest('[class^="handle-"]'),r=e.querySelector("svg");if(e.classList.contains("apo-title")&&Array.from(e.classList).filter(e=>e.includes("handle")).length>0&&(t=e),!t)return;e.dataset.initialized=!0;let l=document.createElement("style");l.textContent=".ap-label-tooltip::after { display: none !important; }",document.head.appendChild(l),r||(window.location.pathname.includes("products")?window.product.available?e.innerHTML+=`
+			  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+				   xmlns="http://www.w3.org/2000/svg">
+				<path fill-rule="evenodd" clip-rule="evenodd"
+					  d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z"
+					  fill="#D83D0E"/>
+			  </svg>`:e.innerHTML+=`
+			  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+				   xmlns="http://www.w3.org/2000/svg">
+				<path fill-rule="evenodd" clip-rule="evenodd"
+					  d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z"
+					  fill="#B3B3B3"/>
+			  </svg>`:e.innerHTML+=`
+			<svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+				 xmlns="http://www.w3.org/2000/svg">
+			  <path fill-rule="evenodd" clip-rule="evenodd"
+					d="M9 2.125C5.20304 2.125 2.125 5.20304 2.125 9C2.125 12.797 5.20304 15.875 9 15.875C12.797 15.875 15.875 12.797 15.875 9C15.875 5.20305 12.797 2.125 9 2.125ZM0.874999 9C0.874999 4.51269 4.51269 0.875001 9 0.875001C13.4873 0.875002 17.125 4.51269 17.125 9C17.125 13.4873 13.4873 17.125 9 17.125C4.51268 17.125 0.874998 13.4873 0.874999 9ZM9.83333 12.3333C9.83333 12.7936 9.46024 13.1667 9 13.1667C8.53976 13.1667 8.16667 12.7936 8.16667 12.3333C8.16667 11.8731 8.53976 11.5 9 11.5C9.46024 11.5 9.83333 11.8731 9.83333 12.3333ZM7.93333 7.33334C7.93333 6.74423 8.4109 6.26667 9 6.26667C9.5891 6.26667 10.0667 6.74423 10.0667 7.33334L10.0667 7.43444C10.0667 7.74415 9.94364 8.04117 9.72464 8.26017L8.57574 9.40907C8.34142 9.64339 8.34142 10.0233 8.57574 10.2576C8.81005 10.4919 9.18995 10.4919 9.42427 10.2576L10.5732 9.1087C11.0172 8.66466 11.2667 8.06241 11.2667 7.43444L11.2667 7.33334C11.2667 6.08149 10.2518 5.06667 9 5.06667C7.74816 5.06667 6.73333 6.08149 6.73333 7.33333L6.73333 7.75C6.73333 8.08137 7.00196 8.35 7.33333 8.35C7.6647 8.35 7.93333 8.08137 7.93333 7.75L7.93333 7.33334Z"
+					fill="#D83D0E"/>
+			</svg>`);let o=e.querySelector("svg");o&&o.addEventListener("click",async e=>{e.preventDefault(),e.stopPropagation();let r=t.previousElementSibling;for(;r&&!r.classList.contains("ap-options__heading-container");)r=r.previousElementSibling;let l="";r&&(l=r.querySelector(".avp-heading")?.innerText);let o=Array.from(t.classList).find(e=>e.startsWith("handle-")),a;o&&(a=o.split("-")[1]),document.querySelector("#dynamic-product-content").style.width="auto",modalWrapper.style.display="flex",container.innerHTML="";let i=t.querySelector(".apo-title")?.innerText,n="";(productTitleSearch=l?`${i} - ${l} (${a})`:`${i} (${a})`).includes("Warranty")&&(productTitleSearch=`Warranty (${a})`);let c=encodeURIComponent(productTitleSearch),s=await fetchProductByOptionCategory(a,c);if(s&&(n=s.relatedProducts&&0!==s.relatedProducts.length?renderOptionPopupProducts(s):s.descriptionHtml)){let _=document.createElement("div");_.innerHTML=n;let d=_;if(d){container.innerHTML=d.innerHTML+`<span class="modal-close">${closeIconTemplate}</span>`;let p=document.querySelector(".modal-close");p.addEventListener("click",()=>{modalWrapper.style.display="none"});let u=d.querySelectorAll("script");u.forEach(e=>{let t=document.createElement("script");e.src?t.src=e.src:t.textContent=e.textContent,document.body.appendChild(t)});let $=container.querySelectorAll("#dynamic-product-content img");$.forEach(e=>{let t=e.src,r=t.split("/").pop(),l=`https://cdn.shopify.com/s/files/1/0884/2012/2940/files/${r}`;e.src=l});let h=document.querySelectorAll(".product-card");h&&(h.forEach(e=>{let t=e.getAttribute("data-product-id"),r=s.relatedProducts.find(e=>e.id===t);r&&e.addEventListener("click",e=>{let t=e.currentTarget,l=[...t.parentElement.children].filter(e=>e!==t.parentElement);l.forEach(e=>e.classList.remove("active")),t.classList.add("active");let o=r.shortDescription,a=`
+					<div class="product-details__product-image">
+					  <img src="${r.imageUrl}" alt="${r.title}">
+					</div>
+					<div class="product-details__product-info">
+					  <h2 class="product-details__title">${r.title}</h2>
+					  <p class="product-details__short_description">${o}</p>
+					</div>`,i=document.querySelector(".product-details-container"),n=document.querySelector(".product-details-description-body");i.style.display="flex",n.style.display="block",i.innerHTML=a;let c=document.createElement("div");c.innerHTML=r.descriptionHtml.replace(o,""),removeEmptyElements(c),clearImages(c),n.innerHTML=c.innerHTML})}),h[0]?.click())}else console.error("MainContent not found in the fetched HTML.")}})})}function setupOptionsHandler(){let e=document.querySelectorAll(".avp-option");e.forEach(e=>{let t=e.querySelector(".ap-label-tooltip");if(t){let r=document.createElement("div");r.classList.add("selected_options_container"),t.append(r)}let l=e.querySelector(".ap-options__swatch");e.querySelectorAll(".avp-productoptionswatchwrapper").forEach(t=>{let r=t.querySelector('input[type="radio"]');t.addEventListener("click",o=>{if(window.location.pathname.includes("products")&&!window.product.available){o.preventDefault();return}let a=Array.from(l?.querySelectorAll('input[type="radio"]')),i=a.indexOf(r),n=r.value,c;if(c=r?.parentElement?.querySelector(".swatch-variant-title .money")?.innerText.replace("(","").replace(")","").replace("+",""),"No Thanks"!=n||c.includes("-$")||(c="USD"===Shopify.currency.active?"$0":""),"Weight Stack"===r.getAttribute("field-name")){let s=document.querySelector("fieldset.weight-stack");if(s){let _=[...e.querySelectorAll(".avp-productoptionswatchwrapper")].indexOf(t),d=s.querySelectorAll("label")[_];d&&d.click()}}let p=`
+          <div class="option_selected-container">
+            <p class="option_selected">${n}</p>
+            ${c?`<span class="option_selected-price">${c}</span>`:""}
+            <svg class="remove-icon" data-group-name="${r.name}" data-value="${i}" width="16" height="16" fill="none"
+                 xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd"
+                    d="M3.5771 3.57613C3.81142 3.34181 4.19132 3.34181 4.42563 3.57613L8.00137 7.15186L11.5771 3.57613C11.8114 3.34181 12.1913 3.34181 12.4256 3.57613C12.6599 3.81044 12.6599 4.19034 12.4256 4.42465L8.8499 8.00039L12.4256 11.5761C12.6599 11.8104 12.6599 12.1903 12.4256 12.4247C12.1913 12.659 11.8114 12.659 11.5771 12.4247L8.00137 8.84892L4.42563 12.4247C4.19132 12.659 3.81142 12.659 3.5771 12.4247C3.34279 12.1903 3.34279 11.8104 3.5771 11.5761L7.15284 8.00039L3.5771 4.42465C3.34279 4.19034 3.34279 3.81044 3.5771 3.57613Z"
+                    fill="black"/>
+            </svg>
+          </div>`;setTimeout(()=>{let e=document.querySelector(`[name="properties[${CSS.escape(r.getAttribute("field-name").replace("&quot;",'"'))}]"]`);e&&r.checked&&c&&(c.includes("-$")?e.value.includes("Subtract")||(e.value=e.value+` [Subtract ${c}]`):e.value.includes("Add")||(e.value=e.value+` [Add +${c}]`))});let u=t.parentElement.parentElement.querySelector(".selected_options_container");if(r.checked)u?.querySelector(`[data-value="${i}"]`)||(u.innerHTML=p),Array.from(u.children).forEach(e=>{e.style.display="flex"}),e.querySelectorAll(".avp-productoptionswatchwrapper").forEach(e=>{e.setAttribute("style","border: 1px solid #E5E5E5 !important;")}),t.setAttribute("style","border: 1px solid #D83D0E !important;"),e.querySelectorAll(".remove-icon").forEach(r=>{r.addEventListener("click",l=>{l.stopPropagation();let o=l.target.closest(".option_selected-container");if(o){let a=parseInt(r.getAttribute("data-value")),i=e.querySelectorAll('.avp-productoptionswatchwrapper input[type="radio"]')[a];i&&(i.checked=!1,i.dispatchEvent(new Event("change",{bubbles:!0})),o.remove(),t.setAttribute("style","border: 1px solid #E5E5E5 !important;"),"Full Assembly & Installation"===r.getAttribute("data-group-name")&&document.querySelectorAll(".handle-491, .installation-needed")[0].querySelectorAll(".ap-options__swatch label")[0].click());let n=r.dataset.groupName;n&&(selectedNegativePrices=selectedNegativePrices.filter(e=>e.target!==n),updateCustomPrice())}})});else{let $=u.querySelector(`[data-value="${i}"]`);$&&$.closest(".option_selected-container").remove(),t.setAttribute("style","border: 1px solid #E5E5E5 !important;")}})})}),document.querySelectorAll(".avp-productoptionswatchwrapper").forEach(e=>{e.addEventListener("click",t=>{let r=e.querySelector("input"),l=r.value;inputMoneyValue=r?.parentElement?.querySelector(".swatch-variant-title .money")?.innerText.replace("(","").replace(")","").replace("+",""),"No Thanks"!=l||inputMoneyValue.includes("-$")||(inputMoneyValue="USD"===Shopify.currency.active?"$0":"");let o=r.checked;if(o){if(selectedNegativePrices&&inputMoneyValue&&inputMoneyValue.includes("-$")){let a=parseFloat(inputMoneyValue.replace("-$",""));-1===selectedNegativePrices.findIndex(e=>e.target==r.name)?selectedNegativePrices.push({target:r.name,value:a}):selectedNegativePrices.forEach(e=>{e.target===r.name&&(e.value=a)})}updateCustomPrice()}else{let i=r.name;selectedNegativePrices=selectedNegativePrices.filter(e=>e.target!==i)}});let t=e.querySelector(".option-value-des");if(t){let r=t.querySelector(".apo-value-help-text");if(r&&r.innerText.includes("-$")){let l=t.querySelector(".apo-money");if(l){let o=l.innerText;if(o){let a=r.innerText.replace("Subtract ","");l.innerText=a,r.style.display="none"}}}}})}async function fetchProductByHandle(e){let t=`https://fitnesssuperstore-api.azurewebsites.net/api/shopify/option/${e}`;try{let r=await fetch(t,{method:"GET"});if(!r.ok)throw Error("Failed to fetch product by handle");let l=await r.json();return l.products[0]}catch(o){return console.error("Error fetching product by handle:",o),null}}async function fetchProductByTitle(e){let t=`https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbytitle?title=${encodeURIComponent(e)}`;try{let r=await fetch(t,{method:"GET"});if(!r.ok)throw Error("Failed to fetch product by title");let l=await r.json();return l.products[0]}catch(o){return console.error("Error fetching product by title:",o),null}}async function fetchProductByOptionCategory(e,t){let r=`https://fitnesssuperstore-api.azurewebsites.net/api/shopify/productbyoptioncategory?optionCategoryId=${e}&title=${t}`;try{let l=await fetch(r,{method:"GET"});if(!l.ok)throw Error("Failed to fetch product by title");let o=await l.json();return o[0]}catch(a){return console.error("Error fetching product by title:",a),null}}async function fetchProductMetafields(e){let t=`https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${e}/`;try{let r=await fetch(t,{method:"GET"});if(!r.ok)throw Error("Failed to fetch product metafields");let l=await r.json();return l.metafields}catch(o){return console.error("Error fetching product metafields:",o),null}}async function fetchProductDetails(e){let t=`https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${e}`;try{let r=await fetch(t,{method:"GET"});if(!r.ok)throw Error("Failed to fetch product details");let l=await r.json();return l.product}catch(o){return console.error("Error fetching product details:",o),null}}async function fetchProductDetailsWithMetafields(e){let t=`https://fitnesssuperstore-api.azurewebsites.net/api/shopify/product/${e}`,r=`https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metafields/${e}/`;try{let[l,o]=await Promise.all([fetch(t,{method:"GET"}),fetch(r,{method:"GET"})]);if(!l.ok||!o.ok)throw Error("Failed to fetch product details or metafields");let a=await l.json(),i=await o.json();return a.product.metafields=i.metafields,a.product}catch(n){return console.error("Error fetching product details with metafields:",n),null}}async function fetchProductMetaObject(e){let t=`https://fitnesssuperstore-api.azurewebsites.net/api/shopify/metaobject?metaobjectId=${e}`;try{let r=await fetch(t,{method:"GET"});if(!r.ok)throw Error("Failed to fetch metaobject");return await r.json()}catch(l){return console.error("Error fetching meta object:",l),null}}function renderOptionPopupProducts(e){let t=`
     <div class="option-title">
-    <h2>ABOUT OPTIONS - ${e.title.replace(/\(\d+\)/g, '')}</h2>
+    <h2>ABOUT OPTIONS - ${e.title.replace(/\(\d+\)/g,"")}</h2>
     </div>
     <div class="option-products">
-      <div class="product-cards">`;
-  e.relatedProducts.forEach((e) => {
-    let r = parseFloat(e.price),
-      l = 'US' !== Shopify.country ? (r * Shopify.currency.rate).toFixed(2) : r.toFixed(2);
-    t += `
+      <div class="product-cards">`;e.relatedProducts.forEach(e=>{let r=parseFloat(e.price),l="US"!==Shopify.country?(r*Shopify.currency.rate).toFixed(2):r.toFixed(2);t+=`
       <div class="product-card" data-product-id="${e.id}">
         <div class="product-card__img">
           <img src="${e.imageUrl}" alt="${e.title}" />
         </div>
-        <h4 class="product-card__title">${e.title.replace(/\(\d+\)/g, '')}</h4>
+        <h4 class="product-card__title">${e.title.replace(/\(\d+\)/g,"")}</h4>
         <div class="product-card__mid">
           <span class="product-card__code">#${e.sku}</span>
           <span class="product-card__price">
-            ${'$' + l}
+            ${"$"+l}
           </span>
         </div>
-        <p class="product-card__description">${e.shortDescription.substring(0, 150)}...</p>
+        <p class="product-card__description">${e.shortDescription.substring(0,150)}...</p>
         <a class="read-more-btn" data-id="${e.id}">Read more</a>
       </div>
-    `;
-  });
-  let r = `
+    `});let r=`
     </div>
     <div class="product-details">
       <div class="product-details-container"></div>
       <div class="product-details-description-body"></div>
     </div>
-  `;
-  return ((t += r), (t += '</div>'));
-}
-function removeEmptyElements(e) {
-  let t = e.querySelectorAll('p, div');
-  t.forEach((e) => {
-    ((!e.textContent.trim() && 0 === e.children.length) ||
-      '<br>' === e.innerHTML.trim() ||
-      '<br><br>' === e.innerHTML.trim() ||
-      (!e.textContent.trim() && e.innerHTML.trim().match(/^<br\s*\/?>$/i))) &&
-      e.remove();
-  });
-  let r = e.querySelectorAll('h5');
-  r.forEach((e) => e.remove());
-  let l = e.querySelectorAll('h6');
-  l.forEach((e) => e.remove());
-}
-function clearImages(e) {
-  let t = e.querySelectorAll('img');
-  t.forEach((e) => {
-    e.parentElement ? e.parentElement.remove() : e.remove();
-  });
-}
-// if (
-//   (document.addEventListener('DOMContentLoaded', () => {
-//     let e = setInterval(() => {
-//       document.querySelector('.avpoptions-container__v2') &&
-//         (window.location.pathname.includes('products') &&
-//           (renderCustomAvisOptions(),
-//           window.product.available ||
-//             document.querySelectorAll('.avp-select').forEach((e) => {
-//               ((e.style.background = '#F2F2F2'), (e.querySelector('select').disabled = !0), (e.querySelector('select').style.color = '#808080'));
-//             }),
-//           document.querySelectorAll('.money.apo-money').forEach((e) => {
-//             let t = e.textContent.replace(/[()+]/g, '').trim();
-//             e.parentElement && 'option' === e.parentElement.tagName.toLowerCase() ? (e.textContent = `[Add ${t}]`) : (e.textContent = t);
-//           })),
-//         document.querySelectorAll('.ap-options__swatch-container').forEach((e) => {
-//           let t = e.querySelector('.ap-label-tooltip .apo-title');
-//           ((t && 'Paint Color' === t.textContent.trim()) || (t && 'Vinyl Color' === t.textContent.trim()) || (t && 'Upholstery Color' === t.textContent.trim())) &&
-//             !window.location.pathname.includes('cart') &&
-//             (e.style.display = 'none');
-//         }),
-//         clearInterval(e));
-//     }, 100);
-//   }),
-//   document.addEventListener('click', function (e) {
-//     if (e.target.classList.contains('read-more-btn')) {
-//       let t = e.target,
-//         r = t.closest('.product-card');
-//       if (!r) return;
-//       let l = r.querySelector('.product-card__description');
-//       l &&
-//         (l.classList.contains('expanded')
-//           ? ((l.style.maxHeight = '0'), l.classList.remove('expanded'), (t.textContent = 'Read more'))
-//           : ((l.style.maxHeight = l.scrollHeight + 'px'), l.classList.add('expanded'), (t.textContent = 'Read Less')));
-//     }
-//   }),
-//   '/cart' === window.location.pathname)
-// ) {
-//   let e = !1,
-//     t = new MutationObserver(() => {
-//       let t = document.querySelector('.avis-cartOptionsPopup .ap-options__select-container');
-//       t && 'none' !== t.style.display
-//         ? e ||
-//           ((e = !0),
-//           (document.querySelector('html').style.overflowY = 'hidden'),
-//           renderCustomAvisOptions(),
-//           document.querySelectorAll('.money.apo-money').forEach((e) => {
-//             let t = e.textContent.replace(/[()+]/g, '').trim();
-//             e.parentElement && 'option' === e.parentElement.tagName.toLowerCase() ? (e.textContent = `[Add ${t}]`) : (e.textContent = t);
-//           }))
-//         : (e = !1);
-//     });
-//   t.observe(document.body, { childList: !0, subtree: !0, attributes: !0, attributeFilter: ['style', 'class'] });
-// }
-function setupPopupHeaderCloseDelegate() {
-  document.addEventListener('click', (e) => {
-    let t = e.target.closest('.avis-popupHeader-close, .avis-cartOptionsBackdrop, .avis-popupFooter-cancel');
-    t && (document.documentElement.style.overflowY = '');
-  });
-}
-// function updateCustomPrice() {
-//   setTimeout(() => {
-//     let e = document.querySelector('.pr_custom_price');
-//     if (!e) return;
-//     let t = e.innerText
-//         .match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]
-//         .replace(/,/g, '')
-//         .replace(/(\.\d*?[1-9])0+$/, '$1')
-//         .replace(/\.0+$/, ''),
-//       r = parseFloat(t),
-//       l = selectedNegativePrices.reduce((e, t) => e + (t.value || 0), 0),
-//       o = (r - l).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-//     document.querySelectorAll('.pr_custom_price').forEach((e) => {
-//       e.innerText = o;
-//     });
-//   }, 100);
-// }
-function toSlug(e) {
-  return e
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-setupPopupHeaderCloseDelegate();
+  `;return t+=r,t+="</div>"}function removeEmptyElements(e){let t=e.querySelectorAll("p, div");t.forEach(e=>{(!e.textContent.trim()&&0===e.children.length||"<br>"===e.innerHTML.trim()||"<br><br>"===e.innerHTML.trim()||!e.textContent.trim()&&e.innerHTML.trim().match(/^<br\s*\/?>$/i))&&e.remove()});let r=e.querySelectorAll("h5");r.forEach(e=>e.remove());let l=e.querySelectorAll("h6");l.forEach(e=>e.remove())}function clearImages(e){let t=e.querySelectorAll("img");t.forEach(e=>{e.parentElement?e.parentElement.remove():e.remove()})}if(document.addEventListener("DOMContentLoaded",()=>{let e=setInterval(()=>{document.querySelector(".avpoptions-container__v2")&&(window.location.pathname.includes("products")&&(renderCustomAvisOptions(),window.product.available||document.querySelectorAll(".avp-select").forEach(e=>{e.style.background="#F2F2F2",e.querySelector("select").disabled=!0,e.querySelector("select").style.color="#808080"}),document.querySelectorAll(".money.apo-money").forEach(e=>{let t=e.textContent.replace(/[()+]/g,"").trim();e.parentElement&&"option"===e.parentElement.tagName.toLowerCase()?e.textContent=`[Add ${t}]`:e.textContent=t})),document.querySelectorAll(".ap-options__swatch-container").forEach(e=>{let t=e.querySelector(".ap-label-tooltip .apo-title");(t&&"Paint Color"===t.textContent.trim()||t&&"Vinyl Color"===t.textContent.trim()||t&&"Upholstery Color"===t.textContent.trim())&&!window.location.pathname.includes("cart")&&(e.style.display="none")}),clearInterval(e))},100)}),document.addEventListener("click",function(e){if(e.target.classList.contains("read-more-btn")){let t=e.target,r=t.closest(".product-card");if(!r)return;let l=r.querySelector(".product-card__description");l&&(l.classList.contains("expanded")?(l.style.maxHeight="0",l.classList.remove("expanded"),t.textContent="Read more"):(l.style.maxHeight=l.scrollHeight+"px",l.classList.add("expanded"),t.textContent="Read Less"))}}),"/cart"===window.location.pathname){let e=!1,t=new MutationObserver(()=>{let t=document.querySelector(".avis-cartOptionsPopup .ap-options__select-container");t&&"none"!==t.style.display?e||(e=!0,document.querySelector("html").style.overflowY="hidden",renderCustomAvisOptions(),document.querySelectorAll(".money.apo-money").forEach(e=>{let t=e.textContent.replace(/[()+]/g,"").trim();e.parentElement&&"option"===e.parentElement.tagName.toLowerCase()?e.textContent=`[Add ${t}]`:e.textContent=t})):e=!1});t.observe(document.body,{childList:!0,subtree:!0,attributes:!0,attributeFilter:["style","class"]})}function setupPopupHeaderCloseDelegate(){document.addEventListener("click",e=>{let t=e.target.closest(".avis-popupHeader-close, .avis-cartOptionsBackdrop, .avis-popupFooter-cancel");t&&(document.documentElement.style.overflowY="")})}function updateCustomPrice(){setTimeout(()=>{let e=document.querySelector(".pr_custom_price");if(!e)return;let t=e.innerText.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0].replace(/,/g,"").replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0+$/,""),r=parseFloat(t),l=selectedNegativePrices.reduce((e,t)=>e+(t.value||0),0),o=(r-l).toLocaleString("en-US",{style:"currency",currency:"USD"});document.querySelectorAll(".pr_custom_price").forEach(e=>{e.innerText=o})},100)}function toSlug(e){return e.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")}setupPopupHeaderCloseDelegate();
