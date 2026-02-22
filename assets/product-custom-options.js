@@ -235,6 +235,26 @@ if (!customElements.get('product-customization-options')) {
         if (!option.checked) {
           const optionQuantityInput = document.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
           if (optionQuantityInput) optionQuantityInput.value = 1;
+          const optionContainer = el.closest('[data-option-accordion]');
+          if (!optionContainer) return;
+          const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
+          if (!customizationOption) return;
+          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
+          if (priceContainer) {
+            const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
+            const formattedPrice = price.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            });
+            priceContainer.innerHTML = `$${formattedPrice}`;
+            setTimeout(() => {
+              const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
+              if (selectedOption) {
+                const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
+                selectedOptionPrice.innerHTML = `$${formattedPrice}`;
+              }
+            });
+          }
         }
       }
 
