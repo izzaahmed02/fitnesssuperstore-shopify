@@ -263,6 +263,7 @@ if (!customElements.get('product-customization-options')) {
       setDefaultDisabledOptions() {
         let quantityLimit = 0;
         const optionWithMultichoicelimit = this.querySelectorAll('[data-multichoice-limit]');
+
         if (optionWithMultichoicelimit.length === 0) return;
         optionWithMultichoicelimit.forEach((option) => {
           const limit = Number(option.getAttribute('data-multichoice-limit'));
