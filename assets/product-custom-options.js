@@ -365,6 +365,7 @@ if (!customElements.get('product-customization-options')) {
             });
           }
           if (optionContainer.hasAttribute('data-multichoice-limit')) {
+            let quantityLimit = 0;
             const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
             const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
             if (multiChoiceOptions.length > 0) {
