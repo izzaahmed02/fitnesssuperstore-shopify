@@ -174,6 +174,11 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
+      checkDefaultConditionsToRender() {
+        const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
+        if (optionsToRender.length === 0) return;
+      }
+
       // Helper, for options multichoice
 
       multichoice(optionHandler, option) {
