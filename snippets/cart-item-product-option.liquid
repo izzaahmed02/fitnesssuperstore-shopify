@@ -115,9 +115,18 @@
         {% if default_variant_id != blank %}
           {% assign values = default_values | split: ',' %}
           {% for value in values %}
-            {% assign id = value | split: ':::' | first | plus: 0 %}
-            {% assign price = value | split: ':::' | last | plus: 0 %}
-            {% assign price_formated = value | split: ':::' | last %}
+            {% liquid
+              assign id = value | split: ':::' | first | plus: 0
+              assign price = value | split: ':::' | last | plus: 0
+               assign price_formated = value | split: ':::' | last
+                assign default_quantity = ''
+                for item in options_data
+                if item.defaultValues contains variant.id
+                assign default_quantity = item.quantity | plus: 0
+                break
+                endif
+                endfor
+            %}
 
             <p data-option-id="{{ id }}" data-option-variant-name="{{ product_option.product_option_sets_default.value.title }}">
               {% for variant in product_option.product_option_variants.value %}
