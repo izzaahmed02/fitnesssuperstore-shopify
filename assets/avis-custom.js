@@ -571,23 +571,23 @@ function setupPopupHeaderCloseDelegate() {
     t && (document.documentElement.style.overflowY = '');
   });
 }
-function updateCustomPrice() {
-  setTimeout(() => {
-    let e = document.querySelector('.pr_custom_price');
-    if (!e) return;
-    let t = e.innerText
-        .match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]
-        .replace(/,/g, '')
-        .replace(/(\.\d*?[1-9])0+$/, '$1')
-        .replace(/\.0+$/, ''),
-      r = parseFloat(t),
-      l = selectedNegativePrices.reduce((e, t) => e + (t.value || 0), 0),
-      o = (r - l).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-    document.querySelectorAll('.pr_custom_price').forEach((e) => {
-      e.innerText = o;
-    });
-  }, 100);
-}
+// function updateCustomPrice() {
+//   setTimeout(() => {
+//     let e = document.querySelector('.pr_custom_price');
+//     if (!e) return;
+//     let t = e.innerText
+//         .match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]
+//         .replace(/,/g, '')
+//         .replace(/(\.\d*?[1-9])0+$/, '$1')
+//         .replace(/\.0+$/, ''),
+//       r = parseFloat(t),
+//       l = selectedNegativePrices.reduce((e, t) => e + (t.value || 0), 0),
+//       o = (r - l).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+//     document.querySelectorAll('.pr_custom_price').forEach((e) => {
+//       e.innerText = o;
+//     });
+//   }, 100);
+// }
 function toSlug(e) {
   return e
     .toLowerCase()
