@@ -179,20 +179,20 @@ if (!customElements.get('product-customization-options')) {
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
         if (optionsToRender.length > 0) {
           optionsToRender.forEach((option) => (option.style.display = 'none'));
-          const hasConditions = this.querySelectorAll('[data-has-conditions]');
-          hasConditions.forEach((condition) => {
-            if (condition.checked) {
-              const rule = condition.dataset.hasConditions;
-              optionsToRender.forEach((option) => {
-                const optionRules = option.dataset.conditionsToRender;
-                if (optionRules.includes(rule)) {
-                  option.style.display = 'flex';
-                } else {
-                  option.style.display = 'none';
-                }
-              });
-            }
-          });
+          // const hasConditions = this.querySelectorAll('[data-has-conditions]');
+          // hasConditions.forEach((condition) => {
+          //   if (condition.checked) {
+          //     const rule = condition.dataset.hasConditions;
+          //     optionsToRender.forEach((option) => {
+          //       const optionRules = option.dataset.conditionsToRender;
+          //       if (optionRules.includes(rule)) {
+          //         option.style.display = 'flex';
+          //       } else {
+          //         option.style.display = 'none';
+          //       }
+          //     });
+          //   }
+          // });
         }
       }
 
