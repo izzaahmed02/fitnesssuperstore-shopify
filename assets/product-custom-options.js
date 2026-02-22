@@ -262,7 +262,14 @@ if (!customElements.get('product-customization-options')) {
 
       setDefaultDisabledOptions() {
         if (!this.closest('cart-drawer') || !window.location.href.includes('/cart')) return;
-        const optionWithMultichoicelimit = this.q;
+        const optionWithMultichoicelimit = this.querySelectorAll('[data-multichoice-limit]');
+        if (optionWithMultichoicelimit.length === 0) return;
+        optionWithMultichoicelimit.forEach((option) => {
+          const limit = Number(option.getAttribute('data-multichoice-limit'));
+          const multiChoiceOptions = option.querySelectorAll(`[data-customization-option]:checked`);
+          const notSelectedOptions = option.querySelectorAll(`[data-customization-option]:not(:checked)`);
+          const increaseButtons = option.querySelectorAll('[data-increase-quantity]');
+        });
       }
 
       // Helper for creating option badge
