@@ -164,9 +164,9 @@ if (!customElements.get('product-customization-options')) {
 
             optionsToRender.forEach((option) => {
               const optionRules = option.dataset.conditionsToRender;
-              console.log(optionRules);
 
               if (optionRules.includes(rule)) {
+                console.log('tetst');
                 option.style.display = 'block';
               } else {
                 option.style.display = 'none';
