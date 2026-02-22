@@ -147,6 +147,7 @@
     <!-- RIGHT: MENU SITEMAP -->
     <section class="card">
       <ul class="root" id="sitemap-right">
+        {% comment %}
         {% for link in linklists.sitemap-menu-2.links %}
         <li>
           <a href="{{ link.url }}">{{ link.title }}</a>
@@ -168,6 +169,48 @@
           {% endif %}
         </li>
         {% endfor %}
+          {% endcomment %}
+           {% for link in linklists.sitemap-menu-2.links %}
+  {% if link.url == '/pages/blog' or link.title == 'Blog' %}
+  <li>
+    <a href="{{ link.url }}">{{ link.title }}</a>
+    <ul>
+      {% for blog in blogs %}
+      <li>
+        <a href="{{ blog.url }}">{{ blog.title }}</a>
+        {% if blog.articles_count > 0 %}
+        <ul>
+          {% for article in blog.articles limit:50 %}
+          <li><a href="{{ article.url }}">{{ article.title }}</a></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </li>
+  {% else %}
+  <li>
+    <a href="{{ link.url }}">{{ link.title }}</a>
+    {% if link.links.size > 0 %}
+    <ul>
+      {% for child in link.links %}
+      <li>
+        <a href="{{ child.url }}">{{ child.title }}</a>
+        {% if child.links.size > 0 %}
+        <ul>
+          {% for grandchild in child.links %}
+          <li><a href="{{ grandchild.url }}">{{ grandchild.title }}</a></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </li>
+  {% endif %}
+{% endfor %}
       </ul>
     </section>
 
