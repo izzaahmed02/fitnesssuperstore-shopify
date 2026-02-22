@@ -144,7 +144,7 @@ if (!customElements.get('product-customization-options')) {
               this.conditionalChoice(option);
             }
             if (option.hasAttribute('data-has-multichoice')) {
-              this.multichoice(optionHandler, option);
+              // this.multichoice(optionHandler, option);
             }
             if (this.closest('cart-drawer')) return;
             this.updatePrice();
