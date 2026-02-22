@@ -356,7 +356,7 @@ function setupOptionsHandler() {
                   e.target === r.name && (e.value = a);
                 });
           }
-          updateCustomPrice();
+          // updateCustomPrice();
         } else {
           let i = r.name;
           selectedNegativePrices = selectedNegativePrices.filter((e) => e.target !== i);
