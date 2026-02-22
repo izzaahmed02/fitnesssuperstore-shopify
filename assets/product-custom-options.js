@@ -230,11 +230,8 @@ if (!customElements.get('product-customization-options')) {
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
           addedOption.remove();
-                    const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-
+          const optionQuantityInput = parent.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
         }
-
-        if
       }
 
       // Helper for creating option badge
