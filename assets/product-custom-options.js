@@ -198,6 +198,7 @@ if (!customElements.get('product-customization-options')) {
           console.log('test');
           multiChoiceOptions.forEach((choice) => choice.checked == false);
           optionHandler.dataset.selectedOptions = option.dataCustomizationOption;
+          option.checked = true;
           const addedOptions = parent.querySelectorAll(`[data-option-id]`);
           if (addedOptions.length > 0) {
             addedOptions.forEach((option) => option.remove());
