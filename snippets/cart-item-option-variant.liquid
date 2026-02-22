@@ -40,6 +40,13 @@
   if product_title contains '(-$'
     assign cleaned_title = product_title | split: '(-$' | first
   endif
+  assign default_quantity = 0
+  for item in options_data
+    if item.variantId contains variant.id
+      assign default_quantity = item.quantity | plus: 0
+      break
+    endif
+  endfor
 %}
 
 <label
@@ -79,12 +86,20 @@
     </div>
   {% endif %}
   {% if variant.price != 0 %}
+    {% liquid
+      assign price = variant.price
+      if default_quantity != blank and default_quantity != '0' and default_quantity != 0
+        assign default_quantity = default_quantity | plus: 0
+        assign price = price | times: default_quantity
+      endif
+    %}
+
     <span
-      avis-price="{{ variant.price | money_without_currency }}"
+      avis-price="{{ variant.price | money_without_currency | replace:',','' }}"
       avis-price-compare="0"
       class="product-options__swatch-price"
     >
-      {{- variant.price | money -}}
+      {{- price | money -}}
     </span>
   {% endif %}
 

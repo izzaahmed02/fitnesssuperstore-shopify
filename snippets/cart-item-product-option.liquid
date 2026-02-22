@@ -115,11 +115,18 @@
         {% if default_variant_id != blank %}
           {% assign values = default_values | split: ',' %}
           {% for value in values %}
-            {% assign id = value | split: ':::' | first | plus: 0 %}
-            {% assign price = value | split: ':::' | last | plus: 0 %}
-            {% assign price_formated = value | split: ':::' | last %}
+            {% liquid
+              assign default_variant_title = ''
+              assign id = value | split: ':::' | first | plus: 0
+              assign price = value | split: ':::' | last | plus: 0
+              for variant in product_option.product_option_variants.value
+                if variant.id == id
+                  assign default_variant_title = variant.title
+                endif
+              endfor
+            %}
 
-            <p data-option-id="{{ id }}" data-option-variant-name="{{ product_option.product_option_sets_default.value.title }}">
+            <p data-option-id="{{ id }}" data-option-variant-name="{{ default_variant_title }}">
               {% for variant in product_option.product_option_variants.value %}
                 {% if variant.id == id %}
                   <span class="product-options__accordion-label-title" data-option-title>
@@ -127,8 +134,21 @@
                   </span>
 
                   {% if price > 0 and price != variant.id %}
+                    {% liquid
+                      assign default_quantity = 0
+                      for item in options_data
+                        if item.variantId contains variant.id
+                          assign default_quantity = item.quantity | plus: 0
+                          break
+                        endif
+                      endfor
+
+                      if default_quantity != 0 or default_quantity != '0'
+                        assign price = price | times: 100.0 | times: default_quantity
+                      endif
+                    %}
                     <span class="product-options__accordion-label-price" data-option-price>
-                      {{ price_formated | prepend: cart.currency.symbol }}
+                      {{ price | money }}
                     </span>
                   {% endif %}
                   {% break %}
@@ -141,7 +161,7 @@
             </p>
           {% endfor %}
         {% elsif conditions_to_render != blank and default_variant_id == blank %}
-          <p data-option-id="{{ product_option.product_option_sets_default.value.id }}"  data-option-variant-name="{{ product_option.product_option_sets_default.value.title }}">
+          <p data-option-id="{{ product_option.product_option_sets_default.value.id }}" data-option-variant-name="{{ product_option.product_option_sets_default.value.title }}">
             <span class="product-options__accordion-label-title" data-option-title>{{ product_option.product_option_sets_default.value.title }}</span>
             {% if product_option.product_option_sets_default.value.price != 0 %}
               <span class="product-options__accordion-label-price" data-option-price>{{ product_option.product_option_sets_default.value.price | money }}</span>
@@ -177,21 +197,14 @@
         <span class="product-options__swatch product-options__swatch--single">
           {% for variant in product_option.product_option_variants.value %}
             {% if variant.title != 'No Thanks' %}
-              {% assign default_quantity = '' %}
-              {% for item in options_data %}
-                {% if item.defaultValues contains variant.id %}
-                  {% assign default_quantity = item.quantity %}
-                  {% break %}
-                {% endif %}
-              {% endfor %}
               {%
                 render 'cart-item-option-variant',
                 variant: variant,
                 default_values: default_values | split: ',',
                 product_option: product_option,
                 hide_quantity: product_option.hide_quantity,
-                default_quantity: default_quantity,
-                line_item: line_item
+                line_item: line_item,
+                options_data: options_data
               %}
             {% endif %}
           {% endfor %}

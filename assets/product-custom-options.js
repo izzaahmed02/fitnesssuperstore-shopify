@@ -39,8 +39,8 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        subscribe(PUB_SUB_EVENTS.variantChange, (event)=> {
-          if(!event) return;
+        subscribe(PUB_SUB_EVENTS.variantChange, (event) => {
+          if (!event) return;
           const variant = event.data.variant;
           !variant ? this.classList.add('hidden') : this.classList.remove('hidden');
         });
@@ -63,6 +63,7 @@ if (!customElements.get('product-customization-options')) {
         this.openModifyHandler();
         this.closeModifyHandler();
         this.handleItemUpdate();
+        this.checkDefaultConditionsToRender();
       }
 
       // Method for Accordion state
@@ -156,22 +157,43 @@ if (!customElements.get('product-customization-options')) {
       conditionalChoice(option) {
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
         if (optionsToRender.length === 0) return;
-        optionsToRender.forEach((renderOption) => {
-          const conditionsToRender = renderOption.dataset.conditionsToRender;
-          const selectedOptionsValue = renderOption.querySelector('[data-selected-options]');
+        const rule = option.getAttribute('data-has-conditions');
+        if (option.checked) {
+          optionsToRender.forEach((option) => {
+            const optionRules = option.dataset.conditionsToRender;
+            if (optionRules.includes(rule)) {
+              option.style.display = 'block';
+            }
+          });
+        } else {
+          optionsToRender.forEach((option) => {
+            const optionRules = option.dataset.conditionsToRender;
+            if (optionRules.includes(rule)) {
+              option.style.display = 'none';
+            }
+          });
+        }
+      }
 
-          if (conditionsToRender.includes(option.dataset.hasConditions)) {
-            renderOption.style.display = 'block';
-            const selectedOptions = renderOption.querySelectorAll('[data-customization-option]:checked');
-            if (selectedOptions.length === 0) return;
-
-            selectedOptionsValue.dataset.selectedOptions = [...selectedOptions].map((option) => option.value).join(',');
-          } else {
-            renderOption.style.display = 'none';
-            if (!selectedOptionsValue) return;
-            selectedOptionsValue.dataset.selectedOptions = '';
-          }
-        });
+      checkDefaultConditionsToRender() {
+        const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
+        if (optionsToRender.length > 0) {
+          optionsToRender.forEach((option) => (option.style.display = 'none'));
+          const hasConditions = this.querySelectorAll('[data-has-conditions]');
+          hasConditions.forEach((condition) => {
+            if (condition.checked) {
+              const rule = condition.dataset.hasConditions;
+              optionsToRender.forEach((option) => {
+                const optionRules = option.dataset.conditionsToRender;
+                if (optionRules.includes(rule)) {
+                  option.style.display = 'block';
+                } else {
+                  option.style.display = 'none';
+                }
+              });
+            }
+          });
+        }
       }
 
       // Helper, for options multichoice
@@ -181,41 +203,69 @@ if (!customElements.get('product-customization-options')) {
         let quantityLimit = 0;
         let selectedValues = [];
         const parent = optionHandler.closest('[data-option-accordion]');
-        if(parent && parent.hasAttribute('data-multichoice-limit')) {
-          limit = Number(parent.getAttribute('data-multichoice-limit'))
+        if (parent && parent.hasAttribute('data-multichoice-limit')) {
+          limit = Number(parent.getAttribute('data-multichoice-limit'));
         }
         const optionName = option.name;
-        const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
-        const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
-        
+
         if (option.dataset.fieldName !== 'No Thanks') {
           const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
           if (noThanksOption) {
             noThanksOption.checked = false;
             noThanksOption.disabled = true;
           }
+        } else {
+          const selectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+          if (selectedOptions.length > 0) {
+            selectedOptions.forEach((choice) => {
+              choice.checked = false;
+              const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+              if (optionQuantityInput) {
+                optionQuantityInput.value = 1;
+              }
+            });
+          }
+          optionHandler.dataset.selectedOptions = option.dataCustomizationOption;
+          option.checked = true;
+          const addedOptions = parent.querySelectorAll(`[data-option-id]`);
+          if (addedOptions.length > 0) {
+            addedOptions.forEach((option) => option.remove());
+          }
+          this.createOptionHTML(optionHandler, option);
         }
-        if(option.hasAttribute('data-field-price')) {
+        if (option.hasAttribute('data-field-price')) {
           const noThanksOptionSelected = optionHandler.querySelector('[data-option-variant-name="No Thanks"]');
-          if(noThanksOptionSelected) noThanksOptionSelected.remove();
+          if (noThanksOptionSelected) noThanksOptionSelected.remove();
         }
-     
+
+        const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+        const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
+        const increaseButtons = parent.querySelectorAll('[data-increase-quantity]');
+
         if (multiChoiceOptions.length === 0) selectedValues = [];
         multiChoiceOptions.forEach((choice) => {
-          
-          selectedValues.push(choice.value)
+          selectedValues.push(choice.value);
           const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-          if(optionQuantityInput) {
+          if (optionQuantityInput) {
             quantityLimit += Number(optionQuantityInput.value);
           }
         });
 
-        if(selectedValues.length === limit) {
-          notSelectedOptions.forEach(option => option.disabled = true);
-        } else if(quantityLimit === limit) {
-          notSelectedOptions.forEach(option => option.disabled = true);
+        if (selectedValues.length === limit) {
+          notSelectedOptions.forEach((option) => (option.disabled = true));
+          if (increaseButtons.length > 0) {
+            increaseButtons.forEach((button) => (button.disabled = true));
+          }
+        } else if (quantityLimit === limit) {
+          notSelectedOptions.forEach((option) => (option.disabled = true));
+          if (increaseButtons.length > 0) {
+            increaseButtons.forEach((button) => (button.disabled = true));
+          }
         } else {
-          notSelectedOptions.forEach(option => option.disabled = false); 
+          notSelectedOptions.forEach((option) => (option.disabled = false));
+          if (increaseButtons.length > 0) {
+            increaseButtons.forEach((button) => (button.disabled = false));
+          }
         }
 
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
@@ -223,6 +273,60 @@ if (!customElements.get('product-customization-options')) {
         if (!option.checked && addedOption) {
           addedOption.remove();
         }
+
+        if (!option.checked) {
+          const optionQuantityInput = this.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+          if (optionQuantityInput) optionQuantityInput.value = 1;
+          const optionContainer = option.closest('[data-option-accordion]');
+          if (!optionContainer) return;
+          const customizationOption = optionContainer.querySelector(`[data-customization-option="${option.dataset.customizationOption}"]`);
+          if (!customizationOption) return;
+          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
+          if (priceContainer) {
+            const price = Number(priceContainer.getAttribute('avis-price').replace(',', '')) * Number(optionQuantityInput.value);
+            const formattedPrice = price.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            });
+            priceContainer.innerHTML = `$${formattedPrice}`;
+          }
+        }
+      }
+
+      setDefaultDisabledOptions() {
+        let quantityLimit = 0;
+        const optionWithMultichoicelimit = this.querySelectorAll('[data-multichoice-limit]');
+
+        if (optionWithMultichoicelimit.length === 0) return;
+        optionWithMultichoicelimit.forEach((option) => {
+          const limit = Number(option.getAttribute('data-multichoice-limit'));
+          const multiChoiceOptions = option.querySelectorAll(`[data-customization-option]:checked`);
+          const notSelectedOptions = option.querySelectorAll(`[data-customization-option]:not(:checked)`);
+          const increaseButtons = option.querySelectorAll('[data-increase-quantity]');
+          multiChoiceOptions.forEach((choice) => {
+            const optionQuantityInput = option.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+            if (optionQuantityInput) {
+              quantityLimit += Number(optionQuantityInput.value);
+            }
+          });
+
+          if (multiChoiceOptions.length === limit) {
+            notSelectedOptions.forEach((option) => (option.disabled = true));
+            if (increaseButtons.length > 0) {
+              increaseButtons.forEach((button) => (button.disabled = true));
+            }
+          } else if (quantityLimit === limit) {
+            notSelectedOptions.forEach((option) => (option.disabled = true));
+            if (increaseButtons.length > 0) {
+              increaseButtons.forEach((button) => (button.disabled = true));
+            }
+          } else {
+            notSelectedOptions.forEach((option) => (option.disabled = false));
+            if (increaseButtons.length > 0) {
+              increaseButtons.forEach((button) => (button.disabled = false));
+            }
+          }
+        });
       }
 
       // Helper for creating option badge
@@ -319,13 +423,13 @@ if (!customElements.get('product-customization-options')) {
         this.accordions.forEach((accordion) => {
           const quantitySelectorContainers = accordion.querySelectorAll('[data-quantity-selector]');
           if (quantitySelectorContainers.length === 0) return;
-          quantitySelectorContainers.forEach(container => {            
+          quantitySelectorContainers.forEach((container) => {
             const qunatityInput = container.querySelector('[data-input-quantity]');
             const btnIncrease = container.querySelector('[data-increase-quantity]');
             const btnDecrease = container.querySelector('[data-decrease-quantity]');
             this.addQuantityListener(btnIncrease, 'increase', qunatityInput);
             this.addQuantityListener(btnDecrease, 'decrease', qunatityInput);
-          })
+          });
         });
       }
 
@@ -360,12 +464,33 @@ if (!customElements.get('product-customization-options')) {
             setTimeout(() => {
               const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
               if (selectedOption) {
-                const selectedOptionPrice = selectedOption.querySelector('[data-option-price]')
+                const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
                 selectedOptionPrice.innerHTML = `$${formattedPrice}`;
               }
             });
           }
           customizationOption.checked = true;
+
+          if (optionContainer.hasAttribute('data-multichoice-limit')) {
+            let quantityLimit = 0;
+            const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+            const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
+            if (multiChoiceOptions.length > 0) {
+              multiChoiceOptions.forEach((choice) => {
+                const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+                if (optionQuantityInput) {
+                  quantityLimit += Number(optionQuantityInput.value);
+                }
+              });
+            }
+
+            console.log(quantityLimit, 'quantityLimit');
+
+            if (quantityLimit > limit) {
+              input.value = Number(input.value) - 1;
+              console.log(input.value);
+            }
+          }
           customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
@@ -562,6 +687,7 @@ if (!customElements.get('product-customization-options')) {
             this.dataset.stamp = this.htmlToBase64(this.innerHTML);
             setTimeout(() => {
               this.hideConditionalOptions();
+              this.setDefaultDisabledOptions();
               this.classList.add('modify-opened');
               document.body.style.overflow = 'hidden';
             }, 200);
