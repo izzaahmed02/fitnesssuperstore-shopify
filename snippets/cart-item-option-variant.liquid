@@ -40,6 +40,15 @@
   if product_title contains '(-$'
     assign cleaned_title = product_title | split: '(-$' | first
   endif
+  assign default_quantity = 1
+  for item in options_data
+    if item.defaultValues contains variant.id
+      assign default_quantity = item.quantity | plus: 0
+      break
+    endif
+  endfor
+
+  echo default_quantity
 %}
 
 <label
