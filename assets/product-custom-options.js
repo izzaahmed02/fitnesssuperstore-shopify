@@ -209,6 +209,7 @@ if (!customElements.get('product-customization-options')) {
           if (addedOptions.length > 0) {
             addedOptions.forEach((option) => option.remove());
           }
+          this.createOptionHTML(optionHandler, option);
         }
         if (option.hasAttribute('data-field-price')) {
           const noThanksOptionSelected = optionHandler.querySelector('[data-option-variant-name="No Thanks"]');
