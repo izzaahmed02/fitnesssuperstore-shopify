@@ -170,12 +170,14 @@
         </li>
         {% endfor %}
           {% endcomment %}
-           {% for link in linklists.sitemap-menu-2.links %}
-  {% if link.url == '/pages/blog' or link.title == 'Blog' %}
-  <li>
-    <a href="{{ link.url }}">{{ link.title }}</a>
-    <ul>
-      {% for blog in blogs %}
+           {% assign blog_handles = 'buying-guides,case-studies,comparisons,maintenance,news,showroom,warranty-tips' | split: ',' %}
+
+<li>
+  <a href="/pages/blog">Blog</a>
+  <ul>
+    {% for handle in blog_handles %}
+      {% assign blog = blogs[handle] %}
+      {% if blog %}
       <li>
         <a href="{{ blog.url }}">{{ blog.title }}</a>
         {% if blog.articles_count > 0 %}
@@ -186,31 +188,10 @@
         </ul>
         {% endif %}
       </li>
-      {% endfor %}
-    </ul>
-  </li>
-  {% else %}
-  <li>
-    <a href="{{ link.url }}">{{ link.title }}</a>
-    {% if link.links.size > 0 %}
-    <ul>
-      {% for child in link.links %}
-      <li>
-        <a href="{{ child.url }}">{{ child.title }}</a>
-        {% if child.links.size > 0 %}
-        <ul>
-          {% for grandchild in child.links %}
-          <li><a href="{{ grandchild.url }}">{{ grandchild.title }}</a></li>
-          {% endfor %}
-        </ul>
-        {% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-  </li>
-  {% endif %}
-{% endfor %}
+      {% endif %}
+    {% endfor %}
+  </ul>
+</li>
       </ul>
     </section>
 
