@@ -63,7 +63,6 @@ if (!customElements.get('product-customization-options')) {
         this.openModifyHandler();
         this.closeModifyHandler();
         this.handleItemUpdate();
-        this.setDefaultDisabledOptions();
       }
 
       // Method for Accordion state
@@ -655,6 +654,7 @@ if (!customElements.get('product-customization-options')) {
             this.dataset.stamp = this.htmlToBase64(this.innerHTML);
             setTimeout(() => {
               this.hideConditionalOptions();
+              this.setDefaultDisabledOptions();
               this.classList.add('modify-opened');
               document.body.style.overflow = 'hidden';
             }, 200);
