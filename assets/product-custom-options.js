@@ -377,7 +377,10 @@ if (!customElements.get('product-customization-options')) {
               });
             }
 
-            if (quantityLimit > limit) input.value = Number(input.value) - 1;
+            if (quantityLimit > limit) {
+              input.value = Number(input.value) - 1;
+              console.log(input.value);
+            }
           }
           customizationOption.checked = true;
           customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
