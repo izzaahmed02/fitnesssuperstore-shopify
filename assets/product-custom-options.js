@@ -269,6 +269,13 @@ if (!customElements.get('product-customization-options')) {
           const multiChoiceOptions = option.querySelectorAll(`[data-customization-option]:checked`);
           const notSelectedOptions = option.querySelectorAll(`[data-customization-option]:not(:checked)`);
           const increaseButtons = option.querySelectorAll('[data-increase-quantity]');
+          multiChoiceOptions.forEach((choice) => {
+            selectedValues.push(choice.value);
+            const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+            if (optionQuantityInput) {
+              quantityLimit += Number(optionQuantityInput.value);
+            }
+          });
         });
       }
 
