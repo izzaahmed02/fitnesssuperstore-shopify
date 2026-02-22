@@ -63,6 +63,7 @@ if (!customElements.get('product-customization-options')) {
         this.openModifyHandler();
         this.closeModifyHandler();
         this.handleItemUpdate();
+        this.setDefaultDisabledOptions();
       }
 
       // Method for Accordion state
@@ -277,7 +278,7 @@ if (!customElements.get('product-customization-options')) {
             }
           });
 
-          if (selectedValues.length === limit) {
+          if (multiChoiceOptions.length === limit) {
             notSelectedOptions.forEach((option) => (option.disabled = true));
             if (increaseButtons.length > 0) {
               increaseButtons.forEach((button) => (button.disabled = true));
