@@ -196,9 +196,7 @@ if (!customElements.get('product-customization-options')) {
           const selectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
           if (selectedOptions.length > 0) {
             selectedOptions.forEach((choice) => {
-              console.log(choice);
-
-              choice.checked == false;
+              choice.checked = false;
               const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
               if (optionQuantityInput) {
                 optionQuantityInput.value = 1;
