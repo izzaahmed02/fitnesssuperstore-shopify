@@ -250,14 +250,14 @@ if (!customElements.get('product-customization-options')) {
           }
         }
 
-        if (limit && quantityLimit > 0 && option.checked) {
-          const optionQuantityInput = document.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
-          if (optionQuantityInput) {
-            if (quantityLimit + Number(optionQuantityInput) > limit) {
-              optionQuantityInput.value = limit - quantityLimit;
-            }
-          }
-        }
+        // if (limit && quantityLimit > 0 && option.checked) {
+        //   const optionQuantityInput = document.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+        //   if (optionQuantityInput) {
+        //     if (quantityLimit + Number(optionQuantityInput) > limit) {
+        //       optionQuantityInput.value = limit - quantityLimit;
+        //     }
+        //   }
+        // }
       }
 
       // Helper for creating option badge
