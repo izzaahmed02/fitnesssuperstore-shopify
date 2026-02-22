@@ -260,6 +260,11 @@ if (!customElements.get('product-customization-options')) {
         // }
       }
 
+      setDefaultDisabledOptions() {
+        if (!this.closest('cart-drawer') || !window.location.href.includes('/cart')) return;
+        const optionWithMultichoicelimit = this.q;
+      }
+
       // Helper for creating option badge
 
       createOptionHTML(optionHandler, option) {
