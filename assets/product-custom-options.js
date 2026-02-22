@@ -230,7 +230,7 @@ if (!customElements.get('product-customization-options')) {
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
           addedOption.remove();
-          const optionQuantityInput = parent.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+          const optionQuantityInput = this.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
           if (optionQuantityInput) optionQuantityInput.value = 1;
         }
       }
