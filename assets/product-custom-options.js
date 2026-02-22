@@ -234,8 +234,6 @@ if (!customElements.get('product-customization-options')) {
 
         if (!option.checked) {
           const optionQuantityInput = this.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
-          console.log(optionQuantityInput, 'optionQuantityInput');
-
           if (optionQuantityInput) optionQuantityInput.value = 1;
           const optionContainer = option.closest('[data-option-accordion]');
           if (!optionContainer) return;
