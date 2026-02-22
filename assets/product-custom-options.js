@@ -229,8 +229,6 @@ if (!customElements.get('product-customization-options')) {
         optionHandler.dataset.selectedOptions = selectedValues.join(',');
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
-          const optionQuantityInput = document.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
-
           // addedOption.remove();
         }
 
