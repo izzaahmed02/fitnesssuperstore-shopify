@@ -195,7 +195,13 @@ if (!customElements.get('product-customization-options')) {
         } else {
           const selectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
           if (selectedOptions.length > 0) {
-            selectedOptions.forEach((choice) => choice.checked == false);
+            selectedOptions.forEach((choice) => {
+              choice.checked == false;
+              const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+              if (optionQuantityInput) {
+                quantityLimit += Number(optionQuantityInput.value);
+              }
+            });
           }
           optionHandler.dataset.selectedOptions = option.dataCustomizationOption;
           option.checked = true;
