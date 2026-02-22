@@ -155,14 +155,14 @@ if (!customElements.get('product-customization-options')) {
 
       // Helper, If option have conditional logic
       conditionalChoice(option) {
-        console.log(option.checked);
-
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
         if (optionsToRender.length === 0) return;
         const hasConditions = this.querySelectorAll('[data-has-conditions]');
         hasConditions.forEach((condition) => {
           if (condition.checked) {
             const rule = condition.dataset.hasConditions;
+            console.log(rule);
+
             optionsToRender.forEach((option) => {
               const optionRules = option.dataset.conditionsToRender;
               if (optionRules.includes(rule)) {
