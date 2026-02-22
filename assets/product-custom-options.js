@@ -172,13 +172,11 @@ if (!customElements.get('product-customization-options')) {
             optionsToRender.forEach((option) => {
               const optionRules = option.dataset.conditionsToRender;
               if (optionRules.includes(rule)) {
-                option.style.display = 'block';
+                option.style.display = 'none';
               }
             });
           }
         });
-
-        console.log(count);
 
         // optionsToRender.forEach((renderOption) => {
         //   const conditionsToRender = renderOption.dataset.conditionsToRender;
