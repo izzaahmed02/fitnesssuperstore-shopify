@@ -138,7 +138,7 @@ if (!customElements.get('product-customization-options')) {
             if (!optionContainer) return;
             const optionHandler = optionContainer.querySelector('[data-selected-options]');
             if (!optionHandler) return;
-
+            this.createOptionHTML(optionHandler, option);
             optionHandler.dataset.selectedOptions = option.value;
             if (option.hasAttribute('data-has-conditions')) {
               this.conditionalChoice(option);
@@ -146,7 +146,6 @@ if (!customElements.get('product-customization-options')) {
             if (option.hasAttribute('data-has-multichoice')) {
               this.multichoice(optionHandler, option);
             }
-            this.createOptionHTML(optionHandler, option);
             if (this.closest('cart-drawer')) return;
             this.updatePrice();
           });
