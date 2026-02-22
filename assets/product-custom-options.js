@@ -171,22 +171,22 @@ if (!customElements.get('product-customization-options')) {
             });
           }
         });
-        optionsToRender.forEach((renderOption) => {
-          const conditionsToRender = renderOption.dataset.conditionsToRender;
-          const selectedOptionsValue = renderOption.querySelector('[data-selected-options]');
+        // optionsToRender.forEach((renderOption) => {
+        //   const conditionsToRender = renderOption.dataset.conditionsToRender;
+        //   const selectedOptionsValue = renderOption.querySelector('[data-selected-options]');
 
-          if (conditionsToRender.includes(option.dataset.hasConditions)) {
-            renderOption.style.display = 'block';
-            const selectedOptions = renderOption.querySelectorAll('[data-customization-option]:checked');
-            if (selectedOptions.length === 0) return;
+        //   if (conditionsToRender.includes(option.dataset.hasConditions)) {
+        //     renderOption.style.display = 'block';
+        //     const selectedOptions = renderOption.querySelectorAll('[data-customization-option]:checked');
+        //     if (selectedOptions.length === 0) return;
 
-            selectedOptionsValue.dataset.selectedOptions = [...selectedOptions].map((option) => option.value).join(',');
-          } else {
-            renderOption.style.display = 'none';
-            if (!selectedOptionsValue) return;
-            selectedOptionsValue.dataset.selectedOptions = '';
-          }
-        });
+        //     selectedOptionsValue.dataset.selectedOptions = [...selectedOptions].map((option) => option.value).join(',');
+        //   } else {
+        //     renderOption.style.display = 'none';
+        //     if (!selectedOptionsValue) return;
+        //     selectedOptionsValue.dataset.selectedOptions = '';
+        //   }
+        // });
       }
 
       checkDefaultConditionsToRender() {
