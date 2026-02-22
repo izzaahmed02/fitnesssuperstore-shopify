@@ -59,15 +59,15 @@ function renderCustomAvisOptions() {
           (r.classList.toggle('show'), t.classList.toggle('open'));
         }));
   });
-  let o = document.querySelectorAll('.option-avis-arrow-select');
-  (o.forEach((e) => {
-    e.addEventListener('click', () => {
-      'rotate(45deg)' === e.style.transform ? e.setAttribute('style', 'transform: rotate(225deg) !important') : e.setAttribute('style', 'transform: rotate(45deg) !important');
-    });
-  }),
-    // setupOptionsPopup(),
-    // setupOptionsHandler(),
-    // setupOptions());
+  // let o = document.querySelectorAll('.option-avis-arrow-select');
+  // (o.forEach((e) => {
+  //   e.addEventListener('click', () => {
+  //     'rotate(45deg)' === e.style.transform ? e.setAttribute('style', 'transform: rotate(225deg) !important') : e.setAttribute('style', 'transform: rotate(45deg) !important');
+  //   });
+  // }),
+  //   setupOptionsPopup(),
+  //   setupOptionsHandler(),
+  //   setupOptions());
   let a = document.querySelector('.avis-cartOptionsPopup .avis-popupBox');
   (a && (a.style.display = 'flex'),
     window.location.pathname.includes('products') &&
