@@ -247,13 +247,15 @@ if (!customElements.get('product-customization-options')) {
               maximumFractionDigits: 2,
             });
             priceContainer.innerHTML = `$${formattedPrice}`;
-            setTimeout(() => {
-              const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
-              if (selectedOption) {
-                const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
-                selectedOptionPrice.innerHTML = `$${formattedPrice}`;
-              }
-            });
+          }
+        }
+
+        if (limit && quantityLimit > 0 && option.checked) {
+          const optionQuantityInput = document.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
+          if (optionQuantityInput) {
+            if (quantityLimit + Number(optionQuantityInput) > limit) {
+              optionQuantityInput.value = limit - quantityLimit;
+            }
           }
         }
       }
