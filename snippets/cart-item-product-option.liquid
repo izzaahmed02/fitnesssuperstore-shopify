@@ -118,7 +118,6 @@
             {% liquid
               assign id = value | split: ':::' | first | plus: 0
               assign price = value | split: ':::' | last | plus: 0
-              assign price_formated = value | split: ':::' | last
             %}
 
             <p data-option-id="{{ id }}" data-option-variant-name="{{ product_option.product_option_sets_default.value.title }}">
@@ -137,9 +136,13 @@
                           break
                         endif
                       endfor
+
+                      if default_quantity != 0 or default_quantity != '0'
+                        assign price = price | times: default_quantity
+                      endif
                     %}
                     <span class="product-options__accordion-label-price" data-option-price>
-                      {{ price_formated | prepend: cart.currency.symbol }}
+                      {{ price | money }}
                     </span>
                   {% endif %}
                   {% break %}
