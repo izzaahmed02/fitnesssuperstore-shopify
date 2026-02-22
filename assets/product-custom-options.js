@@ -230,6 +230,8 @@ if (!customElements.get('product-customization-options')) {
         const addedOption = this.querySelector(`[data-option-id="${option.dataset.customizationOption}"]`);
         if (!option.checked && addedOption) {
           addedOption.remove();
+          console.log('hsbvjhsnjdkv');
+
           const optionQuantityInput = this.querySelector(`[data-input-quantity="${option.dataset.customizationOption}"]`);
           console.log(optionQuantityInput);
 
