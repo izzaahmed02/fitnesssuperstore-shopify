@@ -176,7 +176,14 @@ if (!customElements.get('product-customization-options')) {
 
       checkDefaultConditionsToRender() {
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
-        if (optionsToRender.length === 0) return;
+        if (optionsToRender.length > 0) {
+          optionsToRender.forEach((option) => (option.style.display = 'none'));
+          const hasConditions = this.querySelectorAll('[data-has-conditions]');
+          hasConditions.forEach((condition) => {
+            if (condition.checked) {
+            }
+          });
+        }
       }
 
       // Helper, for options multichoice
