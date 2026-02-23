@@ -140,6 +140,7 @@ if (!customElements.get('product-customization-options')) {
             const optionHandler = optionContainer.querySelector('[data-selected-options]');
             if (!optionHandler) return;
             this.createOptionHTML(optionHandler, option);
+            this.handleUnselect(optionHandler, option);
             optionHandler.dataset.selectedOptions = option.value;
             if (option.hasAttribute('data-has-conditions')) {
               this.conditionalChoice(option);
