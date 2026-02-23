@@ -208,12 +208,12 @@ if (!customElements.get('product-customization-options')) {
         //TO DO
 
         //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
-        const placeholder = document.querySelector('////placeholder');
-        if (bannerHidden) {
-          placeholder.innerHTML = '';
-        } else {
-          placeholder.innerHTML = this.conditionalChoiceBanner();
-        }
+        // const placeholder = document.querySelector('////placeholder');
+        // if (bannerHidden) {
+        //   placeholder.innerHTML = '';
+        // } else {
+        //   placeholder.innerHTML = this.conditionalChoiceBanner();
+        // }
       }
 
       checkDefaultConditionsToRender() {
