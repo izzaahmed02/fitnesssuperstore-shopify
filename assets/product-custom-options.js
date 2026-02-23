@@ -174,12 +174,12 @@ if (!customElements.get('product-customization-options')) {
           //TO DO
 
           //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
-          const placeholder = parent.querySelector('////placeholder');
-          if (bannerHidden) {
-            placeholder.innerHTML = '';
-          } else {
-            placeholder.innerHTML = this.conditionalChoiceBanner();
-          }
+          // const placeholder = parent.querySelector('////placeholder');
+          // if (bannerHidden) {
+          //   placeholder.innerHTML = '';
+          // } else {
+          //   placeholder.innerHTML = this.conditionalChoiceBanner();
+          // }
         } else {
           const parent = option.closest('[data-option-accordion]');
           const hasConditions = parent.querySelectorAll('[data-has-conditions]:checked');
@@ -195,12 +195,12 @@ if (!customElements.get('product-customization-options')) {
                   bannerHidden = true;
                 }
               });
-              const placeholder = parent.querySelector('////placeholder');
-              if (bannerHidden) {
-                placeholder.innerHTML = '';
-              } else {
-                placeholder.innerHTML = this.conditionalChoiceBanner();
-              }
+              // const placeholder = parent.querySelector('////placeholder');
+              // if (bannerHidden) {
+              //   placeholder.innerHTML = '';
+              // } else {
+              //   placeholder.innerHTML = this.conditionalChoiceBanner();
+              // }
             });
           }
         }
@@ -238,12 +238,12 @@ if (!customElements.get('product-customization-options')) {
             //TO DO
 
             //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
-            const placeholder = parent.querySelector('////placeholder');
-            if (bannerHidden) {
-              placeholder.innerHTML = '';
-            } else {
-              placeholder.innerHTML = this.conditionalChoiceBanner();
-            }
+            // const placeholder = parent.querySelector('////placeholder');
+            // if (bannerHidden) {
+            //   placeholder.innerHTML = '';
+            // } else {
+            //   placeholder.innerHTML = this.conditionalChoiceBanner();
+            // }
           });
         }
       }
