@@ -349,6 +349,9 @@ if (!customElements.get('product-customization-options')) {
                 if (optionRules.includes(rule)) option.style.display = 'none';
               });
             });
+
+            const placeholder = document.querySelector('////placeholder');
+            placeholder.innerHTML = this.conditionalChoiceBanner();
           }
         }
       }
