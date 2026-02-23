@@ -234,7 +234,6 @@ if (!customElements.get('product-customization-options')) {
           this.createOptionHTML(optionHandler, option);
         }
 
-
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
         const increaseButtons = parent.querySelectorAll('[data-increase-quantity]');
@@ -341,7 +340,10 @@ if (!customElements.get('product-customization-options')) {
           const noThanksOriginalOption = this.querySelector(`[data-customization-option][name="${option.name}"][data-field-name="No Thanks"]`);
           if (noThanksOriginalOption) {
             const noThanksOption = this.querySelector(`[data-option-id="${noThanksOriginalOption.value}"]`);
-            if (noThanksOption) noThanksOption.remove();
+            noThanksOriginalOption.checked = false;
+            if (noThanksOption) {
+              noThanksOption.remove();
+            }
           }
           optionHandler.insertAdjacentHTML('beforeend', this.placeholderHTML(option));
         } else {
