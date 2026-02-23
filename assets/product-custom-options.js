@@ -140,6 +140,7 @@ if (!customElements.get('product-customization-options')) {
             const optionHandler = optionContainer.querySelector('[data-selected-options]');
             if (!optionHandler) return;
             this.createOptionHTML(optionHandler, option);
+            this.handleUnselect(optionHandler, option);
             optionHandler.dataset.selectedOptions = option.value;
             if (option.hasAttribute('data-has-conditions')) {
               this.conditionalChoice(option);
@@ -157,43 +158,103 @@ if (!customElements.get('product-customization-options')) {
       conditionalChoice(option) {
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
         if (optionsToRender.length === 0) return;
+        let bannerHidden = false;
+        optionsToRender.forEach((conditionalOption) => (conditionalOption.style.display = 'none'));
         const rule = option.getAttribute('data-has-conditions');
         if (option.checked) {
+          const parent = option.closest('[data-option-accordion]');
           optionsToRender.forEach((option) => {
             const optionRules = option.dataset.conditionsToRender;
             if (optionRules.includes(rule)) {
+              bannerHidden = true;
               option.style.display = 'block';
             }
           });
+
+          //TO DO
+
+          //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
+          // const placeholder = parent.querySelector('////placeholder');
+          // if (bannerHidden) {
+          //   placeholder.innerHTML = '';
+          // } else {
+          //   placeholder.innerHTML = this.conditionalChoiceBanner();
+          // }
         } else {
-          optionsToRender.forEach((option) => {
-            const optionRules = option.dataset.conditionsToRender;
-            if (optionRules.includes(rule)) {
-              option.style.display = 'none';
-            }
-          });
+          const parent = option.closest('[data-option-accordion]');
+          const hasConditions = parent.querySelectorAll('[data-has-conditions]:checked');
+          if (hasConditions.length > 0) {
+            hasConditions.forEach((condition) => {
+              const parent = condition.closest('[data-option-accordion]');
+
+              const rule = condition.dataset.hasConditions;
+              optionsToRender.forEach((option) => {
+                const optionRules = option.dataset.conditionsToRender;
+                if (optionRules.includes(rule)) {
+                  option.style.display = 'block';
+                  bannerHidden = true;
+                }
+              });
+              // const placeholder = parent.querySelector('////placeholder');
+              // if (bannerHidden) {
+              //   placeholder.innerHTML = '';
+              // } else {
+              //   placeholder.innerHTML = this.conditionalChoiceBanner();
+              // }
+            });
+          }
         }
+
+        //TO DO
+
+        //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
+        // const placeholder = document.querySelector('////placeholder');
+        // if (bannerHidden) {
+        //   placeholder.innerHTML = '';
+        // } else {
+        //   placeholder.innerHTML = this.conditionalChoiceBanner();
+        // }
       }
 
       checkDefaultConditionsToRender() {
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
         if (optionsToRender.length > 0) {
+          let bannerHidden = false;
           optionsToRender.forEach((option) => (option.style.display = 'none'));
           const hasConditions = this.querySelectorAll('[data-has-conditions]');
           hasConditions.forEach((condition) => {
+            const parent = condition.closest('[data-option-accordion]');
             if (condition.checked) {
               const rule = condition.dataset.hasConditions;
               optionsToRender.forEach((option) => {
                 const optionRules = option.dataset.conditionsToRender;
                 if (optionRules.includes(rule)) {
                   option.style.display = 'block';
-                } else {
-                  option.style.display = 'none';
+                  bannerHidden = true;
                 }
               });
             }
+
+            //TO DO
+
+            //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
+            // const placeholder = parent.querySelector('////placeholder');
+            // if (bannerHidden) {
+            //   placeholder.innerHTML = '';
+            // } else {
+            //   placeholder.innerHTML = this.conditionalChoiceBanner();
+            // }
           });
         }
+      }
+
+      //TO DO
+
+      //зробити розмітку банера, можна хардкодом транслейшенів тут немає толком
+
+      conditionalChoiceBanner() {
+        const banner = `<div class="conditional-options__banner">You HTML here<div>`;
+        return banner;
       }
 
       // Helper, for options multichoice
@@ -207,37 +268,6 @@ if (!customElements.get('product-customization-options')) {
           limit = Number(parent.getAttribute('data-multichoice-limit'));
         }
         const optionName = option.name;
-
-        if (option.dataset.fieldName !== 'No Thanks') {
-          const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
-          if (noThanksOption) {
-            noThanksOption.checked = false;
-            noThanksOption.disabled = true;
-          }
-        } else {
-          const selectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
-          if (selectedOptions.length > 0) {
-            selectedOptions.forEach((choice) => {
-              choice.checked = false;
-              const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-              if (optionQuantityInput) {
-                optionQuantityInput.value = 1;
-              }
-            });
-          }
-          optionHandler.dataset.selectedOptions = option.dataCustomizationOption;
-          option.checked = true;
-          const addedOptions = parent.querySelectorAll(`[data-option-id]`);
-          if (addedOptions.length > 0) {
-            addedOptions.forEach((option) => option.remove());
-          }
-          this.createOptionHTML(optionHandler, option);
-        }
-        if (option.hasAttribute('data-field-price')) {
-          const noThanksOptionSelected = optionHandler.querySelector('[data-option-variant-name="No Thanks"]');
-          if (noThanksOptionSelected) noThanksOptionSelected.remove();
-        }
-
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
         const increaseButtons = parent.querySelectorAll('[data-increase-quantity]');
@@ -283,7 +313,7 @@ if (!customElements.get('product-customization-options')) {
           if (!customizationOption) return;
           const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
           if (priceContainer) {
-            const price = Number(priceContainer.getAttribute('avis-price').replace(',', '')) * Number(optionQuantityInput.value);
+            const price = Number(priceContainer.getAttribute('avis-price').replace(',', ''));
             const formattedPrice = price.toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -329,16 +359,63 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
+      //Helper to check if "No Thanks" option is selected uncheck the rest options
+
+      handleUnselect(optionHandler, option) {
+        const optionName = option.name;
+        const parent = optionHandler.closest('[data-option-accordion]');
+        if (option.dataset.fieldName === 'No Thanks') {
+          const selectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+          if (selectedOptions.length > 0) {
+            selectedOptions.forEach((choice) => {
+              choice.checked = false;
+              const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+              if (optionQuantityInput) {
+                optionQuantityInput.value = 1;
+              }
+            });
+          }
+          optionHandler.dataset.selectedOptions = option.dataCustomizationOption;
+          option.checked = true;
+          const addedOptions = parent.querySelectorAll(`[data-option-id]`);
+          if (addedOptions.length > 0) {
+            addedOptions.forEach((option) => option.remove());
+          }
+          this.createOptionHTML(optionHandler, option);
+          const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
+          const conditionalOptions = parent.querySelectorAll('[data-has-conditions]');
+          if (conditionalOptions.length > 0 && optionsToRender.length > 0) {
+            conditionalOptions.forEach((option) => {
+              const rule = option.dataset.hasConditions;
+              optionsToRender.forEach((option) => {
+                const optionRules = option.dataset.conditionsToRender;
+                if (optionRules.includes(rule)) option.style.display = 'none';
+              });
+            });
+
+            //TO DO
+
+            //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
+
+            const placeholder = parent.querySelector('////placeholder');
+            placeholder.innerHTML = this.conditionalChoiceBanner();
+          }
+        }
+      }
+
       // Helper for creating option badge
 
       createOptionHTML(optionHandler, option) {
         if (!option) return;
         if (optionHandler.dataset.selectedOptions.includes(option.value)) return;
-        if (option.hasAttribute('data-has-multichoice')) {
+        if (option.getAttribute('data-field-name') && option.getAttribute('data-field-name') !== 'No Thanks') {
           const noThanksOriginalOption = this.querySelector(`[data-customization-option][name="${option.name}"][data-field-name="No Thanks"]`);
           if (noThanksOriginalOption) {
             const noThanksOption = this.querySelector(`[data-option-id="${noThanksOriginalOption.value}"]`);
-            if (noThanksOption) noThanksOption.remove();
+            noThanksOriginalOption.checked = false;
+            if (noThanksOption) {
+              noThanksOption.remove();
+            }
           }
           optionHandler.insertAdjacentHTML('beforeend', this.placeholderHTML(option));
         } else {
