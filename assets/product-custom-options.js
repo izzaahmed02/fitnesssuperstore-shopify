@@ -325,6 +325,7 @@ if (!customElements.get('product-customization-options')) {
 
       handleUnselect(optionHandler, option) {
         const optionName = option.name;
+        const parent = optionHandler.closest('[data-option-accordion]');
         if (option.dataset.fieldName === 'No Thanks') {
           const selectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
           if (selectedOptions.length > 0) {
