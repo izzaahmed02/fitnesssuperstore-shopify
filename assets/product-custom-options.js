@@ -166,7 +166,20 @@ if (!customElements.get('product-customization-options')) {
           });
         } else {
           const parent = option.closest('[data-option-accordion]');
-          const hasConditions = parent.querySelectorAll('[data-has-conditions]:checked');
+          const hasConditions = parent.querySelectorAll('[data-has-conditions]');
+          if (hasConditions.length > 0) {
+            hasConditions.forEach((condition) => {
+              if (condition.checked) {
+                const rule = condition.dataset.hasConditions;
+                optionsToRender.forEach((option) => {
+                  const optionRules = option.dataset.conditionsToRender;
+                  if (optionRules.includes(rule)) {
+                    option.style.display = 'block';
+                  }
+                });
+              }
+            });
+          }
           optionsToRender.forEach((option) => {
             const optionRules = option.dataset.conditionsToRender;
             if (optionRules.includes(rule)) {
