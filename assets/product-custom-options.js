@@ -188,11 +188,7 @@ if (!customElements.get('product-customization-options')) {
               const rule = condtitionsChecked[0].dataset.hasConditions;
               optionsToRender.forEach((option) => {
                 const optionRules = option.dataset.conditionsToRender;
-                if (optionRules.includes(rule)) {
-                  option.style.display = 'block';
-                } else {
-                  option.style.display = 'none';
-                }
+                if (optionRules.includes(rule)) option.style.display = 'block';
               });
             } else {
               optionsToRender.forEach((option) => {
