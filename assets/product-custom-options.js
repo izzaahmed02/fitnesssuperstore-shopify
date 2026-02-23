@@ -329,12 +329,18 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
+      //Helper to check if "No Thanks" option is selected uncheck the rest options
+
+      handleUnselect(option) {
+
+      }
+
       // Helper for creating option badge
 
       createOptionHTML(optionHandler, option) {
         if (!option) return;
         if (optionHandler.dataset.selectedOptions.includes(option.value)) return;
-        if (option.hasAttribute('data-has-multichoice')) {
+        if (option.getAttribute('data-field-name') && option.getAttribute('data-field-name') !== 'No Thanks') {
           const noThanksOriginalOption = this.querySelector(`[data-customization-option][name="${option.name}"][data-field-name="No Thanks"]`);
           if (noThanksOriginalOption) {
             const noThanksOption = this.querySelector(`[data-option-id="${noThanksOriginalOption.value}"]`);
