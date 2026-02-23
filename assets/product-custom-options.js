@@ -167,7 +167,7 @@ if (!customElements.get('product-customization-options')) {
           });
         } else {
           const parent = option.closest('[data-option-accordion]');
-          const hasConditions = parent.querySelectorAll('[data-has-conditions]');
+          const hasConditions = parent.querySelectorAll('[data-has-conditions]:checked');
           if (hasConditions.length > 0) {
             hasConditions.forEach((condition) => {
               if (condition.checked) {
