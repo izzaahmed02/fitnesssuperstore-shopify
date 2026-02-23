@@ -198,7 +198,15 @@ if (!customElements.get('product-customization-options')) {
               });
             }
           });
+
+          if (bannerHidden) {
+          }
         }
+      }
+
+      conditionalChoiceBanner(show) {
+        const banner = `<div class="conditional-options__banner">You HTML here<div>`;
+        return banner;
       }
 
       // Helper, for options multichoice
