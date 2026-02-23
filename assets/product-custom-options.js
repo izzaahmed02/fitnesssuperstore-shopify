@@ -185,6 +185,8 @@ if (!customElements.get('product-customization-options')) {
           const hasConditions = parent.querySelectorAll('[data-has-conditions]:checked');
           if (hasConditions.length > 0) {
             hasConditions.forEach((condition) => {
+              const parent = condition.closest('[data-option-accordion]');
+
               const rule = condition.dataset.hasConditions;
               optionsToRender.forEach((option) => {
                 const optionRules = option.dataset.conditionsToRender;
@@ -193,6 +195,12 @@ if (!customElements.get('product-customization-options')) {
                   bannerHidden = true;
                 }
               });
+              const placeholder = parent.querySelector('////placeholder');
+              if (bannerHidden) {
+                placeholder.innerHTML = '';
+              } else {
+                placeholder.innerHTML = this.conditionalChoiceBanner();
+              }
             });
           }
         }
