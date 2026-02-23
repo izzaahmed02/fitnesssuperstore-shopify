@@ -158,7 +158,7 @@ if (!customElements.get('product-customization-options')) {
       conditionalChoice(option) {
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
         if (optionsToRender.length === 0) return;
-        optionsToRender.forEach((option) => (option.style.display = 'none'));
+        optionsToRender.forEach((conditionalOption) => (conditionalOption.style.display = 'none'));
         const rule = option.getAttribute('data-has-conditions');
         if (option.checked) {
           optionsToRender.forEach((option) => {
@@ -177,12 +177,6 @@ if (!customElements.get('product-customization-options')) {
               });
             });
           }
-          optionsToRender.forEach((option) => {
-            const optionRules = option.dataset.conditionsToRender;
-            if (optionRules.includes(rule)) {
-              option.style.display = 'none';
-            }
-          });
         }
       }
 
