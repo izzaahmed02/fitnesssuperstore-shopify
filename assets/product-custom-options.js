@@ -194,6 +194,15 @@ if (!customElements.get('product-customization-options')) {
                   option.style.display = 'none';
                 }
               });
+            } else {
+              optionsToRender.forEach((option) => {
+                const optionRules = option.dataset.conditionsToRender;
+                if (optionRules.includes(rule)) {
+                  option.style.display = 'block';
+                } else {
+                  option.style.display = 'none';
+                }
+              });
             }
           });
         }
