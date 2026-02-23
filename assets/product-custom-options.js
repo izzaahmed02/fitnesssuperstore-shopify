@@ -322,7 +322,7 @@ if (!customElements.get('product-customization-options')) {
           this.createOptionHTML(optionHandler, option);
           const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
           const conditionalOptions = parent.querySelectorAll('[data-has-conditions]');
-          if (conditionalOptions.length > 0) {
+          if (conditionalOptions.length > 0 && optionsToRender.length > 0) {
             conditionalOptions.forEach((option) => {
               const rule = option.dataset.hasConditions;
               optionsToRender.forEach((option) => {
