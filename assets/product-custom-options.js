@@ -322,16 +322,15 @@ if (!customElements.get('product-customization-options')) {
           this.createOptionHTML(optionHandler, option);
           const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
           const conditionalOptions = parent.querySelectorAll('[data-has-conditions]');
-          conditionalOptions.forEach((condition) => {
-            if (condition.checked) {
-              const rule = condition.dataset.hasConditions;
-              optionsToRender.forEach((option) => {
-                const optionRules = option.dataset.conditionsToRender;
-                if (optionRules.includes(rule)) {
-                  option.style.display = 'block';
-                }
-              });
-            }
+          conditionalOptions.forEach((option) => {
+            const rule = option.dataset.hasConditions;
+
+            optionsToRender.forEach((option) => {
+              const optionRules = option.dataset.conditionsToRender;
+              if (optionRules.includes(rule)) {
+                option.style.display = 'block';
+              }
+            });
           });
         }
       }
