@@ -162,6 +162,7 @@ if (!customElements.get('product-customization-options')) {
         optionsToRender.forEach((conditionalOption) => (conditionalOption.style.display = 'none'));
         const rule = option.getAttribute('data-has-conditions');
         if (option.checked) {
+          const parent = option.closest('[data-option-accordion]');
           optionsToRender.forEach((option) => {
             const optionRules = option.dataset.conditionsToRender;
             if (optionRules.includes(rule)) {
@@ -173,7 +174,7 @@ if (!customElements.get('product-customization-options')) {
           //TO DO
 
           //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
-          const placeholder = document.querySelector('////placeholder');
+          const placeholder = parent.querySelector('////placeholder');
           if (bannerHidden) {
             placeholder.innerHTML = '';
           } else {
