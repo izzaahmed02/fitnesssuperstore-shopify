@@ -329,6 +329,8 @@ if (!customElements.get('product-customization-options')) {
             addedOptions.forEach((option) => option.remove());
           }
           this.createOptionHTML(optionHandler, option);
+
+          this.checkDefaultConditionsToRender();
         }
       }
 
