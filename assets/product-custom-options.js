@@ -182,6 +182,7 @@ if (!customElements.get('product-customization-options')) {
           optionsToRender.forEach((option) => (option.style.display = 'none'));
           const hasConditions = this.querySelectorAll('[data-has-conditions]');
           hasConditions.forEach((condition) => {
+            const parent = condition.closest('[data-option-accordion]');
             if (condition.checked) {
               const rule = condition.dataset.hasConditions;
               optionsToRender.forEach((option) => {
