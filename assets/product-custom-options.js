@@ -233,10 +233,7 @@ if (!customElements.get('product-customization-options')) {
           }
           this.createOptionHTML(optionHandler, option);
         }
-        // if (option.hasAttribute('data-field-price')) {
-        //   const noThanksOptionSelected = optionHandler.querySelector('[data-option-variant-name="No Thanks"]');
-        //   if (noThanksOptionSelected) noThanksOptionSelected.remove();
-        // }
+
 
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
