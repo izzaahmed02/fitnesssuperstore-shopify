@@ -228,6 +228,10 @@ if (!customElements.get('product-customization-options')) {
         }
       }
 
+      //TO DO
+
+      //зробити розмітку банера, можна хардкодом транслейшенів тут немає толком
+
       conditionalChoiceBanner() {
         const banner = `<div class="conditional-options__banner">You HTML here<div>`;
         return banner;
