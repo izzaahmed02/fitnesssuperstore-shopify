@@ -183,6 +183,7 @@ if (!customElements.get('product-customization-options')) {
       checkDefaultConditionsToRender() {
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
         if (optionsToRender.length > 0) {
+          let bannerHidden = false;
           optionsToRender.forEach((option) => (option.style.display = 'none'));
           const hasConditions = this.querySelectorAll('[data-has-conditions]');
           hasConditions.forEach((condition) => {
@@ -192,6 +193,7 @@ if (!customElements.get('product-customization-options')) {
                 const optionRules = option.dataset.conditionsToRender;
                 if (optionRules.includes(rule)) {
                   option.style.display = 'block';
+                  bannerHidden = true;
                 }
               });
             }
