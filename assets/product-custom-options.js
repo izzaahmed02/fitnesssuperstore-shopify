@@ -209,11 +209,11 @@ if (!customElements.get('product-customization-options')) {
         const optionName = option.name;
 
         if (option.dataset.fieldName !== 'No Thanks') {
-          const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
-          if (noThanksOption) {
-            noThanksOption.checked = false;
-            noThanksOption.disabled = true;
-          }
+          // const noThanksOption = this.querySelector(`[data-customization-option][name="${optionName}"][data-field-name="No Thanks"]`);
+          // if (noThanksOption) {
+          //   noThanksOption.checked = false;
+          //   noThanksOption.disabled = true;
+          // }
         } else {
           const selectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
           if (selectedOptions.length > 0) {
