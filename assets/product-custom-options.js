@@ -183,9 +183,9 @@ if (!customElements.get('product-customization-options')) {
           const hasConditions = this.querySelectorAll('[data-has-conditions]');
           hasConditions.forEach((condition) => {
             const parent = condition.closest('[data-option-accordion]');
-            const condtitionsChecked = parent.querySelectorAll('[data-has-conditions]:checked');
-            if (condtitionsChecked.length > 0) {
-              const rule = condtitionsChecked[0].dataset.hasConditions;
+            const conditionsChecked = parent.querySelectorAll('[data-has-conditions]:checked');
+            if (conditionsChecked.length > 0) {
+              const rule = conditionsChecked[0].dataset.hasConditions;
               optionsToRender.forEach((option) => {
                 const optionRules = option.dataset.conditionsToRender;
                 if (optionRules.includes(rule)) option.style.display = 'block';
