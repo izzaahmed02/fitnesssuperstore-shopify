@@ -182,23 +182,16 @@ if (!customElements.get('product-customization-options')) {
           optionsToRender.forEach((option) => (option.style.display = 'none'));
           const hasConditions = this.querySelectorAll('[data-has-conditions]');
           hasConditions.forEach((condition) => {
-            const parent = condition.closest('[data-option-accordion]');
-            const conditionsChecked = parent.querySelectorAll('[data-has-conditions]:checked');
-            if (conditionsChecked.length > 0) {
-              const rule = conditionsChecked[0].dataset.hasConditions;
+            if (condition.checked) {
+              const rule = condition.dataset.hasConditions;
               optionsToRender.forEach((option) => {
                 const optionRules = option.dataset.conditionsToRender;
-                if (optionRules.includes(rule)) option.style.display = 'block';
+                if (optionRules.includes(rule)) {
+                  option.style.display = 'block';
+                } else {
+                  option.style.display = 'none';
+                }
               });
-            } else {
-              const conditions = parent.querySelectorAll('[data-has-conditions]');
-              if (conditions.length > 0) {
-                const rule = conditions[0].dataset.hasConditions;
-                optionsToRender.forEach((option) => {
-                  const optionRules = option.dataset.conditionsToRender;
-                  if (optionRules.includes(rule)) option.style.display = 'none';
-                });
-              }
             }
           });
         }
@@ -215,6 +208,7 @@ if (!customElements.get('product-customization-options')) {
           limit = Number(parent.getAttribute('data-multichoice-limit'));
         }
         const optionName = option.name;
+
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
         const increaseButtons = parent.querySelectorAll('[data-increase-quantity]');
@@ -329,8 +323,6 @@ if (!customElements.get('product-customization-options')) {
             addedOptions.forEach((option) => option.remove());
           }
           this.createOptionHTML(optionHandler, option);
-
-          this.checkDefaultConditionsToRender();
         }
       }
 
