@@ -165,8 +165,8 @@ if (!customElements.get('product-customization-options')) {
           optionsToRender.forEach((option) => {
             const optionRules = option.dataset.conditionsToRender;
             if (optionRules.includes(rule)) {
+              bannerHidden = true;
               option.style.display = 'block';
-              let bannerHidden = true;
             }
           });
         } else {
