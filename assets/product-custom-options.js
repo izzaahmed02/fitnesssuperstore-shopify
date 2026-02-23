@@ -204,6 +204,7 @@ if (!customElements.get('product-customization-options')) {
           optionsToRender.forEach((option) => (option.style.display = 'none'));
           const hasConditions = this.querySelectorAll('[data-has-conditions]');
           hasConditions.forEach((condition) => {
+            const parent = condition.closest('[data-option-accordion]');
             if (condition.checked) {
               const rule = condition.dataset.hasConditions;
               optionsToRender.forEach((option) => {
@@ -214,17 +215,17 @@ if (!customElements.get('product-customization-options')) {
                 }
               });
             }
+
+            //TO DO
+
+            //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
+            const placeholder = parent.querySelector('////placeholder');
+            if (bannerHidden) {
+              placeholder.innerHTML = '';
+            } else {
+              placeholder.innerHTML = this.conditionalChoiceBanner();
+            }
           });
-
-          //TO DO
-
-          //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
-          const placeholder = document.querySelector('////placeholder');
-          if (bannerHidden) {
-            placeholder.innerHTML = '';
-          } else {
-            placeholder.innerHTML = this.conditionalChoiceBanner();
-          }
         }
       }
 
