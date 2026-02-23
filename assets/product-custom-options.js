@@ -188,8 +188,6 @@ if (!customElements.get('product-customization-options')) {
                 const optionRules = option.dataset.conditionsToRender;
                 if (optionRules.includes(rule)) {
                   option.style.display = 'block';
-                } else {
-                  option.style.display = 'none';
                 }
               });
             }
@@ -322,6 +320,8 @@ if (!customElements.get('product-customization-options')) {
             addedOptions.forEach((option) => option.remove());
           }
           this.createOptionHTML(optionHandler, option);
+          const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
+          const conditionalOptions = parent.querySelectorAll('[data-has-conditions]');
         }
       }
 
