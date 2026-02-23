@@ -158,6 +158,7 @@ if (!customElements.get('product-customization-options')) {
       conditionalChoice(option) {
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
         if (optionsToRender.length === 0) return;
+        let bannerHidden = false;
         optionsToRender.forEach((conditionalOption) => (conditionalOption.style.display = 'none'));
         const rule = option.getAttribute('data-has-conditions');
         if (option.checked) {
@@ -204,9 +205,9 @@ if (!customElements.get('product-customization-options')) {
           //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
           const placeholder = document.querySelector('////placeholder');
           if (bannerHidden) {
-            placeholder.innerHTML = this.conditionalChoiceBanner();
-          } else {
             placeholder.innerHTML = '';
+          } else {
+            placeholder.innerHTML = this.conditionalChoiceBanner();
           }
         }
       }
