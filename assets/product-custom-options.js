@@ -192,14 +192,13 @@ if (!customElements.get('product-customization-options')) {
               });
             } else {
               const conditions = parent.querySelectorAll('[data-has-conditions]');
-              optionsToRender.forEach((option) => {
-                const optionRules = option.dataset.conditionsToRender;
-                if (optionRules.includes(rule)) {
-                  option.style.display = 'block';
-                } else {
-                  option.style.display = 'none';
-                }
-              });
+              if (conditions.length > 0) {
+                const rule = conditions[0].dataset.hasConditions;
+                optionsToRender.forEach((option) => {
+                  const optionRules = option.dataset.conditionsToRender;
+                  if (optionRules.includes(rule)) option.style.display = 'none';
+                });
+              }
             }
           });
         }
