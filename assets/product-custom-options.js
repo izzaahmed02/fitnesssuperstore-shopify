@@ -164,7 +164,10 @@ if (!customElements.get('product-customization-options')) {
         if (option.checked) {
           optionsToRender.forEach((option) => {
             const optionRules = option.dataset.conditionsToRender;
-            if (optionRules.includes(rule)) option.style.display = 'block';
+            if (optionRules.includes(rule)) {
+              option.style.display = 'block';
+              let bannerHidden = true;
+            }
           });
         } else {
           const parent = option.closest('[data-option-accordion]');
