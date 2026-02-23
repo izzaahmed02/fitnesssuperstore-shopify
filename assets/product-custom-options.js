@@ -208,26 +208,26 @@ if (!customElements.get('product-customization-options')) {
         }
         const optionName = option.name;
 
-        if (option.dataset.fieldName !== 'No Thanks') {
-        } else {
-          const selectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
-          if (selectedOptions.length > 0) {
-            selectedOptions.forEach((choice) => {
-              choice.checked = false;
-              const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-              if (optionQuantityInput) {
-                optionQuantityInput.value = 1;
-              }
-            });
-          }
-          optionHandler.dataset.selectedOptions = option.dataCustomizationOption;
-          option.checked = true;
-          const addedOptions = parent.querySelectorAll(`[data-option-id]`);
-          if (addedOptions.length > 0) {
-            addedOptions.forEach((option) => option.remove());
-          }
-          this.createOptionHTML(optionHandler, option);
-        }
+        // if (option.dataset.fieldName !== 'No Thanks') {
+        // } else {
+        //   const selectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
+        //   if (selectedOptions.length > 0) {
+        //     selectedOptions.forEach((choice) => {
+        //       choice.checked = false;
+        //       const optionQuantityInput = parent.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+        //       if (optionQuantityInput) {
+        //         optionQuantityInput.value = 1;
+        //       }
+        //     });
+        //   }
+        //   optionHandler.dataset.selectedOptions = option.dataCustomizationOption;
+        //   option.checked = true;
+        //   const addedOptions = parent.querySelectorAll(`[data-option-id]`);
+        //   if (addedOptions.length > 0) {
+        //     addedOptions.forEach((option) => option.remove());
+        //   }
+        //   this.createOptionHTML(optionHandler, option);
+        // }
 
         const multiChoiceOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
         const notSelectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:not(:checked)`);
