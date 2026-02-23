@@ -170,15 +170,11 @@ if (!customElements.get('product-customization-options')) {
           const hasConditions = parent.querySelectorAll('[data-has-conditions]:checked');
           if (hasConditions.length > 0) {
             hasConditions.forEach((condition) => {
-              if (condition.checked) {
-                const rule = condition.dataset.hasConditions;
-                optionsToRender.forEach((option) => {
-                  const optionRules = option.dataset.conditionsToRender;
-                  if (optionRules.includes(rule)) {
-                    option.style.display = 'block';
-                  }
-                });
-              }
+              const rule = condition.dataset.hasConditions;
+              optionsToRender.forEach((option) => {
+                const optionRules = option.dataset.conditionsToRender;
+                if (optionRules.includes(rule)) option.style.display = 'block';
+              });
             });
           }
           optionsToRender.forEach((option) => {
