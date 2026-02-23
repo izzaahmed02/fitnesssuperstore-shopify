@@ -199,12 +199,17 @@ if (!customElements.get('product-customization-options')) {
             }
           });
 
+          //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
+          const placeholder = document.querySelector('////placeholder');
           if (bannerHidden) {
+            placeholder.innerHTML = this.conditionalChoiceBanner();
+          } else {
+            placeholder.innerHTML = '';
           }
         }
       }
 
-      conditionalChoiceBanner(show) {
+      conditionalChoiceBanner() {
         const banner = `<div class="conditional-options__banner">You HTML here<div>`;
         return banner;
       }
