@@ -350,6 +350,8 @@ if (!customElements.get('product-customization-options')) {
               });
             });
 
+            //'тут мабуть в HTML краще додати плейсхолдер але перевіряти умову з метаобʼєкта, що це кондішинал чойс'
+
             const placeholder = document.querySelector('////placeholder');
             placeholder.innerHTML = this.conditionalChoiceBanner();
           }
