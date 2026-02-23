@@ -323,6 +323,7 @@ if (!customElements.get('product-customization-options')) {
       //Helper to check if "No Thanks" option is selected uncheck the rest options
 
       handleUnselect(option) {
+        const optionName = option.name;
         if (option.dataset.fieldName === 'No Thanks') {
           const selectedOptions = this.querySelectorAll(`[data-customization-option][name="${optionName}"]:checked`);
           if (selectedOptions.length > 0) {
