@@ -154,31 +154,20 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
-      // Helper, If option have conditional logic
+      // Helper, If option have conditional logic. Only hide an accordion when none of its condition triggers are checked.
       conditionalChoice(option) {
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
         if (optionsToRender.length === 0) return;
-        optionsToRender.forEach((conditionalOption) => (conditionalOption.style.display = 'none'));
-        const rule = option.getAttribute('data-has-conditions');
-        const parent = option.closest('[data-option-accordion]');
 
-        if (option.checked) {
-          optionsToRender.forEach((acc) => {
-            const optionRules = acc.dataset.conditionsToRender || '';
-            if (optionRules.includes(rule)) acc.style.display = 'block';
-          });
-        } else {
-          const hasConditions = parent.querySelectorAll('[data-has-conditions]:checked');
-          if (hasConditions.length > 0) {
-            hasConditions.forEach((condition) => {
-              const r = condition.dataset.hasConditions;
-              optionsToRender.forEach((acc) => {
-                const optionRules = acc.dataset.conditionsToRender || '';
-                if (optionRules.includes(r)) acc.style.display = 'block';
-              });
-            });
-          }
-        }
+        const checkedConditions = this.querySelectorAll('[data-has-conditions]:checked');
+        const checkedRules = Array.from(checkedConditions).map((el) => el.dataset.hasConditions);
+
+        optionsToRender.forEach((acc) => {
+          const optionRulesStr = acc.dataset.conditionsToRender || '';
+          const optionRules = optionRulesStr.split(',').map((r) => r.trim());
+          const shouldShow = optionRules.some((r) => r && checkedRules.includes(r));
+          acc.style.display = shouldShow ? 'block' : 'none';
+        });
 
         this.updateConditionalBanners();
       }
