@@ -154,21 +154,21 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
-      // Helper, If option have conditional logic. Only hide an accordion when none of its condition triggers are checked.
-      conditionalChoice(option) {
+      syncConditionalVisibility() {
         const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
         if (optionsToRender.length === 0) return;
-
         const checkedConditions = this.querySelectorAll('[data-has-conditions]:checked');
         const checkedRules = Array.from(checkedConditions).map((el) => el.dataset.hasConditions);
-
         optionsToRender.forEach((acc) => {
           const optionRulesStr = acc.dataset.conditionsToRender || '';
           const optionRules = optionRulesStr.split(',').map((r) => r.trim());
           const shouldShow = optionRules.some((r) => r && checkedRules.includes(r));
           acc.style.display = shouldShow ? 'block' : 'none';
         });
+      }
 
+      conditionalChoice(option) {
+        this.syncConditionalVisibility();
         this.updateConditionalBanners();
       }
 
@@ -441,6 +441,8 @@ if (!customElements.get('product-customization-options')) {
                 noThanksOriginalOption.disabled = false;
               }
             }
+            this.syncConditionalVisibility();
+            this.updateConditionalBanners();
             if (this.closest('cart-drawer')) return;
             this.updatePrice();
           });
