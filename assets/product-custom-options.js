@@ -164,6 +164,17 @@ if (!customElements.get('product-customization-options')) {
           const optionRules = optionRulesStr.split(',').map((r) => r.trim());
           const shouldShow = optionRules.some((r) => r && checkedRules.includes(r));
           acc.style.display = shouldShow ? 'block' : 'none';
+          if (!shouldShow) {
+            acc.querySelectorAll('[data-customization-option]:checked').forEach((input) => {
+              input.checked = false;
+            });
+            const optionHandler = acc.querySelector('[data-selected-options]');
+            if (optionHandler) {
+              optionHandler.querySelectorAll('[data-option-id]').forEach((badge) => badge.remove());
+              optionHandler.dataset.selectedOptions = '';
+              optionHandler.style.display = 'none';
+            }
+          }
         });
       }
 
@@ -173,17 +184,7 @@ if (!customElements.get('product-customization-options')) {
       }
 
       checkDefaultConditionsToRender() {
-        const optionsToRender = this.querySelectorAll('[data-conditions-to-render]');
-        if (optionsToRender.length === 0) return;
-        optionsToRender.forEach((accordion) => (accordion.style.display = 'none'));
-        const hasConditions = this.querySelectorAll('[data-has-conditions]:checked');
-        hasConditions.forEach((condition) => {
-          const rule = condition.dataset.hasConditions;
-          optionsToRender.forEach((accordion) => {
-            const optionRules = accordion.dataset.conditionsToRender || '';
-            if (optionRules.includes(rule)) accordion.style.display = 'block';
-          });
-        });
+        this.syncConditionalVisibility();
         this.updateConditionalBanners();
       }
 
