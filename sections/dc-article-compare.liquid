@@ -804,7 +804,34 @@ document.addEventListener("DOMContentLoaded", function () {
     title.style.height = maxHeight + "px";
   });
 });
+
+
+
+
+
+
+// ─── Dynamically set column widths based on product count ───
+const featureColWidth = 150;
+const tableWidth = scrollableContent.clientWidth;
+const maxColsBeforeScroll = 8;
+
+if (productCount <= maxColsBeforeScroll) {
+  const productColWidth = (tableWidth - featureColWidth) / productCount;
+  document.querySelectorAll('#mainTable .col-product').forEach(col => {
+    col.style.width = productColWidth + 'px';
+    col.style.minWidth = productColWidth + 'px';
+    col.style.maxWidth = productColWidth + 'px';
+  });
+  document.querySelectorAll('#mainTable .comparison-table th:not(.feature-col), #mainTable .comparison-table td:not(.feature-label)').forEach(cell => {
+    cell.style.width = productColWidth + 'px';
+    cell.style.minWidth = productColWidth + 'px';
+    cell.style.maxWidth = productColWidth + 'px';
+  });
+}
 </script>
+
+
+
 
 
 {% schema %}
