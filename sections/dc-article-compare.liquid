@@ -1,23 +1,31 @@
 <style>
-/* ─── ≤8 columns: fluid, fills full width ─── */
-.compareChart.cols-3 .comparison-table,
-.compareChart.cols-4 .comparison-table,
-.compareChart.cols-5 .comparison-table,
-.compareChart.cols-6 .comparison-table,
-.compareChart.cols-7 .comparison-table,
-.compareChart.cols-8 .comparison-table {
-  width: 100%;
-  table-layout: fixed;
-}
 
-/* ─── 9+ columns: one rule covers ALL counts, triggers scroll ─── */
-.compareChart[class*="cols-"] .comparison-table th:not(.feature-col),
-.compareChart[class*="cols-"] .comparison-table td:not(.feature-label) {
-  width: 120px !important;
-  max-width: 120px !important;
-  min-width: 120px !important;
-}
-
+  /* ─── Column-width classes for all possible counts ─── */
+  .compareChart.cols-3 .col-product {
+    width: 365.6px;
+    max-width: 365.6px;
+    min-width: 365.6px;
+  }
+  .compareChart.cols-4 .col-product {
+    width: 273.6px;
+    max-width: 273.6px;
+    min-width: 273.6px;
+  }
+  .compareChart.cols-5 .col-product {
+    width: 219.6px;
+    max-width: 219.6px;
+    min-width: 219.6px;
+  }
+  .compareChart.cols-6 .col-product {
+    width: 182.6px;
+    max-width: 182.6px;
+    min-width: 182.6px;
+  }
+  .compareChart.cols-7 .col-product {
+    width: 156.6px;
+    max-width: 156.6px;
+    min-width: 156.6px;
+  }
 
 
   /* Also apply matching widths inside the sticky header */
@@ -26,7 +34,7 @@
   .compareChart.cols-5 .sticky-header th:not(.feature-col) { width: 219.6px; max-width: 219.6px; min-width: 219.6px; }
   .compareChart.cols-6 .sticky-header th:not(.feature-col) { width: 182.6px; max-width: 182.6px; min-width: 182.6px; }
   .compareChart.cols-7 .sticky-header th:not(.feature-col) { width: 156.6px; max-width: 156.6px; min-width: 156.6px; }
-  .compareChart.cols-8 .sticky-header th:not(.feature-col) { width: 136.6px; max-width: 136.6px; min-width: 136.6px; }
+
 
 
 .belowfoldCharts {
@@ -468,9 +476,6 @@
 .compareChart .bottom-arrows.hidden {
   display: none;
 }
-
-
-
 </style>
 
 <!-- Calculate product count once -->
@@ -627,10 +632,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const allRightBtns = document.querySelectorAll(".scroll-btn.right");
 
   const productCount = document.querySelectorAll("#mainTable .col-product").length;
-  const shouldShowStickyArrows = productCount > 8;
+  const shouldShowStickyArrows = productCount > 7;
 
-if (shouldShowStickyArrows) {
+  if (shouldShowStickyArrows) {
     stickyScrollArrows.style.display = "flex";
+    bottomScrollArrows.classList.add("hidden");
+  } else if (productCount <= 7) {
     bottomScrollArrows.classList.add("hidden");
   }
 
