@@ -81,7 +81,9 @@ if (!customElements.get('product-customization-options')) {
             if (!controlElementID) return;
             if (!accordionBody) return;
             openButton.getAttribute('aria-expanded') === 'false' ? openButton.setAttribute('aria-expanded', true) : openButton.setAttribute('aria-expanded', false);
-            openButton.getAttribute('aria-expanded') === 'false' ? (accordionBody.style.height = `0px`) : (accordionBody.style.height = `${height}px`);
+            // openButton.getAttribute('aria-expanded') === 'false' ? (accordionBody.style.height = `0px`) : (accordionBody.style.height = `${height}px`);
+            openButton.getAttribute('aria-expanded') === 'false' ? (accordionBody.style.height = `0px`) : (accordionBody.style.height = `auto`);
+            
           });
         });
       }
@@ -139,6 +141,9 @@ if (!customElements.get('product-customization-options')) {
             if (!optionContainer) return;
             const optionHandler = optionContainer.querySelector('[data-selected-options]');
             if (!optionHandler) return;
+            if (option.checked && !option.hasAttribute('data-has-multichoice')) {
+              this.uncheckOtherOptionsInGroup(optionContainer, optionHandler, option);
+            }
             this.createOptionHTML(optionHandler, option);
             this.handleUnselect(optionHandler, option);
             optionHandler.dataset.selectedOptions = option.value;
@@ -152,6 +157,18 @@ if (!customElements.get('product-customization-options')) {
             this.updatePrice();
           });
         });
+      }
+
+      // Single-choice in variant: only one option can be selected. Clear all in group then re-check the selected one.
+      uncheckOtherOptionsInGroup(optionContainer, optionHandler, selectedOption) {
+        const optionName = selectedOption.name;
+        const allInGroup = optionContainer.querySelectorAll(`[data-customization-option][name="${optionName}"]`);
+        allInGroup.forEach((input) => {
+          input.checked = false;
+        });
+        optionHandler.querySelectorAll('[data-option-id]').forEach((badge) => badge.remove());
+        optionHandler.dataset.selectedOptions = '';
+        selectedOption.checked = true;
       }
 
       syncConditionalVisibility() {
@@ -643,14 +660,15 @@ if (!customElements.get('product-customization-options')) {
         const priceElement = document.querySelectorAll('.pr_custom_price');
         if (priceElement.length === 0) return;
 
-        const currentPrice = priceElement[0].dataset?.priceValue;
-        const finalPrice = Number(currentPrice) + priceAdjustment;
+        const priceValueRaw = priceElement[0].dataset?.priceValue ?? '';
+        const currentPrice = Number(String(priceValueRaw).replace(/,/g, '')) || 0;
+        const finalPrice = currentPrice + priceAdjustment;
         const formattedPrice = finalPrice.toLocaleString('en-US', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
         priceElement.forEach((el) => {
-          el.innerText = `${priceElement[0].dataset?.currency}${formattedPrice}`;
+          el.innerText = `${priceElement[0].dataset?.currency || ''}${formattedPrice}`;
         });
       }
 
