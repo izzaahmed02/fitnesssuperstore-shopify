@@ -54,7 +54,7 @@
       {% for block in section.blocks %}
         {% case block.type %}
           {% when 'description' %}
-            {% if product.content != blank %}
+             {% if product.content != blank %}
               <div class="extra-info-width">
                 <h2 class="product__extra_info-title description-heading">Description</h2>
      {% assign videos = product.media | where: "media_type", "video" %}
@@ -81,12 +81,17 @@
       </div>
 
       <!-- Modal -->
-      <div id="video-{{ video.id }}" class="product-video-modal">
-        <div class="product-video-modal-content">
-          <span class="product-video-close">&times;</span>
-          {{ video | media_tag: controls: true, autoplay: true }}
-        </div>
-      </div>
+     <!-- Modal -->
+<div id="video-{{ video.id }}" class="product-video-modal">
+  <div class="product-video-modal-content">
+    <span class="product-video-close">&times;</span>
+    <video controls preload="none" poster="{{ video.preview_image | img_url: '800x' }}">
+      {% for source in video.sources %}
+        <source data-src="{{ source.url }}" type="{{ source.mime_type }}">
+      {% endfor %}
+    </video>
+  </div>
+</div>
     {% endfor %}
   </div>
 
@@ -195,18 +200,26 @@ document.addEventListener("DOMContentLoaded", function() {
   const triggers = document.querySelectorAll(".product-video-trigger");
   const modals = document.querySelectorAll(".product-video-modal");
 
-  // Open modal
-  triggers.forEach(trigger => {
-    trigger.addEventListener("click", function(e) {
-      e.preventDefault();
-      const videoId = this.getAttribute("data-video-id");
-      const modal = document.getElementById(videoId);
-      if (modal) {
-        modal.style.display = "flex";
-        document.body.classList.add("no-scroll"); // disable scroll
-      }
-    });
+ triggers.forEach(trigger => {
+  trigger.addEventListener("click", function(e) {
+    e.preventDefault();
+    const videoId = this.getAttribute("data-video-id");
+    const modal = document.getElementById(videoId);
+    if (modal) {
+      // Lazy-load sources on first open
+      modal.querySelectorAll("source[data-src]").forEach(source => {
+        source.src = source.getAttribute("data-src");
+        source.removeAttribute("data-src");
+      });
+      const video = modal.querySelector("video");
+      if (video) video.load();
+      
+      modal.style.display = "flex";
+      document.body.classList.add("no-scroll");
+      if (video) video.play();
+    }
   });
+});
 
   // Close modal
   modals.forEach(modal => {
