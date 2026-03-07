@@ -876,30 +876,55 @@ class ProductGallery extends HTMLElement {
       }
     } else if (media.media_type === 'video') {
       
-      const video = document.createElement('video');
+        const video = document.createElement('video');
       video.controls = true;
-      video.autoplay = true;
-      video.muted = true;
-      video.loop = true;
+      video.autoplay = false;           // DO NOT autoplay — prevents automatic fetch
+      video.muted = false;              // optional: let user unmute
+      video.loop = false;               // avoid automatic looping
       video.playsInline = true;
+      video.preload = 'none';           // important: prevents browser from preloading MP4
       video.style.maxWidth = '100%';
       video.style.maxHeight = '100%';
+      video.setAttribute('aria-label', media.alt || 'Product video');
 
       const validSource = (media.sources || []).find((s) =>
         s.mime_type?.includes('mp4')
       );
 
-      if (validSource) {
+      if (validSource && validSource.url) {
+        // Defensive: attach error handler so we handle failed loads gracefully
+        video.addEventListener('error', (ev) => {
+          console.warn(`renderPopupViewer: Video failed to load for media ID ${media.id}`, ev);
+          // show user-friendly fallback message instead of a blank broken player
+          const fallback = document.createElement('div');
+          fallback.className = 'video-fallback';
+          fallback.textContent = 'Video not available.';
+          // replace video with message
+          if (video.parentNode) {
+            video.parentNode.replaceChild(fallback, video);
+          }
+        });
+
+        // Append source but do NOT trigger automatic load
         const source = document.createElement('source');
         source.src = validSource.url;
         source.type = validSource.mime_type;
         video.appendChild(source);
-        newMediaElement = video; // Assign the new video to newMediaElement
-       
+
+        // Provide a poster image if available to avoid showing a blank player
+        if (media.preview_image && media.preview_image.src) {
+          video.poster = media.preview_image.src;
+        }
+
+        // only set newMediaElement to video; the browser will load when user hits play
+        newMediaElement = video;
       } else {
-        newMediaElement = document.createElement('p');
-        newMediaElement.textContent = 'Video format not supported or no valid source found.';
+        // No MP4 source — fall back to a friendly message
+        const fallback = document.createElement('p');
+        fallback.className = 'video-fallback';
+        fallback.textContent = 'Video format not supported or no valid source found.';
         console.warn(`renderPopupViewer: No valid video source found for ID: ${media.id}`);
+        newMediaElement = fallback;
       }
     } else if (media.media_type === 'model') {
       
