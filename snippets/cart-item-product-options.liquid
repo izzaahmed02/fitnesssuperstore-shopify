@@ -164,7 +164,19 @@
                       <div class="option_selected-container" data-selected-color-option>
                         <p class="option_selected" data-option-id="{{ product_option.product_option_sets_default.value.id }}">
                           <div data-color-selected-title>
-                            {{ product_option.product_option_sets_default.value.title }}
+                            {% liquid
+                              assign selected_property_value = ''
+                              for property in line_item.properties
+                                if property.first == product_option.product_option_title
+                                  assign selected_property_value = property.last
+                                endif
+                              endfor
+                            %}
+                            {% if selected_property_value != blank %}
+                              {{ selected_property_value }}
+                            {% else %}
+                              {{ product_option.product_option_sets_default.value.title }}
+                            {% endif %}
                           </div>
                           <div class="option_selected-price">
                             {% if product_option.product_option_sets_default.value.price > 0 %}
