@@ -13,6 +13,9 @@ def forbid(text: str, needle: str, context: str):
 
 theme = Path('layout/theme.liquid').read_text()
 script_tags = Path('snippets/script-tags.liquid').read_text()
+head_meta = Path('snippets/head-meta.liquid').read_text()
+modals_templates = Path('snippets/modals-and-templates.liquid').read_text()
+stylesheet_tags = Path('snippets/stylesheet-tags.liquid').read_text()
 
 # 1) Mobile gallery timeout should be guarded and only appear once.
 require(theme, "var mobileGalleryWrapper = document.querySelector('.smobile-gallery-wrapper.only-mobile');", 'layout/theme.liquid')
@@ -30,22 +33,41 @@ require(theme, "function waitForGorgiasLoaded(timeoutMs)", 'layout/theme.liquid'
 require(theme, "window.clearTimeout(timer);", 'layout/theme.liquid')
 require(theme, "}, { once: true });", 'layout/theme.liquid')
 
-# 4) jQuery should not be render-blocking.
+# 4) Product page should preload featured media for better LCP.
+require(head_meta, "{% if template contains 'product' and product and product.featured_media %}", 'snippets/head-meta.liquid')
+require(head_meta, 'fetchpriority="high"', 'snippets/head-meta.liquid')
+
+# 5) jQuery should not be render-blocking.
 require(script_tags, "<script src=\"{{ 'jquery.min.js' | asset_url }}\" defer=\"defer\"></script>", 'snippets/script-tags.liquid')
 
-# 5) Square marketplace on product pages should be interaction/load triggered.
+# 6) Square marketplace on product pages should be interaction/load triggered.
 require(script_tags, "function loadSquareMarketplace()", 'snippets/script-tags.liquid')
-require(script_tags, "window.addEventListener(evt, loadSquareMarketplace, { once: true, passive: true });", 'snippets/script-tags.liquid')
 forbid(script_tags, '<script src="https://js.squarecdn.com/square-marketplace.js" async></script>', 'snippets/script-tags.liquid')
 
-# 6) Google Maps should be interaction/load triggered for heavy pages.
+# 7) Google Maps should be interaction/load triggered for heavy pages.
 require(script_tags, "function loadGoogleMaps()", 'snippets/script-tags.liquid')
-require(script_tags, "window.addEventListener(evt, loadGoogleMaps, { once: true, passive: true });", 'snippets/script-tags.liquid')
 forbid(script_tags, "<script src=\"https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw\" defer></script>", 'snippets/script-tags.liquid')
 
-# 7) Heatmap should load after window load with a timeout (no idle callback).
+# 8) Heatmap should load after window load with a timeout (no idle callback).
 require(script_tags, "function initHeatmap()", 'snippets/script-tags.liquid')
-require(script_tags, "h.addEventListener('load', function ()", 'snippets/script-tags.liquid')
 forbid(script_tags, "requestIdleCallback(initHeatmap", 'snippets/script-tags.liquid')
+
+# 9) Globo filter integration should be removed from runtime templates.
+forbid(theme, 'globo.filter', 'layout/theme.liquid')
+forbid(modals_templates, 'globo.filter', 'snippets/modals-and-templates.liquid')
+forbid(modals_templates, 'gspf', 'snippets/modals-and-templates.liquid')
+forbid(stylesheet_tags, 'globo-search-custom.css', 'snippets/stylesheet-tags.liquid')
+
+# 10) Globo filter files should not exist.
+for f in [
+    'snippets/globo.filter.product-index.liquid',
+    'snippets/globo.filter.sort.liquid',
+    'snippets/globo.filter.search.liquid',
+    'snippets/globo.filter.product.liquid',
+    'snippets/globo.filter.tree.liquid',
+    'assets/globo-search-custom.css',
+]:
+    if Path(f).exists():
+        raise AssertionError(f"Expected removed file still exists: {f}")
 
 print('CWV regression checks passed.')
