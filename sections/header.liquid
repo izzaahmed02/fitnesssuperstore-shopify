@@ -648,52 +648,76 @@
 
 {% if section.settings.enable_hover_dropdowns %}
 <script>
-  $(document).ready(function () {
-    let hoverMenuInitialized = false;
+  document.addEventListener('DOMContentLoaded', function () {
+    var hoverMenuInitialized = false;
+    var hoverBindings = [];
+
+    function teardownDesktopHoverMenus() {
+      hoverBindings.forEach(function (binding) {
+        binding.details.removeEventListener('mouseenter', binding.onMouseEnter);
+        binding.details.removeEventListener('mouseleave', binding.onMouseLeave);
+        binding.summary.removeEventListener('click', binding.onSummaryClick);
+      });
+
+      hoverBindings = [];
+      hoverMenuInitialized = false;
+    }
 
     function initDesktopHoverMenus() {
-      if (window.innerWidth >= 1024 && !hoverMenuInitialized) {
-        hoverMenuInitialized = true;
-
-        $('header.header .header__navigation-container details').each(function () {
-          const $details = $(this);
-          const $summary = $details.find('summary');
-          let hoverTimer;
-          const hoverDelay = 100;
-
-          $summary.on('click.preventHover', function (e) {
-            e.preventDefault();
-            return false;
-          });
-
-          $details.on('mouseenter.hoverMenu', function () {
-            clearTimeout(hoverTimer);
-            hoverTimer = setTimeout(function () {
-              $details.attr('open', true);
-              $summary.attr('aria-expanded', 'true');
-            }, hoverDelay);
-          });
-
-          $details.on('mouseleave.hoverMenu', function () {
-            clearTimeout(hoverTimer);
-            hoverTimer = setTimeout(function () {
-              $details.removeAttr('open');
-              $summary.attr('aria-expanded', 'false');
-            }, hoverDelay);
-          });
-        });
-      } else if (window.innerWidth < 1024 && hoverMenuInitialized) {
-        hoverMenuInitialized = false;
-        $('header.header details summary').off('.preventHover');
-        $('header.header details').off('.hoverMenu');
+      if (window.innerWidth < 1024) {
+        if (hoverMenuInitialized) teardownDesktopHoverMenus();
+        return;
       }
+
+      if (hoverMenuInitialized) return;
+
+      var detailNodes = document.querySelectorAll('header.header .header__navigation-container details');
+      detailNodes.forEach(function (details) {
+        var summary = details.querySelector('summary');
+        if (!summary) return;
+
+        var hoverTimer;
+        var hoverDelay = 100;
+
+        var onSummaryClick = function (event) {
+          event.preventDefault();
+          return false;
+        };
+
+        var onMouseEnter = function () {
+          window.clearTimeout(hoverTimer);
+          hoverTimer = window.setTimeout(function () {
+            details.setAttribute('open', '');
+            summary.setAttribute('aria-expanded', 'true');
+          }, hoverDelay);
+        };
+
+        var onMouseLeave = function () {
+          window.clearTimeout(hoverTimer);
+          hoverTimer = window.setTimeout(function () {
+            details.removeAttribute('open');
+            summary.setAttribute('aria-expanded', 'false');
+          }, hoverDelay);
+        };
+
+        summary.addEventListener('click', onSummaryClick);
+        details.addEventListener('mouseenter', onMouseEnter);
+        details.addEventListener('mouseleave', onMouseLeave);
+
+        hoverBindings.push({
+          details: details,
+          summary: summary,
+          onSummaryClick: onSummaryClick,
+          onMouseEnter: onMouseEnter,
+          onMouseLeave: onMouseLeave
+        });
+      });
+
+      hoverMenuInitialized = true;
     }
 
     initDesktopHoverMenus();
-
-    $(window).on('resize', function () {
-      initDesktopHoverMenus();
-    });
+    window.addEventListener('resize', initDesktopHoverMenus);
   });
 </script>
 
