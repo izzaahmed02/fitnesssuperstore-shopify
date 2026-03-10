@@ -2,18 +2,26 @@
 
 <div class="hero-section">
   <div class="image-wrapper">
+    {% assign hero_image = section.settings.background_image %}
     <picture>
       {%- comment -%} Serve WebP first with PNG/JPEG fallback {%- endcomment -%}
-      <source srcset="{{ section.settings.background_image | image_url: width: 1000, format: 'webp' }}" type="image/webp">
-      <img 
-        src="{{ section.settings.background_image | image_url: width: 1000 }}" 
-        alt="{{ section.settings.title_text | escape }}" 
-        class="hero-bg"
-        loading="eager" 
-        fetchpriority="high"
-        width="1030"
-        height="auto"
+      <source
+        srcset="{{ hero_image | image_url: width: 768, format: 'webp' }} 768w, {{ hero_image | image_url: width: 1200, format: 'webp' }} 1200w, {{ hero_image | image_url: width: 1600, format: 'webp' }} 1600w"
+        sizes="100vw"
+        type="image/webp"
       >
+      {{
+        hero_image
+        | image_url: width: 1600
+        | image_tag:
+          alt: section.settings.title_text,
+          class: 'hero-bg',
+          loading: 'eager',
+          fetchpriority: 'high',
+          decoding: 'async',
+          widths: '768, 1200, 1600, 2000',
+          sizes: '100vw'
+      }}
     </picture>
 
     <div class="overlay"></div> 
