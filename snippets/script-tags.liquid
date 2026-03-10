@@ -3,7 +3,7 @@
     window.location.replace('/collections/all');
   }
 </script>
-<script src="{{ 'jquery.min.js' | asset_url }}"></script>
+<script src="{{ 'jquery.min.js' | asset_url }}" defer="defer"></script>
   <script src="{{ 'constants.js' | asset_url }}" defer="defer"></script>
           <script src="{{ 'pubsub.js' | asset_url }}" defer="defer"></script>
           <script src="{{ 'global.js' | asset_url }}" defer="defer"></script>
@@ -20,21 +20,52 @@
 {% endif %}
 
 {% if template contains 'page.about-us' or template contains 'page.warehouse-page' %}
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw" defer></script>
+  <script>
+    (function() {
+      var mapsLoaded = false;
+
+      function loadGoogleMaps() {
+        if (mapsLoaded) return;
+        mapsLoaded = true;
+        var mapsScript = document.createElement('script');
+        mapsScript.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw";
+        mapsScript.defer = true;
+        document.head.appendChild(mapsScript);
+      }
+
+      ['scroll', 'mousemove', 'touchstart', 'keydown', 'click'].forEach(function(evt) {
+        window.addEventListener(evt, loadGoogleMaps, { once: true, passive: true });
+      });
+
+      window.addEventListener('load', function() {
+        window.setTimeout(loadGoogleMaps, 1200);
+      }, { once: true });
+    })();
+  </script>
 {% endif %}
 
 <script>
   (function (h, e, a, t, m, ap) {
-    (h._heatmap_paq = []).push(['setTrackerUrl', (h.heatUrl = e) + a]);
-    h.hErrorLogs = h.hErrorLogs || [];
-    ap = t.createElement('script');
-    ap.src = h.heatUrl + 'preprocessor.min.js?sid=' + m;
-    ap.defer = true;
-    t.head.appendChild(ap);
-    ['error', 'unhandledrejection'].forEach(function (ty) {
-      h.addEventListener(ty, function (et) {
-        h.hErrorLogs.push({ type: ty, event: et });
+    function initHeatmap() {
+      (h._heatmap_paq = []).push(['setTrackerUrl', (h.heatUrl = e) + a]);
+      h.hErrorLogs = h.hErrorLogs || [];
+      ap = t.createElement('script');
+      ap.src = h.heatUrl + 'preprocessor.min.js?sid=' + m;
+      ap.defer = true;
+      t.head.appendChild(ap);
+      ['error', 'unhandledrejection'].forEach(function (ty) {
+        h.addEventListener(ty, function (et) {
+          h.hErrorLogs.push({ type: ty, event: et });
+        });
       });
-    });
+    }
+
+    if (t.readyState === 'complete') {
+      h.setTimeout(initHeatmap, 1000);
+    } else {
+      h.addEventListener('load', function () {
+        h.setTimeout(initHeatmap, 1000);
+      }, { once: true });
+    }
   })(window, 'https://dashboard.heatmap.com/', 'heatmap.php', document, 2798);
 </script>
