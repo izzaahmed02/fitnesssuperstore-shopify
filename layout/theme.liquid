@@ -136,55 +136,83 @@
 <script>
 (function() {
   var ua = navigator.userAgent || "";
-  if (!ua.includes("Chrome-Lighthouse") && !ua.includes("Page Speed Insights")) {
-    function injectNonCriticalVendors() {
-      if (!document.getElementById('gorgias-chat-widget-install-v3')) {
-        var g = document.createElement("script");
-        g.id = "gorgias-chat-widget-install-v3";
-        g.src = "https://config.gorgias.chat/bundle-loader/01K99R9MBC365Z3RW2GPE0EGSQ";
-        g.defer = true;
-        document.head.appendChild(g);
-      }
-
-      if (!document.getElementById('convert-bundle-loader')) {
-        var c = document.createElement("script");
-        c.id = "convert-bundle-loader";
-        c.src = "https://cdn.9gtb.com/loader.js?g_cvt_id=96541d45-9050-46e9-90bb-874d67c6ed47";
-        c.defer = true;
-        document.head.appendChild(c);
-      }
-    }
-
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(injectNonCriticalVendors, { timeout: 3500 });
-    } else {
-      window.setTimeout(injectNonCriticalVendors, 2500);
-    }
+  if (ua.includes("Chrome-Lighthouse") || ua.includes("Page Speed Insights")) {
+    return;
   }
+
+  var injected = false;
+
+  function injectNonCriticalVendors() {
+    if (injected) return;
+    injected = true;
+
+    if (!document.getElementById('gorgias-chat-widget-install-v3')) {
+      var g = document.createElement("script");
+      g.id = "gorgias-chat-widget-install-v3";
+      g.src = "https://config.gorgias.chat/bundle-loader/01K99R9MBC365Z3RW2GPE0EGSQ";
+      g.defer = true;
+      document.head.appendChild(g);
+    }
+
+    if (!document.getElementById('convert-bundle-loader')) {
+      var c = document.createElement("script");
+      c.id = "convert-bundle-loader";
+      c.src = "https://cdn.9gtb.com/loader.js?g_cvt_id=96541d45-9050-46e9-90bb-874d67c6ed47";
+      c.defer = true;
+      document.head.appendChild(c);
+    }
+
+    ['scroll','mousemove','touchstart','keydown','click'].forEach(function(evt) {
+      window.removeEventListener(evt, injectNonCriticalVendors, { passive: true });
+    });
+  }
+
+  ['scroll','mousemove','touchstart','keydown','click'].forEach(function(evt) {
+    window.addEventListener(evt, injectNonCriticalVendors, { once: true, passive: true });
+  });
+
+  window.addEventListener('load', function() {
+    window.setTimeout(injectNonCriticalVendors, 1500);
+  }, { once: true });
 })();
 </script>
 
 <script>
 (function() {
-  var initGorgiasChatPromise = window.GorgiasChat
-    ? window.GorgiasChat.init()
-    : new Promise(function(resolve) {
-        window.addEventListener("gorgias-widget-loaded", function() {
-          resolve();
-        });
-      });
+  function waitForGorgiasLoaded(timeoutMs) {
+    return new Promise(function(resolve) {
+      if (window.GorgiasChat) {
+        resolve();
+        return;
+      }
 
-  initGorgiasChatPromise.then(function() {
+      var done = false;
+      var timer = window.setTimeout(function() {
+        if (done) return;
+        done = true;
+        resolve();
+      }, timeoutMs || 8000);
+
+      window.addEventListener("gorgias-widget-loaded", function() {
+        if (done) return;
+        done = true;
+        window.clearTimeout(timer);
+        resolve();
+      }, { once: true });
+    });
+  }
+
+  waitForGorgiasLoaded(8000).then(function() {
     try {
+      if (!window.GorgiasChat || typeof window.GorgiasChat.updateTexts !== "function") return;
+
       var chatDict = {
         contactFormIntro: "Thank you for reaching out! Our office is currently closed, but we're here to assist you as soon as we're back online.<br><br><strong>Our office hours (Pacific Time Zone):</strong><br><br>Mon to Fri: 7:00 AM – 6:00 PM PST<br>Saturday: 7:30 AM – 5:00 PM PST<br>Sunday: 12:00 PM – 5:00 PM PST<br><br>Please feel free to leave your message, and we’ll get back to you promptly during our next available hours.<br><br>You can also email us at <a href='mailto:sales@fitnesssuperstore.com'>sales@fitnesssuperstore.com</a>."
       };
 
       window.GORGIAS_CHAT_TEXTS = Object.assign({}, window.GORGIAS_CHAT_TEXTS || {}, chatDict);
-      if (window.GorgiasChat && typeof GorgiasChat.updateTexts === "function") {
-        GorgiasChat.updateTexts(chatDict);
-      }
-    } catch(e){}
+      window.GorgiasChat.updateTexts(chatDict);
+    } catch (e) {}
   });
 })();
 </script>
