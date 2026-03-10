@@ -4,6 +4,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="">
 
+{% if template contains 'product' and product and product.featured_media %}
+  <link
+    rel="preload"
+    as="image"
+    href="{{ product.featured_media | image_url: width: 1200 }}"
+    imagesrcset="{{ product.featured_media | image_url: width: 533 }} 533w, {{ product.featured_media | image_url: width: 720 }} 720w, {{ product.featured_media | image_url: width: 940 }} 940w, {{ product.featured_media | image_url: width: 1066 }} 1066w, {{ product.featured_media | image_url: width: 1200 }} 1200w"
+    imagesizes="(min-width: 990px) 50vw, 100vw"
+    fetchpriority="high"
+  >
+{% endif %}
+
 
 {% assign url_parts = canonical_url | split: '?' %}
 {% if url_parts.size > 1 %}
