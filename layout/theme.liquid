@@ -118,9 +118,12 @@
     {%- render 'optimization', postpone_loading: 'reset' -%}
 
     <script>
-setTimeout(function() {
-  document.querySelector('.smobile-gallery-wrapper.only-mobile').style.display = 'block';
-}, 3000);
+      setTimeout(function() {
+        var mobileGalleryWrapper = document.querySelector('.smobile-gallery-wrapper.only-mobile');
+        if (mobileGalleryWrapper) {
+          mobileGalleryWrapper.style.display = 'block';
+        }
+      }, 3000);
     </script>
 
 
@@ -130,27 +133,33 @@ setTimeout(function() {
 {%- capture sortTemplate -%}{% render 'globo.filter.sort' %}{%- endcapture -%}{%- unless sortTemplate contains 'Liquid error' -%}<script id="gspfFilterSort" type="template/html">{{- sortTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
 {%- capture searchTemplate -%}{% render 'globo.filter.search' %}{%- endcapture -%}{%- unless searchTemplate contains 'Liquid error' -%}<script id="gspfSearchResult" type="template/html">{{- searchTemplate | replace: "script>", "scripttag>" -}}</script>{%- endunless -%}
 
-    <script>
-setTimeout(function() {
-  document.querySelector('.smobile-gallery-wrapper.only-mobile').style.display = 'block';
-}, 3000);
-    </script>
-
 <script>
 (function() {
   var ua = navigator.userAgent || "";
   if (!ua.includes("Chrome-Lighthouse") && !ua.includes("Page Speed Insights")) {
-    var g = document.createElement("script");
-    g.id = "gorgias-chat-widget-install-v3";
-    g.src = "https://config.gorgias.chat/bundle-loader/01K99R9MBC365Z3RW2GPE0EGSQ";
-    g.defer = true;
-    document.head.appendChild(g);
+    function injectNonCriticalVendors() {
+      if (!document.getElementById('gorgias-chat-widget-install-v3')) {
+        var g = document.createElement("script");
+        g.id = "gorgias-chat-widget-install-v3";
+        g.src = "https://config.gorgias.chat/bundle-loader/01K99R9MBC365Z3RW2GPE0EGSQ";
+        g.defer = true;
+        document.head.appendChild(g);
+      }
 
-    var c = document.createElement("script");
-    c.id = "convert-bundle-loader";
-    c.src = "https://cdn.9gtb.com/loader.js?g_cvt_id=96541d45-9050-46e9-90bb-874d67c6ed47";
-    c.defer = true;
-    document.head.appendChild(c);
+      if (!document.getElementById('convert-bundle-loader')) {
+        var c = document.createElement("script");
+        c.id = "convert-bundle-loader";
+        c.src = "https://cdn.9gtb.com/loader.js?g_cvt_id=96541d45-9050-46e9-90bb-874d67c6ed47";
+        c.defer = true;
+        document.head.appendChild(c);
+      }
+    }
+
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(injectNonCriticalVendors, { timeout: 3500 });
+    } else {
+      window.setTimeout(injectNonCriticalVendors, 2500);
+    }
   }
 })();
 </script>
