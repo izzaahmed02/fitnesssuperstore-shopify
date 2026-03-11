@@ -164,7 +164,6 @@ onReady(() => {
   }, { passive: true });
 
   document.addEventListener('click', (e) => {
-    if (e.target.closest('.button.globo-formbuilder-open')) document.body.style.overflow = 'hidden';
     if (e.target.closest('.header.dismiss')) document.body.style.overflow = 'auto';
   }, { passive: true });
 
