@@ -17,10 +17,8 @@ head_meta = Path('snippets/head-meta.liquid').read_text()
 modals_templates = Path('snippets/modals-and-templates.liquid').read_text()
 stylesheet_tags = Path('snippets/stylesheet-tags.liquid').read_text()
 
-# 1) Mobile gallery timeout should be guarded and only appear once.
-require(theme, "var mobileGalleryWrapper = document.querySelector('.smobile-gallery-wrapper.only-mobile');", 'layout/theme.liquid')
-require(theme, "if (mobileGalleryWrapper)", 'layout/theme.liquid')
-assert theme.count(".smobile-gallery-wrapper.only-mobile") == 1, "Mobile gallery selector should appear exactly once"
+# 1) Legacy mobile gallery fallback should not exist (unused selector + forced style mutation).
+forbid(theme, ".smobile-gallery-wrapper.only-mobile", 'layout/theme.liquid')
 
 # 2) Vendor injection should be interaction/load based and deduplicated.
 require(theme, "var injected = false;", 'layout/theme.liquid')
@@ -52,13 +50,17 @@ forbid(script_tags, "<script src=\"https://maps.googleapis.com/maps/api/js?key=A
 require(script_tags, "function initHeatmap()", 'snippets/script-tags.liquid')
 forbid(script_tags, "requestIdleCallback(initHeatmap", 'snippets/script-tags.liquid')
 
-# 9) Globo filter integration should be removed from runtime templates.
+# 9) Google Ads gtag should be interaction/load triggered (no immediate network request).
+require(script_tags, "function loadGtag()", 'snippets/script-tags.liquid')
+forbid(script_tags, '<script async src="https://www.googletagmanager.com/gtag/js?id=AW-997565942">', 'snippets/script-tags.liquid')
+
+# 10) Globo filter integration should be removed from runtime templates.
 forbid(theme, 'globo.filter', 'layout/theme.liquid')
 forbid(modals_templates, 'globo.filter', 'snippets/modals-and-templates.liquid')
 forbid(modals_templates, 'gspf', 'snippets/modals-and-templates.liquid')
 forbid(stylesheet_tags, 'globo-search-custom.css', 'snippets/stylesheet-tags.liquid')
 
-# 10) Globo filter files should not exist.
+# 11) Globo filter files should not exist.
 for f in [
     'snippets/globo.filter.product-index.liquid',
     'snippets/globo.filter.sort.liquid',
