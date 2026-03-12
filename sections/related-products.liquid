@@ -1,4 +1,22 @@
-{{ 'section-related-products.css' | asset_url | stylesheet_tag }}
+<script>
+  (function() {
+    var loadRelatedProductsStyles = function() {
+      if (document.querySelector('link[data-related-products-css]')) return;
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = "{{ 'section-related-products.css' | asset_url }}";
+      link.setAttribute('data-related-products-css', 'true');
+      document.head.appendChild(link);
+    };
+
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(loadRelatedProductsStyles, { timeout: 1500 });
+    } else {
+      window.addEventListener('load', loadRelatedProductsStyles, { once: true });
+    }
+  })();
+</script>
+<noscript>{{ 'section-related-products.css' | asset_url | stylesheet_tag }}</noscript>
 
 {% comment %} Get the metafield data - use .value to get ProductListDrop {% endcomment %}
 {% assign related_products_list = product.metafields.custom.related_products.value %}
