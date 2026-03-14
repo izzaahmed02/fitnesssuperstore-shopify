@@ -193,24 +193,53 @@ try {
 		}, 100)
 
 		const waitForPayLaterDependency = setInterval(() => {
-		  const payLaterText = generatePayLaterText();
 		  const affirmElement = document.querySelector('.affirm-as-low-as');
 		  const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
 
 		  if (affirmElement || afterPayElement) {
-			 document.querySelectorAll('.paylater-container').forEach(container => {
-				container.style.display = 'block';
-			 });
-			 document.querySelectorAll('.paylater-text').forEach(container => {
-				 container.innerHTML = getPaylaterModal(payLaterText);
-			 });
-				
+			 renderPayLaterText();
+			 bindPayLaterVariantListeners();
 			 clearInterval(waitForPayLaterDependency);
 			}
 		  }, 100);
 	});
 } catch (error) {
 	console.log(error)
+}
+
+let payLaterVariantListenersBound = false;
+
+function bindPayLaterVariantListeners() {
+	if (payLaterVariantListenersBound) return;
+	payLaterVariantListenersBound = true;
+
+	const refreshPayLater = () => {
+		renderPayLaterText();
+		setTimeout(renderPayLaterText, 250);
+		setTimeout(renderPayLaterText, 600);
+	};
+
+	document.addEventListener('variant:change', refreshPayLater);
+	document.addEventListener('variant-change', refreshPayLater);
+
+	document.querySelectorAll('form[action*="/cart/add"] [name^="option"], form[action*="/cart/add"] [name="id"]').forEach((input) => {
+		input.addEventListener('change', () => {
+			setTimeout(refreshPayLater, 100);
+		});
+	});
+}
+
+function renderPayLaterText() {
+	const payLaterText = generatePayLaterText();
+	if (!payLaterText) return;
+
+	document.querySelectorAll('.paylater-container').forEach(container => {
+		container.style.display = 'block';
+	});
+
+	document.querySelectorAll('.paylater-text').forEach(container => {
+		container.innerHTML = getPaylaterModal(payLaterText);
+	});
 }
 
 function getPaylaterModal(payLaterText) {
@@ -220,22 +249,27 @@ function getPaylaterModal(payLaterText) {
 }
 
 function generatePayLaterText() {
-	let payLaterText = '';
 	const productPrice = getProductPrice();	
-	document.querySelector('square-placement').setAttribute('data-amount', productPrice);
+	if (!productPrice) return '';
+
+	const squarePlacementElement = document.querySelector('square-placement');
+	if (squarePlacementElement) {
+		squarePlacementElement.setAttribute('data-amount', productPrice);
+	}
 
 	let afterPayRate = null;
-	if (document.querySelector('square-placement').length > 0) {
-		afterPayRate = parseFloat(document.querySelector('square-placement').shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML.replace('$', '').replace('/mo.', ''));
+	if (squarePlacementElement?.shadowRoot) {
+		afterPayRate = parseFloat(squarePlacementElement.shadowRoot.querySelector('.afterpay-text2 strong')?.innerHTML.replace('$', '').replace('/mo.', ''));
 	}
 	const affirm24MosRate = computeAffirmLoanDetails(productPrice, 24).MonthlyPaymentAmount;
 	const rates = [afterPayRate, affirm24MosRate]
 	.map(rate => parseFloat(rate))
 	.filter(rate => !isNaN(rate));
   
-    const lowestRate = rates.length ? Math.min(...rates) : 0;  
+    const lowestRate = rates.length ? Math.min(...rates) : 0;
+	if (!lowestRate) return '';
 
-	payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
+	const payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
 		style: 'currency',
 		currency: 'USD',
 		})}/mo (options at checkout)`
@@ -605,9 +639,13 @@ function generateAffirmPaymentTerms() {
   }
 
   function getProductPrice() {
-    const priceElement = document.querySelector('.pr_custom_price').innerText;
+	const priceElement = document.querySelector('.pr_custom_price')?.innerText;
+	if (!priceElement) return null;
 
-	const formattedProductPrice = priceElement.match(/\d+(?:,\d{3})*(?:\.\d+)?/)[0]  
+	const priceMatch = priceElement.match(/\d+(?:,\d{3})*(?:\.\d+)?/);
+	if (!priceMatch) return null;
+
+	const formattedProductPrice = priceMatch[0]
 	.replace(/,/g, '') 
 	.replace(/(\.\d*?[1-9])0+$/, '$1') 
 	.replace(/\.0+$/, ''); 
