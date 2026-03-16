@@ -196,13 +196,17 @@
                   {%comment %}
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                    {%endcomment %}
-                    <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
+                    <span class="pr_custom_compare_price"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
                     {% comment %}
                   {% endif %}
                    {%endcomment %}
+
+
+                   [{"text":"Precor Comparisons + Features: P30, P80, P82 & Experience Consoles","url":"https://www.fitnesssuperstore.com/pages/precor-comparisons-features-p30-p80-p82-experience-consoles"},{"text":"Precor Lower Body Elliptical Comparison Chart","url":"https://www.fitnesssuperstore.com/pages/precor-lower-body-elliptical-comparison-chart"}]
+
                    
 
 
@@ -702,7 +706,7 @@
 
                 <div class="product__prices hidden lg:block">
                   
-                    <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
+                    <span class="pr_custom_compare_price"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
@@ -3682,13 +3686,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-<style>.pm-empty{visibility:hidden!important}</style>
+<style>
+  .pm-empty{
+    visibility:hidden!important;
+    display: none;
+  }
+</style>
 <script>
 if(!window.__pmMin){window.__pmMin=1;(function(){
   const e=".product__prices",
         t={
           PRICE:".price-item--sale.price-item--last, .price-item-fixed",
-          CMP_WRAP:".pr_custom_compare_price",
           CMP:".pr_custom_compare_price s",
           SAVE:".you-save",
           VID:".product-variant-id",
@@ -3737,9 +3745,7 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
 
     clear(){
       this.$$(t.PRICE).forEach(e=>{e.textContent=e.textContent||"",e.classList.add("pm-empty")});
-      const e=this.$(t.CMP), r=this.$(t.CMP_WRAP);
-      e&&(e.textContent="");
-      r&&r.classList.add("pm-empty");
+      const e=this.$(t.CMP); e&&(e.textContent="",e.classList.add("pm-empty"));
       const n=this.$(t.SAVE); n&&(n.textContent="",n.classList.add("pm-empty"))
     }
 
@@ -3750,9 +3756,8 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
         t.classList.remove("pm-empty")
       });
       const o=e.compare_at_price && n(e.compare_at_price)>n(e.price),
-            a=this.$(t.CMP), c=this.$(t.CMP_WRAP);
-      a&&(a.textContent=o?r(n(e.compare_at_price)):"");
-      c&&c.classList.toggle("pm-empty",!o);
+            a=this.$(t.CMP);
+      a&&(a.textContent=o?r(n(e.compare_at_price)):"",a.classList.toggle("pm-empty",!o));
       const i=this.$(t.SAVE);
       if(i) if(o){const t=n(e.compare_at_price)-n(e.price); i.textContent="You save "+r(t), i.classList.remove("pm-empty")} else i.textContent="",i.classList.add("pm-empty")
     }
@@ -4064,3 +4069,4 @@ if(productForm && !productForm.__variantSyncBound){
 
 })();
 </script>
+
