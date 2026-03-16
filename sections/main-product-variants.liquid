@@ -30,7 +30,7 @@
     margin-bottom: 40px;
   }
 
-  
+
 {% endstyle %}
 
 {% if product.available == true %}
@@ -157,7 +157,7 @@
               {%- when 'review_widget' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
               <div class="available-wrap">
-            
+
                 {% if product.metafields.custom.backorder == true %}
                   <div class="badge backorder-badge stock-badge">
                       <span>Available to Pre-Order</span>
@@ -196,7 +196,7 @@
                   {%comment %}
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                    {%endcomment %}
-                    <span class="pr_custom_compare_price"
+                    <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
@@ -204,7 +204,6 @@
                   {% endif %}
                    {%endcomment %}
 
- 
 
 
                   {% if product.metafields.custom.saleprice_name != blank %}
@@ -225,25 +224,25 @@
                       {% comment %}{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %} {% endcomment %}
 
                        <div>
-                 
+
 
                       <span class="you-save pm-empty"></span>
-                      
+
                     </div>
-                 
+
                       {% endif %}
                     </div>
                 </div>
 
-               
+
             {%- endcase -%}
           {%- endfor -%}
         </div>
       </div>
 
       <div class="product-main-left-container">
-        
-        
+
+
         <product-gallery data-product-title="{{ product.title | escape }}">
           <div class="custom-product-gallery">
             <div class="custom-gallery-wrapper">
@@ -605,7 +604,7 @@
                         {% for collection in product.collections %}
                           {% if collection.handle contains 'shop-by-strength-product-line' %}
                             <span class="more-info" data-customfield="Shipping">(More Info)</span>
-                          
+
                             <script>
   var attachClickHandler = setInterval(function () {
     var $target = $('.custom_shipping_container');
@@ -702,12 +701,12 @@
 {% endunless %}
 
                 <div class="product__prices hidden lg:block">
-                  
-                    <span class="pr_custom_compare_price"
+
+                    <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
-                 
+
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
@@ -724,11 +723,11 @@
                       -%}
 
                        <div>
-                 
+
 
                      <span class="you-save pm-empty"></span>
                     </div>
-                
+
                       {% endif %}
                     </div>
                 </div>
@@ -1222,7 +1221,7 @@
               {%- when 'review_widget' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
                 <div class="available-wrap hidden lg:flex">
-               
+
 
                   {% if product.metafields.custom.backorder == true %}
                     <div class="badge backorder-badge stock-badge">
@@ -1784,7 +1783,7 @@
         assign seo_media = product.featured_media
       endif
     -%}
-  
+
 
     <script>
 (function() {
@@ -3689,6 +3688,7 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
   const e=".product__prices",
         t={
           PRICE:".price-item--sale.price-item--last, .price-item-fixed",
+          CMP_WRAP:".pr_custom_compare_price",
           CMP:".pr_custom_compare_price s",
           SAVE:".you-save",
           VID:".product-variant-id",
@@ -3737,7 +3737,9 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
 
     clear(){
       this.$$(t.PRICE).forEach(e=>{e.textContent=e.textContent||"",e.classList.add("pm-empty")});
-      const e=this.$(t.CMP); e&&(e.textContent="",e.classList.add("pm-empty"));
+      const e=this.$(t.CMP), r=this.$(t.CMP_WRAP);
+      e&&(e.textContent="");
+      r&&r.classList.add("pm-empty");
       const n=this.$(t.SAVE); n&&(n.textContent="",n.classList.add("pm-empty"))
     }
 
@@ -3748,8 +3750,9 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
         t.classList.remove("pm-empty")
       });
       const o=e.compare_at_price && n(e.compare_at_price)>n(e.price),
-            a=this.$(t.CMP);
-      a&&(a.textContent=o?r(n(e.compare_at_price)):"",a.classList.toggle("pm-empty",!o));
+            a=this.$(t.CMP), c=this.$(t.CMP_WRAP);
+      a&&(a.textContent=o?r(n(e.compare_at_price)):"");
+      c&&c.classList.toggle("pm-empty",!o);
       const i=this.$(t.SAVE);
       if(i) if(o){const t=n(e.compare_at_price)-n(e.price); i.textContent="You save "+r(t), i.classList.remove("pm-empty")} else i.textContent="",i.classList.add("pm-empty")
     }
@@ -4061,4 +4064,3 @@ if(productForm && !productForm.__variantSyncBound){
 
 })();
 </script>
-
