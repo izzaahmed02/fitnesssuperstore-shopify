@@ -67,117 +67,38 @@
     // ─────────────────────────────────────────────
 
     /**
-     * Fetch rating + review count from the Judge.me CACHE server.
-     *
-     * Uses https://cache.judge.me — the only Judge.me endpoint that allows
-     * browser-side (CORS) requests. Credentials are read automatically from
-     * the existing window.jdgm global your theme already sets.
-     *
-     * The response contains HTML widgets; we parse rating + count out of the
-     * preview_badge snippet using a regex rather than loading the full widget.
+     * Read Judge.me rating from the product object returned by fetchProductDetails.
+     * The rating is embedded in product.metafields.reviews via the Storefront API.
      *
      * @param {number|string} productId  Shopify product ID
-     * @returns {Promise<{rating: number, count: number}|null>}
+     * @returns {{rating: number|null, count: number}|null}
      */
-    async function getJudgeMeRating(productId) {
-      if (judgemeCache.has(productId)) {
-        console.log(`[Judge.me] Using cached rating for product ${productId}:`, judgemeCache.get(productId));
-        return judgemeCache.get(productId);
+    function getJudgeMeRating(productId) {
+      const key = String(productId);
+
+      if (judgemeCache.has(key)) {
+        return judgemeCache.get(key);
       }
 
-      const PUBLIC_TOKEN = window.jdgm?.PUBLIC_TOKEN || '';
-      const SHOP_DOMAIN  = window.jdgm?.SHOP_DOMAIN  || window.Shopify?.shop || window.location.hostname;
-      const PLATFORM     = window.jdgm?.PLATFORM     || 'shopify';
+      // Walk the productCache to find the product by ID and read its metafields
+      for (const [, product] of productCache) {
+        if (String(product.id) !== key) continue;
 
-      // ── Credential debug ──────────────────────────────────────────────────
-      console.group(`[Judge.me DEBUG] Fetching rating — product ${productId}`);
-      console.log('PLATFORM    :', PLATFORM);
-      console.log('SHOP_DOMAIN :', SHOP_DOMAIN);
-      console.log('PUBLIC_TOKEN:', PUBLIC_TOKEN ? `${PUBLIC_TOKEN.slice(0, 6)}… (found ✓)` : 'MISSING ✗');
-      console.log('window.jdgm :', window.jdgm ? 'present ✓' : 'not found ✗');
-      // ─────────────────────────────────────────────────────────────────────
+        const ratingRaw = product?.metafields?.reviews_rating;
+        const countRaw  = product?.metafields?.reviews_rating_count;
 
-      if (!PUBLIC_TOKEN) {
-        console.warn('[Judge.me DEBUG] ✗ Aborting — public token missing. Expected window.jdgm.PUBLIC_TOKEN.');
-        console.groupEnd();
-        return null;
-      }
+        const rating = ratingRaw != null ? parseFloat(ratingRaw) : null;
+        const count  = countRaw  != null ? parseInt(countRaw, 10) : 0;
 
-      try {
-        // cache.judge.me is CORS-enabled and designed for browser JS calls.
-        // preview_badge_product_ids returns the star-rating badge HTML which
-        // embeds data-average-rating and data-number-of-reviews attributes.
-        // Request preview_badge AND all_reviews data in one call.
-        // all_reviews_rating / all_reviews_count are store-wide but serve as a
-        // fallback when the per-product badge is suppressed by Judge.me settings.
-        const url = `https://cache.judge.me/widgets/${PLATFORM}/${SHOP_DOMAIN}` +
-          `?public_token=${encodeURIComponent(PUBLIC_TOKEN)}` +
-          `&preview_badge_product_ids=${productId}` +
-          `&all_reviews_rating=1` +
-          `&all_reviews_count=1`;
+        const result = { rating: rating || null, count };
+        judgemeCache.set(key, result);
 
-        console.log('Request URL :', url);
-
-        const response = await fetch(url);
-        console.log('HTTP status :', `${response.status} ${response.statusText}`);
-
-        if (!response.ok) {
-          console.warn(`[Judge.me DEBUG] ✗ Request failed (${response.status}) for product ${productId}`);
-          console.groupEnd();
-          return null;
-        }
-
-        const data = await response.json();
-        console.log('Response keys:', Object.keys(data));
-        console.log('Full raw response:', JSON.stringify(data, null, 2));
-
-        // ── Strategy 1: per-product badge ────────────────────────────────────
-        // The correct key is preview_badges (plural), an object keyed by product ID.
-        // e.g. data.preview_badges["12345"] = "<span data-average-rating='4.8' ...>"
-        const badgeHtml = data?.preview_badges?.[String(productId)] || '';
-        console.log(`preview_badges["${productId}"] HTML:`, badgeHtml || '(empty — badge may be hidden for products with 0 reviews)');
-
-        const ratingMatch = badgeHtml.match(/data-average-rating="([\d.]+)"/);
-        const countMatch  = badgeHtml.match(/data-number-of-reviews="(\d+)"/);
-
-        console.log('data-average-rating  :', ratingMatch ? `"${ratingMatch[1]}" ✓` : 'NOT FOUND ✗');
-        console.log('data-number-of-reviews:', countMatch  ? `"${countMatch[1]}"  ✓` : 'NOT FOUND ✗');
-
-        let rating = ratingMatch ? parseFloat(ratingMatch[1]) : null;
-        let count  = countMatch  ? parseInt(countMatch[1], 10) : 0;
-
-        // ── Strategy 2: settings metafield fallback ───────────────────────────
-        // If the badge HTML was empty (suppressed), try parsing the rating out of
-        // the settings script block which contains all_reviews_rating/count for
-        // the whole store. This is a rough fallback; per-product data is preferred.
-        if (rating === null) {
-          console.warn('[Judge.me DEBUG] ⚠ Badge HTML empty — checking settings block for store-level fallback...');
-          const settingsHtml = data?.settings || '';
-          const settingsRatingMatch = settingsHtml.match(/"all_reviews_rating"\s*:\s*([\d.]+)/);
-          const settingsCountMatch  = settingsHtml.match(/"all_reviews_count"\s*:\s*(\d+)/);
-          if (settingsRatingMatch) {
-            rating = parseFloat(settingsRatingMatch[1]);
-            count  = settingsCountMatch ? parseInt(settingsCountMatch[1], 10) : 0;
-            console.log(`%c[Judge.me DEBUG] ⚠ Using store-level fallback — ${rating} stars, ${count} reviews`, 'color: orange; font-weight: bold');
-          } else {
-            console.warn('[Judge.me DEBUG] ✗ No rating data found anywhere in response');
-          }
-        }
-
-        const result = { rating, count };
-        judgemeCache.set(productId, result);
-
-        if (rating !== null) {
-          console.log(`%c[Judge.me DEBUG] ✓ Final result — ${rating} stars, ${count} reviews`, 'color: green; font-weight: bold');
-        }
-
-        console.groupEnd();
+        console.log(`[Judge.me] Product ${key} — rating: ${rating ?? 'none'}, count: ${count}`);
         return result;
-      } catch (e) {
-        console.error('[Judge.me DEBUG] ✗ Fetch threw an exception:', e);
-        console.groupEnd();
-        return null;
       }
+
+      console.warn(`[Judge.me] Product ${key} not found in cache yet`);
+      return null;
     }
 
     /**
@@ -350,27 +271,105 @@
       }
     }
 
-    // OPTIMIZED: Fetch product details via API with caching
+    // Fetch product details via Storefront GraphQL API (includes reviews metafields)
+    // The Storefront API returns reviews.rating and reviews.rating_count as metafields
+    // written by Judge.me — no CORS issues, no Liquid changes needed.
     async function fetchProductDetails(handle) {
-      // Check cache first
       if (productCache.has(handle)) {
         console.log(`[Bundle Selector] Using cached product ${handle}`);
         return productCache.get(handle);
       }
-      
+
       try {
+        // ── Strategy 1: Storefront GraphQL (includes metafields) ─────────────
+        const storefrontToken = window.Shopify?.shop
+          ? document.querySelector('meta[name="shopify-storefront-token"]')?.content
+          || window.ShopifyAnalytics?.meta?.token
+          || null
+          : null;
+
+        if (storefrontToken) {
+          const query = `{
+            product(handle: "${handle}") {
+              id
+              title
+              handle
+              description
+              featuredImage { url }
+              images(first: 1) { edges { node { url } } }
+              variants(first: 1) {
+                edges {
+                  node {
+                    id
+                    sku
+                    price { amount }
+                    compareAtPrice { amount }
+                  }
+                }
+              }
+              metafield_rating: metafield(namespace: "reviews", key: "rating") { value }
+              metafield_count: metafield(namespace: "reviews", key: "rating_count") { value }
+            }
+          }`;
+
+          const gqlResponse = await fetch('/api/2024-01/graphql.json', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Shopify-Storefront-Access-Token': storefrontToken
+            },
+            body: JSON.stringify({ query })
+          });
+
+          if (gqlResponse.ok) {
+            const gqlData = await gqlResponse.json();
+            const p = gqlData?.data?.product;
+            if (p) {
+              // Normalise to the same shape as the .js endpoint
+              const numericId = p.id.replace('gid://shopify/Product/', '');
+              const variant = p.variants?.edges?.[0]?.node;
+              const normalised = {
+                id: parseInt(numericId, 10),
+                title: p.title,
+                handle: p.handle,
+                description: p.description,
+                featured_image: p.featuredImage?.url || p.images?.edges?.[0]?.node?.url || null,
+                variants: p.variants?.edges?.map(e => ({
+                  id: parseInt(e.node.id.replace('gid://shopify/ProductVariant/', ''), 10),
+                  sku: e.node.sku,
+                  price: Math.round(parseFloat(e.node.price?.amount || 0) * 100),
+                  compare_at_price: e.node.compareAtPrice
+                    ? Math.round(parseFloat(e.node.compareAtPrice.amount) * 100)
+                    : null
+                })) || [],
+                // Flatten metafields so getJudgeMeRating can read them easily
+                metafields: {
+                  reviews_rating:       p.metafield_rating?.value       || null,
+                  reviews_rating_count: p.metafield_count?.value        || null
+                }
+              };
+
+              console.log(`[Bundle Selector] GraphQL fetched "${handle}" — rating: ${normalised.metafields.reviews_rating}, count: ${normalised.metafields.reviews_rating_count}`);
+              productCache.set(handle, normalised);
+              return normalised;
+            }
+          }
+        }
+
+        // ── Strategy 2: REST .js fallback (no metafields) ────────────────────
+        console.log(`[Bundle Selector] Falling back to REST for ${handle}`);
         const response = await fetch(`/products/${handle}.js`);
         if (!response.ok) {
           console.log(`[Bundle Selector] Product ${handle} not found (${response.status})`);
           return null;
         }
         const data = await response.json();
-        console.log(`[Bundle Selector] Fetched product ${handle}:`, data.title);
-        
-        // Cache the result
+        // REST response has no metafields — ratings will show as fallback
+        data.metafields = { reviews_rating: null, reviews_rating_count: null };
+        console.log(`[Bundle Selector] REST fetched "${handle}" (no rating metafields available)`);
         productCache.set(handle, data);
-        
         return data;
+
       } catch (error) {
         console.error(`[Bundle Selector] Error fetching product ${handle}:`, error);
         return null;
@@ -462,7 +461,8 @@
                   price: variant.price,
                   compare_at_price: variant.compare_at_price,
                   variant_id: variant.id,
-                  sku: sku
+                  sku: sku,
+                  metafields: product.metafields || { reviews_rating: null, reviews_rating_count: null }
                 };
               }
             }
@@ -579,7 +579,7 @@
       const individualProductsPromise = findProductsBySKUs(config.skus);
       
       // Handle bundle product + Judge.me rating when ready
-      bundleProductPromise.then(async (bundleProduct) => {
+      bundleProductPromise.then((bundleProduct) => {
         if (bundleProduct) {
           const imageUrl = bundleProduct.featured_image || (bundleProduct.images && bundleProduct.images[0]) || '';
           if (mainImage) {
@@ -591,12 +591,11 @@
             mainDesc.innerHTML = bundleProduct.description || 'Premium cable machine attachments bundle.';
           }
 
-          // ── Judge.me rating via cache.judge.me ────────────────────────────
+          // Rating is read directly from the product metafields fetched via GraphQL
           if (ratingEl) {
-            const judgeme = await getJudgeMeRating(bundleProduct.id);
+            const judgeme = getJudgeMeRating(bundleProduct.id);
             ratingEl.innerHTML = buildRatingHTML(judgeme?.rating ?? null, judgeme?.count ?? 0);
           }
-          // ─────────────────────────────────────────────────────────────────
 
         } else {
           if (mainDesc) mainDesc.innerHTML = 'Premium cable machine attachments bundle designed for comprehensive full-body training.';
@@ -621,12 +620,7 @@
       
       console.log('[Bundle Selector] Rendering products:', products.filter(p => p).length, 'out of', config.skus.length);
 
-      // Render products — fetch Judge.me ratings in parallel for all found products
-      const judgemePromises = products.map(product =>
-        product?.id ? getJudgeMeRating(product.id) : Promise.resolve(null)
-      );
-      const judgemeRatings = await Promise.all(judgemePromises);
-
+      // Render products — ratings are read directly from product metafields
       products.forEach((product, index) => {
         const name = config.productNames[index] || config.skus[index];
         const sku = config.skus[index];
@@ -645,8 +639,7 @@
         const price = product?.price ? (product.price / 100).toFixed(2) : 'N/A';
         const comparePrice = product?.compare_at_price ? (product.compare_at_price / 100).toFixed(2) : null;
 
-        // Use Judge.me data if available, otherwise fall back to 5 stars
-        const jm = judgemeRatings[index];
+        const jm = product?.id ? getJudgeMeRating(product.id) : null;
         const rating = jm?.rating ?? null;
         const reviewCount = jm?.count ?? 0;
 
