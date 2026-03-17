@@ -107,9 +107,14 @@
         // cache.judge.me is CORS-enabled and designed for browser JS calls.
         // preview_badge_product_ids returns the star-rating badge HTML which
         // embeds data-average-rating and data-number-of-reviews attributes.
+        // Request preview_badge AND all_reviews data in one call.
+        // all_reviews_rating / all_reviews_count are store-wide but serve as a
+        // fallback when the per-product badge is suppressed by Judge.me settings.
         const url = `https://cache.judge.me/widgets/${PLATFORM}/${SHOP_DOMAIN}` +
           `?public_token=${encodeURIComponent(PUBLIC_TOKEN)}` +
-          `&preview_badge_product_ids=${productId}`;
+          `&preview_badge_product_ids=${productId}` +
+          `&all_reviews_rating=1` +
+          `&all_reviews_count=1`;
 
         console.log('Request URL :', url);
 
@@ -124,11 +129,13 @@
 
         const data = await response.json();
         console.log('Response keys:', Object.keys(data));
+        console.log('Full raw response:', JSON.stringify(data, null, 2));
 
-        // The preview_badge field contains an HTML string like:
-        // <span class="jdgm-prev-badge" data-average-rating="4.8" data-number-of-reviews="23" ...>
-        const badgeHtml = data?.preview_badge || '';
-        console.log('preview_badge HTML:', badgeHtml || '(empty — no reviews yet or product not synced)');
+        // ── Strategy 1: per-product badge ────────────────────────────────────
+        // The correct key is preview_badges (plural), an object keyed by product ID.
+        // e.g. data.preview_badges["12345"] = "<span data-average-rating='4.8' ...>"
+        const badgeHtml = data?.preview_badges?.[String(productId)] || '';
+        console.log(`preview_badges["${productId}"] HTML:`, badgeHtml || '(empty — badge may be hidden for products with 0 reviews)');
 
         const ratingMatch = badgeHtml.match(/data-average-rating="([\d.]+)"/);
         const countMatch  = badgeHtml.match(/data-number-of-reviews="(\d+)"/);
@@ -136,16 +143,32 @@
         console.log('data-average-rating  :', ratingMatch ? `"${ratingMatch[1]}" ✓` : 'NOT FOUND ✗');
         console.log('data-number-of-reviews:', countMatch  ? `"${countMatch[1]}"  ✓` : 'NOT FOUND ✗');
 
-        const rating = ratingMatch ? parseFloat(ratingMatch[1]) : null;
-        const count  = countMatch  ? parseInt(countMatch[1], 10) : 0;
+        let rating = ratingMatch ? parseFloat(ratingMatch[1]) : null;
+        let count  = countMatch  ? parseInt(countMatch[1], 10) : 0;
+
+        // ── Strategy 2: settings metafield fallback ───────────────────────────
+        // If the badge HTML was empty (suppressed), try parsing the rating out of
+        // the settings script block which contains all_reviews_rating/count for
+        // the whole store. This is a rough fallback; per-product data is preferred.
+        if (rating === null) {
+          console.warn('[Judge.me DEBUG] ⚠ Badge HTML empty — checking settings block for store-level fallback...');
+          const settingsHtml = data?.settings || '';
+          const settingsRatingMatch = settingsHtml.match(/"all_reviews_rating"\s*:\s*([\d.]+)/);
+          const settingsCountMatch  = settingsHtml.match(/"all_reviews_count"\s*:\s*(\d+)/);
+          if (settingsRatingMatch) {
+            rating = parseFloat(settingsRatingMatch[1]);
+            count  = settingsCountMatch ? parseInt(settingsCountMatch[1], 10) : 0;
+            console.log(`%c[Judge.me DEBUG] ⚠ Using store-level fallback — ${rating} stars, ${count} reviews`, 'color: orange; font-weight: bold');
+          } else {
+            console.warn('[Judge.me DEBUG] ✗ No rating data found anywhere in response');
+          }
+        }
 
         const result = { rating, count };
         judgemeCache.set(productId, result);
 
         if (rating !== null) {
-          console.log(`%c[Judge.me DEBUG] ✓ Success — ${rating} stars, ${count} reviews`, 'color: green; font-weight: bold');
-        } else {
-          console.warn('[Judge.me DEBUG] ⚠ Rating parsed as null — badge HTML may be empty or format has changed');
+          console.log(`%c[Judge.me DEBUG] ✓ Final result — ${rating} stars, ${count} reviews`, 'color: green; font-weight: bold');
         }
 
         console.groupEnd();
