@@ -67,8 +67,22 @@
     // ─────────────────────────────────────────────
 
     /**
-     * Fetch rating data from the Judge.me anonymous widget API.
-     * Results are cached by productId to avoid redundant requests.
+     * Fetch rating data from the Judge.me reviews API using your Public token.
+     *
+     * ── Setup (one-time) ──────────────────────────────────────────────────────
+     * Add this snippet to your theme.liquid <head>, BEFORE this script loads:
+     *
+     *   <script>
+     *     window.judgeMePublicToken = {{ shop.metafields.judgeme.public_token | json }};
+     *     window.judgeMeShopDomain  = {{ shop.permanent_domain | json }};
+     *   </script>
+     *
+     * Or simply hardcode for now (not recommended for production):
+     *   window.judgeMePublicToken = 'YOUR_PUBLIC_TOKEN_HERE';
+     *
+     * Get your Public token from:
+     *   Judge.me app → Settings → Integrations → Developers → Public token
+     * ─────────────────────────────────────────────────────────────────────────
      *
      * @param {number|string} productId  Shopify product ID
      * @returns {Promise<{rating: number, count: number}|null>}
@@ -79,9 +93,17 @@
         return judgemeCache.get(productId);
       }
 
+      const PUBLIC_TOKEN = window.jdgm?.PUBLIC_TOKEN || window.judgeMePublicToken || '';
+      const SHOP_DOMAIN  = window.jdgm?.SHOP_DOMAIN  || window.judgeMeShopDomain || window.Shopify?.shop || window.location.hostname;
+
+      if (!PUBLIC_TOKEN) {
+        console.warn('[Bundle Selector] Judge.me public token missing. Expected window.jdgm.PUBLIC_TOKEN to be set.');
+        return null;
+      }
+
       try {
-        const shopDomain = window.Shopify?.shop || window.location.hostname;
-        const url = `https://judge.me/api/v1/widgets/product_review?api_token=anonymous&shop_domain=${shopDomain}&platform=shopify&pid=${productId}`;
+        // /reviews returns individual review objects; we aggregate rating + count from them
+        const url = `https://judge.me/api/v1/reviews?api_token=${encodeURIComponent(PUBLIC_TOKEN)}&shop_domain=${encodeURIComponent(SHOP_DOMAIN)}&product_id=${productId}`;
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -90,11 +112,13 @@
         }
 
         const data = await response.json();
-        const result = {
-          rating: data.rating ?? null,
-          count: data.reviews_count ?? 0
-        };
+        const reviews = data.reviews || [];
+        const count   = reviews.length;
+        const rating  = count > 0
+          ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / count
+          : null;
 
+        const result = { rating, count };
         judgemeCache.set(productId, result);
         console.log(`[Bundle Selector] Judge.me rating for product ${productId}:`, result);
         return result;
