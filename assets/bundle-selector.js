@@ -67,22 +67,14 @@
     // ─────────────────────────────────────────────
 
     /**
-     * Fetch rating data from the Judge.me reviews API using your Public token.
+     * Fetch rating + review count from the Judge.me CACHE server.
      *
-     * ── Setup (one-time) ──────────────────────────────────────────────────────
-     * Add this snippet to your theme.liquid <head>, BEFORE this script loads:
+     * Uses https://cache.judge.me — the only Judge.me endpoint that allows
+     * browser-side (CORS) requests. Credentials are read automatically from
+     * the existing window.jdgm global your theme already sets.
      *
-     *   <script>
-     *     window.judgeMePublicToken = {{ shop.metafields.judgeme.public_token | json }};
-     *     window.judgeMeShopDomain  = {{ shop.permanent_domain | json }};
-     *   </script>
-     *
-     * Or simply hardcode for now (not recommended for production):
-     *   window.judgeMePublicToken = 'YOUR_PUBLIC_TOKEN_HERE';
-     *
-     * Get your Public token from:
-     *   Judge.me app → Settings → Integrations → Developers → Public token
-     * ─────────────────────────────────────────────────────────────────────────
+     * The response contains HTML widgets; we parse rating + count out of the
+     * preview_badge snippet using a regex rather than loading the full widget.
      *
      * @param {number|string} productId  Shopify product ID
      * @returns {Promise<{rating: number, count: number}|null>}
@@ -93,37 +85,47 @@
         return judgemeCache.get(productId);
       }
 
-      const PUBLIC_TOKEN = window.jdgm?.PUBLIC_TOKEN || window.judgeMePublicToken || '';
-      const SHOP_DOMAIN  = window.jdgm?.SHOP_DOMAIN  || window.judgeMeShopDomain || window.Shopify?.shop || window.location.hostname;
+      const PUBLIC_TOKEN = window.jdgm?.PUBLIC_TOKEN || '';
+      const SHOP_DOMAIN  = window.jdgm?.SHOP_DOMAIN  || window.Shopify?.shop || window.location.hostname;
+      const PLATFORM     = window.jdgm?.PLATFORM     || 'shopify';
 
       if (!PUBLIC_TOKEN) {
-        console.warn('[Bundle Selector] Judge.me public token missing. Expected window.jdgm.PUBLIC_TOKEN to be set.');
+        console.warn('[Bundle Selector] Judge.me public token missing. Expected window.jdgm.PUBLIC_TOKEN.');
         return null;
       }
 
       try {
-        // /reviews returns individual review objects; we aggregate rating + count from them
-        const url = `https://judge.me/api/v1/reviews?api_token=${encodeURIComponent(PUBLIC_TOKEN)}&shop_domain=${encodeURIComponent(SHOP_DOMAIN)}&product_id=${productId}`;
+        // cache.judge.me is CORS-enabled and designed for browser JS calls.
+        // preview_badge_product_ids returns the star-rating badge HTML which
+        // embeds data-average-rating and data-number-of-reviews attributes.
+        const url = `https://cache.judge.me/widgets/${PLATFORM}/${SHOP_DOMAIN}` +
+          `?public_token=${encodeURIComponent(PUBLIC_TOKEN)}` +
+          `&preview_badge_product_ids=${productId}`;
+
         const response = await fetch(url);
 
         if (!response.ok) {
-          console.log(`[Bundle Selector] Judge.me request failed (${response.status}) for product ${productId}`);
+          console.log(`[Bundle Selector] Judge.me cache request failed (${response.status}) for product ${productId}`);
           return null;
         }
 
         const data = await response.json();
-        const reviews = data.reviews || [];
-        const count   = reviews.length;
-        const rating  = count > 0
-          ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / count
-          : null;
+
+        // The preview_badge field contains an HTML string like:
+        // <span class="jdgm-prev-badge" data-average-rating="4.8" data-number-of-reviews="23" ...>
+        const badgeHtml = data?.preview_badge || '';
+        const ratingMatch = badgeHtml.match(/data-average-rating="([\d.]+)"/);
+        const countMatch  = badgeHtml.match(/data-number-of-reviews="(\d+)"/);
+
+        const rating = ratingMatch ? parseFloat(ratingMatch[1]) : null;
+        const count  = countMatch  ? parseInt(countMatch[1], 10) : 0;
 
         const result = { rating, count };
         judgemeCache.set(productId, result);
         console.log(`[Bundle Selector] Judge.me rating for product ${productId}:`, result);
         return result;
       } catch (e) {
-        console.log('[Bundle Selector] Judge.me fetch failed:', e);
+        console.log('[Bundle Selector] Judge.me cache fetch failed:', e);
         return null;
       }
     }
