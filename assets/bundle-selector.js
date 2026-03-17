@@ -7,6 +7,7 @@
   // Cache for product lookups to avoid redundant API calls
   const productCache = new Map();
   const skuCache = new Map();
+  const judgemeCache = new Map();
   
   function initBundleSelector() {
     console.log('[Bundle Selector] Initializing...');
@@ -60,6 +61,64 @@
       hiddenInput.value = variantId || '';
       hiddenInput.dataset.bundleSet = bundleSet || '';
     }
+    
+    // ─────────────────────────────────────────────
+    // Judge.me helpers
+    // ─────────────────────────────────────────────
+
+    /**
+     * Fetch rating data from the Judge.me anonymous widget API.
+     * Results are cached by productId to avoid redundant requests.
+     *
+     * @param {number|string} productId  Shopify product ID
+     * @returns {Promise<{rating: number, count: number}|null>}
+     */
+    async function getJudgeMeRating(productId) {
+      if (judgemeCache.has(productId)) {
+        console.log(`[Bundle Selector] Using cached Judge.me rating for product ${productId}`);
+        return judgemeCache.get(productId);
+      }
+
+      try {
+        const shopDomain = window.Shopify?.shop || window.location.hostname;
+        const url = `https://judge.me/api/v1/widgets/product_review?api_token=anonymous&shop_domain=${shopDomain}&platform=shopify&pid=${productId}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          console.log(`[Bundle Selector] Judge.me request failed (${response.status}) for product ${productId}`);
+          return null;
+        }
+
+        const data = await response.json();
+        const result = {
+          rating: data.rating ?? null,
+          count: data.reviews_count ?? 0
+        };
+
+        judgemeCache.set(productId, result);
+        console.log(`[Bundle Selector] Judge.me rating for product ${productId}:`, result);
+        return result;
+      } catch (e) {
+        console.log('[Bundle Selector] Judge.me fetch failed:', e);
+        return null;
+      }
+    }
+
+    /**
+     * Build a star-rating HTML string from a numeric rating.
+     *
+     * @param {number} rating      e.g. 4.7
+     * @param {number} count       review count
+     * @returns {string}           HTML string
+     */
+    function buildRatingHTML(rating, count) {
+      if (!rating) return '<div class="rating-stars">★★★★★</div>';
+      const fullStars = Math.floor(rating);
+      const halfStar  = rating % 1 >= 0.5 ? '½' : '';
+      return `<div class="rating-stars">${'★'.repeat(fullStars)}${halfStar}</div><span>${count} reviews</span>`;
+    }
+
+    // ─────────────────────────────────────────────
     
     // Load bundle product images and titles for cards
     async function loadBundleCardData() {
@@ -428,6 +487,7 @@
       
       if (mainTitle) mainTitle.textContent = config.title;
       if (mainDesc) mainDesc.textContent = 'Loading bundle details...';
+      if (ratingEl) ratingEl.innerHTML = '<div class="rating-stars rating-stars--loading">Loading rating...</div>';
       if (productsGrid) productsGrid.innerHTML = '<div class="loading">Loading products...</div>';
 
       // Fetch bundle product in parallel with individual products
@@ -437,8 +497,8 @@
       const bundleProductPromise = fetchProductDetails(bundleProductHandle);
       const individualProductsPromise = findProductsBySKUs(config.skus);
       
-      // Handle bundle product when ready
-      bundleProductPromise.then(bundleProduct => {
+      // Handle bundle product + Judge.me rating when ready
+      bundleProductPromise.then(async (bundleProduct) => {
         if (bundleProduct) {
           const imageUrl = bundleProduct.featured_image || (bundleProduct.images && bundleProduct.images[0]) || '';
           if (mainImage) {
@@ -449,25 +509,26 @@
           if (mainDesc) {
             mainDesc.innerHTML = bundleProduct.description || 'Premium cable machine attachments bundle.';
           }
-          
+
+          // ── Judge.me rating (Option 1: anonymous widget API) ──
           if (ratingEl) {
-            console.log("Judge me Badge is "+bundleProduct.metafields.judgeme.badge );
-            if (bundleProduct.metafields?.judgeme?.badge?.value) {
-              console.log("Value is available");
-              const rating = bundleProduct.metafields.judgeme.badge.value.rating;
-              const reviewCount = bundleProduct.metafields.judgeme.rating_count || 0;
-              ratingEl.innerHTML = `<div class="rating-stars">${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}</div><span>${reviewCount} reviews</span>`;
+            const judgeme = await getJudgeMeRating(bundleProduct.id);
+            if (judgeme?.rating) {
+              ratingEl.innerHTML = buildRatingHTML(judgeme.rating, judgeme.count);
             } else {
-              console.log("Value not available");
-              ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div>';
+              // Fallback: show 5 stars with no count
+              ratingEl.innerHTML = buildRatingHTML(null, 0);
             }
           }
+          // ─────────────────────────────────────────────────────
+
         } else {
           if (mainDesc) mainDesc.innerHTML = 'Premium cable machine attachments bundle designed for comprehensive full-body training.';
-          if (ratingEl) ratingEl.innerHTML = '<div class="rating-stars">★★★★★</div>';
+          if (ratingEl) ratingEl.innerHTML = buildRatingHTML(null, 0);
         }
       }).catch(e => {
         console.log('[Bundle Selector] Could not fetch bundle product:', e);
+        if (ratingEl) ratingEl.innerHTML = buildRatingHTML(null, 0);
       });
 
       // Handle individual products when ready
@@ -484,7 +545,12 @@
       
       console.log('[Bundle Selector] Rendering products:', products.filter(p => p).length, 'out of', config.skus.length);
 
-      // Render products
+      // Render products — fetch Judge.me ratings in parallel for all found products
+      const judgemePromises = products.map(product =>
+        product?.id ? getJudgeMeRating(product.id) : Promise.resolve(null)
+      );
+      const judgemeRatings = await Promise.all(judgemePromises);
+
       products.forEach((product, index) => {
         const name = config.productNames[index] || config.skus[index];
         const sku = config.skus[index];
@@ -502,10 +568,16 @@
         
         const price = product?.price ? (product.price / 100).toFixed(2) : 'N/A';
         const comparePrice = product?.compare_at_price ? (product.compare_at_price / 100).toFixed(2) : null;
-        const rating = product?.metafields?.reviews?.rating?.value?.rating || 5;
-        const reviewCount = product?.metafields?.reviews?.rating_count || 31;
 
-        console.log("Review Count "+reviewCount);
+        // Use Judge.me data if available, otherwise fall back to 5 stars
+        const jm = judgemeRatings[index];
+        const rating = jm?.rating ?? 5;
+        const reviewCount = jm?.count ?? 0;
+        const fullStars = Math.floor(rating);
+        const halfStar = rating % 1 >= 0.5 ? '½' : '';
+        const starsHTML = `${'★'.repeat(fullStars)}${halfStar}`;
+
+        console.log(`[Bundle Selector] Product ${sku} — Judge.me rating: ${rating} (${reviewCount} reviews)`);
 
         productCard.innerHTML = `
           <div class="bundle-product-card__image">
@@ -515,7 +587,8 @@
             <div class="bundle-product-card__sku">SKU: ${sku}</div>
             <h5 class="bundle-product-card__title">${name}${product ? '' : ' (New)'}</h5>
             <div class="bundle-product-card__rating">
-              <span class="rating-stars">${'★'.repeat(Math.floor(rating))}</span>
+              <span class="rating-stars">${starsHTML}</span>
+              ${reviewCount > 0 ? `<span class="rating-count">(${reviewCount})</span>` : ''}
             </div>
             <div class="bundle-product-card__price">
               ${comparePrice ? `<span class="price-compare">As high as: $${comparePrice}</span>` : ''}
