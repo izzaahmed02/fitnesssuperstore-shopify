@@ -11,7 +11,7 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
 
     {% if section.settings.heading != blank %}
       <div class="section-header center">
-        <h1 class="section-header__title">{{ section.settings.heading }}</h1>
+        <h2 class="section-header__title">{{ section.settings.heading }}</h2>
 
         {% if section.settings.subheading != blank %}
           <h3 class="section-header__subheading">{{ section.settings.subheading }}</h3>
@@ -25,6 +25,12 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
 
     {% assign blog = blogs[section.settings.blog] %}
 
+    {%- comment -%}
+    Capture the current article ID if we're on an article page,
+    so we can exclude it from the related posts loop below.
+    {%- endcomment -%}
+    {% assign current_article_id = article.id %}
+
     {% if blog and blog.articles_count > 0 %}
       <div class="related-slider" data-slider>
 
@@ -32,10 +38,11 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
           {% assign featured_tag = 'featured:top' %}
 
 {%- comment -%}
-1️⃣ Featured articles first
+1️⃣ Featured articles first — skip the current article if on an article page
 {%- endcomment -%}
 {% for article in blog.articles %}
   {% if article.tags contains featured_tag %}
+    {% if current_article_id == blank or article.id != current_article_id %}
     <div class="related-slider__slide featured-article">
       <article class="card-wrapper">
         <a href="{{ article.url }}" class="card">
@@ -63,37 +70,37 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
       <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
     {% endif %}
     {% if author_name %}
-       {% if article.metafields.custom.author_name %}
-  {% if article.metafields.custom.author_url %}<a style="z-index: 2;text-decoration: underline;" href="{{ article.metafields.custom.author_url }}"> {% endif %}
-    <span>{{ article.metafields.custom.author_name }}</span>
- {% if article.metafields.custom.author_url %} </a> {% endif %}
-                {% else %}
-
-                <span>{{ article.author }}</span> 
-              {%- endif -%}
+      <span>{{ author_name }}</span>
     {% endif %}
   </p>
 {% endif %}
 
 
-           
-
+            {% if section.settings.show_excerpt %}
+              <div class="card__excerpt">
+                {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+              </div>
+            {% endif %}
+{% if section.settings.read_more_text %}
             <div class="card__actions">
               <span class="link">{{ section.settings.read_more_text }}</span>
             </div>
+          {% endif %}
 
           </div>
         </a>
       </article>
     </div>
+    {% endif %}
   {% endif %}
 {% endfor %}
 
 {%- comment -%}
-2️⃣ Remaining (non-featured) articles
+2️⃣ Remaining (non-featured) articles — skip the current article if on an article page
 {%- endcomment -%}
 {% for article in blog.articles %}
   {% unless article.tags contains featured_tag %}
+    {% if current_article_id == blank or article.id != current_article_id %}
     <div class="related-slider__slide">
       <article class="card-wrapper">
         <a href="{{ article.url }}" class="card">
@@ -114,37 +121,33 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
               {{ article.title }}
             </h3>
 
-          
+            {% if article.published_at or article.author %}
+              <p class="card__meta publish-info">
+                {% if article.published_at %}
+                  <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                {% endif %}
+                {% if article.author %}
+                  <span>{{ article.author }}</span>
+                {% endif %}
+              </p>
+            {% endif %}
 
-                       {% assign author_name = article.metafields.custom.author_name %}
-{% if article.published_at or author_name %}
-  <p class="card__meta publish-info">
-    {% if article.published_at %}
-      <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
-    {% endif %}
-    {% if author_name %}
-       {% if article.metafields.custom.author_name %}
-  {% if article.metafields.custom.author_url %}<a style="z-index: 2;text-decoration: underline;" href="{{ article.metafields.custom.author_url }}"> {% endif %}
-    <span>{{ article.metafields.custom.author_name }}</span>
- {% if article.metafields.custom.author_url %} </a> {% endif %}
-                {% else %}
-
-                <span>{{ article.author }}</span> 
-              {%- endif -%}
-    {% endif %}
-  </p>
-{% endif %}
-
-           
-
+            {% if section.settings.show_excerpt %}
+              <div class="card__excerpt">
+                {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
+              </div>
+            {% endif %}
+{% if section.settings.read_more_text %}
             <div class="card__actions">
               <span class="link">{{ section.settings.read_more_text }}</span>
             </div>
+          {% endif %}
 
           </div>
         </a>
       </article>
     </div>
+    {% endif %}
   {% endunless %}
 {% endfor %}
 
@@ -184,6 +187,53 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
  
 
   <style>
+
+ #RelatedBlogs-{{ section.id }} .card__media { aspect-ratio: 16/9; overflow: hidden; }
+    #RelatedBlogs-{{ section.id }} .card__image { width: 100%; height: 100%; object-fit: cover; display:block; }
+    .related-articles .card__media { position:relative; }
+    .publish-info { display:flex; justify-content:space-between;}
+
+  #RelatedBlogs-{{ section.id }} .publish-info span { margin-bottom: 12px; font-family: Lato; font-size: 12px; line-height: 18px; color: gray; text-transform: none; letter-spacing: .13rem;}
+  #RelatedBlogs-{{ section.id }} .link {color: #D83D0E;}
+
+  #RelatedBlogs-{{ section.id }} h1 {
+  text-transform: uppercase;
+}
+#RelatedBlogs-{{ section.id }} h3 {
+font-size:18px;
+line-height:24px;
+}
+
+  .rich-text-custom__wrapper {
+    margin-top:24px;
+  display: flex;
+  justify-content:center;
+  align-items:center;
+}
+  .rich-text-custom__btn {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    background-color:#D83D0E;
+    padding: 12px 24px;
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    border: none;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  @media screen and (max-width: 767px){
+  .related-blog-sec {
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+  }
+  }
+
+
     #RelatedBlogs-{{ section.id }} .related-slider__track {
       display: flex;
       gap: 16px;
@@ -242,7 +292,7 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
       margin-bottom: 12px;
     }
 
-    .card__actions .link {
+    .link {
       color: #D83D0E;
       font-weight: 600;
     }
@@ -310,65 +360,6 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
       pointer-events: none;
       cursor: default;
     }
-
-
-    .card:not(.ratio) {
-
-    height: auto;
-}
-
-       #RelatedBlogs-{{ section.id }} .card__media { aspect-ratio: 16/9; overflow: hidden; }
-    #RelatedBlogs-{{ section.id }} .card__image { width: 100%; height: 100%; object-fit: cover; display:block; }
-    .related-articles .card__media { position:relative; }
-    .publish-info { display:flex; justify-content:space-between;}
-
-  #RelatedBlogs-{{ section.id }} .publish-info span { margin-bottom: 12px; font-family: Lato; font-size: 12px; line-height: 18px; color: gray; text-transform: none; letter-spacing: .13rem;}
-  #RelatedBlogs-{{ section.id }} .link {color: #D83D0E;}
-
-  #RelatedBlogs-{{ section.id }} h1 {
-  text-transform: uppercase;
-}
-#RelatedBlogs-{{ section.id }} h3 {
-font-size:18px;
-line-heigth:24px;
-}
-
-  .rich-text-custom__wrapper {
-    margin-top:24px;
-  display: flex;
-  justify-content:center;
-  align-items:center;
-}
-  .rich-text-custom__btn {
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 24px;
-    background-color:#D83D0E;
-    padding: 12px 24px;
-    color: #fff;
-    border-radius: 8px;
-    text-decoration: none;
-    border: none;
-    box-shadow: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  @media screen and (max-width: 767px){
-  .related-blog-sec {
-  padding-top: 0px !important;
-  padding-bottom: 0px !important;
-  }
-  }
-
-
-    .card:not(.ratio) {
-
-    height: auto;
-}
-
-
   </style>
 
   <script>
@@ -463,7 +454,7 @@ line-heigth:24px;
 {% schema %}
 {
   "name": "Related Blog posts Slider",
-  "class": "related-articles test1",
+  "class": "related-articles",
   "settings": [
     {
       "id": "heading",
