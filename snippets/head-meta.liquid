@@ -4,6 +4,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="">
 
+{% assign base_url = shop.url | replace: 'http://', 'https://' %}
+
 {% if template contains 'product' and product and product.featured_media %}
   <link rel="dns-prefetch" href="https://cdn.shopify.com">
   <link
@@ -51,14 +53,14 @@
   {% if custom_canonical %}
     <link rel="canonical" href="{{ custom_canonical }}">
   {% else %}
-    <link rel="canonical" href="{{ shop.url }}/products/{{ product.handle }}">
+    <link rel="canonical" href="{{ base_url }}/products/{{ product.handle }}">
   {% endif %}
 
 {% elsif template == 'collection' %}
-  <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
+  <link rel="canonical" href="{{ collection.url | prepend: base_url }}">
 
- {% elsif page and page.handle == 'homepage' %}
-  <link rel="canonical" href="{{ shop.url }}">
+{% elsif page and page.handle == 'homepage' %}
+  <link rel="canonical" href="{{ base_url }}">
   
 {% else %}
   <link rel="canonical" href="{{ canonical_url }}">
