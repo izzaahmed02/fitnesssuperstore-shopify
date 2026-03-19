@@ -17,6 +17,28 @@
     {% break %}
   {% endfor %}
 
+  {% liquid
+    assign options_data = null
+    assign default_variant_id = null
+    assign default_variant_price = null
+    assign color_name = ''
+    assign option_handle = products.product_option_title | handleize
+    for property in line_item.properties
+      if property.first == '_functionOperation'
+        assign options_data = property.last
+      endif
+    endfor
+    if options_data != blank
+      for item in options_data
+        if item.groupHandle == option_handle
+          assign default_variant_id = item.variantId | split: '/' | last | plus: 0
+          assign default_variant_price = item.priceAdjustment | plus: 0
+          assign color_name = item.colorName
+        endif
+      endfor
+    endif
+  %}
+
   {% if products.product_option_title contains 'Paint' or has_custom_color_paint %}
     <div
       class="group-color-container"
@@ -24,7 +46,7 @@
         data-group-color-name="{{ products.product_option_title | handleize }}" data-color-name-title="{{ products.product_option_title }}"
       {% endif %}
     >
-      {% if color_counter > 1 %}
+      {%- if color_counter > 1 -%}
         <h3 class="group-color product-options__subcategory-title">
           {{ products.product_option_title }}
           {% render 'related-products-button',
@@ -33,29 +55,29 @@
             product_category: item_product.metafields.custom.option_category_id.value,
             option_title: products.product_option_title
           %}
-
           <div class="option_selected-container" data-selected-color-option="{{ products.product_option_title | handleize }}">
-            <p class="option_selected" data-option-id="{{ products.product_option_sets_default.value.id }}">
+            <p class="option_selected" data-option-id="{{ default_variant_id }}">
               <span data-color-selected-title>
-                {{ products.product_option_sets_default.value.title }}
+                {{ color_name }}
               </span>
               <span class="option_selected-price">
-                {% if products.product_option_sets_default.value.price > 0 %}
-                  {{ products.product_option_sets_default.value.price }}
+                {% if default_variant_price > 0 %}
+                  {{ default_variant_price | prepend: cart.currency.symbol }}
                 {% endif %}
               </span>
             </p>
           </div>
         </h3>
-      {% endif %}
+      {%- endif -%}
 
       <div class="color_options_container options_container">
         {% render 'custom-color-wrapper',
           group: 'paint',
           products: products.product_option_variants.value,
           title: products.product_option_title,
-          default: default,
-          default_option: products.product_option_sets_default.value
+          default: default_variant_id,
+          default_option: products.product_option_sets_default.value,
+          selected_price: default_variant_price
         %}
       </div>
     </div>
@@ -71,15 +93,20 @@
       {%- if color_counter > 1 -%}
         <h3 class="group-color product-options__subcategory-title">
           {{ products.product_option_title }}
-          {% render 'related-products-button', product_id: item_product.id, product_handle: item_product.handle, product_category: item_product.metafields.custom.option_category_id.value %}
+          {% render 'related-products-button',
+            product_id: item_product.id,
+            product_handle: item_product.handle,
+            product_category: item_product.metafields.custom.option_category_id.value,
+            option_title: products.product_option_title
+          %}
           <div class="option_selected-container" data-selected-color-option="{{ products.product_option_title | handleize }}">
-            <p class="option_selected" data-option-id="{{ products.product_option_sets_default.value.id }}">
+            <p class="option_selected" data-option-id="{{ default_variant_id }}">
               <span data-color-selected-title>
-                {{ products.product_option_sets_default.value.title }}
+                {{ color_name }}
               </span>
               <span class="option_selected-price">
-                {% if products.product_option_sets_default.value.price > 0 %}
-                  {{ products.product_option_sets_default.value.price }}
+                {% if default_variant_price > 0 %}
+                  {{ default_variant_price | prepend: cart.currency.symbol }}
                 {% endif %}
               </span>
             </p>
@@ -89,10 +116,10 @@
 
       <div class="color_options_container options_container">
         {% render 'custom-color-wrapper',
-          group: 'vinyl',
+          group: 'paint',
           products: products.product_option_variants.value,
           title: products.product_option_title,
-          default: default,
+          default: default_variant_id,
           default_option: products.product_option_sets_default.value
         %}
       </div>

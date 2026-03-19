@@ -105,10 +105,183 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 	const pollingInterval = setInterval(checkForElements, 500);
 
+	let currentPageIndex = 0; 
+    
+    function attachArrowHandlers() {
+      document.querySelector('.next-arrow').addEventListener('click', () => {
+		var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
+		currentPageIndex = activeIndex; 
+        saOpenPage(currentPageIndex, sa_start_sort); 
+      });
 
+      document.querySelector('.prev-arrow').addEventListener('click', () => {
+		var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
+		currentPageIndex = activeIndex - 2; 
+		saOpenPage(currentPageIndex, sa_start_sort);
+      });
+    }
 
+    function addPaginationArrows() {
+      const paginationContainer = document.getElementById("sa_review_paging");
+  
+      if (paginationContainer) {
+        if (!paginationContainer.querySelector(".prev-arrow") && !paginationContainer.querySelector(".next-arrow")) {
+          const prevArrow = document.createElement("button");
+          prevArrow.className = "arrow custom prev-arrow";
+		  prevArrow.setAttribute("aria-label", "Previous slide");
+          prevArrow.innerHTML = `
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M7.53033 0.46967C7.82322 0.762563 7.82322 1.23744 7.53033 1.53033L2.06066 7L7.53033 12.4697C7.82322 12.7626 7.82322 13.2374 7.53033 13.5303C7.23744 13.8232 6.76256 13.8232 6.46967 13.5303L0.46967 7.53033C0.176777 7.23744 0.176777 6.76256 0.46967 6.46967L6.46967 0.46967C6.76256 0.176777 7.23744 0.176777 7.53033 0.46967Z" fill="#CCCCCC"/>
+            </svg>
+          `;
+  
+          const nextArrow = document.createElement("button");
+          nextArrow.className = "arrow custom next-arrow";
+		  nextArrow.setAttribute("aria-label", "Next slide");
+          nextArrow.innerHTML = `
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.23744 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#D83D0E"/>
+            </svg>
+          `;
+  
+          paginationContainer.prepend(prevArrow); 
+          paginationContainer.appendChild(nextArrow);
 
+          attachArrowHandlers();
+        }
+      }
+    }
 
+    function addCustomActions() {
+      const dropdownContainer = document.createElement('div');
+      dropdownContainer.classList.add('sa-reviews-dropdown-container');
+
+      const sortByDropdown = document.createElement('select');
+      sortByDropdown.setAttribute('id', 'sortByDropdown');
+	  sortByDropdown.setAttribute('aria-label', 'Sort reviews');
+      sortByDropdown.innerHTML = `
+        <option value="high">Sort by: Highest to Lowest</option>
+        <option value="low">Sort by: Lowest to Highest</option>
+        <option value="new">Sort by: Newest to Oldest</option>
+        <option value="old">Sort by: Oldest to Newest</option>
+        <option value="featured">Sort by: Favorite Reviews</option>
+      `;
+      dropdownContainer.appendChild(sortByDropdown);
+      
+      const showContainer = document.createElement('div');
+      showContainer.setAttribute('class', 'show-dropdown-container');
+      
+      dropdownContainer.appendChild(showContainer);
+       
+      const writeReviewButton = document.createElement('a');
+      writeReviewButton.setAttribute('id', 'writeReviewButton');
+      writeReviewButton.setAttribute('href', 'https://www.shopperapproved.com/reviews/fitnesssuperstore.com#reviews');
+      writeReviewButton.setAttribute('target', '_blank'); 
+      writeReviewButton.setAttribute('rel', 'noopener noreferrer'); 
+      writeReviewButton.textContent = 'Write a Review';
+      writeReviewButton.classList.add('write-review-btn');
+      dropdownContainer.appendChild(writeReviewButton); 
+     
+	  const productPage = document.querySelector('#product_page');
+	  const reviewHeader = document.querySelector('#review_header');
+	  const existingDropdownContainer = document.querySelector('.sa-reviews-dropdown-container');
+	  
+	  if (productPage && reviewHeader && !existingDropdownContainer) {
+		productPage.parentNode.insertBefore(dropdownContainer, productPage);
+	  }
+    }
+  
+    function registerSAReviewsPolling() {
+      const interval = setInterval(async function () {
+        const reviewSection = document.querySelector("#sa_review_paging");
+		if (reviewSection) {
+			addCustomActions();
+
+			if (Object.keys(sa_product_reviews.high).length > sa_products_count) {
+				addPaginationArrows();
+			}
+
+			if (!document.querySelector('.merchantheader')) {
+				if(document.querySelector('.product__info-container .available-wrap .sa-reviews')) {
+					document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
+				}
+				if(document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews')) {
+					document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
+				}
+			} 
+		}
+      }, 500);
+    }
+
+	function registerProductReviewsPolling() {
+		const interval = setInterval(async function() {
+			const reviewSection = document.querySelector('.product_review');
+
+			if (reviewSection) {			
+				clearInterval(interval);
+				const productInfoContainer = document.querySelector('.product__info-container');
+
+				const starsReview =  productInfoContainer.querySelector('#product_just_stars .on');
+
+				if (!starsReview) {
+					var saTotalStars = await getShopperApprovedTotalReviewsCount();
+
+					if (saTotalStars) {
+						productInfoContainer.querySelector('#product_just_stars').innerHTML = `<span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="ind_cnt med"><a class="sa_jump_to_reviews" href="#review_header">${saTotalStars} <span class="ind_cnt_desc">reviews</span></a></span>`
+						productInfoContainer.querySelector('.sa-reviews').style.display = 'flex';
+					}
+				}
+			}
+		});
+	}
+
+    function registerCustomActionEvent() {
+		setTimeout(() => {
+			let sortByDropDownCurrentValue = '';
+			let showDropDownCurrentValue = '';
+	
+			const sortByDropdown = document.getElementById('sortByDropdown');
+			const saSort = document.getElementById('sa_sort');
+			var showDropdownSelect = document.getElementById('showDropdown');
+	
+			if (sortByDropdown) {
+				sortByDropDownCurrentValue = sortByDropdown.value;
+			}
+	
+			if (sortByDropdown && saSort) {
+			  const newSortByDropdown = sortByDropdown.cloneNode(true);
+	
+			  sortByDropdown.value = saSort.value;
+
+			  sortByDropdown.parentNode.replaceChild(newSortByDropdown, sortByDropdown);
+		
+			  if (sortByDropDownCurrentValue) {
+				newSortByDropdown.value = sortByDropDownCurrentValue;
+			  }
+
+			  newSortByDropdown.addEventListener('change', () => {
+				if (saJQ('#review_header').length > 0) {
+					saJQ('html, body').animate({
+						scrollTop: saJQ('#review_header').offset().top
+					});
+				}
+				saJQ('#product_page').toggleClass('sa_loading_bg', true);
+				saJQ('#sa_review_section').animate({
+					opacity: 0
+				}, 300);
+				sort = newSortByDropdown.value;
+				var reverse = (typeof (sa_productreverse) == 'undefined') ? '' : '&reverse=' + sa_productreverse;
+				var productId = (typeof (sa_product) != 'undefined') ? sa_product : sa_productid;
+				saLoadScript(sa_host + 'widgets/' + sa_page + '.php?siteid=' + sa_siteid + '&productid=' + productId + '&page=0&sort=' + sort + reverse + '&loadnow=1' + '&rtype=' + sa_rtype);
+				registerCustomActionEvent();
+			  });
+			}
+		}, 1000);
+    }
+    
+    registerSAReviewsPolling();
+	registerCustomActionEvent(); 
+	registerProductReviewsPolling();
 
 	document.querySelector('#download-pds').addEventListener('click', () => {
 		const product = window.product;
@@ -186,7 +359,9 @@ try {
 			event.stopPropagation();
 		});
 
-	
+		/*var afterPayIntervalTrigger = setInterval(() => {
+			hideOrShowAfterPayLogo(() => clearInterval(afterPayIntervalTrigger));
+		}, 100);*/
 
 		var affirmPayIntervalTrigger = setInterval(() => {
 			hideOrShowAffirmLogo(() => clearInterval(affirmPayIntervalTrigger));
@@ -238,7 +413,7 @@ function generatePayLaterText() {
 	payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
 		style: 'currency',
 		currency: 'USD',
-		})}/mo (options at checkout)`
+		})}/mo. / 24 interest-free payment`
 
 	return payLaterText;
 }
@@ -322,65 +497,6 @@ function showPayLaterModal() {
 	}
 }
 
-function showShopPayModal() {
-	let nativeShopPayTrigger = null;
-
-	const shopifyPaymentTerms = document.querySelector('shopify-payment-terms');
-	if (shopifyPaymentTerms && shopifyPaymentTerms.shadowRoot) {
-		nativeShopPayTrigger = shopifyPaymentTerms.shadowRoot.querySelector('#shopify-installments-cta') ||
-			shopifyPaymentTerms.shadowRoot.querySelector('button');
-	}
-
-	if (!nativeShopPayTrigger) {
-		nativeShopPayTrigger = document.querySelector('.installment a') ||
-			document.querySelector('.installment button');
-	}
-
-	if (nativeShopPayTrigger) {
-		nativeShopPayTrigger.click();
-	}
-}
-
-function generateShopPayModalContent() {
-	const priceElement = document.querySelector('.pr_custom_price');
-	const cleanedPrice = priceElement.textContent.replace(/[^\d,\.]/g, '');
-	const shopPayLogo = `<svg xmlns="http://www.w3.org/2000/svg" role="img" viewBox="0 0 38 24" width="76" height="48" aria-labelledby="pi-shopify_pay"><title id="pi-shopify_pay">Shop Pay</title><path opacity=".07" d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z" fill="#000"></path><path d="M35.889 0C37.05 0 38 .982 38 2.182v19.636c0 1.2-.95 2.182-2.111 2.182H2.11C.95 24 0 23.018 0 21.818V2.182C0 .982.95 0 2.111 0H35.89z" fill="#5A31F4"></path><path d="M9.35 11.368c-1.017-.223-1.47-.31-1.47-.705 0-.372.306-.558.92-.558.54 0 .934.238 1.225.704a.079.079 0 00.104.03l1.146-.584a.082.082 0 00.032-.114c-.475-.831-1.353-1.286-2.51-1.286-1.52 0-2.464.755-2.464 1.956 0 1.275 1.15 1.597 2.17 1.82 1.02.222 1.474.31 1.474.705 0 .396-.332.582-.993.582-.612 0-1.065-.282-1.34-.83a.08.08 0 00-.107-.035l-1.143.57a.083.083 0 00-.036.111c.454.92 1.384 1.437 2.627 1.437 1.583 0 2.539-.742 2.539-1.98s-1.155-1.598-2.173-1.82v-.003zM15.49 8.855c-.65 0-1.224.232-1.636.646a.04.04 0 01-.069-.03v-2.64a.08.08 0 00-.08-.081H12.27a.08.08 0 00-.08.082v8.194a.08.08 0 00.08.082h1.433a.08.08 0 00.081-.082v-3.594c0-.695.528-1.227 1.239-1.227.71 0 1.226.521 1.226 1.227v3.594a.08.08 0 00.081.082h1.433a.08.08 0 00.081-.082v-3.594c0-1.51-.981-2.577-2.355-2.577zM20.753 8.62c-.778 0-1.507.24-2.03.588a.082.082 0 00-.027.109l.632 1.088a.08.08 0 00.11.03 2.5 2.5 0 011.318-.366c1.25 0 2.17.891 2.17 2.068 0 1.003-.736 1.745-1.669 1.745-.76 0-1.288-.446-1.288-1.077 0-.361.152-.657.548-.866a.08.08 0 00.032-.113l-.596-1.018a.08.08 0 00-.098-.035c-.799.299-1.359 1.018-1.359 1.984 0 1.46 1.152 2.55 2.76 2.55 1.877 0 3.227-1.313 3.227-3.195 0-2.018-1.57-3.492-3.73-3.492zM28.675 8.843c-.724 0-1.373.27-1.845.746-.026.027-.069.007-.069-.029v-.572a.08.08 0 00-.08-.082h-1.397a.08.08 0 00-.08.082v8.182a.08.08 0 00.08.081h1.433a.08.08 0 00.081-.081v-2.683c0-.036.043-.054.069-.03a2.6 2.6 0 001.808.7c1.682 0 2.993-1.373 2.993-3.157s-1.313-3.157-2.993-3.157zm-.271 4.929c-.956 0-1.681-.768-1.681-1.783s.723-1.783 1.681-1.783c.958 0 1.68.755 1.68 1.783 0 1.027-.713 1.783-1.681 1.783h.001z" fill="#fff"></path></svg>`;
-
-	let shopPayHTML = `<div class="buy-now-pay-later shoppay-modal">
-	<div class="shoppay-header">
-		${shopPayLogo}
-		<h1 class="title">Shop Pay Installments</h1>
-	</div>
-	<p class="price">Purchase price: <strong>$${cleanedPrice}</strong></p>
-	<p class="description">Split your purchase into flexible installments with Shop Pay. Choose Shop Pay at checkout to pay over time.</p>
-	<div class="steps-container">
-		<div class="step">
-			<div class="step-circle">1</div>
-			<div class="step-text">Add items to your cart</div>
-		</div>
-		<div class="step-connector"></div>
-		<div class="step">
-			<div class="step-circle">2</div>
-			<div class="step-text">Select Shop Pay at checkout</div>
-		</div>
-		<div class="step-connector"></div>
-		<div class="step">
-			<div class="step-circle">3</div>
-			<div class="step-text">Choose your payment plan</div>
-		</div>
-		<div class="step-connector"></div>
-		<div class="step">
-			<div class="step-circle">4</div>
-			<div class="step-text">Complete your purchase</div>
-		</div>
-	</div>
-	<div class="options">${generateShopPayTerms()}</div>
-	<p class="shoppay-disclaimer">Subject to eligibility check. Terms may vary based on purchase amount and creditworthiness. Shop Pay Installments are issued by Affirm.</p>
-</div>`;
-
-	return shopPayHTML;
-}
-
 function generatePayLaterAggregate() {
 	const priceElement = document.querySelector('.pr_custom_price');
 	const cleanedPrice = priceElement.textContent.replace(/[^\d,\.]/g, '');
@@ -388,7 +504,7 @@ function generatePayLaterAggregate() {
 	<h1 class="title">BUY NOW. PAY LATER.</h1>
 	<p class="price">Purchase price: <strong>$${cleanedPrice}</strong>
 	</p>
-	<p class="description"> Choose Affirm or Shop Pay at checkout. Subject to approval. </p>
+	<p class="description"> Select Affirm as your payment method at checkout to pay in installments. </p>
 	<div class="steps-container">
 	  <div class="step">
 		<div class="step-circle">1</div>
@@ -422,11 +538,35 @@ function combinedPayLater() {
 
 	/*payLaterOptions += generateAfterPayPaymentTerms();*/
 	payLaterOptions += generateAffirmPaymentTerms();
-	payLaterOptions += generateShopPayTerms();
 
 	return payLaterOptions;
 }
+/*
+function generateAfterPayPaymentTerms() {
+	const afterPayRateElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
+	if (afterPayRateElement == null) return;
 
+	const afterPayRate = afterPayRateElement.querySelector('strong');
+	if (!afterPayRate) return null;
+
+	const matchPrice = afterPayRate.innerHTML.match(/[\d,]+(\.\d{1,2})?/);
+	const currentPrice = matchPrice ? parseFloat(matchPrice[0].replace(',', '')) : null;
+	if (!currentPrice) return;
+
+	const productPrice = getProductPrice();
+	const terms = [6, 12, 24];
+	let afterPayTermsHTML = '';
+
+	terms.forEach(term => {
+		const rate = computeAfterPayLoanDetails(productPrice, currentPrice, 12, term);
+		if (rate) {
+			afterPayTermsHTML += generateAfterPayOptionHTML(term, rate);
+		}
+	});
+
+	return afterPayTermsHTML;
+}
+*/
 function generateAfterPayOptionHTML(term, rate) {
 	const { MonthlyPaymentForNewTerm, APR, TotalPaymentsNewTerm } = rate;
 
@@ -507,103 +647,6 @@ function generateAffirmPaymentTerms() {
 	};
   }
 
-  function generateShopPayTerms() {
-	let productPrice = getProductPrice();
-
-	// Shop Pay supports orders $35-$30,000 (from shopify-meta on shopify-payment-terms element)
-	if (!productPrice || productPrice < 35 || productPrice > 30000) return '';
-
-	let shopPayTermsHTML = '';
-	const shopPayLogo = `<svg xmlns="http://www.w3.org/2000/svg" role="img" viewBox="0 0 38 24" width="57" height="36" aria-labelledby="pi-shopify_pay"><title id="pi-shopify_pay">Shop Pay</title><path opacity=".07" d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z" fill="#000"></path><path d="M35.889 0C37.05 0 38 .982 38 2.182v19.636c0 1.2-.95 2.182-2.111 2.182H2.11C.95 24 0 23.018 0 21.818V2.182C0 .982.95 0 2.111 0H35.89z" fill="#5A31F4"></path><path d="M9.35 11.368c-1.017-.223-1.47-.31-1.47-.705 0-.372.306-.558.92-.558.54 0 .934.238 1.225.704a.079.079 0 00.104.03l1.146-.584a.082.082 0 00.032-.114c-.475-.831-1.353-1.286-2.51-1.286-1.52 0-2.464.755-2.464 1.956 0 1.275 1.15 1.597 2.17 1.82 1.02.222 1.474.31 1.474.705 0 .396-.332.582-.993.582-.612 0-1.065-.282-1.34-.83a.08.08 0 00-.107-.035l-1.143.57a.083.083 0 00-.036.111c.454.92 1.384 1.437 2.627 1.437 1.583 0 2.539-.742 2.539-1.98s-1.155-1.598-2.173-1.82v-.003zM15.49 8.855c-.65 0-1.224.232-1.636.646a.04.04 0 01-.069-.03v-2.64a.08.08 0 00-.08-.081H12.27a.08.08 0 00-.08.082v8.194a.08.08 0 00.08.082h1.433a.08.08 0 00.081-.082v-3.594c0-.695.528-1.227 1.239-1.227.71 0 1.226.521 1.226 1.227v3.594a.08.08 0 00.081.082h1.433a.08.08 0 00.081-.082v-3.594c0-1.51-.981-2.577-2.355-2.577zM20.753 8.62c-.778 0-1.507.24-2.03.588a.082.082 0 00-.027.109l.632 1.088a.08.08 0 00.11.03 2.5 2.5 0 011.318-.366c1.25 0 2.17.891 2.17 2.068 0 1.003-.736 1.745-1.669 1.745-.76 0-1.288-.446-1.288-1.077 0-.361.152-.657.548-.866a.08.08 0 00.032-.113l-.596-1.018a.08.08 0 00-.098-.035c-.799.299-1.359 1.018-1.359 1.984 0 1.46 1.152 2.55 2.76 2.55 1.877 0 3.227-1.313 3.227-3.195 0-2.018-1.57-3.492-3.73-3.492zM28.675 8.843c-.724 0-1.373.27-1.845.746-.026.027-.069.007-.069-.029v-.572a.08.08 0 00-.08-.082h-1.397a.08.08 0 00-.08.082v8.182a.08.08 0 00.08.081h1.433a.08.08 0 00.081-.081v-2.683c0-.036.043-.054.069-.03a2.6 2.6 0 001.808.7c1.682 0 2.993-1.373 2.993-3.157s-1.313-3.157-2.993-3.157zm-.271 4.929c-.956 0-1.681-.768-1.681-1.783s.723-1.783 1.681-1.783c.958 0 1.68.755 1.68 1.783 0 1.027-.713 1.783-1.681 1.783h.001z" fill="#fff"></path></svg>`;
-
-	const shopPayPlans = getShopPayFinancingPlans(productPrice);
-
-	shopPayPlans.forEach(plan => {
-		const { term, apr, monthlyPayment, totalPayment, interest } = plan;
-		const aprText = apr === 0 ? '0% APR' : `${apr}% APR`;
-		const interestText = apr === 0 ? '$0.00' : `$${interest.toFixed(2)}`;
-
-		shopPayTermsHTML += `
-			<div class="option shoppay">
-				<div class="option-details">
-					<p class="payment-info">
-						<strong>$${monthlyPayment.toFixed(2)} every month</strong> for ${term} months
-					</p>
-					<p class="apr">Interest (${aprText})<span style="float:right;">${interestText}</span></p>
-					<p class="total">Total<span style="float:right;">$${totalPayment.toFixed(2)}</span></p>
-				</div>
-				<a href="#" class="terms-link shoppay-terms-link" onclick="event.preventDefault(); event.stopPropagation(); showShopPayModal();">
-					${shopPayLogo}
-					<span>See terms: <strong><u>Shop Pay</u></strong></span>
-				</a>
-			</div>`;
-	});
-
-	return shopPayTermsHTML;
-  }
-
-  function getShopPayFinancingPlans(productPrice) {
-	const plans = [];
-
-	if (productPrice >= 50 && productPrice < 150) {
-		plans.push({
-			term: 4,
-			apr: 0,
-			monthlyPayment: productPrice / 4,
-			totalPayment: productPrice,
-			interest: 0,
-			frequency: 'bi-weekly'
-		});
-	} else if (productPrice >= 150 && productPrice < 1000) {
-		plans.push({
-			term: 6,
-			apr: 0,
-			monthlyPayment: productPrice / 6,
-			totalPayment: productPrice,
-			interest: 0
-		});
-		const interest12 = calculateInterest(productPrice, 15, 12);
-		plans.push({
-			term: 12,
-			apr: 15,
-			monthlyPayment: (productPrice + interest12) / 12,
-			totalPayment: productPrice + interest12,
-			interest: interest12
-		});
-	} else if (productPrice >= 1000 && productPrice <= 30000) {
-		plans.push({
-			term: 6,
-			apr: 0,
-			monthlyPayment: productPrice / 6,
-			totalPayment: productPrice,
-			interest: 0
-		});
-		plans.push({
-			term: 12,
-			apr: 0,
-			monthlyPayment: productPrice / 12,
-			totalPayment: productPrice,
-			interest: 0
-		});
-		const interest24 = calculateInterest(productPrice, 15, 24);
-		plans.push({
-			term: 24,
-			apr: 15,
-			monthlyPayment: (productPrice + interest24) / 24,
-			totalPayment: productPrice + interest24,
-			interest: interest24
-		});
-	}
-
-	return plans;
-  }
-
-  function calculateInterest(principal, annualRate, months) {
-	const monthlyRate = annualRate / 100 / 12;
-	const totalInterest = principal * monthlyRate * months;
-	return totalInterest;
-  }
-
   function getProductPrice() {
     const priceElement = document.querySelector('.pr_custom_price').innerText;
 
@@ -614,7 +657,24 @@ function generateAffirmPaymentTerms() {
 	const productPrice = parseFloat(formattedProductPrice);
 	return productPrice;
   }
+/*
+  function hideOrShowAfterPayLogo(callback) {
+	var afterPayModalContainer = document.querySelector('afterpay-modal');
+	if (afterPayModalContainer) {
+		const afterPayElement = document.querySelector('square-placement')?.shadowRoot?.querySelector('.afterpay-text2');
+		document.querySelectorAll('.afterPayLogo').forEach(element => {
+		  if (afterPayElement && element) {
+			element.style.display = 'block';
+		  } else {
+			element.style.display = 'none';
+		  }
+		});
 
+		if (callback) {
+			callback();
+		}
+	}
+  }*/
 
   function hideOrShowAffirmLogo(callback) {
 	var affirmElement = document.querySelector('.affirm-as-low-as');
@@ -652,4 +712,24 @@ function generateAffirmPaymentTerms() {
             subtree: false,
         });
     });
+}
+
+async function getShopperApprovedTotalReviewsCount() {
+	const apiUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/reviews/reviewscount`;
+
+	try {
+		const response = await fetch(apiUrl, {
+			method: 'GET'
+		});
+
+		if (!response.ok) {
+			throw new Error('Failed to fetch API fetchShopperApprovedTotalReviews');
+		}
+
+        const data = await response.json();
+		return data;
+	} catch (error) {
+		console.error('Error fetching API fetchShopperApprovedTotalReviews', error);
+		return null;
+	}
 }

@@ -1,0 +1,223 @@
+{% comment %}
+  Компонент для рендеринга аккордеона с опциями продукта
+  Параметры:
+    - category: категория опций (объект с title и др. атрибутами)
+    - product_option: опция продукта (объект со свойствами)
+    - forloop_index: индекс текущей итерации цикла
+{% endcomment %}
+
+{% liquid
+  assign conditions_to_render = ''
+  if product_option.tier_parent_products.value != blank
+    for condition in product_option.tier_parent_products.value
+      assign conditions_to_render = conditions_to_render | append: condition.id | append: ', '
+    endfor
+  endif
+  assign option_type = 'Accordion'
+  if product_option.option_type != blank
+    assign option_type = product_option.option_type
+  endif
+  assign option_visible = true
+  if product_option.hide_values
+    assign option_visible = false
+  endif
+%}
+
+{% if option_type == 'Accordion' %}
+  <div
+    data-type="{{ product_option.product_option_title | handleize }}"
+    data-option-accordion
+    class="product-options__accordion"
+    {% if conditions_to_render != blank %}
+      data-conditions-to-render="{{ conditions_to_render | replace_last: ',', '' | strip }}"
+    {% endif %}
+    {% if product_option.enable_multichoice %}
+      multichoice
+    {% endif %}
+    {% if product_option.multichoice_limit != blank %}
+      data-multichoice-limit="{{ product_option.multichoice_limit }}"
+    {% endif %}
+    {% unless option_visible %}
+      style="display: none !important;"
+    {% endunless %}
+  >
+    {% assign current_time = 'now' | date: '%s%N' %}
+    {% assign random_suffix = current_time | times: forloop_index | plus: forloop_index0 %}
+    {% assign extra_unique = current_time | reverse | slice: 0, 5 | first %}
+    {% assign accordion_id = 'accordion-content-'
+      | append: product_option.product_option_title
+      | handleize
+      | append: '-'
+      | append: forloop_index
+      | append: '-'
+      | append: product_id
+      | append: '-'
+      | append: random_suffix
+      | append: '-'
+      | append: extra_unique
+    %}
+    <button class="product-options__accordion-header" aria-expanded="false" aria-controls="{{ accordion_id }}" data-open-accordion>
+      <h3 class="product-options__subcategory-title" data-option-title>
+        {{ product_option.product_option_title }}
+        {% if product_option.help_text.value != blank %}
+          {% liquid
+            render 'related-products-button', product_id: product_option.product_option_sets_default.value.id, option_title: product_option.product_option_title
+          %}
+        {% endif %}
+      </h3>
+      {% assign price = product_option.product_option_sets_default.value.price %}
+      {% assign price_substract = product_option.product_option_sets_default.value.metafields.custom.price_reduction_value %}
+
+      <span
+        class="product-options__accordion-label"
+        data-selected-options="{{ product_option.product_option_sets_default.value.id }}{% if price_substract != blank %}:::-{{price_substract}}{% endif %}{% if price > 0 %}:::{{price | money_without_currency }}{% endif %}"
+        {% if product_option.mandatory %}
+          data-mandatory
+        {% endif %}
+      >
+        {% if product_option.product_option_sets_default.value != blank %}
+          <p data-option-id="{{ product_option.product_option_sets_default.value.id }}" data-option-variant-name="{{ product_option.product_option_sets_default.value.title }}">
+            <span class="product-options__accordion-label-title" data-option-title>{{ product_option.product_option_sets_default.value.title }}</span>
+            {% if product_option.product_option_sets_default.value.price != 0 %}
+              <span class="product-options__accordion-label-price" data-option-price>{{ product_option.product_option_sets_default.value.price | money }}</span>
+            {% endif %}
+
+            <svg class="close-option" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M3.57808 3.57417C3.81239 3.33986 4.19229 3.33986 4.42661 3.57417L8.00234 7.14991L11.5781 3.57417C11.8124 3.33986 12.1923 3.33986 12.4266 3.57417C12.6609 3.80849 12.6609 4.18839 12.4266 4.4227L8.85087 7.99844L12.4266 11.5742C12.6609 11.8085 12.6609 12.1884 12.4266 12.4227C12.1923 12.657 11.8124 12.657 11.5781 12.4227L8.00234 8.84697L4.42661 12.4227C4.19229 12.657 3.81239 12.657 3.57808 12.4227C3.34377 12.1884 3.34377 11.8085 3.57808 11.5742L7.15382 7.99844L3.57808 4.4227C3.34377 4.18839 3.34377 3.80849 3.57808 3.57417Z" fill="black"/>
+            </svg>
+          </p>
+        {% endif %}
+      </span>
+
+      <span class="product-options__accordion-icon">
+        {% render 'product-option-chevron' %}
+      </span>
+    </button>
+
+    <div id="{{ accordion_id }}" class="product-options__accordion-content">
+      <div
+        class="product-options__item product-options__swatch-container"
+        key="{{ product_option.product_option_title | handleize }}"
+        role="group"
+        aria-labelledby="product-options-{{ product_option.product_option_title | handleize }}-{{ forloop_index0 }}-{{ forloop_index }}"
+      >
+        <div class="product-options__label-tooltip">
+          <label
+            class="product-options__title"
+            id="product-options-{{ product_option.product_option_title | handleize }}-{{ forloop_index0 }}-{{ forloop_index }}"
+          >
+          </label>
+          <div class="selected_options_container"></div>
+        </div>
+
+        <span class="product-options__swatch product-options__swatch--single">
+          {% for variant in product_option.product_option_variants.value %}
+            {% render 'product-option-variant', variant: variant, default: default, product_option: product_option, hide_quantity: product_option.hide_quantity %}
+          {% endfor %}
+        </span>
+      </div>
+    </div>
+  </div>
+{% elsif option_type == 'Select' %}
+  <select
+    name="{{ product_option.product_option_title | handleize }}"
+    class="product-options__select"
+    data-select-option
+    data-select-title="{{ product_option.product_option_title }}"
+    {% unless option_visible %}
+      style="display: none !important;"
+    {% endunless %}
+  >
+    {% for variant in product_option.product_option_variants.value %}
+      {% liquid
+        assign is_default_variant = variant.product.has_only_default_variant
+        if is_default_variant
+          assign product_title = variant.product.title
+        else
+          assign product_title = variant.title
+        endif
+        assign cleaned_title = product_title
+        if product_title contains '($' or product_title contains '(+$'
+          assign parts = product_title | split: ')'
+          if parts.size > 1
+            assign first_part = parts | first | append: ')'
+            if first_part contains '$'
+              assign cleaned_title = product_title | remove_first: first_part | strip
+            endif
+          endif
+        endif
+
+        if cleaned_title contains '($' or cleaned_title contains '(+$'
+          assign last_bracket_index = cleaned_title | split: '(' | size | minus: 1
+          if last_bracket_index > 0
+            assign parts = cleaned_title | split: '('
+            assign last_part = '(' | append: parts[last_bracket_index]
+            if last_part contains '$' and last_part contains ')'
+              assign cleaned_title = cleaned_title | remove: last_part | strip
+            endif
+          endif
+        endif
+
+        if product_title contains '(-$'
+          assign cleaned_title = product_title | split: '(-$' | first
+        endif
+      %}
+      <option
+        value="{{ variant.id }}{% if variant.metafields.custom.price_reduction_value != blank %}:::-{{variant.metafields.custom.price_reduction_value}}{% endif %}{% if variant.price > 0%}:::{{ variant.price | money_without_currency | replace: ',','' }}{% endif %}"
+        data-select-variant-title="{{ cleaned_title }}"
+        {% if variant.id == default %}
+          selected
+        {% endif %}
+        {% if variant.available == false %}
+          disabled="disabled"
+        {% endif %}
+      >
+        {{ cleaned_title }}
+        {% if variant.price != 0 %}
+          ({{ variant.price | money }})
+        {% elsif variant.metafields.custom.price_reduction_value != blnak %}
+          Subtract -${{ variant.metafields.custom.price_reduction_value }}
+        {% endif %}
+      </option>
+    {% endfor %}
+  </select>
+{% else %}
+  <div class="product-options__quantity-option" data-quantity-option>
+    {% for variant in product_option.product_option_variants.value %}
+      <div class="product-options__quantity-option--header">
+        {{ product_option.product_option_title }}
+        {% if product_option.help_text.value != blank %}
+          {% render 'related-products-button',
+            product_id: product.id,
+            product_handle: product.handle,
+            product_category: product.metafields.custom.option_category_id.value,
+            option_title: product_option.product_option_title
+          %}
+        {% endif %}
+      </div>
+
+      <div class="product-options__quantity-option--input-wrapper">
+        {{ variant.metafields.custom.option_input_label }}
+
+        <div class="product-options__quantity-option--input-field">
+          <button class="product-options__quantity-option--input-decrease" data-quantity-option-decrease>{% render 'product-option-minus' %}</button>
+          <input
+            type="number"
+            data-quantity-option-variant="{{ variant.id }}"
+            data-quantity-option-input
+            data-quantity-option-variant-price="{{ variant.price | money_without_currency }}"
+            data-quantity-option-variant-title="{{ variant.product.title }}"
+            data-quantity-option-group="{{ product_option.product_option_title | handleize }}"
+            data-value="{{ variant.metafields.custom.option_input_min_quantity | default: 1 }}"
+            value="{{ variant.metafields.custom.option_input_min_quantity | default: 1 }}"
+            min="{{ variant.metafields.custom.option_input_min_quantity | default: 1 }}"
+            {% if variant.metafields.custom.option_input_max_quantity %}
+              max="{{ variant.metafields.custom.option_input_max_quantity }}"
+            {% endif %}
+          >
+          <button class="product-options__quantity-option--input-increase" data-quantity-option-increase>{% render 'product-option-plus' %}</button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
