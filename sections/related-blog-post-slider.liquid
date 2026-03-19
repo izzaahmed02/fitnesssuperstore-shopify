@@ -32,6 +32,18 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
     {% assign current_article_id = article.id %}
 
     {% if blog and blog.articles_count > 0 %}
+
+      {%- comment -%}
+      Count visible slides for this section instance, namespaced by section.id
+      to avoid variable bleed when the section is used multiple times on one page.
+      {%- endcomment -%}
+      {% assign slide_count = 0 %}
+      {% for a in blog.articles %}
+        {% if current_article_id == blank or a.id != current_article_id %}
+          {% assign slide_count = slide_count | plus: 1 %}
+        {% endif %}
+      {% endfor %}
+
       <div class="related-slider" data-slider>
 
         <div class="related-slider__track" data-track>
@@ -153,7 +165,7 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
 
         </div>
 
-        {% if section.settings.show_scrollbar %}
+        {% if section.settings.show_scrollbar and slide_count > 3 %}
           <div class="related-slider__bottom">
 
             <div class="related-slider__scrollbar" data-scrollbar>
@@ -292,7 +304,7 @@ line-height:24px;
       margin-bottom: 12px;
     }
 
-    .related-articles .link {
+    .link {
       color: #D83D0E;
       font-weight: 600;
     }
