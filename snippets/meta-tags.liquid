@@ -15,7 +15,8 @@
 %}
 {% endcomment %}
 {%- liquid
-  assign canonical_parts = canonical_url | split: '?'
+  assign https_canonical_url = canonical_url | replace_first: 'http://', 'https://'
+  assign canonical_parts = https_canonical_url | split: '?'
   assign og_url = canonical_parts[0] | default: request.origin
   assign og_type = 'website'
   assign og_description = page_description | default: shop.description | default: shop.name

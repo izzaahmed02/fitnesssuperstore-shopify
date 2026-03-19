@@ -5,6 +5,7 @@
 <meta name="theme-color" content="">
 
 {% assign base_url = shop.url | replace: 'http://', 'https://' %}
+{% assign https_canonical_url = canonical_url | replace_first: 'http://', 'https://' %}
 
 {% if template contains 'product' and product and product.featured_media %}
   <link rel="dns-prefetch" href="https://cdn.shopify.com">
@@ -59,11 +60,11 @@
 {% elsif template == 'collection' %}
   <link rel="canonical" href="{{ collection.url | prepend: base_url }}">
 
-{% elsif page and page.handle == 'homepage' %}
+{% elsif request.page_type == 'index' or template == 'index' %}
   <link rel="canonical" href="{{ base_url }}">
-  
+
 {% else %}
-  <link rel="canonical" href="{{ canonical_url }}">
+  <link rel="canonical" href="{{ https_canonical_url }}">
 {% endif %}
 
 {%- if settings.favicon != blank -%}
