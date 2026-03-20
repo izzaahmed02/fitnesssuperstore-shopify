@@ -440,30 +440,34 @@
               {% for media in product.media %}
                 {% case media.media_type %}
                   {% when 'image' %}
-                    <div class="mobile-gallery-slide-wrap">
-                      <div class="image-skeleton-wrapper">
-                        <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
-                          {% assign isFirst = forloop.first %}
+                
+                       <div class="mobile-gallery-slide-wrap">
+                    <div class="image-skeleton-wrapper">
+                      <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
+                        {% assign is_first = forloop.first %}
 
-                          <img
-                            src="{{ media.preview_image | image_url: width: 480 }}"
-                            srcset="
-                              {{ media.preview_image | image_url: width: 320 }} 320w,
-                              {{ media.preview_image | image_url: width: 480 }} 480w,
-                              {{ media.preview_image | image_url: width: 800 }} 800w
-                            "
-                            sizes="(max-width: 768px) 100vw, 800px"
-                            alt="{{ media.alt | escape }}"
-                            {% unless isFirst %}
-                              loading="lazy"
-                            {% endunless %}
-                            width="{{ media.preview_image.width }}"
-                            height="{{ media.preview_image.height }}"
-                            onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
-                          >
-                        </div>
+                        <img
+                          src="{{ media.preview_image | image_url: width: 480 }}"
+                          srcset="
+                            {{ media.preview_image | image_url: width: 320 }} 320w,
+                            {{ media.preview_image | image_url: width: 480 }} 480w,
+                            {{ media.preview_image | image_url: width: 800 }} 800w
+                          "
+                          sizes="(max-width: 768px) 100vw, 800px"
+                          alt="{{ media.alt | escape }}"
+                           {% if is_first %}
+                            fetchpriority="high"
+                          {% else %}
+                            loading="lazy"
+                          {% endif %}
+                          width="{{ media.preview_image.width }}"
+                          height="{{ media.preview_image.height }}"
+                          onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                        >
                       </div>
                     </div>
+                  </div>
+
 
                   {% when 'video' %}
                     <div class="mobile-gallery-slide-wrap">
