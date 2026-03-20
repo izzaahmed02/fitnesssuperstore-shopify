@@ -633,7 +633,7 @@
                   <div class="mobile-gallery-slide-wrap">
                     <div class="image-skeleton-wrapper">
                       <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
-                        {% assign isFirst = forloop.first %}
+                        {% assign is_first = forloop.first %}
 
                         <img
                           src="{{ media.preview_image | image_url: width: 480 }}"
@@ -644,9 +644,11 @@
                           "
                           sizes="(max-width: 768px) 100vw, 800px"
                           alt="{{ media.alt | escape }}"
-                          {% unless isFirst %}
+                           {% if is_first %}
+                            fetchpriority="high"
+                          {% else %}
                             loading="lazy"
-                          {% endunless %}
+                          {% endif %}
                           width="{{ media.preview_image.width }}"
                           height="{{ media.preview_image.height }}"
                           onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
