@@ -1,0 +1,259 @@
+<section 
+  class="financing-options" 
+  style="background: {{ section.settings.bg_color }};"
+>
+  <div class="page-width">
+
+    {% for block in section.blocks %}
+
+      {% case block.type %}
+
+      {% when 'full_width' %}
+      <div class="financing-full">
+
+        {% if block.settings.title != blank %}
+          <h2 class="financing-title">{{ block.settings.title }}</h2>
+        {% endif %}
+
+        <div class="financing-full__inner">
+
+          <div class="financing-item">
+            {% if block.settings.logo_1 != blank %}
+              <img src="{{ block.settings.logo_1 | image_url }}" alt="">
+            {% endif %}
+            <p>{{ block.settings.text_1 }}</p>
+          </div>
+
+          <div class="financing-separator"></div>
+
+          <div class="financing-item">
+            {% if block.settings.logo_2 != blank %}
+              <img src="{{ block.settings.logo_2 | image_url }}" alt="">
+            {% endif %}
+            <p>{{ block.settings.text_2 }}</p>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {% when 'half_width' %}
+      <div class="financing-half">
+
+        {% if block.settings.title != blank %}
+          <h3 class="financing-subtitle">{{ block.settings.title }}</h3>
+        {% endif %}
+
+        <div class="financing-card">
+
+          {% if block.settings.logo != blank %}
+            <img src="{{ block.settings.logo | image_url }}" alt="">
+          {% endif %}
+
+          <p>{{ block.settings.text }}</p>
+
+        </div>
+
+      </div>
+
+      {% endcase %}
+
+    {% endfor %}
+
+  </div>
+</section>
+
+
+<style>
+
+.financing-options{
+  padding:60px 0;
+}
+
+.financing-title{
+  margin-bottom:25px;
+  font-size:26px;
+  font-weight:600;
+}
+
+.financing-full{
+  margin-bottom:40px;
+}
+
+.financing-full__inner{
+  display:flex;
+  align-items:center;
+  border:1px solid #e5e5e5;
+  border-radius:12px;
+  padding:25px;
+}
+
+.financing-item{
+  display:flex;
+  align-items:center;
+  gap:15px;
+  flex:1;
+}
+
+.financing-item img{
+  max-height:32px;
+}
+
+.financing-separator{
+  width:1px;
+  background:#e5e5e5;
+  height:40px;
+  margin:0 20px;
+}
+
+.financing-half{
+  width:50%;
+  float:left;
+  padding-right:15px;
+  box-sizing:border-box;
+}
+
+.financing-half:nth-child(even){
+  padding-right:0;
+  padding-left:15px;
+}
+
+.financing-subtitle{
+  font-size:22px;
+  margin-bottom:15px;
+}
+
+.financing-card{
+  border:1px solid #e5e5e5;
+  border-radius:12px;
+  padding:25px;
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
+.financing-card img{
+  max-height:34px;
+}
+
+.financing-options::after{
+  content:'';
+  display:block;
+  clear:both;
+}
+
+
+/* Mobile */
+
+@media screen and (max-width: 749px){
+
+.financing-full__inner{
+  flex-direction:column;
+  gap:20px;
+}
+
+.financing-separator{
+  width:100%;
+  height:1px;
+}
+
+.financing-half{
+  width:100%;
+  padding:0;
+  margin-bottom:25px;
+}
+
+}
+
+</style>
+
+
+{% schema %}
+{
+  "name": "Financing options",
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Section background",
+      "default": "#ffffff"
+    }
+  ],
+  "blocks": [
+
+    {
+      "type": "full_width",
+      "name": "Full width financing",
+      "limit": 1,
+      "settings": [
+
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+
+        {
+          "type": "image_picker",
+          "id": "logo_1",
+          "label": "First logo"
+        },
+
+        {
+          "type": "textarea",
+          "id": "text_1",
+          "label": "First text"
+        },
+
+        {
+          "type": "image_picker",
+          "id": "logo_2",
+          "label": "Second logo"
+        },
+
+        {
+          "type": "textarea",
+          "id": "text_2",
+          "label": "Second text"
+        }
+
+      ]
+    },
+
+    {
+      "type": "half_width",
+      "name": "Half width card",
+      "limit": 2,
+      "settings": [
+
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+
+        {
+          "type": "image_picker",
+          "id": "logo",
+          "label": "Logo"
+        },
+
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Text"
+        }
+
+      ]
+    }
+
+  ],
+
+  "presets": [
+    {
+      "name": "Financing options"
+    }
+  ]
+}
+{% endschema %}
