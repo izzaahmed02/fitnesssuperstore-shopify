@@ -212,9 +212,7 @@ observePopup() {
         centerMode: false,
       });
 
-      this.popupThumbnails.querySelectorAll('.mobile-popup-thumb').forEach((thumb, idx) => {
-  thumb.classList.toggle('active', idx === index);
-});
+
 
       $(this.popupSlider).on('afterChange', (event, slick, currentSlide) => {
         this.pauseAllMedia(this.popup);
