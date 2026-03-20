@@ -1,0 +1,520 @@
+{% comment %}
+  Pay Over Time Section – Shopify Dawn Theme
+  Left-block labels align exactly with their target payment rows via JS measurement.
+{% endcomment %}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    background-color: {{ section.settings.background_color }};
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+
+  /* ── Section shell ── */
+  #shopify-section-{{ section.id }} .pot-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    box-sizing: border-box;
+  }
+
+  /* ── Header ── */
+  #shopify-section-{{ section.id }} .pot-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  #shopify-section-{{ section.id }} .pot-title {
+    font-size: clamp(22px, 4vw, 36px);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #1a1a2e;
+    margin: 0 0 10px;
+    line-height: 1.1;
+  }
+  #shopify-section-{{ section.id }} .pot-description {
+    font-size: 16px;
+    color: #5b6fa6;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  /* ── Body ── */
+  #shopify-section-{{ section.id }} .pot-body {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  /* ── Left Block ── */
+  #shopify-section-{{ section.id }} .pot-left-block {
+    width: 187px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  #shopify-section-{{ section.id }} .pot-label {
+    position: absolute;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateY(-50%);
+  }
+  #shopify-section-{{ section.id }} .pot-label__text {
+    font-weight: 700;
+    font-size: 15px;
+    color: #1a1a2e;
+    white-space: nowrap;
+  }
+  #shopify-section-{{ section.id }} .pot-label__arrow svg {
+    width: 34.5px;
+    height: auto;
+    display: block;
+  }
+  #shopify-section-{{ section.id }} .pot-label__arrow--down,
+  #shopify-section-{{ section.id }} .pot-label__arrow--up  { display: none; }
+  #shopify-section-{{ section.id }} .pot-label__arrow--right { display: inline-flex; }
+
+  #shopify-section-{{ section.id }} .pot-or-divider {
+    position: absolute;
+    right: 0;
+    font-size: 14px;
+    color: #1a1a2e;
+    font-weight: 500;
+    transform: translateY(-50%);
+  }
+
+  /* ── Right Block ── */
+  #shopify-section-{{ section.id }} .pot-right-block {
+    max-width: 405px;
+    width: 405px;
+    flex-shrink: 0;
+  }
+
+  /* Mobile labels hidden on desktop */
+  #shopify-section-{{ section.id }} .pot-mobile-label { display: none; }
+
+  /* ── Card ── */
+  #shopify-section-{{ section.id }} .pot-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 20px 20px 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  #shopify-section-{{ section.id }} .pot-card__heading {
+    font-weight: 700;
+    font-size: 16px;
+    color: #1a1a2e;
+    margin: 0 0 16px;
+  }
+
+  /* ── Payment List ── */
+  #shopify-section-{{ section.id }} .pot-payment-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  #shopify-section-{{ section.id }} .pot-payment-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    border: 1.5px solid #e5e5e5;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a1a2e;
+  }
+  #shopify-section-{{ section.id }} .pot-payment-item--highlighted {
+    border-color: #F1592A;
+    font-weight: 700;
+  }
+
+  /* ── Radio ── */
+  #shopify-section-{{ section.id }} .pot-radio {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+  }
+  #shopify-section-{{ section.id }} .pot-radio--active { border-color: #F1592A; }
+  #shopify-section-{{ section.id }} .pot-radio__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #F1592A;
+  }
+
+  /* ── Footer ── */
+  #shopify-section-{{ section.id }} .pot-footer {
+    text-align: center;
+    margin-top: 32px;
+  }
+  #shopify-section-{{ section.id }} .pot-footer__text {
+    display: inline-block;
+    padding: 14px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1a1a2e;
+    margin: 0;
+    max-width: 600px;
+    border-width: 1.5px;
+    border-style: solid;
+  }
+
+  /* =====================================================================
+     MOBILE ≤ 749px
+  ===================================================================== */
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .pot-body {
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    #shopify-section-{{ section.id }} .pot-left-block { display: none; }
+    #shopify-section-{{ section.id }} .pot-right-block {
+      width: 100%;
+      max-width: 420px;
+    }
+    #shopify-section-{{ section.id }} .pot-mobile-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 420px;
+    }
+    #shopify-section-{{ section.id }} .pot-mobile-label--top {
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    }
+    #shopify-section-{{ section.id }} .pot-mobile-label--bottom {
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+    #shopify-section-{{ section.id }} .pot-mobile-label .pot-label__text {
+      font-weight: 700;
+      font-size: 14px;
+      color: #1a1a2e;
+    }
+    #shopify-section-{{ section.id }} .pot-mobile-label svg {
+      width: 14px;
+      height: 34.5px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="pot-section">
+  <div class="pot-container">
+
+    {%- if section.settings.title != blank or section.settings.description != blank -%}
+      <div class="pot-header">
+        {%- if section.settings.title != blank -%}
+          <h2 class="pot-title">{{ section.settings.title }}</h2>
+        {%- endif -%}
+        {%- if section.settings.description != blank -%}
+          <p class="pot-description">{{ section.settings.description }}</p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div class="pot-body">
+
+      {%- comment %} ── LEFT BLOCK (desktop only) ── {% endcomment -%}
+      <div class="pot-left-block" id="potLeftBlock-{{ section.id }}">
+
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'label_shoppay' -%}
+            <div class="pot-label" id="labelShopPay-{{ section.id }}">
+              <span class="pot-label__text">{{ block.settings.label_text }}</span>
+              <span class="pot-label__arrow pot-label__arrow--right">
+                {%- render 'pot-arrow-right' -%}
+              </span>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+
+        <div class="pot-or-divider" id="potOrDivider-{{ section.id }}">or</div>
+
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'label_affirm' -%}
+            <div class="pot-label" id="labelAffirm-{{ section.id }}">
+              <span class="pot-label__text">{{ block.settings.label_text }}</span>
+              <span class="pot-label__arrow pot-label__arrow--right">
+                {%- render 'pot-arrow-right' -%}
+              </span>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+
+      </div>
+
+      {%- comment %} ── RIGHT BLOCK ── {% endcomment -%}
+      <div class="pot-right-block">
+
+        {%- comment %} Mobile: Shop Pay label ABOVE card {% endcomment -%}
+        <div class="pot-mobile-label pot-mobile-label--top">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'label_shoppay' -%}
+              <span class="pot-label__text">{{ block.settings.label_text }}</span>
+              {%- render 'pot-arrow-down' -%}
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+
+        <div class="pot-card" id="potCard-{{ section.id }}">
+          <p class="pot-card__heading">
+            {%- for block in section.blocks -%}
+              {%- if block.type == 'card_title' -%}{{ block.settings.card_title }}{%- endif -%}
+            {%- endfor -%}
+          </p>
+
+          <ul class="pot-payment-list">
+            {%- assign option_index = 0 -%}
+            {%- for block in section.blocks -%}
+              {%- if block.type == 'payment_option' -%}
+                {%- assign item_id = '' -%}
+                {%- if block.settings.highlighted -%}
+                  {%- if option_index == 0 -%}
+                    {%- assign item_id = 'potItemShopPay-' | append: section.id -%}
+                  {%- else -%}
+                    {%- assign item_id = 'potItemAffirm-' | append: section.id -%}
+                  {%- endif -%}
+                  {%- assign option_index = option_index | plus: 1 -%}
+                {%- endif -%}
+                <li class="pot-payment-item{% if block.settings.highlighted %} pot-payment-item--highlighted{% endif %}"
+                    {%- if item_id != '' %} id="{{ item_id }}"{% endif -%}>
+                  <span class="pot-radio{% if block.settings.highlighted %} pot-radio--active{% endif %}">
+                    {%- if block.settings.highlighted -%}<span class="pot-radio__dot"></span>{%- endif -%}
+                  </span>
+                  <span>{{ block.settings.option_text }}</span>
+                </li>
+              {%- endif -%}
+            {%- endfor -%}
+          </ul>
+        </div>
+
+        {%- comment %} Mobile: Affirm label BELOW card {% endcomment -%}
+        <div class="pot-mobile-label pot-mobile-label--bottom">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'label_affirm' -%}
+              {%- render 'pot-arrow-up' -%}
+              <span class="pot-label__text">{{ block.settings.label_text }}</span>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+
+      </div>
+
+    </div>
+
+    {%- if section.settings.bottom_text != blank -%}
+      <div class="pot-footer">
+        <p class="pot-footer__text"
+           style="background-color:{{ section.settings.bottom_bg_color }};border-color:{{ section.settings.bottom_border_color }};">
+          {{ section.settings.bottom_text }}
+        </p>
+      </div>
+    {%- endif -%}
+
+  </div>
+</div>
+
+<script>
+(function() {
+  function alignLabels() {
+    if (window.innerWidth <= 749) return;
+
+    var sectionId   = '{{ section.id }}';
+    var leftBlock   = document.getElementById('potLeftBlock-'    + sectionId);
+    var card        = document.getElementById('potCard-'         + sectionId);
+    var itemShopPay = document.getElementById('potItemShopPay-'  + sectionId);
+    var itemAffirm  = document.getElementById('potItemAffirm-'   + sectionId);
+    var lblShopPay  = document.getElementById('labelShopPay-'    + sectionId);
+    var lblAffirm   = document.getElementById('labelAffirm-'     + sectionId);
+    var orDiv       = document.getElementById('potOrDivider-'    + sectionId);
+
+    if (!leftBlock || !card || !itemShopPay || !itemAffirm) return;
+
+    var leftTop      = leftBlock.getBoundingClientRect().top;
+    var cardH        = card.getBoundingClientRect().height;
+    var shopPayRect  = itemShopPay.getBoundingClientRect();
+    var affirmRect   = itemAffirm.getBoundingClientRect();
+
+    leftBlock.style.height = cardH + 'px';
+
+    var shopPayMid = (shopPayRect.top + shopPayRect.height / 2) - leftTop;
+    var affirmMid  = (affirmRect.top  + affirmRect.height  / 2) - leftTop;
+
+    if (lblShopPay) lblShopPay.style.top = shopPayMid + 'px';
+    if (lblAffirm)  lblAffirm.style.top  = affirmMid  + 'px';
+    if (orDiv)      orDiv.style.top      = ((shopPayMid + affirmMid) / 2) + 'px';
+  }
+
+  document.fonts ? document.fonts.ready.then(alignLabels) : alignLabels();
+  window.addEventListener('resize', alignLabels);
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Pay Over Time",
+  "tag": "section",
+  "class": "section-pay-over-time",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section Header"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "WHERE DO I CLICK TO PAY OVER TIME?"
+    },
+    {
+      "type": "text",
+      "id": "description",
+      "label": "Description",
+      "default": "At checkout, look for these two payment options:"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Section Background Color",
+      "default": "#f5f5f5"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Top Padding",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Bottom Padding",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 60
+    },
+    {
+      "type": "header",
+      "content": "Bottom Note"
+    },
+    {
+      "type": "text",
+      "id": "bottom_text",
+      "label": "Bottom Note Text",
+      "default": "Shop Pay Installments is selected inside Shop Pay. Affirm is selected separately."
+    },
+    {
+      "type": "color",
+      "id": "bottom_bg_color",
+      "label": "Bottom Note Background Color",
+      "default": "#fef3ef"
+    },
+    {
+      "type": "color",
+      "id": "bottom_border_color",
+      "label": "Bottom Note Border Color",
+      "default": "#F1592A"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "label_shoppay",
+      "name": "Shop Pay Label",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label_text",
+          "label": "Label Text",
+          "default": "Select Shop Pay"
+        }
+      ]
+    },
+    {
+      "type": "label_affirm",
+      "name": "Affirm Label",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label_text",
+          "label": "Label Text",
+          "default": "Select Affirm"
+        }
+      ]
+    },
+    {
+      "type": "card_title",
+      "name": "Payment Card Title",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "card_title",
+          "label": "Card Title",
+          "default": "Payment"
+        }
+      ]
+    },
+    {
+      "type": "payment_option",
+      "name": "Payment Option",
+      "settings": [
+        {
+          "type": "text",
+          "id": "option_text",
+          "label": "Option Text",
+          "default": "Payment Option"
+        },
+        {
+          "type": "checkbox",
+          "id": "highlighted",
+          "label": "Highlight this option",
+          "default": false,
+          "info": "Adds orange border and filled radio button. First highlighted = Shop Pay, second = Affirm."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Pay Over Time",
+      "blocks": [
+        { "type": "label_shoppay", "settings": { "label_text": "Select Shop Pay" } },
+        { "type": "label_affirm",  "settings": { "label_text": "Select Affirm"   } },
+        { "type": "card_title",    "settings": { "card_title": "Payment"          } },
+        { "type": "payment_option", "settings": { "option_text": "Credit / Debit Card",                          "highlighted": false } },
+        { "type": "payment_option", "settings": { "option_text": "Shop Pay - Pay in full or in installments",    "highlighted": true  } },
+        { "type": "payment_option", "settings": { "option_text": "PayPal",                                       "highlighted": false } },
+        { "type": "payment_option", "settings": { "option_text": "Affirm - Pay over time",                       "highlighted": true  } },
+        { "type": "payment_option", "settings": { "option_text": "Amazon Pay",                                   "highlighted": false } }
+      ]
+    }
+  ]
+}
+{% endschema %}
