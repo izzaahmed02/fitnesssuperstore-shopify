@@ -170,8 +170,6 @@
     border-style: solid;
   }
 
-  
-
   /* =====================================================================
      MOBILE ≤ 749px
   ===================================================================== */
@@ -188,27 +186,26 @@
     }
     #shopify-section-{{ section.id }} .pot-mobile-label {
       display: flex;
-      align-items: center;
+      justify-content: flex-end;
       gap: 8px;
       width: 100%;
       max-width: 420px;
     }
     #shopify-section-{{ section.id }} .pot-mobile-label--top {
-      justify-content: flex-end;
-      margin-bottom: 10px;
+      align-items: flex-start;
     }
     #shopify-section-{{ section.id }} .pot-mobile-label--bottom {
-      justify-content: flex-end;
-      margin-top: 10px;
+      align-items: flex-end;
     }
-    #shopify-section-{{ section.id }} .pot-mobile-label .pot-label__text {
+    #shopify-section-{{ section.id }} .pot-mobile-label__text {
       font-weight: 700;
       font-size: 14px;
       color: #1a1a2e;
+      white-space: nowrap;
     }
-    #shopify-section-{{ section.id }} .pot-mobile-label svg {
-      width: 14px;
-      height: 34.5px;
+    #shopify-section-{{ section.id }} .pot-mobile-arrow-svg {
+      flex-shrink: 0;
+      display: block;
     }
   }
 {%- endstyle -%}
@@ -261,12 +258,11 @@
       {%- comment %} ── RIGHT BLOCK ── {% endcomment -%}
       <div class="pot-right-block">
 
-        {%- comment %} Mobile: Shop Pay label ABOVE card {% endcomment -%}
-        <div class="pot-mobile-label pot-mobile-label--top">
+        {%- comment %} Mobile: Shop Pay label ABOVE card — arrow injected by JS {% endcomment -%}
+        <div class="pot-mobile-label pot-mobile-label--top" id="potMobileLabelTop-{{ section.id }}">
           {%- for block in section.blocks -%}
             {%- if block.type == 'label_shoppay' -%}
-              <span class="pot-label__text">{{ block.settings.label_text }}</span>
-              {%- render 'pot-arrow-down' -%}
+              <span class="pot-mobile-label__text" id="potMobileTextTop-{{ section.id }}">{{ block.settings.label_text }}</span>
             {%- endif -%}
           {%- endfor -%}
         </div>
@@ -303,12 +299,11 @@
           </ul>
         </div>
 
-        {%- comment %} Mobile: Affirm label BELOW card {% endcomment -%}
-        <div class="pot-mobile-label pot-mobile-label--bottom">
+        {%- comment %} Mobile: Affirm label BELOW card — arrow injected by JS {% endcomment -%}
+        <div class="pot-mobile-label pot-mobile-label--bottom" id="potMobileLabelBottom-{{ section.id }}">
           {%- for block in section.blocks -%}
             {%- if block.type == 'label_affirm' -%}
-              {%- render 'pot-arrow-up' -%}
-              <span class="pot-label__text">{{ block.settings.label_text }}</span>
+              <span class="pot-mobile-label__text" id="potMobileTextBottom-{{ section.id }}">{{ block.settings.label_text }}</span>
             {%- endif -%}
           {%- endfor -%}
         </div>
@@ -331,37 +326,133 @@
 
 <script>
 (function() {
-  function alignLabels() {
+  var sid = '{{ section.id }}';
+
+  function gel(prefix) {
+    return document.getElementById(prefix + '-' + sid);
+  }
+
+  function makeSVGArrow(dir, w, h) {
+    var ns  = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+    svg.setAttribute('width', w);
+    svg.setAttribute('height', h);
+    svg.setAttribute('fill', 'none');
+    svg.classList.add('pot-mobile-arrow-svg');
+
+    var cx = w / 2, aw = 5, ah = 8;
+    var col = '#F1592A', sw = 2;
+
+    var line = document.createElementNS(ns, 'line');
+    line.setAttribute('stroke', col);
+    line.setAttribute('stroke-width', sw);
+    line.setAttribute('stroke-linecap', 'round');
+
+    var poly = document.createElementNS(ns, 'polyline');
+    poly.setAttribute('fill', 'none');
+    poly.setAttribute('stroke', col);
+    poly.setAttribute('stroke-width', sw);
+    poly.setAttribute('stroke-linecap', 'round');
+    poly.setAttribute('stroke-linejoin', 'round');
+
+    if (dir === 'down') {
+      line.setAttribute('x1', cx); line.setAttribute('y1', 1);
+      line.setAttribute('x2', cx); line.setAttribute('y2', h - ah);
+      poly.setAttribute('points',
+        (cx - aw) + ',' + (h - ah) + ' ' +
+        cx        + ',' + (h - 1)  + ' ' +
+        (cx + aw) + ',' + (h - ah)
+      );
+    } else {
+      line.setAttribute('x1', cx); line.setAttribute('y1', h - 1);
+      line.setAttribute('x2', cx); line.setAttribute('y2', ah);
+      poly.setAttribute('points',
+        (cx - aw) + ',' + ah + ' ' +
+        cx        + ',1 '    +
+        (cx + aw) + ',' + ah
+      );
+    }
+
+    svg.appendChild(line);
+    svg.appendChild(poly);
+    return svg;
+  }
+
+  function alignDesktop() {
     if (window.innerWidth <= 749) return;
 
-    var sectionId   = '{{ section.id }}';
-    var leftBlock   = document.getElementById('potLeftBlock-'    + sectionId);
-    var card        = document.getElementById('potCard-'         + sectionId);
-    var itemShopPay = document.getElementById('potItemShopPay-'  + sectionId);
-    var itemAffirm  = document.getElementById('potItemAffirm-'   + sectionId);
-    var lblShopPay  = document.getElementById('labelShopPay-'    + sectionId);
-    var lblAffirm   = document.getElementById('labelAffirm-'     + sectionId);
-    var orDiv       = document.getElementById('potOrDivider-'    + sectionId);
+    var leftBlock   = gel('potLeftBlock');
+    var card        = gel('potCard');
+    var itemShopPay = gel('potItemShopPay');
+    var itemAffirm  = gel('potItemAffirm');
+    var lblShopPay  = gel('labelShopPay');
+    var lblAffirm   = gel('labelAffirm');
+    var orDiv       = gel('potOrDivider');
 
     if (!leftBlock || !card || !itemShopPay || !itemAffirm) return;
 
-    var leftTop      = leftBlock.getBoundingClientRect().top;
-    var cardH        = card.getBoundingClientRect().height;
-    var shopPayRect  = itemShopPay.getBoundingClientRect();
-    var affirmRect   = itemAffirm.getBoundingClientRect();
+    var leftTop = leftBlock.getBoundingClientRect().top;
+    var cardH   = card.getBoundingClientRect().height;
+    var spRect  = itemShopPay.getBoundingClientRect();
+    var afRect  = itemAffirm.getBoundingClientRect();
 
     leftBlock.style.height = cardH + 'px';
 
-    var shopPayMid = (shopPayRect.top + shopPayRect.height / 2) - leftTop;
-    var affirmMid  = (affirmRect.top  + affirmRect.height  / 2) - leftTop;
+    var spMid = (spRect.top + spRect.height / 2) - leftTop;
+    var afMid = (afRect.top + afRect.height / 2) - leftTop;
 
-    if (lblShopPay) lblShopPay.style.top = shopPayMid + 'px';
-    if (lblAffirm)  lblAffirm.style.top  = affirmMid  + 'px';
-    if (orDiv)      orDiv.style.top      = ((shopPayMid + affirmMid) / 2) + 'px';
+    if (lblShopPay) lblShopPay.style.top = spMid + 'px';
+    if (lblAffirm)  lblAffirm.style.top  = afMid + 'px';
+    if (orDiv)      orDiv.style.top      = ((spMid + afMid) / 2) + 'px';
   }
 
-  document.fonts ? document.fonts.ready.then(alignLabels) : alignLabels();
-  window.addEventListener('resize', alignLabels);
+  function buildMobileArrows() {
+    if (window.innerWidth > 749) return;
+
+    var labelTop    = gel('potMobileLabelTop');
+    var labelBot    = gel('potMobileLabelBottom');
+    var textTop     = gel('potMobileTextTop');
+    var textBot     = gel('potMobileTextBottom');
+    var itemShopPay = gel('potItemShopPay');
+    var itemAffirm  = gel('potItemAffirm');
+
+    if (!labelTop || !labelBot || !itemShopPay || !itemAffirm) return;
+
+    labelTop.querySelectorAll('.pot-mobile-arrow-svg').forEach(function(el) { el.remove(); });
+    labelBot.querySelectorAll('.pot-mobile-arrow-svg').forEach(function(el) { el.remove(); });
+
+    var textTopRect = textTop.getBoundingClientRect();
+    var spRect      = itemShopPay.getBoundingClientRect();
+    var downH = Math.max(Math.round((spRect.top + spRect.height / 2) - textTopRect.top), 20);
+
+    var svgDown = makeSVGArrow('down', 14, downH);
+    textTop.style.alignSelf = 'flex-start';
+    svgDown.style.alignSelf = 'flex-start';
+    labelTop.appendChild(svgDown);
+
+    var afRect      = itemAffirm.getBoundingClientRect();
+    var textBotRect = textBot.getBoundingClientRect();
+    var upH = Math.max(Math.round(textBotRect.bottom - (afRect.top + afRect.height / 2)), 20);
+
+    var svgUp = makeSVGArrow('up', 14, upH);
+    textBot.style.alignSelf = 'flex-end';
+    svgUp.style.alignSelf   = 'flex-end';
+    labelBot.appendChild(svgUp);
+  }
+
+  function runAll() {
+    alignDesktop();
+    buildMobileArrows();
+  }
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(runAll);
+  } else {
+    window.addEventListener('load', runAll);
+  }
+
+  window.addEventListener('resize', runAll);
 })();
 </script>
 
