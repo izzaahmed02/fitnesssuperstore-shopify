@@ -26,7 +26,7 @@
   </div>
 
   <!-- Lightbox -->
-  <div class="customer-photo-gallery__lightbox" aria-hidden="true">
+  <div class="customer-photo-gallery__lightbox" aria-hidden="true" inert>
     <div class="customer-photo-gallery__lightbox-inner">
       <button type="button" class="customer-photo-gallery__lightbox-close" aria-label="Close">&times;</button>
       <img src="" alt="Expanded customer photo">
@@ -215,11 +215,15 @@
     img.addEventListener('click', function () {
       lightboxImg.src = img.dataset.full || img.src;
       lightbox.classList.add('customer-photo-gallery__lightbox--active');
+      lightbox.setAttribute('aria-hidden', 'false');
+      lightbox.removeAttribute('inert');
     });
   });
 
   closeBtn.addEventListener('click', function () {
     lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+     lightbox.setAttribute('aria-hidden', 'true');
+    lightbox.setAttribute('inert', '');
   });
 
   lightbox.addEventListener('click', function (e) {
