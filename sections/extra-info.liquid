@@ -89,7 +89,11 @@
       <div id="video-{{ video.id }}" class="product-video-modal">
         <div class="product-video-modal-content">
           <span class="product-video-close">&times;</span>
-          {{ video | media_tag: controls: true, autoplay: true }}
+          <video controls autoplay playsinline preload="none" style="width:100%; border-radius:12px;">
+            {% for source in video.sources %}
+              <source src="{{ source.url }}" type="{{ source.mime_type }}">
+            {% endfor %}
+          </video>
         </div>
       </div>
     {% endfor %}
