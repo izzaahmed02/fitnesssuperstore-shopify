@@ -1,0 +1,13 @@
+{%- liquid
+  assign lazy_load = lazy | default: false
+  assign media_attr = media | default: 'all'
+  assign stylesheet_href = asset | asset_url
+-%}
+
+{%- if lazy_load -%}
+  <link rel="preload" href="{{ stylesheet_href }}" as="style">
+  <link rel="stylesheet" href="{{ stylesheet_href }}" media="print" onload="this.media='{{ media_attr }}'">
+  <noscript><link rel="stylesheet" href="{{ stylesheet_href }}" media="{{ media_attr }}"></noscript>
+{%- else -%}
+  {{ asset | asset_url | stylesheet_tag }}
+{%- endif -%}

@@ -9,4 +9,27 @@
 </script>
 
 
-<script type="module" src="https://cdn.intelligems.io/esm/af0d62f8eb94/bundle.js" async></script>
+<script>
+  (function() {
+    var intelligemsLoaded = false;
+
+    function loadIntelligems() {
+      if (intelligemsLoaded) return;
+      intelligemsLoaded = true;
+
+      var script = document.createElement('script');
+      script.type = 'module';
+      script.src = 'https://cdn.intelligems.io/esm/af0d62f8eb94/bundle.js';
+      script.async = true;
+      document.head.appendChild(script);
+    }
+
+    ['scroll', 'mousemove', 'touchstart', 'keydown', 'click'].forEach(function(evt) {
+      window.addEventListener(evt, loadIntelligems, { once: true, passive: true });
+    });
+
+    window.addEventListener('load', function() {
+      window.setTimeout(loadIntelligems, 1200);
+    }, { once: true });
+  })();
+</script>
