@@ -1,62 +1,75 @@
 <section class="financing-options" style="background: {{ section.settings.bg_color }};">
-  <div class="page-width financing-options__wrapper">
+  <div class="page-width">
 
-    {% for block in section.blocks %}
+    <div class="financing-grid">
 
-      {% case block.type %}
+      {% for block in section.blocks %}
 
-      {% when 'full_width' %}
-      <div class="financing-card financing-card--full">
+        {% case block.type %}
 
-        {% if block.settings.title != blank %}
-        <h2 class="financing-card__title">{{ block.settings.title }}</h2>
-        {% endif %}
+        {% when 'full_width' %}
 
-        <div class="financing-full__inner">
+        <div class="financing-block financing-block--full">
 
-          <div class="financing-full__item">
-            {% if block.settings.logo_1 %}
-              <img src="{{ block.settings.logo_1 | image_url }}" alt="">
-            {% endif %}
-            <p>{{ block.settings.text_1 }}</p>
-          </div>
-
-          <div class="financing-full__divider"></div>
-
-          <div class="financing-full__item">
-            {% if block.settings.logo_2 %}
-              <img src="{{ block.settings.logo_2 | image_url }}" alt="">
-            {% endif %}
-            <p>{{ block.settings.text_2 }}</p>
-          </div>
-
-        </div>
-      </div>
-
-
-      {% when 'half_width' %}
-
-      <div class="financing-card financing-card--half">
-
-        {% if block.settings.title != blank %}
-        <h3 class="financing-card__title">{{ block.settings.title }}</h3>
-        {% endif %}
-
-        <div class="financing-half__content">
-
-          {% if block.settings.logo %}
-          <img src="{{ block.settings.logo | image_url }}" alt="">
+          {% if block.settings.title != blank %}
+          <h2 class="financing-title">{{ block.settings.title }}</h2>
           {% endif %}
 
-          <p>{{ block.settings.text }}</p>
+          <div class="financing-card financing-card--full">
+
+            <div class="financing-full__inner">
+
+              <div class="financing-full__item">
+                {% if block.settings.logo_1 %}
+                  <img src="{{ block.settings.logo_1 | image_url }}" alt="">
+                {% endif %}
+                <p>{{ block.settings.text_1 }}</p>
+              </div>
+
+              <div class="financing-divider"></div>
+
+              <div class="financing-full__item">
+                {% if block.settings.logo_2 %}
+                  <img src="{{ block.settings.logo_2 | image_url }}" alt="">
+                {% endif %}
+                <p>{{ block.settings.text_2 }}</p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+
+        {% when 'half_width' %}
+
+        <div class="financing-block financing-block--half">
+
+          {% if block.settings.title != blank %}
+          <h3 class="financing-title">{{ block.settings.title }}</h3>
+          {% endif %}
+
+          <div class="financing-card financing-card--half">
+
+            <div class="financing-half__content">
+
+              {% if block.settings.logo %}
+                <img src="{{ block.settings.logo | image_url }}" alt="">
+              {% endif %}
+
+              <p>{{ block.settings.text }}</p>
+
+            </div>
+
+          </div>
 
         </div>
 
-      </div>
+        {% endcase %}
 
-      {% endcase %}
+      {% endfor %}
 
-    {% endfor %}
+    </div>
 
   </div>
 </section>
@@ -68,38 +81,53 @@
   padding:60px 0;
 }
 
-.financing-options__wrapper{
+/* GRID */
+
+.financing-grid{
   display:flex;
   flex-wrap:wrap;
   gap:16px;
 }
 
-/* Cards */
+/* BLOCK */
+
+.financing-block{
+  width:100%;
+}
+
+.financing-block--half{
+  width:calc(50% - 8px);
+}
+
+/* TITLES */
+
+.financing-title{
+  font-size:22px;
+  margin-bottom:12px;
+}
+
+/* CARD */
 
 .financing-card{
   background:#fff;
   border:1px solid #e5e5e5;
   border-radius:12px;
   padding:20px 24px;
-  width:100%;
   box-sizing:border-box;
 }
 
-.financing-card__title{
-  font-size:22px;
-  margin-bottom:16px;
-}
-
-/* Full width block */
+/* FULL WIDTH */
 
 .financing-card--full{
-  width:100%;
+  height:112px;
+  display:flex;
+  align-items:center;
 }
 
 .financing-full__inner{
   display:flex;
   align-items:center;
-  height:112px;
+  width:100%;
 }
 
 .financing-full__item{
@@ -113,55 +141,60 @@
   max-height:32px;
 }
 
-.financing-full__divider{
+/* SEPARATOR */
+
+.financing-divider{
   width:1px;
-  height:48px;
+  height:40px;
   background:#e5e5e5;
   margin:0 32px;
 }
 
-/* Half width blocks */
+/* HALF WIDTH */
 
 .financing-card--half{
-  width:calc(50% - 8px);
+  height:112px;
+  display:flex;
+  align-items:center;
 }
 
 .financing-half__content{
   display:flex;
   align-items:center;
   gap:16px;
-  height:112px;
 }
 
 .financing-half__content img{
-  max-height:34px;
+  max-height:32px;
 }
 
 
-/* Mobile */
+/* MOBILE */
 
 @media screen and (max-width:749px){
 
-.financing-card--half{
+.financing-block--half{
   width:100%;
+}
+
+.financing-card--full{
+  height:148px;
+}
+
+.financing-card--half{
+  height:148px;
 }
 
 .financing-full__inner{
   flex-direction:column;
   align-items:flex-start;
-  height:auto;
-  gap:20px;
+  gap:16px;
 }
 
-.financing-full__divider{
+.financing-divider{
   width:100%;
   height:1px;
   margin:0;
-}
-
-.financing-half__content{
-  height:148px;
-  align-items:flex-start;
 }
 
 }
@@ -184,7 +217,7 @@
 
     {
       "type": "full_width",
-      "name": "Full width card",
+      "name": "Full width financing",
       "limit": 1,
       "settings": [
 
