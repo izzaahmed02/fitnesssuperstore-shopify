@@ -874,34 +874,34 @@ class ProductGallery extends HTMLElement {
         newMediaElement = iframe; // Assign the new iframe to newMediaElement
        
       }
-    } else if (media.media_type === 'video') {
       
-      const video = document.createElement('video');
-      video.controls = true;
-      video.autoplay = true;
-      video.muted = true;
-      video.loop = true;
-      video.playsInline = true;
-      video.style.maxWidth = '100%';
-      video.style.maxHeight = '100%';
+     } else if (media.media_type === 'video') {
+  const video = document.createElement('video');
+  video.controls = true;
+  video.autoplay = true;
+  video.muted = true;
+  video.loop = true;
+  video.playsInline = true;
+  video.preload = 'none'; // ← prevents premature fetch
+  video.style.maxWidth = '100%';
+  video.style.maxHeight = '100%';
 
-      const validSource = (media.sources || []).find((s) =>
-        s.mime_type?.includes('mp4')
-      );
+  const sources = media.sources || [];
+  const validSource =
+    sources.find((s) => s.mime_type?.includes('mp4')) ||
+    sources[0];
 
-      if (validSource) {
-        const source = document.createElement('source');
-        source.src = validSource.url;
-        source.type = validSource.mime_type;
-        video.appendChild(source);
-        newMediaElement = video; // Assign the new video to newMediaElement
-       
-      } else {
-        newMediaElement = document.createElement('p');
-        newMediaElement.textContent = 'Video format not supported or no valid source found.';
-        console.warn(`renderPopupViewer: No valid video source found for ID: ${media.id}`);
-      }
-    } else if (media.media_type === 'model') {
+  if (validSource?.url) {
+    const source = document.createElement('source');
+    source.src = validSource.url;
+    source.type = validSource.mime_type || 'video/mp4';
+    video.appendChild(source);
+    newMediaElement = video;
+  } else {
+    newMediaElement = document.createElement('p');
+    newMediaElement.textContent = 'No video source available.';
+  }
+} else if (media.media_type === 'model') {
       
       const popup = document.getElementById('product-gallery-popup');
       const popupThumbnail = popup?.querySelector(`[data-media-id="${mediaId}"]`);

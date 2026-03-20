@@ -655,17 +655,22 @@
                     </div>
                   </div>
 
-                {% when 'video' %}
+             
+
+                  {% when 'video' %}
                   <div class="mobile-gallery-slide-wrap">
                     <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
                       <video
-                        src="{{ media.sources[1].url }}"
                         controls
                         muted
                         playsinline
-                        preload="metadata"
+                        preload="none"
                         poster="{{ media.preview_image | image_url: width: 800 }}"
-                      ></video>
+                      >
+                        {%- for source in media.sources -%}
+                          <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                        {%- endfor -%}
+                      </video>
                     </div>
                   </div>
 
