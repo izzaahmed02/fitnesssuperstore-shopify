@@ -864,7 +864,7 @@ class ProductGallery extends HTMLElement {
 
       if (embedUrl) {
         const iframe = document.createElement('iframe');
-        iframe.src = embedUrl + '?autoplay=1&rel=0';
+        iframe.src = embedUrl + '?autoplay=0&rel=0';
         iframe.allow =
           'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
         iframe.allowFullscreen = true;
@@ -878,7 +878,7 @@ class ProductGallery extends HTMLElement {
      } else if (media.media_type === 'video') {
   const video = document.createElement('video');
   video.controls = true;
-  video.autoplay = true;
+  video.autoplay = false;
   video.muted = true;
   video.loop = true;
   video.playsInline = true;
