@@ -1,4 +1,4 @@
-{{ 'extra-info.css' | asset_url | stylesheet_tag: preload: false }}
+<noscript>{{ 'extra-info.css' | asset_url | stylesheet_tag }}</noscript>
 
 
 {%- style -%}
@@ -30,7 +30,7 @@
 {% assign attachments_metafield = product.metafields.custom.attachments_and_add_ons.value %}
 {% assign otherRigRackSystems = product.metafields.custom.recommended_products.value %}
 
-<div class="product__extra_info">
+<div class="product__extra_info" id="ExtraInfo-{{ section.id }}">
   
     <div class="product__extra_info-wrap">
     {% if product.metafields.custom.gym_package_inclusions and product.metafields.custom.gym_package_inclusions.value != blank%}
@@ -984,6 +984,55 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
  
 </div>
+
+<script>
+  (function() {
+    const sectionId = "ExtraInfo-{{ section.id }}";
+    const stylesheetId = "extra-info-css";
+    const stylesheetHref = "{{ 'extra-info.css' | asset_url }}";
+
+    function loadStylesheet() {
+      if (document.getElementById(stylesheetId)) return;
+
+      const link = document.createElement('link');
+      link.id = stylesheetId;
+      link.rel = 'stylesheet';
+      link.href = stylesheetHref;
+      document.head.appendChild(link);
+    }
+
+    function initLazyStyles() {
+      const target = document.getElementById(sectionId);
+
+      if (!target) {
+        loadStylesheet();
+        return;
+      }
+
+      if (!('IntersectionObserver' in window)) {
+        loadStylesheet();
+        return;
+      }
+
+      const observer = new IntersectionObserver(function(entries, observerInstance) {
+        entries.forEach(function(entry) {
+          if (!entry.isIntersecting) return;
+
+          loadStylesheet();
+          observerInstance.unobserve(entry.target);
+        });
+      }, { rootMargin: '600px 0px' });
+
+      observer.observe(target);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initLazyStyles);
+    } else {
+      initLazyStyles();
+    }
+  })();
+</script>
 
 
 {% schema %}
