@@ -560,7 +560,11 @@ margin-bottom: 0px !important;
           </script>
         </product-gallery>
 
-        <mobile-gallery>
+        {%- liquid
+          assign mobile_gallery_featured_media = product.selected_or_first_available_variant.featured_media | default: product.featured_media | default: product.media.first
+          assign mobile_gallery_aspect_ratio = mobile_gallery_featured_media.preview_image.aspect_ratio | default: mobile_gallery_featured_media.aspect_ratio | default: 1
+        -%}
+        <mobile-gallery style="--mobile-gallery-aspect-ratio: {{ mobile_gallery_aspect_ratio }};">
           <div class="mobile-gallery-wrapper only-mobile">
             <div class="main-slider-arrow--left" type="button">
               <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">

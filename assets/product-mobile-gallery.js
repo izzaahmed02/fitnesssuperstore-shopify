@@ -59,6 +59,7 @@ class MobileGallery extends HTMLElement {
     this.observePopup();
 
     this.attachSlideClickHandlers();
+    this.setSliderAspectRatio();
   }
 
   updatePopupReferences() {
@@ -141,6 +142,15 @@ observePopup() {
     }
   }
 
+  setSliderAspectRatio() {
+    if (!this.slider || !this.mediaData?.length) return;
+
+    const featuredMedia = this.mediaData[0];
+    const ratio = Number(featuredMedia?.preview_image?.aspect_ratio) || Number(featuredMedia?.aspect_ratio) || 1;
+
+    this.style.setProperty('--mobile-gallery-aspect-ratio', String(ratio));
+  }
+
   checkAndInit(isDesktop) {
     if (!this.slider || !this.dots) return;
     const shouldInit = !isDesktop();
@@ -152,7 +162,7 @@ observePopup() {
         appendDots: this.dots,
         arrows: true,
         infinite: false,
-        adaptiveHeight: true,
+        adaptiveHeight: false,
         lazyLoad: 'ondemand',
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
@@ -184,7 +194,7 @@ observePopup() {
         appendDots: this.popupDots,
         arrows: false,
         infinite: false,
-        adaptiveHeight: true,
+        adaptiveHeight: false,
         lazyLoad: 'ondemand',
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
@@ -315,7 +325,7 @@ observePopup() {
         arrows: false,
         infinite: false,
         initialSlide: index,
-        adaptiveHeight: true,
+        adaptiveHeight: false,
         lazyLoad: 'ondemand',
         speed: 250,
         cssEase: 'cubic-bezier(0.25, 1, 0.5, 1)',
