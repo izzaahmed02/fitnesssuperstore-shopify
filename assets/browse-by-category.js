@@ -1,37 +1,46 @@
 document.addEventListener("DOMContentLoaded", function() {
   // Select ALL browse-category sections instead of just the first one
   let sections = document.querySelectorAll(".browse-category");
-  
+
   if (sections.length === 0) return;
 
-  // Function to equalize card heights within a container
-  function equalizeCardHeights(container) {
-    let cards = container.querySelectorAll(".category-card");
-    let maxHeight = 0;
-    
-    // Reset heights first
-    cards.forEach(card => card.style.minHeight = "auto");
-    
-    // Find max height
-    cards.forEach(card => {
-      let height = card.offsetHeight;
-      if (height > maxHeight) {
-        maxHeight = height;
-      }
+  function scheduleEqualizeCardHeights(container) {
+    if (!container) return;
+
+    if (container.__equalizeFrame) {
+      cancelAnimationFrame(container.__equalizeFrame);
+    }
+
+    container.__equalizeFrame = requestAnimationFrame(() => {
+      let cards = Array.from(container.querySelectorAll(".category-card"));
+      if (!cards.length) return;
+
+      cards.forEach((card) => {
+        card.style.minHeight = "auto";
+      });
+
+      requestAnimationFrame(() => {
+        let maxHeight = cards.reduce((tallest, card) => {
+          return Math.max(tallest, card.getBoundingClientRect().height);
+        }, 0);
+
+        cards.forEach((card) => {
+          card.style.minHeight = maxHeight ? `${maxHeight}px` : "";
+        });
+      });
     });
-    
-    // Apply max height to all cards
-    cards.forEach(card => card.style.minHeight = `${maxHeight}px`);
   }
 
   // Initialize each section independently
   sections.forEach(function(section) {
     let activeTabContent = section.querySelector(".category-tab-content.active");
-    let activeSlider = activeTabContent.querySelector('[class*="slider-tab-"]');
+    let activeSlider = activeTabContent?.querySelector('[class*="slider-tab-"]');
+
+    if (!activeTabContent || !activeSlider) return;
 
     // Initialize the first active tab's slider
     $(activeSlider).on("setPosition", function() {
-      equalizeCardHeights(activeTabContent);
+      scheduleEqualizeCardHeights(activeTabContent);
     });
 
     $(activeSlider).slick({
@@ -84,9 +93,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
         // Activate the selected tab in THIS section
         let selectedTab = section.querySelector(`#${tabId}`);
-        selectedTab.classList.add("active");
+        let slider = selectedTab?.querySelector('[class*="slider-tab-"]');
 
-        let slider = selectedTab.querySelector('[class*="slider-tab-"]');
+        if (!selectedTab || !slider) return;
+
+        selectedTab.classList.add("active");
 
         // Destroy existing slick if initialized
         if ($(slider).hasClass("slick-initialized")) {
@@ -95,7 +106,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         // Initialize slick for the new tab
         $(slider).on("setPosition", function() {
-          equalizeCardHeights(selectedTab);
+          scheduleEqualizeCardHeights(selectedTab);
         });
 
         $(slider).slick({
