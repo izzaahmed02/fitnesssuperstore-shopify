@@ -48,13 +48,14 @@ forbid(script_tags, '<script src="https://js.squarecdn.com/square-marketplace.js
 require(script_tags, "function loadGoogleMaps()", 'snippets/script-tags.liquid')
 forbid(script_tags, "<script src=\"https://maps.googleapis.com/maps/api/js?key=AIzaSyC1KAxFSFi-ORhUWVMuZfaHGyjAF-pmVDw\" defer></script>", 'snippets/script-tags.liquid')
 
-# 8) Heatmap should load after window load with a timeout (no idle callback).
-require(script_tags, "function initHeatmap()", 'snippets/script-tags.liquid')
-forbid(script_tags, "requestIdleCallback(initHeatmap", 'snippets/script-tags.liquid')
+# 8) Heatmap loader should stay on the lightweight preprocessor implementation.
+require(script_tags, 'preprocessor.min.js?sid=', 'snippets/script-tags.liquid')
+require(script_tags, "['error', 'unhandledrejection'].forEach(function (ty) {", 'snippets/script-tags.liquid')
+forbid(script_tags, "function initHeatmap()", 'snippets/script-tags.liquid')
 
-# 9) Google Ads gtag should be interaction/load triggered (no immediate network request).
-require(script_tags, "function loadGtag()", 'snippets/script-tags.liquid')
+# 9) Google Ads gtag should not be added back as an immediate request in script-tags.
 forbid(script_tags, '<script async src="https://www.googletagmanager.com/gtag/js?id=AW-997565942">', 'snippets/script-tags.liquid')
+forbid(script_tags, "function loadGtag()", 'snippets/script-tags.liquid')
 
 # 10) Globo filter app remnants should be fully removed from runtime templates/styles.
 forbid(main_search, 'id="gf-products"', 'sections/main-search.liquid')
