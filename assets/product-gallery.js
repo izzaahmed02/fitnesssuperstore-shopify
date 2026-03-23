@@ -877,32 +877,40 @@ class ProductGallery extends HTMLElement {
       }
       
      } else if (media.media_type === 'video') {
-  const video = document.createElement('video');
-  video.controls = true;
-  video.autoplay = false;
-  video.muted = true;
-  video.loop = true;
-  video.playsInline = true;
-  video.preload = 'none'; // ← prevents premature fetch
-  video.style.maxWidth = '100%';
-  video.style.maxHeight = '100%';
+      const video = document.createElement('video');
+      const posterSrc = media.preview_image?.src
+        ? media.preview_image.src.replace(/width=\d+/, 'width=1600')
+        : '';
 
-  const sources = media.sources || [];
-  const validSource =
-    sources.find((s) => s.mime_type?.includes('mp4')) ||
-    sources[0];
+      video.controls = true;
+      video.autoplay = false;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.preload = 'metadata';
+      video.style.maxWidth = '100%';
+      video.style.maxHeight = '100%';
 
-  if (validSource?.url) {
-    const source = document.createElement('source');
-    source.src = validSource.url;
-    source.type = validSource.mime_type || 'video/mp4';
-    video.appendChild(source);
-    newMediaElement = video;
-  } else {
-    newMediaElement = document.createElement('p');
-    newMediaElement.textContent = 'No video source available.';
-  }
-} else if (media.media_type === 'model') {
+      if (posterSrc) {
+        video.poster = posterSrc;
+      }
+
+      const sources = media.sources || [];
+      const validSource =
+        sources.find((s) => s.mime_type?.includes('mp4')) ||
+        sources[0];
+
+      if (validSource?.url) {
+        const source = document.createElement('source');
+        source.src = validSource.url;
+        source.type = validSource.mime_type || 'video/mp4';
+        video.appendChild(source);
+        newMediaElement = video;
+      } else {
+        newMediaElement = document.createElement('p');
+        newMediaElement.textContent = 'No video source available.';
+      }
+    } else if (media.media_type === 'model') {
       
       const popup = document.getElementById('product-gallery-popup');
       const popupThumbnail = popup?.querySelector(`[data-media-id="${mediaId}"]`);
