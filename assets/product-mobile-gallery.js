@@ -58,13 +58,7 @@ class MobileGallery extends HTMLElement {
     // Setup MutationObserver to detect popup removal
     this.observePopup();
 
-    // Attach click handlers to open popup
-    this.querySelectorAll('.mobile-gallery-slide-wrap').forEach((slide, index) => {
-      slide.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.openPopup(index);
-      });
-    });
+    this.attachSlideClickHandlers();
   }
 
   updatePopupReferences() {
@@ -248,10 +242,29 @@ observePopup() {
     }
   }
 
-  openPopup(index) {
+  async ensureHammerLoaded() {
+    if (typeof Hammer !== 'undefined') return true;
+    if (this.hammerPromise) return this.hammerPromise;
+
+    this.hammerPromise = new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.head.appendChild(script);
+    });
+
+    return this.hammerPromise;
+  }
+
+  async openPopup(index) {
+    await this.ensureHammerLoaded();
+
     if (!this.popup || !this.popupSlider || !this.popupThumbnails || !this.popupDots) {
       console.warn('[MobileGallery] Popup elements missing, attempting to recreate');
       this.createPopup();
+      await this.ensureHammerLoaded();
       if (!this.popup || !this.popupSlider || !this.popupThumbnails || !this.popupDots) {
         console.error('[MobileGallery] Failed to create popup elements');
         return;
@@ -407,12 +420,82 @@ observePopup() {
   }
 
   renderSlides(container) {
-    const slides = this.querySelectorAll('.mobile-gallery-slide-wrap');
     container.innerHTML = '';
 
-    slides.forEach((slide) => {
-      const clone = slide.cloneNode(true);
-      container.appendChild(clone);
+    this.mediaData.forEach((media, index) => {
+      const slideWrap = document.createElement('div');
+      slideWrap.className = 'mobile-gallery-slide-wrap';
+
+      if (media.media_type === 'image' && media.preview_image) {
+        const skeleton = document.createElement('div');
+        skeleton.className = 'image-skeleton-wrapper';
+
+        const slide = document.createElement('div');
+        slide.className = 'mobile-gallery-slide';
+        slide.dataset.mediaId = media.id;
+
+        const img = document.createElement('img');
+        img.src = media.preview_image.src;
+        img.srcset = media.preview_image.srcset || '';
+        img.sizes = '(max-width: 768px) 100vw, 800px';
+        img.alt = media.alt || '';
+        img.width = media.preview_image.width || '';
+        img.height = media.preview_image.height || '';
+        if (index === 0) {
+          img.fetchPriority = 'high';
+          img.loading = 'eager';
+        } else {
+          img.loading = 'lazy';
+        }
+        img.addEventListener('load', () => skeleton.classList.add('loaded'), { once: true });
+
+        slide.appendChild(img);
+        skeleton.appendChild(slide);
+        slideWrap.appendChild(skeleton);
+      } else if (media.media_type === 'video') {
+        slideWrap.innerHTML = `<div class="mobile-gallery-slide" data-media-id="${media.id}"><video controls muted playsinline preload="none" poster="${media.preview_image?.src || ''}">${(media.sources || []).map((source) => `<source src="${source.url}" type="${source.mime_type}">`).join('')}</video></div>`;
+      } else if (media.media_type === 'external_video') {
+        slideWrap.innerHTML = `<div class="mobile-gallery-slide external-video" data-media-id="${media.id}"><div class="video-wrapper"><div class="video-iframe-overlay" aria-hidden="true"></div></div></div>`;
+      }
+
+      container.appendChild(slideWrap);
+    });
+
+    this.attachExternalVideoEmbeds(container);
+    this.attachSlideClickHandlers();
+  }
+
+  attachSlideClickHandlers() {
+    this.querySelectorAll('.mobile-gallery-slide-wrap').forEach((slide, index) => {
+      slide.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.openPopup(index);
+      });
+    });
+  }
+
+  attachExternalVideoEmbeds(scope) {
+    scope.querySelectorAll('.mobile-gallery-slide.external-video').forEach((slide) => {
+      const mediaId = slide.dataset.mediaId;
+      const media = this.mediaData.find((item) => String(item.id) === String(mediaId));
+      const wrapper = slide.querySelector('.video-wrapper');
+      if (!media || !wrapper) return;
+
+      let iframeSrc = '';
+      if (media.host === 'youtube') {
+        iframeSrc = `https://www.youtube.com/embed/${media.external_id}?enablejsapi=1&playsinline=1`;
+      } else if (media.host === 'vimeo') {
+        iframeSrc = `https://player.vimeo.com/video/${media.external_id}`;
+      }
+
+      if (!iframeSrc) return;
+      const iframe = document.createElement('iframe');
+      iframe.src = iframeSrc;
+      iframe.setAttribute('allow', 'autoplay; encrypted-media');
+      iframe.setAttribute('allowfullscreen', 'true');
+      iframe.setAttribute('frameborder', '0');
+      iframe.style.pointerEvents = 'none';
+      wrapper.appendChild(iframe);
     });
   }
 
@@ -560,6 +643,10 @@ observePopup() {
 
         if (!allowZoom) {
           wrapper.className += ' zoom-disabled';
+        }
+
+        if (typeof Hammer === 'undefined') {
+          return;
         }
 
         const hammer = new Hammer(wrapper);

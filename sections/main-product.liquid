@@ -150,12 +150,7 @@
             {%- case block.type -%}
               {%- when 'title' -%}
                 <div class="product__title" {{ block.shopify_attributes }}>
-                  <h2>{{ product.title | escape }}</h2>
-                  <a href="{{ product.url }}" class="product__title">
-                    <h2 class="h1">
-                      {{ product.title | escape }}
-                    </h2>
-                  </a>
+                  <p class="h2">{{ product.title | escape }}</p>
                 </div>
             
               {% when 'price' %}
@@ -246,7 +241,7 @@
                       alt="{{ media.alt | escape }}"
                       width="{{ preview.width }}"
                       height="{{ preview.height }}"
-                      fetchpriority="high"
+                      loading="lazy"
                       onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
                     >
                     {% if media.alt contains '3D' or media.alt contains '3d' %}
@@ -429,15 +424,20 @@
                 >
                   {% if first_media.media_type == 'image' %}
                     <div class="image-skeleton-wrapper">
-                      <img
-                        src="{{ preview | image_url: width: 800 }}"
-                        alt="{{ first_media.alt | escape }}"
-                        class="main-product-image"
-                        width="{{ preview.width }}"
-                        height="{{ preview.height }}"
-                        loading="eager"
-                        onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
-                      >
+                      {%- capture first_media_sizes -%}(min-width: 990px) 50vw, 100vw{%- endcapture -%}
+                      {%- capture first_media_widths -%}480, 720, 960, 1200, 1600, 2048{%- endcapture -%}
+                      {{
+                        preview
+                        | image_url: width: 2048
+                        | image_tag:
+                          class: 'main-product-image',
+                          widths: first_media_widths,
+                          sizes: first_media_sizes,
+                          loading: 'eager',
+                          fetchpriority: 'high',
+                          alt: first_media.alt,
+                          onload: "this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                      }}
                       {% if first_media.alt contains '3D' or first_media.alt contains '3d' %}
                         <span class="icon-3d main" aria-label="3D Icon">
                           <svg
@@ -619,75 +619,14 @@
       </product-gallery>
 
         <mobile-gallery>
-        <div class="mobile-gallery-wrapper only-mobile">
+          <div class="mobile-gallery-wrapper only-mobile">
           <div class="main-slider-arrow--left" type="button">
             <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M7.19635 0.46967C7.48924 0.762563 7.48924 1.23744 7.19635 1.53033L2.72668 6L7.19635 10.4697C7.48924 10.7626 7.48924 11.2374 7.19635 11.5303C6.90345 11.8232 6.42858 11.8232 6.13569 11.5303L1.13569 6.53033C0.995033 6.38968 0.916016 6.19891 0.916016 6C0.916016 5.80109 0.995033 5.61032 1.13569 5.46967L6.13569 0.46967C6.42858 0.176777 6.90345 0.176777 7.19635 0.46967Z" fill="white"/>
             </svg>
           </div>
 
-          <div class="mobile-gallery-slider image-skeleton-wrapper"> 
-            {% for media in product.media %}
-              {% case media.media_type %}
-                {% when 'image' %}
-                  <div class="mobile-gallery-slide-wrap">
-                    <div class="image-skeleton-wrapper">
-                      <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
-                        {% assign is_first = forloop.first %}
-
-                        <img
-                          src="{{ media.preview_image | image_url: width: 480 }}"
-                          srcset="
-                            {{ media.preview_image | image_url: width: 320 }} 320w,
-                            {{ media.preview_image | image_url: width: 480 }} 480w,
-                            {{ media.preview_image | image_url: width: 800 }} 800w
-                          "
-                          sizes="(max-width: 768px) 100vw, 800px"
-                          alt="{{ media.alt | escape }}"
-                           {% if is_first %}
-                            fetchpriority="high"
-                          {% else %}
-                            loading="lazy"
-                          {% endif %}
-                          width="{{ media.preview_image.width }}"
-                          height="{{ media.preview_image.height }}"
-                          onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
-                        >
-                      </div>
-                    </div>
-                  </div>
-
-             
-
-                  {% when 'video' %}
-                  <div class="mobile-gallery-slide-wrap">
-                    <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
-                      <video
-                        controls
-                        muted
-                        playsinline
-                        preload="none"
-                        poster="{{ media.preview_image | image_url: width: 800 }}"
-                      >
-                        {%- for source in media.sources -%}
-                          <source src="{{ source.url }}" type="{{ source.mime_type }}">
-                        {%- endfor -%}
-                      </video>
-                    </div>
-                  </div>
-
-                {% when 'external_video' %}
-                  <div class="mobile-gallery-slide-wrap">
-                    <div class="mobile-gallery-slide external-video" data-media-id="{{ media.id }}">
-                      <div class="video-wrapper">
-                        <div class="video-iframe-overlay" aria-hidden="true"></div>
-                        {{ media | external_video_tag: autoplay: false, muted: true, loop: false }}
-                      </div>
-                    </div>
-                  </div>
-              {% endcase %}
-            {% endfor %}
-          </div>
+            <div class="mobile-gallery-slider image-skeleton-wrapper"></div>
 
           <div class="main-slider-arrow--right" type="button">
             <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -696,8 +635,8 @@
           </div>
 
           <div class="mobile-gallery-dots"></div>
-        </div>
-      </mobile-gallery>
+          </div>
+        </mobile-gallery>
 
         {% if section.settings.accent_text != blank %}
           <div class="product__accesnt-text hidden lg:flex">
@@ -859,11 +798,6 @@
               {%- when 'title' -%}
                 <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
                   <h1>{{ product.title | escape }}</h1>
-                  <a href="{{ product.url }}" class="product__title">
-                    <h2 class="h1">
-                      {{ product.title | escape }}
-                    </h2>
-                  </a>
                 </div>
               {% when 'price' %}
 
@@ -1944,10 +1878,7 @@
     {%- if product.media.size > 0 -%}
 
     <script src="{{ 'product-gallery.js' | asset_url }}" defer="defer"></script>
-      <script src="{{ 'product-mobile-gallery.js' | asset_url }}" defer="defer"></script> 
-
-
-      <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js" defer="defer"></script>
+    <script src="{{ 'product-mobile-gallery.js' | asset_url }}" defer="defer"></script>
     {%- endif -%}
 
     {%- if first_3d_model -%}
@@ -2064,22 +1995,40 @@
 <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
 
-<script defer type="text/javascript">
-  var sa_products_count = 3;
-  var sa_date_format = 'F j, Y';
-  var sa_product = window.product.variants[0].sku;
-  (function (w, d, t, f, o, s, a) {
-    o = 'shopperapproved';
-    if (!w[o]) {
-      w[o] = function () {
-        (w[o].arg = w[o].arg || []).push(arguments);
-      };
-      (s = d.createElement(t)), (a = d.getElementsByTagName(t)[0]);
-      s.async = 1;
-      s.src = f;
-      a.parentNode.insertBefore(s, a);
-    }
-  })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
+<script>
+  (function () {
+    var firstVariant = window.product && window.product.variants && window.product.variants[0];
+    var saProduct = firstVariant && firstVariant.sku;
+    if (!saProduct) return;
+
+    var reviewsTarget = document.querySelector('.shopify-app-block, [id*="shopper" i], .spr-badge, [data-shopper-approved]');
+    if (!reviewsTarget || !('IntersectionObserver' in window)) return;
+
+    var loaded = false;
+    var observer = new IntersectionObserver(function(entries) {
+      if (loaded || !entries.some(function(entry) { return entry.isIntersecting; })) return;
+      loaded = true;
+      observer.disconnect();
+
+      window.sa_products_count = 3;
+      window.sa_date_format = 'F j, Y';
+      (function (w, d, t, f, o, s, a) {
+        o = 'shopperapproved';
+        if (!w[o]) {
+          w[o] = function () {
+            (w[o].arg = w[o].arg || []).push(arguments);
+          };
+          s = d.createElement(t);
+          a = d.getElementsByTagName(t)[0];
+          s.async = 1;
+          s.src = f;
+          a.parentNode.insertBefore(s, a);
+        }
+      })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + saProduct + '.js');
+    }, { rootMargin: '200px 0px' });
+
+    observer.observe(reviewsTarget);
+  })();
 </script>
 
 
