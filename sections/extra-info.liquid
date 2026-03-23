@@ -70,12 +70,18 @@
       <div class="product-video-item">
         <a href="#" class="product-video-trigger" data-video-id="video-{{ video.id }}">
           {% if video.preview_image %}
+            {% capture video_thumbnail_alt %}{{ product.title }} video preview {{ forloop.index }}{% endcapture %}
             <div class="product-video-thumbnail-wrapper">
-              <img 
-                src="{{ video.preview_image | img_url: '800x' }}" 
-                alt="{{ product.title }} video preview {{ forloop.index }}" 
-                class="product-video-thumbnail"
-              >
+              {{
+                video.preview_image
+                | image_url: width: 800
+                | image_tag:
+                  alt: video_thumbnail_alt,
+                  class: 'product-video-thumbnail',
+                  widths: '320, 480, 640, 800',
+                  sizes: '(min-width: 990px) 532px, 100vw',
+                  loading: 'lazy'
+              }}
               <span class="product-video-play-icon">▶</span>
             </div>
           {% else %}

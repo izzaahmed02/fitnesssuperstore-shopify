@@ -236,14 +236,18 @@
                   type="button"
                 >
                   <div class="image-skeleton-wrapper">
-                    <img
-                      src="{{ preview | image_url: width: 100 }}"
-                      alt="{{ media.alt | escape }}"
-                      width="{{ preview.width }}"
-                      height="{{ preview.height }}"
-                      loading="lazy"
-                      onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
-                    >
+                    {{
+                      preview
+                      | image_url: width: 176
+                      | image_tag:
+                        alt: media.alt,
+                        widths: '88, 176',
+                        sizes: '88px',
+                        width: 88,
+                        height: 88,
+                        loading: 'lazy',
+                        onload: "this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                    }}
                     {% if media.alt contains '3D' or media.alt contains '3d' %}
                       <span class="icon-3d" aria-label="3D Icon">
                         <svg
@@ -287,14 +291,18 @@
                   type="button"
                 >
                   <div class="image-skeleton-wrapper">
-                    <img
-                      src="{{ preview | image_url: width: 100 }}"
-                      alt="{{ model.alt | escape }}"
-                      width="{{ preview.width }}"
-                      height="{{ preview.height }}"
-                      loading="lazy"
-                      onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
-                    >
+                    {{
+                      preview
+                      | image_url: width: 176
+                      | image_tag:
+                        alt: model.alt,
+                        widths: '88, 176',
+                        sizes: '88px',
+                        width: 88,
+                        height: 88,
+                        loading: 'lazy',
+                        onload: "this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                    }}
                     {% if model.alt contains '3D' or model.alt contains '3d' %}
                       <span class="icon-3d" aria-label="3D Icon">
                         <svg
@@ -335,14 +343,18 @@
                   type="button"
                 >
                   <div class="image-skeleton-wrapper">
-                    <img
-                      src="{{ remaining_images.first.preview_image | image_url: width: 100 }}"
-                      alt="{{ remaining_images.first.alt | escape }}"
-                      width="{{ remaining_images.first.preview_image.width }}"
-                      height="{{ remaining_images.first.preview_image.height }}"
-                      loading="lazy"
-                      onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
-                    >
+                    {{
+                      remaining_images.first.preview_image
+                      | image_url: width: 176
+                      | image_tag:
+                        alt: remaining_images.first.alt,
+                        widths: '88, 176',
+                        sizes: '88px',
+                        width: 88,
+                        height: 88,
+                        loading: 'lazy',
+                        onload: "this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                    }}
                     {% if remaining_images.first.alt contains '3D' or remaining_images.first.alt contains '3d' %}
                       <span class="icon-3d" aria-label="3D Icon">
                         <svg
@@ -389,13 +401,17 @@
                       type="button"
                     >
                       <div class="thumbnail-btn__warp">
-                        <img
-                          src="{{ media.preview_image | image_url: width: 100 }}"
-                          alt="{{ media.alt | escape }}"
-                          width="{{ media.preview_image.width }}"
-                          height="{{ media.preview_image.height }}"
-                          loading="lazy"
-                        >
+                        {{
+                          media.preview_image
+                          | image_url: width: 176
+                          | image_tag:
+                            alt: media.alt,
+                            widths: '88, 176',
+                            sizes: '88px',
+                            width: 88,
+                            height: 88,
+                            loading: 'lazy'
+                        }}
                       </div>
 
                       {%- assign shopify_video_count = product.media | where: 'media_type', 'video' | size -%}
@@ -424,11 +440,11 @@
                 >
                   {% if first_media.media_type == 'image' %}
                     <div class="image-skeleton-wrapper">
-                      {%- capture first_media_sizes -%}(min-width: 990px) 50vw, 100vw{%- endcapture -%}
-                      {%- capture first_media_widths -%}480, 720, 960, 1200, 1600, 2048{%- endcapture -%}
+                      {%- capture first_media_sizes -%}(min-width: 1200px) 34vw, (min-width: 990px) 38vw, 100vw{%- endcapture -%}
+                      {%- capture first_media_widths -%}360, 540, 720, 900, 1080, 1440{%- endcapture -%}
                       {{
                         preview
-                        | image_url: width: 2048
+                        | image_url: width: 1440
                         | image_tag:
                           class: 'main-product-image',
                           widths: first_media_widths,
@@ -569,9 +585,9 @@
                 "media_type": {{ media.media_type | json }},
                 "alt": {{ media.alt | json }},
                 "preview_image": {
-                  "src": {{ media.preview_image | image_url: width: 800 | json }},
-                  "srcset": "{{ media.preview_image | image_url: width: 800 }} 800w, {{ media.preview_image | image_url: width: 1200 }} 1200w, {{ media.preview_image | image_url: width: 1600 }} 1600w, {{ media.preview_image | image_url: width: 2048 }} 2048w",
-                  "sizes": "(min-width: 990px) 800px, 100vw",
+                  "src": {{ media.preview_image | image_url: width: 720 | json }},
+                  "srcset": "{{ media.preview_image | image_url: width: 360 }} 360w, {{ media.preview_image | image_url: width: 540 }} 540w, {{ media.preview_image | image_url: width: 720 }} 720w, {{ media.preview_image | image_url: width: 900 }} 900w, {{ media.preview_image | image_url: width: 1080 }} 1080w, {{ media.preview_image | image_url: width: 1440 }} 1440w",
+                  "sizes": "(min-width: 1200px) 34vw, (min-width: 990px) 38vw, 100vw",
                   "width": {{ media.preview_image.width | json }},
                   "height": {{ media.preview_image.height | json }}
                 }
