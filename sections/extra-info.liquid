@@ -90,7 +90,21 @@
       <div id="video-{{ video.id }}" class="product-video-modal">
         <div class="product-video-modal-content">
           <span class="product-video-close">&times;</span>
-          <video controls autoplay playsinline preload="none" style="width:100%; border-radius:12px;">
+          <button
+            type="button"
+            class="product-video-modal-poster"
+            aria-label="Play {{ product.title }} video {{ forloop.index }}"
+          >
+            {% if video.preview_image %}
+              <img
+                src="{{ video.preview_image | img_url: '1200x' }}"
+                alt="{{ product.title }} video preview {{ forloop.index }}"
+                class="product-video-modal-poster-image"
+              >
+            {% endif %}
+            <span class="product-video-modal-play-icon">▶</span>
+          </button>
+          <video controls playsinline preload="none" poster="{{ video.preview_image | image_url: width: 1200 }}" style="width:100%; border-radius:12px; display:none;">
             {% for source in video.sources %}
               <source src="{{ source.url }}" type="{{ source.mime_type }}">
             {% endfor %}
@@ -163,6 +177,36 @@
   max-height: 90vh;
 }
 
+.product-video-modal-poster {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.product-video-modal-poster-image {
+  width: 100%;
+  height: auto;
+  max-height: 90vh;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+.product-video-modal-play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  color: white;
+  text-shadow: 0 0 10px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+
 .product-video-modal iframe,
 .product-video-modal video {
   width: 100%;
@@ -212,6 +256,7 @@ document.addEventListener("DOMContentLoaded", function() {
       const videoId = this.getAttribute("data-video-id");
       const modal = document.getElementById(videoId);
       if (modal) {
+        resetModalVideo(modal);
         modal.style.display = "flex";
         document.body.classList.add("no-scroll"); // disable scroll
       }
@@ -221,6 +266,21 @@ document.addEventListener("DOMContentLoaded", function() {
   // Close modal
   modals.forEach(modal => {
     const closeBtn = modal.querySelector(".product-video-close");
+    const posterBtn = modal.querySelector(".product-video-modal-poster");
+
+    if (posterBtn) {
+      posterBtn.addEventListener("click", function() {
+        const video = modal.querySelector("video");
+
+        posterBtn.style.display = "none";
+
+        if (video) {
+          video.style.display = "block";
+          video.play();
+        }
+      });
+    }
+
     closeBtn.addEventListener("click", function() {
       modal.style.display = "none";
       document.body.classList.remove("no-scroll"); // re-enable scroll
@@ -240,14 +300,25 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 
   // Stop video (works for <video> and <iframe>)
-  function stopVideo(modal) {
+  function resetModalVideo(modal) {
+    const posterBtn = modal.querySelector(".product-video-modal-poster");
     const video = modal.querySelector("video");
-    const iframe = modal.querySelector("iframe");
+
+    if (posterBtn) {
+      posterBtn.style.display = "block";
+    }
 
     if (video) {
       video.pause();
       video.currentTime = 0;
+      video.style.display = "none";
     }
+  }
+
+  function stopVideo(modal) {
+    const iframe = modal.querySelector("iframe");
+
+    resetModalVideo(modal);
 
     if (iframe) {
       iframe.src = iframe.src; // reload iframe to stop playback
