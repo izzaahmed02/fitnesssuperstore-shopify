@@ -81,7 +81,8 @@ class ProductGallery extends HTMLElement {
       if (container) {
         const media = this.mediaData.find((m) => m.id == this.activeMediaId);
         const popup = document.getElementById('product-gallery-popup');
-        if (media && media.media_type !== 'model' && (!popup || popup.hidden)) {
+        if (media && media.media_type !== 'model' && popup && popup.hidden) {
+         
           this.openPopup(this.activeMediaId);
         } else if (media && media.media_type === 'model') {
           console.log('Main image click: Media type is model, not opening popup.');
@@ -216,12 +217,10 @@ class ProductGallery extends HTMLElement {
         img.className = 'main-product-image';
         skeletonWrapper.className = 'image-skeleton-wrapper';
         img.src = media.preview_image.src;
-        img.srcset = media.preview_image.srcset || '';
         img.sizes = media.preview_image.sizes || '';
         img.width = media.preview_image.width || '';
         img.height = media.preview_image.height || '';
         img.loading = 'lazy';
-        img.fetchPriority = 'low';
         container.appendChild(skeletonWrapper);
         skeletonWrapper.appendChild(img);
         

@@ -81,76 +81,18 @@
 
 
 <script>
-  (function () {
-    var heatmapLoaded = false;
-
-    function initHeatmap() {
-      if (heatmapLoaded) return;
-      heatmapLoaded = true;
-
-      (window._heatmap_paq = window._heatmap_paq || []).push(['setTrackerUrl', (window.heatUrl = 'https://dashboard.heatmap.com/') + 'heatmap.php']);
-      window.hErrorLogs = window.hErrorLogs || [];
-
-      var heatmapScript = document.createElement('script');
-      heatmapScript.src = window.heatUrl + 'preprocessor.min.js?sid=2798';
-      heatmapScript.defer = true;
-      document.head.appendChild(heatmapScript);
-
-      ['error', 'unhandledrejection'].forEach(function (type) {
-        window.addEventListener(type, function (event) {
-          window.hErrorLogs.push({ type: type, event: event });
-        });
+  (function (h, e, a, t, m, ap) {
+    (h._heatmap_paq = []).push(['setTrackerUrl', (h.heatUrl = e) + a]);
+    h.hErrorLogs = h.hErrorLogs || [];
+    ap = t.createElement('script');
+    ap.src = h.heatUrl + 'preprocessor.min.js?sid=' + m;
+    ap.defer = true;
+    t.head.appendChild(ap);
+    ['error', 'unhandledrejection'].forEach(function (ty) {
+      h.addEventListener(ty, function (et) {
+        h.hErrorLogs.push({ type: ty, event: et });
       });
-
-      ['scroll', 'mousemove', 'touchstart', 'keydown', 'click'].forEach(function (evt) {
-        window.removeEventListener(evt, initHeatmap, { passive: true });
-      });
-    }
-
-    ['scroll', 'mousemove', 'touchstart', 'keydown', 'click'].forEach(function (evt) {
-      window.addEventListener(evt, initHeatmap, { once: true, passive: true });
     });
-
-    window.addEventListener('load', function () {
-      window.setTimeout(initHeatmap, 1500);
-    }, { once: true });
-  })();
+  })(window, 'https://dashboard.heatmap.com/', 'heatmap.php', document, 2798);
 </script>
 
-
-
-<script>
-  (function () {
-    var gtagLoaded = false;
-
-    function loadGtag() {
-      if (gtagLoaded) return;
-      gtagLoaded = true;
-
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = window.gtag || function () {
-        window.dataLayer.push(arguments);
-      };
-
-      var gtagScript = document.createElement('script');
-      gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-997565942';
-      gtagScript.async = true;
-      document.head.appendChild(gtagScript);
-
-      window.gtag('js', new Date());
-      window.gtag('config', 'AW-997565942');
-
-      ['scroll', 'mousemove', 'touchstart', 'keydown', 'click'].forEach(function (evt) {
-        window.removeEventListener(evt, loadGtag, { passive: true });
-      });
-    }
-
-    ['scroll', 'mousemove', 'touchstart', 'keydown', 'click'].forEach(function (evt) {
-      window.addEventListener(evt, loadGtag, { once: true, passive: true });
-    });
-
-    window.addEventListener('load', function () {
-      window.setTimeout(loadGtag, 1500);
-    }, { once: true });
-  })();
-</script>
