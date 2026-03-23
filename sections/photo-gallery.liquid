@@ -1,32 +1,33 @@
-{%- assign gallery_metafield = product.metafields.custom.customer_photo_gallery -%}
-
-{% if gallery_metafield and gallery_metafield.value != blank %}
+{% if section.blocks.size > 0 %}
 <section id="customer-photo-gallery-{{ section.id }}" class="customer-photo-gallery">
   <div class="customer-photo-gallery__header">
-    <h3>Customer's Photo Gallery</h3>
+    <h2 class="contact__heading" data-live-text-setting="section.template--25824224346428__gallery_slider_9JqYiA.heading">Completed Facility Installation</h2>
+    <p data-live-text-setting="section.template--25824224346428__gallery_slider_9JqYiA.text"></p>
   </div>
 
   <!-- Arrows -->
   <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--left" aria-label="Previous image">‹</button>
   <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--right" aria-label="Next image">›</button>
 
-  <div class="customer-photo-gallery__slider" id="photos">
-    {% for image in gallery_metafield.value %}
-      {% assign thumb = image | image_url: width: 900 %}
-      {% assign full  = image | image_url: width: 2400 %}
-      <div class="customer-photo-gallery__slide">
-        <img
-          src="{{ thumb }}"
-          data-full="{{ full }}"
-          alt="Customer photo {{ forloop.index }}"
-          loading="lazy"
-        >
-      </div>
+  <div class="customer-photo-gallery__slider">
+    {% for block in section.blocks %}
+      {% if block.settings.image != blank %}
+        {% assign thumb = block.settings.image | image_url: width: 900 %}
+        {% assign full  = block.settings.image | image_url: width: 2400 %}
+        <div class="customer-photo-gallery__slide" {{ block.shopify_attributes }}>
+          <img
+            src="{{ thumb }}"
+            data-full="{{ full }}"
+            alt="Customer photo {{ forloop.index }}"
+            loading="lazy"
+          >
+        </div>
+      {% endif %}
     {% endfor %}
   </div>
 
   <!-- Lightbox -->
-  <div class="customer-photo-gallery__lightbox" aria-hidden="true" inert>
+  <div class="customer-photo-gallery__lightbox" aria-hidden="true">
     <div class="customer-photo-gallery__lightbox-inner">
       <button type="button" class="customer-photo-gallery__lightbox-close" aria-label="Close">&times;</button>
       <img src="" alt="Expanded customer photo">
@@ -40,8 +41,8 @@
    BASE
 ------------------------------- */
 .customer-photo-gallery {
-  margin: 20px 0;
-  padding: 0 12px;
+  margin: 40px 0;
+  padding: 0 16px;
   position: relative;
 }
 
@@ -49,10 +50,9 @@
   margin-bottom: 16px;
 }
 
-.customer-photo-gallery__header h3 {
+.customer-photo-gallery__header h4 {
   font-family: Lato;
   font-weight: 700;
-  margin: 0;
 }
 
 /* -----------------------------
@@ -67,7 +67,7 @@
 
 /* Center slides if 4 or fewer images */
 .customer-photo-gallery__slider:has(.customer-photo-gallery__slide:nth-child(1)):not(:has(.customer-photo-gallery__slide:nth-child(5))) {
-  justify-content: left;
+  justify-content: center;
 }
 
 .customer-photo-gallery__slider::-webkit-scrollbar {
@@ -83,7 +83,6 @@
 .customer-photo-gallery__slide img {
   width: 100%;
   height: 100%;
-  max-height: 325px;
   object-fit: cover;
   border-radius: 6px;
   cursor: pointer;
@@ -100,12 +99,11 @@
 @media screen and (min-width: 990px) {
   .customer-photo-gallery__slide {
     flex: 0 0 25%;
-    padding-right: 12px;
+    padding: 8px;
   }
 
   .customer-photo-gallery__slide img {
     height: 100%;
-    max-height: 325px;
   }
 }
 
@@ -114,7 +112,7 @@
 ------------------------------- */
 .customer-photo-gallery__arrow {
   position: absolute;
-  top: 60%;
+  top: 70%;
   transform: translateY(-50%);
   background: rgba(0,0,0,0.45);
   color: #fff;
@@ -162,10 +160,8 @@
 
 .customer-photo-gallery__lightbox-inner img {
   max-width: 100%;
-    max-height: 650px;
-    display: block;
-    object-fit: cover;
-    padding: 20px;
+  max-height: 100%;
+  display: block;
 }
 
 .customer-photo-gallery__lightbox-close {
@@ -177,16 +173,6 @@
   border: none;
   color: #fff;
   cursor: pointer;
-}
-
-
-
-
-@media (max-width: 749px) {
-.customer-photo-gallery__header h3 {
-        font-size: 20px;
-        margin-bottom: 16px;
-}
 }
 </style>
 
@@ -211,56 +197,26 @@
   var lightboxImg = lightbox.querySelector('img');
   var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
 
-  var activeLightboxRequest = null;
-
-  function openLightbox(img) {
-    var previewSrc = img.currentSrc || img.src;
-    var fullSrc = img.dataset.full || previewSrc;
-
-    activeLightboxRequest = fullSrc;
-    lightboxImg.src = previewSrc;
-    lightboxImg.alt = img.alt || 'Expanded customer photo';
-    lightbox.classList.add('customer-photo-gallery__lightbox--active');
-    lightbox.setAttribute('aria-hidden', 'false');
-    lightbox.removeAttribute('inert');
-
-    if (fullSrc !== previewSrc) {
-      var fullImage = new Image();
-      fullImage.decoding = 'async';
-      fullImage.onload = function () {
-        if (activeLightboxRequest === fullSrc) {
-          lightboxImg.src = fullSrc;
-        }
-      };
-      fullImage.src = fullSrc;
-    }
-  }
-
-  function closeLightbox() {
-    activeLightboxRequest = null;
-    lightbox.classList.remove('customer-photo-gallery__lightbox--active');
-    lightbox.setAttribute('aria-hidden', 'true');
-    lightbox.setAttribute('inert', '');
-    lightboxImg.removeAttribute('src');
-  }
-
   slides.forEach(function (img) {
     img.addEventListener('click', function () {
-      openLightbox(img);
+      lightboxImg.src = img.dataset.full || img.src;
+      lightbox.classList.add('customer-photo-gallery__lightbox--active');
     });
   });
 
-  closeBtn.addEventListener('click', closeLightbox);
+  closeBtn.addEventListener('click', function () {
+    lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+  });
 
   lightbox.addEventListener('click', function (e) {
     if (e.target === lightbox) {
-      closeLightbox();
+      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
     }
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && lightbox.classList.contains('customer-photo-gallery__lightbox--active')) {
-      closeLightbox();
+    if (e.key === 'Escape') {
+      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
     }
   });
 
@@ -281,12 +237,38 @@
 
 {% schema %}
 {
-  "name": "Customer Photo Gallery",
-  
+  "name": "Photo gallery",
+  "settings": [],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Gallery Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        }
+      ]
+    }
+  ],
   "presets": [
     {
-      "name": "Customer Photo Gallery",
-      "category": "Custom"
+      "name": "Photo gallery",
+      "blocks": [
+        {
+          "type": "image"
+        },
+        {
+          "type": "image"
+        },
+        {
+          "type": "image"
+        },
+        {
+          "type": "image"
+        }
+      ]
     }
   ]
 }

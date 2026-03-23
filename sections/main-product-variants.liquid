@@ -30,7 +30,7 @@
     margin-bottom: 40px;
   }
 
-  
+
 {% endstyle %}
 
 {% if product.available == true %}
@@ -215,14 +215,14 @@
                   {%comment %}
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                    {%endcomment %}
-                    <span class="pr_custom_compare_price"
+                    <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
                     {% comment %}
                   {% endif %}
                    {%endcomment %}
-                   
+
 
 
                   {% if product.metafields.custom.saleprice_name != blank %}
@@ -243,25 +243,25 @@
                       {% comment %}{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %} {% endcomment %}
 
                        <div>
-                 
+
 
                       <span class="you-save pm-empty"></span>
-                      
+
                     </div>
-                 
+
                       {% endif %}
                     </div>
                 </div>
 
-               
+
             {%- endcase -%}
           {%- endfor -%}
         </div>
       </div>
 
       <div class="product-main-left-container">
-        
-        
+
+
         <product-gallery data-product-title="{{ product.title | escape }}">
           <div class="custom-product-gallery">
             <div class="custom-gallery-wrapper">
@@ -459,30 +459,34 @@
               {% for media in product.media %}
                 {% case media.media_type %}
                   {% when 'image' %}
-                    <div class="mobile-gallery-slide-wrap">
-                      <div class="image-skeleton-wrapper">
-                        <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
-                          {% assign isFirst = forloop.first %}
+                
+                       <div class="mobile-gallery-slide-wrap">
+                    <div class="image-skeleton-wrapper">
+                      <div class="mobile-gallery-slide" data-media-id="{{ media.id }}">
+                        {% assign is_first = forloop.first %}
 
-                          <img
-                            src="{{ media.preview_image | image_url: width: 480 }}"
-                            srcset="
-                              {{ media.preview_image | image_url: width: 320 }} 320w,
-                              {{ media.preview_image | image_url: width: 480 }} 480w,
-                              {{ media.preview_image | image_url: width: 800 }} 800w
-                            "
-                            sizes="(max-width: 768px) 100vw, 800px"
-                            alt="{{ media.alt | escape }}"
-                            {% unless isFirst %}
-                              loading="lazy"
-                            {% endunless %}
-                            width="{{ media.preview_image.width }}"
-                            height="{{ media.preview_image.height }}"
-                            onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
-                          >
-                        </div>
+                        <img
+                          src="{{ media.preview_image | image_url: width: 480 }}"
+                          srcset="
+                            {{ media.preview_image | image_url: width: 320 }} 320w,
+                            {{ media.preview_image | image_url: width: 480 }} 480w,
+                            {{ media.preview_image | image_url: width: 800 }} 800w
+                          "
+                          sizes="(max-width: 768px) 100vw, 800px"
+                          alt="{{ media.alt | escape }}"
+                           {% if is_first %}
+                            fetchpriority="high"
+                          {% else %}
+                            loading="lazy"
+                          {% endif %}
+                          width="{{ media.preview_image.width }}"
+                          height="{{ media.preview_image.height }}"
+                          onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                        >
                       </div>
                     </div>
+                  </div>
+
 
                   {% when 'video' %}
                     <div class="mobile-gallery-slide-wrap">
@@ -623,7 +627,7 @@
                         {% for collection in product.collections %}
                           {% if collection.handle contains 'shop-by-strength-product-line' %}
                             <span class="more-info" data-customfield="Shipping">(More Info)</span>
-                          
+
                             <script>
   var attachClickHandler = setInterval(function () {
     var $target = $('.custom_shipping_container');
@@ -718,12 +722,12 @@
 {% endcomment %}
 
                 <div class="product__prices hidden lg:block">
-                  
-                    <span class="pr_custom_compare_price"
+
+                    <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
-                 
+
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
@@ -740,11 +744,11 @@
                       -%}
 
                        <div>
-                 
+
 
                      <span class="you-save pm-empty"></span>
                     </div>
-                
+
                       {% endif %}
                     </div>
                 </div>
@@ -785,7 +789,7 @@
                     </svg>
                     <span class="product-form__error-message"></span>
                   </div>
-                  <h5 class="product_price_with_options-heading">Total with options</h5>
+                  <h2 class="product_price_with_options-heading">Total with options</h2>
 
                   <div class="product_price_with_options-contaniner">
                     <div class="product_prices">
@@ -3545,12 +3549,18 @@
 
 
 
-<style>.pm-empty{visibility:hidden!important}</style>
+<style>
+  .pm-empty{
+  visibility:hidden!important;
+  display:none;
+}
+</style>
 <script>
 if(!window.__pmMin){window.__pmMin=1;(function(){
   const e=".product__prices",
         t={
           PRICE:".price-item--sale.price-item--last, .price-item-fixed",
+          CMP_WRAP:".pr_custom_compare_price",
           CMP:".pr_custom_compare_price s",
           SAVE:".you-save",
           VID:".product-variant-id",
@@ -3599,7 +3609,9 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
 
     clear(){
       this.$$(t.PRICE).forEach(e=>{e.textContent=e.textContent||"",e.classList.add("pm-empty")});
-      const e=this.$(t.CMP); e&&(e.textContent="",e.classList.add("pm-empty"));
+      const e=this.$(t.CMP), r=this.$(t.CMP_WRAP);
+      e&&(e.textContent="");
+      r&&r.classList.add("pm-empty");
       const n=this.$(t.SAVE); n&&(n.textContent="",n.classList.add("pm-empty"))
     }
 
@@ -3610,8 +3622,9 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
         t.classList.remove("pm-empty")
       });
       const o=e.compare_at_price && n(e.compare_at_price)>n(e.price),
-            a=this.$(t.CMP);
-      a&&(a.textContent=o?r(n(e.compare_at_price)):"",a.classList.toggle("pm-empty",!o));
+            a=this.$(t.CMP), c=this.$(t.CMP_WRAP);
+      a&&(a.textContent=o?r(n(e.compare_at_price)):"");
+      c&&c.classList.toggle("pm-empty",!o);
       const i=this.$(t.SAVE);
       if(i) if(o){const t=n(e.compare_at_price)-n(e.price); i.textContent="You save "+r(t), i.classList.remove("pm-empty")} else i.textContent="",i.classList.add("pm-empty")
     }

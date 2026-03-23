@@ -15,7 +15,8 @@
 %}
 {% endcomment %}
 {%- liquid
-  assign canonical_parts = canonical_url | split: '?'
+  assign https_canonical_url = canonical_url | replace_first: 'http://', 'https://'
+  assign canonical_parts = https_canonical_url | split: '?'
   assign og_url = canonical_parts[0] | default: request.origin
   assign og_type = 'website'
   assign og_description = page_description | default: shop.description | default: shop.name
@@ -43,7 +44,7 @@
 <meta property="og:description" content="{{ og_description | escape }}">
 
 {%- if page_image -%}
-  <meta property="og:image" content="http:{{ page_image | image_url }}">
+  <meta property="og:image" content="https:{{ page_image | image_url }}">
   <meta property="og:image:secure_url" content="https:{{ page_image | image_url }}">
   <meta property="og:image:width" content="{{ page_image.width }}">
   <meta property="og:image:height" content="{{ page_image.height }}">

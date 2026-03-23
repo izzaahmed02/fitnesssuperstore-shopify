@@ -4,6 +4,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="">
 
+{% assign base_url = shop.url | replace: 'http://', 'https://' %}
+{% assign https_canonical_url = canonical_url | replace_first: 'http://', 'https://' %}
+
 {% if template contains 'product' and product and product.featured_media %}
   <link rel="dns-prefetch" href="https://cdn.shopify.com">
   <link
@@ -51,17 +54,17 @@
   {% if custom_canonical %}
     <link rel="canonical" href="{{ custom_canonical }}">
   {% else %}
-    <link rel="canonical" href="{{ shop.url }}/products/{{ product.handle }}">
+    <link rel="canonical" href="{{ base_url }}/products/{{ product.handle }}">
   {% endif %}
 
 {% elsif template == 'collection' %}
-  <link rel="canonical" href="{{ collection.url | prepend: shop.url }}">
+  <link rel="canonical" href="{{ collection.url | prepend: base_url }}">
 
- {% elsif page and page.handle == 'homepage' %}
-  <link rel="canonical" href="{{ shop.url }}">
-  
+{% elsif request.page_type == 'index' or template == 'index' %}
+  <link rel="canonical" href="{{ base_url }}">
+
 {% else %}
-  <link rel="canonical" href="{{ canonical_url }}">
+  <link rel="canonical" href="{{ https_canonical_url }}">
 {% endif %}
 
 {%- if settings.favicon != blank -%}
@@ -69,5 +72,5 @@
 {%- endif -%}
 
 {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}
-  <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
+  <link href="https://fonts.shopifycdn.com" crossorigin>
 {%- endunless -%}

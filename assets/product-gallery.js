@@ -81,8 +81,7 @@ class ProductGallery extends HTMLElement {
       if (container) {
         const media = this.mediaData.find((m) => m.id == this.activeMediaId);
         const popup = document.getElementById('product-gallery-popup');
-        if (media && media.media_type !== 'model' && popup && popup.hidden) {
-         
+        if (media && media.media_type !== 'model' && (!popup || popup.hidden)) {
           this.openPopup(this.activeMediaId);
         } else if (media && media.media_type === 'model') {
           console.log('Main image click: Media type is model, not opening popup.');
@@ -217,10 +216,12 @@ class ProductGallery extends HTMLElement {
         img.className = 'main-product-image';
         skeletonWrapper.className = 'image-skeleton-wrapper';
         img.src = media.preview_image.src;
+        img.srcset = media.preview_image.srcset || '';
         img.sizes = media.preview_image.sizes || '';
         img.width = media.preview_image.width || '';
         img.height = media.preview_image.height || '';
         img.loading = 'lazy';
+        img.fetchPriority = 'low';
         container.appendChild(skeletonWrapper);
         skeletonWrapper.appendChild(img);
         
@@ -864,7 +865,7 @@ class ProductGallery extends HTMLElement {
 
       if (embedUrl) {
         const iframe = document.createElement('iframe');
-        iframe.src = embedUrl + '?autoplay=1&rel=0';
+        iframe.src = embedUrl + '?autoplay=0&rel=0';
         iframe.allow =
           'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
         iframe.allowFullscreen = true;
@@ -874,32 +875,40 @@ class ProductGallery extends HTMLElement {
         newMediaElement = iframe; // Assign the new iframe to newMediaElement
        
       }
-    } else if (media.media_type === 'video') {
       
+     } else if (media.media_type === 'video') {
       const video = document.createElement('video');
+      const posterSrc = media.preview_image?.src
+        ? media.preview_image.src.replace(/width=\d+/, 'width=1600')
+        : '';
+
       video.controls = true;
-      video.autoplay = true;
+      video.autoplay = false;
       video.muted = true;
       video.loop = true;
       video.playsInline = true;
+      video.preload = 'metadata';
       video.style.maxWidth = '100%';
       video.style.maxHeight = '100%';
 
-      const validSource = (media.sources || []).find((s) =>
-        s.mime_type?.includes('mp4')
-      );
+      if (posterSrc) {
+        video.poster = posterSrc;
+      }
 
-      if (validSource) {
+      const sources = media.sources || [];
+      const validSource =
+        sources.find((s) => s.mime_type?.includes('mp4')) ||
+        sources[0];
+
+      if (validSource?.url) {
         const source = document.createElement('source');
         source.src = validSource.url;
-        source.type = validSource.mime_type;
+        source.type = validSource.mime_type || 'video/mp4';
         video.appendChild(source);
-        newMediaElement = video; // Assign the new video to newMediaElement
-       
+        newMediaElement = video;
       } else {
         newMediaElement = document.createElement('p');
-        newMediaElement.textContent = 'Video format not supported or no valid source found.';
-        console.warn(`renderPopupViewer: No valid video source found for ID: ${media.id}`);
+        newMediaElement.textContent = 'No video source available.';
       }
     } else if (media.media_type === 'model') {
       

@@ -1,4 +1,5 @@
-{{ 'extra-info.css' | asset_url | stylesheet_tag }}
+{{ 'extra-info.css' | asset_url | stylesheet_tag: preload: false }}
+
 
 {%- style -%}
   .main-container {
@@ -24,11 +25,16 @@
   }
 {%- endstyle -%}
 
+{% assign extra = product.metafields.custom.extra_info.value %}
+{% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
+{% assign attachments_metafield = product.metafields.custom.attachments_and_add_ons.value %}
+{% assign otherRigRackSystems = product.metafields.custom.recommended_products.value %}
+
 <div class="product__extra_info">
   
     <div class="product__extra_info-wrap">
     {% if product.metafields.custom.gym_package_inclusions and product.metafields.custom.gym_package_inclusions.value != blank%}
-          <h4 class="product__extra_info-title">Package Inclusions</h4>
+          <h2 class="product__extra_info-title">Package Inclusions</h2>
         {% for package in product.metafields.custom.gym_package_inclusions.value %}
           <div class="package-group">
             <h5 class="product__extra_info-title">{{ package.display_name }}</h5>
@@ -56,7 +62,7 @@
           {% when 'description' %}
             {% if product.content != blank %}
               <div class="extra-info-width">
-                <h4 class="product__extra_info-title">Description</h4>
+                <h2 class="product__extra_info-title description-heading">Description</h2>
      {% assign videos = product.media | where: "media_type", "video" %}
 {% if videos.size > 0 %}
   <div class="product-videos-wrapper">
@@ -64,12 +70,18 @@
       <div class="product-video-item">
         <a href="#" class="product-video-trigger" data-video-id="video-{{ video.id }}">
           {% if video.preview_image %}
+            {% capture video_thumbnail_alt %}{{ product.title }} video preview {{ forloop.index }}{% endcapture %}
             <div class="product-video-thumbnail-wrapper">
-              <img 
-                src="{{ video.preview_image | img_url: '800x' }}" 
-                alt="{{ product.title }} video preview {{ forloop.index }}" 
-                class="product-video-thumbnail"
-              >
+              {{
+                video.preview_image
+                | image_url: width: 800
+                | image_tag:
+                  alt: video_thumbnail_alt,
+                  class: 'product-video-thumbnail',
+                  widths: '320, 480, 640, 800',
+                  sizes: '(min-width: 990px) 532px, 100vw',
+                  loading: 'lazy'
+              }}
               <span class="product-video-play-icon">▶</span>
             </div>
           {% else %}
@@ -79,12 +91,30 @@
           {% endif %}
         </a>
       </div>
-
+ 
       <!-- Modal -->
       <div id="video-{{ video.id }}" class="product-video-modal">
         <div class="product-video-modal-content">
           <span class="product-video-close">&times;</span>
-          {{ video | media_tag: controls: true, autoplay: true }}
+          <button
+            type="button"
+            class="product-video-modal-poster"
+            aria-label="Play {{ product.title }} video {{ forloop.index }}"
+          >
+            {% if video.preview_image %}
+              <img
+                src="{{ video.preview_image | img_url: '1200x' }}"
+                alt="{{ product.title }} video preview {{ forloop.index }}"
+                class="product-video-modal-poster-image"
+              >
+            {% endif %}
+            <span class="product-video-modal-play-icon">▶</span>
+          </button>
+          <video controls playsinline preload="none" poster="{{ video.preview_image | image_url: width: 1200 }}" style="width:100%; border-radius:12px; display:none;">
+            {% for source in video.sources %}
+              <source src="{{ source.url }}" type="{{ source.mime_type }}">
+            {% endfor %}
+          </video>
         </div>
       </div>
     {% endfor %}
@@ -111,6 +141,7 @@
   width: 100%;
   border-radius: 12px;
   cursor: pointer;
+  height: auto;
   display: block;
 }
 
@@ -151,6 +182,36 @@
   width: 100%;
   max-width: 900px; /* keeps it centered on big screens */
   max-height: 90vh;
+}
+
+.product-video-modal-poster {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.product-video-modal-poster-image {
+  width: 100%;
+  height: auto;
+  max-height: 90vh;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+.product-video-modal-play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  color: white;
+  text-shadow: 0 0 10px rgba(0,0,0,0.6);
+  pointer-events: none;
 }
 
 .product-video-modal iframe,
@@ -202,6 +263,7 @@ document.addEventListener("DOMContentLoaded", function() {
       const videoId = this.getAttribute("data-video-id");
       const modal = document.getElementById(videoId);
       if (modal) {
+        resetModalVideo(modal);
         modal.style.display = "flex";
         document.body.classList.add("no-scroll"); // disable scroll
       }
@@ -211,6 +273,21 @@ document.addEventListener("DOMContentLoaded", function() {
   // Close modal
   modals.forEach(modal => {
     const closeBtn = modal.querySelector(".product-video-close");
+    const posterBtn = modal.querySelector(".product-video-modal-poster");
+
+    if (posterBtn) {
+      posterBtn.addEventListener("click", function() {
+        const video = modal.querySelector("video");
+
+        posterBtn.style.display = "none";
+
+        if (video) {
+          video.style.display = "block";
+          video.play();
+        }
+      });
+    }
+
     closeBtn.addEventListener("click", function() {
       modal.style.display = "none";
       document.body.classList.remove("no-scroll"); // re-enable scroll
@@ -230,14 +307,25 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 
   // Stop video (works for <video> and <iframe>)
-  function stopVideo(modal) {
+  function resetModalVideo(modal) {
+    const posterBtn = modal.querySelector(".product-video-modal-poster");
     const video = modal.querySelector("video");
-    const iframe = modal.querySelector("iframe");
+
+    if (posterBtn) {
+      posterBtn.style.display = "block";
+    }
 
     if (video) {
       video.pause();
       video.currentTime = 0;
+      video.style.display = "none";
     }
+  }
+
+  function stopVideo(modal) {
+    const iframe = modal.querySelector("iframe");
+
+    resetModalVideo(modal);
 
     if (iframe) {
       iframe.src = iframe.src; // reload iframe to stop playback
@@ -261,7 +349,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
              {% if product.metafields.custom.condition_state == 'Remanufactured' %}
             <div class="extra-info-width remanufacturing-process-video">
-              <h4 class="product__extra_info-title">Our Remanufacturing Process</h4>
+              <h2 class="product__extra_info-title">Our Remanufacturing Process</h2>
               <div class="custom-video-wrapper">
                 <div class="custom-video-poster" style="display:block;">
                   <img
@@ -290,6 +378,10 @@ document.addEventListener("DOMContentLoaded", function() {
           {% endif %}
 
           {% comment %}
+
+
+
+          
           {% when 'extra' %}
             {% assign extra = product.metafields.custom.extra_info.value %}
             {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
@@ -297,13 +389,13 @@ document.addEventListener("DOMContentLoaded", function() {
             {% assign otherRigRackSystems = product.metafields.custom.recommended_products.value %}
 
             {% if extra != blank %}
-              <h4 class="product__extra_info-title">Extra info</h4>
+              <h2 class="product__extra_info-title">Extra info</h2>
     
               <div class="extra-info-width">
                 {% if extra.other_french_fitness_rig_rack_systems != blank %}
                   <div class="extra-info-accordion">
                     <span class="accordion-item">
-                      <h4 class="product__extra_info-title">Other French Fitness Rig & Rack Systems</h4>
+                      <h2 class="product__extra_info-title">Other French Fitness Rig & Rack Systems</h2>
     
                       <svg
                         class="arrow"
@@ -343,7 +435,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 {% if extra.manuals != blank %}
                   <div class="extra-info-accordion">
                     <span class="accordion-item">
-                      <h4 class="product__extra_info-title">Manuals</h4>
+                      <h2 class="product__extra_info-title">Manuals</h2>
     
                       <svg
                         class="arrow"
@@ -383,7 +475,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 {% if extra.photos != blank %}
                   <div class="extra-info-accordion">
                     <span class="accordion-item">
-                      <h4 class="product__extra_info-title">Photos</h4>
+                      <h2 class="product__extra_info-title">Photos</h2>
     
                       <svg
                         class="arrow"
@@ -423,7 +515,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 {% if extra.instructional_video_url != blank %}
                   <div class="extra-info-accordion">
                     <span class="accordion-item">
-                      <h4 class="product__extra_info-title">Instructional video</h4>
+                      <h2 class="product__extra_info-title">Instructional video</h2>
     
                       <svg
                         class="arrow"
@@ -462,7 +554,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 {% if extra.other_videos != blank %}
                   <div class="extra-info-accordion">
                     <span class="accordion-item">
-                      <h4 class="product__extra_info-title">Other Videos</h4>
+                      <h2 class="product__extra_info-title">Other Videos</h2>
     
                       <svg
                         class="arrow"
@@ -502,7 +594,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 {% if extra.comparisons != blank %}
                   <div class="extra-info-accordion">
                     <span class="accordion-item">
-                      <h4 class="product__extra_info-title">Comparisons</h4>
+                      <h2 class="product__extra_info-title">Comparisons</h2>
     
                       <svg
                         class="arrow"
@@ -533,13 +625,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 {% endif %}
               </div>
             {% endif %}
+
+
             {% endcomment %}
             
     
           {% when 'all_in_one_overview' %}
             {% if block.settings.overview != blank %}
               <div class="product__extra_overview extra-info-width">
-                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                 <div class="product__extra_overview-list">{{ block.settings.overview }}</div>
               </div>
             {% endif %}
@@ -560,7 +654,7 @@ document.addEventListener("DOMContentLoaded", function() {
             {% if matched_video %}
               <div class="product-video-section extra-info-width">
                 {% if block.settings.heading != blank %}
-                  <h4 class="product__extra_info-title">{{ block.settings.heading }}</h4>
+                  <h2 class="product__extra_info-title">{{ block.settings.heading }}</h2>
                 {% endif %}
                 <div class="custom-product-video-wrapper">
                   <video class="custom-product-video" width="100%" controls poster="{{ matched_thumbnail }}">
@@ -586,7 +680,7 @@ document.addEventListener("DOMContentLoaded", function() {
           {% when 'features' %}
             {% if block.settings.features != blank %}
               <div class="product__extra_features extra-info-width">
-                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                 <div>{{ block.settings.features }}</div>
               </div>
             {% endif %}
@@ -600,11 +694,11 @@ document.addEventListener("DOMContentLoaded", function() {
           {% endif %}
 
           {% if addMoreSections != blank %}
-            <h4 class="product__extra_info-title">Add more sections</h4>
+            <h2 class="product__extra_info-title">Add more sections</h2>
             {% if addMoreSections["2_sections"] != blank %}
               <div class="extra-info-accordion">
                 <span class="accordion-item">
-                  <h4 class="product__extra_info-title">2 sections</h4>
+                  <h2 class="product__extra_info-title">2 sections</h2>
   
                   <svg
                     class="arrow"
@@ -626,7 +720,7 @@ document.addEventListener("DOMContentLoaded", function() {
             {% if addMoreSections["3_sections"] != blank %}
               <div class="extra-info-accordion">
                 <span class="accordion-item">
-                  <h4 class="product__extra_info-title">3 sections</h4>
+                  <h2 class="product__extra_info-title">3 sections</h2>
   
                   <svg
                     class="arrow"
@@ -648,7 +742,7 @@ document.addEventListener("DOMContentLoaded", function() {
             {% if addMoreSections["4_sections"] != blank %}
               <div class="extra-info-accordion">
                 <span class="accordion-item">
-                  <h4 class="product__extra_info-title">4 sections</h4>
+                  <h2 class="product__extra_info-title">4 sections</h2>
   
                   <svg
                     class="arrow"
@@ -670,7 +764,7 @@ document.addEventListener("DOMContentLoaded", function() {
             {% if addMoreSections["5_sections"] != blank %}
               <div class="extra-info-accordion">
                 <span class="accordion-item">
-                  <h4 class="product__extra_info-title">5 sections</h4>
+                  <h2 class="product__extra_info-title">5 sections</h2>
   
                   <svg
                     class="arrow"
@@ -694,7 +788,7 @@ document.addEventListener("DOMContentLoaded", function() {
           {% when 'benefits' %}
             {% if block.settings.benefits != blank %}
               <div class="product__extra_overview extra-info-width">
-                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                 <div class="product__extra_overview-list">{{ block.settings.benefits }}</div>
               </div>
             {% endif %}
@@ -702,7 +796,7 @@ document.addEventListener("DOMContentLoaded", function() {
           {% when 'warranty' %}
             {% if block.settings.warranty != blank %}
               <div class="product__extra_warranty extra-info-width">
-                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                 <div>{{ block.settings.warranty }}</div>
               </div>
             {% endif %}
@@ -716,7 +810,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 {%- assign rig_frame_pieces_count = rig_frame_pieces_count | plus: 1 -%}
               {%- endfor -%}         
               <section class="rig-attachments-section">
-                  <h4 class="product__extra_info-title">Rig Frame Pieces (Customize Your Rig) for Sale ({{ rig_frame_pieces_count }})</h4>
+                  <h2 class="product__extra_info-title">Rig Frame Pieces (Customize Your Rig) for Sale ({{ rig_frame_pieces_count }})</h2>
                   <div class="rig-product-grid">
                     {% for product_ref in attachments_object.rig_frame_pieces_customize_your_rig_for_sale.value %}
                       <div class="rig-product-card">
@@ -753,7 +847,7 @@ document.addEventListener("DOMContentLoaded", function() {
                   {%- assign rig_attachments_count = rig_attachments_count | plus: 1 -%}
                 {%- endfor -%} 
                 <section class="rig-attachments-section">
-                  <h4 class="product__extra_info-title">Rig Attachments & Accessories for Sale ({{ rig_attachments_count }})</h4>
+                  <h2 class="product__extra_info-title">Rig Attachments & Accessories for Sale ({{ rig_attachments_count }})</h2>
                   <div class="rig-product-grid">
                     {% for product_ref in attachments_object.rig_attachments_accessories_for_sale.value %}
                       <div class="rig-product-card">
@@ -788,7 +882,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
           {% if otherRigRackSystems != blank %}
             <section class="other-rig-rack-systems-section">
-              <h4 class="product__extra_info-title">Other French Fitness Rig & Rack Systems</h4>
+              <h2 class="product__extra_info-title">Other French Fitness Rig & Rack Systems</h2>
               <div class="other-rig-rack-systems-cards">
                 {% for product_ref in otherRigRackSystems.other_french_fitness_rig_rack_systems.value %}
                   <div class="rig-product-card">
@@ -828,7 +922,7 @@ document.addEventListener("DOMContentLoaded", function() {
           {% when 'tech' %}
             {% if block.settings.tech != blank %}
               <div class="product__extra_tech extra-info-width">
-                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                 <div>{{ block.settings.tech }}</div>
               </div>
             {% endif %}
@@ -864,12 +958,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div>{{ buyingGuide }}</div>
               </div>
             {% endif %}
-
+ 
           {% when 'faq' %}
             {% assign faq = product.metafields.custom.features_specs.value.frequently_asked_questions.value %}
             {% if faq != blank %}
               <div class="product__extra_tech extra-info-width">
-                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                 <div>{{ faq }}</div>
               </div>
             {% endif %}
@@ -877,7 +971,7 @@ document.addEventListener("DOMContentLoaded", function() {
           {% when 'shippingdimsweight' %}
             {% if block.settings.shippingdimsweight != blank %}
               <div class="product__extra_smith extra-info-width">
-                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                 <div>{{ product.metafields.custom.features_specs.value.shipping_dims_weight_2.value }}</div>
               </div>
             {% endif %}
@@ -885,7 +979,7 @@ document.addEventListener("DOMContentLoaded", function() {
           {% when 'weightstacks' %}
             {% if block.settings.weightstacks != blank %}
               <div class="product__extra_smith extra-info-width">
-                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                 <div>{{ block.settings.weightstacks }}</div>
               </div>
             {% endif %}
@@ -895,7 +989,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
             {% if setIncludes != blank %}
               <div class="product__extra_accessories extra-info-width">
-                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                 <div class="product__extra_accessories-container">
                   {% for item in setIncludes %}
                     <div class="product__extra_accessories-item">
@@ -912,7 +1006,7 @@ document.addEventListener("DOMContentLoaded", function() {
           {% when 'smith' %}
             {% if block.settings.smith != blank %}
               <div class="product__extra_smith extra-info-width">
-                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                 <div>{{ block.settings.smith }}</div>
               </div>
             {% endif %}
@@ -922,7 +1016,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
             {% if accessories != blank %}
               <div class="product__extra_accessories extra-info-width">
-                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                 <div class="product__extra_accessories-container">
                   {% for item in accessories %}
                     <div class="product__extra_accessories-item">
@@ -939,7 +1033,7 @@ document.addEventListener("DOMContentLoaded", function() {
           {% when 'accessory-feature' %}
             {% if block.settings['accessory-feature'] != blank %}
               <div class="product__extra_accessory-feature">
-                <h4 class="product__extra_info-title">{{ block.settings.title }}</h4>
+                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                 <div>{{ block.settings['accessory-feature'] }}</div>
               </div>
             {% endif %}
