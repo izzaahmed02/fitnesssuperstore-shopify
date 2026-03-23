@@ -211,30 +211,56 @@
   var lightboxImg = lightbox.querySelector('img');
   var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
 
+  var activeLightboxRequest = null;
+
+  function openLightbox(img) {
+    var previewSrc = img.currentSrc || img.src;
+    var fullSrc = img.dataset.full || previewSrc;
+
+    activeLightboxRequest = fullSrc;
+    lightboxImg.src = previewSrc;
+    lightboxImg.alt = img.alt || 'Expanded customer photo';
+    lightbox.classList.add('customer-photo-gallery__lightbox--active');
+    lightbox.setAttribute('aria-hidden', 'false');
+    lightbox.removeAttribute('inert');
+
+    if (fullSrc !== previewSrc) {
+      var fullImage = new Image();
+      fullImage.decoding = 'async';
+      fullImage.onload = function () {
+        if (activeLightboxRequest === fullSrc) {
+          lightboxImg.src = fullSrc;
+        }
+      };
+      fullImage.src = fullSrc;
+    }
+  }
+
+  function closeLightbox() {
+    activeLightboxRequest = null;
+    lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+    lightbox.setAttribute('aria-hidden', 'true');
+    lightbox.setAttribute('inert', '');
+    lightboxImg.removeAttribute('src');
+  }
+
   slides.forEach(function (img) {
     img.addEventListener('click', function () {
-      lightboxImg.src = img.dataset.full || img.src;
-      lightbox.classList.add('customer-photo-gallery__lightbox--active');
-      lightbox.setAttribute('aria-hidden', 'false');
-      lightbox.removeAttribute('inert');
+      openLightbox(img);
     });
   });
 
-  closeBtn.addEventListener('click', function () {
-    lightbox.classList.remove('customer-photo-gallery__lightbox--active');
-     lightbox.setAttribute('aria-hidden', 'true');
-    lightbox.setAttribute('inert', '');
-  });
+  closeBtn.addEventListener('click', closeLightbox);
 
   lightbox.addEventListener('click', function (e) {
     if (e.target === lightbox) {
-      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+      closeLightbox();
     }
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+    if (e.key === 'Escape' && lightbox.classList.contains('customer-photo-gallery__lightbox--active')) {
+      closeLightbox();
     }
   });
 
