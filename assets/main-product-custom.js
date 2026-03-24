@@ -541,6 +541,7 @@ function generateAffirmPaymentTerms() {
 	};
   }
 
+  /*
   function generateShopPayTerms() {
 	let productPrice = getProductPrice();
 
@@ -575,6 +576,7 @@ function generateAffirmPaymentTerms() {
 
 	return shopPayTermsHTML;
   }
+	*/
 
   function getShopPayFinancingPlans(productPrice) {
 	const plans = [];
