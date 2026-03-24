@@ -422,7 +422,7 @@ function generatePayLaterAggregate() {
 	<h1 class="title">BUY NOW. PAY LATER.</h1>
 	<p class="price">Purchase price: <strong>$${cleanedPrice}</strong>
 	</p>
-	<p class="description"> Choose Affirm or Shop Pay at checkout. Subject to approval. </p>
+	<p class="description"> Choose Affirm at checkout. Subject to approval. </p>
 	<div class="steps-container">
 	  <div class="step">
 		<div class="step-circle">1</div>
@@ -456,7 +456,7 @@ function combinedPayLater() {
 
 	/*payLaterOptions += generateAfterPayPaymentTerms();*/
 	payLaterOptions += generateAffirmPaymentTerms();
-	payLaterOptions += generateShopPayTerms();
+	/* payLaterOptions += generateShopPayTerms(); */
 
 	return payLaterOptions;
 }
