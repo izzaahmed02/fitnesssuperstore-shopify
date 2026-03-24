@@ -40,6 +40,8 @@ class MobileGallery extends HTMLElement {
 
     this.updatePopupReferences();
 
+    this.setSliderAspectRatio();
+
     const isDesktop = () => window.matchMedia('(min-width: 990px)').matches;
     this.checkAndInit(isDesktop);
 
@@ -59,7 +61,6 @@ class MobileGallery extends HTMLElement {
     this.observePopup();
 
     this.attachSlideClickHandlers();
-    this.setSliderAspectRatio();
   }
 
   updatePopupReferences() {
@@ -146,7 +147,13 @@ observePopup() {
     if (!this.slider || !this.mediaData?.length) return;
 
     const featuredMedia = this.mediaData[0];
-    const ratio = Number(featuredMedia?.preview_image?.aspect_ratio) || Number(featuredMedia?.aspect_ratio) || 1;
+    const previewImage = featuredMedia?.preview_image || {};
+
+    let ratio = Number(previewImage.aspect_ratio) || Number(featuredMedia?.aspect_ratio);
+    if ((!ratio || !Number.isFinite(ratio)) && previewImage.width && previewImage.height) {
+      ratio = Number(previewImage.width) / Number(previewImage.height);
+    }
+    if (!ratio || !Number.isFinite(ratio) || ratio <= 0) return;
 
     this.style.setProperty('--mobile-gallery-aspect-ratio', String(ratio));
   }
