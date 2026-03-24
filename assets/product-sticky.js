@@ -101,7 +101,7 @@ function checkScroll() {
   }
 
   let resizeTimeout;
-  window.addEventListener("resize", () => {
+  window.addEventListener("load", () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(setupScrollListener, 100);
   });
