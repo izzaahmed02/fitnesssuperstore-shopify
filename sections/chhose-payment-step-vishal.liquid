@@ -1,0 +1,277 @@
+{{ 'section-multicolumn.css' | asset_url | stylesheet_tag }}
+
+<section class="where-payment" style="background: {{ section.settings.bg }}; padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;">
+  <div class="page-width">
+
+    <!-- Main Heading Block -->
+    <div class="where-payment__header">
+      <h2>{{ section.settings.title }}</h2>
+      {% if section.settings.subtitle != blank %}
+        <p class="where-payment__subtitle">{{ section.settings.subtitle }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="where-payment__grid">
+      {% for block in section.blocks %}
+        <div class="where-payment__card" {{ block.shopify_attributes }}>
+          
+          <!-- Card Heading with Icon -->
+          <div class="where-payment__card-heading">
+            {% if block.settings.icon != blank %}
+              <img 
+                src="{{ block.settings.icon | image_url: width: 40 }}" 
+                alt="" 
+                width="22" height="22"
+              >
+            {% endif %}
+            <span>{{ block.settings.title }}</span>
+          </div>
+
+          <!-- Card Subheading -->
+          {% if block.settings.subtitle != blank %}
+            <p class="where-payment__card-subtitle">{{ block.settings.subtitle }}</p>
+          {% endif %}
+
+          <!-- Bullet List -->
+          {% if block.settings.text != blank %}
+            <div class="where-payment__card-text rte">
+              {{ block.settings.text }}
+            </div>
+          {% endif %}
+
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+
+<style>
+.where-payment {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Header */
+.where-payment__header {
+  text-align: center;
+  border: 2px dashed #c8dff5;
+  border-radius: 8px;
+  padding: 24px 20px;
+  margin-bottom: 24px;
+}
+
+.where-payment__header h2 {
+  font-size: 28px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px;
+  color: #111;
+}
+
+.where-payment__subtitle {
+  font-size: 15px;
+  color: #e07a3a;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Grid */
+.where-payment__grid {
+  display: grid;
+  grid-template-columns: repeat({{ section.settings.columns_desktop }}, 1fr);
+  gap: 20px;
+  border: 2px dashed #c8dff5;
+  border-radius: 8px;
+  padding: 24px;
+  background: #fff;
+}
+
+/* Card */
+.where-payment__card {
+  padding: 20px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fff;
+}
+
+/* Card heading row — icon + text */
+.where-payment__card-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.where-payment__card-heading img {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.where-payment__card-heading span {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #111;
+}
+
+/* Card subheading */
+.where-payment__card-subtitle {
+  font-size: 13px;
+  color: #555;
+  margin: 0 0 12px;
+}
+
+/* Bullet list from RTE */
+.where-payment__card-text ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.where-payment__card-text ul li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.where-payment__card-text ul li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2563eb;
+  margin-top: 5px;
+}
+
+/* Mobile */
+@media (max-width: 749px) {
+  .where-payment__grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .where-payment__header h2 {
+    font-size: 22px;
+  }
+}
+</style>
+
+{% schema %}
+{
+  "name": "Where You'll See Payments",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg",
+      "label": "Background color",
+      "default": "#f5f8fc"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Main heading",
+      "default": "WHERE YOU'LL SEE PAYMENT OPTIONS"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subheading",
+      "default": "Payment methods appear in different places depending on the step."
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 2,
+      "label": "Columns on desktop"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom",
+      "default": 40
+    }
+  ],
+  "blocks": [
+    {
+      "type": "card",
+      "name": "Payment Card",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Card icon (next to heading)"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Card heading",
+          "default": "CART (EXPRESS BUTTONS)"
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Card subheading"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Bullet list (use bulleted list in editor)",
+          "default": "<ul><li>Shop Pay</li><li>PayPal</li></ul>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Where You'll See Payments",
+      "blocks": [
+        {
+          "type": "card",
+          "settings": {
+            "title": "CART (EXPRESS BUTTONS)",
+            "text": "<ul><li>Shop Pay</li><li>PayPal</li><li>Amazon Pay (device dependent)</li><li>Google Pay</li></ul>"
+          }
+        },
+        {
+          "type": "card",
+          "settings": {
+            "title": "CHECKOUT (PAYMENT STEP)",
+            "text": "<ul><li>Card</li><li>Shop Pay</li><li>PayPal</li><li>Affirm</li><li>other available methods for your order</li></ul>"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
