@@ -1,0 +1,686 @@
+{% comment %}
+  Section: Pay Over Time - Payment Options Guide
+  Reusable section with blocks for payment options (radio buttons).
+  Desktop: arrows point left from labels to options
+  Mobile: arrows point down/up from labels above/below
+{% endcomment %}
+
+<section class="pot-section" id="pay-over-time-{{ section.id }}">
+  <div class="pot-container">
+    <h2 class="pot-heading">{{ section.settings.heading }}</h2>
+    <p class="pot-subheading">{{ section.settings.subheading }}</p>
+
+    <div class="pot-layout">
+
+      {%- comment -%} Desktop Left Labels {%- endcomment -%}
+      <div class="pot-labels pot-labels--left">
+        {%- for block in section.blocks -%}
+          {%- if block.settings.show_arrow_label and block.settings.arrow_side == 'left' -%}
+            <div
+              class="pot-label-item pot-label-item--left"
+              data-block-index="{{ forloop.index0 }}"
+              {{ block.shopify_attributes }}
+            >
+              <span class="pot-label-text">{{ block.settings.arrow_label }}</span>
+              <span class="pot-arrow pot-arrow--right">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 14" fill="none" aria-hidden="true">
+                  <line x1="0" y1="7" x2="52" y2="7" stroke="currentColor" stroke-width="2"/>
+                  <polyline points="46,1 58,7 46,13" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+                </svg>
+              </span>
+            </div>
+          {%- endif -%}
+          {%- if block.settings.show_or_divider -%}
+            <div class="pot-or-divider" {{ block.shopify_attributes }}>or</div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+
+      {%- comment -%} Payment Card {%- endcomment -%}
+      <div class="pot-card">
+        <div class="pot-card__header">{{ section.settings.card_title }}</div>
+        <div class="pot-options" id="pot-options-{{ section.id }}">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'payment_option' -%}
+              <label
+                class="pot-option{% if block.settings.highlighted %} pot-option--highlighted{% endif %}"
+                {{ block.shopify_attributes }}
+              >
+                <input
+                  type="radio"
+                  name="pot-payment-{{ section.id }}"
+                  value="option-{{ forloop.index }}"
+                  class="pot-radio"
+                  {% if block.settings.highlighted %}checked{% endif %}
+                >
+                <span class="pot-radio-custom"></span>
+                <span class="pot-option-label">{{ block.settings.option_label }}</span>
+              </label>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      </div>
+
+      {%- comment -%} Desktop Right Labels (if any) {%- endcomment -%}
+      <div class="pot-labels pot-labels--right">
+        {%- for block in section.blocks -%}
+          {%- if block.settings.show_arrow_label and block.settings.arrow_side == 'right' -%}
+            <div
+              class="pot-label-item pot-label-item--right"
+              data-block-index="{{ forloop.index0 }}"
+              {{ block.shopify_attributes }}
+            >
+              <span class="pot-arrow pot-arrow--left">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 14" fill="none" aria-hidden="true">
+                  <line x1="60" y1="7" x2="8" y2="7" stroke="currentColor" stroke-width="2"/>
+                  <polyline points="14,1 2,7 14,13" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <span class="pot-label-text">{{ block.settings.arrow_label }}</span>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+
+    </div>{%- comment -%} /.pot-layout {%- endcomment -%}
+
+    {%- comment -%} Mobile Labels — rendered via CSS visibility, positioned via JS {%- endcomment -%}
+    <div class="pot-mobile-labels" aria-hidden="true">
+      {%- for block in section.blocks -%}
+        {%- if block.settings.show_arrow_label -%}
+          <div
+            class="pot-mobile-label"
+            data-block-index="{{ forloop.index0 }}"
+            data-arrow-side="{{ block.settings.mobile_arrow_direction | default: 'down' }}"
+            {{ block.shopify_attributes }}
+          >
+            <span class="pot-label-text">{{ block.settings.arrow_label }}</span>
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+
+    {%- if section.settings.footnote != blank -%}
+      <div class="pot-footnote">{{ section.settings.footnote }}</div>
+    {%- endif -%}
+  </div>
+</section>
+
+<style>
+  /* =============================================
+     CSS VARIABLES
+  ============================================= */
+  #pay-over-time-{{ section.id }} {
+    --pot-accent: {{ section.settings.accent_color }};
+    --pot-accent-bg: {{ section.settings.accent_bg_color }};
+    --pot-heading-color: {{ section.settings.heading_color }};
+    --pot-subheading-color: {{ section.settings.subheading_color }};
+    --pot-bg: {{ section.settings.section_bg }};
+    --pot-card-bg: #ffffff;
+    --pot-border: #e5e7eb;
+    --pot-label-font-size: 1.05rem;
+    --pot-heading-font-size: clamp(1.5rem, 4vw, 2.2rem);
+  }
+
+  /* =============================================
+     SECTION BASE
+  ============================================= */
+  .pot-section {
+    background: var(--pot-bg);
+    padding: 60px 20px;
+    font-family: inherit;
+  }
+
+  .pot-container {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .pot-heading {
+    font-size: var(--pot-heading-font-size);
+    font-weight: 900;
+    color: var(--pot-heading-color);
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+    line-height: 1.1;
+  }
+
+  .pot-subheading {
+    font-size: 1rem;
+    color: var(--pot-subheading-color);
+    font-weight: 500;
+    margin: 0 0 36px;
+  }
+
+  /* =============================================
+     LAYOUT — DESKTOP (3 columns)
+  ============================================= */
+  .pot-layout {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0 16px;
+  }
+
+  /* =============================================
+     LEFT / RIGHT LABEL COLUMNS
+  ============================================= */
+  .pot-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .pot-labels--left {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .pot-labels--right {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .pot-label-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    white-space: nowrap;
+  }
+
+  .pot-label-item--left {
+    justify-content: flex-end;
+  }
+
+  .pot-label-item--right {
+    justify-content: flex-start;
+  }
+
+  .pot-label-text {
+    font-size: var(--pot-label-font-size);
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .pot-arrow svg {
+    width: 60px;
+    height: 14px;
+    color: var(--pot-accent);
+    display: block;
+  }
+
+  .pot-or-divider {
+    font-size: 0.9rem;
+    color: #888;
+    text-align: center;
+    padding: 10px 0;
+    width: 100%;
+  }
+
+  /* =============================================
+     PAYMENT CARD
+  ============================================= */
+  .pot-card {
+    background: var(--pot-card-bg);
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    padding: 24px 20px;
+    min-width: 300px;
+    max-width: 420px;
+    width: 100%;
+  }
+
+  .pot-card__header {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-align: left;
+    margin-bottom: 16px;
+    padding-bottom: 0;
+  }
+
+  /* =============================================
+     OPTIONS (RADIO BUTTONS)
+  ============================================= */
+  .pot-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pot-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1.5px solid var(--pot-border);
+    border-radius: 10px;
+    padding: 13px 16px;
+    cursor: pointer;
+    transition: border-color 0.18s, background 0.18s;
+    background: #fff;
+    text-align: left;
+    position: relative;
+  }
+
+  .pot-option:hover {
+    border-color: var(--pot-accent);
+  }
+
+  .pot-option--highlighted,
+  .pot-option:has(.pot-radio:checked) {
+    border-color: var(--pot-accent);
+    background: #fff;
+  }
+
+  /* Hide native radio */
+  .pot-radio {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  /* Custom radio */
+  .pot-radio-custom {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--pot-border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.18s;
+    background: #fff;
+    position: relative;
+  }
+
+  .pot-radio-custom::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--pot-accent);
+    transform: scale(0);
+    transition: transform 0.18s;
+  }
+
+  .pot-option--highlighted .pot-radio-custom,
+  .pot-option:has(.pot-radio:checked) .pot-radio-custom {
+    border-color: var(--pot-accent);
+  }
+
+  .pot-option--highlighted .pot-radio-custom::after,
+  .pot-option:has(.pot-radio:checked) .pot-radio-custom::after {
+    transform: scale(1);
+  }
+
+  .pot-option-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1a1a1a;
+  }
+
+  /* =============================================
+     FOOTNOTE
+  ============================================= */
+  .pot-footnote {
+    margin-top: 24px;
+    display: inline-block;
+    background: var(--pot-accent-bg);
+    border: 1.5px solid var(--pot-accent);
+    border-radius: 10px;
+    padding: 13px 22px;
+    font-size: 0.92rem;
+    color: #1a1a1a;
+    max-width: 620px;
+    line-height: 1.5;
+  }
+
+  /* =============================================
+     MOBILE LABELS (hidden on desktop)
+  ============================================= */
+  .pot-mobile-labels {
+    display: none;
+  }
+
+  /* =============================================
+     RESPONSIVE — MOBILE
+  ============================================= */
+  @media (max-width: 680px) {
+    .pot-section {
+      padding: 40px 16px;
+    }
+
+    /* Hide desktop side labels */
+    .pot-labels--left,
+    .pot-labels--right {
+      display: none;
+    }
+
+    /* Switch layout to single column */
+    .pot-layout {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .pot-card {
+      min-width: unset;
+      max-width: 100%;
+    }
+
+    /* Show mobile labels container */
+    .pot-mobile-labels {
+      display: block;
+      position: relative;
+    }
+
+    /* Mobile label + arrow — injected via JS below for precise positioning */
+    .pot-mobile-label {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      padding-right: 12px;
+      margin-bottom: 0;
+    }
+
+    .pot-mobile-label .pot-label-text {
+      font-size: 0.95rem;
+    }
+
+    .pot-mobile-arrow-svg {
+      color: var(--pot-accent);
+    }
+  }
+</style>
+
+<script>
+(function() {
+  var section = document.getElementById('pay-over-time-{{ section.id }}');
+  if (!section) return;
+
+  /* =============================================
+     RADIO INTERACTIVITY
+  ============================================= */
+  var radios = section.querySelectorAll('.pot-radio');
+  radios.forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      section.querySelectorAll('.pot-option').forEach(function(opt) {
+        opt.classList.remove('pot-option--highlighted');
+      });
+      if (this.checked) {
+        this.closest('.pot-option').classList.add('pot-option--highlighted');
+      }
+    });
+  });
+
+  /* =============================================
+     MOBILE: Position labels with arrows
+     relative to their matching option rows
+  ============================================= */
+  function setupMobileLabels() {
+    var isMobile = window.innerWidth <= 680;
+    var card = section.querySelector('.pot-card');
+    var options = section.querySelectorAll('.pot-option');
+    var mobileLabels = section.querySelectorAll('.pot-mobile-label');
+
+    if (!isMobile || !card || options.length === 0) return;
+
+    // Clear any previously injected arrows
+    mobileLabels.forEach(function(lbl) {
+      var existing = lbl.querySelector('.pot-mobile-arrow-svg-wrap');
+      if (existing) existing.remove();
+    });
+
+    mobileLabels.forEach(function(label) {
+      var blockIdx = parseInt(label.getAttribute('data-block-index'), 10);
+      var direction = label.getAttribute('data-arrow-side') || 'down';
+
+      // Find matching option by block index position
+      // We map block index to the Nth payment_option block
+      var optionEl = options[blockIdx] || null;
+      if (!optionEl) return;
+
+      // Create arrow SVG
+      var wrap = document.createElement('div');
+      wrap.className = 'pot-mobile-arrow-svg-wrap';
+      wrap.style.cssText = 'display:flex;justify-content:flex-end;padding-right:18px;';
+
+      var svgNS = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('viewBox', '0 0 14 50');
+      svg.setAttribute('width', '14');
+      svg.setAttribute('height', '50');
+      svg.setAttribute('fill', 'none');
+      svg.classList.add('pot-mobile-arrow-svg');
+
+      var line = document.createElementNS(svgNS, 'line');
+      var poly = document.createElementNS(svgNS, 'polyline');
+
+      if (direction === 'down') {
+        line.setAttribute('x1', '7'); line.setAttribute('y1', '0');
+        line.setAttribute('x2', '7'); line.setAttribute('y2', '42');
+        poly.setAttribute('points', '1,36 7,48 13,36');
+      } else {
+        line.setAttribute('x1', '7'); line.setAttribute('y1', '50');
+        line.setAttribute('x2', '7'); line.setAttribute('y2', '8');
+        poly.setAttribute('points', '1,14 7,2 13,14');
+      }
+
+      line.setAttribute('stroke', 'currentColor');
+      line.setAttribute('stroke-width', '2');
+      poly.setAttribute('fill', 'none');
+      poly.setAttribute('stroke', 'currentColor');
+      poly.setAttribute('stroke-width', '2');
+      poly.setAttribute('stroke-linejoin', 'round');
+      poly.setAttribute('stroke-linecap', 'round');
+
+      svg.appendChild(line);
+      svg.appendChild(poly);
+      wrap.appendChild(svg);
+      label.appendChild(wrap);
+    });
+  }
+
+  /* Run on load and resize */
+  setupMobileLabels();
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(setupMobileLabels, 150);
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Pay Over Time",
+  "tag": "section",
+  "class": "pay-over-time-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "WHERE DO I CLICK TO PAY OVER TIME?"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "At checkout, look for these two payment options:"
+    },
+    {
+      "type": "text",
+      "id": "card_title",
+      "label": "Card title",
+      "default": "Payment"
+    },
+    {
+      "type": "textarea",
+      "id": "footnote",
+      "label": "Footnote text",
+      "default": "Shop Pay Installments is selected inside Shop Pay. Affirm is selected separately."
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "section_bg",
+      "label": "Section background",
+      "default": "#f0f0f0"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color (arrows, radio, border)",
+      "default": "#e8572a"
+    },
+    {
+      "type": "color",
+      "id": "accent_bg_color",
+      "label": "Footnote background",
+      "default": "#fdeee8"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "color",
+      "id": "subheading_color",
+      "label": "Subheading color",
+      "default": "#4a7ab5"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "payment_option",
+      "name": "Payment Option",
+      "settings": [
+        {
+          "type": "text",
+          "id": "option_label",
+          "label": "Option label",
+          "default": "Shop Pay - Pay in full or in installments"
+        },
+        {
+          "type": "checkbox",
+          "id": "highlighted",
+          "label": "Highlighted (selected state)",
+          "default": false
+        },
+        {
+          "type": "header",
+          "content": "Arrow label (desktop)"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_arrow_label",
+          "label": "Show arrow label",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "arrow_label",
+          "label": "Arrow label text",
+          "default": "Select Shop Pay"
+        },
+        {
+          "type": "select",
+          "id": "arrow_side",
+          "label": "Arrow side (desktop)",
+          "options": [
+            { "value": "left", "label": "Left" },
+            { "value": "right", "label": "Right" }
+          ],
+          "default": "left"
+        },
+        {
+          "type": "select",
+          "id": "mobile_arrow_direction",
+          "label": "Mobile arrow direction",
+          "options": [
+            { "value": "down", "label": "Down (label above option)" },
+            { "value": "up", "label": "Up (label below option)" }
+          ],
+          "default": "down"
+        },
+        {
+          "type": "header",
+          "content": "Dividers"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_or_divider",
+          "label": "Show 'or' divider after this item",
+          "default": false
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Pay Over Time",
+      "blocks": [
+        {
+          "type": "payment_option",
+          "settings": {
+            "option_label": "Credit / Debit Card",
+            "highlighted": false,
+            "show_arrow_label": false
+          }
+        },
+        {
+          "type": "payment_option",
+          "settings": {
+            "option_label": "Shop Pay - Pay in full or in installments",
+            "highlighted": true,
+            "show_arrow_label": true,
+            "arrow_label": "Select Shop Pay",
+            "arrow_side": "left",
+            "mobile_arrow_direction": "down",
+            "show_or_divider": true
+          }
+        },
+        {
+          "type": "payment_option",
+          "settings": {
+            "option_label": "PayPal",
+            "highlighted": false,
+            "show_arrow_label": false
+          }
+        },
+        {
+          "type": "payment_option",
+          "settings": {
+            "option_label": "Affirm - Pay over time",
+            "highlighted": true,
+            "show_arrow_label": true,
+            "arrow_label": "Select Affirm",
+            "arrow_side": "left",
+            "mobile_arrow_direction": "up",
+            "show_or_divider": false
+          }
+        },
+        {
+          "type": "payment_option",
+          "settings": {
+            "option_label": "Amazon Pay",
+            "highlighted": false,
+            "show_arrow_label": false
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
