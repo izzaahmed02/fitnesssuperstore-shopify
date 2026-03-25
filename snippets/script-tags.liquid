@@ -13,7 +13,13 @@
   <script src="{{ 'animations.js' | asset_url }}" defer="defer"></script>
 {% endif %}
 
-<script src="{{ 'slick.min.js' | asset_url }}" defer></script>
+{% assign should_load_slick = false %}
+{% if request.page_type == 'index' or request.page_type == 'product' or request.page_type == 'collection' or request.page_type == 'blog' or request.page_type == 'article' or template contains 'page.homepage' or template contains 'page.reviews' or template contains 'page.warehouse' %}
+  {% assign should_load_slick = true %}
+{% endif %}
+{% if should_load_slick %}
+  <script src="{{ 'slick.min.js' | asset_url }}" defer></script>
+{% endif %}
 
 {% if request.page_type == 'product' %}
   <script>

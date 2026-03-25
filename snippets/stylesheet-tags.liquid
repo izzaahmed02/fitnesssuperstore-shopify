@@ -6,31 +6,37 @@
   <link rel="preload" as="font" href="{{ settings.type_header_font | font_url }}" type="font/woff2" crossorigin>
 {% endunless %}
 
+{{ 'main.min.css' | asset_url | stylesheet_tag: preload: true }}
+{{ 'base-v2.min.css' | asset_url | stylesheet_tag: preload: true }}
+{{ 'custom-shell.css' | asset_url | stylesheet_tag: preload: true }}
 
-<link rel="preload" href="{{ 'main.min.css' | asset_url }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="{{ 'main.min.css' | asset_url }}"></noscript>
-
-<!-- Base styles that must render before LCP -->
-<link rel="preload" href="{{ 'base-v2.min.css' | asset_url }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="{{ 'base-v2.min.css' | asset_url }}"></noscript>
-
-<!-- Non-critical CSS (load after LCP) -->
-
-<link rel="preload" href="{{ 'custom.css' | asset_url }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="{{ 'custom.css' | asset_url }}"></noscript>
-
-
-
-
-
-{% if settings.predictive_search_enabled %}
-  <link rel="stylesheet" href="{{ 'component-predictive-search.css' | asset_url }}" media="print" onload="this.media='all'">
+{% if request.page_type == 'product' %}
+  <link rel="stylesheet" href="{{ 'product-options.css' | asset_url }}" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="{{ 'reviews-overrides.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="{{ 'product-options.css' | asset_url }}"></noscript>
+  <noscript><link rel="stylesheet" href="{{ 'reviews-overrides.css' | asset_url }}"></noscript>
 {% endif %}
 
-<link rel="preload" as="style" href="{{ 'slick.min.css' | asset_url }}" onload="this.onload=null;this.rel='stylesheet';">
-<link rel="preload" as="style" href="{{ 'slick-theme.min.css' | asset_url }}" onload="this.onload=null;this.rel='stylesheet';">
+{% if settings.predictive_search_enabled %}
+  <link rel="stylesheet" href="{{ 'search-overrides.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="{{ 'search-overrides.css' | asset_url }}"></noscript>
+{% endif %}
 
-<noscript>
-  <link rel="stylesheet" href="{{ 'slick.min.css' | asset_url }}">
-  <link rel="stylesheet" href="{{ 'slick-theme.min.css' | asset_url }}">
-</noscript>
+{% if request.page_type == 'index' or request.page_type == 'collection' or request.page_type == 'page' %}
+  <link rel="stylesheet" href="{{ 'page-modules.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="{{ 'page-modules.css' | asset_url }}"></noscript>
+{% endif %}
+
+{% assign should_load_slick = false %}
+{% if request.page_type == 'index' or request.page_type == 'product' or request.page_type == 'collection' or request.page_type == 'blog' or request.page_type == 'article' or template contains 'page.homepage' or template contains 'page.reviews' or template contains 'page.warehouse' %}
+  {% assign should_load_slick = true %}
+{% endif %}
+
+{% if should_load_slick %}
+  <link rel="stylesheet" href="{{ 'slick.min.css' | asset_url }}" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="{{ 'slick-theme.min.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="{{ 'slick.min.css' | asset_url }}">
+    <link rel="stylesheet" href="{{ 'slick-theme.min.css' | asset_url }}">
+  </noscript>
+{% endif %}
