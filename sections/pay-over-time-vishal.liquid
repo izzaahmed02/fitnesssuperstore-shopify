@@ -1,9 +1,17 @@
 {% comment %}
   Section: Pay Over Time - Payment Options Guide
-  Reusable section with blocks for payment options (radio buttons).
-  Desktop: arrows point left from labels to options
-  Mobile: arrows point down/up from labels above/below
+  - Reusable section with blocks for payment options (radio buttons)
+  - Desktop: arrows point left/right from labels to options
+  - Mobile: arrows point down/up from labels above/below
+  - Read-only mode: controlled via Theme Editor toggle
+    When enabled, all radios are disabled and the two pre-selected
+    options are defined by "readonly_selected_1" and "readonly_selected_2"
+    settings (block position numbers, 1-based)
 {% endcomment %}
+
+{%- assign is_readonly = section.settings.readonly_mode -%}
+{%- assign sel1 = section.settings.readonly_selected_1 | plus: 0 -%}
+{%- assign sel2 = section.settings.readonly_selected_2 | plus: 0 -%}
 
 <section class="pot-section" id="pay-over-time-{{ section.id }}">
   <div class="pot-container">
@@ -14,57 +22,84 @@
 
       {%- comment -%} Desktop Left Labels {%- endcomment -%}
       <div class="pot-labels pot-labels--left">
+        {%- assign option_index = 0 -%}
         {%- for block in section.blocks -%}
-          {%- if block.settings.show_arrow_label and block.settings.arrow_side == 'left' -%}
-            <div
-              class="pot-label-item pot-label-item--left"
-              data-block-index="{{ forloop.index0 }}"
-              {{ block.shopify_attributes }}
-            >
-              <span class="pot-label-text">{{ block.settings.arrow_label }}</span>
-              <span class="pot-arrow pot-arrow--right">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 14" fill="none" aria-hidden="true">
-                  <line x1="0" y1="7" x2="52" y2="7" stroke="currentColor" stroke-width="2"/>
-                  <polyline points="46,1 58,7 46,13" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-                </svg>
-              </span>
-            </div>
-          {%- endif -%}
-          {%- if block.settings.show_or_divider -%}
-            <div class="pot-or-divider" {{ block.shopify_attributes }}>or</div>
+          {%- if block.type == 'payment_option' -%}
+            {%- assign option_index = option_index | plus: 1 -%}
+            {%- if block.settings.show_arrow_label and block.settings.arrow_side == 'left' -%}
+              <div
+                class="pot-label-item pot-label-item--left"
+                data-block-index="{{ forloop.index0 }}"
+                {{ block.shopify_attributes }}
+              >
+                <span class="pot-label-text">{{ block.settings.arrow_label }}</span>
+                <span class="pot-arrow pot-arrow--right">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 14" fill="none" aria-hidden="true">
+                    <line x1="0" y1="7" x2="52" y2="7" stroke="currentColor" stroke-width="2"/>
+                    <polyline points="46,1 58,7 46,13" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+                  </svg>
+                </span>
+              </div>
+            {%- endif -%}
+            {%- if block.settings.show_or_divider -%}
+              <div class="pot-or-divider">or</div>
+            {%- endif -%}
           {%- endif -%}
         {%- endfor -%}
       </div>
 
       {%- comment -%} Payment Card {%- endcomment -%}
-      <div class="pot-card">
+      <div class="pot-card{% if is_readonly %} pot-card--readonly{% endif %}">
         <div class="pot-card__header">{{ section.settings.card_title }}</div>
         <div class="pot-options" id="pot-options-{{ section.id }}">
+
+          {%- assign option_counter = 0 -%}
           {%- for block in section.blocks -%}
             {%- if block.type == 'payment_option' -%}
+              {%- assign option_counter = option_counter | plus: 1 -%}
+
+              {%- if is_readonly -%}
+                {%- assign is_checked = false -%}
+                {%- if option_counter == sel1 or option_counter == sel2 -%}
+                  {%- assign is_checked = true -%}
+                {%- endif -%}
+              {%- else -%}
+                {%- assign is_checked = block.settings.highlighted -%}
+              {%- endif -%}
+
               <label
-                class="pot-option{% if block.settings.highlighted %} pot-option--highlighted{% endif %}"
+                class="pot-option{% if is_checked %} pot-option--highlighted{% endif %}{% if is_readonly %} pot-option--readonly{% endif %}"
                 {{ block.shopify_attributes }}
               >
                 <input
                   type="radio"
                   name="pot-payment-{{ section.id }}"
-                  value="option-{{ forloop.index }}"
+                  value="option-{{ option_counter }}"
                   class="pot-radio"
-                  {% if block.settings.highlighted %}checked{% endif %}
+                  {% if is_checked %}checked{% endif %}
+                  {% if is_readonly %}disabled aria-disabled="true"{% endif %}
                 >
                 <span class="pot-radio-custom"></span>
                 <span class="pot-option-label">{{ block.settings.option_label }}</span>
+                {%- if is_readonly -%}
+                  <span class="pot-readonly-badge" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="13" height="13">
+                      <path d="M11 6V5a3 3 0 0 0-6 0v1H3.5A1.5 1.5 0 0 0 2 7.5v6A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5v-6A1.5 1.5 0 0 0 12.5 6H11ZM6 5a2 2 0 1 1 4 0v1H6V5Z"/>
+                    </svg>
+                  </span>
+                {%- endif -%}
               </label>
+
             {%- endif -%}
           {%- endfor -%}
+
         </div>
       </div>
 
-      {%- comment -%} Desktop Right Labels (if any) {%- endcomment -%}
+      {%- comment -%} Desktop Right Labels {%- endcomment -%}
       <div class="pot-labels pot-labels--right">
         {%- for block in section.blocks -%}
-          {%- if block.settings.show_arrow_label and block.settings.arrow_side == 'right' -%}
+          {%- if block.type == 'payment_option' and block.settings.show_arrow_label and block.settings.arrow_side == 'right' -%}
             <div
               class="pot-label-item pot-label-item--right"
               data-block-index="{{ forloop.index0 }}"
@@ -82,12 +117,12 @@
         {%- endfor -%}
       </div>
 
-    </div>{%- comment -%} /.pot-layout {%- endcomment -%}
+    </div>
 
-    {%- comment -%} Mobile Labels — rendered via CSS visibility, positioned via JS {%- endcomment -%}
+    {%- comment -%} Mobile Labels {%- endcomment -%}
     <div class="pot-mobile-labels" aria-hidden="true">
       {%- for block in section.blocks -%}
-        {%- if block.settings.show_arrow_label -%}
+        {%- if block.type == 'payment_option' and block.settings.show_arrow_label -%}
           <div
             class="pot-mobile-label"
             data-block-index="{{ forloop.index0 }}"
@@ -103,42 +138,43 @@
     {%- if section.settings.footnote != blank -%}
       <div class="pot-footnote">{{ section.settings.footnote }}</div>
     {%- endif -%}
+
+    {%- if is_readonly and section.settings.readonly_badge_text != blank -%}
+      <p class="pot-readonly-notice">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" width="14" height="14" aria-hidden="true">
+          <path d="M11 6V5a3 3 0 0 0-6 0v1H3.5A1.5 1.5 0 0 0 2 7.5v6A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5v-6A1.5 1.5 0 0 0 12.5 6H11ZM6 5a2 2 0 1 1 4 0v1H6V5Z"/>
+        </svg>
+        {{ section.settings.readonly_badge_text }}
+      </p>
+    {%- endif -%}
+
   </div>
 </section>
 
 <style>
-  /* =============================================
-     CSS VARIABLES
-  ============================================= */
   #pay-over-time-{{ section.id }} {
-    --pot-accent: {{ section.settings.accent_color }};
-    --pot-accent-bg: {{ section.settings.accent_bg_color }};
-    --pot-heading-color: {{ section.settings.heading_color }};
+    --pot-accent:           {{ section.settings.accent_color }};
+    --pot-accent-bg:        {{ section.settings.accent_bg_color }};
+    --pot-heading-color:    {{ section.settings.heading_color }};
     --pot-subheading-color: {{ section.settings.subheading_color }};
-    --pot-bg: {{ section.settings.section_bg }};
-    --pot-card-bg: #ffffff;
-    --pot-border: #e5e7eb;
-    --pot-label-font-size: 1.05rem;
-    --pot-heading-font-size: clamp(1.5rem, 4vw, 2.2rem);
+    --pot-bg:               {{ section.settings.section_bg }};
+    --pot-readonly-tint:    {{ section.settings.readonly_tint_color }};
+    --pot-card-bg:          #ffffff;
+    --pot-border:           #e5e7eb;
   }
 
-  /* =============================================
-     SECTION BASE
-  ============================================= */
   .pot-section {
     background: var(--pot-bg);
     padding: 60px 20px;
     font-family: inherit;
   }
-
   .pot-container {
     max-width: 900px;
     margin: 0 auto;
     text-align: center;
   }
-
   .pot-heading {
-    font-size: var(--pot-heading-font-size);
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
     font-weight: 900;
     color: var(--pot-heading-color);
     text-transform: uppercase;
@@ -146,7 +182,6 @@
     margin: 0 0 10px;
     line-height: 1.1;
   }
-
   .pot-subheading {
     font-size: 1rem;
     color: var(--pot-subheading-color);
@@ -154,9 +189,7 @@
     margin: 0 0 36px;
   }
 
-  /* =============================================
-     LAYOUT — DESKTOP (3 columns)
-  ============================================= */
+  /* Layout */
   .pot-layout {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -164,25 +197,10 @@
     gap: 0 16px;
   }
 
-  /* =============================================
-     LEFT / RIGHT LABEL COLUMNS
-  ============================================= */
-  .pot-labels {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .pot-labels--left {
-    align-items: flex-end;
-    text-align: right;
-  }
-
-  .pot-labels--right {
-    align-items: flex-start;
-    text-align: left;
-  }
-
+  /* Labels */
+  .pot-labels { display: flex; flex-direction: column; gap: 0; }
+  .pot-labels--left  { align-items: flex-end;   text-align: right; }
+  .pot-labels--right { align-items: flex-start; text-align: left;  }
   .pot-label-item {
     display: flex;
     align-items: center;
@@ -190,39 +208,13 @@
     padding: 6px 0;
     white-space: nowrap;
   }
+  .pot-label-item--left  { justify-content: flex-end;   }
+  .pot-label-item--right { justify-content: flex-start; }
+  .pot-label-text { font-size: 1.05rem; font-weight: 700; color: #1a1a1a; }
+  .pot-arrow svg { width: 60px; height: 14px; color: var(--pot-accent); display: block; }
+  .pot-or-divider { font-size: 0.9rem; color: #888; text-align: center; padding: 10px 0; width: 100%; }
 
-  .pot-label-item--left {
-    justify-content: flex-end;
-  }
-
-  .pot-label-item--right {
-    justify-content: flex-start;
-  }
-
-  .pot-label-text {
-    font-size: var(--pot-label-font-size);
-    font-weight: 700;
-    color: #1a1a1a;
-  }
-
-  .pot-arrow svg {
-    width: 60px;
-    height: 14px;
-    color: var(--pot-accent);
-    display: block;
-  }
-
-  .pot-or-divider {
-    font-size: 0.9rem;
-    color: #888;
-    text-align: center;
-    padding: 10px 0;
-    width: 100%;
-  }
-
-  /* =============================================
-     PAYMENT CARD
-  ============================================= */
+  /* Card */
   .pot-card {
     background: var(--pot-card-bg);
     border-radius: 16px;
@@ -231,26 +223,13 @@
     min-width: 300px;
     max-width: 420px;
     width: 100%;
+    position: relative;
   }
+  .pot-card--readonly { background: var(--pot-readonly-tint); }
+  .pot-card__header { font-size: 1.1rem; font-weight: 700; color: #1a1a1a; text-align: left; margin-bottom: 16px; }
 
-  .pot-card__header {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1a1a1a;
-    text-align: left;
-    margin-bottom: 16px;
-    padding-bottom: 0;
-  }
-
-  /* =============================================
-     OPTIONS (RADIO BUTTONS)
-  ============================================= */
-  .pot-options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
+  /* Options */
+  .pot-options { display: flex; flex-direction: column; gap: 10px; }
   .pot-option {
     display: flex;
     align-items: center;
@@ -263,71 +242,57 @@
     background: #fff;
     text-align: left;
     position: relative;
+    user-select: none;
   }
-
-  .pot-option:hover {
-    border-color: var(--pot-accent);
-  }
-
+  .pot-option:hover { border-color: var(--pot-accent); }
   .pot-option--highlighted,
-  .pot-option:has(.pot-radio:checked) {
-    border-color: var(--pot-accent);
-    background: #fff;
-  }
+  .pot-option:has(.pot-radio:checked) { border-color: var(--pot-accent); }
 
-  /* Hide native radio */
-  .pot-radio {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-    pointer-events: none;
-  }
+  /* Read-only option — lock it down */
+  .pot-option--readonly { cursor: not-allowed; }
+  .pot-option--readonly:hover { border-color: var(--pot-border); }
+  .pot-option--readonly.pot-option--highlighted,
+  .pot-option--readonly.pot-option--highlighted:hover { border-color: var(--pot-accent); }
+
+  /* Native radio hidden */
+  .pot-radio { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
 
   /* Custom radio */
   .pot-radio-custom {
-    width: 20px;
-    height: 20px;
+    width: 20px; height: 20px;
     border-radius: 50%;
     border: 2px solid var(--pot-border);
     flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     transition: border-color 0.18s;
     background: #fff;
     position: relative;
   }
-
   .pot-radio-custom::after {
     content: '';
-    width: 10px;
-    height: 10px;
+    width: 10px; height: 10px;
     border-radius: 50%;
     background: var(--pot-accent);
     transform: scale(0);
     transition: transform 0.18s;
   }
-
   .pot-option--highlighted .pot-radio-custom,
-  .pot-option:has(.pot-radio:checked) .pot-radio-custom {
-    border-color: var(--pot-accent);
-  }
-
+  .pot-option:has(.pot-radio:checked) .pot-radio-custom { border-color: var(--pot-accent); }
   .pot-option--highlighted .pot-radio-custom::after,
-  .pot-option:has(.pot-radio:checked) .pot-radio-custom::after {
-    transform: scale(1);
+  .pot-option:has(.pot-radio:checked) .pot-radio-custom::after { transform: scale(1); }
+
+  .pot-option-label { font-size: 0.95rem; font-weight: 500; color: #1a1a1a; flex: 1; }
+
+  /* Lock badge */
+  .pot-readonly-badge { margin-left: auto; color: #bbb; display: flex; align-items: center; flex-shrink: 0; }
+
+  /* Read-only global notice */
+  .pot-readonly-notice {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 14px; font-size: 0.8rem; color: #999; font-style: italic;
   }
 
-  .pot-option-label {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #1a1a1a;
-  }
-
-  /* =============================================
-     FOOTNOTE
-  ============================================= */
+  /* Footnote */
   .pot-footnote {
     margin-top: 24px;
     display: inline-block;
@@ -341,158 +306,89 @@
     line-height: 1.5;
   }
 
-  /* =============================================
-     MOBILE LABELS (hidden on desktop)
-  ============================================= */
-  .pot-mobile-labels {
-    display: none;
-  }
+  /* Mobile labels */
+  .pot-mobile-labels { display: none; }
+  .pot-mobile-arrow-svg { color: var(--pot-accent); }
 
-  /* =============================================
-     RESPONSIVE — MOBILE
-  ============================================= */
   @media (max-width: 680px) {
-    .pot-section {
-      padding: 40px 16px;
-    }
-
-    /* Hide desktop side labels */
-    .pot-labels--left,
-    .pot-labels--right {
-      display: none;
-    }
-
-    /* Switch layout to single column */
-    .pot-layout {
-      grid-template-columns: 1fr;
-      gap: 0;
-    }
-
-    .pot-card {
-      min-width: unset;
-      max-width: 100%;
-    }
-
-    /* Show mobile labels container */
-    .pot-mobile-labels {
-      display: block;
-      position: relative;
-    }
-
-    /* Mobile label + arrow — injected via JS below for precise positioning */
-    .pot-mobile-label {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      padding-right: 12px;
-      margin-bottom: 0;
-    }
-
-    .pot-mobile-label .pot-label-text {
-      font-size: 0.95rem;
-    }
-
-    .pot-mobile-arrow-svg {
-      color: var(--pot-accent);
-    }
+    .pot-section { padding: 40px 16px; }
+    .pot-labels--left, .pot-labels--right { display: none; }
+    .pot-layout { grid-template-columns: 1fr; gap: 0; }
+    .pot-card { min-width: unset; max-width: 100%; }
+    .pot-mobile-labels { display: block; position: relative; }
+    .pot-mobile-label { display: flex; flex-direction: column; align-items: flex-end; padding-right: 12px; }
   }
 </style>
 
 <script>
-(function() {
-  var section = document.getElementById('pay-over-time-{{ section.id }}');
+(function () {
+  var section  = document.getElementById('pay-over-time-{{ section.id }}');
+  var readonly = {{ is_readonly | json }};
   if (!section) return;
 
-  /* =============================================
-     RADIO INTERACTIVITY
-  ============================================= */
-  var radios = section.querySelectorAll('.pot-radio');
-  radios.forEach(function(radio) {
-    radio.addEventListener('change', function() {
-      section.querySelectorAll('.pot-option').forEach(function(opt) {
-        opt.classList.remove('pot-option--highlighted');
+  /* Interactive radios — only when NOT read-only */
+  if (!readonly) {
+    section.querySelectorAll('.pot-radio').forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        section.querySelectorAll('.pot-option').forEach(function (opt) {
+          opt.classList.remove('pot-option--highlighted');
+        });
+        if (this.checked) this.closest('.pot-option').classList.add('pot-option--highlighted');
       });
-      if (this.checked) {
-        this.closest('.pot-option').classList.add('pot-option--highlighted');
-      }
     });
-  });
+  }
 
-  /* =============================================
-     MOBILE: Position labels with arrows
-     relative to their matching option rows
-  ============================================= */
+  /* Block all interaction on read-only options */
+  if (readonly) {
+    section.querySelectorAll('.pot-option--readonly').forEach(function (opt) {
+      opt.addEventListener('click',       function (e) { e.preventDefault(); });
+      opt.addEventListener('pointerdown', function (e) { e.preventDefault(); });
+    });
+  }
+
+  /* Mobile: inject vertical arrow SVGs under each label */
   function setupMobileLabels() {
-    var isMobile = window.innerWidth <= 680;
-    var card = section.querySelector('.pot-card');
-    var options = section.querySelectorAll('.pot-option');
-    var mobileLabels = section.querySelectorAll('.pot-mobile-label');
-
-    if (!isMobile || !card || options.length === 0) return;
-
-    // Clear any previously injected arrows
-    mobileLabels.forEach(function(lbl) {
-      var existing = lbl.querySelector('.pot-mobile-arrow-svg-wrap');
+    if (window.innerWidth > 680) return;
+    section.querySelectorAll('.pot-mobile-label').forEach(function (label) {
+      var existing = label.querySelector('.pot-mobile-arrow-svg-wrap');
       if (existing) existing.remove();
-    });
 
-    mobileLabels.forEach(function(label) {
-      var blockIdx = parseInt(label.getAttribute('data-block-index'), 10);
-      var direction = label.getAttribute('data-arrow-side') || 'down';
-
-      // Find matching option by block index position
-      // We map block index to the Nth payment_option block
-      var optionEl = options[blockIdx] || null;
-      if (!optionEl) return;
-
-      // Create arrow SVG
+      var dir  = label.getAttribute('data-arrow-side') || 'down';
       var wrap = document.createElement('div');
       wrap.className = 'pot-mobile-arrow-svg-wrap';
       wrap.style.cssText = 'display:flex;justify-content:flex-end;padding-right:18px;';
 
-      var svgNS = 'http://www.w3.org/2000/svg';
-      var svg = document.createElementNS(svgNS, 'svg');
-      svg.setAttribute('viewBox', '0 0 14 50');
-      svg.setAttribute('width', '14');
-      svg.setAttribute('height', '50');
-      svg.setAttribute('fill', 'none');
+      var ns   = 'http://www.w3.org/2000/svg';
+      var svg  = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox','0 0 14 50');
+      svg.setAttribute('width','14'); svg.setAttribute('height','50');
+      svg.setAttribute('fill','none');
       svg.classList.add('pot-mobile-arrow-svg');
 
-      var line = document.createElementNS(svgNS, 'line');
-      var poly = document.createElementNS(svgNS, 'polyline');
+      var line = document.createElementNS(ns, 'line');
+      var poly = document.createElementNS(ns, 'polyline');
 
-      if (direction === 'down') {
-        line.setAttribute('x1', '7'); line.setAttribute('y1', '0');
-        line.setAttribute('x2', '7'); line.setAttribute('y2', '42');
-        poly.setAttribute('points', '1,36 7,48 13,36');
+      if (dir === 'down') {
+        line.setAttribute('x1','7'); line.setAttribute('y1','0');
+        line.setAttribute('x2','7'); line.setAttribute('y2','42');
+        poly.setAttribute('points','1,36 7,48 13,36');
       } else {
-        line.setAttribute('x1', '7'); line.setAttribute('y1', '50');
-        line.setAttribute('x2', '7'); line.setAttribute('y2', '8');
-        poly.setAttribute('points', '1,14 7,2 13,14');
+        line.setAttribute('x1','7'); line.setAttribute('y1','50');
+        line.setAttribute('x2','7'); line.setAttribute('y2','8');
+        poly.setAttribute('points','1,14 7,2 13,14');
       }
-
-      line.setAttribute('stroke', 'currentColor');
-      line.setAttribute('stroke-width', '2');
-      poly.setAttribute('fill', 'none');
-      poly.setAttribute('stroke', 'currentColor');
-      poly.setAttribute('stroke-width', '2');
-      poly.setAttribute('stroke-linejoin', 'round');
-      poly.setAttribute('stroke-linecap', 'round');
-
-      svg.appendChild(line);
-      svg.appendChild(poly);
-      wrap.appendChild(svg);
-      label.appendChild(wrap);
+      line.setAttribute('stroke','currentColor'); line.setAttribute('stroke-width','2');
+      poly.setAttribute('fill','none'); poly.setAttribute('stroke','currentColor');
+      poly.setAttribute('stroke-width','2');
+      poly.setAttribute('stroke-linejoin','round'); poly.setAttribute('stroke-linecap','round');
+      svg.appendChild(line); svg.appendChild(poly);
+      wrap.appendChild(svg); label.appendChild(wrap);
     });
   }
 
-  /* Run on load and resize */
   setupMobileLabels();
-  var resizeTimer;
-  window.addEventListener('resize', function() {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(setupMobileLabels, 150);
-  });
+  var t;
+  window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(setupMobileLabels, 150); });
 })();
 </script>
 
@@ -528,6 +424,47 @@
     },
     {
       "type": "header",
+      "content": "🔒 Read-Only Mode"
+    },
+    {
+      "type": "paragraph",
+      "content": "When enabled, all radio buttons are locked — visitors cannot change selections. Choose which two options appear pre-selected using the sliders below."
+    },
+    {
+      "type": "checkbox",
+      "id": "readonly_mode",
+      "label": "Enable read-only mode",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "readonly_selected_1",
+      "label": "Pre-selected option #1",
+      "info": "Position number of the first option to highlight (1 = top of the list).",
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "readonly_selected_2",
+      "label": "Pre-selected option #2",
+      "info": "Position number of the second option to highlight.",
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "text",
+      "id": "readonly_badge_text",
+      "label": "Read-only notice (shown below card)",
+      "info": "Optional small note visible when read-only is active. Leave blank to hide.",
+      "default": "These options are for display purposes only."
+    },
+    {
+      "type": "header",
       "content": "Colors"
     },
     {
@@ -547,6 +484,12 @@
       "id": "accent_bg_color",
       "label": "Footnote background",
       "default": "#fdeee8"
+    },
+    {
+      "type": "color",
+      "id": "readonly_tint_color",
+      "label": "Card background in read-only mode",
+      "default": "#fafafa"
     },
     {
       "type": "color",
@@ -575,12 +518,12 @@
         {
           "type": "checkbox",
           "id": "highlighted",
-          "label": "Highlighted (selected state)",
+          "label": "Selected by default (read-only OFF only)",
           "default": false
         },
         {
           "type": "header",
-          "content": "Arrow label (desktop)"
+          "content": "Arrow label"
         },
         {
           "type": "checkbox",
@@ -599,7 +542,7 @@
           "id": "arrow_side",
           "label": "Arrow side (desktop)",
           "options": [
-            { "value": "left", "label": "Left" },
+            { "value": "left",  "label": "Left"  },
             { "value": "right", "label": "Right" }
           ],
           "default": "left"
@@ -610,7 +553,7 @@
           "label": "Mobile arrow direction",
           "options": [
             { "value": "down", "label": "Down (label above option)" },
-            { "value": "up", "label": "Up (label below option)" }
+            { "value": "up",   "label": "Up (label below option)"   }
           ],
           "default": "down"
         },
