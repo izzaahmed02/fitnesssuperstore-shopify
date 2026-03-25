@@ -346,66 +346,74 @@
     .pot-desktop-layout { display: none; }
 
     /* Show mobile layout */
-    .pot-mobile-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      position: relative;
-    }
+.pot-mobile-wrap {
+  display: block;
+  position: relative;
+  /* top/bottom padding makes room for the absolutely positioned labels */
+  padding-top: 52px;
+  padding-bottom: 52px;
+}
 
-    /* Mobile card */
-    .pot-mob-card {
-      background: var(--pot-card-bg);
-      border-radius: 12px;
-      border: 1.5px solid #c8ddf0;   /* light blue border like reference */
-      padding: 20px 16px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .pot-mob-card.pot-card--readonly { background: var(--pot-readonly-tint); }
+/* Mobile card — sits in normal flow, labels float over it */
+.pot-mob-card {
+  background: var(--pot-card-bg);
+  border-radius: 12px;
+  border: 1.5px solid #c8ddf0;
+  padding: 20px 16px;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+.pot-mob-card.pot-card--readonly { background: var(--pot-readonly-tint); }
 
-    /* Mobile label — shared */
-    .pot-mob-label {
-      display: flex;
-      align-items: center;
-      gap: 0;
-    }
+/* Shared label base — absolutely positioned */
+.pot-mob-label {
+  position: absolute;
+  right: 10px;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  z-index: 2;
+}
 
-    /* TOP label: text right-aligned, arrow below pointing down */
-    .pot-mob-label--top {
-      flex-direction: column;
-      align-items: flex-end;
-      padding-right: 10px;
-      margin-bottom: 0;
-    }
-    .pot-mob-label--top .pot-label-text {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #1a1a1a;
-      text-align: right;
-    }
+/* TOP label: sits above card, arrow tip touches card top border */
+.pot-mob-label--top {
+  top: 0;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.pot-mob-label--top .pot-label-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  text-align: right;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
 
-    /* BOTTOM label: arrow above pointing up, text below */
-    .pot-mob-label--bottom {
-      flex-direction: column;
-      align-items: flex-end;
-      padding-right: 10px;
-      margin-top: 0;
-    }
-    .pot-mob-label--bottom .pot-label-text {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #1a1a1a;
-      text-align: right;
-    }
+/* BOTTOM label: sits below card, arrow tip touches card bottom border */
+.pot-mob-label--bottom {
+  bottom: 0;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.pot-mob-label--bottom .pot-label-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  text-align: right;
+  line-height: 1.2;
+  margin-top: 2px;
+}
 
-    /* Arrow SVGs */
-    .pot-mob-arrow svg {
-      width: 14px;
-      height: 44px;
-      color: var(--pot-accent);
-      display: block;
-    }
+/* Arrow SVGs — sized so the tip overlaps the card border by ~4px */
+.pot-mob-arrow svg {
+  width: 14px;
+  height: 48px;
+  color: var(--pot-accent);
+  display: block;
+}
   }
 </style>
 
