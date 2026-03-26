@@ -119,6 +119,12 @@ window.addEventListener('DOMContentLoaded', async () => {
 	document.querySelector('.compare-products-actions a')?.setAttribute('href', '');
 });
 
+const container = document.getElementById('dynamic-product-content');
+const modalWrapper = document.querySelector('.modal-wrapper');
+const closeIconTemplate = `<svg aria-hidden="true" focusable="false" width="12" height="13" class="icon icon-close-small" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+	<path d="M8.48627 9.32917L2.82849 3.67098" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
+	<path d="M2.88539 9.38504L8.42932 3.61524" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>`;
 
 try {
 	document.addEventListener('DOMContentLoaded', (event) => {	
@@ -158,7 +164,7 @@ try {
 							customFieldvalue = 'Warranty (30)';
 							product = await fetchProductByTitle(customFieldvalue);
 						}
-						if (product) {
+						if (product && container && modalWrapper) {
 							document.querySelector('#dynamic-product-content').style.width = "auto";
 							modalWrapper.style.display = 'flex';
 							const tempDiv = document.createElement('div');
@@ -178,13 +184,17 @@ try {
 			});
 		});
 
-		modalWrapper.addEventListener('click', () => {
-			modalWrapper.style.display = 'none';
-		});
+		if (modalWrapper) {
+			modalWrapper.addEventListener('click', () => {
+				modalWrapper.style.display = 'none';
+			});
+		}
 
-		container.addEventListener('click', (event) => {
-			event.stopPropagation();
-		});
+		if (container) {
+			container.addEventListener('click', (event) => {
+				event.stopPropagation();
+			});
+		}
 
 	
 
@@ -337,6 +347,8 @@ function computeAfterPayLoanDetails(principal, monthlyPayment, numPayments, newT
 }
 
 function showPayLaterModal() {
+	if (!container || !modalWrapper) return;
+
 	const payLaterAggregateHTML = generatePayLaterAggregate();
 
 	if (generatePayLaterAggregate) {
