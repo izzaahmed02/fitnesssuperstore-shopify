@@ -3,30 +3,27 @@ document.addEventListener("DOMContentLoaded", () => {
   let scrollListenerAttached = false;
 
   function getProductContext() {
-    const productContainers = document.querySelectorAll(".product");
+  const container = document.querySelector(".product");
+  if (!container) return null;
 
-    for (const container of productContainers) {
-      const productInfo = container.querySelector(".product__info-wrapper.grid__item");
-      const leftContainer = container.querySelector(".product-main-left-container");
-      const productExtraInfo = container.querySelector(".product__extra_info");
+  const productInfo = container.querySelector(".product__info-wrapper");
+  const productExtraInfo =
+    container.querySelector(".product__extra_info") ||
+    document.querySelector(".product__extra_info");
 
-      if (productInfo && leftContainer && productExtraInfo) {
-        const fixedContainer =
-          container.closest(".page-width-desktop.page-width-index") ||
-          document.querySelector(".page-width-desktop.page-width-index");
+  const fixedContainer =
+    container.closest(".page-width-desktop.page-width-index") ||
+    document.querySelector(".page-width-desktop.page-width-index");
 
-        return {
-          container,
-          productInfo,
-          leftContainer,
-          productExtraInfo,
-          fixedContainer,
-        };
-      }
-    }
+  if (!productInfo || !productExtraInfo) return null;
 
-    return null;
-  }
+  return {
+    container,
+    productInfo,
+    productExtraInfo,
+    fixedContainer,
+  };
+}
 
   function checkScroll() {
     const headerWrapper = document.querySelector(".header-wrapper");
