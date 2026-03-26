@@ -418,8 +418,6 @@
 
     if (!textTop || !textBot || !arrowDown || !arrowUp || !itemShopPay || !itemAffirm) return;
 
-    var GAP = 4; /* px gap between arrowhead and highlighted row border */
-
     /* Hide arrows during measurement so they don't skew rects */
     arrowDown.style.display = 'none';
     arrowUp.style.display   = 'none';
@@ -432,16 +430,16 @@
     /*
       DOWN arrow
       Starts at: bottom of "Select Shop Pay" text
-      Ends at:   top of Shop Pay highlighted row minus GAP
+      Ends at:   vertical midpoint of Shop Pay highlighted row
     */
-    var downH = Math.max(Math.round(spRect.top - GAP - textTopRect.bottom), 10);
+    var downH = Math.max(Math.round((spRect.top + spRect.height / 2) - textTopRect.bottom), 10);
 
     /*
       UP arrow
-      Starts at: bottom of Affirm highlighted row plus GAP
+      Starts at: vertical midpoint of Affirm highlighted row
       Ends at:   top of "Select Affirm" text
     */
-    var upH = Math.max(Math.round(textBotRect.top - (afRect.bottom + GAP)), 10);
+    var upH = Math.max(Math.round(textBotRect.top - (afRect.top + afRect.height / 2)), 10);
 
     /* Restore and apply heights */
     arrowDown.style.display = 'block';
@@ -453,13 +451,13 @@
     arrowUp.style.height  = upH + 'px';
 
     /* Vertical alignment within flex rows */
-    textTop.style.alignSelf   = 'flex-end';   /* text bottom-aligns with arrow base  */
-    arrowDown.style.alignSelf = 'flex-start'; /* arrow top-aligns, hangs down        */
+    textTop.style.alignSelf   = 'flex-end';
+    arrowDown.style.alignSelf = 'flex-start';
 
-    textBot.style.alignSelf = 'flex-start';   /* text top-aligns with arrow tip      */
-    arrowUp.style.alignSelf = 'flex-end';     /* arrow bottom-aligns, points up      */
+    textBot.style.alignSelf = 'flex-start';
+    arrowUp.style.alignSelf = 'flex-end';
   }
-
+  
   function runAll() {
     alignDesktop();
     scaleMobileArrows();
