@@ -8,8 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const container of productContainers) {
       const productInfo = container.querySelector(".product__info-wrapper.grid__item");
       const leftContainer = container.querySelector(".product-main-left-container");
-
-      const productExtraInfo = productInfo;
+      const productExtraInfo = container.querySelector(".product__extra_info");
 
       if (productInfo && leftContainer && productExtraInfo) {
         const fixedContainer =
