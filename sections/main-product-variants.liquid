@@ -1810,118 +1810,6 @@
     -%}
 
 
-    <script>
-(function() {
-  'use strict';
-
-  console.log('🔵 Button state script starting...');
-
-  // Wait for DOM to be ready
-  function init() {
-    const submitButton = document.querySelector('[data-submit-button]');
-    const buttonText = document.querySelector('[data-submit-button-text]');
-    const variantIdInput = document.querySelector('.product-variant-id, input[name="id"]');
-
-    console.log('submitButton:', submitButton);
-    console.log('buttonText:', buttonText);
-    console.log('variantIdInput:', variantIdInput);
-    console.log('window.product:', window.product);
-
-    if (!submitButton || !buttonText) {
-      console.error('❌ Required elements not found');
-      return;
-    }
-
-    if (!window.product || !window.product.variants) {
-      console.error('❌ Product data not found');
-      return;
-    }
-
-    // Create variant lookup
-    const variantsById = {};
-    window.product.variants.forEach(function(v) {
-      variantsById[String(v.id)] = v;
-    });
-
-    console.log('✅ Variants loaded:', Object.keys(variantsById).length);
-
-    function updateButton() {
-      let variantId = null;
-
-      // Try to get variant ID
-      if (variantIdInput) {
-        variantId = variantIdInput.value || variantIdInput.getAttribute('value');
-      }
-
-      console.log('Current variant ID:', variantId);
-
-      const variant = variantId ? variantsById[String(variantId)] : null;
-      
-      console.log('Found variant:', variant);
-
-      if (!variant) {
-        // No variant selected
-        buttonText.textContent = 'Choose Variant';
-        submitButton.disabled = true;
-        console.log('✅ State: No variant selected');
-      } else if (!variant.available) {
-        // Out of stock
-        buttonText.textContent = 'Unavailable';
-        submitButton.disabled = true;
-        console.log('✅ State: Out of stock');
-      } else {
-        // Available
-        buttonText.textContent = 'Add to Cart';
-        submitButton.disabled = false;
-        console.log('✅ State: Available');
-      }
-    }
-
-    // Listen for changes
-    if (variantIdInput) {
-      variantIdInput.addEventListener('change', function() {
-        console.log('🔄 Variant input changed');
-        setTimeout(updateButton, 50);
-      });
-    }
-
-    // Listen for custom events
-    document.addEventListener('variant:change', function(e) {
-      console.log('🔄 variant:change event', e.detail);
-      setTimeout(updateButton, 50);
-    });
-
-    document.addEventListener('variant-change', function(e) {
-      console.log('🔄 variant-change event', e.detail);
-      setTimeout(updateButton, 50);
-    });
-
-    // Listen for form changes
-    const form = submitButton.closest('form');
-    if (form) {
-      form.addEventListener('change', function(e) {
-        const name = e.target.name || '';
-        if (name.includes('option') || name === 'id') {
-          console.log('🔄 Form option changed:', name);
-          setTimeout(updateButton, 100);
-        }
-      });
-    }
-
-    // Initial update
-    updateButton();
-    
-    console.log('✅ Button state script initialized');
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
-</script>
-
 </product-info>
 
 <div id="product-gallery-popup" class="product-popup-overlay" hidden>
@@ -1964,6 +1852,41 @@
   <div class="mobile-popup-thumbnails"></div>
   <div class="mobile-popup-dots"></div>
 </div>
+
+{% assign options = product.metafields.options.product_options.value %}
+{% for category in options %}
+  {% if category.help_text.value != blank %}
+    {% liquid
+      assign content = category.help_text.value
+      assign title = content.title
+      assign text = content.help_text
+      assign related_products = content.related_products.value
+    %}
+    {% render 'related-products-popup-for-options', 
+      popup_id: category.title,
+      title: title,
+      related_products: related_products,
+      text: text
+    %}
+  {% endif %}
+
+  {% for product_option in category.product_options.value %}
+    {% if product_option.help_text.value != blank %}
+      {% liquid
+        assign content = product_option.help_text.value
+        assign title = content.title
+        assign text = content.help_text
+        assign related_products = content.related_products.value
+      %}
+      {% render 'related-products-popup-for-options', 
+        popup_id: product_option.product_option_title,
+        title: title,
+        related_products: related_products,
+        text: text
+      %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
 
 <style>
   #dynamic-product-content iframe{max-width:100% !important;}
