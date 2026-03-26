@@ -1985,6 +1985,48 @@
   <div class="mobile-popup-dots"></div>
 </div>
 
+{% assign options = product.metafields.options.product_options.value %}
+{% assign has_info = false %}
+{% for category in options %}
+  {% if category.help_text.value != blank %}
+    {% liquid
+      assign content = category.help_text.value
+      assign title = content.title
+      assign text = content.help_text
+      assign related_products = content.related_products.value
+      assign has_info = true
+    %}
+    {% render 'related-products-popup-for-options', 
+      popup_id: category.title,
+      title: title,
+      related_products: related_products,
+      text: text
+    %}
+  {% endif %}
+
+  {% for product_option in category.product_options.value %}
+    {% if product_option.help_text.value != blank %}
+      {% liquid
+        assign content = product_option.help_text.value
+        assign title = content.title
+        assign text = content.help_text
+        assign related_products = content.related_products.value
+        assign has_info = true
+      %}
+      {% render 'related-products-popup-for-options', 
+        popup_id: product_option.product_option_title,
+        title: title,
+        related_products: related_products,
+        text: text
+      %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
+{% if has_info %}
+  {{ 'avis-custom.css' | asset_url | stylesheet_tag }}
+{% endif %}
+
 <style>
   #dynamic-product-content iframe{max-width:100% !important;}
 
@@ -2040,42 +2082,17 @@
 </script>
 
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+{% unless hide_product_options %}
+  <script src="{{'product-custom-options.js' | asset_url }}" defer></script>
+{% endunless %}
 
-<script>
-  (function () {
-    var firstVariant = window.product && window.product.variants && window.product.variants[0];
-    var saProduct = firstVariant && firstVariant.sku;
-    if (!saProduct) return;
+{% if custom_product_options_block.size > 0 %}
+  <script src="{{'product-form-with-options.js' | asset_url }}" defer></script>
+{% endif %}
+<script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
 
-    var reviewsTarget = document.querySelector('.shopify-app-block, [id*="shopper" i], .spr-badge, [data-shopper-approved]');
-    if (!reviewsTarget || !('IntersectionObserver' in window)) return;
 
-    var loaded = false;
-    var observer = new IntersectionObserver(function(entries) {
-      if (loaded || !entries.some(function(entry) { return entry.isIntersecting; })) return;
-      loaded = true;
-      observer.disconnect();
 
-      window.sa_products_count = 3;
-      window.sa_date_format = 'F j, Y';
-      (function (w, d, t, f, o, s, a) {
-        o = 'shopperapproved';
-        if (!w[o]) {
-          w[o] = function () {
-            (w[o].arg = w[o].arg || []).push(arguments);
-          };
-          s = d.createElement(t);
-          a = d.getElementsByTagName(t)[0];
-          s.async = 1;
-          s.src = f;
-          a.parentNode.insertBefore(s, a);
-        }
-      })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + saProduct + '.js');
-    }, { rootMargin: '200px 0px' });
-
-    observer.observe(reviewsTarget);
-  })();
-</script>
 
 
 {% schema %}
