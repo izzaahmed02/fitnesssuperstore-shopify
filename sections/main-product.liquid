@@ -96,7 +96,7 @@
   {% unless hide_product_options %}
     {{ 'product-options.css' | asset_url | stylesheet_tag }}
   {% endunless %}
-  
+
   {%- style -%}
     .section-{{ section.id }}-padding {
       padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
@@ -901,7 +901,13 @@
 
               {%- when 'price_with_option' -%}
                {% unless product.tags contains 'avisplus-product-options' %}
-                <product-form
+                  {% assign tag = 'product-form' %}
+
+                  {% assign custom_product_options_block = section.blocks | where: 'type', 'product_options' %}
+                {% if custom_product_options_block.size > 0 %}
+                  {% assign tag = 'product-form-with-options' %}
+                {% endif %}
+                <{{ tag }}
                   class="product-form"
                   data-hide-errors="{{ gift_card_recipient_feature_active }}"
                   data-section-id="{{ section.id }}"
@@ -927,7 +933,7 @@
                     <div class="product_prices">
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}">
+                           <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
                             {{ product.selected_or_first_available_variant.price | money }}
                           </p>
                         </div>
@@ -1307,7 +1313,7 @@
                     </div>
                   {% endif %}
                 {% render 'paylater-providers' %}
-                </product-form>
+                 </{{ tag }}>
                {% endunless %}
               {%- when 'inventory' -%}
                 <p
@@ -1858,6 +1864,8 @@
                 </product-recommendations>
               {%- when 'icon-with-text' -%}
                 {% render 'icon-with-text', block: block %}
+                 {% when 'product_options' %}
+                {% render 'product-options', product: product %}  
             {%- endcase -%}
           {%- endfor -%}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
