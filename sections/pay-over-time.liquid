@@ -181,7 +181,7 @@
 
     #shopify-section-{{ section.id }} .pot-right-block {
       width: 100%;
-      max-width: 420px;
+      max-width: 100%;
     }
 
     #shopify-section-{{ section.id }} .pot-title {
@@ -195,18 +195,26 @@
       margin-bottom: 20px;
     }
 
+    /*
+      Mobile label rows: flex row, text + arrow, flush right.
+      The label+arrow sit outside the card (above/below).
+      Arrow is pinned 30px from the right edge of the container via padding-right.
+    */
     #shopify-section-{{ section.id }} .pot-mobile-label {
       display: flex;
+      align-items: flex-end;
       justify-content: flex-end;
-      gap: 8px;
+      padding-right: 30px;
       width: 100%;
-      max-width: 420px;
+      gap: 6px;
     }
     #shopify-section-{{ section.id }} .pot-mobile-label--top {
-      align-items: flex-start;
+      align-items: flex-end;
+      margin-bottom: 0;
     }
     #shopify-section-{{ section.id }} .pot-mobile-label--bottom {
-      align-items: flex-end;
+      align-items: flex-start;
+      margin-top: 0;
     }
     #shopify-section-{{ section.id }} .pot-mobile-label__text {
       font-weight: 700;
@@ -214,13 +222,12 @@
       line-height: 24px;
       color: #393940;
       white-space: nowrap;
-      margin-bottom: 12px;
-      margin-top: 12px;
     }
-    /* Arrow SVGs shown on mobile, sized by JS */
+    /* Arrow SVGs: shown on mobile, height set by JS */
     #shopify-section-{{ section.id }} .pot-mobile-arrow-svg {
       display: block;
       flex-shrink: 0;
+      width: 14px;
     }
   }
 {%- endstyle -%}
@@ -281,7 +288,7 @@
         <div class="pot-mobile-label pot-mobile-label--top" id="potMobileLabelTop-{{ section.id }}">
           {%- for block in section.blocks -%}
             {%- if block.type == 'label_shoppay' -%}
-              <span class="pot-mobile-label__text pot-mobile-label__text-top" id="potMobileTextTop-{{ section.id }}">{{ block.settings.label_text }}</span>
+              <span class="pot-mobile-label__text" id="potMobileTextTop-{{ section.id }}">{{ block.settings.label_text }}</span>
               <svg class="pot-mobile-arrow-svg" id="potMobileArrowDown-{{ section.id }}"
                    width="14" viewBox="0 0 14 126" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M13.2803 118.22C13.573 118.513 13.573 118.987 13.2803 119.28L7.28027 125.28C6.98742 125.573 6.5126 125.573 6.21972 125.28L0.219721 119.28C-0.0730338 118.987 -0.0730566 118.513 0.219721 118.22C0.512585 117.927 0.987405 117.927 1.28027 118.22L5.99999 122.939L6 0.75C6 0.335786 6.33579 -2.53553e-07 6.75 -2.95052e-07C7.16418 4.48954e-05 7.5 0.335814 7.5 0.75L7.49999 122.939L12.2197 118.22C12.5126 117.927 12.9874 117.927 13.2803 118.22Z" fill="#F1592A"/>
@@ -326,7 +333,6 @@
         <div class="pot-mobile-label pot-mobile-label--bottom" id="potMobileLabelBottom-{{ section.id }}">
           {%- for block in section.blocks -%}
             {%- if block.type == 'label_affirm' -%}
-              
               <span class="pot-mobile-label__text" id="potMobileTextBottom-{{ section.id }}">{{ block.settings.label_text }}</span>
               <svg class="pot-mobile-arrow-svg" id="potMobileArrowUp-{{ section.id }}"
                    width="14" viewBox="0 0 14 90" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -400,36 +406,46 @@
 
     if (!textTop || !textBot || !arrowDown || !arrowUp || !itemShopPay || !itemAffirm) return;
 
-    /* Temporarily hide arrows so they don't affect measurements */
+    var GAP = 4; /* px gap between arrowhead and highlighted row border */
+
+    /* Hide arrows during measurement so they don't skew rects */
     arrowDown.style.display = 'none';
     arrowUp.style.display   = 'none';
 
     var textTopRect = textTop.getBoundingClientRect();
-    var textBotRect = textBot.getBoundingClientRect();
     var spRect      = itemShopPay.getBoundingClientRect();
     var afRect      = itemAffirm.getBoundingClientRect();
+    var textBotRect = textBot.getBoundingClientRect();
 
-    /* DOWN arrow: from bottom of "Select Shop Pay" text → midpoint of Shop Pay row */
-    var downH = Math.max(Math.round((spRect.top + spRect.height / 2) - textTopRect.bottom), 20);
+    /*
+      DOWN arrow
+      Starts at: bottom of "Select Shop Pay" text
+      Ends at:   top of Shop Pay highlighted row minus GAP
+    */
+    var downH = Math.max(Math.round(spRect.top - GAP - textTopRect.bottom), 10);
 
-    /* UP arrow: from midpoint of Affirm row → top of "Select Affirm" text */
-    var upH = Math.max(Math.round(textBotRect.top - (afRect.top + afRect.height / 2)), 20);
+    /*
+      UP arrow
+      Starts at: bottom of Affirm highlighted row plus GAP
+      Ends at:   top of "Select Affirm" text
+    */
+    var upH = Math.max(Math.round(textBotRect.top - (afRect.bottom + GAP)), 10);
 
-    /* Apply computed heights and restore display */
+    /* Restore and apply heights */
     arrowDown.style.display = 'block';
     arrowDown.setAttribute('height', downH);
-    arrowDown.style.height = downH + 'px';
+    arrowDown.style.height  = downH + 'px';
 
     arrowUp.style.display = 'block';
     arrowUp.setAttribute('height', upH);
-    arrowUp.style.height = upH + 'px';
+    arrowUp.style.height  = upH + 'px';
 
-    /* Align text and arrows within their flex containers */
-    textTop.style.alignSelf   = 'flex-start';
-    arrowDown.style.alignSelf = 'flex-start';
+    /* Vertical alignment within flex rows */
+    textTop.style.alignSelf   = 'flex-end';   /* text bottom-aligns with arrow base  */
+    arrowDown.style.alignSelf = 'flex-start'; /* arrow top-aligns, hangs down        */
 
-    arrowUp.style.alignSelf   = 'flex-end';
-    textBot.style.alignSelf   = 'flex-end';
+    textBot.style.alignSelf = 'flex-start';   /* text top-aligns with arrow tip      */
+    arrowUp.style.alignSelf = 'flex-end';     /* arrow bottom-aligns, points up      */
   }
 
   function runAll() {
