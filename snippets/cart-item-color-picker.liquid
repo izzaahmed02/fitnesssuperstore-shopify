@@ -1,0 +1,128 @@
+<div id="{{ products.product_title | handleize }}" class="custom-color-group">
+  {% comment %}{{ products.product_option_variants.value | json }}{% endcomment %}
+  {% assign has_custom_color_paint = false %}
+  {% assign has_custom_color_vinyl = false %}
+
+  {% if products.product_option_variants.value %}
+    {% if products.product_option_title contains 'Paint' %}
+      {% assign has_custom_color_paint = true %}
+    {% endif %}
+    {% if products.product_option_title contains 'Vinyl' %}
+      {% assign has_custom_color_vinyl = true %}
+    {% endif %}
+  {% endif %}
+
+  {% for item in product %}
+    {% assign item_product = item.product %}
+    {% break %}
+  {% endfor %}
+
+  {% liquid
+    assign options_data = null
+    assign default_variant_id = null
+    assign default_variant_price = null
+    assign color_name = ''
+    assign option_handle = products.product_option_title | handleize
+    for property in line_item.properties
+      if property.first == '_functionOperation'
+        assign options_data = property.last
+      endif
+    endfor
+    if options_data != blank
+      for item in options_data
+        if item.groupHandle == option_handle
+          assign default_variant_id = item.variantId | split: '/' | last | plus: 0
+          assign default_variant_price = item.priceAdjustment | plus: 0
+          assign color_name = item.colorName
+        endif
+      endfor
+    endif
+  %}
+
+  {% if products.product_option_title contains 'Paint' or has_custom_color_paint %}
+    <div
+      class="group-color-container"
+      {% if color_counter > 1 %}
+        data-group-color-name="{{ products.product_option_title | handleize }}" data-color-name-title="{{ products.product_option_title }}"
+      {% endif %}
+    >
+      {%- if color_counter > 1 -%}
+        <h3 class="group-color product-options__subcategory-title">
+          {{ products.product_option_title }}
+          {% render 'related-products-button',
+            product_id: item_product.id,
+            product_handle: item_product.handle,
+            product_category: item_product.metafields.custom.option_category_id.value,
+            option_title: products.product_option_title
+          %}
+          <div class="option_selected-container" data-selected-color-option="{{ products.product_option_title | handleize }}">
+            <p class="option_selected" data-option-id="{{ default_variant_id }}">
+              <span data-color-selected-title>
+                {{ color_name }}
+              </span>
+              <span class="option_selected-price">
+                {% if default_variant_price > 0 %}
+                  {{ default_variant_price | prepend: cart.currency.symbol }}
+                {% endif %}
+              </span>
+            </p>
+          </div>
+        </h3>
+      {%- endif -%}
+
+      <div class="color_options_container options_container">
+        {% render 'custom-color-wrapper',
+          group: 'paint',
+          products: products.product_option_variants.value,
+          title: products.product_option_title,
+          default: default_variant_id,
+          default_option: products.product_option_sets_default.value,
+          selected_price: default_variant_price
+        %}
+      </div>
+    </div>
+  {% endif %}
+
+  {% if products.product_option_title contains 'Vinyl' or has_custom_color_vinyl %}
+    <div
+      class="group-color-container"
+      {% if color_counter > 1 %}
+        data-group-color-name="{{ products.product_option_title | handleize }}" data-color-name-title="{{ products.product_option_title }}"
+      {% endif %}
+    >
+      {%- if color_counter > 1 -%}
+        <h3 class="group-color product-options__subcategory-title">
+          {{ products.product_option_title }}
+          {% render 'related-products-button',
+            product_id: item_product.id,
+            product_handle: item_product.handle,
+            product_category: item_product.metafields.custom.option_category_id.value,
+            option_title: products.product_option_title
+          %}
+          <div class="option_selected-container" data-selected-color-option="{{ products.product_option_title | handleize }}">
+            <p class="option_selected" data-option-id="{{ default_variant_id }}">
+              <span data-color-selected-title>
+                {{ color_name }}
+              </span>
+              <span class="option_selected-price">
+                {% if default_variant_price > 0 %}
+                  {{ default_variant_price | prepend: cart.currency.symbol }}
+                {% endif %}
+              </span>
+            </p>
+          </div>
+        </h3>
+      {%- endif -%}
+
+      <div class="color_options_container options_container">
+        {% render 'custom-color-wrapper',
+          group: 'paint',
+          products: products.product_option_variants.value,
+          title: products.product_option_title,
+          default: default_variant_id,
+          default_option: products.product_option_sets_default.value
+        %}
+      </div>
+    </div>
+  {% endif %}
+</div>
