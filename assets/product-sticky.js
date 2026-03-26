@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const productContainers = document.querySelectorAll(".product");
 
     for (const container of productContainers) {
-      const productInfo = container.querySelector(".product__info-wrapper");
+      const productInfo = container.querySelector(".product__info-wrapper.grid__item");
       const leftContainer = container.querySelector(".product-main-left-container");
       const productExtraInfo = container.querySelector(".product__extra_info");
 
@@ -51,6 +51,20 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    if (extraInfoRect.top <= windowHeight - productInfoHeight) {
+      productInfo.classList.add("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = "";
+    } else {
+      productInfo.classList.remove("fixed");
+    }
+
+    if (extraInfoRect.top <= windowHeight && extraInfoRect.bottom > windowHeight) {
+      productInfo.classList.add("fixed");
+      productInfo.classList.remove("absolute");
+      productInfo.style.top = "";
+    }
+
     if (extraInfoRect.bottom <= windowHeight) {
       productInfo.classList.remove("fixed");
       productInfo.classList.add("absolute");
@@ -58,14 +72,6 @@ document.addEventListener("DOMContentLoaded", () => {
       productInfo.style.left = "";
       productInfo.style.right = "";
       return;
-    }
-
-    if (extraInfoRect.top <= windowHeight - productInfoHeight || (extraInfoRect.top <= windowHeight && extraInfoRect.bottom > windowHeight)) {
-      productInfo.classList.add("fixed");
-      productInfo.classList.remove("absolute");
-      productInfo.style.top = "";
-    } else {
-      productInfo.classList.remove("fixed");
     }
 
     if (fixedContainer && productInfo.classList.contains("fixed")) {
@@ -112,10 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const observer = new MutationObserver(() => {
-    if (getProductContext()) {
-      observer.disconnect();
-      setupScrollListener();
-    }
+    setupScrollListener();
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
