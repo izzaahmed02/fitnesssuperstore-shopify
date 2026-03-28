@@ -15,9 +15,6 @@
     {{ block.shopify_attributes }}
   >
     {%- for option in product.options_with_values -%}
-      {% if option.name == 'Size' or option.name == 'Height' %}
-  {% continue %}
-{% endif %}
       {%- liquid
         assign swatch_count = option.values | map: 'swatch' | compact | size
         assign picker_type = block.settings.picker_type
@@ -87,25 +84,7 @@
         </div>
       {%- endif -%}
     {%- endfor -%}
-{% assign siblings = product.metafields.custom.sibling_products.value %}
 
-{% if siblings != blank %}
-  <fieldset class="js product-form__input product-form__input--pill">
-    <legend class="form__label">Size</legend>
-
-    <div class="sibling-size-buttons">
-      {% for sib in siblings %}
-        {% assign label = sib.metafields.custom.size_label.value | default: sib.title %}
-        <a
-          href="{{ sib.url }}"
-          class="sibling-size-button{% if sib.id == product.id %} is-active{% endif %}"
-        >
-          {{ label }}
-        </a>
-      {% endfor %}
-    </div>
-  </fieldset>
-{% endif %}
     <script type="application/json" data-selected-variant>{{ product.selected_or_first_available_variant | json }}</script>
   </variant-selects>
 {%- endunless -%}
