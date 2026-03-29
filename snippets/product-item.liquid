@@ -4,8 +4,18 @@
         {% assign images = product.images %}
         {% for item in images limit: 5 %}
             {% if item != '' %}
+                 {%- assign image_src = item | image_url: width: 600 -%}
                 <div class="image-item aa">
-                     {{ item | image_url: width: 600 | image_tag: class: 'lazy-load', alt: item.alt }}
+                      <img
+                        src="{{ image_src }}"
+                        data-src="{{ image_src }}"
+                        srcset="{{ item | image_url: width: 352 }} 352w, {{ image_src }} 600w"
+                        alt="{{ item.alt | escape }}"
+                        width="{{ item.width }}"
+                        height="{{ item.height }}"
+                        loading="lazy"
+                        class="lazy-load"
+                    >
                 </div>
             {% endif %}
         {% endfor %}
