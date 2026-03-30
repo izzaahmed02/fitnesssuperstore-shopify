@@ -1,0 +1,435 @@
+{% comment %}
+  Gym Plan Section - Dawn Theme Compatible
+  File: sections/gym-plan-section.liquid
+{% endcomment %}
+
+<section
+  class="gym-plan-section"
+  style="
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  "
+>
+  <div class="gym-plan-section__inner page-width">
+
+    {% if section.settings.section_title != blank %}
+      <h2 class="gym-plan-section__title">{{ section.settings.section_title }}</h2>
+    {% endif %}
+
+    {% if section.settings.section_description != blank %}
+      <p class="gym-plan-section__description">{{ section.settings.section_description }}</p>
+    {% endif %}
+
+    <div class="gym-plan-section__blocks">
+
+      {% for block in section.blocks %}
+
+        {% if block.type == 'content_block' %}
+          <div class="gym-plan-block gym-plan-block--white" {{ block.shopify_attributes }}>
+
+            {% if block.settings.heading_1 != blank %}
+              <h3 class="gym-plan-block__heading">{{ block.settings.heading_1 }}</h3>
+            {% endif %}
+
+            {% if block.settings.list_1 != blank %}
+              <ul class="gym-plan-block__list">
+                {% assign list_1_items = block.settings.list_1 | split: '<br>' %}
+                {% for item in list_1_items %}
+                  {% assign trimmed = item | strip %}
+                  {% if trimmed != blank %}
+                    <li>{{ trimmed }}</li>
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            {% endif %}
+
+            {% if block.settings.heading_2 != blank %}
+              <h3 class="gym-plan-block__heading">{{ block.settings.heading_2 }}</h3>
+            {% endif %}
+
+            {% if block.settings.list_2 != blank %}
+              <ul class="gym-plan-block__list">
+                {% assign list_2_items = block.settings.list_2 | split: '<br>' %}
+                {% for item in list_2_items %}
+                  {% assign trimmed = item | strip %}
+                  {% if trimmed != blank %}
+                    <li>{{ trimmed }}</li>
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            {% endif %}
+
+            {% if block.settings.cta_title != blank and block.settings.cta_link != blank %}
+              <div class="gym-plan-block__cta-wrap">
+                <a href="{{ block.settings.cta_link }}" class="gym-plan-block__cta">
+                  {{ block.settings.cta_title }}
+                </a>
+              </div>
+            {% endif %}
+
+            {% if block.settings.note_text != blank %}
+              <p class="gym-plan-block__note">{{ block.settings.note_text }}</p>
+            {% endif %}
+
+          </div>
+
+        {% elsif block.type == 'image_block' %}
+          <div class="gym-plan-block gym-plan-block--transparent" {{ block.shopify_attributes }}>
+
+            <div class="gym-plan-block__image-wrap">
+              {% if block.settings.image != blank %}
+                {{
+                  block.settings.image
+                  | image_url: width: 800
+                  | image_tag:
+                    class: 'gym-plan-block__image',
+                    loading: 'lazy',
+                    alt: block.settings.image.alt | default: block.settings.image_caption
+                }}
+              {% else %}
+                <div class="gym-plan-block__image-placeholder">
+                  {{ 'image' | placeholder_svg_tag: 'gym-plan-block__placeholder-svg' }}
+                </div>
+              {% endif %}
+            </div>
+
+            {% if block.settings.image_caption != blank %}
+              <p class="gym-plan-block__caption">{{ block.settings.image_caption }}</p>
+            {% endif %}
+
+          </div>
+        {% endif %}
+
+      {% endfor %}
+
+    </div>
+  </div>
+</section>
+
+<style>
+  .gym-plan-section {
+    background-color: #f4f5f7;
+  }
+
+  .gym-plan-section__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .gym-plan-section__title {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #1a1a1a;
+    margin: 0 0 0.75rem;
+  }
+
+  .gym-plan-section__description {
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+    font-weight: 600;
+    text-align: center;
+    color: #444;
+    max-width: 680px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.5;
+  }
+
+  .gym-plan-section__blocks {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    align-items: stretch;
+  }
+
+  .gym-plan-block {
+    border-radius: 14px;
+    padding: 2rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+
+  .gym-plan-block--white {
+    background-color: #ffffff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  }
+
+  .gym-plan-block--transparent {
+    background-color: transparent;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0;
+  }
+
+  .gym-plan-block__heading {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 0.75rem;
+  }
+
+  .gym-plan-block__list {
+    list-style-type: disc;
+    padding-left: 1.25rem;
+    margin: 0 0 1.25rem;
+  }
+
+  .gym-plan-block__list li {
+    font-size: 0.92rem;
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 0.3rem;
+  }
+
+  .gym-plan-block__list li::marker {
+    color: #1e73be;
+  }
+
+  .gym-plan-block__cta-wrap {
+    margin-top: auto;
+    padding-top: 1.25rem;
+  }
+
+  .gym-plan-block__cta {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background-color: #e5521a;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 0.9rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.15s ease;
+    letter-spacing: 0.01em;
+  }
+
+  .gym-plan-block__cta:hover {
+    background-color: #c94412;
+    transform: translateY(-1px);
+  }
+
+  .gym-plan-block__note {
+    font-size: 0.78rem;
+    color: #777;
+    margin: 0.85rem 0 0;
+    line-height: 1.5;
+  }
+
+  .gym-plan-block__image-wrap {
+    flex: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 220px;
+    display: flex;
+    align-items: stretch;
+  }
+
+  .gym-plan-block__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 12px;
+  }
+
+  .gym-plan-block__image-placeholder {
+    width: 100%;
+    min-height: 260px;
+    background: #dde1e7;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gym-plan-block__placeholder-svg {
+    width: 60px;
+    height: 60px;
+    opacity: 0.3;
+  }
+
+  .gym-plan-block__caption {
+    font-size: 0.85rem;
+    color: #555;
+    margin: 0.75rem 0 0;
+    text-align: left;
+  }
+
+  @media screen and (max-width: 749px) {
+    .gym-plan-section__blocks {
+      grid-template-columns: 1fr;
+    }
+
+    .gym-plan-section__title {
+      text-align: left;
+    }
+
+    .gym-plan-section__description {
+      text-align: left;
+      margin-left: 0;
+    }
+
+    .gym-plan-block--transparent {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .gym-plan-block__caption {
+      text-align: left;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Gym Plan Trust Hub",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section Title",
+      "default": "YOUR GYM PLAN: STEP BY STEP"
+    },
+    {
+      "type": "textarea",
+      "id": "section_description",
+      "label": "Section Description",
+      "default": "Before you place your order, we'll map your room and build a layout that makes sense"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top Padding",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom Padding",
+      "default": 60
+    }
+  ],
+  "blocks": [
+    {
+      "type": "content_block",
+      "name": "Content Block (White)",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "header",
+          "content": "First List"
+        },
+        {
+          "type": "text",
+          "id": "heading_1",
+          "label": "Heading 1",
+          "default": "What you get"
+        },
+        {
+          "type": "richtext",
+          "id": "list_1",
+          "label": "List 1 Items",
+          "info": "Each line becomes a bullet. Separate items with Enter/line break.",
+          "default": "<p>A scaled layout render of your room<br/>Recommended equipment list + options<br/>A quote that matches your plan<br/>Delivery planning help (and install options if needed)</p>"
+        },
+        {
+          "type": "header",
+          "content": "Second List"
+        },
+        {
+          "type": "text",
+          "id": "heading_2",
+          "label": "Heading 2",
+          "default": "What we need from you"
+        },
+        {
+          "type": "richtext",
+          "id": "list_2",
+          "label": "List 2 Items",
+          "info": "Each line becomes a bullet. Separate items with Enter/line break.",
+          "default": "<p>Room dimensions (or a rough estimate)<br/>A few photos of the space<br/>Ceiling height + power notes (if known)<br/>Your goals + budget range (even a ballpark)</p>"
+        },
+        {
+          "type": "header",
+          "content": "Call to Action"
+        },
+        {
+          "type": "text",
+          "id": "cta_title",
+          "label": "CTA Button Text",
+          "default": "Get My Free Layout Consultation"
+        },
+        {
+          "type": "url",
+          "id": "cta_link",
+          "label": "CTA Button Link"
+        },
+        {
+          "type": "header",
+          "content": "Note"
+        },
+        {
+          "type": "text",
+          "id": "note_text",
+          "label": "Small Note Text",
+          "default": "Design consult is free. A deposit may be requested only when you're ready to reserve equipment."
+        }
+      ]
+    },
+    {
+      "type": "image_block",
+      "name": "Image Block (Transparent)",
+      "limit": 2,
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "image_caption",
+          "label": "Image Caption",
+          "default": "Before: Custom Layout Render"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Gym Plan Trust Hub",
+      "blocks": [
+        { "type": "content_block" },
+        {
+          "type": "image_block",
+          "settings": { "image_caption": "Before: Custom Layout Render" }
+        },
+        {
+          "type": "image_block",
+          "settings": { "image_caption": "After: Finished Space by Our Customers" }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
