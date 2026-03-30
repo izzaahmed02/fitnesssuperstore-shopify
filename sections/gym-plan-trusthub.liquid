@@ -31,13 +31,11 @@
               <p class="gym-plan-block__heading">{{ block.settings.heading_1 }}</p>
             {% endif %}
 
-           {% if block.settings.list_1 != blank %}
+          {% if block.settings.list_1 != blank %}
   <ul class="gym-plan-block__list">
-    {% assign list_1_clean = block.settings.list_1 | strip_html %}
-    {% assign list_1_items = list_1_clean | split: '<br>' %}
-    {% assign list_1_lines = list_1_clean | newline_to_br | split: '<br />' %}
-    {% for item in list_1_lines %}
-      {% assign trimmed = item | strip %}
+    {% assign list_1_items = block.settings.list_1 | split: '</p>' %}
+    {% for item in list_1_items %}
+      {% assign trimmed = item | strip_html | strip %}
       {% if trimmed != blank %}
         <li>{{ trimmed }}</li>
       {% endif %}
