@@ -31,33 +31,36 @@
               <p class="gym-plan-block__heading">{{ block.settings.heading_1 }}</p>
             {% endif %}
 
-            {% if block.settings.list_1 != blank %}
-              <ul class="gym-plan-block__list">
-                {% assign list_1_items = block.settings.list_1 | split: '<br>' %}
-                {% for item in list_1_items %}
-                  {% assign trimmed = item | strip %}
-                  {% if trimmed != blank %}
-                    <li>{{ trimmed }}</li>
-                  {% endif %}
-                {% endfor %}
-              </ul>
-            {% endif %}
+           {% if block.settings.list_1 != blank %}
+  <ul class="gym-plan-block__list">
+    {% assign list_1_clean = block.settings.list_1 | strip_html %}
+    {% assign list_1_items = list_1_clean | split: '<br>' %}
+    {% assign list_1_lines = list_1_clean | newline_to_br | split: '<br />' %}
+    {% for item in list_1_lines %}
+      {% assign trimmed = item | strip %}
+      {% if trimmed != blank %}
+        <li>{{ trimmed }}</li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+{% endif %}
 
             {% if block.settings.heading_2 != blank %}
               <p class="gym-plan-block__heading">{{ block.settings.heading_2 }}</p>
             {% endif %}
 
             {% if block.settings.list_2 != blank %}
-              <ul class="gym-plan-block__list">
-                {% assign list_2_items = block.settings.list_2 | split: '<br>' %}
-                {% for item in list_2_items %}
-                  {% assign trimmed = item | strip %}
-                  {% if trimmed != blank %}
-                    <li>{{ trimmed }}</li>
-                  {% endif %}
-                {% endfor %}
-              </ul>
-            {% endif %}
+  <ul class="gym-plan-block__list">
+    {% assign list_2_clean = block.settings.list_2 | strip_html %}
+    {% assign list_2_lines = list_2_clean | newline_to_br | split: '<br />' %}
+    {% for item in list_2_lines %}
+      {% assign trimmed = item | strip %}
+      {% if trimmed != blank %}
+        <li>{{ trimmed }}</li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+{% endif %}
 
             {% if block.settings.cta_title != blank and block.settings.cta_link != blank %}
               <div class="gym-plan-block__cta-wrap">
