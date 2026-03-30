@@ -2,8 +2,8 @@ class FacetFiltersForm extends HTMLElement{constructor(){super(),this.onActiveFi
       to right,
       #C6C6C6 0%,
       #C6C6C6 ${i}%,
-      #F1592A ${i}%,
-      #F1592A ${s}%,
+      #D83D0E ${i}%,
+      #D83D0E ${s}%,
       #C6C6C6 ${s}%,
       #C6C6C6 100%
     )`}}document.addEventListener("DOMContentLoaded",()=>{customElements.define("price-range-slider",PriceRangeSlider)});class FacetRemove extends HTMLElement{constructor(){super();let e=this.querySelector("a");e.setAttribute("role","button"),e.addEventListener("click",this.closeFilter.bind(this)),e.addEventListener("keyup",e=>{e.preventDefault(),"SPACE"===e.code.toUpperCase()&&this.closeFilter(e)})}closeFilter(e){e.preventDefault();let t=this.closest("facet-filters-form")||document.querySelector("facet-filters-form");t.onActiveFilterClick(e)}}customElements.define("facet-remove",FacetRemove);
