@@ -31,11 +31,13 @@
               <p class="gym-plan-block__heading">{{ block.settings.heading_1 }}</p>
             {% endif %}
 
-          {% if block.settings.list_1 != blank %}
+         {% if block.settings.list_1 != blank %}
   <ul class="gym-plan-block__list">
-    {% assign list_1_items = block.settings.list_1 | split: '</p>' %}
+    {% assign list_1_clean = block.settings.list_1 | strip_html: 'p' %}
+    {% assign list_1_br = block.settings.list_1 | replace: '<br>', '|||' | replace: '<br/>', '|||' | replace: '<br />', '|||' | replace: '</p>', '|||' | strip_html %}
+    {% assign list_1_items = list_1_br | split: '|||' %}
     {% for item in list_1_items %}
-      {% assign trimmed = item | strip_html | strip %}
+      {% assign trimmed = item | strip %}
       {% if trimmed != blank %}
         <li>{{ trimmed }}</li>
       {% endif %}
@@ -43,15 +45,11 @@
   </ul>
 {% endif %}
 
-            {% if block.settings.heading_2 != blank %}
-              <p class="gym-plan-block__heading">{{ block.settings.heading_2 }}</p>
-            {% endif %}
-
-            {% if block.settings.list_2 != blank %}
+           {% if block.settings.list_2 != blank %}
   <ul class="gym-plan-block__list">
-    {% assign list_2_clean = block.settings.list_2 | strip_html %}
-    {% assign list_2_lines = list_2_clean | newline_to_br | split: '<br />' %}
-    {% for item in list_2_lines %}
+    {% assign list_2_br = block.settings.list_2 | replace: '<br>', '|||' | replace: '<br/>', '|||' | replace: '<br />', '|||' | replace: '</p>', '|||' | strip_html %}
+    {% assign list_2_items = list_2_br | split: '|||' %}
+    {% for item in list_2_items %}
       {% assign trimmed = item | strip %}
       {% if trimmed != blank %}
         <li>{{ trimmed }}</li>
