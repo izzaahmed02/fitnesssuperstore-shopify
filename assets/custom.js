@@ -113,6 +113,28 @@ onReady(() => {
     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, { passive: false });
 
+  const getHashTarget = (rawHash) => {
+    if (!rawHash || rawHash.length <= 1) return null;
+    const decodedHash = decodeURIComponent(rawHash);
+    const id = decodedHash.startsWith('#') ? decodedHash.slice(1) : decodedHash;
+    return document.getElementById(id) || document.querySelector(decodedHash);
+  };
+
+  const smoothScrollToHash = (rawHash) => {
+    const target = getHashTarget(rawHash);
+    if (!target) return;
+    const header = document.querySelector('.section-header');
+    const offset = header ? header.offsetHeight : 0;
+    const top = target.getBoundingClientRect().top + window.scrollY - offset - 16;
+    window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+  };
+
+  if (window.location.hash) {
+    setTimeout(() => smoothScrollToHash(window.location.hash), 120);
+  }
+
+  window.addEventListener('hashchange', () => smoothScrollToHash(window.location.hash), { passive: true });
+
   if (!customElements.get('scrollable-faq')) {
     class ScrollableFaq extends HTMLElement {
       constructor(){
