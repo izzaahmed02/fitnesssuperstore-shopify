@@ -5,6 +5,9 @@
 
 <section class="bwig-section" id="bwig-{{ section.id }}">
   <div class="bwig-container">
+    <div class="bwig-container-side">
+    </div>
+    <div class="bwig-container-main">
     {% if section.settings.heading != blank %}
       <h2 class="bwig-heading">{{ section.settings.heading }}</h2>
     {% endif %}
@@ -34,17 +37,16 @@
             {% endif %}
           </div>
 
-          <div class="bwig-card-text">
-            {% if block.settings.title != blank %}
-              <h3 class="bwig-card-title">{{ block.settings.title }}</h3>
-            {% endif %}
+          {% if block.settings.title != blank %}
+            <h3 class="bwig-card-title">{{ block.settings.title }}</h3>
+          {% endif %}
 
-            {% if block.settings.description != blank %}
-              <p class="bwig-card-desc">{{ block.settings.description }}</p>
-            {% endif %}
-          </div>
+          {% if block.settings.description != blank %}
+            <p class="bwig-card-desc">{{ block.settings.description }}</p>
+          {% endif %}
         </div>
       {% endfor %}
+    </div>
     </div>
   </div>
 </section>
@@ -67,11 +69,12 @@
   }
 
   .bwig-container {
-    max-width: {{ section.settings.content_max_width }}px;
-    margin: 0 auto;
-    padding: 0 24px;
+    margin: 0 0;
+    padding: 0 0px;
   }
-
+.bwig-container-side{
+width:56%;
+}
   .bwig-heading {
     font-family: 'Arial Black', Arial, sans-serif;
     font-size: clamp(22px, 3vw, 36px);
@@ -167,65 +170,62 @@
 
   /* Mobile */
   @media (max-width: 560px) {
-    .bwig-container {
-      flex-direction: column;
-    }
-
-    .bwig-container-side {
-      width: 100% !important;
-    }
-
     .bwig-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
 
     .bwig-card {
-      flex-direction: row;
-      align-items: center;
-      text-align: left;
-      padding: 20px 16px;
-      gap: 16px;
-      border-radius: 8px;
-      border: 1px solid #eeeeee;
-      background-color: var(--bwig-card-bg);
-    }
-
-    .bwig-icon-wrap {
-      width: 56px;
-      height: 56px;
-      flex-shrink: 0;
-      margin-bottom: 0;
-    }
-
-    .bwig-icon-wrap svg,
-    .bwig-icon-placeholder svg,
-    .bwig-icon-svg svg {
-      width: 24px;
-      height: 24px;
-    }
-
-    .bwig-card-text {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .bwig-card-title {
-      font-size: 15px;
-      font-weight: 700;
-      margin: 0 0 6px 0;
-    }
-
-    .bwig-card-desc {
-      font-size: 13px;
-      line-height: 1.5;
+      padding: 24px 16px 20px;
     }
 
     .bwig-heading {
       font-size: 20px;
-      margin-bottom: 20px;
     }
   }
+  /* Mobile */
+@media (max-width: 560px) {
+  .bwig-grid {
+    grid-template-columns: 1fr;  /* Single column */
+    gap: 16px;
+  }
+
+  .bwig-card {
+    flex-direction: row;          /* Horizontal layout */
+    align-items: flex-start;
+    text-align: left;
+    padding: 20px 16px;
+    gap: 16px;
+    border-radius: 10px;
+    border: 1px solid #e8e8e8;
+    background-color: #fff;
+  }
+
+  .bwig-icon-wrap {
+    flex-shrink: 0;
+    margin-bottom: 0;             /* Remove bottom margin from vertical layout */
+    width: 60px;
+    height: 60px;
+  }
+
+  .bwig-card-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bwig-card-title {
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  .bwig-card-desc {
+    font-size: 13px;
+  }
+
+  .bwig-heading {
+    font-size: 20px;
+  }
+}
 </style>
 
 {% schema %}
