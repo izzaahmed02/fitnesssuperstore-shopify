@@ -1,569 +1,798 @@
-{% style %}
+{{ 'section-scrollable-faq.css' | asset_url | stylesheet_tag }}
 
-  .payment-faqs .accordion-container ul li{
-    position: relative;
-  }
-.payment-faqs .payment-methods-container {
-  display: flex;
-  font-family: Arial, sans-serif;
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 16px;
-  gap: 24px;
-}
+<style>
+      #shopify-section-{{ section.id }} {
+          background-color: {{ section.settings.bg_color }};
+          padding:0;
+      }
 
-.payment-faqs .sidebar {
-  position: sticky;
-  top: 16px;
-  height: fit-content;
-  margin-right: 24px;
-  flex: 1;
-  flex-shrink: 0;
-  max-width: 515px;
-}
+      #shopify-section-{{ section.id }} .address-wrapper {
+          margin-bottom: 12px;
+      }
 
-.payment-faqs .sidebar h3 {
-  font-family: DM Sans;
-  font-weight: 700;
-  font-size: clamp(24px, 5vw, 32px);
-  line-height: 1.3;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 16px;
-}
+      #shopify-section-{{ section.id }} .address-wrapper .title {
+          font-weight: 700;
+      }
 
-.payment-faqs .sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+      #shopify-section-{{ section.id }} .address-wrapper p {
+          margin-top: 8px;
+          margin-bottom: 16px;
+      }
 
-.payment-faqs .sidebar li {
-  margin-bottom: 8px;
-  border: 1px solid #E5E5E5;
-  border-radius: 4px;
-  overflow: hidden;
-}
+      #shopify-section-{{ section.id }} .address-wrapper .address {
+          display: flex;
+          align-items: center;
+          font-size: 16px;
+          color: #000000;
+      }
 
-.payment-faqs .sidebar a {
-  display: block;
-  text-decoration: none;
-  color: #000;
-  font-family: DM Sans;
-  font-weight: 700;
-  font-size: clamp(14px, 2.5vw, 16px);
-  line-height: 1.5;
-  padding: 12px;
-  transition: all 0.3s ease;
-}
+      #shopify-section-{{ section.id }} .address-wrapper .address svg {
+          margin-right: 10px;
+      }
 
-.payment-faqs .sidebar a:hover,
-.payment-faqs .sidebar li.active a,
-.payment-faqs .sidebar a.active {
-  background-color: #DF633A;
-  color: #fff;
-}
+      #shopify-section-{{ section.id }} ul li {
+          position: relative;
+      }
 
-/* Accordion Section */
-.payment-faqs .accordion-container {
-  flex: 1.5;
-  padding: 0;
-}
+      #shopify-section-{{ section.id }} ul li:before {
+          content: "";
+          display: block;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          position: absolute;
+          top: 8px;
+          left: -14px;
+          background: #3E77AA;
+      }
 
-.payment-faqs .accordion {
-  border-bottom: 1px solid #E5E5E5;
-  margin: 16px 0;
-}
+      #shopify-section-{{ section.id }} a strong {
+          margin-bottom: 0;
+          line-height: 22px;
+      }
 
-.payment-faqs .accordion-header {
-  font-family: DM Sans;
-  font-weight: 700;
-  font-size: clamp(16px, 2.5vw, 18px);
-  line-height: 1.5;
-  cursor: pointer;
-  padding: 12px 0;
-  gap: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+      #shopify-section-template--23645057646908__scrollable_faq_D47NJc .scrollable-faq__item-text a {
+          display: flex;
+      }
 
-.payment-faqs .accordion-header p {
-  margin: 0;
-}
+      #shopify-section-template--23645057646908__scrollable_faq_D47NJc .scrollable-faq__item:nth-child(3) a:after {
+          content: url("https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Chevron_-_Right.svg?v=1730219308");
+      }
 
-.payment-faqs .accordion-header::after {
-  content: '>';
-  font-size: 20px;
-  transition: transform 0.3s ease;
-  transform: rotate(90deg);
-}
+      h2 {
+          margin: 0px;
+      }
 
-.payment-faqs .accordion-header.active::after {
-  content: '<';
-}
+      h2, .h2 {
+          font-size: 38px;
+          font-weight: 600;
+          line-height: 50px;
+          text-transform: uppercase;
+          margin-bottom: 16px;
+      }
 
-.payment-faqs .accordion-content-text {
-  font-family: DM Sans;
-  font-weight: 400;
-  font-size: clamp(14px, 2.5vw, 16px);
-  line-height: 1.5;
-  padding: 12px 0;
-  display: none;
-}
+      .scrollable-faq__item-text h2 {
+          font-family: Lato;
+          font-weight: 700;
+          font-style: Bold;
+          font-size: 28px;
+          line-height: 36px;
+          letter-spacing: 0px;
+          vertical-align: middle;
+          text-transform: capitalize;
+          padding-bottom: 16px;
+      }
 
-.payment-faqs .accordion-content-text.active {
-  display: block;
-}
+      .scrollable-faq__item-text br {
+          display: none;
+      }
 
-/* List styles */
-.payment-faqs .accordion-container ul {
-  margin-left: 20px;
-  padding: 0;
-}
+      .scrollable-faq__right-side {
+          width: calc(55% - 20px);
+          max-width: 624px;
+          display: flex;
+          flex-direction: column;
+          gap: 0px;
+      }
 
-.payment-faqs .accordion-container ol li {
-  font-family: DM Sans;
-  font-weight: 400;
-  font-size: clamp(12px, 2vw, 14px);
-  line-height: 1.5;
-  margin-bottom: 8px;
-  color: #333333;
-  position: relative;
-  padding-left: 16px;
-}
+      .scrollable-faq__item {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          padding: 36px 16px 0px 16px;
+      }
 
-.payment-faqs .accordion-container ul li:before {
-  content: "";
-  border: 4px solid #FE8425;
-  border-radius: 50%;
-  position: absolute;
-  left: -15px;
-  top: 7px;
-}
+      .scrollable-faq__nav {
+          position: sticky;
+      }
 
-.payment-faqs .accordion-container ol li:before {
-  content: "*";
-  position: absolute;
-  left: 0;
-  top: 2px;
-  color: #FE8425;
-}
+      @media screen and (min-width: 320px) and (max-width: 426px) {
+          #shopify-section-template--26232940003644__scrollable_faq_vishal_94zbh9 .scrollable-faq__right-side {
+              padding-right: 0 !important;
+          }
 
-.payment-faqs .accordion-content-text p a,
-.payment-faqs .accordion-content-text li a {
-  color: #DF633A;
-  font-weight: 700;
-  text-decoration: none;
-}
+          h2, .h2 {
+              font-size: 20px !important;
+              line-height: 26px !important;
+              margin-bottom: 12px !important;
+          }
 
-.payment-faqs .accordion-content-text p {
-  margin: 8px 0;
-  font-size: clamp(14px, 2.5vw, 16px);
-  line-height: 1.5;
-}
+          .section-padding {
+              padding: 0 !important;
+          }
+      }
 
-/* Logo Container */
-.payment-faqs .logo-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
+      @media screen and (max-width: 750px) {
+          .scrollable-faq.section-padding {
+              padding-block: 24px;
+          }
+      }
 
-.payment-faqs .logo-image {
-  width: clamp(50px, 15vw, 60px);
-  height: auto;
-  object-fit: contain;
-}
+      {% if template == 'page.crating-process' %}
+      .scrollable-faq__item {
+          display: flex;
+          flex-direction: column;
+      }
 
+      .scrollable-faq__item-title-vishal {
+          order: 1;
+          margin: 0 0 12px 0;
+          font-family: Oswald;
+          font-weight: 600;
+          font-style: SemiBold;
+          font-size: 38px;
+          line-height: 50px;
+          letter-spacing: 0%;
+          vertical-align: middle;
+          text-transform: uppercase;
+      }
 
+      .scrollable-faq__item-text {
+          order: 2;
+          margin-top: 0;
+          margin-bottom: 16px;
+      }
 
+      .scrollable-faq__item-text > p {
+          margin: 0;
+      }
 
-#shopify-section-template--26232940003644__payment_faqs_tMPbE4 {
+      .scrollable-faq__item-image {
+          order: 3;
+      }
 
+      .scrollable-faq__item {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+      }
 
-  display: flex;
-      justify-content: center !important;
-    width: 100% !important;
-}
+      .scrollable-faq__item-text {
+          margin-top: 0px;
+      }
+      {% endif %}
 
-.payment-faqs .payment-methods-container {
-  
-  max-width: 100% !important;
-  margin-right: 0 !important;
-  display: flex;
-  align-items: flex-start;
-  gap: 32px;
-}
+      @media (max-width: 749px) {
+          .scrollable-faq__right-side {
+              row-gap: 24px;
+              width: 100%;
+          }
 
-.payment-faqs .sidebar {
-  width: 25%;
-  position: sticky;
-  top: 20px;
-}
+          .scrollable-faq__item-title-vishal {
+              margin-bottom: 8px;
+          }
 
-.payment-faqs .accordion-container {
-  width: 75%;
-}
-.payment-methods-container {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start; /* IMPORTANT */
-  gap: 32px;
-  flex-wrap: nowrap; /* prevents dropping below */
-}
+          .scrollable-faq__item-text p:first-child {
+              margin-top: 0;
+          }
 
+          .scrollable-faq__item-text {
+              margin-bottom: 12px;
+              margin-top: 10px;
+          }
 
-.sidebar {
-  flex: 0 0 250px; /* fixed width sidebar */
-}
+          .rich-text {
+              padding: 0 1.5rem;
+          }
+      }
 
-.accordion-container {
-  flex: 1; /* take remaining space */
-  max-width: 800px; /* optional: control width */
-}
-/* PAYMENT FAQ ACCORDION */
-.payment-faq__container {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  width: 100%;
-}
+      .rich-text__wrapper {
+          padding: 24px 16px !important;
+      }
 
-.payment-faq__title {
-  font-family: Oswald, sans-serif;
-  font-weight: 600;
-  font-size: 38px;
-  line-height: 50px;
-  text-transform: uppercase;
-  margin-bottom: 16px;
-}
+      .rich-text__heading {
+          text-align: center !important;
+      }
 
-.payment-faq__item {
-  border: 1px solid #E5E5E5;
-  border-bottom: none;
-}
+      .rich-text__text p {
+          font-size: 16px !important;
+          line-height: 24px !important;
+      }
 
-.payment-faq__item:last-child {
-  border-bottom: 1px solid #E5E5E5;
-}
+      .rich-text__buttons {
+          row-gap: 16px !important;
+      }
 
-.payment-faq__question {
-  width: 100%;
-  background: none;
-  border: none;
-  padding: 18px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  font-family: Lato, sans-serif;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 24px;
-  text-align: left;
-  color: #000;
-}
+      .faq-main-text {
+          margin-bottom: 16px;
+      }
 
-.payment-faq__question svg {
-  flex-shrink: 0;
-  transition: transform 0.3s ease;
-}
+      .faq-warning {
+          padding: 4px 4px 4px 20px;
+          margin-bottom: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+      }
 
-.payment-faq__item.is-open .payment-faq__question svg {
-  transform: rotate(180deg);
-}
+      .warning-orange {
+          border-left: 4px solid #F15A29;
+          padding: 4px 4px 4px 20px;
+      }
 
-.payment-faq__answer {
-  display: none;
-  padding: 0 16px 18px 16px;
-  font-family: Lato, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  color: #333;
-}
+      .warning-orange .faq-warning__header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #F15A29;
+          font-weight: 700;
+          font-family: Lato;
+          font-style: Bold;
+          font-size: 18px;
+          line-height: 24px;
+          letter-spacing: 0px;
+      }
 
-.payment-faq__item.is-open .payment-faq__answer {
-  display: block;
-}
-/* Media Queries */
-@media (max-width: 1024px) {
-  .payment-faqs .sidebar {
-    width: 250px;
-    margin-right: 16px;
-  }
-}
+      .scrollable-faq__left-side {
+          padding: 36px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 326px;
+      }
 
-@media (max-width: 766px) {
-  .payment-faqs .payment-methods-container {
-    flex-direction: column;
-    padding: 12px;
-    gap: 16px;
-  }
-.payment-faqs .payment-methods-container {
-  
-  max-width: 100% !important;
-  margin-left: 0% !important;
-  margin-right: 0 !important;
-}
-  .payment-faqs .sidebar {
-    position: relative;
-    top: 0;
-    width: 100%;
-    margin-right: 0;
-  }
+      .warning-orange .faq-warning__icon::before {
+          content: "";
+          display: inline-block;
+          width: 20px;
+          height: 20px;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' stroke='%23F15A29' stroke-width='2'/%3E%3Ctext x='12' y='16' text-anchor='middle' fill='%23F15A29' font-size='13' font-family='serif'%3E%3F%3C/text%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-size: contain;
+          vertical-align: middle;
+          margin-bottom: 2px;
+      }
 
-  .payment-faqs .sidebar h3 {
-    font-size: clamp(20px, 4vw, 24px);
-  }
+      .warning-gray {
+          background: #FCF6F4;
+          border-radius: 12px;
+          padding: 20px 24px;
+      }
 
-  .payment-faqs .sidebar a {
-    font-size: clamp(13px, 2.5vw, 14px);
-  }
+      .warning-gray .faq-warning__header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #F15A29;
+          font-family: Lato;
+          font-weight: 700;
+          font-style: Bold;
+          font-size: 18px;
+          line-height: 24px;
+          letter-spacing: 0px;
+      }
 
-  .payment-faqs .accordion {
-    margin: 0;
-    padding: 0;
-  }
+      .warning-gray .faq-warning__icon::before {
+          content: "";
+          display: inline-block;
+          width: 24px;
+          height: 24px;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath d='M12 2L2 21h20L12 2z' stroke='%23F15A29' stroke-width='2' stroke-linejoin='round'/%3E%3Cline x1='12' y1='10' x2='12' y2='14' stroke='%23F15A29' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='12' cy='17.5' r='1' fill='%23F15A29'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-size: contain;
+          vertical-align: middle;
+      }
 
-  .payment-faqs .accordion-header {
-        font-size: 16px;
-        line-height: 24px;
-        font-family: DM Sans;
-        padding: 12px;
-        font-weight: 700;
+      .faq-warning__body {
+          font-family: Lato;
+          font-weight: 400;
+          font-style: Regular;
+          font-size: 16px;
+          line-height: 24px;
+          letter-spacing: 0px;
+          color: #333;
+          margin: 0;
+      }
 
-  }
+      /* =============================================
+         PAYMENT FAQ ACCORDION — NEW STYLES
+         ============================================= */
 
-  .payment-faqs .accordion-container ul li:before{
-    content: "";
-    border: 4px solid #FE8425;
-    border-radius: 50%;
-    position: absolute;
-    top: 7px;
-    left: -15px;
-  }
+      .payment-faq__section-title {
+          font-family: Oswald, sans-serif;
+          font-weight: 600;
+          font-size: 38px;
+          line-height: 50px;
+          text-transform: uppercase;
+          margin: 0 0 16px 0;
+      }
 
-.payment-faqs .accordion-content-text p, .payment-faqs .accordion-container ol li, .payment-faqs .accordion-container ul li{
-  font-family: DM Sans;
-  position: relative;
-font-weight: 400;
-font-size: 16px;
-line-height: 24px;
-letter-spacing: 0px;
-  margin: 0px;
-vertical-align: middle;
-}
+      .payment-faq__container {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+      }
 
-  .payment-faqs .accordion-content-text.active {
-    padding: 12px;
-    padding-top: 0px;
-}
+      .payment-faq__item {
+          border: 1px solid #E5E5E5;
+          border-bottom: none;
+      }
 
-  .payment-faqs .accordion-container {
-    padding-bottom: 30px;
-}
+      .payment-faq__item:last-child {
+          border-bottom: 1px solid #E5E5E5;
+      }
 
-}
+      .payment-faq__question {
+          width: 100%;
+          background: none;
+          border: none;
+          padding: 18px 16px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          cursor: pointer;
+          font-family: Lato, sans-serif;
+          font-size: 16px;
+          font-weight: 400;
+          line-height: 24px;
+          text-align: left;
+          color: #000;
+          gap: 12px;
+      }
 
+      .payment-faq__question:hover {
+          background-color: #fafafa;
+      }
 
-{% endstyle %}
+      .payment-faq__question svg {
+          flex-shrink: 0;
+          transition: transform 0.3s ease;
+      }
 
-<div class="payment-methods-container">
-  <!-- Sticky Sidebar -->
-  <div class="sidebar">
-    <h3>{{ section.settings.sidebar_title }}</h3>
-    <p>{{ section.settings.sidebar_text }}</p>
-  </div>
+      .payment-faq__item.is-open .payment-faq__question svg {
+          transform: rotate(180deg);
+      }
 
-  <!-- Accordion/Content Section -->
-  <div class="accordion-container">
-    {% for block in section.blocks %}
-        <div class="accordion" id="{{ block.settings.accordion_id }}">
-          <div class="accordion-header"><p>{{ block.settings.accordion_title }}</p></div>
-          <div class="accordion-content-container">         
-            <!-- Accordion Content Text -->
-            <div class="accordion-content-text">
-              {{ block.settings.accordion_content }}
+      .payment-faq__answer {
+          display: none;
+          padding: 0 16px 18px 16px;
+          font-family: Lato, sans-serif;
+          font-size: 16px;
+          line-height: 24px;
+          color: #333;
+      }
+
+      .payment-faq__item.is-open .payment-faq__answer {
+          display: block;
+      }
+
+      @media (max-width: 749px) {
+          .payment-faq__section-title {
+              font-size: 20px;
+              line-height: 26px;
+          }
+      }
+</style>
+
+<scrollable-faq class="scrollable-faq section-padding scroll-trigger animate--slide-in">
+  <div class="scrollable-faq__wrapper {% if section.settings.mobile_layout == 'dropdown' %}mobile_dropdown{% endif %}">
+    <div class="scrollable-faq__left-side">
+      <div class="scrollable-faq__nav-wrapper">
+        {% if section.settings.title != blank %}
+          <h2 class="h2">{{ section.settings.title }}</h2>
+        {% endif %}
+        {% if section.settings.text != blank %}
+          <div class="scrollable-faq__text">{{ section.settings.text }}</div>
+        {% endif %}
+        {% if section.settings.link != blank %}
+          <a href="{{ section.settings.link }}" class="scrollable-faq__link">
+            {{- section.settings.link_text -}}
+          </a>
+        {% endif %}
+        <div class="scrollable-faq__nav">
+          {% for block in section.blocks %}
+            <button
+              data-scroll-to="block-{{ block.settings.title | handle }}"
+              data-scroll-to-mobile="mobile-block-{{ block.settings.title | handle }}"
+            >
+              {{ block.settings.title }}
+              <svg class="scrollable-faq__arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                      d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z"
+                      fill="black"/>
+              </svg>
+            </button>
+
+            <!-- ── Mobile dropdown for this block ── -->
+            <div
+              class="scrollable-faq__item--mob faq_item--mobile"
+              id="mobile-block-{{ block.settings.title | handle }}"
+            >
+              {% if block.type == 'payment_faq' %}
+                <!-- Payment FAQ mobile -->
+                {% if block.settings.title != blank %}
+                  <div class="payment-faq__section-title">{{ block.settings.title }}</div>
+                {% endif %}
+                <div class="payment-faq__container">
+                  {% for i in (1..10) %}
+                    {% assign q_key = 'faq_question_' | append: i %}
+                    {% assign a_key = 'faq_answer_' | append: i %}
+                    {% assign q = block.settings[q_key] %}
+                    {% assign a = block.settings[a_key] %}
+                    {% if q != blank %}
+                      <div class="payment-faq__item">
+                        <button class="payment-faq__question" aria-expanded="false">
+                          {{ q }}
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                              d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z"
+                              fill="black"/>
+                          </svg>
+                        </button>
+                        {% if a != blank %}
+                          <div class="payment-faq__answer">{{ a }}</div>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+
+              {% else %}
+                <!-- Original block mobile -->
+                {% if block.settings.image != blank %}
+                  <div class="scrollable-faq__item-image">
+                    <img src="{{ block.settings.image | img_url: 'master' }}" alt="{{ block.settings.image.alt }}" loading="lazy">
+                  </div>
+                {% endif %}
+                {% if block.settings.title != blank %}
+                  <h2 class=".scrollable-faq__item-title-vishal h2">{{ block.settings.title }}</h2>
+                {% endif %}
+                {% if block.settings.image_under_title1 != blank %}
+                  <div class="scrollable-faq__item-icons-container">
+                    {% for i in (1..6) %}
+                      {% assign icon_key = 'image_under_title' | append: i %}
+                      {% assign icon = block.settings[icon_key] %}
+                      {% if icon != blank %}
+                        <div class="scrollable-faq__item-image origin-proportions scrollable-faq__item-icons">
+                          <img src="{{ icon | img_url: 'master' }}" alt="{{ icon.alt }}" loading="lazy" width="70" height="48">
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                {% if block.settings.content != blank %}
+                  <div class="scrollable-faq__item-text">{{ block.settings.content }}</div>
+                {% endif %}
+                <div class="scrollable-faq__item-images">
+                  {% for i in (1..5) %}
+                    {% assign image_below_key = 'image_below' | append: i %}
+                    {% assign image_below_link_key = 'image_below_link_url_' | append: i %}
+                    {% assign image_below = block.settings[image_below_key] %}
+                    {% assign image_below_link_url = block.settings[image_below_link_key] %}
+                    {% if image_below != blank %}
+                      <div class="scrollable-faq__item-icon {% if block.settings.image_below_origin_proportions %}origin-proportions{% endif %}">
+                        <a href="{{ image_below_link_url }}" rel="nofollow">
+                          <img src="{{ image_below | img_url: 'master' }}" alt="{{ image_below.alt }}" loading="lazy">
+                        </a>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+                {% if block.settings.addr1 != blank %}
+                  <div class="address-wrapper">
+                    <span class="title">{{ block.settings.addrtitle1 }}</span>
+                    <p>{{ block.settings.addrtext1 }}</p>
+                    <span class="address">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M4.75 10.1482C4.75 7.63087 5.66985 5.80032 7.00337 4.59302C8.34965 3.37416 10.1636 2.75 12 2.75C13.8364 2.75 15.6504 3.37418 16.9966 4.59304C18.3301 5.80035 19.25 7.63089 19.25 10.1482C19.25 13.4221 17.2847 16.2839 15.2683 18.3449C14.5408 19.0884 14.0747 19.5589 13.5981 19.8644C13.1668 20.1408 12.7127 20.288 12.0002 20.288C11.2877 20.288 10.8336 20.1409 10.4023 19.8644C9.9257 19.559 9.45955 19.0885 8.73207 18.345C6.71544 16.284 4.75 13.4221 4.75 10.1482ZM20.75 10.1482C20.75 7.23337 19.6699 4.98983 18.0034 3.48107C16.3496 1.98387 14.1636 1.25001 12 1.25C9.83643 1.24999 7.65035 1.98385 5.99663 3.48105C4.33015 4.98981 3.25 7.23335 3.25 10.1482C3.25 14.0136 5.5502 17.2379 7.65992 19.3941L7.70691 19.4421L7.70693 19.4421C8.37418 20.1242 8.95657 20.7195 9.59294 21.1274C10.2895 21.5738 11.0303 21.788 12.0002 21.788C12.9702 21.788 13.711 21.5737 14.4075 21.1273C15.0439 20.7194 15.6262 20.1241 16.2935 19.442L16.2935 19.4419L16.3405 19.3939C18.45 17.2377 20.75 14.0135 20.75 10.1482ZM9.75 10C9.75 8.75739 10.7574 7.75003 12 7.75003C13.2426 7.75003 14.25 8.75739 14.25 10C14.25 11.2427 13.2426 12.25 12 12.25C10.7574 12.25 9.75 11.2427 9.75 10ZM12 6.25003C9.92893 6.25003 8.25 7.92896 8.25 10C8.25 12.0711 9.92893 13.75 12 13.75C14.0711 13.75 15.75 12.0711 15.75 10C15.75 7.92896 14.0711 6.25003 12 6.25003Z" fill="#D83D0E"/>
+                      </svg>
+                      {{ block.settings.addr1 -}}
+                    </span>
+                  </div>
+                {% endif %}
+                {% if block.settings.addr2 != blank %}
+                  <div class="address-wrapper">
+                    <span class="title">{{ block.settings.addrtitle2 }}</span>
+                    <p>{{ block.settings.addrtext2 }}</p>
+                    <span class="address">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M4.75 10.1482C4.75 7.63087 5.66985 5.80032 7.00337 4.59302C8.34965 3.37416 10.1636 2.75 12 2.75C13.8364 2.75 15.6504 3.37418 16.9966 4.59304C18.3301 5.80035 19.25 7.63089 19.25 10.1482C19.25 13.4221 17.2847 16.2839 15.2683 18.3449C14.5408 19.0884 14.0747 19.5589 13.5981 19.8644C13.1668 20.1408 12.7127 20.288 12.0002 20.288C11.2877 20.288 10.8336 20.1409 10.4023 19.8644C9.9257 19.559 9.45955 19.0885 8.73207 18.345C6.71544 16.284 4.75 13.4221 4.75 10.1482ZM20.75 10.1482C20.75 7.23337 19.6699 4.98983 18.0034 3.48107C16.3496 1.98387 14.1636 1.25001 12 1.25C9.83643 1.24999 7.65035 1.98385 5.99663 3.48105C4.33015 4.98981 3.25 7.23335 3.25 10.1482C3.25 14.0136 5.5502 17.2379 7.65992 19.3941L7.70691 19.4421L7.70693 19.4421C8.37418 20.1242 8.95657 20.7195 9.59294 21.1274C10.2895 21.5738 11.0303 21.788 12.0002 21.788C12.9702 21.788 13.711 21.5737 14.4075 21.1273C15.0439 20.7194 15.6262 20.1241 16.2935 19.442L16.2935 19.4419L16.3405 19.3939C18.45 17.2377 20.75 14.0135 20.75 10.1482ZM9.75 10C9.75 8.75739 10.7574 7.75003 12 7.75003C13.2426 7.75003 14.25 8.75739 14.25 10C14.25 11.2427 13.2426 12.25 12 12.25C10.7574 12.25 9.75 11.2427 9.75 10ZM12 6.25003C9.92893 6.25003 8.25 7.92896 8.25 10C8.25 12.0711 9.92893 13.75 12 13.75C14.0711 13.75 15.75 12.0711 15.75 10C15.75 7.92896 14.0111 6.25003 12 6.25003Z" fill="#D83D0E"/>
+                      </svg>
+                      {{ block.settings.addr2 -}}
+                    </span>
+                  </div>
+                {% endif %}
+                {% if block.settings.link_label != empty %}
+                  <a href="{{ block.settings.link_url }}" class="scrollable-faq__item-link">
+                    {{- block.settings.link_label -}}
+                  </a>
+                {% endif %}
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="scrollable-faq__right-side {% if section.settings.mobile_layout == 'dropdown' %}mobile_dropdown--hidden{% endif %}">
+      {% for block in section.blocks %}
+
+        {% if block.type == 'payment_faq' %}
+          <!-- ══════════════════════════════════════
+               PAYMENT FAQ BLOCK (accordion)
+               ══════════════════════════════════════ -->
+          <div class="scrollable-faq__item" id="block-{{ block.settings.title | handle }}">
+            {% if block.settings.title != blank %}
+              <div class="payment-faq__section-title">{{ block.settings.title }}</div>
+            {% endif %}
+            <div class="payment-faq__container">
+              {% for i in (1..10) %}
+                {% assign q_key = 'faq_question_' | append: i %}
+                {% assign a_key = 'faq_answer_' | append: i %}
+                {% assign q = block.settings[q_key] %}
+                {% assign a = block.settings[a_key] %}
+                {% if q != blank %}
+                  <div class="payment-faq__item">
+                    <button class="payment-faq__question" aria-expanded="false">
+                      {{ q }}
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                          d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z"
+                          fill="black"/>
+                      </svg>
+                    </button>
+                    {% if a != blank %}
+                      <div class="payment-faq__answer">{{ a }}</div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              {% endfor %}
             </div>
           </div>
-        </div>
-    {% endfor %}
+
+        {% else %}
+          <!-- ══════════════════════════════════════
+               ORIGINAL BLOCK (unchanged)
+               ══════════════════════════════════════ -->
+          <div class="scrollable-faq__item" id="block-{{ block.settings.title | handle }}">
+            {% if block.settings.image != blank %}
+              <div class="scrollable-faq__item-image">
+                <img src="{{ block.settings.image | img_url: 'master' }}" alt="{{ block.settings.image.alt }}" loading="lazy">
+              </div>
+            {% endif %}
+            {% if block.settings.title != blank %}
+              <h2 class=".scrollable-faq__item-title-vishal h2">{{ block.settings.title }}</h2>
+            {% endif %}
+            {% if block.settings.image_under_title1 != blank %}
+              <div class="scrollable-faq__item-icons-container">
+                {% for i in (1..6) %}
+                  {% assign icon_key = 'image_under_title' | append: i %}
+                  {% assign icon = block.settings[icon_key] %}
+                  {% if icon != blank %}
+                    <div class="scrollable-faq__item-image origin-proportions scrollable-faq__item-icons">
+                      <img src="{{ icon | img_url: 'master' }}" alt="{{ icon.alt }}" loading="lazy" width="70" height="48">
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% if block.settings.content != blank %}
+              <div class="scrollable-faq__item-text">{{ block.settings.content }}</div>
+            {% endif %}
+            <div class="scrollable-faq__item-images">
+              {% for i in (1..5) %}
+                {% assign image_below_key = 'image_below' | append: i %}
+                {% assign image_below_link_key = 'image_below_link_url_' | append: i %}
+                {% assign image_below = block.settings[image_below_key] %}
+                {% assign image_below_link_url = block.settings[image_below_link_key] %}
+                {% if image_below != blank %}
+                  <div class="scrollable-faq__item-icon {% if block.settings.image_below_origin_proportions %}origin-proportions{% endif %}">
+                    <a href="{{ image_below_link_url }}" rel="nofollow">
+                      <img src="{{ image_below | img_url: 'master' }}" alt="{{ image_below.alt }}" loading="lazy">
+                    </a>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+            {% if block.settings.addr1 != blank %}
+              <div class="address-wrapper">
+                <span class="title">{{ block.settings.addrtitle1 }}</span>
+                <p>{{ block.settings.addrtext1 }}</p>
+                <span class="address">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M4.75 10.1482C4.75 7.63087 5.66985 5.80032 7.00337 4.59302C8.34965 3.37416 10.1636 2.75 12 2.75C13.8364 2.75 15.6504 3.37418 16.9966 4.59304C18.3301 5.80035 19.25 7.63089 19.25 10.1482C19.25 13.4221 17.2847 16.2839 15.2683 18.3449C14.5408 19.0884 14.0747 19.5589 13.5981 19.8644C13.1668 20.1408 12.7127 20.288 12.0002 20.288C11.2877 20.288 10.8336 20.1409 10.4023 19.8644C9.9257 19.559 9.45955 19.0885 8.73207 18.345C6.71544 16.284 4.75 13.4221 4.75 10.1482ZM20.75 10.1482C20.75 7.23337 19.6699 4.98983 18.0034 3.48107C16.3496 1.98387 14.1636 1.25001 12 1.25C9.83643 1.24999 7.65035 1.98385 5.99663 3.48105C4.33015 4.98981 3.25 7.23335 3.25 10.1482C3.25 14.0136 5.5502 17.2379 7.65992 19.3941L7.70691 19.4421L7.70693 19.4421C8.37418 20.1242 8.95657 20.7195 9.59294 21.1274C10.2895 21.5738 11.0303 21.788 12.0002 21.788C12.9702 21.788 13.711 21.5737 14.4075 21.1273C15.0439 20.7194 15.6262 20.1241 16.2935 19.442L16.2935 19.4419L16.3405 19.3939C18.45 17.2377 20.75 14.0135 20.75 10.1482ZM9.75 10C9.75 8.75739 10.7574 7.75003 12 7.75003C13.2426 7.75003 14.25 8.75739 14.25 10C14.25 11.2427 13.2426 12.25 12 12.25C10.7574 12.25 9.75 11.2427 9.75 10ZM12 6.25003C9.92893 6.25003 8.25 7.92896 8.25 10C8.25 12.0711 9.92893 13.75 12 13.75C14.0711 13.75 15.75 12.0711 15.75 10C15.75 7.92896 14.0111 6.25003 12 6.25003Z" fill="#D83D0E"/>
+                  </svg>
+                  {{ block.settings.addr1 -}}
+                </span>
+              </div>
+            {% endif %}
+            {% if block.settings.addr2 != blank %}
+              <div class="address-wrapper">
+                <span class="title">{{ block.settings.addrtitle2 }}</span>
+                <p>{{ block.settings.addrtext2 }}</p>
+                <span class="address">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M4.75 10.1482C4.75 7.63087 5.66985 5.80032 7.00337 4.59302C8.34965 3.37416 10.1636 2.75 12 2.75C13.8364 2.75 15.6504 3.37418 16.9966 4.59304C18.3301 5.80035 19.25 7.63089 19.25 10.1482C19.25 13.4221 17.2847 16.2839 15.2683 18.3449C14.5408 19.0884 14.0747 19.5589 13.5981 19.8644C13.1668 20.1408 12.7127 20.288 12.0002 20.288C11.2877 20.288 10.8336 20.1409 10.4023 19.8644C9.9257 19.559 9.45955 19.0885 8.73207 18.345C6.71544 16.284 4.75 13.4221 4.75 10.1482ZM20.75 10.1482C20.75 7.23337 19.6699 4.98983 18.0034 3.48107C16.3496 1.98387 14.1636 1.25001 12 1.25C9.83643 1.24999 7.65035 1.98385 5.99663 3.48105C4.33015 4.98981 3.25 7.23335 3.25 10.1482C3.25 14.0136 5.5502 17.2379 7.65992 19.3941L7.70691 19.4421L7.70693 19.4421C8.37418 20.1242 8.95657 20.7195 9.59294 21.1274C10.2895 21.5738 11.0303 21.788 12.0002 21.788C12.9702 21.788 13.711 21.5737 14.4075 21.1273C15.0439 20.7194 15.6262 20.1241 16.2935 19.442L16.2935 19.4419L16.3405 19.3939C18.45 17.2377 20.75 14.0135 20.75 10.1482ZM9.75 10C9.75 8.75739 10.7574 7.75003 12 7.75003C13.2426 7.75003 14.25 8.75739 14.25 10C14.25 11.2427 13.2426 12.25 12 12.25C10.7574 12.25 9.75 11.2427 9.75 10ZM12 6.25003C9.92893 6.25003 8.25 7.92896 8.25 10C8.25 12.0711 9.92893 13.75 12 13.75C14.0711 13.75 15.75 12.0711 15.75 10C15.75 7.92896 14.0111 6.25003 12 6.25003Z" fill="#D83D0E"/>
+                  </svg>
+                  {{ block.settings.addr2 -}}
+                </span>
+              </div>
+            {% endif %}
+            {% if block.settings.link_label != empty %}
+              <a href="{{ block.settings.link_url }}" class="scrollable-faq__item-link">
+                {{- block.settings.link_label -}}
+              </a>
+            {% endif %}
+          </div>
+
+        {% endif %}
+      {% endfor %}
+    </div>
   </div>
-</div>
+</scrollable-faq>
 
+<!-- ══════════════════════════════════════
+     PAYMENT FAQ ACCORDION JAVASCRIPT
+     ══════════════════════════════════════ -->
 <script>
-// JavaScript for Accordion and Sidebar Functionality
-function initializeAccordionsAndSidebar() {
-  const headers = document.querySelectorAll('.payment-faqs .accordion-header');
-  const sidebarLinks = document.querySelectorAll('.payment-faqs .sidebar-link');
+  (function () {
+    function initPaymentFaq() {
+      document.querySelectorAll('.payment-faq__question').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var item = this.closest('.payment-faq__item');
+          var isOpen = item.classList.contains('is-open');
 
-  // Remove existing event listeners
-  headers.forEach(header => {
-    header.removeEventListener('click', toggleAccordion);
-  });
-  sidebarLinks.forEach(link => {
-    link.removeEventListener('click', handleSidebarClick);
-  });
+          /* Close all open items */
+          document.querySelectorAll('.payment-faq__item.is-open').forEach(function (el) {
+            el.classList.remove('is-open');
+            el.querySelector('.payment-faq__question').setAttribute('aria-expanded', 'false');
+          });
 
-  // Accordion functionality
-  headers.forEach(header => {
-    header.addEventListener('click', toggleAccordion);
-  });
-
-  function toggleAccordion() {
-    const content = this.nextElementSibling.querySelector('.accordion-content-text');
-    const isActive = content.classList.contains('active');
-    const accordionId = this.parentElement.id;
-
-    // Close all other accordions
-    document.querySelectorAll('.payment-faqs .accordion-content-text').forEach(item => {
-      item.classList.remove('active');
-    });
-    document.querySelectorAll('.payment-faqs .accordion-header').forEach(item => {
-      item.classList.remove('active');
-    });
-
-    // Toggle the clicked accordion
-    if (!isActive) {
-      content.classList.add('active');
-      this.classList.add('active');
-      
-      // Update sidebar active state
-      updateSidebarActiveState(accordionId);
+          /* Open the clicked one if it was closed */
+          if (!isOpen) {
+            item.classList.add('is-open');
+            btn.setAttribute('aria-expanded', 'true');
+          }
+        });
+      });
     }
-  }
 
-  // Sidebar link functionality
-  sidebarLinks.forEach(link => {
-    link.addEventListener('click', handleSidebarClick);
-  });
-
-  function handleSidebarClick(e) {
-    e.preventDefault();
-    const targetId = this.getAttribute('href').substring(1);
-    const targetElement = document.getElementById(targetId);
-
-    // Update sidebar active state
-    updateSidebarActiveState(targetId);
-
-    // Scroll to target
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth' });
-      
-      // Open the accordion
-      const header = targetElement.querySelector('.accordion-header');
-      const content = targetElement.querySelector('.accordion-content-text');
-      if (header && content && !content.classList.contains('active')) {
-        headers.forEach(h => h.classList.remove('active'));
-        document.querySelectorAll('.payment-faqs .accordion-content-text').forEach(c => c.classList.remove('active'));
-        header.classList.add('active');
-        content.classList.add('active');
-      }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPaymentFaq);
+    } else {
+      initPaymentFaq();
     }
-  }
-
-  function updateSidebarActiveState(targetId) {
-    sidebarLinks.forEach(link => {
-      const li = link.parentElement;
-      li.classList.remove('active');
-      link.classList.remove('active');
-      if (link.getAttribute('href') === `#${targetId}`) {
-        li.classList.add('active');
-        link.classList.add('active');
-      }
-    });
-  }
-
-  // Handle initial page load with hash
-  const hash = window.location.hash.substring(1);
-  if (hash) {
-    const targetElement = document.getElementById(hash);
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth' });
-      const header = targetElement.querySelector('.accordion-header');
-      const content = targetElement.querySelector('.accordion-content-text');
-      if (header && content) {
-        header.classList.add('active');
-        content.classList.add('active');
-      }
-      updateSidebarActiveState(hash);
-    }
-  }
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', initializeAccordionsAndSidebar);
-
-// Re-initialize on window resize
-let resizeTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(initializeAccordionsAndSidebar, 250);
-});
+  })();
 </script>
 
 {% schema %}
 {
-  "name": "Payment FAQs",
-  "class": "payment-faqs",
+  "name": "Scrollable FAQ",
+  "class": "scrollable-faqDiv",
   "settings": [
     {
-      "type": "text",
-      "id": "sidebar_title",
-      "label": "Sidebar Title",
-      "default": "FAQs"
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#ffffff"
     },
     {
       "type": "text",
-      "id": "sidebar_text",
-      "label": "Sidebar Text",
-      "default": "Select a payment method"
+      "id": "title",
+      "label": "Title"
+    },
+    {
+      "type": "textarea",
+      "id": "text",
+      "label": "Text"
+    },
+    {
+      "type": "text",
+      "id": "link_text",
+      "label": "Link text"
+    },
+    {
+      "type": "url",
+      "id": "link",
+      "label": "Link url"
+    },
+    {
+      "type": "select",
+      "id": "mobile_layout",
+      "options": [
+        { "value": "column", "label": "Column" },
+        { "value": "dropdown", "label": "Dropdowns" }
+      ],
+      "default": "column",
+      "label": "Mobile layout"
     }
   ],
   "blocks": [
     {
-      "type": "accordion",
-      "name": "Accordion Section",
+      "type": "block",
+      "name": "Block",
       "settings": [
-       
-        {
-          "type": "richtext",
-          "id": "accordion_title",
-          "label": "Accordion Title",
-          "default": "<p>Accordion Title</p>"
-        },
-        {
-          "type": "richtext",
-          "id": "accordion_content",
-          "label": "Accordion Content",
-          "default": "<p>Add your content here.</p>"
-        }
-       
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "html", "id": "content", "label": "Content (HTML)" },
+        { "type": "text", "id": "title", "label": "Title" },
+        { "type": "header", "content": "Icons under title" },
+        { "type": "image_picker", "id": "image_under_title1", "label": "Icon 1" },
+        { "type": "image_picker", "id": "image_under_title2", "label": "Icon 2" },
+        { "type": "image_picker", "id": "image_under_title3", "label": "Icon 3" },
+        { "type": "image_picker", "id": "image_under_title4", "label": "Icon 4" },
+        { "type": "image_picker", "id": "image_under_title5", "label": "Icon 5" },
+        { "type": "image_picker", "id": "image_under_title6", "label": "Icon 6" },
+        { "type": "image_picker", "id": "image_below1", "label": "Image below the text 1" },
+        { "type": "url", "id": "image_below_link_url_1", "label": "URL" },
+        { "type": "image_picker", "id": "image_below2", "label": "Image below the text 2" },
+        { "type": "url", "id": "image_below_link_url_2", "label": "URL" },
+        { "type": "image_picker", "id": "image_below3", "label": "Image below the text 3" },
+        { "type": "url", "id": "image_below_link_url_3", "label": "URL" },
+        { "type": "image_picker", "id": "image_below4", "label": "Image below the text 4" },
+        { "type": "url", "id": "image_below_link_url_4", "label": "URL" },
+        { "type": "image_picker", "id": "image_below5", "label": "Image below the text 5" },
+        { "type": "url", "id": "image_below_link_url_5", "label": "URL" },
+        { "type": "checkbox", "id": "image_below_origin_proportions", "label": "Image origin proportions", "default": false },
+        { "type": "header", "content": "Link" },
+        { "type": "text", "id": "link_label", "label": "Label" },
+        { "type": "url", "id": "link_url", "label": "URL" },
+        { "type": "text", "id": "addrtitle1", "label": "Address title 1" },
+        { "type": "text", "id": "addrtext1", "label": "Address text 1" },
+        { "type": "text", "id": "addr1", "label": "Address 1" },
+        { "type": "text", "id": "addrtitle2", "label": "Address title 2" },
+        { "type": "text", "id": "addrtext2", "label": "Address text 2" },
+        { "type": "text", "id": "addr2", "label": "Address 2" }
+      ]
+    },
+    {
+      "type": "payment_faq",
+      "name": "Payment FAQ",
+      "settings": [
+        { "type": "text", "id": "title", "label": "Section Title", "default": "Payment FAQ" },
+        { "type": "header", "content": "FAQ Item 1" },
+        { "type": "text", "id": "faq_question_1", "label": "Question 1" },
+        { "type": "textarea", "id": "faq_answer_1", "label": "Answer 1" },
+        { "type": "header", "content": "FAQ Item 2" },
+        { "type": "text", "id": "faq_question_2", "label": "Question 2" },
+        { "type": "textarea", "id": "faq_answer_2", "label": "Answer 2" },
+        { "type": "header", "content": "FAQ Item 3" },
+        { "type": "text", "id": "faq_question_3", "label": "Question 3" },
+        { "type": "textarea", "id": "faq_answer_3", "label": "Answer 3" },
+        { "type": "header", "content": "FAQ Item 4" },
+        { "type": "text", "id": "faq_question_4", "label": "Question 4" },
+        { "type": "textarea", "id": "faq_answer_4", "label": "Answer 4" },
+        { "type": "header", "content": "FAQ Item 5" },
+        { "type": "text", "id": "faq_question_5", "label": "Question 5" },
+        { "type": "textarea", "id": "faq_answer_5", "label": "Answer 5" },
+        { "type": "header", "content": "FAQ Item 6" },
+        { "type": "text", "id": "faq_question_6", "label": "Question 6" },
+        { "type": "textarea", "id": "faq_answer_6", "label": "Answer 6" },
+        { "type": "header", "content": "FAQ Item 7" },
+        { "type": "text", "id": "faq_question_7", "label": "Question 7" },
+        { "type": "textarea", "id": "faq_answer_7", "label": "Answer 7" },
+        { "type": "header", "content": "FAQ Item 8" },
+        { "type": "text", "id": "faq_question_8", "label": "Question 8" },
+        { "type": "textarea", "id": "faq_answer_8", "label": "Answer 8" },
+        { "type": "header", "content": "FAQ Item 9" },
+        { "type": "text", "id": "faq_question_9", "label": "Question 9" },
+        { "type": "textarea", "id": "faq_answer_9", "label": "Answer 9" },
+        { "type": "header", "content": "FAQ Item 10" },
+        { "type": "text", "id": "faq_question_10", "label": "Question 10" },
+        { "type": "textarea", "id": "faq_answer_10", "label": "Answer 10" }
       ]
     }
   ],
   "presets": [
-    {
-      "name": "Payment FAQs",
-      "blocks": [
-        {
-          "type": "accordion",
-          "settings": {
-            "accordion_title": "<p>Payment Method 1</p>",
-            "accordion_content": "<p>Details about payment method 1.</p>"
-          }
-        },
-        {
-          "type": "accordion",
-          "settings": {
-            "accordion_title": "<p>Payment Method 2</p>",
-            "accordion_content": "<p>Details about payment method 2.</p>"
-          }
-        }
-      ]
-    }
+    { "name": "Scrollable FAQ- Vishal" }
   ]
 }
 {% endschema %}
