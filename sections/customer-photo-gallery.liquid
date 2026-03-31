@@ -195,6 +195,18 @@
   var section = document.getElementById('customer-photo-gallery-{{ section.id }}');
   if (!section) return;
 
+  var photosAnchor = section.querySelector('#photos');
+
+  function setPhotosAnchorOffset() {
+    if (!photosAnchor) return;
+    var stickyHeader = document.querySelector('.header-wrapper') || document.querySelector('.section-header');
+    var headerHeight = stickyHeader ? Math.ceil(stickyHeader.getBoundingClientRect().height) : 0;
+    photosAnchor.style.scrollMarginTop = (headerHeight + 4) + 'px';
+  }
+
+  setPhotosAnchorOffset();
+  window.addEventListener('resize', setPhotosAnchorOffset);
+
   var slider = section.querySelector('.customer-photo-gallery__slider');
   var slides = section.querySelectorAll('.customer-photo-gallery__slide img');
   var prev = section.querySelector('.customer-photo-gallery__arrow--left');
