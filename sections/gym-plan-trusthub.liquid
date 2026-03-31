@@ -33,13 +33,15 @@
 
          {% if block.settings.list_1 != blank %}
   <ul class="gym-plan-block__list">
-    {% assign list_1_clean = block.settings.list_1 | strip_html: 'p' %}
     {% assign list_1_br = block.settings.list_1 | replace: '<br>', '|||' | replace: '<br/>', '|||' | replace: '<br />', '|||' | replace: '</p>', '|||' | strip_html %}
     {% assign list_1_items = list_1_br | split: '|||' %}
     {% for item in list_1_items %}
       {% assign trimmed = item | strip %}
       {% if trimmed != blank %}
-        <li>{{ trimmed }}</li>
+        <li>
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="4" cy="4" r="4" fill="#3E77AA"/></svg>
+          {{ trimmed }}
+        </li>
       {% endif %}
     {% endfor %}
   </ul>
@@ -49,14 +51,17 @@
               <p class="gym-plan-block__heading">{{ block.settings.heading_2 }}</p>
             {% endif %}
 
-           {% if block.settings.list_2 != blank %}
+          {% if block.settings.list_2 != blank %}
   <ul class="gym-plan-block__list">
     {% assign list_2_br = block.settings.list_2 | replace: '<br>', '|||' | replace: '<br/>', '|||' | replace: '<br />', '|||' | replace: '</p>', '|||' | strip_html %}
     {% assign list_2_items = list_2_br | split: '|||' %}
     {% for item in list_2_items %}
       {% assign trimmed = item | strip %}
       {% if trimmed != blank %}
-        <li>{{ trimmed }}</li>
+        <li>
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="4" cy="4" r="4" fill="#3E77AA"/></svg>
+          {{ trimmed }}
+        </li>
       {% endif %}
     {% endfor %}
   </ul>
@@ -175,16 +180,23 @@
   }
 
   .gym-plan-block__list {
-    list-style-type: disc;
-    padding-left: 1.25rem;
+    list-style: none;
+    padding-left: 0;
     margin: 0px;
     margin-bottom: 24px;
   }
 
   .gym-plan-block__list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     font-size: 14px;
     line-height: 20px;
   }
+
+.gym-plan-block__list li svg {
+  flex-shrink: 0;
+}
 
   .gym-plan-block__list li p {
     margin: 0px;
