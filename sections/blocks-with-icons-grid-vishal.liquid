@@ -5,9 +5,6 @@
 
 <section class="bwig-section" id="bwig-{{ section.id }}">
   <div class="bwig-container">
-    <div class="bwig-container-side">
-    </div>
-    <div class="bwig-container-main">
     {% if section.settings.heading != blank %}
       <h2 class="bwig-heading">{{ section.settings.heading }}</h2>
     {% endif %}
@@ -37,16 +34,17 @@
             {% endif %}
           </div>
 
-          {% if block.settings.title != blank %}
-            <h3 class="bwig-card-title">{{ block.settings.title }}</h3>
-          {% endif %}
+          <div class="bwig-card-text">
+            {% if block.settings.title != blank %}
+              <h3 class="bwig-card-title">{{ block.settings.title }}</h3>
+            {% endif %}
 
-          {% if block.settings.description != blank %}
-            <p class="bwig-card-desc">{{ block.settings.description }}</p>
-          {% endif %}
+            {% if block.settings.description != blank %}
+              <p class="bwig-card-desc">{{ block.settings.description }}</p>
+            {% endif %}
+          </div>
         </div>
       {% endfor %}
-    </div>
     </div>
   </div>
 </section>
@@ -69,13 +67,11 @@
   }
 
   .bwig-container {
-    margin: 0 0;
-    padding: 0 0px;
-    display:flex;
+    max-width: {{ section.settings.content_max_width }}px;
+    margin: 0 auto;
+    padding: 0 24px;
   }
-.bwig-container-side{
-width:56%;
-}
+
   .bwig-heading {
     font-family: 'Arial Black', Arial, sans-serif;
     font-size: clamp(22px, 3vw, 36px);
@@ -171,17 +167,63 @@ width:56%;
 
   /* Mobile */
   @media (max-width: 560px) {
+    .bwig-container {
+      flex-direction: column;
+    }
+
+    .bwig-container-side {
+      width: 100% !important;
+    }
+
     .bwig-grid {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 12px;
     }
 
     .bwig-card {
-      padding: 24px 16px 20px;
+      flex-direction: row;
+      align-items: center;
+      text-align: left;
+      padding: 20px 16px;
+      gap: 16px;
+      border-radius: 8px;
+      border: 1px solid #eeeeee;
+      background-color: var(--bwig-card-bg);
+    }
+
+    .bwig-icon-wrap {
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+      margin-bottom: 0;
+    }
+
+    .bwig-icon-wrap svg,
+    .bwig-icon-placeholder svg,
+    .bwig-icon-svg svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .bwig-card-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bwig-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+    }
+
+    .bwig-card-desc {
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     .bwig-heading {
       font-size: 20px;
+      margin-bottom: 20px;
     }
   }
 </style>
