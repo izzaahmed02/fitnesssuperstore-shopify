@@ -3723,6 +3723,9 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
   }
 
   function n(e){return Number.isFinite(+e)?Math.round(+e):null;}
+  function c(e){
+    return "string"==typeof e && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(e);
+  }
 
   function a(e){
     const t=e.closest("[data-product-handle]")?.getAttribute("data-product-handle");
@@ -3811,7 +3814,7 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
       }
       let n=null;
       if(e) try{n=JSON.parse(e.textContent||"{}")}catch(e){}
-      if((!n||!Array.isArray(n.variants)||!n.variants.length)&&(e=a(this.root))) try{const t=await fetch(`/products/${e}.js`); t.ok&&(n=await t.json())}catch(e){}
+      if((!n||!Array.isArray(n.variants)||!n.variants.length)&&(e=a(this.root))&&c(e)) try{const t=await fetch(`/products/${e}.js`); t.ok&&(n=await t.json())}catch(e){}
       if((!n||!Array.isArray(n.variants)||!n.variants.length)&&/\/products\//.test(location.pathname)) try{const e=await fetch(location.pathname.replace(/\/+$/,"")+".js"); e.ok&&(n=await e.json())}catch(e){}
       n&&Array.isArray(n.variants)?(this.variants=n.variants,this.byId=new Map(this.variants.map(e=>[String(e.id),e]))):(this.variants=[],this.byId.clear())
     }
