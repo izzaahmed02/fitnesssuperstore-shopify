@@ -645,7 +645,7 @@ if (!customElements.get('product-customization-options')) {
         const colorVariantInput = this.querySelector('[data-color-variant-input]');
         if (colorVariantInput) {
           const colorPrice = colorVariantInput.dataset?.price;
-          console.log(colorPrice);
+          console.log('colorPrice',colorPrice);
 
           if (colorPrice !== '') {
             priceAdjustment += Number(colorPrice || 0);
@@ -658,7 +658,7 @@ if (!customElements.get('product-customization-options')) {
       // Helper to create corect price HTML
 
       priceHelper(priceAdjustment) {
-        console.log(priceAdjustment);
+        console.log('priceAdjustment',priceAdjustment);
         
         const priceElement = document.querySelectorAll('.pr_custom_price');
         if (priceElement.length === 0) return;
@@ -670,7 +670,7 @@ if (!customElements.get('product-customization-options')) {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
-        console.log(formattedPrice);
+        console.log('formattedPrice',formattedPrice);
         
         priceElement.forEach((el) => {
           el.innerText = `${priceElement[0].dataset?.currency || ''}${formattedPrice}`;
