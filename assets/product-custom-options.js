@@ -642,15 +642,15 @@ if (!customElements.get('product-customization-options')) {
           }
         });
 
-        const colorVariantInput = this.querySelector('[data-color-variant-input]');
-        if (colorVariantInput) {
-          console.log('colorVariantInput',colorVariantInput)
-          const colorPrice = colorVariantInput.dataset?.price;
-          console.log('colorPrice',colorPrice);
-
-          if (colorPrice !== '') {
-            priceAdjustment += Number(colorPrice || 0);
-          }
+        const colorVariantInputs = this.querySelectorAll('[data-color-variant-input]');
+        if (colorVariantInputs.length > 0) {
+          colorVariantInputs.forEach((input) => {
+            const colorVariant = (input.dataset?.variant || '').trim();
+            const colorPrice = input.dataset?.price;
+            if (colorVariant !== '' && colorPrice !== '') {
+              priceAdjustment += Number(colorPrice || 0);
+            }
+          });
         }
 
         this.priceHelper(priceAdjustment);
