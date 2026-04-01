@@ -657,6 +657,8 @@ if (!customElements.get('product-customization-options')) {
       // Helper to create corect price HTML
 
       priceHelper(priceAdjustment) {
+        console.log(priceAdjustment);
+        
         const priceElement = document.querySelectorAll('.pr_custom_price');
         if (priceElement.length === 0) return;
 
@@ -667,6 +669,8 @@ if (!customElements.get('product-customization-options')) {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
+        console.log(formattedPrice);
+        
         priceElement.forEach((el) => {
           el.innerText = `${priceElement[0].dataset?.currency || ''}${formattedPrice}`;
         });
