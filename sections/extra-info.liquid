@@ -1,5 +1,9 @@
 {{ 'extra-info.css' | asset_url | stylesheet_tag: preload: false }}
 
+{% assign is_gift_cards_template = false %}
+{% if template.suffix == 'gift_cards' %}
+  {% assign is_gift_cards_template = true %}
+{% endif %}
 
 {%- style -%}
   .main-container {
@@ -1088,11 +1092,15 @@ document.addEventListener("DOMContentLoaded", function() {
             {% endif %}
         {% endcase %}
       {% endfor %}
+
+      {% unless is_gift_cards_template %}
     
       {% render 'prop65' %}
       <a id="download-pds" style="cursor:pointer;">Download Product Data Sheet</a>
 
       {% render 'product-downloads' %}
+
+      {% endunless %}
     </div>
  
 </div>
