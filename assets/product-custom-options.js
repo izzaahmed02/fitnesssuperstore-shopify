@@ -645,6 +645,7 @@ if (!customElements.get('product-customization-options')) {
         const colorVariantInput = this.querySelector('[data-color-variant-input]');
         if (colorVariantInput) {
           const colorPrice = colorVariantInput.dataset?.price;
+          console.log(colorPrice);
 
           if (colorPrice !== '') {
             priceAdjustment += Number(colorPrice || 0);
