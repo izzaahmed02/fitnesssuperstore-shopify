@@ -110,11 +110,18 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 
 
-	document.querySelector('#download-pds').addEventListener('click', () => {
-		const product = window.product;
-		var pdsUrl = `https://fs-child-products.azurewebsites.net/api/pdf/${product.id}/${product.variants[0].sku}`; 
-		window.open(pdsUrl, "_blank"); 
-	})
+	const downloadPdsLink = document.querySelector('#download-pds');
+
+	if (downloadPdsLink) {
+		downloadPdsLink.addEventListener('click', () => {
+			const product = window.product;
+
+			if (!product || !product.variants || !product.variants[0]) return;
+
+			var pdsUrl = `https://fs-child-products.azurewebsites.net/api/pdf/${product.id}/${product.variants[0].sku}`;
+			window.open(pdsUrl, "_blank");
+		});
+	}
 
 	document.querySelector('.compare-products-actions a')?.setAttribute('href', '');
 });
