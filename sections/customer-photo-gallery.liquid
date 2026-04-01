@@ -1,346 +1,237 @@
 {%- assign gallery_metafield = product.metafields.custom.customer_photo_gallery -%}
 
 {% if gallery_metafield and gallery_metafield.value != blank %}
-<section id="customer-photo-gallery-{{ section.id }}" class="customer-photo-gallery">
-  <div class="customer-photo-gallery__header" id="photos">
-    <h3>Customer's Photo Gallery</h3>
-  </div>
 
-  <!-- Arrows -->
-  <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--left" aria-label="Previous image">‹</button>
-  <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--right" aria-label="Next image">›</button>
-
-  <div class="customer-photo-gallery__slider">
-    {% for image in gallery_metafield.value %}
-      {% assign thumb = image | image_url: width: 900 %}
-      {% assign full  = image | image_url: width: 2400 %}
-      <div class="customer-photo-gallery__slide">
-        <img
-          src="{{ thumb }}"
-          data-full="{{ full }}"
-          alt="Customer photo {{ forloop.index }}"
-          loading="lazy"
-        >
-      </div>
-    {% endfor %}
-  </div>
-
-  <!-- Lightbox -->
-  <div class="customer-photo-gallery__lightbox" aria-hidden="true" inert>
-    <div class="customer-photo-gallery__lightbox-inner">
-      <button type="button" class="customer-photo-gallery__lightbox-close" aria-label="Close">&times;</button>
-      <img src="" alt="Expanded customer photo">
-    </div>
-  </div>
-</section>
-{% endif %}
-
-<style>
-/* -----------------------------
-   BASE
-------------------------------- */
-.customer-photo-gallery {
-  margin: 20px 0;
-  padding: 0 12px;
-  position: relative;
-}
-
-.customer-photo-gallery__header {
-  margin-bottom: 16px;
-}
-
-.customer-photo-gallery__header h3 {
-  font-family: Lato;
-  font-weight: 700;
-  margin: 0;
-}
-
-/* -----------------------------
-   SLIDER (ALL DEVICES)
-------------------------------- */
-.customer-photo-gallery__slider {
-  display: flex;
-  gap: 0px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-}
-
-/* Center slides if 4 or fewer images */
-.customer-photo-gallery__slider:has(.customer-photo-gallery__slide:nth-child(1)):not(:has(.customer-photo-gallery__slide:nth-child(5))) {
-  justify-content: left;
-}
-
-.customer-photo-gallery__slider::-webkit-scrollbar {
-  display: none;
-}
-
-.customer-photo-gallery__slide {
-  flex: 0 0 80%;
-  scroll-snap-align: start;
-  padding: 4px;
-}
-
-.customer-photo-gallery__slide img {
-  width: 100%;
-  height: 100%;
-  max-height: 325px;
-  object-fit: cover;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: transform .2s ease;
-}
-
-.customer-photo-gallery__slide img:hover {
-  transform: scale(1.03);
-}
-
-/* -----------------------------
-   DESKTOP SIZING
-------------------------------- */
-@media screen and (min-width: 990px) {
-  .customer-photo-gallery__slide {
-    flex: 0 0 25%;
-    padding-right: 12px;
-  }
-
-  .customer-photo-gallery__slide img {
-    height: 100%;
-    max-height: 325px;
-  }
-}
-
-/* -----------------------------
-   ARROWS
-------------------------------- */
-.customer-photo-gallery__arrow {
-  position: absolute;
-  top: 60%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.45);
-  color: #fff;
-  border: none;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  font-size: 22px;
-  cursor: pointer;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.customer-photo-gallery__arrow--left { left: 10px; }
-.customer-photo-gallery__arrow--right { right: 10px; }
-
-/* -----------------------------
-   LIGHTBOX
-------------------------------- */
-.customer-photo-gallery__lightbox {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.8);
-  opacity: 0;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: .2s ease;
-  z-index: 999;
-}
-
-.customer-photo-gallery__lightbox--active {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.customer-photo-gallery__lightbox-inner {
-  max-width: 700px;
-  max-height: auto;
-  position: relative;
-}
-
-.customer-photo-gallery__lightbox-inner img {
-  max-width: 100%;
-    max-height: 650px;
-    display: block;
-    object-fit: cover;
-    padding: 20px;
-}
-
-.customer-photo-gallery__lightbox-close {
-  position: absolute;
-  top: -36px;
-  right: -6px;
-  font-size: 32px;
-  background: none;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-}
-
-
-
-
-@media (max-width: 749px) {
-.customer-photo-gallery__header h3 {
-        font-size: 20px;
-        margin-bottom: 16px;
-}
-}
-</style>
+{%- comment -%}
+  Pre-compute image URLs in Liquid (Shopify CDN helpers only work server-side).
+  The JS reads this data and only renders the gallery when #photos is in the URL.
+{%- endcomment -%}
 
 <script>
 (function () {
-  var section = document.getElementById('customer-photo-gallery-{{ section.id }}');
-  if (!section) return;
+  /* ── Image data compiled by Liquid at render time ── */
+  var IMAGES = [
+    {%- for image in gallery_metafield.value -%}
+      {
+        thumb: "{{ image | image_url: width: 900 }}",
+        full:  "{{ image | image_url: width: 2400 }}"
+      }{%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  ];
 
-  var photosAnchor = section.querySelector('#photos');
+  var SECTION_ID = 'customer-photo-gallery-{{ section.id }}';
 
-  function setPhotosAnchorOffset() {
-    if (!photosAnchor) return;
-    var stickyHeader = document.querySelector('.header-wrapper') || document.querySelector('.section-header');
-    var headerHeight = stickyHeader ? Math.ceil(stickyHeader.getBoundingClientRect().height) : 0;
-    photosAnchor.style.scrollMarginTop = (headerHeight + 4) + 'px';
-  }
-
-  setPhotosAnchorOffset();
-  window.addEventListener('resize', setPhotosAnchorOffset);
-
-  function smoothScrollToPhotosAnchor() {
-    if (!photosAnchor) return;
-
-    setPhotosAnchorOffset();
-
-    var scrollMarginTop = parseInt(window.getComputedStyle(photosAnchor).scrollMarginTop, 10) || 0;
-    var targetTop = photosAnchor.getBoundingClientRect().top + window.pageYOffset - scrollMarginTop;
-
-    window.scrollTo({
-      top: targetTop,
-      behavior: 'smooth'
+  /* ── Only initialise when #photos is (or becomes) active ── */
+  if (window.location.hash === '#photos') {
+    domReady(initGallery);
+  } else {
+    window.addEventListener('hashchange', function onHash() {
+      if (window.location.hash === '#photos') {
+        window.removeEventListener('hashchange', onHash);
+        initGallery();
+      }
     });
   }
 
-  function queueSmoothScrollToPhotosAnchor() {
-    if (window.location.hash !== '#photos') return;
-
-    smoothScrollToPhotosAnchor();
-    window.setTimeout(smoothScrollToPhotosAnchor, 500);
-    window.setTimeout(smoothScrollToPhotosAnchor, 1200);
+  function domReady(fn) {
+    if (document.readyState !== 'loading') { fn(); } else { document.addEventListener('DOMContentLoaded', fn); }
   }
 
-  function scrollToPhotosOnInitialHash() {
-    if (window.location.hash !== '#photos') return;
+  /* ─────────────────────────────────────────────────────────
+     Everything below — DOM, CSS, events — is created only
+     when initGallery() runs, keeping cold-page load clean.
+  ───────────────────────────────────────────────────────── */
+  function initGallery() {
+    if (document.getElementById(SECTION_ID)) return; /* guard double-init */
 
-    var firstOpenDelay = 200;
+    injectStyles();
+    injectDOM();
+    wireEvents();
+    scheduleScroll();
+  }
 
+  /* ── 1. Styles ── */
+  function injectStyles() {
+    if (document.getElementById('cpg-style-{{ section.id }}')) return;
+    var s = document.createElement('style');
+    s.id = 'cpg-style-{{ section.id }}';
+    s.textContent = [
+      '.customer-photo-gallery{margin:20px 0;padding:0 12px;position:relative}',
+      '.customer-photo-gallery__header{margin-bottom:16px}',
+      '.customer-photo-gallery__header h3{font-family:Lato;font-weight:700;margin:0}',
+
+      '.customer-photo-gallery__slider{display:flex;gap:0;overflow-x:auto;scroll-snap-type:x mandatory}',
+      '.customer-photo-gallery__slider:has(.customer-photo-gallery__slide:nth-child(1)):not(:has(.customer-photo-gallery__slide:nth-child(5))){justify-content:left}',
+      '.customer-photo-gallery__slider::-webkit-scrollbar{display:none}',
+      '.customer-photo-gallery__slide{flex:0 0 80%;scroll-snap-align:start;padding:4px}',
+      '.customer-photo-gallery__slide img{width:100%;height:100%;max-height:325px;object-fit:cover;border-radius:6px;cursor:pointer;transition:transform .2s ease}',
+      '.customer-photo-gallery__slide img:hover{transform:scale(1.03)}',
+
+      '@media screen and (min-width:990px){',
+        '.customer-photo-gallery__slide{flex:0 0 25%;padding-right:12px}',
+        '.customer-photo-gallery__slide img{height:100%;max-height:325px}',
+      '}',
+
+      '.customer-photo-gallery__arrow{position:absolute;top:60%;transform:translateY(-50%);background:rgba(0,0,0,.45);color:#fff;border:none;width:34px;height:34px;border-radius:50%;font-size:22px;cursor:pointer;z-index:20;display:flex;align-items:center;justify-content:center}',
+      '.customer-photo-gallery__arrow--left{left:10px}',
+      '.customer-photo-gallery__arrow--right{right:10px}',
+
+      '.customer-photo-gallery__lightbox{position:fixed;inset:0;background:rgba(0,0,0,.8);opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;transition:.2s ease;z-index:999}',
+      '.customer-photo-gallery__lightbox--active{opacity:1;pointer-events:auto}',
+      '.customer-photo-gallery__lightbox-inner{max-width:700px;position:relative}',
+      '.customer-photo-gallery__lightbox-inner img{max-width:100%;max-height:650px;display:block;object-fit:cover;padding:20px}',
+      '.customer-photo-gallery__lightbox-close{position:absolute;top:-36px;right:-6px;font-size:32px;background:none;border:none;color:#fff;cursor:pointer}',
+
+      '@media(max-width:749px){.customer-photo-gallery__header h3{font-size:20px;margin-bottom:16px}}'
+    ].join('');
+    document.head.appendChild(s);
+  }
+
+  /* ── 2. DOM ── */
+  function injectDOM() {
+    var slidesHTML = IMAGES.map(function (img, i) {
+      return '<div class="customer-photo-gallery__slide">'
+           +   '<img src="' + img.thumb + '" data-full="' + img.full + '" '
+           +       'alt="Customer photo ' + (i + 1) + '" loading="lazy">'
+           + '</div>';
+    }).join('');
+
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = '<section id="' + SECTION_ID + '" class="customer-photo-gallery">'
+      + '<div class="customer-photo-gallery__header" id="photos"><h3>Customer\'s Photo Gallery</h3></div>'
+      + '<button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--left" aria-label="Previous image">&#8249;</button>'
+      + '<button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--right" aria-label="Next image">&#8250;</button>'
+      + '<div class="customer-photo-gallery__slider">' + slidesHTML + '</div>'
+      + '<div class="customer-photo-gallery__lightbox" aria-hidden="true" inert>'
+      +   '<div class="customer-photo-gallery__lightbox-inner">'
+      +     '<button type="button" class="customer-photo-gallery__lightbox-close" aria-label="Close">&times;</button>'
+      +     '<img src="" alt="Expanded customer photo">'
+      +   '</div>'
+      + '</div>'
+      + '</section>';
+
+    var placeholder = document.getElementById('cpg-placeholder-{{ section.id }}');
+    placeholder.parentNode.insertBefore(wrapper.firstElementChild, placeholder);
+  }
+
+  /* ── 3. Events ── */
+  function wireEvents() {
+    var section  = document.getElementById(SECTION_ID);
+    var slider   = section.querySelector('.customer-photo-gallery__slider');
+    var slides   = section.querySelectorAll('.customer-photo-gallery__slide img');
+    var prev     = section.querySelector('.customer-photo-gallery__arrow--left');
+    var next     = section.querySelector('.customer-photo-gallery__arrow--right');
+    var lightbox = section.querySelector('.customer-photo-gallery__lightbox');
+    var lbImg    = lightbox.querySelector('img');
+    var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
+
+    /* Hide arrows on desktop when 4 or fewer images */
+    if (window.matchMedia('(min-width:990px)').matches && slides.length <= 4) {
+      prev.style.display = 'none';
+      next.style.display = 'none';
+    }
+
+    /* Lightbox */
+    var activeReq = null;
+
+    function openLightbox(img) {
+      var preview = img.currentSrc || img.src;
+      var full    = img.dataset.full || preview;
+      activeReq   = full;
+      lbImg.src   = preview;
+      lbImg.alt   = img.alt;
+      lightbox.classList.add('customer-photo-gallery__lightbox--active');
+      lightbox.setAttribute('aria-hidden', 'false');
+      lightbox.removeAttribute('inert');
+      if (full !== preview) {
+        var hi = new Image();
+        hi.decoding = 'async';
+        hi.onload = function () { if (activeReq === full) lbImg.src = full; };
+        hi.src = full;
+      }
+    }
+
+    function closeLightbox() {
+      activeReq = null;
+      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+      lightbox.setAttribute('aria-hidden', 'true');
+      lightbox.setAttribute('inert', '');
+      lbImg.removeAttribute('src');
+    }
+
+    slides.forEach(function (img) {
+      img.addEventListener('click', function () { openLightbox(img); });
+    });
+    closeBtn.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', function (e) { if (e.target === lightbox) closeLightbox(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && lightbox.classList.contains('customer-photo-gallery__lightbox--active')) {
+        closeLightbox();
+      }
+    });
+
+    /* Slider arrows */
+    function scrollSlider(dir) {
+      var slideEl = slider.querySelector('.customer-photo-gallery__slide');
+      var step = slideEl ? slideEl.offsetWidth + 16 : 200;
+      slider.scrollBy({ left: dir === 'next' ? step : -step, behavior: 'smooth' });
+    }
+    prev.addEventListener('click', function () { scrollSlider('prev'); });
+    next.addEventListener('click', function () { scrollSlider('next'); });
+  }
+
+  /* ── 4. Scroll to #photos ── */
+  function scheduleScroll() {
+    function getHeaderHeight() {
+      var el = document.querySelector('.header-wrapper') || document.querySelector('.section-header');
+      return el ? Math.ceil(el.getBoundingClientRect().height) : 0;
+    }
+
+    function scrollToPhotos() {
+      var anchor = document.getElementById('photos');
+      if (!anchor) return;
+      var headerH = getHeaderHeight();
+      anchor.style.scrollMarginTop = (headerH + 4) + 'px';
+      var top = anchor.getBoundingClientRect().top + window.pageYOffset - (headerH + 4);
+      window.scrollTo({ top: top, behavior: 'smooth' });
+    }
+
+    var delay = 200;
     try {
       if (!window.sessionStorage.getItem('photos-hash-visited')) {
-        firstOpenDelay = 900;
+        delay = 900;
         window.sessionStorage.setItem('photos-hash-visited', '1');
       }
-    } catch (e) {
-      firstOpenDelay = 900;
-    }
+    } catch (e) { delay = 900; }
 
-    window.setTimeout(queueSmoothScrollToPhotosAnchor, firstOpenDelay);
-  }
+    window.setTimeout(scrollToPhotos, delay);
+    window.setTimeout(scrollToPhotos, delay + 500);
+    window.setTimeout(scrollToPhotos, delay + 1200);
 
-  if (window.location.hash === '#photos') {
-    scrollToPhotosOnInitialHash();
-    window.addEventListener('load', scrollToPhotosOnInitialHash);
-  }
-
-  window.addEventListener('hashchange', queueSmoothScrollToPhotosAnchor);
-
-  var slider = section.querySelector('.customer-photo-gallery__slider');
-  var slides = section.querySelectorAll('.customer-photo-gallery__slide img');
-  var prev = section.querySelector('.customer-photo-gallery__arrow--left');
-  var next = section.querySelector('.customer-photo-gallery__arrow--right');
-
-  // ----- HIDE ARROWS ON DESKTOP IF 4 OR FEWER IMAGES -----
-  if (window.matchMedia('(min-width: 990px)').matches && slides.length <= 4) {
-    prev.style.display = 'none';
-    next.style.display = 'none';
-  }
-
-  // ----- LIGHTBOX -----
-  var lightbox = section.querySelector('.customer-photo-gallery__lightbox');
-  var lightboxImg = lightbox.querySelector('img');
-  var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
-
-  var activeLightboxRequest = null;
-
-  function openLightbox(img) {
-    var previewSrc = img.currentSrc || img.src;
-    var fullSrc = img.dataset.full || previewSrc;
-
-    activeLightboxRequest = fullSrc;
-    lightboxImg.src = previewSrc;
-    lightboxImg.alt = img.alt || 'Expanded customer photo';
-    lightbox.classList.add('customer-photo-gallery__lightbox--active');
-    lightbox.setAttribute('aria-hidden', 'false');
-    lightbox.removeAttribute('inert');
-
-    if (fullSrc !== previewSrc) {
-      var fullImage = new Image();
-      fullImage.decoding = 'async';
-      fullImage.onload = function () {
-        if (activeLightboxRequest === fullSrc) {
-          lightboxImg.src = fullSrc;
-        }
-      };
-      fullImage.src = fullSrc;
-    }
-  }
-
-  function closeLightbox() {
-    activeLightboxRequest = null;
-    lightbox.classList.remove('customer-photo-gallery__lightbox--active');
-    lightbox.setAttribute('aria-hidden', 'true');
-    lightbox.setAttribute('inert', '');
-    lightboxImg.removeAttribute('src');
-  }
-
-  slides.forEach(function (img) {
-    img.addEventListener('click', function () {
-      openLightbox(img);
+    window.addEventListener('resize', function () {
+      var anchor = document.getElementById('photos');
+      if (anchor) anchor.style.scrollMarginTop = (getHeaderHeight() + 4) + 'px';
     });
-  });
 
-  closeBtn.addEventListener('click', closeLightbox);
-
-  lightbox.addEventListener('click', function (e) {
-    if (e.target === lightbox) {
-      closeLightbox();
-    }
-  });
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && lightbox.classList.contains('customer-photo-gallery__lightbox--active')) {
-      closeLightbox();
-    }
-  });
-
-  // ----- SLIDER ARROWS -----
-  function scrollSlider(dir) {
-    var slideWidth = slider.querySelector('.customer-photo-gallery__slide').offsetWidth + 16;
-    slider.scrollBy({
-      left: dir === 'next' ? slideWidth : -slideWidth,
-      behavior: 'smooth'
+    window.addEventListener('hashchange', function () {
+      if (window.location.hash === '#photos') scrollToPhotos();
     });
   }
-
-  prev.addEventListener('click', function () { scrollSlider('prev'); });
-  next.addEventListener('click', function () { scrollSlider('next'); });
 
 })();
 </script>
 
+{%- comment -%}
+  Tiny anchor — the JS inserts the gallery section before this node.
+  Zero render cost when the gallery is not initialised.
+{%- endcomment -%}
+<span id="cpg-placeholder-{{ section.id }}" hidden></span>
+
+{% endif %}
+
 {% schema %}
 {
   "name": "Customer Photo Gallery",
-  
   "presets": [
     {
       "name": "Customer Photo Gallery",
