@@ -113,7 +113,7 @@ onReady(() => {
     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, { passive: false });
 
-    const getHashTarget = (rawHash) => {
+  const getHashTarget = (rawHash) => {
     if (!rawHash || rawHash.length <= 1) return null;
     const decodedHash = decodeURIComponent(rawHash);
     const id = decodedHash.startsWith('#') ? decodedHash.slice(1) : decodedHash;
