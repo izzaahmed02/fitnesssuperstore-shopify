@@ -155,6 +155,11 @@
   {%- endif -%}
   {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
 
+  {% assign is_gift_cards_template = false %}
+  {% if template.suffix == 'gift_cards' %}
+    {% assign is_gift_cards_template = true %}
+  {% endif %}
+
 
   {% comment %} pdp-page-width main-container {% endcomment %}
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
@@ -163,16 +168,21 @@
           {%- for block in section.blocks -%}
             {%- case block.type -%}
               {%- when 'title' -%}
-                <div class="product__title" {{ block.shopify_attributes }}>
-                  <h2>{{ product.title | escape }}</h2>
-                  <a href="{{ product.url }}" class="product__title">
-                    <h2 class="h1">
-                      {{ product.title | escape }}
-                    </h2>
-                  </a>
+                 <div class="product__title" {{ block.shopify_attributes }}>
+                   {% if is_gift_cards_template %}
+                    <h2>{{ product.title | escape }}</h2>
+                  {% else %}
+                    <h2>{{ product.title | escape }}</h2>
+                    <a href="{{ product.url }}" class="product__title">
+                      <h2 class="h1">
+                        {{ product.title | escape }}
+                      </h2>
+                    </a>
+                  {% endif %}
                 </div>
               {%- when 'review_widget' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
+                 {% unless is_gift_cards_template %}
               <div class="available-wrap">
 
                 {% if product.metafields.custom.backorder == true %}
@@ -190,9 +200,11 @@
                 {% endif %}
               </div>
               {% endunless %}
+              {% endunless %}
               {% when 'price' %}
+                 {% unless is_gift_cards_template %}
                 <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
-
+                  {% endunless %}
                 {% assign campaign_text = '' %}
 
                 {% if product.title contains 'French Fitness' %}
@@ -213,10 +225,12 @@
                   {%comment %}
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                    {%endcomment %}
+                    {% unless is_gift_cards_template %}
                     <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
+                     {% endunless %}
                     {% comment %}
                   {% endif %}
                    {%endcomment %}
@@ -699,13 +713,17 @@
                   {{- block.settings.text -}}
                 </p>
               {%- when 'title' -%}
-                <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
-                  <h1>{{ product.title | escape }}</h1>
-                  <a href="{{ product.url }}" class="product__title">
-                    <h2 class="h1">
-                      {{ product.title | escape }}
-                    </h2>
-                  </a>
+                 <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
+                  {% if is_gift_cards_template %}
+                    <h1>{{ product.title | escape }}</h1>
+                  {% else %}
+                    <h1>{{ product.title | escape }}</h1>
+                    <a href="{{ product.url }}" class="product__title">
+                      <h2 class="h1">
+                        {{ product.title | escape }}
+                      </h2>
+                    </a>
+                  {% endif %}
                 </div>
               {% when 'price' %}
 
@@ -727,10 +745,14 @@
 
                 <div class="product__prices hidden lg:block">
 
+                  {% unless is_gift_cards_template %}
+
                     <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
                       >As high as:
                       <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
                     </span>
+
+                     {% endunless %}
 
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
@@ -758,7 +780,10 @@
                 </div>
 
 
+                 {% unless is_gift_cards_template %}
               {% render 'paylater-providers' %}
+               {% endunless %}
+
               {%- when 'tile_calculator' -%}
                 {% if block.settings.show_tile_calculator %}
                   <div class="product__tile-calculator">
@@ -1177,7 +1202,9 @@
                       </button>
                     </div>
                   {% endif %}
+                   {% unless is_gift_cards_template %}
                 {% render 'paylater-providers' %}
+                {% endunless %}
                 </{{tag}}>
                {% endunless %}
               {%- when 'inventory' -%}
@@ -1244,6 +1271,7 @@
 
               {%- when 'review_widget' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
+                {% unless is_gift_cards_template %}
                 <div class="available-wrap hidden lg:flex">
 
 
@@ -1261,6 +1289,7 @@
                     </div>
                   {% endif %}
                 </div>
+                 {% endunless %}
               {% endunless %}
               {%- when 'sku' -%}
                 <p
@@ -1278,7 +1307,9 @@
               {% when 'color_picker' %}
                 <div></div>
 
+                 {% unless is_gift_cards_template %}
                 {% render 'custom-color-picker', product: product %}
+                 {% endunless %}
 
               {%- when 'collapsible_tab' -%}
                 <div class="product__accordion accordion quick-add-hidden" {{ block.shopify_attributes }}>
