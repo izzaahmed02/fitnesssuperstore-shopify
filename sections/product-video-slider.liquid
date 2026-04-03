@@ -227,7 +227,7 @@
     {%- comment -%} Popup modal (plays video) {%- endcomment -%}
     <div class="video-modal" id="extraInfoVideoModal">
       <div class="modal-content">
-        <span class="close-modal" id="extraInfoVideoModalClose">&times;</span>
+        <button type="button" class="close-modal" id="extraInfoVideoModalClose" aria-label="Close video popup">&times;</button>
         <div id="extraInfoVideoModalContainer"></div>
       </div>
     </div>
@@ -366,7 +366,7 @@
 
   .prodVideoSlider .extra-info-videos .modal-content {
     position: relative;
-    max-width: 1280px;
+    max-width: 890px;
     max-height: calc(100vh - 40px);
     background: transparent;
     padding: 0;
@@ -376,10 +376,36 @@
 
   .prodVideoSlider .extra-info-videos .modal-content iframe,
   .prodVideoSlider .extra-info-videos .modal-content video {
+    width: 100%;
     max-height: calc(100vh - 40px - 60px);
     border-radius: 16px;
     border: none;
     background: #000;
+  }
+
+  .prodVideoSlider .extra-info-videos .video-modal-poster {
+    position: relative;
+    width: 100%;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .prodVideoSlider .extra-info-videos .video-modal-poster img,
+  .prodVideoSlider .extra-info-videos .video-modal-poster video {
+    width: 100%;
+    border-radius: 16px;
+    display: block;
+    max-height: calc(100vh - 40px - 60px);
+    object-fit: contain;
+    background: #000;
+  }
+
+  .prodVideoSlider .extra-info-videos .video-modal-poster .play-button {
+    font-size: 32px;
+    padding: 14px 18px;
+    pointer-events: none;
   }
 
   .prodVideoSlider .extra-info-videos .close-modal {
@@ -396,6 +422,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  html.no-scroll,
+  body.no-scroll {
+    overflow: hidden;
+    height: 100%;
   }
 
   @media (max-width: 749px) {
@@ -453,37 +485,138 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var $modal = $('#extraInfoVideoModal');
   var $container = $('#extraInfoVideoModalContainer');
+  var modalState = {
+    src: '',
+    posterHtml: '',
+    title: 'Video'
+  };
 
-  function openVideoPopup(src) {
-    if (!src) return;
+  function withAutoplay(src) {
+    if (!src) return src;
+    return src.indexOf('?') === -1 ? (src + '?autoplay=1') : (src + '&autoplay=1');
+  }
 
-    var html;
+  function isNativeVideoUrl(src) {
+    if (!src) return false;
 
-    if (src.indexOf('.mp4') !== -1) {
-      html =
-        '<video controls autoplay>' +
-        '<source src="' + src + '" type="video/mp4">' +
-        '</video>';
-    } else {
-      html =
-        '<iframe src="' + src + '"' +
-        ' frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
-        ' allowfullscreen></iframe>';
+    var cleanSrc = src.split('?')[0].toLowerCase();
+    var videoExtensionPattern = /\.(mp4|m3u8|mov|webm)$/;
+    var isKnownVideoExtension = videoExtensionPattern.test(cleanSrc);
+    var isShopifyHosted =
+      src.indexOf('cdn.shopify.com') !== -1 ||
+      src.indexOf('/videos/c/o/v/') !== -1;
+
+    return isKnownVideoExtension || isShopifyHosted;
+  }
+
+  function buildMediaHtml(src) {
+    if (isNativeVideoUrl(src)) {
+      return (
+        '<video controls autoplay playsinline>' +
+        '<source src="' + src + '">' +
+        '</video>'
+      );
     }
 
+    return (
+      '<iframe src="' + withAutoplay(src) + '"' +
+      ' frameborder="0" allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
+      ' allowfullscreen></iframe>'
+    );
+  }
+
+  function escapeHtmlAttr(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function getPosterHtml($thumb) {
+    var $thumbImage = $thumb.find('.video-thumb-image').first();
+    if ($thumbImage.length) {
+      var imgSrc = $thumbImage.attr('src');
+      var imgAlt = $thumbImage.attr('alt') || 'Video thumbnail';
+      return '<img src="' + imgSrc + '" alt="' + escapeHtmlAttr(imgAlt) + '" loading="eager" decoding="async">';
+    }
+
+    var $thumbVideo = $thumb.find('.video-thumb-video').first();
+    if ($thumbVideo.length) {
+      var videoSrc = $thumbVideo.attr('src') || '';
+      var videoPoster = $thumbVideo.attr('poster');
+      var posterAttr = videoPoster ? (' poster="' + videoPoster + '"') : '';
+      return (
+        '<video muted playsinline preload="metadata"' + posterAttr + '>' +
+        '<source src="' + videoSrc + '">' +
+        '</video>'
+      );
+    }
+
+    return '';
+  }
+
+  function renderPosterModal() {
+    if (!modalState.src) return;
+
+    var fallbackPoster = '<div class="video-modal-poster-fallback"></div>';
+    var posterHtml = modalState.posterHtml || fallbackPoster;
+    var safeTitle = escapeHtmlAttr(modalState.title);
+    var html =
+      '<button type="button" class="video-modal-poster" aria-label="Play ' + safeTitle + '">' +
+        posterHtml +
+        '<span class="play-button">&#9658;</span>' +
+      '</button>';
+
     $container.html(html);
+  }
+
+  function playModalVideo() {
+    if (!modalState.src) return;
+
+    $container.html('<div class="video-modal-player">' + buildMediaHtml(modalState.src) + '</div>');
+
+    var $video = $container.find('video');
+    if (!$video.length) return;
+
+    var videoEl = $video.get(0);
+    var playPromise = videoEl.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(function () {
+        videoEl.muted = true;
+        videoEl.play();
+      });
+    }
+  }
+
+  function openVideoPopup($thumb) {
+    modalState.src = $thumb.data('video-url') || '';
+    modalState.posterHtml = getPosterHtml($thumb);
+    modalState.title = $.trim($thumb.closest('.video-slide-inner').find('p').first().text()) || 'Video';
+    if (!modalState.src) return;
+
+    renderPosterModal();
     $modal.css('display', 'flex');
+    document.body.classList.add('no-scroll');
   }
 
   function closeVideoPopup() {
     $modal.css('display', 'none');
     $container.html('');
+    document.body.classList.remove('no-scroll');
+    modalState.src = '';
+    modalState.posterHtml = '';
+    modalState.title = 'Video';
   }
 
   // Open popup when clicking thumbnail
   $slider.on('click', '.video-thumbnail', function () {
-    var src = $(this).data('video-url');
-    openVideoPopup(src);
+    openVideoPopup($(this));
+  });
+
+  $container.on('click', '.video-modal-poster', function () {
+    playModalVideo();
   });
 
   $('#extraInfoVideoModalClose').on('click', function () {
