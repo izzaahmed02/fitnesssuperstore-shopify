@@ -383,39 +383,6 @@
     background: #000;
   }
 
-  .prodVideoSlider .extra-info-videos .video-modal-poster {
-    position: relative;
-    width: 100%;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  .prodVideoSlider .extra-info-videos .video-modal-poster .video-thumb-image,
-  .prodVideoSlider .extra-info-videos .video-modal-poster .video-thumb-video {
-    width: 100%;
-    display: block;
-    border-radius: 16px;
-    pointer-events: none;
-  }
-
-  .prodVideoSlider .extra-info-videos .video-modal-play-button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 24px;
-    color: #fff;
-    backdrop-filter: blur(6px);
-    background: #23232B66;
-    padding: 14px 18px;
-    border-radius: 50%;
-    pointer-events: none;
-  }
-
   .prodVideoSlider .extra-info-videos .close-modal {
     position: absolute;
     top: -52px;
@@ -525,21 +492,25 @@ document.addEventListener('DOMContentLoaded', function () {
   function openVideoPopup($thumb) {
     var src = $thumb.data('video-url');
     if (!src) return;
-    var $posterSource = $thumb.find('.video-thumb-image').first();
-    if (!$posterSource.length) {
-      $posterSource = $thumb.find('.video-thumb-video').first();
-    }
-
-    var posterHtml = $posterSource.length ? $posterSource.prop('outerHTML') : '';
     var html =
-      '<button type="button" class="video-modal-poster" data-video-src="' + src + '" aria-label="Play video">' +
-      posterHtml +
-      '<span class="video-modal-play-button">&#9658;</span>' +
-      '</button>' +
-      '<div class="video-modal-player" style="display:none;"></div>';
+      '<div class="video-modal-player">' +
+      buildMediaHtml(src) +
+      '</div>';
 
     $container.html(html);
     $modal.css('display', 'flex');
+
+    var $video = $container.find('video');
+    if ($video.length) {
+      var videoEl = $video.get(0);
+      var playPromise = videoEl.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(function () {
+          videoEl.muted = true;
+          videoEl.play();
+        });
+      }
+    }
   }
 
   function closeVideoPopup() {
@@ -550,17 +521,6 @@ document.addEventListener('DOMContentLoaded', function () {
   // Open popup when clicking thumbnail
   $slider.on('click', '.video-thumbnail', function () {
     openVideoPopup($(this));
-  });
-
-  $container.on('click', '.video-modal-poster', function () {
-    var $poster = $(this);
-    var src = $poster.data('video-src');
-    var $player = $container.find('.video-modal-player');
-
-    if (!src || !$player.length) return;
-
-    $player.html(buildMediaHtml(src)).show();
-    $poster.hide();
   });
 
   $('#extraInfoVideoModalClose').on('click', function () {
