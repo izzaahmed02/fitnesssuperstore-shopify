@@ -105,183 +105,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 	const pollingInterval = setInterval(checkForElements, 500);
 
-	let currentPageIndex = 0; 
-    
-    function attachArrowHandlers() {
-      document.querySelector('.next-arrow').addEventListener('click', () => {
-		var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
-		currentPageIndex = activeIndex; 
-        saOpenPage(currentPageIndex, sa_start_sort); 
-      });
-
-      document.querySelector('.prev-arrow').addEventListener('click', () => {
-		var activeIndex = document.querySelector('.sa_page.active') ? parseFloat(document.querySelector('.sa_page.active').value) : 0;
-		currentPageIndex = activeIndex - 2; 
-		saOpenPage(currentPageIndex, sa_start_sort);
-      });
-    }
-
-    function addPaginationArrows() {
-      const paginationContainer = document.getElementById("sa_review_paging");
-  
-      if (paginationContainer) {
-        if (!paginationContainer.querySelector(".prev-arrow") && !paginationContainer.querySelector(".next-arrow")) {
-          const prevArrow = document.createElement("button");
-          prevArrow.className = "arrow custom prev-arrow";
-		  prevArrow.setAttribute("aria-label", "Previous slide");
-          prevArrow.innerHTML = `
-            <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M7.53033 0.46967C7.82322 0.762563 7.82322 1.23744 7.53033 1.53033L2.06066 7L7.53033 12.4697C7.82322 12.7626 7.82322 13.2374 7.53033 13.5303C7.23744 13.8232 6.76256 13.8232 6.46967 13.5303L0.46967 7.53033C0.176777 7.23744 0.176777 6.76256 0.46967 6.46967L6.46967 0.46967C6.76256 0.176777 7.23744 0.176777 7.53033 0.46967Z" fill="#CCCCCC"/>
-            </svg>
-          `;
-  
-          const nextArrow = document.createElement("button");
-          nextArrow.className = "arrow custom next-arrow";
-		  nextArrow.setAttribute("aria-label", "Next slide");
-          nextArrow.innerHTML = `
-            <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7.53033 6.46967C7.82322 6.76256 7.82322 7.23744 7.53033 7.53033L1.53033 13.5303C1.23744 13.8232 0.762563 13.8232 0.46967 13.5303C0.176777 13.23744 0.176777 12.7626 0.46967 12.4697L5.93934 7L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#D83D0E"/>
-            </svg>
-          `;
-  
-          paginationContainer.prepend(prevArrow); 
-          paginationContainer.appendChild(nextArrow);
-
-          attachArrowHandlers();
-        }
-      }
-    }
-
-    function addCustomActions() {
-      const dropdownContainer = document.createElement('div');
-      dropdownContainer.classList.add('sa-reviews-dropdown-container');
-
-      const sortByDropdown = document.createElement('select');
-      sortByDropdown.setAttribute('id', 'sortByDropdown');
-	  sortByDropdown.setAttribute('aria-label', 'Sort reviews');
-      sortByDropdown.innerHTML = `
-        <option value="high">Sort by: Highest to Lowest</option>
-        <option value="low">Sort by: Lowest to Highest</option>
-        <option value="new">Sort by: Newest to Oldest</option>
-        <option value="old">Sort by: Oldest to Newest</option>
-        <option value="featured">Sort by: Favorite Reviews</option>
-      `;
-      dropdownContainer.appendChild(sortByDropdown);
-      
-      const showContainer = document.createElement('div');
-      showContainer.setAttribute('class', 'show-dropdown-container');
-      
-      dropdownContainer.appendChild(showContainer);
-       
-      const writeReviewButton = document.createElement('a');
-      writeReviewButton.setAttribute('id', 'writeReviewButton');
-      writeReviewButton.setAttribute('href', 'https://www.shopperapproved.com/reviews/fitnesssuperstore.com#reviews');
-      writeReviewButton.setAttribute('target', '_blank'); 
-      writeReviewButton.setAttribute('rel', 'noopener noreferrer'); 
-      writeReviewButton.textContent = 'Write a Review';
-      writeReviewButton.classList.add('write-review-btn');
-      dropdownContainer.appendChild(writeReviewButton); 
-     
-	  const productPage = document.querySelector('#product_page');
-	  const reviewHeader = document.querySelector('#review_header');
-	  const existingDropdownContainer = document.querySelector('.sa-reviews-dropdown-container');
-	  
-	  if (productPage && reviewHeader && !existingDropdownContainer) {
-		productPage.parentNode.insertBefore(dropdownContainer, productPage);
-	  }
-    }
-  
-    function registerSAReviewsPolling() {
-      const interval = setInterval(async function () {
-        const reviewSection = document.querySelector("#sa_review_paging");
-		if (reviewSection) {
-			addCustomActions();
-
-			if (Object.keys(sa_product_reviews.high).length > sa_products_count) {
-				addPaginationArrows();
-			}
-
-			if (!document.querySelector('.merchantheader')) {
-				if(document.querySelector('.product__info-container .available-wrap .sa-reviews')) {
-					document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
-				}
-				if(document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews')) {
-					document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
-				}
-			} 
-		}
-      }, 500);
-    }
-
-	function registerProductReviewsPolling() {
-		const interval = setInterval(async function() {
-			const reviewSection = document.querySelector('.product_review');
-
-			if (reviewSection) {			
-				clearInterval(interval);
-				const productInfoContainer = document.querySelector('.product__info-container');
-
-				const starsReview =  productInfoContainer.querySelector('#product_just_stars .on');
-
-				if (!starsReview) {
-					var saTotalStars = await getShopperApprovedTotalReviewsCount();
-
-					if (saTotalStars) {
-						productInfoContainer.querySelector('#product_just_stars').innerHTML = `<span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="ind_cnt med"><a class="sa_jump_to_reviews" href="#review_header">${saTotalStars} <span class="ind_cnt_desc">reviews</span></a></span>`
-						productInfoContainer.querySelector('.sa-reviews').style.display = 'flex';
-					}
-				}
-			}
-		});
-	}
-
-    function registerCustomActionEvent() {
-		setTimeout(() => {
-			let sortByDropDownCurrentValue = '';
-			let showDropDownCurrentValue = '';
-	
-			const sortByDropdown = document.getElementById('sortByDropdown');
-			const saSort = document.getElementById('sa_sort');
-			var showDropdownSelect = document.getElementById('showDropdown');
-	
-			if (sortByDropdown) {
-				sortByDropDownCurrentValue = sortByDropdown.value;
-			}
-	
-			if (sortByDropdown && saSort) {
-			  const newSortByDropdown = sortByDropdown.cloneNode(true);
-	
-			  sortByDropdown.value = saSort.value;
-
-			  sortByDropdown.parentNode.replaceChild(newSortByDropdown, sortByDropdown);
-		
-			  if (sortByDropDownCurrentValue) {
-				newSortByDropdown.value = sortByDropDownCurrentValue;
-			  }
-
-			  newSortByDropdown.addEventListener('change', () => {
-				if (saJQ('#review_header').length > 0) {
-					saJQ('html, body').animate({
-						scrollTop: saJQ('#review_header').offset().top
-					});
-				}
-				saJQ('#product_page').toggleClass('sa_loading_bg', true);
-				saJQ('#sa_review_section').animate({
-					opacity: 0
-				}, 300);
-				sort = newSortByDropdown.value;
-				var reverse = (typeof (sa_productreverse) == 'undefined') ? '' : '&reverse=' + sa_productreverse;
-				var productId = (typeof (sa_product) != 'undefined') ? sa_product : sa_productid;
-				saLoadScript(sa_host + 'widgets/' + sa_page + '.php?siteid=' + sa_siteid + '&productid=' + productId + '&page=0&sort=' + sort + reverse + '&loadnow=1' + '&rtype=' + sa_rtype);
-				registerCustomActionEvent();
-			  });
-			}
-		}, 1000);
-    }
-    
-    registerSAReviewsPolling();
-	registerCustomActionEvent(); 
-	registerProductReviewsPolling();
 
 	document.querySelector('#download-pds').addEventListener('click', () => {
 		const product = window.product;
@@ -413,7 +236,7 @@ function generatePayLaterText() {
 	payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
 		style: 'currency',
 		currency: 'USD',
-		})}/mo. / 24 interest-free payment`
+		})}/mo (options at checkout)`
 
 	return payLaterText;
 }
@@ -504,7 +327,7 @@ function generatePayLaterAggregate() {
 	<h1 class="title">BUY NOW. PAY LATER.</h1>
 	<p class="price">Purchase price: <strong>$${cleanedPrice}</strong>
 	</p>
-	<p class="description"> Select Affirm as your payment method at checkout to pay in installments. </p>
+	<p class="description"> Choose Affirm at checkout. Subject to approval. </p>
 	<div class="steps-container">
 	  <div class="step">
 		<div class="step-circle">1</div>
@@ -714,22 +537,3 @@ function generateAffirmPaymentTerms() {
     });
 }
 
-async function getShopperApprovedTotalReviewsCount() {
-	const apiUrl = `https://fitnesssuperstore-api.azurewebsites.net/api/reviews/reviewscount`;
-
-	try {
-		const response = await fetch(apiUrl, {
-			method: 'GET'
-		});
-
-		if (!response.ok) {
-			throw new Error('Failed to fetch API fetchShopperApprovedTotalReviews');
-		}
-
-        const data = await response.json();
-		return data;
-	} catch (error) {
-		console.error('Error fetching API fetchShopperApprovedTotalReviews', error);
-		return null;
-	}
-}
