@@ -376,10 +376,44 @@
 
   .prodVideoSlider .extra-info-videos .modal-content iframe,
   .prodVideoSlider .extra-info-videos .modal-content video {
+    width: 100%;
     max-height: calc(100vh - 40px - 60px);
     border-radius: 16px;
     border: none;
     background: #000;
+  }
+
+  .prodVideoSlider .extra-info-videos .video-modal-poster {
+    position: relative;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .prodVideoSlider .extra-info-videos .video-modal-poster .video-thumb-image,
+  .prodVideoSlider .extra-info-videos .video-modal-poster .video-thumb-video {
+    width: 100%;
+    display: block;
+    border-radius: 16px;
+    pointer-events: none;
+  }
+
+  .prodVideoSlider .extra-info-videos .video-modal-play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    color: #fff;
+    backdrop-filter: blur(6px);
+    background: #23232B66;
+    padding: 14px 18px;
+    border-radius: 50%;
+    pointer-events: none;
   }
 
   .prodVideoSlider .extra-info-videos .close-modal {
@@ -454,22 +488,47 @@ document.addEventListener('DOMContentLoaded', function () {
   var $modal = $('#extraInfoVideoModal');
   var $container = $('#extraInfoVideoModalContainer');
 
-  function openVideoPopup(src) {
-    if (!src) return;
+  function withAutoplay(src) {
+    if (!src) return src;
+    return src.indexOf('?') === -1 ? (src + '?autoplay=1') : (src + '&autoplay=1');
+  }
 
-    var html;
+  function isNativeVideoUrl(src) {
+    if (!src) return false;
 
-    if (src.indexOf('.mp4') !== -1) {
-      html =
-        '<video controls autoplay>' +
-        '<source src="' + src + '" type="video/mp4">' +
-        '</video>';
-    } else {
-      html =
-        '<iframe src="' + src + '"' +
-        ' frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
-        ' allowfullscreen></iframe>';
+    var cleanSrc = src.split('?')[0].toLowerCase();
+    var videoExtensionPattern = /\.(mp4|m3u8|mov|webm)$/;
+    var isKnownVideoExtension = videoExtensionPattern.test(cleanSrc);
+    var isShopifyHosted =
+      src.indexOf('cdn.shopify.com') !== -1 ||
+      src.indexOf('/videos/c/o/v/') !== -1;
+
+    return isKnownVideoExtension || isShopifyHosted;
+  }
+
+  function buildMediaHtml(src) {
+    if (isNativeVideoUrl(src)) {
+      return (
+        '<video controls autoplay playsinline>' +
+        '<source src="' + src + '">' +
+        '</video>'
+      );
     }
+
+    return (
+      '<iframe src="' + withAutoplay(src) + '"' +
+      ' frameborder="0" allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
+      ' allowfullscreen></iframe>'
+    );
+  }
+
+  function openVideoPopup($thumb) {
+    var src = $thumb.data('video-url');
+    if (!src) return;
+    var html =
+      '<div class="video-modal-player">' +
+      buildMediaHtml(src) +
+      '</div>';
 
     $container.html(html);
     $modal.css('display', 'flex');
@@ -482,8 +541,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Open popup when clicking thumbnail
   $slider.on('click', '.video-thumbnail', function () {
-    var src = $(this).data('video-url');
-    openVideoPopup(src);
+    openVideoPopup($(this));
   });
 
   $('#extraInfoVideoModalClose').on('click', function () {
