@@ -130,11 +130,14 @@
   {% endif %}
 >
   {{ 'section-main-product.css' | asset_url | stylesheet_tag }}
-  {{ 'component-accordion.css' | asset_url | stylesheet_tag }}
+  <link rel="stylesheet" href="{{ 'component-accordion.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript>{{ 'component-accordion.css' | asset_url | stylesheet_tag }}</noscript>
   {{ 'component-price.css' | asset_url | stylesheet_tag }}
   {{ 'component-slider.css' | asset_url | stylesheet_tag }}
-  {{ 'component-rating.css' | asset_url | stylesheet_tag }}
-  {{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
+  <link rel="stylesheet" href="{{ 'component-rating.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript>{{ 'component-rating.css' | asset_url | stylesheet_tag }}</noscript>
+  <link rel="stylesheet" href="{{ 'component-deferred-media.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript>{{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}</noscript>
 
   {% unless product.has_only_default_variant %}
     {{ 'component-product-variant-picker.css' | asset_url | stylesheet_tag }}
@@ -145,11 +148,12 @@
     {{ 'component-volume-pricing.css' | asset_url | stylesheet_tag }}
   {%- endif -%}
 
-  {{ 'avis-custom.css' | asset_url | stylesheet_tag }}
+ 
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
-  {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
+  <link rel="stylesheet" href="{{ 'paylater-modal.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript>{{ 'paylater-modal.css' | asset_url | stylesheet_tag }}</noscript>
 
   {%- style -%}
     .section-{{ section.id }}-padding {
@@ -260,15 +264,7 @@ margin-bottom: 0px !important;
               {%- when 'review_widget' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
               <div class="available-wrap">
-                <div class="sa-reviews">
-                  {% render 'icon-rstar' %}
-                  {% render 'icon-rstar' %}
-                  {% render 'icon-rstar' %}
-                  {% render 'icon-rstar' %}
-                  {% render 'icon-rstar' %}
-                  <div style="display: none;" class="review_header"></div>
-                  <div id="product_just_stars" class="reg"></div>
-                </div>
+              
                 {% if product.metafields.custom.backorder == true %}
                   <div class="badge backorder-badge stock-badge">
                       <span>Available to Pre-Order</span>
@@ -568,7 +564,11 @@ margin-bottom: 0px !important;
           </script>
         </product-gallery>
 
-        <mobile-gallery>
+        {%- liquid
+          assign mobile_gallery_featured_media = product.selected_or_first_available_variant.featured_media | default: product.featured_media | default: product.media.first
+          assign mobile_gallery_aspect_ratio = mobile_gallery_featured_media.preview_image.aspect_ratio | default: mobile_gallery_featured_media.aspect_ratio | default: 1
+        -%}
+        <mobile-gallery style="--mobile-gallery-aspect-ratio: {{ mobile_gallery_aspect_ratio }};">
           <div class="mobile-gallery-wrapper only-mobile">
             <div class="main-slider-arrow--left" type="button">
               <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -894,7 +894,7 @@ margin-bottom: 0px !important;
                     </svg>
                     <span class="product-form__error-message"></span>
                   </div>
-                  <h5 class="product_price_with_options-heading">Total with options</h5>
+                  <h2 class="product_price_with_options-heading">Total with options</h2>
 
                   <div class="product_price_with_options-contaniner">
                     <div class="product_prices">
@@ -1256,7 +1256,7 @@ margin-bottom: 0px !important;
                         class: 'installment caption-large'
                       -%}
                         <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-                        {{ form | payment_terms }}
+                        {% comment %}{{ form | payment_terms }}{% endcomment %}
                       {%- endform -%}
                     </div>
                   </div>
@@ -1346,15 +1346,7 @@ margin-bottom: 0px !important;
               {%- when 'review_widget' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
                 <div class="available-wrap hidden lg:flex">
-                  <div class="sa-reviews">
-                    {% render 'icon-rstar' %}
-                    {% render 'icon-rstar' %}
-                    {% render 'icon-rstar' %}
-                    {% render 'icon-rstar' %}
-                    {% render 'icon-rstar' %}
-                    <div style="display: none;" class="review_header"></div>
-                    <div id="product_just_stars" class="reg"></div>
-                  </div>
+             
 
                   {% if product.metafields.custom.backorder == true %}
                     <div class="badge backorder-badge stock-badge">
@@ -1973,86 +1965,10 @@ margin-bottom: 0px !important;
 <script>
   window.product = {{ product | json }}
 </script>
-{% comment %} <script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script> {% endcomment %}
+
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
 
-<script defer type="text/javascript">
-  var sa_products_count = 3;
-  var sa_date_format = 'F j, Y';
-  var sa_product = window.product.variants[0].sku;
-  (function (w, d, t, f, o, s, a) {
-    o = 'shopperapproved';
-    if (!w[o]) {
-      w[o] = function () {
-        (w[o].arg = w[o].arg || []).push(arguments);
-      };
-      (s = d.createElement(t)), (a = d.getElementsByTagName(t)[0]);
-      s.async = 1;
-      s.src = f;
-      a.parentNode.insertBefore(s, a);
-    }
-  })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
-</script>
-{% comment %}
-  <script defer>
-    document.addEventListener("DOMContentLoaded", function () {
-      let scrollTimeout;
 
-      window.addEventListener('scroll', function () {
-          if (scrollTimeout) {
-              clearTimeout(scrollTimeout);
-          }
-
-          scrollTimeout = setTimeout(() => {
-              const stickyAddToCart = document.querySelector('.sticky-add-to-cart');
-              const headerWrapper = document.querySelector('.header-wrapper');
-              const headerBottom = headerWrapper.getBoundingClientRect().bottom;
-
-              if (headerBottom <= 0) {
-                  stickyAddToCart.style.display = 'block';
-              } else {
-                  stickyAddToCart.style.display = 'none';
-              }
-          }, 50);
-      });
-
-      const stickyQuantity = document.querySelector('.sticky-quantity');
-      const formQuantityInput = document.querySelector('.quantity__input');
-
-      if (stickyQuantity) {
-        stickyQuantity.addEventListener('change', () => {
-          if (formQuantityInput) {
-              formQuantityInput.value = stickyQuantity.value;
-          }
-        });
-      }
-
-      formQuantityInput.addEventListener('change', () => {
-        var formQuantityValue = formQuantityInput.value;
-
-        if (formQuantityInput) {
-          stickyQuantity.value = formQuantityInput.value;
-        }
-      });
-
-      if (!window.product.available) {
-        const stickyProductActions = document.querySelector('.sticky-product-actions');
-
-        if (stickyProductActions) {
-          stickyProductActions.innerHTML = `<div class="restock-rocket-button-container"><button onclick="_RestockRocket.openModal()" class="sticky-restock-button restock-rocket-button restock-rocket-button-product restock-rocket-button-hover" style="font-family: inherit; font-size: inherit; background-color: rgb(241, 89, 42); color: rgb(255, 255, 255); border-radius: 0px;">Notify me when available</button></div>`
-        }
-      }
-    });
-
-    function addToCart() {
-      const addToCartMainButton = document.querySelector('.product-form__submit');
-
-      if (addToCartMainButton) {
-        addToCartMainButton.click();
-      }
-    }
-  </script>
-{% endcomment %}
 {% schema %}
 {
   "name": "t:sections.main-product.name",
