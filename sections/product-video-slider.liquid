@@ -525,12 +525,21 @@ document.addEventListener('DOMContentLoaded', function () {
     );
   }
 
+  function escapeHtmlAttr(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
   function getPosterHtml($thumb) {
     var $thumbImage = $thumb.find('.video-thumb-image').first();
     if ($thumbImage.length) {
       var imgSrc = $thumbImage.attr('src');
       var imgAlt = $thumbImage.attr('alt') || 'Video thumbnail';
-      return '<img src="' + imgSrc + '" alt="' + imgAlt + '" loading="eager" decoding="async">';
+      return '<img src="' + imgSrc + '" alt="' + escapeHtmlAttr(imgAlt) + '" loading="eager" decoding="async">';
     }
 
     var $thumbVideo = $thumb.find('.video-thumb-video').first();
@@ -553,8 +562,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var fallbackPoster = '<div class="video-modal-poster-fallback"></div>';
     var posterHtml = modalState.posterHtml || fallbackPoster;
+    var safeTitle = escapeHtmlAttr(modalState.title);
     var html =
-      '<button type="button" class="video-modal-poster" aria-label="Play ' + modalState.title + '">' +
+      '<button type="button" class="video-modal-poster" aria-label="Play ' + safeTitle + '">' +
         posterHtml +
         '<span class="play-button">&#9658;</span>' +
       '</button>';
