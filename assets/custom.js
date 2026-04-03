@@ -79,11 +79,12 @@ onReady(() => {
     });
   }, { passive: true });
 
-  const toggleCollapsible = (panel, arrow, open) => {
+   const toggleCollapsible = (panel, arrow, open) => {
     rafBatch(() => {
       const willOpen = open ?? !panel.classList.contains('visible');
+      const panelHeight = willOpen ? `${panel.scrollHeight}px` : '0';
       panel.classList.toggle('visible', willOpen);
-      panel.style.height = willOpen ? `${panel.scrollHeight}px` : '0';
+      panel.style.height = panelHeight;
       if (arrow) arrow.style.transform = willOpen ? 'rotate(180deg)' : 'rotate(0deg)';
     });
   };
@@ -111,6 +112,28 @@ onReady(() => {
     e.preventDefault();
     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, { passive: false });
+
+    const getHashTarget = (rawHash) => {
+    if (!rawHash || rawHash.length <= 1) return null;
+    const decodedHash = decodeURIComponent(rawHash);
+    const id = decodedHash.startsWith('#') ? decodedHash.slice(1) : decodedHash;
+    return document.getElementById(id) || document.querySelector(decodedHash);
+  };
+
+  const smoothScrollToHash = (rawHash) => {
+    const target = getHashTarget(rawHash);
+    if (!target) return;
+    const header = document.querySelector('.section-header');
+    const offset = header ? header.offsetHeight : 0;
+    const top = target.getBoundingClientRect().top + window.scrollY - offset - 16;
+    window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+  };
+
+  if (window.location.hash) {
+    setTimeout(() => smoothScrollToHash(window.location.hash), 120);
+  }
+
+  window.addEventListener('hashchange', () => smoothScrollToHash(window.location.hash), { passive: true });
 
   if (!customElements.get('scrollable-faq')) {
     class ScrollableFaq extends HTMLElement {
@@ -168,7 +191,7 @@ onReady(() => {
     if (e.target.closest('.header.dismiss')) document.body.style.overflow = 'auto';
   }, { passive: true });
 
-  document.body.addEventListener('click', (e) => {
+    document.body.addEventListener('click', (e) => {
     const btn = e.target.closest('.accordion-item');
     if (!btn) return;
     const panel = btn.nextElementSibling; if (!panel) return;
@@ -177,9 +200,10 @@ onReady(() => {
     const arrow = btn.querySelector('.arrow');
 
     const opening = !panel.classList.contains('visible');
+    const panelHeight = opening ? `${panel.scrollHeight}px` : '0';
     rafBatch(() => {
       panel.classList.toggle('visible', opening);
-      panel.style.height = opening ? `${panel.scrollHeight}px` : '0';
+      panel.style.height = panelHeight;
       if (plus && minus) { plus.style.display = opening ? 'none' : 'block'; minus.style.display = opening ? 'block' : 'none'; }
       if (arrow) arrow.style.transform = opening ? 'rotate(180deg)' : 'rotate(0deg)';
     });
