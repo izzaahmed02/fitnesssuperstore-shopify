@@ -120,7 +120,7 @@ class CartDrawer extends HTMLElement {
           let r = t.dataset.key,
             i = t.parentElement.querySelector('.quantity-text'),
             a = parseInt(i.textContent, 10) || 1;
-          a > 1 ? await this.updateCartItem(r, a - 1) : await this.updateCartItem(r, 0);
+          a > 1 ? await this.updateCartItem(r, a - 1, t) : await this.updateCartItem(r, 0, t);
           return;
         }
         let n = e.target.closest('.quantity-btn--plus');
@@ -128,14 +128,14 @@ class CartDrawer extends HTMLElement {
           let s = n.dataset.key,
             c = n.parentElement.querySelector('.quantity-text'),
             l = parseInt(c.textContent, 10) || 1;
-          await this.updateCartItem(s, l + 1);
+          await this.updateCartItem(s, l + 1, n);
           return;
         }
         let o = e.target.closest('.cart-remove-button');
         if (o) {
           e.stopPropagation();
           let d = o.dataset.key;
-          await this.updateCartItem(d, 0);
+          await this.updateCartItem(d, 0, o);
           return;
         }
       }),
@@ -144,26 +144,39 @@ class CartDrawer extends HTMLElement {
   unregisterCartDrawerActions() {
     this._cartDrawerHandler && (document.removeEventListener('click', this._cartDrawerHandler), (this._cartDrawerHandler = null));
   }
-  async updateCartItem(e, t) {
+  setDrawerItemLoading(e, t, r) {
+    let i = document.getElementById('CartDrawer-CartItems'),
+      a = document.querySelector(`tr[data-key="${e}"]`);
+    i && i.classList.toggle('cart__items--disabled', t),
+      r && ((r.disabled = t), r.classList.toggle('loading', t)),
+      a &&
+        a.querySelectorAll('.loading__spinner').forEach((e) => {
+          e.classList.toggle('hidden', !t);
+        });
+  }
+  async updateCartItem(e, t, r = null) {
+    this.setDrawerItemLoading(e, !0, r);
     try {
-      let r = await fetch('/cart/change.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ id: e, quantity: t }) });
-      if (!r.ok) {
-        console.error('Cart update failed:', r.status);
+      let i = await fetch('/cart/change.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ id: e, quantity: t }) });
+      if (!i.ok) {
+        console.error('Cart update failed:', i.status);
         return;
       }
-      let i = await r.json(),
-        a = i.items.find((t) => t.key === e),
-        n = document.querySelector(`tr[data-key="${e}"]`);
-      if (!a && n) {
-        n.remove();
+      let a = await i.json(),
+        n = a.items.find((t) => t.key === e),
+        s = document.querySelector(`tr[data-key="${e}"]`);
+      if (!n && s) {
+        s.remove();
         return;
       }
-      if (a && n) {
-        let s = n.querySelector('.quantity-text');
-        s && (s.textContent = a.quantity), this.unregisterCartDrawerActions(), this.registerCartDrawerActions();
+      if (n && s) {
+        let c = s.querySelector('.quantity-text');
+        c && (c.textContent = n.quantity), this.unregisterCartDrawerActions(), this.registerCartDrawerActions();
       }
     } catch (c) {
       console.error('Error updating cart item:', c);
+    } finally {
+      this.setDrawerItemLoading(e, !1, r);
     }
   }
   formatMoney(e) {
