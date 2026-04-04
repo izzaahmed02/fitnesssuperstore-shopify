@@ -58,7 +58,7 @@
             {{ section.settings.button_text_1 }}
             {% render 'chevron-button' %}
         </a>
-        <a id="emailFunction" href="{{ section.settings.button_link_2 }}" class="bannerBtn desktop button button--secondary">
+        <a href="{{ section.settings.button_link_2 }}" class="bannerBtn desktop button button--secondary emailFunction">
             {{ section.settings.button_text_2 }}
             {% render 'chevron-button' %}
         </a>
@@ -165,33 +165,27 @@
       }, 250);
     });
 
-document.querySelector('#emailFunction').addEventListener('click', function (e) {
-  e.preventDefault();
-
-  // 1. Smooth scroll to the form
-  const form = document.querySelector('[id="globo-formbuilder-140088"]');
-  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  // 2. Auto-select "Product Question / Sales Quote"
-  setTimeout(function () {
-    const select = document.querySelector('[id="140088-select-2"]');
-    if (select) {
-      select.value = 'Product Question / Sales Quote';
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-      select.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-  }, 800);
+document.querySelectorAll('.emailFunction').forEach(function (btn) {
+  btn.addEventListener('click', function (e) {
+    e.preventDefault();
+    const form = document.querySelector('[id="globo-formbuilder-140088"]');
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(function () {
+      const select = document.querySelector('[id="140088-select-2"]');
+      if (select) {
+        select.value = 'Product Question / Sales Quote';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        select.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }, 800);
+  });
 });
 
 document.querySelectorAll('.showroomVisit').forEach(function (btn) {
   btn.addEventListener('click', function (e) {
     e.preventDefault();
-
-    // 1. Smooth scroll to the form
     const form = document.querySelector('[id="globo-formbuilder-140088"]');
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    // 2. Auto-select "Showroom Visit / Video Walkthrough"
     setTimeout(function () {
       const select = document.querySelector('[id="140088-select-2"]');
       if (select) {
