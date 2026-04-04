@@ -21,7 +21,7 @@
     right: 0;
   }
 
-  /* Closed-state thumbnail in header */
+  /* Closed-state thumbnail inside header */
   .accordion-header {
     display: flex;
     align-items: center;
@@ -30,10 +30,14 @@
   .accordion-thumb-closed {
     width: 36px;
     height: 36px;
+    min-width: 36px;
     border-radius: 6px;
     overflow: hidden;
-    flex-shrink: 0;
     background: #f1f1f1;
+    border: 1px solid #e5e5e5;
+  }
+  .accordion-thumb-closed--empty {
+    border: 1px dashed #ccc;
   }
   .accordion-thumb-closed img {
     width: 100%;
@@ -41,40 +45,37 @@
     object-fit: cover;
     display: block;
   }
-  .accordion-thumb-closed--empty {
-    border: 1px dashed #ccc;
-  }
 
-  /* Option A: expanded body layout */
-  .accordion-body-inner {
-    display: flex;
-    gap: 16px;
-    padding: 16px;
-    align-items: flex-start;
+  /* Option A expanded layout — scoped tightly so accordion.css can't interfere */
+  .image-faq-body {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    padding: 16px !important;
+    box-sizing: border-box;
   }
-  .accordion-thumb-large {
-    width: 100px;
-    height: 100px;
+  .image-faq-thumb {
+    width: 100px !important;
+    height: 100px !important;
+    min-width: 100px !important;
     border-radius: 8px;
     overflow: hidden;
-    flex-shrink: 0;
     background: #f1f1f1;
     border: 1px solid #e5e5e5;
+    flex-shrink: 0;
   }
-  .accordion-thumb-large img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+  .image-faq-thumb img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
   }
-  .accordion-thumb-large--empty {
-    display: none;
-  }
-  .accordion-body-text {
+  .image-faq-text {
     flex: 1;
     min-width: 0;
   }
-  .accordion-body-tag {
+  .image-faq-tag {
     display: inline-block;
     font-size: 11px;
     color: #0F6E56;
@@ -101,7 +102,6 @@
           aria-expanded="false"
           aria-controls="accordion-content-{{ forloop.index }}">
 
-          {% comment %} Small closed-state thumbnail {% endcomment %}
           <span class="accordion-thumb-closed {% unless has_image %}accordion-thumb-closed--empty{% endunless %}">
             {% if has_image %}
               {{ block.settings.image | image_url: width: 72 | image_tag: loading: 'lazy', alt: block.settings.title }}
@@ -117,15 +117,19 @@
           class="accordion-content"
           aria-hidden="true">
 
-          <div class="accordion-body-inner">
-            {% comment %} Large thumbnail shown when expanded {% endcomment %}
-            <div class="accordion-thumb-large {% unless has_image %}accordion-thumb-large--empty{% endunless %}">
-              {% if has_image %}
-                {{ block.settings.image | image_url: width: 200 | image_tag: loading: 'lazy', alt: block.settings.title }}
-              {% endif %}
-            </div>
+          {% comment %}
+            .image-faq-body sits OUTSIDE .accordion-content-inner so accordion.css
+            padding/display rules on that class don't collapse the flex row.
+          {% endcomment %}
+          <div class="image-faq-body">
 
-            <div class="accordion-body-text">
+            {% if has_image %}
+              <div class="image-faq-thumb">
+                {{ block.settings.image | image_url: width: 200 | image_tag: loading: 'lazy', alt: block.settings.title }}
+              </div>
+            {% endif %}
+
+            <div class="image-faq-text">
               {% assign faq_link_start = '<a class="accordion-link" aria-label="Learn more about '
                 | append: block.settings.title
                 | append: '" tabindex="-1" '
@@ -134,11 +138,11 @@
                 {{ block.settings.copy | replace: '<a ', faq_link_start }}
               </div>
               {% if block.settings.tag != blank %}
-                <span class="accordion-body-tag">{{ block.settings.tag }}</span>
+                <span class="image-faq-tag">{{ block.settings.tag }}</span>
               {% endif %}
             </div>
-          </div>
 
+          </div>
         </div>
       </div>
     {% endfor %}
@@ -193,13 +197,13 @@
           "type": "image_picker",
           "id": "image",
           "label": "Step Image",
-          "info": "Shown as a small thumbnail in the closed state and a 100×100px preview when expanded. Recommended size: 200×200px square."
+          "info": "Shown as a 36px thumbnail in the closed state and 100x100px when expanded. Recommended: 200x200px square."
         },
         {
           "type": "text",
           "id": "tag",
           "label": "Label tag (optional)",
-          "info": "Short category label shown below the copy, e.g. 'Inspection' or 'Rebuild'"
+          "info": "Short label shown below the copy, e.g. 'Inspection' or 'Rebuild'"
         },
         {
           "type": "richtext",
