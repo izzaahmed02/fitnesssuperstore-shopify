@@ -272,6 +272,18 @@
                               </div>
                             </dl>
                           {% endif %}
+                          {% assign cart_processing_time = item.variant.metafields.custom.processing_time_long_variant
+                            | default: item.product.metafields.custom.processing_time_long
+                            | default: item.product.metafields.custom.processing_time
+                          %}
+                          {% if cart_processing_time != blank %}
+                            <dl>
+                              <div class="product-option">
+                                <dt>Processing Time:</dt>
+                                <dd>{{ cart_processing_time }}</dd>
+                              </div>
+                            </dl>
+                          {% endif %}
                           {%- if item.product.has_only_default_variant == false or item.properties.size != 0 or item.selling_plan_allocation != null -%}
                             <dl>
                               {%- if item.product.has_only_default_variant == false -%}
@@ -291,7 +303,7 @@
                             {% assign p_name = prop.first %}
                             {% assign p_value = prop.last %}
                             {% assign first_char = p_name | slice: 0, 1 %}
-                            {% if p_name == blank or p_value == blank or first_char == '_' %}
+                            {% if p_name == blank or p_value == blank or first_char == '_' or p_name contains 'Processing Time' %}
                               {% continue %}
                             {% endif %}
                             {% comment %}
