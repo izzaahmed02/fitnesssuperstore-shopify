@@ -37,7 +37,7 @@ if (!customElements.get('product-form-with-options')) {
         this.submitButton.setAttribute('aria-disabled', true);
         this.submitButton.classList.add('loading');
         this.querySelector('.loading__spinner').classList.remove('hidden');
-        this.cart.setActiveElement(document.activeElement);
+        this.cart?.setActiveElement(document.activeElement);
         const url = `${window.Shopify.routes.root}cart/add.js`;
 
         const productProperties = {
@@ -73,6 +73,11 @@ if (!customElements.get('product-form-with-options')) {
           !response.ok ? this.handleCartError(result) : this.handleCartSuccess(result);
         } catch (error) {
           console.error(error);
+          this.handleErrorMessage('Unable to add item to cart. Please try again.');
+        } finally {
+          this.submitButton.classList.remove('loading');
+          this.submitButton.removeAttribute('aria-disabled');
+          this.querySelector('.loading__spinner')?.classList.add('hidden');
         }
       }
 
