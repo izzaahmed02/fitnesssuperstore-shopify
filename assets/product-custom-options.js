@@ -585,7 +585,7 @@ if (!customElements.get('product-customization-options')) {
           button.addEventListener('click', (event) => {
             event.preventDefault();
             event.stopPropagation();
-            const popup = document.querySelector(`[data-popup="${button.dataset?.popupOpen}"`);
+            const popup = document.querySelector(`[data-popup="${button.dataset?.popupOpen}"]`);
             if (!popup) return;
             popup.classList.add('active');
           });
@@ -595,7 +595,7 @@ if (!customElements.get('product-customization-options')) {
         this.closePopupButtons.forEach((button) => {
           button.addEventListener('click', (event) => {
             event.preventDefault();
-            const popup = document.querySelector(`[data-popup="${button.dataset?.closePopup}"`);
+            const popup = document.querySelector(`[data-popup="${button.dataset?.closePopup}"]`);
             if (!popup) return;
             popup.classList.remove('active');
           });
@@ -688,7 +688,7 @@ if (!customElements.get('product-customization-options')) {
           const swatches = group.querySelectorAll('[data-color-name]');
           if (swatches.length === 0) return;
           swatches.forEach((swatch) => {
-            const swatchesActiveContainer = this.querySelector(`[data-selected-color-option="${swatch.dataset.group}"`);
+            const swatchesActiveContainer = this.querySelector(`[data-selected-color-option="${swatch.dataset.group}"]`);
             swatch.addEventListener('click', (event) => {
               event.preventDefault();
               swatches.forEach((item) => item.classList.remove('color-selected'));
@@ -720,7 +720,7 @@ if (!customElements.get('product-customization-options')) {
           addCustomColor.addEventListener('click', (event) => {
             event.preventDefault();
             const input = colorForm.querySelector('input[type="text"]');
-            const swatchesActiveContainer = this.querySelector(`[data-selected-color-option="${input.dataset.group}"`);
+            const swatchesActiveContainer = this.querySelector(`[data-selected-color-option="${input.dataset.group}"]`);
 
             if (!input) return;
             colorInput.dataset.variant = input.dataset.id;
@@ -821,7 +821,10 @@ if (!customElements.get('product-customization-options')) {
       async replaceItem() {
         const changeUrl = `${window.Shopify.routes.root}cart/change.js`;
         const addUrl = `${window.Shopify.routes.root}cart/add.js`;
-        if (!this.checkMandatoryFields()) return alert('Please select your options before adding this item to cart');
+        if (!this.checkMandatoryFields()) {
+          this.applyChangesButton?.classList.remove('loading');
+          return alert('Please select your options before adding this item to cart');
+        }
         let sections = '';
         if (window.location.href.includes('/cart')) {
           sections = this.getSectionsToRender().map((section) => section.section);
@@ -832,21 +835,6 @@ if (!customElements.get('product-customization-options')) {
         const productProperties = {
           ...this.prepareOptions(),
           _functionOperation: this.prepareFunctionalProperties(),
-        };
-
-        const changeRequest = {
-          id: this.modifyID,
-          quantity: 0,
-          sections: sections,
-          sections_url: window.location.pathname,
-        };
-
-        const changeConfig = {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(changeRequest),
         };
 
         const updateRequest = {
@@ -870,30 +858,47 @@ if (!customElements.get('product-customization-options')) {
         };
 
         try {
+          const updateResponse = await fetch(addUrl, updateConfig);
+          await updateResponse.json();
+          if (!updateResponse.ok) throw new Error('Failed to add to cart');
+
+          const changeRequest = {
+            id: this.modifyID,
+            quantity: 0,
+            sections: sections,
+            sections_url: window.location.pathname,
+          };
+
+          const changeConfig = {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(changeRequest),
+          };
+
           const response = await fetch(changeUrl, changeConfig);
-          if (response.ok) {
-            const updateResponse = await fetch(addUrl, updateConfig);
+          const changeResult = await response.json();
+          if (!response.ok) throw new Error('Failed to remove original cart line');
 
-            const updateResult = await updateResponse.json();
+          if (window.location.href.includes('/cart')) {
+            this.getSectionsToRender().forEach((section) => {
+              const elementToReplace = document.querySelector(section.selector) || document.getElementById(section.id);
 
-            if (!updateResponse.ok) throw new Error('Failed to add to cart');
-            if (window.location.href.includes('/cart')) {
-              this.getSectionsToRender().forEach((section) => {
-                const elementToReplace = document.querySelector(section.selector) || document.getElementById(section.id);
-
-                elementToReplace.innerHTML = this.getSectionInnerHTML(updateResult.sections[section.section], section.selector);
-              });
-            } else {
-              this.cartDrawer.renderContents(updateResult);
-            }
-
-            this.classList.remove('modify-opened');
-            this.dataset.stamp = 'none';
-            document.body.style.overflow = 'auto';
-            this.#accordionToggleAdded = false;
+              elementToReplace.innerHTML = this.getSectionInnerHTML(changeResult.sections[section.section], section.selector);
+            });
+          } else {
+            this.cartDrawer.renderContents(changeResult);
           }
+
+          this.classList.remove('modify-opened');
+          this.dataset.stamp = 'none';
+          document.body.style.overflow = 'auto';
+          this.#accordionToggleAdded = false;
         } catch (error) {
           console.error(error);
+        } finally {
+          this.applyChangesButton?.classList.remove('loading');
         }
       }
 
