@@ -1,19 +1,15 @@
-{% comment %}
-  Custom Image Banner Section for Shopify Dawn Theme
-{% endcomment %}
-
 <style>
   .custom-banner {
     position: relative;
     width: 100%;
     overflow: hidden;
     border-radius: 24px;
-    min-height: {{ section.settings.banner_height_mobile }}px;
+    min-height: var(--banner-height-mobile);
   }
 
   @media screen and (min-width: 750px) {
     .custom-banner {
-      min-height: {{ section.settings.banner_height_desktop }}px;
+      min-height: var(--banner-height-desktop);
     }
   }
 
@@ -47,7 +43,7 @@
   .custom-banner__overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, {{ section.settings.overlay_opacity | divided_by: 100.0 }});
+    background: rgba(0, 0, 0, var(--overlay-opacity, 0.5));
   }
 
   .custom-banner__content {
@@ -55,7 +51,7 @@
     z-index: 2;
     display: flex;
     align-items: center;
-    min-height: {{ section.settings.banner_height_mobile }}px;
+    min-height: var(--banner-height-mobile);
     padding: 40px 32px;
     box-sizing: border-box;
   }
@@ -66,7 +62,7 @@
 
   @media screen and (min-width: 750px) {
     .custom-banner__content {
-      min-height: {{ section.settings.banner_height_desktop }}px;
+      min-height: var(--banner-height-desktop);
       padding: 48px;
     }
   }
@@ -84,7 +80,7 @@
     text-transform: uppercase;
     letter-spacing: 0px;
     line-height: 34px;
-    text-align:left;
+    text-align: left;
   }
 
   @media screen and (min-width: 750px) {
@@ -104,7 +100,6 @@
     color: {{ section.settings.text_color }};
     margin: 0 0 28px 0;
     max-width: 555px;
-    
   }
 
   @media screen and (min-width: 750px) {
@@ -115,7 +110,7 @@
       max-width: 555px;
       text-align: left;
       margin: 0 0 32px 0;
-      }
+    }
   }
 
   .custom-banner__buttons {
@@ -174,20 +169,36 @@
 
   /* Section spacing */
   .custom-banner-wrapper {
-    padding-top: {{ section.settings.padding_top_mobile }}px;
-    padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
+    padding-top: var(--banner-padding-top-mobile);
+    padding-bottom: var(--banner-padding-bottom-mobile);
   }
 
   @media screen and (min-width: 750px) {
     .custom-banner-wrapper {
-      padding-top: {{ section.settings.padding_top_desktop }}px;
-      padding-bottom: {{ section.settings.padding_bottom_desktop }}px;
+      padding-top: var(--banner-padding-top-desktop);
+      padding-bottom: var(--banner-padding-bottom-desktop);
     }
   }
 </style>
 
-<div class="custom-banner-wrapper">
-  <div class="custom-banner color-{{ section.settings.color_scheme }} gradient">
+{%- assign overlay_alpha = section.settings.overlay_opacity | divided_by: 100.0 -%}
+
+<div
+  class="custom-banner-wrapper"
+  style="
+    --banner-padding-top-mobile: {{ section.settings.padding_top_mobile }}px;
+    --banner-padding-bottom-mobile: {{ section.settings.padding_bottom_mobile }}px;
+    --banner-padding-top-desktop: {{ section.settings.padding_top_desktop }}px;
+    --banner-padding-bottom-desktop: {{ section.settings.padding_bottom_desktop }}px;
+  "
+>
+  <div
+    class="custom-banner color-{{ section.settings.color_scheme }} gradient"
+    style="
+      --banner-height-mobile: {{ section.settings.banner_height_mobile }}px;
+      --banner-height-desktop: {{ section.settings.banner_height_desktop }}px;
+    "
+  >
 
     {%- if section.settings.desktop_image != blank -%}
       {%- assign desktop_img_url = section.settings.desktop_image | image_url: width: 1920 -%}
@@ -227,7 +238,10 @@
       {{ 'lifestyle-1' | placeholder_svg_tag: 'custom-banner__image custom-banner__image--mobile placeholder' }}
     {%- endif -%}
 
-    <div class="custom-banner__overlay"></div>
+    <div
+      class="custom-banner__overlay"
+      style="--overlay-opacity: {{ overlay_alpha }};"
+    ></div>
 
     <div class="custom-banner__content">
       <div class="custom-banner__text-box">
