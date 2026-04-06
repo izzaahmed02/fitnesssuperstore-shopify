@@ -73,13 +73,25 @@
     {{ 'component-volume-pricing.css' | asset_url | stylesheet_tag }}
   {%- endif -%}
 
-  <link rel="stylesheet" href="{{ 'avis-custom.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'avis-custom.css' | asset_url | stylesheet_tag }}</noscript>
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   <link rel="stylesheet" href="{{ 'paylater-modal.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'paylater-modal.css' | asset_url | stylesheet_tag }}</noscript>
+
+  {% assign hide_product_options = false %}
+  {% for item in cart.items %}
+    {% for property in item.properties %}
+      {% if property.first == '_functionOperation' %}
+        {% assign hide_product_options = true %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  {% unless hide_product_options %}
+    <link rel="stylesheet" href="{{ 'product-options.css' | asset_url }}" media="print" onload="this.media='all'">
+    <noscript>{{ 'product-options.css' | asset_url | stylesheet_tag }}</noscript>
+  {% endunless %}
 
   {%- style -%}
     .section-{{ section.id }}-padding {
@@ -156,7 +168,7 @@
           {%- for block in section.blocks -%}
             {%- case block.type -%}
               {%- when 'title' -%}
-                <div class="product__title" {{ block.shopify_attributes }}>
+                 <div class="product__title" {{ block.shopify_attributes }}>
                    {% if is_gift_cards_template %}
                     <h2>{{ product.title | escape }}</h2>
                   {% else %}
@@ -170,7 +182,7 @@
                 </div>
               {%- when 'review_widget' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
-                  {% unless is_gift_cards_template %}
+                 {% unless is_gift_cards_template %}
               <div class="available-wrap">
 
                 {% if product.metafields.custom.backorder == true %}
@@ -189,11 +201,11 @@
               </div>
                 {% endunless %}
               {% endunless %}
+              {% endunless %}
               {% when 'price' %}
-                {% unless is_gift_cards_template %}
-                  <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
-                {% endunless %}
-
+                 {% unless is_gift_cards_template %}
+                <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
+                  {% endunless %}
                 {% assign campaign_text = '' %}
 
                 {% if product.title contains 'French Fitness' %}
@@ -215,11 +227,11 @@
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                    {%endcomment %}
                     {% unless is_gift_cards_template %}
-                      <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
-                        >As high as:
-                        <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-                      </span>
-                    {% endunless %}
+                    <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
+                      >As high as:
+                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
+                    </span>
+                     {% endunless %}
                     {% comment %}
                   {% endif %}
                    {%endcomment %}
@@ -702,7 +714,7 @@
                   {{- block.settings.text -}}
                 </p>
               {%- when 'title' -%}
-                <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
+                 <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
                   {% if is_gift_cards_template %}
                     <h1>{{ product.title | escape }}</h1>
                   {% else %}
@@ -734,12 +746,14 @@
 
                 <div class="product__prices hidden lg:block">
 
-                     {% unless is_gift_cards_template %}
-                      <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
-                        >As high as:
-                        <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-                      </span>
-                    {% endunless %}
+                  {% unless is_gift_cards_template %}
+
+                    <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
+                      >As high as:
+                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
+                    </span>
+
+                     {% endunless %}
 
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
@@ -767,9 +781,9 @@
                 </div>
 
 
-             {% unless is_gift_cards_template %}
-                {% render 'paylater-providers' %}
-              {% endunless %}
+                 {% unless is_gift_cards_template %}
+              {% render 'paylater-providers' %}
+               {% endunless %}
 
               {%- when 'tile_calculator' -%}
                 {% if block.settings.show_tile_calculator %}
@@ -779,8 +793,13 @@
                 {% endif %}
 
               {%- when 'price_with_option' -%}
-               {% unless product.tags contains 'avisplus-product-options' %}
-                <product-form
+                {% unless product.tags contains 'avisplus-product-options' %}
+                {% assign tag = 'product-form' %}
+                {% assign custom_product_options_block = section.blocks | where: 'type', 'product_options' %}
+                {% if custom_product_options_block.size > 0 %}
+                  {% assign tag = 'product-form-with-options' %}
+                {% endif %}
+                <{{ tag }}
                   class="product-form"
                   data-hide-errors="{{ gift_card_recipient_feature_active }}"
                   data-section-id="{{ section.id }}"
@@ -806,7 +825,7 @@
                     <div class="product_prices">
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}">
+                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
                             {{ product.selected_or_first_available_variant.price | money }}
                           </p>
                         </div>
@@ -1065,32 +1084,26 @@
                                     assign quantity_rule_soldout = true
                                   endif
                                 -%}
-                               <button
-  id="ProductSubmitButton-{{ section.id }}"
-  type="submit"
-  name="add"
-  class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
-  data-submit-button
-  {% if product.selected_or_first_available_variant == null %}
-    disabled
-  {% elsif product.selected_or_first_available_variant.available == false or quantity_rule_soldout %}
-    disabled
-  {% endif %}
->
-  {% render 'icon-cart' %}
-  <span data-submit-button-text>
-    {%- if product.selected_or_first_available_variant == null -%}
-      Choose Variant
-    {%- elsif product.selected_or_first_available_variant.available == false
-      or quantity_rule_soldout
-    -%}
-      Unavailable
-    {%- else -%}
-      {{ 'products.product.add_to_cart' | t }}
-    {%- endif -%}
-  </span>
-  {%- render 'loading-spinner' -%}
-</button>
+                                <button
+                                  id="ProductSubmitButton-{{ section.id }}"
+                                  type="submit"
+                                  name="add"
+                                  class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
+                                >
+                                  {% render 'icon-cart' %}
+                                  <span>
+                                    {%- if product.selected_or_first_available_variant == null -%}
+                                      {{ 'products.product.unavailable' | t }}
+                                    {%- elsif product.selected_or_first_available_variant.available == false
+                                      or quantity_rule_soldout
+                                    -%}
+                                      {{ 'products.product.sold_out' | t }}
+                                    {%- else -%}
+                                      {{ 'products.product.add_to_cart' | t }}
+                                    {%- endif -%}
+                                  </span>
+                                  {%- render 'loading-spinner' -%}
+                                </button>
                               </div>
                             {%- endform -%}
                           {%- else -%}
@@ -1190,10 +1203,10 @@
                       </button>
                     </div>
                   {% endif %}
-                {% unless is_gift_cards_template %}
+                   {% unless is_gift_cards_template %}
                 {% render 'paylater-providers' %}
-              {% endunless %}
-                </product-form>
+                {% endunless %}
+                </{{tag}}>
                {% endunless %}
               {%- when 'inventory' -%}
                 <p
@@ -1295,9 +1308,9 @@
               {% when 'color_picker' %}
                 <div></div>
 
-                {% unless is_gift_cards_template %}
-                  {% render 'custom-color-picker', product: product %}
-                {% endunless %}
+                 {% unless is_gift_cards_template %}
+                {% render 'custom-color-picker', product: product %}
+                 {% endunless %}
 
               {%- when 'collapsible_tab' -%}
                 <div class="product__accordion accordion quick-add-hidden" {{ block.shopify_attributes }}>
@@ -1748,6 +1761,8 @@
                 </product-recommendations>
               {%- when 'icon-with-text' -%}
                 {% render 'icon-with-text', block: block %}
+                {% when 'product_options' %}
+                {% render 'product-options', product: product %}  
             {%- endcase -%}
           {%- endfor -%}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
@@ -1828,118 +1843,6 @@
     -%}
 
 
-    <script>
-(function() {
-  'use strict';
-
-  console.log('🔵 Button state script starting...');
-
-  // Wait for DOM to be ready
-  function init() {
-    const submitButton = document.querySelector('[data-submit-button]');
-    const buttonText = document.querySelector('[data-submit-button-text]');
-    const variantIdInput = document.querySelector('.product-variant-id, input[name="id"]');
-
-    console.log('submitButton:', submitButton);
-    console.log('buttonText:', buttonText);
-    console.log('variantIdInput:', variantIdInput);
-    console.log('window.product:', window.product);
-
-    if (!submitButton || !buttonText) {
-      console.error('❌ Required elements not found');
-      return;
-    }
-
-    if (!window.product || !window.product.variants) {
-      console.error('❌ Product data not found');
-      return;
-    }
-
-    // Create variant lookup
-    const variantsById = {};
-    window.product.variants.forEach(function(v) {
-      variantsById[String(v.id)] = v;
-    });
-
-    console.log('✅ Variants loaded:', Object.keys(variantsById).length);
-
-    function updateButton() {
-      let variantId = null;
-
-      // Try to get variant ID
-      if (variantIdInput) {
-        variantId = variantIdInput.value || variantIdInput.getAttribute('value');
-      }
-
-      console.log('Current variant ID:', variantId);
-
-      const variant = variantId ? variantsById[String(variantId)] : null;
-      
-      console.log('Found variant:', variant);
-
-      if (!variant) {
-        // No variant selected
-        buttonText.textContent = 'Choose Variant';
-        submitButton.disabled = true;
-        console.log('✅ State: No variant selected');
-      } else if (!variant.available) {
-        // Out of stock
-        buttonText.textContent = 'Unavailable';
-        submitButton.disabled = true;
-        console.log('✅ State: Out of stock');
-      } else {
-        // Available
-        buttonText.textContent = 'Add to Cart';
-        submitButton.disabled = false;
-        console.log('✅ State: Available');
-      }
-    }
-
-    // Listen for changes
-    if (variantIdInput) {
-      variantIdInput.addEventListener('change', function() {
-        console.log('🔄 Variant input changed');
-        setTimeout(updateButton, 50);
-      });
-    }
-
-    // Listen for custom events
-    document.addEventListener('variant:change', function(e) {
-      console.log('🔄 variant:change event', e.detail);
-      setTimeout(updateButton, 50);
-    });
-
-    document.addEventListener('variant-change', function(e) {
-      console.log('🔄 variant-change event', e.detail);
-      setTimeout(updateButton, 50);
-    });
-
-    // Listen for form changes
-    const form = submitButton.closest('form');
-    if (form) {
-      form.addEventListener('change', function(e) {
-        const name = e.target.name || '';
-        if (name.includes('option') || name === 'id') {
-          console.log('🔄 Form option changed:', name);
-          setTimeout(updateButton, 100);
-        }
-      });
-    }
-
-    // Initial update
-    updateButton();
-    
-    console.log('✅ Button state script initialized');
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
-</script>
-
 </product-info>
 
 <div id="product-gallery-popup" class="product-popup-overlay" hidden>
@@ -1983,6 +1886,41 @@
   <div class="mobile-popup-dots"></div>
 </div>
 
+{% assign options = product.metafields.options.product_options.value %}
+{% for category in options %}
+  {% if category.help_text.value != blank %}
+    {% liquid
+      assign content = category.help_text.value
+      assign title = content.title
+      assign text = content.help_text
+      assign related_products = content.related_products.value
+    %}
+    {% render 'related-products-popup-for-options', 
+      popup_id: category.title,
+      title: title,
+      related_products: related_products,
+      text: text
+    %}
+  {% endif %}
+
+  {% for product_option in category.product_options.value %}
+    {% if product_option.help_text.value != blank %}
+      {% liquid
+        assign content = product_option.help_text.value
+        assign title = content.title
+        assign text = content.help_text
+        assign related_products = content.related_products.value
+      %}
+      {% render 'related-products-popup-for-options', 
+        popup_id: product_option.product_option_title,
+        title: title,
+        related_products: related_products,
+        text: text
+      %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
 <style>
   #dynamic-product-content iframe{max-width:100% !important;}
 </style>
@@ -1990,8 +1928,17 @@
 <script>
   window.product = {{ product | json }}
 </script>
-<script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
+
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+
+{% unless hide_product_options %}
+  <script src="{{'product-custom-options.js' | asset_url }}" defer></script>
+{% endunless %}
+<script src="{{ 'old-custom.js' | asset_url }}" defer="defer"></script>
+
+{% if custom_product_options_block.size > 0 %}
+  <script src="{{'product-form-with-options.js' | asset_url }}" defer></script>
+{% endif %}
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -2085,23 +2032,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
-<script defer type="text/javascript">
-  var sa_products_count = 3;
-  var sa_date_format = 'F j, Y';
-  var sa_product = window.product.variants[0].sku;
-  (function (w, d, t, f, o, s, a) {
-    o = 'shopperapproved';
-    if (!w[o]) {
-      w[o] = function () {
-        (w[o].arg = w[o].arg || []).push(arguments);
-      };
-      (s = d.createElement(t)), (a = d.getElementsByTagName(t)[0]);
-      s.async = 1;
-      s.src = f;
-      a.parentNode.insertBefore(s, a);
-    }
-  })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
-</script>
+
 
 {% schema %}
 {
@@ -2159,6 +2090,10 @@ document.addEventListener('DOMContentLoaded', function() {
       "type": "price_with_option",
       "name": "Price with options",
       "limit": 1
+    },
+    {
+      "type": "product_options",
+      "name": "Product options"
     },
     {
       "type": "price",
