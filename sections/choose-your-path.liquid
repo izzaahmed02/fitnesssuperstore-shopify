@@ -1,0 +1,207 @@
+
+{% stylesheet %}
+.choose-path-section {
+  padding: 36px 0;
+  text-align: center;
+}
+
+.choose-path-section__title {
+  font-size: 38px;
+  line-height: 50px;
+  letter-spacing: 0px;
+  margin: 0px;
+  margin-bottom: 20px;
+}
+
+.choose-path-section__grid {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.choose-path-section__block {
+  background-color: #ffffff;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1 1 0;
+  text-align: left;
+}
+
+.choose-path-section__block-title {
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: 0px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  margin:0px;
+  text-transform: uppercase;
+}
+
+.choose-path-section__block-text {
+  margin:0px;
+  margin-top: 2px;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0px;
+  color: #7283A4;
+  font-weight: 700;
+}
+
+.choose-path-section .choose-path-section__block-list {
+  list-style: none;
+  padding-left: 0px;
+  margin: 16px 0;
+}
+
+.choose-path-section__block-list li {
+  position: relative;
+  margin-bottom: 4px;
+  font-size:16px;
+  line-height: 24px;
+  padding-left: 20px;
+}
+
+.choose-path-section__block-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background-color: #3E77AA; /* Blue dot */
+  border-radius: 50%;
+}
+
+.choose-path-section__button {
+  margin-top: auto;
+  padding: 12px 16px;
+  background-color: #F1592A;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 8px;
+  text-align: center;
+  display: block;
+  font-weight: 500;
+}
+
+@media screen and (min-width: 992px) {
+  .choose-path-section__block:nth-child(1),
+  .choose-path-section__block:nth-child(2) {
+    max-width: 288px;
+  }
+  .choose-path-section__block:nth-child(3) {
+    max-width: 404px;
+  }
+}
+
+@media screen and (max-width: 991px) {
+
+  .choose-path-section {
+    padding: 36px 16px;
+  }
+  .choose-path-section__grid {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .choose-path-section__block {
+    max-width: 100%;
+  }
+
+  .choose-path-section__title {
+    font-size: 20px;
+    line-height: 26px;
+    text-align: left;
+  }
+}
+{% endstylesheet %}
+
+<div class="choose-path-section" style="background: {{ section.settings.bg_color }};">
+  {% if section.settings.section_title != blank %}
+    <h2 class="choose-path-section__title">{{ section.settings.section_title }}</h2>
+  {% endif %}
+
+  <div class="choose-path-section__grid">
+    {% for block in section.blocks %}
+      <div class="choose-path-section__block">
+        {% if block.settings.block_title != blank %}
+          <p class="choose-path-section__block-title">{{ block.settings.block_title }}</p>
+        {% endif %}
+        {% if block.settings.block_text != blank %}
+          <p class="choose-path-section__block-text">{{ block.settings.block_text }}</p>
+        {% endif %}
+        {% if block.settings.block_list != blank %}
+          <ol class="choose-path-section__block-list">{{ block.settings.block_list }}</ol>
+        {% endif %}
+        {% if block.settings.button_text != blank and block.settings.button_link != blank %}
+          <a href="{{ block.settings.button_link }}" class="choose-path-section__button">{{ block.settings.button_text }}</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+
+{% schema %}
+{
+  "name": "Choose Your Path Section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section Title"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Section Background Color",
+      "default": "#ffffff"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "path_block",
+      "name": "Path Block",
+      "settings": [
+        {
+          "type": "text",
+          "id": "block_title",
+          "label": "Block Title"
+        },
+        {
+          "type": "textarea",
+          "id": "block_text",
+          "label": "Expert Text"
+        },
+        {
+          "type": "richtext",
+          "id": "block_list",
+          "label": "Ordered List (HTML supported)"
+        },
+        {
+          "type": "text",
+          "id": "button_text",
+          "label": "Button Text"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Button Link"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 3,
+  "presets": [
+    {
+      "name": "Choose Your Path Section",
+      "category": "Custom"
+    }
+  ]
+}
+{% endschema %}
