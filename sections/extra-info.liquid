@@ -1097,16 +1097,12 @@ document.addEventListener("DOMContentLoaded", function() {
     
       {% render 'prop65' %}
 
-     {% assign tags = customer.tags | split: ',' %}
-
-{% for tag in tags %}
-  {% assign clean_tag = tag | strip %}
-  
-  {% if clean_tag == 'admin' %}
+     {% if customer %}
+  {% assign tags = customer.tags | split: ', ' %}
+  {% if tags contains 'admin' %}
     <a id="download-pds" style="cursor:pointer;">Download Product Data Sheet</a>
-    {% break %}
   {% endif %}
-{% endfor %}
+{% endif %}
 
       {% render 'product-downloads' %}
 
