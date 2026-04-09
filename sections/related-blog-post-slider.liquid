@@ -81,8 +81,16 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
     {% if article.published_at %}
       <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
     {% endif %}
+
     {% if author_name %}
-      <span>{{ author_name }}</span>
+      {% if article.metafields.author_name %}
+                {% if article.metafields.author_url %}<a style="z-index: 2;text-decoration: underline;" href="{{ article.metafields.author_url }}"> {% endif %}
+                    <span>{{ article.metafields.author_name }}</span>
+                      {% if article.metafields.author_url %} </a> {% endif %}
+                {% else %}
+
+                <span>{{ article.author }}</span>
+              {%- endif -%}
     {% endif %}
   </p>
 {% endif %}
