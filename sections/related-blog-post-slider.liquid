@@ -133,16 +133,18 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
               {{ article.title }}
             </h3>
 
-            {% if article.published_at or article.author %}
-              <p class="card__meta publish-info">
-                {% if article.published_at %}
-                  <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
-                {% endif %}
-                {% if article.author %}
-                  <span>{{ article.author }}</span>
-                {% endif %}
-              </p>
-            {% endif %}
+            {% assign author_name = article.metafields.custom.author_name %}
+{% if article.published_at or author_name %}
+  <p class="card__meta publish-info">
+    {% if article.published_at %}
+      <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+    {% endif %}
+    {% if author_name %}
+      <span class="test">{{ author_name }}</span>
+    {% endif %}
+  </p>
+{% endif %}
+
 
             {% if section.settings.show_excerpt %}
               <div class="card__excerpt">
