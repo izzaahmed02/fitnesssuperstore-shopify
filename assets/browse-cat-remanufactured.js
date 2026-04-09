@@ -1,30 +1,24 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const browseCategory = document.querySelector(".browse-category");
-  if (!browseCategory) return;
+  document.querySelectorAll(".browse-category").forEach(function (browseCategory) {
+    initBrowseCategory(browseCategory);
+  });
+});
 
+function initBrowseCategory(browseCategory) {
   function scheduleEqualCardHeights(container) {
     if (!container) return;
-
-    if (container.__equalizeFrame) {
-      cancelAnimationFrame(container.__equalizeFrame);
-    }
+    if (container.__equalizeFrame) cancelAnimationFrame(container.__equalizeFrame);
 
     container.__equalizeFrame = requestAnimationFrame(() => {
       const cards = Array.from(container.querySelectorAll(".category-card"));
       if (!cards.length) return;
-
-      cards.forEach((card) => {
-        card.style.minHeight = "auto";
-      });
+      cards.forEach(card => card.style.minHeight = "auto");
 
       requestAnimationFrame(() => {
         const maxHeight = cards.reduce((tallest, card) => {
           return Math.max(tallest, card.getBoundingClientRect().height);
         }, 0);
-
-        cards.forEach((card) => {
-          card.style.minHeight = maxHeight ? `${maxHeight}px` : "";
-        });
+        cards.forEach(card => card.style.minHeight = maxHeight ? `${maxHeight}px` : "");
       });
     });
   }
@@ -63,7 +57,9 @@ document.addEventListener("DOMContentLoaded", function () {
       this.classList.add("active");
 
       browseCategory.querySelectorAll(".category-tab-content").forEach(tab => tab.classList.remove("active"));
-      const targetTab = browseCategory.querySelector(`#${tabId}`);
+
+      // Scope querySelector to THIS section's browse-by-category wrapper
+      const targetTab = browseCategory.querySelector(`[id="${tabId}"]`);
       const targetSlider = targetTab?.querySelector('[class*="slider-tab-"]');
 
       if (!targetTab || !targetSlider) return;
@@ -96,4 +92,4 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
   });
-});
+}
