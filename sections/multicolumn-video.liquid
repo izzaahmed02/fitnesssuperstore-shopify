@@ -153,13 +153,7 @@
                                             </li>
                                         {% endfor %}
                                     </ul>
-                {%- when 'text' -%}
-                  <div
-                    class="image-with-text__text rte {% if section.settings.desktop_image_width == 'full-screen' %}half-screen-size{% endif %} {{ block.settings.text_style }} {% if block.settings.text_size == 'large' %}large{% endif %}"
-                    {{ block.shopify_attributes }}
-                  >
-                    {{ block.settings.text }}
-                  </div>
+                
                 {%- when 'note' -%}
                   <div class="note">
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -238,6 +232,19 @@
       </div>
       
     </div>
+
+    {%- for block in section.blocks -%}
+              {% case block.type %}
+    {%- when 'text' -%}
+                  <div
+                    class="image-with-text__text rte {% if section.settings.desktop_image_width == 'full-screen' %}half-screen-size{% endif %} {{ block.settings.text_style }} {% if block.settings.text_size == 'large' %}large{% endif %}"
+                    {{ block.shopify_attributes }}
+                  >
+                    {{ block.settings.text }}
+                  </div>
+
+                {% endcase %}
+              {% endfor %}
      <div class="image-with-text__media-item {% if section.settings.original_image_proportions %}original-proportions{% endif %} image-with-text__media-item--{{ section.settings.desktop_image_width }} image-with-text__media-item--{{ section.settings.desktop_content_position }}">
           {%- if section.settings.video != blank or section.settings.video_url != null -%}
             <deferred-media
