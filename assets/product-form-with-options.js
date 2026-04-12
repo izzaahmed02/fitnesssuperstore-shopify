@@ -42,8 +42,11 @@ if (!customElements.get('product-form-with-options')) {
 
         const productProperties = {
           ...this.prepareOptions(),
-          _functionOperation: this.prepareFunctionalProperties(),
         };
+
+        if (this.dataset.enableFunctionOperation === 'true') {
+          productProperties._functionOperation = this.prepareFunctionalProperties();
+        }
 
         const bodyRequest = {
           items: [

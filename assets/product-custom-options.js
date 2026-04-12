@@ -834,8 +834,11 @@ if (!customElements.get('product-customization-options')) {
 
         const productProperties = {
           ...this.prepareOptions(),
-          _functionOperation: this.prepareFunctionalProperties(),
         };
+
+        if (this.dataset.enableFunctionOperation === 'true') {
+          productProperties._functionOperation = this.prepareFunctionalProperties();
+        }
 
         const updateRequest = {
           items: [
