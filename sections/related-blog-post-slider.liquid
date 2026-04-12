@@ -1,5 +1,5 @@
 {% comment %}
-Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT RESTORED + FAST DRAG FIX)
+Related Blog Posts — JS driven slider with synced scrollbar
 {% endcomment %}
 
 <section
@@ -75,29 +75,33 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
               {{ article.title }}
             </h3>
 
-           {% assign author_name = article.metafields.custom.author_name %}
-{% if article.published_at or author_name %}
-  <p class="card__meta publish-info">
-    {% if article.published_at %}
-      <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
-    {% endif %}
-    {% if author_name %}
-      <span>{{ author_name }}</span>
-    {% endif %}
-  </p>
-{% endif %}
-
+            {%- assign author_name = article.metafields.custom.author_name.value -%}
+            {%- assign author_url = article.metafields.custom.author_url.value -%}
+            {% if article.published_at or author_name %}
+              <p class="card__meta publish-info">
+                {% if article.published_at %}
+                  <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
+                {% endif %}
+                {% if author_name %}
+                  {% if author_url %}
+                    <a class="card__author-link" href="{{ author_url }}">{{ author_name }}</a>
+                  {% else %}
+                    <span>{{ author_name }}</span>
+                  {% endif %}
+                {% endif %}
+              </p>
+            {% endif %}
 
             {% if section.settings.show_excerpt %}
               <div class="card__excerpt">
                 {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
               </div>
             {% endif %}
-{% if section.settings.read_more_text %}
-            <div class="card__actions">
-              <span class="link">{{ section.settings.read_more_text }}</span>
-            </div>
-          {% endif %}
+            {% if section.settings.read_more_text %}
+              <div class="card__actions">
+                <span class="link">{{ section.settings.read_more_text }}</span>
+              </div>
+            {% endif %}
 
           </div>
         </a>
@@ -133,13 +137,19 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
               {{ article.title }}
             </h3>
 
-            {% if article.published_at or article.author %}
+            {%- assign author_name = article.metafields.custom.author_name.value -%}
+            {%- assign author_url = article.metafields.custom.author_url.value -%}
+            {% if article.published_at or author_name %}
               <p class="card__meta publish-info">
                 {% if article.published_at %}
                   <span>{{ article.published_at | date: "%b %d, %Y" }}</span>
                 {% endif %}
-                {% if article.author %}
-                  <span>{{ article.author }}</span>
+                {% if author_name %}
+                  {% if author_url %}
+                    <a class="card__author-link" href="{{ author_url }}">{{ author_name }}</a>
+                  {% else %}
+                    <span>{{ author_name }}</span>
+                  {% endif %}
                 {% endif %}
               </p>
             {% endif %}
@@ -149,11 +159,11 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
                 {{ article.excerpt | strip_html | truncate: section.settings.excerpt_length }}
               </div>
             {% endif %}
-{% if section.settings.read_more_text %}
-            <div class="card__actions">
-              <span class="link">{{ section.settings.read_more_text }}</span>
-            </div>
-          {% endif %}
+            {% if section.settings.read_more_text %}
+              <div class="card__actions">
+                <span class="link">{{ section.settings.read_more_text }}</span>
+              </div>
+            {% endif %}
 
           </div>
         </a>
@@ -168,30 +178,37 @@ Related Blog Posts — JS driven slider with synced scrollbar (FULL CONTENT REST
         {% if section.settings.show_scrollbar and slide_count > 3 %}
           
         {% else %}
-<style>
-@media screen and (min-width: 767px) {
- #shopify-section-{{ section.id }} .related-slider__bottom {
-display: none;
-}
-}
-
+          <style>
+            @media screen and (min-width: 767px) {
+              #shopify-section-{{ section.id }} .related-slider__bottom {
+                display: none;
+              }
+            }
           </style>
-           {% endif %}
-          <div class="related-slider__bottom">
+        {% endif %}
 
-            <div class="related-slider__scrollbar" data-scrollbar>
-              <span class="scroll-thumb" data-thumb></span>
-            </div>
+        <div class="related-slider__bottom">
 
-            <div class="related-slider__arrows">
-              <button class="arrow prev" data-prev aria-label="Previous"><svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><path fill-rule='evenodd' clip-rule='evenodd' d='M11 17H27V15H11V17Z' fill='black'/><path fill-rule='evenodd' clip-rule='evenodd' d='M11.4141 16L17.707 9.70706L16.2928 8.29285L8.58571 16L16.2928 23.7071L17.707 22.2928L11.4141 16Z' fill='black'/></svg>
-</button>
-              <button class="arrow next" data-next aria-label="Next"><svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><path fill-rule='evenodd' clip-rule='evenodd' d='M21 17H5V15H21V17Z' fill='black'/><path fill-rule='evenodd' clip-rule='evenodd' d='M20.5859 16L14.293 9.70706L15.7072 8.29285L23.4143 16L15.7072 23.7071L14.293 22.2928L20.5859 16Z' fill='black'/></svg>
-</button>
-            </div>
-
+          <div class="related-slider__scrollbar" data-scrollbar>
+            <span class="scroll-thumb" data-thumb></span>
           </div>
-       
+
+          <div class="related-slider__arrows">
+            <button class="arrow prev" data-prev aria-label="Previous">
+              <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                <path fill-rule='evenodd' clip-rule='evenodd' d='M11 17H27V15H11V17Z' fill='black'/>
+                <path fill-rule='evenodd' clip-rule='evenodd' d='M11.4141 16L17.707 9.70706L16.2928 8.29285L8.58571 16L16.2928 23.7071L17.707 22.2928L11.4141 16Z' fill='black'/>
+              </svg>
+            </button>
+            <button class="arrow next" data-next aria-label="Next">
+              <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                <path fill-rule='evenodd' clip-rule='evenodd' d='M21 17H5V15H21V17Z' fill='black'/>
+                <path fill-rule='evenodd' clip-rule='evenodd' d='M20.5859 16L14.293 9.70706L15.7072 8.29285L23.4143 16L15.7072 23.7071L14.293 22.2928L20.5859 16Z' fill='black'/>
+              </svg>
+            </button>
+          </div>
+
+        </div>
 
       </div>
     {% else %}
@@ -207,62 +224,80 @@ display: none;
     {% endif %}
 
   </div>
- 
 
   <style>
 
- #RelatedBlogs-{{ section.id }} .card__media { aspect-ratio: 16/9; overflow: hidden; }
-    #RelatedBlogs-{{ section.id }} .card__image { width: 100%; height: 100%; object-fit: cover; display:block; }
-    .related-articles .card__media { position:relative; }
-    .publish-info { display:flex; justify-content:space-between;}
+    #RelatedBlogs-{{ section.id }} .card__media { aspect-ratio: 16/9; overflow: hidden; }
+    #RelatedBlogs-{{ section.id }} .card__image { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .related-articles .card__media { position: relative; }
+    .publish-info { display: flex; justify-content: space-between; }
 
-  #RelatedBlogs-{{ section.id }} .publish-info span { margin-bottom: 12px; font-family: Lato; font-size: 12px; line-height: 18px; color: gray; text-transform: none; letter-spacing: .13rem;}
-  #RelatedBlogs-{{ section.id }} .link {color: #D83D0E;}
+    #RelatedBlogs-{{ section.id }} .publish-info span,
+    #RelatedBlogs-{{ section.id }} .publish-info a.card__author-link {
+      margin-bottom: 12px;
+      font-family: Lato;
+      font-size: 12px;
+      line-height: 18px;
+      color: gray;
+      text-transform: none;
+      letter-spacing: .13rem;
+    }
 
-  #RelatedBlogs-{{ section.id }} h1 {
-  text-transform: uppercase;
-}
-#RelatedBlogs-{{ section.id }} h3 {
-font-size:18px;
-line-height:24px;
-}
+    #RelatedBlogs-{{ section.id }} .publish-info a.card__author-link {
+      text-decoration: underline;
+      z-index: 2;
+      position: relative;
+    }
 
-  .rich-text-custom__wrapper {
-    margin-top:24px;
-  display: flex;
-  justify-content:center;
-  align-items:center;
-}
-  .rich-text-custom__btn {
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 24px;
-    background-color:#D83D0E;
-    padding: 12px 24px;
-    color: #fff;
-    border-radius: 8px;
-    text-decoration: none;
-    border: none;
-    box-shadow: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    #RelatedBlogs-{{ section.id }} .link { color: #D83D0E; }
+
+    #RelatedBlogs-{{ section.id }} h1 { text-transform: uppercase; }
+
+    #RelatedBlogs-{{ section.id }} h3 {
+      font-size: 18px;
+      line-height: 24px;
+    }
+
+    .related-articles-slider .card:not(.ratio) {
+    height: unset;
   }
 
-  @media screen and (max-width: 767px){
-  .related-blog-sec {
-  padding-top: 0px !important;
-  padding-bottom: 0px !important;
-  }
-  }
+    .rich-text-custom__wrapper {
+      margin-top: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
+    .rich-text-custom__btn {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 24px;
+      background-color: #D83D0E;
+      padding: 12px 24px;
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      border: none;
+      box-shadow: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    @media screen and (max-width: 767px) {
+      .related-blog-sec {
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
+      }
+    }
 
     #RelatedBlogs-{{ section.id }} .related-slider__track {
       display: flex;
       gap: 16px;
       overflow-x: auto;
-      -webkit-overflow-scrolling: touch; /* mobile momentum */
-      scroll-behavior: auto; /* instant for drag */
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: auto;
     }
 
     #RelatedBlogs-{{ section.id }} .related-slider__track::-webkit-scrollbar {
@@ -290,9 +325,7 @@ line-height:24px;
       object-fit: cover;
     }
 
-    .related-articles .section-header {
-      position: unset;
-    }
+    .related-articles .section-header { position: unset; }
 
     .card__heading {
       font-size: 18px;
@@ -346,7 +379,7 @@ line-height:24px;
       width: 40px;
       background: #D83D0E;
       border-radius: 6px;
-      transition: none; /* no delay during drag */
+      transition: none;
     }
 
     .related-slider__arrows {
@@ -383,6 +416,7 @@ line-height:24px;
       pointer-events: none;
       cursor: default;
     }
+
   </style>
 
   <script>
@@ -396,14 +430,12 @@ line-height:24px;
     const prev = slider.querySelector('[data-prev]');
     const next = slider.querySelector('[data-next]');
 
-    // Update arrows state
     function updateArrows() {
       const maxScroll = track.scrollWidth - track.clientWidth;
       prev.classList.toggle('disabled', track.scrollLeft <= 1);
       next.classList.toggle('disabled', track.scrollLeft >= maxScroll - 1);
     }
 
-    // Sync thumb instantly
     function syncThumb() {
       const maxScroll = track.scrollWidth - track.clientWidth;
       if (maxScroll <= 0) return;
@@ -417,7 +449,6 @@ line-height:24px;
 
     track.addEventListener('scroll', syncThumb);
 
-    // Arrow click
     function scrollByCard(dir) {
       const card = track.querySelector('.related-slider__slide');
       if (!card) return;
@@ -434,7 +465,6 @@ line-height:24px;
       if (!next.classList.contains('disabled')) scrollByCard(1);
     });
 
-    // Drag & click functionality
     let dragging = false;
     let startX = 0;
     let startScrollLeft = 0;
@@ -459,7 +489,6 @@ line-height:24px;
       syncThumb();
     });
 
-    // Click scrollbar to jump
     scrollbar.addEventListener('mousedown', (e) => {
       if (e.target === thumb) return;
       const rect = scrollbar.getBoundingClientRect();
@@ -469,7 +498,6 @@ line-height:24px;
       track.scrollLeft = ratio * (track.scrollWidth - track.clientWidth);
     });
 
-    // Initial sync
     syncThumb();
   })();
   </script>
@@ -477,7 +505,7 @@ line-height:24px;
 {% schema %}
 {
   "name": "Related Blog posts Slider",
-  "class": "related-articles",
+  "class": "related-articles related-articles-slider",
   "settings": [
     {
       "id": "heading",
