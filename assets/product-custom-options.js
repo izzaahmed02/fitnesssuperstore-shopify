@@ -977,6 +977,18 @@ if (!customElements.get('product-customization-options')) {
         const activeOptions = this.querySelectorAll('[data-selected-options]');
         if (activeOptions.length === 0) return;
         let productOptions = [];
+
+        // Include main product variant so Cart Transform includes it as a component
+        const mainVariantId = this.dataset.variantId;
+        if (mainVariantId) {
+          productOptions.push({
+            variantId: `gid://shopify/ProductVariant/${mainVariantId}`,
+            priceAdjustment: 0,
+            quantity: 1,
+            groupHandle: 'main-product',
+            defaultValues: String(mainVariantId),
+          });
+        }
         activeOptions.forEach((option) => {
           if (option.dataset.selectedOptions !== '') {
             const parent = option.closest('[data-option-accordion]');
