@@ -82,13 +82,19 @@
                         {%- for property in line_item.properties -%}
                           {% assign property_key = property.first | strip %}
                           {% assign property_first_char = property_key | slice: 0, 1 %}
-                          {%- if property.last != blank and property_key != '_functionOperation' and property_first_char != '_' -%}
+                          {% assign normalized_property_key = property_key | downcase | remove: ' ' | remove: '_' | remove: '-' %}
+                          {% assign property_value = property.last | strip %}
+                          {% assign is_function_payload = false %}
+                          {% if property_value contains 'variantId' and property_value contains 'groupHandle' %}
+                            {% assign is_function_payload = true %}
+                          {% endif %}
+                          {%- if property_value != blank and property_first_char != '_' and normalized_property_key != 'functionoperation' and is_function_payload == false -%}
                             <span>{{ property_key }}:</span>
                             <span>
-                              {%- if property.last contains '/uploads/' -%}
-                                <a href="{{ property.last }}">{{ property.last | split: '/' | last }}</a>
+                              {%- if property_value contains '/uploads/' -%}
+                                <a href="{{ property_value }}">{{ property_value | split: '/' | last }}</a>
                               {%- else -%}
-                                {{ property.last }}
+                                {{ property_value }}
                               {%- endif -%}
                             </span>
                           {%- endif -%}
