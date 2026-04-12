@@ -44,10 +44,6 @@ if (!customElements.get('product-form-with-options')) {
           ...this.prepareOptions(),
         };
 
-        if (this.dataset.enableFunctionOperation === 'true') {
-          productProperties._functionOperation = this.prepareFunctionalProperties();
-        }
-
         const bodyRequest = {
           items: [
             {
