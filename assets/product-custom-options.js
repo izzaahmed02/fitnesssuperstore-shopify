@@ -836,6 +836,10 @@ if (!customElements.get('product-customization-options')) {
           ...this.prepareOptions(),
         };
 
+        if (this.dataset.enableFunctionOperation === 'true') {
+          productProperties._functionOperation = this.prepareFunctionalProperties();
+        }
+
         const updateRequest = {
           items: [
             {
