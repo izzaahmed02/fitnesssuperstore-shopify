@@ -832,19 +832,10 @@ if (!customElements.get('product-customization-options')) {
           sections = this.cartDrawer.getSectionsToRender().map((section) => section.id);
         }
 
-        const productProperties = {
-          ...this.prepareOptions(),
-          _functionOperation: this.prepareFunctionalProperties(),
-        };
+        const productProperties = this.prepareOptions();
 
         const updateRequest = {
-          items: [
-            {
-              id: this.modifyID.split(':')[0],
-              quantity: this.quantityInput?.value || 1,
-              properties: productProperties,
-            },
-          ],
+          items: this.buildCartItems(productProperties),
           sections: sections,
           sections_url: window.location.pathname,
         };
@@ -1051,6 +1042,34 @@ if (!customElements.get('product-customization-options')) {
         }
 
         return productOptions;
+      }
+
+      buildCartItems(productProperties) {
+        const mainVariantId = Number(this.modifyID.split(':')[0]);
+        const mainItem = {
+          id: mainVariantId,
+          quantity: Number(this.quantityInput?.value || 1),
+          properties: productProperties,
+        };
+
+        const addonItems = this.prepareFunctionalProperties()
+          .map((option) => {
+            const id = Number(String(option.variantId || '').split('ProductVariant/')[1]);
+            const quantity = Number(option.quantity || 1);
+            return { id, quantity };
+          })
+          .filter((item) => Number.isFinite(item.id) && item.id > 0 && item.id !== mainVariantId && item.quantity > 0)
+          .reduce((acc, item) => {
+            const existing = acc.find((entry) => entry.id === item.id);
+            if (existing) {
+              existing.quantity += item.quantity;
+            } else {
+              acc.push(item);
+            }
+            return acc;
+          }, []);
+
+        return [mainItem, ...addonItems];
       }
 
       // If condistionals option is present and some elements are hidden. We hide the in modify popup

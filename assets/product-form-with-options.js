@@ -40,19 +40,10 @@ if (!customElements.get('product-form-with-options')) {
         this.cart?.setActiveElement(document.activeElement);
         const url = `${window.Shopify.routes.root}cart/add.js`;
 
-        const productProperties = {
-          ...this.prepareOptions(),
-          _functionOperation: this.prepareFunctionalProperties(),
-        };
+        const productProperties = this.prepareOptions();
 
         const bodyRequest = {
-          items: [
-            {
-              id: this.variantIdInput.value,
-              quantity: this.quantityInput.value || 1,
-              properties: productProperties,
-            },
-          ],
+          items: this.buildCartItems(productProperties),
           sections: this.cart.getSectionsToRender().map((section) => section.id),
           sections_url: window.location.pathname,
         };
@@ -263,6 +254,34 @@ if (!customElements.get('product-form-with-options')) {
         }
 
         return productOptions;
+      }
+
+      buildCartItems(productProperties) {
+        const mainVariantId = Number(this.variantIdInput.value);
+        const mainItem = {
+          id: mainVariantId,
+          quantity: Number(this.quantityInput.value || 1),
+          properties: productProperties,
+        };
+
+        const addonItems = this.prepareFunctionalProperties()
+          .map((option) => {
+            const id = Number(String(option.variantId || '').split('ProductVariant/')[1]);
+            const quantity = Number(option.quantity || 1);
+            return { id, quantity };
+          })
+          .filter((item) => Number.isFinite(item.id) && item.id > 0 && item.id !== mainVariantId && item.quantity > 0)
+          .reduce((acc, item) => {
+            const existing = acc.find((entry) => entry.id === item.id);
+            if (existing) {
+              existing.quantity += item.quantity;
+            } else {
+              acc.push(item);
+            }
+            return acc;
+          }, []);
+
+        return [mainItem, ...addonItems];
       }
 
       checkMandatoryFields() {
