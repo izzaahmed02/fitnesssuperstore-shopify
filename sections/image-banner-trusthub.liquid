@@ -1,0 +1,482 @@
+{% comment %}
+  Custom Image Banner Section for Shopify Dawn Theme
+{% endcomment %}
+
+<style>
+  .custom-banner {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 24px;
+    min-height: {{ section.settings.banner_height_mobile }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .custom-banner {
+      min-height: {{ section.settings.banner_height_desktop }}px;
+    }
+  }
+
+  .custom-banner__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+
+  .custom-banner__image--desktop {
+    display: none;
+  }
+
+  .custom-banner__image--mobile {
+    display: block;
+  }
+
+  @media screen and (min-width: 750px) {
+    .custom-banner__image--desktop {
+      display: block;
+    }
+    .custom-banner__image--mobile {
+      display: none;
+    }
+  }
+
+  .custom-banner__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, {{ section.settings.overlay_opacity | divided_by: 100.0 }});
+  }
+
+  .custom-banner__content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    min-height: {{ section.settings.banner_height_mobile }}px;
+    padding: 40px 32px;
+    box-sizing: border-box;
+  }
+
+  .banner-trusthub {
+    padding: 16px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .custom-banner__content {
+      min-height: {{ section.settings.banner_height_desktop }}px;
+      padding: 48px;
+    }
+  }
+
+  .custom-banner__text-box {
+    max-width: 555px;
+    width: 100%;
+  }
+
+  .custom-banner__title {
+    font-size: {{ section.settings.title_size_mobile }}px;
+    font-weight: 800;
+    color: {{ section.settings.text_color }};
+    margin: 0 0 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 0px;
+    line-height: 34px;
+    text-align:left;
+  }
+
+  @media screen and (min-width: 750px) {
+    .custom-banner__title {
+      font-size: {{ section.settings.title_size_desktop }}px;
+      margin: 0 0 12px 0;
+      text-transform: uppercase;
+      letter-spacing: 0px;
+      line-height: 68px;
+      text-align: left;
+    }
+  }
+
+  .custom-banner__description {
+    font-size: 16px;
+    line-height: 24px;
+    color: {{ section.settings.text_color }};
+    margin: 0 0 28px 0;
+    max-width: 555px;
+    
+  }
+
+  @media screen and (min-width: 750px) {
+    .custom-banner__description {
+      font-size: 16px;
+      line-height: 24px;
+      letter-spacing: 0px;
+      max-width: 555px;
+      text-align: left;
+      margin: 0 0 32px 0;
+      }
+  }
+
+  .custom-banner__buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+  }
+
+  @media screen and (min-width: 750px) {
+    .custom-banner__buttons {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 16px;
+      width: auto;
+    }
+  }
+
+  .custom-banner__btn {
+    font-family: var(--font-body-family);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    letter-spacing: 0px;
+    width: 100%;
+    box-sizing: border-box;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  @media screen and (min-width: 750px) {
+    .custom-banner__btn {
+      width: auto;
+      min-width: 200px;
+      margin: unset;
+    }
+  }
+
+  .custom-banner__btn--primary {
+    background-color: {{ section.settings.btn_primary_bg }};
+    color: {{ section.settings.btn_primary_text }};
+  }
+
+  .custom-banner__btn--secondary {
+    background-color: {{ section.settings.btn_secondary_bg }};
+    color: {{ section.settings.btn_secondary_text }};
+  }
+
+  /* Section spacing */
+  .custom-banner-wrapper {
+    padding-top: {{ section.settings.padding_top_mobile }}px;
+    padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .custom-banner-wrapper {
+      padding-top: {{ section.settings.padding_top_desktop }}px;
+      padding-bottom: {{ section.settings.padding_bottom_desktop }}px;
+    }
+  }
+</style>
+
+<div class="custom-banner-wrapper">
+  <div class="custom-banner color-{{ section.settings.color_scheme }} gradient">
+
+    {%- if section.settings.desktop_image != blank -%}
+      {%- assign desktop_img_url = section.settings.desktop_image | image_url: width: 1920 -%}
+      <img
+        src="{{ desktop_img_url }}"
+        class="custom-banner__image custom-banner__image--desktop"
+        alt="{{ section.settings.desktop_image.alt | escape }}"
+        loading="lazy"
+        width="{{ section.settings.desktop_image.width }}"
+        height="{{ section.settings.desktop_image.height }}"
+      >
+    {%- else -%}
+      {{ 'lifestyle-1' | placeholder_svg_tag: 'custom-banner__image custom-banner__image--desktop placeholder' }}
+    {%- endif -%}
+
+    {%- if section.settings.mobile_image != blank -%}
+      {%- assign mobile_img_url = section.settings.mobile_image | image_url: width: 800 -%}
+      <img
+        src="{{ mobile_img_url }}"
+        class="custom-banner__image custom-banner__image--mobile"
+        alt="{{ section.settings.mobile_image.alt | escape }}"
+        loading="lazy"
+        width="{{ section.settings.mobile_image.width }}"
+        height="{{ section.settings.mobile_image.height }}"
+      >
+    {%- elsif section.settings.desktop_image != blank -%}
+      {%- assign mobile_fallback_url = section.settings.desktop_image | image_url: width: 800 -%}
+      <img
+        src="{{ mobile_fallback_url }}"
+        class="custom-banner__image custom-banner__image--mobile"
+        alt="{{ section.settings.desktop_image.alt | escape }}"
+        loading="lazy"
+        width="{{ section.settings.desktop_image.width }}"
+        height="{{ section.settings.desktop_image.height }}"
+      >
+    {%- else -%}
+      {{ 'lifestyle-1' | placeholder_svg_tag: 'custom-banner__image custom-banner__image--mobile placeholder' }}
+    {%- endif -%}
+
+    <div class="custom-banner__overlay"></div>
+
+    <div class="custom-banner__content">
+      <div class="custom-banner__text-box">
+
+        {%- if section.settings.title != blank -%}
+          <h2 class="custom-banner__title">{{ section.settings.title }}</h2>
+        {%- endif -%}
+
+        {%- if section.settings.description != blank -%}
+          <p class="custom-banner__description">{{ section.settings.description }}</p>
+        {%- endif -%}
+
+        {%- if section.settings.btn1_label != blank or section.settings.btn2_label != blank -%}
+          <div class="custom-banner__buttons">
+            {%- if section.settings.btn1_label != blank -%}
+              <a href="{{ section.settings.btn1_link }}" class="custom-banner__btn custom-banner__btn--primary">
+                {{ section.settings.btn1_label }}
+              </a>
+            {%- endif -%}
+            {%- if section.settings.btn2_label != blank -%}
+              <a href="{{ section.settings.btn2_link }}" class="custom-banner__btn custom-banner__btn--secondary">
+                {{ section.settings.btn2_label }}
+              </a>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Image Banner Trust Hub",
+  "tag": "section",
+  "class": "section banner-trusthub",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Images"
+    },
+    {
+      "type": "image_picker",
+      "id": "desktop_image",
+      "label": "Desktop Image"
+    },
+    {
+      "type": "image_picker",
+      "id": "mobile_image",
+      "label": "Mobile Image",
+      "info": "Falls back to desktop image if not set"
+    },
+    {
+      "type": "header",
+      "content": "Banner Height"
+    },
+    {
+      "type": "range",
+      "id": "banner_height_desktop",
+      "label": "Desktop Height (px)",
+      "min": 300,
+      "max": 900,
+      "step": 20,
+      "default": 500
+    },
+    {
+      "type": "range",
+      "id": "banner_height_mobile",
+      "label": "Mobile Height (px)",
+      "min": 300,
+      "max": 700,
+      "step": 20,
+      "default": 500
+    },
+    {
+      "type": "header",
+      "content": "Section Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_desktop",
+      "label": "Desktop Padding Top (px)",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_desktop",
+      "label": "Desktop Padding Bottom (px)",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Mobile Padding Top (px)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Mobile Padding Bottom (px)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Overlay"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay Opacity (%)",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "default": 50
+    },
+    {
+      "type": "header",
+      "content": "Text Content"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "WHY CUSTOMERS TRUST FITNESS SUPERSTORE"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Description",
+      "default": "You're not just shopping for equipment. You're building a home gym that keeps you consistent, outfitting a facility your community depends on, or upgrading a space that reflects your standards."
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "title_size_desktop",
+      "label": "Title Size Desktop (px)",
+      "min": 24,
+      "max": 80,
+      "step": 2,
+      "default": 52
+    },
+    {
+      "type": "range",
+      "id": "title_size_mobile",
+      "label": "Title Size Mobile (px)",
+      "min": 20,
+      "max": 56,
+      "step": 2,
+      "default": 36
+    },
+    {
+      "type": "header",
+      "content": "Button 1 (Primary)"
+    },
+    {
+      "type": "text",
+      "id": "btn1_label",
+      "label": "Button 1 Label",
+      "default": "Shop Remanufactured"
+    },
+    {
+      "type": "url",
+      "id": "btn1_link",
+      "label": "Button 1 Link"
+    },
+    {
+      "type": "color",
+      "id": "btn_primary_bg",
+      "label": "Button 1 Background",
+      "default": "#e8461a"
+    },
+    {
+      "type": "color",
+      "id": "btn_primary_text",
+      "label": "Button 1 Text Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Button 2 (Secondary)"
+    },
+    {
+      "type": "text",
+      "id": "btn2_label",
+      "label": "Button 2 Label",
+      "default": "Shop New Equipment"
+    },
+    {
+      "type": "url",
+      "id": "btn2_link",
+      "label": "Button 2 Link"
+    },
+    {
+      "type": "color",
+      "id": "btn_secondary_bg",
+      "label": "Button 2 Background",
+      "default": "#e8461a"
+    },
+    {
+      "type": "color",
+      "id": "btn_secondary_text",
+      "label": "Button 2 Text Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Section Settings"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        { "value": "accent-1", "label": "Accent 1" },
+        { "value": "accent-2", "label": "Accent 2" },
+        { "value": "background-1", "label": "Background 1" },
+        { "value": "background-2", "label": "Background 2" },
+        { "value": "inverse", "label": "Inverse" }
+      ],
+      "default": "background-1",
+      "label": "Color scheme"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image Banner Trust Hub"
+    }
+  ]
+}
+{% endschema %}
