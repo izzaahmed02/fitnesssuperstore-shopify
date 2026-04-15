@@ -806,13 +806,19 @@
                     </div>
                   {% endif %}
                 </div>
+      
+
                 {% assign metaObject3rdParty = product.metafields.custom['3rd_party'].value %}
-                {% if metaObject3rdParty != blank and metaObject3rdParty.google_material contains 'display' %}
-                  <div class="showroom">
-                    <div class="img-wrap">{% render 'icon-bigcheck' %}</div>
-                    <span class="showroom-text">On Display in Store — Benicia California Showroom</span>
-                  </div>
-                {% endif %}
+                  {% if metaObject3rdParty != blank and metaObject3rdParty.google_material != blank %}
+                    {% assign value = metaObject3rdParty.google_material | downcase %}
+                    {% if value == 'on display in benicia' %}
+                      <div class="showroom">
+                        <div class="img-wrap">{% render 'icon-bigcheck' %}</div>
+                        <span class="showroom-text">On Display in Store — Benicia California Showroom</span>
+                      </div>
+                    {% endif %}
+                  {% endif %}
+
               {%- when 'text' -%}
                 <p
                   class="product__text inline-richtext{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}"
