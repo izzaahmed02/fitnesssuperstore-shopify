@@ -362,17 +362,55 @@
 
 document.addEventListener('DOMContentLoaded', function () {
   if (window.innerWidth <= 749) {
-    const firstItem = document.querySelector('.scrollable-faq__item--mob');
-    const firstButton = document.querySelector('.scrollable-faq__nav button');
 
-    if (firstItem) {
-      firstItem.classList.add('visible');
-      firstItem.style.height = firstItem.scrollHeight + 'px';
+    const buttons = document.querySelectorAll('.scrollable-faq__nav button');
+    const items = document.querySelectorAll('.scrollable-faq__item--mob');
+
+    // 👉 Function to close all
+    function closeAll() {
+      items.forEach(item => {
+        item.classList.remove('visible');
+        item.style.height = '0px';
+      });
+
+      buttons.forEach(btn => btn.classList.remove('active'));
     }
 
-    if (firstButton) {
-      firstButton.classList.add('active');
+    // 👉 Function to open one
+    function openItem(index) {
+      const item = items[index];
+      const btn = buttons[index];
+
+      if (!item) return;
+
+      item.classList.add('visible');
+      item.style.height = item.scrollHeight + 'px';
+
+      if (btn) btn.classList.add('active');
     }
+
+    // ✅ Open FIRST by default
+    window.addEventListener('load', function () {
+      openItem(0);
+    });
+
+    // ✅ Click behavior (accordion)
+    buttons.forEach((btn, index) => {
+      btn.addEventListener('click', function () {
+
+        const item = items[index];
+        const isOpen = item.classList.contains('visible');
+
+        // Close all first
+        closeAll();
+
+        // Toggle current
+        if (!isOpen) {
+          openItem(index);
+        }
+      });
+    });
+
   }
 });
     </script>
