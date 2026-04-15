@@ -366,9 +366,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const buttons = document.querySelectorAll('.scrollable-faq__nav button');
   const items = document.querySelectorAll('.scrollable-faq__item--mob');
 
-  if (!items.length) return;
+  if (!buttons.length || !items.length) return;
 
-  // 👉 Close all
   function closeAll() {
     items.forEach(item => {
       item.classList.remove('visible');
@@ -378,54 +377,27 @@ document.addEventListener('DOMContentLoaded', function () {
     buttons.forEach(btn => btn.classList.remove('active'));
   }
 
-  // 👉 Open item safely
-  function openItem(index, skipAnimation = false) {
-    const item = items[index];
-    const btn = buttons[index];
+  function openItem(i) {
+    const item = items[i];
+    const btn = buttons[i];
 
     if (!item) return;
 
+    closeAll();
+
     item.classList.add('visible');
-
-    // 🔥 Force instant height on first load (no jump)
-    if (skipAnimation) {
-      item.style.transition = 'none';
-      item.style.height = item.scrollHeight + 'px';
-
-      // restore transition
-      setTimeout(() => {
-        item.style.transition = '';
-      }, 50);
-    } else {
-      item.style.height = item.scrollHeight + 'px';
-    }
+    item.style.height = item.scrollHeight + 'px';
 
     if (btn) btn.classList.add('active');
   }
 
-  // ✅ STEP 1: Open first instantly (no layout shift)
-  openItem(0, true);
+  // 👉 open first on load
+  openItem(0);
 
-  // ✅ STEP 2: Recalculate after images load (fix wrong height)
-  window.addEventListener('load', function () {
-    const firstItem = items[0];
-    if (firstItem && firstItem.classList.contains('visible')) {
-      firstItem.style.height = firstItem.scrollHeight + 'px';
-    }
-  });
-
-  // ✅ STEP 3: Accordion click (single open)
-  buttons.forEach((btn, index) => {
-    btn.addEventListener('click', function () {
-
-      const item = items[index];
-      const isOpen = item.classList.contains('visible');
-
-      closeAll();
-
-      if (!isOpen) {
-        openItem(index);
-      }
+  // 👉 click accordion
+  buttons.forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      openItem(i);
     });
   });
 
