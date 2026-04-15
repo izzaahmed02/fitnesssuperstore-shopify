@@ -361,57 +361,74 @@
 <script>
 
 document.addEventListener('DOMContentLoaded', function () {
-  if (window.innerWidth <= 749) {
+  if (window.innerWidth > 749) return;
 
-    const buttons = document.querySelectorAll('.scrollable-faq__nav button');
-    const items = document.querySelectorAll('.scrollable-faq__item--mob');
+  const buttons = document.querySelectorAll('.scrollable-faq__nav button');
+  const items = document.querySelectorAll('.scrollable-faq__item--mob');
 
-    // 👉 Function to close all
-    function closeAll() {
-      items.forEach(item => {
-        item.classList.remove('visible');
-        item.style.height = '0px';
-      });
+  if (!items.length) return;
 
-      buttons.forEach(btn => btn.classList.remove('active'));
-    }
+  // 👉 Close all
+  function closeAll() {
+    items.forEach(item => {
+      item.classList.remove('visible');
+      item.style.height = '0px';
+    });
 
-    // 👉 Function to open one
-    function openItem(index) {
-      const item = items[index];
-      const btn = buttons[index];
+    buttons.forEach(btn => btn.classList.remove('active'));
+  }
 
-      if (!item) return;
+  // 👉 Open item safely
+  function openItem(index, skipAnimation = false) {
+    const item = items[index];
+    const btn = buttons[index];
 
-      item.classList.add('visible');
+    if (!item) return;
+
+    item.classList.add('visible');
+
+    // 🔥 Force instant height on first load (no jump)
+    if (skipAnimation) {
+      item.style.transition = 'none';
       item.style.height = item.scrollHeight + 'px';
 
-      if (btn) btn.classList.add('active');
+      // restore transition
+      setTimeout(() => {
+        item.style.transition = '';
+      }, 50);
+    } else {
+      item.style.height = item.scrollHeight + 'px';
     }
 
-    // ✅ Open FIRST by default
-    window.addEventListener('load', function () {
-      openItem(0);
-    });
-
-    // ✅ Click behavior (accordion)
-    buttons.forEach((btn, index) => {
-      btn.addEventListener('click', function () {
-
-        const item = items[index];
-        const isOpen = item.classList.contains('visible');
-
-        // Close all first
-        closeAll();
-
-        // Toggle current
-        if (!isOpen) {
-          openItem(index);
-        }
-      });
-    });
-
+    if (btn) btn.classList.add('active');
   }
+
+  // ✅ STEP 1: Open first instantly (no layout shift)
+  openItem(0, true);
+
+  // ✅ STEP 2: Recalculate after images load (fix wrong height)
+  window.addEventListener('load', function () {
+    const firstItem = items[0];
+    if (firstItem && firstItem.classList.contains('visible')) {
+      firstItem.style.height = firstItem.scrollHeight + 'px';
+    }
+  });
+
+  // ✅ STEP 3: Accordion click (single open)
+  buttons.forEach((btn, index) => {
+    btn.addEventListener('click', function () {
+
+      const item = items[index];
+      const isOpen = item.classList.contains('visible');
+
+      closeAll();
+
+      if (!isOpen) {
+        openItem(index);
+      }
+    });
+  });
+
 });
     </script>
 
