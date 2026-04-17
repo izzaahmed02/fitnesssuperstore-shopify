@@ -40,19 +40,7 @@
         top: 0;
         left: -38px;
     }
-
-    /* Override any theme accordion styles scoped to this section */
-    .section-{{ section.id }} .accordion-content {
-        max-height: 0 !important;
-        overflow: hidden !important;
-        transition: max-height 0.35s ease !important;
-    }
-
-    .section-{{ section.id }} .accordion-content.is-open {
-        max-height: 2000px !important;
-    }
 </style>
-
 <div class="section-{{ section.id }} page-width scroll-trigger animate--slide-in">
     <div class="container">
         <div class="delivery-first-acc__wrapper">
@@ -69,37 +57,38 @@
                                 class="accordion-header"
                                 type="button"
                                 aria-expanded="false"
-                                aria-controls="accordion-content-{{ section.id }}-{{ forloop.index }}">
-                            <span class="accordion-title">
-                                {{ block.settings.title }}
-                            </span>
+                                aria-controls="accordion-content-{{ forloop.index }}">
+
+                                <span class="accordion-title">
+                                  {{ block.settings.title }}
+                                </span>
                             {% render 'chevron' %}
                         </button>
 
                         <div
-                                id="accordion-content-{{ section.id }}-{{ forloop.index }}"
+                                id="accordion-content-{{ forloop.index }}"
                                 class="accordion-content"
                                 aria-hidden="true"
                         >
                             <div class="accordion-content-inner">
                                 {{ block.settings.subcopy }}
                                 {% if forloop.index == 2 %}
-                                    <div class="delivery-accordion-item delivery-accordion-item--sub">
+                                    <div class="delivery-accordion-item">
                                         <button
-                                                class="accordion-header accordion-header--sub"
+                                                class="accordion-header"
                                                 type="button"
-                                                aria-expanded="false"
-                                                aria-controls="accordion-subcontent-{{ section.id }}-{{ forloop.index }}">
+                                                aria-expanded="true"
+                                                aria-controls="accordion-content-{{ forloop.index }}">
                                             {% render 'subchevron' %}
                                             <span class="accordion-title">
-                                                {{ block.settings.subtitle }}
-                                            </span>
+                                  {{ block.settings.subtitle }}
+                                </span>
                                         </button>
 
                                         <div
-                                                id="accordion-subcontent-{{ section.id }}-{{ forloop.index }}"
-                                                class="accordion-content accordion-content--sub"
-                                                aria-hidden="true"
+                                                id="accordion-content-{{ forloop.index }}"
+                                                class="accordion-content"
+                                                aria-hidden="false"
                                         >
                                             <div class="accordion-content-inner">
                                                 {% if block.settings.subimage != blank %}
@@ -125,41 +114,6 @@
         </div>
     </div>
 </div>
-
-<script>
-  (function () {
-    var section = document.querySelector('.section-{{ section.id }}');
-    if (!section) return;
-
-    section.addEventListener('click', function (e) {
-      var btn = e.target.closest('.accordion-header');
-      if (!btn) return;
-
-      // Stop the click bubbling up so a sub-accordion click
-      // doesn't also trigger the parent accordion toggle
-      e.stopPropagation();
-
-      var controlsId = btn.getAttribute('aria-controls');
-      var content = document.getElementById(controlsId);
-      if (!content) return;
-
-      var isExpanded = btn.getAttribute('aria-expanded') === 'true';
-
-      if (isExpanded) {
-        // Close
-        btn.setAttribute('aria-expanded', 'false');
-        content.setAttribute('aria-hidden', 'true');
-        content.classList.remove('is-open');
-      } else {
-        // Open
-        btn.setAttribute('aria-expanded', 'true');
-        content.setAttribute('aria-hidden', 'false');
-        content.classList.add('is-open');
-      }
-    });
-  })();
-</script>
-
 {% schema %}
 {
   "name": "Third Accordion Section",
@@ -211,7 +165,7 @@
         {
           "type": "image_picker",
           "id": "subimage",
-          "label": "Block Subaccordion Image"
+          "label": "Block Subaccorion Image"
         }
       ]
     }
