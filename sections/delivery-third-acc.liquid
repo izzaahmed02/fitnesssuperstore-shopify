@@ -41,15 +41,69 @@
         left: -38px;
     }
 
-    /* Sub-accordion transition — mirrors Dawn's own timing */
-    .section-{{ section.id }} #accordion-subcontent-{{ section.id }} {
-        overflow: hidden;
-        max-height: 0;
-        transition: max-height 0.4s ease;
+    /* Re-apply all .accordion-header base styles to sub-accordion-header */
+    .sub-accordion-header {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        width: 100%;
+        cursor: pointer;
+        border: none;
+        outline: none;
+        text-align: left;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+        padding: 12px;
+        background-color: transparent;
+        column-gap: 2px;
     }
 
-    .section-{{ section.id }} #accordion-subcontent-{{ section.id }}[aria-hidden="false"] {
+    .sub-accordion-header .accordion-title {
+        color: #D83D0E;
+        font-size: 9px;
+        line-height: 11px;
+    }
+
+    .sub-accordion-header .accordion-chevron {
+        transform: rotate(180deg);
+        transition: transform 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .sub-accordion-header[aria-expanded="true"] .accordion-chevron {
+        transform: rotate(0deg);
+    }
+
+    /* Sub-accordion open/close transition */
+    #accordion-subcontent-{{ forloop.index }} {
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.3s ease;
+    }
+
+    #accordion-subcontent-{{ forloop.index }}[aria-hidden="false"] {
         max-height: 600px;
+    }
+
+    /* Border override for sub item */
+    .delivery-accordion-item:has(> .sub-accordion-header[aria-expanded="true"]) {
+        border: 1px solid #E5E5E5;
+    }
+
+    /* Image style inside sub-accordion */
+    .delivery-accordion-item .sub-accordion-header ~ .accordion-content .accordion-content-image {
+        border-radius: 0;
+    }
+
+    @media (max-width: 749px) {
+        .sub-accordion-header {
+            column-gap: 8px;
+        }
+
+        .delivery-accordion-item .sub-accordion-header ~ .accordion-content .accordion-content-image {
+            min-height: 180px;
+            object-fit: contain;
+        }
     }
 </style>
 
@@ -86,7 +140,7 @@
                                 {% if forloop.index == 2 %}
                                     <div class="delivery-accordion-item">
                                         <button
-                                                class="accordion-header sub-accordion-header"
+                                                class="sub-accordion-header"
                                                 type="button"
                                                 aria-expanded="false"
                                                 aria-controls="accordion-subcontent-{{ forloop.index }}">
