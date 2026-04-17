@@ -41,6 +41,7 @@
         left: -38px;
     }
 </style>
+
 <div class="section-{{ section.id }} page-width scroll-trigger animate--slide-in">
     <div class="container">
         <div class="delivery-first-acc__wrapper">
@@ -57,38 +58,37 @@
                                 class="accordion-header"
                                 type="button"
                                 aria-expanded="false"
-                                aria-controls="accordion-content-{{ forloop.index }}">
-
-                                <span class="accordion-title">
-                                  {{ block.settings.title }}
-                                </span>
+                                aria-controls="accordion-content-{{ section.id }}-{{ forloop.index }}">
+                            <span class="accordion-title">
+                                {{ block.settings.title }}
+                            </span>
                             {% render 'chevron' %}
                         </button>
 
                         <div
-                                id="accordion-content-{{ forloop.index }}"
+                                id="accordion-content-{{ section.id }}-{{ forloop.index }}"
                                 class="accordion-content"
                                 aria-hidden="true"
                         >
                             <div class="accordion-content-inner">
                                 {{ block.settings.subcopy }}
                                 {% if forloop.index == 2 %}
-                                    <div class="delivery-accordion-item">
+                                    <div class="delivery-accordion-item delivery-accordion-item--sub">
                                         <button
-                                                class="accordion-header"
+                                                class="accordion-header accordion-header--sub"
                                                 type="button"
-                                                aria-expanded="true"
-                                                aria-controls="accordion-content-{{ forloop.index }}">
+                                                aria-expanded="false"
+                                                aria-controls="accordion-subcontent-{{ section.id }}-{{ forloop.index }}">
                                             {% render 'subchevron' %}
                                             <span class="accordion-title">
-                                  {{ block.settings.subtitle }}
-                                </span>
+                                                {{ block.settings.subtitle }}
+                                            </span>
                                         </button>
 
                                         <div
-                                                id="accordion-content-{{ forloop.index }}"
-                                                class="accordion-content"
-                                                aria-hidden="false"
+                                                id="accordion-subcontent-{{ section.id }}-{{ forloop.index }}"
+                                                class="accordion-content accordion-content--sub"
+                                                aria-hidden="true"
                                         >
                                             <div class="accordion-content-inner">
                                                 {% if block.settings.subimage != blank %}
@@ -114,6 +114,28 @@
         </div>
     </div>
 </div>
+
+<script>
+  (function () {
+    var section = document.querySelector('.section-{{ section.id }}');
+    if (!section) return;
+
+    section.addEventListener('click', function (e) {
+      var btn = e.target.closest('.accordion-header');
+      if (!btn) return;
+
+      var controlsId = btn.getAttribute('aria-controls');
+      var content = document.getElementById(controlsId);
+      if (!content) return;
+
+      var isExpanded = btn.getAttribute('aria-expanded') === 'true';
+
+      btn.setAttribute('aria-expanded', String(!isExpanded));
+      content.setAttribute('aria-hidden', String(isExpanded));
+    });
+  })();
+</script>
+
 {% schema %}
 {
   "name": "Third Accordion Section",
@@ -165,7 +187,7 @@
         {
           "type": "image_picker",
           "id": "subimage",
-          "label": "Block Subaccorion Image"
+          "label": "Block Subaccordion Image"
         }
       ]
     }
