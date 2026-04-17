@@ -55,14 +55,11 @@
   {% endif %}
 >
   {{ 'section-main-product.css' | asset_url | stylesheet_tag }}
-  <link rel="stylesheet" href="{{ 'component-accordion.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'component-accordion.css' | asset_url | stylesheet_tag }}</noscript>
+  {{ 'component-accordion.css' | asset_url | stylesheet_tag }}
   {{ 'component-price.css' | asset_url | stylesheet_tag }}
   {{ 'component-slider.css' | asset_url | stylesheet_tag }}
-  <link rel="stylesheet" href="{{ 'component-rating.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'component-rating.css' | asset_url | stylesheet_tag }}</noscript>
-  <link rel="stylesheet" href="{{ 'component-deferred-media.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}</noscript>
+  {{ 'component-rating.css' | asset_url | stylesheet_tag }}
+  {{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
 
   {% unless product.has_only_default_variant %}
     {{ 'component-product-variant-picker.css' | asset_url | stylesheet_tag }}
@@ -73,13 +70,24 @@
     {{ 'component-volume-pricing.css' | asset_url | stylesheet_tag }}
   {%- endif -%}
 
-  <link rel="stylesheet" href="{{ 'avis-custom.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'avis-custom.css' | asset_url | stylesheet_tag }}</noscript>
+  {{ 'avis-custom.css' | asset_url | stylesheet_tag }}
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
   {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
-  <link rel="stylesheet" href="{{ 'paylater-modal.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'paylater-modal.css' | asset_url | stylesheet_tag }}</noscript>
+  {{ 'paylater-modal.css' | asset_url | stylesheet_tag }}
+  
+  {% assign hide_product_options = false %}
+  {% for item in cart.items %}
+    {% for property in item.properties %}
+      {% if property.first == '_functionOperation' %}
+        {% assign hide_product_options = true %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  {% unless hide_product_options %}
+    {{ 'product-options.css' | asset_url | stylesheet_tag }}
+  {% endunless %}
 
   {%- style -%}
     .section-{{ section.id }}-padding {
@@ -143,11 +151,6 @@
   {%- endif -%}
   {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
 
-  {% assign is_gift_cards_template = false %}
-  {% if template.suffix == 'gift_cards' %}
-    {% assign is_gift_cards_template = true %}
-  {% endif %}
-
 
   {% comment %} pdp-page-width main-container {% endcomment %}
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
@@ -157,22 +160,21 @@
             {%- case block.type -%}
               {%- when 'title' -%}
                 <div class="product__title" {{ block.shopify_attributes }}>
-                   {% if is_gift_cards_template %}
-                    <h2>{{ product.title | escape }}</h2>
-                  {% else %}
-                    <h2>{{ product.title | escape }}</h2>
-                    <a href="{{ product.url }}" class="product__title">
-                      <h2 class="h1">
-                        {{ product.title | escape }}
-                      </h2>
-                    </a>
-                  {% endif %}
+                  <h2>{{ product.title | escape }}</h2>
+                  <a href="{{ product.url }}" class="product__title">
+                    <h2 class="h1">
+                      {{ product.title | escape }}
+                    </h2>
+                  </a>
                 </div>
               {%- when 'review_widget' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
-                  {% unless is_gift_cards_template %}
               <div class="available-wrap">
-
+                <div class="sa-reviews">
+                  {% render 'icon-rstar' %}
+                  <div class="review_header"></div>
+                  <div id="product_just_stars" class="reg"></div>
+                </div>
                 {% if product.metafields.custom.backorder == true %}
                   <div class="badge backorder-badge stock-badge">
                       <span>Available to Pre-Order</span>
@@ -187,13 +189,11 @@
                   </div>
                 {% endif %}
               </div>
-                {% endunless %}
               {% endunless %}
               {% when 'price' %}
-                {% unless is_gift_cards_template %}
-                  <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
-                {% endunless %}
+                <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
 
+                {% comment %}
                 {% assign campaign_text = '' %}
 
                 {% if product.title contains 'French Fitness' %}
@@ -209,17 +209,16 @@
                     <p>{{ campaign_text | escape }}</p>
                   </div>
                 {% endunless %}
+                {% endcomment %}
 
                 <div class="product__prices here">
                   {%comment %}
                   {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
                    {%endcomment %}
-                    {% unless is_gift_cards_template %}
-                      <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
-                        >As high as:
-                        <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-                      </span>
-                    {% endunless %}
+                    <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
+                      >As high as:
+                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
+                    </span>
                     {% comment %}
                   {% endif %}
                    {%endcomment %}
@@ -448,11 +447,7 @@
           </script>
         </product-gallery>
 
-        {%- liquid
-          assign mobile_gallery_featured_media = product.selected_or_first_available_variant.featured_media | default: product.featured_media | default: product.media.first
-          assign mobile_gallery_aspect_ratio = mobile_gallery_featured_media.preview_image.aspect_ratio | default: mobile_gallery_featured_media.aspect_ratio | default: 1
-        -%}
-        <mobile-gallery style="--mobile-gallery-aspect-ratio: {{ mobile_gallery_aspect_ratio }};">
+        <mobile-gallery>
           <div class="mobile-gallery-wrapper only-mobile">
             <div class="main-slider-arrow--left" type="button">
               <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -654,20 +649,16 @@
                       </div>
                     </div>
                   {% endif %}
-                {% assign current_variant = product.selected_or_first_available_variant %}
-{% if current_variant.metafields.custom.processing_time_long_variant != blank or product.metafields.custom.processing_time_long != blank %}
-  <div class="item">
-    <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
-    <div class="item__text">
-      <span class="title">Processing Time:</span>
-      <span id="ProcessingTime-{{ section.id }}" data-sku="{{ current_variant.sku }}">
-        {{ current_variant.metafields.custom.processing_time_long_variant | default: product.metafields.custom.processing_time_long }}
-      </span>
-      <span class="more-info" data-customfield="Processing Time" data-processingtime="{{ current_variant.metafields.custom.processing_time_long_variant }}">(More Info)</span>
-    </div>
-  </div>
-{% endif %}
-
+                  {% if product.metafields.custom.processing_time != blank %}
+                    <div class="item">
+                      <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
+                      <div class="item__text">
+                        <span class="title">Processing Time:</span>
+                        {{ product.metafields.custom.processing_time_long }}
+                        <span class="more-info" data-customfield="Processing Time" data-processingtime="{{ product.metafields.custom.processing_time }}">(More Info)</span>
+                      </div>
+                    </div>
+                  {% endif %}
                   {% if product.metafields.custom.product_code != blank %}
                     <div class="item">
                       <div class="item__icon-wrap">{% render 'icon-hashtag' %}</div>
@@ -687,18 +678,13 @@
                     </div>
                   {% endif %}
                 </div>
-
                 {% assign metaObject3rdParty = product.metafields.custom['3rd_party'].value %}
-                  {% if metaObject3rdParty != blank and metaObject3rdParty.google_material != blank %}
-                    {% assign value = metaObject3rdParty.google_material | downcase %}
-                    {% if value == 'on display in benicia' %}
-                      <div class="showroom">
-                        <div class="img-wrap">{% render 'icon-bigcheck' %}</div>
-                        <span class="showroom-text">On Display in Store — Benicia California Showroom</span>
-                      </div>
-                    {% endif %}
-                  {% endif %}
-               
+                {% if metaObject3rdParty != blank and metaObject3rdParty.google_material contains 'display' %}
+                  <div class="showroom">
+                    <div class="img-wrap">{% render 'icon-bigcheck' %}</div>
+                    <span class="showroom-text">On Display at our Northern California Warehouse Showroom</span>
+                  </div>
+                {% endif %}
               {%- when 'text' -%}
                 <p
                   class="product__text inline-richtext{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}"
@@ -708,19 +694,16 @@
                 </p>
               {%- when 'title' -%}
                 <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
-                  {% if is_gift_cards_template %}
-                    <h1>{{ product.title | escape }}</h1>
-                  {% else %}
-                    <h1>{{ product.title | escape }}</h1>
-                    <a href="{{ product.url }}" class="product__title">
-                      <h2 class="h1">
-                        {{ product.title | escape }}
-                      </h2>
-                    </a>
-                  {% endif %}
+                  <h1>{{ product.title | escape }}</h1>
+                  <a href="{{ product.url }}" class="product__title">
+                    <h2 class="h1">
+                      {{ product.title | escape }}
+                    </h2>
+                  </a>
                 </div>
               {% when 'price' %}
 
+{% comment %}
 {% assign campaign_text = '' %}
 
 {% if product.title contains 'French Fitness' %}
@@ -735,16 +718,15 @@
   <div class="campaign-sale-container hide-on-mobile">
     <p>{{ campaign_text | escape }}</p>
   </div>
-{% endunless %}
+{% endunless %} 
+{% endcomment %}
 
                 <div class="product__prices hidden lg:block">
 
-                     {% unless is_gift_cards_template %}
-                      <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
-                        >As high as:
-                        <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-                      </span>
-                    {% endunless %}
+                    <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
+                      >As high as:
+                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
+                    </span>
 
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
@@ -772,10 +754,7 @@
                 </div>
 
 
-             {% unless is_gift_cards_template %}
-                {% render 'paylater-providers' %}
-              {% endunless %}
-
+              {% render 'paylater-providers' %}
               {%- when 'tile_calculator' -%}
                 {% if block.settings.show_tile_calculator %}
                   <div class="product__tile-calculator">
@@ -816,7 +795,7 @@
                     <div class="product_prices">
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}">
+                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
                             {{ product.selected_or_first_available_variant.price | money }}
                           </p>
                         </div>
@@ -1075,32 +1054,26 @@
                                     assign quantity_rule_soldout = true
                                   endif
                                 -%}
-                               <button
-  id="ProductSubmitButton-{{ section.id }}"
-  type="submit"
-  name="add"
-  class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
-  data-submit-button
-  {% if product.selected_or_first_available_variant == null %}
-    disabled
-  {% elsif product.selected_or_first_available_variant.available == false or quantity_rule_soldout %}
-    disabled
-  {% endif %}
->
-  {% render 'icon-cart' %}
-  <span data-submit-button-text>
-    {%- if product.selected_or_first_available_variant == null -%}
-      Choose Variant
-    {%- elsif product.selected_or_first_available_variant.available == false
-      or quantity_rule_soldout
-    -%}
-      Unavailable
-    {%- else -%}
-      {{ 'products.product.add_to_cart' | t }}
-    {%- endif -%}
-  </span>
-  {%- render 'loading-spinner' -%}
-</button>
+                                <button
+                                  id="ProductSubmitButton-{{ section.id }}"
+                                  type="submit"
+                                  name="add"
+                                  class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
+                                >
+                                  {% render 'icon-cart' %}
+                                  <span>
+                                    {%- if product.selected_or_first_available_variant == null -%}
+                                      {{ 'products.product.unavailable' | t }}
+                                    {%- elsif product.selected_or_first_available_variant.available == false
+                                      or quantity_rule_soldout
+                                    -%}
+                                      {{ 'products.product.sold_out' | t }}
+                                    {%- else -%}
+                                      {{ 'products.product.add_to_cart' | t }}
+                                    {%- endif -%}
+                                  </span>
+                                  {%- render 'loading-spinner' -%}
+                                </button>
                               </div>
                             {%- endform -%}
                           {%- else -%}
@@ -1178,7 +1151,7 @@
                         class: 'installment caption-large'
                       -%}
                         <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-                        {% comment %}{{ form | payment_terms }}{% endcomment %}
+                        {{ form | payment_terms }}
                       {%- endform -%}
                     </div>
                   </div>
@@ -1200,9 +1173,7 @@
                       </button>
                     </div>
                   {% endif %}
-                {% unless is_gift_cards_template %}
                 {% render 'paylater-providers' %}
-              {% endunless %}
                 </{{tag}}>
                {% endunless %}
               {%- when 'inventory' -%}
@@ -1269,9 +1240,12 @@
 
               {%- when 'review_widget' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
-                {% unless is_gift_cards_template %}
                 <div class="available-wrap hidden lg:flex">
-
+                  <div class="sa-reviews">
+                    {% render 'icon-rstar' %}
+                    <div class="review_header"></div>
+                    <div id="product_just_stars" class="reg"></div>
+                  </div>
 
                   {% if product.metafields.custom.backorder == true %}
                     <div class="badge backorder-badge stock-badge">
@@ -1287,7 +1261,6 @@
                     </div>
                   {% endif %}
                 </div>
-                 {% endunless %}
               {% endunless %}
               {%- when 'sku' -%}
                 <p
@@ -1305,9 +1278,7 @@
               {% when 'color_picker' %}
                 <div></div>
 
-                {% unless is_gift_cards_template %}
-                  {% render 'custom-color-picker', product: product %}
-                {% endunless %}
+                {% render 'custom-color-picker', product: product %}
 
               {%- when 'collapsible_tab' -%}
                 <div class="product__accordion accordion quick-add-hidden" {{ block.shopify_attributes }}>
@@ -1758,8 +1729,8 @@
                 </product-recommendations>
               {%- when 'icon-with-text' -%}
                 {% render 'icon-with-text', block: block %}
-                 {% when 'product_options' %}
-                {% render 'product-options', product: product %} 
+              {% when 'product_options' %}
+                {% render 'product-options', product: product %}  
             {%- endcase -%}
           {%- endfor -%}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
@@ -1838,120 +1809,7 @@
         assign seo_media = product.featured_media
       endif
     -%}
-
-
-    <script>
-(function() {
-  'use strict';
-
-  console.log('🔵 Button state script starting...');
-
-  // Wait for DOM to be ready
-  function init() {
-    const submitButton = document.querySelector('[data-submit-button]');
-    const buttonText = document.querySelector('[data-submit-button-text]');
-    const variantIdInput = document.querySelector('.product-variant-id, input[name="id"]');
-
-    console.log('submitButton:', submitButton);
-    console.log('buttonText:', buttonText);
-    console.log('variantIdInput:', variantIdInput);
-    console.log('window.product:', window.product);
-
-    if (!submitButton || !buttonText) {
-      console.error('❌ Required elements not found');
-      return;
-    }
-
-    if (!window.product || !window.product.variants) {
-      console.error('❌ Product data not found');
-      return;
-    }
-
-    // Create variant lookup
-    const variantsById = {};
-    window.product.variants.forEach(function(v) {
-      variantsById[String(v.id)] = v;
-    });
-
-    console.log('✅ Variants loaded:', Object.keys(variantsById).length);
-
-    function updateButton() {
-      let variantId = null;
-
-      // Try to get variant ID
-      if (variantIdInput) {
-        variantId = variantIdInput.value || variantIdInput.getAttribute('value');
-      }
-
-      console.log('Current variant ID:', variantId);
-
-      const variant = variantId ? variantsById[String(variantId)] : null;
-      
-      console.log('Found variant:', variant);
-
-      if (!variant) {
-        // No variant selected
-        buttonText.textContent = 'Choose Variant';
-        submitButton.disabled = true;
-        console.log('✅ State: No variant selected');
-      } else if (!variant.available) {
-        // Out of stock
-        buttonText.textContent = 'Unavailable';
-        submitButton.disabled = true;
-        console.log('✅ State: Out of stock');
-      } else {
-        // Available
-        buttonText.textContent = 'Add to Cart';
-        submitButton.disabled = false;
-        console.log('✅ State: Available');
-      }
-    }
-
-    // Listen for changes
-    if (variantIdInput) {
-      variantIdInput.addEventListener('change', function() {
-        console.log('🔄 Variant input changed');
-        setTimeout(updateButton, 50);
-      });
-    }
-
-    // Listen for custom events
-    document.addEventListener('variant:change', function(e) {
-      console.log('🔄 variant:change event', e.detail);
-      setTimeout(updateButton, 50);
-    });
-
-    document.addEventListener('variant-change', function(e) {
-      console.log('🔄 variant-change event', e.detail);
-      setTimeout(updateButton, 50);
-    });
-
-    // Listen for form changes
-    const form = submitButton.closest('form');
-    if (form) {
-      form.addEventListener('change', function(e) {
-        const name = e.target.name || '';
-        if (name.includes('option') || name === 'id') {
-          console.log('🔄 Form option changed:', name);
-          setTimeout(updateButton, 100);
-        }
-      });
-    }
-
-    // Initial update
-    updateButton();
-    
-    console.log('✅ Button state script initialized');
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
-</script>
-
+  
 </product-info>
 
 <div id="product-gallery-popup" class="product-popup-overlay" hidden>
@@ -2037,108 +1895,15 @@
 <script>
   window.product = {{ product | json }}
 </script>
-
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
 {% unless hide_product_options %}
   <script src="{{'product-custom-options.js' | asset_url }}" defer></script>
 {% endunless %}
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const skuElement = document.querySelector('[id^="Sku-"]');
-  const processingTimeElement = document.querySelector('[id^="ProcessingTime-"]');
-  
-  if (!skuElement || !processingTimeElement) {
-    console.log('SKU or Processing Time element not found');
-    return;
-  }
-  
-  // Helper function to extract just the SKU text (excluding the visually-hidden label)
-  function getSkuText(element) {
-    // Clone the element to avoid modifying the DOM
-    const clone = element.cloneNode(true);
-    // Remove the visually-hidden span
-    const hiddenSpan = clone.querySelector('.visually-hidden');
-    if (hiddenSpan) {
-      hiddenSpan.remove();
-    }
-    return clone.textContent.trim();
-  }
-  
-  // Create variant metafields lookup indexed by SKU
-  const variantMetafields = {
-    {% for variant in product.variants %}
-      "{{ variant.sku }}": {
-        "processing_time": {{ variant.metafields.custom.processing_time_long_variant | json }},
-        "sku": "{{ variant.sku }}"
-      }{% unless forloop.last %},{% endunless %}
-    {% endfor %}
-  };
-  
-  const productProcessingTime = {{ product.metafields.custom.processing_time_long | json }};
-  
-  function updateProcessingTime() {
-    const newSku = getSkuText(skuElement);
-    
-    console.log('SKU detected:', newSku);
-    
-    if (!newSku) return;
-    
-    const variantData = variantMetafields[newSku];
-    const newProcessingTime = variantData?.processing_time || productProcessingTime;
-    
-    console.log('Variant data:', variantData);
-    console.log('New processing time:', newProcessingTime);
-    
-    if (newProcessingTime) {
-      const currentText = processingTimeElement.textContent.trim();
-      
-      if (newProcessingTime !== currentText) {
-        processingTimeElement.textContent = newProcessingTime;
-        processingTimeElement.setAttribute('data-sku', newSku);
-        
-        // Update more info attribute
-        const moreInfo = processingTimeElement.nextElementSibling;
-        if (moreInfo && moreInfo.classList.contains('more-info')) {
-          if (variantData?.processing_time) {
-            moreInfo.setAttribute('data-processingtime', variantData.processing_time);
-          } else {
-            moreInfo.setAttribute('data-processingtime', productProcessingTime || '');
-          }
-        }
-        
-        console.log('✅ Processing time updated to:', newProcessingTime);
-      } else {
-        console.log('Processing time already correct');
-      }
-    }
-  }
-  
-  // Watch for SKU changes using MutationObserver
-  const observer = new MutationObserver(function(mutations) {
-    console.log('SKU element changed, updating processing time...');
-    updateProcessingTime();
-  });
-  
-  observer.observe(skuElement, {
-    childList: true,
-    characterData: true,
-    subtree: true
-  });
-  
-  // Also update on initial load
-  updateProcessingTime();
-  
-  console.log('✅ Processing time updater initialized');
-  console.log('Available variants:', variantMetafields);
-});
-</script>
-
 {% if custom_product_options_block.size > 0 %}
   <script src="{{'product-form-with-options.js' | asset_url }}" defer></script>
 {% endif %}
-
-
+<script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
 <script defer type="text/javascript">
   var sa_products_count = 3;
   var sa_date_format = 'F j, Y';
@@ -3572,7 +3337,8 @@ document.addEventListener('DOMContentLoaded', function() {
           "default": "Mats"
         }
       ]
-    }
+    },
+    
   ],
   "settings": [
     {
@@ -3811,9 +3577,6 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
   }
 
   function n(e){return Number.isFinite(+e)?Math.round(+e):null;}
-  function c(e){
-    return "string"==typeof e && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(e);
-  }
 
   function a(e){
     const t=e.closest("[data-product-handle]")?.getAttribute("data-product-handle");
@@ -3902,7 +3665,7 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
       }
       let n=null;
       if(e) try{n=JSON.parse(e.textContent||"{}")}catch(e){}
-      if((!n||!Array.isArray(n.variants)||!n.variants.length)&&(e=a(this.root))&&c(e)) try{const t=await fetch(`/products/${e}.js`); t.ok&&(n=await t.json())}catch(e){}
+      if((!n||!Array.isArray(n.variants)||!n.variants.length)&&(e=a(this.root))) try{const t=await fetch(`/products/${e}.js`); t.ok&&(n=await t.json())}catch(e){}
       if((!n||!Array.isArray(n.variants)||!n.variants.length)&&/\/products\//.test(location.pathname)) try{const e=await fetch(location.pathname.replace(/\/+$/,"")+".js"); e.ok&&(n=await e.json())}catch(e){}
       n&&Array.isArray(n.variants)?(this.variants=n.variants,this.byId=new Map(this.variants.map(e=>[String(e.id),e]))):(this.variants=[],this.byId.clear())
     }
@@ -4173,3 +3936,7 @@ if(productForm && !productForm.__variantSyncBound){
 
 })();
 </script>
+
+
+
+
