@@ -40,6 +40,17 @@
         top: 0;
         left: -38px;
     }
+
+    /* Override any theme accordion styles scoped to this section */
+    .section-{{ section.id }} .accordion-content {
+        max-height: 0 !important;
+        overflow: hidden !important;
+        transition: max-height 0.35s ease !important;
+    }
+
+    .section-{{ section.id }} .accordion-content.is-open {
+        max-height: 2000px !important;
+    }
 </style>
 
 <div class="section-{{ section.id }} page-width scroll-trigger animate--slide-in">
@@ -124,14 +135,27 @@
       var btn = e.target.closest('.accordion-header');
       if (!btn) return;
 
+      // Stop the click bubbling up so a sub-accordion click
+      // doesn't also trigger the parent accordion toggle
+      e.stopPropagation();
+
       var controlsId = btn.getAttribute('aria-controls');
       var content = document.getElementById(controlsId);
       if (!content) return;
 
       var isExpanded = btn.getAttribute('aria-expanded') === 'true';
 
-      btn.setAttribute('aria-expanded', String(!isExpanded));
-      content.setAttribute('aria-hidden', String(isExpanded));
+      if (isExpanded) {
+        // Close
+        btn.setAttribute('aria-expanded', 'false');
+        content.setAttribute('aria-hidden', 'true');
+        content.classList.remove('is-open');
+      } else {
+        // Open
+        btn.setAttribute('aria-expanded', 'true');
+        content.setAttribute('aria-hidden', 'false');
+        content.classList.add('is-open');
+      }
     });
   })();
 </script>
