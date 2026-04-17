@@ -75,7 +75,7 @@
                                 {% if forloop.index == 2 %}
                                     <div class="delivery-accordion-item">
                                         <button
-                                                class="accordion-header accordion-header--sub"
+                                                class="sub-accordion-header"
                                                 type="button"
                                                 aria-expanded="false"
                                                 aria-controls="accordion-subcontent-{{ forloop.index }}">
@@ -117,9 +117,19 @@
 
 <script>
   (function () {
-    document.querySelectorAll('.section-{{ section.id }} .accordion-header--sub').forEach(function (btn) {
+    document.querySelectorAll('.section-{{ section.id }} .sub-accordion-header').forEach(function (btn) {
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
+        e.preventDefault();
+
+        var controlsId = btn.getAttribute('aria-controls');
+        var content = document.getElementById(controlsId);
+        if (!content) return;
+
+        var isExpanded = btn.getAttribute('aria-expanded') === 'true';
+
+        btn.setAttribute('aria-expanded', String(!isExpanded));
+        content.setAttribute('aria-hidden', String(isExpanded));
       });
     });
   })();
