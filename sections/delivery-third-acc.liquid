@@ -195,6 +195,15 @@
 
         btn.setAttribute('aria-expanded', String(!isExpanded));
         content.setAttribute('aria-hidden', String(isExpanded));
+
+        // After the sub-accordion CSS transition completes,
+        // recalculate the parent accordion's max-height to fit the new content
+        var parent = btn.closest('.accordion-content');
+        if (parent) {
+          setTimeout(function () {
+            parent.style.maxHeight = parent.scrollHeight + 'px';
+          }, 310); // slightly after the 0.3s transition finishes
+        }
       });
     });
   })();
