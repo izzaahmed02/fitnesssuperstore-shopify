@@ -825,11 +825,11 @@
                   </div>
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
-                  <div class="product_price_with_options-contaniner">
+                   <div class="product_price_with_options-contaniner">
                     <div class="product_prices">
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}">
+                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
                             {{ product.selected_or_first_available_variant.price | money }}
                           </p>
                         </div>
@@ -1088,32 +1088,26 @@
                                     assign quantity_rule_soldout = true
                                   endif
                                 -%}
-                               <button
-  id="ProductSubmitButton-{{ section.id }}"
-  type="submit"
-  name="add"
-  class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
-  data-submit-button
-  {% if product.selected_or_first_available_variant == null %}
-    disabled
-  {% elsif product.selected_or_first_available_variant.available == false or quantity_rule_soldout %}
-    disabled
-  {% endif %}
->
-  {% render 'icon-cart' %}
-  <span data-submit-button-text>
-    {%- if product.selected_or_first_available_variant == null -%}
-      Choose Variant
-    {%- elsif product.selected_or_first_available_variant.available == false
-      or quantity_rule_soldout
-    -%}
-      Unavailable
-    {%- else -%}
-      {{ 'products.product.add_to_cart' | t }}
-    {%- endif -%}
-  </span>
-  {%- render 'loading-spinner' -%}
-</button>
+                                <button
+                                  id="ProductSubmitButton-{{ section.id }}"
+                                  type="submit"
+                                  name="add"
+                                  class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
+                                >
+                                  {% render 'icon-cart' %}
+                                  <span>
+                                    {%- if product.selected_or_first_available_variant == null -%}
+                                      {{ 'products.product.unavailable' | t }}
+                                    {%- elsif product.selected_or_first_available_variant.available == false
+                                      or quantity_rule_soldout
+                                    -%}
+                                      {{ 'products.product.sold_out' | t }}
+                                    {%- else -%}
+                                      {{ 'products.product.add_to_cart' | t }}
+                                    {%- endif -%}
+                                  </span>
+                                  {%- render 'loading-spinner' -%}
+                                </button>
                               </div>
                             {%- endform -%}
                           {%- else -%}
