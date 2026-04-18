@@ -22,6 +22,8 @@ if (!customElements.get('product-customization-options')) {
       }
 
       #accordionToggleAdded = false;
+      #itemUpdateListenerAdded = false;
+      #isReplacing = false;
 
       get modifyID() {
         return this.dataset.productId;
@@ -69,21 +71,40 @@ if (!customElements.get('product-customization-options')) {
       // Method for Accordion state
 
       toggleAccordions() {
-        if (!this.accordions.length === 0) return;
+        if (this.accordions.length === 0) return;
+        if (this.#accordionToggleAdded) return;
+        this.#accordionToggleAdded = true;
+
         this.accordions.forEach((accordion) => {
           const openButton = accordion.querySelector('[data-open-accordion]');
           if (!openButton) return;
           const controlElementID = openButton.getAttribute('aria-controls');
+          if (!controlElementID) return;
           const accordionBody = this.querySelector(`#${controlElementID}`);
-          const height = accordionBody.firstElementChild.clientHeight;
+          if (!accordionBody) return;
+
           openButton.addEventListener('click', (event) => {
             event.preventDefault();
-            if (!controlElementID) return;
-            if (!accordionBody) return;
-            openButton.getAttribute('aria-expanded') === 'false' ? openButton.setAttribute('aria-expanded', true) : openButton.setAttribute('aria-expanded', false);
-            // openButton.getAttribute('aria-expanded') === 'false' ? (accordionBody.style.height = `0px`) : (accordionBody.style.height = `${height}px`);
-            openButton.getAttribute('aria-expanded') === 'false' ? (accordionBody.style.height = `0px`) : (accordionBody.style.height = `auto`);
-            
+            const isClosed = openButton.getAttribute('aria-expanded') === 'false';
+
+            if (isClosed) {
+              const scope = this.closest('.product__info-wrapper') || this;
+              const otherButtons = scope.querySelectorAll('.product-options__accordion-header[aria-expanded="true"], [data-open-accordion][aria-expanded="true"]');
+              otherButtons.forEach((btn) => {
+                if (btn === openButton) return;
+                btn.setAttribute('aria-expanded', 'false');
+                const otherID = btn.getAttribute('aria-controls');
+                if (!otherID) return;
+                const otherBody = scope.querySelector(`#${otherID}`);
+                if (otherBody) otherBody.style.height = '0px';
+              });
+
+              openButton.setAttribute('aria-expanded', 'true');
+              accordionBody.style.height = 'auto';
+            } else {
+              openButton.setAttribute('aria-expanded', 'false');
+              accordionBody.style.height = '0px';
+            }
           });
         });
       }
@@ -769,10 +790,7 @@ if (!customElements.get('product-customization-options')) {
           const modifyButton = document.querySelector(`[data-key-modify="${this.modifyID}"]`) || this.cartDrawer?.querySelector(`[data-key-modify="${this.modifyID}"]`);
           if (!modifyButton) return;
           modifyButton.addEventListener('click', () => {
-            if (!this.#accordionToggleAdded) {
-              this.toggleAccordions();
-              this.#accordionToggleAdded = true;
-            }
+            this.toggleAccordions();
             this.dataset.stamp = this.htmlToBase64(this.innerHTML);
             setTimeout(() => {
               this.hideConditionalOptions();
@@ -801,8 +819,11 @@ if (!customElements.get('product-customization-options')) {
 
       handleItemUpdate() {
         if (!this.applyChangesButton) return;
+        if (this.#itemUpdateListenerAdded) return;
+        this.#itemUpdateListenerAdded = true;
         this.applyChangesButton.addEventListener('click', (event) => {
           event.preventDefault();
+          if (this.#isReplacing) return;
           const currentStamp = this.htmlToBase64(this.innerHTML);
           if (currentStamp === this.dataset.stamp) {
             this.classList.remove('modify-opened');
@@ -819,12 +840,17 @@ if (!customElements.get('product-customization-options')) {
       // If they are the same we close Modify popup otherwise we remove previous product and add new
 
       async replaceItem() {
+        if (this.#isReplacing) return;
         const changeUrl = `${window.Shopify.routes.root}cart/change.js`;
         const addUrl = `${window.Shopify.routes.root}cart/add.js`;
         if (!this.checkMandatoryFields()) {
           this.applyChangesButton?.classList.remove('loading');
           return alert('Please select your options before adding this item to cart');
         }
+
+        this.#isReplacing = true;
+        if (this.applyChangesButton) this.applyChangesButton.disabled = true;
+
         let sections = '';
         if (window.location.href.includes('/cart')) {
           sections = this.getSectionsToRender().map((section) => section.section);
@@ -858,7 +884,7 @@ if (!customElements.get('product-customization-options')) {
         };
 
         try {
-          const updateResponse = await fetch(addUrl, updateConfig);
+          const updateResponse = await this.cartFetchWithRetry(addUrl, updateConfig);
           await updateResponse.json();
           if (!updateResponse.ok) throw new Error('Failed to add to cart');
 
@@ -877,7 +903,7 @@ if (!customElements.get('product-customization-options')) {
             body: JSON.stringify(changeRequest),
           };
 
-          const response = await fetch(changeUrl, changeConfig);
+          const response = await this.cartFetchWithRetry(changeUrl, changeConfig);
           const changeResult = await response.json();
           if (!response.ok) throw new Error('Failed to remove original cart line');
 
@@ -897,9 +923,33 @@ if (!customElements.get('product-customization-options')) {
           this.#accordionToggleAdded = false;
         } catch (error) {
           console.error(error);
+          if (error && error.isRateLimited) {
+            alert('The cart is busy right now. Please wait a moment and try again.');
+          }
         } finally {
+          this.#isReplacing = false;
+          if (this.applyChangesButton) this.applyChangesButton.disabled = false;
           this.applyChangesButton?.classList.remove('loading');
         }
+      }
+
+      // Helper: fetch with exponential backoff retry on 429 (Too Many Requests)
+
+      async cartFetchWithRetry(url, config, attempt = 0) {
+        const maxAttempts = 4;
+        const response = await fetch(url, config);
+        if (response.status !== 429) return response;
+        if (attempt >= maxAttempts) {
+          const err = new Error('Cart API rate limit exceeded');
+          err.isRateLimited = true;
+          throw err;
+        }
+        const retryAfterHeader = Number(response.headers.get('Retry-After'));
+        const backoffMs = Number.isFinite(retryAfterHeader) && retryAfterHeader > 0
+          ? retryAfterHeader * 1000
+          : Math.min(8000, 500 * Math.pow(2, attempt));
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
+        return this.cartFetchWithRetry(url, config, attempt + 1);
       }
 
       // Helper to check if all mandatory options are selected.
