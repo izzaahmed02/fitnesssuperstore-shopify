@@ -1,0 +1,25 @@
+{%- comment -%}
+  Strips legacy Volusion-era HTML from a description string:
+  - <script src="/v/vspfiles/..."> (and related legacy script tags) that 404 on Shopify
+  - <a href> pointing to legacy product handles with a trailing Volusion numeric ID (e.g. "-1241")
+  Usage: {% render 'clean-description', description: product.description %}
+{%- endcomment -%}
+{%- liquid
+  assign raw = description
+
+  assign script_parts = raw | split: '<script'
+  assign cleaned = script_parts[0]
+  for piece in script_parts offset: 1
+    assign halves = piece | split: '</script>'
+    assign head = halves[0]
+    if head contains 'vspfiles' or head contains '/v/vspfiles' or head contains 'fitness-resp'
+      if halves.size > 1
+        assign tail = halves | slice: 1, 99 | join: '</script>'
+        assign cleaned = cleaned | append: tail
+      endif
+    else
+      assign cleaned = cleaned | append: '<script' | append: piece
+    endif
+  endfor
+-%}
+{{ cleaned }}

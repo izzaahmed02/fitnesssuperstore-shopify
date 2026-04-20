@@ -105,14 +105,17 @@ if(promo.pageType === 'product'){
 		    jQuery(productCards).each(function(){
 		      	let card = jQuery(this);
 		    	attr = card.find('a[href*="products"]').attr('href');
+		    	if(!attr) return;
 		    	urlParams = attr.split('/');
 		      	productIndex = urlParams.indexOf("products");
-		      	jQuery.getJSON('/products/'+urlParams[productIndex+1]+'.js', function(product) {
-		          	
+		      	let handle = productIndex >= 0 ? urlParams[productIndex+1] : null;
+		      	if(!handle || handle === 'undefined' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(handle) || /-\d{3,}$/.test(handle)) return;
+		      	jQuery.getJSON('/products/'+handle+'.js', function(product) {
+
 		          	insertElement = card.find(thisElement2)
 					upsertAla(promo, product.price.toString(), insertElement[0]);
 		        })
-		 	
+
 		  	});
 		}  	
 	}
