@@ -1,4 +1,3 @@
-if (!customElements.get('mobile-gallery')) {
 class MobileGallery extends HTMLElement {
   constructor() {
     super();
@@ -867,5 +866,4 @@ observePopup() {
 
 if (!customElements.get('mobile-gallery')) {
   customElements.define('mobile-gallery', MobileGallery);
-}
 }
