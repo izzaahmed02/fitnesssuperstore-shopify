@@ -90,9 +90,13 @@
     {% endfor %}
   {% endfor %}
 
-  {% unless hide_product_options %}
+  {% if template.suffix == 'combined-listings' %}
     {{ 'product-options.css' | asset_url | stylesheet_tag }}
-  {% endunless %}
+  {% else %}
+    {% unless hide_product_options %}
+      {{ 'product-options.css' | asset_url | stylesheet_tag }}
+    {% endunless %}
+  {% endif %}
 
   {%- style -%}
     .section-{{ section.id }}-padding {
@@ -2145,6 +2149,60 @@ document.addEventListener('DOMContentLoaded', function() {
   <script src="{{'product-form-with-options.js' | asset_url }}" defer></script>
 {% endif %}
 
+{% if template.suffix == 'combined-listings' %}
+  <script>
+    (function () {
+      var pickerSelector = '#variant-selects-{{ section.id }}';
+      var fieldsetSelector = '.product-form__input--pill[data-variant-options], .product-form__input--swatch[data-variant-options]';
+
+      function pickNextAvailable(fieldset) {
+        var radios = fieldset.querySelectorAll('input[type="radio"]');
+        var checked = null;
+        for (var i = 0; i < radios.length; i++) {
+          if (radios[i].checked) { checked = radios[i]; break; }
+        }
+        if (!checked || !checked.classList.contains('disabled')) return;
+
+        var available = null;
+        for (var j = 0; j < radios.length; j++) {
+          if (!radios[j].classList.contains('disabled')) { available = radios[j]; break; }
+        }
+        if (!available || available === checked) return;
+
+        available.checked = true;
+        available.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      function scanAll() {
+        var picker = document.querySelector(pickerSelector);
+        if (!picker) return;
+        picker.querySelectorAll(fieldsetSelector).forEach(pickNextAvailable);
+      }
+
+      function init() {
+        var picker = document.querySelector(pickerSelector);
+        if (!picker) return;
+
+        var observer = new MutationObserver(function () {
+          scanAll();
+        });
+        observer.observe(picker, {
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['class']
+        });
+
+        scanAll();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+{% endif %}
 
 <script defer type="text/javascript">
   var sa_products_count = 3;
