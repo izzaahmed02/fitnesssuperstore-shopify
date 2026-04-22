@@ -229,9 +229,9 @@
 
                 <div class="product__prices here">
                     {% unless is_gift_cards_template %}
-                      <span class="pr_custom_compare_price{% unless product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
+                      <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
                         >As high as:
-                        <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
+                        <s>{{ product.selected_or_first_available_variant.compare_at_price | money_with_currency -}}</s>
                       </span>
                     {% endunless %}
                     {% comment %}
@@ -754,9 +754,9 @@
                 <div class="product__prices hidden lg:block">
 
                      {% unless is_gift_cards_template %}
-                      <span class="pr_custom_compare_price{% unless product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
+                      <span class="pr_custom_compare_price{% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %} pm-empty{% endunless %}"
                         >As high as:
-                        <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
+                        <s>{{ product.selected_or_first_available_variant.compare_at_price | money_with_currency -}}</s>
                       </span>
                     {% endunless %}
 
@@ -3892,9 +3892,6 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 <script>
-  window.__retailPrice = {{ product.metafields.custom.retail_price | default: 0 | json }};
-</script>
-<script>
 if(!window.__pmMin){window.__pmMin=1;(function(){
   const e=".product__prices",
         t={
@@ -3963,14 +3960,14 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
         t.textContent=r(n(e.price));
         t.classList.remove("pm-empty")
       });
-      const retail=n(window.__retailPrice),
+      const compareAt=n(e.compare_at_price),
             variantPrice=n(e.price),
-            o=retail!=null && variantPrice!=null && retail>variantPrice,
+            o=compareAt!=null && variantPrice!=null && compareAt>variantPrice,
             a=this.$(t.CMP), c=this.$(t.CMP_WRAP);
-      a&&(a.textContent=o?r(retail):"");
+      a&&(a.textContent=o?r(compareAt):"");
       c&&c.classList.toggle("pm-empty",!o);
       const i=this.$(t.SAVE);
-      if(i) if(o){const diff=retail-variantPrice; i.textContent="You save "+r(diff), i.classList.remove("pm-empty")} else i.textContent="",i.classList.add("pm-empty")
+      if(i) if(o){const diff=compareAt-variantPrice; i.textContent="You save "+r(diff), i.classList.remove("pm-empty")} else i.textContent="",i.classList.add("pm-empty")
     }
 
     currentVariantFromId(){
