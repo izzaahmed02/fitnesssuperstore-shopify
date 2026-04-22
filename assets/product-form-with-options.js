@@ -4,13 +4,16 @@ if (!customElements.get('product-form-with-options')) {
     class ProductFormWithOptions extends HTMLElement {
       constructor() {
         super();
-        this.productContainer = document.getElementById(`MainProduct-${this.dataset.sectionId}`);
         this.form = this.querySelector('form[data-type="add-to-cart-form"]');
         this.cart = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
         this.submitButton = this.querySelector('button[type="submit"]');
         this.submitButtonText = this.submitButton.querySelector('span');
         if (document.querySelector('cart-drawer')) this.submitButton.setAttribute('aria-haspopup', 'dialog');
         this.hideErrors = this.dataset.hideErrors === 'true';
+      }
+
+      get productContainer() {
+        return document.getElementById(`MainProduct-${this.dataset.sectionId}`) || this.closest('product-info');
       }
 
       get variantIdInput() {
@@ -266,7 +269,9 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       checkMandatoryFields() {
-        const mandatoryFields = this.productContainer.querySelectorAll('[data-selected-options][data-mandatory]');
+        const container = this.productContainer;
+        if (!container) return true;
+        const mandatoryFields = container.querySelectorAll('[data-selected-options][data-mandatory]');
         if (mandatoryFields.length === 0) return true;
         let errorCounter = 0;
         mandatoryFields.forEach((field) => {
