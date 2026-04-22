@@ -1,4 +1,3 @@
-if (!customElements.get('product-gallery')) {
 class ProductGallery extends HTMLElement {
   constructor() {
     super();
@@ -1060,4 +1059,3 @@ class ProductGallery extends HTMLElement {
 }
 
 customElements.define('product-gallery', ProductGallery);
-}
