@@ -13,11 +13,12 @@
   <div class="customer-photo-gallery__slider" id="photos">
     {% for image in gallery_metafield.value %}
       {% assign thumb = image | image_url: width: 900 %}
-      {% assign full  = image | image_url: width: 2400 %}
+      {% assign full  = image | image_url: width: 5760 %}
       <div class="customer-photo-gallery__slide">
         <img
           src="{{ thumb }}"
           data-full="{{ full }}"
+          data-index="{{ forloop.index0 }}"
           alt="Customer photo {{ forloop.index }}"
           loading="lazy"
         >
@@ -29,7 +30,11 @@
   <div class="customer-photo-gallery__lightbox" aria-hidden="true">
     <div class="customer-photo-gallery__lightbox-inner">
       <button type="button" class="customer-photo-gallery__lightbox-close" aria-label="Close">&times;</button>
-      <img src="" alt="Expanded customer photo">
+      <button type="button" class="customer-photo-gallery__lightbox-prev" aria-label="Previous">‹</button>
+      <button type="button" class="customer-photo-gallery__lightbox-next" aria-label="Next">›</button>
+      <div class="customer-photo-gallery__lightbox-img-wrap">
+        <img src="" alt="Expanded customer photo" draggable="false">
+      </div>
     </div>
   </div>
 </section>
@@ -65,7 +70,6 @@
   scroll-snap-type: x mandatory;
 }
 
-/* Center slides if 4 or fewer images */
 .customer-photo-gallery__slider:has(.customer-photo-gallery__slide:nth-child(1)):not(:has(.customer-photo-gallery__slide:nth-child(5))) {
   justify-content: left;
 }
@@ -139,14 +143,15 @@
 .customer-photo-gallery__lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0,0,0,0.88);
   opacity: 0;
   pointer-events: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: .2s ease;
+  transition: opacity .2s ease;
   z-index: 999;
+  overflow: hidden;
 }
 
 .customer-photo-gallery__lightbox--active {
@@ -155,38 +160,107 @@
 }
 
 .customer-photo-gallery__lightbox-inner {
-  max-width: 700px;
-  max-height: auto;
   position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.customer-photo-gallery__lightbox-inner img {
-  max-width: 100%;
-    max-height: 650px;
-    display: block;
-    object-fit: cover;
-    padding: 20px;
+/* Image wrapper — clips overflow when zoomed */
+.customer-photo-gallery__lightbox-img-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: grab;
 }
 
+.customer-photo-gallery__lightbox-img-wrap.dragging {
+  cursor: grabbing;
+}
+
+.customer-photo-gallery__lightbox-img-wrap img {
+  max-width: 90vw;
+  max-height: 90vh;
+  display: block;
+  object-fit: contain;
+  border-radius: 4px;
+  transform-origin: center center;
+  transition: transform 0.05s linear;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Lightbox close */
 .customer-photo-gallery__lightbox-close {
-  position: absolute;
-  top: -36px;
-  right: -6px;
-  font-size: 32px;
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  font-size: 36px;
+  line-height: 1;
   background: none;
   border: none;
   color: #fff;
   cursor: pointer;
+  z-index: 1010;
+  opacity: 0.85;
 }
 
+.customer-photo-gallery__lightbox-close:hover { opacity: 1; }
 
+/* Lightbox prev/next */
+.customer-photo-gallery__lightbox-prev,
+.customer-photo-gallery__lightbox-next {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 28px;
+  cursor: pointer;
+  z-index: 1010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity .15s;
+}
 
+.customer-photo-gallery__lightbox-prev:hover,
+.customer-photo-gallery__lightbox-next:hover { opacity: 1; }
+
+.customer-photo-gallery__lightbox-prev { left: 16px; }
+.customer-photo-gallery__lightbox-next { right: 16px; }
+
+/* Zoom hint */
+.customer-photo-gallery__lightbox-hint {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 1010;
+  white-space: nowrap;
+}
 
 @media (max-width: 749px) {
-.customer-photo-gallery__header h4 {
-        font-size: 20px;
-        margin-bottom: 16px;
-}
+  .customer-photo-gallery__header h4 {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+  .customer-photo-gallery__lightbox-prev { left: 6px; }
+  .customer-photo-gallery__lightbox-next { right: 6px; }
 }
 </style>
 
@@ -195,10 +269,27 @@
   var section = document.getElementById('customer-photo-gallery-{{ section.id }}');
   if (!section) return;
 
-  var slider = section.querySelector('.customer-photo-gallery__slider');
-  var slides = section.querySelectorAll('.customer-photo-gallery__slide img');
-  var prev = section.querySelector('.customer-photo-gallery__arrow--left');
-  var next = section.querySelector('.customer-photo-gallery__arrow--right');
+  var slider      = section.querySelector('.customer-photo-gallery__slider');
+  var slides      = section.querySelectorAll('.customer-photo-gallery__slide img');
+  var prev        = section.querySelector('.customer-photo-gallery__arrow--left');
+  var next        = section.querySelector('.customer-photo-gallery__arrow--right');
+  var lightbox    = section.querySelector('.customer-photo-gallery__lightbox');
+  var lbImgWrap   = lightbox.querySelector('.customer-photo-gallery__lightbox-img-wrap');
+  var lbImg       = lbImgWrap.querySelector('img');
+  var closeBtn    = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
+  var lbPrev      = lightbox.querySelector('.customer-photo-gallery__lightbox-prev');
+  var lbNext      = lightbox.querySelector('.customer-photo-gallery__lightbox-next');
+
+  // Collect all full-res srcs
+  var imageSrcs = Array.from(slides).map(function (img) { return img.dataset.full || img.src; });
+  var currentIndex = 0;
+
+  // Zoom state
+  var scale     = 1;
+  var originX   = 0;
+  var originY   = 0;
+  var MIN_SCALE = 1;
+  var MAX_SCALE = 5;
 
   // ----- HIDE ARROWS ON DESKTOP IF 4 OR FEWER IMAGES -----
   if (window.matchMedia('(min-width: 990px)').matches && slides.length <= 4) {
@@ -206,41 +297,209 @@
     next.style.display = 'none';
   }
 
-  // ----- LIGHTBOX -----
-  var lightbox = section.querySelector('.customer-photo-gallery__lightbox');
-  var lightboxImg = lightbox.querySelector('img');
-  var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
+  // ----- HIDE LIGHTBOX PREV/NEXT IF ONLY 1 IMAGE -----
+  if (slides.length <= 1) {
+    lbPrev.style.display = 'none';
+    lbNext.style.display = 'none';
+  }
 
-  slides.forEach(function (img) {
-    img.addEventListener('click', function () {
-      lightboxImg.src = img.dataset.full || img.src;
-      lightbox.classList.add('customer-photo-gallery__lightbox--active');
-    });
-  });
+  // ----- ZOOM HELPERS -----
+  function clamp(val, min, max) { return Math.min(Math.max(val, min), max); }
 
-  closeBtn.addEventListener('click', function () {
+  function applyTransform() {
+    lbImg.style.transform = 'translate(' + originX + 'px, ' + originY + 'px) scale(' + scale + ')';
+  }
+
+  function resetZoom() {
+    scale   = 1;
+    originX = 0;
+    originY = 0;
+    applyTransform();
+  }
+
+  // Constrain pan so image never drifts fully off screen
+  function constrainPan() {
+    var imgW = lbImg.offsetWidth  * scale;
+    var imgH = lbImg.offsetHeight * scale;
+    var wrapW = lbImgWrap.offsetWidth;
+    var wrapH = lbImgWrap.offsetHeight;
+    var maxX = Math.max(0, (imgW - wrapW) / 2);
+    var maxY = Math.max(0, (imgH - wrapH) / 2);
+    originX = clamp(originX, -maxX, maxX);
+    originY = clamp(originY, -maxY, maxY);
+  }
+
+  // ----- OPEN / CLOSE LIGHTBOX -----
+  function openLightbox(index) {
+    currentIndex = index;
+    lbImg.src = imageSrcs[currentIndex];
+    resetZoom();
+    lightbox.classList.add('customer-photo-gallery__lightbox--active');
+    lightbox.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
     lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+    lightbox.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    resetZoom();
+  }
+
+  // ----- NAVIGATE BETWEEN IMAGES -----
+  function showImage(index) {
+    currentIndex = (index + imageSrcs.length) % imageSrcs.length;
+    lbImg.src = imageSrcs[currentIndex];
+    resetZoom();
+  }
+
+  slides.forEach(function (img, i) {
+    img.addEventListener('click', function () { openLightbox(i); });
   });
+
+  closeBtn.addEventListener('click', closeLightbox);
 
   lightbox.addEventListener('click', function (e) {
-    if (e.target === lightbox) {
-      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
-    }
+    if (e.target === lightbox) closeLightbox();
   });
+
+  lbPrev.addEventListener('click', function () { showImage(currentIndex - 1); });
+  lbNext.addEventListener('click', function () { showImage(currentIndex + 1); });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+    if (!lightbox.classList.contains('customer-photo-gallery__lightbox--active')) return;
+    if (e.key === 'Escape')      closeLightbox();
+    if (e.key === 'ArrowLeft')   showImage(currentIndex - 1);
+    if (e.key === 'ArrowRight')  showImage(currentIndex + 1);
+  });
+
+  // ----- MOUSE WHEEL ZOOM -----
+  lbImgWrap.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var delta  = e.deltaY > 0 ? -0.15 : 0.15;
+    scale      = clamp(scale + delta, MIN_SCALE, MAX_SCALE);
+    if (scale === MIN_SCALE) { originX = 0; originY = 0; }
+    constrainPan();
+    applyTransform();
+  }, { passive: false });
+
+  // ----- MOUSE DRAG (PAN) -----
+  var isDragging  = false;
+  var dragStartX  = 0;
+  var dragStartY  = 0;
+  var dragOriginX = 0;
+  var dragOriginY = 0;
+  var dragMoved   = false;
+
+  lbImgWrap.addEventListener('mousedown', function (e) {
+    if (e.button !== 0) return;
+    isDragging  = true;
+    dragMoved   = false;
+    dragStartX  = e.clientX;
+    dragStartY  = e.clientY;
+    dragOriginX = originX;
+    dragOriginY = originY;
+    lbImgWrap.classList.add('dragging');
+    e.preventDefault();
+  });
+
+  window.addEventListener('mousemove', function (e) {
+    if (!isDragging) return;
+    var dx = e.clientX - dragStartX;
+    var dy = e.clientY - dragStartY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMoved = true;
+    if (scale > 1) {
+      originX = dragOriginX + dx;
+      originY = dragOriginY + dy;
+      constrainPan();
+      applyTransform();
     }
   });
 
-  // ----- SLIDER ARROWS -----
+  window.addEventListener('mouseup', function (e) {
+    if (!isDragging) return;
+    isDragging = false;
+    lbImgWrap.classList.remove('dragging');
+    // If not zoomed and barely moved, treat as swipe
+    if (scale === 1 && !dragMoved) return;
+    if (scale === 1 && dragMoved) {
+      var dx = e.clientX - dragStartX;
+      if (Math.abs(dx) > 50) showImage(dx < 0 ? currentIndex + 1 : currentIndex - 1);
+    }
+  });
+
+  // ----- TOUCH: SWIPE + PINCH ZOOM -----
+  var touchStartX   = 0;
+  var touchStartY   = 0;
+  var lastTouchDist = 0;
+  var isTwoFinger   = false;
+  var touchOriginX  = 0;
+  var touchOriginY  = 0;
+
+  lbImgWrap.addEventListener('touchstart', function (e) {
+    if (e.touches.length === 1) {
+      touchStartX  = e.touches[0].clientX;
+      touchStartY  = e.touches[0].clientY;
+      touchOriginX = originX;
+      touchOriginY = originY;
+      isTwoFinger  = false;
+    } else if (e.touches.length === 2) {
+      isTwoFinger     = true;
+      lastTouchDist   = Math.hypot(
+        e.touches[1].clientX - e.touches[0].clientX,
+        e.touches[1].clientY - e.touches[0].clientY
+      );
+    }
+  }, { passive: true });
+
+  lbImgWrap.addEventListener('touchmove', function (e) {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      var dist  = Math.hypot(
+        e.touches[1].clientX - e.touches[0].clientX,
+        e.touches[1].clientY - e.touches[0].clientY
+      );
+      var ratio = dist / lastTouchDist;
+      scale     = clamp(scale * ratio, MIN_SCALE, MAX_SCALE);
+      if (scale === MIN_SCALE) { originX = 0; originY = 0; }
+      constrainPan();
+      applyTransform();
+      lastTouchDist = dist;
+    } else if (e.touches.length === 1 && scale > 1) {
+      e.preventDefault();
+      var dx = e.touches[0].clientX - touchStartX;
+      var dy = e.touches[0].clientY - touchStartY;
+      originX = touchOriginX + dx;
+      originY = touchOriginY + dy;
+      constrainPan();
+      applyTransform();
+    }
+  }, { passive: false });
+
+  lbImgWrap.addEventListener('touchend', function (e) {
+    if (isTwoFinger) { isTwoFinger = false; return; }
+    if (scale > 1) return; // don't swipe while zoomed
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      showImage(dx < 0 ? currentIndex + 1 : currentIndex - 1);
+    }
+  }, { passive: true });
+
+  // Double-tap to zoom toggle
+  var lastTap = 0;
+  lbImgWrap.addEventListener('touchend', function (e) {
+    var now = Date.now();
+    if (now - lastTap < 300) {
+      if (scale > 1) { resetZoom(); } else { scale = 2.5; applyTransform(); }
+    }
+    lastTap = now;
+  }, { passive: true });
+
+  // ----- THUMBNAIL SLIDER ARROWS -----
   function scrollSlider(dir) {
     var slideWidth = slider.querySelector('.customer-photo-gallery__slide').offsetWidth + 16;
-    slider.scrollBy({
-      left: dir === 'next' ? slideWidth : -slideWidth,
-      behavior: 'smooth'
-    });
+    slider.scrollBy({ left: dir === 'next' ? slideWidth : -slideWidth, behavior: 'smooth' });
   }
 
   prev.addEventListener('click', function () { scrollSlider('prev'); });
@@ -252,7 +511,6 @@
 {% schema %}
 {
   "name": "Customer Photo Gallery",
-  
   "presets": [
     {
       "name": "Customer Photo Gallery",
