@@ -24,6 +24,9 @@ if (!customElements.get('product-customization-options')) {
       #accordionToggleAdded = false;
       #itemUpdateListenerAdded = false;
       #isReplacing = false;
+      #initialized = false;
+      #cartUpdateUnsubscribe = null;
+      #variantChangeUnsubscribe = null;
 
       get modifyID() {
         return this.dataset.productId;
@@ -35,20 +38,37 @@ if (!customElements.get('product-customization-options')) {
 
       connectedCallback() {
         this.init();
-        subscribe(PUB_SUB_EVENTS.cartUpdate, () => {
+        this.#cartUpdateUnsubscribe = subscribe(PUB_SUB_EVENTS.cartUpdate, () => {
           if (window.location.href.includes('/cart')) {
             this.init();
           }
         });
 
-        subscribe(PUB_SUB_EVENTS.variantChange, (event) => {
+        this.#variantChangeUnsubscribe = subscribe(PUB_SUB_EVENTS.variantChange, (event) => {
           if (!event) return;
           const variant = event.data.variant;
           !variant ? this.classList.add('hidden') : this.classList.remove('hidden');
         });
       }
 
+      disconnectedCallback() {
+        // Release pubsub subscriptions so destroyed instances (e.g. after a
+        // cart section innerHTML replacement) stop reacting to cart updates.
+        if (this.#cartUpdateUnsubscribe) {
+          this.#cartUpdateUnsubscribe();
+          this.#cartUpdateUnsubscribe = null;
+        }
+        if (this.#variantChangeUnsubscribe) {
+          this.#variantChangeUnsubscribe();
+          this.#variantChangeUnsubscribe = null;
+        }
+      }
+
       init() {
+        // Idempotent: setting up listeners more than once on the same instance
+        // would double-fire price updates and add-to-cart requests.
+        if (this.#initialized) return;
+        this.#initialized = true;
         if (!window.location.href.includes('/cart') && !this.closest('cart-notification') && !this.closest('cart-drawer')) {
           this.toggleAccordions();
         }
@@ -337,9 +357,9 @@ if (!customElements.get('product-customization-options')) {
           if (!optionContainer) return;
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${option.dataset.customizationOption}"]`);
           if (!customizationOption) return;
-          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
+          const priceContainer = customizationOption.parentElement.querySelector('[data-option-price-raw]');
           if (priceContainer) {
-            const price = Number(priceContainer.getAttribute('avis-price').replace(',', ''));
+            const price = Number(priceContainer.getAttribute('data-option-price-raw').replace(',', ''));
             const formattedPrice = price.toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -547,18 +567,42 @@ if (!customElements.get('product-customization-options')) {
           if (inputValue - 1 === 0 && option === 'decrease') return;
           if (minInputValue && inputValue === minInputValue && option === 'decrease') return;
           if (maxInputValue && inputValue === maxInputValue && option === 'increase') return;
-          option === 'increase' ? (input.value = inputValue + 1) : (input.value = inputValue - 1);
+
+          const nextValue = option === 'increase' ? inputValue + 1 : inputValue - 1;
+          const optionContainer = el.closest('[data-option-accordion]');
+
+          // Multichoice limit must be evaluated BEFORE applying the new value
+          // or recomputing prices. Previously the value was set, prices were
+          // updated, and only then was the limit checked and the value rolled
+          // back — leaving the per-option price element showing the over-limit
+          // figure even after rollback.
+          if (
+            optionContainer &&
+            optionContainer.hasAttribute('data-multichoice-limit') &&
+            option === 'increase'
+          ) {
+            const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
+            let quantityLimit = 0;
+            const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
+            multiChoiceOptions.forEach((choice) => {
+              const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
+              if (!optionQuantityInput) return;
+              quantityLimit += optionQuantityInput === input ? nextValue : Number(optionQuantityInput.value);
+            });
+            if (quantityLimit > limit) return;
+          }
+
+          input.value = nextValue;
           if (updatePrice) {
-            option === 'increase' ? (input.dataset.value = inputValue + 1) : (input.dataset.value = inputValue - 1);
+            input.dataset.value = nextValue;
             this.updatePrice();
           }
-          const optionContainer = el.closest('[data-option-accordion]');
           if (!optionContainer) return;
           const customizationOption = optionContainer.querySelector(`[data-customization-option="${input.dataset.inputQuantity}"]`);
           if (!customizationOption) return;
-          const priceContainer = customizationOption.parentElement.querySelector('[avis-price]');
+          const priceContainer = customizationOption.parentElement.querySelector('[data-option-price-raw]');
           if (priceContainer) {
-            const price = Number(priceContainer.getAttribute('avis-price')) * Number(input.value);
+            const price = Number(priceContainer.getAttribute('data-option-price-raw')) * Number(input.value);
             const formattedPrice = price.toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -568,32 +612,11 @@ if (!customElements.get('product-customization-options')) {
               const selectedOption = optionContainer.querySelector(`[data-option-id="${input.dataset.inputQuantity}"]`);
               if (selectedOption) {
                 const selectedOptionPrice = selectedOption.querySelector('[data-option-price]');
-                selectedOptionPrice.innerHTML = `$${formattedPrice}`;
+                if (selectedOptionPrice) selectedOptionPrice.innerHTML = `$${formattedPrice}`;
               }
             });
           }
           customizationOption.checked = true;
-
-          if (optionContainer.hasAttribute('data-multichoice-limit')) {
-            let quantityLimit = 0;
-            const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
-            const multiChoiceOptions = optionContainer.querySelectorAll(`[data-customization-option]:checked`);
-            if (multiChoiceOptions.length > 0) {
-              multiChoiceOptions.forEach((choice) => {
-                const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
-                if (optionQuantityInput) {
-                  quantityLimit += Number(optionQuantityInput.value);
-                }
-              });
-            }
-
-            console.log(quantityLimit, 'quantityLimit');
-
-            if (quantityLimit > limit) {
-              input.value = Number(input.value) - 1;
-              console.log(input.value);
-            }
-          }
           customizationOption.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
