@@ -583,12 +583,25 @@ if (!customElements.get('product-customization-options')) {
           ) {
             const limit = Number(optionContainer.getAttribute('data-multichoice-limit'));
             let quantityLimit = 0;
+            let pendingOptionCounted = false;
             const multiChoiceOptions = optionContainer.querySelectorAll('[data-customization-option]:checked');
             multiChoiceOptions.forEach((choice) => {
               const optionQuantityInput = optionContainer.querySelector(`[data-input-quantity="${choice.dataset.customizationOption}"]`);
               if (!optionQuantityInput) return;
-              quantityLimit += optionQuantityInput === input ? nextValue : Number(optionQuantityInput.value);
+              if (optionQuantityInput === input) {
+                quantityLimit += nextValue;
+                pendingOptionCounted = true;
+              } else {
+                quantityLimit += Number(optionQuantityInput.value);
+              }
             });
+            // Clicking `+` on an option that isn't checked yet auto-checks it
+            // further down (`customizationOption.checked = true`), so its
+            // post-click quantity must be included in the limit even though
+            // it is not in the `:checked` selector at this point.
+            if (!pendingOptionCounted) {
+              quantityLimit += nextValue;
+            }
             if (quantityLimit > limit) return;
           }
 
