@@ -1,20 +1,15 @@
 // Removes stale Avis (`_apo_option` / `_apo_order`) line items and `ap_*` /
 // `bct` cart attributes that may have been deposited in a customer cart while
-// the previous (Avis-enabled) theme was live. Runs once per session, on idle,
-// so it never blocks render, navigation, or input.
+// the previous (Avis-enabled) theme was live. Runs on every page load (idle
+// scheduled), so an abandoned-cart recovery part-way through a session is
+// also cleaned, not just the first cart the visitor sees. The Cart Transform
+// Function (fs-bundle-api) is the authoritative server-side defence — this
+// script is a best-effort UI cleanup so customers don't see stale Avis
+// properties on the cart page.
 (function () {
-  var SESSION_FLAG = 'fs_cart_apo_cleanup_done';
-
   function shouldSkip() {
-    try {
-      if (window.sessionStorage.getItem(SESSION_FLAG) === '1') return true;
-    } catch (e) {}
     if (document.cookie.indexOf('cart=') === -1) return true;
     return false;
-  }
-
-  function markDone() {
-    try { window.sessionStorage.setItem(SESSION_FLAG, '1'); } catch (e) {}
   }
 
   function isStaleItem(item) {
@@ -40,11 +35,10 @@
     inFlight = fetch('/cart.js', { credentials: 'same-origin' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (cart) {
-        if (!cart || !Array.isArray(cart.items)) { markDone(); return false; }
+        if (!cart || !Array.isArray(cart.items)) return false;
         var stale = cart.items.filter(isStaleItem);
         var attributes = buildAttributeWipe(cart);
         if (stale.length === 0 && Object.keys(attributes).length === 0) {
-          markDone();
           return false;
         }
         var updates = {};
@@ -56,7 +50,6 @@
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({ updates: updates, attributes: attributes })
         }).then(function () {
-          markDone();
           if (typeof PUB_SUB_EVENTS !== 'undefined' && typeof publish === 'function') {
             try { publish(PUB_SUB_EVENTS.cartUpdate, { source: 'fs-cart-apo-cleanup' }); } catch (e) {}
           }
@@ -83,8 +76,7 @@
   }
 
   // Last-resort guard: if a customer somehow clicks Checkout before the idle
-  // cleanup has run, intercept once, run cleanup, then continue. After the
-  // session flag is set this becomes a no-op.
+  // cleanup has run, intercept once, run cleanup, then continue.
   function isCheckoutTrigger(el) {
     if (!el) return false;
     if (el.matches && el.matches('[name="checkout"], [name="goto_pay_gateway"]')) return true;
