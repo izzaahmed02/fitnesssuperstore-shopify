@@ -1710,44 +1710,41 @@ document.addEventListener("DOMContentLoaded", function () {
   const navItems = document.querySelectorAll(".process-nav-item");
   const sections = document.querySelectorAll(".process-step-block");
 
-  // Click scroll
+  // Click: scroll to section using getBoundingClientRect for accuracy
   navItems.forEach(item => {
     item.addEventListener("click", function () {
       const target = document.getElementById(this.dataset.target);
-      window.scrollTo({
-        top: target.offsetTop - 100,
-        behavior: "smooth"
-      });
+      if (!target) return;
+
+      const top = target.getBoundingClientRect().top + window.scrollY - 120;
+      window.scrollTo({ top, behavior: "smooth" });
     });
   });
 
-  // Intersection Observer for scroll spy
-  const observerOptions = {
-    root: null,
-    rootMargin: "0px 0px -40% 0px",
-    threshold: 0.3
-  };
+  // Scroll spy: highlight the nav item whose section is closest to the top of the viewport
+  function updateActiveNav() {
+    let closestSection = null;
+    let closestDistance = Infinity;
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-
-        const id = entry.target.getAttribute("id");
-
-        navItems.forEach(item => {
-          item.classList.remove("active");
-          if (item.dataset.target === id) {
-            item.classList.add("active");
-          }
-        });
-
+    sections.forEach(section => {
+      const rect = section.getBoundingClientRect();
+      const distance = Math.abs(rect.top - 130);
+      if (rect.top <= 200 && distance < closestDistance) {
+        closestDistance = distance;
+        closestSection = section;
       }
     });
-  }, observerOptions);
 
-  sections.forEach(section => {
-    observer.observe(section);
-  });
+    if (closestSection) {
+      const id = closestSection.getAttribute("id");
+      navItems.forEach(item => {
+        item.classList.toggle("active", item.dataset.target === id);
+      });
+    }
+  }
+
+  window.addEventListener("scroll", updateActiveNav, { passive: true });
+  updateActiveNav();
 
 });
 </script>
