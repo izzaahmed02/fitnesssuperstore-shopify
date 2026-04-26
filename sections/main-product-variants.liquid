@@ -81,6 +81,19 @@
   <link rel="stylesheet" href="{{ 'paylater-modal.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'paylater-modal.css' | asset_url | stylesheet_tag }}</noscript>
 
+   {% assign hide_product_options = false %}
+  {% for item in cart.items %}
+    {% for property in item.properties %}
+      {% if property.first == '_functionOperation' %}
+        {% assign hide_product_options = true %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  {% unless hide_product_options %}
+    {{ 'product-options.css' | asset_url | stylesheet_tag }}
+  {% endunless %}
+
   {%- style -%}
     .section-{{ section.id }}-padding {
       padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
@@ -687,6 +700,7 @@
                     </div>
                   {% endif %}
                 </div>
+
                 {% assign metaObject3rdParty = product.metafields.custom['3rd_party'].value %}
                   {% if metaObject3rdParty != blank and metaObject3rdParty.google_material != blank %}
                     {% assign value = metaObject3rdParty.google_material | downcase %}
@@ -697,6 +711,7 @@
                       </div>
                     {% endif %}
                   {% endif %}
+               
               {%- when 'text' -%}
                 <p
                   class="product__text inline-richtext{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}"
@@ -783,7 +798,12 @@
 
               {%- when 'price_with_option' -%}
                {% unless product.tags contains 'avisplus-product-options' %}
-                <product-form
+                {% assign tag = 'product-form' %}
+                {% assign custom_product_options_block = section.blocks | where: 'type', 'product_options' %}
+                {% if custom_product_options_block.size > 0 %}
+                  {% assign tag = 'product-form-with-options' %}
+                {% endif %}
+                <{{ tag }}
                   class="product-form"
                   data-hide-errors="{{ gift_card_recipient_feature_active }}"
                   data-section-id="{{ section.id }}"
@@ -805,11 +825,11 @@
                   </div>
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
-                  <div class="product_price_with_options-contaniner">
+                   <div class="product_price_with_options-contaniner">
                     <div class="product_prices">
                       <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                         <div class="pr_custom_price-container">
-                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}">
+                          <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
                             {{ product.selected_or_first_available_variant.price | money }}
                           </p>
                         </div>
@@ -1068,32 +1088,26 @@
                                     assign quantity_rule_soldout = true
                                   endif
                                 -%}
-                               <button
-  id="ProductSubmitButton-{{ section.id }}"
-  type="submit"
-  name="add"
-  class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
-  data-submit-button
-  {% if product.selected_or_first_available_variant == null %}
-    disabled
-  {% elsif product.selected_or_first_available_variant.available == false or quantity_rule_soldout %}
-    disabled
-  {% endif %}
->
-  {% render 'icon-cart' %}
-  <span data-submit-button-text>
-    {%- if product.selected_or_first_available_variant == null -%}
-      Choose Variant
-    {%- elsif product.selected_or_first_available_variant.available == false
-      or quantity_rule_soldout
-    -%}
-      Unavailable
-    {%- else -%}
-      {{ 'products.product.add_to_cart' | t }}
-    {%- endif -%}
-  </span>
-  {%- render 'loading-spinner' -%}
-</button>
+                                <button
+                                  id="ProductSubmitButton-{{ section.id }}"
+                                  type="submit"
+                                  name="add"
+                                  class="product-form__submit button button--full-width {% if show_dynamic_checkout %}button--secondary{% else %}button--primary{% endif %}"
+                                >
+                                  {% render 'icon-cart' %}
+                                  <span>
+                                    {%- if product.selected_or_first_available_variant == null -%}
+                                      {{ 'products.product.unavailable' | t }}
+                                    {%- elsif product.selected_or_first_available_variant.available == false
+                                      or quantity_rule_soldout
+                                    -%}
+                                      {{ 'products.product.sold_out' | t }}
+                                    {%- else -%}
+                                      {{ 'products.product.add_to_cart' | t }}
+                                    {%- endif -%}
+                                  </span>
+                                  {%- render 'loading-spinner' -%}
+                                </button>
                               </div>
                             {%- endform -%}
                           {%- else -%}
@@ -1196,7 +1210,7 @@
                 {% unless is_gift_cards_template %}
                 {% render 'paylater-providers' %}
               {% endunless %}
-                </product-form>
+                </{{tag}}>
                {% endunless %}
               {%- when 'inventory' -%}
                 <p
@@ -1751,6 +1765,8 @@
                 </product-recommendations>
               {%- when 'icon-with-text' -%}
                 {% render 'icon-with-text', block: block %}
+                 {% when 'product_options' %}
+                {% render 'product-options', product: product %} 
             {%- endcase -%}
           {%- endfor -%}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
@@ -1986,6 +2002,41 @@
   <div class="mobile-popup-dots"></div>
 </div>
 
+{% assign options = product.metafields.options.product_options.value %}
+{% for category in options %}
+  {% if category.help_text.value != blank %}
+    {% liquid
+      assign content = category.help_text.value
+      assign title = content.title
+      assign text = content.help_text
+      assign related_products = content.related_products.value
+    %}
+    {% render 'related-products-popup-for-options', 
+      popup_id: category.title,
+      title: title,
+      related_products: related_products,
+      text: text
+    %}
+  {% endif %}
+
+  {% for product_option in category.product_options.value %}
+    {% if product_option.help_text.value != blank %}
+      {% liquid
+        assign content = product_option.help_text.value
+        assign title = content.title
+        assign text = content.help_text
+        assign related_products = content.related_products.value
+      %}
+      {% render 'related-products-popup-for-options', 
+        popup_id: product_option.product_option_title,
+        title: title,
+        related_products: related_products,
+        text: text
+      %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
 <style>
   #dynamic-product-content iframe{max-width:100% !important;}
 </style>
@@ -1993,8 +2044,11 @@
 <script>
   window.product = {{ product | json }}
 </script>
-<script src="{{ 'avis-custom.js' | asset_url }}" defer="defer"></script>
+
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+{% unless hide_product_options %}
+  <script src="{{'product-custom-options.js' | asset_url }}" defer></script>
+{% endunless %}
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -2087,6 +2141,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+{% if custom_product_options_block.size > 0 %}
+  <script src="{{'product-form-with-options.js' | asset_url }}" defer></script>
+{% endif %}
+
 
 <script defer type="text/javascript">
   var sa_products_count = 3;
@@ -2162,6 +2220,10 @@ document.addEventListener('DOMContentLoaded', function() {
       "type": "price_with_option",
       "name": "Price with options",
       "limit": 1
+    },
+    {
+      "type": "product_options",
+      "name": "Product options"
     },
     {
       "type": "price",

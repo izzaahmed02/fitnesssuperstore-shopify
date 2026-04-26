@@ -79,7 +79,7 @@ onReady(() => {
     });
   }, { passive: true });
 
-  const toggleCollapsible = (panel, arrow, open) => {
+   const toggleCollapsible = (panel, arrow, open) => {
     rafBatch(() => {
       const willOpen = open ?? !panel.classList.contains('visible');
       const panelHeight = willOpen ? `${panel.scrollHeight}px` : '0';
@@ -191,7 +191,7 @@ onReady(() => {
     if (e.target.closest('.header.dismiss')) document.body.style.overflow = 'auto';
   }, { passive: true });
 
-  document.body.addEventListener('click', (e) => {
+    document.body.addEventListener('click', (e) => {
     const btn = e.target.closest('.accordion-item');
     if (!btn) return;
     const panel = btn.nextElementSibling; if (!panel) return;
