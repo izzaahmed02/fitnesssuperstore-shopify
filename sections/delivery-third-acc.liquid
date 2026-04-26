@@ -40,7 +40,73 @@
         top: 0;
         left: -38px;
     }
+
+    /* Re-apply all .accordion-header base styles to sub-accordion-header */
+    .sub-accordion-header {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        width: 100%;
+        cursor: pointer;
+        border: none;
+        outline: none;
+        text-align: left;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+        padding: 12px;
+        background-color: transparent;
+        column-gap: 2px;
+    }
+
+    .sub-accordion-header .accordion-title {
+        color: #D83D0E;
+        font-size: 9px;
+        line-height: 11px;
+    }
+
+    .sub-accordion-header .accordion-chevron {
+        transform: rotate(180deg);
+        transition: transform 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .sub-accordion-header[aria-expanded="true"] .accordion-chevron {
+        transform: rotate(0deg);
+    }
+
+    /* Sub-accordion open/close transition */
+    #accordion-subcontent-{{ forloop.index }} {
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.3s ease;
+    }
+
+    #accordion-subcontent-{{ forloop.index }}[aria-hidden="false"] {
+        max-height: 600px;
+    }
+
+    /* Border override for sub item */
+    .delivery-accordion-item:has(> .sub-accordion-header[aria-expanded="true"]) {
+        border: 1px solid #E5E5E5;
+    }
+
+    /* Image style inside sub-accordion */
+    .delivery-accordion-item .sub-accordion-header ~ .accordion-content .accordion-content-image {
+        border-radius: 0;
+    }
+
+    @media (max-width: 749px) {
+        .sub-accordion-header {
+            column-gap: 8px;
+        }
+
+        .delivery-accordion-item .sub-accordion-header ~ .accordion-content .accordion-content-image {
+            min-height: 180px;
+            object-fit: contain;
+        }
+    }
 </style>
+
 <div class="section-{{ section.id }} page-width scroll-trigger animate--slide-in">
     <div class="container">
         <div class="delivery-first-acc__wrapper">
@@ -58,10 +124,9 @@
                                 type="button"
                                 aria-expanded="false"
                                 aria-controls="accordion-content-{{ forloop.index }}">
-
-                                <span class="accordion-title">
-                                  {{ block.settings.title }}
-                                </span>
+                            <span class="accordion-title">
+                                {{ block.settings.title }}
+                            </span>
                             {% render 'chevron' %}
                         </button>
 
@@ -75,20 +140,20 @@
                                 {% if forloop.index == 2 %}
                                     <div class="delivery-accordion-item">
                                         <button
-                                                class="accordion-header"
+                                                class="sub-accordion-header"
                                                 type="button"
-                                                aria-expanded="true"
-                                                aria-controls="accordion-content-{{ forloop.index }}">
+                                                aria-expanded="false"
+                                                aria-controls="accordion-subcontent-{{ forloop.index }}">
                                             {% render 'subchevron' %}
                                             <span class="accordion-title">
-                                  {{ block.settings.subtitle }}
-                                </span>
+                                                {{ block.settings.subtitle }}
+                                            </span>
                                         </button>
 
                                         <div
-                                                id="accordion-content-{{ forloop.index }}"
+                                                id="accordion-subcontent-{{ forloop.index }}"
                                                 class="accordion-content"
-                                                aria-hidden="false"
+                                                aria-hidden="true"
                                         >
                                             <div class="accordion-content-inner">
                                                 {% if block.settings.subimage != blank %}
@@ -114,6 +179,36 @@
         </div>
     </div>
 </div>
+
+<script>
+  (function () {
+    document.querySelectorAll('.section-{{ section.id }} .sub-accordion-header').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        var controlsId = btn.getAttribute('aria-controls');
+        var content = document.getElementById(controlsId);
+        if (!content) return;
+
+        var isExpanded = btn.getAttribute('aria-expanded') === 'true';
+
+        btn.setAttribute('aria-expanded', String(!isExpanded));
+        content.setAttribute('aria-hidden', String(isExpanded));
+
+        // After the sub-accordion CSS transition completes,
+        // recalculate the parent accordion's max-height to fit the new content
+        var parent = btn.closest('.accordion-content');
+        if (parent) {
+          setTimeout(function () {
+            parent.style.maxHeight = parent.scrollHeight + 'px';
+          }, 110); // slightly after the 0.3s transition finishes
+        }
+      });
+    });
+  })();
+</script>
+
 {% schema %}
 {
   "name": "Third Accordion Section",
@@ -165,7 +260,7 @@
         {
           "type": "image_picker",
           "id": "subimage",
-          "label": "Block Subaccorion Image"
+          "label": "Block Subaccordion Image"
         }
       ]
     }

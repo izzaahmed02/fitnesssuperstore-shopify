@@ -1,0 +1,53 @@
+{%- comment -%}
+  Strips legacy Volusion-era HTML from a rich-text string before render:
+  - <script> blocks whose opening tag references /v/vspfiles/, /v/, fitness-resp,
+    mat-calculator, or a bogus /products/<handle>.js src
+  - hrefs pointing to /v/vspfiles or /v/... (neutralised to "#")
+  - hrefs pointing to /products/undefined or /products/undefined.js (neutralised to "#")
+  Usage: {% render 'clean-description', description: product.description %}
+{%- endcomment -%}
+{%- liquid
+  assign raw = description
+
+  assign script_parts = raw | split: '<script'
+  assign cleaned = script_parts[0]
+  for piece in script_parts offset: 1
+    assign halves = piece | split: '</script>'
+    assign head = halves[0]
+    assign bad = false
+    if head contains 'vspfiles'
+      assign bad = true
+    elsif head contains 'fitness-resp'
+      assign bad = true
+    elsif head contains 'mat-calculator'
+      assign bad = true
+    elsif head contains 'src="/v/'
+      assign bad = true
+    elsif head contains "src='/v/"
+      assign bad = true
+    elsif head contains 'src="/products/'
+      assign bad = true
+    elsif head contains "src='/products/"
+      assign bad = true
+    endif
+    if bad
+      if halves.size > 1
+        assign tail = halves | slice: 1, 99 | join: '</script>'
+        assign cleaned = cleaned | append: tail
+      endif
+    else
+      assign cleaned = cleaned | append: '<script' | append: piece
+    endif
+  endfor
+
+  assign cleaned = cleaned | replace: 'href="/v/vspfiles/', 'href="#legacy-'
+  assign cleaned = cleaned | replace: "href='/v/vspfiles/", "href='#legacy-"
+  assign cleaned = cleaned | replace: 'href="/v/', 'href="#legacy-'
+  assign cleaned = cleaned | replace: "href='/v/", "href='#legacy-"
+  assign cleaned = cleaned | replace: 'href="/products/undefined.js"', 'href="#"'
+  assign cleaned = cleaned | replace: "href='/products/undefined.js'", "href='#'"
+  assign cleaned = cleaned | replace: 'href="/products/undefined"', 'href="#"'
+  assign cleaned = cleaned | replace: "href='/products/undefined'", "href='#'"
+  assign cleaned = cleaned | replace: 'src="/v/vspfiles/', 'data-legacy-src="/v/vspfiles/'
+  assign cleaned = cleaned | replace: "src='/v/vspfiles/", "data-legacy-src='/v/vspfiles/"
+-%}{{ cleaned }}
