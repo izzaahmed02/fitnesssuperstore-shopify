@@ -4,21 +4,23 @@
     <h2 class="contact__heading">Inside Our Remanufacturing Process</h2>
   </div>
 
-  <div class="customer-photo-gallery__slider slick-carousel-gallery">
-    {% for block in section.blocks %}
-      {% if block.settings.image != blank %}
-        {% assign thumb = block.settings.image | image_url: width: 900 %}
-        {% assign full  = block.settings.image | image_url: width: 2400 %}
-        <div class="customer-photo-gallery__slide" {{ block.shopify_attributes }}>
-          <img
-            src="{{ thumb }}"
-            data-full="{{ full }}"
-            alt="Customer photo {{ forloop.index }}"
-            loading="lazy"
-          >
-        </div>
-      {% endif %}
-    {% endfor %}
+  <div class="gallery-slick-wrapper-{{ section.id }}">
+    <div class="slick-carousel-gallery-{{ section.id }}">
+      {% for block in section.blocks %}
+        {% if block.settings.image != blank %}
+          {% assign thumb = block.settings.image | image_url: width: 900 %}
+          {% assign full  = block.settings.image | image_url: width: 2400 %}
+          <div class="customer-photo-gallery__slide" {{ block.shopify_attributes }}>
+            <img
+              src="{{ thumb }}"
+              data-full="{{ full }}"
+              alt="Customer photo {{ forloop.index }}"
+              loading="lazy"
+            >
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
   </div>
 
   <!-- Lightbox -->
@@ -34,12 +36,12 @@
 <style>
   #customer-photo-gallery-{{ section.id }} {
     margin: 40px 0;
-    padding: 0 36px;
     position: relative;
   }
 
   #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__header {
     margin-bottom: 24px;
+    padding: 0 16px;
   }
 
   #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__slide img {
@@ -55,9 +57,26 @@
     transform: scale(1.03);
   }
 
-  /* ── Slick core arrow styles ── */
-  #customer-photo-gallery-{{ section.id }} .slick-prev,
-  #customer-photo-gallery-{{ section.id }} .slick-next {
+  /* ── Wrapper gives padding so arrows have room ── */
+  .gallery-slick-wrapper-{{ section.id }} {
+    position: relative;
+    padding: 0 36px;
+  }
+
+  /* ── Slick list clip ── */
+  .slick-carousel-gallery-{{ section.id }} .slick-list {
+    overflow: hidden;
+    margin: 0 -8px;
+  }
+
+  /* ── Slide spacing ── */
+  .slick-carousel-gallery-{{ section.id }} .slick-slide {
+    margin: 0 8px;
+  }
+
+  /* ── Arrows ── */
+  .gallery-slick-wrapper-{{ section.id }} .slick-prev,
+  .gallery-slick-wrapper-{{ section.id }} .slick-next {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -67,7 +86,7 @@
     border: none;
     background: #616166;
     cursor: pointer;
-    z-index: 999;
+    z-index: 10;
     display: flex !important;
     align-items: center;
     justify-content: center;
@@ -78,23 +97,23 @@
     outline: none;
   }
 
-  #customer-photo-gallery-{{ section.id }} .slick-prev {
-    left: -16px;
+  .gallery-slick-wrapper-{{ section.id }} .slick-prev {
+    left: 0;
   }
 
-  #customer-photo-gallery-{{ section.id }} .slick-next {
-    right: -16px;
+  .gallery-slick-wrapper-{{ section.id }} .slick-next {
+    right: 0;
   }
 
-  #customer-photo-gallery-{{ section.id }} .slick-prev:hover,
-  #customer-photo-gallery-{{ section.id }} .slick-next:hover,
-  #customer-photo-gallery-{{ section.id }} .slick-prev:focus,
-  #customer-photo-gallery-{{ section.id }} .slick-next:focus {
+  .gallery-slick-wrapper-{{ section.id }} .slick-prev:hover,
+  .gallery-slick-wrapper-{{ section.id }} .slick-next:hover,
+  .gallery-slick-wrapper-{{ section.id }} .slick-prev:focus,
+  .gallery-slick-wrapper-{{ section.id }} .slick-next:focus {
     background: #616166;
     outline: none !important;
   }
 
-  #customer-photo-gallery-{{ section.id }} .slick-next:before {
+  .gallery-slick-wrapper-{{ section.id }} .slick-next:before {
     content: '' !important;
     background-image: url('{{ 'arrow-left.svg' | asset_url }}') !important;
     background-size: contain;
@@ -105,7 +124,7 @@
     height: 24px;
   }
 
-  #customer-photo-gallery-{{ section.id }} .slick-prev:before {
+  .gallery-slick-wrapper-{{ section.id }} .slick-prev:before {
     content: '' !important;
     background-image: url('{{ 'arrow-right.svg' | asset_url }}') !important;
     background-size: contain;
@@ -116,40 +135,41 @@
     height: 24px;
   }
 
-  /* ── Slick slide spacing ── */
-  #customer-photo-gallery-{{ section.id }} .slick-slide {
-    margin: 0 8px;
-  }
-
-  #customer-photo-gallery-{{ section.id }} .slick-list {
-    margin: 0 -8px;
-    overflow: hidden;
-  }
-
   /* ── Dots ── */
-  #customer-photo-gallery-{{ section.id }} .slick-dotted.slick-slider {
+  .slick-carousel-gallery-{{ section.id }}.slick-dotted.slick-slider {
     margin-bottom: 70px;
   }
 
-  #customer-photo-gallery-{{ section.id }} .slick-dots {
+  .gallery-slick-wrapper-{{ section.id }} .slick-dots {
     display: block !important;
     bottom: -50px !important;
+    position: absolute;
+    width: 100%;
+    left: 0;
+    text-align: center;
+    padding: 0;
+    margin: 0;
+    list-style: none;
   }
 
-  #customer-photo-gallery-{{ section.id }} .slick-dots li {
+  .gallery-slick-wrapper-{{ section.id }} .slick-dots li {
+    display: inline-block;
     width: auto;
     height: auto;
     margin: 0 3px;
   }
 
-  #customer-photo-gallery-{{ section.id }} .slick-dots li button {
+  .gallery-slick-wrapper-{{ section.id }} .slick-dots li button {
     width: 12px !important;
     height: 12px !important;
     padding: 0 !important;
+    background: transparent;
+    border: none;
+    cursor: pointer;
   }
 
-  #customer-photo-gallery-{{ section.id }} .slick-dots li button:before {
-    font-size: 34px !important;
+  .gallery-slick-wrapper-{{ section.id }} .slick-dots li button:before {
+    font-size: 0 !important;
     line-height: 12px !important;
     width: 12px !important;
     height: 12px !important;
@@ -159,12 +179,12 @@
     border-radius: 50% !important;
   }
 
-  #customer-photo-gallery-{{ section.id }} .slick-dots li.slick-active button:before {
+  .gallery-slick-wrapper-{{ section.id }} .slick-dots li.slick-active button:before {
     background-color: #23232B !important;
   }
 
   /* ── Lightbox ── */
-  .customer-photo-gallery__lightbox {
+  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__lightbox {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.8);
@@ -177,24 +197,24 @@
     z-index: 9999;
   }
 
-  .customer-photo-gallery__lightbox--active {
+  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__lightbox--active {
     opacity: 1;
     pointer-events: auto;
   }
 
-  .customer-photo-gallery__lightbox-inner {
+  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__lightbox-inner {
     max-width: 700px;
     width: 90%;
     position: relative;
   }
 
-  .customer-photo-gallery__lightbox-inner img {
+  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__lightbox-inner img {
     max-width: 100%;
     display: block;
     border-radius: 12px;
   }
 
-  .customer-photo-gallery__lightbox-close {
+  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__lightbox-close {
     position: absolute;
     top: -44px;
     right: 0;
@@ -214,12 +234,12 @@
 
   /* ── Mobile ── */
   @media screen and (max-width: 749px) {
-    #customer-photo-gallery-{{ section.id }} {
+    .gallery-slick-wrapper-{{ section.id }} {
       padding: 0 16px;
     }
 
-    #customer-photo-gallery-{{ section.id }} .slick-prev,
-    #customer-photo-gallery-{{ section.id }} .slick-next {
+    .gallery-slick-wrapper-{{ section.id }} .slick-prev,
+    .gallery-slick-wrapper-{{ section.id }} .slick-next {
       width: 36px;
       height: 36px;
       top: auto;
@@ -227,21 +247,21 @@
       transform: none;
     }
 
-    #customer-photo-gallery-{{ section.id }} .slick-prev {
+    .gallery-slick-wrapper-{{ section.id }} .slick-prev {
       left: auto;
-      right: 48px;
+      right: 44px;
     }
 
-    #customer-photo-gallery-{{ section.id }} .slick-next {
-      right: 4px;
+    .gallery-slick-wrapper-{{ section.id }} .slick-next {
+      right: 0;
     }
 
-    #customer-photo-gallery-{{ section.id }} .slick-dotted.slick-slider {
+    .slick-carousel-gallery-{{ section.id }}.slick-dotted.slick-slider {
       padding-bottom: 24px !important;
       margin-bottom: 64px;
     }
 
-    #customer-photo-gallery-{{ section.id }} .slick-dots {
+    .gallery-slick-wrapper-{{ section.id }} .slick-dots {
       bottom: -10px !important;
     }
   }
@@ -252,7 +272,7 @@
   var sectionEl = document.getElementById('customer-photo-gallery-{{ section.id }}');
   if (!sectionEl) return;
 
-  var $slider = $(sectionEl).find('.slick-carousel-gallery');
+  var $slider = $('.slick-carousel-gallery-{{ section.id }}');
 
   $slider.slick({
     slidesToShow: 4,
@@ -260,18 +280,15 @@
     arrows: true,
     dots: true,
     cssEase: 'linear',
+    appendArrows: $('.gallery-slick-wrapper-{{ section.id }}'),
     responsive: [
       {
         breakpoint: 990,
-        settings: {
-          slidesToShow: 2
-        }
+        settings: { slidesToShow: 2 }
       },
       {
         breakpoint: 480,
-        settings: {
-          slidesToShow: 1
-        }
+        settings: { slidesToShow: 1 }
       }
     ]
   });
