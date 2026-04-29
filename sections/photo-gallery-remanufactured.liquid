@@ -1,0 +1,344 @@
+{% if section.blocks.size > 0 %}
+<section id="customer-photo-gallery-{{ section.id }}" class="customer-photo-gallery">
+  <div class="customer-photo-gallery__header">
+    <h2 class="contact__heading">Inside Our Remanufacturing Process</h2>
+  </div>
+
+  <div class="customer-photo-gallery__slider slick-carousel-gallery">
+    {% for block in section.blocks %}
+      {% if block.settings.image != blank %}
+        {% assign thumb = block.settings.image | image_url: width: 900 %}
+        {% assign full  = block.settings.image | image_url: width: 2400 %}
+        <div class="customer-photo-gallery__slide" {{ block.shopify_attributes }}>
+          <img
+            src="{{ thumb }}"
+            data-full="{{ full }}"
+            alt="Customer photo {{ forloop.index }}"
+            loading="lazy"
+          >
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Lightbox -->
+  <div class="customer-photo-gallery__lightbox" aria-hidden="true">
+    <div class="customer-photo-gallery__lightbox-inner">
+      <button type="button" class="customer-photo-gallery__lightbox-close" aria-label="Close">&times;</button>
+      <img src="" alt="Expanded customer photo">
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<style>
+  #customer-photo-gallery-{{ section.id }} {
+    margin: 40px 0;
+    padding: 0 16px;
+    position: relative;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__header {
+    margin-bottom: 24px;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__slide img {
+    width: 100%;
+    border-radius: 12px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform .2s ease;
+    display: block;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__slide img:hover {
+    transform: scale(1.03);
+  }
+
+  /* ── Slick overrides matching Video Carousel ── */
+  #customer-photo-gallery-{{ section.id }} .slick-prev,
+  #customer-photo-gallery-{{ section.id }} .slick-next {
+    height: 44px;
+    width: 44px;
+    border-radius: 100px;
+    font-size: 0;
+    line-height: 0;
+    position: absolute;
+    top: 50%;
+    display: block;
+    z-index: 999;
+    padding: 0;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: transparent;
+    border: none;
+    outline: none;
+    background: #616166;
+  }
+
+  #customer-photo-gallery-{{ section.id }} button.slick-next.slick-arrow {
+    position: absolute;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    top: 50%;
+    justify-content: center;
+    align-items: center;
+    right: -20px;
+    z-index: 999;
+  }
+
+  #customer-photo-gallery-{{ section.id }} button.slick-prev.slick-arrow {
+    position: absolute;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    right: 55px;
+    z-index: 999;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-next:before {
+    content: '' !important;
+    background-image: url('{{ 'arrow-left.svg' | asset_url }}') !important;
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-prev:before {
+    content: '' !important;
+    background-image: url('{{ 'arrow-right.svg' | asset_url }}') !important;
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-dotted.slick-slider {
+    margin-bottom: 70px;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-dots {
+    display: block !important;
+    bottom: -50px !important;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-dots li {
+    width: auto;
+    height: auto;
+    margin: 0 3px;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-dots li button {
+    width: 12px !important;
+    height: 12px !important;
+    padding: 0 !important;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-dots li button:before {
+    font-size: 34px !important;
+    line-height: 12px !important;
+    width: 12px !important;
+    height: 12px !important;
+    content: '' !important;
+    display: block !important;
+    background-color: #ccc !important;
+    border-radius: 50% !important;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-dots li.slick-active button:before {
+    background-color: #23232B !important;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-next:focus,
+  #customer-photo-gallery-{{ section.id }} .slick-next:hover,
+  #customer-photo-gallery-{{ section.id }} .slick-prev:focus,
+  #customer-photo-gallery-{{ section.id }} .slick-prev:hover {
+    background: #616166;
+    outline: none !important;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-slide {
+    margin: 0 16px;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-list {
+    margin: 0 -18px;
+  }
+
+  /* ── Lightbox ── */
+  .customer-photo-gallery__lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    opacity: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: .2s ease;
+    z-index: 9999;
+  }
+
+  .customer-photo-gallery__lightbox--active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .customer-photo-gallery__lightbox-inner {
+    max-width: 700px;
+    width: 90%;
+    position: relative;
+  }
+
+  .customer-photo-gallery__lightbox-inner img {
+    max-width: 100%;
+    display: block;
+    border-radius: 12px;
+  }
+
+  .customer-photo-gallery__lightbox-close {
+    position: absolute;
+    top: -44px;
+    right: 0;
+    font-size: 28px;
+    background: #616166;
+    cursor: pointer;
+    height: 48px;
+    width: 48px;
+    border-radius: 34px;
+    display: flex;
+    font-weight: 100 !important;
+    color: white;
+    align-items: center;
+    justify-content: center;
+    border: none;
+  }
+
+  @media screen and (max-width: 749px) {
+    #customer-photo-gallery-{{ section.id }} button.slick-next.slick-arrow {
+      width: 36px;
+      height: 36px;
+      right: 0;
+      top: 100%;
+    }
+
+    #customer-photo-gallery-{{ section.id }} button.slick-prev.slick-arrow {
+      width: 36px;
+      height: 36px;
+      left: 0;
+      top: 100%;
+    }
+
+    #customer-photo-gallery-{{ section.id }} .slick-dotted.slick-slider {
+      padding-bottom: 24px !important;
+      margin-bottom: 48px;
+    }
+
+    #customer-photo-gallery-{{ section.id }} .slick-dots {
+      bottom: -10px !important;
+    }
+  }
+</style>
+
+<script>
+(function () {
+  var sectionEl = document.getElementById('customer-photo-gallery-{{ section.id }}');
+  if (!sectionEl) return;
+
+  // ── Slick init ──
+  var $slider = $(sectionEl).find('.slick-carousel-gallery');
+
+  $slider.slick({
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    arrows: true,
+    dots: true,
+    cssEase: 'linear',
+    responsive: [
+      {
+        breakpoint: 990,
+        settings: {
+          slidesToShow: 2
+        }
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1
+        }
+      }
+    ]
+  });
+
+  // ── Lightbox ──
+  var lightbox = sectionEl.querySelector('.customer-photo-gallery__lightbox');
+  var lightboxImg = lightbox.querySelector('img');
+  var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
+
+  sectionEl.querySelectorAll('.customer-photo-gallery__slide img').forEach(function (img) {
+    img.addEventListener('click', function () {
+      lightboxImg.src = img.dataset.full || img.src;
+      lightbox.classList.add('customer-photo-gallery__lightbox--active');
+    });
+  });
+
+  closeBtn.addEventListener('click', function () {
+    lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+  });
+
+  lightbox.addEventListener('click', function (e) {
+    if (e.target === lightbox) {
+      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+    }
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Photo gallery",
+  "settings": [],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Gallery Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Photo gallery",
+      "blocks": [
+        { "type": "image" },
+        { "type": "image" },
+        { "type": "image" },
+        { "type": "image" }
+      ]
+    }
+  ]
+}
+{% endschema %}
