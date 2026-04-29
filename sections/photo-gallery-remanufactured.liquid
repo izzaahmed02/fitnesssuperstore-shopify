@@ -1,327 +1,319 @@
 {% if section.blocks.size > 0 %}
-<section id="customer-photo-gallery-{{ section.id }}" class="customer-photo-gallery">
-  <div class="customer-photo-gallery__header">
+
+{% assign slide_count = 0 %}
+{% for block in section.blocks %}
+  {% if block.settings.image != blank %}
+    {% assign slide_count = slide_count | plus: 1 %}
+  {% endif %}
+{% endfor %}
+
+<section id="cpg-{{ section.id }}" class="cpg">
+  <div class="cpg__header">
     <h2 class="contact__heading">Inside Our Remanufacturing Process</h2>
   </div>
 
-  <div class="gallery-slick-wrapper-{{ section.id }}">
-    <div class="slick-carousel-gallery-{{ section.id }}">
-      {% for block in section.blocks %}
-        {% if block.settings.image != blank %}
-          {% assign thumb = block.settings.image | image_url: width: 900 %}
-          {% assign full  = block.settings.image | image_url: width: 2400 %}
-          <div class="customer-photo-gallery__slide" {{ block.shopify_attributes }}>
-            <img
-              src="{{ thumb }}"
-              data-full="{{ full }}"
-              alt="Customer photo {{ forloop.index }}"
-              loading="lazy"
-            >
-          </div>
-        {% endif %}
-      {% endfor %}
+  <div class="cpg__outer">
+    <button class="cpg__arrow cpg__arrow--prev" aria-label="Previous">
+      <img src="{{ 'arrow-right.svg' | asset_url }}" alt="" width="24" height="24">
+    </button>
+
+    <div class="cpg__track-wrap">
+      <div class="cpg__track">
+        {% for block in section.blocks %}
+          {% if block.settings.image != blank %}
+            {% assign thumb = block.settings.image | image_url: width: 900 %}
+            {% assign full  = block.settings.image | image_url: width: 2400 %}
+            <div class="cpg__slide" {{ block.shopify_attributes }}>
+              <img
+                src="{{ thumb }}"
+                data-full="{{ full }}"
+                alt="Gallery photo {{ forloop.index }}"
+                loading="lazy"
+                class="cpg__img"
+              >
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
     </div>
+
+    <button class="cpg__arrow cpg__arrow--next" aria-label="Next">
+      <img src="{{ 'arrow-left.svg' | asset_url }}" alt="" width="24" height="24">
+    </button>
+  </div>
+
+  <!-- Dots -->
+  <div class="cpg__dots">
+    {% for block in section.blocks %}
+      {% if block.settings.image != blank %}
+        <button class="cpg__dot{% if forloop.first %} cpg__dot--active{% endif %}" aria-label="Go to slide {{ forloop.index }}"></button>
+      {% endif %}
+    {% endfor %}
   </div>
 
   <!-- Lightbox -->
-  <div class="customer-photo-gallery__lightbox" aria-hidden="true">
-    <div class="customer-photo-gallery__lightbox-inner">
-      <button type="button" class="customer-photo-gallery__lightbox-close" aria-label="Close">&times;</button>
-      <img src="" alt="Expanded customer photo">
+  <div class="cpg__lightbox" id="cpg-lightbox-{{ section.id }}">
+    <div class="cpg__lightbox-inner">
+      <button class="cpg__lightbox-close" aria-label="Close">&times;</button>
+      <img src="" alt="Expanded photo" class="cpg__lightbox-img">
     </div>
   </div>
 </section>
-{% endif %}
 
 <style>
-  #customer-photo-gallery-{{ section.id }} {
+  #cpg-{{ section.id }} {
     margin: 40px 0;
     position: relative;
   }
 
-  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__header {
+  #cpg-{{ section.id }} .cpg__header {
     margin-bottom: 24px;
     padding: 0 16px;
   }
 
-  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__slide img {
+  #cpg-{{ section.id }} .cpg__outer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+  }
+
+  #cpg-{{ section.id }} .cpg__track-wrap {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  #cpg-{{ section.id }} .cpg__track {
+    display: flex;
+    transition: transform 0.35s ease;
+    will-change: transform;
+  }
+
+  #cpg-{{ section.id }} .cpg__slide {
+    flex: 0 0 calc(25% - 12px);
+    margin: 0 6px;
+    box-sizing: border-box;
+  }
+
+  #cpg-{{ section.id }} .cpg__img {
     width: 100%;
+    display: block;
     border-radius: 12px;
     object-fit: cover;
     cursor: pointer;
-    transition: transform .2s ease;
-    display: block;
+    transition: transform 0.2s ease;
   }
 
-  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__slide img:hover {
+  #cpg-{{ section.id }} .cpg__img:hover {
     transform: scale(1.03);
   }
 
-  /* ── Wrapper gives padding so arrows have room ── */
-  .gallery-slick-wrapper-{{ section.id }} {
-    position: relative;
-    padding: 0 36px;
-  }
-
-  /* ── Slick list clip ── */
-  .slick-carousel-gallery-{{ section.id }} .slick-list {
-    overflow: hidden;
-    margin: 0 -8px;
-  }
-
-  /* ── Slide spacing ── */
-  .slick-carousel-gallery-{{ section.id }} .slick-slide {
-    margin: 0 8px;
-  }
-
-  /* ── Arrows ── */
-  .gallery-slick-wrapper-{{ section.id }} .slick-prev,
-  .gallery-slick-wrapper-{{ section.id }} .slick-next {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
+  #cpg-{{ section.id }} .cpg__arrow {
+    flex-shrink: 0;
     width: 48px;
     height: 48px;
     border-radius: 50%;
     border: none;
     background: #616166;
     cursor: pointer;
-    z-index: 10;
-    display: flex !important;
+    display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0;
-    line-height: 0;
+    z-index: 10;
     padding: 0;
-    color: transparent;
-    outline: none;
+    transition: background 0.2s;
   }
 
-  .gallery-slick-wrapper-{{ section.id }} .slick-prev {
-    left: 0;
+  #cpg-{{ section.id }} .cpg__arrow:hover {
+    background: #444;
   }
 
-  .gallery-slick-wrapper-{{ section.id }} .slick-next {
-    right: 0;
+  #cpg-{{ section.id }} .cpg__arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 
-  .gallery-slick-wrapper-{{ section.id }} .slick-prev:hover,
-  .gallery-slick-wrapper-{{ section.id }} .slick-next:hover,
-  .gallery-slick-wrapper-{{ section.id }} .slick-prev:focus,
-  .gallery-slick-wrapper-{{ section.id }} .slick-next:focus {
-    background: #616166;
-    outline: none !important;
-  }
-
-  .gallery-slick-wrapper-{{ section.id }} .slick-next:before {
-    content: '' !important;
-    background-image: url('{{ 'arrow-left.svg' | asset_url }}') !important;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    display: inline-block;
+  #cpg-{{ section.id }} .cpg__arrow img {
     width: 24px;
     height: 24px;
+    display: block;
   }
 
-  .gallery-slick-wrapper-{{ section.id }} .slick-prev:before {
-    content: '' !important;
-    background-image: url('{{ 'arrow-right.svg' | asset_url }}') !important;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    display: inline-block;
-    width: 24px;
-    height: 24px;
+  #cpg-{{ section.id }} .cpg__dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 20px;
   }
 
-  /* ── Dots ── */
-  .slick-carousel-gallery-{{ section.id }}.slick-dotted.slick-slider {
-    margin-bottom: 70px;
-  }
-
-  .gallery-slick-wrapper-{{ section.id }} .slick-dots {
-    display: block !important;
-    bottom: -50px !important;
-    position: absolute;
-    width: 100%;
-    left: 0;
-    text-align: center;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-  }
-
-  .gallery-slick-wrapper-{{ section.id }} .slick-dots li {
-    display: inline-block;
-    width: auto;
-    height: auto;
-    margin: 0 3px;
-  }
-
-  .gallery-slick-wrapper-{{ section.id }} .slick-dots li button {
-    width: 12px !important;
-    height: 12px !important;
-    padding: 0 !important;
-    background: transparent;
+  #cpg-{{ section.id }} .cpg__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
     border: none;
+    background: #ccc;
     cursor: pointer;
+    padding: 0;
+    transition: background 0.2s;
   }
 
-  .gallery-slick-wrapper-{{ section.id }} .slick-dots li button:before {
-    font-size: 0 !important;
-    line-height: 12px !important;
-    width: 12px !important;
-    height: 12px !important;
-    content: '' !important;
-    display: block !important;
-    background-color: #ccc !important;
-    border-radius: 50% !important;
+  #cpg-{{ section.id }} .cpg__dot--active {
+    background: #23232B;
   }
 
-  .gallery-slick-wrapper-{{ section.id }} .slick-dots li.slick-active button:before {
-    background-color: #23232B !important;
-  }
-
-  /* ── Lightbox ── */
-  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__lightbox {
+  #cpg-{{ section.id }} .cpg__lightbox {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.82);
     opacity: 0;
     pointer-events: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: .2s ease;
+    transition: opacity 0.2s ease;
     z-index: 9999;
   }
 
-  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__lightbox--active {
+  #cpg-{{ section.id }} .cpg__lightbox.is-open {
     opacity: 1;
     pointer-events: auto;
   }
 
-  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__lightbox-inner {
+  #cpg-{{ section.id }} .cpg__lightbox-inner {
+    position: relative;
     max-width: 700px;
     width: 90%;
-    position: relative;
   }
 
-  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__lightbox-inner img {
-    max-width: 100%;
+  #cpg-{{ section.id }} .cpg__lightbox-img {
+    width: 100%;
     display: block;
     border-radius: 12px;
   }
 
-  #customer-photo-gallery-{{ section.id }} .customer-photo-gallery__lightbox-close {
+  #cpg-{{ section.id }} .cpg__lightbox-close {
     position: absolute;
-    top: -44px;
+    top: -48px;
     right: 0;
-    font-size: 28px;
-    background: #616166;
-    cursor: pointer;
-    height: 48px;
     width: 48px;
-    border-radius: 34px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: #616166;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
     display: flex;
-    font-weight: 100 !important;
-    color: white;
     align-items: center;
     justify-content: center;
-    border: none;
+    line-height: 1;
   }
 
-  /* ── Mobile ── */
-  @media screen and (max-width: 749px) {
-    .gallery-slick-wrapper-{{ section.id }} {
+  @media screen and (max-width: 989px) {
+    #cpg-{{ section.id }} .cpg__slide {
+      flex: 0 0 calc(50% - 12px);
+    }
+  }
+
+  @media screen and (max-width: 599px) {
+    #cpg-{{ section.id }} .cpg__slide {
+      flex: 0 0 calc(100% - 12px);
+    }
+
+    #cpg-{{ section.id }} .cpg__outer {
+      flex-direction: column;
       padding: 0 16px;
     }
 
-    .gallery-slick-wrapper-{{ section.id }} .slick-prev,
-    .gallery-slick-wrapper-{{ section.id }} .slick-next {
-      width: 36px;
-      height: 36px;
-      top: auto;
-      bottom: -48px;
-      transform: none;
+    #cpg-{{ section.id }} .cpg__arrow {
+      display: none;
     }
 
-    .gallery-slick-wrapper-{{ section.id }} .slick-prev {
-      left: auto;
-      right: 44px;
-    }
-
-    .gallery-slick-wrapper-{{ section.id }} .slick-next {
-      right: 0;
-    }
-
-    .slick-carousel-gallery-{{ section.id }}.slick-dotted.slick-slider {
-      padding-bottom: 24px !important;
-      margin-bottom: 64px;
-    }
-
-    .gallery-slick-wrapper-{{ section.id }} .slick-dots {
-      bottom: -10px !important;
+    #cpg-{{ section.id }} .cpg__dots {
+      margin-top: 14px;
     }
   }
 </style>
 
 <script>
 (function () {
-  var sectionEl = document.getElementById('customer-photo-gallery-{{ section.id }}');
-  if (!sectionEl) return;
+  var root = document.getElementById('cpg-{{ section.id }}');
+  if (!root) return;
 
-  var $slider = $('.slick-carousel-gallery-{{ section.id }}');
+  var track    = root.querySelector('.cpg__track');
+  var slides   = root.querySelectorAll('.cpg__slide');
+  var btnPrev  = root.querySelector('.cpg__arrow--prev');
+  var btnNext  = root.querySelector('.cpg__arrow--next');
+  var dots     = root.querySelectorAll('.cpg__dot');
+  var lightbox = root.querySelector('.cpg__lightbox');
+  var lbImg    = root.querySelector('.cpg__lightbox-img');
+  var lbClose  = root.querySelector('.cpg__lightbox-close');
 
-  $slider.slick({
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    arrows: true,
-    dots: true,
-    cssEase: 'linear',
-    appendArrows: $('.gallery-slick-wrapper-{{ section.id }}'),
-    responsive: [
-      {
-        breakpoint: 990,
-        settings: { slidesToShow: 2 }
-      },
-      {
-        breakpoint: 480,
-        settings: { slidesToShow: 1 }
-      }
-    ]
+  var total   = slides.length;
+  var current = 0;
+
+  function getSlidesPerView() {
+    var w = window.innerWidth;
+    if (w <= 599) return 1;
+    if (w <= 989) return 2;
+    return 4;
+  }
+
+  function maxIndex() {
+    return Math.max(0, total - getSlidesPerView());
+  }
+
+  function getSlideWidth() {
+    if (total === 0) return 0;
+    return slides[0].offsetWidth + 12;
+  }
+
+  function goTo(index) {
+    var max = maxIndex();
+    current = Math.min(Math.max(index, 0), max);
+    track.style.transform = 'translateX(-' + (current * getSlideWidth()) + 'px)';
+
+    dots.forEach(function (dot, i) {
+      dot.classList.toggle('cpg__dot--active', i === current);
+    });
+
+    btnPrev.disabled = current === 0;
+    btnNext.disabled = current >= max;
+  }
+
+  btnPrev.addEventListener('click', function () { goTo(current - 1); });
+  btnNext.addEventListener('click', function () { goTo(current + 1); });
+
+  dots.forEach(function (dot, i) {
+    dot.addEventListener('click', function () { goTo(i); });
   });
 
-  // ── Lightbox ──
-  var lightbox = sectionEl.querySelector('.customer-photo-gallery__lightbox');
-  var lightboxImg = lightbox.querySelector('img');
-  var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
+  window.addEventListener('resize', function () { goTo(current); });
 
-  sectionEl.querySelectorAll('.customer-photo-gallery__slide img').forEach(function (img) {
+  goTo(0);
+
+  root.querySelectorAll('.cpg__img').forEach(function (img) {
     img.addEventListener('click', function () {
-      lightboxImg.src = img.dataset.full || img.src;
-      lightbox.classList.add('customer-photo-gallery__lightbox--active');
+      lbImg.src = img.dataset.full || img.src;
+      lightbox.classList.add('is-open');
     });
   });
 
-  closeBtn.addEventListener('click', function () {
-    lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+  lbClose.addEventListener('click', function () {
+    lightbox.classList.remove('is-open');
   });
 
   lightbox.addEventListener('click', function (e) {
-    if (e.target === lightbox) {
-      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
-    }
+    if (e.target === lightbox) lightbox.classList.remove('is-open');
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
-    }
+    if (e.key === 'Escape') lightbox.classList.remove('is-open');
   });
 })();
 </script>
+
+{% endif %}
 
 {% schema %}
 {
