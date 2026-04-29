@@ -34,7 +34,7 @@
 <style>
   #customer-photo-gallery-{{ section.id }} {
     margin: 40px 0;
-    padding: 0 16px;
+    padding: 0 36px;
     position: relative;
   }
 
@@ -55,54 +55,43 @@
     transform: scale(1.03);
   }
 
-  /* ── Slick overrides matching Video Carousel ── */
+  /* ── Slick core arrow styles ── */
   #customer-photo-gallery-{{ section.id }} .slick-prev,
   #customer-photo-gallery-{{ section.id }} .slick-next {
-    height: 44px;
-    width: 44px;
-    border-radius: 100px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: #616166;
+    cursor: pointer;
+    z-index: 999;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
     font-size: 0;
     line-height: 0;
-    position: absolute;
-    top: 50%;
-    display: block;
-    z-index: 999;
     padding: 0;
-    transform: translateY(-50%);
-    cursor: pointer;
     color: transparent;
-    border: none;
     outline: none;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-prev {
+    left: -16px;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-next {
+    right: -16px;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-prev:hover,
+  #customer-photo-gallery-{{ section.id }} .slick-next:hover,
+  #customer-photo-gallery-{{ section.id }} .slick-prev:focus,
+  #customer-photo-gallery-{{ section.id }} .slick-next:focus {
     background: #616166;
-  }
-
-  #customer-photo-gallery-{{ section.id }} button.slick-next.slick-arrow {
-    position: absolute;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    top: 50%;
-    justify-content: center;
-    align-items: center;
-    right: -20px;
-    z-index: 999;
-  }
-
-  #customer-photo-gallery-{{ section.id }} button.slick-prev.slick-arrow {
-    position: absolute;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    right: 55px;
-    z-index: 999;
+    outline: none !important;
   }
 
   #customer-photo-gallery-{{ section.id }} .slick-next:before {
@@ -110,6 +99,7 @@
     background-image: url('{{ 'arrow-left.svg' | asset_url }}') !important;
     background-size: contain;
     background-repeat: no-repeat;
+    background-position: center;
     display: inline-block;
     width: 24px;
     height: 24px;
@@ -120,11 +110,23 @@
     background-image: url('{{ 'arrow-right.svg' | asset_url }}') !important;
     background-size: contain;
     background-repeat: no-repeat;
+    background-position: center;
     display: inline-block;
     width: 24px;
     height: 24px;
   }
 
+  /* ── Slick slide spacing ── */
+  #customer-photo-gallery-{{ section.id }} .slick-slide {
+    margin: 0 8px;
+  }
+
+  #customer-photo-gallery-{{ section.id }} .slick-list {
+    margin: 0 -8px;
+    overflow: hidden;
+  }
+
+  /* ── Dots ── */
   #customer-photo-gallery-{{ section.id }} .slick-dotted.slick-slider {
     margin-bottom: 70px;
   }
@@ -159,22 +161,6 @@
 
   #customer-photo-gallery-{{ section.id }} .slick-dots li.slick-active button:before {
     background-color: #23232B !important;
-  }
-
-  #customer-photo-gallery-{{ section.id }} .slick-next:focus,
-  #customer-photo-gallery-{{ section.id }} .slick-next:hover,
-  #customer-photo-gallery-{{ section.id }} .slick-prev:focus,
-  #customer-photo-gallery-{{ section.id }} .slick-prev:hover {
-    background: #616166;
-    outline: none !important;
-  }
-
-  #customer-photo-gallery-{{ section.id }} .slick-slide {
-    margin: 0 16px;
-  }
-
-  #customer-photo-gallery-{{ section.id }} .slick-list {
-    margin: 0 -18px;
   }
 
   /* ── Lightbox ── */
@@ -226,24 +212,33 @@
     border: none;
   }
 
+  /* ── Mobile ── */
   @media screen and (max-width: 749px) {
-    #customer-photo-gallery-{{ section.id }} button.slick-next.slick-arrow {
-      width: 36px;
-      height: 36px;
-      right: 0;
-      top: 100%;
+    #customer-photo-gallery-{{ section.id }} {
+      padding: 0 16px;
     }
 
-    #customer-photo-gallery-{{ section.id }} button.slick-prev.slick-arrow {
+    #customer-photo-gallery-{{ section.id }} .slick-prev,
+    #customer-photo-gallery-{{ section.id }} .slick-next {
       width: 36px;
       height: 36px;
-      left: 0;
-      top: 100%;
+      top: auto;
+      bottom: -48px;
+      transform: none;
+    }
+
+    #customer-photo-gallery-{{ section.id }} .slick-prev {
+      left: auto;
+      right: 48px;
+    }
+
+    #customer-photo-gallery-{{ section.id }} .slick-next {
+      right: 4px;
     }
 
     #customer-photo-gallery-{{ section.id }} .slick-dotted.slick-slider {
       padding-bottom: 24px !important;
-      margin-bottom: 48px;
+      margin-bottom: 64px;
     }
 
     #customer-photo-gallery-{{ section.id }} .slick-dots {
@@ -257,7 +252,6 @@
   var sectionEl = document.getElementById('customer-photo-gallery-{{ section.id }}');
   if (!sectionEl) return;
 
-  // ── Slick init ──
   var $slider = $(sectionEl).find('.slick-carousel-gallery');
 
   $slider.slick({
