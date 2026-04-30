@@ -65,8 +65,8 @@ customElements.get('product-info') ||
         let r = this.dataset.url !== a,
         s = 'true' === this.dataset.updateUrl && r;
 
-           if (r && e.dataset.productUrl && this.dataset.isCombinedListing === 'true') {
-          window.location.assign(this.buildRequestUrlWithParams(a, i, !0));
+            if (e.dataset.productUrl && this.dataset.isCombinedListing === 'true') {
+          window.location.assign(a);
           return;
         }
 
