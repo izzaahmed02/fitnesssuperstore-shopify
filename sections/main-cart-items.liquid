@@ -115,16 +115,12 @@
                 {%- for item in cart.items -%}
                   {% assign custom_color_found = false %}
                   {% assign color_product_line_price = 0 %}
-                  {% assign main_cart_is_bundle_parent = false %}
 
                   {%- for property in item.properties -%}
                     {%- assign property_first_char = property.first | slice: 0 -%}
                     {%- if property.first == 'Custom color' and property.last != blank -%}
                       {% assign custom_color_found = true %}
                       {% assign color_product_line_price = color_product.price | times: item.quantity %}
-                    {%- endif -%}
-                    {%- if property.first == '_functionOperation' -%}
-                      {% assign main_cart_is_bundle_parent = true %}
                     {%- endif -%}
                   {%- endfor -%}
                   <div class="cart-item {% if item.product.tags contains 'avisplus-product-options'%}avis-option{% else %}{% endif %}" id="CartItem-{{ item.index | plus: 1 }}">
@@ -388,7 +384,7 @@
                           and item.product.metafields.options.product_options == blank
                           and item.variant.metafields.options.product_options == blank
                         %}
-                          {% if item.product.metafields.custom.warranty and main_cart_is_bundle_parent == false %}
+                          {% if item.product.metafields.custom.warranty %}
                             <dl style="margin-bottom: 2px;">
                               <div class="product-option">
                                 <dt>Warranty</dt>
@@ -401,7 +397,7 @@
                           | default: item.product.metafields.custom.processing_time_long
                           | default: item.product.metafields.custom.processing_time
                         %}
-                        {% if cart_processing_time != blank and main_cart_is_bundle_parent == false %}
+                        {% if cart_processing_time != blank %}
                           <dl style="margin-bottom: 2px;">
                             <div class="product-option">
                               <dt>Processing Time:</dt>
@@ -426,12 +422,6 @@
                               {%- assign property_first_char = property.first | slice: 0 -%}
                               {%- if property.last != blank and property_first_char != '_' -%}
                                 {%- if property.first contains 'Processing Time' -%}
-                                  {%- continue -%}
-                                {%- endif -%}
-                                {%- if property.first == 'Option group' -%}
-                                  {%- continue -%}
-                                {%- endif -%}
-                                {%- if main_cart_is_bundle_parent -%}
                                   {%- continue -%}
                                 {%- endif -%}
                                 <div class="product-option" data-name="{{ property.first }}" data-value="{{ property.last }}">
