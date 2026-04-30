@@ -7,7 +7,6 @@
   assign warranty_index = 1
   assign color_index = 1
   assign assambly_index = 0
-  assign display_number = 0
   assign title_downcase = product.title | downcase
   if title_downcase contains 'remanufactured'
     assign color_index = 2
@@ -89,7 +88,6 @@
             if color_title == '' and category_title_downcase != 'warranty' and category_title_downcase != 'assembly & room of choice installation needed?'
               assign index = index | plus: 1
             endif
-            assign display_number = display_number | plus: 1
           endunless
         endunless
         if index == assambly_index
@@ -100,12 +98,22 @@
           assign quantity_index = 1
           assign color_index = color_index | plus: 1
         endif
+        assign category_order = index
+        if color_title != blank
+          assign category_order = color_index
+        elsif category_title_downcase == 'warranty'
+          assign category_order = warranty_index
+        elsif category_title_downcase == 'assembly & room of choice installation needed?'
+          assign category_order = assambly_index
+        elsif quantity_option
+          assign category_order = 0
+        endif
       %}
 
       <div
         class="product-option__item"
         {% unless category.hide_option %}
-          style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
+          style="order: {{ category_order }};"
         {% endunless %}
       >
         {% if category.title != blank %}
@@ -121,7 +129,7 @@
           >
             <span>
               {% unless category.hide_option %}
-                {{- display_number -}}
+                {{- category_order -}}
               {% endunless %}
             </span>
             {{- category.title }}

@@ -86,28 +86,6 @@ if (!customElements.get('product-customization-options')) {
         this.closeModifyHandler();
         this.handleItemUpdate();
         this.checkDefaultConditionsToRender();
-        this.syncCategoryStepNumbers();
-      }
-
-      syncCategoryStepNumbers() {
-        const items = Array.from(this.querySelectorAll('.product-option__item')).filter((item) => {
-          if (item.style.display === 'none') return false;
-          const title = item.querySelector('.product-options__category-title');
-          return title && window.getComputedStyle(title).display !== 'none';
-        });
-        if (items.length === 0) return;
-
-        items
-          .sort((a, b) => {
-            const orderA = Number(window.getComputedStyle(a).order || 0);
-            const orderB = Number(window.getComputedStyle(b).order || 0);
-            if (orderA === orderB) return 0;
-            return orderA - orderB;
-          })
-          .forEach((item, idx) => {
-            const badge = item.querySelector('.product-options__category-title span');
-            if (badge) badge.textContent = String(idx + 1);
-          });
       }
 
       // Method for Accordion state
