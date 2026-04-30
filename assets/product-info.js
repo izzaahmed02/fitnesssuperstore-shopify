@@ -152,8 +152,7 @@ customElements.get('product-info') ||
         });
       }
       updateURL(t, e) {
-        (this.querySelector('share-button')?.updateUrl(`${window.shopUrl}${t}${e ? `?variant=${e}` : ''}`),
-          'false' !== this.dataset.updateUrl && window.history.replaceState({}, '', `${t}${e ? `?variant=${e}` : ''}`));
+        this.querySelector('share-button')?.updateUrl(`${window.shopUrl}${t}${e ? `?variant=${e}` : ''}`);
       }
       setUnavailable() {
         this.productForm?.toggleSubmitButton(!0, window.variantStrings.unavailable);
