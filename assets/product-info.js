@@ -58,28 +58,41 @@ customElements.get('product-info') ||
           }));
       }
       handleOptionValueChange({ data: { event: t, target: e, selectedOptionValues: i } }) {
-        if (!this.contains(t.target)) return;
-        this.resetProductFormState();
-        let a = e.dataset.productUrl || this.pendingRequestUrl || this.dataset.url;
-        this.pendingRequestUrl = a;
-        let r = this.dataset.url !== a,
-          s = 'true' === this.dataset.updateUrl && r;
+  if (!this.contains(t.target)) return;
+  this.resetProductFormState();
 
-        const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
-        if (this.dataset.isCombinedListing === 'true' || hasCombinedListingOptions) {
-          const nextUrl = new URL(a, window.location.origin).toString();
-          const currentUrl = window.location.href;
+  let a = e.dataset.productUrl || this.pendingRequestUrl || this.dataset.url;
+  this.pendingRequestUrl = a;
+  let r = this.dataset.url !== a,
+    s = 'true' === this.dataset.updateUrl && r;
 
-          if (nextUrl === currentUrl) {
-            window.location.reload();
-          } else {
-            window.location.assign(nextUrl);
-          }
-          return;
-        }
+  const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
 
-        this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: r ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
+  // Force combined listing check — also trigger if current product has data-is-combined-listing
+  if (this.dataset.isCombinedListing === 'true' || hasCombinedListingOptions) {
+    // If no product URL on the clicked option, try to find it from the variant selects
+    if (!e.dataset.productUrl) {
+      const checkedInput = this.querySelector('variant-selects input:checked[data-product-url]');
+      if (checkedInput) {
+        a = checkedInput.dataset.productUrl;
       }
+    }
+
+    const nextUrl = new URL(a, window.location.origin).toString();
+    // Strip query params for comparison so variant params don't prevent navigation
+    const currentBase = window.location.origin + window.location.pathname;
+    const nextBase = new URL(a, window.location.origin).origin + new URL(a, window.location.origin).pathname;
+
+    if (nextBase === currentBase) {
+      window.location.reload();
+    } else {
+      window.location.assign(nextUrl);
+    }
+    return;
+  }
+
+  this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: r ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
+},
       resetProductFormState() {
         let t = this.productForm;
         (t?.toggleSubmitButton(!0), t?.handleErrorMessage());
