@@ -42,8 +42,7 @@ customElements.get('product-info') ||
         });  
       }
       syncCombinedListingInitialUrl() {
-        const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
-        if (!(this.dataset.isCombinedListing === 'true' || hasCombinedListingOptions)) return;
+        if (this.dataset.isCombinedListing !== 'true') return;
 
         const activeOptionWithProductUrl = this.querySelector('variant-selects [data-product-url]:checked') || this.querySelector('variant-selects [data-product-url]');
         const targetUrl = activeOptionWithProductUrl?.dataset?.productUrl;
