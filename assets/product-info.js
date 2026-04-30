@@ -17,7 +17,8 @@ customElements.get('product-info') ||
         (this.initializeProductSwapUtility(),
           (this.onVariantChangeUnsubscriber = subscribe(PUB_SUB_EVENTS.optionValueSelectionChange, this.handleOptionValueChange.bind(this))),
           this.initQuantityHandlers(),
-          this.dispatchEvent(new CustomEvent('product-info:loaded', { bubbles: !0 })));
+          this.dispatchEvent(new CustomEvent('product-info:loaded', { bubbles: !0 })),
+          this.syncCombinedListingInitialUrl());
         subscribe(PUB_SUB_EVENTS.variantChange, (event)=> {
           if(!event) return;
           const variant = event.data.variant;
@@ -40,6 +41,21 @@ customElements.get('product-info') ||
           })
         });  
       }
+      syncCombinedListingInitialUrl() {
+        const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
+        if (!(this.dataset.isCombinedListing === 'true' || hasCombinedListingOptions)) return;
+
+        const activeOptionWithProductUrl = this.querySelector('variant-selects [data-product-url]:checked') || this.querySelector('variant-selects [data-product-url]');
+        const targetUrl = activeOptionWithProductUrl?.dataset?.productUrl;
+        if (!targetUrl) return;
+
+        const currentPath = window.location.pathname.replace(/\\/$/, '');
+        const targetPath = new URL(targetUrl, window.location.origin).pathname.replace(/\\/$/, '');
+        if (currentPath === targetPath) return;
+
+        window.location.replace(targetUrl);
+      }
+
       addPreProcessCallback(t) {
         this.preProcessHtmlCallbacks.push(t);
       }
@@ -64,6 +80,13 @@ customElements.get('product-info') ||
         this.pendingRequestUrl = a;
         let r = this.dataset.url !== a,
           s = 'true' === this.dataset.updateUrl && r;
+
+        const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
+        if (this.dataset.isCombinedListing === 'true' || hasCombinedListingOptions) {
+          window.location.assign(a);
+          return;
+        }
+
         this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: r ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
       }
       resetProductFormState() {
