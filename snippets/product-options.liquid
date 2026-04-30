@@ -7,6 +7,7 @@
   assign warranty_index = 1
   assign color_index = 1
   assign assambly_index = 0
+  assign display_number = 0
   assign title_downcase = product.title | downcase
   if title_downcase contains 'remanufactured'
     assign color_index = 2
@@ -88,6 +89,7 @@
             if color_title == '' and category_title_downcase != 'warranty' and category_title_downcase != 'assembly & room of choice installation needed?'
               assign index = index | plus: 1
             endif
+            assign display_number = display_number | plus: 1
           endunless
         endunless
         if index == assambly_index
@@ -119,17 +121,7 @@
           >
             <span>
               {% unless category.hide_option %}
-                {% if quantity_option %}
-                  {{ quantity_index }}
-                {%- elsif color_title != blank -%}
-                  {{- color_index -}}
-                {%- elsif category_title_downcase == 'warranty' -%}
-                  {{- warranty_index -}}
-                {%- elsif category_title_downcase == 'assembly & room of choice installation needed?' -%}
-                  {{- assambly_index -}}
-                {%- else -%}
-                  {{- index -}}
-                {%- endif -%}
+                {{- display_number -}}
               {% endunless %}
             </span>
             {{- category.title }}
@@ -140,6 +132,18 @@
                 product_category: product.metafields.custom.option_category_id.value,
                 option_title: category.title
               %}
+            {% else %}
+              {% for product_option in category.product_options.value %}
+                {% if product_option.option_type == 'Select' and product_option.help_text.value != blank %}
+                  {% render 'related-products-button',
+                    product_id: product.id,
+                    product_handle: product.handle,
+                    product_category: product.metafields.custom.option_category_id.value,
+                    option_title: product_option.product_option_title
+                  %}
+                  {% break %}
+                {% endif %}
+              {% endfor %}
             {% endif %}
             {% if color_counter == 1 %}
               {% for product_option in category.product_options.value %}
