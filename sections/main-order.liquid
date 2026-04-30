@@ -58,8 +58,6 @@
                 {%- break -%}
               {%- endif -%}
             {%- endfor -%}
-            {%- capture main_order_clean_title -%}{%- render 'strip-internal-code', title: line_item.title -%}{%- endcapture -%}
-            {%- capture main_order_clean_variant_title -%}{%- render 'strip-internal-code', title: line_item.variant.title -%}{%- endcapture -%}
             <tr role="row">
               <td
                 id="Row{{ line_item.key }}"
@@ -70,16 +68,16 @@
               >
                 <div>
                   {%- if line_item.url != blank -%}
-                    <a href="{{ line_item.url }}">{{ main_order_clean_title | escape }}</a>
+                    <a href="{{ line_item.url }}">{{ line_item.title | escape }}</a>
                   {%- else -%}
-                    <p>{{ main_order_clean_title | escape }}</p>
+                    <p>{{ line_item.title | escape }}</p>
                   {%- endif -%}
                   {%- assign property_size = line_item.properties | size -%}
                   {%- unless line_item.selling_plan_allocation == null and property_size == 0 -%}
                     <div class="properties">
                       {%- unless line_item.product.has_only_default_variant -%}
                         <span>
-                          {{ main_order_clean_variant_title | escape }}
+                          {{ line_item.variant.title | escape }}
                         </span>
                       {%- endunless -%}
                       {%- unless line_item.selling_plan_allocation == null -%}

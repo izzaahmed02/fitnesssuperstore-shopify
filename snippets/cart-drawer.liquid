@@ -221,8 +221,6 @@
                         </td>
                         <!-- Product details -->
                         <td class="cart-item__details" role="cell">
-                          {%- capture cart_drawer_clean_product_title -%}{%- render 'strip-internal-code', title: item.product.title -%}{%- endcapture -%}
-                          {%- capture cart_drawer_clean_variant_title -%}{%- render 'strip-internal-code', title: item.variant.title -%}{%- endcapture -%}
                           {%- assign cart_drawer_is_bundle_parent = false -%}
                           {%- for prop in item.properties -%}
                             {%- if prop.first == '_functionOperation' -%}
@@ -233,14 +231,14 @@
                           <div class="cart-title">
                             {% if item.product.tags contains 'avisplus-product-options' %}
                               <span class="cart-item__name extra-option-title h4 break">
-                                {{ cart_drawer_clean_variant_title | escape }}
+                                {{ item.variant.title | escape }}
                               </span>
                             {% else %}
                               <a
                                 href="{{ item.url }}"
                                 class="cart-item__name h4 break"
                               >
-                                {{ cart_drawer_clean_product_title | escape }}
+                                {{ item.product.title | escape }}
                               </a>
                             {% endif %}
                             {% if item.original_price != item.final_price %}
