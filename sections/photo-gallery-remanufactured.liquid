@@ -238,9 +238,8 @@
   var lbImg    = root.querySelector('.cpg__lightbox-img');
   var lbClose  = root.querySelector('.cpg__lightbox-close');
 
-  var total       = slides.length;
-  var currentPage = 0;
-  var dotEls      = [];
+  var total        = slides.length;
+  var currentSlide = 0; /* tracks individual slide position */
 
   function getSlidesPerView() {
     var w = window.innerWidth;
@@ -253,20 +252,29 @@
     return Math.ceil(total / getSlidesPerView());
   }
 
+  /* which dot should be active based on current slide index */
+  function getActivePage() {
+    return Math.floor(currentSlide / getSlidesPerView());
+  }
+
+  function maxSlide() {
+    return Math.max(0, total - getSlidesPerView());
+  }
+
   function getSlideWidth() {
     if (!slides[0]) return 0;
     var style = window.getComputedStyle(slides[0]);
-    var marginLeft  = parseFloat(style.marginLeft)  || 0;
-    var marginRight = parseFloat(style.marginRight) || 0;
-    return slides[0].offsetWidth + marginLeft + marginRight;
+    var ml = parseFloat(style.marginLeft)  || 0;
+    var mr = parseFloat(style.marginRight) || 0;
+    return slides[0].offsetWidth + ml + mr;
   }
+
+  var dotEls = [];
 
   function buildDots() {
     dotsWrap.innerHTML = '';
     dotEls = [];
     var pages = getPageCount();
-
-    /* hide dots if only one page */
     dotsWrap.style.display = pages <= 1 ? 'none' : 'flex';
 
     for (var i = 0; i < pages; i++) {
@@ -274,7 +282,10 @@
       btn.className = 'cpg__dot';
       btn.setAttribute('aria-label', 'Go to page ' + (i + 1));
       (function (p) {
-        btn.addEventListener('click', function () { goToPage(p); });
+        btn.addEventListener('click', function () {
+          /* dot click jumps to first slide of that page */
+          goToSlide(p * getSlidesPerView());
+        });
       })(i);
       dotsWrap.appendChild(btn);
       dotEls.push(btn);
@@ -282,34 +293,31 @@
   }
 
   function updateDots() {
+    var activePage = getActivePage();
     dotEls.forEach(function (dot, i) {
-      dot.classList.toggle('cpg__dot--active', i === currentPage);
+      dot.classList.toggle('cpg__dot--active', i === activePage);
     });
   }
 
-  function goToPage(page) {
-    var pages = getPageCount();
-    currentPage = Math.min(Math.max(page, 0), pages - 1);
-
-    var slideIndex = currentPage * getSlidesPerView();
-    track.style.transform = 'translateX(-' + (slideIndex * getSlideWidth()) + 'px)';
-
+  function goToSlide(index) {
+    currentSlide = Math.min(Math.max(index, 0), maxSlide());
+    track.style.transform = 'translateX(-' + (currentSlide * getSlideWidth()) + 'px)';
     updateDots();
-
-    btnPrev.disabled = currentPage === 0;
-    btnNext.disabled = currentPage >= pages - 1;
+    btnPrev.disabled = currentSlide === 0;
+    btnNext.disabled = currentSlide >= maxSlide();
   }
 
-  btnPrev.addEventListener('click', function () { goToPage(currentPage - 1); });
-  btnNext.addEventListener('click', function () { goToPage(currentPage + 1); });
+  /* arrows step 1 slide at a time */
+  btnPrev.addEventListener('click', function () { goToSlide(currentSlide - 1); });
+  btnNext.addEventListener('click', function () { goToSlide(currentSlide + 1); });
 
   window.addEventListener('resize', function () {
     buildDots();
-    goToPage(0);
+    goToSlide(0);
   });
 
   buildDots();
-  goToPage(0);
+  goToSlide(0);
 
   /* ── Lightbox ── */
   root.querySelectorAll('.cpg__img').forEach(function (img) {
