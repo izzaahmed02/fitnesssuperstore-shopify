@@ -42,7 +42,6 @@
     </button>
   </div>
 
-  <!-- Dots — rendered by JS -->
   <div class="cpg__dots"></div>
 
   <!-- Lightbox -->
@@ -230,18 +229,18 @@
   var root = document.getElementById('cpg-{{ section.id }}');
   if (!root) return;
 
-  var track      = root.querySelector('.cpg__track');
-  var slides     = root.querySelectorAll('.cpg__slide');
-  var btnPrev    = root.querySelector('.cpg__arrow--prev');
-  var btnNext    = root.querySelector('.cpg__arrow--next');
-  var dotsWrap   = root.querySelector('.cpg__dots');
-  var lightbox   = root.querySelector('.cpg__lightbox');
-  var lbImg      = root.querySelector('.cpg__lightbox-img');
-  var lbClose    = root.querySelector('.cpg__lightbox-close');
+  var track    = root.querySelector('.cpg__track');
+  var slides   = root.querySelectorAll('.cpg__slide');
+  var btnPrev  = root.querySelector('.cpg__arrow--prev');
+  var btnNext  = root.querySelector('.cpg__arrow--next');
+  var dotsWrap = root.querySelector('.cpg__dots');
+  var lightbox = root.querySelector('.cpg__lightbox');
+  var lbImg    = root.querySelector('.cpg__lightbox-img');
+  var lbClose  = root.querySelector('.cpg__lightbox-close');
 
-  var total      = slides.length;
-  var current    = 0;
-  var dotEls     = [];
+  var total       = slides.length;
+  var currentPage = 0;
+  var dotEls      = [];
 
   function getSlidesPerView() {
     var w = window.innerWidth;
@@ -254,22 +253,28 @@
     return Math.ceil(total / getSlidesPerView());
   }
 
-  function getCurrentPage() {
-    return Math.floor(current / getSlidesPerView());
+  function getSlideWidth() {
+    if (!slides[0]) return 0;
+    var style = window.getComputedStyle(slides[0]);
+    var marginLeft  = parseFloat(style.marginLeft)  || 0;
+    var marginRight = parseFloat(style.marginRight) || 0;
+    return slides[0].offsetWidth + marginLeft + marginRight;
   }
 
   function buildDots() {
     dotsWrap.innerHTML = '';
     dotEls = [];
     var pages = getPageCount();
+
+    /* hide dots if only one page */
+    dotsWrap.style.display = pages <= 1 ? 'none' : 'flex';
+
     for (var i = 0; i < pages; i++) {
       var btn = document.createElement('button');
-      btn.className = 'cpg__dot' + (i === 0 ? ' cpg__dot--active' : '');
+      btn.className = 'cpg__dot';
       btn.setAttribute('aria-label', 'Go to page ' + (i + 1));
-      (function (pageIndex) {
-        btn.addEventListener('click', function () {
-          goTo(pageIndex * getSlidesPerView());
-        });
+      (function (p) {
+        btn.addEventListener('click', function () { goToPage(p); });
       })(i);
       dotsWrap.appendChild(btn);
       dotEls.push(btn);
@@ -277,40 +282,34 @@
   }
 
   function updateDots() {
-    var activePage = getCurrentPage();
     dotEls.forEach(function (dot, i) {
-      dot.classList.toggle('cpg__dot--active', i === activePage);
+      dot.classList.toggle('cpg__dot--active', i === currentPage);
     });
   }
 
-  function getSlideWidth() {
-    if (total === 0) return 0;
-    return slides[0].offsetWidth + 12;
-  }
+  function goToPage(page) {
+    var pages = getPageCount();
+    currentPage = Math.min(Math.max(page, 0), pages - 1);
 
-  function maxIndex() {
-    return Math.max(0, total - getSlidesPerView());
-  }
+    var slideIndex = currentPage * getSlidesPerView();
+    track.style.transform = 'translateX(-' + (slideIndex * getSlideWidth()) + 'px)';
 
-  function goTo(index) {
-    var max = maxIndex();
-    current = Math.min(Math.max(index, 0), max);
-    track.style.transform = 'translateX(-' + (current * getSlideWidth()) + 'px)';
     updateDots();
-    btnPrev.disabled = current === 0;
-    btnNext.disabled = current >= max;
+
+    btnPrev.disabled = currentPage === 0;
+    btnNext.disabled = currentPage >= pages - 1;
   }
 
-  btnPrev.addEventListener('click', function () { goTo(current - getSlidesPerView()); });
-  btnNext.addEventListener('click', function () { goTo(current + getSlidesPerView()); });
+  btnPrev.addEventListener('click', function () { goToPage(currentPage - 1); });
+  btnNext.addEventListener('click', function () { goToPage(currentPage + 1); });
 
   window.addEventListener('resize', function () {
     buildDots();
-    goTo(0);
+    goToPage(0);
   });
 
   buildDots();
-  goTo(0);
+  goToPage(0);
 
   /* ── Lightbox ── */
   root.querySelectorAll('.cpg__img').forEach(function (img) {
