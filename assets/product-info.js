@@ -82,10 +82,9 @@ customElements.get('product-info') ||
 
           const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
         if (this.dataset.isCombinedListing === 'true' || hasCombinedListingOptions) {
-          window.location.assign(a);
+          window.location.assign(this.buildRequestUrlWithParams(a, i, !0));
           return;
         }
-
 
         this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: r ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
       }
