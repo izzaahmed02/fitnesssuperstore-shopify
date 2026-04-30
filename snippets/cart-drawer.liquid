@@ -302,29 +302,39 @@
                           {% for prop in item.properties %}
                             {% assign p_name = prop.first %}
                             {% assign p_value = prop.last %}
-                            {% assign first_char = p_name | slice: 0, 1 %}
-                            {% if p_name == blank or p_value == blank or first_char == '_' or p_name contains 'Processing Time' %}
+                            {% if p_name == blank or p_value == blank %}
                               {% continue %}
                             {% endif %}
-                            {% comment %}
-                              {% if p_name contains "Warranty"
-                              or p_name contains "Processing Time"
-                              or p_name contains "Full Assembly & Installation"
-                              or p_name contains "Color"
-                              or p_name contains "Paint Color"
-                              or p_name contains "Vinyl Color"
-                              or p_name contains "Upholstery Color" %}
-                            {% endcomment %}
+                            {%- comment -%}
+                              Skip cart-transform / Avis internal markers. All other
+                              `_`-prefixed keys are bundle option properties written
+                              by prepareOptions(); we render them with the leading
+                              `_` stripped so checkout hides the duplicated summary
+                              while the cart drawer keeps the same visible output.
+                            {%- endcomment -%}
+                            {% if p_name == '_functionOperation' or p_name == '_mainProductId' %}
+                              {% continue %}
+                            {% endif %}
+                            {% assign apo_check = p_name | slice: 0, 5 %}
+                            {% if apo_check == '_apo_' %}
+                              {% continue %}
+                            {% endif %}
+                            {% assign first_char = p_name | slice: 0, 1 %}
+                            {% if first_char == '_' %}
+                              {% assign p_display_name = p_name | remove_first: '_' %}
+                            {% else %}
+                              {% assign p_display_name = p_name %}
+                            {% endif %}
+                            {% if p_display_name contains 'Processing Time' %}
+                              {% continue %}
+                            {% endif %}
                             {%- capture extra_props -%}
                                       {{ extra_props }}
                                       <div class="product-option">
-                                          <dt>{{ p_name }}:</dt>
+                                          <dt>{{ p_display_name }}:</dt>
                                           <dd>{{ p_value }}</dd>
                                       </div>
                                   {%- endcapture -%}
-                            {% comment %}
-                              {% endif %}
-                            {% endcomment %}
                           {% endfor %}
                           {% if extra_props != '' %}
                             <dl>

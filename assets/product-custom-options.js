@@ -1011,6 +1011,11 @@ if (!customElements.get('product-customization-options')) {
       prepareOptions() {
         const activeOptions = this.querySelectorAll('[data-selected-options]');
         if (activeOptions.length === 0) return;
+        // Keys are prefixed with `_` so Shopify treats them as private and
+        // hides them from the checkout summary, order confirmation email,
+        // and customer order detail. The cart drawer / cart page strip the
+        // leading `_` when rendering so the customer-facing display is
+        // unchanged. Modify popup lookups also match the `_`-prefixed keys.
         let lineItemProperties = {};
         activeOptions.forEach((option) => {
           if (option.dataset.selectedOptions !== '') {
@@ -1020,7 +1025,7 @@ if (!customElements.get('product-customization-options')) {
             const value = parentElement.querySelectorAll('[data-customization-option]:checked');
             if (value.length === 0) return;
             const formatedValue = [...value].map((item) => item.dataset.fieldName).join(', ');
-            lineItemProperties[key] = formatedValue;
+            lineItemProperties['_' + key] = formatedValue;
           }
         });
 
@@ -1030,9 +1035,10 @@ if (!customElements.get('product-customization-options')) {
             const colorGroup = color.closest('[data-group-color-name]');
             const selectedColorValue = color.innerText;
             const selectedColorPrice = colorGroup.querySelector('.option_selected-price');
-            lineItemProperties[colorGroup.dataset.colorNameTitle] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
+            const colorKey = '_' + colorGroup.dataset.colorNameTitle;
+            lineItemProperties[colorKey] = selectedColorValue.includes(':') ? selectedColorValue.split(':')[1] : selectedColorValue;
             if (selectedColorPrice.innerText != '') {
-              lineItemProperties[colorGroup.dataset.colorNameTitle] += ` [+${selectedColorPrice.innerText}]`;
+              lineItemProperties[colorKey] += ` [+${selectedColorPrice.innerText}]`;
             }
           });
         }
@@ -1042,7 +1048,7 @@ if (!customElements.get('product-customization-options')) {
           selectOptions.forEach((select) => {
             const selectOptionTitle = select.dataset.selectTitle;
             const option = select.selectedOptions[0]?.dataset.selectVariantTitle;
-            lineItemProperties[selectOptionTitle] = option;
+            lineItemProperties['_' + selectOptionTitle] = option;
           });
         }
 
@@ -1050,7 +1056,7 @@ if (!customElements.get('product-customization-options')) {
         if (quanityOptions.length > 0) {
           quanityOptions.forEach((option) => {
             const optionTitle = option.dataset.quantityOptionVariantTitle;
-            lineItemProperties[optionTitle] = option.value;
+            lineItemProperties['_' + optionTitle] = option.value;
           });
         }
 

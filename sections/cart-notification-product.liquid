@@ -26,22 +26,41 @@
               </div>
             {%- endfor -%}
           {%- endunless -%}
+          {%- comment -%}
+            `_`-prefixed bundle option properties (written by prepareOptions)
+            are rendered with the leading `_` stripped so checkout hides the
+            duplicated summary while the cart notification keeps the same
+            visible output. Cart-transform / Avis markers are still skipped.
+          {%- endcomment -%}
           {%- for property in item.properties -%}
-            {%- assign property_first_char = property.first | slice: 0 -%}
-            {%- if property.last != blank and property_first_char != '_' -%}
-              <div class="product-option">
-                <dt>{{ property.first }}:</dt>
-                <dd>
-                  {%- if property.last contains '/uploads/' -%}
-                    <a href="{{ property.last }}" class="link">
-                      {{ property.last | split: '/' | last }}
-                    </a>
-                  {%- else -%}
-                    {{ property.last }}
-                  {%- endif -%}
-                </dd>
-              </div>
+            {%- if property.last == blank -%}
+              {%- continue -%}
             {%- endif -%}
+            {%- if property.first == '_functionOperation' or property.first == '_mainProductId' -%}
+              {%- continue -%}
+            {%- endif -%}
+            {%- assign apo_check = property.first | slice: 0, 5 -%}
+            {%- if apo_check == '_apo_' -%}
+              {%- continue -%}
+            {%- endif -%}
+            {%- assign property_first_char = property.first | slice: 0 -%}
+            {%- if property_first_char == '_' -%}
+              {%- assign property_display_name = property.first | remove_first: '_' -%}
+            {%- else -%}
+              {%- assign property_display_name = property.first -%}
+            {%- endif -%}
+            <div class="product-option">
+              <dt>{{ property_display_name }}:</dt>
+              <dd>
+                {%- if property.last contains '/uploads/' -%}
+                  <a href="{{ property.last }}" class="link">
+                    {{ property.last | split: '/' | last }}
+                  </a>
+                {%- else -%}
+                  {{ property.last }}
+                {%- endif -%}
+              </dd>
+            </div>
           {%- endfor -%}
         </dl>
         {%- if item.selling_plan_allocation != null -%}
