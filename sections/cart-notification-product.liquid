@@ -16,7 +16,8 @@
         {%- if settings.show_vendor -%}
           <p class="caption-with-letter-spacing light">{{ item.product.vendor }}</p>
         {%- endif -%}
-        <h3 class="cart-notification-product__name h4">{{ item.product.title | escape }}</h3>
+        {%- capture cart_notif_clean_title -%}{%- render 'strip-internal-code', title: item.product.title -%}{%- endcapture -%}
+        <h3 class="cart-notification-product__name h4">{{ cart_notif_clean_title | escape }}</h3>
         <dl>
           {%- unless item.product.has_only_default_variant -%}
             {%- for option in item.options_with_values -%}
@@ -26,9 +27,16 @@
               </div>
             {%- endfor -%}
           {%- endunless -%}
+          {%- assign cart_notif_is_bundle_parent = false -%}
+          {%- for property in item.properties -%}
+            {%- if property.first == '_functionOperation' -%}
+              {%- assign cart_notif_is_bundle_parent = true -%}
+              {%- break -%}
+            {%- endif -%}
+          {%- endfor -%}
           {%- for property in item.properties -%}
             {%- assign property_first_char = property.first | slice: 0 -%}
-            {%- if property.last != blank and property_first_char != '_' -%}
+            {%- if property.last != blank and property_first_char != '_' and property.first != 'Option group' and cart_notif_is_bundle_parent == false -%}
               <div class="product-option">
                 <dt>{{ property.first }}:</dt>
                 <dd>

@@ -221,17 +221,26 @@
                         </td>
                         <!-- Product details -->
                         <td class="cart-item__details" role="cell">
+                          {%- capture cart_drawer_clean_product_title -%}{%- render 'strip-internal-code', title: item.product.title -%}{%- endcapture -%}
+                          {%- capture cart_drawer_clean_variant_title -%}{%- render 'strip-internal-code', title: item.variant.title -%}{%- endcapture -%}
+                          {%- assign cart_drawer_is_bundle_parent = false -%}
+                          {%- for prop in item.properties -%}
+                            {%- if prop.first == '_functionOperation' -%}
+                              {%- assign cart_drawer_is_bundle_parent = true -%}
+                              {%- break -%}
+                            {%- endif -%}
+                          {%- endfor -%}
                           <div class="cart-title">
                             {% if item.product.tags contains 'avisplus-product-options' %}
                               <span class="cart-item__name extra-option-title h4 break">
-                                {{ item.variant.title | escape }}
+                                {{ cart_drawer_clean_variant_title | escape }}
                               </span>
                             {% else %}
                               <a
                                 href="{{ item.url }}"
                                 class="cart-item__name h4 break"
                               >
-                                {{ item.product.title | escape }}
+                                {{ cart_drawer_clean_product_title | escape }}
                               </a>
                             {% endif %}
                             {% if item.original_price != item.final_price %}
@@ -264,7 +273,7 @@
                               </a>
                             </cart-remove-button>
                           </div>
-                          {% if item.product.metafields.custom.warranty and item.product.metafields.options.product_options == blank and item.variant.metafields.options.product_options == blank %}
+                          {% if item.product.metafields.custom.warranty and item.product.metafields.options.product_options == blank and item.variant.metafields.options.product_options == blank and cart_drawer_is_bundle_parent == false %}
                             <dl>
                               <div style="margin-top: 0px;" class="product-option">
                                 <dt>Warranty</dt>
@@ -276,7 +285,7 @@
                             | default: item.product.metafields.custom.processing_time_long
                             | default: item.product.metafields.custom.processing_time
                           %}
-                          {% if cart_processing_time != blank %}
+                          {% if cart_processing_time != blank and cart_drawer_is_bundle_parent == false %}
                             <dl>
                               <div class="product-option">
                                 <dt>Processing Time:</dt>
@@ -303,7 +312,10 @@
                             {% assign p_name = prop.first %}
                             {% assign p_value = prop.last %}
                             {% assign first_char = p_name | slice: 0, 1 %}
-                            {% if p_name == blank or p_value == blank or first_char == '_' or p_name contains 'Processing Time' %}
+                            {% if p_name == blank or p_value == blank or first_char == '_' or p_name contains 'Processing Time' or p_name == 'Option group' %}
+                              {% continue %}
+                            {% endif %}
+                            {% if cart_drawer_is_bundle_parent %}
                               {% continue %}
                             {% endif %}
                             {% comment %}

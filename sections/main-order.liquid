@@ -51,6 +51,15 @@
         </thead>
         <tbody role="rowgroup">
           {%- for line_item in order.line_items -%}
+            {%- assign main_order_is_bundle_parent = false -%}
+            {%- for property in line_item.properties -%}
+              {%- if property.first == '_functionOperation' -%}
+                {%- assign main_order_is_bundle_parent = true -%}
+                {%- break -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- capture main_order_clean_title -%}{%- render 'strip-internal-code', title: line_item.title -%}{%- endcapture -%}
+            {%- capture main_order_clean_variant_title -%}{%- render 'strip-internal-code', title: line_item.variant.title -%}{%- endcapture -%}
             <tr role="row">
               <td
                 id="Row{{ line_item.key }}"
@@ -61,16 +70,16 @@
               >
                 <div>
                   {%- if line_item.url != blank -%}
-                    <a href="{{ line_item.url }}">{{ line_item.title | escape }}</a>
+                    <a href="{{ line_item.url }}">{{ main_order_clean_title | escape }}</a>
                   {%- else -%}
-                    <p>{{ line_item.title | escape }}</p>
+                    <p>{{ main_order_clean_title | escape }}</p>
                   {%- endif -%}
                   {%- assign property_size = line_item.properties | size -%}
                   {%- unless line_item.selling_plan_allocation == null and property_size == 0 -%}
                     <div class="properties">
                       {%- unless line_item.product.has_only_default_variant -%}
                         <span>
-                          {{ line_item.variant.title | escape }}
+                          {{ main_order_clean_variant_title | escape }}
                         </span>
                       {%- endunless -%}
                       {%- unless line_item.selling_plan_allocation == null -%}
@@ -78,11 +87,11 @@
                           {{ line_item.selling_plan_allocation.selling_plan.name }}
                         </span>
                       {%- endunless -%}
-                      {%- if property_size != 0 -%}
+                      {%- if property_size != 0 and main_order_is_bundle_parent == false -%}
                         {%- for property in line_item.properties -%}
                           {% assign property_key = property.first | strip %}
                           {% assign property_first_char = property_key | slice: 0, 1 %}
-                          {%- if property.last != blank and property_key != '_functionOperation' and property_first_char != '_' -%}
+                          {%- if property.last != blank and property_key != '_functionOperation' and property_first_char != '_' and property_key != 'Option group' -%}
                             <span>{{ property_key }}:</span>
                             <span>
                               {%- if property.last contains '/uploads/' -%}
