@@ -80,10 +80,12 @@ customElements.get('product-info') ||
         let r = this.dataset.url !== a,
           s = 'true' === this.dataset.updateUrl && r;
 
-        if (this.dataset.isCombinedListing === 'true') {
+          const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
+        if (this.dataset.isCombinedListing === 'true' || hasCombinedListingOptions) {
           window.location.assign(a);
           return;
         }
+
 
         this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: r ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
       }
