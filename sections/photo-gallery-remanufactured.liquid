@@ -239,7 +239,7 @@
   var lbClose  = root.querySelector('.cpg__lightbox-close');
 
   var total        = slides.length;
-  var currentSlide = 0; /* tracks individual slide position */
+  var currentSlide = 0;
 
   function getSlidesPerView() {
     var w = window.innerWidth;
@@ -248,17 +248,14 @@
     return 4;
   }
 
-  function getPageCount() {
-    return Math.ceil(total / getSlidesPerView());
-  }
-
-  /* which dot should be active based on current slide index */
-  function getActivePage() {
-    return Math.floor(currentSlide / getSlidesPerView());
-  }
-
+  /* max slide index we can scroll to */
   function maxSlide() {
     return Math.max(0, total - getSlidesPerView());
+  }
+
+  /* number of dots = number of positions we can be in = maxSlide + 1 */
+  function getDotCount() {
+    return maxSlide() + 1;
   }
 
   function getSlideWidth() {
@@ -274,18 +271,15 @@
   function buildDots() {
     dotsWrap.innerHTML = '';
     dotEls = [];
-    var pages = getPageCount();
-    dotsWrap.style.display = pages <= 1 ? 'none' : 'flex';
+    var count = getDotCount();
+    dotsWrap.style.display = count <= 1 ? 'none' : 'flex';
 
-    for (var i = 0; i < pages; i++) {
+    for (var i = 0; i < count; i++) {
       var btn = document.createElement('button');
       btn.className = 'cpg__dot';
-      btn.setAttribute('aria-label', 'Go to page ' + (i + 1));
-      (function (p) {
-        btn.addEventListener('click', function () {
-          /* dot click jumps to first slide of that page */
-          goToSlide(p * getSlidesPerView());
-        });
+      btn.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      (function (idx) {
+        btn.addEventListener('click', function () { goToSlide(idx); });
       })(i);
       dotsWrap.appendChild(btn);
       dotEls.push(btn);
@@ -293,9 +287,8 @@
   }
 
   function updateDots() {
-    var activePage = getActivePage();
     dotEls.forEach(function (dot, i) {
-      dot.classList.toggle('cpg__dot--active', i === activePage);
+      dot.classList.toggle('cpg__dot--active', i === currentSlide);
     });
   }
 
@@ -307,7 +300,6 @@
     btnNext.disabled = currentSlide >= maxSlide();
   }
 
-  /* arrows step 1 slide at a time */
   btnPrev.addEventListener('click', function () { goToSlide(currentSlide - 1); });
   btnNext.addEventListener('click', function () { goToSlide(currentSlide + 1); });
 
