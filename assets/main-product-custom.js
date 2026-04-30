@@ -1,3 +1,8 @@
+
+const modalWrapper = document.querySelector('.dynamic-product-content__wrapper');
+const container = document.querySelector('#dynamic-product-content');
+const closeIconTemplate = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4L14 14M14 4L4 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+
 window.addEventListener('DOMContentLoaded', async () => {
 	
 	_affirm_config = {
@@ -166,6 +171,7 @@ try {
 							product = await fetchProductByTitle(customFieldvalue);
 						}
 						if (product) {
+							if (!modalWrapper || !container) return;
 							document.querySelector('#dynamic-product-content').style.width = "auto";
 							modalWrapper.style.display = 'flex';
 							const tempDiv = document.createElement('div');
@@ -312,6 +318,7 @@ function computeAfterPayLoanDetails(principal, monthlyPayment, numPayments, newT
 }
 
 function showPayLaterModal() {
+	if (!modalWrapper || !container) return;
 	const payLaterAggregateHTML = generatePayLaterAggregate();
 
 	if (generatePayLaterAggregate) {

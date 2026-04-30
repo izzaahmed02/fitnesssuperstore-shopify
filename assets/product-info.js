@@ -65,14 +65,18 @@ customElements.get('product-info') ||
         let r = this.dataset.url !== a,
           s = 'true' === this.dataset.updateUrl && r;
 
-      
-
-          const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
+        const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
         if (this.dataset.isCombinedListing === 'true' || hasCombinedListingOptions) {
-          window.location.assign(a);
+          const nextUrl = new URL(a, window.location.origin).toString();
+          const currentUrl = window.location.href;
+
+          if (nextUrl === currentUrl) {
+            window.location.reload();
+          } else {
+            window.location.assign(nextUrl);
+          }
           return;
         }
-
 
         this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: r ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
       }
@@ -152,8 +156,7 @@ customElements.get('product-info') ||
         });
       }
       updateURL(t, e) {
-        (this.querySelector('share-button')?.updateUrl(`${window.shopUrl}${t}${e ? `?variant=${e}` : ''}`),
-          'false' !== this.dataset.updateUrl && window.history.replaceState({}, '', `${t}${e ? `?variant=${e}` : ''}`));
+        this.querySelector('share-button')?.updateUrl(`${window.shopUrl}${t}${e ? `?variant=${e}` : ''}`);
       }
       setUnavailable() {
         this.productForm?.toggleSubmitButton(!0, window.variantStrings.unavailable);
