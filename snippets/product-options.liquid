@@ -8,6 +8,8 @@
   assign color_index = 1
   assign assambly_index = 0
   assign display_number = 0
+  assign visible_total = 0
+  assign has_warranty_visible = false
   assign title_downcase = product.title | downcase
   if title_downcase contains 'remanufactured'
     assign color_index = 2
@@ -39,6 +41,10 @@
         if color_title == '' and category_title_downcase != 'warranty'
           assign last_index = last_index | plus: 1
         endif
+        assign visible_total = visible_total | plus: 1
+        if category_title_downcase == 'warranty'
+          assign has_warranty_visible = true
+        endif
       endunless
     endunless
     assign assambly_index = last_index
@@ -56,6 +62,11 @@
         assign assambly_index = assambly_index | minus: 1
       endunless
       assign quantity_option = false
+      if has_warranty_visible
+        assign other_display_counter = 1
+      else
+        assign other_display_counter = 0
+      endif
     %}
 
     {% for category in options %}
@@ -89,7 +100,14 @@
             if color_title == '' and category_title_downcase != 'warranty' and category_title_downcase != 'assembly & room of choice installation needed?'
               assign index = index | plus: 1
             endif
-            assign display_number = display_number | plus: 1
+            if category_title_downcase == 'warranty'
+              assign display_number = 1
+            elsif category_title_downcase == 'assembly & room of choice installation needed?'
+              assign display_number = visible_total
+            else
+              assign other_display_counter = other_display_counter | plus: 1
+              assign display_number = other_display_counter
+            endif
           endunless
         endunless
         if index == assambly_index
