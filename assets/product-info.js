@@ -92,7 +92,7 @@ customElements.get('product-info') ||
   }
 
   this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: r ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
-},
+}
       resetProductFormState() {
         let t = this.productForm;
         (t?.toggleSubmitButton(!0), t?.handleErrorMessage());
