@@ -8,6 +8,13 @@
   assign color_index = 1
   assign assambly_index = 0
   assign display_number = 0
+  assign num_quantity = 0
+  assign num_color = 0
+  assign num_warranty = 0
+  assign num_other = 0
+  assign quantity_seen = 0
+  assign color_seen = 0
+  assign other_seen = 0
   assign title_downcase = product.title | downcase
   if title_downcase contains 'remanufactured'
     assign color_index = 2
@@ -23,6 +30,7 @@
     endif
     assign color_title = ''
     assign hidden_option = false
+    assign cat_quantity_option = false
     for product_option in category.product_options.value
       assign title = product_option.product_option_title | downcase
       if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
@@ -33,11 +41,23 @@
       if product_option.hide_values
         assign hidden_option = true
       endif
+      if product_option.option_type == 'Quantity input'
+        assign cat_quantity_option = true
+      endif
     endfor
     unless category.hide_option
       unless hidden_option
         if color_title == '' and category_title_downcase != 'warranty'
           assign last_index = last_index | plus: 1
+        endif
+        if cat_quantity_option
+          assign num_quantity = num_quantity | plus: 1
+        elsif color_title != blank
+          assign num_color = num_color | plus: 1
+        elsif category_title_downcase == 'warranty'
+          assign num_warranty = num_warranty | plus: 1
+        elsif category_title_downcase != 'assembly & room of choice installation needed?'
+          assign num_other = num_other | plus: 1
         endif
       endunless
     endunless
@@ -89,7 +109,20 @@
             if color_title == '' and category_title_downcase != 'warranty' and category_title_downcase != 'assembly & room of choice installation needed?'
               assign index = index | plus: 1
             endif
-            assign display_number = display_number | plus: 1
+            if quantity_option
+              assign quantity_seen = quantity_seen | plus: 1
+              assign display_number = quantity_seen
+            elsif color_title != blank
+              assign color_seen = color_seen | plus: 1
+              assign display_number = num_quantity | plus: color_seen
+            elsif category_title_downcase == 'warranty'
+              assign display_number = num_quantity | plus: num_color | plus: 1
+            elsif category_title_downcase == 'assembly & room of choice installation needed?'
+              assign display_number = num_quantity | plus: num_color | plus: num_warranty | plus: num_other | plus: 1
+            else
+              assign other_seen = other_seen | plus: 1
+              assign display_number = num_quantity | plus: num_color | plus: num_warranty | plus: other_seen
+            endif
           endunless
         endunless
         if index == assambly_index
