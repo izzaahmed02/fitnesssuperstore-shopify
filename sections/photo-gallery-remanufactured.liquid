@@ -42,14 +42,8 @@
     </button>
   </div>
 
-  <!-- Dots -->
-  <div class="cpg__dots">
-    {% for block in section.blocks %}
-      {% if block.settings.image != blank %}
-        <button class="cpg__dot{% if forloop.first %} cpg__dot--active{% endif %}" aria-label="Go to slide {{ forloop.index }}"></button>
-      {% endif %}
-    {% endfor %}
-  </div>
+  <!-- Dots — rendered by JS -->
+  <div class="cpg__dots"></div>
 
   <!-- Lightbox -->
   <div class="cpg__lightbox" id="cpg-lightbox-{{ section.id }}">
@@ -122,7 +116,15 @@
     z-index: 2;
     padding: 0;
     transition: background 0.2s;
-    position: absolute;
+  }
+
+  #cpg-{{ section.id }} .cpg__arrow:hover {
+    background: #444;
+  }
+
+  #cpg-{{ section.id }} .cpg__arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 
   #cpg-{{ section.id }} .cpg__arrow img {
@@ -130,14 +132,6 @@
     height: 24px;
     display: block;
   }
-
-  #cpg-{{ section.id }} .cpg__arrow.cpg__arrow--next {
-    right: 0px;
-    }
-
-    #cpg-{{ section.id }} .cpg__arrow.cpg__arrow--prev {
-    left: -10px;
-    }
 
   #cpg-{{ section.id }} .cpg__dots {
     display: flex;
@@ -220,23 +214,9 @@
       flex: 0 0 calc(100% - 12px);
     }
 
-    #cpg-{{ section.id }} .cpg__outer {
-      flex-direction: column;
-      padding: 0 16px;
-    }
-
     #cpg-{{ section.id }} .cpg__arrow {
-      bottom: -15px;
       width: 36px;
       height: 36px;
-    }
-
-     #cpg-{{ section.id }} .cpg__arrow.cpg__arrow--next {
-    right: 20px;
-    }
-
-    #cpg-{{ section.id }} .cpg__arrow.cpg__arrow--prev {
-    left: 20px;
     }
 
     #cpg-{{ section.id }} .cpg__dots {
@@ -250,27 +230,57 @@
   var root = document.getElementById('cpg-{{ section.id }}');
   if (!root) return;
 
-  var track    = root.querySelector('.cpg__track');
-  var slides   = root.querySelectorAll('.cpg__slide');
-  var btnPrev  = root.querySelector('.cpg__arrow--prev');
-  var btnNext  = root.querySelector('.cpg__arrow--next');
-  var dots     = root.querySelectorAll('.cpg__dot');
-  var lightbox = root.querySelector('.cpg__lightbox');
-  var lbImg    = root.querySelector('.cpg__lightbox-img');
-  var lbClose  = root.querySelector('.cpg__lightbox-close');
+  var track      = root.querySelector('.cpg__track');
+  var slides     = root.querySelectorAll('.cpg__slide');
+  var btnPrev    = root.querySelector('.cpg__arrow--prev');
+  var btnNext    = root.querySelector('.cpg__arrow--next');
+  var dotsWrap   = root.querySelector('.cpg__dots');
+  var lightbox   = root.querySelector('.cpg__lightbox');
+  var lbImg      = root.querySelector('.cpg__lightbox-img');
+  var lbClose    = root.querySelector('.cpg__lightbox-close');
 
-  var total   = slides.length;
-  var current = 0;
+  var total      = slides.length;
+  var current    = 0;
+  var dotEls     = [];
 
   function getSlidesPerView() {
     var w = window.innerWidth;
-    if (w <= 599) return 1;
+    if (w <= 749) return 1;
     if (w <= 989) return 2;
     return 4;
   }
 
-  function maxIndex() {
-    return Math.max(0, total - getSlidesPerView());
+  function getPageCount() {
+    return Math.ceil(total / getSlidesPerView());
+  }
+
+  function getCurrentPage() {
+    return Math.floor(current / getSlidesPerView());
+  }
+
+  function buildDots() {
+    dotsWrap.innerHTML = '';
+    dotEls = [];
+    var pages = getPageCount();
+    for (var i = 0; i < pages; i++) {
+      var btn = document.createElement('button');
+      btn.className = 'cpg__dot' + (i === 0 ? ' cpg__dot--active' : '');
+      btn.setAttribute('aria-label', 'Go to page ' + (i + 1));
+      (function (pageIndex) {
+        btn.addEventListener('click', function () {
+          goTo(pageIndex * getSlidesPerView());
+        });
+      })(i);
+      dotsWrap.appendChild(btn);
+      dotEls.push(btn);
+    }
+  }
+
+  function updateDots() {
+    var activePage = getCurrentPage();
+    dotEls.forEach(function (dot, i) {
+      dot.classList.toggle('cpg__dot--active', i === activePage);
+    });
   }
 
   function getSlideWidth() {
@@ -278,30 +288,31 @@
     return slides[0].offsetWidth + 12;
   }
 
+  function maxIndex() {
+    return Math.max(0, total - getSlidesPerView());
+  }
+
   function goTo(index) {
     var max = maxIndex();
     current = Math.min(Math.max(index, 0), max);
     track.style.transform = 'translateX(-' + (current * getSlideWidth()) + 'px)';
-
-    dots.forEach(function (dot, i) {
-      dot.classList.toggle('cpg__dot--active', i === current);
-    });
-
+    updateDots();
     btnPrev.disabled = current === 0;
     btnNext.disabled = current >= max;
   }
 
-  btnPrev.addEventListener('click', function () { goTo(current - 1); });
-  btnNext.addEventListener('click', function () { goTo(current + 1); });
+  btnPrev.addEventListener('click', function () { goTo(current - getSlidesPerView()); });
+  btnNext.addEventListener('click', function () { goTo(current + getSlidesPerView()); });
 
-  dots.forEach(function (dot, i) {
-    dot.addEventListener('click', function () { goTo(i); });
+  window.addEventListener('resize', function () {
+    buildDots();
+    goTo(0);
   });
 
-  window.addEventListener('resize', function () { goTo(current); });
-
+  buildDots();
   goTo(0);
 
+  /* ── Lightbox ── */
   root.querySelectorAll('.cpg__img').forEach(function (img) {
     img.addEventListener('click', function () {
       lbImg.src = img.dataset.full || img.src;
