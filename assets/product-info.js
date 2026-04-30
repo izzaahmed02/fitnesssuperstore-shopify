@@ -63,9 +63,10 @@ customElements.get('product-info') ||
         let a = e.dataset.productUrl || this.pendingRequestUrl || this.dataset.url;
         this.pendingRequestUrl = a;
         let r = this.dataset.url !== a,
-          s = 'true' === this.dataset.updateUrl && r;
+        s = 'true' === this.dataset.updateUrl && r;
+
            if (r && e.dataset.productUrl && this.dataset.isCombinedListing === 'true') {
-          window.location.assign(this.buildRequestUrlWithParams(a, i));
+          window.location.assign(this.buildRequestUrlWithParams(a, i, !0));
           return;
         }
 
