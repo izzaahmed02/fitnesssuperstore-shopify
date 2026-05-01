@@ -65,8 +65,6 @@
       "weight": "{{ product.metafields.custom.product_weight_lbs | default: 'Not specified' | escape }}",
       "mpn": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
       "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
-      "variesBy": [{% for option in product.options %}"{{ option | escape }}"{% unless forloop.last %},{% endunless %}{% endfor %}],
-      {% if product.variants.size == 1 %}
       "offers": {
         "@id": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}#offer",
         "@type": "Offer",
@@ -74,6 +72,7 @@
         "price": "{{ product.price | divided_by: 100.0 | default: '0.00' }}",
         "priceCurrency": "{{ shop.currency | default: 'USD' }}",
         "url": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}",
+       
         "offeredBy": {
           "@type": "Organization",
           "@id": "https://{{ shop.domain }}#seller",
@@ -116,82 +115,6 @@
           }
         }
       },
-      {% else %}
-      "offers": {
-        "@type": "AggregateOffer",
-        "@id": "https://{{ shop.domain }}{{ product.url }}#aggregateoffer",
-        "offerCount": {{ product.variants.size }},
-        "lowPrice": "{{ product.price_min | divided_by: 100.0 }}",
-        "highPrice": "{{ product.price_max | divided_by: 100.0 }}",
-        "priceCurrency": "{{ shop.currency | default: 'USD' }}",
-        "offeredBy": {
-          "@type": "Organization",
-          "@id": "https://{{ shop.domain }}#seller",
-          "name": "{{ shop.name | escape }}",
-          "url": "https://{{ shop.domain }}",
-          "logo": "{{ 'logo.png' | asset_url | default: 'https://via.placeholder.com/500' }}",
-          "description": "{{ shop.description | escape | default: 'Premium fitness equipment at competitive prices.' }}",
-          "founder": "Timothy French",
-          "foundingDate": "2010",
-          "sameAs": [
-            {% if shop.metafields.custom.social_media %}
-              {% for link in shop.metafields.custom.social_media %}
-                "{{ link | escape }}"{% unless forloop.last %},{% endunless %}
-              {% endfor %}
-            {% else %}
-              "https://www.facebook.com/FitnessSuperstore",
-              "https://x.com/fitsuperstore",
-              "https://www.instagram.com/fitness.superstore/"
-            {% endif %}
-          ],
-          "contactPoint": {
-            "@type": "ContactPoint",
-            "telephone": "{{ shop.phone | default: 'Not specified' | escape }}",
-            "contactType": "Customer Service",
-            "areaServed": "{{ shop.metafields.custom.area_served | default: 'US' | escape }}",
-            "availableLanguage": ["{{ shop.metafields.custom.language | default: 'English' | escape }}"]
-          },
-          "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "{{ shop.address.street | default: 'Not specified' | escape }}",
-            "addressLocality": "{{ shop.address.city | default: 'Not specified' | escape }}",
-            "addressRegion": "{{ shop.address.province_code | default: 'Not specified' | escape }}",
-            "postalCode": "{{ shop.address.zip | default: 'Not specified' | escape }}",
-            "addressCountry": "{{ shop.address.country | default: 'Not specified' | escape }}"
-          },
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://{{ shop.domain }}/search?q={search_term_string}",
-            "query-input": "required name=search_term_string"
-          }
-        },
-        "offers": [
-          {% for variant in product.variants %}
-          {
-            "@type": "Offer",
-            "@id": "https://{{ shop.domain }}{{ product.url }}?variant={{ variant.id }}#offer",
-            "name": "{{ variant.title | escape }}",
-            "sku": "{{ variant.sku | default: variant.id | escape }}",
-            "price": "{{ variant.price | divided_by: 100.0 }}",
-            "priceCurrency": "{{ shop.currency | default: 'USD' }}",
-            "availability": "https://schema.org/{% if variant.available %}InStock{% else %}OutOfStock{% endif %}",
-            "url": "https://{{ shop.domain }}{{ product.url }}?variant={{ variant.id }}"
-            {% if variant.compare_at_price > variant.price %}
-            ,"priceSpecification": {
-              "@type": "UnitPriceSpecification",
-              "price": "{{ variant.compare_at_price | divided_by: 100.0 }}",
-              "priceCurrency": "{{ shop.currency | default: 'USD' }}",
-              "priceType": "https://schema.org/ListPrice"
-            }
-            {% endif %}
-            {% if variant.featured_image %}
-            ,"image": "{{ variant.featured_image.src | img_url: 'master' | split: '?' | first | escape }}"
-            {% endif %}
-          }{% unless forloop.last %},{% endunless %}
-          {% endfor %}
-        ]
-      },
-      {% endif %}
       "sku": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
       "url": "https://{{ shop.domain }}{{ product.url }}"
       {% if product.metafields.custom.seo_videos %}
