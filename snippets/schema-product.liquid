@@ -72,6 +72,7 @@
         "price": "{{ product.price | divided_by: 100.0 | default: '0.00' }}",
         "priceCurrency": "{{ shop.currency | default: 'USD' }}",
         "url": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}",
+       
         "offeredBy": {
           "@type": "Organization",
           "@id": "https://{{ shop.domain }}#seller",
@@ -116,47 +117,6 @@
       },
       "sku": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
       "url": "https://{{ shop.domain }}{{ product.url }}"
-      {% if product.variants.size > 1 %}
-      ,
-      "hasVariant": [
-        {% for variant in product.variants %}
-        {
-          "@type": "ProductModel",
-          "@id": "https://{{ shop.domain }}{{ product.url }}?variant={{ variant.id }}#variant",
-          "name": "{{ variant.title | escape }}",
-          "sku": "{{ variant.sku | default: variant.id | escape }}",
-          "mpn": "{{ variant.sku | default: variant.id | escape }}",
-          "color": "{{ variant.option1 | escape }}",
-          "offers": {
-            "@type": "Offer",
-            "@id": "https://{{ shop.domain }}{{ product.url }}?variant={{ variant.id }}#offer",
-            "price": "{{ variant.price | divided_by: 100.0 }}",
-            "priceCurrency": "{{ shop.currency | default: 'USD' }}",
-            "availability": "https://schema.org/{% if variant.available %}InStock{% else %}OutOfStock{% endif %}",
-            "url": "https://{{ shop.domain }}{{ product.url }}?variant={{ variant.id }}"
-            {% if variant.compare_at_price > variant.price %}
-            ,"priceSpecification": {
-              "@type": "UnitPriceSpecification",
-              "price": "{{ variant.compare_at_price | divided_by: 100.0 }}",
-              "priceCurrency": "{{ shop.currency | default: 'USD' }}",
-              "priceType": "https://schema.org/ListPrice"
-            }
-            {% endif %}
-          }
-          {% if variant.featured_image %}
-          ,"image": "{{ variant.featured_image.src | img_url: 'master' | split: '?' | first | escape }}"
-          {% endif %}
-          {% if variant.weight > 0 %}
-          ,"weight": {
-            "@type": "QuantitativeValue",
-            "value": "{{ variant.weight | escape }}",
-            "unitCode": "{{ variant.weight_unit | escape }}"
-          }
-          {% endif %}
-        }{% unless forloop.last %},{% endunless %}
-        {% endfor %}
-      ]
-      {% endif %}
       {% if product.metafields.custom.seo_videos %}
       ,
       "subjectOf": [
