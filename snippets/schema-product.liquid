@@ -71,8 +71,24 @@
         "@id": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}#offer",
         "@type": "Offer",
         "availability": "https://schema.org/{% if product.selected_or_first_available_variant.available %}InStock{% else %}OutOfStock{% endif %}",
-        "price": "{{ product.price | divided_by: 100.0 | default: '0.00' }}",
+        "price": "{{ product.selected_or_first_available_variant.price | divided_by: 100.0 | default: '0.00' }}",
         "priceCurrency": "{{ shop.currency | default: 'USD' }}",
+        {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
+        "priceSpecification": [
+          {
+            "@type": "UnitPriceSpecification",
+            "priceType": "https://schema.org/ListPrice",
+            "price": "{{ product.selected_or_first_available_variant.compare_at_price | divided_by: 100.0 }}",
+            "priceCurrency": "{{ shop.currency | default: 'USD' }}"
+          },
+          {
+            "@type": "UnitPriceSpecification",
+            "priceType": "https://schema.org/SalePrice",
+            "price": "{{ product.selected_or_first_available_variant.price | divided_by: 100.0 }}",
+            "priceCurrency": "{{ shop.currency | default: 'USD' }}"
+          }
+        ],
+        {% endif %}
         "url": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}",
         "offeredBy": {
           "@type": "Organization",
@@ -126,6 +142,22 @@
             "availability": "https://schema.org/{% if variant.available %}InStock{% else %}OutOfStock{% endif %}",
             "price": "{{ variant.price | divided_by: 100.0 }}",
             "priceCurrency": "{{ shop.currency | default: 'USD' }}",
+            {% if variant.compare_at_price > variant.price %}
+            "priceSpecification": [
+              {
+                "@type": "UnitPriceSpecification",
+                "priceType": "https://schema.org/ListPrice",
+                "price": "{{ variant.compare_at_price | divided_by: 100.0 }}",
+                "priceCurrency": "{{ shop.currency | default: 'USD' }}"
+              },
+              {
+                "@type": "UnitPriceSpecification",
+                "priceType": "https://schema.org/SalePrice",
+                "price": "{{ variant.price | divided_by: 100.0 }}",
+                "priceCurrency": "{{ shop.currency | default: 'USD' }}"
+              }
+            ],
+            {% endif %}
             "url": "https://{{ shop.domain }}{{ product.url }}?variant={{ variant.id }}",
             "sku": "{{ variant.sku | default: product.handle | escape }}",
             "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
