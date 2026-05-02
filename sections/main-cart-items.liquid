@@ -50,7 +50,17 @@
   {% endcomment %}
 </style>
 
-<script src="{{ 'cart.js' | asset_url }}" defer="defer"></script>
+{%- unless settings.cart_type == "drawer" -%}
+  {%- comment -%}
+    When the cart drawer is enabled, sections/header.liquid loads cart.js
+    earlier in document order so cart-drawer.js (also loaded from header)
+    can extend the global CartItems class. Loading cart.js again here would
+    re-declare the class and re-define the cart-items custom element,
+    both of which throw on the second execution. Only load it here when
+    the drawer is disabled and header.liquid skips its cart-drawer block.
+  {%- endcomment -%}
+  <script src="{{ 'cart.js' | asset_url }}" defer="defer"></script>
+{%- endunless -%}
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer="defer"></script>
 <div id="icon-close-template" style="display: none;">
   {% render 'icon-close-small' %}
