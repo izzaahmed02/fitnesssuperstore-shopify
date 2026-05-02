@@ -41,6 +41,7 @@ if (!customElements.get('product-form-with-options')) {
         const url = `${window.Shopify.routes.root}cart/add.js`;
 
         const productProperties = {
+          ...this.prepareDefaultProperties(),
           ...this.prepareOptions(),
           _functionOperation: this.prepareFunctionalProperties(),
         };
@@ -131,6 +132,18 @@ if (!customElements.get('product-form-with-options')) {
         if (this.cart && this.cart.classList.contains('is-empty')) this.cart.classList.remove('is-empty');
         this.submitButton.removeAttribute('aria-disabled');
         this.querySelector('.loading__spinner').classList.add('hidden');
+      }
+
+      prepareDefaultProperties() {
+        const result = {};
+        const inputs = this.form.querySelectorAll('input[type="hidden"][name^="properties["]');
+        inputs.forEach((input) => {
+          const match = input.name.match(/^properties\[(.+)\]$/);
+          if (!match) return;
+          if (input.value === '' || input.value == null) return;
+          result[match[1]] = input.value;
+        });
+        return result;
       }
 
       prepareOptions() {
