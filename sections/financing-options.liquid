@@ -1,0 +1,343 @@
+<section class="financing-options" style="background: {{ section.settings.bg_color }};">
+  <div class="page-width">
+
+    <div class="financing-grid">
+
+      {% for block in section.blocks %}
+
+        {% case block.type %}
+
+        {% when 'full_width' %}
+
+        <div class="financing-block financing-block--full">
+
+          {% if block.settings.title != blank %}
+          <p class="financing-title">{{ block.settings.title }}</p>
+          {% endif %}
+
+          <div class="financing-card financing-card--full">
+
+            <div class="financing-full__inner">
+
+              <div class="financing-full__item">
+                {% if block.settings.logo_1 %}
+                  <img src="{{ block.settings.logo_1 | image_url }}" alt="">
+                {% endif %}
+                <p>{{ block.settings.text_1 }}</p>
+              </div>
+
+              <div class="financing-divider"></div>
+
+              <div class="financing-full__item">
+                {% if block.settings.logo_2 %}
+                  <img src="{{ block.settings.logo_2 | image_url }}" alt="">
+                {% endif %}
+                <p>{{ block.settings.text_2 }}</p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+
+        {% when 'half_width' %}
+
+        <div class="financing-block financing-block--half">
+
+          {% if block.settings.title != blank %}
+          <p class="financing-title">{{ block.settings.title }}</p>
+          {% endif %}
+
+          <div class="financing-card financing-card--half">
+
+            <div class="financing-half__content">
+
+              {% if block.settings.logo %}
+                <img src="{{ block.settings.logo | image_url }}" alt="">
+              {% endif %}
+
+              <p>{{ block.settings.text }}</p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {% endcase %}
+
+      {% endfor %}
+
+    </div>
+
+  </div>
+</section>
+
+<style>
+.financing-options{
+  padding:36px 0;
+}
+
+/* GRID */
+
+.financing-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:20px 16px;
+}
+
+.financing-block{
+  width:100%;
+}
+
+.financing-block--half{
+  width:calc(50% - 8px);
+}
+
+/* TITLES */
+
+.financing-title{
+  font-size:20px;
+  line-height: 26px;
+  letter-spacing: 0px;
+  font-weight: 700;
+  margin: 0px;
+  margin-bottom:12px;
+  text-transform: initial;
+  gap: 8px;
+}
+
+.financing-title span {
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: 0px;
+  color: #F1592A;
+  padding: 2px 8px;
+  background: #FCE6DE;
+  border-radius: 20px;
+  text-transform: initial;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* CARD */
+
+.financing-card{
+  background:#fff;
+  border:1px solid #e5e5e5;
+  border-radius:12px;
+  padding:20px;
+  box-sizing:border-box;
+}
+
+/* FULL WIDTH CARD */
+
+.financing-card--full{
+  height:112px;
+  display:flex;
+  align-items:center;
+}
+
+.financing-full__inner{
+  display:flex;
+  align-items:center;
+  width:100%;
+}
+
+.financing-full__item{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  flex:1;
+}
+
+.financing-full__item img{
+  max-height:32px;
+}
+
+/* SEPARATOR */
+
+.financing-divider{
+  width:1px;
+  height:40px;
+  background:#E5E5E5;
+  margin:0 32px;
+  display: block !important;
+}
+
+/* HALF WIDTH CARD */
+
+.financing-card--half{
+  height:112px;
+  display:flex;
+  align-items:center;
+}
+
+.financing-half__content{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.financing-half__content img{
+  max-height:32px;
+}
+
+@media screen and (min-width: 750px) {
+    .financing-options .page-width {
+        padding: 0 16px;
+    }
+}
+
+
+/* MOBILE */
+
+@media screen and (max-width:749px){
+
+.financing-options {
+  padding: 24px 0px;
+}
+
+.financing-block--half{
+  width:100%;
+}
+
+/* FULL CARD MOBILE */
+
+.financing-card--full{
+  height:240px;
+}
+
+.financing-full__inner{
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:16px;
+}
+
+.financing-full__item, .financing-half__content {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.financing-full__item p, .financing-half__content p {
+  margin: 0px;
+}
+
+/* HORIZONTAL SEPARATOR */
+
+.financing-divider{
+  width:100%;
+  height:1px;
+  margin:0;
+  display: block !important;
+}
+
+/* HALF CARD MOBILE */
+
+.financing-card--half{
+  height:148px;
+}
+
+.financing-grid .financing-block--half:nth-child(3) .financing-card--half {
+  height: 172px;
+}
+
+.financing-half__content{
+  align-items:flex-start;
+}
+
+}
+
+</style>
+
+{% schema %}
+{
+  "name": "Financing options",
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Section background",
+      "default": "#f5f5f5"
+    }
+  ],
+  "blocks": [
+
+    {
+      "type": "full_width",
+      "name": "Full width financing",
+      "limit": 1,
+      "settings": [
+
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+
+        {
+          "type": "image_picker",
+          "id": "logo_1",
+          "label": "First logo"
+        },
+
+        {
+          "type": "textarea",
+          "id": "text_1",
+          "label": "First text"
+        },
+
+        {
+          "type": "image_picker",
+          "id": "logo_2",
+          "label": "Second logo"
+        },
+
+        {
+          "type": "textarea",
+          "id": "text_2",
+          "label": "Second text"
+        }
+
+      ]
+    },
+
+    {
+      "type": "half_width",
+      "name": "Half width card",
+      "limit": 2,
+      "settings": [
+
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+
+        {
+          "type": "image_picker",
+          "id": "logo",
+          "label": "Logo"
+        },
+
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Text"
+        }
+
+      ]
+    }
+
+  ],
+
+  "presets": [
+    {
+      "name": "Financing options"
+    }
+  ]
+}
+{% endschema %}
