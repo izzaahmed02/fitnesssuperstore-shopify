@@ -10,7 +10,12 @@
   onload="this.media='all'"
 >
 
-<script src="{{ 'cart.js' | asset_url }}" defer></script>
+{%- comment -%}
+  cart.js is now loaded from sections/header.liquid (before cart-drawer.js)
+  on every page where the cart drawer is enabled, so we no longer load it
+  here. Loading it twice would re-declare the global `CartItems` class and
+  re-`customElements.define('cart-items', ...)`, both of which throw.
+{%- endcomment -%}
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer></script>
 <style>
   .drawer {
