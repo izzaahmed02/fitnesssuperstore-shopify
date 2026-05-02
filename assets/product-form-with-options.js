@@ -41,6 +41,7 @@ if (!customElements.get('product-form-with-options')) {
         const url = `${window.Shopify.routes.root}cart/add.js`;
 
         const productProperties = {
+          ...this.prepareDefaultProperties(),
           ...this.prepareOptions(),
           _functionOperation: this.prepareFunctionalProperties(),
         };
@@ -131,6 +132,26 @@ if (!customElements.get('product-form-with-options')) {
         if (this.cart && this.cart.classList.contains('is-empty')) this.cart.classList.remove('is-empty');
         this.submitButton.removeAttribute('aria-disabled');
         this.querySelector('.loading__spinner').classList.add('hidden');
+      }
+
+      prepareDefaultProperties() {
+        const result = {};
+        if (!this.productContainer) return result;
+        const readCustomField = (name) => {
+          const marker = this.productContainer.querySelector(`[data-customfield="${name}"]`);
+          if (!marker) return null;
+          const itemText = marker.closest('.item__text');
+          if (!itemText) return null;
+          const clone = itemText.cloneNode(true);
+          clone.querySelectorAll('.title, .more-info').forEach((el) => el.remove());
+          const value = clone.textContent.replace(/\s+/g, ' ').trim();
+          return value || null;
+        };
+        const warranty = readCustomField('Warranty');
+        if (warranty) result['Warranty'] = warranty;
+        const processingTime = readCustomField('Processing Time');
+        if (processingTime) result['Processing Time'] = processingTime;
+        return result;
       }
 
       prepareOptions() {
