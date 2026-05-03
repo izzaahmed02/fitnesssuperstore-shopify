@@ -155,7 +155,7 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       prepareOptions() {
-        if (!this.productContainer) return {};
+        if (!this.productContainer) return;
         const activeOptions = this.productContainer.querySelectorAll('[data-selected-options]');
         if (activeOptions.length === 0) return;
         let lineItemProperties = {};
@@ -205,7 +205,7 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       prepareFunctionalProperties() {
-        if (!this.productContainer) return [];
+        if (!this.productContainer) return;
         const activeOptions = this.productContainer.querySelectorAll('[data-selected-options]');
         if (activeOptions.length === 0) return;
         let productOptions = [];
