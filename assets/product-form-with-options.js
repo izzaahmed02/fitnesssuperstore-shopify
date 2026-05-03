@@ -40,11 +40,11 @@ if (!customElements.get('product-form-with-options')) {
         this.cart?.setActiveElement(document.activeElement);
         const url = `${window.Shopify.routes.root}cart/add.js`;
 
-        const productProperties = {
+        const productProperties = this.orderProperties({
           ...this.prepareDefaultProperties(),
           ...this.prepareOptions(),
-          _functionOperation: this.prepareFunctionalProperties(),
-        };
+        });
+        productProperties._functionOperation = this.prepareFunctionalProperties();
 
         const bodyRequest = {
           items: [
@@ -286,6 +286,36 @@ if (!customElements.get('product-form-with-options')) {
         }
 
         return productOptions;
+      }
+
+      // Re-keys the properties object so checkout (which renders properties in
+      // cart-line insertion order) shows the same order as the cart drawer and
+      // cart page Liquid blocks. Slot keys come first in the defined order if
+      // present, then everything else preserves discovery order from the option
+      // picker. _functionOperation is set after this call so it always lands at
+      // the end of the object.
+      orderProperties(rawProps) {
+        const SLOT_ORDER = [
+          'processing time',
+          'warranty',
+          'paint color',
+          'weight stack',
+          'vinyl color',
+          'rig height',
+          'rig # of sections',
+          'full assembly & installation',
+        ];
+        const slotSet = new Set(SLOT_ORDER);
+        const ordered = {};
+        const propKeys = Object.keys(rawProps);
+        SLOT_ORDER.forEach((slot) => {
+          const matchKey = propKeys.find((k) => k.toLowerCase() === slot);
+          if (matchKey !== undefined) ordered[matchKey] = rawProps[matchKey];
+        });
+        propKeys.forEach((k) => {
+          if (!slotSet.has(k.toLowerCase())) ordered[k] = rawProps[k];
+        });
+        return ordered;
       }
 
       checkMandatoryFields() {
