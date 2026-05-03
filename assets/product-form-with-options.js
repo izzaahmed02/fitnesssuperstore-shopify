@@ -155,6 +155,7 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       prepareOptions() {
+        if (!this.productContainer) return;
         const activeOptions = this.productContainer.querySelectorAll('[data-selected-options]');
         if (activeOptions.length === 0) return;
         let lineItemProperties = {};
@@ -204,6 +205,7 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       prepareFunctionalProperties() {
+        if (!this.productContainer) return;
         const activeOptions = this.productContainer.querySelectorAll('[data-selected-options]');
         if (activeOptions.length === 0) return;
         let productOptions = [];
@@ -287,6 +289,7 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       checkMandatoryFields() {
+        if (!this.productContainer) return true;
         const mandatoryFields = this.productContainer.querySelectorAll('[data-selected-options][data-mandatory]');
         if (mandatoryFields.length === 0) return true;
         let errorCounter = 0;
