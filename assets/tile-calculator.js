@@ -62,7 +62,7 @@ class TileCalculator extends HTMLElement {
       setTimeout(() => {
         this.updateQuantity(0);
         this.updateCustomPrice({});
-        this.form.addEventListener('submit', this.onSubmitHandler.bind(this)); 
+        this.form.addEventListener('submit', this.onSubmitHandler.bind(this));
         this.disableAddToCartButton();
 
         this.enableBreakdownInputsRealtimeSync();
@@ -86,7 +86,7 @@ class TileCalculator extends HTMLElement {
     tileTypes.includes('rubberroll');
 
     if (isRoll) {
-      const effectiveCoverageM2 = 9.5;      
+      const effectiveCoverageM2 = 9.5;
       const areaM2 = (lengthCm * widthCm) / 1e4;
       const EPS = 1e-9;
       const rolls =
@@ -105,8 +105,8 @@ class TileCalculator extends HTMLElement {
       wid,
     });
 
-    const o1 = orient(lCm, wCm);        
-    const o2 = orient(wCm, lCm);     
+    const o1 = orient(lCm, wCm);
+    const o2 = orient(wCm, lCm);
     const best = o1.rows * o1.cols <= o2.rows * o2.cols ? o1 : o2;
 
     const tilesPerRow   = best.rows;
@@ -484,7 +484,9 @@ class TileCalculator extends HTMLElement {
     this.btn.classList.add('loading');
     this.btn.querySelector('.loading__spinner').classList.remove('hidden');
 
-    // Wait for extra property fields from external apps
+    // Wait for optional extra property fields injected by external apps
+    // (legacy Avis hidden inputs container). Time-bounded to 200ms so the
+    // submit doesn't hang forever when the app is not installed.
     const items = [];
     const avisEl = await new Promise((resolve) => {
       const existing = document.querySelector(
@@ -492,11 +494,18 @@ class TileCalculator extends HTMLElement {
       );
       if (existing) return resolve(existing);
 
-      const observer = new MutationObserver(() => {
+      let observer;
+      const timeoutId = setTimeout(() => {
+        if (observer) observer.disconnect();
+        resolve(null);
+      }, 200);
+
+      observer = new MutationObserver(() => {
         const found = document.querySelector(
           '.avis-input-hiddens[data-productid="default"]',
         );
         if (found) {
+          clearTimeout(timeoutId);
           observer.disconnect();
           resolve(found);
         }
@@ -505,14 +514,17 @@ class TileCalculator extends HTMLElement {
       observer.observe(document.body, { childList: true, subtree: true });
     });
 
-    // Extract product properties (e.g. warranty, installation)
+    // Extract product properties (e.g. warranty, installation) when the
+    // optional hidden-inputs container is present; otherwise proceed without.
     const props = {};
-    avisEl
-      .querySelectorAll('input[type="hidden"][name^="properties["]')
-      .forEach((input) => {
-        const name = input.name.match(/properties\[(.+?)\]/)?.[1];
-        if (name) props[name] = input.value;
-      });
+    if (avisEl) {
+      avisEl
+        .querySelectorAll('input[type="hidden"][name^="properties["]')
+        .forEach((input) => {
+          const name = input.name.match(/properties\[(.+?)\]/)?.[1];
+          if (name) props[name] = input.value;
+        });
+    }
 
     // Collect selected variants with their calculated quantity
     Object.entries(this.variants).forEach(([type, variant]) => {
@@ -534,7 +546,7 @@ class TileCalculator extends HTMLElement {
         'Accept':       'application/json',
         'X-Requested-With': 'XMLHttpRequest',
       },
-      credentials: 'same-origin', 
+      credentials: 'same-origin',
       body: JSON.stringify({ items }),
     };
     const response = await fetch(`${routes.cart_add_url}`, config);
@@ -554,14 +566,14 @@ class TileCalculator extends HTMLElement {
       this.btn.querySelector('.loading__spinner').classList.add('hidden');
     }
   }
-  
+
   async renderCartDrawer() {
       const finalCartData = await fetch('/cart.js').then((res) => res.json());
       publish(PUB_SUB_EVENTS.cartUpdate, {
         source: 'tile-calculator',
         cartData: finalCartData,
       });
-      
+
       const sectionsResponse = await fetch(
         window.routes.root + '?sections=cart-drawer,cart-icon-bubble',
       );
