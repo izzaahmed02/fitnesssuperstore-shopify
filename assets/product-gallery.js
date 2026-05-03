@@ -1,3 +1,4 @@
+if (!customElements.get('product-gallery')) {
 class ProductGallery extends HTMLElement {
   constructor() {
     super();
@@ -22,13 +23,13 @@ class ProductGallery extends HTMLElement {
     }
     const raw = this.querySelector('[data-product-media]');
     if (!raw) {
-      
+
       return;
     }
 
     try {
       this.mediaData = JSON.parse(raw.innerHTML.trim());
-     
+
     } catch (err) {
       console.error('ConnectedCallback: Invalid JSON in [data-product-media] element.', err);
       return;
@@ -40,19 +41,19 @@ class ProductGallery extends HTMLElement {
       console.error('ConnectedCallback: Missing .custom-product-gallery or [data-main-media-wrapper]. Exiting.');
       return;
     }
-  
+
 
     this.initThumbnails();
-   
+
 
     const currentActiveThumbnail = this.querySelector('.thumbnail-btn.is-active');
 
     if (!currentActiveThumbnail && this.mediaData.length > 0) {
-    
+
       this.setActiveMedia(this.mediaData[0].id);
     } else if (currentActiveThumbnail) {
       this.activeMediaId = currentActiveThumbnail.getAttribute('data-media-id');
-     
+
 
       const firstMedia = this.mediaData.find(m => m.id == this.activeMediaId);
       const mainImageContainer = this.main?.querySelector('[data-zoom-container]');
@@ -60,10 +61,10 @@ class ProductGallery extends HTMLElement {
       if (mainImageContainer && firstMedia && firstMedia.media_type === 'image' && firstMedia.preview_image) {
         const img = mainImageContainer.querySelector('img');
         if (img && img.complete) {
-         
+
           this.initZoom(mainImageContainer, firstMedia, true);
         } else if (img) {
-          
+
           img.onload = () => {
             mainImageContainer.querySelector('.image-skeleton-wrapper')?.classList.add('loaded');
             this.initZoom(mainImageContainer, firstMedia, true);
@@ -73,10 +74,10 @@ class ProductGallery extends HTMLElement {
     }
 
     window.addEventListener('resize', this.handleResize.bind(this));
-  
+
 
     this.main.addEventListener('click', (e) => {
-     
+
       const container = e.target.closest('.main-image-container');
       if (container) {
         const media = this.mediaData.find((m) => m.id == this.activeMediaId);
@@ -95,13 +96,13 @@ class ProductGallery extends HTMLElement {
   }
 
   handleResize() {
-   
+
     const activeId = this.activeMediaId;
     const container = this.main?.querySelector('[data-zoom-container]');
     const media = this.mediaData.find((m) => m.id == activeId);
 
     if (!container || !media || media.media_type !== 'image' || !media.preview_image) {
-     
+
       return;
     }
 
@@ -111,21 +112,21 @@ class ProductGallery extends HTMLElement {
     if (oldLens) oldLens.remove();
 
     container.dataset.zoomInitialized = 'false';
-   
+
 
     const img = container.querySelector('img');
     if (!img) return;
 
     img.onload = null;
-   
+
 
     requestAnimationFrame(() => {
       if (this.isDesktop()) {
         if (img.complete) {
-         
+
           this.initZoom(container, media);
         } else {
-          
+
           img.onload = () => {
             this.initZoom(container, media);
           };
@@ -137,50 +138,50 @@ class ProductGallery extends HTMLElement {
   }
 
   initThumbnails() {
-  
+
     const buttons = this.querySelectorAll('.thumbnail-btn');
     buttons.forEach((btn) => {
       const mediaId = btn.getAttribute('data-media-id');
       const media = this.mediaData.find(m => m.id == mediaId);
       const isVideoThumb = media && (media.media_type === 'video' || media.media_type === 'external_video');
 
-     
+
 
       btn.addEventListener('click', (e) => {
-        
+
         if (isVideoThumb || this.activeMediaId === mediaId) {
-         
+
           this.openPopup(mediaId);
         } else {
-         
+
           this.setActiveMedia(mediaId);
         }
       });
 
       let hoverTimer;
       btn.addEventListener('mouseenter', () => {
-        
+
         if (this.activeMediaId === mediaId || isVideoThumb) {
-         
+
           return;
         }
         hoverTimer = setTimeout(() => {
-         
+
           this.setActiveMedia(mediaId);
         }, 150);
       });
 
       btn.addEventListener('mouseleave', () => {
-       
+
         clearTimeout(hoverTimer);
       });
     });
   }
 
   setActiveMedia(id) {
-    
+
     if (this.activeMediaId == id) {
-     
+
       return;
     }
     this.activeMediaId = id;
@@ -207,7 +208,7 @@ class ProductGallery extends HTMLElement {
         container.classList.add('is-video-preview');
       }
       this.main.appendChild(container);
-     
+
 
       if (media.media_type === 'image' && media.preview_image) {
         const img = document.createElement('img');
@@ -224,10 +225,10 @@ class ProductGallery extends HTMLElement {
         img.fetchPriority = 'low';
         container.appendChild(skeletonWrapper);
         skeletonWrapper.appendChild(img);
-        
+
 
         img.onload = () => {
-          
+
           skeletonWrapper.classList.add('loaded');
           this.initZoom(container, media, true);
         };
@@ -282,10 +283,10 @@ class ProductGallery extends HTMLElement {
       const isActive = btnId == String(id);
       btn.classList.toggle('is-active', isActive);
       if (isActive) {
-       
+
       }
     });
-   
+
   }
 
   isDesktop() {
@@ -293,24 +294,24 @@ class ProductGallery extends HTMLElement {
   }
 
   initZoom(container, media, forceStart = false) {
-    
+
     if (!this.isDesktop()) {
-    
+
       return;
     }
     const img = container.querySelector('img');
     if (!img || !media.preview_image || container.dataset.zoomInitialized === 'true') {
-     
+
       return;
     }
 
     if (this.activeMediaId != media.id) {
-       
+
         return;
     }
 
     container.dataset.zoomInitialized = 'true';
-   
+
 
     const zoomResult = document.createElement('div');
     zoomResult.className = 'zoom-result';
@@ -334,7 +335,7 @@ class ProductGallery extends HTMLElement {
     zoomResult.appendChild(zoomImg);
 
     zoomImg.onload = () => {
-     
+
       const minZoomRatio = 1.2;
       const zoomRatio = zoomImg.naturalWidth / img.clientWidth;
       if (zoomImg.naturalWidth < 100) {
@@ -370,7 +371,7 @@ class ProductGallery extends HTMLElement {
 
         lens.style.width = `${Math.min(lensW, img.clientWidth)}px`;
         lens.style.height = `${Math.min(lensH, img.clientHeight)}px`;
-       
+
 
         const announcementBarSection = document.querySelector('.announcement-bar-section');
         const headerWrapper = document.querySelector('.header-wrapper');
@@ -386,7 +387,7 @@ class ProductGallery extends HTMLElement {
             zoomResult.style.top = '';
             zoomResult.style.height = '';
           }
-         
+
         };
 
         window.removeEventListener('scroll', updateZoomTop);
@@ -424,7 +425,7 @@ class ProductGallery extends HTMLElement {
 
       container.removeEventListener('mouseenter', this._handleZoomMouseEnter);
       this._handleZoomMouseEnter = () => {
-        
+
         zoomResult.style.display = 'block';
         lens.style.display = 'block';
       };
@@ -432,7 +433,7 @@ class ProductGallery extends HTMLElement {
 
       container.removeEventListener('mouseleave', this._handleZoomMouseLeave);
       this._handleZoomMouseLeave = () => {
-       
+
         zoomResult.style.display = 'none';
         lens.style.display = 'none';
       };
@@ -440,23 +441,23 @@ class ProductGallery extends HTMLElement {
 
       zoomResult.removeEventListener('mouseenter', this._handleZoomResultMouseEnter);
       this._handleZoomResultMouseEnter = () => {
-        
+
         zoomResult.style.display = 'none';
         lens.style.display = 'none';
       };
       zoomResult.addEventListener('mouseenter', this._handleZoomResultMouseEnter);
 
       if (forceStart && this.lastMouseX && this.lastMouseY) {
-       
+
         const rect = img.getBoundingClientRect();
         const inside = this.lastMouseX > rect.left && this.lastMouseX < rect.right && this.lastMouseY > rect.top && this.lastMouseY < rect.bottom;
         if (inside) {
-         
+
           zoomResult.style.display = 'block';
           lens.style.display = 'block';
           moveLens({ clientX: this.lastMouseX, clientY: this.lastMouseY });
         } else {
-          
+
         }
       }
     };
@@ -466,7 +467,7 @@ class ProductGallery extends HTMLElement {
   renderPopup() {
     // Only append the popup HTML if it doesn't already exist in the DOM
     if (!document.getElementById('product-gallery-popup')) {
-      
+
       const popupHTML = document.createElement('div');
       popupHTML.innerHTML = `
         <div id="product-gallery-popup" class="product-popup-overlay" hidden>
@@ -488,19 +489,19 @@ class ProductGallery extends HTMLElement {
         </div>
       `;
       document.body.appendChild(popupHTML.firstElementChild);
-      
+
     } else {
-     
+
     }
   }
   // --- End of modified renderPopup ---
 
   // --- Start of modified openPopup ---
   openPopup(mediaId) {
-   
+
     // Ensure the popup HTML structure is in the DOM
     this.renderPopup();
-    
+
     const popup = document.getElementById('product-gallery-popup');
     const viewer = popup.querySelector('[data-popup-viewer]');
     const tabImages = popup.querySelector('[data-tab-content="images"]');
@@ -519,7 +520,7 @@ class ProductGallery extends HTMLElement {
 
     const clickedMedia = this.mediaData.find((m) => m.id == mediaId);
     const defaultTab = clickedMedia && (clickedMedia.media_type === 'video' || clickedMedia.media_type === 'external_video') ? 'videos' : 'images';
-   
+
 
     // If popup is already open, just update its content and return
     if (!popup.hidden) {
@@ -531,16 +532,16 @@ class ProductGallery extends HTMLElement {
     // First, make the popup visible
     popup.hidden = false;
     document.body.style.overflow = 'hidden';
-   
+
 
     // Then, render the initial viewer content
     this.renderPopupViewer(mediaId, viewer);
-    
+
 
     // Populate thumbnails and set up tabs only once when opening for the first time
     // or if they were cleared/not populated (e.g., if popup was removed from DOM)
     if (tabImages.innerHTML === '' && tabVideos.innerHTML === '') {
-     
+
       this.mediaData.forEach((media) => {
         let btn;
 
@@ -566,13 +567,13 @@ class ProductGallery extends HTMLElement {
           };
 
           btn.addEventListener('click', () => {
-           
+
             const zoomedViewer = popup.querySelector(
               '.popup-media-viewer.is-zoomed-simple',
             );
 
             if (zoomedViewer) {
-             
+
               zoomedViewer.classList.remove('is-zoomed-simple');
               const inner = zoomedViewer.querySelector('.popup-media-inner');
               if (inner) {
@@ -583,7 +584,7 @@ class ProductGallery extends HTMLElement {
 
             this.renderPopupViewer(media.id, viewer);
             this.updatePopupThumbActive(media.id);
-           
+
           });
 
           tabImages.appendChild(btn);
@@ -593,7 +594,7 @@ class ProductGallery extends HTMLElement {
         ) {
           btn = this.renderVideoThumbItem(media);
           btn.addEventListener('click', () => {
-           
+
             this.renderPopupViewer(
               media.id,
               document.querySelector('[data-popup-viewer]')
@@ -607,13 +608,13 @@ class ProductGallery extends HTMLElement {
           btn.className = 'popup-thumb popup-thumb-3d';
           btn.type = 'button';
           btn.setAttribute('data-media-id', media.id);
-          
+
           console.debug('[ProductGallery] openPopup: Creating popup thumbnail for model', {
             mediaId: media.id,
             cameraOrbitFromMedia: media.camera_orbit,
             hasCameraOrbit: !!media.camera_orbit
           });
-          
+
           if (media.camera_orbit) {
             btn.setAttribute('data-camera-orbit', media.camera_orbit);
             console.debug('[ProductGallery] openPopup: Set data-camera-orbit on popup thumbnail', {
@@ -691,13 +692,13 @@ class ProductGallery extends HTMLElement {
           tabImages.appendChild(btn);
         }
       });
-     
+
 
       // Setup tab listeners
       tabs.forEach((tab) => {
         tab.removeEventListener('click', this._handlePopupTabClick); // Ensure no duplicate listeners
         this._handlePopupTabClick = () => {
-         
+
           tabs.forEach((t) => t.classList.remove('is-active'));
           tab.classList.add('is-active');
 
@@ -710,7 +711,7 @@ class ProductGallery extends HTMLElement {
           );
 
           if (zoomedViewer) {
-           
+
             zoomedViewer.classList.remove('is-zoomed-simple');
             const inner = zoomedViewer.querySelector('.popup-media-inner');
             if (inner) {
@@ -730,11 +731,11 @@ class ProductGallery extends HTMLElement {
           }
 
           if (firstMedia) {
-            
+
             this.renderPopupViewer(firstMedia.id, viewer);
             this.updatePopupThumbActive(firstMedia.id);
           } else {
-           
+
           }
         };
         tab.addEventListener('click', this._handlePopupTabClick);
@@ -748,21 +749,21 @@ class ProductGallery extends HTMLElement {
     });
     tabImages.classList.toggle('hidden', defaultTab !== 'images');
     tabVideos.classList.toggle('hidden', defaultTab !== 'videos');
-   
+
 
     this.updatePopupThumbActive(mediaId);
-   
+
 
     popup.querySelector('.popup-close').onclick = this.closePopup.bind(this);
     popup.querySelector('.product-popup-backdrop').onclick = this.closePopup.bind(this);
     document.addEventListener('keydown', this.handleEscClose);
-   
+
   }
   // --- End of modified openPopup ---
 
 
   renderPopupViewer(mediaId, viewer) {
-   
+
     const media = this.mediaData.find((m) => m.id == mediaId);
     if (!media) {
       console.error(`renderPopupViewer: Media not found for ID: ${mediaId}`);
@@ -794,7 +795,7 @@ class ProductGallery extends HTMLElement {
     let newMediaElement; // Declare a variable to hold the new media element
 
     if (media.media_type === 'image') {
-      
+
       viewer.classList.add('popup-media-viewer-media-zoom-img');
 
       const inner = document.createElement('div');
@@ -816,11 +817,11 @@ class ProductGallery extends HTMLElement {
       skeletonWrapper.appendChild(img);
       inner.appendChild(skeletonWrapper);
       newMediaElement = inner; // Assign the new image container to newMediaElement
-     
+
 
       img.onload = () => {
         skeletonWrapper.classList.add('loaded');
-       
+
       };
 
       let isZoomed = false;
@@ -841,7 +842,7 @@ class ProductGallery extends HTMLElement {
       this._handlePopupClick = () => {
         isZoomed = !isZoomed;
         viewer.classList.toggle('is-zoomed-simple', isZoomed);
-       
+
 
         const isLandscape = img.naturalWidth && img.naturalHeight ? img.naturalWidth > img.naturalHeight : true;
         const zoomLevel = isLandscape ? 1.5 : 1.2;
@@ -855,7 +856,7 @@ class ProductGallery extends HTMLElement {
       media.external_id &&
       media.host
     ) {
-      
+
       let embedUrl = '';
       if (media.host === 'youtube') {
         embedUrl = `https://www.youtube.com/embed/${media.external_id}`; // Corrected YouTube URL
@@ -873,9 +874,9 @@ class ProductGallery extends HTMLElement {
         iframe.style.width = '100%';
         iframe.style.aspectRatio = '16/9';
         newMediaElement = iframe; // Assign the new iframe to newMediaElement
-       
+
       }
-      
+
      } else if (media.media_type === 'video') {
       const video = document.createElement('video');
       const posterSrc = media.preview_image?.src
@@ -911,19 +912,19 @@ class ProductGallery extends HTMLElement {
         newMediaElement.textContent = 'No video source available.';
       }
     } else if (media.media_type === 'model') {
-      
+
       const popup = document.getElementById('product-gallery-popup');
       const popupThumbnail = popup?.querySelector(`[data-media-id="${mediaId}"]`);
-      
+
       // Check template first (like main view does)
       const template = this.querySelector(`#ModelViewerTemplate-${mediaId}`);
       let cameraOrbit;
-      
+
       if (template) {
         const tempViewer = template.content.querySelector('model-viewer');
         const templateOrbit = tempViewer?.getAttribute('camera-orbit') || '';
         cameraOrbit = templateOrbit || this.defaultCameraOrbit;
-        
+
         console.debug('[ProductGallery] renderPopupViewer: Using template camera orbit', {
           mediaId: mediaId,
           cameraOrbitFromTemplate: templateOrbit,
@@ -937,7 +938,7 @@ class ProductGallery extends HTMLElement {
           popupThumbnail?.dataset.cameraOrbit ||
           media.camera_orbit ||
           this.defaultCameraOrbit;
-        
+
         console.debug('[ProductGallery] renderPopupViewer: Using fallback camera orbit', {
           mediaId: mediaId,
           cameraOrbitFromMainThumb: mainThumbnailBtn?.dataset.cameraOrbit,
@@ -947,7 +948,7 @@ class ProductGallery extends HTMLElement {
           resolvedCameraOrbit: cameraOrbit
         });
       }
-      
+
       const model = document.createElement('model-viewer');
       model.src = media.url;
       model.setAttribute('alt', media.alt || '3D model');
@@ -957,7 +958,7 @@ class ProductGallery extends HTMLElement {
       model.style.width = '100%';
       model.style.height = '100%';
       newMediaElement = model; // Assign the new model-viewer to newMediaElement
-     
+
     } else {
       newMediaElement = document.createElement('p');
       newMediaElement.textContent = 'Unsupported media type.';
@@ -966,12 +967,12 @@ class ProductGallery extends HTMLElement {
 
     if (newMediaElement) {
         viewer.appendChild(newMediaElement); // Append the newly created media element
-        
+
     }
   }
 
   renderVideoThumbItem(media) {
-    
+
     const btn = document.createElement('button');
     btn.className = 'popup-thumb video-thumb-item';
     btn.type = 'button';
@@ -993,7 +994,7 @@ class ProductGallery extends HTMLElement {
   }
 
   updatePopupThumbActive(mediaId) {
-   
+
     const popup = document.getElementById('product-gallery-popup');
     if (!popup) {
       console.warn('updatePopupThumbActive: Popup not found.');
@@ -1007,7 +1008,7 @@ class ProductGallery extends HTMLElement {
       thumb.classList.toggle('is-active', isActive);
       if (isActive) {
         thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-       
+
       }
     });
   }
@@ -1045,17 +1046,18 @@ class ProductGallery extends HTMLElement {
 
     if (popup) popup.hidden = true;
     document.body.style.overflow = '';
-   
+
 
     document.removeEventListener('keydown', this.handleEscClose);
   }
 
   handleEscClose = (e) => {
     if (e.key === 'Escape') {
-      
+
       this.closePopup();
     }
   };
 }
 
 customElements.define('product-gallery', ProductGallery);
+}
