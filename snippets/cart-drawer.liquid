@@ -269,24 +269,22 @@
                               </a>
                             </cart-remove-button>
                           </div>
-                          {%- assign has_warranty_property = false -%}
-                          {%- for prop in item.properties -%}
-                            {%- if prop.first == 'Warranty' -%}{%- assign has_warranty_property = true -%}{%- endif -%}
-                          {%- endfor -%}
-                          {% if item.product.metafields.custom.warranty and has_warranty_property == false %}
-                            <dl>
-                              <div style="margin-top: 0px;" class="product-option">
-                                <dt>Warranty</dt>
-                                <dd>
-                                  {{
-                          item.product.metafields.custom.warranty
-                          | strip_html
-                          | replace: ' (See Description for Details)', ''
-                        }}
-                                </dd>
-                              </div>
-                            </dl>
-                          {% endif %}
+                          {%- comment -%}
+                            Ordered property rendering. Slots fill in this order when present:
+                              1. Processing Time (metafield-driven)
+                              2. Warranty (line item property if set, else metafield fallback)
+                              3. Paint Color
+                              4. Weight Stack
+                              5. Vinyl Color
+                              6. Rig Height
+                              7. Rig # of Sections
+                              8. Full Assembly & Installation
+                            Variant options (options_with_values) follow.
+                            Then a generic loop for any remaining properties, excluding the slot
+                            keys and underscore-prefixed internal keys.
+                          {%- endcomment -%}
+
+                          {%- comment -%} Slot 1: Processing Time (metafield-driven) {%- endcomment -%}
                           {% assign cart_processing_time = item.variant.metafields.custom.processing_time_long_variant
                             | default: item.product.metafields.custom.processing_time_long
                             | default: item.product.metafields.custom.processing_time
@@ -299,6 +297,55 @@
                               </div>
                             </dl>
                           {% endif %}
+
+                          {%- comment -%} Slot 2: Warranty (line item property if set, else metafield fallback) {%- endcomment -%}
+                          {%- assign warranty_property_value = blank -%}
+                          {%- for prop in item.properties -%}
+                            {%- assign prop_lower = prop.first | downcase -%}
+                            {%- if prop_lower == 'warranty' and prop.last != blank -%}
+                              {%- assign warranty_property_value = prop.last -%}
+                            {%- endif -%}
+                          {%- endfor -%}
+                          {%- if warranty_property_value != blank -%}
+                            <dl>
+                              <div style="margin-top: 0px;" class="product-option">
+                                <dt>Warranty:</dt>
+                                <dd>{{ warranty_property_value }}</dd>
+                              </div>
+                            </dl>
+                          {%- elsif item.product.metafields.custom.warranty -%}
+                            <dl>
+                              <div style="margin-top: 0px;" class="product-option">
+                                <dt>Warranty</dt>
+                                <dd>
+                                  {{
+                                    item.product.metafields.custom.warranty
+                                    | strip_html
+                                    | replace: ' (See Description for Details)', ''
+                                  }}
+                                </dd>
+                              </div>
+                            </dl>
+                          {%- endif -%}
+
+                          {%- comment -%} Slots 3-8: known optional property keys, in fixed order {%- endcomment -%}
+                          {%- assign ordered_property_slots = 'paint color,weight stack,vinyl color,rig height,rig # of sections,full assembly & installation' | split: ',' -%}
+                          {%- for slot in ordered_property_slots -%}
+                            {%- for prop in item.properties -%}
+                              {%- assign prop_lower = prop.first | downcase -%}
+                              {%- if prop_lower == slot and prop.last != blank -%}
+                                <dl>
+                                  <div class="product-option" data-name="{{ prop.first }}" data-value="{{ prop.last }}">
+                                    <dt>{{ prop.first }}:</dt>
+                                    <dd>{{ prop.last }}</dd>
+                                  </div>
+                                </dl>
+                                {%- break -%}
+                              {%- endif -%}
+                            {%- endfor -%}
+                          {%- endfor -%}
+
+                          {%- comment -%} Variant options (Color, Size, etc.) {%- endcomment -%}
                           {%- if item.product.has_only_default_variant == false or item.properties.size != 0 or item.selling_plan_allocation != null -%}
                             <dl>
                               {%- if item.product.has_only_default_variant == false -%}
@@ -313,23 +360,23 @@
                               {%- endif -%}
                             </dl>
                           {%- endif -%}
+
+                          {%- comment -%} Slot 9+: everything else, excluding internal keys and slot keys above {%- endcomment -%}
                           {% assign extra_props = '' %}
+                          {%- assign rendered_slot_keys = 'processing time,warranty,paint color,weight stack,vinyl color,rig height,rig # of sections,full assembly & installation' | split: ',' -%}
                           {% for prop in item.properties %}
                             {% assign p_name = prop.first %}
                             {% assign p_value = prop.last %}
                             {% assign first_char = p_name | slice: 0, 1 %}
-                            {% if p_name == blank or p_value == blank or first_char == '_' or p_name contains 'Processing Time' %}
+                            {% if p_name == blank or p_value == blank or first_char == '_' %}
                               {% continue %}
                             {% endif %}
-                            {% comment %}
-                              {% if p_name contains "Warranty"
-                              or p_name contains "Processing Time"
-                              or p_name contains "Full Assembly & Installation"
-                              or p_name contains "Color"
-                              or p_name contains "Paint Color"
-                              or p_name contains "Vinyl Color"
-                              or p_name contains "Upholstery Color" %}
-                            {% endcomment %}
+                            {%- assign p_lower = p_name | downcase -%}
+                            {%- assign skip_prop = false -%}
+                            {%- for rk in rendered_slot_keys -%}
+                              {%- if p_lower == rk -%}{%- assign skip_prop = true -%}{%- break -%}{%- endif -%}
+                            {%- endfor -%}
+                            {%- if skip_prop %}{% continue %}{% endif -%}
                             {%- capture extra_props -%}
                                       {{ extra_props }}
                                       <div class="product-option">
@@ -337,9 +384,6 @@
                                           <dd>{{ p_value }}</dd>
                                       </div>
                                   {%- endcapture -%}
-                            {% comment %}
-                              {% endif %}
-                            {% endcomment %}
                           {% endfor %}
                           {% if extra_props != '' %}
                             <dl>
