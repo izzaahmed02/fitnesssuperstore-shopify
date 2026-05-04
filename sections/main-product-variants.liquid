@@ -33,13 +33,6 @@
 
 {% endstyle %}
 
-{% if product.available == true %}
-  <meta itemprop="availability" content="InStock">
-{% else %}
-  <meta itemprop="availability" content="OutOfStock">
-{% endif %}
-
-
 {% render 'metaobjects-breadcrumbs', with product: product %}
 
 
@@ -54,6 +47,13 @@
     data-zoom-on-hover
   {% endif %}
 >
+  <span id="Availability-Meta-{{ section.id }}">
+    {%- if product.selected_or_first_available_variant.available -%}
+      <meta itemprop="availability" content="InStock">
+    {%- else -%}
+      <meta itemprop="availability" content="OutOfStock">
+    {%- endif -%}
+  </span>
   {{ 'section-main-product.css' | asset_url | stylesheet_tag }}
   <link rel="stylesheet" href="{{ 'component-accordion.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'component-accordion.css' | asset_url | stylesheet_tag }}</noscript>
@@ -183,15 +183,16 @@
               {%- when 'review_widget' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
                   {% unless is_gift_cards_template %}
-              <div class="available-wrap">
+              <div class="available-wrap" id="Stock-Badge-Mobile-{{ section.id }}">
 
+                {%- assign variant_available = product.selected_or_first_available_variant.available -%}
                 {% if product.metafields.custom.backorder == true %}
                   <div class="badge backorder-badge stock-badge">
                       <span>Available to Pre-Order</span>
                   </div>
                 {% else %}
-                  <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                    {% if product.available == true %}
+                  <div class="badge stock-badge {% if variant_available %}in{% else %}out{% endif %}">
+                    {% if variant_available %}
                       <span>Available to Order</span>
                     {% else %}
                       <span>Out of stock</span>
@@ -1276,16 +1277,17 @@
               {%- when 'review_widget' -%}
               {% unless product.tags contains 'avisplus-product-options' %}
                 {% unless is_gift_cards_template %}
-                <div class="available-wrap hidden lg:flex">
+                <div class="available-wrap hidden lg:flex" id="Stock-Badge-Desktop-{{ section.id }}">
 
 
+                  {%- assign variant_available = product.selected_or_first_available_variant.available -%}
                   {% if product.metafields.custom.backorder == true %}
                     <div class="badge backorder-badge stock-badge">
                        <span>Available to Pre-Order</span>
                     </div>
                   {% else %}
-                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                      {% if product.available == true %}
+                    <div class="badge stock-badge {% if variant_available %}in{% else %}out{% endif %}">
+                      {% if variant_available %}
                         <span>Available to Order</span>
                       {% else %}
                         <span>Out of stock</span>
