@@ -4,6 +4,14 @@
 {% comment %} Get the metafield data - use .value to get ProductListDrop {% endcomment %}
 {% assign related_products_list = product.metafields.custom.related_products.value %}
 
+{% comment %}
+  Identify the combined-listing family so we can exclude siblings from this listing.
+  Priority: explicit metafield handle, then Shopify-native parent_product handle.
+{% endcomment %}
+{% assign current_family = product.metafields.custom.combined_listing_family %}
+{% if current_family == blank and product.combined_listing.parent_product.handle != blank %}
+  {% assign current_family = product.combined_listing.parent_product.handle %}
+{% endif %}
 
 {% assign fallback_count = 4 %}
 {% assign found_metafield_products = false %}
@@ -13,8 +21,16 @@
   {% comment %} Count valid products first {% endcomment %}
   {% assign valid_count = 0 %}
   {% for related_product in related_products_list %}
-    <!-- Debug Loop {{ forloop.index }}: Product = {{ related_product.title }} (ID: {{ related_product.id }}) Available: {{ related_product.available }} -->
-    {% if related_product.available and related_product.id != product.id %}
+    {%- assign rp_family = related_product.metafields.custom.combined_listing_family -%}
+    {%- if rp_family == blank and related_product.combined_listing.parent_product.handle != blank -%}
+      {%- assign rp_family = related_product.combined_listing.parent_product.handle -%}
+    {%- endif -%}
+    {%- assign rp_is_sibling = false -%}
+    {%- if current_family != blank and rp_family == current_family -%}
+      {%- assign rp_is_sibling = true -%}
+    {%- endif -%}
+    <!-- Debug Loop {{ forloop.index }}: Product = {{ related_product.title }} (ID: {{ related_product.id }}) Available: {{ related_product.available }} Sibling: {{ rp_is_sibling }} -->
+    {% if related_product.available and related_product.id != product.id and rp_is_sibling == false %}
       {% assign valid_count = valid_count | plus: 1 %}
       {% assign found_metafield_products = true %}
     {% endif %}
@@ -32,11 +48,19 @@
       <div class="featured_products_container">
         {% assign product_count = 0 %}
         {% for related_product in related_products_list %}
-          {% if related_product.available and related_product.id != product.id %}
+          {%- assign rp_family = related_product.metafields.custom.combined_listing_family -%}
+          {%- if rp_family == blank and related_product.combined_listing.parent_product.handle != blank -%}
+            {%- assign rp_family = related_product.combined_listing.parent_product.handle -%}
+          {%- endif -%}
+          {%- assign rp_is_sibling = false -%}
+          {%- if current_family != blank and rp_family == current_family -%}
+            {%- assign rp_is_sibling = true -%}
+          {%- endif -%}
+          {% if related_product.available and related_product.id != product.id and rp_is_sibling == false %}
             <!-- Rendering metafield product: {{ related_product.title }} -->
             {% render 'related-items', product: related_product %}
             {% assign product_count = product_count | plus: 1 %}
-            
+
             {% if product_count >= fallback_count %}
               {% break %}
             {% endif %}
@@ -64,12 +88,20 @@
       {% assign current_collection = product.collections.first %}
       
       {% for collection_product in current_collection.products limit: 20 %}
-        {% if collection_product.available and collection_product.id != product.id %}
+        {%- assign cp_family = collection_product.metafields.custom.combined_listing_family -%}
+        {%- if cp_family == blank and collection_product.combined_listing.parent_product.handle != blank -%}
+          {%- assign cp_family = collection_product.combined_listing.parent_product.handle -%}
+        {%- endif -%}
+        {%- assign cp_is_sibling = false -%}
+        {%- if current_family != blank and cp_family == current_family -%}
+          {%- assign cp_is_sibling = true -%}
+        {%- endif -%}
+        {% if collection_product.available and collection_product.id != product.id and cp_is_sibling == false %}
           <!-- Rendering fallback product from collection: {{ collection_product.title }} -->
           {% render 'related-items', product: collection_product %}
           {% assign product_count = product_count | plus: 1 %}
           {% assign has_products = true %}
-          
+
           {% if product_count >= fallback_count %}
             {% break %}
           {% endif %}
@@ -80,12 +112,20 @@
     {% comment %} If still need more products, use all products collection {% endcomment %}
     {% if product_count < fallback_count %}
       {% for fallback_product in collections.all.products limit: 20 %}
-        {% if fallback_product.available and fallback_product.id != product.id %}
+        {%- assign fp_family = fallback_product.metafields.custom.combined_listing_family -%}
+        {%- if fp_family == blank and fallback_product.combined_listing.parent_product.handle != blank -%}
+          {%- assign fp_family = fallback_product.combined_listing.parent_product.handle -%}
+        {%- endif -%}
+        {%- assign fp_is_sibling = false -%}
+        {%- if current_family != blank and fp_family == current_family -%}
+          {%- assign fp_is_sibling = true -%}
+        {%- endif -%}
+        {% if fallback_product.available and fallback_product.id != product.id and fp_is_sibling == false %}
           <!-- Rendering fallback product from all: {{ fallback_product.title }} -->
           {% render 'related-items', product: fallback_product %}
           {% assign product_count = product_count | plus: 1 %}
           {% assign has_products = true %}
-          
+
           {% if product_count >= fallback_count %}
             {% break %}
           {% endif %}
