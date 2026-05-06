@@ -38,6 +38,14 @@
         meta.content = 'noindex,follow';
         document.head.appendChild(meta);
       }
+      try {
+        var url = new URL(window.location.href);
+        if (url.searchParams.has('option_values')) {
+          url.searchParams.delete('option_values');
+          var clean = url.pathname + (url.search ? url.search : '') + url.hash;
+          window.history.replaceState({}, '', clean);
+        }
+      } catch (e) {}
     })();
   </script>
 {% endif %}
