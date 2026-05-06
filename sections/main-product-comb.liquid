@@ -30,6 +30,22 @@
     margin-bottom: 40px;
   }
 
+  #shopify-section-{{ section.id }} .product__set-includes-summary {
+    margin: 12px 0 16px;
+    padding: 12px 14px;
+    background: #F4F2EF;
+    border-left: 3px solid #23232B;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #23232B;
+  }
+  #shopify-section-{{ section.id }} .product__set-includes-summary-label {
+    font-weight: 700;
+    margin-right: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 12px;
+  }
 
 {% endstyle %}
 
@@ -1572,6 +1588,32 @@
                 %}
 
               {%- when 'variant_picker' -%}
+                {%- liquid
+                  assign set_summary_text = product.metafields.custom.set_includes_summary
+                  assign set_includes_list = product.metafields.custom.features_specs.value.set_includes.value
+                -%}
+                {%- if set_summary_text != blank or set_includes_list != blank -%}
+                  <div class="product__set-includes-summary" data-set-includes-summary>
+                    <span class="product__set-includes-summary-label">Includes:</span>
+                    <span class="product__set-includes-summary-text">
+                      {%- if set_summary_text != blank -%}
+                        {{ set_summary_text }}
+                      {%- else -%}
+                        {%- assign names = '' -%}
+                        {%- for item in set_includes_list -%}
+                          {%- if item.set_name != blank -%}
+                            {%- if names == '' -%}
+                              {%- assign names = item.set_name -%}
+                            {%- else -%}
+                              {%- assign names = names | append: ', ' | append: item.set_name -%}
+                            {%- endif -%}
+                          {%- endif -%}
+                        {%- endfor -%}
+                        {{ names }}
+                      {%- endif -%}
+                    </span>
+                  </div>
+                {%- endif -%}
                 {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
               {%- when 'buy_buttons' -%}
                 {%- render 'buy-buttons',
