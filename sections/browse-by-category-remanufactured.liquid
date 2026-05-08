@@ -3,11 +3,27 @@
   .browse-category .category-tabs {
   display:none;
 }
+
+.browse-category .tab-header {
+  justify-content: center;
+  flex-direction: column;
+}
+
+.browse-category .tab-header p {
+  margin-top: 20px;
+  text-align:center;
+}
+
+
 </style>
 <div class="browse-by-category">
 <div class="tab-header">
   {% if section.settings.heading != blank %}
     <h2>{{ section.settings.heading }}</h2>
+  {% endif %}
+
+    {% if section.settings.description != blank %}
+    <p>{{ section.settings.description }}</p>
   {% endif %}
 
   {% assign tab_data = "" %}
@@ -47,7 +63,7 @@
             <div class="category-card">
               <a aria-label="View {{ block.settings.title | default: handle }} collection" href="{{ block.settings.link }}">
                 {% if block.settings.image != blank %}
-                  <img src="{{ block.settings.image | image_url: width: 150 }}" alt="{{ block.settings.image.alt }}" loading="lazy" decoding="async">
+                  <img src="{{ block.settings.image | image_url }}" alt="{{ block.settings.image.alt }}" loading="lazy" decoding="async">
                 {% endif %}
                 {% if block.settings.title != blank %}
                   <h3>{{ block.settings.title }}</h3>
@@ -75,6 +91,11 @@
       "id": "heading",
       "label": "Section Heading",
       "default": "Browse by Category"
+    },
+    {
+      "type": "text",
+      "id": "description",
+      "label": "Section Description"
     }
   ],
   "blocks": [

@@ -1,0 +1,386 @@
+{% if section.blocks.size > 0 %}
+
+{% assign slide_count = 0 %}
+{% for block in section.blocks %}
+  {% if block.settings.image != blank %}
+    {% assign slide_count = slide_count | plus: 1 %}
+  {% endif %}
+{% endfor %}
+
+<section id="cpg-{{ section.id }}" class="cpg">
+  <div class="cpg__header">
+    <h2 class="contact__heading">Inside Our Remanufacturing Process</h2>
+  </div>
+
+  <div class="cpg__outer">
+    <button class="cpg__arrow cpg__arrow--prev" aria-label="Previous">
+      <img src="{{ 'arrow-right.svg' | asset_url }}" alt="" width="24" height="24">
+    </button>
+
+    <div class="cpg__track-wrap">
+      <div class="cpg__track">
+        {% for block in section.blocks %}
+          {% if block.settings.image != blank %}
+            {% assign thumb = block.settings.image | image_url: width: 900 %}
+            {% assign full  = block.settings.image | image_url: width: 2400 %}
+            <div class="cpg__slide" {{ block.shopify_attributes }}>
+              <img
+                src="{{ thumb }}"
+                data-full="{{ full }}"
+                alt="Gallery photo {{ forloop.index }}"
+                loading="lazy"
+                class="cpg__img"
+              >
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <button class="cpg__arrow cpg__arrow--next" aria-label="Next">
+      <img src="{{ 'arrow-left.svg' | asset_url }}" alt="" width="24" height="24">
+    </button>
+  </div>
+
+  <div class="cpg__dots"></div>
+
+  <!-- Lightbox -->
+  <div class="cpg__lightbox" id="cpg-lightbox-{{ section.id }}">
+    <div class="cpg__lightbox-inner">
+      <button class="cpg__lightbox-close" aria-label="Close">&times;</button>
+      <img src="" alt="Expanded photo" class="cpg__lightbox-img">
+    </div>
+  </div>
+</section>
+
+<style>
+  #cpg-{{ section.id }} {
+    margin: 40px 0;
+    position: relative;
+  }
+
+  #cpg-{{ section.id }} .cpg__header {
+    margin-bottom: 24px;
+    padding: 0 16px;
+  }
+
+  #cpg-{{ section.id }} .cpg__outer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+  }
+
+  #cpg-{{ section.id }} .cpg__track-wrap {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  #cpg-{{ section.id }} .cpg__track {
+    display: flex;
+    transition: transform 0.35s ease;
+    will-change: transform;
+  }
+
+  #cpg-{{ section.id }} .cpg__slide {
+    flex: 0 0 calc(25% - 12px);
+    margin: 0 6px;
+    box-sizing: border-box;
+  }
+
+  #cpg-{{ section.id }} .cpg__img {
+    width: 100%;
+    display: block;
+    border-radius: 12px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  #cpg-{{ section.id }} .cpg__img:hover {
+    transform: scale(1.03);
+  }
+
+  #cpg-{{ section.id }} .cpg__arrow {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: #616166;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    padding: 0;
+    transition: background 0.2s;
+    position: absolute;
+  }
+
+   #cpg-{{ section.id }} .cpg__arrow img {
+    width: 24px;
+    height: 24px;
+    display: block;
+  }
+
+  #cpg-{{ section.id }} .cpg__arrow.cpg__arrow--next {
+    right: 0px;
+    }
+
+    #cpg-{{ section.id }} .cpg__arrow.cpg__arrow--prev {
+    left: -10px;
+    }
+
+  #cpg-{{ section.id }} .cpg__arrow:hover {
+    background: #444;
+  }
+
+  #cpg-{{ section.id }} .cpg__arrow img {
+    width: 24px;
+    height: 24px;
+    display: block;
+  }
+
+  #cpg-{{ section.id }} .cpg__dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 20px;
+  }
+
+  #cpg-{{ section.id }} .cpg__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: none;
+    background: #ccc;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s;
+  }
+
+  #cpg-{{ section.id }} .cpg__dot--active {
+    background: #23232B;
+  }
+
+  #cpg-{{ section.id }} .cpg__lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.82);
+    opacity: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+    z-index: 9999;
+  }
+
+  #cpg-{{ section.id }} .cpg__lightbox.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  #cpg-{{ section.id }} .cpg__lightbox-inner {
+    position: relative;
+    max-width: 700px;
+    width: 90%;
+  }
+
+  #cpg-{{ section.id }} .cpg__lightbox-img {
+    width: 100%;
+    display: block;
+    border-radius: 12px;
+  }
+
+  #cpg-{{ section.id }} .cpg__lightbox-close {
+    position: absolute;
+    top: -48px;
+    right: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: #616166;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  @media screen and (max-width: 989px) {
+    #cpg-{{ section.id }} .cpg__slide {
+      flex: 0 0 calc(50% - 12px);
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    #cpg-{{ section.id }} .cpg__slide {
+      flex: 0 0 calc(100% - 12px);
+    }
+
+    #cpg-{{ section.id }} .cpg__arrow {
+      bottom: -15px;
+      width: 36px;
+      height: 36px;
+    }
+
+     #cpg-{{ section.id }} .cpg__arrow.cpg__arrow--next {
+    right: 20px;
+    }
+
+    #cpg-{{ section.id }} .cpg__arrow.cpg__arrow--prev {
+    left: 20px;
+    }
+
+    #cpg-{{ section.id }} .cpg__dots {
+      margin-top: 14px;
+    }
+  }
+</style>
+
+<script>
+(function () {
+  var root = document.getElementById('cpg-{{ section.id }}');
+  if (!root) return;
+
+  var track    = root.querySelector('.cpg__track');
+  var slides   = root.querySelectorAll('.cpg__slide');
+  var btnPrev  = root.querySelector('.cpg__arrow--prev');
+  var btnNext  = root.querySelector('.cpg__arrow--next');
+  var dotsWrap = root.querySelector('.cpg__dots');
+  var lightbox = root.querySelector('.cpg__lightbox');
+  var lbImg    = root.querySelector('.cpg__lightbox-img');
+  var lbClose  = root.querySelector('.cpg__lightbox-close');
+
+  var total        = slides.length;
+  var currentSlide = 0;
+
+  function getSlidesPerView() {
+    var w = window.innerWidth;
+    if (w <= 749) return 1;
+    if (w <= 989) return 2;
+    return 4;
+  }
+
+  /* max slide index we can scroll to */
+  function maxSlide() {
+    return Math.max(0, total - getSlidesPerView());
+  }
+
+  /* number of dots = number of positions we can be in = maxSlide + 1 */
+  function getDotCount() {
+    return maxSlide() + 1;
+  }
+
+  function getSlideWidth() {
+    if (!slides[0]) return 0;
+    var style = window.getComputedStyle(slides[0]);
+    var ml = parseFloat(style.marginLeft)  || 0;
+    var mr = parseFloat(style.marginRight) || 0;
+    return slides[0].offsetWidth + ml + mr;
+  }
+
+  var dotEls = [];
+
+  function buildDots() {
+    dotsWrap.innerHTML = '';
+    dotEls = [];
+    var count = getDotCount();
+    dotsWrap.style.display = count <= 1 ? 'none' : 'flex';
+
+    for (var i = 0; i < count; i++) {
+      var btn = document.createElement('button');
+      btn.className = 'cpg__dot';
+      btn.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      (function (idx) {
+        btn.addEventListener('click', function () { goToSlide(idx); });
+      })(i);
+      dotsWrap.appendChild(btn);
+      dotEls.push(btn);
+    }
+  }
+
+  function updateDots() {
+    dotEls.forEach(function (dot, i) {
+      dot.classList.toggle('cpg__dot--active', i === currentSlide);
+    });
+  }
+
+  function goToSlide(index) {
+    currentSlide = Math.min(Math.max(index, 0), maxSlide());
+    track.style.transform = 'translateX(-' + (currentSlide * getSlideWidth()) + 'px)';
+    updateDots();
+    btnPrev.disabled = currentSlide === 0;
+    btnNext.disabled = currentSlide >= maxSlide();
+  }
+
+  btnPrev.addEventListener('click', function () { goToSlide(currentSlide - 1); });
+  btnNext.addEventListener('click', function () { goToSlide(currentSlide + 1); });
+
+  window.addEventListener('resize', function () {
+    buildDots();
+    goToSlide(0);
+  });
+
+  buildDots();
+  goToSlide(0);
+
+  /* ── Lightbox ── */
+  root.querySelectorAll('.cpg__img').forEach(function (img) {
+    img.addEventListener('click', function () {
+      lbImg.src = img.dataset.full || img.src;
+      lightbox.classList.add('is-open');
+    });
+  });
+
+  lbClose.addEventListener('click', function () {
+    lightbox.classList.remove('is-open');
+  });
+
+  lightbox.addEventListener('click', function (e) {
+    if (e.target === lightbox) lightbox.classList.remove('is-open');
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') lightbox.classList.remove('is-open');
+  });
+})();
+</script>
+
+{% endif %}
+
+{% schema %}
+{
+  "name": "Gallery Remanufactured",
+  "settings": [],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Gallery Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Gallery Remanufactured",
+      "blocks": [
+        { "type": "image" },
+        { "type": "image" },
+        { "type": "image" },
+        { "type": "image" }
+      ]
+    }
+  ]
+}
+{% endschema %}
