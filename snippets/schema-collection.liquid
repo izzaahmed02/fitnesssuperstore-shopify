@@ -2,11 +2,11 @@
 {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
-  "@id": "https://{{ shop.domain }}{{ collection.url }}",
-  "url": "https://{{ shop.domain }}{{ collection.url }}",
-  "name": "{{ collection.title | escape }} | {{ shop.name | escape }}",
+  "@id": {{ request.origin | append: collection.url | json }},
+  "url": {{ request.origin | append: collection.url | json }},
+  "name": {{ collection.title | append: ' | ' | append: shop.name | json }},
   "inLanguage": "en",
-  "description": "{{ collection.description | strip_html | strip_newlines | truncate: 400 | escape }}",
+  "description": {{ collection.description | strip_html | strip_newlines | strip | truncate: 400 | json }},
 
   "breadcrumb": {
     "@type": "BreadcrumbList",
@@ -14,14 +14,14 @@
       {
         "@type": "ListItem",
         "position": 1,
-        "name": "{{ shop.name | escape }}",
-        "item": "{{ request.origin }}/"
+        "name": {{ shop.name | json }},
+        "item": {{ request.origin | append: '/' | json }}
       },
       {
         "@type": "ListItem",
         "position": 2,
-        "name": "{{ collection.title | escape }}",
-        "item": "https://{{ shop.domain }}{{ collection.url }}"
+        "name": {{ collection.title | json }},
+        "item": {{ request.origin | append: collection.url | json }}
       }
     ]
   },
@@ -32,37 +32,38 @@
     "itemListElement": [
       {% paginate collection.products by 24 %}
         {% for product in collection.products %}
+          {%- assign product_image_url = product.featured_image | image_url: width: 800 -%}
           {
             "@type": "Product",
-            "@id": "https://{{ shop.domain }}{{ product.url }}",
-            "name": "{{ product.title | escape }}",
-            "url": "https://{{ shop.domain }}{{ product.url }}",
-            "description": "{{ product.description | strip_html | strip_newlines | truncate: 400 | escape }}",
-            "sku": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
+            "@id": {{ request.origin | append: product.url | json }},
+            "name": {{ product.title | json }},
+            "url": {{ request.origin | append: product.url | json }},
+            "description": {{ product.description | strip_html | strip_newlines | strip | truncate: 400 | json }},
+            "sku": {{ product.selected_or_first_available_variant.sku | default: product.handle | json }},
             "brand": {
               "@type": "Brand",
-              "name": "{{ product.vendor | default: shop.name | escape }}"
+              "name": {{ product.vendor | default: shop.name | json }}
             },
             {% if product.featured_image %}
-            "image": "{{ product.featured_image | image_url: width: 800 }}",
+            "image": {% if product_image_url contains 'https://' or product_image_url contains 'http://' %}{{ product_image_url | json }}{% else %}{{ product_image_url | prepend: 'https:' | json }}{% endif %},
             {% endif %}
             "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is' or product.metafields.custom.condition_state contains 'As is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
             "offers": {
               "@type": "Offer",
-              "url": "https://{{ shop.domain }}{{ product.url }}",
-              "price": "{{ product.price | money_without_currency | replace: ',', '' }}",
-              "priceCurrency": "{{ shop.currency | default: 'USD' }}",
+              "url": {{ request.origin | append: product.url | json }},
+              "price": {{ product.price | divided_by: 100.0 | json }},
+              "priceCurrency": {{ shop.currency | default: 'USD' | json }},
               "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"
             }
             {% if product.metafields.reviews.rating.value and product.metafields.reviews.review_count %}
             ,
             "aggregateRating": {
               "@type": "AggregateRating",
-              "@id": "https://{{ shop.domain }}{{ product.url }}#aggregaterating",
-              "name": "{{ product.title | escape }}",
-              "ratingValue": "{{ product.metafields.reviews.rating.value | escape }}",
-              "ratingCount": "{{ product.metafields.reviews.review_count }}",
-              "reviewCount": "{{ product.metafields.reviews.review_count }}"
+              "@id": {{ request.origin | append: product.url | append: '#aggregaterating' | json }},
+              "name": {{ product.title | json }},
+              "ratingValue": {{ product.metafields.reviews.rating.value | json }},
+              "ratingCount": {{ product.metafields.reviews.review_count | json }},
+              "reviewCount": {{ product.metafields.reviews.review_count | json }}
             }
             {% endif %}
           }{% unless forloop.last %},{% endunless %}
@@ -103,31 +104,42 @@
       -%}
       {
         "@type": "VideoObject",
-        "@id": "https://{{ shop.domain }}{{ collection.url }}#video-{{ forloop.index }}",
-        "name": "{{ video_title | strip | escape }}",
-        "description": "{{ video_description | escape }}",
+        "@id": {{ request.origin | append: collection.url | append: '#video-' | append: forloop.index | json }},
+        "name": {{ video_title | strip | json }},
+        "description": {{ video_description | json }},
         {% if video_thumbnail != blank %}
         "thumbnailUrl": [
-          "{{ video_thumbnail | escape }}"
+          {% if video_thumbnail contains 'https://' or video_thumbnail contains 'http://' %}
+            {{ video_thumbnail | json }}
+          {% else %}
+            {{ video_thumbnail | prepend: 'https:' | json }}
+          {% endif %}
         ],
         {% endif %}
-        "uploadDate": "{{ video_upload_date | date: '%Y-%m-%dT%H:%M:%SZ' }}",
+        "uploadDate": {{ video_upload_date | date: '%Y-%m-%dT%H:%M:%SZ' | json }},
         {% if video_duration_seconds != blank %}
-        "duration": "PT{{ video_duration_seconds | escape }}S",
+        "duration": {{ 'PT' | append: video_duration_seconds | append: 'S' | json }},
         {% endif %}
         {% if video_content_url != blank %}
-        "contentUrl": "{{ video_content_url | escape }}",
+        "contentUrl": {% if video_content_url contains 'https://' or video_content_url contains 'http://' %}{{ video_content_url | json }}{% else %}{{ video_content_url | prepend: 'https:' | json }}{% endif %},
         {% endif %}
         {% if video_embed_url != blank %}
-        "embedUrl": "{{ video_embed_url | escape }}",
+        "embedUrl": {% if video_embed_url contains 'https://' or video_embed_url contains 'http://' %}{{ video_embed_url | json }}{% else %}{{ video_embed_url | prepend: 'https:' | json }}{% endif %},
         {% endif %}
         "publisher": {
           "@type": "Organization",
-          "name": "{{ shop.name | escape }}",
+          "name": {{ shop.name | json }},
+          {% if settings.logo %}
           "logo": {
             "@type": "ImageObject",
-            "url": "{% if publisher_logo_url contains 'https://' or publisher_logo_url contains 'http://' %}{{ publisher_logo_url | escape }}{% else %}https:{{ publisher_logo_url | escape }}{% endif %}"
+            "url": {% if publisher_logo_url contains 'https://' or publisher_logo_url contains 'http://' %}{{ publisher_logo_url | json }}{% else %}{{ publisher_logo_url | prepend: 'https:' | json }}{% endif %}
           }
+          {% else %}
+          "logo": {
+            "@type": "ImageObject",
+            "url": {{ request.origin | json }}
+          }
+          {% endif %}
         }
       }{% unless forloop.last %},{% endunless %}
     {% endfor %}
@@ -136,12 +148,13 @@
 
   "publisher": {
     "@type": "Organization",
-    "name": "{{ shop.name | escape }}",
-    "url": "{{ shop.url }}",
-    "telephone": "{{ shop.phone | default: 'Not specified' | escape }}",
+    "name": {{ shop.name | json }},
+    "url": {{ request.origin | json }},
+    "telephone": {{ shop.phone | default: '925-215-2927' | json }},
     "email": "sales@fitnesssuperstore.com",
     {% if settings.logo %}
-    "image": "{% assign org_logo_url = settings.logo | image_url: width: 800 %}{% if org_logo_url contains 'https://' or org_logo_url contains 'http://' %}{{ org_logo_url | escape }}{% else %}https:{{ org_logo_url | escape }}{% endif %}",
+      {%- assign org_logo_url = settings.logo | image_url: width: 800 -%}
+      "image": {% if org_logo_url contains 'https://' or org_logo_url contains 'http://' %}{{ org_logo_url | json }}{% else %}{{ org_logo_url | prepend: 'https:' | json }}{% endif %},
     {% endif %}
     "address": {
       "@type": "PostalAddress",
