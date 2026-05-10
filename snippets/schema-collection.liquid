@@ -1,29 +1,3 @@
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "CollectionPage",
-  "@id": "https://{{ shop.domain }}{{ collection.url }}",
-  "url": "https://{{ shop.domain }}{{ collection.url }}",
-  "name": "{{ collection.title | escape }} | {{ shop.name }}",
-  "inLanguage": "en",
-  "description": "{{ collection.description | strip_html | strip_newlines | truncate: 400 | escape }}",
-  "breadcrumb": {
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "{{ shop.name | escape }}",
-        "item": "{{ request.origin }}/"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "{{ collection.title | escape }}",
-        "item": "https://{{ shop.domain }}{{ collection.url }}"
-      }
-    ]
-  },
   "mainEntity": {
     "@type": "ItemList",
     "numberOfItems": {{ collection.products_count }},
@@ -41,7 +15,7 @@
               "@type": "Brand",
               "name": "{% if product.vendor %}{{ product.vendor | escape }}{% else %}{{ shop.name | escape }}{% endif %}"
             },
-            "image": "{{ product.featured_image | image_url: '800x800' }}",
+            "image": "{{ product.featured_image | image_url: width: 800 }}",
             "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
             "offers": {
               "@type": "Offer",
@@ -63,53 +37,66 @@
             {% endif %}
           }{% unless forloop.last %},{% endunless %}
         {% endfor %}
-        
-        {% if collection.metafields.custom.seo_videos %}
-        ,
-        {
-          "VideoObject": [
-            {% assign seo_videos = collection.metafields.custom["seo_videos"].value %}
-            {% for video in seo_videos %}
-              {
-                "@type": "VideoObject",
-                "name": "{{ video.title | escape }}",
-                "description": "{{ video.description | escape }}",
-                "thumbnailUrl": "{{ video.thumbnail_url | escape }}",
-                "duration": "PT{{ video.duration_seconds | escape }}S",
-                "contentUrl": "{{ video.video_url | escape }}",
-                "embedUrl": "{{ video.video_url | escape }}",
-                "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
-                "publisher": {
-                  "@type": "Organization",
-                  "name": "{{ shop.name | escape }}",
-                  "logo": {
-                    "@type": "ImageObject",
-                    "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
-                  }
-                }
-              }{% unless forloop.last %},{% endunless %}
-            {% endfor %}
-          ]
-        }
-        {% endif %}
       {% endpaginate %}
     ]
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "{{ shop.name | escape }}",
-    "url": "{{ shop.url }}",
-    "telephone": "{{ shop.phone | default: 'Not specified' | escape }}",
-    "email": "sales@fitnesssuperstore.com",
-    "image": "{{ settings.logo | image_url: 'master' }}",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "537 Stone Rd. STE F",
-      "addressLocality": "Benicia",
-      "addressRegion": "CA",
-      "postalCode": "94510",
-      "addressCountry": "US"
-    }
   }
-}
-</script>
+  {% if collection.metafields.custom.seo_videos %}
+  ,
+  "subjectOf": [
+    {% assign seo_videos = collection.metafields.custom.seo_videos.value %}
+    {% for video in seo_videos %}
+      {%- liquid
+        assign video_title = video.title.value | default: video.title | default: collection.title | default: shop.name
+
+        assign video_description = video.description.value | default: video.description | default: collection.description | default: shop.description
+        assign video_description = video_description | strip_html | strip_newlines | strip | truncate: 500
+        if video_description == blank
+          assign video_description = 'Video for ' | append: collection.title
+        endif
+
+        assign video_thumbnail = video.thumbnail_url.value | default: video.thumbnail_url
+        if video_thumbnail == blank and collection.featured_image
+          assign video_thumbnail = collection.featured_image | image_url: width: 1200
+        endif
+
+        assign video_upload_date = video.upload_date.value | default: video.upload_date | default: collection.published_at | default: collection.updated_at | default: '2026-01-01T00:00:00Z'
+
+        assign video_duration_seconds = video.duration_seconds.value | default: video.duration_seconds
+
+        assign video_content_url = video.content_url.value | default: video.content_url | default: video.video_url.value | default: video.video_url
+        assign video_embed_url = video.embed_url.value | default: video.embed_url | default: video.video_url.value | default: video.video_url
+
+        assign logo_url = 'Logo_Main_Dark_Background.svg' | asset_url
+      -%}
+      {
+        "@type": "VideoObject",
+        "@id": "https://{{ shop.domain }}{{ collection.url }}#video-{{ forloop.index }}",
+        "name": "{{ video_title | strip | escape }}",
+        "description": "{{ video_description | escape }}",
+        {% if video_thumbnail != blank %}
+        "thumbnailUrl": [
+          "{{ video_thumbnail | escape }}"
+        ],
+        {% endif %}
+        "uploadDate": "{{ video_upload_date | date: '%Y-%m-%dT%H:%M:%SZ' }}",
+        {% if video_duration_seconds != blank %}
+        "duration": "PT{{ video_duration_seconds | escape }}S",
+        {% endif %}
+        {% if video_content_url != blank %}
+        "contentUrl": "{{ video_content_url | escape }}",
+        {% endif %}
+        {% if video_embed_url != blank %}
+        "embedUrl": "{{ video_embed_url | escape }}",
+        {% endif %}
+        "publisher": {
+          "@type": "Organization",
+          "name": "{{ shop.name | escape }}",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "{% if logo_url contains '//' %}https:{{ logo_url }}{% else %}{{ logo_url }}{% endif %}"
+          }
+        }
+      }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ]
+  {% endif %}
