@@ -63,7 +63,14 @@ customElements.get('product-info') ||
         let a = e.dataset.productUrl || this.pendingRequestUrl || this.dataset.url;
         this.pendingRequestUrl = a;
         let r = this.dataset.url !== a,
-          s = 'true' === this.dataset.updateUrl && r;
+        s = 'true' === this.dataset.updateUrl && r;
+
+            const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
+        if (this.dataset.isCombinedListing === 'true' || hasCombinedListingOptions) {
+          window.location.assign(this.buildRequestUrlWithParams(a, i, !0));
+          return;
+        }
+
         this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: r ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
       }
       resetProductFormState() {

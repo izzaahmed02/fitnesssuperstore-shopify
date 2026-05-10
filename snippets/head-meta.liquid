@@ -31,12 +31,21 @@
 {% if template contains 'product' %}
   <script>
     (function() {
-      if (window.location.search.includes('variant=')) {
+      var search = window.location.search;
+      if (search.includes('variant=') || search.includes('option_values=')) {
         var meta = document.createElement('meta');
         meta.name = 'robots';
         meta.content = 'noindex,follow';
         document.head.appendChild(meta);
       }
+      try {
+        var url = new URL(window.location.href);
+        if (url.searchParams.has('option_values')) {
+          url.searchParams.delete('option_values');
+          var clean = url.pathname + (url.search ? url.search : '') + url.hash;
+          window.history.replaceState({}, '', clean);
+        }
+      } catch (e) {}
     })();
   </script>
 {% endif %}
