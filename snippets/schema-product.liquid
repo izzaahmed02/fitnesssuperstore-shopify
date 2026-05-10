@@ -1,108 +1,126 @@
 {%- assign domain_origin = request.origin -%}
+{%- assign seller_logo_url = settings.logo | image_url: width: 800 -%}
+{%- assign fallback_logo_url = 'logo.png' | asset_url -%}
+{%- capture search_target -%}{{ request.origin }}/search?q={search_term_string}{%- endcapture -%}
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@id": "https://{{ shop.domain }}{{ product.url }}#product",
+      "@id": {{ request.origin | append: product.url | append: '#product' | json }},
       "@type": "Product",
       "brand": {
         "@type": "Brand",
-        "@id": "https://{{ shop.domain }}{{ product.url }}#brand",
-        "name": "{{ product.vendor | default: shop.name | escape }}"
+        "@id": {{ request.origin | append: product.url | append: '#brand' | json }},
+        "name": {{ product.vendor | default: shop.name | json }}
       },
+
       {% if product.metafields.reviews.rating.value and product.metafields.reviews.review_count %}
       "aggregateRating": {
         "@type": "AggregateRating",
-        "@id": "https://{{ shop.domain }}{{ product.url }}#aggregaterating",
-        "name": "{{ product.title | escape }}",
-        "ratingValue": "{{ product.metafields.reviews.rating.value | escape }}",
-        "ratingCount": "{{ product.metafields.reviews.review_count }}",
-        "reviewCount": "{{ product.metafields.reviews.review_count }}"
+        "@id": {{ request.origin | append: product.url | append: '#aggregaterating' | json }},
+        "name": {{ product.title | json }},
+        "ratingValue": {{ product.metafields.reviews.rating.value | json }},
+        "ratingCount": {{ product.metafields.reviews.review_count | json }},
+        "reviewCount": {{ product.metafields.reviews.review_count | json }}
       },
       {% endif %}
-      "audience": "{{ product.metafields.custom.audience | default: 'Fitness enthusiasts and commercial gym users' | escape }}",
-      "category": "{{ product.type | default: 'Fitness Equipment' | escape }}",
-      "description": "{{ product.description | strip_html | strip_newlines | truncate: 500 | escape | default: 'High-quality fitness equipment for home or commercial use.' }}",
+
+      "audience": {{ product.metafields.custom.audience | default: 'Fitness enthusiasts and commercial gym users' | json }},
+      "category": {{ product.type | default: 'Fitness Equipment' | json }},
+      "description": {{ product.description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | truncate: 500 | default: 'High-quality fitness equipment for home or commercial use.' | json }},
       "image": [
         {% for image in product.images %}
-          "{{ image.src | img_url: 'master' | split: '?' | first | escape }}"{% unless forloop.last %},{% endunless %}
+          {%- assign product_image_url = image.src | img_url: 'master' | split: '?' | first -%}
+          {% if product_image_url contains 'https://' or product_image_url contains 'http://' %}
+            {{ product_image_url | json }}
+          {% else %}
+            {{ product_image_url | prepend: 'https:' | json }}
+          {% endif %}{% unless forloop.last %},{% endunless %}
         {% else %}
-          "{{ 'product-placeholder.jpg' | asset_url | split: '?' | first | default: 'https://via.placeholder.com/500' | escape }}"
+          {%- assign placeholder_url = 'product-placeholder.jpg' | asset_url | split: '?' | first -%}
+          {% if placeholder_url contains 'https://' or placeholder_url contains 'http://' %}
+            {{ placeholder_url | json }}
+          {% else %}
+            {{ placeholder_url | prepend: 'https:' | json }}
+          {% endif %}
         {% endfor %}
       ],
-      "name": "{{ product.title | escape }}",
-      "color": "{{ product.metafields.custom.product_color | default: 'Not specified' | escape }}",
-      "countryOfAssembly": "{{ product.metafields.custom.country_of_assembly | default: 'US' | escape }}",
-      "countryOfLastProcessing": "{{ product.metafields.custom.country_of_last_processing | default: 'US' | escape }}",
+      "name": {{ product.title | json }},
+      "color": {{ product.metafields.custom.product_color | default: 'Not specified' | json }},
+      "countryOfAssembly": {{ product.metafields.custom.country_of_assembly | default: 'US' | json }},
+      "countryOfLastProcessing": {{ product.metafields.custom.country_of_last_processing | default: 'US' | json }},
       "hasMeasurement": {
         "@type": "QuantitativeValue",
-        "@id": "https://{{ shop.domain }}{{ product.url }}#measurement",
-        "value": "Dimensions: {{ product.metafields.custom.length_in | escape }} inch length x {{ product.metafields.custom.width_in | escape }} inch width x {{ product.metafields.custom.height_in | escape }} inch height"
+        "@id": {{ request.origin | append: product.url | append: '#measurement' | json }},
+        "value": {{ 'Dimensions: ' | append: product.metafields.custom.length_in | append: ' inch length x ' | append: product.metafields.custom.width_in | append: ' inch width x ' | append: product.metafields.custom.height_in | append: ' inch height' | json }}
       },
       "keywords": [
         {%- assign keyword_list = product.metafields.custom.keywords.value -%}
         {%- if keyword_list != blank -%}
           {%- for keyword in keyword_list -%}
-            "{{ keyword | strip | escape }}"{% unless forloop.last %},{% endunless %}
+            {{ keyword | strip | replace: '&amp;', '&' | json }}{% unless forloop.last %},{% endunless %}
           {%- endfor -%}
         {%- elsif product.tags.size > 0 -%}
           {%- for tag in product.tags -%}
-            "{{ tag | strip | escape }}"{% unless forloop.last %},{% endunless %}
+            {{ tag | strip | replace: '&amp;', '&' | json }}{% unless forloop.last %},{% endunless %}
           {%- endfor -%}
         {%- else -%}
           {%- assign words = product.title | split: ' ' -%}
           {%- for word in words -%}
-            "{{ word | strip | escape }}"{% unless forloop.last %},{% endunless %}
+            {{ word | strip | json }}{% unless forloop.last %},{% endunless %}
           {%- endfor -%}
         {%- endif -%}
       ],
       "manufacturer": {
         "@type": "Organization",
-        "@id": "https://{{ shop.domain }}{{ product.url }}#manufacturer",
-        "name": "{{ product.vendor | default: shop.name | escape }}"
+        "@id": {{ request.origin | append: product.url | append: '#manufacturer' | json }},
+        "name": {{ product.vendor | default: shop.name | json }}
       },
-      "weight": "{{ product.metafields.custom.product_weight_lbs | default: 'Not specified' | escape }}",
-      "mpn": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
-      "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'As is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
+      "weight": {{ product.metafields.custom.product_weight_lbs | default: 'Not specified' | json }},
+      "mpn": {{ product.selected_or_first_available_variant.sku | default: product.handle | json }},
+      "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is' or product.metafields.custom.condition_state contains 'As is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
 
       {% if product.has_only_default_variant %}
       "offers": {
-        "@id": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}#offer",
+        "@id": {{ request.origin | append: product.url | append: '?variant=' | append: product.selected_or_first_available_variant.id | append: '#offer' | json }},
         "@type": "Offer",
         "availability": "https://schema.org/{% if product.selected_or_first_available_variant.available %}InStock{% else %}OutOfStock{% endif %}",
-        "price": "{{ product.selected_or_first_available_variant.price | divided_by: 100.0 | default: '0.00' }}",
-        "priceCurrency": "{{ shop.currency | default: 'USD' }}",
+        "price": {{ product.selected_or_first_available_variant.price | divided_by: 100.0 | json }},
+        "priceCurrency": {{ shop.currency | default: 'USD' | json }},
+
         {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
         "priceSpecification": [
           {
             "@type": "UnitPriceSpecification",
             "priceType": "https://schema.org/ListPrice",
-            "price": "{{ product.selected_or_first_available_variant.compare_at_price | divided_by: 100.0 }}",
-            "priceCurrency": "{{ shop.currency | default: 'USD' }}"
+            "price": {{ product.selected_or_first_available_variant.compare_at_price | divided_by: 100.0 | json }},
+            "priceCurrency": {{ shop.currency | default: 'USD' | json }}
           },
           {
             "@type": "UnitPriceSpecification",
             "priceType": "https://schema.org/SalePrice",
-            "price": "{{ product.selected_or_first_available_variant.price | divided_by: 100.0 }}",
-            "priceCurrency": "{{ shop.currency | default: 'USD' }}"
+            "price": {{ product.selected_or_first_available_variant.price | divided_by: 100.0 | json }},
+            "priceCurrency": {{ shop.currency | default: 'USD' | json }}
           }
         ],
         {% endif %}
-        "url": "https://{{ shop.domain }}{{ product.url }}?variant={{ product.selected_or_first_available_variant.id }}",
+
+        "url": {{ request.origin | append: product.url | append: '?variant=' | append: product.selected_or_first_available_variant.id | json }},
         "offeredBy": {
           "@type": "Organization",
-          "@id": "https://{{ shop.domain }}#seller",
-          "name": "{{ shop.name | escape }}",
-          "url": "https://{{ shop.domain }}",
-          "logo": "{{ 'logo.png' | asset_url | default: 'https://via.placeholder.com/500' }}",
-          "description": "{{ shop.description | escape | default: 'Premium fitness equipment at competitive prices.' }}",
+          "@id": {{ request.origin | append: '#seller' | json }},
+          "name": {{ shop.name | json }},
+          "url": {{ request.origin | json }},
+          "logo": {% if seller_logo_url contains 'https://' or seller_logo_url contains 'http://' %}{{ seller_logo_url | json }}{% elsif seller_logo_url != blank %}{{ seller_logo_url | prepend: 'https:' | json }}{% elsif fallback_logo_url contains 'https://' or fallback_logo_url contains 'http://' %}{{ fallback_logo_url | json }}{% else %}{{ fallback_logo_url | prepend: 'https:' | json }}{% endif %},
+          "description": {{ shop.description | default: 'Premium fitness equipment at competitive prices.' | strip_html | strip_newlines | strip | replace: '&amp;', '&' | json }},
           "founder": "Timothy French",
           "foundingDate": "2010",
           "sameAs": [
             {% if shop.metafields.custom.social_media %}
               {% for link in shop.metafields.custom.social_media %}
-                "{{ link | escape }}"{% unless forloop.last %},{% endunless %}
+                {{ link | json }}{% unless forloop.last %},{% endunless %}
               {% endfor %}
             {% else %}
               "https://www.facebook.com/FitnessSuperstore",
@@ -112,22 +130,22 @@
           ],
           "contactPoint": {
             "@type": "ContactPoint",
-            "telephone": "{{ shop.phone | default: 'Not specified' | escape }}",
+            "telephone": {{ shop.phone | default: '925-215-2927' | json }},
             "contactType": "Customer Service",
-            "areaServed": "{{ shop.metafields.custom.area_served | default: 'US' | escape }}",
-            "availableLanguage": ["{{ shop.metafields.custom.language | default: 'English' | escape }}"]
+            "areaServed": {{ shop.metafields.custom.area_served | default: 'US' | json }},
+            "availableLanguage": [{{ shop.metafields.custom.language | default: 'English' | json }}]
           },
           "address": {
             "@type": "PostalAddress",
-            "streetAddress": "{{ shop.address.street | default: 'Not specified' | escape }}",
-            "addressLocality": "{{ shop.address.city | default: 'Not specified' | escape }}",
-            "addressRegion": "{{ shop.address.province_code | default: 'Not specified' | escape }}",
-            "postalCode": "{{ shop.address.zip | default: 'Not specified' | escape }}",
-            "addressCountry": "{{ shop.address.country | default: 'Not specified' | escape }}"
+            "streetAddress": {{ shop.address.street | default: '537 Stone Rd. STE F' | json }},
+            "addressLocality": {{ shop.address.city | default: 'Benicia' | json }},
+            "addressRegion": {{ shop.address.province_code | default: 'CA' | json }},
+            "postalCode": {{ shop.address.zip | default: '94510' | json }},
+            "addressCountry": {{ shop.address.country | default: 'US' | json }}
           },
           "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://{{ shop.domain }}/search?q={search_term_string}",
+            "target": {{ search_target | json }},
             "query-input": "required name=search_term_string"
           }
         }
@@ -137,43 +155,45 @@
         {% for variant in product.variants %}
           {
             "@type": "Offer",
-            "@id": "https://{{ shop.domain }}{{ product.url }}?variant={{ variant.id }}#offer",
-            "name": "{{ product.title | escape }}{% unless variant.title == 'Default Title' %} - {{ variant.title | escape }}{% endunless %}",
+            "@id": {{ request.origin | append: product.url | append: '?variant=' | append: variant.id | append: '#offer' | json }},
+            "name": {% if variant.title == 'Default Title' %}{{ product.title | json }}{% else %}{{ product.title | append: ' - ' | append: variant.title | json }}{% endif %},
             "availability": "https://schema.org/{% if variant.available %}InStock{% else %}OutOfStock{% endif %}",
-            "price": "{{ variant.price | divided_by: 100.0 }}",
-            "priceCurrency": "{{ shop.currency | default: 'USD' }}",
+            "price": {{ variant.price | divided_by: 100.0 | json }},
+            "priceCurrency": {{ shop.currency | default: 'USD' | json }},
+
             {% if variant.compare_at_price > variant.price %}
             "priceSpecification": [
               {
                 "@type": "UnitPriceSpecification",
                 "priceType": "https://schema.org/ListPrice",
-                "price": "{{ variant.compare_at_price | divided_by: 100.0 }}",
-                "priceCurrency": "{{ shop.currency | default: 'USD' }}"
+                "price": {{ variant.compare_at_price | divided_by: 100.0 | json }},
+                "priceCurrency": {{ shop.currency | default: 'USD' | json }}
               },
               {
                 "@type": "UnitPriceSpecification",
                 "priceType": "https://schema.org/SalePrice",
-                "price": "{{ variant.price | divided_by: 100.0 }}",
-                "priceCurrency": "{{ shop.currency | default: 'USD' }}"
+                "price": {{ variant.price | divided_by: 100.0 | json }},
+                "priceCurrency": {{ shop.currency | default: 'USD' | json }}
               }
             ],
             {% endif %}
-            "url": "https://{{ shop.domain }}{{ product.url }}?variant={{ variant.id }}",
-            "sku": "{{ variant.sku | default: product.handle | escape }}",
-            "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
+
+            "url": {{ request.origin | append: product.url | append: '?variant=' | append: variant.id | json }},
+            "sku": {{ variant.sku | default: product.handle | json }},
+            "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is' or product.metafields.custom.condition_state contains 'As is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
             "offeredBy": {
               "@type": "Organization",
-              "@id": "https://{{ shop.domain }}#seller",
-              "name": "{{ shop.name | escape }}",
-              "url": "https://{{ shop.domain }}",
-              "logo": "{{ 'logo.png' | asset_url | default: 'https://via.placeholder.com/500' }}",
-              "description": "{{ shop.description | escape | default: 'Premium fitness equipment at competitive prices.' }}",
+              "@id": {{ request.origin | append: '#seller' | json }},
+              "name": {{ shop.name | json }},
+              "url": {{ request.origin | json }},
+              "logo": {% if seller_logo_url contains 'https://' or seller_logo_url contains 'http://' %}{{ seller_logo_url | json }}{% elsif seller_logo_url != blank %}{{ seller_logo_url | prepend: 'https:' | json }}{% elsif fallback_logo_url contains 'https://' or fallback_logo_url contains 'http://' %}{{ fallback_logo_url | json }}{% else %}{{ fallback_logo_url | prepend: 'https:' | json }}{% endif %},
+              "description": {{ shop.description | default: 'Premium fitness equipment at competitive prices.' | strip_html | strip_newlines | strip | replace: '&amp;', '&' | json }},
               "founder": "Timothy French",
               "foundingDate": "2010",
               "sameAs": [
                 {% if shop.metafields.custom.social_media %}
                   {% for link in shop.metafields.custom.social_media %}
-                    "{{ link | escape }}"{% unless forloop.last %},{% endunless %}
+                    {{ link | json }}{% unless forloop.last %},{% endunless %}
                   {% endfor %}
                 {% else %}
                   "https://www.facebook.com/FitnessSuperstore",
@@ -183,22 +203,22 @@
               ],
               "contactPoint": {
                 "@type": "ContactPoint",
-                "telephone": "{{ shop.phone | default: 'Not specified' | escape }}",
+                "telephone": {{ shop.phone | default: '925-215-2927' | json }},
                 "contactType": "Customer Service",
-                "areaServed": "{{ shop.metafields.custom.area_served | default: 'US' | escape }}",
-                "availableLanguage": ["{{ shop.metafields.custom.language | default: 'English' | escape }}"]
+                "areaServed": {{ shop.metafields.custom.area_served | default: 'US' | json }},
+                "availableLanguage": [{{ shop.metafields.custom.language | default: 'English' | json }}]
               },
               "address": {
                 "@type": "PostalAddress",
-                "streetAddress": "{{ shop.address.street | default: 'Not specified' | escape }}",
-                "addressLocality": "{{ shop.address.city | default: 'Not specified' | escape }}",
-                "addressRegion": "{{ shop.address.province_code | default: 'Not specified' | escape }}",
-                "postalCode": "{{ shop.address.zip | default: 'Not specified' | escape }}",
-                "addressCountry": "{{ shop.address.country | default: 'Not specified' | escape }}"
+                "streetAddress": {{ shop.address.street | default: '537 Stone Rd. STE F' | json }},
+                "addressLocality": {{ shop.address.city | default: 'Benicia' | json }},
+                "addressRegion": {{ shop.address.province_code | default: 'CA' | json }},
+                "postalCode": {{ shop.address.zip | default: '94510' | json }},
+                "addressCountry": {{ shop.address.country | default: 'US' | json }}
               },
               "potentialAction": {
                 "@type": "SearchAction",
-                "target": "https://{{ shop.domain }}/search?q={search_term_string}",
+                "target": {{ search_target | json }},
                 "query-input": "required name=search_term_string"
               }
             }
@@ -207,82 +227,93 @@
       ],
       {% endif %}
 
-      "sku": "{{ product.selected_or_first_available_variant.sku | default: product.handle | escape }}",
-      "url": "https://{{ shop.domain }}{{ product.url }}"
-     {% if product.metafields.custom.seo_videos %}
-,
-"subjectOf": [
-  {% for video in product.metafields.custom.seo_videos.value %}
-    {%- liquid
-      assign video_title = video.title.value | default: video.title | default: product.title | default: shop.name
+      "sku": {{ product.selected_or_first_available_variant.sku | default: product.handle | json }},
+      "url": {{ request.origin | append: product.url | json }}
 
-      assign video_description = video.description.value | default: video.description | default: product.description | default: shop.description
-      assign video_description = video_description | strip_html | strip_newlines | strip | truncate: 500
-      if video_description == blank
-        assign video_description = 'Video for ' | append: product.title
-      endif
+      {% if product.metafields.custom.seo_videos %}
+      ,
+      "subjectOf": [
+        {% for video in product.metafields.custom.seo_videos.value %}
+          {%- liquid
+            assign video_title = video.title.value | default: video.title | default: product.title | default: shop.name
 
-      assign video_thumbnail = video.thumbnail_url.value | default: video.thumbnail_url
-      if video_thumbnail == blank and product.featured_image
-        assign video_thumbnail = product.featured_image.src | img_url: 'master' | split: '?' | first
-      endif
-      if video_thumbnail == blank
-        assign video_thumbnail = 'product-placeholder.jpg' | asset_url | split: '?' | first
-      endif
+            assign video_description = video.description.value | default: video.description | default: product.description | default: shop.description
+            assign video_description = video_description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | truncate: 500
 
-      assign video_upload_date = video.upload_date.value | default: video.upload_date | default: product.published_at | default: product.created_at
+            if video_description == blank
+              assign video_description = 'Video for ' | append: product.title
+            endif
 
-      assign video_duration_seconds = video.duration_seconds.value | default: video.duration_seconds
+            assign video_thumbnail = video.thumbnail_url.value | default: video.thumbnail_url
 
-      assign video_content_url = video.content_url.value | default: video.content_url
-      assign video_embed_url = video.embed_url.value | default: video.embed_url | default: video.video_url.value | default: video.video_url
-    -%}
-    {
-      "@type": "VideoObject",
-      "@id": "https://{{ shop.domain }}{{ product.url }}#video-{{ forloop.index }}",
-      "name": "{{ video_title | strip | escape }}",
-      "description": "{{ video_description | escape }}",
-      "thumbnailUrl": [
-        "{{ video_thumbnail | escape }}"
-      ],
-      "uploadDate": "{{ video_upload_date | date: '%Y-%m-%dT%H:%M:%SZ' }}",
-      {% if video_duration_seconds != blank %}
-      "duration": "PT{{ video_duration_seconds | escape }}S",
+            if video_thumbnail == blank and product.featured_image
+              assign video_thumbnail = product.featured_image.src | img_url: 'master' | split: '?' | first
+            endif
+
+            if video_thumbnail == blank
+              assign video_thumbnail = 'product-placeholder.jpg' | asset_url | split: '?' | first
+            endif
+
+            assign video_upload_date = video.upload_date.value | default: video.upload_date | default: product.published_at | default: product.created_at | default: '2026-01-01T00:00:00Z'
+
+            assign video_duration_seconds = video.duration_seconds.value | default: video.duration_seconds
+
+            assign video_content_url = video.content_url.value | default: video.content_url
+            assign video_embed_url = video.embed_url.value | default: video.embed_url | default: video.video_url.value | default: video.video_url
+
+            assign publisher_logo_url = settings.logo | image_url: width: 800
+          -%}
+          {
+            "@type": "VideoObject",
+            "@id": {{ request.origin | append: product.url | append: '#video-' | append: forloop.index | json }},
+            "name": {{ video_title | strip | json }},
+            "description": {{ video_description | json }},
+            "thumbnailUrl": [
+              {% if video_thumbnail contains 'https://' or video_thumbnail contains 'http://' %}
+                {{ video_thumbnail | json }}
+              {% else %}
+                {{ video_thumbnail | prepend: 'https:' | json }}
+              {% endif %}
+            ],
+            "uploadDate": {{ video_upload_date | date: '%Y-%m-%dT%H:%M:%SZ' | json }},
+            {% if video_duration_seconds != blank %}
+            "duration": {{ 'PT' | append: video_duration_seconds | append: 'S' | json }},
+            {% endif %}
+            {% if video_content_url != blank %}
+            "contentUrl": {% if video_content_url contains 'https://' or video_content_url contains 'http://' %}{{ video_content_url | json }}{% else %}{{ video_content_url | prepend: 'https:' | json }}{% endif %},
+            {% endif %}
+            {% if video_embed_url != blank %}
+            "embedUrl": {% if video_embed_url contains 'https://' or video_embed_url contains 'http://' %}{{ video_embed_url | json }}{% else %}{{ video_embed_url | prepend: 'https:' | json }}{% endif %},
+            {% endif %}
+            "publisher": {
+              "@type": "Organization",
+              "name": {{ shop.name | json }},
+              "logo": {
+                "@type": "ImageObject",
+                "url": {% if publisher_logo_url contains 'https://' or publisher_logo_url contains 'http://' %}{{ publisher_logo_url | json }}{% elsif publisher_logo_url != blank %}{{ publisher_logo_url | prepend: 'https:' | json }}{% elsif fallback_logo_url contains 'https://' or fallback_logo_url contains 'http://' %}{{ fallback_logo_url | json }}{% else %}{{ fallback_logo_url | prepend: 'https:' | json }}{% endif %}
+              }
+            }
+          }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ]
       {% endif %}
-      {% if video_content_url != blank %}
-      "contentUrl": "{{ video_content_url | escape }}",
-      {% endif %}
-      {% if video_embed_url != blank %}
-      "embedUrl": "{{ video_embed_url | escape }}",
-      {% endif %}
-      "publisher": {
-        "@type": "Organization",
-        "name": "{{ shop.name | escape }}",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
-        }
-      }
-    }{% unless forloop.last %},{% endunless %}
-  {% endfor %}
-]
-{% endif %}
     },
     {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       "itemListElement": [
-        { 
-          "@type": "ListItem", 
-          "position": 1, 
-          "name": "{{ shop.name | escape }}", 
-          "item": "{{ request.origin }}/" 
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": {{ shop.name | json }},
+          "item": {{ request.origin | append: '/' | json }}
         }
+
         {%- assign position = 2 -%}
         {%- assign all_breadcrumb_objects = product.metafields.custom.breadcrumb_paths.value | sort: "priority" -%}
         {%- assign active_path = nil -%}
         {%- assign source_flag = "unset" -%}
-        
+
         {%- if collection -%}
           {%- for b_path in all_breadcrumb_objects -%}
             {%- assign b_steps = b_path.steps.value -%}
@@ -294,7 +325,7 @@
             {%- endif -%}
           {%- endfor -%}
         {%- endif -%}
-        
+
         {%- if active_path == nil -%}
           {%- for fallback_path in all_breadcrumb_objects -%}
             {%- if fallback_path.steps and fallback_path.steps.value != blank -%}
@@ -304,63 +335,71 @@
             {%- endif -%}
           {%- endfor -%}
         {%- endif -%}
-        
+
         {%- assign crumbs_text = product.metafields.custom.breadcrumbs.value -%}
+
         {%- if active_path == nil and crumbs_text != blank -%}
           {%- assign source_flag = "text" -%}
         {%- endif -%}
-        
+
         {%- if source_flag == "unset" and product.collections.first -%}
           {%- assign default_coll = product.collections.first -%}
           {%- assign source_flag = "default" -%}
         {%- endif -%}
-        
+
         {%- if source_flag == "metaobject" -%}
           {%- assign nav_steps = active_path.steps.value -%}
           {%- assign nav_titles = active_path.custom_titles.value -%}
           {%- for nav_coll in nav_steps -%}
             {%- if nav_coll.handle != blank -%}
-              ,{ 
-                "@type": "ListItem", 
-                "position": {{ position }}, 
-                "name": "{{ nav_titles[forloop.index0] | default: nav_coll.title | escape }}", 
-                "item": "{{ request.origin }}/collections/{{ nav_coll.handle }}" 
+              ,
+              {
+                "@type": "ListItem",
+                "position": {{ position }},
+                "name": {{ nav_titles[forloop.index0] | default: nav_coll.title | json }},
+                "item": {{ request.origin | append: '/collections/' | append: nav_coll.handle | json }}
               }
               {%- assign position = position | plus: 1 -%}
             {%- endif -%}
           {%- endfor -%}
+
         {%- elsif source_flag == "text" -%}
           {%- assign parts_split = crumbs_text | split: 'Home' -%}
           {%- assign text_parts = parts_split[1] | split: '>' -%}
           {%- assign crumbs_size = text_parts.size | minus: 1 -%}
+
           {%- for idx in (0..crumbs_size) -%}
             {%- assign raw = text_parts[idx] | strip | handleize -%}
-            {%- assign title = text_parts[idx] | strip -%}
+            {%- assign title = text_parts[idx] | strip | replace: '&amp;', '&' -%}
             {%- if idx > 0 and raw != blank and collections[raw] -%}
-              ,{ 
-                "@type": "ListItem", 
-                "position": {{ position }}, 
-                "name": "{{ title | escape }}", 
-                "item": "{{ request.origin }}/collections/{{ raw }}" 
+              ,
+              {
+                "@type": "ListItem",
+                "position": {{ position }},
+                "name": {{ title | json }},
+                "item": {{ request.origin | append: '/collections/' | append: raw | json }}
               }
               {%- assign position = position | plus: 1 -%}
             {%- endif -%}
           {%- endfor -%}
+
         {%- elsif source_flag == "default" -%}
-          ,{ 
-            "@type": "ListItem", 
-            "position": {{ position }}, 
-            "name": "{{ default_coll.title | escape }}", 
-            "item": "{{ request.origin }}/collections/{{ default_coll.handle }}" 
+          ,
+          {
+            "@type": "ListItem",
+            "position": {{ position }},
+            "name": {{ default_coll.title | json }},
+            "item": {{ request.origin | append: '/collections/' | append: default_coll.handle | json }}
           }
           {%- assign position = position | plus: 1 -%}
         {%- endif -%}
-        
-        ,{ 
-          "@type": "ListItem", 
-          "position": {{ position }}, 
-          "name": "{{ product.title | escape }}", 
-          "item": "{{ request.origin }}{{ product.url }}" 
+
+        ,
+        {
+          "@type": "ListItem",
+          "position": {{ position }},
+          "name": {{ product.title | json }},
+          "item": {{ request.origin | append: product.url | json }}
         }
       ]
     }
