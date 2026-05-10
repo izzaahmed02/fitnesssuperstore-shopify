@@ -5,60 +5,69 @@
 {% endcomment %}
 
 {% if videos != blank %}
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {% for video in videos %}
-      {%- liquid
-        assign video_title = video.title.value | default: video.title | default: page.title | default: article.title | default: shop.name
+  {%- assign publisher_logo_url = settings.logo | image_url: width: 800 -%}
+  {%- assign fallback_logo_url = 'logo.png' | asset_url -%}
 
-        assign video_description = video.description.value | default: video.description | default: page.content | default: article.excerpt | default: article.content | default: shop.description
-        assign video_description = video_description | strip_html | strip_newlines | strip | truncate: 500
-        if video_description == blank
-          assign video_description = 'Video from ' | append: shop.name
-        endif
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {% for video in videos %}
+        {%- liquid
+          assign video_title = video.title.value | default: video.title | default: page.title | default: article.title | default: shop.name
+          assign video_title = video_title | strip | replace: '&amp;', '&' | replace: '&#39;', "'"
 
-        assign video_thumbnail = video.thumbnail_url.value | default: video.thumbnail_url
+          assign video_description = video.description.value | default: video.description | default: page.content | default: article.excerpt | default: article.content | default: shop.description
+          assign video_description = video_description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | replace: '&#39;', "'" | truncate: 500
 
-        assign video_upload_date = video.upload_date.value | default: video.upload_date | default: fallback_date | default: article.published_at | default: article.created_at | default: page.published_at | default: page.created_at
+          if video_description == blank
+            assign video_description = 'Video from ' | append: shop.name
+          endif
 
-        assign video_duration_seconds = video.duration_seconds.value | default: video.duration_seconds
+          assign video_thumbnail = video.thumbnail_url.value | default: video.thumbnail_url
 
-        assign video_content_url = video.content_url.value | default: video.content_url | default: video.video_url.value | default: video.video_url
-        assign video_embed_url = video.embed_url.value | default: video.embed_url | default: video.video_url.value | default: video.video_url
-      -%}
-    {
-      "@type": "VideoObject",
-      "@id": "{{ request.origin }}{{ request.path }}#video-{{ forloop.index }}",
-      "name": "{{ video_title | strip | escape }}",
-      "description": "{{ video_description | escape }}",
-      {% if video_thumbnail != blank %}
-      "thumbnailUrl": [
-        "{{ video_thumbnail | escape }}"
-      ],
-      {% endif %}
-      "uploadDate": "{{ video_upload_date | date: '%Y-%m-%dT%H:%M:%SZ' }}",
-      {% if video_duration_seconds != blank %}
-      "duration": "PT{{ video_duration_seconds | escape }}S",
-      {% endif %}
-      {% if video_content_url != blank %}
-      "contentUrl": "{{ video_content_url | escape }}",
-      {% endif %}
-      {% if video_embed_url != blank %}
-      "embedUrl": "{{ video_embed_url | escape }}",
-      {% endif %}
-      "publisher": {
-        "@type": "Organization",
-        "name": "{{ shop.name | escape }}",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "{{ 'Logo_Main_Dark_Background.svg' | asset_url | escape }}"
-        }
-      }
-    }{% unless forloop.last %},{% endunless %}
-    {% endfor %}
-  ]
-}
-</script>
+          assign video_upload_date = video.upload_date.value | default: video.upload_date | default: fallback_date | default: article.published_at | default: article.created_at | default: page.published_at | default: page.created_at | default: '2026-01-01T00:00:00Z'
+
+          assign video_duration_seconds = video.duration_seconds.value | default: video.duration_seconds
+
+          assign video_content_url = video.content_url.value | default: video.content_url | default: video.video_url.value | default: video.video_url
+          assign video_embed_url = video.embed_url.value | default: video.embed_url | default: video.video_url.value | default: video.video_url
+        -%}
+        {
+          "@type": "VideoObject",
+          "@id": {{ request.origin | append: request.path | append: '#video-' | append: forloop.index | json }},
+          "name": {{ video_title | json }},
+          "description": {{ video_description | json }},
+          {% if video_thumbnail != blank %}
+          "thumbnailUrl": [
+            {% if video_thumbnail contains 'https://' or video_thumbnail contains 'http://' %}
+              {{ video_thumbnail | json }}
+            {% else %}
+              {{ video_thumbnail | prepend: 'https:' | json }}
+            {% endif %}
+          ],
+          {% endif %}
+          "uploadDate": {{ video_upload_date | date: '%Y-%m-%dT%H:%M:%SZ' | json }},
+          {% if video_duration_seconds != blank %}
+          "duration": {{ 'PT' | append: video_duration_seconds | append: 'S' | json }},
+          {% endif %}
+          {% if video_content_url != blank %}
+          "contentUrl": {% if video_content_url contains 'https://' or video_content_url contains 'http://' %}{{ video_content_url | json }}{% else %}{{ video_content_url | prepend: 'https:' | json }}{% endif %},
+          {% endif %}
+          {% if video_embed_url != blank %}
+          "embedUrl": {% if video_embed_url contains 'https://' or video_embed_url contains 'http://' %}{{ video_embed_url | json }}{% else %}{{ video_embed_url | prepend: 'https:' | json }}{% endif %},
+          {% endif %}
+          "publisher": {
+            "@type": "Organization",
+            "name": {{ shop.name | json }},
+            "logo": {
+              "@type": "ImageObject",
+              "url": {% if publisher_logo_url contains 'https://' or publisher_logo_url contains 'http://' %}{{ publisher_logo_url | json }}{% elsif publisher_logo_url != blank %}{{ publisher_logo_url | prepend: 'https:' | json }}{% elsif fallback_logo_url contains 'https://' or fallback_logo_url contains 'http://' %}{{ fallback_logo_url | json }}{% else %}{{ fallback_logo_url | prepend: 'https:' | json }}{% endif %}
+            }
+          }
+        }{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    ]
+  }
+  </script>
 {% endif %}
