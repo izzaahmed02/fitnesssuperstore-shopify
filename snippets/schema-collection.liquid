@@ -6,7 +6,7 @@
   "url": {{ request.origin | append: collection.url | json }},
   "name": {{ collection.title | append: ' | ' | append: shop.name | json }},
   "inLanguage": "en",
-  "description": {{ collection.description | strip_html | strip_newlines | strip | truncate: 400 | json }},
+  "description": {{ collection.description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | truncate: 400 | json }},
 
   "breadcrumb": {
     "@type": "BreadcrumbList",
@@ -38,7 +38,7 @@
             "@id": {{ request.origin | append: product.url | json }},
             "name": {{ product.title | json }},
             "url": {{ request.origin | append: product.url | json }},
-            "description": {{ product.description | strip_html | strip_newlines | strip | truncate: 400 | json }},
+            "description": {{ product.description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | truncate: 400 | json }},
             "sku": {{ product.selected_or_first_available_variant.sku | default: product.handle | json }},
             "brand": {
               "@type": "Brand",
@@ -80,8 +80,8 @@
       {%- liquid
         assign video_title = video.title.value | default: video.title | default: collection.title | default: shop.name
 
-        assign video_description = video.description.value | default: video.description | default: collection.description | default: shop.description
-        assign video_description = video_description | strip_html | strip_newlines | strip | truncate: 500
+          assign video_description = video.description.value | default: video.description | default: collection.description | default: shop.description
+          assign video_description = video_description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | truncate: 500
 
         if video_description == blank
           assign video_description = 'Video for ' | append: collection.title
