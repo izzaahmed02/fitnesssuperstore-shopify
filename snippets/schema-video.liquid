@@ -1,22 +1,53 @@
 {% comment %}
-  Usage: {% render 'schema-video', videos: article.metafields.custom.seo_videos.value %}
-         {% render 'schema-video', videos: page.metafields.custom.seo_videos.value %}
+  Usage:
+  {% render 'schema-video', videos: article.metafields.custom.seo_videos.value, fallback_date: article.published_at %}
+  {% render 'schema-video', videos: page.metafields.custom.seo_videos.value, fallback_date: page.published_at %}
 {% endcomment %}
 
+{% if videos != blank %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [
     {% for video in videos %}
+      {%- liquid
+        assign video_title = video.title.value | default: video.title | default: page.title | default: article.title | default: shop.name
+
+        assign video_description = video.description.value | default: video.description | default: page.content | default: article.excerpt | default: article.content | default: shop.description
+        assign video_description = video_description | strip_html | strip_newlines | strip | truncate: 500
+        if video_description == blank
+          assign video_description = 'Video from ' | append: shop.name
+        endif
+
+        assign video_thumbnail = video.thumbnail_url.value | default: video.thumbnail_url
+
+        assign video_upload_date = video.upload_date.value | default: video.upload_date | default: fallback_date | default: article.published_at | default: article.created_at | default: page.published_at | default: page.created_at
+
+        assign video_duration_seconds = video.duration_seconds.value | default: video.duration_seconds
+
+        assign video_content_url = video.content_url.value | default: video.content_url | default: video.video_url.value | default: video.video_url
+        assign video_embed_url = video.embed_url.value | default: video.embed_url | default: video.video_url.value | default: video.video_url
+      -%}
     {
       "@type": "VideoObject",
-      "name": "{{ video.title | escape }}",
-      "description": "{{ video.description | escape }}",
-      "thumbnailUrl": "{{ video.thumbnail_url | escape }}",
-      "duration": "PT{{ video.duration_seconds | escape }}S",
-      "contentUrl": "{{ video.video_url | escape }}",
-      "embedUrl": "{{ video.video_url | escape }}",
-      "uploadDate": "{{ video.upload_date | date: '%Y-%m-%d' }}",
+      "@id": "{{ request.origin }}{{ request.path }}#video-{{ forloop.index }}",
+      "name": "{{ video_title | strip | escape }}",
+      "description": "{{ video_description | escape }}",
+      {% if video_thumbnail != blank %}
+      "thumbnailUrl": [
+        "{{ video_thumbnail | escape }}"
+      ],
+      {% endif %}
+      "uploadDate": "{{ video_upload_date | date: '%Y-%m-%dT%H:%M:%SZ' }}",
+      {% if video_duration_seconds != blank %}
+      "duration": "PT{{ video_duration_seconds | escape }}S",
+      {% endif %}
+      {% if video_content_url != blank %}
+      "contentUrl": "{{ video_content_url | escape }}",
+      {% endif %}
+      {% if video_embed_url != blank %}
+      "embedUrl": "{{ video_embed_url | escape }}",
+      {% endif %}
       "publisher": {
         "@type": "Organization",
         "name": "{{ shop.name | escape }}",
@@ -30,3 +61,4 @@
   ]
 }
 </script>
+{% endif %}
