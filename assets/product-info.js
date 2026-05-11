@@ -81,7 +81,9 @@ customElements.get('product-info') ||
 
             const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
         if (this.dataset.isCombinedListing === 'true' || hasCombinedListingOptions) {
-          window.location.assign(this.buildRequestUrlWithParams(a, i, !0));
+          // Navigate to the clean child URL — adding ?option_values= triggers the
+          // noindex meta in head-meta.liquid and pollutes the canonical URL.
+          window.location.assign(a);
           return;
         }
 
