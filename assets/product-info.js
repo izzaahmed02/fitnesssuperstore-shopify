@@ -14,6 +14,7 @@ customElements.get('product-info') ||
         (super(), (this.quantityInput = this.querySelector('.quantity__input')));
       }
       connectedCallback() {
+        this.redirectCombinedListingToVariant();
         (this.initializeProductSwapUtility(),
           (this.onVariantChangeUnsubscriber = subscribe(PUB_SUB_EVENTS.optionValueSelectionChange, this.handleOptionValueChange.bind(this))),
           this.initQuantityHandlers(),
@@ -39,6 +40,19 @@ customElements.get('product-info') ||
             }
           })
         });  
+      }
+      redirectCombinedListingToVariant() {
+        // On combined-listing parent URLs the page renders the parent product, so
+        // child-level data (compare_at_price, variant metafields) is missing until
+        // the user clicks a variant. Forward to the checked variant's child URL so
+        // the default landing matches the per-variant URL.
+        if (this.dataset.isCombinedListing !== 'true') return;
+        const checked = this.querySelector('variant-selects [data-product-url]:checked, variant-selects option[data-product-url][selected]');
+        const target = checked?.dataset?.productUrl;
+        if (!target) return;
+        const currentPath = window.location.pathname;
+        if (target === currentPath || target === currentPath + '/') return;
+        window.location.replace(target);
       }
       addPreProcessCallback(t) {
         this.preProcessHtmlCallbacks.push(t);
