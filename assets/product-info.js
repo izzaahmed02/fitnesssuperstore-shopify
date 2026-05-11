@@ -81,7 +81,12 @@ customElements.get('product-info') ||
 
             const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
         if (this.dataset.isCombinedListing === 'true' || hasCombinedListingOptions) {
-          window.location.assign(this.buildRequestUrlWithParams(a, i, !0));
+          // Combined-listing clicks target a different child product — navigate
+          // cleanly so the canonical child URL doesn't get noindexed. For
+          // regular multi-variant products data-product-url is empty, so keep
+          // the existing ?option_values= URL or the variant won't apply.
+          const isCombinedListingClick = e.dataset.productUrl && a !== this.dataset.url;
+          window.location.assign(isCombinedListingClick ? a : this.buildRequestUrlWithParams(a, i, !0));
           return;
         }
 
