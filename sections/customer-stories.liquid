@@ -166,24 +166,38 @@
   /* ── Carousel ── */
   #shopify-section-{{ section.id }} .story-card__carousel {
     position: relative;
+    /* overflow visible so peek slides show */
+    overflow: hidden;
+  }
+
+  /* Clip only the outer wrapper, let inner overflow */
+  #shopify-section-{{ section.id }} .story-card__carousel-outer {
     overflow: hidden;
     border-radius: 10px;
   }
 
   #shopify-section-{{ section.id }} .story-card__carousel-track {
     display: flex;
+    gap: 16px;
     transition: transform 0.4s ease;
     will-change: transform;
   }
 
+  /* Desktop: show 1.5 slides */
   #shopify-section-{{ section.id }} .story-card__carousel-slide {
     position: relative;
-    flex: 0 0 100%;
-    width: 100%;
+    flex: 0 0 calc(66.666% - 8px);
     aspect-ratio: 16/9;
     cursor: pointer;
     overflow: hidden;
     border-radius: 10px;
+  }
+
+  /* Mobile: show ~1 slide + ~10% of next */
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .story-card__carousel-slide {
+      flex: 0 0 calc(90% - 8px);
+    }
   }
 
   #shopify-section-{{ section.id }} .story-card__carousel-slide img {
@@ -532,6 +546,7 @@
           <!-- ── Carousel ── -->
           {%- if _slide_count > 0 -%}
             <div class="story-card__carousel" id="cs-carousel-{{ block_uid }}">
+              <div class="story-card__carousel-outer">
               <div class="story-card__carousel-track" id="cs-track-{{ block_uid }}">
 
                 {%- comment -%} Slide 1: Video {%- endcomment -%}
@@ -609,6 +624,7 @@
                 {%- endif -%}
 
               </div><!-- /track -->
+              </div><!-- /carousel-outer -->
 
               {%- if _slide_count > 1 -%}
                 <button class="cs-carousel-arrow cs-arrow-prev" data-cs-prev="{{ block_uid }}" aria-label="Previous slide" disabled>
@@ -739,7 +755,8 @@
 
     function goTo(idx) {
       cur = Math.max(0, Math.min(idx, total - 1));
-      track.style.transform = 'translateX(-' + (cur * 100) + '%)';
+      var slideW = slides[0].offsetWidth + 16; /* slide width + gap */
+      track.style.transform = 'translateX(-' + (cur * slideW) + 'px)';
 
       // arrows
       var prev = document.querySelector('[data-cs-prev="' + blockUid + '"]');
