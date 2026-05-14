@@ -44,9 +44,6 @@
   data-product-id="{{ product.id }}"
   data-update-url="true"
   data-url="{{ product.url }}"
-  {% if template.suffix == 'variants' %}
-    data-pdp-template="variants"
-  {% endif %}
   {% if section.settings.image_zoom == 'hover' %}
     data-zoom-on-hover
   {% endif %}
@@ -123,64 +120,6 @@
         padding-bottom: {{ section.settings.padding_bottom }}px;
       }
     }
-
-    {% if template.suffix == 'variants' %}
-      .product-form__input--pill input[type=radio] + label,
-      .product-form__input--swatch .swatch {
-        transition: border var(--duration-short) ease, background-color var(--duration-short) ease, color var(--duration-short) ease, box-shadow var(--duration-short) ease, transform var(--duration-short) ease;
-      }
-
-      @keyframes pdp-variant-fallback-pulse {
-        0%   { box-shadow: 0 0 0 0 rgba(227, 82, 5, 0.55); transform: scale(1); }
-        35%  { transform: scale(1.04); }
-        100% { box-shadow: 0 0 0 14px rgba(227, 82, 5, 0); transform: scale(1); }
-      }
-
-      .product-form__input--pill input[type=radio].pdp-variant-fallback-pulse + label,
-      .product-form__input--pill input[type=radio] + label.pdp-variant-fallback-pulse,
-      .product-form__input--swatch label.pdp-variant-fallback-pulse,
-      .product-form__input--swatch .swatch-input__label.pdp-variant-fallback-pulse,
-      .swatch.pdp-variant-fallback-pulse {
-        animation: pdp-variant-fallback-pulse 1.4s ease-out;
-        will-change: transform, box-shadow;
-      }
-
-      .pdp-variant-fallback-toast {
-        position: fixed;
-        left: 50%;
-        bottom: 28px;
-        transform: translate(-50%, 16px);
-        background: #1f1f1f;
-        color: #fff;
-        padding: 12px 18px;
-        border-radius: 999px;
-        font-size: 1.3rem;
-        line-height: 1.4;
-        letter-spacing: .02em;
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity .28s ease, transform .28s ease;
-        z-index: 9999;
-        max-width: calc(100vw - 32px);
-        text-align: center;
-      }
-      .pdp-variant-fallback-toast.is-visible {
-        opacity: 1;
-        transform: translate(-50%, 0);
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .product-form__input--pill input[type=radio].pdp-variant-fallback-pulse + label,
-        .product-form__input--pill input[type=radio] + label.pdp-variant-fallback-pulse,
-        .product-form__input--swatch label.pdp-variant-fallback-pulse,
-        .product-form__input--swatch .swatch-input__label.pdp-variant-fallback-pulse,
-        .swatch.pdp-variant-fallback-pulse {
-          animation: none;
-          outline: 2px solid rgba(227, 82, 5, 0.9);
-          outline-offset: 2px;
-        }
-      }
-    {% endif %}
   {%- endstyle -%}
 
   {%- assign enable_product_form_js = true -%}
