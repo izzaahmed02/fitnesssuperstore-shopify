@@ -140,30 +140,31 @@ try {
 					var brand = currentProduct.vendor
 
 					if (customFieldvalue) {			
-						if (customFieldvalue === 'Warranty' || customFieldvalue == 'Shipping' && brand === 'French Fitness') {
-							console.log("I am in custom field");
-							customFieldvalue = `${brand} ${customFieldvalue} Custom Field`
-						} else {
-							if (customFieldvalue === 'Warranty' && window.product.title.includes('Remanufactured')) {
-								console.log("I am in remanufactured custom field");
-								customFieldvalue = `${customFieldvalue} Remanufactured Custom Field`
-							} else if (customFieldvalue === 'Condition' && window.product.title.includes('Remanufactured')) {
-								window.open("/pages/remanufactured-gym-equipment", "_blank");
-								return;
-							} 
-							else {
-								customFieldvalue += ' Custom Field';
-							}
+						if (customFieldvalue === 'Condition' && window.product.title.includes('Remanufactured')) {
+							window.open("/pages/remanufactured-gym-equipment", "_blank");
+							return;
 						}
 
-						console.log("Custom Field Value is "+ customFieldvalue);
-						
-						var product = await fetchProductByTitle(customFieldvalue);
-                      
-                        if (!product && customFieldvalue.includes('Warranty')) {
-							console.log("I am in Warranty 30");
-							customFieldvalue = 'Warranty (30)';
-							product = await fetchProductByTitle(customFieldvalue);
+						var candidateKeys = [];
+						if (customFieldvalue === 'Warranty' || customFieldvalue === 'Shipping') {
+							candidateKeys.push(`${brand} ${customFieldvalue} Custom Field`);
+							if (customFieldvalue === 'Warranty' && window.product.title.includes('Remanufactured')) {
+								candidateKeys.push('Warranty Remanufactured Custom Field');
+							}
+						} else {
+							candidateKeys.push(`${customFieldvalue} Custom Field`);
+						}
+
+						var product = null;
+						for (var i = 0; i < candidateKeys.length; i++) {
+							product = await fetchProductByTitle(candidateKeys[i]);
+							if (product) {
+								console.log('Option Help key matched:', candidateKeys[i]);
+								break;
+							}
+						}
+						if (!product) {
+							console.warn('Option Help key not found. Tried:', candidateKeys);
 						}
 						if (product) {
 							document.querySelector('#dynamic-product-content').style.width = "auto";
