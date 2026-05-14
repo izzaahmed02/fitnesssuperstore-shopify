@@ -23,54 +23,23 @@ customElements.get('product-info') ||
           if(!event) return;
           const variant = event.data.variant;
           if(variant) return;
-
+          
           const variantOptionContainers = document.querySelectorAll('[data-variant-options]');
           if(variantOptionContainers.length === 0) return;
 
-          const isVariantsTemplate = this.dataset.pdpTemplate === 'variants';
-          const switchedTargets = [];
-
           variantOptionContainers.forEach(variantOption => {
             const activeNotDisabledOption = variantOption.querySelector('[data-option-value-id]:checked:not(.disabled)');
-
+            
             if(!activeNotDisabledOption) {
               const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]');
               if(values.length > 0) {
                 const firstAvailableValue = values[0];
                 const firstAvailableValueTarget = document.querySelector(`label[for="${firstAvailableValue.id}"]`);
-                if(firstAvailableValueTarget) {
-                  if(isVariantsTemplate) switchedTargets.push(firstAvailableValueTarget);
-                  firstAvailableValueTarget.click();
-                }
+                if(firstAvailableValueTarget) firstAvailableValueTarget.click();
               }
             }
-          });
-
-          if(isVariantsTemplate && switchedTargets.length > 0) {
-            switchedTargets.forEach((label) => {
-              label.classList.remove('pdp-variant-fallback-pulse');
-              // Force reflow so the animation restarts if the same label pulses twice in a row.
-              void label.offsetWidth;
-              label.classList.add('pdp-variant-fallback-pulse');
-              setTimeout(() => label.classList.remove('pdp-variant-fallback-pulse'), 1500);
-            });
-
-            let toast = document.querySelector('.pdp-variant-fallback-toast');
-            if(!toast) {
-              toast = document.createElement('div');
-              toast.className = 'pdp-variant-fallback-toast';
-              toast.setAttribute('role', 'status');
-              toast.setAttribute('aria-live', 'polite');
-              document.body.appendChild(toast);
-            }
-            toast.textContent = "That combination isn't available — switched to the closest match.";
-            clearTimeout(this._variantFallbackToastTimer);
-            requestAnimationFrame(() => toast.classList.add('is-visible'));
-            this._variantFallbackToastTimer = setTimeout(() => {
-              toast.classList.remove('is-visible');
-            }, 2600);
-          }
-        });
+          })
+        });  
       }
       redirectCombinedListingToVariant() {
         // On combined-listing parent URLs the page renders the parent product, so
