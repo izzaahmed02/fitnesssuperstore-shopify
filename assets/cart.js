@@ -253,52 +253,7 @@ customElements.define('cart-items', CartItems),
     e.addEventListener('click', function (t) {
       t.preventDefault(), e.classList.contains('active') ? (zE('messenger', 'close'), e.classList.remove('active')) : (zE('messenger', 'open'), e.classList.add('active'));
     });
-    let t = new URLSearchParams(window.location.search);
-    'true' === t.get('generateQuotes') && (document.querySelector('.download-quote').style.display = 'flex');
   });
-const fsUrl = 'https://fitnesssuperstore-api.azurewebsites.net';
-async function downloadQuoteCSV() {
-  let e = document.getElementById('csv-quote-btn');
-  e.disabled = !0;
-  let t = await fetch('/cart.json', { method: 'GET' }),
-    r = await t.json();
-  if (r) {
-    let a = document.querySelector('.docapp-shipping-rate-name'),
-      i = a?.querySelector('label')?.textContent,
-      n = a?.querySelector('label input')?.value,
-      s = await fetch(`${fsUrl}/api/quotes/csv`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ products: r.items, shippingName: i, shippingTotal: n }),
-      });
-    if (s.ok) {
-      let o = await s.json();
-      o && (window.location.href = `${fsUrl}/api/quotes/downloadcsv?fileDownloadName=${o}`);
-    }
-    e.disabled = !1;
-  }
-}
-async function downloadQuoteGsheet() {
-  let e = document.getElementById('gsheet-quote-btn');
-  e.disabled = !0;
-  let t = await fetch('/cart.json', { method: 'GET' }),
-    r = await t.json();
-  if (r) {
-    let a = document.querySelector('.docapp-shipping-rate-name'),
-      i = a?.querySelector('label')?.textContent,
-      n = a?.querySelector('label input')?.value,
-      s = await fetch(`${fsUrl}/api/quotes/gsheet`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ products: r.items, shippingName: i, shippingTotal: n }),
-      });
-    if (s.ok) {
-      let o = await s.json();
-      o && window.open(o, '_blank');
-    }
-    e.disabled = !1;
-  }
-}
 function setCartAttributeZipCode(e) {
   fetch('/cart/update.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ attributes: { zipCode: e } }) }).catch((e) => {
     console.error('Error updating cart attribute:', e);
