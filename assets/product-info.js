@@ -52,10 +52,12 @@ customElements.get('product-info') ||
           let hasUnavailableSelection = false;
 
           variantOptionContainers.forEach(variantOption => {
-            const checkedDisabled = variantOption.querySelector('[data-option-value-id]:checked.disabled');
-            if(!checkedDisabled) return;
+            // Pills emit `.disabled` on the input; swatches emit `.visually-disabled` (snippets/swatch-input.liquid).
+            // Both paths set data-option-value-available, so use that as the unified signal.
+            const checkedUnavailable = variantOption.querySelector('[data-option-value-id]:checked[data-option-value-available="false"]');
+            if(!checkedUnavailable) return;
             hasUnavailableSelection = true;
-            const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]:not(.disabled)');
+            const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]');
             if(values.length === 0) return;
             const label = this.querySelector(`label[for="${values[0].id}"]`);
             if(!label) return;
