@@ -21,55 +21,73 @@ customElements.get('product-info') ||
           this.dispatchEvent(new CustomEvent('product-info:loaded', { bubbles: !0 })));
         subscribe(PUB_SUB_EVENTS.variantChange, (event)=> {
           if(!event) return;
-          const variant = event.data.variant;
-          if(variant) return;
-
-          const variantOptionContainers = document.querySelectorAll('[data-variant-options]');
-          if(variantOptionContainers.length === 0) return;
-
           const isVariantsTemplate = this.dataset.pdpTemplate === 'variants';
-          const switchedTargets = [];
 
-          variantOptionContainers.forEach(variantOption => {
-            const activeNotDisabledOption = variantOption.querySelector('[data-option-value-id]:checked:not(.disabled)');
-
-            if(!activeNotDisabledOption) {
-              const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]');
-              if(values.length > 0) {
-                const firstAvailableValue = values[0];
-                const firstAvailableValueTarget = document.querySelector(`label[for="${firstAvailableValue.id}"]`);
-                if(firstAvailableValueTarget) {
-                  if(isVariantsTemplate) switchedTargets.push(firstAvailableValueTarget);
-                  firstAvailableValueTarget.click();
+          if(!isVariantsTemplate) {
+            const variant = event.data.variant;
+            if(variant) return;
+            const variantOptionContainers = document.querySelectorAll('[data-variant-options]');
+            if(variantOptionContainers.length === 0) return;
+            variantOptionContainers.forEach(variantOption => {
+              const activeNotDisabledOption = variantOption.querySelector('[data-option-value-id]:checked:not(.disabled)');
+              if(!activeNotDisabledOption) {
+                const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]');
+                if(values.length > 0) {
+                  const firstAvailableValueTarget = document.querySelector(`label[for="${values[0].id}"]`);
+                  if(firstAvailableValueTarget) firstAvailableValueTarget.click();
                 }
               }
-            }
+            });
+            return;
+          }
+
+          // Variants PDP template: trigger fallback whenever a user-selected option is .disabled,
+          // not just when the section returned variant=null. selected_or_first_available_variant
+          // falls back to first available in Liquid, so the variant=null guard rarely fires.
+          if(event.data && event.data.sectionId && event.data.sectionId !== this.sectionId) return;
+          const variantOptionContainers = this.querySelectorAll('[data-variant-options]');
+          if(variantOptionContainers.length === 0) return;
+
+          const switchedTargets = [];
+          let hasUnavailableSelection = false;
+
+          variantOptionContainers.forEach(variantOption => {
+            const checkedDisabled = variantOption.querySelector('[data-option-value-id]:checked.disabled');
+            if(!checkedDisabled) return;
+            hasUnavailableSelection = true;
+            const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]:not(.disabled)');
+            if(values.length === 0) return;
+            const label = this.querySelector(`label[for="${values[0].id}"]`);
+            if(!label) return;
+            switchedTargets.push(label);
+            label.click();
           });
 
-          if(isVariantsTemplate && switchedTargets.length > 0) {
-            switchedTargets.forEach((label) => {
-              label.classList.remove('pdp-variant-fallback-pulse');
-              // Force reflow so the animation restarts if the same label pulses twice in a row.
-              void label.offsetWidth;
-              label.classList.add('pdp-variant-fallback-pulse');
-              setTimeout(() => label.classList.remove('pdp-variant-fallback-pulse'), 1500);
-            });
+          if(!hasUnavailableSelection) return;
 
-            let toast = document.querySelector('.pdp-variant-fallback-toast');
-            if(!toast) {
-              toast = document.createElement('div');
-              toast.className = 'pdp-variant-fallback-toast';
-              toast.setAttribute('role', 'status');
-              toast.setAttribute('aria-live', 'polite');
-              document.body.appendChild(toast);
-            }
-            toast.textContent = "That combination isn't available — switched to the closest match.";
-            clearTimeout(this._variantFallbackToastTimer);
-            requestAnimationFrame(() => toast.classList.add('is-visible'));
-            this._variantFallbackToastTimer = setTimeout(() => {
-              toast.classList.remove('is-visible');
-            }, 2600);
+          switchedTargets.forEach((label) => {
+            label.classList.remove('pdp-variant-fallback-pulse');
+            void label.offsetWidth;
+            label.classList.add('pdp-variant-fallback-pulse');
+            setTimeout(() => label.classList.remove('pdp-variant-fallback-pulse'), 1500);
+          });
+
+          let toast = document.querySelector('.pdp-variant-fallback-toast');
+          if(!toast) {
+            toast = document.createElement('div');
+            toast.className = 'pdp-variant-fallback-toast';
+            toast.setAttribute('role', 'status');
+            toast.setAttribute('aria-live', 'polite');
+            document.body.appendChild(toast);
           }
+          toast.textContent = switchedTargets.length > 0
+            ? "That combination isn't available — switched to the closest match."
+            : "This combination isn't available right now.";
+          clearTimeout(this._variantFallbackToastTimer);
+          requestAnimationFrame(() => toast.classList.add('is-visible'));
+          this._variantFallbackToastTimer = setTimeout(() => {
+            toast.classList.remove('is-visible');
+          }, 2600);
         });
       }
       redirectCombinedListingToVariant() {
