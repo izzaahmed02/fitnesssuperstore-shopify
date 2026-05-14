@@ -58,6 +58,20 @@
       <meta itemprop="availability" content="OutOfStock">
     {%- endif -%}
   </span>
+
+  {% if template.suffix == 'variants' %}
+    {%- comment -%}
+      Slim list of variants used by product-info.js to distinguish an impossible
+      combination (no variant matches the customer's selected option values) from
+      a variant that simply exists but is sold out. Only the data needed for that
+      lookup is emitted to keep the payload small.
+    {%- endcomment -%}
+    <script type="application/json" data-product-variants-map>
+      [{%- for variant in product.variants -%}
+        {"o1":{{ variant.option1 | json }},"o2":{{ variant.option2 | json }},"o3":{{ variant.option3 | json }},"a":{{ variant.available }}}{%- unless forloop.last -%},{%- endunless -%}
+      {%- endfor -%}]
+    </script>
+  {% endif %}
   {{ 'section-main-product.css' | asset_url | stylesheet_tag }}
   <link rel="stylesheet" href="{{ 'component-accordion.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'component-accordion.css' | asset_url | stylesheet_tag }}</noscript>

@@ -41,12 +41,44 @@ customElements.get('product-info') ||
             return;
           }
 
-          // Variants PDP template: trigger fallback whenever a user-selected option is .disabled,
-          // not just when the section returned variant=null. selected_or_first_available_variant
-          // falls back to first available in Liquid, so the variant=null guard rarely fires.
+          // Variants PDP template: trigger fallback whenever a user-selected option is unavailable
+          // AND no variant exists for the chosen combination (i.e. impossible combo, not just
+          // a sold-out variant the customer might want to view).
           if(event.data && event.data.sectionId && event.data.sectionId !== this.sectionId) return;
           const variantOptionContainers = this.querySelectorAll('[data-variant-options]');
           if(variantOptionContainers.length === 0) return;
+
+          // Quick exit if nothing is currently unavailable.
+          const anyCheckedUnavailable = Array.from(variantOptionContainers).some(c =>
+            c.querySelector('[data-option-value-id]:checked[data-option-value-available="false"]')
+          );
+          if(!anyCheckedUnavailable) return;
+
+          // Look up the customer's full selection in the product variant map. If a variant
+          // matches all checked option values, the combination exists (sold out) — leave it
+          // alone so the customer can see the sold-out state.
+          if(!this._productVariantsMap) {
+            const script = this.querySelector('script[data-product-variants-map]');
+            if(script) {
+              try { this._productVariantsMap = JSON.parse(script.textContent); } catch (e) { this._productVariantsMap = []; }
+            } else {
+              this._productVariantsMap = [];
+            }
+          }
+          const checkedValues = Array.from(variantOptionContainers).map(c => {
+            const checked = c.querySelector('[data-option-value-id]:checked');
+            return checked ? checked.value : null;
+          });
+          if(!checkedValues.includes(null) && this._productVariantsMap.length > 0) {
+            const matchingVariant = this._productVariantsMap.find(v =>
+              v.o1 === (checkedValues[0] ?? null) &&
+              v.o2 === (checkedValues[1] ?? null) &&
+              v.o3 === (checkedValues[2] ?? null)
+            );
+            // Sold-out variant (exists but unavailable) — skip auto-switch, let the
+            // default sold-out CTA surface for the customer.
+            if(matchingVariant) return;
+          }
 
           const switchedTargets = [];
           let hasUnavailableSelection = false;
