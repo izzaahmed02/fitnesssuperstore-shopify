@@ -6,7 +6,7 @@ if (!customElements.get('product-customization-options')) {
         super();
         this.accordions = this.querySelectorAll('[data-option-accordion]');
         this.customizationOptions = this.querySelectorAll('[data-customization-option]');
-        this.openPopupButtons = this.querySelectorAll('[data-popup-open]');
+        this.openPopupButtons = document.querySelectorAll('[data-popup-open]');
         this.closePopupButtons = document.querySelectorAll('[data-close-popup]');
         this.colorGroups = this.querySelectorAll('.color_options_container');
         this.swatches = this.querySelectorAll('[data-color-name]');
