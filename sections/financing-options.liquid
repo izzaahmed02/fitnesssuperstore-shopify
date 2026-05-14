@@ -7,6 +7,41 @@
 
         {% case block.type %}
 
+        {% when 'credit_card' %}
+
+        <div class="financing-block financing-block--full">
+
+          {% if block.settings.title != blank %}
+          <p class="financing-title">{{ block.settings.title }}</p>
+          {% endif %}
+
+          <div class="financing-card financing-card--credit">
+
+            <div class="financing-credit__inner">
+
+              <div class="financing-credit__logos">
+                {% if block.settings.logo_visa %}
+                  <img src="{{ block.settings.logo_visa | image_url }}" alt="Visa">
+                {% endif %}
+                {% if block.settings.logo_mastercard %}
+                  <img src="{{ block.settings.logo_mastercard | image_url }}" alt="Mastercard">
+                {% endif %}
+                {% if block.settings.logo_discover %}
+                  <img src="{{ block.settings.logo_discover | image_url }}" alt="Discover">
+                {% endif %}
+                {% if block.settings.logo_amex %}
+                  <img src="{{ block.settings.logo_amex | image_url }}" alt="American Express">
+                {% endif %}
+              </div>
+
+              <p class="financing-credit__text">{{ block.settings.text }}</p>
+
+            </div>
+
+          </div>
+        </div>
+
+
         {% when 'full_width' %}
 
         <div class="financing-block financing-block--full">
@@ -131,6 +166,42 @@
   box-sizing:border-box;
 }
 
+/* CREDIT/DEBIT CARD */
+
+.section-financing-options .financing-card--credit {
+  height: auto;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+}
+
+.section-financing-options .financing-credit__inner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+}
+
+.section-financing-options .financing-credit__logos {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.section-financing-options .financing-credit__logos img {
+  max-height: 28px;
+  width: auto;
+  display: block;
+}
+
+.section-financing-options .financing-credit__text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: inherit;
+}
+
 /* FULL WIDTH CARD */
 
 .section-financing-options .financing-card--full{
@@ -203,6 +274,18 @@
   width:100%;
 }
 
+/* CREDIT CARD MOBILE */
+
+.section-financing-options .financing-credit__inner {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.section-financing-options .financing-credit__logos {
+  gap: 8px;
+}
+
 /* FULL CARD MOBILE */
 
 .section-financing-options .financing-card--full{
@@ -266,6 +349,53 @@
     }
   ],
   "blocks": [
+
+    {
+      "type": "credit_card",
+      "name": "Credit & Debit Card",
+      "limit": 1,
+      "settings": [
+
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Credit & Debit Cards"
+        },
+
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Description text",
+          "default": "Pay securely with Visa, Mastercard, Discover, or American Express through our secure Shopify checkout."
+        },
+
+        {
+          "type": "image_picker",
+          "id": "logo_visa",
+          "label": "Visa logo"
+        },
+
+        {
+          "type": "image_picker",
+          "id": "logo_mastercard",
+          "label": "Mastercard logo"
+        },
+
+        {
+          "type": "image_picker",
+          "id": "logo_discover",
+          "label": "Discover logo"
+        },
+
+        {
+          "type": "image_picker",
+          "id": "logo_amex",
+          "label": "American Express logo"
+        }
+
+      ]
+    },
 
     {
       "type": "full_width",
