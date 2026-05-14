@@ -42,6 +42,9 @@
         var url = new URL(window.location.href);
         if (url.searchParams.has('option_values')) {
           url.searchParams.delete('option_values');
+          {% if product and product.selected_or_first_available_variant %}
+            url.searchParams.set('variant', '{{ product.selected_or_first_available_variant.id }}');
+          {% endif %}
           var clean = url.pathname + (url.search ? url.search : '') + url.hash;
           window.history.replaceState({}, '', clean);
         }
