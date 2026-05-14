@@ -44,6 +44,14 @@
           url.searchParams.delete('option_values');
           {% if product and product.selected_or_first_available_variant %}
             url.searchParams.set('variant', '{{ product.selected_or_first_available_variant.id }}');
+            // Match the direct-?variant= robots behavior above so rewritten
+            // variant URLs aren't accidentally indexed.
+            if (!document.querySelector('meta[name="robots"][content="noindex,follow"]')) {
+              var rewriteMeta = document.createElement('meta');
+              rewriteMeta.name = 'robots';
+              rewriteMeta.content = 'noindex,follow';
+              document.head.appendChild(rewriteMeta);
+            }
           {% endif %}
           var clean = url.pathname + (url.search ? url.search : '') + url.hash;
           window.history.replaceState({}, '', clean);
