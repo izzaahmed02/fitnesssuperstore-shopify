@@ -761,7 +761,7 @@
                       <div class="item__text">
                         <span class="title">Grade:</span>
                         {{ product.metafields.custom.grade }}
-                        <span class="more-info" data-popup-open="Grade">(More Info)</span>
+                        {% comment %}<span class="more-info" data-customfield="Grade">(More Info)</span>{% endcomment %}
                       </div>
                     </div>
                   {% endif %}
@@ -775,7 +775,7 @@
                           | strip_html
                           | replace: ' (See Description for Details)', ''
                         }}
-                        <span class="more-info" data-popup-open="Warranty">(More Info)</span>
+                        {% comment %}<span class="more-info" data-customfield="Warranty">(More Info)</span>{% endcomment %}
                       </div>
                     </div>
                   {% endif %}
@@ -787,7 +787,7 @@
                         {{ product.metafields.custom.ships }}
                         {% for collection in product.collections %}
                           {% if collection.handle contains 'shop-by-strength-product-line' %}
-                            <span class="more-info" data-popup-open="Shipping">(More Info)</span>
+                            {% comment %}<span class="more-info" data-customfield="Shipping">(More Info)</span>{% endcomment %}
                             <script>
   var attachClickHandler = setInterval(function () {
     var $target = $('.custom_shipping_container');
@@ -815,7 +815,7 @@
                       <div class="item__text">
                         <span class="title">Processing Time:</span>
                         {{ product.metafields.custom.processing_time_long }}
-                        <span class="more-info" data-popup-open="Processing Time">(More Info)</span>
+                        {% comment %}<span class="more-info" data-customfield="Processing Time" data-processingtime="{{ product.metafields.custom.processing_time }}">(More Info)</span>{% endcomment %}
                       </div>
                     </div>
                   {% endif %}
@@ -2026,34 +2026,7 @@
   {% endfor %}
 {% endfor %}
 
-{% if product.metafields.custom.grade != blank %}
-  {% render 'related-products-popup-for-options',
-    popup_id: 'Grade',
-    title: 'Grade',
-    text: product.metafields.custom.grade
-  %}
-{% endif %}
-{% if product.metafields.custom.warranty != blank %}
-  {% render 'related-products-popup-for-options',
-    popup_id: 'Warranty',
-    title: 'Warranty',
-    text: product.metafields.custom.warranty
-  %}
-{% endif %}
-{% if product.metafields.custom.ships != blank %}
-  {% render 'related-products-popup-for-options',
-    popup_id: 'Shipping',
-    title: 'Shipping',
-    text: product.metafields.custom.ships
-  %}
-{% endif %}
-{% if product.metafields.custom.processing_time_long != blank %}
-  {% render 'related-products-popup-for-options',
-    popup_id: 'Processing Time',
-    title: 'Processing Time',
-    text: product.metafields.custom.processing_time_long
-  %}
-{% endif %}
+
 
 <style>
   #dynamic-product-content iframe{max-width:100% !important;}
