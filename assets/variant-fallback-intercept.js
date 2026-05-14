@@ -36,6 +36,13 @@
   }
 
   function handleClick(event, productInfo, variantsMap) {
+    // Programmatic clicks dispatched from applyVariantSelection re-enter this
+    // capture-phase handler before the browser's default action checks the
+    // radio. Suppress interception during that window so a multi-group
+    // fallback that touches an intermediate impossible combination doesn't
+    // recurse and overflow the stack.
+    if (productInfo._applyingFallback) return;
+
     // Resolve the clicked option-value input via the label's `for` attribute,
     // or via the input itself if the customer clicked the input directly.
     const label = event.target.closest('[data-variant-options] label[for]');
@@ -77,7 +84,12 @@
       return;
     }
 
-    applyVariantSelection(productInfo, fieldsets, target);
+    productInfo._applyingFallback = true;
+    try {
+      applyVariantSelection(productInfo, fieldsets, target);
+    } finally {
+      productInfo._applyingFallback = false;
+    }
     showToast(productInfo, "That combination isn't available — switched to the closest match.");
   }
 
