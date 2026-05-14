@@ -21,108 +21,25 @@ customElements.get('product-info') ||
           this.dispatchEvent(new CustomEvent('product-info:loaded', { bubbles: !0 })));
         subscribe(PUB_SUB_EVENTS.variantChange, (event)=> {
           if(!event) return;
-          const isVariantsTemplate = this.dataset.pdpTemplate === 'variants';
-
-          if(!isVariantsTemplate) {
-            const variant = event.data.variant;
-            if(variant) return;
-            const variantOptionContainers = document.querySelectorAll('[data-variant-options]');
-            if(variantOptionContainers.length === 0) return;
-            variantOptionContainers.forEach(variantOption => {
-              const activeNotDisabledOption = variantOption.querySelector('[data-option-value-id]:checked:not(.disabled)');
-              if(!activeNotDisabledOption) {
-                const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]');
-                if(values.length > 0) {
-                  const firstAvailableValueTarget = document.querySelector(`label[for="${values[0].id}"]`);
-                  if(firstAvailableValueTarget) firstAvailableValueTarget.click();
-                }
-              }
-            });
-            return;
-          }
-
-          // Variants PDP template: trigger fallback whenever a user-selected option is unavailable
-          // AND no variant exists for the chosen combination (i.e. impossible combo, not just
-          // a sold-out variant the customer might want to view).
-          if(event.data && event.data.sectionId && event.data.sectionId !== this.sectionId) return;
-          const variantOptionContainers = this.querySelectorAll('[data-variant-options]');
+          const variant = event.data.variant;
+          if(variant) return;
+          
+          const variantOptionContainers = document.querySelectorAll('[data-variant-options]');
           if(variantOptionContainers.length === 0) return;
 
-          // Quick exit if nothing is currently unavailable.
-          const anyCheckedUnavailable = Array.from(variantOptionContainers).some(c =>
-            c.querySelector('[data-option-value-id]:checked[data-option-value-available="false"]')
-          );
-          if(!anyCheckedUnavailable) return;
-
-          // Look up the customer's full selection in the product variant map. If a variant
-          // matches all checked option values, the combination exists (sold out) — leave it
-          // alone so the customer can see the sold-out state.
-          if(!this._productVariantsMap) {
-            const script = this.querySelector('script[data-product-variants-map]');
-            if(script) {
-              try { this._productVariantsMap = JSON.parse(script.textContent); } catch (e) { this._productVariantsMap = []; }
-            } else {
-              this._productVariantsMap = [];
-            }
-          }
-          const checkedValues = Array.from(variantOptionContainers).map(c => {
-            const checked = c.querySelector('[data-option-value-id]:checked');
-            return checked ? checked.value : null;
-          });
-          if(!checkedValues.includes(null) && this._productVariantsMap.length > 0) {
-            const matchingVariant = this._productVariantsMap.find(v =>
-              v.o1 === (checkedValues[0] ?? null) &&
-              v.o2 === (checkedValues[1] ?? null) &&
-              v.o3 === (checkedValues[2] ?? null)
-            );
-            // Sold-out variant (exists but unavailable) — skip auto-switch, let the
-            // default sold-out CTA surface for the customer.
-            if(matchingVariant) return;
-          }
-
-          const switchedTargets = [];
-          let hasUnavailableSelection = false;
-
           variantOptionContainers.forEach(variantOption => {
-            // Pills emit `.disabled` on the input; swatches emit `.visually-disabled` (snippets/swatch-input.liquid).
-            // Both paths set data-option-value-available, so use that as the unified signal.
-            const checkedUnavailable = variantOption.querySelector('[data-option-value-id]:checked[data-option-value-available="false"]');
-            if(!checkedUnavailable) return;
-            hasUnavailableSelection = true;
-            const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]');
-            if(values.length === 0) return;
-            const label = this.querySelector(`label[for="${values[0].id}"]`);
-            if(!label) return;
-            switchedTargets.push(label);
-            label.click();
-          });
-
-          if(!hasUnavailableSelection) return;
-
-          switchedTargets.forEach((label) => {
-            label.classList.remove('pdp-variant-fallback-pulse');
-            void label.offsetWidth;
-            label.classList.add('pdp-variant-fallback-pulse');
-            setTimeout(() => label.classList.remove('pdp-variant-fallback-pulse'), 1500);
-          });
-
-          let toast = document.querySelector('.pdp-variant-fallback-toast');
-          if(!toast) {
-            toast = document.createElement('div');
-            toast.className = 'pdp-variant-fallback-toast';
-            toast.setAttribute('role', 'status');
-            toast.setAttribute('aria-live', 'polite');
-            document.body.appendChild(toast);
-          }
-          toast.textContent = switchedTargets.length > 0
-            ? "That combination isn't available — switched to the closest match."
-            : "This combination isn't available right now.";
-          clearTimeout(this._variantFallbackToastTimer);
-          requestAnimationFrame(() => toast.classList.add('is-visible'));
-          this._variantFallbackToastTimer = setTimeout(() => {
-            toast.classList.remove('is-visible');
-          }, 2600);
-        });
+            const activeNotDisabledOption = variantOption.querySelector('[data-option-value-id]:checked:not(.disabled)');
+            
+            if(!activeNotDisabledOption) {
+              const values = variantOption.querySelectorAll('[data-option-value-id]:not(:checked)[data-option-value-available="true"]');
+              if(values.length > 0) {
+                const firstAvailableValue = values[0];
+                const firstAvailableValueTarget = document.querySelector(`label[for="${firstAvailableValue.id}"]`);
+                if(firstAvailableValueTarget) firstAvailableValueTarget.click();
+              }
+            }
+          })
+        });  
       }
       redirectCombinedListingToVariant() {
         // On combined-listing parent URLs the page renders the parent product, so
