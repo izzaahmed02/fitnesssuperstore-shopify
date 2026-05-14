@@ -44,6 +44,9 @@
   data-product-id="{{ product.id }}"
   data-update-url="true"
   data-url="{{ product.url }}"
+  {% if template.suffix == 'variants' %}
+    data-pdp-template="variants"
+  {% endif %}
   {% if section.settings.image_zoom == 'hover' %}
     data-zoom-on-hover
   {% endif %}
@@ -55,6 +58,20 @@
       <meta itemprop="availability" content="OutOfStock">
     {%- endif -%}
   </span>
+
+  {% if template.suffix == 'variants' %}
+    {%- comment -%}
+      Slim list of variants used by product-info.js to distinguish an impossible
+      combination (no variant matches the customer's selected option values) from
+      a variant that simply exists but is sold out. Only the data needed for that
+      lookup is emitted to keep the payload small.
+    {%- endcomment -%}
+    <script type="application/json" data-product-variants-map>
+      [{%- for variant in product.variants -%}
+        {"o1":{{ variant.option1 | json }},"o2":{{ variant.option2 | json }},"o3":{{ variant.option3 | json }},"a":{{ variant.available }}}{%- unless forloop.last -%},{%- endunless -%}
+      {%- endfor -%}]
+    </script>
+  {% endif %}
   {{ 'section-main-product.css' | asset_url | stylesheet_tag }}
   <link rel="stylesheet" href="{{ 'component-accordion.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'component-accordion.css' | asset_url | stylesheet_tag }}</noscript>
@@ -106,6 +123,64 @@
         padding-bottom: {{ section.settings.padding_bottom }}px;
       }
     }
+
+    {% if template.suffix == 'variants' %}
+      .product-form__input--pill input[type=radio] + label,
+      .product-form__input--swatch .swatch {
+        transition: border var(--duration-short) ease, background-color var(--duration-short) ease, color var(--duration-short) ease, box-shadow var(--duration-short) ease, transform var(--duration-short) ease;
+      }
+
+      @keyframes pdp-variant-fallback-pulse {
+        0%   { box-shadow: 0 0 0 0 rgba(227, 82, 5, 0.55); transform: scale(1); }
+        35%  { transform: scale(1.04); }
+        100% { box-shadow: 0 0 0 14px rgba(227, 82, 5, 0); transform: scale(1); }
+      }
+
+      .product-form__input--pill input[type=radio].pdp-variant-fallback-pulse + label,
+      .product-form__input--pill input[type=radio] + label.pdp-variant-fallback-pulse,
+      .product-form__input--swatch label.pdp-variant-fallback-pulse,
+      .product-form__input--swatch .swatch-input__label.pdp-variant-fallback-pulse,
+      .swatch.pdp-variant-fallback-pulse {
+        animation: pdp-variant-fallback-pulse 1.4s ease-out;
+        will-change: transform, box-shadow;
+      }
+
+      .pdp-variant-fallback-toast {
+        position: fixed;
+        left: 50%;
+        bottom: 28px;
+        transform: translate(-50%, 16px);
+        background: #1f1f1f;
+        color: #fff;
+        padding: 12px 18px;
+        border-radius: 999px;
+        font-size: 1.3rem;
+        line-height: 1.4;
+        letter-spacing: .02em;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .28s ease, transform .28s ease;
+        z-index: 9999;
+        max-width: calc(100vw - 32px);
+        text-align: center;
+      }
+      .pdp-variant-fallback-toast.is-visible {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .product-form__input--pill input[type=radio].pdp-variant-fallback-pulse + label,
+        .product-form__input--pill input[type=radio] + label.pdp-variant-fallback-pulse,
+        .product-form__input--swatch label.pdp-variant-fallback-pulse,
+        .product-form__input--swatch .swatch-input__label.pdp-variant-fallback-pulse,
+        .swatch.pdp-variant-fallback-pulse {
+          animation: none;
+          outline: 2px solid rgba(227, 82, 5, 0.9);
+          outline-offset: 2px;
+        }
+      }
+    {% endif %}
   {%- endstyle -%}
 
   {%- assign enable_product_form_js = true -%}
