@@ -81,7 +81,7 @@
     color: #222;
     margin-bottom: 0.75rem;
     line-height: 24px;
-    margin-top: 0px;
+    margin-top: 0;
   }
 
   #shopify-section-{{ section.id }} .story-card__highlights-list {
@@ -124,11 +124,17 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
 
+  #shopify-section-{{ section.id }} .story-card__highlights-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
   #shopify-section-{{ section.id }} .story-card__cta-row {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-top: 1.5rem;
     flex-wrap: wrap;
   }
 
@@ -157,80 +163,87 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.12);
   }
 
-  /* Media gallery */
-  #shopify-section-{{ section.id }} .story-card__media-gallery {
-    display: grid;
-    gap: 1rem;
-  }
-
-  #shopify-section-{{ section.id }} .story-card__media-gallery--1 {
-    grid-template-columns: 1fr;
-  }
-
-  #shopify-section-{{ section.id }} .story-card__media-gallery--2 {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  #shopify-section-{{ section.id }} .story-card__media-gallery--3 {
-    grid-template-columns: 2fr 1fr;
-  }
-
-  @media screen and (max-width: 749px) {
-    #shopify-section-{{ section.id }} .story-card__media-gallery--2,
-    #shopify-section-{{ section.id }} .story-card__media-gallery--3 {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  #shopify-section-{{ section.id }} .story-card__media-item {
+  /* ── Carousel ── */
+  #shopify-section-{{ section.id }} .story-card__carousel {
     position: relative;
-    border-radius: 8px;
     overflow: hidden;
-    aspect-ratio: 16/9;
+    border-radius: 10px;
   }
 
-  #shopify-section-{{ section.id }} .story-card__media-item img {
+  #shopify-section-{{ section.id }} .story-card__carousel-track {
+    display: flex;
+    transition: transform 0.4s ease;
+    will-change: transform;
+  }
+
+  #shopify-section-{{ section.id }} .story-card__carousel-slide {
+    position: relative;
+    flex: 0 0 100%;
+    width: 100%;
+    aspect-ratio: 16/9;
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+
+  #shopify-section-{{ section.id }} .story-card__carousel-slide img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: transform 0.3s ease;
   }
 
-  #shopify-section-{{ section.id }} .story-card__video-overlay {
+  #shopify-section-{{ section.id }} .story-card__carousel-slide:hover img {
+    transform: scale(1.03);
+  }
+
+  /* Play overlay on video slide */
+  #shopify-section-{{ section.id }} .cs-play-overlay {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0,0,0,0.15);
-    cursor: pointer;
+    background: rgba(0,0,0,0.2);
+    transition: background 0.2s;
   }
 
-  #shopify-section-{{ section.id }} .story-card__play-btn {
-    width: 56px;
-    height: 56px;
-    background: rgba(255,255,255,0.9);
+  #shopify-section-{{ section.id }} .story-card__carousel-slide:hover .cs-play-overlay {
+    background: rgba(0,0,0,0.32);
+  }
+
+  #shopify-section-{{ section.id }} .cs-play-btn {
+    width: 64px;
+    height: 64px;
+    background: rgba(255,255,255,0.92);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform 0.2s;
   }
 
-  #shopify-section-{{ section.id }} .story-card__play-btn svg {
-    width: 20px;
-    height: 20px;
+  #shopify-section-{{ section.id }} .story-card__carousel-slide:hover .cs-play-btn {
+    transform: scale(1.1);
+  }
+
+  #shopify-section-{{ section.id }} .cs-play-btn svg {
+    width: 24px;
+    height: 24px;
     margin-left: 4px;
-    fill: #333;
+    fill: #222;
   }
 
-  #shopify-section-{{ section.id }} .story-card__media-name-tag {
+  /* Name tag overlay */
+  #shopify-section-{{ section.id }} .cs-name-tag {
     position: absolute;
     bottom: 0;
     left: 0;
     background: {{ section.settings.btn_bg_color }};
   }
 
-  #shopify-section-{{ section.id }} .story-card__media-name-tag .name-line {
+  #shopify-section-{{ section.id }} .cs-name-tag .name-line {
     padding: 0.3rem 1rem;
     font-weight: 800;
     font-size: 0.85rem;
@@ -240,7 +253,7 @@
     border-bottom: 1px solid rgba(255,255,255,0.2);
   }
 
-  #shopify-section-{{ section.id }} .story-card__media-name-tag .role-line {
+  #shopify-section-{{ section.id }} .cs-name-tag .role-line {
     padding: 0.3rem 1rem;
     font-weight: 700;
     font-size: 0.75rem;
@@ -250,36 +263,193 @@
     background: rgba(0,0,0,0.15);
   }
 
-  /* Slider nav */
-  #shopify-section-{{ section.id }} .story-card__media-nav {
+  /* Prev / Next arrows */
+  #shopify-section-{{ section.id }} .cs-carousel-arrow {
     position: absolute;
-    right: 1rem;
     top: 50%;
     transform: translateY(-50%);
+    z-index: 3;
     width: 40px;
     height: 40px;
-    background: rgba(255,255,255,0.85);
-    border-radius: 50%;
+    background: rgba(255,255,255,0.88);
     border: none;
+    border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2;
+    transition: background 0.2s, opacity 0.2s;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
 
-  #shopify-section-{{ section.id }} .story-card__media-nav svg {
+  #shopify-section-{{ section.id }} .cs-carousel-arrow:hover {
+    background: #fff;
+  }
+
+  #shopify-section-{{ section.id }} .cs-carousel-arrow[disabled] {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  #shopify-section-{{ section.id }} .cs-carousel-arrow svg {
     width: 16px;
     height: 16px;
+    stroke: #333;
+    fill: none;
+    stroke-width: 2.5;
+    pointer-events: none;
   }
 
-  /* Highlights right column - avatar bottom right */
-  #shopify-section-{{ section.id }} .story-card__highlights-col {
-    /*display: flex;*/
-    flex-direction: column;
-    justify-content: space-between;
+  #shopify-section-{{ section.id }} .cs-arrow-prev { left: 0.75rem; }
+  #shopify-section-{{ section.id }} .cs-arrow-next { right: 0.75rem; }
+
+  /* Dot indicators */
+  #shopify-section-{{ section.id }} .cs-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 0.75rem;
+  }
+
+  #shopify-section-{{ section.id }} .cs-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ccc;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  #shopify-section-{{ section.id }} .cs-dot.is-active {
+    background: {{ section.settings.btn_bg_color }};
+    transform: scale(1.25);
+  }
+
+  /* ── Lightbox ── */
+  .cs-lightbox-{{ section.id }} {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0,0,0,0.92);
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .cs-lightbox-{{ section.id }}.is-open {
+    display: flex;
+  }
+
+  .cs-lightbox-{{ section.id }} .cs-lb__inner {
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .cs-lightbox-{{ section.id }} .cs-lb__close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 10;
+    width: 38px;
+    height: 38px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    line-height: 1;
+  }
+
+  .cs-lightbox-{{ section.id }} .cs-lb__close:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
+  /* Video */
+  .cs-lightbox-{{ section.id }} .cs-lb__video-wrap {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+  }
+
+  .cs-lightbox-{{ section.id }} .cs-lb__video-wrap iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  /* Image */
+  .cs-lightbox-{{ section.id }} .cs-lb__img-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+  }
+
+  .cs-lightbox-{{ section.id }} .cs-lb__img-wrap img {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+    display: block;
+  }
+
+  .cs-lightbox-{{ section.id }} .cs-lb__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    z-index: 5;
+    line-height: 1;
+  }
+
+  .cs-lightbox-{{ section.id }} .cs-lb__nav:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
+  .cs-lightbox-{{ section.id }} .cs-lb__nav--prev { left: 0.75rem; }
+  .cs-lightbox-{{ section.id }} .cs-lb__nav--next { right: 0.75rem; }
+
+  .cs-lightbox-{{ section.id }} .cs-lb__counter {
+    position: absolute;
+    bottom: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.65);
+    font-size: 0.85rem;
+    white-space: nowrap;
   }
 {%- endstyle -%}
+
+<!-- Lightbox -->
+<div class="cs-lightbox-{{ section.id }}" id="cs-lightbox-{{ section.id }}" role="dialog" aria-modal="true" aria-label="Media viewer">
+  <div class="cs-lb__inner"><!-- injected by JS --></div>
+</div>
 
 <div class="customer-stories section-{{ section.id }}-padding">
   <div class="page-width">
@@ -290,6 +460,16 @@
 
     {%- for block in section.blocks -%}
       {%- if block.type == 'story' -%}
+        {%- assign block_uid = block.id | replace: '-', '' -%}
+
+        {%- comment -%} Count total slides: video + images {%- endcomment -%}
+        {%- assign _slide_count = 0 -%}
+        {%- if block.settings.video_thumb != blank -%}{%- assign _slide_count = _slide_count | plus: 1 -%}{%- endif -%}
+        {%- if block.settings.media_2 != blank -%}{%- assign _slide_count = _slide_count | plus: 1 -%}{%- endif -%}
+        {%- if block.settings.media_3 != blank -%}{%- assign _slide_count = _slide_count | plus: 1 -%}{%- endif -%}
+        {%- if block.settings.media_4 != blank -%}{%- assign _slide_count = _slide_count | plus: 1 -%}{%- endif -%}
+        {%- if block.settings.media_5 != blank -%}{%- assign _slide_count = _slide_count | plus: 1 -%}{%- endif -%}
+
         <div class="customer-stories__story-card" {{ block.shopify_attributes }}>
 
           {%- if block.settings.story_title != blank -%}
@@ -305,145 +485,342 @@
           {%- endif -%}
 
           <div class="story-card__body">
-            <!-- Left: Description -->
+            <!-- Left: description + CTA -->
             <div class="story-card__description-col">
               {%- if block.settings.description != blank -%}
                 <div class="story-card__description">{{ block.settings.description }}</div>
               {%- endif -%}
-
-              <div class="story-card__cta-row" style="margin-top: 1.5rem;">
+              <div class="story-card__cta-row">
                 {%- if block.settings.cta_label != blank -%}
-                  <a
-                    class="button"
-                    {% if block.settings.cta_link != blank %}href="{{ block.settings.cta_link }}"{% else %}role="link" aria-disabled="true"{% endif %}
-                  >
+                  <a class="story-card__cta-btn"
+                    {% if block.settings.cta_link != blank %}href="{{ block.settings.cta_link }}"{% else %}role="link" aria-disabled="true"{% endif %}>
                     {{ block.settings.cta_label | escape }}
                   </a>
                 {%- endif -%}
                 {%- if block.settings.cta_icon != blank -%}
-                  <img
-                    src="{{ block.settings.cta_icon | image_url: width: 120 }}"
-                    alt="{{ block.settings.cta_icon.alt | default: 'CTA icon' }}"
-                    class="story-card__cta-icon"
-                    width="52"
-                    height="52"
-                  >
+                  <img src="{{ block.settings.cta_icon | image_url: width: 120 }}"
+                    alt="{{ block.settings.cta_icon.alt | default: 'Badge' }}"
+                    class="story-card__cta-icon" width="52" height="52">
                 {%- endif -%}
               </div>
             </div>
 
-            <!-- Right: Highlights + Avatar -->
+            <!-- Right: highlights + avatar -->
             <div class="story-card__highlights-col">
               {%- if block.settings.highlights_title != blank -%}
                 <p class="story-card__highlights-title">{{ block.settings.highlights_title }}</p>
               {%- endif -%}
-
               {%- assign highlights = block.settings.highlights | newline_to_br | split: '<br />' -%}
-              {%- if highlights.size > 0 and block.settings.highlights != blank -%}
+              {%- if block.settings.highlights != blank -%}
                 <ul class="story-card__highlights-list">
                   {%- for item in highlights -%}
-                    {%- assign trimmed = item | strip -%}
-                    {%- if trimmed != blank -%}
-                      <li>{{ trimmed }}</li>
-                    {%- endif -%}
+                    {%- assign _t = item | strip -%}
+                    {%- if _t != blank -%}<li>{{ _t }}</li>{%- endif -%}
                   {%- endfor -%}
                 </ul>
               {%- endif -%}
-
               {%- if block.settings.avatar != blank -%}
                 <div class="story-card__avatar-wrap">
-                  <img
-                    src="{{ block.settings.avatar | image_url: width: 160 }}"
+                  <img src="{{ block.settings.avatar | image_url: width: 160 }}"
                     alt="{{ block.settings.avatar.alt | default: block.settings.author_name }}"
-                    class="story-card__avatar"
-                    width="64"
-                    height="64"
-                  >
+                    class="story-card__avatar" width="64" height="64">
                 </div>
               {%- endif -%}
             </div>
           </div>
 
-          <!-- Media Gallery -->
-          {%- assign media_count = 0 -%}
-          {%- if block.settings.media_1 != blank -%}{%- assign media_count = media_count | plus: 1 -%}{%- endif -%}
-          {%- if block.settings.media_2 != blank -%}{%- assign media_count = media_count | plus: 1 -%}{%- endif -%}
-          {%- if block.settings.media_3 != blank -%}{%- assign media_count = media_count | plus: 1 -%}{%- endif -%}
+          <!-- ── Carousel ── -->
+          {%- if _slide_count > 0 -%}
+            <div class="story-card__carousel" id="cs-carousel-{{ block_uid }}">
+              <div class="story-card__carousel-track" id="cs-track-{{ block_uid }}">
 
-          {%- if media_count > 0 -%}
-            <div class="story-card__media-gallery story-card__media-gallery--{{ media_count }}">
-
-              {%- if block.settings.media_1 != blank -%}
-                <div class="story-card__media-item">
-                  <img
-                    src="{{ block.settings.media_1 | image_url: width: 1200 }}"
-                    alt="{{ block.settings.media_1.alt | default: 'Story media' }}"
-                    loading="lazy"
-                    width="800"
-                    height="450"
-                  >
-                  {%- if block.settings.media_1_is_video -%}
-                    <div class="story-card__video-overlay"
-                      {%- if block.settings.video_url != blank -%}
-                        onclick="window.open('{{ block.settings.video_url }}', '_blank')"
-                      {%- endif -%}
-                    >
-                      <div class="story-card__play-btn">
+                {%- comment -%} Slide 1: Video {%- endcomment -%}
+                {%- if block.settings.video_thumb != blank -%}
+                  <div class="story-card__carousel-slide"
+                    data-cs-action="video"
+                    data-section="{{ section.id }}"
+                    data-video-url="{{ block.settings.video_url }}"
+                    role="button" tabindex="0" aria-label="Play video">
+                    <img src="{{ block.settings.video_thumb | image_url: width: 1200 }}"
+                      alt="{{ block.settings.video_thumb.alt | default: 'Video thumbnail' }}"
+                      loading="lazy" width="1200" height="675">
+                    <div class="cs-play-overlay">
+                      <div class="cs-play-btn">
                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/></svg>
                       </div>
                     </div>
-                  {%- endif -%}
-                  {%- if block.settings.person_name != blank or block.settings.person_role != blank -%}
-                    <div class="story-card__media-name-tag">
-                      {%- if block.settings.person_name != blank -%}
-                        <div class="name-line">{{ block.settings.person_name }}</div>
-                      {%- endif -%}
-                      {%- if block.settings.person_role != blank -%}
-                        <div class="role-line">{{ block.settings.person_role }}</div>
-                      {%- endif -%}
-                    </div>
-                  {%- endif -%}
-                </div>
-              {%- endif -%}
+                    {%- if block.settings.person_name != blank or block.settings.person_role != blank -%}
+                      <div class="cs-name-tag">
+                        {%- if block.settings.person_name != blank -%}<div class="name-line">{{ block.settings.person_name }}</div>{%- endif -%}
+                        {%- if block.settings.person_role != blank -%}<div class="role-line">{{ block.settings.person_role }}</div>{%- endif -%}
+                      </div>
+                    {%- endif -%}
+                  </div>
+                {%- endif -%}
 
-              {%- if block.settings.media_2 != blank -%}
-                <div class="story-card__media-item" style="position: relative;">
-                  <img
-                    src="{{ block.settings.media_2 | image_url: width: 1200 }}"
-                    alt="{{ block.settings.media_2.alt | default: 'Story media' }}"
-                    loading="lazy"
-                    width="800"
-                    height="450"
-                  >
-                  {%- if media_count > 2 and block.settings.media_3 != blank -%}
-                    <button class="story-card__media-nav" aria-label="Next image" onclick="this.closest('.story-card__media-gallery').querySelector('.story-card__media-item:last-child').scrollIntoView({behavior:'smooth',inline:'start'})">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                    </button>
-                  {%- endif -%}
-                </div>
-              {%- endif -%}
+                {%- comment -%} Slides 2–5: Images {%- endcomment -%}
+                {%- assign _img_idx = 0 -%}
+                {%- if block.settings.media_2 != blank -%}
+                  <div class="story-card__carousel-slide"
+                    data-cs-action="image"
+                    data-section="{{ section.id }}"
+                    data-block="{{ block_uid }}"
+                    data-idx="{{ _img_idx }}"
+                    role="button" tabindex="0" aria-label="View image">
+                    <img src="{{ block.settings.media_2 | image_url: width: 1200 }}"
+                      alt="{{ block.settings.media_2.alt | default: 'Gallery image' }}" loading="lazy" width="1200" height="675">
+                  </div>
+                  {%- assign _img_idx = _img_idx | plus: 1 -%}
+                {%- endif -%}
+                {%- if block.settings.media_3 != blank -%}
+                  <div class="story-card__carousel-slide"
+                    data-cs-action="image"
+                    data-section="{{ section.id }}"
+                    data-block="{{ block_uid }}"
+                    data-idx="{{ _img_idx }}"
+                    role="button" tabindex="0" aria-label="View image">
+                    <img src="{{ block.settings.media_3 | image_url: width: 1200 }}"
+                      alt="{{ block.settings.media_3.alt | default: 'Gallery image' }}" loading="lazy" width="1200" height="675">
+                  </div>
+                  {%- assign _img_idx = _img_idx | plus: 1 -%}
+                {%- endif -%}
+                {%- if block.settings.media_4 != blank -%}
+                  <div class="story-card__carousel-slide"
+                    data-cs-action="image"
+                    data-section="{{ section.id }}"
+                    data-block="{{ block_uid }}"
+                    data-idx="{{ _img_idx }}"
+                    role="button" tabindex="0" aria-label="View image">
+                    <img src="{{ block.settings.media_4 | image_url: width: 1200 }}"
+                      alt="{{ block.settings.media_4.alt | default: 'Gallery image' }}" loading="lazy" width="1200" height="675">
+                  </div>
+                  {%- assign _img_idx = _img_idx | plus: 1 -%}
+                {%- endif -%}
+                {%- if block.settings.media_5 != blank -%}
+                  <div class="story-card__carousel-slide"
+                    data-cs-action="image"
+                    data-section="{{ section.id }}"
+                    data-block="{{ block_uid }}"
+                    data-idx="{{ _img_idx }}"
+                    role="button" tabindex="0" aria-label="View image">
+                    <img src="{{ block.settings.media_5 | image_url: width: 1200 }}"
+                      alt="{{ block.settings.media_5.alt | default: 'Gallery image' }}" loading="lazy" width="1200" height="675">
+                  </div>
+                {%- endif -%}
 
-              {%- if block.settings.media_3 != blank -%}
-                <div class="story-card__media-item">
-                  <img
-                    src="{{ block.settings.media_3 | image_url: width: 1200 }}"
-                    alt="{{ block.settings.media_3.alt | default: 'Story media' }}"
-                    loading="lazy"
-                    width="800"
-                    height="450"
-                  >
-                </div>
-              {%- endif -%}
+              </div><!-- /track -->
 
-            </div>
+              {%- if _slide_count > 1 -%}
+                <button class="cs-carousel-arrow cs-arrow-prev" data-cs-prev="{{ block_uid }}" aria-label="Previous slide" disabled>
+                  <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <button class="cs-carousel-arrow cs-arrow-next" data-cs-next="{{ block_uid }}" aria-label="Next slide">
+                  <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              {%- endif -%}
+            </div><!-- /carousel -->
+
+            <!-- Dot indicators -->
+            {%- if _slide_count > 1 -%}
+              <div class="cs-dots" id="cs-dots-{{ block_uid }}" aria-label="Slide indicators">
+                {%- for i in (1.._slide_count) -%}
+                  <button class="cs-dot{% if forloop.first %} is-active{% endif %}"
+                    data-cs-dot="{{ block_uid }}"
+                    data-dot-idx="{{ forloop.index0 }}"
+                    aria-label="Go to slide {{ forloop.index }}"></button>
+                {%- endfor -%}
+              </div>
+            {%- endif -%}
+
+            {%- comment -%} Hidden gallery data for image lightbox {%- endcomment -%}
+            {%- assign _full = '' -%}
+            {%- if block.settings.media_2 != blank -%}{%- capture _u %}{{ block.settings.media_2 | image_url: width: 1800 }}{% endcapture %}{%- assign _full = _full | append: _u | append: '|||' -%}{%- endif -%}
+            {%- if block.settings.media_3 != blank -%}{%- capture _u %}{{ block.settings.media_3 | image_url: width: 1800 }}{% endcapture %}{%- assign _full = _full | append: _u | append: '|||' -%}{%- endif -%}
+            {%- if block.settings.media_4 != blank -%}{%- capture _u %}{{ block.settings.media_4 | image_url: width: 1800 }}{% endcapture %}{%- assign _full = _full | append: _u | append: '|||' -%}{%- endif -%}
+            {%- if block.settings.media_5 != blank -%}{%- capture _u %}{{ block.settings.media_5 | image_url: width: 1800 }}{% endcapture %}{%- assign _full = _full | append: _u | append: '|||' -%}{%- endif -%}
+            <div id="cs-gallery-{{ block_uid }}" style="display:none" data-images="{{ _full }}"></div>
+
           {%- endif -%}
 
-        </div>
+        </div><!-- /story-card -->
       {%- endif -%}
     {%- endfor -%}
 
   </div>
 </div>
+
+<script>
+(function () {
+  var SID      = '{{ section.id }}';
+  var lightbox = document.getElementById('cs-lightbox-' + SID);
+  if (!lightbox) return;
+  var inner    = lightbox.querySelector('.cs-lb__inner');
+
+  /* ── Lightbox helpers ── */
+  function lbOpen()  { lightbox.classList.add('is-open'); document.body.style.overflow = 'hidden'; }
+  function lbClose() {
+    lightbox.classList.remove('is-open');
+    document.body.style.overflow = '';
+    inner.innerHTML = '';
+  }
+
+  lightbox.addEventListener('click', function (e) { if (e.target === lightbox) lbClose(); });
+  document.addEventListener('keydown', function (e) {
+    if (!lightbox.classList.contains('is-open')) return;
+    if (e.key === 'Escape')      lbClose();
+    if (e.key === 'ArrowRight')  imgShift(1);
+    if (e.key === 'ArrowLeft')   imgShift(-1);
+  });
+
+  /* ── Video lightbox ── */
+  function toEmbed(url) {
+    if (!url) return null;
+    var yt = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+    if (yt) return 'https://www.youtube.com/embed/' + yt[1] + '?autoplay=1&rel=0';
+    var vm = url.match(/vimeo\.com\/(\d+)/);
+    if (vm) return 'https://player.vimeo.com/video/' + vm[1] + '?autoplay=1';
+    return url;
+  }
+
+  function openVideo(url) {
+    var src = toEmbed(url);
+    inner.innerHTML =
+      '<button class="cs-lb__close" aria-label="Close">&#x2715;</button>' +
+      '<div class="cs-lb__video-wrap">' +
+        (src
+          ? '<iframe src="' + src + '" allowfullscreen allow="autoplay; encrypted-media"></iframe>'
+          : '<p style="color:#fff;padding:2rem;text-align:center">No video URL set.</p>') +
+      '</div>';
+    inner.querySelector('.cs-lb__close').addEventListener('click', lbClose);
+    lbOpen();
+  }
+
+  /* ── Image lightbox ── */
+  var _imgs = [], _cur = 0;
+
+  function imgRender() {
+    var multi = _imgs.length > 1;
+    inner.innerHTML =
+      '<button class="cs-lb__close" aria-label="Close">&#x2715;</button>' +
+      '<div class="cs-lb__img-wrap">' +
+        (multi ? '<button class="cs-lb__nav cs-lb__nav--prev" aria-label="Previous">&#8249;</button>' : '') +
+        '<img src="' + _imgs[_cur] + '" alt="Image ' + (_cur + 1) + '">' +
+        (multi ? '<button class="cs-lb__nav cs-lb__nav--next" aria-label="Next">&#8250;</button>' : '') +
+        (multi ? '<span class="cs-lb__counter">' + (_cur + 1) + ' / ' + _imgs.length + '</span>' : '') +
+      '</div>';
+    inner.querySelector('.cs-lb__close').addEventListener('click', lbClose);
+    var p = inner.querySelector('.cs-lb__nav--prev');
+    var n = inner.querySelector('.cs-lb__nav--next');
+    if (p) p.addEventListener('click', function () { imgShift(-1); });
+    if (n) n.addEventListener('click', function () { imgShift(1); });
+  }
+
+  function imgShift(dir) {
+    if (!_imgs.length) return;
+    _cur = (_cur + dir + _imgs.length) % _imgs.length;
+    imgRender();
+  }
+
+  function openImages(imgs, idx) {
+    _imgs = imgs; _cur = idx;
+    imgRender();
+    lbOpen();
+  }
+
+  /* ── Carousel logic ── */
+  function initCarousel(blockUid) {
+    var track  = document.getElementById('cs-track-' + blockUid);
+    var dotsEl = document.getElementById('cs-dots-' + blockUid);
+    if (!track) return;
+
+    var slides = Array.prototype.slice.call(track.querySelectorAll('.story-card__carousel-slide'));
+    var total  = slides.length;
+    var cur    = 0;
+
+    function goTo(idx) {
+      cur = Math.max(0, Math.min(idx, total - 1));
+      track.style.transform = 'translateX(-' + (cur * 100) + '%)';
+
+      // arrows
+      var prev = document.querySelector('[data-cs-prev="' + blockUid + '"]');
+      var next = document.querySelector('[data-cs-next="' + blockUid + '"]');
+      if (prev) prev.disabled = cur === 0;
+      if (next) next.disabled = cur === total - 1;
+
+      // dots
+      if (dotsEl) {
+        var dots = dotsEl.querySelectorAll('.cs-dot');
+        dots.forEach(function (d, i) { d.classList.toggle('is-active', i === cur); });
+      }
+    }
+
+    // arrow buttons
+    var prevBtn = document.querySelector('[data-cs-prev="' + blockUid + '"]');
+    var nextBtn = document.querySelector('[data-cs-next="' + blockUid + '"]');
+    if (prevBtn) prevBtn.addEventListener('click', function () { goTo(cur - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function () { goTo(cur + 1); });
+
+    // dot buttons
+    if (dotsEl) {
+      dotsEl.querySelectorAll('.cs-dot').forEach(function (dot) {
+        dot.addEventListener('click', function () { goTo(parseInt(dot.dataset.dotIdx, 10)); });
+      });
+    }
+
+    // touch swipe
+    var startX = null;
+    track.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+    track.addEventListener('touchend', function (e) {
+      if (startX === null) return;
+      var dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) > 40) goTo(dx < 0 ? cur + 1 : cur - 1);
+      startX = null;
+    }, { passive: true });
+
+    // click actions per slide
+    slides.forEach(function (slide) {
+      function act() {
+        var action = slide.dataset.csAction;
+        if (action === 'video') {
+          openVideo(slide.dataset.videoUrl);
+        } else if (action === 'image') {
+          var dataEl = document.getElementById('cs-gallery-' + blockUid);
+          var raw    = dataEl ? dataEl.dataset.images : '';
+          var imgs   = raw ? raw.split('|||').filter(Boolean) : [];
+          openImages(imgs, parseInt(slide.dataset.idx, 10) || 0);
+        }
+      }
+      slide.addEventListener('click', act);
+      slide.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') act(); });
+    });
+  }
+
+  // init all carousels in this section
+  document.querySelectorAll('[data-cs-prev]').forEach(function (btn) {
+    initCarousel(btn.dataset.csPrev);
+  });
+  // also init single-slide carousels (no prev/next buttons)
+  document.querySelectorAll('#shopify-section-' + SID + ' .story-card__carousel-track').forEach(function (track) {
+    var id = track.id.replace('cs-track-', '');
+    if (!document.querySelector('[data-cs-prev="' + id + '"]')) {
+      // single slide — just bind click
+      var slide = track.querySelector('.story-card__carousel-slide');
+      if (!slide) return;
+      slide.addEventListener('click', function () {
+        var action = slide.dataset.csAction;
+        if (action === 'video') openVideo(slide.dataset.videoUrl);
+        else if (action === 'image') {
+          var dataEl = document.getElementById('cs-gallery-' + id);
+          var raw    = dataEl ? dataEl.dataset.images : '';
+          var imgs   = raw ? raw.split('|||').filter(Boolean) : [];
+          openImages(imgs, 0);
+        }
+      });
+    }
+  });
+
+})();
+</script>
 
 {% schema %}
 {
@@ -467,7 +844,7 @@
       "options": [
         { "value": "1.75rem", "label": "Small" },
         { "value": "2.25rem", "label": "Medium" },
-        { "value": "3rem", "label": "Large" },
+        { "value": "3rem",    "label": "Large" },
         { "value": "3.75rem", "label": "X-Large" }
       ],
       "default": "3rem"
@@ -521,7 +898,7 @@
     {
       "type": "color",
       "id": "btn_bg_color",
-      "label": "Button background color",
+      "label": "Button / name-tag color",
       "default": "#E85D26"
     },
     {
@@ -591,11 +968,11 @@
           "type": "textarea",
           "id": "description",
           "label": "Story description",
-          "default": "Revitalize Fitness in Elizabeth City, NC needed a complete equipment package for their commercial training facility. Our team worked with co-owner Rick Anderson to outfit the space across every category."
+          "default": "Revitalize Fitness in Elizabeth City, NC needed a complete equipment package for their commercial training facility."
         },
         {
           "type": "header",
-          "content": "Equipment highlights"
+          "content": "Highlights"
         },
         {
           "type": "text",
@@ -608,7 +985,7 @@
           "id": "highlights",
           "label": "Highlight items (one per line)",
           "default": "French Fitness Cardio Equipment\nSelectorized Cable & Multi-Station Machines\nPlate Loaded Strength Machines\nFunctional Training & Accessories",
-          "info": "Enter each highlight on a new line."
+          "info": "Enter each item on a new line."
         },
         {
           "type": "header",
@@ -628,33 +1005,28 @@
         {
           "type": "image_picker",
           "id": "cta_icon",
-          "label": "CTA icon image (circle badge next to button)"
+          "label": "CTA badge icon (circle next to button)"
         },
         {
           "type": "header",
-          "content": "Media gallery"
+          "content": "Carousel — Slide 1: Video"
         },
         {
           "type": "image_picker",
-          "id": "media_1",
-          "label": "Media 1 (main / left)"
-        },
-        {
-          "type": "checkbox",
-          "id": "media_1_is_video",
-          "label": "Show play button on Media 1",
-          "default": false
+          "id": "video_thumb",
+          "label": "Video thumbnail image"
         },
         {
           "type": "url",
           "id": "video_url",
-          "label": "Video URL (opens on play button click)"
+          "label": "Video URL (YouTube or Vimeo)",
+          "info": "Clicking the thumbnail opens the video in a popup player."
         },
         {
           "type": "text",
           "id": "person_name",
           "label": "Name tag — person name",
-          "info": "Shown as overlay on Media 1",
+          "info": "Overlay on the video thumbnail",
           "default": "Rick Anderson"
         },
         {
@@ -664,14 +1036,28 @@
           "default": "Co-Owner of Revitalize Fitness"
         },
         {
+          "type": "header",
+          "content": "Carousel — Slides 2–5: Images"
+        },
+        {
           "type": "image_picker",
           "id": "media_2",
-          "label": "Media 2 (right top)"
+          "label": "Gallery image 1"
         },
         {
           "type": "image_picker",
           "id": "media_3",
-          "label": "Media 3 (right bottom)"
+          "label": "Gallery image 2"
+        },
+        {
+          "type": "image_picker",
+          "id": "media_4",
+          "label": "Gallery image 3"
+        },
+        {
+          "type": "image_picker",
+          "id": "media_5",
+          "label": "Gallery image 4"
         }
       ]
     }
