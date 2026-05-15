@@ -76,21 +76,24 @@ customElements.get('product-info') ||
         this.resetProductFormState();
         let a = e.dataset.productUrl || this.pendingRequestUrl || this.dataset.url;
         this.pendingRequestUrl = a;
-        let r = this.dataset.url !== a,
-        s = 'true' === this.dataset.updateUrl && r;
+        // Compare pathnames only — data-product-url often carries ?variant=ID
+        // even for regular (non-combined) products, so comparing full strings
+        // would incorrectly flag every click as a different product.
+        let basePath = this.dataset.url.split('?')[0];
+        let targetPath = a.split('?')[0];
+        let isDifferentProduct = targetPath !== basePath;
+        let s = 'true' === this.dataset.updateUrl && isDifferentProduct;
 
-            const hasCombinedListingOptions = !!this.querySelector('variant-selects [data-product-url]');
-        if (this.dataset.isCombinedListing === 'true' || hasCombinedListingOptions) {
-          // Combined-listing clicks target a different child product — navigate
-          // cleanly so the canonical child URL doesn't get noindexed. For
-          // regular multi-variant products data-product-url is empty, so keep
-          // the existing ?option_values= URL or the variant won't apply.
-          const isCombinedListingClick = e.dataset.productUrl && a !== this.dataset.url;
-          window.location.assign(isCombinedListingClick ? a : this.buildRequestUrlWithParams(a, i, !0));
+        if (this.dataset.isCombinedListing === 'true') {
+          // Combined-listing: every option click resolves to a specific child
+          // product URL (already ?variant=<id>). Navigate to it — never append
+          // option_values, so the URL stays /products/<child>?variant=<id> and
+          // the canonical (set by head-meta.liquid) remains the clean child URL.
+          window.location.assign(a);
           return;
         }
 
-        this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: r ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
+        this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: isDifferentProduct ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
       }
       resetProductFormState() {
         let t = this.productForm;
@@ -129,8 +132,12 @@ customElements.get('product-info') ||
         return e ? JSON.parse(e) : null;
       }
       buildRequestUrlWithParams(t, e, i = !1) {
-        let a = [];
-        return (i || a.push(`section_id=${this.sectionId}`), e.length && a.push(`option_values=${e.join(',')}`), `${t}?${a.join('&')}`);
+        // Use URL/URLSearchParams so an existing ?variant=<id> in `t` is
+        // preserved correctly instead of producing a broken `?...?...` string.
+        let url = new URL(t, window.location.origin);
+        if (!i) url.searchParams.set('section_id', this.sectionId);
+        if (e.length) url.searchParams.set('option_values', e.join(','));
+        return url.pathname + url.search;
       }
       updateOptionValues(t) {
         let e = t.querySelector('variant-selects');
@@ -171,8 +178,23 @@ customElements.get('product-info') ||
         });
       }
       updateURL(t, e) {
-        (this.querySelector('share-button')?.updateUrl(`${window.shopUrl}${t}${e ? `?variant=${e}` : ''}`),
-          'false' !== this.dataset.updateUrl && window.history.replaceState({}, '', `${t}${e ? `?variant=${e}` : ''}`));
+        // `t` may already carry ?variant=<id>, ?option_values=..., or
+        // ?section_id=... — strip fetch-only params and keep only ?variant=<id>
+        // so the address bar holds the canonical-friendly shape and the
+        // canonical tag itself stays at /products/<handle> with no query.
+        let url = new URL(t, window.location.origin);
+        url.searchParams.delete('option_values');
+        url.searchParams.delete('section_id');
+        if (e) {
+          url.searchParams.set('variant', e);
+        } else {
+          url.searchParams.delete('variant');
+        }
+        let final = url.pathname + url.search;
+        this.querySelector('share-button')?.updateUrl(`${window.shopUrl}${final}`);
+        if ('false' !== this.dataset.updateUrl) {
+          window.history.replaceState({}, '', final);
+        }
       }
       setUnavailable() {
         this.productForm?.toggleSubmitButton(!0, window.variantStrings.unavailable);
@@ -181,6 +203,11 @@ customElements.get('product-info') ||
       }
       updateMedia(t, e) {
         if (!e) return;
+        // Custom <product-gallery> (used by the variants/comb templates) is a
+        // separate element with its own setActiveMedia(rawId). The Dawn-default
+        // <media-gallery> path below is a no-op when product-gallery is used,
+        // so notify it explicitly here.
+        this.querySelector('product-gallery')?.setActiveMedia?.(e);
         let i = this.querySelector('media-gallery ul'),
           a = t.querySelector('media-gallery ul'),
           r = () => {
