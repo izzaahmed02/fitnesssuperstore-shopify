@@ -84,12 +84,16 @@ customElements.get('product-info') ||
         let isDifferentProduct = targetPath !== basePath;
         let s = 'true' === this.dataset.updateUrl && isDifferentProduct;
 
-        if (this.dataset.isCombinedListing === 'true') {
-          // Combined-listing: every option click resolves to a specific child
-          // product URL (already ?variant=<id>). Navigate to it — never append
-          // option_values, so the URL stays /products/<child>?variant=<id> and
-          // the canonical (set by head-meta.liquid) remains the clean child URL.
-          window.location.assign(a);
+        if (this.dataset.isCombinedListing === 'true' || isDifferentProduct) {
+          // Combined-listing flows: on the parent template the
+          // data-is-combined-listing flag is set; on a child product the
+          // option picker still renders sibling-children whose product_url
+          // points to a different /products/<child> path. In either case we
+          // want a full page refresh to the bare child path (no ?variant= /
+          // ?option_values=) so the canonical-friendly URL is what the user
+          // sees and shares.
+          let target = new URL(a, window.location.origin);
+          window.location.assign(target.pathname);
           return;
         }
 
