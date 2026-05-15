@@ -50,9 +50,12 @@ customElements.get('product-info') ||
         const checked = this.querySelector('variant-selects [data-product-url]:checked, variant-selects option[data-product-url][selected]');
         const target = checked?.dataset?.productUrl;
         if (!target) return;
+        // Strip ?variant= and any other query so combined-listing URLs stay
+        // clean (/products/<child>), matching the variant-change navigation.
+        const targetPath = new URL(target, window.location.origin).pathname;
         const currentPath = window.location.pathname;
-        if (target === currentPath || target === currentPath + '/') return;
-        window.location.replace(target);
+        if (targetPath === currentPath || targetPath === currentPath + '/') return;
+        window.location.replace(targetPath);
       }
       addPreProcessCallback(t) {
         this.preProcessHtmlCallbacks.push(t);
@@ -86,10 +89,12 @@ customElements.get('product-info') ||
 
         if (this.dataset.isCombinedListing === 'true') {
           // Combined-listing: every option click resolves to a specific child
-          // product URL (already ?variant=<id>). Navigate to it — never append
-          // option_values, so the URL stays /products/<child>?variant=<id> and
-          // the canonical (set by head-meta.liquid) remains the clean child URL.
-          window.location.assign(a);
+          // product URL. Navigate to the child's clean path (strip ?variant=
+          // and any other query) so the address bar shows /products/<child>
+          // with no variant param — the canonical (set by head-meta.liquid)
+          // stays clean too.
+          let target = new URL(a, window.location.origin);
+          window.location.assign(target.pathname);
           return;
         }
 
