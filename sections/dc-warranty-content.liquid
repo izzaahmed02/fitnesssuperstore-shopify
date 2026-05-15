@@ -594,6 +594,80 @@
   #shopify-section-{{ section.id }} .ffw-ol li {
     margin-bottom: 10px;
   }
+
+  #shopify-section-{{ section.id }} .ffw-contact-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--ffw-muted);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-contact-lines p {
+    margin: 0;
+    color: var(--ffw-muted);
+  }
+
+  #shopify-section-{{ section.id }} .ffw-contact-lines strong {
+    color: var(--ffw-text);
+    font-weight: 600;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-service-region {
+    border: 1px solid rgba(241, 89, 42, 0.16);
+    border-radius: 22px;
+    background: linear-gradient(125deg, rgba(255, 139, 91, 0.10), rgba(255, 255, 255, 0.92));
+    padding: 20px;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-service-region-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: rgba(241, 89, 42, 0.15);
+    color: var(--ffw-accent);
+    flex: 0 0 54px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-service-region h3 {
+    margin: 0 0 8px;
+    color: var(--ffw-text);
+    font-size: 22px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-service-region-body p {
+    margin: 0 0 12px;
+    color: var(--ffw-muted);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  #shopify-section-{{ section.id }} .ffw-service-region-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ffw-accent);
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  #shopify-section-{{ section.id }} ol {
+    padding: 0;
+  }
+
+  @media (max-width: 640px) {
+    #shopify-section-{{ section.id }} .ffw-service-region {
+      flex-direction: column;
+    }
+  }
+
 {%- endstyle -%}
 
 <section class="ffw-root">
@@ -646,12 +720,29 @@
       <div class="ffw-side-stack">
         {% for block in section.blocks %}
           {% if block.type == 'side_card' %}
+            {% assign side_eyebrow = block.settings.eyebrow | downcase %}
+            {% assign side_title = block.settings.title | downcase %}
+            {% assign side_icon = block.settings.icon | downcase %}
+            {% assign is_contact_card = false %}
+            {% if side_eyebrow == 'contact' or side_icon == 'mail' or side_title contains 'support@frenchfitness.com' %}
+              {% assign is_contact_card = true %}
+            {% endif %}
+
             <div class="ffw-side-card">
               <div class="ffw-side-icon"><span class="ffw-icon ffw-icon-fill">{{ block.settings.icon }}</span></div>
               <div>
                 <div class="ffw-eyebrow" style="letter-spacing:0.15em">{{ block.settings.eyebrow }}</div>
-                <h4 style="margin:0 0 8px;font-size:20px;">{{ block.settings.title }}</h4>
-                <p class="ffw-lead" style="margin:0;font-size:14px;">{{ block.settings.description }}</p>
+                {% if is_contact_card %}
+                  <div class="ffw-contact-lines">
+                    <p><strong>Warranty:</strong> <a href="mailto:support@frenchfitness.com">support@frenchfitness.com</a></p>
+                    <p><strong>Sales / general inquiries:</strong> <a href="mailto:sales@frenchfitness.com">sales@frenchfitness.com</a></p>
+                    <p><strong>Phone:</strong> <a href="tel:+19254306111">(925) 430-6111</a></p>
+                    <p>Mon–Fri, 8:00 am to 4:00 pm PST</p>
+                  </div>
+                {% else %}
+                  <h4 style="margin:0 0 8px;font-size:20px;">{{ block.settings.title }}</h4>
+                  <p class="ffw-lead" style="margin:0;font-size:14px;">{{ block.settings.description }}</p>
+                {% endif %}
               </div>
             </div>
           {% endif %}
@@ -663,9 +754,14 @@
       <div class="ffw-highlight-alt">
         {% for block in section.blocks %}
           {% if block.type == 'warranty_highlight' %}
+            {% assign warranty_title_downcase = block.settings.title | downcase %}
+            {% assign warranty_description = block.settings.description %}
+            {% if warranty_title_downcase contains 'labor' and warranty_title_downcase contains 'year' %}
+              {% assign warranty_description = 'On-site technician dispatch across the USA and Canada, with remote regions requiring confirmation.' %}
+            {% endif %}
             <div class="ffw-highlight-card">
               <h4>{{ block.settings.title }}</h4>
-              <p>{{ block.settings.description }}</p>
+              <p>{{ warranty_description }}</p>
             </div>
           {% endif %}
         {% endfor %}
@@ -694,7 +790,8 @@
 
     <section class="ffw-standbehind">
       <h3>{{ section.settings.standbehind_title }}</h3>
-      {{ section.settings.standbehind_intro }}
+      {% assign standbehind_intro_copy = section.settings.standbehind_intro | replace: 'your standard coverage in the USA &amp; Canada includes:', 'your standard coverage across the USA and Canada includes:' | replace: 'your standard coverage in the USA & Canada includes:', 'your standard coverage across the USA and Canada includes:' %}
+      {{ standbehind_intro_copy }}
       
       <div class="ffw-standbehind-grid">
         {% for block in section.blocks %}
@@ -723,7 +820,10 @@
           <span class="ffw-glow-dot"></span>
           Coverage summary
         </div>
-        <h3 style="margin:0 0 8px;font-size:26px;">USA &amp; Canada coverage</h3>
+        <h3 style="margin:0 0 8px;font-size:26px;">USA and Canada coverage</h3>
+        <p style="color:var(--ffw-muted);margin:0 0 10px;">
+          Remote regions may require confirmation for freight, service, or warranty logistics.
+        </p>
         <p style="color:var(--ffw-muted);margin:0 0 16px;">
           Labor extensions: $50/yr racks · $100/yr strength · $150/yr cardio.
         </p>
@@ -754,8 +854,27 @@
         </div>
       </div>
       <div class="ffw-accordion">
+        {% if section.settings.show_service_regions %}
+          {% assign service_regions_url = section.settings.service_regions_url | default: '/pages/shipping-information' %}
+          <div class="ffw-service-region">
+            <div class="ffw-service-region-icon">
+              <span class="ffw-icon ffw-icon-fill" style="font-size:34px;">local_shipping</span>
+            </div>
+            <div>
+              <h3>{{ section.settings.service_regions_title }}</h3>
+              <div class="ffw-service-region-body">
+                {{ section.settings.service_regions_body }}
+              </div>
+              <a class="ffw-service-region-link" href="{{ service_regions_url }}">
+                {{ section.settings.service_regions_cta_text }}
+              </a>
+            </div>
+          </div>
+        {% endif %}
+
         {% for block in section.blocks %}
           {% if block.type == 'accordion' %}
+            {% assign accordion_title_downcase = block.settings.title | downcase %}
             <details class="ffw-details" {% if block.settings.open_default %}open{% endif %}>
               <summary class="ffw-summary">
                 <span class="ffw-summary-badge">{{ block.settings.badge }}</span>
@@ -763,7 +882,11 @@
                 <span class="ffw-summary-arrow">›</span>
               </summary>
               <div class="ffw-details-content">
-                {{ block.settings.content }}
+                {% if accordion_title_downcase contains 'international warranty terms' or block.settings.badge == '06' %}
+                  {{ section.settings.international_terms_content }}
+                {% else %}
+                  {{ block.settings.content }}
+                {% endif %}
               </div>
             </details>
           {% endif %}
@@ -937,13 +1060,57 @@
       "type": "richtext",
       "id": "standbehind_intro",
       "label": "Introduction",
-      "default": "<p>When you choose French Fitness, you're not just buying gear—you're buying confidence. For most French Fitness strength and cardio equipment, your standard coverage in the USA & Canada includes:</p>"
+      "default": "<p>When you choose French Fitness, you're not just buying gear—you're buying confidence. For most French Fitness strength and cardio equipment, your standard coverage across the USA and Canada includes:</p>"
     },
     {
       "type": "text",
       "id": "standbehind_note",
       "label": "Bottom Note",
       "default": "Cosmetic issues for all French Fitness products are covered if reported within <strong>7 days of delivery</strong>."
+    },
+    {
+      "type": "header",
+      "content": "🚚 Service and Delivery Regions"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_service_regions",
+      "label": "Show Service and Delivery Regions block",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "service_regions_title",
+      "label": "Service Regions Title",
+      "default": "Service and Delivery Regions"
+    },
+    {
+      "type": "richtext",
+      "id": "service_regions_body",
+      "label": "Service Regions Copy",
+      "default": "<p>Our French Fitness warranty applies across the USA and Canada, with the standard warranty path covering most customers in major population areas. Remote regions may require confirmation on freight, service, or warranty logistics. International coverage varies. See full details on our Shipping & Service Regions page.</p>"
+    },
+    {
+      "type": "text",
+      "id": "service_regions_cta_text",
+      "label": "Service Regions Link Text",
+      "default": "See full Shipping & Service Regions →"
+    },
+    {
+      "type": "text",
+      "id": "service_regions_url",
+      "label": "Service Regions Link URL",
+      "default": "/pages/shipping-information"
+    },
+    {
+      "type": "header",
+      "content": "🌎 International Warranty Terms"
+    },
+    {
+      "type": "richtext",
+      "id": "international_terms_content",
+      "label": "International Warranty Terms Content",
+      "default": "<ol><li>Outside the USA and Canada, French Fitness warranty coverage is parts-only for 3 years from the date of purchase.</li><li>Labor, technician dispatch, and on-site service are not included for international orders.</li><li>Standard international orders follow the international door-to-port (CIF) terms shown on the website at checkout. Customers do not need to contact us before ordering unless they want shipping terms other than the standard website terms, such as DDP, EXW, or a custom port/destination quote.</li><li>Under standard CIF terms, destination-side costs after arrival at the destination port are the customer’s responsibility. These may include customs duties, taxes, brokerage, destination port fees, and transportation from the port to the final address, unless a different written shipping agreement applies.</li><li>Gym accessories and free weights come with a 30-day warranty. If an item becomes non-functional due to breakage, we will replace it free of charge. Cosmetic defects, gashes, and other wear and tear are not covered unless reported within 7 days of receipt.</li><li>Cosmetic defects on covered products must be reported within 7 days of receipt.</li><li>We provide phone and email support with technicians who can help diagnose issues and guide installation of replacement parts.</li><li>If we send parts under warranty, we will cover shipping charges for warrantied parts unless otherwise stated in the applicable shipping terms. The customer agrees to return any unused, defective, or old parts using the provided return shipping label when requested. Failure to return requested parts may void the warranty.</li><li>Extended parts warranty options may be available where shown on the product page or at checkout.</li></ol>"
     },
     {
       "type": "header",
@@ -955,7 +1122,7 @@
       "label": "Button Text",
       "default": "Build Your Gym With Lifetime Protection →"
     },
-      {
+    {
       "type": "url",
       "id": "cta_url",
       "label": "Button URL"
@@ -1224,7 +1391,7 @@
             "icon": "headset_mic",
             "eyebrow": "Support Hours",
             "title": "Mon–Fri, 8 a.m.–4 p.m. PST",
-            "description": "Real people to triage your claim, dispatch techs, and overnight parts."
+            "description": "Real people to triage your claim, dispatch technicians, and coordinate approved parts."
           }
         },
         {
@@ -1232,8 +1399,8 @@
           "settings": {
             "icon": "mail",
             "eyebrow": "Contact",
-            "title": "support@frenchfitness.com",
-            "description": "(925) 430-6111 — Phone & email coverage."
+            "title": "Warranty & Sales Support",
+            "description": "Warranty: support@frenchfitness.com\nSales / general inquiries: sales@frenchfitness.com\nPhone: (925) 430-6111\nMon–Fri, 8:00 am to 4:00 pm PST"
           }
         },
         {
@@ -1254,7 +1421,7 @@
           "type": "warranty_highlight",
           "settings": {
             "title": "1 Year Labor",
-            "description": "On-site technician dispatch anywhere in the USA & Canada."
+            "description": "On-site technician dispatch across the USA and Canada, with remote regions requiring confirmation."
           }
         },
         {
