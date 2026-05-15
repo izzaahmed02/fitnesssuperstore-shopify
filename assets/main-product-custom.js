@@ -253,18 +253,6 @@ function generatePayLaterText() {
 	return payLaterText;
 }
 
-function toggleTransitTimeForm() {
-	const transitTimeForm = document.querySelector('.transit-time-form');
-	const locationDisplayHeader = document.querySelector('.location-header .location-display');
-	if (transitTimeForm.style.display === 'block') {
-		transitTimeForm.style.display = 'none';
-		locationDisplayHeader.style.color = '#D83D0E'
-	} else {
-		transitTimeForm.style.display = 'block';
-		locationDisplayHeader.style.color = '#57200F'
-	}
-}
-
 function computeAfterPayLoanDetails(principal, monthlyPayment, numPayments, newTerm = null) {
 	function aprEquation(rate) {
         return (principal * rate) / (1 - Math.pow(1 + rate, -numPayments)) - monthlyPayment;
