@@ -28,7 +28,7 @@
         endif
 
         assign variant_help_handle = option.name | handleize
-        assign variant_help = shop.metaobjects.product_option_help_text[variant_help_handle]
+        assign variant_help = shop.metaobjects.variant_option_help_text[variant_help_handle]
         assign variant_help_popup_id = 'variant-' | append: variant_help_handle
       -%}
       {%- if picker_type == 'swatch' -%}
@@ -118,14 +118,14 @@
   {%- for option in product.options_with_values -%}
     {%- liquid
       assign variant_help_handle = option.name | handleize
-      assign variant_help = shop.metaobjects.product_option_help_text[variant_help_handle]
+      assign variant_help = shop.metaobjects.variant_option_help_text[variant_help_handle]
       assign variant_help_popup_id = 'variant-' | append: variant_help_handle
     -%}
     {%- if variant_help != blank -%}
       {% render 'related-products-popup-for-options',
         popup_id: variant_help_popup_id,
         title: variant_help.title,
-        related_products: variant_help.related_products.value,
+        related_products: blank,
         text: variant_help.help_text
       %}
     {%- endif -%}
