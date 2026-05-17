@@ -1,28 +1,39 @@
 .homepage-faqs {
-    padding: 44px 0;
+    padding: 32px 0;
+}
+
+.trusthub-faqs {
+    max-width: 1044px;
+    margin: 0 auto;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
 }
 
 .homepage-faqs__title {
+    margin: 0;
+    width: 100%;
+    max-width: 812px;
     text-align: center;
-    margin: 0 0 32px 0;
-    font-size: 38px;
-    line-height: 50px;
     font-family: 'Oswald', sans-serif;
     font-weight: 600;
+    font-size: 28px;
+    line-height: 34px;
     text-transform: uppercase;
     color: #23232b;
 }
 
+/* Tabs (desktop) */
 .trusthub-faqs__tabs {
     display: flex;
     flex-direction: row;
-    justify-content: center;
     align-items: stretch;
-    gap: 0;
-    max-width: 812px;
-    margin: 0 auto 24px;
-    border-bottom: 1px solid #e5e5e5;
     width: 100%;
+    max-width: 1012px;
+    margin: 0;
+    gap: 0;
 }
 
 .trusthub-faqs__tab {
@@ -30,42 +41,90 @@
     min-width: 0;
     background: transparent;
     border: none;
-    padding: 12px 16px;
+    padding: 16px 0 0;
     margin: 0;
     cursor: pointer;
     font-family: 'Lato', sans-serif;
-    font-size: 16px;
-    line-height: 24px;
-    font-weight: 400;
-    color: #4f4f55;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+    color: #000000;
     text-align: center;
     position: relative;
-    bottom: -1px;
-    border-bottom: 3px solid transparent;
-    transition: color 0.2s linear, border-color 0.2s linear, font-weight 0.2s linear;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    font-feature-settings: 'pnum' on, 'lnum' on;
 }
 
-.trusthub-faqs__tab:hover {
-    color: #23232b;
+.trusthub-faqs__tab > span {
+    display: block;
+    padding: 0 8px;
 }
 
-.trusthub-faqs__tab.active {
-    color: #23232b;
-    font-weight: 700;
-    border-bottom-color: #D83D0E;
+.trusthub-faqs__tab::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 4px;
+    background: #e5e5e5;
+    border-radius: 6px;
+    transition: background-color 0.2s linear;
 }
 
+.trusthub-faqs__tab.active::after {
+    background: #d83d0e;
+}
+
+.trusthub-faqs__tab:hover:not(.active)::after {
+    background: #cfcfcf;
+}
+
+/* Panels & accordion list */
 .trusthub-faqs__panel {
     display: none;
+    width: 100%;
+    max-width: 812px;
 }
 
 .trusthub-faqs__panel.active {
     display: block;
 }
 
+.trusthub-faqs__group-title {
+    display: none;
+}
+
 .homepage-faqs__accordions {
-    margin: 0 auto 32px auto;
-    max-width: 812px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.homepage-faqs__accordions .accordion {
+    margin-bottom: 0;
+    border-radius: 8px;
+}
+
+.homepage-faqs__accordions .accordion-header {
+    border-radius: 8px;
+    gap: 20px;
+}
+
+.homepage-faqs__accordions .accordion:not(:last-child) {
+    margin-bottom: 0;
+}
+
+.homepage-faqs__accordions .accordion-content-inner {
+    margin-top: 16px;
+    padding: 0 12px 12px;
+}
+
+.homepage-faqs__accordions .accordion-content-inner p {
+    color: #393940;
 }
 
 .homepage-faqs__link {
@@ -77,31 +136,100 @@
     justify-content: center;
     align-items: center;
     column-gap: 4px;
+    margin-top: 12px;
 }
 
 .homepage-faqs__link svg path {
     fill: #D83D0E;
 }
 
-@media (max-width: 749px) {
+.accordion-content-inner a {
+    position: relative;
+    padding-right: 28px;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 24px;
+    color: #D83D0E;
+    font-family: Lato, sans-serif;
+}
+
+@media screen and (min-width: 750px) {
+    .homepage-faqs {
+        padding: 48px 0;
+    }
+
+    .homepage-faqs__title {
+        font-size: 38px;
+        line-height: 50px;
+    }
+}
+
+@media screen and (max-width: 749px) {
     .homepage-faqs {
         padding: 24px 0;
     }
 
+    .trusthub-faqs {
+        gap: 20px;
+        padding: 0 16px;
+    }
+
     .homepage-faqs__title {
-        font-size: 24px;
-        line-height: 30px;
-        text-align: center;
-        margin-bottom: 20px;
+        text-align: left;
+        font-size: 28px;
+        line-height: 34px;
     }
 
+    /* Hide desktop tab bar */
     .trusthub-faqs__tabs {
-        margin-bottom: 16px;
+        display: none;
     }
 
-    .trusthub-faqs__tab {
-        font-size: 14px;
-        line-height: 20px;
-        padding: 10px 8px;
+    /* Show every panel stacked, with its own group header */
+    .trusthub-faqs__panel,
+    .trusthub-faqs__panel[hidden] {
+        display: block;
+        max-width: none;
+    }
+
+    .trusthub-faqs__panel + .trusthub-faqs__panel {
+        margin-top: 16px;
+    }
+
+    .trusthub-faqs__panel:not(:last-child) {
+        border-bottom: 1px solid #e5e5e5;
+        padding-bottom: 24px;
+    }
+
+    .trusthub-faqs__group-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 0;
+        margin: 0 0 16px;
+        width: 100%;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-family: 'Lato', sans-serif;
+        font-weight: 700;
+        font-size: 18px;
+        line-height: 24px;
+        color: #000000;
+        text-align: left;
+    }
+
+    .trusthub-faqs__group-title svg {
+        flex-shrink: 0;
+        transition: transform 0.2s linear;
+    }
+
+    .trusthub-faqs__panel.collapsed .trusthub-faqs__group-title svg {
+        transform: rotate(180deg);
+    }
+
+    .trusthub-faqs__panel.collapsed .homepage-faqs__accordions {
+        display: none;
     }
 }

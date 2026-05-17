@@ -66,7 +66,7 @@
                         class="trusthub-faqs__tab{% if forloop.first %} active{% endif %}"
                         aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
                         data-tab="trusthub-faqs-{{ section.id }}-{{ handle }}">
-                    {{ title }}
+                    <span>{{ title }}</span>
                 </button>
             {%- endfor -%}
         </div>
@@ -75,12 +75,25 @@
     {%- for tab in tab_list -%}
         {%- assign parts = tab | split: '::' -%}
         {%- assign handle = parts[0] -%}
+        {%- assign title = parts[1] -%}
         <div
                 class="trusthub-faqs__panel{% if forloop.first %} active{% endif %}"
                 id="trusthub-faqs-{{ section.id }}-{{ handle }}"
                 role="tabpanel"
                 {% unless forloop.first %}hidden{% endunless %}>
-            <div class="homepage-faqs__accordions">
+            {%- if tab_list.size > 1 -%}
+                <button
+                        type="button"
+                        class="trusthub-faqs__group-title"
+                        aria-expanded="true"
+                        aria-controls="trusthub-faqs-{{ section.id }}-{{ handle }}-list">
+                    <span>{{ title }}</span>
+                    {% render 'chevron' %}
+                </button>
+            {%- endif -%}
+            <div
+                    class="homepage-faqs__accordions"
+                    id="trusthub-faqs-{{ section.id }}-{{ handle }}-list">
                 {%- assign first_in_panel = true -%}
                 {%- for block in section.blocks -%}
                     {%- assign block_handle = block.settings.tab_handle | handleize -%}
