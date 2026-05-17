@@ -23,46 +23,113 @@
     }
 </style>
 
-<div class="page-width">
-    <h2 class="homepage-faqs__title center">{{ section.settings.title }}</h2>
-    <div class="homepage-faqs__accordions">
-        {% for block in section.blocks %}
-            <div class="homepage-faqs__accordion-item accordion">
-                <button
-                        class="accordion-header"
-                        type="button"
-                        aria-expanded="false"
-                        aria-controls="accordion-content-{{ forloop.index }}">
-                    <span class="accordion-title">
-                        {{ block.settings.title }}
-                    </span>
-                    {% render 'chevron' %}
-                </button>
-                <div
-                        id="accordion-content-{{ forloop.index }}"
-                        class="accordion-content"
-                        aria-hidden="true"
-                >
-                    {% assign faq_link_start = '<a class="accordion-link" aria-label="Learn more about ' 
-                        | append: block.settings.title 
-                        | append: '" tabindex="-1" ' 
-                    %}
+{%- liquid
+  assign tab_data = ''
+  assign separator = ''
+  for block in section.blocks
+    assign handle = block.settings.tab_handle | handleize
+    if handle == blank
+      assign handle = 'general'
+    endif
+    unless tab_data contains handle
+      assign tab_title = block.settings.tab_title
+      if tab_title == blank
+        assign tab_title = 'General Questions'
+      endif
+      capture tab_data
+        echo tab_data
+        echo separator
+        echo handle
+        echo '::'
+        echo tab_title
+      endcapture
+      assign separator = '|'
+    endunless
+  endfor
+  assign tab_list = tab_data | split: '|'
+-%}
 
-                    <div class="accordion-content-inner">
-                        {{ block.settings.copy | replace: '<a ', faq_link_start }}
-                    </div>
-                </div>
+<div class="page-width trusthub-faqs">
+    {%- if section.settings.title != blank -%}
+        <h2 class="homepage-faqs__title center">{{ section.settings.title }}</h2>
+    {%- endif -%}
+
+    {%- if tab_list.size > 1 -%}
+        <div class="trusthub-faqs__tabs" role="tablist">
+            {%- for tab in tab_list -%}
+                {%- assign parts = tab | split: '::' -%}
+                {%- assign handle = parts[0] -%}
+                {%- assign title = parts[1] -%}
+                <button
+                        type="button"
+                        role="tab"
+                        class="trusthub-faqs__tab{% if forloop.first %} active{% endif %}"
+                        aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                        data-tab="trusthub-faqs-{{ section.id }}-{{ handle }}">
+                    {{ title }}
+                </button>
+            {%- endfor -%}
+        </div>
+    {%- endif -%}
+
+    {%- for tab in tab_list -%}
+        {%- assign parts = tab | split: '::' -%}
+        {%- assign handle = parts[0] -%}
+        <div
+                class="trusthub-faqs__panel{% if forloop.first %} active{% endif %}"
+                id="trusthub-faqs-{{ section.id }}-{{ handle }}"
+                role="tabpanel"
+                {% unless forloop.first %}hidden{% endunless %}>
+            <div class="homepage-faqs__accordions">
+                {%- assign first_in_panel = true -%}
+                {%- for block in section.blocks -%}
+                    {%- assign block_handle = block.settings.tab_handle | handleize -%}
+                    {%- if block_handle == blank -%}
+                        {%- assign block_handle = 'general' -%}
+                    {%- endif -%}
+                    {%- if block_handle == handle -%}
+                        <div class="homepage-faqs__accordion-item accordion" {{ block.shopify_attributes }}>
+                            <button
+                                    class="accordion-header"
+                                    type="button"
+                                    aria-expanded="{% if first_in_panel %}true{% else %}false{% endif %}"
+                                    aria-controls="accordion-content-{{ section.id }}-{{ forloop.index }}">
+                                <span class="accordion-title">
+                                    {{ block.settings.title }}
+                                </span>
+                                {% render 'chevron' %}
+                            </button>
+                            <div
+                                    id="accordion-content-{{ section.id }}-{{ forloop.index }}"
+                                    class="accordion-content"
+                                    aria-hidden="{% if first_in_panel %}false{% else %}true{% endif %}"
+                            >
+                                {% assign faq_link_start = '<a class="accordion-link" aria-label="Learn more about '
+                                    | append: block.settings.title
+                                    | append: '" tabindex="-1" '
+                                %}
+
+                                <div class="accordion-content-inner">
+                                    {{ block.settings.copy | replace: '<a ', faq_link_start }}
+                                </div>
+                            </div>
+                        </div>
+                        {%- assign first_in_panel = false -%}
+                    {%- endif -%}
+                {%- endfor -%}
             </div>
-        {% endfor %}
-    </div>
-    {% if section.settings.url %}
-    <a href="{{ section.settings.url }}" class="homepage-faqs__link">{{ section.settings.label }}
-        {% render 'chevron-button' %}
-    </a>
-  {% endif %}
+        </div>
+    {%- endfor -%}
+
+    {%- if section.settings.url != blank -%}
+        <a href="{{ section.settings.url }}" class="homepage-faqs__link">{{ section.settings.label }}
+            {% render 'chevron-button' %}
+        </a>
+    {%- endif -%}
 </div>
 
 <script src="{{ 'accordion.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'trusthub-faqs.js' | asset_url }}" defer="defer"></script>
 
 {% schema %}
 {
@@ -79,7 +146,8 @@
     {
       "type": "text",
       "id": "title",
-      "label": "Section Title"
+      "label": "Section Title",
+      "default": "Frequently Asked Questions"
     },
     {
       "type": "text",
@@ -97,6 +165,20 @@
       "type": "faq",
       "name": "FAQ Item",
       "settings": [
+        {
+          "type": "text",
+          "id": "tab_handle",
+          "label": "Tab handle",
+          "info": "Group FAQs into tabs. Use the same handle for items that belong to the same tab (e.g. 'general' or 'company-brand').",
+          "default": "general"
+        },
+        {
+          "type": "text",
+          "id": "tab_title",
+          "label": "Tab title",
+          "info": "Only the first item per handle sets the tab's display title.",
+          "default": "General Questions"
+        },
         {
           "type": "text",
           "id": "title",
