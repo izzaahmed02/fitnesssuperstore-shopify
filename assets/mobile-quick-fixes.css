@@ -1,0 +1,395 @@
+/* =========================================================
+   Mobile Home Page Quick Fixes
+   Scope: roughly 360-430px widths; mobile polish pass only.
+   Per direction: remove the moving announcement bar on mobile,
+   tighten header/hero/trust/category/footer, reorder sections.
+   Desktop intentionally left unchanged where possible.
+   ========================================================= */
+
+/* Hide the optional mobile-only static proof line on desktop */
+.mobile-static-proof {
+  display: none;
+}
+
+/* Desktop: keep <details> footer accordions visually open.
+   On mobile the <details> element provides the accordion behavior;
+   on desktop we force the link groups to render expanded so the
+   multi-column layout matches the existing design. */
+@media screen and (min-width: 769px) {
+  details.footer__menu-col > .footer__menu-links {
+    display: flex !important;
+    flex-direction: column;
+    row-gap: 12px;
+  }
+  details.footer__menu-col > summary.footer__menu-label {
+    list-style: none;
+    cursor: default;
+    pointer-events: none;
+  }
+  details.footer__menu-col > summary.footer__menu-label::-webkit-details-marker {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 768px) {
+
+  /* ---------- 1. Announcement bar — REMOVE on mobile ---------- */
+  /* Per updated direction (May 12): no auto-rotating / marquee
+     announcement bar on mobile. Hide the section wrapper entirely. */
+  .announcement-bar-section,
+  .utility-bar,
+  .announcement-bar,
+  .announcement-bar-slider {
+    display: none !important;
+  }
+
+  /* Optional static (non-sticky) fallback line - rendered by announcement-bar.liquid.
+     Shown only at the very top, disappears on scroll (handled via CSS + JS). */
+  .mobile-static-proof {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    max-height: 32px;
+    padding: 4px 16px;
+    background-color: #1a1a1a;
+    color: #fff;
+    font-size: 13px;
+    line-height: 18px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mobile-static-proof.is-hidden {
+    display: none !important;
+  }
+
+  /* ---------- 2. Header/search — reduce vertical space ---------- */
+  header {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .header__logo-icons--container .header__heading-link {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .header__search,
+  .search-modal__form,
+  .predictive-search__form {
+    margin-top: 8px;
+  }
+
+  .search__input,
+  input[type="search"] {
+    min-height: 44px;
+  }
+
+  /* ---------- 3. Hero — keep message, reduce density ---------- */
+  /* Theme markup uses .hero-section inside section wrapper .heroSection */
+  .heroSection .hero-section {
+    padding: 0;
+  }
+
+  .heroSection .image-wrapper {
+    min-height: 500px;
+  }
+
+  .heroSection .content {
+    padding: 28px 16px;
+    gap: 16px;
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+  }
+
+  .heroSection .title h1 {
+    font-size: 28px;
+    line-height: 34px;
+    text-align: center;
+  }
+
+  .heroSection .copyText {
+    font-size: 15px;
+    line-height: 22px;
+    text-align: center;
+    font-weight: 700;
+  }
+
+  .heroSection .bannerBtn.mobile {
+    min-height: 48px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .heroSection .description {
+    gap: 14px;
+  }
+
+  /* ---------- 4. Trust stack — compact 2x2, hide Mission ---------- */
+  .heroSection .questions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .heroSection .benefit-card {
+    padding: 14px 10px;
+    border-radius: 10px;
+    margin: 0;
+  }
+
+  /* Hide the third (Mission) card on mobile only */
+  .heroSection .benefit-card:nth-child(3) {
+    display: none;
+  }
+
+  .heroSection .text h2 {
+    font-size: 15px;
+    line-height: 20px;
+  }
+
+  .heroSection .text p {
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  /* ---------- 5. Category carousel — tighten ---------- */
+  .browse-category .browse-by-category {
+    padding: 24px 16px 36px;
+  }
+
+  .browse-category .tab-header h2,
+  .homepage-offers .tab-header h2,
+  .browse-brand .tab-header h2,
+  .home-products .tab-header h2 {
+    font-size: 28px;
+    line-height: 32px;
+    margin-bottom: 16px;
+  }
+
+  .browse-category .category-card {
+    margin: 6px;
+    padding: 14px 10px;
+    border-radius: 16px;
+  }
+
+  .browse-category .category-card img {
+    width: 110px;
+    height: 110px;
+  }
+
+  .browse-category .category-card h3 {
+    font-size: 18px;
+    line-height: 23px;
+  }
+
+  .browse-category .slick-next,
+  .browse-category .slick-prev,
+  .browse-brand .slick-next,
+  .browse-brand .slick-prev,
+  .home-products .slick-next,
+  .home-products .slick-prev {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  /* ---------- 6. We Offer — clean titles, no mid-word breaks ---------- */
+  .homepage-offers .we-offer {
+    padding: 24px 16px;
+  }
+
+  .homepage-offers .category-tab-content {
+    gap: 12px;
+  }
+
+  .homepage-offers .image-title {
+    padding: 14px;
+  }
+
+  .homepage-offers .image-title h3 {
+    font-size: 18px;
+    line-height: 23px;
+    word-break: normal;
+    overflow-wrap: normal;
+    hyphens: none;
+  }
+
+  /* ---------- 7. Brand section — heading not clipped ---------- */
+  .browse-brand .browse-by-brand {
+    padding: 24px 16px 40px;
+  }
+
+  .browse-brand .tab-header {
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .browse-brand .tab-header h2 {
+    max-width: none;
+    flex: 1;
+  }
+
+  .browse-brand .homepage-brands__button.button {
+    flex-shrink: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  /* ---------- 8. Section order on mobile ---------- */
+  /* Desired mobile order:
+     1. Hero/trust  (section_hero_Faz8AP)
+     2. Shop by Category (browse_by_category_MnThy7, browse_by_category_GEQqid)
+     3. We Offer (homepage_offers_h8aRcy)
+     4. Top Brands (browse_by_brand_JzX8Di)
+     5. Most Popular Fitness Equipment (home_products_QKQbUC)
+     6. Apps / Power. Progress. Performance. (1761350491e59bc46a) -- moved lower
+     Other shopify sections retain their natural order via large fallback. */
+  body.template-index .inner-container {
+    display: flex;
+    flex-direction: column;
+  }
+  body.template-index .inner-container > #shopify-section-section_hero_Faz8AP            { order: 1; }
+  body.template-index .inner-container > #shopify-section-browse_by_category_MnThy7      { order: 2; }
+  body.template-index .inner-container > #shopify-section-browse_by_category_GEQqid      { order: 3; }
+  body.template-index .inner-container > #shopify-section-homepage_offers_h8aRcy         { order: 4; }
+  body.template-index .inner-container > #shopify-section-browse_by_brand_JzX8Di         { order: 5; }
+  body.template-index .inner-container > #shopify-section-home_products_QKQbUC           { order: 6; }
+  body.template-index .inner-container > #shopify-section-1761350491e59bc46a             { order: 7; }
+  body.template-index .inner-container > #shopify-section-homepage_offers_gnkWH6         { order: 8; }
+  body.template-index .inner-container > #shopify-section-homepage-faqs                  { order: 9; }
+  body.template-index .inner-container > #shopify-section-reviews_JRiQPJ                 { order: 10; }
+  body.template-index .inner-container > #shopify-section-homepage-subscription          { order: 11; }
+
+  /* ---------- 9. Popular products — compact cards ---------- */
+  .home-products .custom-container {
+    padding: 24px 16px;
+  }
+
+  .home-products .featured_products_header h2 {
+    font-size: 28px;
+    line-height: 32px;
+    margin-bottom: 16px;
+  }
+
+  .home-products .product-item .image-wrap img {
+    max-height: 220px;
+  }
+
+  .home-products .prodInfo {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  /* Keep CTA / price visible and tappable */
+  .home-products .product-item .button,
+  .home-products .product-item .shop-now-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  /* ---------- 10/11. What Sets Us Apart / Reviews — tighten ---------- */
+  .homepage-faqs,
+  .reviews-section {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  /* ---------- 12. Newsletter compact ---------- */
+  .homepage-subscription input[type="email"],
+  .homepage-subscription button[type="submit"] {
+    min-height: 44px;
+  }
+
+  /* ---------- 13. Footer — mobile accordion via <details> ---------- */
+  .footer__top {
+    row-gap: 24px;
+  }
+
+  .footer__info {
+    row-gap: 20px;
+  }
+
+  .footer__menu {
+    display: block;
+  }
+
+  .footer__menu-col {
+    max-width: 100%;
+    min-width: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .footer__menu-col:last-child {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .footer__menu-label {
+    min-height: 44px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 8px 0;
+    list-style: none;
+  }
+
+  .footer__menu-label::-webkit-details-marker {
+    display: none;
+  }
+
+  /* Chevron indicator on <details> summary */
+  details.footer__menu-col > summary.footer__menu-label::after {
+    content: "";
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-left: 12px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+  }
+  details.footer__menu-col[open] > summary.footer__menu-label::after {
+    transform: rotate(-135deg);
+  }
+
+  .footer__menu-links {
+    row-gap: 10px;
+    padding-bottom: 16px;
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+  }
+
+  .footer__menu-link {
+    display: block;
+    padding: 4px 0;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .footer-payment {
+    justify-content: flex-start !important;
+    flex-wrap: wrap;
+  }
+
+  /* ---------- 14. Floating chat clearance ---------- */
+  iframe[title*="chat"],
+  .chat-widget,
+  .gorgias-chat-key,
+  .reamaze-widget,
+  .zsiq_floatmain {
+    bottom: 84px !important;
+  }
+
+  /* ---------- 15. General spacing cleanup ---------- */
+  .shopify-section + .shopify-section {
+    /* Avoid stacking large margins between sections on mobile */
+  }
+}

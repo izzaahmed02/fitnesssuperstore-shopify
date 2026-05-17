@@ -43,6 +43,27 @@
     }
 {% endstyle %}
 
+{%- if section.settings.show_mobile_static_proof and section.settings.mobile_static_proof_text != blank -%}
+  <div class="mobile-static-proof" data-mobile-static-proof>
+    {{ section.settings.mobile_static_proof_text | escape }}
+  </div>
+  <script>
+    (function () {
+      var el = document.querySelector('[data-mobile-static-proof]');
+      if (!el) return;
+      var hide = function () {
+        if (window.scrollY > 4) {
+          el.classList.add('is-hidden');
+        } else {
+          el.classList.remove('is-hidden');
+        }
+      };
+      window.addEventListener('scroll', hide, { passive: true });
+      hide();
+    })();
+  </script>
+{%- endif -%}
+
 <div
         class="utility-bar color-{{ section.settings.color_scheme }} gradient{% if section.settings.show_line_separator and section.blocks.size > 0 %} utility-bar--bottom-border{% elsif section.settings.show_line_separator and section.settings.show_social and social_icons %} utility-bar--bottom-border-social-only{% endif %}{% if section.settings.enable_country_selector or section.settings.enable_language_selector %} header-localization{% endif %}"
         {{ block.shopify_attributes }}
@@ -224,6 +245,23 @@
       "id": "show_line_separator",
       "default": true,
       "label": "t:sections.header.settings.show_line_separator.label"
+    },
+    {
+      "type": "header",
+      "content": "Mobile static proof line"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_mobile_static_proof",
+      "default": false,
+      "label": "Show static proof line on mobile (replaces the hidden marquee)",
+      "info": "Shows one short non-sticky line at the very top of mobile; disappears once the user scrolls."
+    },
+    {
+      "type": "text",
+      "id": "mobile_static_proof_text",
+      "default": "Nationwide Delivery & Installation",
+      "label": "Mobile static proof text"
     },
     {
       "type": "header",
