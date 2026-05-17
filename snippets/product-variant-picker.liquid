@@ -26,6 +26,10 @@
             assign picker_type = 'swatch'
           endif
         endif
+
+        assign variant_help_handle = option.name | handleize
+        assign variant_help = shop.metaobjects.product_option_help_text[variant_help_handle]
+        assign variant_help_popup_id = 'variant-' | append: variant_help_handle
       -%}
       {%- if picker_type == 'swatch' -%}
         <fieldset class="js product-form__input product-form__input--swatch" data-variant-options>
@@ -34,6 +38,13 @@
             <span data-selected-value>
               {{- option.selected_value -}}
             </span>
+            {%- if variant_help != blank -%}
+              {% render 'related-products-button',
+                product_id: product.id,
+                product_handle: product.handle,
+                option_title: variant_help_popup_id
+              %}
+            {%- endif -%}
           </legend>
           {% render 'product-variant-options',
             product: product,
@@ -44,7 +55,16 @@
         </fieldset>
       {%- elsif picker_type == 'button' -%}
         <fieldset class="js product-form__input product-form__input--pill" data-variant-options>
-          <legend class="form__label">{{ option.name }}:</legend>
+          <legend class="form__label">
+            {{ option.name }}:
+            {%- if variant_help != blank -%}
+              {% render 'related-products-button',
+                product_id: product.id,
+                product_handle: product.handle,
+                option_title: variant_help_popup_id
+              %}
+            {%- endif -%}
+          </legend>
           {% render 'product-variant-options',
             product: product,
             option: option,
@@ -56,6 +76,13 @@
         <div class="product-form__input product-form__input--dropdown">
           <label class="form__label" for="Option-{{ section.id }}-{{ forloop.index0 }}">
             {{ option.name }}:
+            {%- if variant_help != blank -%}
+              {% render 'related-products-button',
+                product_id: product.id,
+                product_handle: product.handle,
+                option_title: variant_help_popup_id
+              %}
+            {%- endif -%}
           </label>
           <div class="select">
             {%- if picker_type == 'swatch_dropdown' -%}
@@ -87,4 +114,53 @@
 
     <script type="application/json" data-selected-variant>{{ product.selected_or_first_available_variant | json }}</script>
   </variant-selects>
+
+  {%- for option in product.options_with_values -%}
+    {%- liquid
+      assign variant_help_handle = option.name | handleize
+      assign variant_help = shop.metaobjects.product_option_help_text[variant_help_handle]
+      assign variant_help_popup_id = 'variant-' | append: variant_help_handle
+    -%}
+    {%- if variant_help != blank -%}
+      {% render 'related-products-popup-for-options',
+        popup_id: variant_help_popup_id,
+        title: variant_help.title,
+        related_products: variant_help.related_products.value,
+        text: variant_help.help_text
+      %}
+    {%- endif -%}
+  {%- endfor -%}
+
+  <script>
+    (function () {
+      if (window.__variantHelpPopupBound) return;
+      window.__variantHelpPopupBound = true;
+      document.addEventListener('click', function (event) {
+        var opener = event.target.closest && event.target.closest('[data-popup-open]');
+        if (opener && !opener.closest('product-customization-options')) {
+          var openId = opener.getAttribute('data-popup-open');
+          if (openId && openId.indexOf('variant-') === 0) {
+            var popup = document.querySelector('[data-popup="' + openId + '"]');
+            if (popup) {
+              event.preventDefault();
+              event.stopPropagation();
+              popup.classList.add('active');
+              return;
+            }
+          }
+        }
+        var closer = event.target.closest && event.target.closest('[data-close-popup]');
+        if (closer) {
+          var closeId = closer.getAttribute('data-close-popup');
+          if (closeId && closeId.indexOf('variant-') === 0) {
+            var popupToClose = document.querySelector('[data-popup="' + closeId + '"]');
+            if (popupToClose) {
+              event.preventDefault();
+              popupToClose.classList.remove('active');
+            }
+          }
+        }
+      });
+    })();
+  </script>
 {%- endunless -%}
