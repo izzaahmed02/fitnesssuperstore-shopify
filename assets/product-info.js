@@ -168,6 +168,7 @@ customElements.get('product-info') ||
             a('Stock-Badge-Mobile', ({ classList: t }) => t.contains('hidden')),
             a('Stock-Badge-Desktop', ({ classList: t }) => t.contains('hidden')),
             a('Availability-Meta', ({ classList: t }) => t.contains('hidden')),
+            a('Buy-Box-Note', ({ innerText: t }) => '' === t.trim()),
             this.updateQuantityRules(this.sectionId, e),
             this.querySelector(`#Quantity-Rules-${this.dataset.section}`)?.classList.remove('hidden'),
             this.querySelector(`#Volume-Note-${this.dataset.section}`)?.classList.remove('hidden'),
