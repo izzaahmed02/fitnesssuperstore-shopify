@@ -36,9 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
           settings: {
             slidesToShow: 1,
             slidesToScroll: 1,
-            centerMode: true,
-            centerPadding: '72px',
-            arrows: false,
+            centerMode: false,
+            variableWidth: false,
+            dots: false,
+            arrows: true,
+            appendArrows: $('#shopify-section-' + sectionId + ' .gallery-slider-nav-mobile'),
           },
         },
       ],
@@ -222,6 +224,11 @@ document.addEventListener('DOMContentLoaded', () => {
     display: block;
   }
 
+  /* ── Mobile nav container — hidden on desktop ── */
+  .gallery-slider-nav-mobile {
+    display: none;
+  }
+
   /* ── Mobile ── */
   @media screen and (max-width: 750px) {
     #shopify-section-{{ section.id }} {
@@ -229,56 +236,97 @@ document.addEventListener('DOMContentLoaded', () => {
       padding-bottom: 24px;
     }
 
-    .gallery-wrapper {
-      margin-top: 0;
+    /* Hide desktop nav, show mobile nav */
+    #shopify-section-{{ section.id }} .gallery-slider-nav {
+      display: none;
     }
 
+    .gallery-slider-nav-mobile {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Mobile slide item */
     #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide .item {
-      height: 208px;
+      height: 320px;
       border-radius: 16px;
-      margin: 0 8px 20px;
+      margin: 0 8px 0 0;
       background: #edeff3;
     }
 
     #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide .item img {
-      height: 208px;
+      height: 320px;
       border-radius: 16px;
-      object-position: bottom;
+      object-position: center;
     }
 
-    .gallery-wrapper-main svg {
-      width: 36px;
-      height: 36px;
+    /* Remove left padding on mobile so first slide hugs left edge */
+    .gallery-bg {
+      padding-left: 0;
+      padding-right: 0;
     }
 
-    .gallery-slider-warehouse .gallery-bg {
-      padding: 0px 16px;
+    #shopify-section-{{ section.id }} .gallery-wrapper {
+      margin-top: 0;
+      padding-left: 16px;
+    }
+
+    /* Hide dots on mobile */
+    #shopify-section-{{ section.id }} .slick-dots {
+      display: none !important;
+    }
+
+    /* Next arrow — positioned over the half-visible right slide */
+    #shopify-section-{{ section.id }} .slick-next,
+    #shopify-section-{{ section.id }} button[class^="gallery-next"] {
+      pointer-events: all;
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    /* Hide prev arrow on mobile */
+    #shopify-section-{{ section.id }} .slick-prev,
+    #shopify-section-{{ section.id }} button[class^="gallery-prev"] {
+      display: none !important;
+    }
+
+    /* White gradient fade on right edge */
+    #shopify-section-{{ section.id }} .gallery-wrapper-main::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100px;
+      height: 100%;
+      background: linear-gradient(to right, transparent, white);
+      pointer-events: none;
+      z-index: 10;
     }
 
     .gallery-slider-warehouse .contact__heading,
     .gallery-slider-warehouse p {
       text-align: left !important;
       margin-bottom: 16px !important;
+      padding: 0 16px;
     }
 
     .gallery-slider-warehouse .button.btn__link {
       margin-top: 16px !important;
-      width: 100% !important;
+      width: calc(100% - 32px) !important;
       justify-content: center;
-    }
-
-    /* White gradient fade on right edge over the half-visible slide */
-    #shopify-section-{{ section.id }} .gallery-wrapper-main::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 80px;
-      height: calc(100% - 72px);
-      background: linear-gradient(to right, transparent, white);
-      pointer-events: none;
-      z-index: 10;
-      border-radius: 0 16px 16px 0;
+      margin-left: 16px;
+      margin-right: 16px;
     }
   }
 {%- endstyle -%}
@@ -312,7 +360,11 @@ document.addEventListener('DOMContentLoaded', () => {
       {% endfor %}
     </div>
 
+    <!-- Desktop arrow nav -->
     <div class="gallery-slider-nav"></div>
+
+    <!-- Mobile arrow nav -->
+    <div class="gallery-slider-nav-mobile"></div>
   </div>
 </div>
 
