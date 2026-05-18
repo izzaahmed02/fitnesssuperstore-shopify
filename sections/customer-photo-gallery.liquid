@@ -26,7 +26,7 @@
   </div>
 
   <!-- Lightbox -->
-  <div class="customer-photo-gallery__lightbox" aria-hidden="true">
+  <div class="customer-photo-gallery__lightbox" aria-hidden="true" inert>
     <div class="customer-photo-gallery__lightbox-inner">
       <button type="button" class="customer-photo-gallery__lightbox-close" aria-label="Close">&times;</button>
       <img src="" alt="Expanded customer photo">
@@ -211,26 +211,37 @@
   var lightboxImg = lightbox.querySelector('img');
   var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
 
+  function openLightbox(src) {
+    lightboxImg.src = src;
+    lightbox.classList.add('customer-photo-gallery__lightbox--active');
+    lightbox.removeAttribute('aria-hidden');
+    lightbox.removeAttribute('inert');
+    closeBtn.focus();
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+    lightbox.setAttribute('aria-hidden', 'true');
+    lightbox.setAttribute('inert', '');
+  }
+
   slides.forEach(function (img) {
     img.addEventListener('click', function () {
-      lightboxImg.src = img.dataset.full || img.src;
-      lightbox.classList.add('customer-photo-gallery__lightbox--active');
+      openLightbox(img.dataset.full || img.src);
     });
   });
 
-  closeBtn.addEventListener('click', function () {
-    lightbox.classList.remove('customer-photo-gallery__lightbox--active');
-  });
+  closeBtn.addEventListener('click', closeLightbox);
 
   lightbox.addEventListener('click', function (e) {
     if (e.target === lightbox) {
-      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+      closeLightbox();
     }
   });
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
-      lightbox.classList.remove('customer-photo-gallery__lightbox--active');
+      closeLightbox();
     }
   });
 
