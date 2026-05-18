@@ -4,19 +4,22 @@ document.addEventListener('DOMContentLoaded', () => {
   function gallerySlickInit() {
     const sectionId = '{{ section.id }}';
     const $slider = $('#shopify-section-' + sectionId + ' .gallery-wrapper');
+    const isMobile = window.innerWidth < 750;
 
     $slider.slick({
-      dots: true,
-      arrows: false,
+      dots: !isMobile,
+      arrows: isMobile,
       infinite: true,
       slidesToShow: 1,
       slidesToScroll: 1,
-      centerMode: true,
-      centerPadding: '202px',
+      centerMode: !isMobile,
+      centerPadding: isMobile ? '0px' : '202px',
 
-      appendArrows: $('#shopify-section-' + sectionId + ' .gallery-slider-nav'),
+      appendArrows: isMobile
+        ? $('#shopify-section-' + sectionId + ' .gallery-slider-nav-mobile')
+        : $('#shopify-section-' + sectionId + ' .gallery-slider-nav'),
 
-      prevArrow: `<button class="gallery-prev-${sectionId}">
+      prevArrow: `<button class="gallery-prev-${sectionId}" style="display:none!important">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect width="48" height="48" rx="24" fill="#616166"/>
           <path fill-rule="evenodd" clip-rule="evenodd" d="M26.5303 17.4697C26.8232 17.7626 26.8232 18.2374 26.5303 18.5303L21.0607 24L26.5303 29.4697C26.8232 29.7626 26.8232 30.2374 26.5303 30.5303C26.2374 30.8232 25.7626 30.8232 25.4697 30.5303L19.4697 24.5303C19.1768 24.2374 19.1768 23.7626 19.4697 23.4697L25.4697 17.4697C25.7626 17.1768 26.2374 17.1768 26.5303 17.4697Z" fill="white"/>
@@ -29,20 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
           <path fill-rule="evenodd" clip-rule="evenodd" d="M21.4697 17.4697C21.7626 17.1768 22.2374 17.1768 22.5303 17.4697L28.5303 23.4697C28.8232 23.7626 28.8232 24.2374 28.5303 24.5303L22.5303 30.5303C22.2374 30.8232 21.7626 30.8232 21.4697 30.5303C21.1768 30.2374 21.1768 29.7626 21.4697 29.4697L26.9393 24L21.4697 18.5303C21.1768 18.2374 21.1768 17.7626 21.4697 17.4697Z" fill="white"/>
         </svg>
       </button>`,
-
-    responsive: [
-  {
-    breakpoint: 750,
-    settings: {
-      slidesToShow: 1,
-      slidesToScroll: 1,
-      centerMode: true,
-      centerPadding: '60px',
-      dots: false,
-      arrows: true,
-    },
-  },
-],
     });
   }
 
@@ -195,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     background: #23232B;
   }
 
-  /* ── Uniform slide height in centerMode ── */
+  /* ── Uniform slide height in centerMode (desktop) ── */
   #shopify-section-{{ section.id }} .gallery-wrapper .slick-track {
     display: flex;
     align-items: stretch;
@@ -229,17 +218,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ── Mobile ── */
-  @media screen and (max-width: 750px) {
+  @media screen and (max-width: 749px) {
+
     #shopify-section-{{ section.id }} {
       padding-top: 24px;
       padding-bottom: 24px;
     }
 
-    /* Hide desktop nav, show mobile nav */
+    /* Hide desktop nav */
     #shopify-section-{{ section.id }} .gallery-slider-nav {
       display: none;
     }
 
+    /* Show mobile nav */
     .gallery-slider-nav-mobile {
       display: block;
       position: absolute;
@@ -248,14 +239,36 @@ document.addEventListener('DOMContentLoaded', () => {
       width: 100%;
       height: 100%;
       pointer-events: none;
+      z-index: 5;
     }
 
-    /* Mobile slide item */
+    /* Clip overflow so only right peek shows, not left */
+    .gallery-slider-warehouse .gallery-bg {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    /* Shift wrapper so slide starts from left with 16px inset */
+    #shopify-section-{{ section.id }} .gallery-wrapper-main {
+      overflow: hidden;
+    }
+
+    #shopify-section-{{ section.id }} .gallery-wrapper {
+      margin-top: 0;
+      /* Each slide is 80vw wide, so the next one peeks ~20vw on right */
+    }
+
+    /* Force each slide to be 80% of viewport — creates the peek */
+    #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide {
+      width: 80vw !important;
+    }
+
     #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide .item {
       height: 320px;
       border-radius: 16px;
-      margin: 0 8px 0 0;
+      margin: 0 8px;
       background: #edeff3;
+      width: 100%;
     }
 
     #shopify-section-{{ section.id }} .gallery-wrapper .slick-slide .item img {
@@ -263,17 +276,22 @@ document.addEventListener('DOMContentLoaded', () => {
       border-radius: 16px;
       object-position: center;
     }
+
+    /* Align track to start from left with 16px padding */
+    #shopify-section-{{ section.id }} .gallery-wrapper .slick-track {
+      margin-left: 16px;
+    }
+
     /* Hide dots on mobile */
     #shopify-section-{{ section.id }} .slick-dots {
       display: none !important;
     }
 
-    /* Next arrow — positioned over the half-visible right slide */
-    #shopify-section-{{ section.id }} .slick-next,
-    #shopify-section-{{ section.id }} button[class^="gallery-next"] {
+    /* Next arrow — floats over the right peek area */
+    #shopify-section-{{ section.id }} button.gallery-next-{{ section.id }} {
       pointer-events: all;
       position: absolute;
-      right: 24px;
+      right: 12px;
       top: 50%;
       transform: translateY(-50%);
       background: none;
@@ -283,18 +301,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* Hide prev arrow on mobile */
-    #shopify-section-{{ section.id }} .slick-prev,
-    #shopify-section-{{ section.id }} button[class^="gallery-prev"] {
+    #shopify-section-{{ section.id }} button.gallery-prev-{{ section.id }} {
       display: none !important;
     }
 
-    /* White gradient fade on right edge */
+    /* White gradient over right peek */
     #shopify-section-{{ section.id }} .gallery-wrapper-main::after {
       content: '';
       position: absolute;
       top: 0;
       right: 0;
-      width: 100px;
+      width: 90px;
       height: 100%;
       background: linear-gradient(to right, transparent, white);
       pointer-events: none;
