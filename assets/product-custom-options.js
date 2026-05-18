@@ -27,6 +27,7 @@ if (!customElements.get('product-customization-options')) {
       #initialized = false;
       #cartUpdateUnsubscribe = null;
       #variantChangeUnsubscribe = null;
+      #onPageShow = null;
 
       get modifyID() {
         return this.dataset.productId;
@@ -49,6 +50,14 @@ if (!customElements.get('product-customization-options')) {
           const variant = event.data.variant;
           !variant ? this.classList.add('hidden') : this.classList.remove('hidden');
         });
+
+        // Browsers re-apply saved <select> and checkbox values when the user
+        // navigates back to the page, but do not fire `change` events for those
+        // restorations. Without this, the option (e.g. Room of Choice
+        // Installation) stays visually selected while the displayed price
+        // reverts to the base amount. Recompute once restoration is complete.
+        this.#onPageShow = () => this.updatePrice();
+        window.addEventListener('pageshow', this.#onPageShow);
       }
 
       disconnectedCallback() {
@@ -61,6 +70,10 @@ if (!customElements.get('product-customization-options')) {
         if (this.#variantChangeUnsubscribe) {
           this.#variantChangeUnsubscribe();
           this.#variantChangeUnsubscribe = null;
+        }
+        if (this.#onPageShow) {
+          window.removeEventListener('pageshow', this.#onPageShow);
+          this.#onPageShow = null;
         }
       }
 
