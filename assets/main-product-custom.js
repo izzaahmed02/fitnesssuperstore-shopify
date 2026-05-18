@@ -214,10 +214,36 @@ try {
 			 document.querySelectorAll('.paylater-text').forEach(container => {
 				 container.innerHTML = getPaylaterModal(payLaterText);
 			 });
-				
+
 			 clearInterval(waitForPayLaterDependency);
 			}
 		  }, 100);
+
+		if (typeof subscribe === 'function' && typeof PUB_SUB_EVENTS !== 'undefined' && PUB_SUB_EVENTS.variantChange) {
+			subscribe(PUB_SUB_EVENTS.variantChange, () => {
+				const refreshPayLater = () => {
+					try {
+						if (!document.querySelector('.pr_custom_price')) return false;
+						const placement = document.querySelector('square-placement');
+						if (placement) {
+							placement.setAttribute('data-amount', getProductPrice());
+						}
+						const updated = generatePayLaterText();
+						document.querySelectorAll('.paylater-text').forEach(container => {
+							container.innerHTML = getPaylaterModal(updated);
+						});
+						return true;
+					} catch (e) {
+						return false;
+					}
+				};
+				// Price element is swapped after variantChange publishes; retry briefly.
+				let attempts = 0;
+				const retry = setInterval(() => {
+					if (refreshPayLater() || ++attempts > 20) clearInterval(retry);
+				}, 100);
+			});
+		}
 	});
 } catch (error) {
 	console.log(error)
