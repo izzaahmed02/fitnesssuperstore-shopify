@@ -363,6 +363,7 @@
             <div class="custom-gallery-wrapper">
               <!-- Thumbnails -->
               {%- assign image_media = product.media | where: 'media_type', 'image' -%}
+              {%- assign selected_featured_media = product.selected_or_first_available_variant.featured_media | default: product.featured_media | default: product.media.first -%}
 
               <div class="custom-gallery-thumbnails only-desktop">
                 {% assign model = product.media | where: 'media_type', 'model' | first %}
@@ -394,7 +395,7 @@
                   {% assign remaining = image_media.size | minus: image_limit %}
 
                   <button
-                    class="thumbnail-btn{% if model %}{% else %}{% if forloop.first %} is-active{% endif %}{% endif %}"
+                    class="thumbnail-btn{% if model %}{% else %}{% if media.id == selected_featured_media.id %} is-active{% endif %}{% endif %}"
                     data-media-id="{{ media.id }}"
                     type="button"
                   >
@@ -463,7 +464,7 @@
                     <model-viewer alt="{{ model.alt | json }}" src="{% for source in model.sources %}{% if source.format == 'glb' %}{{ source.url }}{% endif %}{% endfor %}" camera-controls="true" camera-orbit="0deg 75deg 4m" data-shopify-feature="1.12" data-js-focus-visible="" ar-status="not-presenting"></model-viewer>
                   </div>
                 {% else %}
-                  {% assign first_media = product.media.first %}
+                  {% assign first_media = selected_featured_media %}
                   {% assign preview = first_media.preview_image %}
 
                   <div
