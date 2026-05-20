@@ -220,5 +220,35 @@
         visibility: visible !important;
 }
 </style>
+
+{% if page.handle == 'contact' %}
+<script>
+  (function () {
+    if (window.location.hash !== '#showroom-visit') return;
+
+    var attempts = 0;
+    var maxAttempts = 30;
+
+    var interval = setInterval(function () {
+      attempts++;
+      var select = document.querySelector('[data-element-id="select-2"]');
+
+      if (select) {
+        select.value = 'Showroom Visit / Video Walkthrough';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+
+        var section = document.getElementById('shopify-section-template--26527337021756__form');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        clearInterval(interval);
+      }
+
+      if (attempts >= maxAttempts) clearInterval(interval);
+    }, 100);
+  })();
+</script>
+{% endif %}
   </body>
 </html>
