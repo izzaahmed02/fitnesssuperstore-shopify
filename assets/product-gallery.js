@@ -47,9 +47,12 @@ class ProductGallery extends HTMLElement {
 
 
     const currentActiveThumbnail = this.querySelector('.thumbnail-btn.is-active');
+    const renderedMainId = this.main?.querySelector('.main-image-container')?.getAttribute('data-media-id');
+    const renderedMainMatches = renderedMainId && this.mediaData.find((m) => m.id == renderedMainId);
 
-    if (!currentActiveThumbnail && this.mediaData.length > 0) {
-
+    if (!currentActiveThumbnail && renderedMainMatches) {
+      this.activeMediaId = renderedMainId;
+    } else if (!currentActiveThumbnail && this.mediaData.length > 0) {
       this.setActiveMedia(this.mediaData[0].id);
     } else if (currentActiveThumbnail) {
       this.activeMediaId = currentActiveThumbnail.getAttribute('data-media-id');
