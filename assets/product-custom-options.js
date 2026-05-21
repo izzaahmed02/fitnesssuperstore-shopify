@@ -47,7 +47,27 @@ if (!customElements.get('product-customization-options')) {
 
         this.#variantChangeUnsubscribe = subscribe(PUB_SUB_EVENTS.variantChange, (event) => {
           if (!event) return;
-          const variant = event.data.variant;
+          const { variant, sectionId, html } = event.data;
+
+          // Refresh the Product-Options wrapper from the fetched section
+          // html. The section-refetch path in product-info.js attempts the
+          // same swap through its generic id-helper, but bails out silently
+          // when its lookups don't match (e.g. products whose default
+          // variant has no `options.product_options` metafield while sibling
+          // variants do). Repeat the swap here so the options always update
+          // when the variant changes.
+          if (sectionId && html && typeof html.getElementById === 'function') {
+            const wrapperId = `Product-Options-${sectionId}`;
+            const source = html.getElementById(wrapperId);
+            const target = document.getElementById(wrapperId);
+            if (source && target && source.innerHTML.trim() !== target.innerHTML.trim()) {
+              target.innerHTML = source.innerHTML;
+              // `this` is now detached; the freshly connected element will
+              // take over from here.
+              return;
+            }
+          }
+
           !variant ? this.classList.add('hidden') : this.classList.remove('hidden');
         });
 
