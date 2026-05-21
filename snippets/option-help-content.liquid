@@ -22,12 +22,12 @@
     assign exact_keys = exact_keys | append: 'Processing Time Custom Field|'
   endif
   if product.metafields.custom.warranty != blank
-    assign exact_keys = exact_keys | append: 'Warranty Custom Field|'
-    if vendor != blank
-      assign exact_keys = exact_keys | append: vendor | append: ' Warranty Custom Field|'
-    endif
     if product.title contains 'Remanufactured'
       assign exact_keys = exact_keys | append: 'Warranty Remanufactured Custom Field|'
+    elsif vendor != blank
+      assign exact_keys = exact_keys | append: vendor | append: ' Warranty Custom Field|'
+    else
+      assign exact_keys = exact_keys | append: 'Warranty Custom Field|'
     endif
   endif
   if product.metafields.custom.ships != blank
