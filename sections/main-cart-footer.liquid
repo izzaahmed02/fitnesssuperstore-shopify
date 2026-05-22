@@ -103,8 +103,42 @@
               <div class="supporting-menu__item supporting-menu__item--payment">
                 <ul class="supporting-menu__payment payment-icons inline-list">
                   {%- for type in shop.enabled_payment_types -%}
-                    <li>{{ type | payment_type_svg_tag: class: 'payment-icon' }}</li>
-                  {%- endfor -%}
+  {%- assign icon_file = '' -%}
+
+  {%- case type -%}
+    {%- when 'visa' -%}
+      {%- assign icon_file = 'visa.svg' -%}
+    {%- when 'master' -%}
+      {%- assign icon_file = 'mastercard.svg' -%}
+    {%- when 'american_express' -%}
+      {%- assign icon_file = 'amex.svg' -%}
+    {%- when 'paypal' -%}
+      {%- assign icon_file = 'paypal.svg' -%}
+    {%- when 'apple_pay' -%}
+      {%- assign icon_file = 'apple.svg' -%}
+    {%- when 'google_pay' -%}
+      {%- assign icon_file = 'google.svg' -%}
+    {%- when 'shopify_pay' -%}
+      {%- assign icon_file = 'shoppay.svg' -%}
+    {%- when 'maestro' -%}
+      {%- assign icon_file = 'maestro.svg' -%}
+  {%- endcase -%}
+
+  {%- if icon_file != blank -%}
+    <li>
+      <img
+        src="{{ icon_file | file_url }}"
+        alt="{{ type | replace: '_', ' ' | capitalize }}"
+        class="payment-icon"
+        loading="lazy"
+        width="38"
+        height="24"
+      >
+    </li>
+  {%- else -%}
+    <li>{{ type | payment_type_svg_tag: class: 'payment-icon' }}</li>
+  {%- endif -%}
+{%- endfor -%}
                 </ul>
               </div>
               <div class="cart__ctas" {{ block.shopify_attributes }}>

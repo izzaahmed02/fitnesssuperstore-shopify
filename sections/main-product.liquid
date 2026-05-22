@@ -38,6 +38,10 @@
     box-sizing: border-box;
   }
 
+  .product__tile-calculator{
+    margin-top: 14px;
+  }
+
 {% endstyle %}
 
 {% if product.template_suffix == 'discontinued' %}
@@ -70,7 +74,8 @@
   <link rel="stylesheet" href="{{ 'component-accordion.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'component-accordion.css' | asset_url | stylesheet_tag }}</noscript>
   {{ 'component-price.css' | asset_url | stylesheet_tag }}
-  {{ 'component-slider.css' | asset_url | stylesheet_tag }}
+  <link rel="stylesheet" href="{{ 'component-slider.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript>{{ 'component-slider.css' | asset_url | stylesheet_tag }}</noscript>
   <link rel="stylesheet" href="{{ 'component-rating.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'component-rating.css' | asset_url | stylesheet_tag }}</noscript>
   <link rel="stylesheet" href="{{ 'component-deferred-media.css' | asset_url }}" media="print" onload="this.media='all'">
@@ -88,7 +93,8 @@
 
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
-  {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
+  <link rel="stylesheet" href="{{ 'custom-option-picker-snippet.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript>{{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}</noscript>
   <link rel="stylesheet" href="{{ 'paylater-modal.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'paylater-modal.css' | asset_url | stylesheet_tag }}</noscript>
 
@@ -942,9 +948,12 @@
                     </svg>
                     <span class="product-form__error-message"></span>
                   </div>
-                  {% if product.metafields.custom.buy_box_note %}
-                    <p>{{ product.metafields.custom.buy_box_note }}</p>
-                  {% endif %}
+                  {%- assign buy_box_variant = product.selected_or_first_available_variant -%}
+                  <div id="Buy-Box-Note-{{ section.id }}" class="buy-box-note{% if buy_box_variant.metafields.custom.buy_box_note == blank %} hidden{% endif %}">
+                    {% if buy_box_variant.metafields.custom.buy_box_note != blank %}
+                      <p>{{ buy_box_variant.metafields.custom.buy_box_note }}</p>
+                    {% endif %}
+                  </div>
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
                   <div class="product_price_with_options-contaniner">

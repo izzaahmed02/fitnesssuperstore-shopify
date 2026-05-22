@@ -75,7 +75,8 @@
   <link rel="stylesheet" href="{{ 'component-accordion.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'component-accordion.css' | asset_url | stylesheet_tag }}</noscript>
   {{ 'component-price.css' | asset_url | stylesheet_tag }}
-  {{ 'component-slider.css' | asset_url | stylesheet_tag }}
+  <link rel="stylesheet" href="{{ 'component-slider.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript>{{ 'component-slider.css' | asset_url | stylesheet_tag }}</noscript>
   <link rel="stylesheet" href="{{ 'component-rating.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'component-rating.css' | asset_url | stylesheet_tag }}</noscript>
   <link rel="stylesheet" href="{{ 'component-deferred-media.css' | asset_url }}" media="print" onload="this.media='all'">
@@ -93,7 +94,8 @@
  
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
-  {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
+  <link rel="stylesheet" href="{{ 'custom-option-picker-snippet.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript>{{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}</noscript>
   <link rel="stylesheet" href="{{ 'paylater-modal.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'paylater-modal.css' | asset_url | stylesheet_tag }}</noscript>
 
@@ -361,6 +363,7 @@
             <div class="custom-gallery-wrapper">
               <!-- Thumbnails -->
               {%- assign image_media = product.media | where: 'media_type', 'image' -%}
+              {%- assign selected_featured_media = product.selected_or_first_available_variant.featured_media | default: product.featured_media | default: product.media.first -%}
 
               <div class="custom-gallery-thumbnails only-desktop">
                 {% assign model = product.media | where: 'media_type', 'model' | first %}
@@ -392,7 +395,7 @@
                   {% assign remaining = image_media.size | minus: image_limit %}
 
                   <button
-                    class="thumbnail-btn{% if model %}{% else %}{% if forloop.first %} is-active{% endif %}{% endif %}"
+                    class="thumbnail-btn{% if model %}{% else %}{% if media.id == selected_featured_media.id %} is-active{% endif %}{% endif %}"
                     data-media-id="{{ media.id }}"
                     type="button"
                   >
@@ -461,7 +464,7 @@
                     <model-viewer alt="{{ model.alt | json }}" src="{% for source in model.sources %}{% if source.format == 'glb' %}{{ source.url }}{% endif %}{% endfor %}" camera-controls="true" camera-orbit="0deg 75deg 4m" data-shopify-feature="1.12" data-js-focus-visible="" ar-status="not-presenting"></model-viewer>
                   </div>
                 {% else %}
-                  {% assign first_media = product.media.first %}
+                  {% assign first_media = selected_featured_media %}
                   {% assign preview = first_media.preview_image %}
 
                   <div
@@ -903,6 +906,12 @@
                     </svg>
                     <span class="product-form__error-message"></span>
                   </div>
+
+                  {% assign boyboxvariant = product.selected_or_first_available_variant %}
+                   {% if boyboxvariant.metafields.custom.buy_box_note %}
+                    <p>{{ boyboxvariant.metafields.custom.buy_box_note }}</p>
+                  {% endif %}
+
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
                    <div class="product_price_with_options-contaniner">
@@ -2111,6 +2120,7 @@
 
 {% render 'option-help-content' %}
 <script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'old-custom.js' | asset_url }}" defer="defer"></script>
 {% unless hide_product_options %}
   <script src="{{'product-custom-options.js' | asset_url }}" defer></script>
 {% endunless %}
