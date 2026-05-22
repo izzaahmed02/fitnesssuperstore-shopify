@@ -30,7 +30,11 @@
   </div>
 
   <!-- Lightbox -->
-  <div class="customer-photo-gallery__lightbox" aria-hidden="true" inert>
+  <div class="customer-photo-gallery__lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Customer photo gallery">
+    <button type="button" class="customer-photo-gallery__lightbox-close" aria-label="Close">&times;</button>
+    <button type="button" class="customer-photo-gallery__lightbox-arrow customer-photo-gallery__lightbox-arrow--left" aria-label="Previous image">‹</button>
+    <button type="button" class="customer-photo-gallery__lightbox-arrow customer-photo-gallery__lightbox-arrow--right" aria-label="Next image">›</button>
+
     <div class="customer-photo-gallery__lightbox-inner">
       <div class="customer-photo-gallery__lightbox-spinner" aria-hidden="true"></div>
       <img src="" alt="">
@@ -372,38 +376,97 @@ body.cpg-lightbox-open {
     }
   }
 
-  function openLightbox(src) {
-    lightboxImg.src = src;
+  function loadImage(index) {
+    if (index < 0 || index >= total) return;
+    currentIndex = index;
+
+    var slideImg = slides[index];
+    var fullSrc = slideImg.dataset.full || slideImg.src;
+    var captionText = slideImg.dataset.caption || '';
+
+    lightboxImg.classList.remove('is-loaded');
+    showSpinner(true);
+
+    // Lazy-load: assign src directly and listen on the displayed img
+    function reveal() {
+      lightboxImg.classList.add('is-loaded');
+      showSpinner(false);
+    }
+    lightboxImg.onload = reveal;
+    lightboxImg.onerror = reveal;
+    lightboxImg.alt = captionText || ('Customer photo ' + (index + 1));
+    lightboxImg.src = fullSrc;
+
+    // Fallback for cached images where onload may not fire after src reassignment
+    if (lightboxImg.complete && lightboxImg.naturalWidth > 0) {
+      reveal();
+    }
+
+    caption.textContent = captionText;
+    counter.textContent = (index + 1) + ' of ' + total;
+
+    // Preload neighbors for snappier navigation
+    if (index + 1 < total) {
+      var nImg = new Image();
+      nImg.src = slides[index + 1].dataset.full || slides[index + 1].src;
+    }
+    if (index - 1 >= 0) {
+      var pImg = new Image();
+      pImg.src = slides[index - 1].dataset.full || slides[index - 1].src;
+    }
+
+    // Hide arrows at boundaries (no wrap)
+    lbPrev.hidden = index === 0;
+    lbNext.hidden = index === total - 1;
+  }
+
+  function openLightbox(index) {
+    loadImage(index);
     lightbox.classList.add('customer-photo-gallery__lightbox--active');
-    lightbox.removeAttribute('aria-hidden');
-    lightbox.removeAttribute('inert');
-    closeBtn.focus();
+    lightbox.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('cpg-lightbox-open');
   }
 
   function closeLightbox() {
     lightbox.classList.remove('customer-photo-gallery__lightbox--active');
     lightbox.setAttribute('aria-hidden', 'true');
-    lightbox.setAttribute('inert', '');
+    document.body.classList.remove('cpg-lightbox-open');
+    // Clear src to free memory
+    setTimeout(function () {
+      if (!lightbox.classList.contains('customer-photo-gallery__lightbox--active')) {
+        lightboxImg.removeAttribute('src');
+        lightboxImg.classList.remove('is-loaded');
+      }
+    }, 250);
   }
 
-  slides.forEach(function (img) {
+  function nextImage() {
+    if (currentIndex < total - 1) loadImage(currentIndex + 1);
+  }
+
+  function prevImage() {
+    if (currentIndex > 0) loadImage(currentIndex - 1);
+  }
+
+  slides.forEach(function (img, i) {
     img.addEventListener('click', function () {
-      openLightbox(img.dataset.full || img.src);
+      openLightbox(i);
     });
   });
 
   closeBtn.addEventListener('click', closeLightbox);
+  lbNext.addEventListener('click', nextImage);
+  lbPrev.addEventListener('click', prevImage);
 
   lightbox.addEventListener('click', function (e) {
-    if (e.target === lightbox) {
-      closeLightbox();
-    }
+    if (e.target === lightbox) closeLightbox();
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      closeLightbox();
-    }
+    if (!lightbox.classList.contains('customer-photo-gallery__lightbox--active')) return;
+    if (e.key === 'Escape') closeLightbox();
+    else if (e.key === 'ArrowRight') nextImage();
+    else if (e.key === 'ArrowLeft') prevImage();
   });
 
   // ----- MOBILE SWIPE INSIDE LIGHTBOX -----
