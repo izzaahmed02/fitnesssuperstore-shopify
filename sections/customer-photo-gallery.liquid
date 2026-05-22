@@ -232,6 +232,9 @@
   -webkit-user-select: none;
   user-select: none;
   -webkit-user-drag: none;
+}
+
+.customer-photo-gallery__lightbox-inner img.is-transforming {
   will-change: transform;
 }
 
@@ -536,8 +539,22 @@ body.cpg-lightbox-open {
 
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
+  // will-change: transform is set only while a transform is in flight, then
+  // cleared after a short idle so the compositor layer isn't kept alive at rest.
+  var transformingTimer = 0;
+  function markTransforming() {
+    if (!lightboxImg) return;
+    lightboxImg.classList.add('is-transforming');
+    if (transformingTimer) clearTimeout(transformingTimer);
+    transformingTimer = setTimeout(function () {
+      lightboxImg.classList.remove('is-transforming');
+      transformingTimer = 0;
+    }, 300);
+  }
+
   function applyTransform() {
     if (!lightboxImg) return;
+    markTransforming();
     // Clamp pan so image edges can't drift past viewport center
     var maxPanX = 0, maxPanY = 0;
     if (scale > 1) {
@@ -638,8 +655,22 @@ body.cpg-lightbox-open {
       zoomAt(e.clientX, e.clientY, factor);
     }, { passive: false });
 
-    // Mouse drag to pan when zoomed
+    // Mouse drag to pan when zoomed. mousemove/mouseup attach only while dragging.
     var mouseDrag = { active: false, moved: false, x: 0, y: 0, panX: 0, panY: 0 };
+    function onMouseMove(e) {
+      if (!mouseDrag.active) return;
+      mouseDrag.moved = true;
+      panX = mouseDrag.panX + (e.clientX - mouseDrag.x);
+      panY = mouseDrag.panY + (e.clientY - mouseDrag.y);
+      applyTransform();
+    }
+    function onMouseUp() {
+      if (!mouseDrag.active) return;
+      mouseDrag.active = false;
+      lightboxImg.classList.remove('is-panning');
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    }
     lightboxImg.addEventListener('mousedown', function (e) {
       if (e.button !== 0 || scale <= 1) return;
       mouseDrag.active = true;
@@ -649,19 +680,9 @@ body.cpg-lightbox-open {
       mouseDrag.panX = panX;
       mouseDrag.panY = panY;
       lightboxImg.classList.add('is-panning');
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
       e.preventDefault();
-    });
-    window.addEventListener('mousemove', function (e) {
-      if (!mouseDrag.active) return;
-      mouseDrag.moved = true;
-      panX = mouseDrag.panX + (e.clientX - mouseDrag.x);
-      panY = mouseDrag.panY + (e.clientY - mouseDrag.y);
-      applyTransform();
-    });
-    window.addEventListener('mouseup', function () {
-      if (!mouseDrag.active) return;
-      mouseDrag.active = false;
-      lightboxImg.classList.remove('is-panning');
     });
 
     // Click backdrop to close — suppressed if user just finished a pan drag
