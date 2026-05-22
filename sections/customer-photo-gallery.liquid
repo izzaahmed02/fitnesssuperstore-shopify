@@ -62,7 +62,6 @@
   margin: 20px 0;
   padding: 0 12px;
   position: relative;
-  contain: layout paint;
 }
 
 .customer-photo-gallery__header {
@@ -443,6 +442,12 @@ body.cpg-lightbox-open {
     initialized = true;
 
     lightbox.hidden = false;
+    // Move lightbox to <body> so position:fixed always resolves to viewport,
+    // regardless of any ancestor that creates a containing block
+    // (transform/filter/perspective/will-change/contain).
+    if (lightbox.parentNode !== document.body) {
+      document.body.appendChild(lightbox);
+    }
     lightboxImg = lightbox.querySelector('.customer-photo-gallery__lightbox-inner img');
     caption = lightbox.querySelector('.customer-photo-gallery__lightbox-caption');
     counter = lightbox.querySelector('.customer-photo-gallery__lightbox-counter');
