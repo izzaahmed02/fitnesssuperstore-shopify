@@ -24,10 +24,6 @@
     padding-bottom: {{ section.settings.padding_bottom }}px;
   }
 
-  #shopify-section-{{ section.id }} .product__extra_info-tabs input[type="radio"] {
-    display: none;
-  }
-
   #shopify-section-{{ section.id }} .extra-info-tabs-nav {
     display: flex;
     justify-content: space-between;
@@ -37,7 +33,7 @@
     border-bottom: 1px solid #EDEFF3;
   }
 
-  #shopify-section-{{ section.id }} .extra-info-tab-label {
+  #shopify-section-{{ section.id }} .extra-info-tab-button {
     font-family: Oswald, sans-serif;
     font-size: 16px;
     line-height: 26px;
@@ -46,36 +42,27 @@
     color: #23232B;
     flex: 1;
     text-align: center;
-    padding-bottom: 8px;
+    padding: 0 0 8px;
     cursor: pointer;
     transition: 0.2s ease;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: transparent;
   }
 
-  #extra-tab-description-{{ section.id }}:checked ~ .extra-info-tabs-nav label[for="extra-tab-description-{{ section.id }}"],
-  #extra-tab-features-{{ section.id }}:checked ~ .extra-info-tabs-nav label[for="extra-tab-features-{{ section.id }}"],
-  #extra-tab-benefits-{{ section.id }}:checked ~ .extra-info-tabs-nav label[for="extra-tab-benefits-{{ section.id }}"],
-  #extra-tab-train-{{ section.id }}:checked ~ .extra-info-tabs-nav label[for="extra-tab-train-{{ section.id }}"],
-  #extra-tab-buying-guide-{{ section.id }}:checked ~ .extra-info-tabs-nav label[for="extra-tab-buying-guide-{{ section.id }}"],
-  #extra-tab-faq-{{ section.id }}:checked ~ .extra-info-tabs-nav label[for="extra-tab-faq-{{ section.id }}"],
-  #extra-tab-warranty-{{ section.id }}:checked ~ .extra-info-tabs-nav label[for="extra-tab-warranty-{{ section.id }}"] {
-    border-bottom: 3px solid #D83D0E;
+  #shopify-section-{{ section.id }} .extra-info-tab-button.is-active {
+    border-bottom-color: #D83D0E;
   }
 
-  #shopify-section-{{ section.id }} .extra-info-tab-content {
+  #shopify-section-{{ section.id }} .extra-info-tab-panel {
     display: none;
   }
 
-  #extra-tab-description-{{ section.id }}:checked ~ .extra-info-tabs-content #extra-content-description-{{ section.id }},
-  #extra-tab-features-{{ section.id }}:checked ~ .extra-info-tabs-content #extra-content-features-{{ section.id }},
-  #extra-tab-benefits-{{ section.id }}:checked ~ .extra-info-tabs-content #extra-content-benefits-{{ section.id }},
-  #extra-tab-train-{{ section.id }}:checked ~ .extra-info-tabs-content #extra-content-train-{{ section.id }},
-  #extra-tab-buying-guide-{{ section.id }}:checked ~ .extra-info-tabs-content #extra-content-buying-guide-{{ section.id }},
-  #extra-tab-faq-{{ section.id }}:checked ~ .extra-info-tabs-content #extra-content-faq-{{ section.id }},
-  #extra-tab-warranty-{{ section.id }}:checked ~ .extra-info-tabs-content #extra-content-warranty-{{ section.id }} {
+  #shopify-section-{{ section.id }} .extra-info-tab-panel.is-active {
     display: block;
   }
 
-  #shopify-section-{{ section.id }} .extra-info-tab-content > * + * {
+  #shopify-section-{{ section.id }} .extra-info-tab-panel > * + * {
     margin-top: 24px;
   }
 
@@ -238,6 +225,19 @@
     list-style: disc;
   }
 
+  #shopify-section-{{ section.id }} .extra-info-empty-message {
+    display: none;
+  }
+
+  {% if request.design_mode %}
+    #shopify-section-{{ section.id }} .extra-info-empty-message {
+      display: block;
+      padding: 16px;
+      border: 1px dashed #D83D0E;
+      border-radius: 8px;
+    }
+  {% endif %}
+
   @media screen and (max-width: 750px) {
     #shopify-section-{{ section.id }} .product__extra_info {
       padding-top: {{ section.settings.padding_top | times: 0.6 | round }}px;
@@ -252,7 +252,7 @@
       justify-content: flex-start;
     }
 
-    #shopify-section-{{ section.id }} .extra-info-tab-label {
+    #shopify-section-{{ section.id }} .extra-info-tab-button {
       font-size: 14px;
       line-height: 22px;
       min-width: max-content;
@@ -299,282 +299,348 @@
 <div class="product__extra_info product__extra_info-tabs">
   <div class="product__extra_info-wrap">
 
-    <input type="radio" name="extra-info-tabs-{{ section.id }}" id="extra-tab-description-{{ section.id }}" checked>
-    <input type="radio" name="extra-info-tabs-{{ section.id }}" id="extra-tab-features-{{ section.id }}">
-    <input type="radio" name="extra-info-tabs-{{ section.id }}" id="extra-tab-benefits-{{ section.id }}">
-    <input type="radio" name="extra-info-tabs-{{ section.id }}" id="extra-tab-train-{{ section.id }}">
-    <input type="radio" name="extra-info-tabs-{{ section.id }}" id="extra-tab-buying-guide-{{ section.id }}">
-    <input type="radio" name="extra-info-tabs-{{ section.id }}" id="extra-tab-faq-{{ section.id }}">
-    <input type="radio" name="extra-info-tabs-{{ section.id }}" id="extra-tab-warranty-{{ section.id }}">
+    {% assign has_visible_tabs = false %}
 
-    <div class="extra-info-tabs-nav">
-      <label for="extra-tab-description-{{ section.id }}" class="extra-info-tab-label">Description</label>
-      <label for="extra-tab-features-{{ section.id }}" class="extra-info-tab-label">Features</label>
-      <label for="extra-tab-benefits-{{ section.id }}" class="extra-info-tab-label">Benefits</label>
-      <label for="extra-tab-train-{{ section.id }}" class="extra-info-tab-label">What You Can Train</label>
-      <label for="extra-tab-buying-guide-{{ section.id }}" class="extra-info-tab-label">Buying Guide</label>
-      <label for="extra-tab-faq-{{ section.id }}" class="extra-info-tab-label">Frequently Asked Questions</label>
-      <label for="extra-tab-warranty-{{ section.id }}" class="extra-info-tab-label">Warranty</label>
+    <div class="extra-info-tabs-nav" role="tablist">
+      {% for block in section.blocks %}
+        {% assign show_tab = false %}
+        {% assign tab_title = block.settings.title %}
+
+        {% case block.type %}
+          {% when 'description' %}
+            {% if product.content != blank or request.design_mode %}
+              {% assign show_tab = true %}
+            {% endif %}
+
+          {% when 'features' %}
+            {% assign otherFeatures = product.metafields.custom.features_specs.value.other_features.value %}
+            {% if block.settings.features != blank or otherFeatures != blank or request.design_mode %}
+              {% assign show_tab = true %}
+            {% endif %}
+
+          {% when 'benefits' %}
+            {% if block.settings.benefits != blank or request.design_mode %}
+              {% assign show_tab = true %}
+            {% endif %}
+
+          {% when 'what_you_can_train' %}
+            {% if block.settings.what_you_can_train != blank or request.design_mode %}
+              {% assign show_tab = true %}
+            {% endif %}
+
+          {% when 'buyingguide' %}
+            {% if block.settings.buyingguide != blank or request.design_mode %}
+              {% assign show_tab = true %}
+            {% endif %}
+
+          {% when 'faq' %}
+            {% if block.settings.faq != blank or request.design_mode %}
+              {% assign show_tab = true %}
+            {% endif %}
+
+          {% when 'warranty' %}
+            {% if block.settings.warranty != blank or request.design_mode %}
+              {% assign show_tab = true %}
+            {% endif %}
+        {% endcase %}
+
+        {% if show_tab and tab_title != blank %}
+          {% assign has_visible_tabs = true %}
+          <button
+            type="button"
+            class="extra-info-tab-button"
+            data-extra-tab-button="{{ section.id }}-{{ block.id }}"
+            role="tab"
+            aria-controls="extra-tab-panel-{{ section.id }}-{{ block.id }}"
+            aria-selected="false"
+            {{ block.shopify_attributes }}
+          >
+            {{ tab_title }}
+          </button>
+        {% endif %}
+      {% endfor %}
     </div>
 
     <div class="extra-info-tabs-content">
+      {% for block in section.blocks %}
+        {% assign show_panel = false %}
+        {% assign tab_title = block.settings.title %}
 
-      <div class="extra-info-tab-content" id="extra-content-description-{{ section.id }}">
-        {% for block in section.blocks %}
-          {% case block.type %}
-            {% when 'description' %}
-              {% if product.content != blank %}
-                <div class="extra-info-width">
-                  <h2 class="product__extra_info-title description-heading">Description</h2>
+        {% case block.type %}
+          {% when 'description' %}
+            {% if product.content != blank or request.design_mode %}
+              {% assign show_panel = true %}
+            {% endif %}
 
-                  {% assign videos = product.media | where: "media_type", "video" %}
-                  {% if videos.size > 0 %}
-                    <div class="product-videos-wrapper" id="descriptionvideo">
-                      {% for video in videos %}
-                        <div class="product-video-item">
-                          <a href="#" class="product-video-trigger" data-video-id="video-{{ video.id }}">
-                            {% if video.preview_image %}
-                              {% capture video_thumbnail_alt %}{{ product.title }} video preview {{ forloop.index }}{% endcapture %}
-                              <div class="product-video-thumbnail-wrapper">
-                                {{
-                                  video.preview_image
-                                  | image_url: width: 800
-                                  | image_tag:
-                                    alt: video_thumbnail_alt,
-                                    class: 'product-video-thumbnail',
-                                    widths: '320, 480, 640, 800',
-                                    sizes: '(min-width: 990px) 532px, 100vw',
-                                    loading: 'lazy'
-                                }}
-                                <span class="product-video-play-icon">▶</span>
-                              </div>
-                            {% else %}
-                              <div class="video-placeholder">
-                                ▶ Play Video {{ forloop.index }}
-                              </div>
-                            {% endif %}
-                          </a>
-                        </div>
+          {% when 'features' %}
+            {% assign otherFeatures = product.metafields.custom.features_specs.value.other_features.value %}
+            {% if block.settings.features != blank or otherFeatures != blank or request.design_mode %}
+              {% assign show_panel = true %}
+            {% endif %}
 
-                        <div id="video-{{ video.id }}" class="product-video-modal">
-                          <div class="product-video-modal-content">
-                            <span class="product-video-close">&times;</span>
-                            <button
-                              type="button"
-                              class="product-video-modal-poster"
-                              aria-label="Play {{ product.title }} video {{ forloop.index }}"
-                            >
+          {% when 'benefits' %}
+            {% if block.settings.benefits != blank or request.design_mode %}
+              {% assign show_panel = true %}
+            {% endif %}
+
+          {% when 'what_you_can_train' %}
+            {% if block.settings.what_you_can_train != blank or request.design_mode %}
+              {% assign show_panel = true %}
+            {% endif %}
+
+          {% when 'buyingguide' %}
+            {% if block.settings.buyingguide != blank or request.design_mode %}
+              {% assign show_panel = true %}
+            {% endif %}
+
+          {% when 'faq' %}
+            {% if block.settings.faq != blank or request.design_mode %}
+              {% assign show_panel = true %}
+            {% endif %}
+
+          {% when 'warranty' %}
+            {% if block.settings.warranty != blank or request.design_mode %}
+              {% assign show_panel = true %}
+            {% endif %}
+        {% endcase %}
+
+        {% if show_panel and tab_title != blank %}
+          <div
+            class="extra-info-tab-panel"
+            id="extra-tab-panel-{{ section.id }}-{{ block.id }}"
+            data-extra-tab-panel="{{ section.id }}-{{ block.id }}"
+            role="tabpanel"
+          >
+            {% case block.type %}
+
+              {% when 'description' %}
+                {% if product.content != blank %}
+                  <div class="extra-info-width">
+                    {% assign videos = product.media | where: "media_type", "video" %}
+                    {% if videos.size > 0 %}
+                      <div class="product-videos-wrapper" id="descriptionvideo">
+                        {% for video in videos %}
+                          <div class="product-video-item">
+                            <a href="#" class="product-video-trigger" data-video-id="video-{{ video.id }}">
                               {% if video.preview_image %}
-                                <img
-                                  src="{{ video.preview_image | img_url: '1200x' }}"
-                                  alt="{{ product.title }} video preview {{ forloop.index }}"
-                                  class="product-video-modal-poster-image"
-                                >
+                                {% capture video_thumbnail_alt %}{{ product.title }} video preview {{ forloop.index }}{% endcapture %}
+                                <div class="product-video-thumbnail-wrapper">
+                                  {{
+                                    video.preview_image
+                                    | image_url: width: 800
+                                    | image_tag:
+                                      alt: video_thumbnail_alt,
+                                      class: 'product-video-thumbnail',
+                                      widths: '320, 480, 640, 800',
+                                      sizes: '(min-width: 990px) 532px, 100vw',
+                                      loading: 'lazy'
+                                  }}
+                                  <span class="product-video-play-icon">▶</span>
+                                </div>
+                              {% else %}
+                                <div class="video-placeholder">
+                                  ▶ Play Video {{ forloop.index }}
+                                </div>
                               {% endif %}
-                              <span class="product-video-modal-play-icon">▶</span>
-                            </button>
-                            <video controls playsinline preload="none" poster="{{ video.preview_image | image_url: width: 1200 }}" style="width:100%; border-radius:12px; display:none;">
-                              {% for source in video.sources %}
-                                <source src="{{ source.url }}" type="{{ source.mime_type }}">
-                              {% endfor %}
-                            </video>
+                            </a>
                           </div>
-                        </div>
-                      {% endfor %}
-                    </div>
-                  {% endif %}
 
-                  {% render 'clean-description', description: product.description %}
-                </div>
-              {% endif %}
-
-              {% if product.metafields.custom.condition_state == 'Remanufactured' %}
-                <div class="extra-info-width remanufacturing-process-video">
-                  <h2 class="product__extra_info-title">Our Remanufacturing Process</h2>
-                  <div class="custom-video-wrapper">
-                    <div class="custom-video-poster" style="display:block;">
-                      <img
-                        src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Our_Remanufacturing_Process_Video_Thumbnail_-_PDP.png?v=1763416095"
-                        alt="Remanufacturing Process Thumbnail"
-                      >
-                      <svg class="custom-play-button" width="80" height="80" viewBox="0 0 80 80" fill="none">
-                        <circle cx="40" cy="40" r="40" fill="rgba(0,0,0,0.5)"/>
-                        <polygon points="32,25 60,40 32,55" fill="#fff"/>
-                      </svg>
-                    </div>
-                    <video
-                      class="custom-video"
-                      style="display:none; width:100%; max-height:320px;"
-                      controls
-                      poster="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Our_Remanufacturing_Process_Video_Thumbnail_-_PDP.png?v=1763416095"
-                    >
-                      <source
-                        src="https://cdn.shopify.com/videos/c/o/v/2596b47c911e44c3a9f1fc683663f105.mp4"
-                        type="video/mp4"
-                      >
-                      Your browser does not support the video tag.
-                    </video>
-                  </div>
-                </div>
-              {% endif %}
-          {% endcase %}
-        {% endfor %}
-
-        {% unless is_gift_cards_template %}
-          {% render 'prop65' %}
-
-          {% if customer and customer.tags contains 'admin' %}
-            <a id="download-pds" style="cursor:pointer;">Download Product Data Sheet</a>
-          {% endif %}
-
-          {% render 'product-downloads' %}
-        {% endunless %}
-      </div>
-
-      <div class="extra-info-tab-content" id="extra-content-features-{{ section.id }}">
-        {% for block in section.blocks %}
-          {% case block.type %}
-            {% when 'features' %}
-              {% if block.settings.features != blank %}
-                <div class="product__extra_features extra-info-width">
-                  <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
-                  <div>{{ block.settings.features }}</div>
-                </div>
-              {% endif %}
-
-              {% assign otherFeatures = product.metafields.custom.features_specs.value.other_features.value %}
-              {% if otherFeatures != blank %}
-                <div class="product__extra_tech extra-info-width">
-                  <div>{{ otherFeatures }}</div>
-                </div>
-              {% endif %}
-
-              {% if addMoreSections != blank %}
-                <div class="extra-info-width">
-                  <h2 class="product__extra_info-title">Add more sections</h2>
-
-                  {% assign add_more_keys = "2_sections,3_sections,4_sections,5_sections" | split: "," %}
-                  {% for add_key in add_more_keys %}
-                    {% if addMoreSections[add_key] != blank %}
-                      <div class="extra-info-accordion">
-                        <span class="accordion-item">
-                          <h2 class="product__extra_info-title">{{ add_key | replace: "_", " " }}</h2>
-
-                          <svg
-                            class="arrow"
-                            width="14"
-                            height="8"
-                            viewBox="0 0 14 8"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
-                          </svg>
-                        </span>
-
-                        <div class="extra-info-accordion-content">
-                          {% render 'clean-description', description: addMoreSections[add_key] %}
-                        </div>
+                          <div id="video-{{ video.id }}" class="product-video-modal">
+                            <div class="product-video-modal-content">
+                              <span class="product-video-close">&times;</span>
+                              <button
+                                type="button"
+                                class="product-video-modal-poster"
+                                aria-label="Play {{ product.title }} video {{ forloop.index }}"
+                              >
+                                {% if video.preview_image %}
+                                  <img
+                                    src="{{ video.preview_image | img_url: '1200x' }}"
+                                    alt="{{ product.title }} video preview {{ forloop.index }}"
+                                    class="product-video-modal-poster-image"
+                                  >
+                                {% endif %}
+                                <span class="product-video-modal-play-icon">▶</span>
+                              </button>
+                              <video controls playsinline preload="none" poster="{{ video.preview_image | image_url: width: 1200 }}" style="width:100%; border-radius:12px; display:none;">
+                                {% for source in video.sources %}
+                                  <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                                {% endfor %}
+                              </video>
+                            </div>
+                          </div>
+                        {% endfor %}
                       </div>
                     {% endif %}
-                  {% endfor %}
-                </div>
-              {% endif %}
-          {% endcase %}
-        {% endfor %}
-      </div>
 
-      <div class="extra-info-tab-content" id="extra-content-benefits-{{ section.id }}">
-        {% for block in section.blocks %}
-          {% case block.type %}
-            {% when 'benefits' %}
-              {% if block.settings.benefits != blank %}
-                <div class="product__extra_overview extra-info-width">
-                  <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
-                  <div class="product__extra_overview-list">{{ block.settings.benefits }}</div>
-                </div>
-              {% endif %}
-          {% endcase %}
-        {% endfor %}
-      </div>
+                    {% render 'clean-description', description: product.description %}
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add a product description to display content in this tab.
+                  </div>
+                {% endif %}
 
-      <div class="extra-info-tab-content" id="extra-content-train-{{ section.id }}">
-        {% assign has_train_content = false %}
+                {% if product.metafields.custom.condition_state == 'Remanufactured' %}
+                  <div class="extra-info-width remanufacturing-process-video">
+                    <h2 class="product__extra_info-title">Our Remanufacturing Process</h2>
+                    <div class="custom-video-wrapper">
+                      <div class="custom-video-poster" style="display:block;">
+                        <img
+                          src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Our_Remanufacturing_Process_Video_Thumbnail_-_PDP.png?v=1763416095"
+                          alt="Remanufacturing Process Thumbnail"
+                        >
+                        <svg class="custom-play-button" width="80" height="80" viewBox="0 0 80 80" fill="none">
+                          <circle cx="40" cy="40" r="40" fill="rgba(0,0,0,0.5)"/>
+                          <polygon points="32,25 60,40 32,55" fill="#fff"/>
+                        </svg>
+                      </div>
+                      <video
+                        class="custom-video"
+                        style="display:none; width:100%; max-height:320px;"
+                        controls
+                        poster="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Our_Remanufacturing_Process_Video_Thumbnail_-_PDP.png?v=1763416095"
+                      >
+                        <source
+                          src="https://cdn.shopify.com/videos/c/o/v/2596b47c911e44c3a9f1fc683663f105.mp4"
+                          type="video/mp4"
+                        >
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                  </div>
+                {% endif %}
 
-        {% for block in section.blocks %}
-          {% case block.type %}
-            {% when 'what_you_can_train' %}
-              {% if block.settings.what_you_can_train != blank %}
-                {% assign has_train_content = true %}
-                <div class="product__extra_train extra-info-width" {{ block.shopify_attributes }}>
-                  <h2 class="product__extra_info-title">
-                    {% if block.settings.title != blank %}
-                      {{ block.settings.title }}
-                    {% else %}
-                      What You Can Train
-                    {% endif %}
-                  </h2>
-                  <div>{{ block.settings.what_you_can_train }}</div>
-                </div>
-              {% endif %}
-          {% endcase %}
-        {% endfor %}
+                {% unless is_gift_cards_template %}
+                  {% render 'prop65' %}
 
-        {% unless has_train_content %}
-          {% if request.design_mode %}
-            <div class="extra-info-width">
-              <h2 class="product__extra_info-title">What You Can Train</h2>
-              <p>Add a <strong>What You Can Train</strong> block, then connect its content from the theme customizer.</p>
-            </div>
-          {% endif %}
-        {% endunless %}
-      </div>
+                  {% if customer and customer.tags contains 'admin' %}
+                    <a id="download-pds" style="cursor:pointer;">Download Product Data Sheet</a>
+                  {% endif %}
 
-      <div class="extra-info-tab-content" id="extra-content-buying-guide-{{ section.id }}">
-        {% for block in section.blocks %}
-          {% case block.type %}
-            {% when 'buyingguide' %}
-              {% assign buyingGuide = product.metafields.custom.features_specs.value.buying_guide.value %}
-              {% if buyingGuide != blank %}
-                <div class="product__extra_tech extra-info-width">
-                  <h2 class="product__extra_info-title">Buying Guide</h2>
-                  <div>{{ buyingGuide }}</div>
-                </div>
-              {% endif %}
-          {% endcase %}
-        {% endfor %}
-      </div>
+                  {% render 'product-downloads' %}
+                {% endunless %}
 
-      <div class="extra-info-tab-content" id="extra-content-faq-{{ section.id }}">
-        {% for block in section.blocks %}
-          {% case block.type %}
-            {% when 'faq' %}
-              {% assign faq = product.metafields.custom.features_specs.value.frequently_asked_questions.value %}
-              {% if faq != blank %}
-                <div class="product__extra_tech extra-info-width">
-                  <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
-                  <div>{{ faq }}</div>
-                </div>
-              {% endif %}
-          {% endcase %}
-        {% endfor %}
-      </div>
+              {% when 'features' %}
+                {% assign otherFeatures = product.metafields.custom.features_specs.value.other_features.value %}
 
-      <div class="extra-info-tab-content" id="extra-content-warranty-{{ section.id }}">
-        {% for block in section.blocks %}
-          {% case block.type %}
-            {% when 'warranty' %}
-              {% if block.settings.warranty != blank %}
-                <div class="product__extra_warranty extra-info-width">
-                  <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
-                  <div>{{ block.settings.warranty }}</div>
-                </div>
-              {% endif %}
-          {% endcase %}
-        {% endfor %}
-      </div>
+                {% if block.settings.features != blank %}
+                  <div class="product__extra_features extra-info-width">
+                    <div>{{ block.settings.features }}</div>
+                  </div>
+                {% endif %}
 
+                {% if otherFeatures != blank %}
+                  <div class="product__extra_tech extra-info-width">
+                    <div>{{ otherFeatures }}</div>
+                  </div>
+                {% endif %}
+
+                {% if block.settings.features == blank and otherFeatures == blank and request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this Features block or connect a dynamic source.
+                  </div>
+                {% endif %}
+
+                {% if addMoreSections != blank %}
+                  <div class="extra-info-width">
+                    {% assign add_more_keys = "2_sections,3_sections,4_sections,5_sections" | split: "," %}
+                    {% for add_key in add_more_keys %}
+                      {% if addMoreSections[add_key] != blank %}
+                        <div class="extra-info-accordion">
+                          <span class="accordion-item">
+                            <h2 class="product__extra_info-title">{{ add_key | replace: "_", " " }}</h2>
+
+                            <svg
+                              class="arrow"
+                              width="14"
+                              height="8"
+                              viewBox="0 0 14 8"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                            </svg>
+                          </span>
+
+                          <div class="extra-info-accordion-content">
+                            {% render 'clean-description', description: addMoreSections[add_key] %}
+                          </div>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+              {% when 'benefits' %}
+                {% if block.settings.benefits != blank %}
+                  <div class="product__extra_overview extra-info-width">
+                    <div class="product__extra_overview-list">{{ block.settings.benefits }}</div>
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this Benefits block or connect a dynamic source.
+                  </div>
+                {% endif %}
+
+              {% when 'what_you_can_train' %}
+                {% if block.settings.what_you_can_train != blank %}
+                  <div class="product__extra_train extra-info-width">
+                    <div>{{ block.settings.what_you_can_train }}</div>
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this What You Can Train block or connect a dynamic source.
+                  </div>
+                {% endif %}
+
+              {% when 'buyingguide' %}
+                {% if block.settings.buyingguide != blank %}
+                  <div class="product__extra_tech extra-info-width">
+                    <div>{{ block.settings.buyingguide }}</div>
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this Buying Guide block or connect a dynamic source.
+                  </div>
+                {% endif %}
+
+              {% when 'faq' %}
+                {% if block.settings.faq != blank %}
+                  <div class="product__extra_tech extra-info-width">
+                    <div>{{ block.settings.faq }}</div>
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this FAQ block or connect a dynamic source.
+                  </div>
+                {% endif %}
+
+              {% when 'warranty' %}
+                {% if block.settings.warranty != blank %}
+                  <div class="product__extra_warranty extra-info-width">
+                    <div>{{ block.settings.warranty }}</div>
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this Warranty block or connect a dynamic source.
+                  </div>
+                {% endif %}
+
+            {% endcase %}
+          </div>
+        {% endif %}
+      {% endfor %}
     </div>
+
+    {% unless has_visible_tabs %}
+      {% if request.design_mode %}
+        <div class="extra-info-empty-message">
+          Add blocks to create tabs. Each tab uses the block Title as the tab label.
+        </div>
+      {% endif %}
+    {% endunless %}
+
   </div>
 </div>
 
@@ -613,6 +679,12 @@
       "type": "description",
       "name": "Description",
       "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Description"
+        },
         {
           "type": "checkbox",
           "id": "show_tile_calculator",
@@ -653,13 +725,13 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title",
+          "label": "Tab title",
           "default": "Features"
         },
         {
           "type": "richtext",
           "id": "features",
-          "label": "Features"
+          "label": "Content"
         }
       ]
     },
@@ -670,13 +742,13 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title",
+          "label": "Tab title",
           "default": "Benefits"
         },
         {
           "type": "richtext",
           "id": "benefits",
-          "label": "Benefits"
+          "label": "Content"
         }
       ]
     },
@@ -687,7 +759,7 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title",
+          "label": "Tab title",
           "default": "What You Can Train"
         },
         {
@@ -702,9 +774,15 @@
       "name": "Buying Guide",
       "settings": [
         {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Buying Guide"
+        },
+        {
           "type": "richtext",
           "id": "buyingguide",
-          "label": "Buying Guide"
+          "label": "Content"
         }
       ]
     },
@@ -715,13 +793,13 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title",
+          "label": "Tab title",
           "default": "Frequently Asked Questions"
         },
         {
           "type": "richtext",
           "id": "faq",
-          "label": "Frequently Asked Questions"
+          "label": "Content"
         }
       ]
     },
@@ -732,13 +810,13 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title",
+          "label": "Tab title",
           "default": "Warranty"
         },
         {
           "type": "richtext",
           "id": "warranty",
-          "label": "Warranty"
+          "label": "Content"
         }
       ]
     },
@@ -771,12 +849,13 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title"
+          "label": "Tab title",
+          "default": "All in one overview"
         },
         {
           "type": "richtext",
           "id": "overview",
-          "label": "Overview"
+          "label": "Content"
         }
       ]
     },
@@ -798,12 +877,13 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title"
+          "label": "Tab title",
+          "default": "Tech specs"
         },
         {
           "type": "richtext",
           "id": "tech",
-          "label": "Tech specs"
+          "label": "Content"
         }
       ]
     },
@@ -825,12 +905,13 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title"
+          "label": "Tab title",
+          "default": "Smith bar specs"
         },
         {
           "type": "richtext",
           "id": "smith",
-          "label": "Smith bar specs"
+          "label": "Content"
         }
       ]
     },
@@ -841,12 +922,13 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title"
+          "label": "Tab title",
+          "default": "Weight Stacks"
         },
         {
           "type": "richtext",
           "id": "weightstacks",
-          "label": "Weight Stacks specs"
+          "label": "Content"
         }
       ]
     },
@@ -855,9 +937,15 @@
       "name": "Comparison Chart Title",
       "settings": [
         {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Comparison Chart Title"
+        },
+        {
           "type": "richtext",
           "id": "comparisonchartitle",
-          "label": "Comparison Chart Title"
+          "label": "Content"
         }
       ]
     },
@@ -866,9 +954,15 @@
       "name": "Comparison Chart Table",
       "settings": [
         {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Comparison Chart Table"
+        },
+        {
           "type": "richtext",
           "id": "comparisoncharttable",
-          "label": "Comparison Chart Table"
+          "label": "Content"
         }
       ]
     },
@@ -877,9 +971,15 @@
       "name": "Other Comparison Charts",
       "settings": [
         {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Other Comparison Charts"
+        },
+        {
           "type": "richtext",
           "id": "othercomparisoncharts",
-          "label": "Other Comparison Charts"
+          "label": "Content"
         }
       ]
     },
@@ -890,12 +990,13 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title"
+          "label": "Tab title",
+          "default": "Shipping"
         },
         {
           "type": "richtext",
           "id": "shippingdimsweight",
-          "label": "Shipping specs"
+          "label": "Content"
         }
       ]
     },
@@ -906,7 +1007,8 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title"
+          "label": "Tab title",
+          "default": "Set Includes"
         }
       ]
     },
@@ -917,7 +1019,8 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title"
+          "label": "Tab title",
+          "default": "Accessories"
         }
       ]
     },
@@ -928,12 +1031,13 @@
         {
           "type": "text",
           "id": "title",
-          "label": "Title"
+          "label": "Tab title",
+          "default": "Accessory feature"
         },
         {
           "type": "richtext",
           "id": "accessory-feature",
-          "label": "Accessory feature"
+          "label": "Content"
         }
       ]
     },
@@ -942,9 +1046,15 @@
       "name": "List",
       "settings": [
         {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "List"
+        },
+        {
           "type": "richtext",
           "id": "list",
-          "label": "List content"
+          "label": "Content"
         }
       ]
     },
@@ -953,9 +1063,15 @@
       "name": "Text",
       "settings": [
         {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Text"
+        },
+        {
           "type": "richtext",
           "id": "text",
-          "label": "Text"
+          "label": "Content"
         }
       ]
     }
@@ -967,6 +1083,38 @@
   ]
 }
 {% endschema %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll("#shopify-section-{{ section.id }} .product__extra_info-tabs").forEach(section => {
+      const buttons = section.querySelectorAll("[data-extra-tab-button]");
+      const panels = section.querySelectorAll("[data-extra-tab-panel]");
+
+      if (!buttons.length || !panels.length) return;
+
+      function activateTab(tabId) {
+        buttons.forEach(button => {
+          const isActive = button.getAttribute("data-extra-tab-button") === tabId;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+
+        panels.forEach(panel => {
+          const isActive = panel.getAttribute("data-extra-tab-panel") === tabId;
+          panel.classList.toggle("is-active", isActive);
+        });
+      }
+
+      buttons.forEach(button => {
+        button.addEventListener("click", function() {
+          activateTab(this.getAttribute("data-extra-tab-button"));
+        });
+      });
+
+      activateTab(buttons[0].getAttribute("data-extra-tab-button"));
+    });
+  });
+</script>
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
