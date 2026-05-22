@@ -66,15 +66,38 @@
     margin-top: 24px;
   }
 
+  /*
+    List fix:
+    The previous version forced list-style on both UL and LI.
+    Some theme CSS also adds li::before bullets, causing double bullets.
+  */
   #shopify-section-{{ section.id }} .extra-info-width ul,
-  #shopify-section-{{ section.id }} .metafield-rich_text_field ul {
+  #shopify-section-{{ section.id }} .metafield-rich_text_field ul,
+  #shopify-section-{{ section.id }} .product__extra_info ul {
     padding-left: 24px;
+    margin-left: 0;
     list-style: disc;
   }
 
+  #shopify-section-{{ section.id }} .extra-info-width ol,
+  #shopify-section-{{ section.id }} .metafield-rich_text_field ol,
+  #shopify-section-{{ section.id }} .product__extra_info ol {
+    padding-left: 24px;
+    margin-left: 0;
+    list-style: decimal;
+  }
+
   #shopify-section-{{ section.id }} .extra-info-width li,
-  #shopify-section-{{ section.id }} .metafield-rich_text_field li {
-    list-style: disc;
+  #shopify-section-{{ section.id }} .metafield-rich_text_field li,
+  #shopify-section-{{ section.id }} .product__extra_info li {
+    list-style: inherit;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-width li::before,
+  #shopify-section-{{ section.id }} .metafield-rich_text_field li::before,
+  #shopify-section-{{ section.id }} .product__extra_info li::before {
+    content: none !important;
+    display: none !important;
   }
 
   #shopify-section-{{ section.id }} .extra-info-empty-message {
@@ -459,12 +482,30 @@
                 {% assign otherFeatures = product.metafields.custom.features_specs.value.other_features.value %}
 
                 {% if block.settings.features_liquid != blank %}
+                  {% capture features_output %}{{ block.settings.features_liquid }}{% endcapture %}
                   <div class="product__extra_features extra-info-width">
-                    {{ block.settings.features_liquid }}
+                    {{ features_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
                   </div>
                 {% elsif block.settings.features != blank %}
+                  {% capture features_output %}{{ block.settings.features }}{% endcapture %}
                   <div class="product__extra_features extra-info-width">
-                    {{ block.settings.features }}
+                    {{ features_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
                   </div>
                 {% elsif request.design_mode %}
                   <div class="extra-info-empty-message">
@@ -509,12 +550,30 @@
 
               {% when 'benefits' %}
                 {% if block.settings.benefits_liquid != blank %}
+                  {% capture benefits_output %}{{ block.settings.benefits_liquid }}{% endcapture %}
                   <div class="product__extra_overview extra-info-width">
-                    {{ block.settings.benefits_liquid }}
+                    {{ benefits_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
                   </div>
                 {% elsif block.settings.benefits != blank %}
+                  {% capture benefits_output %}{{ block.settings.benefits }}{% endcapture %}
                   <div class="product__extra_overview extra-info-width">
-                    {{ block.settings.benefits }}
+                    {{ benefits_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
                   </div>
                 {% elsif request.design_mode %}
                   <div class="extra-info-empty-message">
@@ -524,12 +583,30 @@
 
               {% when 'what_you_can_train' %}
                 {% if block.settings.what_you_can_train_liquid != blank %}
+                  {% capture train_output %}{{ block.settings.what_you_can_train_liquid }}{% endcapture %}
                   <div class="product__extra_train extra-info-width">
-                    {{ block.settings.what_you_can_train_liquid }}
+                    {{ train_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
                   </div>
                 {% elsif block.settings.what_you_can_train != blank %}
+                  {% capture train_output %}{{ block.settings.what_you_can_train }}{% endcapture %}
                   <div class="product__extra_train extra-info-width">
-                    {{ block.settings.what_you_can_train }}
+                    {{ train_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
                   </div>
                 {% elsif request.design_mode %}
                   <div class="extra-info-empty-message">
@@ -539,12 +616,30 @@
 
               {% when 'buyingguide' %}
                 {% if block.settings.buyingguide_liquid != blank %}
+                  {% capture buyingguide_output %}{{ block.settings.buyingguide_liquid }}{% endcapture %}
                   <div class="product__extra_tech extra-info-width">
-                    {{ block.settings.buyingguide_liquid }}
+                    {{ buyingguide_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
                   </div>
                 {% elsif block.settings.buyingguide != blank %}
+                  {% capture buyingguide_output %}{{ block.settings.buyingguide }}{% endcapture %}
                   <div class="product__extra_tech extra-info-width">
-                    {{ block.settings.buyingguide }}
+                    {{ buyingguide_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
                   </div>
                 {% elsif request.design_mode %}
                   <div class="extra-info-empty-message">
@@ -554,12 +649,30 @@
 
               {% when 'faq' %}
                 {% if block.settings.faq_liquid != blank %}
+                  {% capture faq_output %}{{ block.settings.faq_liquid }}{% endcapture %}
                   <div class="product__extra_tech extra-info-width">
-                    {{ block.settings.faq_liquid }}
+                    {{ faq_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
                   </div>
                 {% elsif block.settings.faq != blank %}
+                  {% capture faq_output %}{{ block.settings.faq }}{% endcapture %}
                   <div class="product__extra_tech extra-info-width">
-                    {{ block.settings.faq }}
+                    {{ faq_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
                   </div>
                 {% elsif request.design_mode %}
                   <div class="extra-info-empty-message">
@@ -569,12 +682,30 @@
 
               {% when 'warranty' %}
                 {% if block.settings.warranty_liquid != blank %}
+                  {% capture warranty_output %}{{ block.settings.warranty_liquid }}{% endcapture %}
                   <div class="product__extra_warranty extra-info-width">
-                    {{ block.settings.warranty_liquid }}
+                    {{ warranty_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
                   </div>
                 {% elsif block.settings.warranty != blank %}
+                  {% capture warranty_output %}{{ block.settings.warranty }}{% endcapture %}
                   <div class="product__extra_warranty extra-info-width">
-                    {{ block.settings.warranty }}
+                    {{ warranty_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
                   </div>
                 {% elsif request.design_mode %}
                   <div class="extra-info-empty-message">
