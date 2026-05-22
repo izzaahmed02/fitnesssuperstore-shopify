@@ -133,6 +133,33 @@
     margin-top: 14px;
   }
 
+
+  /*
+    Clean fix: keep the right-side product form in normal document flow.
+    This prevents the product form from stopping/sticking while the rest of the page scrolls.
+  */
+  #shopify-section-{{ section.id }} .product__info-wrapper,
+  #shopify-section-{{ section.id }} .product__info-container,
+  #shopify-section-{{ section.id }} #ProductInfo-{{ section.id }},
+  #shopify-section-{{ section.id }} .product-form,
+  #shopify-section-{{ section.id }} product-form,
+  #shopify-section-{{ section.id }} product-form-with-options,
+  #shopify-section-{{ section.id }} .product_price_with_options-contaniner,
+  #shopify-section-{{ section.id }} .product_price_with_options_atc {
+    position: static !important;
+    top: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    z-index: auto !important;
+  }
+
+  #shopify-section-{{ section.id }} .product__info-wrapper {
+    align-self: start !important;
+  }
+
 {% endstyle %}
 
 {% if product.template_suffix == 'discontinued' %}
@@ -804,7 +831,7 @@
       <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}" style="opacity: 1 !important;">
         <section
           id="ProductInfo-{{ section.id }}"
-          class="product__info-container{% if section.settings.enable_sticky_info %} product__column-sticky{% endif %}"
+          class="product__info-container"
         >
           {%- assign product_form_id = 'product-form-' | append: section.id -%}
 
@@ -837,22 +864,6 @@
                   {% endunless %}
                 {% endfor %}
 <div class="metainfo-wrapper metainfo-tabs-wrapper">
-  {% assign metainfo_tab_2_has_content = false %}
-  {% assign metainfo_tab_3_has_content = false %}
-
-  {% if section.settings.metainfo_tab_2_title != blank %}
-    {% if section.settings.metainfo_tab_2_content != blank or section.settings.metainfo_tab_2_liquid != blank %}
-      {% assign metainfo_tab_2_has_content = true %}
-    {% endif %}
-  {% endif %}
-
-  {% if section.settings.metainfo_tab_3_title != blank %}
-    {% if section.settings.metainfo_tab_3_content != blank or section.settings.metainfo_tab_3_liquid != blank %}
-      {% assign metainfo_tab_3_has_content = true %}
-    {% endif %}
-  {% endif %}
-
-  <div class="metainfo-wrapper metainfo-tabs-wrapper">
   {% assign has_custom_metainfo_tabs = false %}
 
   {% for block in section.blocks %}
@@ -3975,48 +3986,6 @@
   "type": "url",
   "id": "button_link",
   "label": "Button link"
-},
-{
-  "type": "header",
-  "content": "Metainfo tabs"
-},
-{
-  "type": "paragraph",
-  "content": "The first tab is fixed as Delivery & Warranty and uses the existing product metainfo. Use Tab 2 and Tab 3 for extra metafield-connected content."
-},
-{
-  "type": "text",
-  "id": "metainfo_tab_2_title",
-  "label": "Tab 2 title"
-},
-{
-  "type": "richtext",
-  "id": "metainfo_tab_2_content",
-  "label": "Tab 2 content",
-  "info": "Use the dynamic source icon to connect this field to a compatible metafield."
-},
-{
-  "type": "liquid",
-  "id": "metainfo_tab_2_liquid",
-  "label": "Tab 2 custom liquid / metafield output",
-  "info": "Use this field when you need to output a metafield with Liquid, for example {{ product.metafields.custom.example | metafield_tag }}. This overrides Tab 2 content when filled."
-},
-{
-  "type": "text",
-  "id": "metainfo_tab_3_title",
-  "label": "Tab 3 title"
-},
-{
-  "type": "richtext",
-  "id": "metainfo_tab_3_content",
-  "label": "Tab 3 content",
-  "info": "Use the dynamic source icon to connect this field to a compatible metafield."
-},
-{
-  "type": "liquid",
-  "id": "metainfo_tab_3_liquid",
-  "label": "Tab 3 custom liquid / metafield output",
-  "info": "Use this field when you need to output a metafield with Liquid, for example {{ product.metafields.custom.example | metafield_tag }}. This overrides Tab 3 content when filled."
 },
     {
       "type": "header",
