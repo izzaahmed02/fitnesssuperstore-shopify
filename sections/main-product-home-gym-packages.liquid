@@ -746,95 +746,204 @@
                   {% endunless %}
                 {% endfor %}
 
-                <div class="metainfo-wrapper">
-                  {% if product.metafields.custom.condition_state != blank %}
-                    <div class="item">
-                      <div class="item__icon-wrap">{% render 'icon-star' %}</div>
-                      <div class="item__text">
-                        <span class="title">Condition:</span>
-                        {{
-                          product.metafields.custom.condition_state
-                          | strip_html
-                          | replace: ' (See Description for Details)', ''
-                          | replace: '(What Does this Mean?)', ''
-                        }}
-                      </div>
-                    </div>
-                  {% endif %}
-                  {% if product.metafields.custom.grade != blank %}
-                    <div class="item">
-                      <div class="item__icon-wrap">{% render 'icon-chart' %}</div>
-                      <div class="item__text">
-                        <span class="title">Grade:</span>
-                        {{ product.metafields.custom.grade }}
-                        <span class="more-info" data-customfield="Grade">(More Info)</span>
-                      </div>
-                    </div>
-                  {% endif %}
-                  {% if product.metafields.custom.warranty != blank %}
-                    <div class="item"> 
-                      <div class="item__icon-wrap">{% render 'icon-verified' %}</div>
-                      <div class="item__text">
-                        <span class="title">Warranty:</span>
-                        {{
-                          product.metafields.custom.warranty
-                          | strip_html
-                          | replace: ' (See Description for Details)', ''
-                        }}
-                        <span class="more-info" data-customfield="Warranty">(More Info)</span>
-                      </div>
-                    </div>
-                  {% endif %}
-                  {% if product.metafields.custom.ships != blank %}
-                    <div class="item">
-                      <div class="item__icon-wrap">{% render 'icon-box' %}</div>
-                      <div class="item__text">
-                        <span class="title">Ships:</span>
-                        {{ product.metafields.custom.ships }}
-                        {% for collection in product.collections %}
-                          {% if collection.handle contains 'shop-by-strength-product-line' %}
-                            <span class="more-info" data-customfield="Shipping">(More Info)</span>
-                            <script>
-  var attachClickHandler = setInterval(function () {
-    var $target = $('.custom_shipping_container');
-    if ($target.length > 0) {
-      var $clickTarget = $target.parent().parent();
+                <div class="metainfo-wrapper metainfo-tabs-wrapper">
+  {% assign metainfo_tab_2_has_content = false %}
+  {% assign metainfo_tab_3_has_content = false %}
 
-      $clickTarget.off('click.clearContent').on('click.clearContent', function () {
-        $('#dynamic-product-content').empty();
-      });
+  {% if section.settings.metainfo_tab_2_title != blank %}
+    {% if section.settings.metainfo_tab_2_content != blank or section.settings.metainfo_tab_2_liquid != blank %}
+      {% assign metainfo_tab_2_has_content = true %}
+    {% endif %}
+  {% endif %}
 
-      clearInterval(attachClickHandler); 
-    }
-  }, 200);
-</script>
+  {% if section.settings.metainfo_tab_3_title != blank %}
+    {% if section.settings.metainfo_tab_3_content != blank or section.settings.metainfo_tab_3_liquid != blank %}
+      {% assign metainfo_tab_3_has_content = true %}
+    {% endif %}
+  {% endif %}
 
+  <div class="metainfo-tabs-nav" role="tablist">
+    <button
+      type="button"
+      class="metainfo-tab-button is-active"
+      data-metainfo-tab-button="delivery-warranty-{{ section.id }}"
+      role="tab"
+      aria-controls="metainfo-tab-panel-delivery-warranty-{{ section.id }}"
+      aria-selected="true"
+    >
+      Delivery &amp; Warranty
+    </button>
 
-                          {% endif %}
-                        {% endfor %}
-                      </div>
-                    </div>
-                  {% endif %}
-                  {% if product.metafields.custom.processing_time != blank %}
-                    <div class="item">
-                      <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
-                      <div class="item__text">
-                        <span class="title">Processing Time:</span>
-                        {{ product.metafields.custom.processing_time_long }}
-                        <span class="more-info" data-customfield="Processing Time" data-processingtime="{{ product.metafields.custom.processing_time }}">(More Info)</span>
-                      </div>
-                    </div>
-                  {% endif %}
-                  {% if product.metafields.custom.product_code != blank %}
-                    <div class="item">
-                      <div class="item__icon-wrap">{% render 'icon-hashtag' %}</div>
-                      <div class="item__text">
-                        <span class="title">Product Code:</span>
-                        {{ product.metafields.custom.product_code }}
-                      </div>
-                    </div>
-                  {% endif %}
-                </div>
+    {% if metainfo_tab_2_has_content %}
+      <button
+        type="button"
+        class="metainfo-tab-button"
+        data-metainfo-tab-button="custom-tab-2-{{ section.id }}"
+        role="tab"
+        aria-controls="metainfo-tab-panel-custom-tab-2-{{ section.id }}"
+        aria-selected="false"
+      >
+        {{ section.settings.metainfo_tab_2_title }}
+      </button>
+    {% endif %}
+
+    {% if metainfo_tab_3_has_content %}
+      <button
+        type="button"
+        class="metainfo-tab-button"
+        data-metainfo-tab-button="custom-tab-3-{{ section.id }}"
+        role="tab"
+        aria-controls="metainfo-tab-panel-custom-tab-3-{{ section.id }}"
+        aria-selected="false"
+      >
+        {{ section.settings.metainfo_tab_3_title }}
+      </button>
+    {% endif %}
+  </div>
+
+  <div class="metainfo-tabs-content">
+    <div
+      class="metainfo-tab-panel is-active"
+      id="metainfo-tab-panel-delivery-warranty-{{ section.id }}"
+      data-metainfo-tab-panel="delivery-warranty-{{ section.id }}"
+      role="tabpanel"
+    >
+      {% if product.metafields.custom.condition_state != blank %}
+        <div class="item">
+          <div class="item__icon-wrap">{% render 'icon-star' %}</div>
+          <div class="item__text">
+            <span class="title">Condition:</span>
+            {{
+              product.metafields.custom.condition_state
+              | strip_html
+              | replace: ' (See Description for Details)', ''
+              | replace: '(What Does this Mean?)', ''
+            }}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if product.metafields.custom.grade != blank %}
+        <div class="item">
+          <div class="item__icon-wrap">{% render 'icon-chart' %}</div>
+          <div class="item__text">
+            <span class="title">Grade:</span>
+            {{ product.metafields.custom.grade }}
+            <span class="more-info" data-customfield="Grade">(More Info)</span>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if product.metafields.custom.warranty != blank %}
+        <div class="item">
+          <div class="item__icon-wrap">{% render 'icon-verified' %}</div>
+          <div class="item__text">
+            <span class="title">Warranty:</span>
+            {{
+              product.metafields.custom.warranty
+              | strip_html
+              | replace: ' (See Description for Details)', ''
+            }}
+            <span class="more-info" data-customfield="Warranty">(More Info)</span>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if product.metafields.custom.ships != blank %}
+        <div class="item">
+          <div class="item__icon-wrap">{% render 'icon-box' %}</div>
+          <div class="item__text">
+            <span class="title">Ships:</span>
+            {{ product.metafields.custom.ships }}
+
+            {% for collection in product.collections %}
+              {% if collection.handle contains 'shop-by-strength-product-line' %}
+                <span class="more-info" data-customfield="Shipping">(More Info)</span>
+
+                <script>
+                  var attachClickHandler = setInterval(function () {
+                    var $target = $('.custom_shipping_container');
+
+                    if ($target.length > 0) {
+                      var $clickTarget = $target.parent().parent();
+
+                      $clickTarget.off('click.clearContent').on('click.clearContent', function () {
+                        $('#dynamic-product-content').empty();
+                      });
+
+                      clearInterval(attachClickHandler);
+                    }
+                  }, 200);
+                </script>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if product.metafields.custom.processing_time != blank %}
+        <div class="item">
+          <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
+          <div class="item__text">
+            <span class="title">Processing Time:</span>
+            {{ product.metafields.custom.processing_time_long }}
+            <span
+              class="more-info"
+              data-customfield="Processing Time"
+              data-processingtime="{{ product.metafields.custom.processing_time }}"
+            >
+              (More Info)
+            </span>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if product.metafields.custom.product_code != blank %}
+        <div class="item">
+          <div class="item__icon-wrap">{% render 'icon-hashtag' %}</div>
+          <div class="item__text">
+            <span class="title">Product Code:</span>
+            {{ product.metafields.custom.product_code }}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if metainfo_tab_2_has_content %}
+      <div
+        class="metainfo-tab-panel"
+        id="metainfo-tab-panel-custom-tab-2-{{ section.id }}"
+        data-metainfo-tab-panel="custom-tab-2-{{ section.id }}"
+        role="tabpanel"
+      >
+        <div class="metainfo-tab-custom-content">
+          {% if section.settings.metainfo_tab_2_liquid != blank %}
+            {{ section.settings.metainfo_tab_2_liquid }}
+          {% else %}
+            {{ section.settings.metainfo_tab_2_content }}
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if metainfo_tab_3_has_content %}
+      <div
+        class="metainfo-tab-panel"
+        id="metainfo-tab-panel-custom-tab-3-{{ section.id }}"
+        data-metainfo-tab-panel="custom-tab-3-{{ section.id }}"
+        role="tabpanel"
+      >
+        <div class="metainfo-tab-custom-content">
+          {% if section.settings.metainfo_tab_3_liquid != blank %}
+            {{ section.settings.metainfo_tab_3_liquid }}
+          {% else %}
+            {{ section.settings.metainfo_tab_3_content }}
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
 
                   {% assign metaObject3rdParty = product.metafields.custom['3rd_party'].value %}
                   {% if metaObject3rdParty != blank and metaObject3rdParty.google_material != blank %}
