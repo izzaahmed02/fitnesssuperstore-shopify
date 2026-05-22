@@ -503,10 +503,10 @@
 
         {% for block in section.blocks %}
           {% case block.type %}
-            {% when 'tech' %}
-              {% if block.settings.tech != blank %}
+            {% when 'what_you_can_train' %}
+              {% if block.settings.what_you_can_train != blank %}
                 {% assign has_train_content = true %}
-                <div class="product__extra_train product__extra_tech extra-info-width" {{ block.shopify_attributes }}>
+                <div class="product__extra_train extra-info-width" {{ block.shopify_attributes }}>
                   <h2 class="product__extra_info-title">
                     {% if block.settings.title != blank %}
                       {{ block.settings.title }}
@@ -514,25 +514,17 @@
                       What You Can Train
                     {% endif %}
                   </h2>
-                  <div>{{ block.settings.tech }}</div>
+                  <div>{{ block.settings.what_you_can_train }}</div>
                 </div>
               {% endif %}
           {% endcase %}
         {% endfor %}
 
-        {% assign otherTechSpecs = product.metafields.custom.features_specs.value.other_tech_specs.value %}
-        {% if otherTechSpecs != blank %}
-          {% assign has_train_content = true %}
-          <div class="product__extra_train product__extra_tech extra-info-width">
-            <div>{{ otherTechSpecs }}</div>
-          </div>
-        {% endif %}
-
         {% unless has_train_content %}
           {% if request.design_mode %}
             <div class="extra-info-width">
               <h2 class="product__extra_info-title">What You Can Train</h2>
-              <p>This tab is connected to the <strong>Tech specs</strong> block content and <strong>features_specs → other_tech_specs</strong> metafield. Add content there to display it here.</p>
+              <p>Add a <strong>What You Can Train</strong> block, then connect its content from the theme customizer.</p>
             </div>
           {% endif %}
         {% endunless %}
@@ -689,6 +681,23 @@
       ]
     },
     {
+      "type": "what_you_can_train",
+      "name": "What You Can Train",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "What You Can Train"
+        },
+        {
+          "type": "richtext",
+          "id": "what_you_can_train",
+          "label": "Content"
+        }
+      ]
+    },
+    {
       "type": "buyingguide",
       "name": "Buying Guide",
       "settings": [
@@ -730,23 +739,6 @@
           "type": "richtext",
           "id": "warranty",
           "label": "Warranty"
-        }
-      ]
-    },
-    {
-      "type": "tech",
-      "name": "What You Can Train",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Title",
-          "default": "What You Can Train"
-        },
-        {
-          "type": "richtext",
-          "id": "tech",
-          "label": "Content"
         }
       ]
     },
@@ -796,6 +788,22 @@
           "type": "textarea",
           "id": "otherfeatures",
           "label": "Other Features Specs"
+        }
+      ]
+    },
+    {
+      "type": "tech",
+      "name": "Tech specs",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+        {
+          "type": "richtext",
+          "id": "tech",
+          "label": "Tech specs"
         }
       ]
     },
