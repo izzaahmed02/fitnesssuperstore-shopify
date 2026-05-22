@@ -227,23 +227,14 @@
     display: block !important;
   }
 
-  .othercomparisonhdg {
-    font-size: 18px !important;
-    line-height: 24px !important;
-    font-weight: 700 !important;
-    margin: 16px 0 8px !important;
-    text-transform: capitalize !important;
-    font-family: 'Lato';
-  }
-
-  #shopify-section-{{ section.id }} .product__extra_train .metafield-rich_text_field ul,
-  #shopify-section-{{ section.id }} .product__extra_train ul {
+  #shopify-section-{{ section.id }} .product__extra_train ul,
+  #shopify-section-{{ section.id }} .product__extra_train .metafield-rich_text_field ul {
     padding-left: 24px;
     list-style: disc;
   }
 
-  #shopify-section-{{ section.id }} .product__extra_train .metafield-rich_text_field li,
-  #shopify-section-{{ section.id }} .product__extra_train li {
+  #shopify-section-{{ section.id }} .product__extra_train li,
+  #shopify-section-{{ section.id }} .product__extra_train .metafield-rich_text_field li {
     list-style: disc;
   }
 
@@ -304,7 +295,6 @@
 {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
 {% assign attachments_metafield = product.metafields.custom.attachments_and_add_ons.value %}
 {% assign otherRigRackSystems = product.metafields.custom.recommended_products.value %}
-{% assign train_metafield = product.metafields.custom.features_specs.value.tech_specs %}
 
 <div class="product__extra_info product__extra_info-tabs">
   <div class="product__extra_info-wrap">
@@ -511,42 +501,38 @@
       <div class="extra-info-tab-content" id="extra-content-train-{{ section.id }}">
         {% assign has_train_content = false %}
 
-        {% if train_metafield != blank %}
+        {% for block in section.blocks %}
+          {% case block.type %}
+            {% when 'tech' %}
+              {% if block.settings.tech != blank %}
+                {% assign has_train_content = true %}
+                <div class="product__extra_train product__extra_tech extra-info-width" {{ block.shopify_attributes }}>
+                  <h2 class="product__extra_info-title">
+                    {% if block.settings.title != blank %}
+                      {{ block.settings.title }}
+                    {% else %}
+                      What You Can Train
+                    {% endif %}
+                  </h2>
+                  <div>{{ block.settings.tech }}</div>
+                </div>
+              {% endif %}
+          {% endcase %}
+        {% endfor %}
+
+        {% assign otherTechSpecs = product.metafields.custom.features_specs.value.other_tech_specs.value %}
+        {% if otherTechSpecs != blank %}
           {% assign has_train_content = true %}
-          <div class="product__extra_train extra-info-width">
-            <h2 class="product__extra_info-title">What You Can Train</h2>
-            <div class="product__extra_train-content">
-              {{ train_metafield | metafield_tag }}
-            </div>
+          <div class="product__extra_train product__extra_tech extra-info-width">
+            <div>{{ otherTechSpecs }}</div>
           </div>
         {% endif %}
-
-        {% unless has_train_content %}
-          {% for block in section.blocks %}
-            {% case block.type %}
-              {% when 'what_you_can_train' %}
-                {% if block.settings.what_you_can_train_content != blank %}
-                  {% assign has_train_content = true %}
-                  <div class="product__extra_train extra-info-width" {{ block.shopify_attributes }}>
-                    <h2 class="product__extra_info-title">
-                      {% if block.settings.title != blank %}
-                        {{ block.settings.title }}
-                      {% else %}
-                        What You Can Train
-                      {% endif %}
-                    </h2>
-                    <div>{{ block.settings.what_you_can_train_content }}</div>
-                  </div>
-                {% endif %}
-            {% endcase %}
-          {% endfor %}
-        {% endunless %}
 
         {% unless has_train_content %}
           {% if request.design_mode %}
             <div class="extra-info-width">
               <h2 class="product__extra_info-title">What You Can Train</h2>
-              <p>Add content to <strong>product.metafields.custom.features_specs.value.tech_specs</strong>, or add a <strong>What You Can Train</strong> block in the Shopify theme editor.</p>
+              <p>This tab is connected to the <strong>Tech specs</strong> block content and <strong>features_specs → other_tech_specs</strong> metafield. Add content there to display it here.</p>
             </div>
           {% endif %}
         {% endunless %}
@@ -703,23 +689,6 @@
       ]
     },
     {
-      "type": "what_you_can_train",
-      "name": "What You Can Train",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Title",
-          "default": "What You Can Train"
-        },
-        {
-          "type": "richtext",
-          "id": "what_you_can_train_content",
-          "label": "Content"
-        }
-      ]
-    },
-    {
       "type": "buyingguide",
       "name": "Buying Guide",
       "settings": [
@@ -761,6 +730,23 @@
           "type": "richtext",
           "id": "warranty",
           "label": "Warranty"
+        }
+      ]
+    },
+    {
+      "type": "tech",
+      "name": "What You Can Train",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "What You Can Train"
+        },
+        {
+          "type": "richtext",
+          "id": "tech",
+          "label": "Content"
         }
       ]
     },
@@ -810,22 +796,6 @@
           "type": "textarea",
           "id": "otherfeatures",
           "label": "Other Features Specs"
-        }
-      ]
-    },
-    {
-      "type": "tech",
-      "name": "Tech specs",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Title"
-        },
-        {
-          "type": "richtext",
-          "id": "tech",
-          "label": "Tech specs"
         }
       ]
     },
@@ -1069,40 +1039,6 @@
       if (iframe) {
         iframe.src = iframe.src;
       }
-    }
-  });
-</script>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    if (typeof $ !== 'undefined' && $.fn && $.fn.slick) {
-      $('.other-rig-rack-systems-section .other-rig-rack-systems-cards').not('.slick-initialized').slick({
-        infinite: true,
-        slidesToScroll: 1,
-        lazyLoad: 'ondemand',
-        arrows: true,
-        dots: false,
-        slidesToShow: 2,
-        swipeToSlide: true,
-        prevArrow: '<button type="button" class="slick-prev"><svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.19635 0.46967C7.48924 0.762563 7.48924 1.23744 7.19635 1.53033L2.72668 6L7.19635 10.4697C7.48924 10.7626 7.48924 11.2374 7.19635 11.5303C6.90345 11.8232 6.42858 11.8232 6.13569 11.5303L1.13569 6.53033C0.995033 6.38968 0.916016 6.19891 0.916016 6C0.916016 5.80109 0.995033 5.61032 1.13569 5.46967L6.13569 0.46967C6.42858 0.176777 6.90345 0.176777 7.19635 0.46967Z" fill="white"></path></svg></button>',
-        nextArrow: '<button type="button" class="slick-next"><svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M0.803654 0.46967C1.09655 0.176777 1.57142 0.176777 1.86431 0.46967L6.86431 5.46967C7.15721 5.76256 7.15721 6.23744 6.86431 6.53033L1.86431 11.5303C1.57142 11.8232 1.09655 11.8232 0.803654 11.5303C0.510761 11.2374 0.510761 10.7626 0.803654 10.4697L5.27332 6L0.803654 1.53033C0.510761 1.23744 0.510761 0.762563 0.803654 0.46967Z" fill="white"></path></svg></button>',
-        responsive: [
-          {
-            breakpoint: 1024,
-            settings: {
-              slidesToShow: 2,
-              dots: false
-            }
-          },
-          {
-            breakpoint: 750,
-            settings: {
-              slidesToShow: 1,
-              dots: false
-            }
-          }
-        ]
-      });
     }
   });
 </script>
