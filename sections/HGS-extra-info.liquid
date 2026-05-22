@@ -66,6 +66,33 @@
     margin-top: 24px;
   }
 
+  #shopify-section-{{ section.id }} .extra-info-width ul,
+  #shopify-section-{{ section.id }} .metafield-rich_text_field ul {
+    padding-left: 24px;
+    list-style: disc;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-width li,
+  #shopify-section-{{ section.id }} .metafield-rich_text_field li {
+    list-style: disc;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-empty-message {
+    display: none;
+  }
+
+  {% if request.design_mode %}
+    #shopify-section-{{ section.id }} .extra-info-empty-message {
+      display: block;
+      padding: 16px;
+      border: 1px dashed #D83D0E;
+      border-radius: 8px;
+      font-family: Lato, sans-serif;
+      font-size: 14px;
+      line-height: 22px;
+    }
+  {% endif %}
+
   .product-videos-wrapper {
     display: flex;
     flex-direction: column;
@@ -214,30 +241,6 @@
     display: block !important;
   }
 
-  #shopify-section-{{ section.id }} .product__extra_train ul,
-  #shopify-section-{{ section.id }} .product__extra_train .metafield-rich_text_field ul {
-    padding-left: 24px;
-    list-style: disc;
-  }
-
-  #shopify-section-{{ section.id }} .product__extra_train li,
-  #shopify-section-{{ section.id }} .product__extra_train .metafield-rich_text_field li {
-    list-style: disc;
-  }
-
-  #shopify-section-{{ section.id }} .extra-info-empty-message {
-    display: none;
-  }
-
-  {% if request.design_mode %}
-    #shopify-section-{{ section.id }} .extra-info-empty-message {
-      display: block;
-      padding: 16px;
-      border: 1px dashed #D83D0E;
-      border-radius: 8px;
-    }
-  {% endif %}
-
   @media screen and (max-width: 750px) {
     #shopify-section-{{ section.id }} .product__extra_info {
       padding-top: {{ section.settings.padding_top | times: 0.6 | round }}px;
@@ -291,10 +294,7 @@
   }
 {%- endstyle -%}
 
-{% assign extra = product.metafields.custom.extra_info.value %}
 {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
-{% assign attachments_metafield = product.metafields.custom.attachments_and_add_ons.value %}
-{% assign otherRigRackSystems = product.metafields.custom.recommended_products.value %}
 
 <div class="product__extra_info product__extra_info-tabs">
   <div class="product__extra_info-wrap">
@@ -303,48 +303,15 @@
 
     <div class="extra-info-tabs-nav" role="tablist">
       {% for block in section.blocks %}
-        {% assign show_tab = false %}
         {% assign tab_title = block.settings.title %}
+        {% assign supported_tab = false %}
 
         {% case block.type %}
-          {% when 'description' %}
-            {% if product.content != blank or request.design_mode %}
-              {% assign show_tab = true %}
-            {% endif %}
-
-          {% when 'features' %}
-            {% assign otherFeatures = product.metafields.custom.features_specs.value.other_features.value %}
-            {% if block.settings.features != blank or otherFeatures != blank or request.design_mode %}
-              {% assign show_tab = true %}
-            {% endif %}
-
-          {% when 'benefits' %}
-            {% if block.settings.benefits != blank or request.design_mode %}
-              {% assign show_tab = true %}
-            {% endif %}
-
-          {% when 'what_you_can_train' %}
-            {% if block.settings.what_you_can_train != blank or request.design_mode %}
-              {% assign show_tab = true %}
-            {% endif %}
-
-          {% when 'buyingguide' %}
-            {% if block.settings.buyingguide != blank or request.design_mode %}
-              {% assign show_tab = true %}
-            {% endif %}
-
-          {% when 'faq' %}
-            {% if block.settings.faq != blank or request.design_mode %}
-              {% assign show_tab = true %}
-            {% endif %}
-
-          {% when 'warranty' %}
-            {% if block.settings.warranty != blank or request.design_mode %}
-              {% assign show_tab = true %}
-            {% endif %}
+          {% when 'description', 'features', 'benefits', 'what_you_can_train', 'buyingguide', 'faq', 'warranty' %}
+            {% assign supported_tab = true %}
         {% endcase %}
 
-        {% if show_tab and tab_title != blank %}
+        {% if supported_tab and tab_title != blank %}
           {% assign has_visible_tabs = true %}
           <button
             type="button"
@@ -363,48 +330,15 @@
 
     <div class="extra-info-tabs-content">
       {% for block in section.blocks %}
-        {% assign show_panel = false %}
         {% assign tab_title = block.settings.title %}
+        {% assign supported_panel = false %}
 
         {% case block.type %}
-          {% when 'description' %}
-            {% if product.content != blank or request.design_mode %}
-              {% assign show_panel = true %}
-            {% endif %}
-
-          {% when 'features' %}
-            {% assign otherFeatures = product.metafields.custom.features_specs.value.other_features.value %}
-            {% if block.settings.features != blank or otherFeatures != blank or request.design_mode %}
-              {% assign show_panel = true %}
-            {% endif %}
-
-          {% when 'benefits' %}
-            {% if block.settings.benefits != blank or request.design_mode %}
-              {% assign show_panel = true %}
-            {% endif %}
-
-          {% when 'what_you_can_train' %}
-            {% if block.settings.what_you_can_train != blank or request.design_mode %}
-              {% assign show_panel = true %}
-            {% endif %}
-
-          {% when 'buyingguide' %}
-            {% if block.settings.buyingguide != blank or request.design_mode %}
-              {% assign show_panel = true %}
-            {% endif %}
-
-          {% when 'faq' %}
-            {% if block.settings.faq != blank or request.design_mode %}
-              {% assign show_panel = true %}
-            {% endif %}
-
-          {% when 'warranty' %}
-            {% if block.settings.warranty != blank or request.design_mode %}
-              {% assign show_panel = true %}
-            {% endif %}
+          {% when 'description', 'features', 'benefits', 'what_you_can_train', 'buyingguide', 'faq', 'warranty' %}
+            {% assign supported_panel = true %}
         {% endcase %}
 
-        {% if show_panel and tab_title != blank %}
+        {% if supported_panel and tab_title != blank %}
           <div
             class="extra-info-tab-panel"
             id="extra-tab-panel-{{ section.id }}-{{ block.id }}"
@@ -477,7 +411,7 @@
                   </div>
                 {% elsif request.design_mode %}
                   <div class="extra-info-empty-message">
-                    Add a product description to display content in this tab.
+                    Product description is empty.
                   </div>
                 {% endif %}
 
@@ -524,21 +458,23 @@
               {% when 'features' %}
                 {% assign otherFeatures = product.metafields.custom.features_specs.value.other_features.value %}
 
-                {% if block.settings.features != blank %}
+                {% if block.settings.features_liquid != blank %}
                   <div class="product__extra_features extra-info-width">
-                    <div>{{ block.settings.features }}</div>
+                    {{ block.settings.features_liquid }}
+                  </div>
+                {% elsif block.settings.features != blank %}
+                  <div class="product__extra_features extra-info-width">
+                    {{ block.settings.features }}
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this Features block, connect a dynamic source, or use the Custom liquid field.
                   </div>
                 {% endif %}
 
                 {% if otherFeatures != blank %}
                   <div class="product__extra_tech extra-info-width">
                     <div>{{ otherFeatures }}</div>
-                  </div>
-                {% endif %}
-
-                {% if block.settings.features == blank and otherFeatures == blank and request.design_mode %}
-                  <div class="extra-info-empty-message">
-                    Add content to this Features block or connect a dynamic source.
                   </div>
                 {% endif %}
 
@@ -550,7 +486,6 @@
                         <div class="extra-info-accordion">
                           <span class="accordion-item">
                             <h2 class="product__extra_info-title">{{ add_key | replace: "_", " " }}</h2>
-
                             <svg
                               class="arrow"
                               width="14"
@@ -573,57 +508,77 @@
                 {% endif %}
 
               {% when 'benefits' %}
-                {% if block.settings.benefits != blank %}
+                {% if block.settings.benefits_liquid != blank %}
                   <div class="product__extra_overview extra-info-width">
-                    <div class="product__extra_overview-list">{{ block.settings.benefits }}</div>
+                    {{ block.settings.benefits_liquid }}
+                  </div>
+                {% elsif block.settings.benefits != blank %}
+                  <div class="product__extra_overview extra-info-width">
+                    {{ block.settings.benefits }}
                   </div>
                 {% elsif request.design_mode %}
                   <div class="extra-info-empty-message">
-                    Add content to this Benefits block or connect a dynamic source.
+                    Add content to this Benefits block, connect a dynamic source, or use the Custom liquid field.
                   </div>
                 {% endif %}
 
               {% when 'what_you_can_train' %}
-                {% if block.settings.what_you_can_train != blank %}
+                {% if block.settings.what_you_can_train_liquid != blank %}
                   <div class="product__extra_train extra-info-width">
-                    <div>{{ block.settings.what_you_can_train }}</div>
+                    {{ block.settings.what_you_can_train_liquid }}
+                  </div>
+                {% elsif block.settings.what_you_can_train != blank %}
+                  <div class="product__extra_train extra-info-width">
+                    {{ block.settings.what_you_can_train }}
                   </div>
                 {% elsif request.design_mode %}
                   <div class="extra-info-empty-message">
-                    Add content to this What You Can Train block or connect a dynamic source.
+                    Add content to this What You Can Train block, connect a dynamic source, or use the Custom liquid field.
                   </div>
                 {% endif %}
 
               {% when 'buyingguide' %}
-                {% if block.settings.buyingguide != blank %}
+                {% if block.settings.buyingguide_liquid != blank %}
                   <div class="product__extra_tech extra-info-width">
-                    <div>{{ block.settings.buyingguide }}</div>
+                    {{ block.settings.buyingguide_liquid }}
+                  </div>
+                {% elsif block.settings.buyingguide != blank %}
+                  <div class="product__extra_tech extra-info-width">
+                    {{ block.settings.buyingguide }}
                   </div>
                 {% elsif request.design_mode %}
                   <div class="extra-info-empty-message">
-                    Add content to this Buying Guide block or connect a dynamic source.
+                    Add content to this Buying Guide block, connect a dynamic source, or use the Custom liquid field.
                   </div>
                 {% endif %}
 
               {% when 'faq' %}
-                {% if block.settings.faq != blank %}
+                {% if block.settings.faq_liquid != blank %}
                   <div class="product__extra_tech extra-info-width">
-                    <div>{{ block.settings.faq }}</div>
+                    {{ block.settings.faq_liquid }}
+                  </div>
+                {% elsif block.settings.faq != blank %}
+                  <div class="product__extra_tech extra-info-width">
+                    {{ block.settings.faq }}
                   </div>
                 {% elsif request.design_mode %}
                   <div class="extra-info-empty-message">
-                    Add content to this FAQ block or connect a dynamic source.
+                    Add content to this FAQ block, connect a dynamic source, or use the Custom liquid field.
                   </div>
                 {% endif %}
 
               {% when 'warranty' %}
-                {% if block.settings.warranty != blank %}
+                {% if block.settings.warranty_liquid != blank %}
                   <div class="product__extra_warranty extra-info-width">
-                    <div>{{ block.settings.warranty }}</div>
+                    {{ block.settings.warranty_liquid }}
+                  </div>
+                {% elsif block.settings.warranty != blank %}
+                  <div class="product__extra_warranty extra-info-width">
+                    {{ block.settings.warranty }}
                   </div>
                 {% elsif request.design_mode %}
                   <div class="extra-info-empty-message">
-                    Add content to this Warranty block or connect a dynamic source.
+                    Add content to this Warranty block, connect a dynamic source, or use the Custom liquid field.
                   </div>
                 {% endif %}
 
@@ -636,7 +591,7 @@
     {% unless has_visible_tabs %}
       {% if request.design_mode %}
         <div class="extra-info-empty-message">
-          Add blocks to create tabs. Each tab uses the block Title as the tab label.
+          Add blocks to create tabs. Each tab uses the block Tab title as the label.
         </div>
       {% endif %}
     {% endunless %}
@@ -732,6 +687,11 @@
           "type": "richtext",
           "id": "features",
           "label": "Content"
+        },
+        {
+          "type": "liquid",
+          "id": "features_liquid",
+          "label": "Custom liquid / metafield output"
         }
       ]
     },
@@ -749,6 +709,11 @@
           "type": "richtext",
           "id": "benefits",
           "label": "Content"
+        },
+        {
+          "type": "liquid",
+          "id": "benefits_liquid",
+          "label": "Custom liquid / metafield output"
         }
       ]
     },
@@ -766,6 +731,11 @@
           "type": "richtext",
           "id": "what_you_can_train",
           "label": "Content"
+        },
+        {
+          "type": "liquid",
+          "id": "what_you_can_train_liquid",
+          "label": "Custom liquid / metafield output"
         }
       ]
     },
@@ -783,6 +753,11 @@
           "type": "richtext",
           "id": "buyingguide",
           "label": "Content"
+        },
+        {
+          "type": "liquid",
+          "id": "buyingguide_liquid",
+          "label": "Custom liquid / metafield output"
         }
       ]
     },
@@ -800,6 +775,11 @@
           "type": "richtext",
           "id": "faq",
           "label": "Content"
+        },
+        {
+          "type": "liquid",
+          "id": "faq_liquid",
+          "label": "Custom liquid / metafield output"
         }
       ]
     },
@@ -817,261 +797,11 @@
           "type": "richtext",
           "id": "warranty",
           "label": "Content"
-        }
-      ]
-    },
-    {
-      "type": "video",
-      "name": "Dynamic Video as Tag",
-      "settings": [
-        {
-          "type": "text",
-          "id": "heading",
-          "label": "Title"
-        }
-      ]
-    },
-    {
-      "type": "extra",
-      "name": "Extra info",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Title"
-        }
-      ]
-    },
-    {
-      "type": "all_in_one_overview",
-      "name": "All in one overview",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "All in one overview"
         },
         {
-          "type": "richtext",
-          "id": "overview",
-          "label": "Content"
-        }
-      ]
-    },
-    {
-      "type": "otherfeatures",
-      "name": "Other Features specs",
-      "settings": [
-        {
-          "type": "textarea",
-          "id": "otherfeatures",
-          "label": "Other Features Specs"
-        }
-      ]
-    },
-    {
-      "type": "tech",
-      "name": "Tech specs",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "Tech specs"
-        },
-        {
-          "type": "richtext",
-          "id": "tech",
-          "label": "Content"
-        }
-      ]
-    },
-    {
-      "type": "othertech",
-      "name": "Other Tech specs",
-      "settings": [
-        {
-          "type": "textarea",
-          "id": "othertech",
-          "label": "Other Tech Specs"
-        }
-      ]
-    },
-    {
-      "type": "smith",
-      "name": "Smith bar specs",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "Smith bar specs"
-        },
-        {
-          "type": "richtext",
-          "id": "smith",
-          "label": "Content"
-        }
-      ]
-    },
-    {
-      "type": "weightstacks",
-      "name": "Weight Stacks",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "Weight Stacks"
-        },
-        {
-          "type": "richtext",
-          "id": "weightstacks",
-          "label": "Content"
-        }
-      ]
-    },
-    {
-      "type": "comparisonchartitle",
-      "name": "Comparison Chart Title",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "Comparison Chart Title"
-        },
-        {
-          "type": "richtext",
-          "id": "comparisonchartitle",
-          "label": "Content"
-        }
-      ]
-    },
-    {
-      "type": "comparisoncharttable",
-      "name": "Comparison Chart Table",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "Comparison Chart Table"
-        },
-        {
-          "type": "richtext",
-          "id": "comparisoncharttable",
-          "label": "Content"
-        }
-      ]
-    },
-    {
-      "type": "othercomparisoncharts",
-      "name": "Other Comparison Charts",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "Other Comparison Charts"
-        },
-        {
-          "type": "richtext",
-          "id": "othercomparisoncharts",
-          "label": "Content"
-        }
-      ]
-    },
-    {
-      "type": "shippingdimsweight",
-      "name": "Shipping",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "Shipping"
-        },
-        {
-          "type": "richtext",
-          "id": "shippingdimsweight",
-          "label": "Content"
-        }
-      ]
-    },
-    {
-      "type": "setincludes",
-      "name": "Set Includes",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "Set Includes"
-        }
-      ]
-    },
-    {
-      "type": "accessories",
-      "name": "Accessories",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "Accessories"
-        }
-      ]
-    },
-    {
-      "type": "accessory-feature",
-      "name": "Accessory feature",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "Accessory feature"
-        },
-        {
-          "type": "richtext",
-          "id": "accessory-feature",
-          "label": "Content"
-        }
-      ]
-    },
-    {
-      "type": "list",
-      "name": "List",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "List"
-        },
-        {
-          "type": "richtext",
-          "id": "list",
-          "label": "Content"
-        }
-      ]
-    },
-    {
-      "type": "text",
-      "name": "Text",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Tab title",
-          "default": "Text"
-        },
-        {
-          "type": "richtext",
-          "id": "text",
-          "label": "Content"
+          "type": "liquid",
+          "id": "warranty_liquid",
+          "label": "Custom liquid / metafield output"
         }
       ]
     }
