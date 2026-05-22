@@ -1,4 +1,4 @@
-{{ 'hgs-extra-info.css' | asset_url | stylesheet_tag: preload: false }}
+{{ 'extra-info.css' | asset_url | stylesheet_tag: preload: false }}
 
 {% assign is_gift_cards_template = false %}
 {% if template.suffix == 'gift_cards' %}
@@ -497,11 +497,29 @@
       </div>
 
       <div class="extra-info-tab-content" id="extra-content-train-{{ section.id }}">
+        {% assign has_train_content = false %}
+
         {% for block in section.blocks %}
           {% case block.type %}
+            {% when 'what_you_can_train' %}
+              {% if block.settings.what_you_can_train_content != blank %}
+                {% assign has_train_content = true %}
+                <div class="product__extra_train extra-info-width" {{ block.shopify_attributes }}>
+                  <h2 class="product__extra_info-title">
+                    {% if block.settings.title != blank %}
+                      {{ block.settings.title }}
+                    {% else %}
+                      What You Can Train
+                    {% endif %}
+                  </h2>
+                  <div>{{ block.settings.what_you_can_train_content }}</div>
+                </div>
+              {% endif %}
+
             {% when 'all_in_one_overview' %}
               {% if block.settings.overview != blank %}
-                <div class="product__extra_overview extra-info-width">
+                {% assign has_train_content = true %}
+                <div class="product__extra_overview extra-info-width" {{ block.shopify_attributes }}>
                   <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
                   <div class="product__extra_overview-list">{{ block.settings.overview }}</div>
                 </div>
@@ -509,12 +527,20 @@
 
             {% when 'list' %}
               {% if block.settings.list != blank %}
-                <div class="product__extra_list extra-info-width">
+                {% assign has_train_content = true %}
+                <div class="product__extra_list extra-info-width" {{ block.shopify_attributes }}>
                   <div>{{ block.settings.list }}</div>
                 </div>
               {% endif %}
           {% endcase %}
         {% endfor %}
+
+        {% unless has_train_content %}
+          <div class="extra-info-width">
+            <h2 class="product__extra_info-title">What You Can Train</h2>
+            <p>Add content for this tab by adding a <strong>What You Can Train</strong> block in the Shopify theme editor.</p>
+          </div>
+        {% endunless %}
       </div>
 
       <div class="extra-info-tab-content" id="extra-content-buying-guide-{{ section.id }}">
@@ -634,6 +660,102 @@
       ]
     },
     {
+      "type": "features",
+      "name": "Features",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Features"
+        },
+        {
+          "type": "richtext",
+          "id": "features",
+          "label": "Features"
+        }
+      ]
+    },
+    {
+      "type": "benefits",
+      "name": "Benefits",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Benefits"
+        },
+        {
+          "type": "richtext",
+          "id": "benefits",
+          "label": "Benefits"
+        }
+      ]
+    },
+    {
+      "type": "what_you_can_train",
+      "name": "What You Can Train",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "What You Can Train"
+        },
+        {
+          "type": "richtext",
+          "id": "what_you_can_train_content",
+          "label": "Content"
+        }
+      ]
+    },
+    {
+      "type": "buyingguide",
+      "name": "Buying Guide",
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "buyingguide",
+          "label": "Buying Guide"
+        }
+      ]
+    },
+    {
+      "type": "faq",
+      "name": "FAQ",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Frequently Asked Questions"
+        },
+        {
+          "type": "richtext",
+          "id": "faq",
+          "label": "Frequently Asked Questions"
+        }
+      ]
+    },
+    {
+      "type": "warranty",
+      "name": "Warranty",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Warranty"
+        },
+        {
+          "type": "richtext",
+          "id": "warranty",
+          "label": "Warranty"
+        }
+      ]
+    },
+    {
       "type": "video",
       "name": "Dynamic Video as Tag",
       "settings": [
@@ -672,22 +794,6 @@
       ]
     },
     {
-      "type": "features",
-      "name": "Features",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Title"
-        },
-        {
-          "type": "richtext",
-          "id": "features",
-          "label": "Features"
-        }
-      ]
-    },
-    {
       "type": "otherfeatures",
       "name": "Other Features specs",
       "settings": [
@@ -695,38 +801,6 @@
           "type": "textarea",
           "id": "otherfeatures",
           "label": "Other Features Specs"
-        }
-      ]
-    },
-    {
-      "type": "benefits",
-      "name": "Benefits",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Title"
-        },
-        {
-          "type": "richtext",
-          "id": "benefits",
-          "label": "benefits"
-        }
-      ]
-    },
-    {
-      "type": "warranty",
-      "name": "Warranty",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Title"
-        },
-        {
-          "type": "richtext",
-          "id": "warranty",
-          "label": "Warranty"
         }
       ]
     },
@@ -823,33 +897,6 @@
       ]
     },
     {
-      "type": "buyingguide",
-      "name": "Buying Guide",
-      "settings": [
-        {
-          "type": "richtext",
-          "id": "buyingguide",
-          "label": "Buying Guide"
-        }
-      ]
-    },
-    {
-      "type": "faq",
-      "name": "FAQ",
-      "settings": [
-        {
-          "type": "text",
-          "id": "title",
-          "label": "Title"
-        },
-        {
-          "type": "richtext",
-          "id": "faq",
-          "label": "Frequently Asked Questions"
-        }
-      ]
-    },
-    {
       "type": "shippingdimsweight",
       "name": "Shipping",
       "settings": [
@@ -928,7 +975,7 @@
   ],
   "presets": [
     {
-      "name": "HGS Extra info"
+      "name": "HGD Extra info"
     }
   ]
 }
