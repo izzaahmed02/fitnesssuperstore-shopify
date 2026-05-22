@@ -133,6 +133,21 @@
     margin-top: 14px;
   }
 
+
+  /* Keep product info/form column in normal page flow. */
+  #shopify-section-{{ section.id }} #ProductInfo-{{ section.id }},
+  #shopify-section-{{ section.id }} .product__info-container {
+    position: static !important;
+    top: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    z-index: auto !important;
+  }
+
+  #shopify-section-{{ section.id }} .product__info-wrapper {
+    align-self: start !important;
+  }
+
 {% endstyle %}
 
 {% if product.template_suffix == 'discontinued' %}
@@ -232,7 +247,7 @@
   {% if enable_product_form_js %}
     <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
   {% endif %}
-  <script src="{{ 'product-sticky.js' | asset_url }}" defer="defer"></script>
+
 
   {%- if product.quantity_price_breaks_configured? -%}
     <script src="{{ 'show-more.js' | asset_url }}" defer="defer"></script>
@@ -804,7 +819,7 @@
       <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}" style="opacity: 1 !important;">
         <section
           id="ProductInfo-{{ section.id }}"
-          class="product__info-container{% if section.settings.enable_sticky_info %} product__column-sticky{% endif %}"
+          class="product__info-container"
         >
           {%- assign product_form_id = 'product-form-' | append: section.id -%}
 
@@ -837,22 +852,6 @@
                   {% endunless %}
                 {% endfor %}
 <div class="metainfo-wrapper metainfo-tabs-wrapper">
-  {% assign metainfo_tab_2_has_content = false %}
-  {% assign metainfo_tab_3_has_content = false %}
-
-  {% if section.settings.metainfo_tab_2_title != blank %}
-    {% if section.settings.metainfo_tab_2_content != blank or section.settings.metainfo_tab_2_liquid != blank %}
-      {% assign metainfo_tab_2_has_content = true %}
-    {% endif %}
-  {% endif %}
-
-  {% if section.settings.metainfo_tab_3_title != blank %}
-    {% if section.settings.metainfo_tab_3_content != blank or section.settings.metainfo_tab_3_liquid != blank %}
-      {% assign metainfo_tab_3_has_content = true %}
-    {% endif %}
-  {% endif %}
-
-  <div class="metainfo-wrapper metainfo-tabs-wrapper">
   {% assign has_custom_metainfo_tabs = false %}
 
   {% for block in section.blocks %}
