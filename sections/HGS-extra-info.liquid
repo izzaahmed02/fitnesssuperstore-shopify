@@ -236,6 +236,17 @@
     font-family: 'Lato';
   }
 
+  #shopify-section-{{ section.id }} .product__extra_train .metafield-rich_text_field ul,
+  #shopify-section-{{ section.id }} .product__extra_train ul {
+    padding-left: 24px;
+    list-style: disc;
+  }
+
+  #shopify-section-{{ section.id }} .product__extra_train .metafield-rich_text_field li,
+  #shopify-section-{{ section.id }} .product__extra_train li {
+    list-style: disc;
+  }
+
   @media screen and (max-width: 750px) {
     #shopify-section-{{ section.id }} .product__extra_info {
       padding-top: {{ section.settings.padding_top | times: 0.6 | round }}px;
@@ -293,6 +304,7 @@
 {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
 {% assign attachments_metafield = product.metafields.custom.attachments_and_add_ons.value %}
 {% assign otherRigRackSystems = product.metafields.custom.recommended_products.value %}
+{% assign train_metafield = product.metafields.custom.features_specs.value.tech_specs %}
 
 <div class="product__extra_info product__extra_info-tabs">
   <div class="product__extra_info-wrap">
@@ -499,47 +511,44 @@
       <div class="extra-info-tab-content" id="extra-content-train-{{ section.id }}">
         {% assign has_train_content = false %}
 
-        {% for block in section.blocks %}
-          {% case block.type %}
-            {% when 'what_you_can_train' %}
-              {% if block.settings.what_you_can_train_content != blank %}
-                {% assign has_train_content = true %}
-                <div class="product__extra_train extra-info-width" {{ block.shopify_attributes }}>
-                  <h2 class="product__extra_info-title">
-                    {% if block.settings.title != blank %}
-                      {{ block.settings.title }}
-                    {% else %}
-                      What You Can Train
-                    {% endif %}
-                  </h2>
-                  <div>{{ block.settings.what_you_can_train_content }}</div>
-                </div>
-              {% endif %}
-
-            {% when 'all_in_one_overview' %}
-              {% if block.settings.overview != blank %}
-                {% assign has_train_content = true %}
-                <div class="product__extra_overview extra-info-width" {{ block.shopify_attributes }}>
-                  <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
-                  <div class="product__extra_overview-list">{{ block.settings.overview }}</div>
-                </div>
-              {% endif %}
-
-            {% when 'list' %}
-              {% if block.settings.list != blank %}
-                {% assign has_train_content = true %}
-                <div class="product__extra_list extra-info-width" {{ block.shopify_attributes }}>
-                  <div>{{ block.settings.list }}</div>
-                </div>
-              {% endif %}
-          {% endcase %}
-        {% endfor %}
+        {% if train_metafield != blank %}
+          {% assign has_train_content = true %}
+          <div class="product__extra_train extra-info-width">
+            <h2 class="product__extra_info-title">What You Can Train</h2>
+            <div class="product__extra_train-content">
+              {{ train_metafield | metafield_tag }}
+            </div>
+          </div>
+        {% endif %}
 
         {% unless has_train_content %}
-          <div class="extra-info-width">
-            <h2 class="product__extra_info-title">What You Can Train</h2>
-            <p>Add content for this tab by adding a <strong>What You Can Train</strong> block in the Shopify theme editor.</p>
-          </div>
+          {% for block in section.blocks %}
+            {% case block.type %}
+              {% when 'what_you_can_train' %}
+                {% if block.settings.what_you_can_train_content != blank %}
+                  {% assign has_train_content = true %}
+                  <div class="product__extra_train extra-info-width" {{ block.shopify_attributes }}>
+                    <h2 class="product__extra_info-title">
+                      {% if block.settings.title != blank %}
+                        {{ block.settings.title }}
+                      {% else %}
+                        What You Can Train
+                      {% endif %}
+                    </h2>
+                    <div>{{ block.settings.what_you_can_train_content }}</div>
+                  </div>
+                {% endif %}
+            {% endcase %}
+          {% endfor %}
+        {% endunless %}
+
+        {% unless has_train_content %}
+          {% if request.design_mode %}
+            <div class="extra-info-width">
+              <h2 class="product__extra_info-title">What You Can Train</h2>
+              <p>Add content to <strong>product.metafields.custom.features_specs.value.tech_specs</strong>, or add a <strong>What You Can Train</strong> block in the Shopify theme editor.</p>
+            </div>
+          {% endif %}
         {% endunless %}
       </div>
 
@@ -550,6 +559,7 @@
               {% assign buyingGuide = product.metafields.custom.features_specs.value.buying_guide.value %}
               {% if buyingGuide != blank %}
                 <div class="product__extra_tech extra-info-width">
+                  <h2 class="product__extra_info-title">Buying Guide</h2>
                   <div>{{ buyingGuide }}</div>
                 </div>
               {% endif %}
@@ -974,7 +984,7 @@
   ],
   "presets": [
     {
-      "name": "HGD Extra info"
+      "name": "HGS Extra info"
     }
   ]
 }
