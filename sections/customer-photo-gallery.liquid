@@ -1,26 +1,34 @@
 {%- assign gallery_metafield = product.metafields.custom.customer_photo_gallery -%}
 
 {% if gallery_metafield and gallery_metafield.value != blank %}
-<section id="customer-photo-gallery-{{ section.id }}" class="customer-photo-gallery">
+<section
+  id="customer-photo-gallery-{{ section.id }}"
+  class="customer-photo-gallery"
+  data-count="{{ gallery_metafield.value.size }}"
+>
   <div class="customer-photo-gallery__header">
     <h4>{{ section.settings.heading | default: 'Customer Photo Gallery' }}</h4>
   </div>
 
   <!-- Arrows -->
-  <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--left" aria-label="Previous image">‹</button>
-  <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--right" aria-label="Next image">›</button>
+  <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--left" aria-label="Previous image" type="button">‹</button>
+  <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--right" aria-label="Next image" type="button">›</button>
 
   <div class="customer-photo-gallery__slider" id="photos">
     {% for image in gallery_metafield.value %}
-      {% assign thumb = image | image_url: width: 900 %}
-      {% assign full  = image | image_url: width: 2400 %}
-      {% assign caption = image.alt | default: '' %}
+      {%- assign w = image.width | default: 1200 -%}
+      {%- assign h = image.height | default: 1200 -%}
+      {%- assign full = image | image_url: width: 2048 -%}
+      {%- assign caption = image.alt | default: '' -%}
       <div class="customer-photo-gallery__slide">
         <img
-          src="{{ thumb }}"
+          src="{{ image | image_url: width: 600 }}"
+          srcset="{{ image | image_url: width: 400 }} 400w, {{ image | image_url: width: 600 }} 600w, {{ image | image_url: width: 800 }} 800w"
+          sizes="(min-width: 990px) 25vw, 80vw"
+          width="{{ w }}"
+          height="{{ h }}"
           data-full="{{ full }}"
           data-caption="{{ caption | escape }}"
-          data-index="{{ forloop.index0 }}"
           alt="Customer photo {{ forloop.index }}"
           loading="lazy"
           decoding="async"
@@ -30,14 +38,14 @@
   </div>
 
   <!-- Lightbox -->
-  <div class="customer-photo-gallery__lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Customer photo gallery">
+  <div class="customer-photo-gallery__lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Customer photo gallery" hidden>
     <button type="button" class="customer-photo-gallery__lightbox-close" aria-label="Close">&times;</button>
     <button type="button" class="customer-photo-gallery__lightbox-arrow customer-photo-gallery__lightbox-arrow--left" aria-label="Previous image">‹</button>
     <button type="button" class="customer-photo-gallery__lightbox-arrow customer-photo-gallery__lightbox-arrow--right" aria-label="Next image">›</button>
 
     <div class="customer-photo-gallery__lightbox-inner">
       <div class="customer-photo-gallery__lightbox-spinner" aria-hidden="true"></div>
-      <img src="" alt="">
+      <img alt="" decoding="async">
       <div class="customer-photo-gallery__lightbox-caption" aria-live="polite"></div>
     </div>
 
@@ -54,6 +62,7 @@
   margin: 20px 0;
   padding: 0 12px;
   position: relative;
+  contain: layout paint;
 }
 
 .customer-photo-gallery__header {
@@ -74,11 +83,16 @@
   gap: 0px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
-/* Center slides if 4 or fewer images */
-.customer-photo-gallery__slider:has(.customer-photo-gallery__slide:nth-child(1)):not(:has(.customer-photo-gallery__slide:nth-child(5))) {
-  justify-content: left;
+/* Center slides if 4 or fewer images (uses data-count instead of expensive :has) */
+.customer-photo-gallery[data-count="1"] .customer-photo-gallery__slider,
+.customer-photo-gallery[data-count="2"] .customer-photo-gallery__slider,
+.customer-photo-gallery[data-count="3"] .customer-photo-gallery__slider,
+.customer-photo-gallery[data-count="4"] .customer-photo-gallery__slider {
+  justify-content: flex-start;
 }
 
 .customer-photo-gallery__slider::-webkit-scrollbar {
@@ -95,14 +109,20 @@
   width: 100%;
   height: 100%;
   max-height: 325px;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 6px;
   cursor: pointer;
-  transition: transform .2s ease;
+  background: #f2f2f2;
 }
 
-.customer-photo-gallery__slide img:hover {
-  transform: scale(1.03);
+@media (hover: hover) {
+  .customer-photo-gallery__slide img {
+    transition: transform .2s ease;
+  }
+  .customer-photo-gallery__slide img:hover {
+    transform: scale(1.03);
+  }
 }
 
 /* -----------------------------
@@ -144,6 +164,16 @@
 .customer-photo-gallery__arrow--left { left: 10px; }
 .customer-photo-gallery__arrow--right { right: 10px; }
 
+/* Hide thumb arrows on desktop when there are 4 or fewer images (CSS-driven, no JS layout read) */
+@media screen and (min-width: 990px) {
+  .customer-photo-gallery[data-count="1"] .customer-photo-gallery__arrow,
+  .customer-photo-gallery[data-count="2"] .customer-photo-gallery__arrow,
+  .customer-photo-gallery[data-count="3"] .customer-photo-gallery__arrow,
+  .customer-photo-gallery[data-count="4"] .customer-photo-gallery__arrow {
+    display: none;
+  }
+}
+
 /* -----------------------------
    LIGHTBOX
 ------------------------------- */
@@ -158,6 +188,11 @@
   justify-content: center;
   transition: opacity .2s ease;
   z-index: 9999;
+  contain: layout paint;
+}
+
+.customer-photo-gallery__lightbox[hidden] {
+  display: none;
 }
 
 .customer-photo-gallery__lightbox--active {
@@ -284,14 +319,16 @@
   z-index: 2;
 }
 
-.customer-photo-gallery__lightbox-arrow:hover {
-  background: rgba(0,0,0,0.75);
+@media (hover: hover) {
+  .customer-photo-gallery__lightbox-arrow:hover,
+  .customer-photo-gallery__lightbox-close:hover {
+    background: rgba(0,0,0,0.75);
+  }
 }
 
 .customer-photo-gallery__lightbox-arrow--left { left: 16px; }
 .customer-photo-gallery__lightbox-arrow--right { right: 16px; }
 
-.customer-photo-gallery__lightbox-arrow[disabled],
 .customer-photo-gallery__lightbox-arrow[hidden] {
   display: none;
 }
@@ -299,6 +336,17 @@
 /* Lock body scroll when lightbox open */
 body.cpg-lightbox-open {
   overflow: hidden;
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .customer-photo-gallery__lightbox,
+  .customer-photo-gallery__lightbox-inner img,
+  .customer-photo-gallery__lightbox-spinner,
+  .customer-photo-gallery__slide img {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 @media (max-width: 749px) {
@@ -345,35 +393,102 @@ body.cpg-lightbox-open {
   if (!section) return;
 
   var slider = section.querySelector('.customer-photo-gallery__slider');
-  var slides = Array.prototype.slice.call(section.querySelectorAll('.customer-photo-gallery__slide img'));
-  var prev = section.querySelector('.customer-photo-gallery__arrow--left');
-  var next = section.querySelector('.customer-photo-gallery__arrow--right');
+  var slides = section.querySelectorAll('.customer-photo-gallery__slide img');
+  var total = slides.length;
+  if (!total) return;
 
-  // ----- HIDE THUMB ARROWS ON DESKTOP IF 4 OR FEWER IMAGES -----
-  if (window.matchMedia('(min-width: 990px)').matches && slides.length <= 4) {
-    prev.style.display = 'none';
-    next.style.display = 'none';
+  var prevArrow = section.querySelector('.customer-photo-gallery__arrow--left');
+  var nextArrow = section.querySelector('.customer-photo-gallery__arrow--right');
+
+  // ----- THUMB SLIDER ARROWS -----
+  var cachedSlideWidth = 0;
+  function getSlideWidth() {
+    if (!cachedSlideWidth) {
+      var firstSlide = slider.querySelector('.customer-photo-gallery__slide');
+      cachedSlideWidth = firstSlide ? firstSlide.offsetWidth + 16 : 0;
+    }
+    return cachedSlideWidth;
+  }
+  // Invalidate cached width on resize (debounced via rAF)
+  var resizeTick = 0;
+  window.addEventListener('resize', function () {
+    if (resizeTick) return;
+    resizeTick = requestAnimationFrame(function () {
+      cachedSlideWidth = 0;
+      resizeTick = 0;
+    });
+  }, { passive: true });
+
+  function scrollSlider(dir) {
+    var w = getSlideWidth();
+    if (!w) return;
+    slider.scrollBy({
+      left: dir === 'next' ? w : -w,
+      behavior: 'smooth'
+    });
+  }
+  prevArrow.addEventListener('click', function () { scrollSlider('prev'); });
+  nextArrow.addEventListener('click', function () { scrollSlider('next'); });
+
+  // ----- LIGHTBOX (lazy-init on first thumb click) -----
+  var lightbox = section.querySelector('.customer-photo-gallery__lightbox');
+  var lightboxImg, caption, counter, spinner, closeBtn, lbPrev, lbNext;
+  var currentIndex = 0;
+  var lastTrigger = null;
+  var initialized = false;
+  var idle = window.requestIdleCallback || function (cb) { return setTimeout(cb, 1); };
+
+  function initLightbox() {
+    if (initialized) return;
+    initialized = true;
+
+    lightbox.hidden = false;
+    lightboxImg = lightbox.querySelector('.customer-photo-gallery__lightbox-inner img');
+    caption = lightbox.querySelector('.customer-photo-gallery__lightbox-caption');
+    counter = lightbox.querySelector('.customer-photo-gallery__lightbox-counter');
+    spinner = lightbox.querySelector('.customer-photo-gallery__lightbox-spinner');
+    closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
+    lbPrev = lightbox.querySelector('.customer-photo-gallery__lightbox-arrow--left');
+    lbNext = lightbox.querySelector('.customer-photo-gallery__lightbox-arrow--right');
+
+    closeBtn.addEventListener('click', closeLightbox);
+    lbNext.addEventListener('click', nextImage);
+    lbPrev.addEventListener('click', prevImage);
+
+    lightbox.addEventListener('click', function (e) {
+      if (e.target === lightbox) closeLightbox();
+    });
+
+    document.addEventListener('keydown', onKeydown);
+
+    // Mobile swipe
+    var touchStartX = 0, touchStartY = 0, touchActive = false;
+    lightbox.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) return;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchActive = true;
+    }, { passive: true });
+    lightbox.addEventListener('touchend', function (e) {
+      if (!touchActive) return;
+      touchActive = false;
+      var t = e.changedTouches[0];
+      var dx = t.clientX - touchStartX;
+      var dy = t.clientY - touchStartY;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) nextImage();
+        else prevImage();
+      }
+    }, { passive: true });
   }
 
-  // ----- LIGHTBOX -----
-  var lightbox = section.querySelector('.customer-photo-gallery__lightbox');
-  var lightboxImg = lightbox.querySelector('.customer-photo-gallery__lightbox-inner img');
-  var caption = lightbox.querySelector('.customer-photo-gallery__lightbox-caption');
-  var counter = lightbox.querySelector('.customer-photo-gallery__lightbox-counter');
-  var spinner = lightbox.querySelector('.customer-photo-gallery__lightbox-spinner');
-  var closeBtn = lightbox.querySelector('.customer-photo-gallery__lightbox-close');
-  var lbPrev = lightbox.querySelector('.customer-photo-gallery__lightbox-arrow--left');
-  var lbNext = lightbox.querySelector('.customer-photo-gallery__lightbox-arrow--right');
-
-  var currentIndex = 0;
-  var total = slides.length;
-
   function showSpinner(show) {
-    if (show) {
-      spinner.classList.add('is-visible');
-    } else {
-      spinner.classList.remove('is-visible');
-    }
+    spinner.classList.toggle('is-visible', show);
+  }
+
+  function reveal() {
+    lightboxImg.classList.add('is-loaded');
+    showSpinner(false);
   }
 
   function loadImage(index) {
@@ -381,130 +496,126 @@ body.cpg-lightbox-open {
     currentIndex = index;
 
     var slideImg = slides[index];
-    var fullSrc = slideImg.dataset.full || slideImg.src;
+    var fullSrc = slideImg.dataset.full || slideImg.currentSrc || slideImg.src;
     var captionText = slideImg.dataset.caption || '';
 
     lightboxImg.classList.remove('is-loaded');
     showSpinner(true);
 
-    // Lazy-load: assign src directly and listen on the displayed img
-    function reveal() {
-      lightboxImg.classList.add('is-loaded');
-      showSpinner(false);
-    }
-    lightboxImg.onload = reveal;
-    lightboxImg.onerror = reveal;
     lightboxImg.alt = captionText || ('Customer photo ' + (index + 1));
+
+    // fetchpriority for the active image
+    if ('fetchPriority' in lightboxImg) lightboxImg.fetchPriority = 'high';
+
     lightboxImg.src = fullSrc;
 
-    // Fallback for cached images where onload may not fire after src reassignment
-    if (lightboxImg.complete && lightboxImg.naturalWidth > 0) {
-      reveal();
+    // Prefer decode() for smoother fade; fallback to onload + cached-check
+    if (typeof lightboxImg.decode === 'function') {
+      lightboxImg.decode().then(reveal).catch(reveal);
+    } else {
+      lightboxImg.onload = reveal;
+      lightboxImg.onerror = reveal;
+      if (lightboxImg.complete && lightboxImg.naturalWidth > 0) reveal();
     }
 
     caption.textContent = captionText;
     counter.textContent = (index + 1) + ' of ' + total;
 
-    // Preload neighbors for snappier navigation
-    if (index + 1 < total) {
-      var nImg = new Image();
-      nImg.src = slides[index + 1].dataset.full || slides[index + 1].src;
-    }
-    if (index - 1 >= 0) {
-      var pImg = new Image();
-      pImg.src = slides[index - 1].dataset.full || slides[index - 1].src;
-    }
-
     // Hide arrows at boundaries (no wrap)
     lbPrev.hidden = index === 0;
     lbNext.hidden = index === total - 1;
+
+    // Preload neighbors during idle time so they don't fight active decode
+    idle(function () {
+      if (index + 1 < total) {
+        var n = new Image();
+        n.src = slides[index + 1].dataset.full;
+      }
+      if (index - 1 >= 0) {
+        var p = new Image();
+        p.src = slides[index - 1].dataset.full;
+      }
+    });
   }
 
-  function openLightbox(index) {
+  function openLightbox(index, trigger) {
+    initLightbox();
+    lastTrigger = trigger || null;
     loadImage(index);
     lightbox.classList.add('customer-photo-gallery__lightbox--active');
     lightbox.setAttribute('aria-hidden', 'false');
     document.body.classList.add('cpg-lightbox-open');
+    // Focus close button so keyboard users land on a control
+    requestAnimationFrame(function () {
+      if (closeBtn) closeBtn.focus({ preventScroll: true });
+    });
   }
 
   function closeLightbox() {
+    if (!initialized) return;
     lightbox.classList.remove('customer-photo-gallery__lightbox--active');
     lightbox.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('cpg-lightbox-open');
-    // Clear src to free memory
+    // Free memory after fade-out
     setTimeout(function () {
       if (!lightbox.classList.contains('customer-photo-gallery__lightbox--active')) {
         lightboxImg.removeAttribute('src');
         lightboxImg.classList.remove('is-loaded');
       }
     }, 250);
-  }
-
-  function nextImage() {
-    if (currentIndex < total - 1) loadImage(currentIndex + 1);
-  }
-
-  function prevImage() {
-    if (currentIndex > 0) loadImage(currentIndex - 1);
-  }
-
-  slides.forEach(function (img, i) {
-    img.addEventListener('click', function () {
-      openLightbox(i);
-    });
-  });
-
-  closeBtn.addEventListener('click', closeLightbox);
-  lbNext.addEventListener('click', nextImage);
-  lbPrev.addEventListener('click', prevImage);
-
-  lightbox.addEventListener('click', function (e) {
-    if (e.target === lightbox) closeLightbox();
-  });
-
-  document.addEventListener('keydown', function (e) {
-    if (!lightbox.classList.contains('customer-photo-gallery__lightbox--active')) return;
-    if (e.key === 'Escape') closeLightbox();
-    else if (e.key === 'ArrowRight') nextImage();
-    else if (e.key === 'ArrowLeft') prevImage();
-  });
-
-  // ----- MOBILE SWIPE INSIDE LIGHTBOX -----
-  var touchStartX = 0;
-  var touchStartY = 0;
-  var touchActive = false;
-
-  lightbox.addEventListener('touchstart', function (e) {
-    if (e.touches.length !== 1) return;
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    touchActive = true;
-  }, { passive: true });
-
-  lightbox.addEventListener('touchend', function (e) {
-    if (!touchActive) return;
-    touchActive = false;
-    var t = e.changedTouches[0];
-    var dx = t.clientX - touchStartX;
-    var dy = t.clientY - touchStartY;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-      if (dx < 0) nextImage();
-      else prevImage();
+    // Restore focus to the opener
+    if (lastTrigger && typeof lastTrigger.focus === 'function') {
+      lastTrigger.focus({ preventScroll: true });
     }
-  }, { passive: true });
-
-  // ----- THUMB SLIDER ARROWS -----
-  function scrollSlider(dir) {
-    var slideWidth = slider.querySelector('.customer-photo-gallery__slide').offsetWidth + 16;
-    slider.scrollBy({
-      left: dir === 'next' ? slideWidth : -slideWidth,
-      behavior: 'smooth'
-    });
   }
 
-  prev.addEventListener('click', function () { scrollSlider('prev'); });
-  next.addEventListener('click', function () { scrollSlider('next'); });
+  function nextImage() { if (currentIndex < total - 1) loadImage(currentIndex + 1); }
+  function prevImage() { if (currentIndex > 0) loadImage(currentIndex - 1); }
 
+  function onKeydown(e) {
+    if (!lightbox.classList.contains('customer-photo-gallery__lightbox--active')) return;
+    if (e.key === 'Escape') { closeLightbox(); return; }
+    if (e.key === 'ArrowRight') { nextImage(); return; }
+    if (e.key === 'ArrowLeft') { prevImage(); return; }
+    if (e.key === 'Tab') {
+      // Focus trap across the visible controls
+      var focusable = [closeBtn, lbPrev, lbNext].filter(function (el) { return el && !el.hidden; });
+      if (!focusable.length) return;
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      var active = document.activeElement;
+      if (e.shiftKey && active === first) { last.focus(); e.preventDefault(); }
+      else if (!e.shiftKey && active === last) { first.focus(); e.preventDefault(); }
+    }
+  }
+
+  // ----- THUMB CLICK (event delegation - single listener) -----
+  slider.addEventListener('click', function (e) {
+    var img = e.target.closest('.customer-photo-gallery__slide img');
+    if (!img) return;
+    var index = -1;
+    for (var i = 0; i < slides.length; i++) {
+      if (slides[i] === img) { index = i; break; }
+    }
+    if (index !== -1) openLightbox(index, img);
+  });
+
+  // Make thumbs keyboard-focusable + Enter/Space activatable
+  for (var i = 0; i < slides.length; i++) {
+    slides[i].setAttribute('tabindex', '0');
+    slides[i].setAttribute('role', 'button');
+  }
+  slider.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var img = e.target.closest('.customer-photo-gallery__slide img');
+    if (!img) return;
+    e.preventDefault();
+    var index = -1;
+    for (var i = 0; i < slides.length; i++) {
+      if (slides[i] === img) { index = i; break; }
+    }
+    if (index !== -1) openLightbox(index, img);
+  });
 })();
 </script>
 
