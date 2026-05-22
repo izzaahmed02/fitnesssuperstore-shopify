@@ -835,8 +835,7 @@
                     </div>
                   {% endunless %}
                 {% endfor %}
-
-                <div class="metainfo-wrapper metainfo-tabs-wrapper">
+<div class="metainfo-wrapper metainfo-tabs-wrapper">
   {% assign metainfo_tab_2_has_content = false %}
   {% assign metainfo_tab_3_has_content = false %}
 
@@ -852,6 +851,15 @@
     {% endif %}
   {% endif %}
 
+  <div class="metainfo-wrapper metainfo-tabs-wrapper">
+  {% assign has_custom_metainfo_tabs = false %}
+
+  {% for block in section.blocks %}
+    {% if block.type == 'metainfo_custom_tab' and block.settings.title != blank %}
+      {% assign has_custom_metainfo_tabs = true %}
+    {% endif %}
+  {% endfor %}
+
   <div class="metainfo-tabs-nav" role="tablist">
     <button
       type="button"
@@ -864,31 +872,21 @@
       Delivery &amp; Warranty
     </button>
 
-    {% if metainfo_tab_2_has_content %}
-      <button
-        type="button"
-        class="metainfo-tab-button"
-        data-metainfo-tab-button="custom-tab-2-{{ section.id }}"
-        role="tab"
-        aria-controls="metainfo-tab-panel-custom-tab-2-{{ section.id }}"
-        aria-selected="false"
-      >
-        {{ section.settings.metainfo_tab_2_title }}
-      </button>
-    {% endif %}
-
-    {% if metainfo_tab_3_has_content %}
-      <button
-        type="button"
-        class="metainfo-tab-button"
-        data-metainfo-tab-button="custom-tab-3-{{ section.id }}"
-        role="tab"
-        aria-controls="metainfo-tab-panel-custom-tab-3-{{ section.id }}"
-        aria-selected="false"
-      >
-        {{ section.settings.metainfo_tab_3_title }}
-      </button>
-    {% endif %}
+    {% for block in section.blocks %}
+      {% if block.type == 'metainfo_custom_tab' and block.settings.title != blank %}
+        <button
+          type="button"
+          class="metainfo-tab-button"
+          data-metainfo-tab-button="custom-tab-{{ section.id }}-{{ block.id }}"
+          role="tab"
+          aria-controls="metainfo-tab-panel-custom-tab-{{ section.id }}-{{ block.id }}"
+          aria-selected="false"
+          {{ block.shopify_attributes }}
+        >
+          {{ block.settings.title }}
+        </button>
+      {% endif %}
+    {% endfor %}
   </div>
 
   <div class="metainfo-tabs-content">
@@ -999,39 +997,26 @@
       {% endif %}
     </div>
 
-    {% if metainfo_tab_2_has_content %}
-      <div
-        class="metainfo-tab-panel"
-        id="metainfo-tab-panel-custom-tab-2-{{ section.id }}"
-        data-metainfo-tab-panel="custom-tab-2-{{ section.id }}"
-        role="tabpanel"
-      >
-        <div class="metainfo-tab-custom-content">
-          {% if section.settings.metainfo_tab_2_liquid != blank %}
-            {{ section.settings.metainfo_tab_2_liquid }}
-          {% else %}
-            {{ section.settings.metainfo_tab_2_content }}
-          {% endif %}
+    {% for block in section.blocks %}
+      {% if block.type == 'metainfo_custom_tab' and block.settings.title != blank %}
+        <div
+          class="metainfo-tab-panel"
+          id="metainfo-tab-panel-custom-tab-{{ section.id }}-{{ block.id }}"
+          data-metainfo-tab-panel="custom-tab-{{ section.id }}-{{ block.id }}"
+          role="tabpanel"
+        >
+          <div class="metainfo-tab-custom-content">
+            {% if block.settings.custom_liquid != blank %}
+              {{ block.settings.custom_liquid }}
+            {% elsif block.settings.content != blank %}
+              {{ block.settings.content }}
+            {% elsif request.design_mode %}
+              <p>Add content or connect a metafield for this tab.</p>
+            {% endif %}
+          </div>
         </div>
-      </div>
-    {% endif %}
-
-    {% if metainfo_tab_3_has_content %}
-      <div
-        class="metainfo-tab-panel"
-        id="metainfo-tab-panel-custom-tab-3-{{ section.id }}"
-        data-metainfo-tab-panel="custom-tab-3-{{ section.id }}"
-        role="tabpanel"
-      >
-        <div class="metainfo-tab-custom-content">
-          {% if section.settings.metainfo_tab_3_liquid != blank %}
-            {{ section.settings.metainfo_tab_3_liquid }}
-          {% else %}
-            {{ section.settings.metainfo_tab_3_content }}
-          {% endif %}
-        </div>
-      </div>
-    {% endif %}
+      {% endif %}
+    {% endfor %}
   </div>
 </div>
 
