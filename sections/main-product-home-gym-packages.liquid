@@ -2305,6 +2305,39 @@
 {% render 'option-help-content' %}
 <script src="{{ 'old-custom.js' | asset_url }}" defer="defer"></script>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("#shopify-section-{{ section.id }} .metainfo-tabs-wrapper").forEach(function (wrapper) {
+      var buttons = wrapper.querySelectorAll("[data-metainfo-tab-button]");
+      var panels = wrapper.querySelectorAll("[data-metainfo-tab-panel]");
+
+      if (!buttons.length || !panels.length) return;
+
+      function activateMetainfoTab(tabId) {
+        buttons.forEach(function (button) {
+          var isActive = button.getAttribute("data-metainfo-tab-button") === tabId;
+
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+
+        panels.forEach(function (panel) {
+          var isActive = panel.getAttribute("data-metainfo-tab-panel") === tabId;
+
+          panel.classList.toggle("is-active", isActive);
+        });
+      }
+
+      buttons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          activateMetainfoTab(button.getAttribute("data-metainfo-tab-button"));
+        });
+      });
+
+      activateMetainfoTab(buttons[0].getAttribute("data-metainfo-tab-button"));
+    });
+  });
+</script>
 
 
 {% schema %}
@@ -3910,29 +3943,71 @@
       "label": "t:sections.main-product.settings.enable_video_looping.label"
     },
     {
-      "type": "header",
-      "content": "Information under slider"
-    },
-    {
-      "type": "text",
-      "id": "accent_text",
-      "label": "Accesnt text"
-    },
-    {
-      "type": "text",
-      "id": "text",
-      "label": "Text"
-    },
-    {
-      "type": "text",
-      "id": "button_text",
-      "label": "Button text"
-    },
-    {
-      "type": "url",
-      "id": "button_link",
-      "label": "Button link"
-    },
+  "type": "header",
+  "content": "Information under slider"
+},
+{
+  "type": "text",
+  "id": "accent_text",
+  "label": "Accesnt text"
+},
+{
+  "type": "text",
+  "id": "text",
+  "label": "Text"
+},
+{
+  "type": "text",
+  "id": "button_text",
+  "label": "Button text"
+},
+{
+  "type": "url",
+  "id": "button_link",
+  "label": "Button link"
+},
+{
+  "type": "header",
+  "content": "Metainfo tabs"
+},
+{
+  "type": "paragraph",
+  "content": "The first tab is fixed as Delivery & Warranty and uses the existing product metainfo. Use Tab 2 and Tab 3 for extra metafield-connected content."
+},
+{
+  "type": "text",
+  "id": "metainfo_tab_2_title",
+  "label": "Tab 2 title"
+},
+{
+  "type": "richtext",
+  "id": "metainfo_tab_2_content",
+  "label": "Tab 2 content",
+  "info": "Use the dynamic source icon to connect this field to a compatible metafield."
+},
+{
+  "type": "liquid",
+  "id": "metainfo_tab_2_liquid",
+  "label": "Tab 2 custom liquid / metafield output",
+  "info": "Use this field when you need to output a metafield with Liquid, for example {{ product.metafields.custom.example | metafield_tag }}. This overrides Tab 2 content when filled."
+},
+{
+  "type": "text",
+  "id": "metainfo_tab_3_title",
+  "label": "Tab 3 title"
+},
+{
+  "type": "richtext",
+  "id": "metainfo_tab_3_content",
+  "label": "Tab 3 content",
+  "info": "Use the dynamic source icon to connect this field to a compatible metafield."
+},
+{
+  "type": "liquid",
+  "id": "metainfo_tab_3_liquid",
+  "label": "Tab 3 custom liquid / metafield output",
+  "info": "Use this field when you need to output a metafield with Liquid, for example {{ product.metafields.custom.example | metafield_tag }}. This overrides Tab 3 content when filled."
+},
     {
       "type": "header",
       "content": "t:sections.all.padding.section_padding_heading"
