@@ -50,18 +50,8 @@ customElements.get('product-info') ||
         const checked = this.querySelector('variant-selects [data-product-url]:checked, variant-selects option[data-product-url][selected]');
         const target = checked?.dataset?.productUrl;
         if (!target) return;
-        // Compare pathnames only. If the option_value.product_url points back
-        // to the parent itself (just with ?variant=<id>), the path is unchanged
-        // and redirecting would either loop forever or bounce the user back to
-        // the parent URL with the default variant selected.
-        let targetPath;
-        try {
-          targetPath = new URL(target, window.location.origin).pathname;
-        } catch (_) {
-          return;
-        }
         const currentPath = window.location.pathname;
-        if (targetPath === currentPath || targetPath === currentPath + '/' || targetPath + '/' === currentPath) return;
+        if (target === currentPath || target === currentPath + '/') return;
         window.location.replace(target);
       }
       addPreProcessCallback(t) {
@@ -95,22 +85,15 @@ customElements.get('product-info') ||
         let s = 'true' === this.dataset.updateUrl && isDifferentProduct;
 
         if (this.dataset.isCombinedListing === 'true' || isDifferentProduct) {
-          // Combined-listing flows have two shapes:
-          //   1. Sibling-child click (isDifferentProduct === true): the
-          //      data-product-url points to a different /products/<child>
-          //      path. Drop ?variant= / ?option_values= so the URL stays
-          //      canonical-friendly — the destination child product picks
-          //      its own default variant.
-          //   2. Combined-listing parent click (same pathname, isCombinedListing
-          //      flag set): the option value's product_url is the parent URL
-          //      with ?variant=<id>. Preserve ?variant= so the reload selects
-          //      the clicked option; without it, the parent re-renders with
-          //      the default variant and the click appears to revert.
+          // Combined-listing flows: on the parent template the
+          // data-is-combined-listing flag is set; on a child product the
+          // option picker still renders sibling-children whose product_url
+          // points to a different /products/<child> path. In either case we
+          // want a full page refresh to the bare child path (no ?variant= /
+          // ?option_values=) so the canonical-friendly URL is what the user
+          // sees and shares.
           let target = new URL(a, window.location.origin);
-          target.searchParams.delete('section_id');
-          target.searchParams.delete('option_values');
-          let destination = isDifferentProduct ? target.pathname : target.pathname + target.search;
-          window.location.assign(destination);
+          window.location.assign(target.pathname);
           return;
         }
 
