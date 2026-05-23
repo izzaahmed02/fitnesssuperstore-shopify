@@ -94,27 +94,25 @@ customElements.get('product-info') ||
         let isDifferentProduct = targetPath !== basePath;
         let s = 'true' === this.dataset.updateUrl && isDifferentProduct;
 
-        if (isDifferentProduct) {
-          // Cross-product click. Two shapes hit this:
-          //   1. Combined-listing parent → sibling-child URL.
-          //   2. Combined-listing child → sibling-child URL.
-          // In both cases the destination is a different /products/<child>
-          // path. Drop ?variant= / ?option_values= so the URL stays
-          // canonical-friendly — the destination product picks its own
-          // default variant on load.
+        if (this.dataset.isCombinedListing === 'true' || isDifferentProduct) {
+          // Combined-listing flows have two shapes:
+          //   1. Sibling-child click (isDifferentProduct === true): the
+          //      data-product-url points to a different /products/<child>
+          //      path. Drop ?variant= / ?option_values= so the URL stays
+          //      canonical-friendly — the destination child product picks
+          //      its own default variant.
+          //   2. Combined-listing parent click (same pathname, isCombinedListing
+          //      flag set): the option value's product_url is the parent URL
+          //      with ?variant=<id>. Preserve ?variant= so the reload selects
+          //      the clicked option; without it, the parent re-renders with
+          //      the default variant and the click appears to revert.
           let target = new URL(a, window.location.origin);
           target.searchParams.delete('section_id');
           target.searchParams.delete('option_values');
-          window.location.assign(target.pathname);
+          let destination = isDifferentProduct ? target.pathname : target.pathname + target.search;
+          window.location.assign(destination);
           return;
         }
-
-        // Same-pathname click (regular PDP and combined-listing parent
-        // both): use the standard option_values fetch. Shopify resolves the
-        // selected option ids to the matching variant on the parent and
-        // returns the section HTML for that variant, which re-renders in
-        // place. Full-page navigation here would reload the parent without
-        // ?variant= and snap the picker back to the default variant.
 
         this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: isDifferentProduct ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
       }
