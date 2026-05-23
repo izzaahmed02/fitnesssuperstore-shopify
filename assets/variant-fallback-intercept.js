@@ -17,31 +17,52 @@
  *    destination renders with the right options preselected.
  */
 (function () {
+  console.log('[FS-DEBUG] variant-fallback-intercept.js loaded');
   const TOAST_CLASS = 'pdp-variant-fallback-toast';
   const PULSE_CLASS = 'pdp-variant-fallback-pulse';
   const PULSE_DURATION_MS = 1500;
   const TOAST_DURATION_MS = 2600;
 
   function init(productInfo) {
+    console.log('[FS-DEBUG] interceptor init candidate', {
+      id: productInfo.id,
+      isCombinedListing: productInfo.dataset.isCombinedListing,
+      pdpTemplate: productInfo.dataset.pdpTemplate,
+      alreadyInit: productInfo.dataset.variantFallbackInit === 'true',
+    });
     if (productInfo.dataset.variantFallbackInit === 'true') return;
     productInfo.dataset.variantFallbackInit = 'true';
 
     const script = productInfo.querySelector('script[data-product-variants-map]');
-    if (!script) return;
+    if (!script) {
+      console.log('[FS-DEBUG] interceptor init: NO variants-map script found, bailing');
+      return;
+    }
     let variantsMap;
     try {
       variantsMap = JSON.parse(script.textContent);
-    } catch (_) {
+    } catch (e) {
+      console.log('[FS-DEBUG] interceptor init: variants-map JSON parse failed', e);
       return;
     }
-    if (!Array.isArray(variantsMap) || variantsMap.length === 0) return;
+    if (!Array.isArray(variantsMap) || variantsMap.length === 0) {
+      console.log('[FS-DEBUG] interceptor init: variants-map empty');
+      return;
+    }
 
     const isCombined = productInfo.dataset.isCombinedListing === 'true';
     const handler = isCombined ? handleCombinedClick : handleClick;
+    console.log('[FS-DEBUG] interceptor init: attached', {
+      isCombined,
+      handler: isCombined ? 'handleCombinedClick' : 'handleClick',
+      variantsCount: variantsMap.length,
+      sampleVariant: variantsMap[0],
+    });
     productInfo.addEventListener('click', (event) => handler(event, productInfo, variantsMap), true);
   }
 
   function handleCombinedClick(event, productInfo, variantsMap) {
+    console.log('[FS-DEBUG] handleCombinedClick fired', { target: event.target, phase: event.eventPhase });
     // Combined-listing parent or child: every option click needs to land on
     // a real variant URL. If the customer picks an impossible combination
     // (e.g. Singles + With Rack when With Rack only exists on Sets),
@@ -55,8 +76,14 @@
     } else {
       input = event.target.closest('[data-variant-options] [data-option-value-id]');
     }
-    if (!input || !input.matches('[data-option-value-id]')) return;
-    if (input.checked) return;
+    if (!input || !input.matches('[data-option-value-id]')) {
+      console.log('[FS-DEBUG] handleCombinedClick: no matching input found, ignoring');
+      return;
+    }
+    if (input.checked) {
+      console.log('[FS-DEBUG] handleCombinedClick: input already checked, ignoring');
+      return;
+    }
 
     const fieldsets = Array.from(productInfo.querySelectorAll('[data-variant-options]'));
     const clickedFieldset = input.closest('[data-variant-options]');
@@ -68,6 +95,7 @@
       const checked = fs.querySelector('[data-option-value-id]:checked');
       return checked ? checked.value : null;
     });
+    console.log('[FS-DEBUG] handleCombinedClick: intended combination', intended);
 
     let target = variantsMap.find(
       (v) =>
@@ -80,7 +108,11 @@
       target = findClosestVariant(variantsMap, intended, clickedIndex);
       usedFallback = !!target;
     }
-    if (!target || !target.u) return; // map lacks data; let default flow take over
+    console.log('[FS-DEBUG] handleCombinedClick: resolved target', { target, usedFallback });
+    if (!target || !target.u) {
+      console.log('[FS-DEBUG] handleCombinedClick: no target.u, falling through to default flow');
+      return; // map lacks data; let default flow take over
+    }
 
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -88,6 +120,7 @@
     if (usedFallback) {
       showToast(productInfo, "That combination isn't available — switched to the closest match.");
     }
+    console.log('[FS-DEBUG] handleCombinedClick: NAVIGATING to', target.u);
     window.location.assign(target.u);
   }
 
@@ -235,7 +268,9 @@
   const PRODUCT_INFO_SELECTOR = 'product-info[data-pdp-template="variants"], product-info[data-is-combined-listing="true"]';
 
   function autoInit() {
-    document.querySelectorAll(PRODUCT_INFO_SELECTOR).forEach(init);
+    const matches = document.querySelectorAll(PRODUCT_INFO_SELECTOR);
+    console.log('[FS-DEBUG] interceptor autoInit ran, candidates=', matches.length);
+    matches.forEach(init);
   }
 
   if (document.readyState === 'loading') {
