@@ -1,16 +1,20 @@
 /*
- * Variant fallback interceptor for the variants PDP template.
+ * Variant fallback interceptor.
  *
- * Intercepts variant-option clicks before the standard product-info fetch
- * cycle. Looks up the customer's intended option-value combination in a
- * slim product.variants map emitted on the page:
- *   - variant matches the combination (available or sold out) → let the
- *     click proceed normally; the customer sees the right state and CTA.
- *   - no variant matches (impossible combination) → cancel the click,
- *     redirect to the closest available variant, and show a toast.
+ * Two modes, both driven by a slim variants map emitted on the page:
  *
- * Scoped to <product-info data-pdp-template="variants"> so other PDP
- * templates that share the section file (e.g. gift cards) are untouched.
+ *  - Variants PDP (data-pdp-template="variants"): intercept impossible
+ *    combinations only. Cancel the click and dispatch synthetic clicks
+ *    to apply the closest matching variant within the same product.
+ *
+ *  - Combined-listing parent or child (data-is-combined-listing="true"):
+ *    the aggregated picker lets customers click combinations that don't
+ *    have a backing variant on the current product; without a fallback
+ *    the page navigates to the bare parent URL and reloads the default
+ *    variant — the click appears to revert. Intercept every option click,
+ *    resolve the intended combination against the family variants map,
+ *    and navigate to the matching (or closest) variant's URL so the
+ *    destination renders with the right options preselected.
  */
 (function () {
   const TOAST_CLASS = 'pdp-variant-fallback-toast';
@@ -32,7 +36,59 @@
     }
     if (!Array.isArray(variantsMap) || variantsMap.length === 0) return;
 
-    productInfo.addEventListener('click', (event) => handleClick(event, productInfo, variantsMap), true);
+    const isCombined = productInfo.dataset.isCombinedListing === 'true';
+    const handler = isCombined ? handleCombinedClick : handleClick;
+    productInfo.addEventListener('click', (event) => handler(event, productInfo, variantsMap), true);
+  }
+
+  function handleCombinedClick(event, productInfo, variantsMap) {
+    // Combined-listing parent or child: every option click needs to land on
+    // a real variant URL. If the customer picks an impossible combination
+    // (e.g. Singles + With Rack when With Rack only exists on Sets),
+    // route to the closest matching variant so the destination renders
+    // correctly instead of falling back to the parent's default variant.
+    const label = event.target.closest('[data-variant-options] label[for]');
+    let input;
+    if (label) {
+      const forId = label.getAttribute('for');
+      input = forId ? productInfo.querySelector('#' + cssEscape(forId)) : null;
+    } else {
+      input = event.target.closest('[data-variant-options] [data-option-value-id]');
+    }
+    if (!input || !input.matches('[data-option-value-id]')) return;
+    if (input.checked) return;
+
+    const fieldsets = Array.from(productInfo.querySelectorAll('[data-variant-options]'));
+    const clickedFieldset = input.closest('[data-variant-options]');
+    const clickedIndex = fieldsets.indexOf(clickedFieldset);
+    if (clickedIndex === -1) return;
+
+    const intended = fieldsets.map((fs) => {
+      if (fs === clickedFieldset) return input.value;
+      const checked = fs.querySelector('[data-option-value-id]:checked');
+      return checked ? checked.value : null;
+    });
+
+    let target = variantsMap.find(
+      (v) =>
+        v.o1 === (intended[0] || null) &&
+        v.o2 === (intended[1] || null) &&
+        v.o3 === (intended[2] || null)
+    );
+    let usedFallback = false;
+    if (!target) {
+      target = findClosestVariant(variantsMap, intended, clickedIndex);
+      usedFallback = !!target;
+    }
+    if (!target || !target.u) return; // map lacks data; let default flow take over
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    if (usedFallback) {
+      showToast(productInfo, "That combination isn't available — switched to the closest match.");
+    }
+    window.location.assign(target.u);
   }
 
   function handleClick(event, productInfo, variantsMap) {
@@ -176,8 +232,10 @@
     return String(value).replace(/[^a-zA-Z0-9_-]/g, (c) => '\\' + c);
   }
 
+  const PRODUCT_INFO_SELECTOR = 'product-info[data-pdp-template="variants"], product-info[data-is-combined-listing="true"]';
+
   function autoInit() {
-    document.querySelectorAll('product-info[data-pdp-template="variants"]').forEach(init);
+    document.querySelectorAll(PRODUCT_INFO_SELECTOR).forEach(init);
   }
 
   if (document.readyState === 'loading') {
@@ -186,10 +244,10 @@
     autoInit();
   }
 
-  // Re-attach if a fresh product-info element gets swapped in (combined listings, etc.).
+  // Re-attach if a fresh product-info element gets swapped in.
   document.addEventListener('product-info:loaded', (event) => {
     const target = event.target;
-    if (target && typeof target.matches === 'function' && target.matches('product-info[data-pdp-template="variants"]')) {
+    if (target && typeof target.matches === 'function' && target.matches(PRODUCT_INFO_SELECTOR)) {
       init(target);
     }
   });

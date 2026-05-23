@@ -14,38 +14,6 @@ customElements.get('product-info') ||
         (super(), (this.quantityInput = this.querySelector('.quantity__input')));
       }
       connectedCallback() {
-        console.log('[FS-DEBUG] product-info connectedCallback', {
-          id: this.id,
-          isCombinedListing: this.dataset.isCombinedListing,
-          dataUrl: this.dataset.url,
-          dataSection: this.dataset.section,
-          currentLocation: window.location.href,
-        });
-        this.addEventListener('click', (ev) => {
-          const input = ev.target?.closest?.('[data-variant-options] [data-option-value-id]');
-          const label = ev.target?.closest?.('[data-variant-options] label[for]');
-          if (!input && !label) return;
-          console.log('[FS-DEBUG] picker CLICK', {
-            phase: ev.eventPhase,
-            target: ev.target,
-            input,
-            inputProductUrl: input?.dataset?.productUrl,
-            inputChecked: input?.checked,
-            inputAvailable: input?.dataset?.optionValueAvailable,
-            inputOptionValueId: input?.dataset?.optionValueId,
-            labelFor: label?.getAttribute('for'),
-            defaultPrevented: ev.defaultPrevented,
-          });
-        }, true);
-        this.addEventListener('change', (ev) => {
-          if (!ev.target?.closest?.('[data-variant-options]')) return;
-          console.log('[FS-DEBUG] picker CHANGE', {
-            target: ev.target,
-            checked: ev.target?.checked,
-            value: ev.target?.value,
-            productUrl: ev.target?.dataset?.productUrl,
-          });
-        }, true);
         this.redirectCombinedListingToVariant();
         (this.initializeProductSwapUtility(),
           (this.onVariantChangeUnsubscriber = subscribe(PUB_SUB_EVENTS.optionValueSelectionChange, this.handleOptionValueChange.bind(this))),
@@ -78,23 +46,12 @@ customElements.get('product-info') ||
         // child-level data (compare_at_price, variant metafields) is missing until
         // the user clicks a variant. Forward to the checked variant's child URL so
         // the default landing matches the per-variant URL.
-        if (this.dataset.isCombinedListing !== 'true') {
-          console.log('[FS-DEBUG] redirectCombinedListingToVariant: not a combined listing, skipping');
-          return;
-        }
+        if (this.dataset.isCombinedListing !== 'true') return;
         const checked = this.querySelector('variant-selects [data-product-url]:checked, variant-selects option[data-product-url][selected]');
         const target = checked?.dataset?.productUrl;
-        console.log('[FS-DEBUG] redirectCombinedListingToVariant: checked=', checked, 'target=', target, 'currentPath=', window.location.pathname);
-        if (!target) {
-          console.log('[FS-DEBUG] redirectCombinedListingToVariant: no target, returning');
-          return;
-        }
+        if (!target) return;
         const currentPath = window.location.pathname;
-        if (target === currentPath || target === currentPath + '/') {
-          console.log('[FS-DEBUG] redirectCombinedListingToVariant: target matches currentPath, no redirect');
-          return;
-        }
-        console.log('[FS-DEBUG] redirectCombinedListingToVariant: REDIRECTING to', target);
+        if (target === currentPath || target === currentPath + '/') return;
         window.location.replace(target);
       }
       addPreProcessCallback(t) {
@@ -115,26 +72,7 @@ customElements.get('product-info') ||
           }));
       }
       handleOptionValueChange({ data: { event: t, target: e, selectedOptionValues: i } }) {
-        console.log('[FS-DEBUG] handleOptionValueChange ENTER', {
-          eventTarget: t.target,
-          eventTargetTag: t.target?.tagName,
-          eventTargetValue: t.target?.value,
-          eventTargetId: t.target?.id,
-          targetDataset: e?.dataset && {
-            productUrl: e.dataset.productUrl,
-            optionValueId: e.dataset.optionValueId,
-            optionValueAvailable: e.dataset.optionValueAvailable,
-          },
-          selectedOptionValues: i,
-          thisContainsTarget: this.contains(t.target),
-          isCombinedListing: this.dataset.isCombinedListing,
-          dataUrl: this.dataset.url,
-          currentLocation: window.location.href,
-        });
-        if (!this.contains(t.target)) {
-          console.log('[FS-DEBUG] handleOptionValueChange: target NOT inside product-info, bailing');
-          return;
-        }
+        if (!this.contains(t.target)) return;
         this.resetProductFormState();
         let a = e.dataset.productUrl || this.pendingRequestUrl || this.dataset.url;
         this.pendingRequestUrl = a;
@@ -146,10 +84,6 @@ customElements.get('product-info') ||
         let isDifferentProduct = targetPath !== basePath;
         let s = 'true' === this.dataset.updateUrl && isDifferentProduct;
 
-        console.log('[FS-DEBUG] handleOptionValueChange computed', {
-          a, basePath, targetPath, isDifferentProduct,
-        });
-
         if (this.dataset.isCombinedListing === 'true' || isDifferentProduct) {
           // Combined-listing flows: on the parent template the
           // data-is-combined-listing flag is set; on a child product the
@@ -159,12 +93,10 @@ customElements.get('product-info') ||
           // ?option_values=) so the canonical-friendly URL is what the user
           // sees and shares.
           let target = new URL(a, window.location.origin);
-          console.log('[FS-DEBUG] handleOptionValueChange: taking COMBINED-LISTING branch, navigating to', target.pathname, 'full url=', a);
           window.location.assign(target.pathname);
           return;
         }
 
-        console.log('[FS-DEBUG] handleOptionValueChange: taking AJAX renderProductInfo branch with URL', this.buildRequestUrlWithParams(a, i, s));
         this.renderProductInfo({ requestUrl: this.buildRequestUrlWithParams(a, i, s), targetId: e.id, callback: isDifferentProduct ? this.handleSwapProduct(a, s) : this.handleUpdateProductInfo(a) });
       }
       resetProductFormState() {

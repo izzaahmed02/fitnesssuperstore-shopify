@@ -59,6 +59,13 @@
 {% assign default_camera_orbit = '24deg 74deg 10m' %}
 
 
+{%- liquid
+  assign combined_listing_parent = product.combined_listing.parent_product
+  assign is_combined_listing_child = false
+  if combined_listing_parent != blank
+    assign is_combined_listing_child = true
+  endif
+-%}
 <product-info
   id="MainProduct-{{ section.id }}"
   class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }} prodTemplate"
@@ -66,10 +73,28 @@
   data-product-id="{{ product.id }}"
   data-update-url="true"
   data-url="{{ product.url }}"
+  {%- if is_combined_listing_child %}
+    data-is-combined-listing="true"
+  {%- endif %}
   {% if section.settings.image_zoom == 'hover' %}
     data-zoom-on-hover
   {% endif %}
 >
+  {%- if is_combined_listing_child -%}
+    {%- comment -%}
+      On a combined-listing CHILD page the aggregated picker still shows sibling
+      option values (e.g. Singles when viewing a Sets child). Clicking a sibling
+      whose combination has no backing variant resolves to the parent URL, which
+      reloads to the default variant and looks like the click reverted. Emit the
+      family's variants map so variant-fallback-intercept.js can route the click
+      to the closest matching variant's URL.
+    {%- endcomment -%}
+    <script type="application/json" data-product-variants-map>
+      [{%- for variant in combined_listing_parent.variants -%}
+        {"o1":{{ variant.option1 | json }},"o2":{{ variant.option2 | json }},"o3":{{ variant.option3 | json }},"a":{{ variant.available }},"u":{{ variant.url | json }}}{%- unless forloop.last -%},{%- endunless -%}
+      {%- endfor -%}]
+    </script>
+  {%- endif -%}
   {{ 'section-main-product.css' | asset_url | stylesheet_tag }}
   <link rel="stylesheet" href="{{ 'component-accordion.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'component-accordion.css' | asset_url | stylesheet_tag }}</noscript>
@@ -138,6 +163,9 @@
   {%- endfor -%}
 
   <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
+  {%- if is_combined_listing_child -%}
+    <script src="{{ 'variant-fallback-intercept.js' | asset_url }}" defer="defer"></script>
+  {%- endif -%}
   {% if enable_product_form_js %}
     <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
   {% endif %}
