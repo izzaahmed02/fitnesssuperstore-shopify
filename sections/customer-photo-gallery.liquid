@@ -1,10 +1,32 @@
 {%- assign gallery_metafield = product.metafields.custom.customer_photo_gallery -%}
 
-{% if gallery_metafield and gallery_metafield.value != blank %}
+{%- liquid
+  assign has_blocks = false
+  assign has_metafield = false
+  assign image_count = 0
+
+  if section.blocks.size > 0
+    for block in section.blocks
+      if block.type == 'image' and block.settings.image != blank
+        assign image_count = image_count | plus: 1
+      endif
+    endfor
+    if image_count > 0
+      assign has_blocks = true
+    endif
+  endif
+
+  if has_blocks == false and gallery_metafield and gallery_metafield.value != blank
+    assign has_metafield = true
+    assign image_count = gallery_metafield.value.size
+  endif
+-%}
+
+{% if image_count > 0 %}
 <section
   id="customer-photo-gallery-{{ section.id }}"
   class="customer-photo-gallery"
-  data-count="{{ gallery_metafield.value.size }}"
+  data-count="{{ image_count }}"
 >
   <div class="customer-photo-gallery__header">
     <h4>{{ section.settings.heading | default: 'Customer Photo Gallery' }}</h4>
@@ -15,26 +37,54 @@
   <button class="customer-photo-gallery__arrow customer-photo-gallery__arrow--right" aria-label="Next image" type="button">›</button>
 
   <div class="customer-photo-gallery__slider" id="photos">
-    {% for image in gallery_metafield.value %}
-      {%- assign w = image.width | default: 1200 -%}
-      {%- assign h = image.height | default: 1200 -%}
-      {%- assign full = image | image_url: width: 2048 -%}
-      {%- assign caption = image.alt | default: '' -%}
-      <div class="customer-photo-gallery__slide">
-        <img
-          src="{{ image | image_url: width: 600 }}"
-          srcset="{{ image | image_url: width: 400 }} 400w, {{ image | image_url: width: 600 }} 600w, {{ image | image_url: width: 800 }} 800w"
-          sizes="(min-width: 990px) 25vw, 80vw"
-          width="{{ w }}"
-          height="{{ h }}"
-          data-full="{{ full }}"
-          data-caption="{{ caption | escape }}"
-          alt="Customer photo {{ forloop.index }}"
-          loading="lazy"
-          decoding="async"
-        >
-      </div>
-    {% endfor %}
+    {% if has_blocks %}
+      {%- assign idx = 0 -%}
+      {% for block in section.blocks %}
+        {%- if block.type == 'image' and block.settings.image != blank -%}
+          {%- assign idx = idx | plus: 1 -%}
+          {%- assign image = block.settings.image -%}
+          {%- assign w = image.width | default: 1200 -%}
+          {%- assign h = image.height | default: 1200 -%}
+          {%- assign full = image | image_url: width: 2048 -%}
+          {%- assign caption = block.settings.caption | default: image.alt | default: '' -%}
+          <div class="customer-photo-gallery__slide" {{ block.shopify_attributes }}>
+            <img
+              src="{{ image | image_url: width: 600 }}"
+              srcset="{{ image | image_url: width: 400 }} 400w, {{ image | image_url: width: 600 }} 600w, {{ image | image_url: width: 800 }} 800w"
+              sizes="(min-width: 990px) 25vw, 80vw"
+              width="{{ w }}"
+              height="{{ h }}"
+              data-full="{{ full }}"
+              data-caption="{{ caption | escape }}"
+              alt="Customer photo {{ idx }}"
+              loading="lazy"
+              decoding="async"
+            >
+          </div>
+        {%- endif -%}
+      {% endfor %}
+    {% else %}
+      {% for image in gallery_metafield.value %}
+        {%- assign w = image.width | default: 1200 -%}
+        {%- assign h = image.height | default: 1200 -%}
+        {%- assign full = image | image_url: width: 2048 -%}
+        {%- assign caption = image.alt | default: '' -%}
+        <div class="customer-photo-gallery__slide">
+          <img
+            src="{{ image | image_url: width: 600 }}"
+            srcset="{{ image | image_url: width: 400 }} 400w, {{ image | image_url: width: 600 }} 600w, {{ image | image_url: width: 800 }} 800w"
+            sizes="(min-width: 990px) 25vw, 80vw"
+            width="{{ w }}"
+            height="{{ h }}"
+            data-full="{{ full }}"
+            data-caption="{{ caption | escape }}"
+            alt="Customer photo {{ forloop.index }}"
+            loading="lazy"
+            decoding="async"
+          >
+        </div>
+      {% endfor %}
+    {% endif %}
   </div>
 
   <!-- Lightbox -->
@@ -918,14 +968,41 @@ body.cpg-lightbox-open {
 {% schema %}
 {
   "name": "Customer Photo Gallery",
+  "enabled_on": {
+    "templates": ["product", "article"]
+  },
   "settings": [
     {
       "type": "text",
       "id": "heading",
       "label": "Section heading",
       "default": "Customer Photo Gallery"
+    },
+    {
+      "type": "paragraph",
+      "content": "On product pages, images come from the product's customer_photo_gallery metafield by default. Add image blocks below to override that (or to provide images on article templates)."
     }
   ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Photo",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "caption",
+          "label": "Caption",
+          "info": "Optional. Falls back to the image's alt text."
+        }
+      ]
+    }
+  ],
+  "max_blocks": 50,
   "presets": [
     {
       "name": "Customer Photo Gallery",
