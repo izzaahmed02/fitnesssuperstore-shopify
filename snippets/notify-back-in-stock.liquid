@@ -1,9 +1,10 @@
 {% comment %}
-  Renders a native "Notify me when available" email form for sold-out products.
-
-  Uses Shopify's built-in {% form 'contact' %}, which emails the store's contact
-  email (Settings > Notifications). No third-party app required. On submit, Shopify
-  reloads the product page and form.posted_successfully? becomes true.
+  Renders a "Notify me when available" button for sold-out products. Clicking it
+  opens a popup containing an email field. Submitting uses Shopify's built-in
+  {% form 'contact' %}, which emails the store's contact email (Settings >
+  Notifications). No third-party app required. On submit Shopify reloads the
+  product page; form.posted_successfully? then reopens the popup with a
+  confirmation message.
 
   Accepts:
   - product: {Object} product object.
@@ -15,91 +16,187 @@
 {%- if product != blank -%}
   {%- liquid
     assign variant = product.selected_or_first_available_variant
-    assign notify_form_id = 'NotifyBackInStock-' | append: section_id
+    assign uid = 'NotifyBackInStock-' | append: section_id
+    assign dialog_id = 'NotifyDialog-' | append: section_id
     assign show_variant = false
     if variant != null and product.has_only_default_variant == false and variant.title != blank
       assign show_variant = true
     endif
     assign product_url = request.origin | append: product.url
   -%}
-  <div class="notify-back-in-stock" id="{{ notify_form_id }}">
-    {%- form 'contact', id: notify_form_id, class: 'notify-back-in-stock__form' -%}
-      {%- if form.posted_successfully? -%}
-        <p class="notify-back-in-stock__message notify-back-in-stock__message--success" role="status">
-          Thanks! We'll email you as soon as this item is back in stock.
-        </p>
-      {%- else -%}
-        <p class="notify-back-in-stock__heading">Out of stock</p>
-        <p class="notify-back-in-stock__subtext">
-          Enter your email and we'll let you know when it's available again.
-        </p>
+  <div class="notify-back-in-stock">
+    <button
+      type="button"
+      class="notify-back-in-stock__open button button--full-width button--primary"
+      data-notify-open="{{ dialog_id }}"
+      aria-haspopup="dialog"
+    >
+      Notify me when available
+    </button>
 
-        {%- if form.errors -%}
-          <p class="notify-back-in-stock__message notify-back-in-stock__message--error" role="alert">
-            {{ form.errors | default_errors }}
-          </p>
-        {%- endif -%}
-
-        <input
-          type="hidden"
-          name="contact[body]"
-          value="Back-in-stock request for {{ product.title | escape }}{% if show_variant %} - {{ variant.title | escape }}{% endif %} ({{ product_url }})"
+    <dialog id="{{ dialog_id }}" class="notify-modal" aria-label="Notify me when available">
+      <div class="notify-modal__inner">
+        <button
+          type="button"
+          class="notify-modal__close"
+          data-notify-close
+          aria-label="Close"
         >
-        <input type="hidden" name="contact[Product]" value="{{ product.title | escape }}">
-        {%- if show_variant -%}
-          <input type="hidden" name="contact[Variant]" value="{{ variant.title | escape }}">
-        {%- endif -%}
-        <input type="hidden" name="contact[Product URL]" value="{{ product_url }}">
-
-        <div class="notify-back-in-stock__field field">
-          <input
-            type="email"
-            class="field__input"
-            id="NotifyEmail-{{ section_id }}"
-            name="contact[email]"
-            value="{% if customer %}{{ customer.email }}{% endif %}"
-            autocomplete="email"
-            spellcheck="false"
-            autocapitalize="off"
-            required
-            placeholder="your@email.com"
-          >
-          <label class="field__label" for="NotifyEmail-{{ section_id }}">Email</label>
-        </div>
-
-        <button type="submit" class="notify-back-in-stock__submit button button--full-width button--primary">
-          Notify me when available
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </button>
-      {%- endif -%}
-    {%- endform -%}
+
+        {%- form 'contact', id: uid, class: 'notify-modal__form' -%}
+          {%- assign notify_posted = form.posted_successfully? -%}
+          {%- if form.posted_successfully? -%}
+            <p class="notify-modal__message notify-modal__message--success" role="status">
+              Thanks! We'll email you as soon as this item is back in stock.
+            </p>
+          {%- else -%}
+            <p class="notify-modal__heading">Get notified when it's back</p>
+            <p class="notify-modal__subtext">
+              Enter your email and we'll let you know as soon as this item is available again.
+            </p>
+
+            {%- if form.errors -%}
+              <p class="notify-modal__message notify-modal__message--error" role="alert">
+                {{ form.errors | default_errors }}
+              </p>
+            {%- endif -%}
+
+            <input
+              type="hidden"
+              name="contact[body]"
+              value="Back-in-stock request for {{ product.title | escape }}{% if show_variant %} - {{ variant.title | escape }}{% endif %} ({{ product_url }})"
+            >
+            <input type="hidden" name="contact[Product]" value="{{ product.title | escape }}">
+            {%- if show_variant -%}
+              <input type="hidden" name="contact[Variant]" value="{{ variant.title | escape }}">
+            {%- endif -%}
+            <input type="hidden" name="contact[Product URL]" value="{{ product_url }}">
+
+            <div class="notify-modal__field field">
+              <input
+                type="email"
+                class="field__input"
+                id="NotifyEmail-{{ section_id }}"
+                name="contact[email]"
+                value="{% if customer %}{{ customer.email }}{% endif %}"
+                autocomplete="email"
+                spellcheck="false"
+                autocapitalize="off"
+                required
+                placeholder="your@email.com"
+              >
+              <label class="field__label" for="NotifyEmail-{{ section_id }}">Email</label>
+            </div>
+
+            <button type="submit" class="notify-modal__submit button button--full-width button--primary">
+              Notify me when available
+            </button>
+          {%- endif -%}
+        {%- endform -%}
+      </div>
+    </dialog>
   </div>
+
+  <script>
+    (function () {
+      var dialog = document.getElementById('{{ dialog_id }}');
+      if (!dialog || dialog.dataset.notifyInit) return;
+      dialog.dataset.notifyInit = '1';
+
+      function open() {
+        if (typeof dialog.showModal === 'function') {
+          dialog.showModal();
+        } else {
+          dialog.setAttribute('open', '');
+        }
+      }
+      function close() {
+        if (typeof dialog.close === 'function') {
+          dialog.close();
+        } else {
+          dialog.removeAttribute('open');
+        }
+      }
+
+      document.querySelectorAll('[data-notify-open="{{ dialog_id }}"]').forEach(function (btn) {
+        btn.addEventListener('click', open);
+      });
+      dialog.querySelectorAll('[data-notify-close]').forEach(function (btn) {
+        btn.addEventListener('click', close);
+      });
+      dialog.addEventListener('click', function (event) {
+        if (event.target === dialog) close();
+      });
+
+      {%- if notify_posted -%}
+        open();
+      {%- endif -%}
+    })();
+  </script>
 {%- endif -%}
 
 {%- style -%}
   .notify-back-in-stock {
     margin-top: 1.5rem;
   }
-  .notify-back-in-stock__heading {
-    margin: 0 0 0.4rem;
+  .notify-modal {
+    width: 90%;
+    max-width: 42rem;
+    padding: 0;
+    border: none;
+    border-radius: 0.6rem;
+    box-shadow: 0 0.5rem 3rem rgba(0, 0, 0, 0.2);
+    color: rgb(var(--color-foreground));
+    background: rgb(var(--color-background));
+  }
+  .notify-modal::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+  .notify-modal__inner {
+    position: relative;
+    padding: 2.4rem;
+  }
+  .notify-modal__close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.2rem;
+    height: 3.2rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .notify-modal__heading {
+    margin: 0 2.4rem 0.6rem 0;
+    font-size: 1.8rem;
     font-weight: 600;
   }
-  .notify-back-in-stock__subtext {
-    margin: 0 0 1.2rem;
+  .notify-modal__subtext {
+    margin: 0 0 1.6rem;
     font-size: 1.4rem;
     opacity: 0.85;
   }
-  .notify-back-in-stock__field {
-    margin-bottom: 1rem;
+  .notify-modal__field {
+    margin-bottom: 1.2rem;
   }
-  .notify-back-in-stock__message {
+  .notify-modal__message {
     margin: 0 0 1.2rem;
     font-size: 1.4rem;
   }
-  .notify-back-in-stock__message--success {
+  .notify-modal__message--success {
     color: rgb(62, 142, 96);
     font-weight: 600;
   }
-  .notify-back-in-stock__message--error {
+  .notify-modal__message--error {
     color: rgb(235, 0, 27);
   }
 {%- endstyle -%}
