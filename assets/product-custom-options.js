@@ -1042,8 +1042,10 @@ if (!customElements.get('product-customization-options')) {
       // Helper to prepare line item properties
 
       prepareOptions() {
+        // Only Accordion options carry [data-selected-options]; Select/Color/Quantity
+        // options do not. Bailing when this list is empty would drop a product whose
+        // only option is a Select (e.g. the assembly dropdown), so keep going.
         const activeOptions = this.querySelectorAll('[data-selected-options]');
-        if (activeOptions.length === 0) return;
         let lineItemProperties = {};
         activeOptions.forEach((option) => {
           if (option.dataset.selectedOptions !== '') {
@@ -1093,8 +1095,9 @@ if (!customElements.get('product-customization-options')) {
       // Hepler to create Shopify Function logic
 
       prepareFunctionalProperties() {
+        // See prepareOptions: non-accordion options (Select/Color/Quantity) have no
+        // [data-selected-options], so don't bail when this list is empty.
         const activeOptions = this.querySelectorAll('[data-selected-options]');
-        if (activeOptions.length === 0) return;
         let productOptions = [];
         activeOptions.forEach((option) => {
           if (option.dataset.selectedOptions !== '') {
@@ -1169,7 +1172,7 @@ if (!customElements.get('product-customization-options')) {
           });
         }
 
-        return productOptions;
+        return productOptions.length > 0 ? productOptions : undefined;
       }
 
       // If condistionals option is present and some elements are hidden. We hide the in modify popup

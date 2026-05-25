@@ -157,8 +157,10 @@ if (!customElements.get('product-form-with-options')) {
 
       prepareOptions() {
         if (!this.productContainer) return;
+        // Only Accordion options carry [data-selected-options]; Select/Color/Quantity
+        // options do not. Bailing when this list is empty would drop a product whose
+        // only option is a Select (e.g. the assembly dropdown), so keep going.
         const activeOptions = this.productContainer.querySelectorAll('[data-selected-options]');
-        if (activeOptions.length === 0) return;
         let lineItemProperties = {};
         activeOptions.forEach((option) => {
           if (option.dataset.selectedOptions !== '') {
@@ -207,8 +209,9 @@ if (!customElements.get('product-form-with-options')) {
 
       prepareFunctionalProperties() {
         if (!this.productContainer) return;
+        // See prepareOptions: non-accordion options (Select/Color/Quantity) have no
+        // [data-selected-options], so don't bail when this list is empty.
         const activeOptions = this.productContainer.querySelectorAll('[data-selected-options]');
-        if (activeOptions.length === 0) return;
         let productOptions = [];
         activeOptions.forEach((option) => {
           if (option.dataset.selectedOptions !== '') {
@@ -286,7 +289,7 @@ if (!customElements.get('product-form-with-options')) {
           });
         }
 
-        return productOptions;
+        return productOptions.length > 0 ? productOptions : undefined;
       }
 
       checkMandatoryFields() {
