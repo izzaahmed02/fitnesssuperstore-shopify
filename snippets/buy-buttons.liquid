@@ -101,6 +101,13 @@
         </div>
       {%- endform -%}
     </{{ tag }}>
+
+    {%- if product.selected_or_first_available_variant == null
+      or product.selected_or_first_available_variant.available == false
+      or quantity_rule_soldout
+    -%}
+      {%- render 'notify-back-in-stock', product: product, section_id: section_id -%}
+    {%- endif -%}
   {%- else -%}
     <div class="product-form">
       <div class="product-form__buttons form">
