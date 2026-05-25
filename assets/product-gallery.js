@@ -330,7 +330,7 @@ class ProductGallery extends HTMLElement {
     const imgHeight = media.preview_image.height || img.naturalHeight;
 
     const imgAspect = imgWidth / imgHeight;
-    const zoomWidth = 1600;
+    const zoomWidth = 2048;
     const zoomHeight = Math.round(zoomWidth / imgAspect);
     zoomImg.src = media.preview_image.src.replace(/width=\d+/, `width=${zoomWidth}`).replace(/height=\d+/, `height=${zoomHeight}`);
     zoomImg.style.transform = 'scale(0.5)';
@@ -808,7 +808,7 @@ class ProductGallery extends HTMLElement {
       skeletonWrapper.className = 'image-skeleton-wrapper';
 
       const img = document.createElement('img');
-      img.src = media.preview_image?.src ? media.preview_image.src.replace(/width=\d+/, 'width=1600') : '';
+      img.src = media.preview_image?.src ? media.preview_image.src.replace(/width=\d+/, 'width=2048') : '';
       img.alt = media.alt || '';
       img.loading = 'eager';
       img.className = 'popup-media-zoom-img';
