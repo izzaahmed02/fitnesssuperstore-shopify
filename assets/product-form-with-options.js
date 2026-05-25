@@ -7,9 +7,9 @@ if (!customElements.get('product-form-with-options')) {
         this.productContainer = document.getElementById(`MainProduct-${this.dataset.sectionId}`);
         this.form = this.querySelector('form[data-type="add-to-cart-form"]');
         this.cart = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
-        this.submitButton = this.querySelector('button[type="submit"]');
-        this.submitButtonText = this.submitButton.querySelector('span');
-        if (document.querySelector('cart-drawer')) this.submitButton.setAttribute('aria-haspopup', 'dialog');
+        this.submitButton = this.form ? this.form.querySelector('button[type="submit"]') : null;
+        this.submitButtonText = this.submitButton?.querySelector('span');
+        if (this.submitButton && document.querySelector('cart-drawer')) this.submitButton.setAttribute('aria-haspopup', 'dialog');
         this.hideErrors = this.dataset.hideErrors === 'true';
       }
 
@@ -97,6 +97,7 @@ if (!customElements.get('product-form-with-options')) {
       }
 
       toggleSubmitButton(disable = true, text) {
+        if (!this.submitButton) return;
         if (disable) {
           this.submitButton.setAttribute('disabled', 'disabled');
           if (text) this.submitButtonText.textContent = text;
