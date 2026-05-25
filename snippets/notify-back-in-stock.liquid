@@ -1,0 +1,105 @@
+{% comment %}
+  Renders a native "Notify me when available" email form for sold-out products.
+
+  Uses Shopify's built-in {% form 'contact' %}, which emails the store's contact
+  email (Settings > Notifications). No third-party app required. On submit, Shopify
+  reloads the product page and form.posted_successfully? becomes true.
+
+  Accepts:
+  - product: {Object} product object.
+  - section_id: {String} id of the host section, used to build unique element ids.
+
+  Usage:
+  {% render 'notify-back-in-stock', product: product, section_id: section.id %}
+{% endcomment %}
+{%- if product != blank -%}
+  {%- liquid
+    assign variant = product.selected_or_first_available_variant
+    assign notify_form_id = 'NotifyBackInStock-' | append: section_id
+    assign show_variant = false
+    if variant != null and product.has_only_default_variant == false and variant.title != blank
+      assign show_variant = true
+    endif
+    assign product_url = request.origin | append: product.url
+  -%}
+  <div class="notify-back-in-stock" id="{{ notify_form_id }}">
+    {%- form 'contact', id: notify_form_id, class: 'notify-back-in-stock__form' -%}
+      {%- if form.posted_successfully? -%}
+        <p class="notify-back-in-stock__message notify-back-in-stock__message--success" role="status">
+          Thanks! We'll email you as soon as this item is back in stock.
+        </p>
+      {%- else -%}
+        <p class="notify-back-in-stock__heading">Out of stock</p>
+        <p class="notify-back-in-stock__subtext">
+          Enter your email and we'll let you know when it's available again.
+        </p>
+
+        {%- if form.errors -%}
+          <p class="notify-back-in-stock__message notify-back-in-stock__message--error" role="alert">
+            {{ form.errors | default_errors }}
+          </p>
+        {%- endif -%}
+
+        <input
+          type="hidden"
+          name="contact[body]"
+          value="Back-in-stock request for {{ product.title | escape }}{% if show_variant %} - {{ variant.title | escape }}{% endif %} ({{ product_url }})"
+        >
+        <input type="hidden" name="contact[Product]" value="{{ product.title | escape }}">
+        {%- if show_variant -%}
+          <input type="hidden" name="contact[Variant]" value="{{ variant.title | escape }}">
+        {%- endif -%}
+        <input type="hidden" name="contact[Product URL]" value="{{ product_url }}">
+
+        <div class="notify-back-in-stock__field field">
+          <input
+            type="email"
+            class="field__input"
+            id="NotifyEmail-{{ section_id }}"
+            name="contact[email]"
+            value="{% if customer %}{{ customer.email }}{% endif %}"
+            autocomplete="email"
+            spellcheck="false"
+            autocapitalize="off"
+            required
+            placeholder="your@email.com"
+          >
+          <label class="field__label" for="NotifyEmail-{{ section_id }}">Email</label>
+        </div>
+
+        <button type="submit" class="notify-back-in-stock__submit button button--full-width button--primary">
+          Notify me when available
+        </button>
+      {%- endif -%}
+    {%- endform -%}
+  </div>
+{%- endif -%}
+
+{%- style -%}
+  .notify-back-in-stock {
+    margin-top: 1.5rem;
+  }
+  .notify-back-in-stock__heading {
+    margin: 0 0 0.4rem;
+    font-weight: 600;
+  }
+  .notify-back-in-stock__subtext {
+    margin: 0 0 1.2rem;
+    font-size: 1.4rem;
+    opacity: 0.85;
+  }
+  .notify-back-in-stock__field {
+    margin-bottom: 1rem;
+  }
+  .notify-back-in-stock__message {
+    margin: 0 0 1.2rem;
+    font-size: 1.4rem;
+  }
+  .notify-back-in-stock__message--success {
+    color: rgb(62, 142, 96);
+    font-weight: 600;
+  }
+  .notify-back-in-stock__message--error {
+    color: rgb(235, 0, 27);
+  }
+{%- endstyle -%}
