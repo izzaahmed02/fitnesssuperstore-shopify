@@ -1201,25 +1201,8 @@ border: 1px solid #e5e5e5;
         contentDiv.appendChild(innerDiv);
         item.appendChild(button);
         item.appendChild(contentDiv);
-
-        button.addEventListener('click', function () {
-          const isOpen = button.getAttribute('aria-expanded') === 'true';
-          const svg = button.querySelector('svg');
-
-          if (isOpen) {
-            button.setAttribute('aria-expanded', 'false');
-            contentDiv.setAttribute('aria-hidden', 'true');
-            contentDiv.style.maxHeight = '0';
-            if (svg) svg.style.transform = 'rotate(0deg)';
-          } else {
-            button.setAttribute('aria-expanded', 'true');
-            contentDiv.setAttribute('aria-hidden', 'false');
-            contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
-            if (svg) svg.style.transform = 'rotate(180deg)';
-          }
-        });
-
         accordionItems.push(item);
+
         currentQuestion = null;
         currentAnswerNodes = [];
       }
@@ -1238,6 +1221,51 @@ border: 1px solid #e5e5e5;
       container.innerHTML = '';
       accordionItems.forEach(function (item) {
         container.appendChild(item);
+      });
+
+      // Wire up click handlers with close-others behaviour
+      function openItem(button, contentDiv) {
+        button.setAttribute('aria-expanded', 'true');
+        contentDiv.setAttribute('aria-hidden', 'false');
+        contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
+        const svg = button.querySelector('svg');
+        if (svg) svg.style.transform = 'rotate(180deg)';
+      }
+
+      function closeItem(button, contentDiv) {
+        button.setAttribute('aria-expanded', 'false');
+        contentDiv.setAttribute('aria-hidden', 'true');
+        contentDiv.style.maxHeight = '0';
+        const svg = button.querySelector('svg');
+        if (svg) svg.style.transform = 'rotate(0deg)';
+      }
+
+      const allItems = container.querySelectorAll('.faq-accordion-item');
+
+      allItems.forEach(function (item, index) {
+        const button = item.querySelector('button');
+        const contentDiv = item.querySelector('div[id^="faq-item-"]');
+
+        // Open first item by default
+        if (index === 0) {
+          openItem(button, contentDiv);
+        }
+
+        button.addEventListener('click', function () {
+          const isOpen = button.getAttribute('aria-expanded') === 'true';
+
+          // Close all others first
+          allItems.forEach(function (otherItem) {
+            const otherButton = otherItem.querySelector('button');
+            const otherContent = otherItem.querySelector('div[id^="faq-item-"]');
+            closeItem(otherButton, otherContent);
+          });
+
+          // If it wasn't open, open it
+          if (!isOpen) {
+            openItem(button, contentDiv);
+          }
+        });
       });
     });
   });
