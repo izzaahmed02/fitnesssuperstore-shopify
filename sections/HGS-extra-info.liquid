@@ -1153,32 +1153,32 @@
         const itemId = 'faq-item-' + Math.random().toString(36).slice(2, 8);
 
         const item = document.createElement('div');
-        item.className = 'accordion';
+        item.className = 'faq-accordion-item';
 
         const button = document.createElement('button');
-        button.className = 'accordion-header';
+        button.className = 'faq-accordion-header';
         button.type = 'button';
         button.setAttribute('aria-expanded', 'false');
         button.setAttribute('aria-controls', itemId);
 
         const titleSpan = document.createElement('span');
-        titleSpan.className = 'accordion-title';
+        titleSpan.className = 'faq-accordion-title';
         titleSpan.textContent = questionText;
         button.appendChild(titleSpan);
 
         button.insertAdjacentHTML('beforeend', `
-          <svg class="accordion-chevron" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg class="faq-accordion-chevron" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="black"/>
           </svg>
         `);
 
         const contentDiv = document.createElement('div');
-        contentDiv.className = 'accordion-content';
+        contentDiv.className = 'faq-accordion-content';
         contentDiv.id = itemId;
         contentDiv.setAttribute('aria-hidden', 'true');
 
         const innerDiv = document.createElement('div');
-        innerDiv.className = 'accordion-content-inner';
+        innerDiv.className = 'faq-accordion-content-inner';
 
         currentAnswerNodes.forEach(function (node) {
           if (node.nodeName === 'BR') return;
@@ -1192,16 +1192,10 @@
 
         button.addEventListener('click', function () {
           const isOpen = button.getAttribute('aria-expanded') === 'true';
-
-          if (isOpen) {
-            button.setAttribute('aria-expanded', 'false');
-            contentDiv.setAttribute('aria-hidden', 'true');
-            contentDiv.style.maxHeight = '0';
-          } else {
-            button.setAttribute('aria-expanded', 'true');
-            contentDiv.setAttribute('aria-hidden', 'false');
-            contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
-          }
+          button.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+          contentDiv.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
+          contentDiv.style.maxHeight = isOpen ? '0' : contentDiv.scrollHeight + 'px';
+          button.querySelector('.faq-accordion-chevron').style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
         });
 
         accordionItems.push(item);
@@ -1227,3 +1221,72 @@
     });
   });
 </script>
+
+.faq-accordion-item {
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  transition: .3s linear;
+  margin-bottom: 12px;
+}
+
+.faq-accordion-item:has(.faq-accordion-header[aria-expanded="true"]) {
+  border-color: #D83D0E;
+}
+
+.faq-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  color: #000;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.faq-accordion-chevron {
+  flex-shrink: 0;
+  transition: .3s linear;
+}
+
+.faq-accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s linear;
+}
+
+.faq-accordion-content-inner {
+  padding: 0 12px 12px;
+  margin-top: 4px;
+}
+
+.faq-accordion-content-inner p {
+  margin: 0;
+  color: #393940;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.faq-accordion-content-inner p:not(:last-child) {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 749px) {
+  .faq-accordion-item,
+  .faq-accordion-header {
+    border-radius: 8px;
+  }
+  .faq-accordion-title {
+    font-size: 16px;
+    line-height: 24px;
+    text-align: left;
+  }
+  .faq-accordion-content-inner {
+    margin-top: 0;
+  }
+}
