@@ -26,6 +26,7 @@
     scrollbar-width: none;
     cursor: grab;
     scroll-behavior: smooth;
+    padding-bottom: 4px;
   }
 
   .explore-packages__track::-webkit-scrollbar {
@@ -46,11 +47,11 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     scroll-snap-align: start;
     text-decoration: none;
     color: inherit;
     transition: box-shadow 0.2s ease;
+    box-sizing: border-box;
   }
 
   .explore-packages__card:hover {
@@ -64,6 +65,9 @@
     overflow: hidden;
     background: #eaeaea;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .explore-packages__card-image-wrap img {
@@ -85,6 +89,12 @@
     font-family: Lato, sans-serif;
     margin-bottom: 8px;
     width: fit-content;
+    position: relative;
+    z-index: 1;
+  }
+
+  .explore-packages__image-container {
+    position: relative;
   }
 
   .explore-packages__card-body {
@@ -122,7 +132,8 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-top: 4px;
+    margin-top: auto;
+    padding-top: 8px;
   }
 
   .explore-packages__card-price-label {
@@ -139,43 +150,39 @@
     font-family: Lato, sans-serif;
   }
 
-  /* Gradient overlay on last visible card edge */
+  /* Gradient — covers the right portion of the slider */
   .explore-packages__gradient {
     position: absolute;
     top: 0;
     right: 0;
-    width: 220px;
+    width: 35%;
     height: 100%;
-    background: linear-gradient(to right, transparent, #ffffff);
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,1) 100%);
     pointer-events: none;
-    transition: opacity 0.3s ease;
     z-index: 2;
+    transition: opacity 0.3s ease;
   }
 
   .explore-packages__gradient.is-hidden {
     opacity: 0;
   }
 
-  /* Arrows */
-  .explore-packages__arrows {
-    display: flex;
-    gap: 8px;
-    margin-top: 20px;
-    justify-content: flex-end;
-  }
-
+  /* Arrow — floats over the slider, positioned at right edge of first card */
   .explore-packages__arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: #23232B;
+    background: #4B4B5A;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s ease, opacity 0.2s ease;
-    opacity: 1;
+    z-index: 3;
+    transition: background 0.2s ease, opacity 0.3s ease;
   }
 
   .explore-packages__arrow:hover {
@@ -188,13 +195,23 @@
   }
 
   .explore-packages__arrow svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     fill: none;
     stroke: #fff;
-    stroke-width: 2;
+    stroke-width: 2.5;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+
+  .explore-packages__arrow--prev {
+    left: 0;
+  }
+
+  .explore-packages__arrow--next {
+    /* will be set by JS based on first card width */
+    left: 360px;
+    transform: translate(-50%, -50%);
   }
 
   @media (max-width: 749px) {
@@ -209,7 +226,7 @@
     }
 
     .explore-packages__gradient {
-      width: 120px;
+      width: 40%;
     }
   }
 {%- endstyle -%}
@@ -219,20 +236,21 @@
     <h2 class="explore-packages__title">{{ section.settings.title }}</h2>
   {% endif %}
 
-  <div class="explore-packages__slider-wrapper">
+  <div class="explore-packages__slider-wrapper" id="explore-wrapper-{{ section.id }}">
+
     <div class="explore-packages__track" id="explore-track-{{ section.id }}">
       {% for block in section.blocks %}
         {% assign prod = block.settings.product %}
         {% if prod != blank %}
           <a href="{{ prod.url }}" class="explore-packages__card" {{ block.shopify_attributes }}>
-            <div>
+            <div class="explore-packages__image-container">
+              {% if prod.metafields.custom.condition_state != blank %}
+                <div class="explore-packages__badge">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                  {{ prod.metafields.custom.condition_state }}
+                </div>
+              {% endif %}
               <div class="explore-packages__card-image-wrap">
-                {% if prod.metafields.custom.condition_state != blank %}
-                  <div class="explore-packages__badge">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                    {{ prod.metafields.custom.condition_state }}
-                  </div>
-                {% endif %}
                 {% if prod.featured_image %}
                   {{ prod.featured_image | image_url: width: 400 | image_tag: loading: 'lazy', alt: prod.title }}
                 {% endif %}
@@ -252,16 +270,20 @@
         {% endif %}
       {% endfor %}
     </div>
-    <div class="explore-packages__gradient" id="explore-gradient-{{ section.id }}"></div>
-  </div>
 
-  <div class="explore-packages__arrows">
-    <button class="explore-packages__arrow is-hidden" id="explore-prev-{{ section.id }}" aria-label="Previous">
+    <!-- Gradient over partial second card -->
+    <div class="explore-packages__gradient" id="explore-gradient-{{ section.id }}"></div>
+
+    <!-- Prev arrow -->
+    <button class="explore-packages__arrow explore-packages__arrow--prev is-hidden" id="explore-prev-{{ section.id }}" aria-label="Previous">
       <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <button class="explore-packages__arrow" id="explore-next-{{ section.id }}" aria-label="Next">
+
+    <!-- Next arrow — positioned at right edge of first card -->
+    <button class="explore-packages__arrow explore-packages__arrow--next" id="explore-next-{{ section.id }}" aria-label="Next">
       <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
     </button>
+
   </div>
 </div>
 
@@ -271,10 +293,23 @@
     const prevBtn = document.getElementById('explore-prev-{{ section.id }}');
     const nextBtn = document.getElementById('explore-next-{{ section.id }}');
     const gradient = document.getElementById('explore-gradient-{{ section.id }}');
+    const wrapper = document.getElementById('explore-wrapper-{{ section.id }}');
 
     if (!track) return;
 
-    const cardWidth = track.querySelector('.explore-packages__card')?.offsetWidth + 16 || 376;
+    const firstCard = track.querySelector('.explore-packages__card');
+
+    // Position next arrow at the right edge of the first card, vertically centered
+    function positionNextArrow() {
+      if (!firstCard) return;
+      const cardRight = firstCard.offsetLeft + firstCard.offsetWidth;
+      nextBtn.style.left = cardRight + 'px';
+    }
+
+    positionNextArrow();
+    window.addEventListener('resize', positionNextArrow);
+
+    const cardWidth = firstCard ? firstCard.offsetWidth + 16 : 376;
 
     function updateControls() {
       const scrollLeft = track.scrollLeft;
@@ -308,12 +343,7 @@
       scrollStart = track.scrollLeft;
     });
 
-    track.addEventListener('mouseleave', function () {
-      isDown = false;
-      track.classList.remove('is-dragging');
-    });
-
-    track.addEventListener('mouseup', function () {
+    document.addEventListener('mouseup', function () {
       isDown = false;
       track.classList.remove('is-dragging');
     });
@@ -322,8 +352,7 @@
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - track.offsetLeft;
-      const walk = (x - startX) * 1.5;
-      track.scrollLeft = scrollStart - walk;
+      track.scrollLeft = scrollStart - (x - startX) * 1.5;
     });
 
     // Touch swipe
@@ -336,8 +365,7 @@
     }, { passive: true });
 
     track.addEventListener('touchmove', function (e) {
-      const dx = touchStartX - e.touches[0].pageX;
-      track.scrollLeft = touchScrollStart + dx;
+      track.scrollLeft = touchScrollStart + (touchStartX - e.touches[0].pageX);
     }, { passive: true });
   })();
 </script>
