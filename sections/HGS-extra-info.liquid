@@ -1153,29 +1153,32 @@
         const itemId = 'faq-item-' + Math.random().toString(36).slice(2, 8);
 
         const item = document.createElement('div');
-        item.className = 'faq-accordion-item';
-        item.style.borderBottom = '1px solid #EDEFF3';
+        item.className = 'accordion';
 
         const button = document.createElement('button');
+        button.className = 'accordion-header';
         button.type = 'button';
-        button.style.cssText = 'display:flex; justify-content:space-between; align-items:center; width:100%; background:none; border:none; padding:16px 0; cursor:pointer; text-align:left; font-family:Lato,sans-serif; font-size:16px; font-weight:700; color:#23232B;';
         button.setAttribute('aria-expanded', 'false');
         button.setAttribute('aria-controls', itemId);
-        button.textContent = questionText;
+
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'accordion-title';
+        titleSpan.textContent = questionText;
+        button.appendChild(titleSpan);
 
         button.insertAdjacentHTML('beforeend', `
-          <svg style="flex-shrink:0; margin-left:12px; transition:transform 0.3s ease;" width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#23232B"/>
+          <svg class="accordion-chevron" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.46967 8.46967C5.76256 8.17678 6.23744 8.17678 6.53033 8.46967L12 13.9393L17.4697 8.46967C17.7626 8.17678 18.2374 8.17678 18.5303 8.46967C18.8232 8.76256 18.8232 9.23744 18.5303 9.53033L12.5303 15.5303C12.2374 15.8232 11.7626 15.8232 11.4697 15.5303L5.46967 9.53033C5.17678 9.23744 5.17678 8.76256 5.46967 8.46967Z" fill="black"/>
           </svg>
         `);
 
         const contentDiv = document.createElement('div');
+        contentDiv.className = 'accordion-content';
         contentDiv.id = itemId;
-        contentDiv.style.cssText = 'overflow:hidden; max-height:0; transition:max-height 0.3s ease;';
         contentDiv.setAttribute('aria-hidden', 'true');
 
         const innerDiv = document.createElement('div');
-        innerDiv.style.cssText = 'padding:0 0 16px 0; font-family:Lato,sans-serif; font-size:15px; line-height:1.6; color:#23232B;';
+        innerDiv.className = 'accordion-content-inner';
 
         currentAnswerNodes.forEach(function (node) {
           if (node.nodeName === 'BR') return;
@@ -1189,18 +1192,15 @@
 
         button.addEventListener('click', function () {
           const isOpen = button.getAttribute('aria-expanded') === 'true';
-          const svg = button.querySelector('svg');
 
           if (isOpen) {
             button.setAttribute('aria-expanded', 'false');
             contentDiv.setAttribute('aria-hidden', 'true');
             contentDiv.style.maxHeight = '0';
-            if (svg) svg.style.transform = 'rotate(0deg)';
           } else {
             button.setAttribute('aria-expanded', 'true');
             contentDiv.setAttribute('aria-hidden', 'false');
             contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
-            if (svg) svg.style.transform = 'rotate(180deg)';
           }
         });
 
