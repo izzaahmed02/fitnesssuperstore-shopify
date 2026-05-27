@@ -1151,37 +1151,33 @@
         if (!questionText) return;
 
         const itemId = 'faq-item-' + Math.random().toString(36).slice(2, 8);
+
         const item = document.createElement('div');
-        item.className = 'accordion';
+        item.className = 'faq-accordion-item';
+        item.style.borderBottom = '1px solid #EDEFF3';
 
         const button = document.createElement('button');
-        button.className = 'accordion-header';
         button.type = 'button';
+        button.style.cssText = 'display:flex; justify-content:space-between; align-items:center; width:100%; background:none; border:none; padding:16px 0; cursor:pointer; text-align:left; font-family:Lato,sans-serif; font-size:16px; font-weight:700; color:#23232B;';
         button.setAttribute('aria-expanded', 'false');
         button.setAttribute('aria-controls', itemId);
+        button.textContent = questionText;
 
-        const titleSpan = document.createElement('span');
-        titleSpan.className = 'accordion-title';
-        titleSpan.textContent = questionText;
-        button.appendChild(titleSpan);
-
-        // Render the chevron SVG matching {% render 'chevron' %}
         button.insertAdjacentHTML('beforeend', `
-          <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" class="accordion-chevron">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="currentColor"/>
+          <svg style="flex-shrink:0; margin-left:12px; transition:transform 0.3s ease;" width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#23232B"/>
           </svg>
         `);
 
         const contentDiv = document.createElement('div');
-        contentDiv.className = 'accordion-content';
         contentDiv.id = itemId;
+        contentDiv.style.cssText = 'overflow:hidden; max-height:0; transition:max-height 0.3s ease;';
         contentDiv.setAttribute('aria-hidden', 'true');
 
         const innerDiv = document.createElement('div');
-        innerDiv.className = 'accordion-content-inner';
+        innerDiv.style.cssText = 'padding:0 0 16px 0; font-family:Lato,sans-serif; font-size:15px; line-height:1.6; color:#23232B;';
 
         currentAnswerNodes.forEach(function (node) {
-          // Skip bare <br> nodes and empty text nodes
           if (node.nodeName === 'BR') return;
           if (node.nodeType === 3 && !node.textContent.trim()) return;
           innerDiv.appendChild(node.cloneNode(true));
@@ -1190,14 +1186,31 @@
         contentDiv.appendChild(innerDiv);
         item.appendChild(button);
         item.appendChild(contentDiv);
-        accordionItems.push(item);
 
+        button.addEventListener('click', function () {
+          const isOpen = button.getAttribute('aria-expanded') === 'true';
+          const svg = button.querySelector('svg');
+
+          if (isOpen) {
+            button.setAttribute('aria-expanded', 'false');
+            contentDiv.setAttribute('aria-hidden', 'true');
+            contentDiv.style.maxHeight = '0';
+            if (svg) svg.style.transform = 'rotate(0deg)';
+          } else {
+            button.setAttribute('aria-expanded', 'true');
+            contentDiv.setAttribute('aria-hidden', 'false');
+            contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
+            if (svg) svg.style.transform = 'rotate(180deg)';
+          }
+        });
+
+        accordionItems.push(item);
         currentQuestion = null;
         currentAnswerNodes = [];
       }
 
       nodes.forEach(function (node) {
-        if (node.nodeName === 'B' || (node.nodeName === 'STRONG')) {
+        if (node.nodeName === 'B' || node.nodeName === 'STRONG') {
           flushItem();
           currentQuestion = node;
         } else if (currentQuestion !== null) {
@@ -1207,18 +1220,10 @@
 
       flushItem();
 
-      // Replace container contents with built accordion items
       container.innerHTML = '';
       accordionItems.forEach(function (item) {
         container.appendChild(item);
       });
-
-      // Re-init accordion.js on the new items if it exposes an init method,
-      // otherwise dispatch a native click binding by triggering accordion.js's
-      // DOMContentLoaded-equivalent via re-querying
-      if (typeof window.initAccordions === 'function') {
-        window.initAccordions();
-      }
     });
   });
 </script>
