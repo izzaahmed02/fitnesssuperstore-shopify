@@ -662,35 +662,43 @@
                   </div>
                 {% endif %}
 
- {% when 'faq' %}
+{% when 'faq' %}
   {% if block.settings.faq_liquid != blank %}
     {% capture faq_output %}{{ block.settings.faq_liquid }}{% endcapture %}
-    <pre style="white-space:pre-wrap; font-size:11px; background:#f5f5f5; padding:16px;">
-      {{ faq_output
-        | replace: '&amp;lt;', '<'
-        | replace: '&amp;gt;', '>'
-        | replace: '&lt;', '<'
-        | replace: '&gt;', '>'
-        | replace: '&quot;', '"'
-        | replace: '&#39;', "'"
-        | replace: '&amp;nbsp;', '&nbsp;'
-        | escape
-      }}
-    </pre>
+    <div class="product__extra_tech extra-info-width" id="faq-raw-{{ block.id }}">
+      <h4>{{ block.settings.title }}</h4>
+      <div class="faq-raw-content">
+        {{ faq_output
+          | replace: '&amp;lt;', '<'
+          | replace: '&amp;gt;', '>'
+          | replace: '&lt;', '<'
+          | replace: '&gt;', '>'
+          | replace: '&quot;', '"'
+          | replace: '&#39;', "'"
+          | replace: '&amp;nbsp;', '&nbsp;'
+        }}
+      </div>
+    </div>
   {% elsif block.settings.faq != blank %}
     {% capture faq_output %}{{ block.settings.faq }}{% endcapture %}
-    <pre style="white-space:pre-wrap; font-size:11px; background:#f5f5f5; padding:16px;">
-      {{ faq_output
-        | replace: '&amp;lt;', '<'
-        | replace: '&amp;gt;', '>'
-        | replace: '&lt;', '<'
-        | replace: '&gt;', '>'
-        | replace: '&quot;', '"'
-        | replace: '&#39;', "'"
-        | replace: '&amp;nbsp;', '&nbsp;'
-        | escape
-      }}
-    </pre>
+    <div class="product__extra_tech extra-info-width" id="faq-raw-{{ block.id }}">
+      <h4>{{ block.settings.title }}</h4>
+      <div class="faq-raw-content">
+        {{ faq_output
+          | replace: '&amp;lt;', '<'
+          | replace: '&amp;gt;', '>'
+          | replace: '&lt;', '<'
+          | replace: '&gt;', '>'
+          | replace: '&quot;', '"'
+          | replace: '&#39;', "'"
+          | replace: '&amp;nbsp;', '&nbsp;'
+        }}
+      </div>
+    </div>
+  {% elsif request.design_mode %}
+    <div class="extra-info-empty-message">
+      Add content to this FAQ block, connect a dynamic source, or use the Custom liquid field.
+    </div>
   {% endif %}
 
               {% when 'warranty' %}
@@ -1128,3 +1136,89 @@
 </script>
 
 <script src="{{ 'accordion.js' | asset_url }}" defer="defer"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".faq-raw-content").forEach(function (container) {
+      const nodes = Array.from(container.childNodes);
+      const accordionItems = [];
+      let currentQuestion = null;
+      let currentAnswerNodes = [];
+
+      function flushItem() {
+        if (!currentQuestion) return;
+        const questionText = currentQuestion.textContent.trim();
+        if (!questionText) return;
+
+        const itemId = 'faq-item-' + Math.random().toString(36).slice(2, 8);
+        const item = document.createElement('div');
+        item.className = 'accordion';
+
+        const button = document.createElement('button');
+        button.className = 'accordion-header';
+        button.type = 'button';
+        button.setAttribute('aria-expanded', 'false');
+        button.setAttribute('aria-controls', itemId);
+
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'accordion-title';
+        titleSpan.textContent = questionText;
+        button.appendChild(titleSpan);
+
+        // Render the chevron SVG matching {% render 'chevron' %}
+        button.insertAdjacentHTML('beforeend', `
+          <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" class="accordion-chevron">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="currentColor"/>
+          </svg>
+        `);
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'accordion-content';
+        contentDiv.id = itemId;
+        contentDiv.setAttribute('aria-hidden', 'true');
+
+        const innerDiv = document.createElement('div');
+        innerDiv.className = 'accordion-content-inner';
+
+        currentAnswerNodes.forEach(function (node) {
+          // Skip bare <br> nodes and empty text nodes
+          if (node.nodeName === 'BR') return;
+          if (node.nodeType === 3 && !node.textContent.trim()) return;
+          innerDiv.appendChild(node.cloneNode(true));
+        });
+
+        contentDiv.appendChild(innerDiv);
+        item.appendChild(button);
+        item.appendChild(contentDiv);
+        accordionItems.push(item);
+
+        currentQuestion = null;
+        currentAnswerNodes = [];
+      }
+
+      nodes.forEach(function (node) {
+        if (node.nodeName === 'B' || (node.nodeName === 'STRONG')) {
+          flushItem();
+          currentQuestion = node;
+        } else if (currentQuestion !== null) {
+          currentAnswerNodes.push(node);
+        }
+      });
+
+      flushItem();
+
+      // Replace container contents with built accordion items
+      container.innerHTML = '';
+      accordionItems.forEach(function (item) {
+        container.appendChild(item);
+      });
+
+      // Re-init accordion.js on the new items if it exposes an init method,
+      // otherwise dispatch a native click binding by triggering accordion.js's
+      // DOMContentLoaded-equivalent via re-querying
+      if (typeof window.initAccordions === 'function') {
+        window.initAccordions();
+      }
+    });
+  });
+</script>
