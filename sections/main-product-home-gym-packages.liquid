@@ -2357,14 +2357,12 @@
       function activateMetainfoTab(tabId) {
         buttons.forEach(function (button) {
           var isActive = button.getAttribute("data-metainfo-tab-button") === tabId;
-
           button.classList.toggle("is-active", isActive);
           button.setAttribute("aria-selected", isActive ? "true" : "false");
         });
 
         panels.forEach(function (panel) {
           var isActive = panel.getAttribute("data-metainfo-tab-panel") === tabId;
-
           panel.classList.toggle("is-active", isActive);
         });
       }
@@ -2376,6 +2374,117 @@
       });
 
       activateMetainfoTab(buttons[0].getAttribute("data-metainfo-tab-button"));
+
+      // Build accordions inside .metainfo-tab-custom-content
+      setTimeout(function () {
+        wrapper.querySelectorAll(".metainfo-tab-custom-content").forEach(function (container) {
+          if (container.getAttribute("data-accordion-built") === "true") return;
+          container.setAttribute("data-accordion-built", "true");
+
+          var nodes = Array.from(container.childNodes);
+          var accordionItems = [];
+          var currentTitle = null;
+          var currentContentNodes = [];
+
+          function flushItem() {
+            if (!currentTitle) return;
+            var titleText = currentTitle.textContent.trim();
+            if (!titleText) return;
+
+            var itemId = 'meta-pf-' + Math.random().toString(36).slice(2, 8);
+
+            var item = document.createElement('div');
+            item.style.borderBottom = '1px solid #EDEFF3';
+
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.setAttribute('aria-expanded', 'false');
+            button.setAttribute('aria-controls', itemId);
+            button.style.cssText = 'display:flex; justify-content:space-between; align-items:center; width:100%; background:none; border:none; padding:12px 0; cursor:pointer; text-align:left; font-family:Lato,sans-serif; font-size:16px; font-weight:600; color:#000000;';
+            button.textContent = titleText;
+            button.insertAdjacentHTML('beforeend', `
+              <svg style="flex-shrink:0; margin-left:12px; transition:transform 0.3s ease;" width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#23232B"/>
+              </svg>
+            `);
+
+            var contentDiv = document.createElement('div');
+            contentDiv.id = itemId;
+            contentDiv.style.cssText = 'overflow:hidden; max-height:0; transition:max-height 0.3s ease;';
+            contentDiv.setAttribute('aria-hidden', 'true');
+
+            var innerDiv = document.createElement('div');
+            innerDiv.style.cssText = 'padding:12px 0; font-family:Lato,sans-serif; font-size:14px; line-height:1.6; color:#23232B;';
+
+            currentContentNodes.forEach(function (node) {
+              if (node.nodeName === 'BR') return;
+              if (node.nodeType === 3 && !node.textContent.trim()) return;
+              if (node.nodeName === 'DIV' && node.style && node.style.minHeight) return;
+              innerDiv.appendChild(node.cloneNode(true));
+            });
+
+            contentDiv.appendChild(innerDiv);
+            item.appendChild(button);
+            item.appendChild(contentDiv);
+            accordionItems.push(item);
+
+            currentTitle = null;
+            currentContentNodes = [];
+          }
+
+          nodes.forEach(function (node) {
+            if (node.nodeName === 'H5') {
+              flushItem();
+              currentTitle = node;
+            } else if (currentTitle !== null) {
+              currentContentNodes.push(node);
+            }
+          });
+
+          flushItem();
+
+          container.innerHTML = '';
+          accordionItems.forEach(function (item, index) {
+            container.appendChild(item);
+          });
+
+          var allItems = Array.from(container.children);
+
+          allItems.forEach(function (item, index) {
+            var btn = item.querySelector('button');
+            var content = item.querySelector('div[id^="meta-pf-"]');
+            if (!btn || !content) return;
+
+            if (index === 0) {
+              btn.setAttribute('aria-expanded', 'true');
+              content.setAttribute('aria-hidden', 'false');
+              content.style.maxHeight = 'none';
+              var svg = btn.querySelector('svg');
+              if (svg) svg.style.transform = 'rotate(180deg)';
+            }
+
+            btn.addEventListener('click', function () {
+              var isOpen = btn.getAttribute('aria-expanded') === 'true';
+
+              allItems.forEach(function (otherItem) {
+                var otherBtn = otherItem.querySelector('button');
+                var otherContent = otherItem.querySelector('div[id^="meta-pf-"]');
+                if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
+                if (otherContent) otherContent.style.maxHeight = '0';
+                var otherSvg = otherBtn && otherBtn.querySelector('svg');
+                if (otherSvg) otherSvg.style.transform = 'rotate(0deg)';
+              });
+
+              if (!isOpen) {
+                btn.setAttribute('aria-expanded', 'true');
+                content.style.maxHeight = content.scrollHeight + 'px';
+                var svg = btn.querySelector('svg');
+                if (svg) svg.style.transform = 'rotate(180deg)';
+              }
+            });
+          });
+        });
+      }, 300);
     });
   });
 </script>
