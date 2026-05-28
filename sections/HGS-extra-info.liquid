@@ -361,6 +361,18 @@
    .product__extra_train.extra-info-width {
     column-count: 1;
   }
+  #shopify-section-{{ section.id }} .extra-info-tabs-nav {
+    display: none;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-tab-panel {
+    display: block !important;
+    border-bottom: 1px solid #EDEFF3;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-tab-panel > * + * {
+    margin-top: 0;
+  }
 }
 {%- endstyle -%}
 
@@ -1371,6 +1383,82 @@
             openItem(button, contentDiv);
           }
         });
+      });
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (window.innerWidth >= 750) return;
+
+    const sectionEl = document.querySelector("#shopify-section-{{ section.id }}");
+    if (!sectionEl) return;
+
+    const panels = sectionEl.querySelectorAll(".extra-info-tab-panel");
+
+    panels.forEach(function (panel, index) {
+      const tabId = panel.getAttribute("data-extra-tab-panel");
+      const tabBtn = sectionEl.querySelector("[data-extra-tab-button='" + tabId + "']");
+      if (!tabBtn) return;
+
+      const title = tabBtn.textContent.trim();
+
+      // Build header button
+      const header = document.createElement('button');
+      header.type = 'button';
+      header.setAttribute('aria-expanded', 'false');
+      header.style.cssText = 'display:flex; justify-content:space-between; align-items:center; width:100%; background:none; border:none; padding:16px 0; cursor:pointer; text-align:left; font-family:Lato,sans-serif; font-size:16px; font-weight:700; color:#23232B;';
+      header.textContent = title;
+      header.insertAdjacentHTML('beforeend', `
+        <svg style="flex-shrink:0; margin-left:12px; transition:transform 0.3s ease;" width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#23232B"/>
+        </svg>
+      `);
+
+      // Wrap existing panel content in a collapsible div
+      const inner = document.createElement('div');
+      inner.style.cssText = 'overflow:hidden; max-height:0; transition:max-height 0.35s ease;';
+
+      const innerWrap = document.createElement('div');
+      innerWrap.style.cssText = 'padding-bottom:16px;';
+
+      while (panel.firstChild) {
+        innerWrap.appendChild(panel.firstChild);
+      }
+
+      inner.appendChild(innerWrap);
+      panel.appendChild(header);
+      panel.appendChild(inner);
+
+      // Open first panel by default
+      if (index === 0) {
+        header.setAttribute('aria-expanded', 'true');
+        inner.style.maxHeight = 'none';
+        const svg = header.querySelector('svg');
+        if (svg) svg.style.transform = 'rotate(180deg)';
+      }
+
+      header.addEventListener('click', function () {
+        const isOpen = header.getAttribute('aria-expanded') === 'true';
+        const svg = header.querySelector('svg');
+
+        // Close all panels
+        panels.forEach(function (otherPanel) {
+          const otherHeader = otherPanel.querySelector(':scope > button');
+          const otherInner = otherPanel.querySelector(':scope > div');
+          if (otherHeader) otherHeader.setAttribute('aria-expanded', 'false');
+          if (otherInner) otherInner.style.maxHeight = '0';
+          const otherSvg = otherHeader && otherHeader.querySelector('svg');
+          if (otherSvg) otherSvg.style.transform = 'rotate(0deg)';
+        });
+
+        // Open clicked if it was closed
+        if (!isOpen) {
+          header.setAttribute('aria-expanded', 'true');
+          inner.style.maxHeight = inner.scrollHeight + 'px';
+          if (svg) svg.style.transform = 'rotate(180deg)';
+        }
       });
     });
   });
