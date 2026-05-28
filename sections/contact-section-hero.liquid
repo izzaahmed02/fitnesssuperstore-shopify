@@ -156,6 +156,7 @@ document.querySelectorAll('.emailFunction').forEach(function (btn) {
   });
 });
 
+// Existing button click functionality (unchanged)
 document.querySelectorAll('.showroomVisit').forEach(function (btn) {
   btn.addEventListener('click', function (e) {
     e.preventDefault();
@@ -171,6 +172,23 @@ document.querySelectorAll('.showroomVisit').forEach(function (btn) {
     }, 800);
   });
 });
+
+// NEW: Auto-trigger if ?service=showroom is in the URL
+const params = new URLSearchParams(window.location.search);
+if (params.get('service') === 'showroom') {
+  const form = document.querySelector('[id="globo-formbuilder-140088"]');
+  if (form) {
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  setTimeout(function () {
+    const select = document.querySelector('[id="140088-select-2"]');
+    if (select) {
+      select.value = 'Showroom Visit / Video Walkthrough';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      select.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }, 800);
+}
 
 document.querySelectorAll('a.button').forEach(function (btn) {
   const text = btn.textContent.trim();
