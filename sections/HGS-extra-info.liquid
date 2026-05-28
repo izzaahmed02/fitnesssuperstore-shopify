@@ -1377,3 +1377,82 @@
     });
   });
 </script>
+<script>
+  (function () {
+    if (window.innerWidth >= 750) return;
+
+    var sectionId = '{{ section.id }}';
+    var sectionEl = document.querySelector('#shopify-section-' + sectionId);
+    if (!sectionEl) return;
+
+    // Only target panels inside THIS section's tab content
+    var panels = sectionEl.querySelectorAll('.extra-info-tabs-content > .extra-info-tab-panel');
+    if (!panels.length) return;
+
+    panels.forEach(function (panel, index) {
+      var tabId = panel.getAttribute('data-extra-tab-panel');
+      var tabBtn = sectionEl.querySelector('[data-extra-tab-button="' + tabId + '"]');
+      if (!tabBtn) return;
+
+      var title = tabBtn.textContent.trim();
+
+      var header = document.createElement('button');
+      header.type = 'button';
+      // Unique data attribute so no other script can accidentally target these
+      header.setAttribute('data-hgs-tab-accordion', sectionId);
+      header.setAttribute('aria-expanded', 'false');
+      header.style.cssText = 'display:flex; justify-content:space-between; align-items:center; width:100%; background:none; border:none; padding:16px 0; cursor:pointer; text-align:left; font-family:Lato,sans-serif; font-size:16px; font-weight:700; color:#23232B;';
+      header.textContent = title;
+      header.insertAdjacentHTML('beforeend', `
+        <svg data-hgs-chevron style="flex-shrink:0; margin-left:12px; transition:transform 0.3s ease;" width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#23232B"/>
+        </svg>
+      `);
+
+      var inner = document.createElement('div');
+      inner.setAttribute('data-hgs-tab-inner', sectionId);
+      inner.style.cssText = 'overflow:hidden; max-height:0; transition:max-height 0.35s ease;';
+
+      var innerWrap = document.createElement('div');
+      innerWrap.style.cssText = 'padding-bottom:16px;';
+
+      while (panel.firstChild) {
+        innerWrap.appendChild(panel.firstChild);
+      }
+
+      inner.appendChild(innerWrap);
+      panel.appendChild(header);
+      panel.appendChild(inner);
+
+      if (index === 0) {
+        header.setAttribute('aria-expanded', 'true');
+        inner.style.maxHeight = 'none';
+        var firstSvg = header.querySelector('[data-hgs-chevron]');
+        if (firstSvg) firstSvg.style.transform = 'rotate(180deg)';
+      }
+
+      header.addEventListener('click', function () {
+        var isOpen = header.getAttribute('aria-expanded') === 'true';
+
+        // Only close/open headers that belong to THIS section's tab accordion
+        panels.forEach(function (otherPanel) {
+          var otherHeader = otherPanel.querySelector('[data-hgs-tab-accordion="' + sectionId + '"]');
+          var otherInner = otherPanel.querySelector('[data-hgs-tab-inner="' + sectionId + '"]');
+          if (otherHeader) {
+            otherHeader.setAttribute('aria-expanded', 'false');
+            var otherSvg = otherHeader.querySelector('[data-hgs-chevron]');
+            if (otherSvg) otherSvg.style.transform = 'rotate(0deg)';
+          }
+          if (otherInner) otherInner.style.maxHeight = '0';
+        });
+
+        if (!isOpen) {
+          header.setAttribute('aria-expanded', 'true');
+          inner.style.maxHeight = inner.scrollHeight + 'px';
+          var svg = header.querySelector('[data-hgs-chevron]');
+          if (svg) svg.style.transform = 'rotate(180deg)';
+        }
+      });
+    });
+  })();
+</script>
