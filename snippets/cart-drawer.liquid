@@ -321,6 +321,15 @@
                             {% if p_name == blank or p_value == blank or first_char == '_' or p_name contains 'Processing Time' %}
                               {% continue %}
                             {% endif %}
+                            {%- comment -%}Skip properties that are already shown as variant options above{%- endcomment -%}
+                            {%- assign prop_is_variant_option = false -%}
+                            {%- for opt in item.options_with_values -%}
+                              {%- if opt.name == p_name -%}
+                                {%- assign prop_is_variant_option = true -%}
+                                {%- break -%}
+                              {%- endif -%}
+                            {%- endfor -%}
+                            {%- if prop_is_variant_option -%}{%- continue -%}{%- endif -%}
                             {% comment %}
                               {% if p_name contains "Warranty"
                               or p_name contains "Processing Time"
