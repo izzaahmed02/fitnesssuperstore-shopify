@@ -134,7 +134,7 @@
   {%- comment -%} Slim variant map: o1 = Product Line, o2 = Machine Model {%- endcomment -%}
   <script type="application/json" id="pulley-variants-{{ section.id }}">
     [{%- for variant in product.variants -%}
-      {"o1":{{ variant.option1 | json }},"o2":{{ variant.option2 | json }},"avail":{{ variant.available }}}
+      {"id":{{ variant.id }},"o1":{{ variant.option1 | json }},"o2":{{ variant.option2 | json }},"avail":{{ variant.available }}}
       {%- unless forloop.last -%},{%- endunless -%}
     {%- endfor -%}]
   </script>
@@ -143,148 +143,155 @@
   (function () {
     var SID = {{ section.id | json }};
 
-    function init() {
-      var variantsData = [];
-      try {
-        var raw = document.getElementById('pulley-variants-' + SID);
-        if (raw) variantsData = JSON.parse(raw.textContent);
-      } catch (_) {}
+    // Load variants data (includes id, o1=Product Line, o2=Machine Model)
+    var variantsData = [];
+    try {
+      var raw = document.getElementById('pulley-variants-' + SID);
+      if (raw) variantsData = JSON.parse(raw.textContent);
+    } catch (_) {}
 
-      var trigger    = document.getElementById('pulley-trigger-' + SID);
-      var triggerTxt = document.getElementById('pulley-trigger-text-' + SID);
-      var panel      = document.getElementById('pulley-panel-' + SID);
-      var filter     = document.getElementById('pulley-filter-' + SID);
-      var list       = document.getElementById('pulley-list-' + SID);
-      var radiosDiv  = document.getElementById('pulley-radios-' + SID);
-
-      if (!trigger || !panel || !radiosDiv) return;
-
-      // ── helpers ──────────────────────────────────────────────────────────
-
-      function openPanel() {
-        panel.hidden = false;
-        trigger.setAttribute('aria-expanded', 'true');
-        if (filter) { filter.value = ''; applyFilter(''); filter.focus(); }
+    // Navigate to the best variant for a given Product Line + Machine Model combination.
+    // Falls back to first available with the Product Line if the exact combo doesn't exist.
+    function navigateToVariant(productLine, machineModel) {
+      var target = null;
+      if (machineModel) {
+        target = variantsData.find(function (v) { return v.o1 === productLine && v.o2 === machineModel; });
       }
-
-      function closePanel() {
-        panel.hidden = true;
-        trigger.setAttribute('aria-expanded', 'false');
+      if (!target) {
+        target = variantsData.find(function (v) { return v.o1 === productLine && v.avail; });
       }
-
-      function applyFilter(query) {
-        var q = query.toLowerCase().trim();
-        list.querySelectorAll('.pulley-item').forEach(function (item) {
-          var match = !q || item.dataset.value.toLowerCase().includes(q) ||
-                      item.textContent.toLowerCase().includes(q);
-          item.classList.toggle('pulley-item--hidden', !match);
-        });
+      if (!target) {
+        target = variantsData.find(function (v) { return v.o1 === productLine; });
       }
+      if (target && target.id) {
+        window.location.assign(window.location.pathname + '?variant=' + target.id);
+      }
+    }
 
-      function selectItem(value) {
-        // Click the matching hidden radio → drives Shopify's variant system
-        var radios = radiosDiv.querySelectorAll('input[type="radio"]');
-        for (var i = 0; i < radios.length; i++) {
-          if (radios[i].value === value) {
-            radios[i].click();
-            break;
-          }
+    function getCurrentProductLine() {
+      var plFieldset = document.querySelector('[data-pulley-section="' + SID + '"].pulley-product-line');
+      if (!plFieldset) return null;
+      var checked = plFieldset.querySelector('input[type="radio"]:checked');
+      return checked ? checked.value : null;
+    }
+
+    function getCurrentMachineModel() {
+      var radiosDiv = document.getElementById('pulley-radios-' + SID);
+      if (!radiosDiv) return null;
+      var checked = radiosDiv.querySelector('input[type="radio"]:checked');
+      return checked ? checked.value : null;
+    }
+
+    // ── Dropdown helpers ──────────────────────────────────────────────────
+
+    function openPanel(panel, trigger, filter) {
+      panel.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      if (filter) { filter.value = ''; applyFilter(filter, panel, ''); filter.focus(); }
+    }
+
+    function closePanel(panel, trigger) {
+      panel.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function applyFilter(filter, panel, query) {
+      var q = query.toLowerCase().trim();
+      panel.querySelectorAll('.pulley-item').forEach(function (el) {
+        var match = !q || el.dataset.value.toLowerCase().includes(q) ||
+                    el.textContent.toLowerCase().includes(q);
+        el.classList.toggle('pulley-item--hidden', !match);
+      });
+    }
+
+    function filterModelsByProductLine(productLine, list) {
+      if (!productLine || !variantsData.length) return;
+      var valid = {};
+      variantsData.forEach(function (v) { if (v.o1 === productLine) valid[v.o2] = true; });
+      list.querySelectorAll('.pulley-item').forEach(function (el) {
+        el.classList.toggle('pulley-item--out-of-line', !valid[el.dataset.value]);
+      });
+    }
+
+    // ── Document-level listeners (registered once) ────────────────────────
+
+    if (!window['_pulleyDocListeners_' + SID]) {
+      window['_pulleyDocListeners_' + SID] = true;
+
+      document.addEventListener('click', function (e) {
+        var wrapper = document.getElementById('pulley-searchable-' + SID);
+        var panel   = document.getElementById('pulley-panel-' + SID);
+        if (panel && !panel.hidden && wrapper && !wrapper.contains(e.target)) {
+          var trigger = document.getElementById('pulley-trigger-' + SID);
+          closePanel(panel, trigger);
         }
-        // Update trigger label
-        if (triggerTxt) triggerTxt.textContent = value;
-        // Update aria-selected on list items
-        list.querySelectorAll('.pulley-item').forEach(function (item) {
-          var sel = item.dataset.value === value;
-          item.classList.toggle('pulley-item--selected', sel);
-          item.setAttribute('aria-selected', sel ? 'true' : 'false');
-        });
-        closePanel();
-      }
-
-      function filterModelsByProductLine(productLine) {
-        if (!productLine || !variantsData.length) return;
-        var valid = {};
-        variantsData.forEach(function (v) {
-          if (v.o1 === productLine) valid[v.o2] = true;
-        });
-        list.querySelectorAll('.pulley-item').forEach(function (item) {
-          var inLine = !!valid[item.dataset.value];
-          item.classList.toggle('pulley-item--out-of-line', !inLine);
-        });
-        // Re-apply current text filter on top
-        if (filter) applyFilter(filter.value);
-      }
-
-      // ── trigger click ────────────────────────────────────────────────────
-
-      trigger.addEventListener('click', function () {
-        if (panel.hidden) { openPanel(); } else { closePanel(); }
       });
 
-      // ── filter input ─────────────────────────────────────────────────────
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        var panel   = document.getElementById('pulley-panel-' + SID);
+        var trigger = document.getElementById('pulley-trigger-' + SID);
+        if (panel && !panel.hidden) {
+          closePanel(panel, trigger);
+          if (trigger) trigger.focus();
+        }
+      });
+    }
 
+    // ── Init ──────────────────────────────────────────────────────────────
+
+    function init() {
+      var trigger = document.getElementById('pulley-trigger-' + SID);
+      var panel   = document.getElementById('pulley-panel-' + SID);
+      var filter  = document.getElementById('pulley-filter-' + SID);
+      var list    = document.getElementById('pulley-list-' + SID);
+
+      if (!trigger || !panel || !list) return;
+      if (trigger.dataset.pulleyBound === 'true') return;
+      trigger.dataset.pulleyBound = 'true';
+
+      // Trigger open/close
+      trigger.addEventListener('click', function () {
+        if (panel.hidden) { openPanel(panel, trigger, filter); } else { closePanel(panel, trigger); }
+      });
+
+      // Type-to-filter
       if (filter) {
-        filter.addEventListener('input', function () {
-          applyFilter(filter.value);
-        });
+        filter.addEventListener('input', function () { applyFilter(filter, panel, filter.value); });
       }
 
-      // ── list item selection ──────────────────────────────────────────────
-
+      // Machine Model selection → navigate to variant (full page load, no AJAX)
       list.addEventListener('click', function (e) {
-        var item = e.target.closest('.pulley-item');
-        if (!item || item.classList.contains('pulley-item--hidden') || item.classList.contains('pulley-item--out-of-line')) return;
-        selectItem(item.dataset.value);
+        var el = e.target.closest('.pulley-item');
+        if (!el || el.classList.contains('pulley-item--hidden') || el.classList.contains('pulley-item--out-of-line')) return;
+        var pl = getCurrentProductLine();
+        navigateToVariant(pl || '', el.dataset.value);
       });
 
       list.addEventListener('keydown', function (e) {
         if (e.key !== 'Enter' && e.key !== ' ') return;
-        var item = e.target.closest('.pulley-item');
-        if (!item) return;
+        var el = e.target.closest('.pulley-item');
+        if (!el) return;
         e.preventDefault();
-        selectItem(item.dataset.value);
+        var pl = getCurrentProductLine();
+        navigateToVariant(pl || '', el.dataset.value);
       });
 
-      // ── close on outside click ───────────────────────────────────────────
-
-      document.addEventListener('click', function (e) {
-        var wrapper = document.getElementById('pulley-searchable-' + SID);
-        if (wrapper && !wrapper.contains(e.target)) closePanel();
-      });
-
-      // ── close on Escape ──────────────────────────────────────────────────
-
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && !panel.hidden) { closePanel(); trigger.focus(); }
-      });
-
-      // ── filter models when Product Line changes ──────────────────────────
-
+      // Product Line selection → navigate to variant (full page load, no AJAX)
       var plFieldset = document.querySelector('[data-pulley-section="' + SID + '"].pulley-product-line');
       if (plFieldset) {
+        // Intercept in capture phase so we navigate before Shopify's AJAX fires
         plFieldset.addEventListener('change', function (e) {
           if (e.target && e.target.type === 'radio') {
-            filterModelsByProductLine(e.target.value);
+            e.stopImmediatePropagation();
+            navigateToVariant(e.target.value, getCurrentMachineModel());
           }
-        });
-        // Run once for the initially selected Product Line
+        }, true);
+
+        // Filter dropdown to show only compatible models for initial Product Line
         var checkedPL = plFieldset.querySelector('input[type="radio"]:checked');
-        if (checkedPL) filterModelsByProductLine(checkedPL.value);
+        if (checkedPL) filterModelsByProductLine(checkedPL.value, list);
       }
-
-      // ── keep trigger label in sync when radio changes externally ─────────
-      // (e.g. variant-fallback-intercept clicks a radio programmatically)
-
-      radiosDiv.addEventListener('change', function (e) {
-        if (e.target && e.target.type === 'radio' && e.target.checked) {
-          if (triggerTxt) triggerTxt.textContent = e.target.value;
-          list.querySelectorAll('.pulley-item').forEach(function (item) {
-            var sel = item.dataset.value === e.target.value;
-            item.classList.toggle('pulley-item--selected', sel);
-            item.setAttribute('aria-selected', sel ? 'true' : 'false');
-          });
-        }
-      });
     }
 
     if (document.readyState === 'loading') {
