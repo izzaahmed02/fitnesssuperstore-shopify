@@ -69,20 +69,14 @@
       return checked ? checked.value : null;
     });
 
-    // Prefer Shopify's own per-option-value destination. `data-product-url`
-    // (Liquid `value.product_url`) already resolves the clicked option value
-    // to the correct sibling child + variant, accounting for option positions.
-    // This is authoritative for the child-switching option (e.g. Single/Set),
-    // where map lookups by o1/o2/o3 can mis-resolve because the picker shows
-    // sibling option values that don't form a real combination on this child.
-    const clickedProductUrl = input.dataset.productUrl;
-    if (clickedProductUrl) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      window.location.assign(clickedProductUrl);
-      return;
-    }
-
+    // Resolve the clicked combination against the family variants map. We must
+    // route to a concrete variant URL carrying ?variant=<id>: the clicked
+    // option value's bare data-product-url often points at a child whose only
+    // matching variants are sold out (e.g. every Singles weight is sold out),
+    // and loading that child bare makes the combined listing re-default to the
+    // first *available* variant in the family — typically a Sets variant. That
+    // is exactly the "switch to Singles, reload, snap back to Sets" symptom.
+    // Pinning ?variant=<id> forces the intended (even sold-out) variant.
     let target = variantsMap.find(
       (v) =>
         v.o1 === (intended[0] || null) &&
@@ -102,7 +96,7 @@
     if (usedFallback) {
       showToast(productInfo, "That combination isn't available — switched to the closest match.");
     }
-    window.location.assign(target.u);
+    window.location.assign(withVariantParam(target.u, target.id));
   }
 
   function handleClick(event, productInfo, variantsMap) {
@@ -239,6 +233,20 @@
     if (toast._hideTimer) clearTimeout(toast._hideTimer);
     requestAnimationFrame(() => toast.classList.add('is-visible'));
     toast._hideTimer = setTimeout(() => toast.classList.remove('is-visible'), TOAST_DURATION_MS);
+  }
+
+  function withVariantParam(url, id) {
+    // Force ?variant=<id> so the destination selects the intended variant even
+    // when it is sold out. variant.url usually already carries ?variant=, but
+    // normalize defensively in case the map URL was emitted without it.
+    if (!id) return url;
+    try {
+      const u = new URL(url, window.location.origin);
+      u.searchParams.set('variant', String(id));
+      return u.pathname + u.search;
+    } catch (_) {
+      return url + (url.indexOf('?') === -1 ? '?' : '&') + 'variant=' + encodeURIComponent(id);
+    }
   }
 
   function cssEscape(value) {
