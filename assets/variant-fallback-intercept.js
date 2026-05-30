@@ -69,6 +69,20 @@
       return checked ? checked.value : null;
     });
 
+    // Prefer Shopify's own per-option-value destination. `data-product-url`
+    // (Liquid `value.product_url`) already resolves the clicked option value
+    // to the correct sibling child + variant, accounting for option positions.
+    // This is authoritative for the child-switching option (e.g. Single/Set),
+    // where map lookups by o1/o2/o3 can mis-resolve because the picker shows
+    // sibling option values that don't form a real combination on this child.
+    const clickedProductUrl = input.dataset.productUrl;
+    if (clickedProductUrl) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      window.location.assign(clickedProductUrl);
+      return;
+    }
+
     let target = variantsMap.find(
       (v) =>
         v.o1 === (intended[0] || null) &&
