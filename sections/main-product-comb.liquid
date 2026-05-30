@@ -80,7 +80,8 @@
     closest matching variant instead.
   {%- endcomment -%}
   <script type="application/json" data-product-variants-map>
-    [{%- for variant in product.variants -%}
+    {%- assign variants_map_source = product.combined_listing.parent_product | default: product -%}
+    [{%- for variant in variants_map_source.variants -%}
       {"o1":{{ variant.option1 | json }},"o2":{{ variant.option2 | json }},"o3":{{ variant.option3 | json }},"a":{{ variant.available }},"u":{{ variant.url | json }}}{%- unless forloop.last -%},{%- endunless -%}
     {%- endfor -%}]
   </script>
