@@ -38,6 +38,9 @@
         endif
         if item.defaultValues != blank
           assign default_values = item.defaultValues
+        elsif item.variantId != blank
+          assign numeric_id = item.variantId | split: '/' | last
+          assign default_values = numeric_id | append: ':::' | append: item.priceAdjustment
         endif
       endif
     endfor
@@ -281,7 +284,8 @@
     {% for variant in product_option.product_option_variants.value %}
       {% assign default_quantity = '' %}
       {% for item in options_data %}
-        {% if item.defaultValues contains variant.id %}
+        {% assign item_numeric_id = item.variantId | split: '/' | last %}
+        {% if item.defaultValues contains variant.id or item_numeric_id == variant.id %}
           {% assign default_quantity = item.quantity %}
           {% break %}
         {% endif %}

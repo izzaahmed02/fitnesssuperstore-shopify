@@ -228,7 +228,6 @@ if (!customElements.get('product-form-with-options')) {
                 priceAdjustment: variantPrice,
                 quantity: quantity,
                 groupHandle: parent.dataset.type || '',
-                defaultValues: option.dataset.selectedOptions,
               };
 
               productOptions.push(productOption);
@@ -267,7 +266,6 @@ if (!customElements.get('product-form-with-options')) {
               priceAdjustment: variantPrice,
               quantity: 1,
               groupHandle: select.name,
-              defaultValues: variantID.split('ProductVariant/')[1],
             };
             productOptions.push(productOption);
           });
@@ -283,7 +281,6 @@ if (!customElements.get('product-form-with-options')) {
               priceAdjustment: Number(variantPrice),
               quantity: Number(option.value),
               groupHandle: option.dataset.quantityOptionGroup,
-              defaultValues: variantID,
             };
             productOptions.push(productOption);
           });
