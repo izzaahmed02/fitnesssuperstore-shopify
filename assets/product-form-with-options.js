@@ -74,7 +74,7 @@ if (!customElements.get('product-form-with-options')) {
           !response.ok ? this.handleCartError(result) : this.handleCartSuccess(result);
         } catch (error) {
           console.error(error);
-          this.handleErrorMessage('Unable to add item to cart. Please try again.');
+          this.handleErrorMessage('This configuration is currently out of stock. Please choose another configuration or contact us for availability.');
         } finally {
           this.submitButton.classList.remove('loading');
           this.submitButton.removeAttribute('aria-disabled');
