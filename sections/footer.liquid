@@ -307,3 +307,29 @@
   ]
 }
 {% endschema %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const toggles = document.querySelectorAll('.footer__accordion-toggle');
+
+  toggles.forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+      const submenuId = toggle.getAttribute('aria-controls');
+      const submenu = document.getElementById(submenuId);
+
+      // One-open-at-a-time (optional — remove this block to allow multiple open)
+      toggles.forEach(other => {
+        if (other !== toggle) {
+          other.setAttribute('aria-expanded', 'false');
+          const otherId = other.getAttribute('aria-controls');
+          const otherMenu = document.getElementById(otherId);
+          if (otherMenu) otherMenu.classList.remove('is-open');
+        }
+      });
+
+      toggle.setAttribute('aria-expanded', String(!isOpen));
+      if (submenu) submenu.classList.toggle('is-open', !isOpen);
+    });
+  });
+});
+</script>
