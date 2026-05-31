@@ -47,10 +47,24 @@ customElements.get('product-info') ||
         // the user clicks a variant. Forward to the checked variant's child URL so
         // the default landing matches the per-variant URL.
         if (this.dataset.isCombinedListing !== 'true') return;
+        const currentPath = window.location.pathname;
+        // If the current path is itself one of the rendered child product URLs,
+        // we're already on a legitimate child page the user navigated to — do
+        // not redirect. Otherwise (e.g. on the bare parent URL) the checked
+        // option's child data-product-url can point at a *different* child:
+        // when the landed child's variants are all sold out, the default
+        // selected variant resolves to a sibling (e.g. Sets), and redirecting
+        // to it would bounce the user away from the child they chose.
+        const optionUrls = Array.from(
+          this.querySelectorAll('variant-selects [data-product-url], variant-selects option[data-product-url]')
+        ).map((el) => el.dataset.productUrl);
+        const onValidChild = optionUrls.some(
+          (u) => u === currentPath || u === currentPath + '/' || u + '/' === currentPath
+        );
+        if (onValidChild) return;
         const checked = this.querySelector('variant-selects [data-product-url]:checked, variant-selects option[data-product-url][selected]');
         const target = checked?.dataset?.productUrl;
         if (!target) return;
-        const currentPath = window.location.pathname;
         if (target === currentPath || target === currentPath + '/') return;
         window.location.replace(target);
       }
