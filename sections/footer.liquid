@@ -92,30 +92,44 @@
           {%- render 'social-icons', class: 'footer__socials' -%}
         {%- endif -%}
       </div>
-      {% if section.settings.menu != blank %}
-        <div class="footer__menu">
-          {% for link in section.settings.menu.links %}
-            {% assign has_submenu = false %}
-            {% if link.links.size > 0 %}
-              {% assign has_submenu = true %}
-            {% endif %}
-            <div class="footer__menu-col">
-              {% if has_submenu %}
-                <div class="footer__menu-label">{{ link.title | escape }}</div>
-                <ul class="footer__menu-links">
-                  {% for sub_link in link.links %}
-                    <li>
-                      <a href="{{ sub_link.url }}" class="footer__menu-link">{{ sub_link.title | escape }}</a>
-                    </li>
-                  {% endfor %}
-                </ul>
-              {% else %}
-                <a href="{{ link.url }}" class="footer__menu-label">{{ link.title | escape }}</a>
-              {% endif %}
-            </div>
-          {% endfor %}
-        </div>
+     {% if section.settings.menu != blank %}
+  <div class="footer__menu">
+    {% for link in section.settings.menu.links %}
+      {% assign has_submenu = false %}
+      {% if link.links.size > 0 %}
+        {% assign has_submenu = true %}
       {% endif %}
+
+      <div class="footer__menu-col">
+        {% if has_submenu %}
+          <button
+            class="footer__menu-label footer__accordion-toggle"
+            aria-expanded="false"
+            aria-controls="footer-submenu-{{ forloop.index }}"
+          >
+            {{ link.title | escape }}
+            <svg class="footer__chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <ul
+            class="footer__menu-links"
+            id="footer-submenu-{{ forloop.index }}"
+          >
+            {% for sub_link in link.links %}
+              <li>
+                <a href="{{ sub_link.url }}" class="footer__menu-link">{{ sub_link.title | escape }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+
+        {% else %}
+          <a href="{{ link.url }}" class="footer__menu-label">{{ link.title | escape }}</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
     </div>
      <div class="footer-payment right" style="
     display: flex;
