@@ -26,6 +26,50 @@
 
 
 {%- style -%}
+/* Accordion behaviour — mobile only */
+@media screen and (max-width: 749px) {
+  .footer__accordion-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+  }
+
+  .footer__chevron {
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+  }
+
+  .footer__accordion-toggle[aria-expanded="true"] .footer__chevron {
+    transform: rotate(180deg);
+  }
+
+  /* Collapsed state */
+  .footer__menu-col .footer__menu-links {
+    display: grid;
+    grid-template-rows: 0fr;
+    overflow: hidden;
+    transition: grid-template-rows 0.3s ease;
+    margin: 0;
+  }
+
+  /* The inner wrapper grid needs for the 0fr trick to work */
+  .footer__menu-col .footer__menu-links > li:first-child {
+    /* acts as the "inner" for grid row collapse — see JS note */
+  }
+
+  /* Expanded state */
+  .footer__menu-col .footer__menu-links.is-open {
+    grid-template-rows: 1fr;
+  }
+}
   .footer {
     margin-top: {{ section.settings.margin_top | times: 0.75 | round: 0 }}px;
   }
