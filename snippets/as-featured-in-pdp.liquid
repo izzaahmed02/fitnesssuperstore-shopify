@@ -1,0 +1,531 @@
+{%- comment -%}
+  "As Featured In" PDP section — source for the custom_liquid block on the product page.
+
+  This is the version-controlled source for the custom_liquid block used on the
+  product page (e.g. french-fitness-mbr500-medicine-ball-rebounder-new). It is
+  data-driven by the product metafield custom.as_featured_in (a list of
+  metaobjects with: name, excerpt, logo, link) and is reusable across products.
+
+  Behavior:
+  - Hides automatically when the product has no as_featured_in data.
+  - Single entry: hides the carousel/progress indicator and displays one card cleanly.
+  - The whole card is clickable and opens the linked article in a new tab.
+  - Wording is factual only; the excerpt renders as a neutral caption (no quote styling).
+{%- endcomment -%}
+
+{% liquid
+  assign featured_mentions = product.metafields.custom.as_featured_in.value
+  assign section_title = section.settings.heading | default: 'As Featured In'
+  assign slider_id = 'as-featured-in-' | append: section.id
+  assign status_id = 'as-featured-in-status-' | append: section.id
+  assign mention_count = featured_mentions.size
+%}
+
+{% if featured_mentions != blank %}
+  {% style %}
+    #shopify-section-{{ section.id }} .as-featured-in {
+      width: 100%;
+      margin: 0;
+      padding: {{ section.settings.padding_top }}px 20px {{ section.settings.padding_bottom }}px;
+      box-sizing: border-box;
+      font-family: Lato, sans-serif;
+      background: #ffffff;
+      overflow: hidden;
+      --as-featured-in-progress: 0%;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__title {
+      margin: 0 0 28px;
+      color: #1f2328;
+      font-family: Lato, sans-serif !important;
+      font-size: 28px !important;
+      font-weight: 700 !important;
+      line-height: 1.3 !important;
+      letter-spacing: normal !important;
+      text-align: left !important;
+      text-transform: none !important;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__status {
+      position: absolute !important;
+      overflow: hidden;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__slider {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__slider:not(.slick-initialized) {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__slider:not(.slick-initialized) .as-featured-in__slide:nth-child(n+4) {
+      display: none;
+    }
+
+    /* Single-entry state: one card displays cleanly, no carousel/grid behavior */
+    #shopify-section-{{ section.id }} .as-featured-in--single .as-featured-in__slider,
+    #shopify-section-{{ section.id }} .as-featured-in--single .as-featured-in__slider:not(.slick-initialized) {
+      display: block;
+      grid-template-columns: none;
+      gap: 0;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in--single .as-featured-in__slide {
+      max-width: 380px;
+      margin: 0 auto;
+      padding: 0;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__slider .slick-list {
+      overflow: hidden;
+      cursor: grab;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__slider .slick-list:active {
+      cursor: grabbing;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__slider .slick-track {
+      display: flex !important;
+      align-items: stretch;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__slider .slick-slide {
+      height: auto;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__slider .slick-slide > div,
+    #shopify-section-{{ section.id }} .as-featured-in__slide {
+      height: 100%;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__slide {
+      box-sizing: border-box;
+      padding: 0 11px;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__item {
+      position: relative;
+      display: flex !important;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      min-height: 190px;
+      height: 100%;
+      padding: 26px 22px 24px;
+      background: #f7f7f7;
+      border: none;
+      border-radius: 14px;
+      box-shadow: none;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    /* Whole card is clickable when a link is present */
+    #shopify-section-{{ section.id }} .as-featured-in__item:has(.as-featured-in__link) {
+      cursor: pointer;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__quote {
+      order: 2;
+      margin: 20px auto 0;
+      max-width: 100%;
+      color: #333333;
+      font-family: Lato, sans-serif;
+      font-size: 15px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 1.45;
+      letter-spacing: 0.1px;
+      text-align: center;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__logo-wrap {
+      order: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 56px;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__logo {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: 155px;
+      max-height: 46px;
+      object-fit: contain;
+      margin: 0 auto;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__logo-text {
+      margin: 0;
+      color: #111111;
+      font-family: Lato, sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    /* Stretched link overlay: makes the entire card clickable */
+    #shopify-section-{{ section.id }} .as-featured-in__link {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__link:focus-visible {
+      outline: 2px solid #111111;
+      outline-offset: 2px;
+      border-radius: 14px;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__navigation {
+      display: flex;
+      width: 100%;
+      flex-wrap: nowrap;
+      position: relative;
+      justify-content: center;
+      align-items: center;
+      max-width: 550px;
+      margin: 22px auto 0;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__dots {
+      width: calc(100% - 120px);
+      min-width: 180px;
+      position: relative;
+      line-height: 0 !important;
+      margin: 0;
+      padding: 10px 0;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__dots::before,
+    #shopify-section-{{ section.id }} .as-featured-in__dots::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      height: 6px;
+      transform: translateY(-50%);
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__dots::before {
+      right: 0;
+      background: #eeeeee;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__dots::after {
+      width: var(--as-featured-in-progress);
+      background: #111111;
+      transition: width 0.35s ease;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__dots .slick-dots {
+      position: relative;
+      bottom: auto;
+      display: flex !important;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      height: 20px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      z-index: 1;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__dots .slick-dots li {
+      flex: 1 1 auto;
+      width: auto;
+      height: 20px;
+      margin: 0;
+      padding: 0;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__dots .slick-dots li button {
+      display: block;
+      width: 100%;
+      height: 20px;
+      padding: 0;
+      color: transparent;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__dots .slick-dots li button::before {
+      display: none;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__dots .slick-dots li button:focus-visible {
+      outline: 2px solid #111111;
+      outline-offset: 6px;
+      border-radius: 999px;
+    }
+
+    #shopify-section-{{ section.id }} .as-featured-in__slider .slick-prev,
+    #shopify-section-{{ section.id }} .as-featured-in__slider .slick-next {
+      display: none !important;
+    }
+
+    @media screen and (max-width: 749px) {
+      #shopify-section-{{ section.id }} .as-featured-in {
+        padding: 34px 16px 38px;
+      }
+
+      #shopify-section-{{ section.id }} .as-featured-in__title {
+        margin-bottom: 24px;
+        font-size: 28px !important;
+        line-height: 1.25 !important;
+      }
+
+      #shopify-section-{{ section.id }} .as-featured-in__content {
+        max-width: 100%;
+      }
+
+      #shopify-section-{{ section.id }} .as-featured-in__slider:not(.slick-initialized) {
+        display: block;
+      }
+
+      #shopify-section-{{ section.id }} .as-featured-in__slider:not(.slick-initialized) .as-featured-in__slide:not(:first-child) {
+        display: none;
+      }
+
+      #shopify-section-{{ section.id }} .as-featured-in__slide {
+        padding: 0;
+      }
+
+      #shopify-section-{{ section.id }} .as-featured-in__item {
+        min-height: 190px;
+        padding: 26px 22px 22px;
+        border-radius: 14px;
+      }
+
+      #shopify-section-{{ section.id }} .as-featured-in__quote {
+        max-width: 300px;
+        margin-top: 18px;
+        font-size: 16px;
+        line-height: 1.45;
+      }
+
+      #shopify-section-{{ section.id }} .as-featured-in__logo {
+        max-width: 180px;
+        max-height: 52px;
+      }
+
+      #shopify-section-{{ section.id }} .as-featured-in__logo-text {
+        font-size: 20px;
+        line-height: 1.2;
+      }
+
+      #shopify-section-{{ section.id }} .as-featured-in__navigation {
+        margin-top: 18px;
+      }
+
+      #shopify-section-{{ section.id }} .as-featured-in__dots {
+        width: calc(100% - 64px);
+      }
+    }
+  {% endstyle %}
+
+  <section class="as-featured-in{% if mention_count <= 1 %} as-featured-in--single{% endif %}" data-as-featured-in-section id="{{ slider_id }}" aria-label="{{ section_title | escape }}">
+    <span id="{{ status_id }}" class="as-featured-in__status" data-as-featured-in-status role="status" aria-live="polite" aria-atomic="true"></span>
+
+    <h2 class="as-featured-in__title">{{ section_title | escape }}</h2>
+
+    <div class="as-featured-in__content">
+      <div class="as-featured-in__slider" data-as-featured-in-slider>
+        {% for mention in featured_mentions %}
+          {% liquid
+            assign mention_name = mention.name.value
+            assign mention_excerpt = mention.excerpt.value
+            assign mention_logo = mention.logo.value
+            assign mention_link = mention.link.value
+            assign mention_logo_alt = mention_logo.alt | default: mention_name
+          %}
+
+          <div class="as-featured-in__slide">
+            <article class="as-featured-in__item">
+              <div class="as-featured-in__logo-wrap">
+                {% if mention_logo != blank %}
+                  {{ mention_logo | image_url: width: 440 | image_tag: class: 'as-featured-in__logo', loading: 'lazy', alt: mention_logo_alt }}
+                {% elsif mention_name != blank %}
+                  <div class="as-featured-in__logo-text">
+                    Featured by {{ mention_name | escape }}
+                  </div>
+                {% endif %}
+              </div>
+
+              {% if mention_excerpt != blank %}
+                <div class="as-featured-in__quote">
+                  {{ mention_excerpt | escape }}
+                </div>
+              {% endif %}
+
+              {% if mention_link != blank %}
+                <a class="as-featured-in__link" href="{{ mention_link }}" target="_blank" rel="noopener" aria-label="Read the feature{% if mention_name != blank %} on {{ mention_name | escape }}{% endif %} (opens in a new tab)"></a>
+              {% endif %}
+            </article>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if mention_count > 1 %}
+        <div class="as-featured-in__navigation" data-as-featured-in-navigation>
+          <div class="as-featured-in__dots" data-as-featured-in-dots></div>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      var section = document.currentScript.previousElementSibling;
+
+      if (!section || section.dataset.asFeaturedInReady === 'true') {
+        return;
+      }
+
+      section.dataset.asFeaturedInReady = 'true';
+
+      var slider = section.querySelector('[data-as-featured-in-slider]');
+      var dots = section.querySelector('[data-as-featured-in-dots]');
+      var navigation = section.querySelector('[data-as-featured-in-navigation]');
+      var status = section.querySelector('[data-as-featured-in-status]');
+      var attempts = 0;
+
+      // Single-entry state: navigation is not rendered, so there is no carousel
+      // to initialise. The single card displays cleanly via CSS — bail out early.
+      if (!slider || !dots || !navigation) {
+        return;
+      }
+
+      function getSlideCount() {
+        return slider.querySelectorAll('.as-featured-in__slide:not(.slick-cloned)').length;
+      }
+
+      function getVisibleCount(slick) {
+        if (!slick || !slick.options) {
+          return 1;
+        }
+
+        return Math.max(parseInt(slick.options.slidesToShow, 10) || 1, 1);
+      }
+
+      function setProgress(index, slick) {
+        var slideCount = slick && slick.slideCount ? slick.slideCount : getSlideCount();
+        var visibleCount = getVisibleCount(slick);
+        var maxIndex = Math.max(slideCount - visibleCount, 0);
+        var safeIndex = Math.max(0, Math.min(index, maxIndex));
+        var progress = slideCount > visibleCount ? ((safeIndex + visibleCount) / slideCount) * 100 : 100;
+
+        section.style.setProperty('--as-featured-in-progress', progress + '%');
+
+        if (status) {
+          var visibleEnd = Math.min(safeIndex + visibleCount, slideCount);
+          status.textContent = 'Featured mentions ' + (safeIndex + 1) + ' through ' + visibleEnd + ' of ' + slideCount;
+        }
+
+        navigation.hidden = slideCount <= visibleCount;
+      }
+
+      function initSlider() {
+        var $ = window.jQuery;
+
+        if (!$ || !$.fn || !$.fn.slick) {
+          attempts += 1;
+
+          if (attempts < 40) {
+            window.setTimeout(initSlider, 100);
+          }
+
+          return;
+        }
+
+        var $slider = $(slider);
+        var $dots = $(dots);
+
+        if ($slider.hasClass('slick-initialized')) {
+          $slider.slick('setPosition');
+          setProgress($slider.slick('slickCurrentSlide'), $slider.slick('getSlick'));
+          return;
+        }
+
+        $slider.on('init reInit afterChange', function (event, slick, currentSlide) {
+          setProgress(typeof currentSlide === 'number' ? currentSlide : slick.currentSlide || 0, slick);
+        });
+
+        $slider.on('beforeChange', function (event, slick, currentSlide, nextSlide) {
+          setProgress(nextSlide, slick);
+        });
+
+        $slider.slick({
+          slidesToShow: 3,
+          slidesToScroll: 1,
+          arrows: false,
+          dots: true,
+          appendDots: $dots,
+          customPaging: function (slick, index) {
+            return '<button type="button" aria-label="' + (index + 1) + ' of ' + slick.slideCount + '">' + (index + 1) + '</button>';
+          },
+          infinite: false,
+          adaptiveHeight: true,
+          draggable: true,
+          swipe: true,
+          swipeToSlide: true,
+          touchMove: true,
+          touchThreshold: 8,
+          speed: 350,
+          cssEase: 'ease',
+          responsive: [
+            {
+              breakpoint: 990,
+              settings: {
+                slidesToShow: 2
+              }
+            },
+            {
+              breakpoint: 750,
+              settings: {
+                slidesToShow: 1
+              }
+            }
+          ]
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', initSlider);
+      window.addEventListener('load', initSlider);
+      document.addEventListener('shopify:section:load', initSlider);
+      document.addEventListener('shopify:section:select', initSlider);
+
+      initSlider();
+    })();
+  </script>
+{% endif %}
