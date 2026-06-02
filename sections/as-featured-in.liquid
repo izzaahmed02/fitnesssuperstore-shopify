@@ -1,17 +1,13 @@
-{%- comment -%}
-  "As Featured In" PDP section — source for the custom_liquid block on the product page.
+{% comment %}
+  "As Featured In" PDP section.
 
-  This is the version-controlled source for the custom_liquid block used on the
-  product page (e.g. french-fitness-mbr500-medicine-ball-rebounder-new). It is
-  data-driven by the product metafield custom.as_featured_in (a list of
-  metaobjects with: name, excerpt, logo, link) and is reusable across products.
-
-  Behavior:
+  Reusable, data-driven by the product metafield custom.as_featured_in (a list of
+  metaobjects with: name, excerpt, logo, link). Behavior:
   - Hides automatically when the product has no as_featured_in data.
   - Single entry: hides the carousel/progress indicator and displays one card cleanly.
   - The whole card is clickable and opens the linked article in a new tab.
   - Wording is factual only; the excerpt renders as a neutral caption (no quote styling).
-{%- endcomment -%}
+{% endcomment %}
 
 {% liquid
   assign featured_mentions = product.metafields.custom.as_featured_in.value
@@ -529,3 +525,44 @@
     })();
   </script>
 {% endif %}
+
+{% schema %}
+{
+  "name": "As Featured In",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "As Featured In"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 40
+    }
+  ],
+  "presets": [
+    {
+      "name": "As Featured In"
+    }
+  ]
+}
+{% endschema %}
