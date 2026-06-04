@@ -128,11 +128,25 @@
       box-shadow: none;
       box-sizing: border-box;
       text-align: center;
+      color: inherit;
+      text-decoration: none;
     }
 
-    /* Whole card is clickable when a link is present */
-    #shopify-section-{{ section.id }} .as-featured-in__item:has(.as-featured-in__link) {
+    /* When the card itself is a link, keep it visually identical to the
+       article variant: no underline, inherit text color, pointer cursor. */
+    #shopify-section-{{ section.id }} a.as-featured-in__item--link {
       cursor: pointer;
+      color: #111111;
+    }
+
+    #shopify-section-{{ section.id }} a.as-featured-in__item--link:hover,
+    #shopify-section-{{ section.id }} a.as-featured-in__item--link:focus {
+      text-decoration: none;
+    }
+
+    #shopify-section-{{ section.id }} a.as-featured-in__item--link:focus-visible {
+      outline: 2px solid #111111;
+      outline-offset: 2px;
     }
 
     #shopify-section-{{ section.id }} .as-featured-in__quote {
@@ -176,21 +190,6 @@
       font-weight: 700;
       line-height: 1.2;
       text-align: center;
-    }
-
-    /* Stretched link overlay: makes the entire card clickable */
-    #shopify-section-{{ section.id }} .as-featured-in__link {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      color: inherit;
-      text-decoration: none;
-    }
-
-    #shopify-section-{{ section.id }} .as-featured-in__link:focus-visible {
-      outline: 2px solid #111111;
-      outline-offset: 2px;
-      border-radius: 14px;
     }
 
     #shopify-section-{{ section.id }} .as-featured-in__navigation {
@@ -356,24 +355,16 @@
             assign mention_name = mention.name.value
             assign mention_excerpt = mention.excerpt.value
             assign mention_logo = mention.logo.value
-            assign mention_link = mention.link
-            if mention_link == blank
-              assign mention_link = mention.link.value
-            endif
+            assign mention_link = mention.link.value
             assign mention_logo_alt = mention_logo.alt | default: mention_name
           %}
-          <!-- DEBUG link rendering -->
-          <div style="font-family:monospace;font-size:11px;color:#444;padding:6px 10px;background:#fff7c2;border:1px dashed #c90;margin:6px 0;text-align:left;word-break:break-all;">
-            <div>A &lt;mention.link.value&gt;: <code>{{ mention.link.value }}</code></div>
-            <div>B &lt;mention.link&gt;: <code>{{ mention.link }}</code></div>
-            <div>C &lt;mention.link.url&gt;: <code>{{ mention.link.url }}</code></div>
-            <div>D &lt;mention.link.value.url&gt;: <code>{{ mention.link.value.url }}</code></div>
-            <div>E type: <code>{{ mention.link.type }}</code></div>
-            <div>F assigned mention_link: <code>{{ mention_link }}</code></div>
-          </div>
 
           <div class="as-featured-in__slide">
-            <article class="as-featured-in__item">
+            {%- if mention_link != blank -%}
+              <a class="as-featured-in__item as-featured-in__item--link" href="{{ mention_link }}" target="_blank" rel="noopener" aria-label="Read feature{% if mention_name != blank %} from {{ mention_name | escape }}{% endif %} (opens in a new tab)">
+            {%- else -%}
+              <article class="as-featured-in__item">
+            {%- endif -%}
               <div class="as-featured-in__logo-wrap">
                 {% if mention_logo != blank %}
                   {{ mention_logo | image_url: width: 440 | image_tag: class: 'as-featured-in__logo', loading: 'lazy', alt: mention_logo_alt }}
@@ -389,11 +380,11 @@
                   {{ mention_excerpt | escape }}
                 </div>
               {% endif %}
-
-              {% if mention_link != blank %}
-                <a class="as-featured-in__link" href="{{ mention_link }}" target="_blank" rel="noopener" aria-label="Read feature{% if mention_name != blank %} from {{ mention_name | escape }}{% endif %} (opens in a new tab)"></a>
-              {% endif %}
-            </article>
+            {%- if mention_link != blank -%}
+              </a>
+            {%- else -%}
+              </article>
+            {%- endif -%}
           </div>
         {% endfor %}
       </div>
@@ -516,7 +507,7 @@
               breakpoint: 750,
               settings: {
                 slidesToShow: 1
-          }
+              }
             }
           ]
         });
