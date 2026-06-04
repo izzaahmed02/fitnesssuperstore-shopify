@@ -356,9 +356,21 @@
             assign mention_name = mention.name.value
             assign mention_excerpt = mention.excerpt.value
             assign mention_logo = mention.logo.value
-            assign mention_link = mention.link.value | default: mention.link
+            assign mention_link = mention.link
+            if mention_link == blank
+              assign mention_link = mention.link.value
+            endif
             assign mention_logo_alt = mention_logo.alt | default: mention_name
           %}
+          <!-- DEBUG link rendering -->
+          <div style="font-family:monospace;font-size:11px;color:#444;padding:6px 10px;background:#fff7c2;border:1px dashed #c90;margin:6px 0;text-align:left;word-break:break-all;">
+            <div>A &lt;mention.link.value&gt;: <code>{{ mention.link.value }}</code></div>
+            <div>B &lt;mention.link&gt;: <code>{{ mention.link }}</code></div>
+            <div>C &lt;mention.link.url&gt;: <code>{{ mention.link.url }}</code></div>
+            <div>D &lt;mention.link.value.url&gt;: <code>{{ mention.link.value.url }}</code></div>
+            <div>E type: <code>{{ mention.link.type }}</code></div>
+            <div>F assigned mention_link: <code>{{ mention_link }}</code></div>
+          </div>
 
           <div class="as-featured-in__slide">
             <article class="as-featured-in__item">
@@ -504,7 +516,7 @@
               breakpoint: 750,
               settings: {
                 slidesToShow: 1
-              }
+          }
             }
           ]
         });
