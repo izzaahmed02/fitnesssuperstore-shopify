@@ -124,11 +124,13 @@
   }
 </style>
 
-{% if current_price > sale_price %}
+{% assign sale_price_cents = sale_price | replace: ',', '' | times: 100.0 %}
+
+{% if current_price > sale_price_cents %}
   <div class="price-banner">
     <div class="price-banner__prices">
       <span class="price-banner__price">
-        {{ sale_price | money }}
+        {{ sale_price_cents | money }}
       </span>
       <span class="price-banner__compare">
         {{ current_price | money }}

@@ -243,20 +243,28 @@
                       <s>{{ _variant.compare_at_price | money_with_currency -}}</s>
                     </span>
                   {% endif %}
-                  <div class="price-container">
-                    {%- render 'price',
-                      product: product,
-                      use_variant: true,
-                      show_badges: true,
-                      price_class: 'price--large'
-                    -%}
-                    {% if _variant.compare_at_price > _variant.price %}
-                      <span class="you-save"
-                        >You save
-                        {{ _variant.compare_at_price | minus: _variant.price | money -}}
-                      </span>
-                    {% endif %}
-                  </div>
+                  {% if product.metafields.custom.saleprice_name != blank %}
+                    {% render 'super-sale',
+                      sale_name: product.metafields.custom.saleprice_name,
+                      current_price: _variant.compare_at_price,
+                      sale_price: product.metafields.custom.sale_price
+                    %}
+                  {% else %}
+                    <div class="price-container">
+                      {%- render 'price',
+                        product: product,
+                        use_variant: true,
+                        show_badges: true,
+                        price_class: 'price--large'
+                      -%}
+                      {% if _variant.compare_at_price > _variant.price %}
+                        <span class="you-save"
+                          >You save
+                          {{ _variant.compare_at_price | minus: _variant.price | money -}}
+                        </span>
+                      {% endif %}
+                    </div>
+                  {% endif %}
                 </div>
             {%- endcase -%}
           {%- endfor -%}
@@ -899,20 +907,28 @@
                       <s>{{ _variant.compare_at_price | money_with_currency -}}</s>
                     </span>
                   {% endif %}
-                  <div class="price-container">
-                    {%- render 'price',
-                      product: product,
-                      use_variant: true,
-                      show_badges: true,
-                      price_class: 'price--large'
-                    -%}
-                    {% if _variant.compare_at_price > _variant.price %}
-                      <span class="you-save"
-                        >You save
-                        {{ _variant.compare_at_price | minus: _variant.price | money -}}
-                      </span>
-                    {% endif %}
-                  </div>
+                  {% if product.metafields.custom.saleprice_name != blank %}
+                    {% render 'super-sale',
+                      sale_name: product.metafields.custom.saleprice_name,
+                      current_price: _variant.compare_at_price,
+                      sale_price: product.metafields.custom.sale_price
+                    %}
+                  {% else %}
+                    <div class="price-container">
+                      {%- render 'price',
+                        product: product,
+                        use_variant: true,
+                        show_badges: true,
+                        price_class: 'price--large'
+                      -%}
+                      {% if _variant.compare_at_price > _variant.price %}
+                        <span class="you-save"
+                          >You save
+                          {{ _variant.compare_at_price | minus: _variant.price | money -}}
+                        </span>
+                      {% endif %}
+                    </div>
+                  {% endif %}
                 </div>
               {% render 'paylater-providers' %}
               {%- when 'tile_calculator' -%}
