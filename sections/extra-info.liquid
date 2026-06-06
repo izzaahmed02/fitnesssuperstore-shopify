@@ -512,12 +512,7 @@ document.addEventListener("DOMContentLoaded", function() {
             {% endif %}
 
           {% when 'warranty' %}
-            {% if block.settings.warranty != blank %}
-              <div class="product__extra_warranty extra-info-width">
-                <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
-                <div>{{ block.settings.warranty }}</div>
-              </div>
-            {% endif %}
+            {% comment %} Warranty rendered at the bottom, just before .popover-container {% endcomment %}
 
             {% if attachments_metafield != blank %}
               {% assign attachments_object = attachments_metafield %}
@@ -791,9 +786,18 @@ document.addEventListener("DOMContentLoaded", function() {
             {% endif %}
         {% endcase %}
       {% endfor %}
-    
+
+      {% for block in section.blocks %}
+        {% if block.type == 'warranty' and block.settings.warranty != blank %}
+          <div class="product__extra_warranty extra-info-width">
+            <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
+            <div>{{ block.settings.warranty }}</div>
+          </div>
+        {% endif %}
+      {% endfor %}
+
        {% unless is_gift_cards_template %}
-    
+
       {% render 'prop65' %}
 
      {% if customer and customer.tags contains 'admin' %}
