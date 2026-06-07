@@ -167,20 +167,46 @@
   }
 
   function findClosestVariant(variantsMap, intended, prioritizedIndex) {
+    // Pick the variant that best preserves the customer's *whole* selection,
+    // not just the option they clicked. The clicked value is kept whenever any
+    // variant carries it; among those we preserve as many of the other already
+    // selected options as possible, weighting the higher-level options more
+    // (for the dumbbell family: Purchase Type > Set Type > Weight).
+    //
+    // This is what stops the selector from snapping all the way back to the
+    // first variant — typically a Single — when an exact combination has no
+    // backing variant (e.g. Sets + With Rack + a weight range that has no rack,
+    // or a clicked value that no variant carries yet). The customer stays on
+    // their Purchase Type/Set Type context instead of being reset to Singles.
     const keys = ['o1', 'o2', 'o3'];
     const priorityKey = keys[prioritizedIndex];
     const priorityValue = intended[prioritizedIndex];
 
-    // Prefer an in-stock variant that preserves the customer's clicked value.
-    const inStockKeepingClick = variantsMap.find((v) => v.a && v[priorityKey] === priorityValue);
-    if (inStockKeepingClick) return inStockKeepingClick;
+    // Candidates that carry the clicked value. If the clicked value exists on
+    // no variant at all, fall back to the whole map but still preserve the rest
+    // of the selection below — never silently reset the higher-level options.
+    let pool = variantsMap.filter((v) => v[priorityKey] === priorityValue);
+    if (pool.length === 0) pool = variantsMap;
 
-    // Otherwise, any variant (sold-out included) that preserves the clicked value.
-    const anyKeepingClick = variantsMap.find((v) => v[priorityKey] === priorityValue);
-    if (anyKeepingClick) return anyKeepingClick;
+    // Weight earlier (higher-level) options more so Purchase Type / Set Type are
+    // kept ahead of Weight; prefer in-stock variants to break ties.
+    const weights = [4, 2, 1];
 
-    // Last resort: first in-stock variant, or first variant overall.
-    return variantsMap.find((v) => v.a) || variantsMap[0] || null;
+    let best = null;
+    let bestScore = -Infinity;
+    pool.forEach((v) => {
+      let score = 0;
+      for (let i = 0; i < keys.length; i++) {
+        if (intended[i] != null && v[keys[i]] === intended[i]) score += weights[i];
+      }
+      if (v.a) score += 0.5;
+      if (score > bestScore) {
+        bestScore = score;
+        best = v;
+      }
+    });
+
+    return best || null;
   }
 
   function applyVariantSelection(productInfo, fieldsets, target) {

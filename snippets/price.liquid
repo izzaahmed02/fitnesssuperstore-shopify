@@ -35,6 +35,22 @@
   if target == product and product.price_varies
     assign money_price = 'products.product.price.from_price_html' | t: price: money_price
   endif
+
+  comment
+    Combined-listing parents often carry a single low placeholder price (e.g. a
+    Single at $4.50) so product.price_varies is false and the card would show a
+    bare "$4.50" as if the whole family costs that. Detect the parent the same
+    way the rest of the theme does (in a combined listing, but with no parent of
+    its own) and show a "From <low price>" family-level price instead.
+  endcomment
+  if target == product and product.price_varies == false and product.combined_listing != blank and product.combined_listing.parent_product == blank
+    assign family_from_price = product.price_min | default: price
+    assign money_family_from = family_from_price | money
+    if settings.currency_code_enabled
+      assign money_family_from = family_from_price | money_with_currency
+    endif
+    assign money_price = 'products.product.price.from_price_html' | t: price: money_family_from
+  endif
 -%}
 
 {%- unless target == nil -%}
