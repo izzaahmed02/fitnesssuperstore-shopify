@@ -2,3 +2,15 @@ variant-selects{display:block}.product--no-media .product-form__input--dropdown,
 /*.product-form__input--pill input[type=radio].disabled+label {
   display:none;
 }*/
+
+/* Crossed-out option pills are intentionally still selectable: the variant
+   fallback interceptor routes the click to the closest available variant.
+   Signal "interactive but unavailable" rather than "hard disabled" with a
+   help cursor and a softer dashed strike-through (the explanatory tooltip is
+   set via the label title in product-variant-options.liquid). */
+.product-form__input--pill input[type=radio].disabled + label.pill-unavailable,
+.product-form__input--pill input[type=radio]:disabled + label.pill-unavailable {
+  cursor: help;
+  pointer-events: auto;
+  text-decoration-style: dashed;
+}
