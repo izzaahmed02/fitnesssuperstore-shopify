@@ -1230,6 +1230,30 @@
                                 class="product-variant-id"
                               >
 
+                              {%- comment -%}
+                                Carry product-level metafields (Warranty, Processing Time) into the
+                                cart as line-item properties so they persist through checkout to the
+                                order page. The cart page already reads `item.product.metafields`
+                                directly, but the checkout/order page only renders real line-item
+                                properties; the with-options form does this in JS
+                                (product-form-with-options.js), so this is the default form's
+                                equivalent.
+                              {%- endcomment -%}
+                              {%- if product.metafields.custom.warranty != blank -%}
+                                <input
+                                  type="hidden"
+                                  name="properties[Warranty]"
+                                  value="{{ product.metafields.custom.warranty | strip_html | replace: ' (See Description for Details)', '' | escape }}"
+                                >
+                              {%- endif -%}
+                              {%- if product.metafields.custom.processing_time_long != blank -%}
+                                <input
+                                  type="hidden"
+                                  name="properties[Processing Time]"
+                                  value="{{ product.metafields.custom.processing_time_long | strip_html | escape }}"
+                                >
+                              {%- endif -%}
+
                               {%- if gift_card_recipient_feature_active -%}
                                 {%- render 'gift-card-recipient-form',
                                   product: product,
