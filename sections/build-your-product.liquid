@@ -1,0 +1,267 @@
+{{ 'build-your-product.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'build-your-product.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign main_product = product
+  assign main_variant = main_product.selected_or_first_available_variant
+  assign install_product = section.settings.installation_product
+-%}
+
+<build-your-product
+  class="byp page-width"
+  data-section-id="{{ section.id }}"
+  data-cart-add-url="{{ routes.cart_add_url }}"
+  data-recommendations-url="{{ routes.product_recommendations_url }}"
+  data-main-variant-id="{{ main_variant.id }}"
+>
+  <h2 class="byp__heading">{{ section.settings.heading | escape }}</h2>
+
+  <div class="byp__layout">
+    {%- comment -%} ================= LEFT: ACCORDIONS ================= {%- endcomment -%}
+    <div class="byp__accordions">
+      {%- for block in section.blocks -%}
+        <details class="byp-accordion" {% if block.settings.open_by_default %}open{% endif %} {{ block.shopify_attributes }}>
+          <summary class="byp-accordion__summary">
+            <span class="byp-accordion__title">
+              {{ block.settings.title | escape }}
+              {%- if block.settings.tooltip != blank -%}
+                <span class="byp-tooltip" tabindex="0" aria-label="{{ block.settings.tooltip | escape }}" title="{{ block.settings.tooltip | escape }}">?</span>
+              {%- endif -%}
+            </span>
+            <span class="byp-accordion__chevron" aria-hidden="true">
+              {{- 'icon-caret.svg' | inline_asset_content -}}
+            </span>
+          </summary>
+
+          <div class="byp-accordion__content">
+            <ul class="byp-grid" role="list">
+              {%- for addon in block.settings.products -%}
+                {%- liquid
+                  assign addon_variant = addon.selected_or_first_available_variant
+                  assign rating = addon.metafields.reviews.rating.value
+                  assign rating_count = addon.metafields.reviews.rating_count.value
+                -%}
+                <li class="byp-card"
+                    data-product-id="{{ addon.id }}"
+                    data-product-handle="{{ addon.handle }}"
+                    data-product-title="{{ addon.title | escape }}">
+
+                  {%- comment -%} Variant data for JS (price / compare_at updates + ATC) {%- endcomment -%}
+                  <script type="application/json" class="byp-card__variants-json">
+                    [
+                      {%- for v in addon.variants -%}
+                        {
+                          "id": {{ v.id }},
+                          "title": {{ v.title | json }},
+                          "available": {{ v.available }},
+                          "price": {{ v.price }},
+                          "compare_at_price": {{ v.compare_at_price | default: 0 }},
+                          "option1": {{ v.option1 | json }}
+                        }{% unless forloop.last %},{% endunless %}
+                      {%- endfor -%}
+                    ]
+                  </script>
+
+                  {%- comment -%} Full description for the Learn More modal {%- endcomment -%}
+                  <template class="byp-card__description-full">{{ addon.description }}</template>
+
+                  <div class="byp-card__media">
+                    {%- if addon.featured_media -%}
+                      <img
+                        srcset="{{ addon.featured_media | image_url: width: 360 }} 360w, {{ addon.featured_media | image_url: width: 540 }} 540w"
+                        src="{{ addon.featured_media | image_url: width: 540 }}"
+                        sizes="(min-width: 990px) 280px, 45vw"
+                        alt="{{ addon.featured_media.alt | escape }}"
+                        loading="lazy"
+                        width="{{ addon.featured_media.width }}"
+                        height="{{ addon.featured_media.height }}">
+                    {%- endif -%}
+                  </div>
+
+                  {%- if addon_variant.sku != blank -%}
+                    <p class="byp-card__sku">SKU: {{ addon_variant.sku }}</p>
+                  {%- endif -%}
+
+                  <h3 class="byp-card__title">{{ addon.title }}</h3>
+
+                  {%- if rating -%}
+                    <div class="byp-card__rating" data-rating="{{ rating.rating | default: rating }}">
+                      <span class="byp-star" aria-hidden="true">&#9733;</span>
+                      <span class="byp-card__rating-count">{{ rating_count | default: 0 }} reviews</span>
+                    </div>
+                  {%- endif -%}
+
+                  <p class="byp-card__excerpt">{{ addon.description | strip_html | truncatewords: 24 }}</p>
+
+                  {%- comment -%} Color swatches (single "Color" option) or variant select {%- endcomment -%}
+                  {%- unless addon.has_only_default_variant -%}
+                    {%- if addon.options.size == 1 and addon.options.first == 'Color' -%}
+                      <fieldset class="byp-card__swatches">
+                        <legend class="byp-card__option-label">Color: <span data-selected-option>{{ addon_variant.option1 }}</span></legend>
+                        {%- for v in addon.variants -%}
+                          <label class="byp-swatch" style="--swatch-color: {{ v.option1 | downcase | replace: ' ', '' }};">
+                            <input type="radio" name="byp-color-{{ section.id }}-{{ addon.id }}"
+                                   value="{{ v.id }}" {% if v == addon_variant %}checked{% endif %}>
+                            <span class="visually-hidden">{{ v.option1 }}</span>
+                          </label>
+                        {%- endfor -%}
+                      </fieldset>
+                    {%- else -%}
+                      <select class="byp-card__variant-select" aria-label="{{ 'products.product.product_variants' | t }}">
+                        {%- for v in addon.variants -%}
+                          <option value="{{ v.id }}" {% unless v.available %}disabled{% endunless %} {% if v == addon_variant %}selected{% endif %}>{{ v.title }}</option>
+                        {%- endfor -%}
+                      </select>
+                    {%- endif -%}
+                  {%- endunless -%}
+
+                  {%- comment -%} Row: Learn more + price (with "As high as" compare price) {%- endcomment -%}
+                  <div class="byp-card__row byp-card__row--price">
+                    <button type="button" class="byp-card__learn-more link">Learn more</button>
+                    <div class="byp-card__price">
+                      <span class="byp-card__compare{% unless addon_variant.compare_at_price > addon_variant.price %} hidden{% endunless %}">
+                        As high as: <s data-compare-price>{{ addon_variant.compare_at_price | money }}</s>
+                      </span>
+                      <span class="byp-card__price-current" data-price>{{ addon_variant.price | money }} {{ cart.currency.iso_code }}</span>
+                    </div>
+                  </div>
+
+                  {%- comment -%} Row: quantity selector + ATC button {%- endcomment -%}
+                  <div class="byp-card__row byp-card__row--actions">
+                    <select class="byp-card__qty" aria-label="{{ 'products.product.quantity.label' | t }}">
+                      {%- for i in (1..10) -%}
+                        <option value="{{ i }}">{{ i }}</option>
+                      {%- endfor -%}
+                    </select>
+                    <button type="button" class="byp-card__atc button"
+                            {% unless addon_variant.available %}disabled{% endunless %}
+                            data-variant-id="{{ addon_variant.id }}">
+                      {%- if addon.has_only_default_variant == false and addon.options.first == 'Color' -%}
+                        Select Color
+                      {%- else -%}
+                        Add To Order
+                      {%- endif -%}
+                    </button>
+                  </div>
+                </li>
+              {%- endfor -%}
+            </ul>
+          </div>
+        </details>
+      {%- endfor -%}
+    </div>
+
+    {%- comment -%} ================= RIGHT: FLOATING CART ================= {%- endcomment -%}
+    <aside class="byp-floating-cart hidden" aria-live="polite" aria-label="Your build">
+      <div class="byp-floating-cart__inner">
+        <h3 class="byp-floating-cart__heading">You are buying</h3>
+
+        <div class="byp-floating-cart__main">
+          <div class="byp-floating-cart__main-media">
+            {%- if main_product.featured_media -%}
+              <img src="{{ main_product.featured_media | image_url: width: 140 }}" alt="" width="70" height="70" loading="lazy">
+            {%- endif -%}
+          </div>
+          <p class="byp-floating-cart__main-title">{{ main_product.title }}</p>
+          <div class="byp-floating-cart__main-price">
+            <span data-main-price>{{ main_variant.price | money }}</span>
+            {%- if main_variant.compare_at_price > main_variant.price -%}
+              <s data-main-compare>{{ main_variant.compare_at_price | money }}</s>
+            {%- endif -%}
+          </div>
+        </div>
+
+        <h4 class="byp-floating-cart__subheading">Add Ons</h4>
+        <ul class="byp-floating-cart__items" role="list"></ul>
+
+        {%- if install_product != blank -%}
+          <div class="byp-floating-cart__install">
+            <label for="byp-install-{{ section.id }}">{{ section.settings.installation_label | escape }}</label>
+            <select id="byp-install-{{ section.id }}" class="byp-floating-cart__install-select">
+              <option value="">{{ section.settings.installation_default | escape }}</option>
+              {%- for v in install_product.variants -%}
+                <option value="{{ v.id }}" data-price="{{ v.price }}">{{ v.title }} (+{{ v.price | money }})</option>
+              {%- endfor -%}
+            </select>
+          </div>
+        {%- endif -%}
+
+        <div class="byp-floating-cart__subtotal">
+          <span>Subtotal</span>
+          <span class="byp-floating-cart__subtotal-values">
+            <s data-subtotal-compare class="hidden"></s>
+            <strong data-subtotal></strong>
+          </span>
+        </div>
+
+        <button type="button" class="byp-floating-cart__atc button button--primary">Add to cart</button>
+        <p class="byp-floating-cart__error" role="alert" hidden></p>
+      </div>
+    </aside>
+  </div>
+
+  {%- comment -%} ================= LEARN MORE MODAL ================= {%- endcomment -%}
+  <div class="byp-modal hidden" role="dialog" aria-modal="true" aria-labelledby="byp-modal-title-{{ section.id }}">
+    <div class="byp-modal__overlay" data-modal-close></div>
+    <div class="byp-modal__panel">
+      <button type="button" class="byp-modal__close" data-modal-close aria-label="{{ 'accessibility.close' | t }}">&times;</button>
+      <div class="byp-modal__rating hidden">
+        <span class="byp-modal__stars" aria-hidden="true"></span>
+        <span class="byp-modal__rating-count"></span>
+      </div>
+      <h3 class="byp-modal__title" id="byp-modal-title-{{ section.id }}"></h3>
+      <div class="byp-modal__description rte"></div>
+
+      <div class="byp-modal__related">
+        <h4>You may also need</h4>
+        <ul class="byp-modal__related-track" role="list"></ul>
+      </div>
+    </div>
+  </div>
+</build-your-product>
+
+{% schema %}
+{
+  "name": "Build Your Product",
+  "tag": "section",
+  "class": "section-build-your-product",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Build Your Product" },
+    { "type": "header", "content": "Installation options" },
+    {
+      "type": "product",
+      "id": "installation_product",
+      "label": "Installation / assembly product",
+      "info": "Each variant of this product becomes an option in the floating cart dropdown (e.g. Assembly Only, Room of Choice + Assembly)."
+    },
+    { "type": "text", "id": "installation_label", "label": "Dropdown label", "default": "Assembly & Room of Choice Installation Needed?" },
+    { "type": "text", "id": "installation_default", "label": "Default option (no charge)", "default": "Curbside Delivery Only" }
+  ],
+  "blocks": [
+    {
+      "type": "accordion",
+      "name": "Accordion",
+      "settings": [
+        { "type": "text", "id": "title", "label": "Title", "default": "Best Selling Add-Ons" },
+        { "type": "text", "id": "tooltip", "label": "Tooltip text (orange ? icon)" },
+        { "type": "checkbox", "id": "open_by_default", "label": "Open by default", "default": false },
+        { "type": "product_list", "id": "products", "label": "Products", "limit": 12 }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Build Your Product",
+      "blocks": [
+        { "type": "accordion", "settings": { "title": "Best Selling Add-Ons", "open_by_default": true } },
+        { "type": "accordion", "settings": { "title": "Mat" } },
+        { "type": "accordion", "settings": { "title": "Bench" } },
+        { "type": "accordion", "settings": { "title": "Olympic Weight Plate Set" } },
+        { "type": "accordion", "settings": { "title": "Bars & Pull Attachments" } },
+        { "type": "accordion", "settings": { "title": "Handles, Ropes & Lower Body Attachments" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
