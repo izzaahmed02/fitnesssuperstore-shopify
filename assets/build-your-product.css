@@ -1,0 +1,411 @@
+/* ==========================================================================
+   Build Your Product — Dawn theme
+   Palette taken from the Figma: ink #111418, accent #E04E1F, soft CTA #F7D2C2
+   ========================================================================== */
+
+.byp {
+  --byp-ink: #111418;
+  --byp-muted: #5c6066;
+  --byp-accent: #e04e1f;
+  --byp-accent-soft: #f7d2c2;
+  --byp-border: #e6e6e6;
+  --byp-radius: 10px;
+  margin-top: 4rem;
+  margin-bottom: 4rem;
+}
+
+.byp__heading {
+  font-size: 2.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--byp-ink);
+  margin: 0 0 2rem;
+}
+
+.byp__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38rem;
+  gap: 3rem;
+  align-items: start;
+}
+
+/* ---------- Accordions ---------- */
+
+.byp-accordion {
+  border-bottom: 1px solid var(--byp-border);
+}
+
+.byp-accordion__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.8rem 0;
+  cursor: pointer;
+  list-style: none;
+}
+.byp-accordion__summary::-webkit-details-marker { display: none; }
+
+.byp-accordion__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--byp-ink);
+}
+
+.byp-tooltip {
+  display: inline-grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  background: var(--byp-accent);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: help;
+}
+
+.byp-accordion__chevron { transition: transform 0.2s ease; display: inline-flex; }
+.byp-accordion__chevron svg { width: 1.4rem; height: 1.4rem; }
+.byp-accordion[open] .byp-accordion__chevron { transform: rotate(180deg); }
+
+.byp-accordion__content { padding-bottom: 2.4rem; }
+
+/* ---------- Product grid / cards ---------- */
+
+.byp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
+  gap: 1.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.byp-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--byp-border);
+  border-radius: var(--byp-radius);
+  padding: 1.6rem;
+  background: #fff;
+}
+
+.byp-card__media {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  margin-bottom: 1.2rem;
+}
+.byp-card__media img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.byp-card__sku {
+  font-size: 1.2rem;
+  color: var(--byp-muted);
+  margin: 0 0 0.4rem;
+}
+
+.byp-card__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--byp-ink);
+  margin: 0 0 0.6rem;
+}
+
+.byp-card__rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  color: var(--byp-muted);
+  margin-bottom: 0.8rem;
+}
+.byp-star { color: #f5a623; font-size: 1.4rem; }
+
+/* Requirement: short description clamped to 3 lines */
+.byp-card__excerpt {
+  font-size: 1.3rem;
+  line-height: 1.45;
+  color: var(--byp-muted);
+  margin: 0 0 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Variants */
+.byp-card__swatches { border: 0; padding: 0; margin: 0 0 1rem; }
+.byp-card__option-label { font-size: 1.3rem; font-weight: 600; margin-bottom: 0.6rem; display: block; }
+.byp-swatch { display: inline-block; margin-right: 0.6rem; cursor: pointer; }
+.byp-swatch input { position: absolute; opacity: 0; }
+.byp-swatch::after, .byp-swatch span + ::after { content: none; }
+.byp-swatch {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--swatch-color, #111);
+  border: 2px solid var(--byp-border);
+  position: relative;
+}
+.byp-swatch:has(input:checked) { border-color: var(--byp-ink); box-shadow: 0 0 0 2px #fff inset; }
+
+.byp-card__variant-select {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--byp-border);
+  border-radius: 8px;
+  font-size: 1.3rem;
+}
+
+/* Learn more + price row */
+.byp-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.byp-card__row--price { margin-top: auto; padding-top: 0.8rem; }
+
+.byp-card__learn-more {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 1.3rem;
+  text-decoration: underline;
+  color: var(--byp-ink);
+  cursor: pointer;
+}
+
+.byp-card__price { text-align: right; }
+.byp-card__compare {
+  display: block;
+  font-size: 1.15rem;
+  color: var(--byp-muted);
+}
+.byp-card__price-current {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--byp-accent);
+}
+
+/* Qty + ATC row */
+.byp-card__row--actions { margin-top: 1.2rem; }
+
+.byp-card__qty {
+  width: 7rem;
+  padding: 1rem;
+  border: 1px solid var(--byp-border);
+  border-radius: 8px;
+  font-size: 1.4rem;
+  background: #fff;
+}
+
+.byp-card__atc {
+  flex: 1;
+  min-height: 4.4rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--byp-accent-soft);
+  color: var(--byp-ink);
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.byp-card__atc:hover:not(:disabled) { background: #f3bda6; }
+.byp-card__atc:disabled { opacity: 0.5; cursor: not-allowed; }
+.byp-card__atc--added { background: var(--byp-accent); color: #fff; }
+
+/* ---------- Floating cart ---------- */
+
+.byp-floating-cart {
+  position: sticky;
+  top: 2rem;
+}
+.byp-floating-cart.hidden { display: none; }
+
+.byp-floating-cart__inner {
+  background: #fafafa;
+  border-radius: var(--byp-radius);
+  padding: 2rem;
+}
+
+.byp-floating-cart__heading {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 1.2rem;
+}
+
+.byp-floating-cart__main {
+  display: grid;
+  grid-template-columns: 7rem 1fr auto;
+  gap: 1.2rem;
+  align-items: center;
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.2rem;
+  margin-bottom: 1.6rem;
+}
+.byp-floating-cart__main-title { font-size: 1.3rem; margin: 0; }
+.byp-floating-cart__main-price { text-align: right; font-weight: 700; }
+.byp-floating-cart__main-price s { display: block; font-weight: 400; color: var(--byp-muted); font-size: 1.2rem; }
+
+.byp-floating-cart__subheading { font-size: 1.5rem; font-weight: 700; margin: 0 0 0.8rem; }
+
+.byp-floating-cart__items { list-style: none; margin: 0 0 1.6rem; padding: 0; }
+.byp-floating-cart__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.2rem;
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.2rem;
+  margin-bottom: 0.8rem;
+}
+.byp-floating-cart__item-info p { margin: 0 0 0.4rem; font-size: 1.3rem; }
+.byp-floating-cart__remove {
+  background: none; border: 0; padding: 0;
+  font-size: 1.2rem; text-decoration: underline; cursor: pointer; color: var(--byp-ink);
+}
+.byp-floating-cart__item-price { font-weight: 700; white-space: nowrap; }
+.byp-qty-badge { color: var(--byp-muted); font-size: 1.2rem; }
+
+.byp-floating-cart__install { border-top: 1px solid var(--byp-border); padding-top: 1.6rem; margin-bottom: 1.6rem; }
+.byp-floating-cart__install label { display: block; font-size: 1.35rem; font-weight: 700; margin-bottom: 0.8rem; }
+.byp-floating-cart__install-select {
+  width: 100%;
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--byp-border);
+  border-radius: 8px;
+  font-size: 1.35rem;
+  background: #fff;
+}
+
+.byp-floating-cart__subtotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.4rem;
+}
+.byp-floating-cart__subtotal-values s { color: var(--byp-muted); font-weight: 400; margin-right: 0.6rem; }
+.byp-floating-cart__subtotal-values strong { font-size: 1.8rem; }
+
+.byp-floating-cart__atc {
+  width: 100%;
+  min-height: 4.8rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--byp-accent);
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.byp-floating-cart__atc[aria-busy='true'] { opacity: 0.7; cursor: wait; }
+
+.byp-floating-cart__error { color: #c1281c; font-size: 1.3rem; margin: 1rem 0 0; }
+
+/* ---------- Learn More modal ---------- */
+
+.byp-modal { position: fixed; inset: 0; z-index: 100; }
+.byp-modal.hidden { display: none; }
+body.byp-modal-open { overflow: hidden; }
+
+.byp-modal__overlay { position: absolute; inset: 0; background: rgba(17, 20, 24, 0.55); }
+
+.byp-modal__panel {
+  position: relative;
+  max-width: 64rem;
+  max-height: 85vh;
+  overflow-y: auto;
+  margin: 6vh auto;
+  background: #fff;
+  border-radius: var(--byp-radius);
+  padding: 3rem;
+}
+
+.byp-modal__close {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.6rem;
+  background: none;
+  border: 0;
+  font-size: 2.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.byp-modal__rating { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.8rem; }
+.byp-modal__stars { color: #f5a623; font-size: 1.6rem; letter-spacing: 0.1em; }
+.byp-modal__rating-count { font-size: 1.3rem; color: var(--byp-muted); }
+
+.byp-modal__title { font-size: 2rem; font-weight: 700; margin: 0 0 1.2rem; }
+.byp-modal__description { font-size: 1.4rem; line-height: 1.6; }
+
+.byp-modal__related { margin-top: 2.4rem; }
+.byp-modal__related.hidden { display: none; }
+.byp-modal__related h4 { font-size: 1.5rem; font-weight: 700; margin: 0 0 1.2rem; }
+
+.byp-modal__related-track {
+  display: flex;
+  gap: 1.2rem;
+  overflow-x: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 1rem;
+  scroll-snap-type: x mandatory;
+}
+.byp-modal__related-card {
+  flex: 0 0 14rem;
+  scroll-snap-align: start;
+  border: 1px solid var(--byp-border);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+.byp-modal__related-card a { text-decoration: none; color: var(--byp-ink); }
+.byp-modal__related-card img { width: 10rem; height: 10rem; object-fit: contain; }
+.byp-modal__related-card p { font-size: 1.2rem; margin: 0.6rem 0 0.3rem; }
+.byp-modal__related-card span { font-size: 1.25rem; font-weight: 700; color: var(--byp-accent); }
+
+/* ---------- Responsive ---------- */
+
+@media screen and (max-width: 989px) {
+  .byp__layout { grid-template-columns: 1fr; }
+
+  /* Floating cart becomes a fixed bottom sheet on mobile */
+  .byp-floating-cart {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    z-index: 50;
+    max-height: 60vh;
+    overflow-y: auto;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+  }
+  .byp-floating-cart__inner { border-radius: 12px 12px 0 0; }
+}
+
+@media screen and (max-width: 599px) {
+  .byp-grid { grid-template-columns: repeat(2, 1fr); }
+  .byp-card { padding: 1.2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .byp * { transition: none !important; }
+}
