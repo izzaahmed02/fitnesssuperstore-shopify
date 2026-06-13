@@ -32,8 +32,7 @@
   gap: 3rem;
   align-items: start;
 }
-/* MERGED: stop sliders stretching the page wider than the screen */
-.byp__layout > * { min-width: 0; }
+.byp__layout > * { min-width: 0; } /* stop sliders stretching the page */
 .byp__accordions { min-width: 0; max-width: 100%; }
 
 /* ---------- Accordions ---------- */
@@ -84,14 +83,13 @@
 
 /* ---------- Product slider / cards ---------- */
 
-/* MERGED: constrain slider to its container */
 .byp-slider { position: relative; min-width: 0; max-width: 100%; }
 
 .byp-grid {
   display: flex;
   gap: 1.6rem;
   overflow-x: auto;
-  max-width: 100%; /* MERGED */
+  max-width: 100%;
   scroll-snap-type: x mandatory;
   margin: 0;
   padding: 0.2rem 0 1.2rem;
@@ -283,6 +281,44 @@
   padding: 2rem;
 }
 
+/* Build-Your-Product bar with minimize/maximize toggle */
+.byp-floating-cart__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.6rem;
+}
+.byp-floating-cart__build-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--byp-ink);
+  margin: 0;
+}
+.byp-floating-cart__toggle {
+  display: none; /* desktop: always expanded, no toggle */
+  align-items: center;
+  justify-content: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  flex: 0 0 auto;
+  border: 1px solid var(--byp-border);
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+.byp-floating-cart__toggle-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+/* collapsed = arrow points down, body hidden */
+.byp-floating-cart--collapsed .byp-floating-cart__toggle-icon { transform: rotate(180deg); }
+.byp-floating-cart--collapsed .byp-floating-cart__body { display: none; }
+.byp-floating-cart--collapsed .byp-floating-cart__bar { margin-bottom: 0; }
+
 .byp-floating-cart__heading {
   font-size: 1.6rem;
   font-weight: 700;
@@ -429,6 +465,8 @@ body.byp-modal-open { overflow: hidden; }
 @media screen and (max-width: 989px) {
   .byp__layout { grid-template-columns: 1fr; }
 
+  .byp-floating-cart__toggle { display: inline-flex; } /* show toggle on mobile */
+
   /* Floating cart becomes a fixed bottom sheet on mobile */
   .byp-floating-cart {
     position: fixed;
@@ -444,7 +482,6 @@ body.byp-modal-open { overflow: hidden; }
   .byp-floating-cart__inner { border-radius: 12px 12px 0 0; }
 }
 
-/* MERGED: mobile = exactly 2 cards per view + visible arrows */
 @media screen and (max-width: 599px) {
   .byp-card {
     flex: 0 0 calc(50% - 0.8rem); /* exactly 2 per view (1.6rem gap) */
