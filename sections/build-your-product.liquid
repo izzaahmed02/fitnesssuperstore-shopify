@@ -158,48 +158,57 @@
     {%- comment -%} ================= RIGHT: FLOATING CART ================= {%- endcomment -%}
     <aside class="byp-floating-cart hidden" aria-live="polite" aria-label="Your build">
       <div class="byp-floating-cart__inner">
-        <h3 class="byp-floating-cart__heading">You are buying</h3>
-
-        <div class="byp-floating-cart__main">
-          <div class="byp-floating-cart__main-media">
-            {%- if main_product.featured_media -%}
-              <img src="{{ main_product.featured_media | image_url: width: 140 }}" alt="" width="70" height="70" loading="lazy">
-            {%- endif -%}
-          </div>
-          <p class="byp-floating-cart__main-title">{{ main_product.title }}</p>
-          <div class="byp-floating-cart__main-price">
-            <span data-main-price>{{ main_variant.price | money }}</span>
-            {%- if main_variant.compare_at_price > main_variant.price -%}
-              <s data-main-compare>{{ main_variant.compare_at_price | money }}</s>
-            {%- endif -%}
-          </div>
+        <div class="byp-floating-cart__bar">
+          <h2 class="byp-floating-cart__build-title">Build Your Product</h2>
+          <button type="button" class="byp-floating-cart__toggle" aria-expanded="true" aria-label="Minimize cart">
+            <span class="byp-floating-cart__toggle-icon" aria-hidden="true">&#9650;</span>
+          </button>
         </div>
 
-        <h4 class="byp-floating-cart__subheading">Add Ons</h4>
-        <ul class="byp-floating-cart__items" role="list"></ul>
+        <div class="byp-floating-cart__body">
+          <h3 class="byp-floating-cart__heading">You are buying</h3>
 
-        {%- if install_product != blank -%}
-          <div class="byp-floating-cart__install">
-            <label for="byp-install-{{ section.id }}">{{ section.settings.installation_label | escape }}</label>
-            <select id="byp-install-{{ section.id }}" class="byp-floating-cart__install-select">
-              <option value="">{{ section.settings.installation_default | escape }}</option>
-              {%- for v in install_product.variants -%}
-                <option value="{{ v.id }}" data-price="{{ v.price }}">{{ v.title }} (+{{ v.price | money }})</option>
-              {%- endfor -%}
-            </select>
+          <div class="byp-floating-cart__main">
+            <div class="byp-floating-cart__main-media">
+              {%- if main_product.featured_media -%}
+                <img src="{{ main_product.featured_media | image_url: width: 140 }}" alt="" width="70" height="70" loading="lazy">
+              {%- endif -%}
+            </div>
+            <p class="byp-floating-cart__main-title">{{ main_product.title }}</p>
+            <div class="byp-floating-cart__main-price">
+              <span data-main-price>{{ main_variant.price | money }}</span>
+              {%- if main_variant.compare_at_price > main_variant.price -%}
+                <s data-main-compare>{{ main_variant.compare_at_price | money }}</s>
+              {%- endif -%}
+            </div>
           </div>
-        {%- endif -%}
 
-        <div class="byp-floating-cart__subtotal">
-          <span>Subtotal</span>
-          <span class="byp-floating-cart__subtotal-values">
-            <s data-subtotal-compare class="hidden"></s>
-            <strong data-subtotal></strong>
-          </span>
+          <h4 class="byp-floating-cart__subheading">Add Ons</h4>
+          <ul class="byp-floating-cart__items" role="list"></ul>
+
+          {%- if install_product != blank -%}
+            <div class="byp-floating-cart__install">
+              <label for="byp-install-{{ section.id }}">{{ section.settings.installation_label | escape }}</label>
+              <select id="byp-install-{{ section.id }}" class="byp-floating-cart__install-select">
+                <option value="">{{ section.settings.installation_default | escape }}</option>
+                {%- for v in install_product.variants -%}
+                  <option value="{{ v.id }}" data-price="{{ v.price }}">{{ v.title }} (+{{ v.price | money }})</option>
+                {%- endfor -%}
+              </select>
+            </div>
+          {%- endif -%}
+
+          <div class="byp-floating-cart__subtotal">
+            <span>Subtotal</span>
+            <span class="byp-floating-cart__subtotal-values">
+              <s data-subtotal-compare class="hidden"></s>
+              <strong data-subtotal></strong>
+            </span>
+          </div>
+
+          <button type="button" class="byp-floating-cart__atc button button--primary">Add to cart</button>
+          <p class="byp-floating-cart__error" role="alert" hidden></p>
         </div>
-
-        <button type="button" class="byp-floating-cart__atc button button--primary">Add to cart</button>
-        <p class="byp-floating-cart__error" role="alert" hidden></p>
       </div>
     </aside>
   </div>
