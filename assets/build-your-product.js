@@ -50,6 +50,8 @@ if (!customElements.get('build-your-product')) {
             return this.renderFloatingCart();
           }
 
+          if (e.target.closest('.byp-floating-cart__toggle')) return this.toggleFloatingCart();
+
           if (e.target.closest('.byp-floating-cart__atc')) return this.addAllToCart();
         });
 
@@ -122,6 +124,15 @@ if (!customElements.get('build-your-product')) {
           left: arrow.classList.contains('byp-slider__arrow--prev') ? -step : step,
           behavior: 'smooth'
         });
+      }
+
+      /* ---------- floating cart minimize/maximize ---------- */
+
+      toggleFloatingCart() {
+        const collapsed = this.floatingCart.classList.toggle('byp-floating-cart--collapsed');
+        const toggle = this.floatingCart.querySelector('.byp-floating-cart__toggle');
+        toggle.setAttribute('aria-expanded', String(!collapsed));
+        toggle.setAttribute('aria-label', collapsed ? 'Maximize cart' : 'Minimize cart');
       }
 
       /* ---------- main product ---------- */
@@ -268,6 +279,7 @@ if (!customElements.get('build-your-product')) {
           this.items.clear();
           if (this.installSelect) this.installSelect.value = '';
           this.floatingCart.classList.add('hidden');
+          this.floatingCart.classList.remove('byp-floating-cart--collapsed');
 
           if (cartDrawer) {
             let sections = data.sections;
