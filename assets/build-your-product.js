@@ -116,7 +116,8 @@ if (!customElements.get('build-your-product')) {
         const slider = arrow.closest('.byp-slider');
         const track = slider.querySelector('.byp-slider__track');
         const card = track.querySelector('.byp-card');
-        const step = card ? card.getBoundingClientRect().width + 16 : 320;
+        const perView = window.matchMedia('(max-width: 599px)').matches ? 2 : 1;
+        const step = card ? (card.getBoundingClientRect().width + 16) * perView : 320;
         track.scrollBy({
           left: arrow.classList.contains('byp-slider__arrow--prev') ? -step : step,
           behavior: 'smooth'
