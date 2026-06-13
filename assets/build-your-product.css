@@ -32,6 +32,9 @@
   gap: 3rem;
   align-items: start;
 }
+/* MERGED: stop sliders stretching the page wider than the screen */
+.byp__layout > * { min-width: 0; }
+.byp__accordions { min-width: 0; max-width: 100%; }
 
 /* ---------- Accordions ---------- */
 
@@ -81,12 +84,14 @@
 
 /* ---------- Product slider / cards ---------- */
 
-.byp-slider { position: relative; }
+/* MERGED: constrain slider to its container */
+.byp-slider { position: relative; min-width: 0; max-width: 100%; }
 
 .byp-grid {
   display: flex;
   gap: 1.6rem;
   overflow-x: auto;
+  max-width: 100%; /* MERGED */
   scroll-snap-type: x mandatory;
   margin: 0;
   padding: 0.2rem 0 1.2rem;
@@ -439,10 +444,23 @@ body.byp-modal-open { overflow: hidden; }
   .byp-floating-cart__inner { border-radius: 12px 12px 0 0; }
 }
 
+/* MERGED: mobile = exactly 2 cards per view + visible arrows */
 @media screen and (max-width: 599px) {
-  .byp-card { flex-basis: 21rem; padding: 1.2rem; }
+  .byp-card {
+    flex: 0 0 calc(50% - 0.8rem); /* exactly 2 per view (1.6rem gap) */
+    padding: 1.2rem;
+  }
   .byp-card__media { height: 12rem; }
-  .byp-slider__arrow { display: none; } /* swipe on touch devices */
+  .byp-card__qty { width: 5.6rem; padding: 0.8rem; }
+
+  /* keep arrows on mobile, inside the viewport */
+  .byp-slider__arrow {
+    width: 3.2rem;
+    height: 3.2rem;
+    font-size: 1.2rem;
+  }
+  .byp-slider__arrow--prev { left: 0.2rem; }
+  .byp-slider__arrow--next { right: 0.2rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
