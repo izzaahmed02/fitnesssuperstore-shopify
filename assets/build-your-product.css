@@ -6,6 +6,11 @@
     padding: 0 26px;
 }
 
+/* ==========================================================================
+   Build Your Product — Dawn theme
+   Palette taken from the Figma: ink #111418, accent #E04E1F, soft CTA #F7D2C2
+   ========================================================================== */
+
 .byp {
   --byp-ink: #111418;
   --byp-muted: #5c6066;
@@ -18,7 +23,7 @@
 }
 
 .byp__heading {
-  font-size: 32px;
+  font-size: 2.6rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -78,18 +83,46 @@
 
 .byp-accordion__content { padding-bottom: 2.4rem; }
 
-/* ---------- Product grid / cards ---------- */
+/* ---------- Product slider / cards ---------- */
+
+.byp-slider { position: relative; }
 
 .byp-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
+  display: flex;
   gap: 1.6rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
   margin: 0;
-  padding: 0;
+  padding: 0.2rem 0 1.2rem;
   list-style: none;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
+.byp-slider__arrow {
+  position: absolute;
+  top: 38%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 50%;
+  border: 1px solid var(--byp-border);
+  background: #fff;
+  color: var(--byp-ink);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+.byp-slider__arrow--prev { left: -1.2rem; }
+.byp-slider__arrow--next { right: -1.2rem; }
+.byp-slider__arrow[hidden] { display: none; }
+.byp-slider__arrow:hover { background: var(--byp-accent-soft); }
+
 .byp-card {
+  flex: 0 0 26rem; /* fixed slide width */
+  scroll-snap-align: start;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--byp-border);
@@ -408,9 +441,9 @@ body.byp-modal-open { overflow: hidden; }
 }
 
 @media screen and (max-width: 599px) {
-  .byp-grid { grid-template-columns: repeat(2, 1fr); }
-  .byp-card { padding: 1.2rem; }
+  .byp-card { flex-basis: 21rem; padding: 1.2rem; }
   .byp-card__media { height: 12rem; }
+  .byp-slider__arrow { display: none; } /* swipe on touch devices */
 }
 
 @media (prefers-reduced-motion: reduce) {
