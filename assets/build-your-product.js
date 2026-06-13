@@ -33,6 +33,9 @@ if (!customElements.get('build-your-product')) {
       connectedCallback() {
         // Card-level events (delegated)
         this.addEventListener('click', (e) => {
+          const arrow = e.target.closest('.byp-slider__arrow');
+          if (arrow) return this.onSliderArrow(arrow);
+
           const atc = e.target.closest('.byp-card__atc');
           if (atc) return this.onCardAdd(atc.closest('.byp-card'));
 
@@ -71,6 +74,52 @@ if (!customElements.get('build-your-product')) {
               this.renderFloatingCart();
             }, 300);
           }
+        });
+
+        this.initSliders();
+      }
+
+      /* ---------- product sliders ---------- */
+
+      initSliders() {
+        this.querySelectorAll('.byp-slider').forEach((slider) => {
+          const track = slider.querySelector('.byp-slider__track');
+          track.addEventListener('scroll', () => this.updateSliderArrows(slider), { passive: true });
+        });
+
+        const refreshAll = () => this.querySelectorAll('.byp-slider').forEach((s) => this.updateSliderArrows(s));
+        window.addEventListener('resize', refreshAll);
+
+        // Recalculate when an accordion is opened (hidden tracks report 0 width)
+        this.querySelectorAll('.byp-accordion').forEach((acc) => {
+          acc.addEventListener('toggle', () => {
+            if (acc.open) requestAnimationFrame(() => this.updateSliderArrows(acc.querySelector('.byp-slider')));
+          });
+        });
+
+        refreshAll();
+      }
+
+      updateSliderArrows(slider) {
+        if (!slider) return;
+        const track = slider.querySelector('.byp-slider__track');
+        const prev = slider.querySelector('.byp-slider__arrow--prev');
+        const next = slider.querySelector('.byp-slider__arrow--next');
+        const maxScroll = track.scrollWidth - track.clientWidth;
+
+        const hasOverflow = maxScroll > 4;
+        prev.hidden = !hasOverflow || track.scrollLeft <= 4;
+        next.hidden = !hasOverflow || track.scrollLeft >= maxScroll - 4;
+      }
+
+      onSliderArrow(arrow) {
+        const slider = arrow.closest('.byp-slider');
+        const track = slider.querySelector('.byp-slider__track');
+        const card = track.querySelector('.byp-card');
+        const step = card ? card.getBoundingClientRect().width + 16 : 320;
+        track.scrollBy({
+          left: arrow.classList.contains('byp-slider__arrow--prev') ? -step : step,
+          behavior: 'smooth'
         });
       }
 
@@ -219,8 +268,30 @@ if (!customElements.get('build-your-product')) {
           if (this.installSelect) this.installSelect.value = '';
           this.floatingCart.classList.add('hidden');
 
-          if (cartDrawer && data.sections) {
-            cartDrawer.renderContents(data); // Dawn re-renders #CartDrawer + cart-icon-bubble and opens the drawer
+          if (cartDrawer) {
+            let sections = data.sections;
+
+            // Fallback: some themes/snippet setups don't return bundled sections
+            // on /cart/add.js — re-fetch them via the Section Rendering API.
+            if (!sections || !sections['cart-drawer']) {
+              const res = await fetch(`${window.location.pathname}?sections=cart-drawer,cart-icon-bubble`);
+              if (res.ok) sections = await res.json();
+            }
+
+            if (sections && sections['cart-drawer']) {
+              // The drawer keeps its "is-empty" state classes from page load,
+              // which hide the line items even after re-render — clear them.
+              cartDrawer.classList.remove('is-empty');
+              cartDrawer.querySelector('.drawer__inner')?.classList.remove('is-empty');
+
+              try {
+                cartDrawer.renderContents({ ...data, sections });
+              } catch (renderError) {
+                window.location.href = window.routes ? window.routes.cart_url : '/cart';
+              }
+            } else {
+              window.location.href = window.routes ? window.routes.cart_url : '/cart';
+            }
           } else {
             window.location.href = window.routes ? window.routes.cart_url : '/cart';
           }
