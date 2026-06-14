@@ -193,9 +193,10 @@ padding-bottom: 0px;}
 {%- assign video_thumbnail = section.settings.cover_image | default: video_file.preview_image | image_url: width: 1200 -%}
 {%- assign upload_date = page.published_at | default: page.created_at | default: article.published_at | default: collection.updated_at | default: product.published_at | default: '2026-01-01T00:00:00Z' -%}
 {%- assign video_duration_seconds = video_file.duration | divided_by: 1000 | round -%}
+{%- assign has_seo_videos = page.metafields.custom.seo_videos.value | default: collection.metafields.custom.seo_videos.value | default: article.metafields.custom.seo_videos.value | default: product.metafields.custom.seo_videos.value -%}
 
 
-{% if video_file %}
+{% if video_file and has_seo_videos == blank %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",

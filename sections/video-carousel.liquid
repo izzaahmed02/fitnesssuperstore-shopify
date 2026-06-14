@@ -68,16 +68,18 @@
   {% assign shopify_video = block.settings.shopify_video %}
   {% assign fallback_thumb = block.settings.thumbnail | image_url: width: 1200 %}
   {% assign video_upload_date = article.published_at | default: article.created_at | default: page.published_at | default: page.created_at | default: '2026-01-01T00:00:00Z' %}
+  {% assign has_seo_videos = page.metafields.custom.seo_videos.value | default: collection.metafields.custom.seo_videos.value | default: article.metafields.custom.seo_videos.value | default: product.metafields.custom.seo_videos.value %}
   <div class="carousel-item">
     <div class="video-thumbnail" data-video-url="{{ video_url }}">
       <img src="{{ fallback_thumb }}" alt="{{ block.settings.thumbnail.alt | escape }}" />
       <div class="play-button">&#9658;</div>
     </div>
 
-    {% if shopify_video != blank and shopify_video.sources != blank %}
+    {% if has_seo_videos == blank and shopify_video != blank and shopify_video.sources != blank %}
   {% assign video_src = shopify_video.sources[0].url %}
   {% assign video_embed = shopify_video.sources | where: "format", "mp4" | first %}
   {% assign video_thumb = shopify_video.preview_image | image_url: width: 1200 %}
+  {% assign video_duration_seconds = shopify_video.duration | divided_by: 1000 | round %}
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -86,8 +88,8 @@
     "description": "Video about {{ section.settings.hdg | strip_html | escape }} — {{ block.settings.thumbnail.alt | escape }}",
     "thumbnailUrl": "{{ video_thumb | prepend: 'https:' }}",
     "uploadDate": "{{ video_upload_date | date: "%Y-%m-%dT%H:%M:%SZ" }}",
-    "duration": "PT1M57S",
-    "contentUrl": "{{ video_src }}",
+    {% if video_duration_seconds and video_duration_seconds > 0 %}"duration": "PT{{ video_duration_seconds }}S",
+    {% endif %}"contentUrl": "{{ video_src }}",
     "embedUrl": "{{ video_embed.url | default: video_src }}",
     "publisher": {
       "@type": "Organization",
@@ -99,7 +101,7 @@
     }
   }
   </script>
-{% elsif video_url != blank %}
+{% elsif has_seo_videos == blank and video_url != blank %}
   {% assign fallback_thumb = block.settings.thumbnail | image_url: width: 1200 %}
   <script type="application/ld+json">
   {
@@ -109,7 +111,6 @@
     "description": "Video about {{ section.settings.hdg | strip_html | escape }} — {{ block.settings.thumbnail.alt | escape }}",
     "thumbnailUrl": "{{ fallback_thumb | prepend: 'https:' }}",
     "uploadDate": "{{ video_upload_date | date: "%Y-%m-%dT%H:%M:%SZ" }}",
-    "duration": "PT1M57S",
     "contentUrl": "{{ video_url }}",
     "embedUrl": "{{ video_url }}",
     "publisher": {
