@@ -1,10 +1,12 @@
 {%- comment -%}
-  Renders a single "Shipping & Service Regions" card.
+  Renders a single "Shipping & Service Regions" card as a <details> accordion.
+  On desktop the cards are forced open and non-interactive (see section CSS/JS);
+  on mobile they collapse, with the first one open by default.
   Accepts:
   - block: the section block (icon, title, text settings)
 {%- endcomment -%}
-<div class="service-regions__card" {{ block.shopify_attributes }}>
-  <div class="service-regions__card-head">
+<details class="service-regions__card" open {{ block.shopify_attributes }}>
+  <summary class="service-regions__card-head">
     {%- if block.settings.icon != blank -%}
       <img
         class="service-regions__card-icon"
@@ -21,8 +23,11 @@
     {%- if block.settings.title != blank -%}
       <h3 class="service-regions__card-title">{{ block.settings.title | escape }}</h3>
     {%- endif -%}
-  </div>
+    <svg class="service-regions__card-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M6 9l6 6 6-6" stroke="#23232B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </summary>
   {%- if block.settings.text != blank -%}
     <div class="service-regions__card-text rte">{{ block.settings.text }}</div>
   {%- endif -%}
-</div>
+</details>

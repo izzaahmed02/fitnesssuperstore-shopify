@@ -73,11 +73,15 @@
     padding: 28px 32px;
   }
 
-  #shopify-section-{{ section.id }} .service-regions__card-head {
+  #shopify-section-{{ section.id }} .service-regions__card > summary {
+    list-style: none;
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 12px;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__card > summary::-webkit-details-marker {
+    display: none;
   }
 
   #shopify-section-{{ section.id }} .service-regions__card-icon {
@@ -95,6 +99,16 @@
     margin: 0;
   }
 
+  #shopify-section-{{ section.id }} .service-regions__card-chevron {
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__card[open] .service-regions__card-chevron {
+    transform: rotate(180deg);
+  }
+
   #shopify-section-{{ section.id }} .service-regions__card-text,
   #shopify-section-{{ section.id }} .service-regions__card-text p {
     color: #393940;
@@ -102,29 +116,75 @@
     line-height: 24px;
   }
 
+  #shopify-section-{{ section.id }} .service-regions__card-text {
+    margin-top: 12px;
+  }
+
   #shopify-section-{{ section.id }} .service-regions__card-text > *:last-child {
     margin-bottom: 0;
   }
 
+  /* Desktop: cards stay open, not collapsible, chevron hidden */
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }} .service-regions__card > summary {
+      pointer-events: none;
+      cursor: default;
+    }
+
+    #shopify-section-{{ section.id }} .service-regions__card-chevron {
+      display: none;
+    }
+  }
+
+  /* Mobile: photo becomes a top banner, dark block becomes light, cards are accordions */
   @media screen and (max-width: 749px) {
     #shopify-section-{{ section.id }} .service-regions__inner {
-      padding: 24px 16px;
+      background-color: transparent;
+      padding: 0;
+      border-radius: 0;
+      overflow: visible;
+    }
+
+    #shopify-section-{{ section.id }} .service-regions__bg {
+      position: static;
+      width: 100%;
+      height: 210px;
       border-radius: 16px;
     }
 
+    #shopify-section-{{ section.id }} .service-regions__overlay {
+      display: none;
+    }
+
     #shopify-section-{{ section.id }} .service-regions__title {
-      font-size: 24px;
-      line-height: 30px;
-      margin-bottom: 20px;
+      color: #23232b;
+      text-align: left;
+      font-size: 34px;
+      line-height: 1.1;
+      margin: 20px 0 16px;
     }
 
     #shopify-section-{{ section.id }} .service-regions__grid {
       grid-template-columns: minmax(0, 1fr);
-      gap: 16px;
+      gap: 12px;
     }
 
     #shopify-section-{{ section.id }} .service-regions__col {
-      gap: 16px;
+      gap: 12px;
+    }
+
+    #shopify-section-{{ section.id }} .service-regions__card {
+      border: 1px solid #ececec;
+      padding: 20px;
+    }
+
+    #shopify-section-{{ section.id }} .service-regions__card > summary {
+      cursor: pointer;
+    }
+
+    #shopify-section-{{ section.id }} .service-regions__card-title {
+      font-size: 20px;
+      line-height: 26px;
     }
   }
 {%- endstyle -%}
@@ -169,6 +229,33 @@
   </div>
 </div>
 
+<script>
+  (function () {
+    var section = document.getElementById('shopify-section-{{ section.id }}');
+    if (!section) return;
+    var cards = section.querySelectorAll('details.service-regions__card');
+    if (!cards.length) return;
+    var mq = window.matchMedia('(min-width: 750px)');
+
+    function apply(e) {
+      if (e.matches) {
+        // Desktop: keep every card open.
+        cards.forEach(function (card) { card.open = true; });
+      } else {
+        // Mobile: collapse to an accordion, first card open.
+        cards.forEach(function (card, i) { card.open = i === 0; });
+      }
+    }
+
+    apply(mq);
+    if (mq.addEventListener) {
+      mq.addEventListener('change', apply);
+    } else if (mq.addListener) {
+      mq.addListener(apply);
+    }
+  })();
+</script>
+
 {% schema %}
 {
   "name": "Shipping & service regions",
@@ -183,7 +270,8 @@
     {
       "type": "image_picker",
       "id": "background_image",
-      "label": "Background image"
+      "label": "Background image",
+      "info": "Shown as a full background on desktop and as a top banner on mobile."
     },
     {
       "type": "color",
