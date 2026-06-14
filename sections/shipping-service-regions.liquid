@@ -1,0 +1,263 @@
+{%- liquid
+  assign half = section.blocks.size | plus: 1 | divided_by: 2
+-%}
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.6 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__inner {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    background-color: {{ section.settings.bg_color }};
+    padding: 56px 48px;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, {{ section.settings.overlay_opacity | divided_by: 100.0 }});
+    z-index: 1;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__content {
+    position: relative;
+    z-index: 2;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__title {
+    font-family: var(--font-heading-family);
+    font-weight: 700;
+    font-size: 44px;
+    line-height: 1.15;
+    text-transform: uppercase;
+    text-align: center;
+    color: #ffffff;
+    margin: 0 0 40px;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    align-items: start;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__col {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 28px 32px;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__card-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__card-title {
+    font-family: Lato, sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 28px;
+    color: #23232b;
+    margin: 0;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__card-text,
+  #shopify-section-{{ section.id }} .service-regions__card-text p {
+    color: #393940;
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  #shopify-section-{{ section.id }} .service-regions__card-text > *:last-child {
+    margin-bottom: 0;
+  }
+
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .service-regions__inner {
+      padding: 24px 16px;
+      border-radius: 16px;
+    }
+
+    #shopify-section-{{ section.id }} .service-regions__title {
+      font-size: 24px;
+      line-height: 30px;
+      margin-bottom: 20px;
+    }
+
+    #shopify-section-{{ section.id }} .service-regions__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    #shopify-section-{{ section.id }} .service-regions__col {
+      gap: 16px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="service-regions section-{{ section.id }}-padding scroll-trigger animate--slide-in">
+  <div class="page-width">
+    <div class="service-regions__inner">
+      {%- if section.settings.background_image != blank -%}
+        {{
+          section.settings.background_image
+          | image_url: width: 2200
+          | image_tag: class: 'service-regions__bg', loading: 'lazy', alt: section.settings.title
+        }}
+        <div class="service-regions__overlay"></div>
+      {%- endif -%}
+
+      <div class="service-regions__content">
+        {%- if section.settings.title != blank -%}
+          <h2 class="service-regions__title">{{ section.settings.title }}</h2>
+        {%- endif -%}
+
+        {%- if section.blocks.size > 0 -%}
+          <div class="service-regions__grid">
+            <div class="service-regions__col">
+              {%- for block in section.blocks -%}
+                {%- if forloop.index0 < half -%}
+                  {%- render 'shipping-region-card', block: block -%}
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+            <div class="service-regions__col">
+              {%- for block in section.blocks -%}
+                {%- if forloop.index0 >= half -%}
+                  {%- render 'shipping-region-card', block: block -%}
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Shipping & service regions",
+  "class": "shipping-service-regions",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Shipping & Service Regions"
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background image"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#2e2e2e"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "unit": "%",
+      "label": "Background image overlay opacity",
+      "default": 55
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 40
+    }
+  ],
+  "blocks": [
+    {
+      "type": "region",
+      "name": "Region",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon",
+          "info": "Optional. Leave blank to use the default location pin icon."
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Shipping & service regions",
+      "blocks": [
+        { "type": "region" },
+        { "type": "region" },
+        { "type": "region" },
+        { "type": "region" },
+        { "type": "region" },
+        { "type": "region" }
+      ]
+    }
+  ]
+}
+{% endschema %}
