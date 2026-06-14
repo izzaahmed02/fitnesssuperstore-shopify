@@ -67,6 +67,7 @@
   {% assign video_url = block.settings.video_url %}
   {% assign shopify_video = block.settings.shopify_video %}
   {% assign fallback_thumb = block.settings.thumbnail | image_url: width: 1200 %}
+  {% assign video_upload_date = article.published_at | default: article.created_at | default: page.published_at | default: page.created_at | default: '2026-01-01T00:00:00Z' %}
   <div class="carousel-item">
     <div class="video-thumbnail" data-video-url="{{ video_url }}">
       <img src="{{ fallback_thumb }}" alt="{{ block.settings.thumbnail.alt | escape }}" />
@@ -84,7 +85,7 @@
     "name": "{{ block.settings.thumbnail.alt | escape }}",
     "description": "Video about {{ section.settings.hdg | strip_html | escape }} — {{ block.settings.thumbnail.alt | escape }}",
     "thumbnailUrl": "{{ video_thumb | prepend: 'https:' }}",
-    "uploadDate": "{{ 'now' | date: "%Y-%m-%d" }}",
+    "uploadDate": "{{ video_upload_date | date: "%Y-%m-%dT%H:%M:%SZ" }}",
     "duration": "PT1M57S",
     "contentUrl": "{{ video_src }}",
     "embedUrl": "{{ video_embed.url | default: video_src }}",
@@ -107,7 +108,7 @@
     "name": "{{ block.settings.thumbnail.alt | escape }}",
     "description": "Video about {{ section.settings.hdg | strip_html | escape }} — {{ block.settings.thumbnail.alt | escape }}",
     "thumbnailUrl": "{{ fallback_thumb | prepend: 'https:' }}",
-    "uploadDate": "{{ 'now' | date: "%Y-%m-%d" }}",
+    "uploadDate": "{{ video_upload_date | date: "%Y-%m-%dT%H:%M:%SZ" }}",
     "duration": "PT1M57S",
     "contentUrl": "{{ video_url }}",
     "embedUrl": "{{ video_url }}",
