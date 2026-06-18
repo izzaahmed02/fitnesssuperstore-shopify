@@ -70,12 +70,14 @@
               [
                 {%- for fam in block.settings.products -%}
                   {%- assign fam_variant = fam.selected_or_first_available_variant -%}
-                  {
+                 {
                     "id": {{ fam.id }},
                     "title": {{ fam.title | json }},
                     "url": {{ fam.url | json }},
+                    "sku": {{ fam_variant.sku | json }},
                     "image": {{ fam.featured_media | image_url: width: 200 | json }},
                     "price": {{ fam_variant.price }},
+                    "compare_at_price": {{ fam_variant.compare_at_price | default: 0 }},
                     "rating": {{ fam.metafields.reviews.rating.value.rating | default: 0 | json }},
                     "rating_count": {{ fam.metafields.reviews.rating_count.value | default: 0 | json }},
                     "description": {{ fam.description | json }}
