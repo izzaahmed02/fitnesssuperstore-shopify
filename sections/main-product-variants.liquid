@@ -1237,6 +1237,28 @@
                       </div>
                     </div>
                   </div>
+                  {%- comment -%}
+                    International transformer note (informational only — not an add-on/selector).
+                    Shows only for US-voltage corded machines, keyed on custom.electrical_requirement.
+                    Match on the ASCII suffix to stay safe from EN DASH / spacing mismatches.
+                  {%- endcomment -%}
+                  {%- assign er = product.metafields.custom.electrical_requirement.value | default: '' -%}
+                  {%- if er contains '120V / 15A' or er contains '120V / 20A' -%}
+                    {%- style -%}
+                      .intl-transformer-note {
+                        margin-top: 0.5rem;
+                        font-size: 0.85rem;
+                        line-height: 1.4;
+                        color: rgba(var(--color-foreground, 85, 85, 85), 0.85);
+                      }
+                      .intl-transformer-note a { text-decoration: underline; }
+                    {%- endstyle -%}
+                    <p class="intl-transformer-note">
+                      Shipping outside the U.S. or Canada? We can supply a
+                      <a href="/products/220v-240v-external-transformer-box">220V–240V external transformer box</a>
+                      for compatible machines.
+                    </p>
+                  {%- endif -%}
                   {% if product.metafields.custom.backorder == true and product.metafields.custom.back_order_availability_date %}
                     <div class="backorder_container">
                       <span>
