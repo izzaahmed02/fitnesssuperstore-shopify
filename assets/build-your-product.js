@@ -364,55 +364,61 @@ if (!customElements.get('build-your-product')) {
         // Featured image
         const img = this.modal.querySelector('.byp-modal__main-img');
         if (main.image) {
-          img.src = main.image.indexOf('?') > -1 ? main.image : `${main.image}`;
+          img.src = main.image;
           img.hidden = false;
         } else {
           img.hidden = true;
         }
 
         this.modal.querySelector('.byp-modal__title').textContent = main.title || '';
-        this.modal.querySelector('.byp-modal__description').innerHTML = main.description || '';
 
-        // Rating
+        // Description (clamped to 5 rows via CSS)
+        const desc = this.modal.querySelector('.byp-modal__description');
+        desc.innerHTML = main.description || '';
+
+        // Featured rating (stars + count), shown above the title like the slider cards
         const ratingWrap = this.modal.querySelector('.byp-modal__rating');
         const rating = Math.round(Number(main.rating) || 0);
-        if (rating > 0) {
+        if (rating > 0 || Number(main.rating_count) > 0) {
           ratingWrap.classList.remove('hidden');
-          ratingWrap.querySelector('.byp-modal__stars').textContent = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+          ratingWrap.querySelector('.byp-modal__stars').textContent =
+            '★'.repeat(rating) + '☆'.repeat(Math.max(0, 5 - rating));
           ratingWrap.querySelector('.byp-modal__rating-count').textContent = `${main.rating_count || 0} reviews`;
         } else {
           ratingWrap.classList.add('hidden');
         }
 
-        // "Same family" slider (everything except the featured product)
+        // "Same family" slider — full cards matching the card layout
         const track = this.modal.querySelector('.byp-modal__related-track');
         const wrap = this.modal.querySelector('.byp-modal__related');
         track.innerHTML = '';
-        const siblings = family.filter((p) => p.id !== excludeId);
-
-        siblings.forEach((p) => {
+        // Show the full family (including the featured product) so it reads like a catalog row
+        family.forEach((p) => {
+          const ratingN = Math.round(Number(p.rating) || 0);
+          const hasCompare = Number(p.compare_at_price) > Number(p.price);
           const li = document.createElement('li');
           li.className = 'byp-modal__related-card';
           li.innerHTML = `
             <a href="${p.url}">
-              ${p.image ? `<img src="${p.image}" alt="" loading="lazy" width="100" height="100">` : ''}
-              <p>${this.escapeHtml(p.title)}</p>
-              <span>${this.formatMoney(p.price)}</span>
+              ${p.image ? `<img src="${p.image}" alt="" loading="lazy" width="160" height="160">` : ''}
+              ${p.sku ? `<p class="byp-modal__related-sku">SKU: ${this.escapeHtml(p.sku)}</p>` : ''}
+              <p class="byp-modal__related-title">${this.escapeHtml(p.title)}</p>
+              ${
+                ratingN > 0 || Number(p.rating_count) > 0
+                  ? `<p class="byp-modal__related-rating"><span class="byp-star">&#9733;</span> ${p.rating_count || 0} reviews</p>`
+                  : ''
+              }
+              ${hasCompare ? `<p class="byp-modal__related-compare">As high as: <s>${this.formatMoney(p.compare_at_price)}</s></p>` : ''}
+              <p class="byp-modal__related-price">${this.formatMoney(p.price)} USD</p>
             </a>`;
           track.appendChild(li);
         });
-        wrap.classList.toggle('hidden', siblings.length === 0);
+        wrap.classList.toggle('hidden', family.length === 0);
 
         this.modal.classList.remove('hidden');
         document.body.classList.add('byp-modal-open');
         this.modal.querySelector('.byp-modal__close').focus();
       }
-
-      closeModal() {
-        this.modal.classList.add('hidden');
-        document.body.classList.remove('byp-modal-open');
-      }
-
       /* ---------- utils ---------- */
 
       formatMoney(cents) {
