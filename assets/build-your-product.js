@@ -1,8 +1,9 @@
 /* ==========================================================================
    Build Your Product — Dawn theme
-   - Add-on selection with instant floating cart
-   - Bulk /cart/add.js + Dawn cart-drawer re-render
-   - Learn More modal with Shopify Product Recommendations slider
+   - Add-on selection with instant, always-sticky floating cart
+   - Bulk /cart/add.js + Dawn cart-drawer open (cart stays visible; list resets)
+   - Learn More popup (card-level + master "?") sourced from each accordion's
+     own product "family" — no Shopify recommendations API
    ========================================================================== */
 
 if (!customElements.get('build-your-product')) {
@@ -15,7 +16,6 @@ if (!customElements.get('build-your-product')) {
         this.items = new Map();
 
         this.cartAddUrl = this.dataset.cartAddUrl || '/cart/add';
-        this.recommendationsUrl = this.dataset.recommendationsUrl || '/recommendations/products';
 
         this.floatingCart = this.querySelector('.byp-floating-cart');
         this.itemsList = this.querySelector('.byp-floating-cart__items');
@@ -36,11 +36,14 @@ if (!customElements.get('build-your-product')) {
           const arrow = e.target.closest('.byp-slider__arrow');
           if (arrow) return this.onSliderArrow(arrow);
 
+          const master = e.target.closest('.byp-accordion__master-learn-more');
+          if (master) return this.openMasterModal(master);
+
           const atc = e.target.closest('.byp-card__atc');
           if (atc) return this.onCardAdd(atc.closest('.byp-card'));
 
           const learnMore = e.target.closest('.byp-card__learn-more');
-          if (learnMore) return this.openModal(learnMore.closest('.byp-card'));
+          if (learnMore) return this.openCardModal(learnMore.closest('.byp-card'));
 
           if (e.target.closest('[data-modal-close]')) return this.closeModal();
 
@@ -78,6 +81,8 @@ if (!customElements.get('build-your-product')) {
           }
         });
 
+        // Floating cart is always visible (sticky) — render the initial state now.
+        this.renderFloatingCart();
         this.initSliders();
       }
 
@@ -210,9 +215,6 @@ if (!customElements.get('build-your-product')) {
       /* ---------- floating cart ---------- */
 
       renderFloatingCart() {
-        // Requirement: visible after the first add-on, then stays visible
-        if (this.items.size > 0) this.floatingCart.classList.remove('hidden');
-
         this.itemsList.innerHTML = '';
         let subtotal = this.mainVariant.price; // cents
         let subtotalCompare = this.mainVariant.comparePrice || this.mainVariant.price;
@@ -275,17 +277,15 @@ if (!customElements.get('build-your-product')) {
           const data = await response.json();
           if (!response.ok) throw new Error(data.description || data.message || 'Could not add to cart.');
 
-          // Requirement: floating cart disappears, main cart drawer opens
+          // Reset the floating cart's add-on list, but KEEP the cart visible/sticky.
           this.items.clear();
           if (this.installSelect) this.installSelect.value = '';
-          this.floatingCart.classList.add('hidden');
-          this.floatingCart.classList.remove('byp-floating-cart--collapsed');
+          this.renderFloatingCart();
 
+          // Only open the Dawn drawer — the floating cart does not disappear.
           if (cartDrawer) {
             let sections = data.sections;
 
-            // Fallback: some themes/snippet setups don't return bundled sections
-            // on /cart/add.js — re-fetch them via the Section Rendering API.
             if (!sections || !sections['cart-drawer']) {
               const res = await fetch(`${window.location.pathname}?sections=cart-drawer,cart-icon-bubble`);
               if (res.ok) sections = await res.json();
@@ -300,13 +300,9 @@ if (!customElements.get('build-your-product')) {
               try {
                 cartDrawer.renderContents({ ...data, sections });
               } catch (renderError) {
-                window.location.href = window.routes ? window.routes.cart_url : '/cart';
+                cartDrawer.open && cartDrawer.open();
               }
-            } else {
-              window.location.href = window.routes ? window.routes.cart_url : '/cart';
             }
-          } else {
-            window.location.href = window.routes ? window.routes.cart_url : '/cart';
           }
 
           if (window.publish && window.PUB_SUB_EVENTS) {
@@ -321,26 +317,92 @@ if (!customElements.get('build-your-product')) {
         }
       }
 
-      /* ---------- Learn More modal ---------- */
+      /* ---------- Learn More popup (card-level + master "?") ---------- */
 
-      openModal(card) {
-        this.modal.querySelector('.byp-modal__title').textContent = card.dataset.productTitle;
-        this.modal.querySelector('.byp-modal__description').innerHTML =
-          card.querySelector('.byp-card__description-full')?.innerHTML || '';
+      // Card "Learn more": feature the clicked product; slider = its accordion family.
+      openCardModal(card) {
+        const family = this.accordionFamily(card.closest('.byp-accordion'));
+        const productId = Number(card.dataset.productId);
+        const featured = family.find((p) => p.id === productId);
 
+        // Fall back to the card's own data if not found in family JSON.
+        const main = featured || {
+          id: productId,
+          title: card.dataset.productTitle,
+          rating: Number(card.querySelector('.byp-card__rating')?.dataset.rating || 0),
+          rating_count: Number((card.querySelector('.byp-card__rating-count')?.textContent || '0').replace(/\D/g, '')),
+          description: card.querySelector('.byp-card__description-full')?.innerHTML || '',
+          image: card.querySelector('.byp-card__media img')?.src || ''
+        };
+
+        this.populateModal(main, family, productId);
+      }
+
+      // Master "?": feature the accordion's main product; slider = the accordion family.
+      openMasterModal(button) {
+        const accordion = button.closest('.byp-accordion');
+        const family = this.accordionFamily(accordion);
+        if (!family.length) return;
+
+        const mainId = Number(button.dataset.masterProductId);
+        const main = family.find((p) => p.id === mainId) || family[0];
+
+        this.populateModal(main, family, main.id);
+      }
+
+      accordionFamily(accordion) {
+        try {
+          return JSON.parse(accordion.querySelector('.byp-accordion__family-json').textContent);
+        } catch (e) {
+          return [];
+        }
+      }
+
+      // Shared renderer: `main` is the featured product object, `family` the slider
+      // list, `excludeId` the product to drop from the slider (the featured one).
+      populateModal(main, family, excludeId) {
+        // Featured image
+        const img = this.modal.querySelector('.byp-modal__main-img');
+        if (main.image) {
+          img.src = main.image.indexOf('?') > -1 ? main.image : `${main.image}`;
+          img.hidden = false;
+        } else {
+          img.hidden = true;
+        }
+
+        this.modal.querySelector('.byp-modal__title').textContent = main.title || '';
+        this.modal.querySelector('.byp-modal__description').innerHTML = main.description || '';
+
+        // Rating
         const ratingWrap = this.modal.querySelector('.byp-modal__rating');
-        const ratingEl = card.querySelector('.byp-card__rating');
-        if (ratingEl) {
-          const rating = Math.round(Number(ratingEl.dataset.rating) || 0);
+        const rating = Math.round(Number(main.rating) || 0);
+        if (rating > 0) {
           ratingWrap.classList.remove('hidden');
           ratingWrap.querySelector('.byp-modal__stars').textContent = '★'.repeat(rating) + '☆'.repeat(5 - rating);
-          ratingWrap.querySelector('.byp-modal__rating-count').textContent =
-            ratingEl.querySelector('.byp-card__rating-count').textContent;
+          ratingWrap.querySelector('.byp-modal__rating-count').textContent = `${main.rating_count || 0} reviews`;
         } else {
           ratingWrap.classList.add('hidden');
         }
 
-        this.loadRecommendations(card.dataset.productId);
+        // "Same family" slider (everything except the featured product)
+        const track = this.modal.querySelector('.byp-modal__related-track');
+        const wrap = this.modal.querySelector('.byp-modal__related');
+        track.innerHTML = '';
+        const siblings = family.filter((p) => p.id !== excludeId);
+
+        siblings.forEach((p) => {
+          const li = document.createElement('li');
+          li.className = 'byp-modal__related-card';
+          li.innerHTML = `
+            <a href="${p.url}">
+              ${p.image ? `<img src="${p.image}" alt="" loading="lazy" width="100" height="100">` : ''}
+              <p>${this.escapeHtml(p.title)}</p>
+              <span>${this.formatMoney(p.price)}</span>
+            </a>`;
+          track.appendChild(li);
+        });
+        wrap.classList.toggle('hidden', siblings.length === 0);
+
         this.modal.classList.remove('hidden');
         document.body.classList.add('byp-modal-open');
         this.modal.querySelector('.byp-modal__close').focus();
@@ -349,48 +411,6 @@ if (!customElements.get('build-your-product')) {
       closeModal() {
         this.modal.classList.add('hidden');
         document.body.classList.remove('byp-modal-open');
-      }
-
-      /**
-       * Bottom slider source: Shopify Product Recommendations API.
-       * 1) intent=complementary — "goes well with" products merchants curate in the
-       *    Search & Discovery app for the product being viewed in the popup.
-       * 2) Fallback intent=related — Shopify's algorithmic recommendations
-       *    (purchase/description similarity) when no complementary products are set.
-       */
-      async loadRecommendations(productId) {
-        const track = this.modal.querySelector('.byp-modal__related-track');
-        const wrap = this.modal.querySelector('.byp-modal__related');
-        track.innerHTML = '';
-        wrap.classList.add('hidden');
-
-        try {
-          let products = await this.fetchRecommendations(productId, 'complementary');
-          if (!products.length) products = await this.fetchRecommendations(productId, 'related');
-          if (!products.length) return;
-
-          products.slice(0, 10).forEach((p) => {
-            const li = document.createElement('li');
-            li.className = 'byp-modal__related-card';
-            li.innerHTML = `
-              <a href="${p.url}">
-                ${p.featured_image ? `<img src="${p.featured_image}&width=200" alt="" loading="lazy" width="100" height="100">` : ''}
-                <p>${this.escapeHtml(p.title)}</p>
-                <span>${this.formatMoney(p.price)}</span>
-              </a>`;
-            track.appendChild(li);
-          });
-          wrap.classList.remove('hidden');
-        } catch (e) {
-          /* recommendations are progressive enhancement — fail silently */
-        }
-      }
-
-      async fetchRecommendations(productId, intent) {
-        const res = await fetch(`${this.recommendationsUrl}.json?product_id=${productId}&limit=10&intent=${intent}`);
-        if (!res.ok) return [];
-        const data = await res.json();
-        return data.products || [];
       }
 
       /* ---------- utils ---------- */
