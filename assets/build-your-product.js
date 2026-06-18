@@ -419,6 +419,12 @@ if (!customElements.get('build-your-product')) {
         document.body.classList.add('byp-modal-open');
         this.modal.querySelector('.byp-modal__close').focus();
       }
+
+      closeModal() {
+        this.modal.classList.add('hidden');
+        document.body.classList.remove('byp-modal-open');
+      }
+
       /* ---------- utils ---------- */
 
       formatMoney(cents) {
