@@ -1,6 +1,23 @@
 {{ 'build-your-product.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'build-your-product.js' | asset_url }}" defer="defer"></script>
 
+{%- comment -%}
+  ============================================================================
+  DATA SOURCE  —  the only place that decides WHERE the section's data comes
+  from. Today it reads from theme-editor block settings. To move to metafields
+  later, replace ONLY the assigns in this block with metafield/metaobject
+  reads that produce the same shapes:
+    - main_product  : the product the floating cart buys (the current PDP product)
+    - install_product : product whose variants populate the install dropdown
+    - section.blocks of type 'accordion' each expose:
+        .settings.title, .settings.tooltip, .settings.open_by_default,
+        .settings.products (a product list),
+        .settings.main_product (featured product for the category "?" popup)
+  The rendered markup below (classes + data-* attributes + per-accordion JSON)
+  is the contract the CSS/JS depend on — keep it identical and nothing else
+  needs to change.
+  ============================================================================
+{%- endcomment -%}
 {%- liquid
   assign main_product = product
   assign main_variant = main_product.selected_or_first_available_variant
@@ -11,7 +28,6 @@
   class="byp page-width"
   data-section-id="{{ section.id }}"
   data-cart-add-url="{{ routes.cart_add_url }}"
-  data-recommendations-url="{{ routes.product_recommendations_url }}"
   data-main-variant-id="{{ main_variant.id }}"
 >
   <h2 class="byp__heading">{{ section.settings.heading | escape }}</h2>
@@ -20,13 +36,24 @@
     {%- comment -%} ================= LEFT: ACCORDIONS ================= {%- endcomment -%}
     <div class="byp__accordions">
       {%- for block in section.blocks -%}
+        {%- liquid
+          # main product for this accordion's "?" popup; fall back to first product
+          assign accordion_main = block.settings.main_product
+          if accordion_main == blank
+            assign accordion_main = block.settings.products.first
+          endif
+        -%}
         <details class="byp-accordion" {% if block.settings.open_by_default %}open{% endif %} {{ block.shopify_attributes }}>
           <summary class="byp-accordion__summary">
             <span class="byp-accordion__title">
               {{ block.settings.title | escape }}
-              {%- if block.settings.tooltip != blank -%}
-                <span class="byp-tooltip" tabindex="0" aria-label="{{ block.settings.tooltip | escape }}" title="{{ block.settings.tooltip | escape }}">?</span>
-              {%- endif -%}
+              {%- comment -%} Master "Learn More": the orange "?" opens the popup featuring this accordion's main product {%- endcomment -%}
+              <button
+                type="button"
+                class="byp-tooltip byp-accordion__master-learn-more"
+                {% if accordion_main != blank %}data-master-product-id="{{ accordion_main.id }}"{% endif %}
+                {% if block.settings.tooltip != blank %}title="{{ block.settings.tooltip | escape }}" aria-label="{{ block.settings.tooltip | escape }}"{% else %}aria-label="Learn more about {{ block.settings.title | escape }}"{% endif %}
+              >?</button>
             </span>
             <span class="byp-accordion__chevron" aria-hidden="true">
               {{- 'icon-caret.svg' | inline_asset_content -}}
@@ -34,6 +61,29 @@
           </summary>
 
           <div class="byp-accordion__content">
+            {%- comment -%}
+              Per-accordion product data ("same family"). Powers the popup's
+              bottom slider and lets the "?" feature the right main product —
+              no Shopify recommendations API call needed.
+            {%- endcomment -%}
+            <script type="application/json" class="byp-accordion__family-json">
+              [
+                {%- for fam in block.settings.products -%}
+                  {%- assign fam_variant = fam.selected_or_first_available_variant -%}
+                  {
+                    "id": {{ fam.id }},
+                    "title": {{ fam.title | json }},
+                    "url": {{ fam.url | json }},
+                    "image": {{ fam.featured_media | image_url: width: 200 | json }},
+                    "price": {{ fam_variant.price }},
+                    "rating": {{ fam.metafields.reviews.rating.value.rating | default: 0 | json }},
+                    "rating_count": {{ fam.metafields.reviews.rating_count.value | default: 0 | json }},
+                    "description": {{ fam.description | json }}
+                  }{% unless forloop.last %},{% endunless %}
+                {%- endfor -%}
+              ]
+            </script>
+
             <div class="byp-slider">
               <button type="button" class="byp-slider__arrow byp-slider__arrow--prev" aria-label="Previous products" hidden>&#10094;</button>
               <ul class="byp-grid byp-slider__track" role="list">
@@ -156,15 +206,12 @@
     </div>
 
     {%- comment -%} ================= RIGHT: FLOATING CART ================= {%- endcomment -%}
-    <aside class="byp-floating-cart hidden" aria-live="polite" aria-label="Your build">
+    <aside class="byp-floating-cart" aria-live="polite" aria-label="Your build">
       <div class="byp-floating-cart__inner">
         <div class="byp-floating-cart__bar">
           <h2 class="byp-floating-cart__build-title">Build Your Product</h2>
           <button type="button" class="byp-floating-cart__toggle" aria-expanded="true" aria-label="Minimize cart">
-            <span class="byp-floating-cart__toggle-icon" aria-hidden="true"><svg width="11" height="7" viewBox="0 0 11 7" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M1 5.5L5.5 1L10 5.5" stroke="#23232B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-</span>
+            <span class="byp-floating-cart__toggle-icon" aria-hidden="true">&#9650;</span>
           </button>
         </div>
 
@@ -216,20 +263,32 @@
     </aside>
   </div>
 
-  {%- comment -%} ================= LEARN MORE MODAL ================= {%- endcomment -%}
+  {%- comment -%}
+    ================= LEARN MORE / MASTER POPUP =================
+    One popup, reused for both the card "Learn more" and the accordion "?".
+    JS sets the main (featured) product and the "same family" slider.
+  {%- endcomment -%}
   <div class="byp-modal hidden" role="dialog" aria-modal="true" aria-labelledby="byp-modal-title-{{ section.id }}">
     <div class="byp-modal__overlay" data-modal-close></div>
     <div class="byp-modal__panel">
       <button type="button" class="byp-modal__close" data-modal-close aria-label="{{ 'accessibility.close' | t }}">&times;</button>
-      <div class="byp-modal__rating hidden">
-        <span class="byp-modal__stars" aria-hidden="true"></span>
-        <span class="byp-modal__rating-count"></span>
+
+      <div class="byp-modal__main">
+        <div class="byp-modal__main-media">
+          <img class="byp-modal__main-img" src="" alt="" hidden>
+        </div>
+        <div class="byp-modal__main-info">
+          <div class="byp-modal__rating hidden">
+            <span class="byp-modal__stars" aria-hidden="true"></span>
+            <span class="byp-modal__rating-count"></span>
+          </div>
+          <h3 class="byp-modal__title" id="byp-modal-title-{{ section.id }}"></h3>
+          <div class="byp-modal__description rte"></div>
+        </div>
       </div>
-      <h3 class="byp-modal__title" id="byp-modal-title-{{ section.id }}"></h3>
-      <div class="byp-modal__description rte"></div>
 
       <div class="byp-modal__related">
-        <h4>You may also need</h4>
+        <h4>More from this collection</h4>
         <ul class="byp-modal__related-track" role="list"></ul>
       </div>
     </div>
@@ -262,7 +321,13 @@
         { "type": "text", "id": "title", "label": "Title", "default": "Best Selling Add-Ons" },
         { "type": "text", "id": "tooltip", "label": "Tooltip text (orange ? icon)" },
         { "type": "checkbox", "id": "open_by_default", "label": "Open by default", "default": false },
-        { "type": "product_list", "id": "products", "label": "Products", "limit": 12 }
+        { "type": "product_list", "id": "products", "label": "Products", "limit": 12 },
+        {
+          "type": "product",
+          "id": "main_product",
+          "label": "Main product (category Learn More)",
+          "info": "Featured at the top of the popup when the orange ? icon is clicked. Defaults to the first product above if left empty."
+        }
       ]
     }
   ],
