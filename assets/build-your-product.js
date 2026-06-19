@@ -372,9 +372,16 @@ if (!customElements.get('build-your-product')) {
 
         this.modal.querySelector('.byp-modal__title').textContent = main.title || '';
 
-        // Description (clamped to 5 rows via CSS)
+        // Description: render as PLAIN TEXT only. Some product descriptions
+        // (e.g. Mat) embed images + wide pricing tables in the rich text, which
+        // overflow the popup and create internal scrollbars. Extracting just the
+        // text keeps every product's popup clean and uniform.
         const desc = this.modal.querySelector('.byp-modal__description');
-        desc.innerHTML = main.description || '';
+        const tmp = document.createElement('div');
+        tmp.innerHTML = main.description || '';
+        // Drop non-content nodes entirely before reading text
+        tmp.querySelectorAll('img, table, iframe, video, script, style').forEach((el) => el.remove());
+        desc.textContent = (tmp.textContent || '').replace(/\s+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 
         // Featured rating (stars + count), shown above the title like the slider cards
         const ratingWrap = this.modal.querySelector('.byp-modal__rating');
