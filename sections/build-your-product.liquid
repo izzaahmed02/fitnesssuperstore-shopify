@@ -3,19 +3,11 @@
 
 {%- comment -%}
   ============================================================================
-  DATA SOURCE  —  the only place that decides WHERE the section's data comes
-  from. Today it reads from theme-editor block settings. To move to metafields
-  later, replace ONLY the assigns in this block with metafield/metaobject
-  reads that produce the same shapes:
-    - main_product  : the product the floating cart buys (the current PDP product)
-    - install_product : product whose variants populate the install dropdown
-    - section.blocks of type 'accordion' each expose:
-        .settings.title, .settings.tooltip, .settings.open_by_default,
-        .settings.products (a product list),
-        .settings.main_product (featured product for the category "?" popup)
-  The rendered markup below (classes + data-* attributes + per-accordion JSON)
-  is the contract the CSS/JS depend on — keep it identical and nothing else
-  needs to change.
+  DATA SOURCE — the only place that decides WHERE the section's data comes
+  from. Reads from theme-editor block settings today; to move to metafields
+  later, replace only the assigns here with metafield/metaobject reads that
+  produce the same shapes. The rendered markup below (classes + data-*
+  attributes + per-accordion JSON) is the contract the CSS/JS depend on.
   ============================================================================
 {%- endcomment -%}
 {%- liquid
@@ -25,7 +17,7 @@
 -%}
 
 <build-your-product
-  class="byp"
+  class="byp page-width"
   data-section-id="{{ section.id }}"
   data-cart-add-url="{{ routes.cart_add_url }}"
   data-main-variant-id="{{ main_variant.id }}"
@@ -37,7 +29,6 @@
     <div class="byp__accordions">
       {%- for block in section.blocks -%}
         {%- liquid
-          # main product for this accordion's "?" popup; fall back to first product
           assign accordion_main = block.settings.main_product
           if accordion_main == blank
             assign accordion_main = block.settings.products.first
@@ -47,7 +38,6 @@
           <summary class="byp-accordion__summary">
             <span class="byp-accordion__title">
               {{ block.settings.title | escape }}
-              {%- comment -%} Master "Learn More": the orange "?" opens the popup featuring this accordion's main product {%- endcomment -%}
               <button
                 type="button"
                 class="byp-tooltip byp-accordion__master-learn-more"
@@ -61,16 +51,12 @@
           </summary>
 
           <div class="byp-accordion__content">
-            {%- comment -%}
-              Per-accordion product data ("same family"). Powers the popup's
-              bottom slider and lets the "?" feature the right main product —
-              no Shopify recommendations API call needed.
-            {%- endcomment -%}
+            {%- comment -%} Per-accordion product data ("same family") for the popup slider {%- endcomment -%}
             <script type="application/json" class="byp-accordion__family-json">
               [
                 {%- for fam in block.settings.products -%}
                   {%- assign fam_variant = fam.selected_or_first_available_variant -%}
-                 {
+                  {
                     "id": {{ fam.id }},
                     "title": {{ fam.title | json }},
                     "url": {{ fam.url | json }},
@@ -89,6 +75,133 @@
             <div class="byp-slider">
               <button type="button" class="byp-slider__arrow byp-slider__arrow--prev" aria-label="Previous products" hidden>&#10094;</button>
               <ul class="byp-grid byp-slider__track" role="list">
+
+              {%- comment -%}
+                ===== COLOR PICKER CARD (main product color) =====
+                Renders only in the accordion flagged "show_color_picker".
+                Reads the main product's options.product_options metafield,
+                locates the Paint/Vinyl color category, and renders the live
+                theme's own picker inside its own <product-customization-options>
+                so the options app initializes it natively. The floating cart
+                commits the selection via the app's payload builders.
+              {%- endcomment -%}
+              {%- if block.settings.show_color_picker -%}
+                {%- liquid
+                  assign byp_options = main_product.metafields.options.product_options.value
+                  if main_product.selected_or_first_available_variant.metafields.options.product_options.value != blank
+                    assign byp_options = main_product.selected_or_first_available_variant.metafields.options.product_options.value
+                  endif
+                -%}
+                {%- if byp_options != blank -%}
+                  {%- for category in byp_options -%}
+                    {%- liquid
+                      assign is_color_category = false
+                      assign color_default = blank
+                      for product_option in category.product_options.value
+                        assign po_title = product_option.product_option_title | downcase
+                        if po_title == 'paint color' or po_title == 'paint colors' or po_title == 'color' or po_title == 'vinyl colors' or po_title == 'vinyl color'
+                          assign is_color_category = true
+                        endif
+                      endfor
+                    -%}
+                    {%- if is_color_category and category.hide_option != true -%}
+                      <li class="byp-card byp-card--color">
+                        <product-customization-options
+                          class="product-options byp-color-options"
+                          data-product-id="{{ main_product.selected_or_first_available_variant.id }}"
+                          data-product="default"
+                          data-byp-color="true"
+                        >
+                          <div class="byp-card__media">
+                            {%- if main_product.featured_media -%}
+                              <img
+                                src="{{ main_product.featured_media | image_url: width: 540 }}"
+                                alt="{{ main_product.featured_media.alt | escape }}"
+                                loading="lazy"
+                                width="{{ main_product.featured_media.width }}"
+                                height="{{ main_product.featured_media.height }}">
+                            {%- endif -%}
+                          </div>
+
+                          {%- assign main_sku = main_product.selected_or_first_available_variant.sku -%}
+                          {%- if main_sku != blank -%}
+                            <p class="byp-card__sku">SKU: {{ main_sku }}</p>
+                          {%- endif -%}
+
+                          <h3 class="byp-card__title">{{ main_product.title }}</h3>
+
+                          <div class="product-option__item" data-group-color-name="{{ category.title | handleize }}" data-color-name-title="{{ category.title }}">
+                            {%- for product_option in category.product_options.value -%}
+                              {%- assign po_title = product_option.product_option_title | downcase -%}
+                              {%- if po_title == 'paint color' or po_title == 'paint colors' or po_title == 'color' -%}
+                                {%- if product_option.product_option_sets_default.value.id -%}
+                                  {%- assign color_default = product_option.product_option_sets_default.value.id -%}
+                                {%- endif -%}
+                                <h2 class="product-options__category-title byp-color-label"
+                                    data-group-color-name="{{ po_title | handleize }}"
+                                    data-color-name-title="{{ product_option.product_option_title }}">
+                                  <span class="byp-color-label__text">Color:</span>
+                                  <div class="option_selected-container" data-selected-color-option="{{ po_title | handleize }}">
+                                    <p class="option_selected" data-option-id="{{ product_option.product_option_sets_default.value.id }}">
+                                      <span data-color-selected-title>{{ product_option.product_option_sets_default.value.title }}</span>
+                                      <span class="option_selected-price">
+                                        {%- if product_option.product_option_sets_default.value.price > 0 -%}
+                                          {{ product_option.product_option_sets_default.value.price }}
+                                        {%- endif -%}
+                                      </span>
+                                    </p>
+                                  </div>
+                                </h2>
+                                {%- render 'custom-color-picker',
+                                  product: product_option.product_option_variants.value,
+                                  products: product_option,
+                                  default: color_default,
+                                  color_type: 'paint',
+                                  title: category.title,
+                                  color_counter: 1
+                                -%}
+                              {%- elsif po_title == 'vinyl color' or po_title == 'vinyl colors' -%}
+                                {%- if product_option.product_option_sets_default.value.id -%}
+                                  {%- assign color_default = product_option.product_option_sets_default.value.id -%}
+                                {%- endif -%}
+                                <h2 class="product-options__category-title byp-color-label"
+                                    data-group-color-name="{{ po_title | handleize }}"
+                                    data-color-name-title="{{ product_option.product_option_title }}">
+                                  <span class="byp-color-label__text">Color:</span>
+                                  <div class="option_selected-container" data-selected-color-option="{{ po_title | handleize }}">
+                                    <p class="option_selected" data-option-id="{{ product_option.product_option_sets_default.value.id }}">
+                                      <span data-color-selected-title>{{ product_option.product_option_sets_default.value.title }}</span>
+                                      <span class="option_selected-price">
+                                        {%- if product_option.product_option_sets_default.value.price > 0 -%}
+                                          {{ product_option.product_option_sets_default.value.price }}
+                                        {%- endif -%}
+                                      </span>
+                                    </p>
+                                  </div>
+                                </h2>
+                                {%- render 'custom-color-picker',
+                                  product: product_option.product_option_variants.value,
+                                  products: product_option,
+                                  default: color_default,
+                                  color_type: 'vinyl',
+                                  title: category.title,
+                                  color_counter: 1
+                                -%}
+                              {%- endif -%}
+                            {%- endfor -%}
+                          </div>
+
+                          <div class="byp-card__row byp-card__row--actions">
+                            <button type="button" class="byp-card__atc button byp-color-confirm">Select Color</button>
+                          </div>
+                        </product-customization-options>
+                      </li>
+                      {%- break -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                {%- endif -%}
+              {%- endif -%}
+
               {%- for addon in block.settings.products -%}
                 {%- liquid
                   assign addon_variant = addon.selected_or_first_available_variant
@@ -100,7 +213,6 @@
                     data-product-handle="{{ addon.handle }}"
                     data-product-title="{{ addon.title | escape }}">
 
-                  {%- comment -%} Variant data for JS (price / compare_at updates + ATC) {%- endcomment -%}
                   <script type="application/json" class="byp-card__variants-json">
                     [
                       {%- for v in addon.variants -%}
@@ -116,7 +228,6 @@
                     ]
                   </script>
 
-                  {%- comment -%} Full description for the Learn More modal {%- endcomment -%}
                   <template class="byp-card__description-full">{{ addon.description }}</template>
 
                   <div class="byp-card__media">
@@ -147,7 +258,6 @@
 
                   <p class="byp-card__excerpt">{{ addon.description | strip_html | truncatewords: 24 }}</p>
 
-                  {%- comment -%} Color swatches (single "Color" option) or variant select {%- endcomment -%}
                   {%- unless addon.has_only_default_variant -%}
                     {%- if addon.options.size == 1 and addon.options.first == 'Color' -%}
                       <fieldset class="byp-card__swatches">
@@ -169,7 +279,6 @@
                     {%- endif -%}
                   {%- endunless -%}
 
-                  {%- comment -%} Row: Learn more + price (with "As high as" compare price) {%- endcomment -%}
                   <div class="byp-card__row byp-card__row--price">
                     <button type="button" class="byp-card__learn-more link">Learn more</button>
                     <div class="byp-card__price">
@@ -180,7 +289,6 @@
                     </div>
                   </div>
 
-                  {%- comment -%} Row: quantity selector + ATC button {%- endcomment -%}
                   <div class="byp-card__row byp-card__row--actions">
                     <select class="byp-card__qty" aria-label="{{ 'products.product.quantity.label' | t }}">
                       {%- for i in (1..10) -%}
@@ -235,6 +343,12 @@
             </div>
           </div>
 
+          <div class="byp-floating-cart__color hidden" data-color-summary>
+            <span class="byp-floating-cart__color-label">Color:</span>
+            <span class="byp-floating-cart__color-value" data-color-summary-value></span>
+            <span class="byp-floating-cart__color-price" data-color-summary-price></span>
+          </div>
+
           <h4 class="byp-floating-cart__subheading">Add Ons</h4>
           <ul class="byp-floating-cart__items" role="list"></ul>
 
@@ -260,16 +374,40 @@
 
           <button type="button" class="byp-floating-cart__atc button button--primary">Add to cart</button>
           <p class="byp-floating-cart__error" role="alert" hidden></p>
+
+          <ul class="byp-floating-cart__warranty list-unstyled">
+            <li class="byp-floating-cart__warranty-item">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M17.666 19.5488V5.54883C17.666 5.0184 17.4729 4.50969 17.129 4.13461C16.7852 3.75954 16.3189 3.54883 15.8327 3.54883H8.49935C8.01312 3.54883 7.5468 3.75954 7.20299 4.13461C6.85917 4.50969 6.66602 5.0184 6.66602 5.54883V19.5488" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 20H22" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 10H22" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="20.416" y1="7.29883" x2="20.416" y2="11.7988" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="3.41602" y1="7.29883" x2="3.41602" y2="11.7988" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="byp-floating-cart__warranty-text">Lifetime Frame Warranty</span>
+            </li>
+            <li class="byp-floating-cart__warranty-item">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M8.30065 10.0008C8.17174 10.0078 8.04339 9.97907 7.9298 9.91771C7.81622 9.85635 7.72181 9.76477 7.65702 9.6531C7.59224 9.54143 7.55959 9.41402 7.5627 9.28496C7.56581 9.15589 7.60456 9.0302 7.67465 8.92178L11.4006 3.00078C11.4592 2.89535 11.544 2.80683 11.6468 2.74381C11.7496 2.68079 11.867 2.6454 11.9875 2.64108C12.108 2.63675 12.2276 2.66363 12.3347 2.71912C12.4418 2.77461 12.5327 2.85682 12.5986 2.95778L16.3006 8.90078C16.3736 9.00557 16.4165 9.12833 16.4247 9.25576C16.433 9.38319 16.4062 9.51044 16.3472 9.62373C16.2883 9.73703 16.1996 9.83205 16.0905 9.89851C15.9815 9.96497 15.8563 10.0003 15.7286 10.0008H8.30065Z" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M9 14H4C3.44772 14 3 14.4477 3 15V20C3 20.5523 3.44772 21 4 21H9C9.55228 21 10 20.5523 10 20V15C10 14.4477 9.55228 14 9 14Z" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M17.5 21C19.433 21 21 19.433 21 17.5C21 15.567 19.433 14 17.5 14C15.567 14 14 15.567 14 17.5C14 19.433 15.567 21 17.5 21Z" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="byp-floating-cart__warranty-text">10 Year Parts Warranty</span>
+            </li>
+            <li class="byp-floating-cart__warranty-item">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M7 10V22" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M15 5.88L14 10H19.83C20.1405 10 20.4467 10.0723 20.7244 10.2111C21.0021 10.35 21.2437 10.5516 21.43 10.8C21.6163 11.0484 21.7422 11.3367 21.7977 11.6422C21.8533 11.9477 21.8369 12.2619 21.75 12.56L19.42 20.56C19.2988 20.9754 19.0462 21.3404 18.7 21.6C18.3538 21.8596 17.9327 22 17.5 22H4C3.46957 22 2.96086 21.7893 2.58579 21.4142C2.21071 21.0391 2 20.5304 2 20V12C2 11.4696 2.21071 10.9609 2.58579 10.5858C2.96086 10.2107 3.46957 10 4 10H6.76C7.13208 9.9998 7.49674 9.89581 7.81296 9.69972C8.12917 9.50363 8.38442 9.22321 8.55 8.89L12 2C12.4716 2.00584 12.9357 2.11817 13.3578 2.3286C13.7799 2.53902 14.1489 2.84211 14.4374 3.2152C14.7259 3.5883 14.9263 4.02176 15.0237 4.4832C15.1212 4.94464 15.113 5.42213 15 5.88Z" stroke="#23232B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="byp-floating-cart__warranty-text">1 Year On-Site Labor</span>
+            </li>
+          </ul>
         </div>
       </div>
     </aside>
   </div>
 
-  {%- comment -%}
-    ================= LEARN MORE / MASTER POPUP =================
-    One popup, reused for both the card "Learn more" and the accordion "?".
-    JS sets the main (featured) product and the "same family" slider.
-  {%- endcomment -%}
+  {%- comment -%} ================= LEARN MORE / MASTER POPUP ================= {%- endcomment -%}
   <div class="byp-modal hidden" role="dialog" aria-modal="true" aria-labelledby="byp-modal-title-{{ section.id }}">
     <div class="byp-modal__overlay" data-modal-close></div>
     <div class="byp-modal__panel">
@@ -310,7 +448,7 @@
       "type": "product",
       "id": "installation_product",
       "label": "Installation / assembly product",
-      "info": "Each variant of this product becomes an option in the floating cart dropdown (e.g. Assembly Only, Room of Choice + Assembly)."
+      "info": "Each variant of this product becomes an option in the floating cart dropdown."
     },
     { "type": "text", "id": "installation_label", "label": "Dropdown label", "default": "Assembly & Room of Choice Installation Needed?" },
     { "type": "text", "id": "installation_default", "label": "Default option (no charge)", "default": "Curbside Delivery Only" }
@@ -322,14 +460,10 @@
       "settings": [
         { "type": "text", "id": "title", "label": "Title", "default": "Best Selling Add-Ons" },
         { "type": "text", "id": "tooltip", "label": "Tooltip text (orange ? icon)" },
+        { "type": "checkbox", "id": "show_color_picker", "label": "Show product color picker as first card", "default": false, "info": "Renders the main product's color options (from the options app) as the first card. Use on only one accordion." },
         { "type": "checkbox", "id": "open_by_default", "label": "Open by default", "default": false },
         { "type": "product_list", "id": "products", "label": "Products", "limit": 12 },
-        {
-          "type": "product",
-          "id": "main_product",
-          "label": "Main product (category Learn More)",
-          "info": "Featured at the top of the popup when the orange ? icon is clicked. Defaults to the first product above if left empty."
-        }
+        { "type": "product", "id": "main_product", "label": "Main product (category Learn More)", "info": "Featured at the top of the popup when the orange ? icon is clicked. Defaults to the first product above if left empty." }
       ]
     }
   ],
@@ -337,7 +471,7 @@
     {
       "name": "Build Your Product",
       "blocks": [
-        { "type": "accordion", "settings": { "title": "Best Selling Add-Ons", "open_by_default": true } },
+        { "type": "accordion", "settings": { "title": "Best Selling Add-Ons", "open_by_default": true, "show_color_picker": true } },
         { "type": "accordion", "settings": { "title": "Mat" } },
         { "type": "accordion", "settings": { "title": "Bench" } },
         { "type": "accordion", "settings": { "title": "Olympic Weight Plate Set" } },
