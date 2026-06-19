@@ -33,6 +33,29 @@
   <h2 class="byp__heading">{{ section.settings.heading | escape }}</h2>
 
   <div class="byp__layout">
+
+    {%- comment -%}
+  STEP 1 — Build-section options engine (foundation / diagnostic)
+  Renders the live metaobject options engine for this product, so its real
+  interactive markup (colour swatches + every option category) exists inside
+  the Build section. We skin this to the Figma layout next; the floating cart
+  will later call this element's prepareOptions()/prepareFunctionalProperties().
+{%- endcomment -%}
+<link rel="stylesheet" href="{{ 'product-options.css' | asset_url }}" media="print" onload="this.media='all'">
+<noscript>{{ 'product-options.css' | asset_url | stylesheet_tag }}</noscript>
+
+{%- comment -%} Hidden price anchor the engine updates; the floating cart will read this running total. {%- endcomment -%}
+<p class="pr_custom_price"
+   data-price-value="{{ product.selected_or_first_available_variant.price | money_without_currency }}"
+   data-currency="{{ cart.currency.symbol }}"
+   style="position:absolute;left:-9999px;top:auto;">{{ product.selected_or_first_available_variant.price | money }}</p>
+
+<div class="byp-options-engine" style="border:2px dashed #e04e1f;padding:16px;margin:0 0 24px;">
+  <p style="font-weight:700;margin:0 0 12px;">[TEMP] Live options engine render:</p>
+  {% render 'product-options', product: product %}
+</div>
+
+<script src="{{ 'product-custom-options.js' | asset_url }}" defer="defer"></script>
     {%- comment -%} ================= LEFT: ACCORDIONS ================= {%- endcomment -%}
     <div class="byp__accordions">
       {%- for block in section.blocks -%}
