@@ -1,0 +1,87 @@
+{%- comment -%}
+  Hidden source of Option Help content for PDP option popups.
+  PDP JS (old-custom.js / main-product-custom.js) reads the matching
+  [data-help-key] block instead of calling the Azure API.
+
+  Only the help entries relevant to this product are rendered, to avoid
+  shipping the entire shop's option help library on every PDP. We match
+  by both exact "Custom Field" keys (Grade/Warranty/etc.) and by
+  substring on option category & product_option titles (entry keys can
+  be composite, e.g. "Warranty (491)", "Color - Paint Color (491)").
+{%- endcomment -%}
+
+{%- liquid
+  assign vendor = product.vendor
+
+  # Exact-match keys for custom fields exposed by the product
+  assign exact_keys = '|'
+  if product.metafields.custom.grade != blank
+    assign exact_keys = exact_keys | append: 'Grade Custom Field|'
+  endif
+  if product.metafields.custom.processing_time != blank
+    assign exact_keys = exact_keys | append: 'Processing Time Custom Field|'
+  endif
+  if product.metafields.custom.warranty != blank
+    if product.title contains 'Remanufactured'
+      assign exact_keys = exact_keys | append: 'Warranty Remanufactured Custom Field|'
+    elsif vendor != blank
+      assign exact_keys = exact_keys | append: vendor | append: ' Warranty Custom Field|'
+    else
+      assign exact_keys = exact_keys | append: 'Warranty Custom Field|'
+    endif
+  endif
+  if product.metafields.custom.ships != blank
+    assign has_strength_line = false
+    for collection in product.collections
+      if collection.handle contains 'shop-by-strength-product-line'
+        assign has_strength_line = true
+        break
+      endif
+    endfor
+    if has_strength_line
+      assign exact_keys = exact_keys | append: 'Shipping Custom Field|'
+      if vendor != blank
+        assign exact_keys = exact_keys | append: vendor | append: ' Shipping Custom Field|'
+      endif
+    endif
+  endif
+  if product.metafields.custom.condition_state != blank
+    assign exact_keys = exact_keys | append: 'Condition Custom Field|'
+  endif
+
+  # Substring tokens drawn from the product's option metaobject
+  # (entry.key may embed these, e.g. "Warranty (491)" or "Color - Paint Color (491)").
+  assign substring_tokens = ''
+  assign option_categories = product.metafields.options.product_options.value
+  for category in option_categories
+    if category.title != blank
+      assign substring_tokens = substring_tokens | append: '|' | append: category.title
+    endif
+    for product_option in category.product_options.value
+      if product_option.product_option_title != blank
+        assign substring_tokens = substring_tokens | append: '|' | append: product_option.product_option_title
+      endif
+    endfor
+  endfor
+  assign substring_token_list = substring_tokens | split: '|'
+-%}
+
+<div id="option-help-content-source" hidden>
+  {%- for entry in shop.metaobjects.option_help.values -%}
+    {%- assign include_entry = false -%}
+    {%- assign needle = '|' | append: entry.key | append: '|' -%}
+    {%- if exact_keys contains needle -%}
+      {%- assign include_entry = true -%}
+    {%- elsif entry.key contains '(' -%}
+      {%- for token in substring_token_list -%}
+        {%- if token != blank and entry.key contains token -%}
+          {%- assign include_entry = true -%}
+          {%- break -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+    {%- if include_entry -%}
+      <div data-help-key="{{ entry.key | escape }}">{{ entry.content }}</div>
+    {%- endif -%}
+  {%- endfor -%}
+</div>
