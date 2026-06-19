@@ -8,6 +8,12 @@
   later, replace only the assigns here with metafield/metaobject reads that
   produce the same shapes. The rendered markup below (classes + data-*
   attributes + per-accordion JSON) is the contract the CSS/JS depend on.
+
+  COLOR NOTE: The product colour picker lives on the MAIN PRODUCT FORM (the
+  options app renders it there). This section does not render a colour picker.
+  At "Add to cart", the floating cart reads the main form's
+  <product-customization-options> instance and attaches its options
+  (colour/warranty/processing/assembly) to the main product line.
   ============================================================================
 {%- endcomment -%}
 {%- liquid
@@ -75,133 +81,6 @@
             <div class="byp-slider">
               <button type="button" class="byp-slider__arrow byp-slider__arrow--prev" aria-label="Previous products" hidden>&#10094;</button>
               <ul class="byp-grid byp-slider__track" role="list">
-
-              {%- comment -%}
-                ===== COLOR PICKER CARD (main product color) =====
-                Renders only in the accordion flagged "show_color_picker".
-                Reads the main product's options.product_options metafield,
-                locates the Paint/Vinyl color category, and renders the live
-                theme's own picker inside its own <product-customization-options>
-                so the options app initializes it natively. The floating cart
-                commits the selection via the app's payload builders.
-              {%- endcomment -%}
-              {%- if block.settings.show_color_picker -%}
-                {%- liquid
-                  assign byp_options = main_product.metafields.options.product_options.value
-                  if main_product.selected_or_first_available_variant.metafields.options.product_options.value != blank
-                    assign byp_options = main_product.selected_or_first_available_variant.metafields.options.product_options.value
-                  endif
-                -%}
-                {%- if byp_options != blank -%}
-                  {%- for category in byp_options -%}
-                    {%- liquid
-                      assign is_color_category = false
-                      assign color_default = blank
-                      for product_option in category.product_options.value
-                        assign po_title = product_option.product_option_title | downcase
-                        if po_title == 'paint color' or po_title == 'paint colors' or po_title == 'color' or po_title == 'vinyl colors' or po_title == 'vinyl color'
-                          assign is_color_category = true
-                        endif
-                      endfor
-                    -%}
-                    {%- if is_color_category and category.hide_option != true -%}
-                      <li class="byp-card byp-card--color">
-                        <product-customization-options
-                          class="product-options byp-color-options"
-                          data-product-id="{{ main_product.selected_or_first_available_variant.id }}"
-                          data-product="default"
-                          data-byp-color="true"
-                        >
-                          <div class="byp-card__media">
-                            {%- if main_product.featured_media -%}
-                              <img
-                                src="{{ main_product.featured_media | image_url: width: 540 }}"
-                                alt="{{ main_product.featured_media.alt | escape }}"
-                                loading="lazy"
-                                width="{{ main_product.featured_media.width }}"
-                                height="{{ main_product.featured_media.height }}">
-                            {%- endif -%}
-                          </div>
-
-                          {%- assign main_sku = main_product.selected_or_first_available_variant.sku -%}
-                          {%- if main_sku != blank -%}
-                            <p class="byp-card__sku">SKU: {{ main_sku }}</p>
-                          {%- endif -%}
-
-                          <h3 class="byp-card__title">{{ main_product.title }}</h3>
-
-                          <div class="product-option__item" data-group-color-name="{{ category.title | handleize }}" data-color-name-title="{{ category.title }}">
-                            {%- for product_option in category.product_options.value -%}
-                              {%- assign po_title = product_option.product_option_title | downcase -%}
-                              {%- if po_title == 'paint color' or po_title == 'paint colors' or po_title == 'color' -%}
-                                {%- if product_option.product_option_sets_default.value.id -%}
-                                  {%- assign color_default = product_option.product_option_sets_default.value.id -%}
-                                {%- endif -%}
-                                <h2 class="product-options__category-title byp-color-label"
-                                    data-group-color-name="{{ po_title | handleize }}"
-                                    data-color-name-title="{{ product_option.product_option_title }}">
-                                  <span class="byp-color-label__text">Color:</span>
-                                  <div class="option_selected-container" data-selected-color-option="{{ po_title | handleize }}">
-                                    <p class="option_selected" data-option-id="{{ product_option.product_option_sets_default.value.id }}">
-                                      <span data-color-selected-title>{{ product_option.product_option_sets_default.value.title }}</span>
-                                      <span class="option_selected-price">
-                                        {%- if product_option.product_option_sets_default.value.price > 0 -%}
-                                          {{ product_option.product_option_sets_default.value.price }}
-                                        {%- endif -%}
-                                      </span>
-                                    </p>
-                                  </div>
-                                </h2>
-                                {%- render 'custom-color-picker',
-                                  product: product_option.product_option_variants.value,
-                                  products: product_option,
-                                  default: color_default,
-                                  color_type: 'paint',
-                                  title: category.title,
-                                  color_counter: 1
-                                -%}
-                              {%- elsif po_title == 'vinyl color' or po_title == 'vinyl colors' -%}
-                                {%- if product_option.product_option_sets_default.value.id -%}
-                                  {%- assign color_default = product_option.product_option_sets_default.value.id -%}
-                                {%- endif -%}
-                                <h2 class="product-options__category-title byp-color-label"
-                                    data-group-color-name="{{ po_title | handleize }}"
-                                    data-color-name-title="{{ product_option.product_option_title }}">
-                                  <span class="byp-color-label__text">Color:</span>
-                                  <div class="option_selected-container" data-selected-color-option="{{ po_title | handleize }}">
-                                    <p class="option_selected" data-option-id="{{ product_option.product_option_sets_default.value.id }}">
-                                      <span data-color-selected-title>{{ product_option.product_option_sets_default.value.title }}</span>
-                                      <span class="option_selected-price">
-                                        {%- if product_option.product_option_sets_default.value.price > 0 -%}
-                                          {{ product_option.product_option_sets_default.value.price }}
-                                        {%- endif -%}
-                                      </span>
-                                    </p>
-                                  </div>
-                                </h2>
-                                {%- render 'custom-color-picker',
-                                  product: product_option.product_option_variants.value,
-                                  products: product_option,
-                                  default: color_default,
-                                  color_type: 'vinyl',
-                                  title: category.title,
-                                  color_counter: 1
-                                -%}
-                              {%- endif -%}
-                            {%- endfor -%}
-                          </div>
-
-                          <div class="byp-card__row byp-card__row--actions">
-                            <button type="button" class="byp-card__atc button byp-color-confirm">Select Color</button>
-                          </div>
-                        </product-customization-options>
-                      </li>
-                      {%- break -%}
-                    {%- endif -%}
-                  {%- endfor -%}
-                {%- endif -%}
-              {%- endif -%}
-
               {%- for addon in block.settings.products -%}
                 {%- liquid
                   assign addon_variant = addon.selected_or_first_available_variant
@@ -297,13 +176,7 @@
                     </select>
                     <button type="button" class="byp-card__atc button"
                             {% unless addon_variant.available %}disabled{% endunless %}
-                            data-variant-id="{{ addon_variant.id }}">
-                      {%- if addon.has_only_default_variant == false and addon.options.first == 'Color' -%}
-                        Select Color
-                      {%- else -%}
-                        Add To Order
-                      {%- endif -%}
-                    </button>
+                            data-variant-id="{{ addon_variant.id }}">Add To Order</button>
                   </div>
                 </li>
               {%- endfor -%}
@@ -341,12 +214,6 @@
                 <s data-main-compare>{{ main_variant.compare_at_price | money }}</s>
               {%- endif -%}
             </div>
-          </div>
-
-          <div class="byp-floating-cart__color hidden" data-color-summary>
-            <span class="byp-floating-cart__color-label">Color:</span>
-            <span class="byp-floating-cart__color-value" data-color-summary-value></span>
-            <span class="byp-floating-cart__color-price" data-color-summary-price></span>
           </div>
 
           <h4 class="byp-floating-cart__subheading">Add Ons</h4>
@@ -460,7 +327,6 @@
       "settings": [
         { "type": "text", "id": "title", "label": "Title", "default": "Best Selling Add-Ons" },
         { "type": "text", "id": "tooltip", "label": "Tooltip text (orange ? icon)" },
-        { "type": "checkbox", "id": "show_color_picker", "label": "Show product color picker as first card", "default": false, "info": "Renders the main product's color options (from the options app) as the first card. Use on only one accordion." },
         { "type": "checkbox", "id": "open_by_default", "label": "Open by default", "default": false },
         { "type": "product_list", "id": "products", "label": "Products", "limit": 12 },
         { "type": "product", "id": "main_product", "label": "Main product (category Learn More)", "info": "Featured at the top of the popup when the orange ? icon is clicked. Defaults to the first product above if left empty." }
@@ -471,7 +337,7 @@
     {
       "name": "Build Your Product",
       "blocks": [
-        { "type": "accordion", "settings": { "title": "Best Selling Add-Ons", "open_by_default": true, "show_color_picker": true } },
+        { "type": "accordion", "settings": { "title": "Best Selling Add-Ons", "open_by_default": true } },
         { "type": "accordion", "settings": { "title": "Mat" } },
         { "type": "accordion", "settings": { "title": "Bench" } },
         { "type": "accordion", "settings": { "title": "Olympic Weight Plate Set" } },
