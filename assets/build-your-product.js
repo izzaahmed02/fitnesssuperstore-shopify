@@ -3,10 +3,10 @@
    - Add-on selection with instant, always-sticky floating cart
    - Bulk /cart/add.js + Dawn cart-drawer open (cart stays visible; list resets)
    - Learn More popup (card-level + master "?") from each accordion's family
-   - Color picker card: reuses the options app's <product-customization-options>
-     instance; floating cart reads the selected color price into the subtotal
-     and commits the selection via the app's prepareOptions() +
-     prepareFunctionalProperties() as properties on the main product line.
+   - Colour is chosen on the MAIN PRODUCT FORM (theme's custom options system).
+     At "Add to cart" this calls the main form's <product-form-with-options>
+     element methods and attaches the result (colour/warranty/processing/assembly
+     + _functionOperation) to the main product line, matching the live cart payload.
    ========================================================================== */
 
 if (!customElements.get('build-your-product')) {
@@ -26,10 +26,6 @@ if (!customElements.get('build-your-product')) {
         this.errorEl = this.querySelector('.byp-floating-cart__error');
         this.modal = this.querySelector('.byp-modal');
 
-        // Color picker instance (the options app element rendered in the card)
-        this.colorOptions = this.querySelector('.byp-color-options');
-        this.colorSummary = this.querySelector('[data-color-summary]');
-
         this.moneyFormat = window.Shopify && Shopify.money_format ? Shopify.money_format : '${{amount}}';
         this.mainVariant = this.readMainVariant();
       }
@@ -42,20 +38,7 @@ if (!customElements.get('build-your-product')) {
           const master = e.target.closest('.byp-accordion__master-learn-more');
           if (master) return this.openMasterModal(master);
 
-          // Color picker swatches / custom-color add — let the app handle the
-          // selection, then refresh our subtotal + summary on the next tick.
-          if (e.target.closest('.byp-color-options')) {
-            if (
-              e.target.closest('[data-color-name]') ||
-              e.target.closest('.add-custom-color') ||
-              e.target.closest('.byp-color-confirm')
-            ) {
-              setTimeout(() => this.renderFloatingCart(), 60);
-            }
-            if (e.target.closest('.byp-color-confirm')) return;
-          }
-
-          const atc = e.target.closest('.byp-card__atc:not(.byp-color-confirm)');
+          const atc = e.target.closest('.byp-card__atc');
           if (atc) return this.onCardAdd(atc.closest('.byp-card'));
 
           const learnMore = e.target.closest('.byp-card__learn-more');
@@ -79,13 +62,6 @@ if (!customElements.get('build-your-product')) {
             this.onCardVariantChange(card, Number(e.target.value));
           }
           if (e.target === this.installSelect) this.renderFloatingCart();
-        });
-
-        // Custom-color text input commit also updates the subtotal/summary
-        this.addEventListener('input', (e) => {
-          if (e.target.closest('.byp-color-options') && e.target.matches('.custom-color-value')) {
-            setTimeout(() => this.renderFloatingCart(), 60);
-          }
         });
 
         document.addEventListener('keydown', (e) => {
@@ -167,26 +143,6 @@ if (!customElements.get('build-your-product')) {
         };
       }
 
-      /* ---------- selected color (read from the app's DOM) ---------- */
-
-      // Returns { name, price } for the currently selected color, or null.
-      readSelectedColor() {
-        if (!this.colorOptions) return null;
-
-        // The app keeps the active selection in the hidden [data-color-variant-input]
-        // (variant id + price) and the human-readable title in [data-color-selected-title].
-        const hidden = this.colorOptions.querySelector('[data-color-variant-input]');
-        const titleEl = this.colorOptions.querySelector('[data-selected-color-option] [data-color-selected-title]');
-        if (!hidden && !titleEl) return null;
-
-        const name = titleEl ? titleEl.textContent.trim() : '';
-        // price stored on the hidden input is in dollars (e.g. "600.00"); 0/"" = no upcharge
-        let priceDollars = hidden ? parseFloat(hidden.dataset.price || '0') : 0;
-        if (Number.isNaN(priceDollars)) priceDollars = 0;
-
-        return { name, price: Math.round(priceDollars * 100) }; // cents
-      }
-
       /* ---------- card interactions ---------- */
 
       cardVariants(card) {
@@ -211,8 +167,6 @@ if (!customElements.get('build-your-product')) {
         }
         const selectedLabel = card.querySelector('[data-selected-option]');
         if (selectedLabel && variant.option1) selectedLabel.textContent = variant.option1;
-        const atc = card.querySelector('.byp-card__atc');
-        if (atc.textContent.trim() === 'Select Color') atc.textContent = 'Add To Order';
       }
 
       onCardAdd(card) {
@@ -247,24 +201,6 @@ if (!customElements.get('build-your-product')) {
         let subtotal = this.mainVariant.price;
         let subtotalCompare = this.mainVariant.comparePrice || this.mainVariant.price;
 
-        // Selected color price folds into the main product subtotal
-        const color = this.readSelectedColor();
-        if (color) {
-          subtotal += color.price;
-          subtotalCompare += color.price;
-          if (this.colorSummary) {
-            const hasColor = color.name !== '';
-            this.colorSummary.classList.toggle('hidden', !hasColor);
-            if (hasColor) {
-              this.colorSummary.querySelector('[data-color-summary-value]').textContent = color.name;
-              const priceEl = this.colorSummary.querySelector('[data-color-summary-price]');
-              priceEl.textContent = color.price > 0 ? `+${this.formatMoney(color.price)}` : '';
-            }
-          }
-        } else if (this.colorSummary) {
-          this.colorSummary.classList.add('hidden');
-        }
-
         this.items.forEach((item) => {
           subtotal += item.price * item.quantity;
           subtotalCompare += (item.comparePrice > item.price ? item.comparePrice : item.price) * item.quantity;
@@ -292,6 +228,40 @@ if (!customElements.get('build-your-product')) {
         if (showCompare) this.subtotalCompareEl.textContent = this.formatMoney(subtotalCompare);
       }
 
+      /* ---------- main-form options (colour/warranty/processing/assembly) ---------- */
+
+      // Colour and the other options live on the main product form, rendered by the
+      // theme's custom options system as a <product-form-with-options> element. That
+      // element exposes the same payload builders the main form uses on submit, so we
+      // call them directly: the FSR90 line the floating cart adds becomes identical to
+      // the main form's own add (same line-item properties + _functionOperation array).
+      mainFormOptionsInstance() {
+        const instances = Array.from(document.querySelectorAll('product-form-with-options'));
+        // Prefer one that is NOT inside a cart drawer/notification or this section.
+        return (
+          instances.find((el) => !el.closest('cart-drawer') && !el.closest('cart-notification') && !el.closest('build-your-product')) ||
+          instances[0] ||
+          null
+        );
+      }
+
+      mainProductProperties() {
+        const instance = this.mainFormOptionsInstance();
+        if (!instance) return null;
+        try {
+          const defaults = instance.prepareDefaultProperties ? instance.prepareDefaultProperties() : {};
+          const options = instance.prepareOptions ? instance.prepareOptions() : {};
+          const fnOps = instance.prepareFunctionalProperties ? instance.prepareFunctionalProperties() : undefined;
+          // Mirror the main form's payload: { ...defaults, ...options, _functionOperation }.
+          const properties = { ...(defaults || {}), ...(options || {}) };
+          if (fnOps) properties._functionOperation = fnOps;
+          return Object.keys(properties).length > 0 ? properties : null;
+        } catch (err) {
+          console.warn('[build-your-product] could not read main-form options, adding main product without them:', err);
+          return null;
+        }
+      }
+
       /* ---------- bulk add to Shopify cart + open Dawn drawer ---------- */
 
       async addAllToCart() {
@@ -300,20 +270,10 @@ if (!customElements.get('build-your-product')) {
         button.disabled = true;
         this.errorEl.hidden = true;
 
-        // Main product line — attach color properties from the options app if present.
+        // Main product line — attach the main form's selected options if available.
         const mainLine = { id: this.mainVariant.id, quantity: 1 };
-        if (this.colorOptions) {
-          try {
-            const props = this.colorOptions.prepareOptions ? this.colorOptions.prepareOptions() : {};
-            const fnOps = this.colorOptions.prepareFunctionalProperties ? this.colorOptions.prepareFunctionalProperties() : undefined;
-            const properties = { ...props };
-            if (fnOps) properties._functionOperation = fnOps;
-            if (Object.keys(properties).length > 0) mainLine.properties = properties;
-          } catch (err) {
-            // Fail safe: add the product without color rather than send a malformed line.
-            console.warn('[build-your-product] color payload unavailable, adding without color:', err);
-          }
-        }
+        const mainProps = this.mainProductProperties();
+        if (mainProps) mainLine.properties = mainProps;
 
         const items = [mainLine];
         this.items.forEach((item) => items.push({ id: item.id, quantity: item.quantity }));
