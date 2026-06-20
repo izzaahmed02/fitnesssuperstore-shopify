@@ -22,7 +22,11 @@ if (!customElements.get('build-your-product')) {
         this.itemsList = this.querySelector('.byp-floating-cart__items');
         this.subtotalEl = this.querySelector('[data-subtotal]');
         this.subtotalCompareEl = this.querySelector('[data-subtotal-compare]');
-        this.installSelect = this.querySelector('.byp-floating-cart__install-select');
+        // Install option is now an FSR90 engine category rendered in the floating
+        // cart (install_only). It is a <product-customization-options> instance that
+        // exposes the same payload builders as the main form, so its selection
+        // attaches to the FSR90 line via properties + _functionOperation.
+        this.installInstance = this.querySelector('.byp-floating-cart__install product-customization-options');
         this.errorEl = this.querySelector('.byp-floating-cart__error');
         this.modal = this.querySelector('.byp-modal');
 
@@ -61,12 +65,18 @@ if (!customElements.get('build-your-product')) {
           if (card && (e.target.matches('.byp-card__variant-select') || e.target.matches('.byp-card__swatches input'))) {
             this.onCardVariantChange(card, Number(e.target.value));
           }
-          if (e.target === this.installSelect) this.renderFloatingCart();
+          if (this.installInstance && this.installInstance.contains(e.target)) this.renderFloatingCart();
         });
 
         document.addEventListener('keydown', (e) => {
           if (e.key === 'Escape') this.closeModal();
         });
+
+        // The install engine may use a custom dropdown (click-driven) rather than a
+        // native <select>, so re-read its selected price after any interaction inside it.
+        if (this.installInstance) {
+          this.installInstance.addEventListener('click', () => setTimeout(() => this.renderFloatingCart(), 0));
+        }
 
         document.addEventListener('change', (e) => {
           if (e.target.closest('variant-selects, variant-radios')) {
@@ -256,9 +266,8 @@ if (!customElements.get('build-your-product')) {
           this.itemsList.appendChild(li);
         });
 
-        if (this.installSelect && this.installSelect.value) {
-          const opt = this.installSelect.selectedOptions[0];
-          const installPrice = Number(opt.dataset.price || 0);
+        const installPrice = this.installSelectedPriceCents();
+        if (installPrice > 0) {
           subtotal += installPrice;
           subtotalCompare += installPrice;
         }
@@ -286,21 +295,53 @@ if (!customElements.get('build-your-product')) {
         );
       }
 
-      mainProductProperties() {
-        const instance = this.mainFormOptionsInstance();
+      // Read one engine instance's payload pieces. Works for both
+      // <product-form-with-options> (main form) and <product-customization-options>
+      // (the floating-cart install instance) — they expose the same builders.
+      readInstancePayload(instance) {
         if (!instance) return null;
         try {
           const defaults = instance.prepareDefaultProperties ? instance.prepareDefaultProperties() : {};
           const options = instance.prepareOptions ? instance.prepareOptions() : {};
           const fnOps = instance.prepareFunctionalProperties ? instance.prepareFunctionalProperties() : undefined;
-          // Mirror the main form's payload: { ...defaults, ...options, _functionOperation }.
-          const properties = { ...(defaults || {}), ...(options || {}) };
-          if (fnOps) properties._functionOperation = fnOps;
-          return Object.keys(properties).length > 0 ? properties : null;
+          return { defaults: defaults || {}, options: options || {}, fnOps: fnOps || null };
         } catch (err) {
-          console.warn('[build-your-product] could not read main-form options, adding main product without them:', err);
+          console.warn('[build-your-product] could not read an options instance:', err);
           return null;
         }
+      }
+
+      // Build the FSR90 line's line-item properties by MERGING every engine instance
+      // that contributes to it: the main form's options (colour/warranty/processing)
+      // plus the floating-cart install instance. Their _functionOperation arrays are
+      // concatenated, so the single FSR90 line carries every selected option and the
+      // pricing function applies each upcharge — identical to the main form's submit.
+      mainProductProperties() {
+        const sources = [this.mainFormOptionsInstance(), this.installInstance];
+        let props = {};
+        let fnOps = [];
+
+        sources.forEach((instance) => {
+          const payload = this.readInstancePayload(instance);
+          if (!payload) return;
+          props = { ...props, ...payload.defaults, ...payload.options };
+          if (Array.isArray(payload.fnOps)) {
+            fnOps = fnOps.concat(payload.fnOps);
+          } else if (payload.fnOps) {
+            fnOps = fnOps.concat([payload.fnOps]);
+          }
+        });
+
+        if (fnOps.length) props._functionOperation = fnOps;
+        return Object.keys(props).length > 0 ? props : null;
+      }
+
+      // Selected install price (cents) for the floating-cart subtotal display.
+      // The engine writes the chosen option's price into .option_selected-price.
+      installSelectedPriceCents() {
+        if (!this.installInstance) return 0;
+        const priceEl = this.installInstance.querySelector('.option_selected-price');
+        return priceEl ? this.parseMoney(priceEl.textContent || '') : 0;
       }
 
       /* ---------- bulk add to Shopify cart + open Dawn drawer ---------- */
@@ -318,9 +359,6 @@ if (!customElements.get('build-your-product')) {
 
         const items = [mainLine];
         this.items.forEach((item) => items.push({ id: item.id, quantity: item.quantity }));
-        if (this.installSelect && this.installSelect.value) {
-          items.push({ id: Number(this.installSelect.value), quantity: 1 });
-        }
 
         const cartDrawer = document.querySelector('cart-drawer');
         const body = { items };
@@ -340,7 +378,6 @@ if (!customElements.get('build-your-product')) {
 
           // Reset the floating cart's add-on list (keep cart visible/sticky).
           this.items.clear();
-          if (this.installSelect) this.installSelect.value = '';
           this.renderFloatingCart();
 
           if (cartDrawer) {
