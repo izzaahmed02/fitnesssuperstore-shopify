@@ -1,506 +1,445 @@
 /* ==========================================================================
-   Build Your Product — Dawn theme
+   Build Your Product — options engine skin
+   Styles the live <product-customization-options> markup rendered inside the
+   Build section so it matches the Build layout. This file ONLY styles the
+   engine's real DOM — it changes no markup and no logic.
+
+   Scope: everything is under `.byp-options-engine`, the wrapper added in the
+   Step 1 render block. Keep that wrapper; you can drop its temporary inline
+   border/label (this file also hides the label).
+
+   Section 1 — colour category (Step 2a).
    ========================================================================== */
-.section-build-your-product {
-    padding: 0 26px;
-}
 
-.byp {
-  --byp-ink: #111418;
-  --byp-muted: #5c6066;
-  --byp-accent: #e04e1f;
-  --byp-accent-soft: #f7d2c2;
-  --byp-border: #e6e6e6;
-  --byp-radius: 10px;
-  margin-top: 4rem;
-  margin-bottom: 4rem;
-}
-
-.byp__heading {
-  font-size: 32px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: var(--byp-ink);
+/* --- strip the Step 1 diagnostic chrome ------------------------------------ */
+.byp-options-engine {
+  border: 0 !important;
+  padding: 0 !important;
   margin: 0 0 2rem;
 }
-
-.byp__layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 38rem;
-  gap: 3rem;
-  align-items: start;
+.byp-options-engine > p:first-child {
+  display: none; /* the temporary "[TEMP] Live options engine render:" label */
 }
-.byp__layout > * { min-width: 0; }
-.byp__accordions { min-width: 0; max-width: 100%; }
 
-/* ---------- Accordions ---------- */
-.byp-accordion { border-bottom: 1px solid var(--byp-border); }
-.byp-accordion__summary {
+/* --- category block + header ---------------------------------------------- */
+.byp-options-engine .product-option__item {
+  border-top: 1px solid #e6e6e6;
+  padding: 1.8rem 0;
+}
+.byp-options-engine .product-options__category-title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 1.8rem 0;
-  cursor: pointer;
-  list-style: none;
-}
-.byp-accordion__summary::-webkit-details-marker { display: none; }
-.byp-accordion__title {
-  display: inline-flex;
-  align-items: center;
   gap: 0.8rem;
+  margin: 0 0 1.4rem;
   font-size: 1.7rem;
   font-weight: 800;
   text-transform: uppercase;
-  color: var(--byp-ink);
+  line-height: 1.2;
+  color: #111418;
 }
-
-/* Orange "?" = master Learn More button */
-.byp-tooltip {
+/* leading number badge (the <span>{number}</span> in the engine header) */
+.byp-options-engine .product-options__category-title > span:first-child {
   display: inline-grid;
   place-items: center;
+  flex: 0 0 auto;
+  min-width: 2.2rem;
+  height: 2.2rem;
+  padding: 0 0.4rem;
+  border-radius: 50%;
+  background: #111418;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+/* the "?" related-products / help trigger rendered by the engine.
+   NOTE: exact class depends on related-products-button.liquid (not yet seen);
+   these cover the common hooks. Refine once that snippet is shared. */
+.byp-options-engine .related-products-button,
+.byp-options-engine .product-options__help,
+.byp-options-engine [data-popup-open] {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
   width: 1.8rem;
   height: 1.8rem;
+  padding: 0;
   border: 0;
   border-radius: 50%;
-  background: var(--byp-accent);
+  background: #e04e1f;
   color: #fff;
   font-size: 1.1rem;
   font-weight: 700;
-  cursor: pointer;
-  line-height: 1.1rem;
-  padding: 0;
-}
-.byp-tooltip:hover { background: #c8430f; }
-
-.byp-accordion__chevron { transition: transform 0.2s ease; display: inline-flex; }
-.byp-accordion__chevron svg { width: 1.4rem; height: 1.4rem; }
-.byp-accordion[open] .byp-accordion__chevron { transform: rotate(180deg); }
-.byp-accordion__content { padding-bottom: 2.4rem; }
-
-/* ---------- Product slider / cards ---------- */
-.byp-slider { position: relative; min-width: 0; max-width: 100%; }
-.byp-grid {
-  display: flex;
-  gap: 1.6rem;
-  overflow-x: auto;
-  max-width: 100%;
-  scroll-snap-type: x mandatory;
-  margin: 0;
-  padding: 0.2rem 0 1.2rem;
-  list-style: none;
-  scrollbar-width: thin;
-  -webkit-overflow-scrolling: touch;
-}
-.byp-slider__arrow {
-  position: absolute;
-  top: 38%;
-  transform: translateY(-50%);
-  z-index: 2;
-  width: 3.8rem;
-  height: 3.8rem;
-  border-radius: 50%;
-  border: 1px solid var(--byp-border);
-  background: #fff;
-  color: var(--byp-ink);
-  font-size: 1.4rem;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
 }
-.byp-slider__arrow--prev { left: -1.2rem; }
-.byp-slider__arrow--next { right: -1.2rem; }
-.byp-slider__arrow[hidden] { display: none; }
-.byp-slider__arrow:hover { background: var(--byp-accent-soft); }
+.byp-options-engine .related-products-button:hover,
+.byp-options-engine [data-popup-open]:hover {
+  background: #c8430f;
+}
 
-.byp-card {
-  flex: 0 0 26rem;
-  scroll-snap-align: start;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--byp-border);
-  border-radius: var(--byp-radius);
-  padding: 1.6rem;
-  background: #fff;
+/* selected-colour label shown in the category header */
+.byp-options-engine .option_selected-container {
+  margin-left: auto;
 }
-.byp-card__media {
+.byp-options-engine .option_selected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-transform: none;
+  color: #5c6066;
+}
+.byp-options-engine .option_selected-price {
+  font-weight: 700;
+  color: #e04e1f;
+}
+
+/* --- colour swatches ------------------------------------------------------- */
+.byp-options-engine .custom-color-group,
+.byp-options-engine .group-color-container {
+  display: block;
+}
+.byp-options-engine .color_options_container,
+.byp-options-engine .color-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+}
+
+/* the actual swatch: size/shape live here, the colour is the inline `background` */
+.byp-options-engine .swatch {
+  position: relative;
+  flex: 0 0 auto;
+  width: 4rem;
+  height: 4rem;
+  border: 2px solid #e6e6e6;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+.byp-options-engine .swatch:hover {
+  transform: scale(1.06);
+}
+.byp-options-engine .swatch.color-selected {
+  border-color: #111418;
+  box-shadow: 0 0 0 2px #fff inset;
+}
+.byp-options-engine .swatch.unavailable {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.byp-options-engine .swatch.unavailable::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    to top left,
+    transparent 46%,
+    #c1281c 46%,
+    #c1281c 54%,
+    transparent 54%
+  );
+}
+
+/* custom-colour "+" trigger swatch */
+.byp-options-engine .swatch--custom-trigger {
+  display: grid;
+  place-items: center;
+  background: #e04e1f !important;
+  border-color: #e04e1f;
+}
+.byp-options-engine .swatch--custom-trigger svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+/* --- custom-colour input popup -------------------------------------------- */
+.byp-options-engine .custom-color-select-wrapper {
   display: flex;
   align-items: center;
-  justify-content: center;
-  height: 17rem;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.byp-options-engine .custom-color-input {
+  flex-basis: 100%;
+  margin-top: 1.2rem;
+  padding: 1.4rem;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  background: #fafafa;
+}
+.byp-options-engine .custom-color-input-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 1rem;
-  overflow: hidden;
+  font-weight: 700;
 }
-.byp-card__media img {
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+.byp-options-engine .custom-color-input-header svg {
+  cursor: pointer;
 }
-.byp-card__sku { font-size: 1.2rem; color: var(--byp-muted); margin: 0 0 0.4rem; }
-.byp-card__title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--byp-ink);
-  margin: 0 0 0.6rem;
+.byp-options-engine .custom-color-input-field {
+  display: flex;
+  gap: 0.8rem;
 }
-.byp-card__rating {
+.byp-options-engine .custom-color-value {
+  flex: 1;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  font-size: 1.3rem;
+}
+.byp-options-engine .add-custom-color {
+  flex: 0 0 auto;
+  padding: 0 1.6rem;
+  border: 0;
+  border-radius: 8px;
+  background: #e04e1f;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.byp-options-engine .custom-color-error_message,
+.byp-options-engine .custom-color-empty-error_message {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.25rem;
-  color: var(--byp-muted);
-  margin-bottom: 0.8rem;
-}
-.byp-star { color: #f5a623; font-size: 1.4rem; }
-.byp-card__excerpt {
-  font-size: 1.3rem;
-  line-height: 1.45;
-  color: var(--byp-muted);
-  margin: 0 0 1rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  margin-top: 0.8rem;
+  color: #c1281c;
+  font-size: 1.2rem;
 }
 
-/* Variants */
-.byp-card__swatches { border: 0; padding: 0; margin: 0 0 1rem; }
-.byp-card__option-label { font-size: 1.3rem; font-weight: 600; margin-bottom: 0.6rem; display: block; }
-.byp-swatch { display: inline-block; margin-right: 0.6rem; cursor: pointer; }
-.byp-swatch input { position: absolute; opacity: 0; }
-.byp-swatch {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background: var(--swatch-color, #111);
-  border: 2px solid var(--byp-border);
-  position: relative;
+/* ==========================================================================
+   Section 2 — accordion add-on categories
+   (Accessories / Add Ons, Cable Attachments)
+   Skins the engine accordion + per-variant cards to the Build card layout.
+   Selection model: clicking a card checks its hidden radio/checkbox and the
+   engine attaches it to the FSR90 line. No per-card "Add" button — the
+   floating cart's single Add to cart submits everything selected.
+   ========================================================================== */
+
+/* sub-option accordion inside a category */
+.byp-options-engine .product-options__accordion {
+  border-top: 1px solid var(--byp-border, #e6e6e6);
 }
-.byp-swatch:has(input:checked) { border-color: var(--byp-ink); box-shadow: 0 0 0 2px #fff inset; }
-.byp-card__variant-select {
-  width: 100%;
-  margin-bottom: 1rem;
-  padding: 0.8rem 1rem;
-  border: 1px solid var(--byp-border);
-  border-radius: 8px;
-  font-size: 1.3rem;
+.byp-options-engine .product-options__accordion:first-child {
+  border-top: 0;
 }
 
-/* Learn more + price row */
-.byp-card__row {
+/* accordion header row */
+.byp-options-engine .product-options__accordion-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
-}
-.byp-card__row--price { margin-top: auto; padding-top: 0.8rem; }
-.byp-card__learn-more {
+  width: 100%;
+  padding: 1.4rem 0;
   background: none;
   border: 0;
-  padding: 0;
-  font-size: 1.3rem;
-  text-decoration: underline;
-  color: var(--byp-ink);
   cursor: pointer;
+  text-align: left;
 }
-.byp-card__price { text-align: right; }
-.byp-card__compare { display: block; font-size: 1.15rem; color: var(--byp-muted); }
-.byp-card__price-current { font-size: 1.5rem; font-weight: 700; color: var(--byp-accent); }
-
-/* Qty + ATC row */
-.byp-card__row--actions { margin-top: 1.2rem; }
-.byp-card__qty {
-  width: 7rem;
-  padding: 1rem;
-  border: 1px solid var(--byp-border);
-  border-radius: 8px;
-  font-size: 1.4rem;
-  background: #fff;
-}
-.byp-card .byp-card__atc.button {
-  flex: 1;
-  min-height: 4.4rem;
-  border: 0;
-  border-radius: 8px;
-  background: var(--byp-accent-soft);
-  color: var(--byp-ink);
-  font-size: 1.4rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease;
-  background-color: rgba(241, 89, 42, 0.27) !important;
-  justify-content: center;
-}
-.byp-card__atc:hover:not(:disabled) { background: #f3bda6; }
-.byp-card__atc:disabled { opacity: 0.5; cursor: not-allowed; }
-.byp-card__atc--added { background: var(--byp-accent); color: #fff; }
-
-/* ---------- Floating cart ---------- */
-.byp-floating-cart { position: sticky; top: 2rem; }
-.byp-floating-cart__inner {
-  background: #fafafa;
-  border-radius: var(--byp-radius);
-  padding: 2rem;
-}
-.byp-floating-cart__bar {
+.byp-options-engine .product-options__subcategory-title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.6rem;
-}
-.byp-floating-cart__build-title {
-  font-size: 1.8rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: var(--byp-ink);
+  gap: 0.6rem;
   margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--byp-ink, #111418);
 }
-.byp-floating-cart__toggle {
-  display: none;
+
+/* selected summary the engine fills, sits to the right of the header */
+.byp-options-engine .product-options__accordion-label {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 3.2rem;
-  height: 3.2rem;
-  flex: 0 0 auto;
-  border: 1px solid var(--byp-border);
-  border-radius: 50%;
-  background: #fff;
+  gap: 0.4rem;
+  margin-left: auto;
+  font-size: 1.3rem;
+  color: var(--byp-muted, #5c6066);
+}
+.byp-options-engine .product-options__accordion-label.error {
+  color: var(--byp-accent, #e04e1f);
+}
+.byp-options-engine .product-options__accordion-label-price {
+  font-weight: 700;
+  color: var(--byp-accent, #e04e1f);
+}
+.byp-options-engine .product-options__accordion-label .close-option {
   cursor: pointer;
 }
-.byp-floating-cart__toggle-icon { font-size: 1.2rem; line-height: 1; transition: transform 0.2s ease; }
-.byp-floating-cart--collapsed .byp-floating-cart__toggle-icon { transform: rotate(180deg); }
-.byp-floating-cart--collapsed .byp-floating-cart__body { display: none; }
-.byp-floating-cart--collapsed .byp-floating-cart__bar { margin-bottom: 0; }
 
-.byp-floating-cart__heading { font-size: 1.6rem; font-weight: 700; margin: 0 0 1.2rem; }
-.byp-floating-cart__main {
+/* chevron */
+.byp-options-engine .product-options__accordion-icon {
+  display: inline-flex;
+  transition: transform 0.2s ease;
+}
+.byp-options-engine .product-options__accordion-icon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+.byp-options-engine .product-options__accordion-header[aria-expanded="true"] .product-options__accordion-icon {
+  transform: rotate(180deg);
+}
+
+/* collapsible content: collapsed by default; engine sets inline height to open */
+.byp-options-engine .product-options__accordion-content {
+  overflow: hidden;
+}
+.byp-options-engine .product-options__accordion-header[aria-expanded="false"] + .product-options__accordion-content {
+  height: 0;
+}
+
+/* cards grid */
+.byp-options-engine .product-options__swatch-container {
+  padding-bottom: 1.8rem;
+}
+.byp-options-engine .product-options__label-tooltip {
+  display: none; /* engine's empty label/selected_options_container row */
+}
+.byp-options-engine .product-options__swatch--single {
   display: grid;
-  grid-template-columns: 7rem 1fr auto;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1.2rem;
-  align-items: center;
-  background: #fff;
-  border-radius: 8px;
-  padding: 1.2rem;
-  margin-bottom: 1.6rem;
-}
-.byp-floating-cart__main-title { font-size: 1.3rem; margin: 0; }
-.byp-floating-cart__main-price { text-align: right; font-weight: 700; }
-.byp-floating-cart__main-price s { display: block; font-weight: 400; color: var(--byp-muted); font-size: 1.2rem; }
-
-.byp-floating-cart__subheading { font-size: 1.5rem; font-weight: 700; margin: 0 0 0.8rem; }
-.byp-floating-cart__items { list-style: none; margin: 0 0 1.6rem; padding: 0; }
-.byp-floating-cart__items:empty { margin-bottom: 0.8rem; }
-.byp-floating-cart__item {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.2rem;
-  background: #fff;
-  border-radius: 8px;
-  padding: 1.2rem;
-  margin-bottom: 0.8rem;
-}
-.byp-floating-cart__item-info p { margin: 0 0 0.4rem; font-size: 1.3rem; }
-.byp-floating-cart__remove {
-  background: none; border: 0; padding: 0;
-  font-size: 1.2rem; text-decoration: underline; cursor: pointer; color: var(--byp-ink);
-}
-.byp-floating-cart__item-price { font-weight: 700; white-space: nowrap; }
-.byp-qty-badge { color: var(--byp-muted); font-size: 1.2rem; }
-
-.byp-floating-cart__install { border-top: 1px solid var(--byp-border); padding-top: 1.6rem; margin-bottom: 1.6rem; }
-.byp-floating-cart__install label { display: block; font-size: 1.35rem; font-weight: 700; margin-bottom: 0.8rem; }
-.byp-floating-cart__install-select {
-  width: 100%;
-  padding: 1rem 1.2rem;
-  border: 1px solid var(--byp-border);
-  border-radius: 8px;
-  font-size: 1.35rem;
-  background: #fff;
 }
 
-.byp-floating-cart__subtotal {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1.4rem;
-}
-.byp-floating-cart__subtotal-values s { color: var(--byp-muted); font-weight: 400; margin-right: 0.6rem; }
-.byp-floating-cart__subtotal-values strong { font-size: 1.8rem; }
-
-.byp-floating-cart__atc {
-  width: 100%;
-  min-height: 4.8rem;
-  border: 0;
-  border-radius: 8px;
-  background: var(--byp-accent);
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: 700;
-  cursor: pointer;
-  justify-content: center;
-}
-.byp-floating-cart__atc[aria-busy='true'] { opacity: 0.7; cursor: wait; }
-.byp-floating-cart__error { color: #c1281c; font-size: 1.3rem; margin: 1rem 0 0; }
-
-/* Warranty highlights */
-.byp-floating-cart__warranty {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.8rem;
-  margin: 1.8rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-.byp-floating-cart__warranty-item {
-  flex: 1;
+/* each variant card (the label is the control) */
+.byp-options-engine .product-options__swatch-wrapper {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0.6rem;
-}
-.byp-floating-cart__warranty-item svg { width: 2.4rem; height: 2.4rem; }
-.byp-floating-cart__warranty-text { font-size: 1.2rem; line-height: 1.3; color: var(--byp-ink); }
-
-/* ---------- Learn More / Master popup ---------- */
-.byp-modal { position: fixed; inset: 0; z-index: 100; }
-.byp-modal.hidden { display: none; }
-body.byp-modal-open { overflow: hidden; }
-.byp-modal__overlay { position: absolute; inset: 0; background: rgba(17, 20, 24, 0.55); }
-.byp-modal__panel {
-  position: relative;
-  max-width: 78rem;
-  max-height: 88vh;
-  overflow-y: auto;
-  margin: 5vh auto;
-  background: #fff;
-  border-radius: 16px;
-  padding: 3.2rem;
-}
-.byp-modal__close {
-  position: absolute;
-  top: 1.2rem;
-  right: 1.6rem;
-  width: 4rem;
-  height: 4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff;
-  border: 0;
-  border-radius: 50%;
-  font-size: 2.6rem;
-  line-height: 1;
+  padding: 1.2rem;
+  border: 1px solid var(--byp-border, #e6e6e6);
+  border-radius: var(--byp-radius, 10px);
   cursor: pointer;
-  z-index: 5;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.byp-modal__close:hover { background: #f2f2f2; }
-.byp-modal__main {
-  display: grid;
-  grid-template-columns: 30rem 1fr;
-  gap: 3rem;
-  align-items: start;
-  padding-bottom: 2.4rem;
-  border-bottom: 1px solid var(--byp-border);
+.byp-options-engine .product-options__swatch-wrapper:hover {
+  border-color: var(--byp-muted, #5c6066);
 }
-.byp-modal__main-media {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 22rem;
+.byp-options-engine .product-options__swatch-wrapper:has(.product-options__swatch-input:checked) {
+  border-color: var(--byp-accent, #e04e1f);
+  box-shadow: 0 0 0 1px var(--byp-accent, #e04e1f) inset;
+}
+.byp-options-engine .product-options__swatch-wrapper--soldout {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* hide the native input — the label is the visible control */
+.byp-options-engine .product-options__swatch-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* checked badge (top-right tick) */
+.byp-options-engine .product-options__swatch-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 2px solid var(--byp-border, #e6e6e6);
+  border-radius: 50%;
+  background: #fff;
+}
+.byp-options-engine .product-options__swatch-wrapper:has(.product-options__swatch-input:checked)::after {
+  border-color: var(--byp-accent, #e04e1f);
+  background: var(--byp-accent, #e04e1f)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2' d='M2 6l3 3 5-6'/%3E%3C/svg%3E")
+    center / 11px no-repeat;
+}
+
+/* card image */
+.byp-options-engine .product-options__swatch-img-wrapper {
+  aspect-ratio: 1 / 1;
+  margin-bottom: 1rem;
+  background: #f6f6f6;
+  border-radius: 6px;
   overflow: hidden;
 }
-.byp-modal__main-img { max-width: 100%; max-height: 26rem; object-fit: contain; }
-.byp-modal__rating { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
-.byp-modal__stars { color: #f5a623; font-size: 1.6rem; letter-spacing: 0.1em; }
-.byp-modal__rating-count { font-size: 1.4rem; color: var(--byp-muted); }
-.byp-modal__title { font-size: 2.6rem; font-weight: 800; line-height: 1.25; margin: 0 0 1.4rem; color: var(--byp-ink); }
-.byp-modal__description {
-  font-size: 1.4rem;
-  line-height: 1.6;
-  color: var(--byp-muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 5;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  max-width: 100%;
-  word-break: break-word;
-  white-space: pre-line;
+.byp-options-engine .product-options__swatch-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
-.byp-modal__description * { margin: 0; }
-.byp-modal__related { margin-top: 2.4rem; }
-.byp-modal__related.hidden { display: none; }
-.byp-modal__related h4 { font-size: 1.5rem; font-weight: 700; margin: 0 0 1.2rem; }
-.byp-modal__related-track {
-  display: flex;
-  gap: 1.6rem;
-  overflow-x: auto;
-  list-style: none;
-  margin: 0;
-  padding: 0 0 1rem;
-  scroll-snap-type: x mandatory;
+
+/* card price + title */
+.byp-options-engine .product-options__swatch-price {
+  margin-bottom: 0.3rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--byp-accent, #e04e1f);
 }
-.byp-modal__related-card {
-  flex: 0 0 22rem;
-  scroll-snap-align: start;
-  border: 1px solid var(--byp-border);
-  border-radius: 10px;
-  padding: 1.4rem;
-}
-.byp-modal__related-card a { text-decoration: none; color: var(--byp-ink); display: block; }
-.byp-modal__related-card img { width: 100%; height: 13rem; object-fit: contain; margin-bottom: 1rem; }
-.byp-modal__related-sku { font-size: 1.2rem; color: var(--byp-muted); margin: 0 0 0.4rem; }
-.byp-modal__related-title {
-  font-size: 1.4rem;
+.byp-options-engine .product-options__swatch-title {
+  font-size: 1.3rem;
   font-weight: 600;
-  line-height: 1.35;
-  margin: 0 0 0.6rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  line-height: 1.3;
+  color: var(--byp-ink, #111418);
 }
-.byp-modal__related-rating { font-size: 1.25rem; color: var(--byp-muted); margin: 0 0 0.6rem; }
-.byp-modal__related-rating .byp-star { color: #f5a623; }
-.byp-modal__related-compare { font-size: 1.2rem; color: var(--byp-muted); margin: 0 0 0.2rem; }
-.byp-modal__related-price { font-size: 1.5rem; font-weight: 700; color: var(--byp-accent); margin: 0; }
-
-/* ---------- Responsive ---------- */
-@media screen and (max-width: 989px) {
-  .byp__layout { grid-template-columns: 1fr; }
-  .byp-floating-cart__toggle { display: inline-flex; }
-  .byp-floating-cart {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: auto;
-    z-index: 50;
-    max-height: 60vh;
-    overflow-y: auto;
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
-  }
-  .byp-floating-cart__inner { border-radius: 12px 12px 0 0; }
-  .byp-modal__main { grid-template-columns: 1fr; }
-  .byp-modal__main-media { min-height: 12rem; }
+.byp-options-engine .price-substract {
+  color: var(--byp-muted, #5c6066);
+  font-weight: 600;
 }
 
-@media screen and (max-width: 599px) {
-  .byp-card { flex: 0 0 calc(50% - 0.8rem); padding: 1.2rem; }
-  .byp-card__media { height: 12rem; }
-  .byp-card__qty { width: 5.6rem; padding: 0.8rem; }
-  .byp-slider__arrow { width: 3.2rem; height: 3.2rem; font-size: 1.2rem; }
-  .byp-slider__arrow--prev { left: 0.2rem; }
-  .byp-slider__arrow--next { right: 0.2rem; }
+/* quantity stepper on the card */
+.byp-options-engine .product-options__quantity-selector {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 1rem;
+  border: 1px solid var(--byp-border, #e6e6e6);
+  border-radius: 6px;
+}
+.byp-options-engine .product-options__quantity-btn {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.byp-options-engine .product-options__quantity-btn svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.byp-options-engine .product-options__quantity-input {
+  width: 3.6rem;
+  height: 3rem;
+  border: 0;
+  border-left: 1px solid var(--byp-border, #e6e6e6);
+  border-right: 1px solid var(--byp-border, #e6e6e6);
+  text-align: center;
+  font-size: 1.3rem;
+  -moz-appearance: textfield;
+}
+.byp-options-engine .product-options__quantity-input::-webkit-outer-spin-button,
+.byp-options-engine .product-options__quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .byp * { transition: none !important; }
+/* ==========================================================================
+   Section 3 — Select-type option
+   (Assembly & Room of Choice Installation Needed?)
+   ========================================================================== */
+.byp-options-engine .product-options__select {
+  width: 100%;
+  max-width: 48rem;
+  padding: 1.2rem 1.4rem;
+  border: 1px solid var(--byp-border, #e6e6e6);
+  border-radius: var(--byp-radius, 10px);
+  background: #fff;
+  font-size: 1.4rem;
+  color: var(--byp-ink, #111418);
 }
