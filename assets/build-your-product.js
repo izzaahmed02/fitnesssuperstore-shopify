@@ -22,11 +22,11 @@ if (!customElements.get('build-your-product')) {
         this.itemsList = this.querySelector('.byp-floating-cart__items');
         this.subtotalEl = this.querySelector('[data-subtotal]');
         this.subtotalCompareEl = this.querySelector('[data-subtotal-compare]');
-        // Install option is now an FSR90 engine category rendered in the floating
-        // cart (install_only). It is a <product-customization-options> instance that
-        // exposes the same payload builders as the main form, so its selection
-        // attaches to the FSR90 line via properties + _functionOperation.
-        this.installInstance = this.querySelector('.byp-floating-cart__install product-customization-options');
+        // Engine option instances rendered inside the Build section: the colour
+        // card's colour-only instance and the floating cart's install-only instance.
+        // Each is a <product-customization-options> exposing the same payload builders
+        // as the main form, so their selections attach to the FSR90 line via
+        // properties + _functionOperation. Queried on demand via engineInstances().
         this.errorEl = this.querySelector('.byp-floating-cart__error');
         this.modal = this.querySelector('.byp-modal');
 
@@ -65,18 +65,19 @@ if (!customElements.get('build-your-product')) {
           if (card && (e.target.matches('.byp-card__variant-select') || e.target.matches('.byp-card__swatches input'))) {
             this.onCardVariantChange(card, Number(e.target.value));
           }
-          if (this.installInstance && this.installInstance.contains(e.target)) this.renderFloatingCart();
+          if (e.target.closest('.byp-options-engine')) this.renderFloatingCart();
         });
 
         document.addEventListener('keydown', (e) => {
           if (e.key === 'Escape') this.closeModal();
         });
 
-        // The install engine may use a custom dropdown (click-driven) rather than a
-        // native <select>, so re-read its selected price after any interaction inside it.
-        if (this.installInstance) {
-          this.installInstance.addEventListener('click', () => setTimeout(() => this.renderFloatingCart(), 0));
-        }
+        // Engine options are click-driven (colour swatches, custom-colour "Add",
+        // and any custom Select dropdowns), so re-read after any click inside an
+        // engine instance — the timeout lets the engine update its state first.
+        this.addEventListener('click', (e) => {
+          if (e.target.closest('.byp-options-engine')) setTimeout(() => this.renderFloatingCart(), 0);
+        });
 
         document.addEventListener('change', (e) => {
           if (e.target.closest('variant-selects, variant-radios')) {
@@ -266,23 +267,28 @@ if (!customElements.get('build-your-product')) {
           this.itemsList.appendChild(li);
         });
 
-        // Install (Assembly & Room of Choice) — this attaches as a property on the
-        // FSR90's own line (not a separate line item), so we show it here as a
-        // summary row for visibility and fold its upcharge into the subtotal.
-        const installPrice = this.installSelectedPriceCents();
-        const installSummary = this.installSelectedSummary();
-        if (installSummary) {
-          subtotal += installPrice;
-          subtotalCompare += installPrice;
+        // Engine options (colour, assembly) attach as properties on the FSR90's own
+        // line — not separate line items — so we show each as a summary row for
+        // visibility and fold its upcharge into the subtotal. The actual cart line and
+        // its "[+$x]" come from the pricing function reading _functionOperation.
+        this.engineInstances().forEach((inst) => {
+          const price = this.instancePriceCents(inst);
+          const entries = this.instanceSummary(inst);
+          if (!entries || !entries.length) return;
+          subtotal += price;
+          subtotalCompare += price;
+          const text = entries
+            .map((e) => (e.label && !e.value.includes(e.label) ? `${e.label}: ${e.value}` : e.value))
+            .join(', ');
           const li = document.createElement('li');
-          li.className = 'byp-floating-cart__item byp-floating-cart__item--install';
+          li.className = 'byp-floating-cart__item byp-floating-cart__item--option';
           li.innerHTML = `
             <div class="byp-floating-cart__item-info">
-              <p>${this.escapeHtml(installSummary.value)}</p>
+              <p>${this.escapeHtml(text)}</p>
             </div>
-            <span class="byp-floating-cart__item-price">${installPrice > 0 ? this.formatMoney(installPrice) : 'No charge'}</span>`;
+            <span class="byp-floating-cart__item-price">${price > 0 ? this.formatMoney(price) : 'No charge'}</span>`;
           this.itemsList.appendChild(li);
-        }
+        });
 
         this.subtotalEl.textContent = this.formatMoney(subtotal);
         const showCompare = subtotalCompare > subtotal;
@@ -290,22 +296,13 @@ if (!customElements.get('build-your-product')) {
         if (showCompare) this.subtotalCompareEl.textContent = this.formatMoney(subtotalCompare);
       }
 
-      /* ---------- main-form options (colour/warranty/processing/assembly) ---------- */
+      /* ---------- FSR90 line options (colour + assembly) from the Build section ---------- */
 
-      // Colour and the other options live on the main product form, rendered by the
-      // theme's custom options system as a <product-form-with-options> element. That
-      // element exposes the same payload builders the main form uses on submit, so we
-      // call them directly: the FSR90 line the floating cart adds becomes identical to
-      // the main form's own add (same line-item properties + _functionOperation array).
-      mainFormOptionsInstance() {
-        const instances = Array.from(document.querySelectorAll('product-form-with-options'));
-        // Prefer one that is NOT inside a cart drawer/notification or this section.
-        return (
-          instances.find((el) => !el.closest('cart-drawer') && !el.closest('cart-notification') && !el.closest('build-your-product')) ||
-          instances[0] ||
-          null
-        );
-      }
+      // Colour and assembly are rendered inside the Build section as the store's
+      // options engine (<product-customization-options>). Each instance exposes the
+      // same payload builders the main form uses on submit, so we call them directly:
+      // the FSR90 line the floating cart adds becomes identical to a main-form add
+      // (same line-item properties + _functionOperation array).
 
       // Read one engine instance's payload pieces. Works for both
       // <product-form-with-options> (main form) and <product-customization-options>
@@ -335,7 +332,11 @@ if (!customElements.get('build-your-product')) {
       // concatenated, so the single FSR90 line carries every selected option and the
       // pricing function applies each upcharge — identical to the main form's submit.
       mainProductProperties() {
-        const sources = [this.mainFormOptionsInstance(), this.installInstance];
+        // Source the FSR90 line's options from the Build section's engine instances
+        // (colour card + install). The main form is being emptied in the end state, so
+        // we do NOT read it here — that also prevents double-counting if it still
+        // renders the same categories during the migration.
+        const sources = this.engineInstances();
         let props = {};
         let fnOps = [];
 
@@ -354,14 +355,18 @@ if (!customElements.get('build-your-product')) {
         return Object.keys(props).length > 0 ? props : null;
       }
 
-      // Selected install price (cents) for the floating-cart subtotal.
-      // The engine returns each upcharge as priceAdjustment (in the store's major
-      // unit, e.g. 649 = $649) in prepareFunctionalProperties(), so we sum those
-      // rather than scraping DOM text — exactly the value the pricing function uses.
-      installSelectedPriceCents() {
-        if (!this.installInstance || typeof this.installInstance.prepareFunctionalProperties !== 'function') return 0;
+      // Every options-engine instance rendered inside the Build section.
+      engineInstances() {
+        return Array.from(this.querySelectorAll('product-customization-options'));
+      }
+
+      // Total upcharge (cents) for one engine instance, summed from the engine's own
+      // priceAdjustment values (major units, e.g. 600 = $600) — the same numbers the
+      // pricing function applies, so the floating-cart subtotal matches checkout.
+      instancePriceCents(instance) {
+        if (!instance || typeof instance.prepareFunctionalProperties !== 'function') return 0;
         try {
-          const ops = this.installInstance.prepareFunctionalProperties() || [];
+          const ops = instance.prepareFunctionalProperties() || [];
           let major = 0;
           ops.forEach((op) => { major += Number(op && op.priceAdjustment) || 0; });
           return Math.round(major * 100);
@@ -370,17 +375,15 @@ if (!customElements.get('build-your-product')) {
         }
       }
 
-      // The selected install option as { label, value } for the floating-cart row.
+      // Selected option(s) for one engine instance as [{ label, value }].
       // prepareOptions() returns { "<group title>": "<selected option text>" }.
-      installSelectedSummary() {
-        if (!this.installInstance || typeof this.installInstance.prepareOptions !== 'function') return null;
+      instanceSummary(instance) {
+        if (!instance || typeof instance.prepareOptions !== 'function') return null;
         try {
-          const opts = this.installInstance.prepareOptions() || {};
-          const entries = Object.entries(opts);
-          if (!entries.length) return null;
-          const [label, value] = entries[0];
-          if (!value) return null;
-          return { label: String(label), value: String(value) };
+          const opts = instance.prepareOptions() || {};
+          return Object.entries(opts)
+            .map(([label, value]) => ({ label: String(label), value: String(value) }))
+            .filter((e) => e.value && e.value !== 'null' && e.value !== 'undefined');
         } catch (err) {
           return null;
         }
