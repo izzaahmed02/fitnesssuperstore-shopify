@@ -24,6 +24,15 @@
   assign main_product = product
   assign main_variant = main_product.selected_or_first_available_variant
   assign install_product = section.settings.installation_product
+  comment
+    The main product form shows the compare-at via the product-level "As high as"
+    price (compare_at_price_max), not the default variant's compare_at_price (which
+    is often null). Mirror that here so the cards + floating cart match the form.
+  endcomment
+  assign main_compare = main_product.compare_at_price_max
+  if main_compare == 0
+    assign main_compare = main_variant.compare_at_price
+  endif
 -%}
 
 <build-your-product
@@ -127,8 +136,8 @@
                   <div class="byp-card__row byp-card__row--price">
                     <button type="button" class="byp-card__learn-more link">Learn more</button>
                     <div class="byp-card__price">
-                      <span class="byp-card__compare{% unless main_variant.compare_at_price > main_variant.price %} hidden{% endunless %}">
-                        As high as: <s>{{ main_variant.compare_at_price | money }}</s>
+                      <span class="byp-card__compare{% unless main_compare > main_variant.price %} hidden{% endunless %}">
+                        As high as: <s>{{ main_compare | money }}</s>
                       </span>
                       <span class="byp-card__price-current">{{ main_variant.price | money }} {{ cart.currency.iso_code }}</span>
                     </div>
@@ -149,11 +158,16 @@
                   assign addon_variant = addon.selected_or_first_available_variant
                   assign rating = addon.metafields.reviews.rating.value
                   assign rating_count = addon.metafields.reviews.rating_count.value
+                  assign addon_compare = addon.compare_at_price_max
+                  if addon_compare == 0
+                    assign addon_compare = addon_variant.compare_at_price
+                  endif
                 -%}
                 <li class="byp-card"
                     data-product-id="{{ addon.id }}"
                     data-product-handle="{{ addon.handle }}"
-                    data-product-title="{{ addon.title | escape }}">
+                    data-product-title="{{ addon.title | escape }}"
+                    data-compare-max="{{ addon.compare_at_price_max | default: 0 }}">
 
                   {% render 'byp-product-badge', product: addon, badge_tags: section.settings.badge_tags %}
 
@@ -226,8 +240,8 @@
                   <div class="byp-card__row byp-card__row--price">
                     <button type="button" class="byp-card__learn-more link">Learn more</button>
                     <div class="byp-card__price">
-                      <span class="byp-card__compare{% unless addon_variant.compare_at_price > addon_variant.price %} hidden{% endunless %}">
-                        As high as: <s data-compare-price>{{ addon_variant.compare_at_price | money }}</s>
+                      <span class="byp-card__compare{% unless addon_compare > addon_variant.price %} hidden{% endunless %}">
+                        As high as: <s data-compare-price>{{ addon_compare | money }}</s>
                       </span>
                       <span class="byp-card__price-current" data-price>{{ addon_variant.price | money }} {{ cart.currency.iso_code }}</span>
                     </div>
@@ -280,8 +294,8 @@
             <p class="byp-floating-cart__main-title">{{ main_product.title }}</p>
             <div class="byp-floating-cart__main-price">
               <span data-main-price>{{ main_variant.price | money }}</span>
-              {%- if main_variant.compare_at_price > main_variant.price -%}
-                <s data-main-compare>{{ main_variant.compare_at_price | money }}</s>
+              {%- if main_compare > main_variant.price -%}
+                <s data-main-compare>{{ main_compare | money }}</s>
               {%- endif -%}
             </div>
           </div>
@@ -312,6 +326,17 @@
 
           <button type="button" class="byp-floating-cart__atc button button--primary">Add to cart</button>
           <p class="byp-floating-cart__error" role="alert" hidden></p>
+
+          {%- comment -%}
+            Affirm monthly-payment messaging. Affirm's site-wide script renders the
+            copy ("Starting at $X/mo or 0% APR — See if you qualify") into this
+            element from data-amount (in cents). build-your-product.js updates the
+            amount and calls affirm.ui.refresh() as the subtotal changes. Requires
+            the store's Affirm script to be loaded on the page (as on the live theme).
+          {%- endcomment -%}
+          <p class="affirm-as-low-as byp-floating-cart__affirm"
+             data-page-type="product"
+             data-amount="{{ main_variant.price }}"></p>
 
           <ul class="byp-floating-cart__warranty list-unstyled">
             <li class="byp-floating-cart__warranty-item">
