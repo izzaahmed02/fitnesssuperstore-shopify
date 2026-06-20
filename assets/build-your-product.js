@@ -31,6 +31,7 @@ if (!customElements.get('build-your-product')) {
         // as the main form, so their selections attach to the FSR90 line via
         // properties + _functionOperation. Queried on demand via engineInstances().
         this.errorEl = this.querySelector('.byp-floating-cart__error');
+        this.affirmEl = this.querySelector('.byp-floating-cart__affirm');
         this.modal = this.querySelector('.byp-modal');
 
         this.moneyFormat = window.Shopify && Shopify.money_format ? Shopify.money_format : '${{amount}}';
@@ -302,6 +303,19 @@ if (!customElements.get('build-your-product')) {
         const showCompare = subtotalCompare > subtotal;
         this.subtotalCompareEl.classList.toggle('hidden', !showCompare);
         if (showCompare) this.subtotalCompareEl.textContent = this.formatMoney(subtotalCompare);
+
+        this.refreshAffirm(subtotal);
+      }
+
+      // Update the Affirm "as low as" amount (cents) and re-render it. Affirm's
+      // site-wide script renders/refreshes any .affirm-as-low-as element; if it
+      // hasn't loaded yet, it will pick this element up on its own initial scan.
+      refreshAffirm(amountCents) {
+        if (!this.affirmEl) return;
+        this.affirmEl.setAttribute('data-amount', String(Math.round(amountCents)));
+        if (window.affirm && window.affirm.ui && typeof window.affirm.ui.refresh === 'function') {
+          window.affirm.ui.refresh();
+        }
       }
 
       /* ---------- FSR90 line options (colour + assembly) from the Build section ---------- */
