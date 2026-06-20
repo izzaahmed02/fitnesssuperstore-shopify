@@ -266,10 +266,22 @@ if (!customElements.get('build-your-product')) {
           this.itemsList.appendChild(li);
         });
 
+        // Install (Assembly & Room of Choice) — this attaches as a property on the
+        // FSR90's own line (not a separate line item), so we show it here as a
+        // summary row for visibility and fold its upcharge into the subtotal.
         const installPrice = this.installSelectedPriceCents();
-        if (installPrice > 0) {
+        const installSummary = this.installSelectedSummary();
+        if (installSummary) {
           subtotal += installPrice;
           subtotalCompare += installPrice;
+          const li = document.createElement('li');
+          li.className = 'byp-floating-cart__item byp-floating-cart__item--install';
+          li.innerHTML = `
+            <div class="byp-floating-cart__item-info">
+              <p>${this.escapeHtml(installSummary.value)}</p>
+            </div>
+            <span class="byp-floating-cart__item-price">${installPrice > 0 ? this.formatMoney(installPrice) : 'No charge'}</span>`;
+          this.itemsList.appendChild(li);
         }
 
         this.subtotalEl.textContent = this.formatMoney(subtotal);
@@ -300,15 +312,21 @@ if (!customElements.get('build-your-product')) {
       // (the floating-cart install instance) — they expose the same builders.
       readInstancePayload(instance) {
         if (!instance) return null;
-        try {
-          const defaults = instance.prepareDefaultProperties ? instance.prepareDefaultProperties() : {};
-          const options = instance.prepareOptions ? instance.prepareOptions() : {};
-          const fnOps = instance.prepareFunctionalProperties ? instance.prepareFunctionalProperties() : undefined;
-          return { defaults: defaults || {}, options: options || {}, fnOps: fnOps || null };
-        } catch (err) {
-          console.warn('[build-your-product] could not read an options instance:', err);
-          return null;
-        }
+        // Call each builder in its own guard so one missing/throwing method
+        // (e.g. prepareDefaultProperties on the bare element) never drops the others.
+        const safe = (fn) => {
+          try {
+            return typeof fn === 'function' ? fn.call(instance) : undefined;
+          } catch (err) {
+            console.warn('[build-your-product] option read failed:', err);
+            return undefined;
+          }
+        };
+        return {
+          defaults: safe(instance.prepareDefaultProperties) || {},
+          options: safe(instance.prepareOptions) || {},
+          fnOps: safe(instance.prepareFunctionalProperties) || null
+        };
       }
 
       // Build the FSR90 line's line-item properties by MERGING every engine instance
@@ -336,12 +354,36 @@ if (!customElements.get('build-your-product')) {
         return Object.keys(props).length > 0 ? props : null;
       }
 
-      // Selected install price (cents) for the floating-cart subtotal display.
-      // The engine writes the chosen option's price into .option_selected-price.
+      // Selected install price (cents) for the floating-cart subtotal.
+      // The engine returns each upcharge as priceAdjustment (in the store's major
+      // unit, e.g. 649 = $649) in prepareFunctionalProperties(), so we sum those
+      // rather than scraping DOM text — exactly the value the pricing function uses.
       installSelectedPriceCents() {
-        if (!this.installInstance) return 0;
-        const priceEl = this.installInstance.querySelector('.option_selected-price');
-        return priceEl ? this.parseMoney(priceEl.textContent || '') : 0;
+        if (!this.installInstance || typeof this.installInstance.prepareFunctionalProperties !== 'function') return 0;
+        try {
+          const ops = this.installInstance.prepareFunctionalProperties() || [];
+          let major = 0;
+          ops.forEach((op) => { major += Number(op && op.priceAdjustment) || 0; });
+          return Math.round(major * 100);
+        } catch (err) {
+          return 0;
+        }
+      }
+
+      // The selected install option as { label, value } for the floating-cart row.
+      // prepareOptions() returns { "<group title>": "<selected option text>" }.
+      installSelectedSummary() {
+        if (!this.installInstance || typeof this.installInstance.prepareOptions !== 'function') return null;
+        try {
+          const opts = this.installInstance.prepareOptions() || {};
+          const entries = Object.entries(opts);
+          if (!entries.length) return null;
+          const [label, value] = entries[0];
+          if (!value) return null;
+          return { label: String(label), value: String(value) };
+        } catch (err) {
+          return null;
+        }
       }
 
       /* ---------- bulk add to Shopify cart + open Dawn drawer ---------- */
