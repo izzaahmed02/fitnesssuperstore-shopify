@@ -181,7 +181,7 @@
                     <p class="byp-card__sku">SKU: {{ addon_variant.sku }}</p>
                   {%- endif -%}
 
-                  <h3 class="byp-card__title">{{ addon.title }}</h3>
+                  <p class="byp-card__title">{{ addon.title }}</p>
 
                   {%- if rating -%}
                     <div class="byp-card__rating" data-rating="{{ rating.rating | default: rating }}">
@@ -274,17 +274,18 @@
           <h4 class="byp-floating-cart__subheading">Add Ons</h4>
           <ul class="byp-floating-cart__items" role="list"></ul>
 
-          {%- if install_product != blank -%}
-            <div class="byp-floating-cart__install">
-              <label for="byp-install-{{ section.id }}">{{ section.settings.installation_label | escape }}</label>
-              <select id="byp-install-{{ section.id }}" class="byp-floating-cart__install-select">
-                <option value="">{{ section.settings.installation_default | escape }}</option>
-                {%- for v in install_product.variants -%}
-                  <option value="{{ v.id }}" data-price="{{ v.price }}">{{ v.title }} (+{{ v.price | money }})</option>
-                {%- endfor -%}
-              </select>
-            </div>
-          {%- endif -%}
+          {%- comment -%}
+            Assembly & Room of Choice Installation — rendered through the live
+            options engine (install_only) so the customer's choice attaches to the
+            FSR90's OWN line as properties + a _functionOperation entry, exactly
+            like the main product form. The pricing function then applies the
+            upcharge and the cart drawer shows it inline under the FSR90.
+            id_suffix keeps this engine instance's wrapper id unique so it does not
+            collide with the colour card's engine instance in this same section.
+          {%- endcomment -%}
+          <div class="byp-floating-cart__install byp-options-engine byp-options-engine--install">
+            {% render 'product-options', product: main_product, install_only: true, id_suffix: '-install' %}
+          </div>
 
           <div class="byp-floating-cart__subtotal">
             <span>Subtotal</span>
