@@ -445,14 +445,21 @@
 }
 
 /* ==========================================================================
-   Section 4 — colour rendered as a card inside the first accordion
+   Section 4 — colour presented as a PRODUCT CARD (first card in accordion 1)
    The engine renders all categories; inside the colour card we show only the
-   colour category and strip the engine's category chrome so it reads as a card.
+   colour category and reshape the engine chrome into a "Color: <name>" line +
+   swatches, so the card matches the add-on product cards.
    ========================================================================== */
 .byp-card--color {
   display: flex;
   flex-direction: column;
 }
+
+/* the engine block: kill outer margin so it nests cleanly in the card */
+.byp-card--color .byp-options-engine {
+  margin: 0 0 1rem;
+}
+
 /* show only the colour category; hide the accordion/select categories */
 .byp-options-engine--color-only .product-option__item:not(:has(.custom-color-group)) {
   display: none;
@@ -462,15 +469,69 @@
   padding: 0;
   order: 0 !important;
 }
-/* drop the leading number badge inside the card */
-.byp-options-engine--color-only .product-options__category-title > span:first-child {
-  display: none;
+
+/* --- "Color: <selected>" line (reshaped from the engine category title) --- */
+/* font-size:0 hides the bare "Colors" text node + collapses the number; children below restore size */
+.byp-card--color .product-options__category-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.8rem;
+  font-size: 0;
+  text-transform: none;
 }
-.byp-options-engine--color-only .product-options__category-title {
-  margin-bottom: 1rem;
+.byp-card--color .product-options__category-title > span:first-child {
+  display: none; /* number badge */
+}
+.byp-card--color .product-options__category-title [data-popup-open],
+.byp-card--color .product-options__category-title .button--popup {
+  display: none; /* the "?" help icon — the accordion header already has one */
+}
+.byp-card--color .option_selected-container {
+  margin: 0;
+}
+.byp-card--color .option_selected-container::before {
+  content: 'Color:';
+  margin-right: 0.5rem;
   font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--byp-ink, #111418);
 }
-/* selected-colour label sits under the title rather than far right in a card */
-.byp-options-engine--color-only .option_selected-container {
-  margin-left: 0;
+.byp-card--color .option_selected {
+  display: inline;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--byp-ink, #111418);
+}
+.byp-card--color .option_selected [data-color-selected-title] {
+  display: inline;
+}
+.byp-card--color .option_selected-price {
+  display: inline;
+  font-weight: 700;
+  color: var(--byp-accent, #e04e1f);
+}
+
+/* swatches row inside the card (size/shape come from Section 1) */
+.byp-card--color .color-options {
+  gap: 1.2rem;
+}
+
+/* --- "Select Color" CTA: looks like the add-on cards' Add To Order button,
+   but uses .byp-card__color-cta so the JS add-to-order handler ignores it. --- */
+.byp-card--color .byp-card__row--actions {
+  margin-top: auto;
+}
+.byp-card--color .byp-card__color-cta.button {
+  flex: 1;
+  border: 0;
+  border-radius: 6px;
+  background: var(--byp-accent-soft, #f7d2c2);
+  color: var(--byp-ink, #111418);
+  font-weight: 700;
+  cursor: pointer;
+}
+.byp-card--color .byp-card__color-cta.button:hover {
+  background: #f3bda6;
 }
