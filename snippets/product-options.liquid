@@ -50,7 +50,7 @@
     assign assambly_index = last_index
   endfor
 %}
-<div id="Product-Options-{{ section.id }}">
+<div id="Product-Options-{{ section.id }}{{ id_suffix }}">
   <product-customization-options
     data-product-id="{{ product.selected_or_first_available_variant.id }}"
     class="product-options"
@@ -70,6 +70,35 @@
     %}
 
     {% for category in options %}
+      {%- comment -%}
+        Single-category render filters. color_only renders only the colour
+        category; install_only renders only the "Assembly & Room of Choice
+        Installation Needed?" category. Both default to off, so existing callers
+        (the live main-product section) render the full set unchanged.
+      {%- endcomment -%}
+      {%- if color_only or install_only -%}
+        {%- assign filter_cat_title = category.title | downcase -%}
+        {%- assign cat_has_color = false -%}
+        {%- assign cat_is_install = false -%}
+        {%- if filter_cat_title contains 'color' or filter_cat_title contains 'colors' -%}
+          {%- assign cat_has_color = true -%}
+        {%- endif -%}
+        {%- if filter_cat_title contains 'assembly' or filter_cat_title contains 'installation' or filter_cat_title contains 'room of choice' -%}
+          {%- assign cat_is_install = true -%}
+        {%- endif -%}
+        {%- for product_option in category.product_options.value -%}
+          {%- assign filter_po_title = product_option.product_option_title | downcase -%}
+          {%- if filter_po_title == 'paint color' or filter_po_title == 'paint colors' or filter_po_title == 'color' or filter_po_title == 'vinyl colors' or filter_po_title == 'vinyl color' -%}
+            {%- assign cat_has_color = true -%}
+          {%- endif -%}
+          {%- if filter_po_title contains 'assembly' or filter_po_title contains 'installation' or filter_po_title contains 'room of choice' -%}
+            {%- assign cat_is_install = true -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- if color_only and cat_has_color == false -%}{%- continue -%}{%- endif -%}
+        {%- if install_only and cat_is_install == false -%}{%- continue -%}{%- endif -%}
+      {%- endif -%}
+
       {% liquid
         assign color_counter = 0
         assign color_title = ''
@@ -138,7 +167,7 @@
             {% endif %}
           >
             <span>
-              {% unless category.hide_option %}
+              {% unless category.hide_option or color_only or install_only %}
                 {{- display_number -}}
               {% endunless %}
             </span>
