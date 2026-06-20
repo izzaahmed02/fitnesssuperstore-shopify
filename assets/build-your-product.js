@@ -16,6 +16,9 @@ if (!customElements.get('build-your-product')) {
       constructor() {
         super();
         this.items = new Map();
+        // Colour is staged in the colour card and only enters the floating cart /
+        // FSR90 line after the customer clicks "Select Color" (.byp-card__color-cta).
+        this.colorCommitted = false;
         this.cartAddUrl = this.dataset.cartAddUrl || '/cart/add';
 
         this.floatingCart = this.querySelector('.byp-floating-cart');
@@ -47,6 +50,9 @@ if (!customElements.get('build-your-product')) {
 
           const learnMore = e.target.closest('.byp-card__learn-more');
           if (learnMore) return this.openCardModal(learnMore.closest('.byp-card'));
+
+          const colorCta = e.target.closest('.byp-card__color-cta');
+          if (colorCta) return this.commitColor(colorCta);
 
           if (e.target.closest('[data-modal-close]')) return this.closeModal();
 
@@ -272,6 +278,8 @@ if (!customElements.get('build-your-product')) {
         // visibility and fold its upcharge into the subtotal. The actual cart line and
         // its "[+$x]" come from the pricing function reading _functionOperation.
         this.engineInstances().forEach((inst) => {
+          // Colour only appears once the customer confirms it via "Select Color".
+          if (this.isColorInstance(inst) && !this.colorCommitted) return;
           const price = this.instancePriceCents(inst);
           const entries = this.instanceSummary(inst);
           if (!entries || !entries.length) return;
@@ -341,6 +349,8 @@ if (!customElements.get('build-your-product')) {
         let fnOps = [];
 
         sources.forEach((instance) => {
+          // Don't attach colour to the FSR90 line until it's confirmed via "Select Color".
+          if (this.isColorInstance(instance) && !this.colorCommitted) return;
           const payload = this.readInstancePayload(instance);
           if (!payload) return;
           props = { ...props, ...payload.defaults, ...payload.options };
@@ -358,6 +368,22 @@ if (!customElements.get('build-your-product')) {
       // Every options-engine instance rendered inside the Build section.
       engineInstances() {
         return Array.from(this.querySelectorAll('product-customization-options'));
+      }
+
+      // True for the colour card's engine instance (gated behind "Select Color").
+      isColorInstance(instance) {
+        return !!(instance && instance.closest('.byp-options-engine--color-only'));
+      }
+
+      // "Select Color" confirms the colour card's current selection, adding it to the
+      // floating cart and the FSR90 line. After this, swatch changes stay in sync.
+      commitColor(button) {
+        this.colorCommitted = true;
+        if (!button.dataset.label) button.dataset.label = button.textContent;
+        button.textContent = 'Color Added ✓';
+        clearTimeout(this._colorCtaTimer);
+        this._colorCtaTimer = setTimeout(() => { button.textContent = button.dataset.label; }, 900);
+        this.renderFloatingCart();
       }
 
       // Total upcharge (cents) for one engine instance, summed from the engine's own
