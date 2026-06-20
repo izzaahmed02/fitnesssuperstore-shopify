@@ -86,14 +86,53 @@
               <button type="button" class="byp-slider__arrow byp-slider__arrow--prev" aria-label="Previous products" hidden>&#10094;</button>
               <ul class="byp-grid byp-slider__track" role="list">
               {%- if forloop.first -%}
-                {%- comment -%} COLOUR — engine-rendered swatches as the first card in "Best Selling Add-Ons". {%- endcomment -%}
-                <li class="byp-card byp-card--color">
+                {%- comment -%} COLOUR — engine swatches presented as a product card (first card in "Best Selling Add-Ons"). {%- endcomment -%}
+                <li class="byp-card byp-card--color"
+                    data-product-id="{{ main_product.id }}"
+                    data-product-handle="{{ main_product.handle }}"
+                    data-product-title="{{ main_product.title | escape }}">
+
+                  <template class="byp-card__description-full">{{ main_product.description }}</template>
+
                   <p class="pr_custom_price"
                      data-price-value="{{ main_variant.price | money_without_currency }}"
                      data-currency="{{ cart.currency.symbol }}"
                      style="position:absolute;left:-9999px;">{{ main_variant.price | money }}</p>
+
+                  <div class="byp-card__media">
+                    {%- if main_product.featured_media -%}
+                      <img
+                        srcset="{{ main_product.featured_media | image_url: width: 360 }} 360w, {{ main_product.featured_media | image_url: width: 540 }} 540w"
+                        src="{{ main_product.featured_media | image_url: width: 540 }}"
+                        sizes="(min-width: 990px) 280px, 45vw"
+                        alt="{{ main_product.featured_media.alt | escape }}"
+                        loading="lazy"
+                        width="{{ main_product.featured_media.width }}"
+                        height="{{ main_product.featured_media.height }}">
+                    {%- endif -%}
+                  </div>
+
+                  {%- if main_variant.sku != blank -%}
+                    <p class="byp-card__sku">SKU: {{ main_variant.sku }}</p>
+                  {%- endif -%}
+
+                  <h3 class="byp-card__title">{{ main_product.title }}</h3>
+
                   <div class="byp-options-engine byp-options-engine--color-only">
                     {% render 'product-options', product: main_product %}
+                  </div>
+
+                  <div class="byp-card__row byp-card__row--price">
+                    <button type="button" class="byp-card__learn-more link">Learn more</button>
+                  </div>
+
+                  <div class="byp-card__row byp-card__row--actions">
+                    <select class="byp-card__qty" aria-label="{{ 'products.product.quantity.label' | t }}">
+                      {%- for i in (1..10) -%}
+                        <option value="{{ i }}">{{ i }}</option>
+                      {%- endfor -%}
+                    </select>
+                    <button type="button" class="byp-card__color-cta button">Select Color</button>
                   </div>
                 </li>
               {%- endif -%}
