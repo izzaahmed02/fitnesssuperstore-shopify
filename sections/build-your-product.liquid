@@ -52,6 +52,19 @@
     {% render 'product-options', product: main_product %}
   </div>
 
+  {%- comment -%} TEMP DEBUG — dump option/variant structure the theme actually sees {%- endcomment -%}
+<pre style="background:#fff;border:1px solid #000;padding:10px;font-size:11px;white-space:pre-wrap;position:relative;z-index:9;">
+{%- for category in product.metafields.options.product_options.value -%}
+CATEGORY: {{ category.title }}
+{%- for opt in category.product_options.value %}
+  OPTION: "{{ opt.product_option_title }}" | variants.size = {{ opt.product_option_variants.value.size }} | default = "{{ opt.product_option_sets_default.value.title }}"
+  {%- for v in opt.product_option_variants.value limit: 6 %}
+      - "{{ v.title }}" id={{ v.id }} price={{ v.price }} avail={{ v.available }}
+  {%- endfor -%}
+{% endfor %}
+{% endfor -%}
+</pre>
+
   <div class="byp__layout">
     {%- comment -%} ================= LEFT: ACCORDIONS ================= {%- endcomment -%}
     <div class="byp__accordions">
