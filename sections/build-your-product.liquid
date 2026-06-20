@@ -92,6 +92,8 @@
                     data-product-handle="{{ main_product.handle }}"
                     data-product-title="{{ main_product.title | escape }}">
 
+                  {% render 'byp-product-badge', product: main_product, badge_tags: section.settings.badge_tags %}
+
                   <template class="byp-card__description-full">{{ main_product.description }}</template>
 
                   <p class="pr_custom_price"
@@ -124,6 +126,12 @@
 
                   <div class="byp-card__row byp-card__row--price">
                     <button type="button" class="byp-card__learn-more link">Learn more</button>
+                    <div class="byp-card__price">
+                      <span class="byp-card__compare{% unless main_variant.compare_at_price > main_variant.price %} hidden{% endunless %}">
+                        As high as: <s>{{ main_variant.compare_at_price | money }}</s>
+                      </span>
+                      <span class="byp-card__price-current">{{ main_variant.price | money }} {{ cart.currency.iso_code }}</span>
+                    </div>
                   </div>
 
                   <div class="byp-card__row byp-card__row--actions">
@@ -146,6 +154,8 @@
                     data-product-id="{{ addon.id }}"
                     data-product-handle="{{ addon.handle }}"
                     data-product-title="{{ addon.title | escape }}">
+
+                  {% render 'byp-product-badge', product: addon, badge_tags: section.settings.badge_tags %}
 
                   <script type="application/json" class="byp-card__variants-json">
                     [
@@ -371,6 +381,7 @@
   "enabled_on": { "templates": ["product"] },
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Build Your Product" },
+    { "type": "text", "id": "badge_tags", "label": "Badge tags (comma-separated)", "default": "Best Seller", "info": "Products carrying any of these tags show a badge in the top-left of their card (e.g. Best Seller, New, Sale). Case-insensitive." },
     { "type": "header", "content": "Installation options" },
     {
       "type": "product",
