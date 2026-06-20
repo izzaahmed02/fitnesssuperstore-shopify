@@ -1,295 +1,485 @@
-  <link rel="preload" href="{{ 'quantity-popover.css' | asset_url }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" href="{{ 'quantity-popover.css' | asset_url }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript>
   <link rel="stylesheet" href="{{ 'quantity-popover.css' | asset_url }}">
 </noscript>
 {% comment %} {{ 'component-card.css' | asset_url | stylesheet_tag }} {% endcomment %}
-    <link
-      rel="stylesheet"
-      href="{{ 'component-card.css' | asset_url }}"
-      media="print"
-      onload="this.media='all'"
-    >
+<link
+  rel="stylesheet"
+  href="{{ 'component-card.css' | asset_url }}"
+  media="print"
+  onload="this.media='all'"
+>
 
-
-<script src="{{ 'cart.js' | asset_url }}" defer></script>
+{%- comment -%}
+  cart.js is now loaded from sections/header.liquid (before cart-drawer.js)
+  on every page where the cart drawer is enabled, so we no longer load it
+  here. Loading it twice would re-declare the global `CartItems` class and
+  re-`customElements.define('cart-items', ...)`, both of which throw.
+{%- endcomment -%}
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer></script>
 <style>
-    .drawer {
-        visibility: hidden;
-        display: none;
-    }
-    .extra-option-item.apo-cart-item-mini {
-      display: none !important;
-    }
+  .drawer {
+    visibility: hidden;
+    display: none;
+  }
+  .extra-option-item.apo-cart-item-mini {
+    display: none !important;
+  }
 </style>
+
+{% assign show_product_options = false %}
+{% assign has_info = false %}
+{% for item in cart.items %}
+  {% for property in item.properties %}
+    {% if property.first == '_functionOperation' %}
+      {% assign show_product_options = true %}
+    {% endif %}
+  {% endfor %}
+  {% if request.page_type == 'product' %}
+    {% if item.product.id != product.id %}
+      {% assign options = item.product.metafields.options.product_options.value %}
+      {% for category in options %}
+        {% if category.help_text.value != blank %}
+          {% liquid
+            assign content = category.help_text.value
+            assign title = content.title
+            assign text = content.help_text
+            assign related_products = content.related_products.value
+            assign has_info = true
+          %}
+          {% render 'related-products-popup-for-options', popup_id: category.title, title: title, related_products: related_products, text: text %}
+        {% endif %}
+
+        {% for product_option in category.product_options.value %}
+          {% if product_option.help_text.value != blank %}
+            {% liquid
+              assign content = product_option.help_text.value
+              assign title = content.title
+              assign text = content.help_text
+              assign related_products = content.related_products.value
+              assign has_info = true
+            %}
+            {% render 'related-products-popup-for-options', popup_id: product_option.product_option_title, title: title, related_products: related_products, text: text %}
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    {% endif %}
+  {% else %}
+    {% assign options = item.product.metafields.options.product_options.value %}
+    {% for category in options %}
+      {% if category.help_text.value != blank %}
+        {% liquid
+          assign content = category.help_text.value
+          assign title = content.title
+          assign text = content.help_text
+          assign related_products = content.related_products.value
+          assign has_info = true
+        %}
+        {% render 'related-products-popup-for-options', popup_id: category.title, title: title, related_products: related_products, text: text %}
+      {% endif %}
+
+      {% for product_option in category.product_options.value %}
+        {% if product_option.help_text.value != blank %}
+          {% liquid
+            assign content = product_option.help_text.value
+            assign title = content.title
+            assign text = content.help_text
+            assign related_products = content.related_products.value
+            assign has_info = true
+          %}
+          {% render 'related-products-popup-for-options', popup_id: product_option.product_option_title, title: title, related_products: related_products, text: text %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  {% endif %}
+{% endfor %}
+
+{% if show_product_options %}
+  <link rel="stylesheet" href="{{ 'product-options.css' | asset_url }}" media="print" onload="this.media='all'">
+  <noscript>{{ 'product-options.css' | asset_url | stylesheet_tag }}</noscript>
+  {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
+{% endif %}
 
 <cart-drawer class="drawer{% if cart == empty %} is-empty{% endif %}">
   <div id="CartDrawer" class="cart-drawer">
     <div id="CartDrawer-Overlay" class="cart-drawer__overlay"></div>
-      <div class="drawer__inner gradient color-{{ settings.cart_color_scheme }}"
-          role="dialog"
-          aria-modal="true"
-          aria-label="{{ 'sections.cart.title' | t }}"
-          tabindex="-1"
-        >
-        {% if cart == empty %}
-          <div class="drawer__inner-empty">
-            <div class="cart-drawer__warnings center{% if settings.cart_drawer_collection != blank %} cart-drawer__warnings--has-collection{% endif %}">
-              <div class="cart-drawer__empty-content">
-                <div class="cart__empty-text drawer__heading">{{ 'sections.cart.empty' | t }}</div>
-                <div class="empty-cart__wrapper">
-                  <a href="{{ routes.all_products_collection_url }}" class="button">
-                    {{ 'general.continue_shopping' | t }}
-                  </a>
-                  <button class="drawer__close"
-                    type="button"
-                    onclick="this.closest('cart-drawer').close()"
-                    aria-label="{{ 'accessibility.close' | t }}"
-                  >
-                      {% render 'drawer-close' %}
-                  </button>
-                </div>
-                {% if shop.customer_accounts_enabled and customer == null %}
-                  <p class="cart__login-title h3">{{ 'sections.cart.login.title' | t }}</p>
-                  <p class="cart__login-paragraph">
-                      {{ 'sections.cart.login.paragraph_html' | t: link: routes.account_login_url }}
-                  </p>
-                {% endif %}
+    <div
+      class="drawer__inner gradient color-{{ settings.cart_color_scheme }}"
+      role="dialog"
+      aria-modal="true"
+      aria-label="{{ 'sections.cart.title' | t }}"
+      tabindex="-1"
+    >
+      {% if cart == empty %}
+        <div class="drawer__inner-empty">
+          <div class="cart-drawer__warnings center{% if settings.cart_drawer_collection != blank %} cart-drawer__warnings--has-collection{% endif %}">
+            <div class="cart-drawer__empty-content">
+              <div class="cart__empty-text drawer__heading">{{ 'sections.cart.empty' | t }}</div>
+              <div class="empty-cart__wrapper">
+                <a href="{{ routes.all_products_collection_url }}" class="button">
+                  {{ 'general.continue_shopping' | t }}
+                </a>
+                <button
+                  class="drawer__close"
+                  type="button"
+                  onclick="this.closest('cart-drawer').close()"
+                  aria-label="{{ 'accessibility.close' | t }}"
+                >
+                  {% render 'drawer-close' %}
+                </button>
               </div>
+              {% if shop.customer_accounts_enabled and customer == null %}
+                <p class="cart__login-title h3">{{ 'sections.cart.login.title' | t }}</p>
+                <p class="cart__login-paragraph">
+                  {{ 'sections.cart.login.paragraph_html' | t: link: routes.account_login_url }}
+                </p>
+              {% endif %}
             </div>
-            {% if settings.cart_drawer_collection != blank %}
-                <div class="cart-drawer__collection">
-                    {% render 'card-collection', card_collection: settings.cart_drawer_collection, columns: 1 %}
-                </div>
-            {% endif %}
           </div>
-        {% endif %}
-        <div class="drawer__header">
-          <div class="drawer__heading">
-            {% assign filtered_count = 0 %}
-            {% for item in cart.items %}
-              {% unless item.product.tags contains 'avisplus-product-options' %}
-                  {% assign filtered_count = filtered_count | plus: item.quantity %}
-              {% endunless %}
-            {% endfor %}
-            Cart preview (<span data-count="{{ filtered_count }}">{{ filtered_count }}</span>)
-          </div>
-          <button class="drawer__close"
-            type="button"
-            onclick="this.closest('cart-drawer').close()"
-            aria-label="{{ 'accessibility.close' | t }}"
-          >
-            {% render 'drawer-close' %}
-          </button>
+          {% if settings.cart_drawer_collection != blank %}
+            <div class="cart-drawer__collection">
+              {% render 'card-collection', card_collection: settings.cart_drawer_collection, columns: 1 %}
+            </div>
+          {% endif %}
         </div>
-        {% comment %} <div data-count="{{ cart.item_count }}" class="cart-drawer__subheading">
+      {% endif %}
+      <div class="drawer__header">
+        <div class="drawer__heading">
+          {% assign filtered_count = 0 %}
+          {% for item in cart.items %}
+            {% unless item.product.tags contains 'avisplus-product-options' %}
+              {% assign filtered_count = filtered_count | plus: item.quantity %}
+            {% endunless %}
+          {% endfor %}
+          Cart preview (<span data-count="{{ filtered_count }}">{{ filtered_count }}</span>)
+        </div>
+        <button
+          class="drawer__close"
+          type="button"
+          onclick="this.closest('cart-drawer').close()"
+          aria-label="{{ 'accessibility.close' | t }}"
+        >
+          {% render 'drawer-close' %}
+        </button>
+      </div>
+      {% comment %}
+        <div data-count="{{ cart.item_count }}" class="cart-drawer__subheading">
           You have <span>{{ cart.item_count }}</span> items in your cart
-        </div> {% endcomment %}
-        <cart-drawer-items {% if cart == empty %} class="is-empty" {% endif %}>
-          <form action="{{ routes.cart_url }}"
-                  id="CartDrawer-Form"
-                  class="cart__contents cart-drawer__form"
-                  method="post"
-          >
-            <div id="CartDrawer-CartItems" class="drawer__contents js-contents">
-              {% if cart != empty %}
-                <div class="drawer__cart-items-wrapper">
-                  <table class="cart-items" role="table">
-                    <div role="rowgroup">
-                      {% for item in cart.items %}
-                        {% comment %}
+        </div>
+      {% endcomment %}
+      <cart-drawer-items
+        {% if cart == empty %}
+          class="is-empty"
+        {% endif %}
+      >
+        <form
+          action="{{ routes.cart_url }}"
+          id="CartDrawer-Form"
+          class="cart__contents cart-drawer__form"
+          method="post"
+        >
+          <div id="CartDrawer-CartItems" class="drawer__contents js-contents">
+            {% if cart != empty %}
+              <div class="drawer__cart-items-wrapper">
+                <table class="cart-items" role="table">
+                  <div role="rowgroup">
+                    {% for item in cart.items %}
+                      {% comment %}
                         {% if item.product.title != 'Warranty' and
                             item.product.title != 'Full Assembly & Installation' and
-                            item.product.title != 'Color' and 
-                            item.product.title != 'Custom Color' and 
-                            item.product.title != 'Custom Paint Color' and 
-                            item.product.title != 'Custom Vinyl Color' and 
+                            item.product.title != 'Color' and
+                            item.product.title != 'Custom Color' and
+                            item.product.title != 'Custom Paint Color' and
+                            item.product.title != 'Custom Vinyl Color' and
                             item.product.title != 'Custom Upholstery Color' %}
-                        {% endcomment %}
-                            <tr
-                              id="CartDrawer-Item-{{ forloop.index }}"
-                              class="cart-item
-                              {% if item.product.tags contains 'avisplus-product-options' %} extra-option-item
-                              {% else %} cart-item-new{% endif %}  apo-cart-item-mini"
-                              data-key="{{ item.key }}"
-                              role="row"
-                            >
-                            <!-- Product Image -->
-                            <td class="cart-item__media" role="cell">
-                              {% if item.image %}
-                                <a href="{{ item.url }}" class="cart-item__link"
-                                    tabindex="-1" aria-hidden="true"></a>
-                                <div>
-                                    <img
-                                      class="cart-item__image"
-                                      src="{{ item.image | image_url: width: 300 }}"
-                                      alt="{{ item.image.alt | escape }}"
-                                      loading="lazy"
-                                      width="150"
-                                      height="{{ 150 | divided_by: item.image.aspect_ratio | ceil }}"
-                                    >
-                                </div>
-                              {% endif %}
-                            </td>
-                            <!-- Product details -->
-                            <td class="cart-item__details" role="cell">
-                              <div class="cart-title">
-                                {% if item.product.tags contains 'avisplus-product-options' %}
-                                    <span class="cart-item__name extra-option-title h4 break">
-                                      {{ item.variant.title | escape }}
-                                    </span>
-                                {% else %}
-                                    <a href="{{ item.url }}"
-                                      class="cart-item__name h4 break">
-                                      {{ item.product.title | escape }}
-                                    </a>
-                                {% endif %}
-                                <cart-remove-button id="CartDrawer-Remove-{{ forloop.index }}" data-index="{{ forloop.index }}">
-    <a href="{{ item.url_to_remove }}"
-        class="cart-remove-button"
-        data-key="{{ item.key }}"
-        aria-label="Remove {{ item.product.title | escape }}"
-    >
-        {% render 'icon-remove' %}
-    </a>
-</cart-remove-button>
+                      {% endcomment %}
+                      <tr
+                        id="CartDrawer-Item-{{ forloop.index }}"
+                        class="
+                          cart-item
+                          {% if item.product.tags contains 'avisplus-product-options' %} extra-option-item
+                          {% else %} cart-item-new{% endif %}  apo-cart-item-mini
+                        "
+                        data-key="{{ item.key }}"
+                        role="row"
+                      >
+                        <!-- Product Image -->
+                        <td class="cart-item__media" role="cell">
+                          {% if item.image %}
+                            <a
+                              href="{{ item.url }}"
+                              class="cart-item__link"
+                              tabindex="-1"
+                              aria-hidden="true"
+                            ></a>
+                            <div>
+                              <img
+                                class="cart-item__image"
+                                src="{{ item.image | image_url: width: 300 }}"
+                                alt="{{ item.image.alt | escape }}"
+                                loading="lazy"
+                                width="150"
+                                height="{{ 150 | divided_by: item.image.aspect_ratio | ceil }}"
+                              >
+                            </div>
+                          {% endif %}
+                        </td>
+                        <!-- Product details -->
+                        <td class="cart-item__details" role="cell">
+                          <div class="cart-title">
+                            {% if item.product.tags contains 'avisplus-product-options' %}
+                              <span class="cart-item__name extra-option-title h4 break">
+                                {{- item.variant.title | escape }}
+                              </span>
+                            {% else %}
+                              <a
+                                href="{{ item.url }}"
+                                class="cart-item__name h4 break"
+                              >
+                                {{- item.product.title | escape }}
+                              </a>
+                            {% endif %}
+                            {% if item.original_price != item.final_price %}
+                              <div class="cart-item__discounted-prices">
+                                <s class="cart-item__old-price product-option">
+                                  {{ item.original_price | money }}
+                                </s>
+                                <strong class="cart-item__final-price product-option">
+                                  {{ item.final_price | money }}
+                                </strong>
                               </div>
-                              {% assign extra_props = "" %}
-                              {% for prop in item.properties %}
-                                {% assign p_name = prop.first %}
-                                {% assign p_value = prop.last %}
-                                {% assign first_char = p_name | slice: 0, 1 %}
-                                {% if p_name == blank or p_value == blank or first_char == '_' %}
-                                    {% continue %}
-                                {% endif %}
-                                {% comment %}
-                                {% if p_name contains "Warranty"
-                                or p_name contains "Processing Time"
-                                or p_name contains "Full Assembly & Installation"
-                                or p_name contains "Color"
-                                or p_name contains "Paint Color"
-                                or p_name contains "Vinyl Color" 
-                                or p_name contains "Upholstery Color" %}
-                                {% endcomment %}
-                                  {%- capture extra_props -%}
+                            {% else %}
+                              {% unless item.product.tags contains 'avisplus-product-options' %}
+                                <div class="extra-price">
+                                  {{ item.original_price | money }}
+                                </div>
+                              {% endunless %}
+                            {% endif %}
+                            <cart-remove-button
+                              class="cart-item__remove"
+                              id="Remove-{{ item.index | plus: 1 }}"
+                              data-index="{{ item.index | plus: 1 }}"
+                            >
+                              <a
+                                href="{{ item.url_to_remove }}"
+                                class="button button--tertiary"
+                                aria-label="{{ 'sections.cart.remove_title' | t: title: item.title | escape }}"
+                              >
+                                {% render 'cart-item-remove' %}
+                              </a>
+                            </cart-remove-button>
+                          </div>
+                          {%- assign has_warranty_property = false -%}
+                          {%- for prop in item.properties -%}
+                            {%- if prop.first == 'Warranty' -%}{%- assign has_warranty_property = true -%}{%- endif -%}
+                          {%- endfor -%}
+                          {% if item.product.metafields.custom.warranty and has_warranty_property == false %}
+                            <dl>
+                              <div style="margin-top: 0px;" class="product-option">
+                                <dt>Warranty</dt>
+                                <dd>
+                                  {{
+                          item.product.metafields.custom.warranty
+                          | strip_html
+                          | replace: ' (See Description for Details)', ''
+                        }}
+                                </dd>
+                              </div>
+                            </dl>
+                          {% endif %}
+                          {% assign cart_processing_time = item.variant.metafields.custom.processing_time_long_variant
+                            | default: item.product.metafields.custom.processing_time_long
+                            | default: item.product.metafields.custom.processing_time
+                          %}
+                          {% if cart_processing_time != blank %}
+                            <dl>
+                              <div class="product-option">
+                                <dt>Processing Time:</dt>
+                                <dd>{{ cart_processing_time }}</dd>
+                              </div>
+                            </dl>
+                          {% endif %}
+                          {%- if item.product.has_only_default_variant == false or item.properties.size != 0 or item.selling_plan_allocation != null -%}
+                            <dl>
+                              {%- if item.product.has_only_default_variant == false -%}
+                                {%- for option in item.options_with_values -%}
+                                  {% unless custom_color_found and option.name == 'Color' %}
+                                    <div class="product-option">
+                                      <dt>{{ option.name }}:</dt>
+                                      <dd>{{ option.value }}</dd>
+                                    </div>
+                                  {% endunless %}
+                                {%- endfor -%}
+                              {%- endif -%}
+                            </dl>
+                          {%- endif -%}
+                          {% assign extra_props = '' %}
+                          {% for prop in item.properties %}
+                            {% assign p_name = prop.first %}
+                            {% assign p_value = prop.last %}
+                            {% assign first_char = p_name | slice: 0, 1 %}
+                            {% if p_name == blank or p_value == blank or first_char == '_' or p_name contains 'Processing Time' %}
+                              {% continue %}
+                            {% endif %}
+                            {% comment %}
+                              {% if p_name contains "Warranty"
+                              or p_name contains "Processing Time"
+                              or p_name contains "Full Assembly & Installation"
+                              or p_name contains "Color"
+                              or p_name contains "Paint Color"
+                              or p_name contains "Vinyl Color"
+                              or p_name contains "Upholstery Color" %}
+                            {% endcomment %}
+                            {%- capture extra_props -%}
                                       {{ extra_props }}
                                       <div class="product-option">
                                           <dt>{{ p_name }}:</dt>
                                           <dd>{{ p_value }}</dd>
                                       </div>
                                   {%- endcapture -%}
-                                {% comment %}
-                                {% endif %}
-                                {% endcomment %}
-                              {% endfor %}
-                              {% if extra_props != "" %}
-                                <dl>
-                                  {%- for option in item.options_with_values -%}
-                                    {% unless option.name == "Title" %}
-                                      <div class="product-option">
-                                        <dt>{{ option.name }}:</dt>
-                                        <dd>{{ option.value }}</dd>
-                                      </div>
-                                    {% endunless %}
-                                  {%- endfor -%}
-                                  {{ extra_props }}
-                                </dl>
+                            {% comment %}
                               {% endif %}
-                              <quantity-popover class="cart-quantity-price {% if item.properties._apo_option and item.properties._apo_order %} apo-hide-item{% endif %}">
-                                <div class="cart-item__quantity-wrapper quantity-popover-wrapper">
-                                  <span class="quantity-text">QTY: </span>
-                                  {% comment %}
-                                  <a type="button"
-                                      class="quantity-btn quantity-btn--minus"
-                                      data-key="{{ item.key }}"
-                                      data-variantId={{ item.variant.id }}
-                                      {% if item.quantity == 1 %}
-                                        disabled="disabled"
-                                      {% endif %}
-                                  >
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                      fill="none" xmlns="http://www.w3.org/2000/svg">
-                                      <rect x="0.5" y="0.5" width="23" height="23"
-                                          rx="11.5" fill="white"/>
-                                      <rect x="0.5" y="0.5" width="23" height="23"
-                                          rx="11.5" stroke="#D3D9E5"/>
-                                      <path fill-rule="evenodd" clip-rule="evenodd"
-                                          d="M7.25 12C7.25 11.5858 7.58579 11.25 8 11.25H12H16C16.4142 11.25 16.75 11.5858 16.75 12C16.75 12.4142 16.4142 12.75 16 12.75H12H8C7.58579 12.75 7.25 12.4142 7.25 12Z"
-                                          fill="black"/>
-                                    </svg>
-                                  </a>
-                                  {% endcomment %}
-                                  <span class="quantity-text">{{ item.quantity }}</span>
-                                  {% comment %}
-                                  <a type="button"
-                                    class="quantity-btn quantity-btn--plus"
-                                    data-key="{{ item.key }}"
-                                    data-variantId="{{ item.variant.id }}"
-                                  >
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                      fill="none" xmlns="http://www.w3.org/2000/svg">
-                                      <rect x="0.5" y="0.5" width="23" height="23"
-                                        rx="11.5" fill="white"/>
-                                      <rect x="0.5" y="0.5" width="23" height="23"
-                                        rx="11.5" stroke="#D3D9E5"/>
-                                      <path fill-rule="evenodd" clip-rule="evenodd"
-                                        d="M12.0004 7.39844C12.3318 7.39844 12.6004 7.66707 12.6004 7.99844V11.3984H16.0004C16.3318 11.3984 16.6004 11.6671 16.6004 11.9984C16.6004 12.3298 16.3318 12.5984 16.0004 12.5984H12.6004V15.9984C12.6004 16.3298 12.3318 16.5984 12.0004 16.5984C11.669 16.5984 11.4004 16.3298 11.4004 15.9984V12.5984H8.00039C7.66902 12.5984 7.40039 12.3298 7.40039 11.9984C7.40039 11.6671 7.66902 11.3984 8.00039 11.3984H11.4004V7.99844C11.4004 7.66707 11.669 7.39844 12.0004 7.39844Z"
-                                        fill="#23232B"/>
-                                    </svg>
-                                  </a>
-                                  {% endcomment %}
-                                </div>
-                                {% if item.original_price != item.final_price %}
-                                  <div class="cart-item__discounted-prices">
-                                    <s class="cart-item__old-price product-option">
-                                      {{ item.original_price | money }}
-                                    </s>
-                                    <strong class="cart-item__final-price product-option">
-                                      {{ item.final_price | money }}
-                                    </strong>
-                                  </div>
-                                {% else %}
-                                  {% unless item.product.tags contains 'avisplus-product-options' %}
-                                    <div class="extra-price product-option">
-                                      {{ item.original_price | money }}
+                            {% endcomment %}
+                          {% endfor %}
+                          {% if extra_props != '' %}
+                            <dl>
+                              {% if item.product.metafields.options.product_options == blank and item.variant.metafields.options.product_options == blank %}
+                                {%- for option in item.options_with_values -%}
+                                  {% unless option.name == 'Title' %}
+                                    <div class="product-option">
+                                      <dt>{{ option.name }}:</dt>
+                                      <dd>{{ option.value }}</dd>
                                     </div>
                                   {% endunless %}
-                                {% endif %}
-                              </quantity-popover>
-                            </td>
-                          </tr>
+                                {%- endfor -%}
+                              {% endif %}
+                              {{ extra_props }}
+                            </dl>
+                          {% endif %}
+                          <quantity-popover class="cart-quantity-price {% if item.properties._apo_option and item.properties._apo_order %} apo-hide-item{% endif %}">
+                            <input type="hidden" data-quantity-variant-id="{{ item.variant.id }}" value="{{ item.quantity }}">
+                            <div class="cart-item__quantity-wrapper quantity-popover-wrapper">
+                              <span class="quantity-text">QTY: </span>
+                              {% comment %}
+                                <a type="button"
+                                    class="quantity-btn quantity-btn--minus"
+                                    data-key="{{ item.key }}"
+                                    data-variantId={{ item.variant.id }}
+                                    {% if item.quantity == 1 %}
+                                      disabled="disabled"
+                                    {% endif %}
+                                >
+                                  <svg width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="0.5" y="0.5" width="23" height="23"
+                                        rx="11.5" fill="white"/>
+                                    <rect x="0.5" y="0.5" width="23" height="23"
+                                        rx="11.5" stroke="#D3D9E5"/>
+                                    <path fill-rule="evenodd" clip-rule="evenodd"
+                                        d="M7.25 12C7.25 11.5858 7.58579 11.25 8 11.25H12H16C16.4142 11.25 16.75 11.5858 16.75 12C16.75 12.4142 16.4142 12.75 16 12.75H12H8C7.58579 12.75 7.25 12.4142 7.25 12Z"
+                                        fill="black"/>
+                                  </svg>
+                                </a>
+                              {% endcomment %}
+                              <span class="quantity-text">{{ item.quantity }}</span>
+                              {% comment %}
+                                <a type="button"
+                                  class="quantity-btn quantity-btn--plus"
+                                  data-key="{{ item.key }}"
+                                  data-variantId="{{ item.variant.id }}"
+                                >
+                                  <svg width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="0.5" y="0.5" width="23" height="23"
+                                      rx="11.5" fill="white"/>
+                                    <rect x="0.5" y="0.5" width="23" height="23"
+                                      rx="11.5" stroke="#D3D9E5"/>
+                                    <path fill-rule="evenodd" clip-rule="evenodd"
+                                      d="M12.0004 7.39844C12.3318 7.39844 12.6004 7.66707 12.6004 7.99844V11.3984H16.0004C16.3318 11.3984 16.6004 11.6671 16.6004 11.9984C16.6004 12.3298 16.3318 12.5984 16.0004 12.5984H12.6004V15.9984C12.6004 16.3298 12.3318 16.5984 12.0004 16.5984C11.669 16.5984 11.4004 16.3298 11.4004 15.9984V12.5984H8.00039C7.66902 12.5984 7.40039 12.3298 7.40039 11.9984C7.40039 11.6671 7.66902 11.3984 8.00039 11.3984H11.4004V7.99844C11.4004 7.66707 11.669 7.39844 12.0004 7.39844Z"
+                                      fill="#23232B"/>
+                                  </svg>
+                                </a>
+                              {% endcomment %}
+                            </div>
+                            {% for property in item.properties %}
+                              {% if property.first == '_functionOperation' %}
+                                <div class="product-edit-options cart-item__custom-options-trigger" data-key-modify="{{ item.key }}" data-cart-item="CartItem-{{ item.id }}">
+                                  <span>Modify</span>
+                                </div>
+                                {% break %}
+                              {% endif %}
+                            {% endfor %}
+                          </quantity-popover>
+                        </td>
+                      </tr>
                       {% comment %}
                         {% endif %}
                       {% endcomment %}
-                      {% endfor %}
-                    </div>
-                  </table>
-                </div>
-              {% endif %}
-              <p id="CartDrawer-LiveRegionText" class="visually-hidden" role="status"></p>
-              <p id="CartDrawer-LineItemStatus" class="visually-hidden" aria-hidden="true" role="status">
-                  {{ 'accessibility.loading' | t }}
-              </p>
+                    {% endfor %}
+                  </div>
+                </table>
+              </div>
+            {% endif %}
+            <p id="CartDrawer-LiveRegionText" class="visually-hidden" role="status"></p>
+            <p id="CartDrawer-LineItemStatus" class="visually-hidden" aria-hidden="true" role="status">
+              {{ 'accessibility.loading' | t }}
+            </p>
+          </div>
+          {% comment %} <div id="CartDrawer-CartErrors" role="alert"></div> {% endcomment %}
+        </form>
+      </cart-drawer-items>
+      <div class="drawer__footer">
+        <div class="cart-drawer__footer" {{ block.shopify_attributes }}>
+          {% unless cart == empty %}
+            <div class="total-wrapper">
+              Total <span class="cart-total">{{ cart.total_price | money }}</span>
             </div>
-            {% comment %} <div id="CartDrawer-CartErrors" role="alert"></div> {% endcomment %}
-          </form>
-        </cart-drawer-items>
-        <div class="drawer__footer">
-            <div class="cart-drawer__footer" {{ block.shopify_attributes }}>
-                {% unless cart == empty %}
-                    <div class="total-wrapper">
-                        Total <span class="cart-total">{{ cart.total_price | money }}</span>
-                    </div>
-                {% endunless %}
-                <a class="cart-link" href="/cart">View/Edit cart</a>
-            </div>
+          {% endunless %}
+          <a class="cart-link" href="/cart">View/Edit cart</a>
         </div>
+      </div>
     </div>
+    {% if show_product_options %}
+      {% for item in cart.items %}
+        {% for property in item.properties %}
+          {% if property.first == '_functionOperation' %}
+            {% render 'cart-item-product-options', line_item: item %}
+            {% break %}
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    {% endif %}
   </div>
 </cart-drawer>
 
+{% comment %}Confirmation Popup{% endcomment %}
+
+<div class="overlay cart-items__overlay"></div>
+<div class="cart-items__popup" style="display: none;">
+  <div class="cart-items__popup-wrapper">
+    <a href="#" class="cart-items__popup-close">{% render 'cart-item-remove' %}</a>
+    <h5 class="cart-items__popup-title">{{ 'general.cart.cart_remove_popup_title' | t }}</h5>
+    <p class="cart-items__popup-copy">{{ 'general.cart.cart_remove_popup_copy' | t }}</p>
+    <div class="cart-items__popup-buttons">
+      <a
+        href="#"
+        class="cart-items__popup-btn cart-items__popup-btn--cancel"
+      >
+        {{ 'general.cart.cart_remove_popup_button_cancel' | t }}
+      </a>
+      <a
+        href="#"
+        class="cart-items__popup-btn cart-items__popup-btn--remove"
+      >
+        {% render 'icon-remove' %}
+        {{ 'general.cart.cart_remove_popup_button_remove' | t }}
+      </a>
+    </div>
+  </div>
+</div>
+
 {% comment %}
-TODO: delete the script below, if it is no longer needed
+  TODO: delete the script below, if it is no longer needed
 {% endcomment %}
 <script>
 	document.addEventListener("DOMContentLoaded", () => {
@@ -358,8 +548,15 @@ TODO: delete the script below, if it is no longer needed
 
 	// Function to update the cart count in the drawer and header
 	function updateCartCount(totalContentCount) {
-    const cartCountBubble = document.querySelector('.cart-count-bubble')
-    cartCountBubble.querySelector('span').innerHTML = document.querySelector('.drawer__heading span').innerHTML;
+    const cartCountBubble = document.querySelector('.cart-count-bubble');
+    const cartCountText = cartCountBubble?.querySelector('span');
+    const drawerHeadingCount = document.querySelector('.drawer__heading span');
+
+    if (!cartCountBubble || !cartCountText || !drawerHeadingCount) {
+      return;
+    }
+
+    cartCountText.innerHTML = drawerHeadingCount.innerHTML;
     cartCountBubble.classList.remove('hidden');
     return;
     {% comment %}
@@ -380,3 +577,6 @@ TODO: delete the script below, if it is no longer needed
 	}
 </script>
 
+{% if show_product_options %}
+  <script src="{{ 'product-custom-options.js' | asset_url }}" defer></script>
+{% endif %}
