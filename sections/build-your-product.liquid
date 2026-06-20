@@ -1,6 +1,8 @@
 {{ 'build-your-product.css' | asset_url | stylesheet_tag }}
-<script src="{{ 'build-your-product.js' | asset_url }}" defer="defer"></script>
+{{ 'product-options.css' | asset_url | stylesheet_tag }}
 {{ 'byp-options-skin.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'build-your-product.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'product-custom-options.js' | asset_url }}" defer="defer"></script>
 
 {%- comment -%}
   ============================================================================
@@ -33,11 +35,24 @@
 >
   <h2 class="byp__heading">{{ section.settings.heading | escape }}</h2>
 
+  {%- comment -%}
+    OPTIONS ENGINE — renders the live metaobject options for this product
+    (Colors, Accessories / Add Ons, Cable Attachments, Assembly) via the store's
+    options engine. The hidden .pr_custom_price anchor is the running-total target
+    the engine updates; the floating cart will read it. We skin this markup to the
+    Build layout in byp-options-skin.css. This is the foundation render — we will
+    relocate/restructure it into the final layout next.
+  {%- endcomment -%}
+  <p class="pr_custom_price"
+     data-price-value="{{ main_variant.price | money_without_currency }}"
+     data-currency="{{ cart.currency.symbol }}"
+     style="position:absolute;left:-9999px;top:auto;">{{ main_variant.price | money }}</p>
+
+  <div class="byp-options-engine">
+    {% render 'product-options', product: main_product %}
+  </div>
+
   <div class="byp__layout">
-
-
-
-<script src="{{ 'product-custom-options.js' | asset_url }}" defer="defer"></script>
     {%- comment -%} ================= LEFT: ACCORDIONS ================= {%- endcomment -%}
     <div class="byp__accordions">
       {%- for block in section.blocks -%}
