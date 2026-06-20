@@ -12,13 +12,12 @@
   produce the same shapes. The rendered markup below (classes + data-*
   attributes + per-accordion JSON) is the contract the CSS/JS depend on.
 
-  COLOR NOTE: The product colour picker lives on the MAIN PRODUCT FORM (the
-  theme's custom options system renders it there as <product-form-with-options>).
-  This section does not render a colour picker. At "Add to cart", the floating
-  cart calls that element's prepareDefaultProperties()/prepareOptions()/
-  prepareFunctionalProperties() and attaches the result (colour/warranty/
-  processing/assembly + _functionOperation) to the main product line, so the line
-  matches the main form's own submit.
+  COLOR: rendered by the live options engine (product-options.liquid) as a card
+  inside the first accordion ("Best Selling Add-Ons"). The engine element wires
+  the swatches and exposes prepareOptions()/prepareFunctionalProperties(); the
+  floating cart will call those at "Add to cart" so colour attaches to the FSR90
+  line via _functionOperation. byp-options-skin.css styles the swatches and hides
+  the non-colour engine categories inside the colour card.
   ============================================================================
 {%- endcomment -%}
 {%- liquid
@@ -34,36 +33,6 @@
   data-main-variant-id="{{ main_variant.id }}"
 >
   <h2 class="byp__heading">{{ section.settings.heading | escape }}</h2>
-
-  {%- comment -%}
-    OPTIONS ENGINE — renders the live metaobject options for this product
-    (Colors, Accessories / Add Ons, Cable Attachments, Assembly) via the store's
-    options engine. The hidden .pr_custom_price anchor is the running-total target
-    the engine updates; the floating cart will read it. We skin this markup to the
-    Build layout in byp-options-skin.css. This is the foundation render — we will
-    relocate/restructure it into the final layout next.
-  {%- endcomment -%}
-  <p class="pr_custom_price"
-     data-price-value="{{ main_variant.price | money_without_currency }}"
-     data-currency="{{ cart.currency.symbol }}"
-     style="position:absolute;left:-9999px;top:auto;">{{ main_variant.price | money }}</p>
-
-  <div class="byp-options-engine">
-    {% render 'product-options', product: main_product %}
-  </div>
-
-  {%- comment -%} TEMP DEBUG — dump option/variant structure the theme actually sees {%- endcomment -%}
-<pre style="background:#fff;border:1px solid #000;padding:10px;font-size:11px;white-space:pre-wrap;position:relative;z-index:9;">
-{%- for category in product.metafields.options.product_options.value -%}
-CATEGORY: {{ category.title }}
-{%- for opt in category.product_options.value %}
-  OPTION: "{{ opt.product_option_title }}" | variants.size = {{ opt.product_option_variants.value.size }} | default = "{{ opt.product_option_sets_default.value.title }}"
-  {%- for v in opt.product_option_variants.value limit: 6 %}
-      - "{{ v.title }}" id={{ v.id }} price={{ v.price }} avail={{ v.available }}
-  {%- endfor -%}
-{% endfor %}
-{% endfor -%}
-</pre>
 
   <div class="byp__layout">
     {%- comment -%} ================= LEFT: ACCORDIONS ================= {%- endcomment -%}
@@ -116,6 +85,18 @@ CATEGORY: {{ category.title }}
             <div class="byp-slider">
               <button type="button" class="byp-slider__arrow byp-slider__arrow--prev" aria-label="Previous products" hidden>&#10094;</button>
               <ul class="byp-grid byp-slider__track" role="list">
+              {%- if forloop.first -%}
+                {%- comment -%} COLOUR — engine-rendered swatches as the first card in "Best Selling Add-Ons". {%- endcomment -%}
+                <li class="byp-card byp-card--color">
+                  <p class="pr_custom_price"
+                     data-price-value="{{ main_variant.price | money_without_currency }}"
+                     data-currency="{{ cart.currency.symbol }}"
+                     style="position:absolute;left:-9999px;">{{ main_variant.price | money }}</p>
+                  <div class="byp-options-engine byp-options-engine--color-only">
+                    {% render 'product-options', product: main_product %}
+                  </div>
+                </li>
+              {%- endif -%}
               {%- for addon in block.settings.products -%}
                 {%- liquid
                   assign addon_variant = addon.selected_or_first_available_variant
