@@ -72,6 +72,7 @@ if (!customElements.get('build-your-product')) {
           if (e.target.closest('variant-selects, variant-radios')) {
             setTimeout(() => {
               this.mainVariant = this.readMainVariant();
+              this.syncMainFormBasePrice();
               this.renderFloatingCart();
             }, 300);
           }
@@ -79,6 +80,11 @@ if (!customElements.get('build-your-product')) {
 
         this.renderFloatingCart();
         this.initSliders();
+
+        // Fix the main-form price base (engine reads the first .pr_custom_price as base).
+        // Set the value synchronously, then re-run after the engine's init paint.
+        this.syncMainFormBasePrice();
+        setTimeout(() => this.syncMainFormBasePrice(), 350);
       }
 
       /* ---------- product sliders ---------- */
@@ -141,6 +147,41 @@ if (!customElements.get('build-your-product')) {
           price: this.parseMoney(priceText),
           comparePrice: this.parseMoney(compareText)
         };
+      }
+
+      /* ---------- main form price (.pr_custom_price) base ----------
+         The options engine's priceHelper() uses the FIRST .pr_custom_price in
+         the DOM (the main product form's) as the base price, reading its
+         data-price-value. On this template that element renders without a valid
+         data-price-value, so the engine computes 0 + adjustments and the main
+         form shows "0". We give every .pr_custom_price a valid base (the FSR90
+         price) so the engine computes base + adjustments correctly, and we fix
+         the on-load display if the engine already wrote 0. */
+      syncMainFormBasePrice() {
+        const priceEls = Array.from(document.querySelectorAll('.pr_custom_price'));
+        if (!priceEls.length) return;
+
+        const baseCents = this.mainVariant.price;
+        if (!baseCents) return;
+        const baseDollars = (baseCents / 100).toFixed(2); // engine expects a plain number string, e.g. "3299.00"
+
+        // The currency symbol the engine formats with — our colour card anchor already carries it.
+        const cardAnchor = this.querySelector('.byp-card--color .pr_custom_price');
+        const currency = cardAnchor ? cardAnchor.dataset.currency : '';
+
+        priceEls.forEach((el) => {
+          const val = parseFloat(el.dataset.priceValue);
+          if (!val || Number.isNaN(val)) {
+            el.dataset.priceValue = baseDollars;
+            if (currency && !el.dataset.currency) el.dataset.currency = currency;
+          }
+        });
+
+        // If the engine already painted "0" into the visible main-form price, restore the base.
+        const mainEl = priceEls[0];
+        if (!this.parseMoney(mainEl.textContent)) {
+          mainEl.textContent = this.formatMoney(baseCents);
+        }
       }
 
       /* ---------- card interactions ---------- */
