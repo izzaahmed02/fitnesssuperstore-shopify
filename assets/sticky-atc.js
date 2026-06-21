@@ -5,9 +5,11 @@
   form in the DOM and:
     - shows itself once the real Add-to-Cart button has scrolled out of view;
     - mirrors the live product price;
-    - builds a dropdown for each visible option in #Product-Options-<section>
-      and keeps it in two-way sync with the real option control, so pricing,
-      validation and cart submission stay owned by product-custom-options.js;
+    - builds a dropdown for each visible add-on option in
+      #Product-Options-<section> (configuration / variant options such as color
+      and rig configuration are excluded; see isConfigOption) and keeps it in
+      two-way sync with the real option control, so pricing, validation and cart
+      submission stay owned by product-custom-options.js;
     - on click, scrolls the options into view (if any) and triggers the real
       submit button.
 
@@ -88,14 +90,34 @@ if (!customElements.get('sticky-atc')) {
       const quantities = Array.from(this.optionsBlock.querySelectorAll('[data-quantity-option]'));
 
       selects.forEach((select) => {
-        if (this.isVisible(select)) this.buildSelectProxy(select);
+        if (this.isVisible(select) && !this.isConfigOption(select.dataset.selectTitle)) {
+          this.buildSelectProxy(select);
+        }
       });
       accordions.forEach((accordion) => {
-        if (this.isVisible(accordion)) this.buildAccordionProxy(accordion);
+        if (this.isVisible(accordion) && !this.isConfigOption(this.accordionTitle(accordion))) {
+          this.buildAccordionProxy(accordion);
+        }
       });
       quantities.forEach((quantity) => {
         if (this.isVisible(quantity)) this.buildScrollProxy(quantity, 'Quantity');
       });
+    }
+
+    // The bar surfaces add-on options only. Configuration / "variant" options
+    // (color pickers and rig configuration) are excluded, per the product team's
+    // option matrix. Color options are already skipped because the theme renders
+    // them as color pickers (not selects/accordions); this guards them anyway.
+    isConfigOption(title) {
+      if (!title) return false;
+      const t = title.toLowerCase();
+      return t.includes('color') ||
+        t.includes('colour') ||
+        t.includes('rig section') ||
+        t.includes('number of rig') ||
+        t.includes('rig upright') ||
+        t.includes('upright height') ||
+        t.includes('rig options');
     }
 
     makeField(labelText) {
