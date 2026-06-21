@@ -1,0 +1,67 @@
+{% comment %}
+  Renders a sticky Add-to-Cart bar for the product page.
+
+  The bar appears once the main Add-to-Cart button scrolls out of view and
+  mirrors the live variant price and add-on option total from the main product
+  form. It does not own any selection or pricing state of its own: clicking its
+  button scrolls the add-on options into view (if any) and then triggers the
+  real product form submit button, so the existing validation and pricing logic
+  in product-custom-options.js / product-form-with-options.js remain the single
+  source of truth.
+
+  Accepts:
+  - product: {Object} product object.
+  - section_id: {String} id of the main product section (used to locate the
+    real form, submit button and option total in the DOM).
+
+  Usage:
+  {% render 'sticky-atc', product: product, section_id: section.id %}
+{% endcomment %}
+
+{%- if product != blank -%}
+  {{ 'sticky-atc.css' | asset_url | stylesheet_tag }}
+
+  <sticky-atc
+    class="sticky-atc"
+    data-section-id="{{ section_id }}"
+    data-submit-button="ProductSubmitButton-{{ section_id }}"
+    aria-hidden="true"
+  >
+    <div class="sticky-atc__inner page-width">
+      <div class="sticky-atc__product">
+        {%- if product.featured_media != blank -%}
+          <img
+            class="sticky-atc__image"
+            src="{{ product.featured_media | image_url: width: 120 }}"
+            alt="{{ product.featured_media.alt | escape }}"
+            width="60"
+            height="60"
+            loading="lazy"
+          >
+        {%- endif -%}
+        <div class="sticky-atc__details">
+          <p class="sticky-atc__title">{{ product.title | escape }}</p>
+          <div class="sticky-atc__pricing">
+            <span class="sticky-atc__price" data-sticky-atc-price>
+              {%- render 'price', product: product, use_variant: true -%}
+            </span>
+            <span class="sticky-atc__addon" data-sticky-atc-addon hidden>
+              <span class="sticky-atc__addon-label">+ add-ons</span>
+              <span class="sticky-atc__addon-total" data-sticky-atc-addon-total>$0.00</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="sticky-atc__button button button--primary"
+        data-sticky-atc-button
+      >
+        <span>{{ 'products.product.add_to_cart' | t }}</span>
+      </button>
+    </div>
+  </sticky-atc>
+
+  <script src="{{ 'sticky-atc.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
