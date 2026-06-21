@@ -1,0 +1,961 @@
+{%- liquid
+  assign has_addons = false
+
+  for block in section.blocks
+    if block.type == 'add_on_product' and block.settings.product != blank
+      assign has_addons = true
+      break
+    endif
+  endfor
+-%}
+
+{% if has_addons %}
+  <product-add-ons class="product-add-ons" data-section-id="{{ section.id }}">
+    <p class="product-add-ons__heading">Add-Ons:</p>
+
+    <div class="product-add-ons__tabs" role="tablist" aria-label="Product add-ons">
+      {%- liquid
+        assign rendered_tabs = ''
+        assign tab_index = 0
+      -%}
+
+      {% for block in section.blocks %}
+        {% if block.type == 'add_on_product' and block.settings.product != blank %}
+          {%- liquid
+            assign tab_heading = block.settings.tab_heading | default: 'Recommended Add-Ons'
+            assign tab_key = tab_heading | handleize
+
+            capture tab_token
+              echo '|'
+              echo tab_key
+              echo '|'
+            endcapture
+          -%}
+
+          {% unless rendered_tabs contains tab_token %}
+            <button
+              type="button"
+              class="product-add-ons__tab{% if tab_index == 0 %} is-active{% endif %}"
+              role="tab"
+              aria-selected="{% if tab_index == 0 %}true{% else %}false{% endif %}"
+              aria-controls="ProductAddOnsPanel-{{ section.id }}-{{ tab_key }}"
+              id="ProductAddOnsTab-{{ section.id }}-{{ tab_key }}"
+              data-tab="{{ tab_key }}"
+            >
+              {{ tab_heading }}
+            </button>
+
+            {%- liquid
+              assign rendered_tabs = rendered_tabs | append: tab_token
+              assign tab_index = tab_index | plus: 1
+            -%}
+          {% endunless %}
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="product-add-ons__panels">
+      {%- liquid
+        assign rendered_panels = ''
+        assign panel_index = 0
+      -%}
+
+      {% for block in section.blocks %}
+        {% if block.type == 'add_on_product' and block.settings.product != blank %}
+          {%- liquid
+            assign panel_heading = block.settings.tab_heading | default: 'Recommended Add-Ons'
+            assign panel_key = panel_heading | handleize
+            assign panel_product_count = 0
+
+            capture panel_token
+              echo '|'
+              echo panel_key
+              echo '|'
+            endcapture
+          -%}
+
+          {% unless rendered_panels contains panel_token %}
+            {% for count_block in section.blocks %}
+              {% if count_block.type == 'add_on_product' and count_block.settings.product != blank %}
+                {% assign count_tab_heading = count_block.settings.tab_heading | default: 'Recommended Add-Ons' %}
+                {% assign count_tab_key = count_tab_heading | handleize %}
+
+                {% if count_tab_key == panel_key %}
+                  {% assign panel_product_count = panel_product_count | plus: 1 %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+
+            <div
+              class="product-add-ons__panel{% if panel_index == 0 %} is-active{% endif %}"
+              id="ProductAddOnsPanel-{{ section.id }}-{{ panel_key }}"
+              role="tabpanel"
+              aria-labelledby="ProductAddOnsTab-{{ section.id }}-{{ panel_key }}"
+              data-panel="{{ panel_key }}"
+              {% unless panel_index == 0 %}hidden{% endunless %}
+            >
+              <div class="product-add-ons__slider-wrap{% if panel_product_count > 2 %} has-slider{% endif %}">
+                {% if panel_product_count > 2 %}
+                  <button
+                    type="button"
+                    class="product-add-ons__arrow product-add-ons__arrow--prev"
+                    aria-label="Previous add-ons"
+                    data-add-ons-prev
+                    hidden
+                  >
+                    <svg width="8" height="12" viewBox="0 0 8 12" fill="none" aria-hidden="true">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M7.19635 0.46967C7.48924 0.762563 7.48924 1.23744 7.19635 1.53033L2.72668 6L7.19635 10.4697C7.48924 10.7626 7.48924 11.2374 7.19635 11.5303C6.90345 11.8232 6.42858 11.8232 6.13569 11.5303L1.13569 6.53033C0.995033 6.38968 0.916016 6.19891 0.916016 6C0.916016 5.80109 0.995033 5.61032 1.13569 5.46967L6.13569 0.46967C6.42858 0.176777 6.90345 0.176777 7.19635 0.46967Z" fill="currentColor"/>
+                    </svg>
+                  </button>
+                {% endif %}
+
+                <div
+                  class="product-add-ons__grid{% if panel_product_count > 2 %} product-add-ons__grid--slider{% endif %}"
+                  {% if panel_product_count > 2 %}data-add-ons-slider{% endif %}
+                >
+                  {% for card_block in section.blocks %}
+                    {% if card_block.type == 'add_on_product' and card_block.settings.product != blank %}
+                      {%- liquid
+                        assign add_on_product = card_block.settings.product
+                        assign card_tab_heading = card_block.settings.tab_heading | default: 'Recommended Add-Ons'
+                        assign card_tab_key = card_tab_heading | handleize
+                        assign add_on_variant = add_on_product.selected_or_first_available_variant
+                      -%}
+
+                      {% if card_tab_key == panel_key %}
+                        {%- liquid
+                          assign add_on_button_label = card_block.settings.button_label | default: 'Add To Cart'
+                        -%}
+
+                        <article class="product-add-ons__card" {{ card_block.shopify_attributes }}>
+                          <a class="product-add-ons__image-link" href="{{ add_on_product.url }}">
+                            <div class="product-add-ons__image-wrap">
+                              {% if add_on_product.featured_image %}
+                                {% assign add_on_image_alt = add_on_product.featured_image.alt | default: add_on_product.title | escape %}
+
+                                {{
+                                  add_on_product.featured_image
+                                  | image_url: width: 520
+                                  | image_tag:
+                                    loading: 'lazy',
+                                    widths: '180, 260, 360, 520',
+                                    sizes: '(min-width: 990px) 180px, 45vw',
+                                    alt: add_on_image_alt,
+                                    class: 'product-add-ons__image'
+                                }}
+                              {% else %}
+                                {{ 'product-1' | placeholder_svg_tag: 'product-add-ons__image placeholder-svg' }}
+                              {% endif %}
+                            </div>
+                          </a>
+
+                          <div class="product-add-ons__content">
+                            <a class="product-add-ons__title" href="{{ add_on_product.url }}">
+                              {{ card_block.settings.custom_title | default: add_on_product.title }}
+                            </a>
+
+                            <div class="product-add-ons__price">
+                              <span>Price:</span>
+                              <strong>{{ add_on_variant.price | money }}</strong>
+
+                              {% if add_on_variant.compare_at_price > add_on_variant.price %}
+                                <s>{{ add_on_variant.compare_at_price | money }}</s>
+                              {% endif %}
+                            </div>
+
+                            <form
+                              class="product-add-ons__form"
+                              method="post"
+                              action="{{ routes.cart_add_url }}"
+                              data-product-add-on-form
+                            >
+                              <input
+                                type="hidden"
+                                name="id"
+                                value="{{ add_on_variant.id }}"
+                                {% unless add_on_variant.available %}
+                                  disabled
+                                {% endunless %}
+                              >
+
+                              <input type="hidden" name="quantity" value="1">
+
+                              <button
+                                type="submit"
+                                name="add"
+                                class="product-add-ons__button"
+                                data-add-on-atc
+                                data-add-on-variant-id="{{ add_on_variant.id }}"
+                                data-default-label="{{ add_on_button_label | escape }}"
+                                data-added-label="Added"
+                                data-sold-out="{% unless add_on_variant.available %}true{% else %}false{% endunless %}"
+                                {% unless add_on_variant.available %}disabled{% endunless %}
+                              >
+                                <span class="product-add-ons__button-icon" aria-hidden="true">
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                    <path d="M7 18C5.9 18 5 18.9 5 20S5.9 22 7 22 9 21.1 9 20 8.1 18 7 18ZM17 18C15.9 18 15 18.9 15 20S15.9 22 17 22 19 21.1 19 20 18.1 18 17 18ZM7.2 14.5C6.45 14.5 5.8 14.08 5.48 13.43L2 6H1C.45 6 0 5.55 0 5S.45 4 1 4H2.65C3.05 4 3.41 4.24 3.57 4.61L4.3 6H21C21.35 6 21.68 6.18 21.86 6.49C22.04 6.8 22.05 7.18 21.88 7.5L18.3 13.97C17.95 14.61 17.29 15 16.57 15H8.1L7.2 14.5Z" fill="currentColor"/>
+                                  </svg>
+                                </span>
+
+                                <span data-add-on-button-label>
+                                  {% if add_on_variant.available == false %}
+                                    Sold Out
+                                  {% else %}
+                                    {{ add_on_button_label }}
+                                  {% endif %}
+                                </span>
+                              </button>
+                            </form>
+                          </div>
+                        </article>
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                </div>
+
+                {% if panel_product_count > 2 %}
+                  <button
+                    type="button"
+                    class="product-add-ons__arrow product-add-ons__arrow--next"
+                    aria-label="Next add-ons"
+                    data-add-ons-next
+                  >
+                    <svg width="8" height="12" viewBox="0 0 8 12" fill="none" aria-hidden="true">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M0.803654 0.46967C1.09655 0.176777 1.57142 0.176777 1.86431 0.46967L6.86431 5.46967C7.15721 5.76256 7.15721 6.23744 6.86431 6.53033L1.86431 11.5303C1.57142 11.8232 1.09655 11.8232 0.803654 11.5303C0.510761 11.2374 0.510761 10.7626 0.803654 10.4697L5.27332 6L0.803654 1.53033C0.510761 1.23744 0.510761 0.762563 0.803654 0.46967Z" fill="currentColor"/>
+                    </svg>
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+
+            {%- liquid
+              assign rendered_panels = rendered_panels | append: panel_token
+              assign panel_index = panel_index | plus: 1
+            -%}
+          {% endunless %}
+        {% endif %}
+      {% endfor %}
+    </div>
+  </product-add-ons>
+
+  <style>
+    .product-add-ons {
+      display: block;
+      margin-top: 18px;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+
+    .product-add-ons__heading {
+      margin: 0 0 14px;
+      font-size: 16px;
+      line-height: 24px;
+      font-weight: 700;
+      color: #23232b;
+    }
+
+    .product-add-ons__tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #e6e1df;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .product-add-ons__tab {
+      position: relative;
+      appearance: none;
+      -webkit-appearance: none;
+      border: 0;
+      background: transparent;
+      padding: 14px 16px;
+      min-width: max-content;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      color: #23232b;
+      cursor: pointer;
+    }
+
+    .product-add-ons__tab::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0px;
+      height: 3px;
+      background: transparent;
+      border-radius: 999px;
+    }
+
+    .product-add-ons__tab.is-active::after {
+      background: #ef3b12;
+    }
+
+    .product-add-ons__panel {
+      padding-top: 16px;
+    }
+
+    .product-add-ons__slider-wrap {
+      position: relative;
+      width: 100%;
+    }
+
+    .product-add-ons__slider-wrap.has-slider {
+      overflow: visible;
+    }
+
+    .product-add-ons__grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .product-add-ons__grid--slider {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding-bottom: 2px;
+    }
+
+    .product-add-ons__grid--slider::-webkit-scrollbar {
+      display: none;
+    }
+
+    .product-add-ons__grid--slider .product-add-ons__card {
+      flex: 0 0 calc((100% - 14px) / 2.25);
+      scroll-snap-align: start;
+    }
+
+    .product-add-ons__card {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: #fff;
+      border: 1px solid #eee9e7;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .product-add-ons__image-link {
+      display: block;
+      text-decoration: none;
+    }
+
+    .product-add-ons__image-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #faf9f9;
+      overflow: hidden;
+    }
+
+    .product-add-ons__image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      padding: 12px;
+    }
+
+    .product-add-ons__content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 12px;
+    }
+
+    .product-add-ons__title {
+      color: #23232b;
+      text-decoration: none;
+      font-size: 14px;
+      line-height: 1.35;
+      font-weight: 700;
+      min-height: 38px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-add-ons__title:hover {
+      color: #ef3b12;
+    }
+
+    .product-add-ons__price {
+      margin-top: 10px;
+      color: #ef3b12;
+      font-size: 14px;
+      line-height: 1.3;
+    }
+
+    .product-add-ons__price span {
+      font-weight: 700;
+    }
+
+    .product-add-ons__price s {
+      margin-left: 4px;
+      color: #777;
+      font-weight: 400;
+    }
+
+    .product-add-ons__form {
+      margin-top: auto;
+      padding-top: 12px;
+      display: block;
+    }
+
+    .product-add-ons__button {
+      width: 100%;
+      min-height: 42px;
+      border: 0;
+      border-radius: 7px;
+      background: #e7350c;
+      color: #fff;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: opacity 160ms ease, transform 160ms ease, background-color 160ms ease;
+    }
+
+    .product-add-ons__button:hover:not(:disabled) {
+      opacity: 0.92;
+    }
+
+    .product-add-ons__button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .product-add-ons__button:disabled {
+      opacity: 0.75;
+      cursor: not-allowed;
+    }
+
+    .product-add-ons__button.is-loading {
+      opacity: 0.75;
+      pointer-events: none;
+    }
+
+    .product-add-ons__button.is-added {
+      background: #6b6b6b;
+      cursor: not-allowed;
+    }
+
+    .product-add-ons__arrow {
+      position: absolute;
+      top: 50%;
+      z-index: 3;
+      width: 48px;
+      height: 48px;
+      border: 0;
+      border-radius: 50%;
+      background: #616166;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transform: translateY(-50%);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    }
+
+    .product-add-ons__arrow[hidden] {
+      display: none;
+    }
+
+    .product-add-ons__arrow--prev {
+      left: -12px;
+    }
+
+    .product-add-ons__arrow--next {
+      right: -12px;
+    }
+
+    @media screen and (max-width: 989px) {
+      .product-add-ons__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .product-add-ons__grid--slider .product-add-ons__card {
+        flex-basis: calc((100% - 12px) / 2.15);
+      }
+    }
+
+    @media screen and (max-width: 575px) {
+      .product-add-ons__grid,
+      .product-add-ons__grid--slider {
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 8px;
+      }
+
+      .product-add-ons__grid .product-add-ons__card,
+      .product-add-ons__grid--slider .product-add-ons__card {
+        flex: 0 0 40%;
+        scroll-snap-align: start;
+      }
+
+      .product-add-ons__arrow {
+        width: 30px;
+        height: 30px;
+      }
+
+      .product-add-ons__arrow--prev {
+        left: -6px;
+      }
+
+      .product-add-ons__arrow--next {
+        right: -6px;
+      }
+    }
+  </style>
+
+  <script>
+    if (!customElements.get('product-add-ons')) {
+      customElements.define(
+        'product-add-ons',
+        class ProductAddOns extends HTMLElement {
+          constructor() {
+            super();
+
+            this.tabs = Array.from(this.querySelectorAll('[data-tab]'));
+            this.panels = Array.from(this.querySelectorAll('[data-panel]'));
+            this.forms = Array.from(this.querySelectorAll('[data-product-add-on-form]'));
+            this.resizeTimer = null;
+            this.cartRefreshTimer = null;
+          }
+
+          connectedCallback() {
+            this.tabs.forEach((tab) => {
+              tab.addEventListener('click', () => {
+                this.selectTab(tab.dataset.tab);
+                window.setTimeout(() => this.updateAllSliders(), 80);
+              });
+            });
+
+            this.forms.forEach((form) => {
+              form.addEventListener('submit', (event) => this.onSubmit(event));
+            });
+
+            this.initSliders();
+            this.refreshAddOnButtons();
+
+            window.addEventListener('resize', () => {
+              window.clearTimeout(this.resizeTimer);
+              this.resizeTimer = window.setTimeout(() => this.updateAllSliders(), 150);
+            });
+
+            document.addEventListener('click', (event) => {
+              if (this.isCartInteraction(event.target)) {
+                this.scheduleCartRefresh(500);
+                this.scheduleCartRefresh(1200);
+              }
+            }, true);
+
+            document.addEventListener('change', (event) => {
+              if (this.isCartInteraction(event.target)) {
+                this.scheduleCartRefresh(500);
+                this.scheduleCartRefresh(1200);
+              }
+            }, true);
+
+            document.addEventListener('cart:updated', () => {
+              this.scheduleCartRefresh(300);
+            });
+
+            document.addEventListener('cart:update', () => {
+              this.scheduleCartRefresh(300);
+            });
+
+            document.addEventListener('cart:change', () => {
+              this.scheduleCartRefresh(300);
+            });
+          }
+
+          selectTab(tabKey) {
+            this.tabs.forEach((tab) => {
+              const isActive = tab.dataset.tab === tabKey;
+
+              tab.classList.toggle('is-active', isActive);
+              tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+
+            this.panels.forEach((panel) => {
+              const isActive = panel.dataset.panel === tabKey;
+
+              panel.classList.toggle('is-active', isActive);
+              panel.hidden = !isActive;
+            });
+          }
+
+          initSliders() {
+            this.querySelectorAll('.product-add-ons__slider-wrap.has-slider').forEach((wrap) => {
+              const slider = wrap.querySelector('[data-add-ons-slider]');
+              const prev = wrap.querySelector('[data-add-ons-prev]');
+              const next = wrap.querySelector('[data-add-ons-next]');
+
+              if (!slider || !prev || !next) return;
+
+              prev.addEventListener('click', () => this.scrollSlider(slider, -1));
+              next.addEventListener('click', () => this.scrollSlider(slider, 1));
+
+              slider.addEventListener(
+                'scroll',
+                () => this.updateSliderArrows(slider, prev, next),
+                { passive: true }
+              );
+
+              this.updateSliderArrows(slider, prev, next);
+            });
+          }
+
+          updateAllSliders() {
+            this.querySelectorAll('.product-add-ons__slider-wrap.has-slider').forEach((wrap) => {
+              const slider = wrap.querySelector('[data-add-ons-slider]');
+              const prev = wrap.querySelector('[data-add-ons-prev]');
+              const next = wrap.querySelector('[data-add-ons-next]');
+
+              if (!slider || !prev || !next) return;
+
+              this.updateSliderArrows(slider, prev, next);
+            });
+          }
+
+          scrollSlider(slider, direction) {
+            const card = slider.querySelector('.product-add-ons__card');
+            const gap = parseFloat(window.getComputedStyle(slider).gap) || 14;
+            const scrollAmount = card ? card.offsetWidth + gap : slider.clientWidth * 0.8;
+
+            slider.scrollBy({
+              left: direction * scrollAmount,
+              behavior: 'smooth'
+            });
+          }
+
+          updateSliderArrows(slider, prev, next) {
+            const maxScrollLeft = slider.scrollWidth - slider.clientWidth;
+            const currentScrollLeft = slider.scrollLeft;
+            const tolerance = 4;
+
+            prev.hidden = currentScrollLeft <= tolerance;
+            next.hidden = currentScrollLeft >= maxScrollLeft - tolerance;
+          }
+
+          async onSubmit(event) {
+            event.preventDefault();
+
+            const form = event.currentTarget;
+            const button = form.querySelector('[data-add-on-atc]');
+            const label = button ? button.querySelector('[data-add-on-button-label]') : null;
+            const defaultLabel = button ? button.dataset.defaultLabel || 'Add To Cart' : 'Add To Cart';
+
+            if (!button || button.disabled) return;
+
+            button.classList.add('is-loading');
+            button.disabled = true;
+            button.setAttribute('aria-disabled', 'true');
+
+            if (label) {
+              label.textContent = 'Adding...';
+            }
+
+            try {
+              const cart = this.getCartComponent();
+              const formData = new FormData(form);
+              const sections = this.getSectionsToRender(cart);
+
+              if (sections.length) {
+                formData.append('sections', sections.join(','));
+                formData.append('sections_url', window.location.pathname);
+              }
+
+              const response = await fetch(`${this.rootUrl()}cart/add.js`, {
+                method: 'POST',
+                headers: {
+                  Accept: 'application/json'
+                },
+                body: formData
+              });
+
+              const parsedState = await response.json();
+
+              if (!response.ok) {
+                throw new Error(parsedState.description || parsedState.message || 'Unable to add this item.');
+              }
+
+              this.renderCart(cart, parsedState, button);
+
+              // Re-enable so the same add-on can be added again,
+              // with a brief "Added" confirmation.
+              this.flashAdded(button);
+            } catch (error) {
+              button.disabled = false;
+              button.removeAttribute('aria-disabled');
+              button.classList.remove('is-loading', 'is-added');
+
+              if (label) {
+                label.textContent = defaultLabel;
+              }
+            }
+          }
+
+          getCartComponent() {
+            return document.querySelector('cart-drawer') || document.querySelector('cart-notification');
+          }
+
+          getSectionsToRender(cart) {
+            if (cart && typeof cart.getSectionsToRender === 'function') {
+              return cart.getSectionsToRender().map((section) => section.id);
+            }
+
+            return ['cart-drawer', 'cart-icon-bubble'];
+          }
+
+          renderCart(cart, parsedState, button) {
+            if (cart && typeof cart.renderContents === 'function') {
+              cart.renderContents(parsedState);
+              this.fixEmptyDrawerState();
+              return;
+            }
+
+            this.renderSectionsFallback(parsedState);
+            this.openCartFallback(button);
+            this.fixEmptyDrawerState();
+          }
+
+          renderSectionsFallback(parsedState) {
+            if (!parsedState.sections) return;
+
+            const drawerHtml = parsedState.sections['cart-drawer'];
+            const iconHtml = parsedState.sections['cart-icon-bubble'];
+
+            if (drawerHtml) {
+              const parsedDrawer = new DOMParser().parseFromString(drawerHtml, 'text/html');
+
+              const newDrawer = parsedDrawer.querySelector('cart-drawer');
+              const currentDrawer = document.querySelector('cart-drawer');
+
+              if (newDrawer && currentDrawer) {
+                currentDrawer.innerHTML = newDrawer.innerHTML;
+              } else {
+                const newCartDrawer = parsedDrawer.querySelector('#CartDrawer');
+                const currentCartDrawer = document.querySelector('#CartDrawer');
+
+                if (newCartDrawer && currentCartDrawer) {
+                  currentCartDrawer.innerHTML = newCartDrawer.innerHTML;
+                }
+              }
+            }
+
+            if (iconHtml) {
+              const parsedIcon = new DOMParser().parseFromString(iconHtml, 'text/html');
+
+              const newIcon = parsedIcon.querySelector('#cart-icon-bubble');
+              const currentIcon = document.querySelector('#cart-icon-bubble');
+
+              if (newIcon && currentIcon) {
+                currentIcon.innerHTML = newIcon.innerHTML;
+              } else {
+                const newBubble = parsedIcon.querySelector('.cart-count-bubble');
+                const currentBubble = document.querySelector('.cart-count-bubble');
+
+                if (newBubble && currentBubble) {
+                  currentBubble.innerHTML = newBubble.innerHTML;
+                }
+              }
+            }
+          }
+
+          openCartFallback(button) {
+            const cartDrawer = document.querySelector('cart-drawer');
+
+            if (cartDrawer && typeof cartDrawer.open === 'function') {
+              cartDrawer.open(button);
+              return;
+            }
+
+            if (cartDrawer) {
+              cartDrawer.classList.add('animate', 'active');
+              document.body.classList.add('overflow-hidden');
+              return;
+            }
+
+            const cartNotification = document.querySelector('cart-notification');
+
+            if (cartNotification && typeof cartNotification.open === 'function') {
+              cartNotification.open();
+            }
+          }
+
+          fixEmptyDrawerState() {
+            const cartDrawer = document.querySelector('cart-drawer');
+
+            if (!cartDrawer) return;
+
+            cartDrawer.classList.remove('is-empty');
+
+            window.requestAnimationFrame(() => {
+              cartDrawer.classList.remove('is-empty');
+
+              cartDrawer.querySelectorAll('.is-empty').forEach((element) => {
+                element.classList.remove('is-empty');
+              });
+
+              cartDrawer
+                .querySelectorAll('[data-cart-empty], .cart-drawer__empty-content, .drawer__inner-empty')
+                .forEach((element) => {
+                  element.hidden = true;
+                  element.style.display = 'none';
+                });
+
+              cartDrawer
+                .querySelectorAll('.drawer__inner, .cart-drawer, #CartDrawer, #CartDrawer-CartItems')
+                .forEach((element) => {
+                  element.hidden = false;
+                  element.style.display = '';
+                });
+            });
+          }
+
+          flashAdded(button) {
+            const label = button.querySelector('[data-add-on-button-label]');
+
+            button.classList.remove('is-loading', 'is-added');
+            button.disabled = false;
+            button.removeAttribute('aria-disabled');
+
+            if (!label) return;
+
+            label.textContent = button.dataset.addedLabel || 'Added';
+            window.clearTimeout(button._addedTimer);
+            button._addedTimer = window.setTimeout(() => {
+              label.textContent = button.dataset.defaultLabel || 'Add To Cart';
+            }, 1200);
+          }
+
+          async refreshAddOnButtons() {
+            const buttons = Array.from(this.querySelectorAll('[data-add-on-atc]'));
+
+            if (!buttons.length) return;
+
+            try {
+              const response = await fetch(`${this.rootUrl()}cart.js`, {
+                headers: {
+                  Accept: 'application/json'
+                },
+                cache: 'no-store'
+              });
+
+              const cart = await response.json();
+              const variantIdsInCart = new Set(
+                (cart.items || []).map((item) => String(item.variant_id))
+              );
+
+              buttons.forEach((button) => {
+                this.updateButtonFromCart(button, variantIdsInCart);
+              });
+            } catch (error) {
+              buttons.forEach((button) => {
+                this.restoreButton(button);
+              });
+            }
+          }
+
+          updateButtonFromCart(button) {
+            // Only a genuinely sold-out variant stays disabled.
+            // Being already in the cart no longer locks the button,
+            // so the same add-on can be added again.
+            const isSoldOut = button.dataset.soldOut === 'true';
+            const label = button.querySelector('[data-add-on-button-label]');
+
+            button.classList.remove('is-loading', 'is-added');
+
+            if (isSoldOut) {
+              button.disabled = true;
+              button.setAttribute('aria-disabled', 'true');
+
+              if (label) {
+                label.textContent = 'Sold Out';
+              }
+
+              return;
+            }
+
+            // Don't stomp the transient "Added" confirmation if it's showing.
+            if (button._addedTimer) return;
+
+            button.disabled = false;
+            button.removeAttribute('aria-disabled');
+
+            if (label) {
+              label.textContent = button.dataset.defaultLabel || 'Add To Cart';
+            }
+          }
+
+          restoreButton(button) {
+            const isSoldOut = button.dataset.soldOut === 'true';
+            const label = button.querySelector('[data-add-on-button-label]');
+
+            button.classList.remove('is-loading', 'is-added');
+
+            if (isSoldOut) {
+              button.disabled = true;
+              button.setAttribute('aria-disabled', 'true');
+
+              if (label) {
+                label.textContent = 'Sold Out';
+              }
+
+              return;
+            }
+
+            button.disabled = false;
+            button.removeAttribute('aria-disabled');
+
+            if (label) {
+              label.textContent = button.dataset.defaultLabel || 'Add To Cart';
+            }
+          }
+
+          isCartInteraction(target) {
+            if (!target) return false;
+
+            return Boolean(
+              target.closest('cart-drawer') ||
+              target.closest('cart-notification') ||
+              target.closest('cart-items') ||
+              target.closest('#CartDrawer') ||
+              target.closest('.cart-drawer') ||
+              target.closest('.drawer')
+            );
+          }
+
+          scheduleCartRefresh(delay) {
+            window.setTimeout(() => {
+              this.refreshAddOnButtons();
+            }, delay || 0);
+          }
+
+          rootUrl() {
+            if (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) {
+              return window.Shopify.routes.root;
+            }
+
+            return '/';
+          }
+        }
+      );
+    }
+  </script>
+{% endif %}
