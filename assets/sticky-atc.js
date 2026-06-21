@@ -34,15 +34,12 @@ if (!customElements.get('sticky-atc')) {
       if (!this.submitButton) return; // nothing to mirror or trigger
 
       this.stickyButton = this.querySelector('[data-sticky-atc-button]');
-      this.priceTarget = this.querySelector('[data-sticky-atc-price]');
       this.optionsTarget = this.querySelector('[data-sticky-atc-options]');
       this.toggle = this.querySelector('[data-sticky-atc-toggle]');
 
       this.optionsBlock = document.getElementById(`Product-Options-${this.sectionId}`);
-      this.sourcePrice = this.findSourcePrice();
 
       this.setupVisibilityObserver();
-      this.setupPriceMirror();
       // Build option proxies after the main options have had a chance to render.
       this.buildOptions();
 
@@ -52,20 +49,12 @@ if (!customElements.get('sticky-atc')) {
 
     disconnectedCallback() {
       if (this.visibilityObserver) this.visibilityObserver.disconnect();
-      if (this.priceObserver) this.priceObserver.disconnect();
       if (this.stickyButton) this.stickyButton.removeEventListener('click', this.onStickyClick);
       if (this.toggle) this.toggle.removeEventListener('click', this.onToggle);
     }
 
     isVisible(el) {
       return !!el && el.getClientRects().length > 0;
-    }
-
-    findSourcePrice() {
-      const info = this.submitButton.closest('product-info, .product__info-wrapper, .product') || document;
-      return info.querySelector('.product__prices .price-container .price') ||
-        info.querySelector('.price-container .price') ||
-        info.querySelector('.price');
     }
 
     /* ----- Visibility: show once the real ATC button has scrolled past ----- */
@@ -82,15 +71,6 @@ if (!customElements.get('sticky-atc')) {
     toggleVisible(visible) {
       this.classList.toggle('is-visible', visible);
       this.setAttribute('aria-hidden', visible ? 'false' : 'true');
-    }
-
-    /* ----- Price mirror ----- */
-    setupPriceMirror() {
-      if (!this.sourcePrice || !this.priceTarget) return;
-      const sync = () => { this.priceTarget.innerHTML = this.sourcePrice.innerHTML; };
-      sync();
-      this.priceObserver = new MutationObserver(sync);
-      this.priceObserver.observe(this.sourcePrice, { childList: true, subtree: true, characterData: true });
     }
 
     /* ----- Mobile collapse toggle ----- */

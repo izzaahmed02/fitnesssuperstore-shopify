@@ -54,9 +54,16 @@
         {%- endif -%}
         <div class="sticky-atc__details">
           <p class="sticky-atc__title">{{ product.title | escape }}</p>
-          <div class="sticky-atc__pricing" data-sticky-atc-price>
-            {%- comment -%} Mirrored from the main price element by sticky-atc.js. {%- endcomment -%}
-            {%- render 'price', product: product, use_variant: true -%}
+          {%- assign sticky_variant = product.selected_or_first_available_variant -%}
+          {%- assign sticky_compare = product.metafields.custom.retail_price -%}
+          {%- if sticky_compare == blank or sticky_compare <= sticky_variant.price -%}
+            {%- assign sticky_compare = sticky_variant.compare_at_price -%}
+          {%- endif -%}
+          <div class="sticky-atc__pricing">
+            <span class="sticky-atc__price-current">{{ sticky_variant.price | money }}</span>
+            {%- if sticky_compare != blank and sticky_compare > sticky_variant.price -%}
+              <span class="sticky-atc__price-compare">{{ sticky_compare | money }}</span>
+            {%- endif -%}
           </div>
         </div>
       </div>

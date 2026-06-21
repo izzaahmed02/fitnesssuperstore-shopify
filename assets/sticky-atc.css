@@ -1,8 +1,8 @@
 /*
-  Sticky Add-to-Cart bar.
+  Sticky Add-to-Cart bar. Tokens taken from the approved Figma design.
 
-  Desktop (>= 990px): pinned to the top of the viewport.
-  Mobile (< 990px): a collapsible panel fixed to the bottom.
+  Desktop (>= 990px): bar pinned to the top of the viewport, 84px tall.
+  Mobile (< 990px): collapsible panel fixed to the bottom.
 
   Hidden by default; the `is-visible` class is toggled by sticky-atc.js once the
   main Add-to-Cart button scrolls out of view.
@@ -13,7 +13,7 @@
   left: 0;
   right: 0;
   z-index: 6;
-  background: rgb(var(--color-background, 255 255 255));
+  background: #ffffff;
   transition: transform 0.25s ease, opacity 0.25s ease;
   opacity: 0;
   pointer-events: none;
@@ -23,8 +23,8 @@
 @media screen and (min-width: 990px) {
   .sticky-atc {
     top: 0;
-    border-bottom: 1px solid rgba(var(--color-foreground, 18 18 18), 0.1);
-    box-shadow: 0 2px 10px rgba(var(--color-foreground, 18 18 18), 0.08);
+    border-bottom: 1px solid #e5e5e5;
+    box-shadow: 0 1rem 2.5rem rgba(53, 53, 53, 0.12);
     transform: translateY(-100%);
   }
 
@@ -34,7 +34,6 @@
     pointer-events: auto;
   }
 
-  /* The mobile collapse toggle is hidden on desktop. */
   .sticky-atc__toggle {
     display: none;
   }
@@ -42,29 +41,19 @@
   .sticky-atc__inner {
     display: flex;
     align-items: center;
-    gap: 1.6rem;
-    padding: 1rem var(--page-width-margin, 1.5rem);
+    gap: 1.2rem;
+    min-height: 8.4rem;
+    padding: 0.8rem var(--page-width-margin, 2rem);
   }
 
   .sticky-atc__product {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    min-width: 0;
-    flex: 0 1 auto;
+    margin-right: auto; /* pushes options + button to the right (Figma 40px gap) */
   }
 
   .sticky-atc__options {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    flex: 1 1 auto;
-    justify-content: flex-end;
-  }
-
-  .sticky-atc__button {
-    flex: 0 0 auto;
-    min-width: 16rem;
+    gap: 1.2rem;
   }
 }
 
@@ -72,10 +61,9 @@
 @media screen and (max-width: 989px) {
   .sticky-atc {
     bottom: 0;
-    border-top: 1px solid rgba(var(--color-foreground, 18 18 18), 0.1);
-    box-shadow: 0 -2px 10px rgba(var(--color-foreground, 18 18 18), 0.12);
+    border-top: 1px solid #e5e5e5;
+    box-shadow: 0 0 1.2rem rgba(0, 0, 0, 0.1);
     transform: translateY(100%);
-    border-radius: 1.2rem 1.2rem 0 0;
   }
 
   .sticky-atc.is-visible {
@@ -84,40 +72,19 @@
     pointer-events: auto;
   }
 
-  .sticky-atc__toggle {
-    position: absolute;
-    top: 0.8rem;
-    right: 1.2rem;
-    background: none;
-    border: none;
-    padding: 0.4rem;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-  }
-
-  /* Caret points up when expanded, flips when collapsed. */
-  .sticky-atc__toggle {
-    transform: rotate(180deg);
-  }
-
-  .sticky-atc.is-collapsed .sticky-atc__toggle {
-    transform: rotate(0deg);
-  }
-
   .sticky-atc__inner {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 1rem;
-    padding: 1.4rem 1.2rem calc(1.4rem + env(safe-area-inset-bottom, 0px));
+    gap: 1.2rem;
+    padding: 1.6rem;
+    padding-bottom: calc(1.6rem + env(safe-area-inset-bottom, 0px));
   }
 
   .sticky-atc__product {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    min-width: 0;
-    padding-right: 3rem; /* leave room for the toggle */
+    padding-right: 3.2rem; /* room for the toggle chevron */
   }
 
   .sticky-atc__image {
@@ -127,14 +94,28 @@
   .sticky-atc__options {
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
+    gap: 1.2rem;
   }
 
-  .sticky-atc__button {
-    width: 100%;
+  .sticky-atc__toggle {
+    position: absolute;
+    top: 1.6rem;
+    right: 1.6rem;
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transform: rotate(180deg); /* points up when expanded */
+    transition: transform 0.2s ease;
   }
 
-  /* Collapsed: show only the product summary row. */
+  .sticky-atc.is-collapsed .sticky-atc__toggle {
+    transform: rotate(0deg);
+  }
+
+  /* Collapsed: only the product summary row shows. */
   .sticky-atc.is-collapsed .sticky-atc__options,
   .sticky-atc.is-collapsed .sticky-atc__button {
     display: none;
@@ -142,88 +123,137 @@
 }
 
 /* ----- Shared element styles ----- */
+.sticky-atc__product {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  min-width: 0;
+}
+
 .sticky-atc__image {
-  width: 4.8rem;
-  height: 4.8rem;
+  width: 6.8rem;
+  height: 6.8rem;
   object-fit: contain;
-  border-radius: 0.4rem;
   flex-shrink: 0;
 }
 
 .sticky-atc__details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
   min-width: 0;
 }
 
 .sticky-atc__title {
-  margin: 0 0 0.2rem;
+  margin: 0;
   font-weight: 700;
-  font-size: 1.4rem;
-  line-height: 1.3;
+  font-size: 1.6rem;
+  line-height: 2.4rem;
+  color: #000000;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 30rem;
+  max-width: 35rem;
 }
 
-.sticky-atc__pricing .price {
-  margin: 0;
+.sticky-atc__pricing {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
 }
 
-/* Option dropdowns rendered by sticky-atc.js. */
+.sticky-atc__price-current {
+  font-weight: 700;
+  font-size: 1.6rem;
+  line-height: 2.4rem;
+  color: #f1592a;
+}
+
+.sticky-atc__price-compare {
+  font-weight: 400;
+  font-size: 1.6rem;
+  line-height: 2.4rem;
+  color: #393940;
+  text-decoration: line-through;
+}
+
+/* Option controls rendered by sticky-atc.js. */
 .sticky-atc__option {
-  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.sticky-atc__option-select {
-  appearance: none;
-  -webkit-appearance: none;
-  padding: 0.9rem 3rem 0.9rem 1.2rem;
-  border: 1px solid rgba(var(--color-foreground, 18 18 18), 0.25);
-  border-radius: 0.6rem;
-  background: rgb(var(--color-background, 255 255 255));
-  font-size: 1.3rem;
-  line-height: 1.2;
+.sticky-atc__option-select,
+.sticky-atc__option-link {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  height: 4.8rem;
+  padding: 1.2rem;
+  padding-right: 4rem;
+  border: 1.5px solid #e5e5e5;
+  border-radius: 0.8rem;
+  background-color: #ffffff;
+  font-size: 1.6rem;
+  line-height: 2.4rem;
+  color: #393940;
   cursor: pointer;
-  max-width: 24rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* Custom down chevron (native arrow removed). */
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%23000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.2rem center;
+  background-size: 2.4rem 2.4rem;
+}
+
+.sticky-atc__option-select {
+  max-width: 36rem;
+}
+
+@media screen and (min-width: 990px) {
+  .sticky-atc__option-select {
+    min-width: 22rem;
+  }
 }
 
 .sticky-atc__option-input {
-  padding: 0.9rem 1.2rem;
-  border: 1px solid rgba(var(--color-foreground, 18 18 18), 0.25);
-  border-radius: 0.6rem;
-  font-size: 1.3rem;
-  width: 8rem;
-}
-
-/* Proxy that scrolls to a complex (multi-choice) option in the main block. */
-.sticky-atc__option-link {
-  padding: 0.9rem 1.2rem;
-  border: 1px solid rgba(var(--color-foreground, 18 18 18), 0.25);
-  border-radius: 0.6rem;
-  background: rgb(var(--color-background, 255 255 255));
-  font-size: 1.3rem;
-  cursor: pointer;
-  text-align: left;
-  max-width: 24rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  box-sizing: border-box;
+  height: 4.8rem;
+  padding: 1.2rem;
+  border: 1.5px solid #e5e5e5;
+  border-radius: 0.8rem;
+  font-size: 1.6rem;
+  width: 9rem;
 }
 
 .sticky-atc__button {
+  box-sizing: border-box;
   display: inline-flex;
-  align-items: center;
+  flex-direction: row;
   justify-content: center;
+  align-items: center;
   gap: 0.8rem;
+  height: 4.8rem;
+  padding: 1.2rem 2.4rem 1.2rem 1.2rem;
+  flex: 0 0 auto;
+  background: #d83d0e;
+  border: none;
+  border-radius: 0.8rem;
+  font-weight: 700;
+  font-size: 1.6rem;
+  line-height: 2.4rem;
+  color: #ffffff;
+  cursor: pointer;
 }
 
 .sticky-atc__button .icon {
-  width: 1.8rem;
-  height: 1.8rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  color: #ffffff;
 }
