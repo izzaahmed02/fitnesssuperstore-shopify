@@ -5,11 +5,11 @@
   form in the DOM and:
     - shows itself once the real Add-to-Cart button has scrolled out of view;
     - mirrors the live product price;
-    - builds a dropdown for each visible add-on option in
-      #Product-Options-<section> (configuration / variant options such as color
-      and rig configuration are excluded; see isConfigOption) and keeps it in
-      two-way sync with the real option control, so pricing, validation and cart
-      submission stay owned by product-custom-options.js;
+    - builds a dropdown for each visible "must-select" option in
+      #Product-Options-<section> (variant/config + key services; upsell add-ons
+      such as mats, attachments and accessories are excluded; see isMustSelect)
+      and keeps it in two-way sync with the real option control, so pricing,
+      validation and cart submission stay owned by product-custom-options.js;
     - on click, scrolls the options into view (if any) and triggers the real
       submit button.
 
@@ -90,34 +90,43 @@ if (!customElements.get('sticky-atc')) {
       const quantities = Array.from(this.optionsBlock.querySelectorAll('[data-quantity-option]'));
 
       selects.forEach((select) => {
-        if (this.isVisible(select) && !this.isConfigOption(select.dataset.selectTitle)) {
-          this.buildSelectProxy(select);
-        }
+        if (this.isVisible(select) && this.isMustSelect(select)) this.buildSelectProxy(select);
       });
       accordions.forEach((accordion) => {
-        if (this.isVisible(accordion) && !this.isConfigOption(this.accordionTitle(accordion))) {
-          this.buildAccordionProxy(accordion);
-        }
+        if (this.isVisible(accordion) && this.isMustSelect(accordion)) this.buildAccordionProxy(accordion);
       });
       quantities.forEach((quantity) => {
-        if (this.isVisible(quantity)) this.buildScrollProxy(quantity, 'Quantity');
+        if (this.isVisible(quantity) && this.isMustSelect(quantity)) this.buildScrollProxy(quantity, this.categoryTitleFor(quantity));
       });
     }
 
-    // The bar surfaces add-on options only. Configuration / "variant" options
-    // (color pickers and rig configuration) are excluded, per the product team's
-    // option matrix. Color options are already skipped because the theme renders
-    // them as color pickers (not selects/accordions); this guards them anyway.
-    isConfigOption(title) {
-      if (!title) return false;
-      const t = title.toLowerCase();
-      return t.includes('color') ||
+    // The bar surfaces only the "must-select" options for the product:
+    // configuration / variant choices (color, weight stack, rig sections, rig
+    // upright height) and the key services (assembly / room of choice, warranty).
+    // Everything else (mats, attachments, cable attachments, accessories / add-ons,
+    // etc.) is treated as a cart upsell and excluded. The decision is made on the
+    // option's category title (the <h2>), which is the reliable signal — the long
+    // accessory lists live under their own categories.
+    categoryTitleFor(el) {
+      const category = el.closest('.product-option__item');
+      const titleEl = category && category.querySelector('.product-options__category-title');
+      return titleEl ? titleEl.textContent.trim() : '';
+    }
+
+    isMustSelect(el) {
+      const t = this.categoryTitleFor(el).toLowerCase();
+      if (!t) return false;
+      return t.includes('warranty') ||
+        t.includes('weight stack') ||
+        t.includes('color') ||
         t.includes('colour') ||
+        t.includes('assembly') ||
+        t.includes('room of choice') ||
+        t.includes('rig option') ||
         t.includes('rig section') ||
         t.includes('number of rig') ||
         t.includes('rig upright') ||
-        t.includes('upright height') ||
-        t.includes('rig options');
+        t.includes('upright height');
     }
 
     makeField(labelText) {
