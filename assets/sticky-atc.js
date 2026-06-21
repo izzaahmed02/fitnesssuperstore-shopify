@@ -51,6 +51,7 @@ if (!customElements.get('sticky-atc')) {
 
     disconnectedCallback() {
       if (this.visibilityObserver) this.visibilityObserver.disconnect();
+      if (this.colorObservers) this.colorObservers.forEach((o) => o.disconnect());
       if (this.stickyButton) this.stickyButton.removeEventListener('click', this.onStickyClick);
       if (this.toggle) this.toggle.removeEventListener('click', this.onToggle);
     }
@@ -88,12 +89,16 @@ if (!customElements.get('sticky-atc')) {
       const selects = Array.from(this.optionsBlock.querySelectorAll('[data-select-option]'));
       const accordions = Array.from(this.optionsBlock.querySelectorAll('[data-option-accordion]'));
       const quantities = Array.from(this.optionsBlock.querySelectorAll('[data-quantity-option]'));
+      const colorGroups = Array.from(this.optionsBlock.querySelectorAll('.custom-color-group'));
 
       selects.forEach((select) => {
         if (this.isVisible(select) && this.isMustSelect(select)) this.buildSelectProxy(select);
       });
       accordions.forEach((accordion) => {
         if (this.isVisible(accordion) && this.isMustSelect(accordion)) this.buildAccordionProxy(accordion);
+      });
+      colorGroups.forEach((group) => {
+        if (this.isVisible(group) && this.isMustSelect(group)) this.buildColorProxy(group);
       });
       quantities.forEach((quantity) => {
         if (this.isVisible(quantity) && this.isMustSelect(quantity)) this.buildScrollProxy(quantity, this.categoryTitleFor(quantity));
@@ -194,6 +199,46 @@ if (!customElements.get('sticky-atc')) {
         const checked = inputs.find((input) => input.checked);
         if (checked) proxy.value = checked.value;
       });
+
+      field.appendChild(proxy);
+      this.optionsTarget.appendChild(field);
+    }
+
+    // A <select> built from a color-picker group's swatches. Selecting an
+    // option clicks the matching swatch (product-custom-options.js handles the
+    // click); the picker's `color-selected` class is mirrored back to the proxy.
+    buildColorProxy(group) {
+      const swatches = Array.from(group.querySelectorAll('.color-options .swatch[data-id]'));
+      if (!swatches.length) return;
+
+      const field = this.makeField(this.categoryTitleFor(group) || 'Color');
+      const proxy = document.createElement('select');
+      proxy.className = 'sticky-atc__option-select';
+
+      swatches.forEach((swatch) => {
+        const option = document.createElement('option');
+        option.value = swatch.dataset.id;
+        option.textContent = (swatch.dataset.colorName || swatch.dataset.title || swatch.dataset.id).trim();
+        if (swatch.classList.contains('unavailable')) option.disabled = true;
+        if (swatch.classList.contains('color-selected')) option.selected = true;
+        proxy.appendChild(option);
+      });
+
+      proxy.addEventListener('change', () => {
+        const target = swatches.find((s) => s.dataset.id === proxy.value);
+        if (target) target.click();
+      });
+
+      const colorOptions = group.querySelector('.color-options');
+      if (colorOptions) {
+        const observer = new MutationObserver(() => {
+          const selected = swatches.find((s) => s.classList.contains('color-selected'));
+          if (selected) proxy.value = selected.dataset.id;
+        });
+        observer.observe(colorOptions, { attributes: true, subtree: true, attributeFilter: ['class'] });
+        this.colorObservers = this.colorObservers || [];
+        this.colorObservers.push(observer);
+      }
 
       field.appendChild(proxy);
       this.optionsTarget.appendChild(field);
