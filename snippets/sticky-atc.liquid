@@ -1,18 +1,20 @@
 {% comment %}
   Renders a sticky Add-to-Cart bar for the product page.
 
-  The bar appears once the main Add-to-Cart button scrolls out of view and
-  mirrors the live variant price and add-on option total from the main product
-  form. It does not own any selection or pricing state of its own: clicking its
-  button scrolls the add-on options into view (if any) and then triggers the
-  real product form submit button, so the existing validation and pricing logic
-  in product-custom-options.js / product-form-with-options.js remain the single
-  source of truth.
+  Layout follows the approved design: a bar pinned to the top of the viewport
+  on desktop and a collapsible panel fixed to the bottom on mobile. It appears
+  once the main Add-to-Cart button scrolls out of view.
+
+  The bar owns no selection or pricing state of its own. Its option dropdowns
+  are built client-side from the options already rendered in
+  #Product-Options-<section_id> and are kept in two-way sync with them, so the
+  existing product-custom-options.js / product-form-with-options.js remain the
+  single source of truth for pricing, validation and cart submission. Clicking
+  the bar's button triggers the real submit button.
 
   Accepts:
   - product: {Object} product object.
-  - section_id: {String} id of the main product section (used to locate the
-    real form, submit button and option total in the DOM).
+  - section_id: {String} id of the main product section.
 
   Usage:
   {% render 'sticky-atc', product: product, section_id: section.id %}
@@ -27,6 +29,17 @@
     data-submit-button="ProductSubmitButton-{{ section_id }}"
     aria-hidden="true"
   >
+    {%- comment -%} Mobile-only expand/collapse toggle. {%- endcomment -%}
+    <button
+      type="button"
+      class="sticky-atc__toggle"
+      data-sticky-atc-toggle
+      aria-expanded="true"
+      aria-label="{{ 'accessibility.toggle' | t | default: 'Toggle' }}"
+    >
+      {% render 'icon-caret' %}
+    </button>
+
     <div class="sticky-atc__inner page-width">
       <div class="sticky-atc__product">
         {%- if product.featured_media != blank -%}
@@ -41,23 +54,22 @@
         {%- endif -%}
         <div class="sticky-atc__details">
           <p class="sticky-atc__title">{{ product.title | escape }}</p>
-          <div class="sticky-atc__pricing">
-            <span class="sticky-atc__price" data-sticky-atc-price>
-              {%- render 'price', product: product, use_variant: true -%}
-            </span>
-            <span class="sticky-atc__addon" data-sticky-atc-addon hidden>
-              <span class="sticky-atc__addon-label">+ add-ons</span>
-              <span class="sticky-atc__addon-total" data-sticky-atc-addon-total>$0.00</span>
-            </span>
+          <div class="sticky-atc__pricing" data-sticky-atc-price>
+            {%- comment -%} Mirrored from the main price element by sticky-atc.js. {%- endcomment -%}
+            {%- render 'price', product: product, use_variant: true -%}
           </div>
         </div>
       </div>
+
+      {%- comment -%} Option dropdowns are injected here from the live options. {%- endcomment -%}
+      <div class="sticky-atc__options" data-sticky-atc-options></div>
 
       <button
         type="button"
         class="sticky-atc__button button button--primary"
         data-sticky-atc-button
       >
+        {% render 'icon-cart' %}
         <span>{{ 'products.product.add_to_cart' | t }}</span>
       </button>
     </div>
