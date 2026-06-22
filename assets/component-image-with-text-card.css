@@ -1,0 +1,198 @@
+/* ============================================================
+   Image with Text Card Section
+   ============================================================ */
+
+.image-with-text-card {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Outer container — provides horizontal padding context */
+.image-with-text-card__container {
+  position: relative;
+  max-width: var(--page-width, 1200px);
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ── Full-width image ───────────────────────────────────────── */
+.image-with-text-card__image-wrapper {
+  width: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  line-height: 0; /* remove inline gap under img */
+}
+
+.image-with-text-card__image {
+  width: 100%;
+  height: 480px;
+  object-fit: cover;
+  display: block;
+  border-radius: 24px;
+}
+
+/* placeholder SVG fallback */
+.image-with-text-card__image.placeholder-svg {
+  height: 480px;
+  background: #e8e8e8;
+}
+
+/* ── White card ─────────────────────────────────────────────── */
+.image-with-text-card__card {
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.08);
+  padding: 40px 40px 48px;
+  margin-top: -60px;        /* overlap the image */
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Heading row ────────────────────────────────────────────── */
+.image-with-text-card__heading-row {
+  margin-bottom: 28px;
+}
+
+.image-with-text-card__heading {
+  margin: 0;
+  font-family: Oswald, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #111111;
+  line-height: 1.1;
+}
+
+.image-with-text-card__heading.h0 { font-size: clamp(2rem, 4vw, 3.2rem); }
+.image-with-text-card__heading.h1 { font-size: clamp(1.75rem, 3vw, 2.6rem); }
+.image-with-text-card__heading.h2 { font-size: clamp(1.4rem, 2.5vw, 2rem); }
+
+.image-with-text-card__heading .accent {
+  color: #D83D0E; /* brand red — matches existing button colour */
+}
+
+/* ── Two-column body ────────────────────────────────────────── */
+.image-with-text-card__body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+/* ── Text ───────────────────────────────────────────────────── */
+.image-with-text-card__text p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 16px;
+  line-height: 24px;
+  color: #393940;
+}
+
+.image-with-text-card__text p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.image-with-text-card__buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+/* Primary / secondary buttons inherit global .button styles */
+.image-with-text-card__buttons .button {
+  min-width: 180px;
+  text-align: center;
+}
+
+/* Link style — matches the existing link-style from image-with-text */
+.image-with-text-card__link-style {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #D83D0E;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.image-with-text-card__link-style:hover {
+  opacity: 0.75;
+}
+
+.image-with-text-card__link-style svg {
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.image-with-text-card__link-style:hover svg {
+  transform: translateX(3px);
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media screen and (max-width: 749px) {
+  /* No horizontal padding on mobile — image/card go edge to edge */
+  .image-with-text-card__container {
+    padding: 0;
+  }
+
+  /* Image: no border radius on mobile, natural height */
+  .image-with-text-card__image-wrapper {
+    border-radius: 0;
+  }
+
+  .image-with-text-card__image {
+    height: auto;
+    min-height: 240px;
+    border-radius: 0;
+  }
+
+  .image-with-text-card__image.placeholder-svg {
+    height: 260px;
+    border-radius: 0;
+  }
+
+  /* Card: no overlap, sits flush below image, no border radius on top corners */
+  .image-with-text-card__card {
+    padding: 24px 16px 36px;
+    margin-top: 0;
+    border-radius: 0 0 0 0;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Single column stacked layout */
+  .image-with-text-card__body {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  /* Right column text sits directly below left column text */
+  .image-with-text-card__col + .image-with-text-card__col {
+    margin-top: 16px;
+  }
+
+  /* Buttons: full width, stacked */
+  .image-with-text-card__buttons {
+    margin-top: 24px;
+    align-items: stretch; /* make button full width */
+    width: 100%;
+  }
+
+  .image-with-text-card__buttons .button {
+    width: 100%;
+    text-align: center;
+    border-radius: 50px; /* pill shape as seen in mobile design */
+  }
+
+  /* Link stays left-aligned */
+  .image-with-text-card__link-style {
+    align-self: flex-start;
+  }
+}
+
+@media screen and (min-width: 750px) and (max-width: 989px) {
+  .image-with-text-card__image {
+    height: 380px;
+  }
+}
