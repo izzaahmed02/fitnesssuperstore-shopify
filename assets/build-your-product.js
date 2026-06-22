@@ -57,6 +57,12 @@ if (!customElements.get('build-your-product')) {
 
           if (e.target.closest('[data-modal-close]')) return this.closeModal();
 
+          const modalAtc = e.target.closest('[data-modal-atc]');
+          if (modalAtc) return this.onModalAdd(modalAtc);
+
+          const relSelect = e.target.closest('[data-modal-select]');
+          if (relSelect) return this.renderModalMain(this.findFamilyProduct(Number(relSelect.dataset.modalSelect)));
+
           const remove = e.target.closest('.byp-floating-cart__remove');
           if (remove) {
             this.items.delete(Number(remove.dataset.variantId));
@@ -521,7 +527,7 @@ if (!customElements.get('build-your-product')) {
           description: card.querySelector('.byp-card__description-full')?.innerHTML || '',
           image: card.querySelector('.byp-card__media img')?.src || ''
         };
-        this.populateModal(main, family, productId);
+        this.populateModal(main, family);
       }
 
       openMasterModal(button) {
@@ -530,7 +536,7 @@ if (!customElements.get('build-your-product')) {
         if (!family.length) return;
         const mainId = Number(button.dataset.masterProductId);
         const main = family.find((p) => p.id === mainId) || family[0];
-        this.populateModal(main, family, main.id);
+        this.populateModal(main, family);
       }
 
       accordionFamily(accordion) {
@@ -541,58 +547,131 @@ if (!customElements.get('build-your-product')) {
         }
       }
 
-      populateModal(main, family, excludeId) {
+      findFamilyProduct(id) {
+        return (this.modalFamily || []).find((p) => Number(p.id) === Number(id)) || null;
+      }
+
+      // Render the related list as buttons (no navigation) and open the modal, then
+      // load `main` into the featured slot. Sagi review #3: clicking a related product
+      // swaps it into the main slot instead of taking the visitor to its product page.
+      populateModal(main, family) {
+        this.modalFamily = Array.isArray(family) ? family : [];
+
+        const track = this.modal.querySelector('.byp-modal__related-track');
+        const wrap = this.modal.querySelector('.byp-modal__related');
+        track.innerHTML = '';
+        this.modalFamily.forEach((p) => {
+          const ratingN = Math.round(Number(p.rating) || 0);
+          const compare = Math.max(Number(p.compare_max) || 0, Number(p.compare_at_price) || 0);
+          const hasCompare = compare > Number(p.price);
+          const li = document.createElement('li');
+          li.className = 'byp-modal__related-card';
+          li.dataset.productId = p.id;
+          li.innerHTML = `
+            <button type="button" class="byp-modal__related-btn" data-modal-select="${p.id}">
+              ${p.image ? `<img src="${p.image}" alt="" loading="lazy" width="160" height="160">` : ''}
+              ${p.sku ? `<p class="byp-modal__related-sku">SKU: ${this.escapeHtml(p.sku)}</p>` : ''}
+              <p class="byp-modal__related-title">${this.escapeHtml(p.title)}</p>
+              ${ratingN > 0 || Number(p.rating_count) > 0 ? `<p class="byp-modal__related-rating"><span class="byp-star">&#9733;</span> ${p.rating_count || 0} reviews</p>` : ''}
+              ${hasCompare ? `<p class="byp-modal__related-compare">As high as: <s>${this.formatMoney(compare)}</s></p>` : ''}
+              <p class="byp-modal__related-price">${this.formatMoney(p.price)} USD</p>
+            </button>`;
+          track.appendChild(li);
+        });
+        wrap.classList.toggle('hidden', this.modalFamily.length === 0);
+
+        this.renderModalMain(main);
+
+        this.modal.classList.remove('hidden');
+        document.body.classList.add('byp-modal-open');
+        this.modal.querySelector('.byp-modal__close').focus();
+      }
+
+      // Populate the featured slot with one product, wire its Add-to-Order button, and
+      // highlight the matching related card.
+      renderModalMain(product) {
+        if (!product) return;
+        this.modalProductId = product.id;
+
         const img = this.modal.querySelector('.byp-modal__main-img');
-        if (main.image) {
-          img.src = main.image;
+        if (product.image) {
+          img.src = product.image;
           img.hidden = false;
         } else {
           img.hidden = true;
         }
 
-        this.modal.querySelector('.byp-modal__title').textContent = main.title || '';
+        this.modal.querySelector('.byp-modal__title').textContent = product.title || '';
 
         // Plain-text description (strip embedded images/tables to avoid scrollers)
         const desc = this.modal.querySelector('.byp-modal__description');
         const tmp = document.createElement('div');
-        tmp.innerHTML = main.description || '';
+        tmp.innerHTML = product.description || '';
         tmp.querySelectorAll('img, table, iframe, video, script, style').forEach((el) => el.remove());
         desc.textContent = (tmp.textContent || '').replace(/\s+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 
         const ratingWrap = this.modal.querySelector('.byp-modal__rating');
-        const rating = Math.round(Number(main.rating) || 0);
-        if (rating > 0 || Number(main.rating_count) > 0) {
+        const rating = Math.round(Number(product.rating) || 0);
+        if (rating > 0 || Number(product.rating_count) > 0) {
           ratingWrap.classList.remove('hidden');
           ratingWrap.querySelector('.byp-modal__stars').textContent = '★'.repeat(rating) + '☆'.repeat(Math.max(0, 5 - rating));
-          ratingWrap.querySelector('.byp-modal__rating-count').textContent = `${main.rating_count || 0} reviews`;
+          ratingWrap.querySelector('.byp-modal__rating-count').textContent = `${product.rating_count || 0} reviews`;
         } else {
           ratingWrap.classList.add('hidden');
         }
 
-        const track = this.modal.querySelector('.byp-modal__related-track');
-        const wrap = this.modal.querySelector('.byp-modal__related');
-        track.innerHTML = '';
-        family.forEach((p) => {
-          const ratingN = Math.round(Number(p.rating) || 0);
-          const hasCompare = Number(p.compare_at_price) > Number(p.price);
-          const li = document.createElement('li');
-          li.className = 'byp-modal__related-card';
-          li.innerHTML = `
-            <a href="${p.url}">
-              ${p.image ? `<img src="${p.image}" alt="" loading="lazy" width="160" height="160">` : ''}
-              ${p.sku ? `<p class="byp-modal__related-sku">SKU: ${this.escapeHtml(p.sku)}</p>` : ''}
-              <p class="byp-modal__related-title">${this.escapeHtml(p.title)}</p>
-              ${ratingN > 0 || Number(p.rating_count) > 0 ? `<p class="byp-modal__related-rating"><span class="byp-star">&#9733;</span> ${p.rating_count || 0} reviews</p>` : ''}
-              ${hasCompare ? `<p class="byp-modal__related-compare">As high as: <s>${this.formatMoney(p.compare_at_price)}</s></p>` : ''}
-              <p class="byp-modal__related-price">${this.formatMoney(p.price)} USD</p>
-            </a>`;
-          track.appendChild(li);
-        });
-        wrap.classList.toggle('hidden', family.length === 0);
+        // Price + Add to Order — only for products that carry a variant id (the FSR90
+        // fallback object from the colour card has none, so the action row stays hidden).
+        const actions = this.modal.querySelector('.byp-modal__actions');
+        const atc = this.modal.querySelector('[data-modal-atc]');
+        const priceEl = this.modal.querySelector('[data-modal-price]');
+        const variantId = Number(product.variant_id) || 0;
+        if (actions && atc) {
+          actions.classList.toggle('hidden', !variantId);
+          if (variantId) {
+            atc.dataset.variantId = String(variantId);
+            atc.dataset.productTitle = product.title || '';
+            atc.dataset.price = String(product.price || 0);
+            atc.dataset.compare = String(Math.max(Number(product.compare_max) || 0, Number(product.compare_at_price) || 0));
+            atc.disabled = product.available === false;
+            if (priceEl) priceEl.textContent = this.formatMoney(product.price || 0);
+            this.updateModalAtcState();
+          }
+        }
 
-        this.modal.classList.remove('hidden');
-        document.body.classList.add('byp-modal-open');
-        this.modal.querySelector('.byp-modal__close').focus();
+        // Highlight the active related card
+        this.modal.querySelectorAll('.byp-modal__related-card').forEach((c) => {
+          c.classList.toggle('byp-modal__related-card--active', Number(c.dataset.productId) === Number(product.id));
+        });
+      }
+
+      updateModalAtcState() {
+        const atc = this.modal.querySelector('[data-modal-atc]');
+        if (!atc) return;
+        if (!atc.dataset.label) atc.dataset.label = 'Add To Order';
+        const inOrder = this.items.has(Number(atc.dataset.variantId));
+        atc.classList.toggle('byp-modal__atc--in-order', inOrder);
+        atc.textContent = inOrder ? 'Added to Order' : atc.dataset.label;
+      }
+
+      onModalAdd(btn) {
+        const variantId = Number(btn.dataset.variantId);
+        if (!variantId || btn.disabled) return;
+        const existing = this.items.get(variantId);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          this.items.set(variantId, {
+            id: variantId,
+            productTitle: btn.dataset.productTitle || '',
+            variantTitle: '',
+            price: Number(btn.dataset.price) || 0,
+            comparePrice: Number(btn.dataset.compare) || 0,
+            quantity: 1
+          });
+        }
+        this.renderFloatingCart();
+        this.updateModalAtcState();
       }
 
       closeModal() {
