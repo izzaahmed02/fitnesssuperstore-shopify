@@ -1,3 +1,16 @@
+{% comment %}
+  Suppression guard: products explicitly flagged with the 'suppress-recommendations' tag
+  never render a recommendation module at all - no metafield products AND no
+  collection/all-products fallback. Used for non-PDP / utility / soon-to-delete products
+  (see "Heading Optimization - SEO Audit" thread, Buckets B and C) so they never show a
+  stray "You May Also Like" section.
+{% endcomment %}
+{% assign suppress_recommendations = false %}
+{% if product.tags contains 'suppress-recommendations' %}
+  {% assign suppress_recommendations = true %}
+{% endif %}
+
+{% unless suppress_recommendations %}
 <link rel="preload" href="{{ 'section-related-products.css' | asset_url }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript>{{ 'section-related-products.css' | asset_url | stylesheet_tag }}</noscript>
 
@@ -148,6 +161,7 @@
     </div>
     <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
   {% endif %}
+{% endunless %}
 {% endunless %}
 
 {% schema %}
