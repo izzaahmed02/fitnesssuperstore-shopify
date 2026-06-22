@@ -28,6 +28,7 @@ if (!customElements.get('sticky-atc')) {
       super();
       this.onStickyClick = this.onStickyClick.bind(this);
       this.onToggle = this.onToggle.bind(this);
+      this.onReposition = this.onReposition.bind(this);
     }
 
     connectedCallback() {
@@ -40,8 +41,12 @@ if (!customElements.get('sticky-atc')) {
       this.toggle = this.querySelector('[data-sticky-atc-toggle]');
 
       this.optionsBlock = document.getElementById(`Product-Options-${this.sectionId}`);
+      // The site's sticky nav. On desktop the bar docks to the bottom of it so
+      // navigation stays usable (it never overlaps the nav).
+      this.siteHeader = document.querySelector('.section-header');
 
       this.setupVisibilityObserver();
+      this.setupHeaderTracking();
       // Build option proxies after the main options have had a chance to render.
       this.buildOptions();
 
@@ -54,6 +59,8 @@ if (!customElements.get('sticky-atc')) {
       if (this.colorObservers) this.colorObservers.forEach((o) => o.disconnect());
       if (this.stickyButton) this.stickyButton.removeEventListener('click', this.onStickyClick);
       if (this.toggle) this.toggle.removeEventListener('click', this.onToggle);
+      window.removeEventListener('scroll', this.onReposition);
+      window.removeEventListener('resize', this.onReposition);
     }
 
     isVisible(el) {
@@ -74,6 +81,32 @@ if (!customElements.get('sticky-atc')) {
     toggleVisible(visible) {
       this.classList.toggle('is-visible', visible);
       this.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    }
+
+    /* ----- Keep the bar docked below the sticky nav (desktop) ----- */
+    setupHeaderTracking() {
+      if (!this.siteHeader) return;
+      window.addEventListener('scroll', this.onReposition, { passive: true });
+      window.addEventListener('resize', this.onReposition, { passive: true });
+      this.updateTopOffset();
+    }
+
+    onReposition() {
+      if (this.repositionScheduled) return;
+      this.repositionScheduled = true;
+      window.requestAnimationFrame(() => {
+        this.repositionScheduled = false;
+        this.updateTopOffset();
+      });
+    }
+
+    // Offset the bar by the nav's current bottom edge: full header height when
+    // the nav is revealed, 0 when it is hidden/scrolled away. The value is only
+    // consumed by the desktop CSS (mobile is bottom-anchored).
+    updateTopOffset() {
+      if (!this.siteHeader) return;
+      const bottom = this.siteHeader.getBoundingClientRect().bottom;
+      this.style.setProperty('--sticky-atc-top', `${Math.max(0, Math.round(bottom))}px`);
     }
 
     /* ----- Mobile collapse toggle ----- */
