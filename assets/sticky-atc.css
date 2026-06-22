@@ -1,8 +1,11 @@
 /*
   Sticky Add-to-Cart bar. Tokens taken from the approved Figma design.
 
-  Desktop (>= 990px): bar pinned to the top of the viewport, 84px tall.
-  Mobile (< 990px): collapsible panel fixed to the bottom.
+  Desktop (>= 990px): bar pinned to the top of the viewport, 84px tall. The
+  visible panel is container-width (.page-width) and centered; the fixed wrapper
+  is transparent and ignores pointer events so the side gutters don't block the
+  page behind it.
+  Mobile (< 990px): full-width collapsible panel fixed to the bottom.
 
   Hidden by default; the `is-visible` class is toggled by sticky-atc.js once the
   main Add-to-Cart button scrolls out of view.
@@ -13,25 +16,27 @@
   left: 0;
   right: 0;
   z-index: 6;
-  background: #ffffff;
   transition: transform 0.25s ease, opacity 0.25s ease;
   opacity: 0;
-  pointer-events: none;
+  pointer-events: none; /* transparent wrapper; the inner panel is interactive */
+}
+
+/* The visible panel carries the background/border/shadow and is interactive. */
+.sticky-atc__inner {
+  background: #ffffff;
+  pointer-events: auto;
 }
 
 /* ----- Desktop: top bar ----- */
 @media screen and (min-width: 990px) {
   .sticky-atc {
     top: var(--sticky-atc-top, 0px);
-    border-bottom: 1px solid #e5e5e5;
-    box-shadow: 0 1rem 2.5rem rgba(53, 53, 53, 0.12);
     transform: translateY(-100%);
   }
 
   .sticky-atc.is-visible {
     transform: translateY(0);
     opacity: 1;
-    pointer-events: auto;
   }
 
   .sticky-atc__toggle {
@@ -47,6 +52,8 @@
        lines up with the header and page content. max-width + auto margins
        come from the .page-width class on the element. */
     padding: 0.8rem 1.5rem;
+    border-bottom: 1px solid #e5e5e5;
+    box-shadow: 0 1rem 2.5rem rgba(53, 53, 53, 0.12);
   }
 
   .sticky-atc__product {
@@ -72,15 +79,12 @@
 @media screen and (max-width: 989px) {
   .sticky-atc {
     bottom: 0;
-    border-top: 1px solid #e5e5e5;
-    box-shadow: 0 0 1.2rem rgba(0, 0, 0, 0.1);
     transform: translateY(100%);
   }
 
   .sticky-atc.is-visible {
     transform: translateY(0);
     opacity: 1;
-    pointer-events: auto;
   }
 
   .sticky-atc__inner {
@@ -90,6 +94,8 @@
     gap: 1.2rem;
     padding: 1.6rem;
     padding-bottom: calc(1.6rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid #e5e5e5;
+    box-shadow: 0 0 1.2rem rgba(0, 0, 0, 0.1);
   }
 
   .sticky-atc__product {
@@ -118,6 +124,7 @@
     background: none;
     border: none;
     cursor: pointer;
+    pointer-events: auto;
     transform: rotate(180deg); /* points up when expanded */
     transition: transform 0.2s ease;
   }
