@@ -77,12 +77,15 @@
                   {%- assign fam_variant = fam.selected_or_first_available_variant -%}
                   {
                     "id": {{ fam.id }},
+                    "variant_id": {{ fam_variant.id }},
+                    "available": {{ fam_variant.available }},
                     "title": {{ fam.title | json }},
                     "url": {{ fam.url | json }},
                     "sku": {{ fam_variant.sku | json }},
-                    "image": {{ fam.featured_media | image_url: width: 200 | json }},
+                    "image": {{ fam.featured_media | image_url: width: 400 | json }},
                     "price": {{ fam_variant.price }},
                     "compare_at_price": {{ fam_variant.compare_at_price | default: 0 }},
+                    "compare_max": {{ fam.compare_at_price_max | default: 0 }},
                     "rating": {{ fam.metafields.reviews.rating.value.rating | default: 0 | json }},
                     "rating_count": {{ fam.metafields.reviews.rating_count.value | default: 0 | json }},
                     "description": {{ fam.description | json }}
@@ -387,6 +390,10 @@
           </div>
           <h3 class="byp-modal__title" id="byp-modal-title-{{ section.id }}"></h3>
           <div class="byp-modal__description rte"></div>
+          <div class="byp-modal__actions hidden">
+            <span class="byp-modal__price" data-modal-price></span>
+            <button type="button" class="byp-modal__atc button" data-modal-atc data-variant-id="">Add To Order</button>
+          </div>
         </div>
       </div>
 
