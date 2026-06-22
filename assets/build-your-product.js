@@ -220,12 +220,14 @@ if (!customElements.get('build-your-product')) {
         card.querySelector('[data-price]').textContent = this.formatMoney(variant.price);
         const compareWrap = card.querySelector('.byp-card__compare');
         if (compareWrap) {
-          const hasCompare = variant.compare_at_price > variant.price;
+          const compareMax = Math.max(Number(card.dataset.compareMax) || 0, variant.compare_at_price || 0);
+          const hasCompare = compareMax > variant.price;
           compareWrap.classList.toggle('hidden', !hasCompare);
-          if (hasCompare) card.querySelector('[data-compare-price]').textContent = this.formatMoney(variant.compare_at_price);
+          if (hasCompare) card.querySelector('[data-compare-price]').textContent = this.formatMoney(compareMax);
         }
         const selectedLabel = card.querySelector('[data-selected-option]');
         if (selectedLabel && variant.option1) selectedLabel.textContent = variant.option1;
+        this.updateAddonCtaStates();
       }
 
       onCardAdd(card) {
@@ -244,12 +246,10 @@ if (!customElements.get('build-your-product')) {
             productTitle: card.dataset.productTitle,
             variantTitle: variant.title === 'Default Title' ? '' : variant.title,
             price: variant.price,
-            comparePrice: variant.compare_at_price || 0,
+            comparePrice: Math.max(Number(card.dataset.compareMax) || 0, variant.compare_at_price || 0),
             quantity
           });
         }
-        atc.classList.add('byp-card__atc--added');
-        setTimeout(() => atc.classList.remove('byp-card__atc--added'), 600);
         this.renderFloatingCart();
       }
 
@@ -305,6 +305,19 @@ if (!customElements.get('build-your-product')) {
         if (showCompare) this.subtotalCompareEl.textContent = this.formatMoney(subtotalCompare);
 
         this.refreshAffirm(subtotal);
+        this.updateAddonCtaStates();
+      }
+
+      // Sagi review #1: reflect added state on each add-on CTA. When a card's currently
+      // selected variant is in the order, the button reads "Added to Order" and turns
+      // grey; otherwise it shows its original label. Reverts automatically on remove.
+      updateAddonCtaStates() {
+        this.querySelectorAll('.byp-card__atc').forEach((btn) => {
+          if (!btn.dataset.label) btn.dataset.label = btn.textContent.trim();
+          const inOrder = this.items.has(Number(btn.dataset.variantId));
+          btn.classList.toggle('byp-card__atc--in-order', inOrder);
+          btn.textContent = inOrder ? 'Added to Order' : btn.dataset.label;
+        });
       }
 
       // Update the Affirm "as low as" amount (cents) and re-render it. Affirm's
