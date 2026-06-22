@@ -26,142 +26,143 @@
   {% assign current_family = product.combined_listing.parent_product.handle %}
 {% endif %}
 
-{% assign fallback_count = 4 %}
-{% assign found_metafield_products = false %}
-
-{% comment %} Check if we have related products in the metafield {% endcomment %}
-{% if related_products_list != blank %}
-  {% comment %} Count valid products first {% endcomment %}
-  {% assign valid_count = 0 %}
-  {% for related_product in related_products_list %}
-    {%- assign rp_family = related_product.metafields.custom.combined_listing_family -%}
-    {%- if rp_family == blank and related_product.combined_listing.parent_product.handle != blank -%}
-      {%- assign rp_family = related_product.combined_listing.parent_product.handle -%}
-    {%- endif -%}
-    {%- assign rp_is_sibling = false -%}
-    {%- if current_family != blank and rp_family == current_family -%}
-      {%- assign rp_is_sibling = true -%}
-    {%- endif -%}
-    <!-- Debug Loop {{ forloop.index }}: Product = {{ related_product.title }} (ID: {{ related_product.id }}) Available: {{ related_product.available }} Sibling: {{ rp_is_sibling }} -->
-    {% if related_product.available and related_product.id != product.id and rp_is_sibling == false %}
-      {% assign valid_count = valid_count | plus: 1 %}
-      {% assign found_metafield_products = true %}
-    {% endif %}
-  {% endfor %}
-  
-  <!-- Debug: Valid products found = {{ valid_count }} -->
-  
-  {% if valid_count > 0 %}
-    <div class="custom-container">
-      <div class="featured_products_header">
-        {% if section.settings.title != blank %}
-          <h2>{{ section.settings.title }}</h2>
-        {% endif %}
-      </div>
-      <div class="featured_products_container">
-        {% assign product_count = 0 %}
-        {% for related_product in related_products_list %}
-          {%- assign rp_family = related_product.metafields.custom.combined_listing_family -%}
-          {%- if rp_family == blank and related_product.combined_listing.parent_product.handle != blank -%}
-            {%- assign rp_family = related_product.combined_listing.parent_product.handle -%}
-          {%- endif -%}
-          {%- assign rp_is_sibling = false -%}
-          {%- if current_family != blank and rp_family == current_family -%}
-            {%- assign rp_is_sibling = true -%}
-          {%- endif -%}
-          {% if related_product.available and related_product.id != product.id and rp_is_sibling == false %}
-            <!-- Rendering metafield product: {{ related_product.title }} -->
-            {% render 'related-items', product: related_product %}
-            {% assign product_count = product_count | plus: 1 %}
-
-            {% if product_count >= fallback_count %}
-              {% break %}
-            {% endif %}
-          {% endif %}
-        {% endfor %}
-      </div>
-    </div>
-    <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
-  {% else %}
-    <!-- No valid products in metafield, using fallback -->
-    {% assign found_metafield_products = false %}
-  {% endif %}
+{% comment %}
+  Designated primary collection for fallback (issue #587, item 4): prefer the explicitly
+  designated custom.primary_collection over whichever collection happens to be assigned
+  first. Falls back to product.collections.first when no primary collection is set.
+{% endcomment %}
+{% assign primary_collection = product.metafields.custom.primary_collection.value %}
+{% if primary_collection == blank and product.collections.size > 0 %}
+  {% assign primary_collection = product.collections.first %}
 {% endif %}
 
-{% comment %} Fallback to collection products if no metafield products found {% endcomment %}
-{% unless found_metafield_products %}
-  <!-- Using fallback products -->
-  {% assign has_products = false %}
-  {% assign product_count = 0 %}
-  
-  {% comment %} Capture the products HTML first {% endcomment %}
-  {% capture fallback_products_html %}
-    {% comment %} Try to get products from the same collection first {% endcomment %}
-    {% if product.collections.size > 0 %}
-      {% assign current_collection = product.collections.first %}
-      
-      {% for collection_product in current_collection.products limit: 20 %}
-        {%- assign cp_family = collection_product.metafields.custom.combined_listing_family -%}
-        {%- if cp_family == blank and collection_product.combined_listing.parent_product.handle != blank -%}
-          {%- assign cp_family = collection_product.combined_listing.parent_product.handle -%}
-        {%- endif -%}
-        {%- assign cp_is_sibling = false -%}
-        {%- if current_family != blank and cp_family == current_family -%}
-          {%- assign cp_is_sibling = true -%}
-        {%- endif -%}
-        {% if collection_product.available and collection_product.id != product.id and cp_is_sibling == false %}
-          <!-- Rendering fallback product from collection: {{ collection_product.title }} -->
-          {% render 'related-items', product: collection_product %}
-          {% assign product_count = product_count | plus: 1 %}
-          {% assign has_products = true %}
+{% assign max_products = 4 %}
+{% assign product_count = 0 %}
+{% assign has_products = false %}
 
-          {% if product_count >= fallback_count %}
-            {% break %}
-          {% endif %}
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-    
-    {% comment %} If still need more products, use all products collection {% endcomment %}
-    {% if product_count < fallback_count %}
-      {% for fallback_product in collections.all.products limit: 20 %}
-        {%- assign fp_family = fallback_product.metafields.custom.combined_listing_family -%}
-        {%- if fp_family == blank and fallback_product.combined_listing.parent_product.handle != blank -%}
-          {%- assign fp_family = fallback_product.combined_listing.parent_product.handle -%}
-        {%- endif -%}
-        {%- assign fp_is_sibling = false -%}
-        {%- if current_family != blank and fp_family == current_family -%}
-          {%- assign fp_is_sibling = true -%}
-        {%- endif -%}
-        {% if fallback_product.available and fallback_product.id != product.id and fp_is_sibling == false %}
-          <!-- Rendering fallback product from all: {{ fallback_product.title }} -->
-          {% render 'related-items', product: fallback_product %}
-          {% assign product_count = product_count | plus: 1 %}
-          {% assign has_products = true %}
+{% comment %}
+  Shared ledger of already-rendered product ids (comma-wrapped for safe "contains" checks).
+  Used to backfill the section up to max_products and to prevent duplicates across the
+  metafield pass, the primary-collection pass, and the all-products pass (issue #587,
+  items 1 and 3).
+{% endcomment %}
+{% assign rendered_ids = ',' %}
 
-          {% if product_count >= fallback_count %}
-            {% break %}
-          {% endif %}
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-  {% endcapture %}
-  
-  {% comment %} Only show the section if we found products {% endcomment %}
-  {% if has_products %}
-    <div class="custom-container">
-      <div class="featured_products_header">
-        {% if section.settings.title != blank %}
-          <h2>{{ section.settings.title }}</h2>
-        {% endif %}
-      </div>
-      <div class="featured_products_container">
-        {{ fallback_products_html }}
-      </div>
-    </div>
-    <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
+{% capture products_html %}
+  {% comment %} Pass 1: curated related products from the metafield {% endcomment %}
+  {% if related_products_list != blank %}
+    {% for related_product in related_products_list %}
+      {% if product_count >= max_products %}{% break %}{% endif %}
+      {%- assign rp_family = related_product.metafields.custom.combined_listing_family -%}
+      {%- if rp_family == blank and related_product.combined_listing.parent_product.handle != blank -%}
+        {%- assign rp_family = related_product.combined_listing.parent_product.handle -%}
+      {%- endif -%}
+      {%- assign rp_is_sibling = false -%}
+      {%- if current_family != blank and rp_family == current_family -%}
+        {%- assign rp_is_sibling = true -%}
+      {%- endif -%}
+      {%- assign rp_id_key = ',' | append: related_product.id | append: ',' -%}
+      {%- assign rp_is_dup = false -%}
+      {%- if rendered_ids contains rp_id_key -%}
+        {%- assign rp_is_dup = true -%}
+      {%- endif -%}
+      {% if related_product.available and related_product.id != product.id and rp_is_sibling == false and rp_is_dup == false %}
+        <!-- Rendering metafield product: {{ related_product.title }} -->
+        {% render 'related-items', product: related_product %}
+        {% assign product_count = product_count | plus: 1 %}
+        {% assign has_products = true %}
+        {% assign rendered_ids = rendered_ids | append: related_product.id | append: ',' %}
+      {% endif %}
+    {% endfor %}
   {% endif %}
-{% endunless %}
+
+  {% comment %}
+    Pass 2: backfill from the designated primary collection (issue #587, items 1, 2, 4).
+    Runs whenever the curated list left fewer than max_products - not only when it was empty.
+    Excludes the current product, siblings, suppress-recommendations products, and any
+    product already rendered above.
+  {% endcomment %}
+  {% if product_count < max_products and primary_collection != blank %}
+    {% for collection_product in primary_collection.products limit: 50 %}
+      {% if product_count >= max_products %}{% break %}{% endif %}
+      {%- assign cp_family = collection_product.metafields.custom.combined_listing_family -%}
+      {%- if cp_family == blank and collection_product.combined_listing.parent_product.handle != blank -%}
+        {%- assign cp_family = collection_product.combined_listing.parent_product.handle -%}
+      {%- endif -%}
+      {%- assign cp_is_sibling = false -%}
+      {%- if current_family != blank and cp_family == current_family -%}
+        {%- assign cp_is_sibling = true -%}
+      {%- endif -%}
+      {%- assign cp_id_key = ',' | append: collection_product.id | append: ',' -%}
+      {%- assign cp_is_dup = false -%}
+      {%- if rendered_ids contains cp_id_key -%}
+        {%- assign cp_is_dup = true -%}
+      {%- endif -%}
+      {%- assign cp_suppressed = false -%}
+      {%- if collection_product.tags contains 'suppress-recommendations' -%}
+        {%- assign cp_suppressed = true -%}
+      {%- endif -%}
+      {% if collection_product.available and collection_product.id != product.id and cp_is_sibling == false and cp_is_dup == false and cp_suppressed == false %}
+        <!-- Rendering fallback product from primary collection: {{ collection_product.title }} -->
+        {% render 'related-items', product: collection_product %}
+        {% assign product_count = product_count | plus: 1 %}
+        {% assign has_products = true %}
+        {% assign rendered_ids = rendered_ids | append: collection_product.id | append: ',' %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% comment %}
+    Pass 3: backfill from all products if still short (issue #587, items 1, 2, 3).
+    Same exclusions, plus dedupe against everything rendered in passes 1 and 2.
+  {% endcomment %}
+  {% if product_count < max_products %}
+    {% for fallback_product in collections.all.products limit: 50 %}
+      {% if product_count >= max_products %}{% break %}{% endif %}
+      {%- assign fp_family = fallback_product.metafields.custom.combined_listing_family -%}
+      {%- if fp_family == blank and fallback_product.combined_listing.parent_product.handle != blank -%}
+        {%- assign fp_family = fallback_product.combined_listing.parent_product.handle -%}
+      {%- endif -%}
+      {%- assign fp_is_sibling = false -%}
+      {%- if current_family != blank and fp_family == current_family -%}
+        {%- assign fp_is_sibling = true -%}
+      {%- endif -%}
+      {%- assign fp_id_key = ',' | append: fallback_product.id | append: ',' -%}
+      {%- assign fp_is_dup = false -%}
+      {%- if rendered_ids contains fp_id_key -%}
+        {%- assign fp_is_dup = true -%}
+      {%- endif -%}
+      {%- assign fp_suppressed = false -%}
+      {%- if fallback_product.tags contains 'suppress-recommendations' -%}
+        {%- assign fp_suppressed = true -%}
+      {%- endif -%}
+      {% if fallback_product.available and fallback_product.id != product.id and fp_is_sibling == false and fp_is_dup == false and fp_suppressed == false %}
+        <!-- Rendering fallback product from all: {{ fallback_product.title }} -->
+        {% render 'related-items', product: fallback_product %}
+        {% assign product_count = product_count | plus: 1 %}
+        {% assign has_products = true %}
+        {% assign rendered_ids = rendered_ids | append: fallback_product.id | append: ',' %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endcapture %}
+
+<!-- Debug: related products rendered = {{ product_count }} -->
+
+{% comment %} Only show the section if we found at least one product {% endcomment %}
+{% if has_products %}
+  <div class="custom-container">
+    <div class="featured_products_header">
+      {% if section.settings.title != blank %}
+        <h2>{{ section.settings.title }}</h2>
+      {% endif %}
+    </div>
+    <div class="featured_products_container">
+      {{ products_html }}
+    </div>
+  </div>
+  <script src="{{ 'related-products.js' | asset_url }}" defer="defer"></script>
+{% endif %}
 {% endunless %}
 
 {% schema %}
