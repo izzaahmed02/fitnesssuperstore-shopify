@@ -171,6 +171,12 @@ if (!customElements.get('sticky-atc')) {
       const field = document.createElement('label');
       field.className = 'sticky-atc__option';
       field.title = labelText || '';
+      if (labelText) {
+        const label = document.createElement('span');
+        label.className = 'sticky-atc__option-label';
+        label.textContent = labelText;
+        field.appendChild(label);
+      }
       return field;
     }
 
