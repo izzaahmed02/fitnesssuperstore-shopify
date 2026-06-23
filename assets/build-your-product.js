@@ -326,6 +326,7 @@ if (!customElements.get('build-your-product')) {
 
         this.refreshAffirm(subtotal);
         this.updateAddonCtaStates();
+        this.updateModalAtcState();
       }
 
       // Sagi review #1: reflect added state on each add-on CTA. When a card's currently
