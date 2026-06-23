@@ -104,6 +104,7 @@ if (!customElements.get('build-your-product')) {
 
         this.renderFloatingCart();
         this.initSliders();
+        this.collapseCartOnMobile();
 
         // Fix the main-form price base (engine reads the first .pr_custom_price as base).
         // Set the value synchronously, then re-run after the engine's init paint.
@@ -158,6 +159,19 @@ if (!customElements.get('build-your-product')) {
         const toggle = this.floatingCart.querySelector('.byp-floating-cart__toggle');
         toggle.setAttribute('aria-expanded', String(!collapsed));
         toggle.setAttribute('aria-label', collapsed ? 'Maximize cart' : 'Minimize cart');
+      }
+
+      // Sagi review #2: on mobile the floating cart is a fixed bottom bar. Start it
+      // collapsed so the resting state is the condensed strip (subtotal + Add to cart),
+      // matching the approved design; the customer expands it to see the full build.
+      collapseCartOnMobile() {
+        if (!window.matchMedia('(max-width: 989px)').matches) return;
+        this.floatingCart.classList.add('byp-floating-cart--collapsed');
+        const toggle = this.floatingCart.querySelector('.byp-floating-cart__toggle');
+        if (toggle) {
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.setAttribute('aria-label', 'Maximize cart');
+        }
       }
 
       /* ---------- main product ---------- */
