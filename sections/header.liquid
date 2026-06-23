@@ -302,7 +302,21 @@
       <span class="header__upper-block-line"></span>
     {% endunless %}
 
-    <p class="header__mobile-static-offer">Nationwide Delivery &amp; Installation</p>
+    {%- liquid
+      assign mobile_offer_icon = blank
+      for block in section.blocks
+        if block.type == 'item' and block.settings.text == 'Nationwide Delivery & Installation'
+          assign mobile_offer_icon = block.settings.icon
+          break
+        endif
+      endfor
+    -%}
+    <div class="header__mobile-static-offer">
+      {%- if mobile_offer_icon != blank -%}
+        <img src="{{ mobile_offer_icon | image_url: width: 40 }}" alt="" width="20" height="20" loading="lazy">
+      {%- endif -%}
+      <span>Nationwide Delivery &amp; Installation</span>
+    </div>
 
     <nav class="header__additional--container" aria-label="Header Info">
       <ul class="header__additional-items scroll" id="scroll-one">
