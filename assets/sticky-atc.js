@@ -119,23 +119,31 @@ if (!customElements.get('sticky-atc')) {
     buildOptions() {
       if (!this.optionsBlock || !this.optionsTarget) return;
 
-      const selects = Array.from(this.optionsBlock.querySelectorAll('[data-select-option]'));
-      const accordions = Array.from(this.optionsBlock.querySelectorAll('[data-option-accordion]'));
-      const quantities = Array.from(this.optionsBlock.querySelectorAll('[data-quantity-option]'));
-      const colorGroups = Array.from(this.optionsBlock.querySelectorAll('.custom-color-group'));
+      const items = [];
+      const add = (el, build) => {
+        if (this.isVisible(el) && this.isMustSelect(el)) items.push({ el, build });
+      };
+      this.optionsBlock.querySelectorAll('[data-select-option]').forEach((el) => add(el, () => this.buildSelectProxy(el)));
+      this.optionsBlock.querySelectorAll('[data-option-accordion]').forEach((el) => add(el, () => this.buildAccordionProxy(el)));
+      this.optionsBlock.querySelectorAll('.custom-color-group').forEach((el) => add(el, () => this.buildColorProxy(el)));
+      this.optionsBlock.querySelectorAll('[data-quantity-option]').forEach((el) => add(el, () => this.buildScrollProxy(el, this.categoryTitleFor(el))));
 
-      selects.forEach((select) => {
-        if (this.isVisible(select) && this.isMustSelect(select)) this.buildSelectProxy(select);
+      // Assembly / Room of Choice installation is always the last option, right
+      // before Add to Cart (per the approved design); keep the rest in DOM order.
+      items.sort((a, b) => {
+        const aa = this.isAssembly(a.el);
+        const ba = this.isAssembly(b.el);
+        if (aa !== ba) return aa - ba;
+        return (a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
       });
-      accordions.forEach((accordion) => {
-        if (this.isVisible(accordion) && this.isMustSelect(accordion)) this.buildAccordionProxy(accordion);
-      });
-      colorGroups.forEach((group) => {
-        if (this.isVisible(group) && this.isMustSelect(group)) this.buildColorProxy(group);
-      });
-      quantities.forEach((quantity) => {
-        if (this.isVisible(quantity) && this.isMustSelect(quantity)) this.buildScrollProxy(quantity, this.categoryTitleFor(quantity));
-      });
+
+      items.forEach((item) => item.build());
+      this.classList.toggle('has-options', items.length > 0);
+    }
+
+    isAssembly(el) {
+      const t = this.categoryTitleFor(el).toLowerCase();
+      return (t.includes('assembly') || t.includes('room of choice') || t.includes('installation')) ? 1 : 0;
     }
 
     // The bar surfaces only the "must-select" options for the product:
@@ -148,7 +156,14 @@ if (!customElements.get('sticky-atc')) {
     categoryTitleFor(el) {
       const category = el.closest('.product-option__item');
       const titleEl = category && category.querySelector('.product-options__category-title');
-      return titleEl ? titleEl.textContent.trim() : '';
+      if (!titleEl) return '';
+      // Only the category's own title text — exclude the leading number span,
+      // the help button, and the selected-value container (all child elements).
+      let text = '';
+      titleEl.childNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) text += node.textContent;
+      });
+      return text.replace(/\s+/g, ' ').trim();
     }
 
     isMustSelect(el) {
@@ -170,11 +185,13 @@ if (!customElements.get('sticky-atc')) {
     makeField(labelText) {
       const field = document.createElement('label');
       field.className = 'sticky-atc__option';
-      field.title = labelText || '';
-      if (labelText) {
+      // Drop any leading display number (e.g. "1 Colors" -> "Colors").
+      const clean = (labelText || '').replace(/\s+/g, ' ').replace(/^\d+\s+/, '').trim();
+      field.title = clean;
+      if (clean) {
         const label = document.createElement('span');
         label.className = 'sticky-atc__option-label';
-        label.textContent = labelText;
+        label.textContent = clean;
         field.appendChild(label);
       }
       return field;

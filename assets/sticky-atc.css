@@ -48,7 +48,7 @@
 
   .sticky-atc__inner {
     display: flex;
-    align-items: flex-end; /* dropdown inputs (labels sit above) align with the button */
+    align-items: center;
     gap: 1.2rem;
     min-height: 8.4rem;
     /* Match the product page's content frame (.page-width-desktop
@@ -60,19 +60,29 @@
     box-shadow: 0 1rem 2.5rem rgba(53, 53, 53, 0.12);
   }
 
-  .sticky-atc__product {
-    margin-right: auto; /* pushes options + button to the right (Figma 40px gap) */
+  /* With option labels above the dropdowns, bottom-align so the inputs line up
+     with the button. With no options, the lone button stays vertically centered. */
+  .sticky-atc.has-options .sticky-atc__inner {
+    align-items: flex-end;
   }
 
   .sticky-atc__options {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
+    justify-content: flex-end; /* dropdowns group to the right, before the button */
     gap: 1.2rem;
-    min-width: 0; /* allow shrink so the button is never pushed off-screen */
+    flex: 1 1 auto;
+    min-width: 0;
     overflow-x: auto; /* defensive: scroll rather than overflow if many options */
   }
 
-  /* Product summary and button never shrink away; options absorb the squeeze. */
+  /* Equal-width dropdowns so a long value never stretches one wider than the rest. */
+  .sticky-atc__option {
+    flex: 0 1 28rem;
+    min-width: 0;
+  }
+
+  /* Product summary and button keep their natural width; options absorb space. */
   .sticky-atc__product,
   .sticky-atc__button {
     flex: 0 0 auto;
@@ -137,10 +147,19 @@
     transform: rotate(0deg);
   }
 
-  /* Collapsed: only the product summary row shows. */
-  .sticky-atc.is-collapsed .sticky-atc__options,
-  .sticky-atc.is-collapsed .sticky-atc__button {
+  /* Collapsed: hide the option dropdowns, but keep the product summary and the
+     Add to Cart button visible so visitors can still add to cart. */
+  .sticky-atc.is-collapsed .sticky-atc__options {
     display: none;
+  }
+
+  /* The sticky bar takes priority over the live chat widget (Gorgias) so its
+     toggle / Add to Cart aren't blocked. Push the chat launcher behind the bar
+     on product pages (this stylesheet only loads where the bar is enabled). */
+  #gorgias-chat-container,
+  [id^="gorgias-chat"],
+  [class*="gorgias-chat"] {
+    z-index: 1 !important;
   }
 }
 
@@ -244,14 +263,9 @@
   background-size: 2.4rem 2.4rem;
 }
 
-.sticky-atc__option-select {
-  max-width: 36rem;
-}
-
-@media screen and (min-width: 990px) {
-  .sticky-atc__option-select {
-    min-width: 14rem;
-  }
+.sticky-atc__option-select,
+.sticky-atc__option-link {
+  width: 100%; /* fill the equal-width option field */
 }
 
 .sticky-atc__option-input {
@@ -272,7 +286,7 @@
   align-items: center;
   gap: 0.8rem;
   height: 4.8rem;
-  padding: 1.2rem 2.4rem 1.2rem 1.2rem;
+  padding: 1.2rem 2.4rem; /* symmetric so the icon + label read centered */
   flex: 0 0 auto;
   background: #d83d0e;
   border: none;
