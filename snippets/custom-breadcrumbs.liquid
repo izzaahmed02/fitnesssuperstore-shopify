@@ -1,13 +1,7 @@
 {% comment %}
   1. Try to use metaobject-based breadcrumbs (sorted by priority).
-  2. If not available, fallback to manual text-based metafield (multi-line text).
-  3. If still empty, fallback to Shopify collection-based path.
+  2. If still empty, fallback to Shopify collection-based path.
 {% endcomment %}
-
-{% assign product_breadcrumbs = product.metafields.custom.breadcrumbs.value %}
-{% assign first_breadcrumb = product_breadcrumbs | split: 'Home' %}
-{% assign jp = first_breadcrumb[1] | split: '>' %}
-{% assign length = jp.size | minus: 1 %}
 
 {% assign breadcrumb_metaobjects = product.metafields.custom.breadcrumb_paths.value | sort: "priority" %}
 {% assign selected_breadcrumb = nil %}
@@ -40,10 +34,6 @@
   {% endfor %}
 {% endif %}
 
-{% if selected_breadcrumb == nil and product_breadcrumbs != blank %}
-  {% assign breadcrumb_source = "text_metafield" %}
-{% endif %}
-
 {% if breadcrumb_source == "none" and product.collections.first %}
   {% assign fallback_collection = product.collections.first %}
   {% assign breadcrumb_source = "shopify_default" %}
@@ -67,17 +57,6 @@
           {% endfor %}
           {% render 'icon-arrow-right-breadcrumbs' %}
           <span aria-current="page">{{ product.title }}</span>
-        {% elsif breadcrumb_source == "text_metafield" %}
-          {% for i in (0..length) %}
-            {% assign col = jp[i] | handleize %}
-
-            {% if forloop.first %}
-              <a href="/">Home</a>
-            {% else %}
-              {% render 'icon-arrow-right-breadcrumbs' %}
-              <a href="{{ collections[col].url }}">{{- jp[i] }}</a>
-            {% endif %}
-          {% endfor %}
         {% elsif breadcrumb_source == "shopify_default" %}
           <a href="/">Home</a>
           {% render 'icon-arrow-right-breadcrumbs' %}
