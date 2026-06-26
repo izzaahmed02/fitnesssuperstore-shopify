@@ -1,13 +1,7 @@
 {% comment %}
   1. Use prioritized metaobject breadcrumbs if available.
-  2. Otherwise, fall back to multi-line text metafield.
-  3. If still empty, use first assigned collection.
+  2. If still empty, use first assigned collection.
 {% endcomment %}
-
-{% assign crumbs_text = product.metafields.custom.breadcrumbs.value %}
-{% assign parts_split = crumbs_text | split: 'Home' %}
-{% assign text_parts = parts_split[1] | split: '>' %}
-{% assign crumbs_size = text_parts.size | minus: 1 %}
 
 {% assign all_breadcrumb_objects = product.metafields.custom.breadcrumb_paths.value | sort: "priority" %}
 {% assign active_path = nil %}
@@ -36,10 +30,6 @@
   {% endfor %}
 {% endif %}
 
-{% if active_path == nil and crumbs_text != blank %}
-  {% assign source_flag = "text" %}
-{% endif %}
-
 {% if source_flag == "unset" and product.collections.first %}
   {% assign default_coll = product.collections.first %}
   {% assign source_flag = "default" %}
@@ -64,20 +54,6 @@
               <a href="{{ domain_origin }}/collections/{{ nav_coll.handle }}">
                 {{ nav_titles[idx] | default: nav_coll.title }}
               </a>
-            {% endif %}
-          {% endfor %}
-          {% render 'icon-arrow-right-breadcrumbs' %}
-          <span aria-current="page">{{ product.title }}</span>
-
-        {% elsif source_flag == "text" %}
-          {% for idx in (0..crumbs_size) %}
-            {% assign raw = text_parts[idx] | strip | handleize %}
-
-            {% if forloop.first %}
-              <a href="{{ domain_origin }}/" text>Home</a>
-            {% elsif raw != blank and collections[raw] %}
-              {% render 'icon-arrow-right-breadcrumbs' %}
-              <a href="{{ domain_origin }}/collections/{{ raw }}">{{ text_parts[idx] | strip }}</a>
             {% endif %}
           {% endfor %}
           {% render 'icon-arrow-right-breadcrumbs' %}
