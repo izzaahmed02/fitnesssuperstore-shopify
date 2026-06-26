@@ -1,0 +1,33 @@
+{%- comment -%}
+  Renders a single "Shipping & Service Regions" card as a <details> accordion.
+  On desktop the cards are forced open and non-interactive (see section CSS/JS);
+  on mobile they collapse, with the first one open by default.
+  Accepts:
+  - block: the section block (icon, title, text settings)
+{%- endcomment -%}
+<details class="service-regions__card" open {{ block.shopify_attributes }}>
+  <summary class="service-regions__card-head">
+    {%- if block.settings.icon != blank -%}
+      <img
+        class="service-regions__card-icon"
+        src="{{ block.settings.icon | image_url: width: 48 }}"
+        alt=""
+        width="24"
+        height="24"
+        loading="lazy">
+    {%- else -%}
+      <svg class="service-regions__card-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z" fill="#D83D0E"/>
+      </svg>
+    {%- endif -%}
+    {%- if block.settings.title != blank -%}
+      <h3 class="service-regions__card-title">{{ block.settings.title | escape }}</h3>
+    {%- endif -%}
+    <svg class="service-regions__card-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M6 9l6 6 6-6" stroke="#23232B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </summary>
+  {%- if block.settings.text != blank -%}
+    <div class="service-regions__card-text rte">{{ block.settings.text }}</div>
+  {%- endif -%}
+</details>
