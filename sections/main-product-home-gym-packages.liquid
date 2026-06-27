@@ -1254,16 +1254,29 @@
                   {%comment %}<h2 class="product_price_with_options-heading">Total with options</h2>{%endcomment %}
 
                   <div class="product_price_with_options-contaniner">
-                    <div class="product_prices">
-                      <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
-                        <div class="pr_custom_price-container">
-                           <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
-                            {{ product.selected_or_first_available_variant.price | money }}
-                          </p>
-                        </div>
-                        
-                      </div>
-                    </div>
+                   <div class="product_prices">
+  {%- assign mp_price = product.selected_or_first_available_variant.price -%}
+  {%- assign mp_compare = 0 -%}
+  {%- if product.metafields.custom.retail_price > mp_price -%}
+    {%- assign mp_compare = product.metafields.custom.retail_price -%}
+  {%- elsif product.selected_or_first_available_variant.compare_at_price > mp_price -%}
+    {%- assign mp_compare = product.selected_or_first_available_variant.compare_at_price -%}
+  {%- endif -%}
+
+  {% if mp_compare > mp_price %}
+    <span class="pr_custom_compare_price">As high as:
+      <s>{{ mp_compare | money_with_currency -}}</s>
+    </span>
+  {% endif %}
+
+  <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
+    <div class="pr_custom_price-container">
+       <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
+        {{ product.selected_or_first_available_variant.price | money }}
+      </p>
+    </div>
+  </div>
+</div>
 
                     {% render 'paylater-providers' %}
 
