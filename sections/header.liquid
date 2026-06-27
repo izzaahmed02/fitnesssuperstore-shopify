@@ -46,11 +46,18 @@
     }
 
     .section-header {
-    position: relative; /* Was "sticky" — that pinned the whole section (banner + header)
-    to the viewport on scroll, which is what kept the banner stuck. The header itself
-    still gets its own sticky positioning independently via .header-wrapper, so this only
-    needs to stay positioned (not sticky) to preserve the Safari z-index fix from PR #2147. */
+    position: relative; /* Mobile default: only .header-wrapper sticks (its rule lives in the
+    mobile media query in base.css); the banner above it stays in normal flow and scrolls
+    away with the page. */
     margin-bottom: {{ section.settings.margin_bottom | times: 0.75 | round: 0 }}px;
+    }
+
+    @media screen and (min-width: 990px) {
+    .section-header {
+    position: sticky; /* Desktop: banner + header stick together as one unit — matches the
+    original behavior and preserves the Safari z-index fix from PR #2147. */
+    top: 0;
+    }
     }
 
     @media screen and (min-width: 750px) {
