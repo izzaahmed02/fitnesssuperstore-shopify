@@ -377,12 +377,17 @@
                 {% endunless %}
 
                 <div>
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-                    <span class="pr_custom_compare_price"
-                      >As high as:
-                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-                    </span>
-                  {% endif %}
+                 {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+  <span class="pr_custom_compare_price"
+    >As high as:
+    <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
+  </span>
+{% elsif product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
+  <span class="pr_custom_compare_price"
+    >As high as:
+    <s>{{ product.selected_or_first_available_variant.compare_at_price | money_with_currency -}}</s>
+  </span>
+{% endif %}
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
