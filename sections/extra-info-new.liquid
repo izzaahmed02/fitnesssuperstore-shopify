@@ -29,53 +29,27 @@
   }
 {%- endstyle -%}
 
-{%- comment -%} TEMP DEBUG — verify all fields. REMOVE before commit {%- endcomment -%}
+{%- comment -%} TEMP TABLE DEBUG — remove before commit {%- endcomment -%}
 {%- assign sf = product.metafields.custom.features_specs_new.value -%}
 <pre style="white-space:pre-wrap;background:#fff;color:#000;padding:12px;border:2px solid red;font-size:12px;">
-=== PRODUCT (must be the TEST COPY) ===
-title: {{ product.title }}
-id: {{ product.id }}
-handle: {{ product.handle }}
-template suffix: {{ template.suffix }}
-
-=== ROOT (must be non-null) ===
-features_specs_new present? {% if sf != blank %}YES{% else %}NO — STOP{% endif %}
-
-=== RICH-TEXT / TEXT FIELDS (these feed block settings) ===
-all_in_one_overview type: {{ product.metafields.custom.features_specs_new.value.all_in_one_overview }}
-all_in_one_overview (first 120): {{ sf.all_in_one_overview | json | slice: 0, 120 }}
-features present? {% if sf.features != blank %}YES{% else %}no{% endif %}
-benefits present? {% if sf.benefits != blank %}YES{% else %}no{% endif %}
-tech_specs present? {% if sf.tech_specs != blank %}YES{% else %}no{% endif %}
-weight_stacks present? {% if sf.weight_stacks != blank %}YES{% else %}no{% endif %}
-warranty_info present? {% if sf.warranty_info != blank %}YES{% else %}no{% endif %}
-
-=== PDP TABLE / REFERENCE FIELDS (these render via snippet/section, NOT settings) ===
+=== STEP 1: do we have tables? ===
 other_features_table count: {{ sf.other_features_table.value.size }}
-other_tech_specs_table count: {{ sf.other_tech_specs_table.value.size }}
-side_by_side_comparison present? {% if sf.side_by_side_comparison != blank %}YES{% else %}no{% endif %}
-shipping_dimensions_weight present? {% if sf.shipping_dimensions_weight != blank %}YES{% else %}no{% endif %}
-shipping is list or single? value.size = {{ sf.shipping_dimensions_weight.value.size }}
 
-=== PDP SECTIONS / FAQ / OTHER ===
-other_features count: {{ sf.other_features.value.size }}
-other_tech_specs count: {{ sf.other_tech_specs.value.size }}
-buying_guide present? {% if sf.buying_guide != blank %}YES{% else %}no{% endif %}
-frequently_asked_questions present? {% if sf.frequently_asked_questions != blank %}YES{% else %}no{% endif %}
-set_includes count: {{ sf.set_includes.value.size }}
-accessories_included count: {{ sf.accessories_included.value.size }}
-other_comparison_chart_pages count: {{ sf.other_comparison_chart_pages.value.size }}
-extra_content count: {{ sf.extra_content.value.size }}
-ending_cta present? {% if sf.ending_cta != blank %}YES{% else %}no{% endif %}
+=== STEP 2: loop them and inspect each ===
+{% for tbl in sf.other_features_table.value %}
+TABLE {{ forloop.index }}:
+  section_header: {{ tbl.section_header }}
+  table_type: {{ tbl.table_type }}
+  headers/columns count: {{ tbl.table_headers.value.size }}
+  first column custom_title: {{ tbl.table_headers.value[0].custom_title }}
+  first column content count: {{ tbl.table_headers.value[0].content.value.size }}
 
-=== FIELDS THE OLD TEMPLATE WANTED BUT NEW OBJECT MAY NOT HAVE (expect blank) ===
-smith_bar_specs: {{ sf.smith_bar_specs }}
-comparison_chart_title: {{ sf.comparison_chart_title }}
-comparison_chart_table: {{ sf.comparison_chart_table }}
-accessory_feature: {{ sf.accessory_feature }}
-list: {{ sf.list }}
+  --- STEP 3: render via snippet (output appears below this line) ---
+  {% render 'pdp-table', table: tbl %}
+  --- end snippet output ---
+{% endfor %}
 </pre>
-{%- comment -%} END TEMP DEBUG {%- endcomment -%}
+{%- comment -%} END TEMP TABLE DEBUG {%- endcomment -%}
 
 {% assign extra = product.metafields.custom.extra_info.value %}
 {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
