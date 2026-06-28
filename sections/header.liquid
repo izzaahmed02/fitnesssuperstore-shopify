@@ -46,16 +46,30 @@
     }
 
     .section-header {
-    position: relative; /* Mobile default: only .header-wrapper sticks (its rule lives in the
-    mobile media query in base.css); the banner above it stays in normal flow and scrolls
-    away with the page. */
+    position: sticky;
+    /* Mobile: pin the section but push the announcement bar above the viewport
+       by offsetting top upward by exactly the bar's height (set by JS below).
+       Result: banner scrolls away, logo/search/icons row stays stuck at top.
+       Falls back to 0px (whole header sticks) if JS doesn't run. */
+    top: calc(-1 * var(--announcement-bar-height, 0px));
+    z-index: 3;
     margin-bottom: {{ section.settings.margin_bottom | times: 0.75 | round: 0 }}px;
+    }
+
+    @media screen and (max-width: 989px) {
+    /* Make .section-header the single sticky container on mobile. Neutralize the
+       JS-driven sticky/hide states on .header-wrapper so it neither double-sticks
+       nor slides away on scroll-down — header stays visible the whole way. */
+    .header-wrapper.shopify-section-header-sticky,
+    .header-wrapper.shopify-section-header-hidden {
+    position: static;
+    top: auto;
+    }
     }
 
     @media screen and (min-width: 990px) {
     .section-header {
-    position: sticky; /* Desktop: banner + header stick together as one unit — matches the
-    original behavior and preserves the Safari z-index fix from PR #2147. */
+    position: sticky; /* Desktop unchanged: banner + header stick together as one unit. */
     top: 0;
     }
     }
@@ -129,7 +143,6 @@
     }
     }
 {%- endstyle -%}
-
 <script src="{{ 'details-disclosure.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'details-modal.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'cart-notification.js' | asset_url }}" defer="defer"></script>
