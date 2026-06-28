@@ -29,23 +29,18 @@
   }
 {%- endstyle -%}
 
-{%- comment -%} TEMP DEBUG — remove before commit {%- endcomment -%}
+{%- comment -%} TEMP DEBUG 2 — remove before commit {%- endcomment -%}
 <pre style="white-space:pre-wrap;background:#fff;color:#000;padding:12px;border:2px solid red;font-size:12px;">
-=== features_specs_new TOP-LEVEL ===
-{{ product.metafields.custom.features_specs_new.value | json }}
-
-=== OTHER FEATURES (TABLE) field — trying common keys ===
-other_features_table: {{ product.metafields.custom.features_specs_new.value.other_features_table.value | json }}
-
-=== FIRST PDP TABLE ENTRY (whichever key works) ===
-{% assign sf = product.metafields.custom.features_specs_new.value %}
-{% assign tbls = sf.other_features_table.value %}
-{% for t in tbls %}
---- table {{ forloop.index }} keys ---
-{{ t | json }}
+=== ALL custom metafields on this product (keys + type) ===
+{% for field in product.metafields.custom %}
+KEY: {{ field[0] }}
+  type: {{ field[1].type }}
 {% endfor %}
+
+=== Try the OLD one to confirm probe works ===
+features_specs present? {{ product.metafields.custom.features_specs.value | json | slice: 0, 200 }}
 </pre>
-{%- comment -%} END TEMP DEBUG {%- endcomment -%}
+{%- comment -%} END TEMP DEBUG 2 {%- endcomment -%}
 
 {% assign extra = product.metafields.custom.extra_info.value %}
 {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
