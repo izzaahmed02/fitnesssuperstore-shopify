@@ -72,8 +72,21 @@
               aria-expanded="false"
               aria-controls="pulley-panel-{{ section.id }}"
             >
+              {%- liquid
+                # Friendly label for the currently selected option, sourced from the
+                # selected variant's custom.option_display_name metafield. Falls back to
+                # the raw selected option value when the metafield is blank. The variant
+                # title / SKU / id are never changed — this only affects the visible text.
+                assign pulley_selected_variant = product.selected_or_first_available_variant
+                assign pulley_selected_dn = pulley_selected_variant.metafields.custom.option_display_name.value
+                if pulley_selected_dn == blank
+                  assign pulley_trigger_label = option.selected_value
+                else
+                  assign pulley_trigger_label = pulley_selected_dn
+                endif
+              -%}
               <span class="pulley-trigger-text" id="pulley-trigger-text-{{ section.id }}">
-                {{- option.selected_value -}}
+                {{- pulley_trigger_label -}}
               </span>
               <svg class="pulley-chevron" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
                 <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -104,6 +117,22 @@
 
               <ul class="pulley-list" id="pulley-list-{{ section.id }}" role="presentation">
                 {%- for value in option.values -%}
+                  {%- liquid
+                    # Resolve the friendly customer-facing label for this option value.
+                    # The label comes from the matching variant's custom.option_display_name
+                    # metafield (e.g. "Matched to: FF-X90"); when blank we keep the raw
+                    # option value exactly as before. data-value stays the raw option value
+                    # so variant selection, SKU, cart, and order data are unchanged — only
+                    # the visible text is friendlier.
+                    assign pulley_value_str = value | append: ''
+                    assign pulley_matched_variant = product.variants | where: 'option2', pulley_value_str | first
+                    assign pulley_display_name = pulley_matched_variant.metafields.custom.option_display_name.value
+                    if pulley_display_name == blank
+                      assign pulley_item_label = value
+                    else
+                      assign pulley_item_label = pulley_display_name
+                    endif
+                  -%}
                   <li
                     class="pulley-item{% unless value.available %} pulley-item--unavail{% endunless %}{% if value.selected %} pulley-item--selected{% endif %}"
                     role="option"
@@ -112,7 +141,7 @@
                     data-available="{{ value.available }}"
                     tabindex="0"
                   >
-                    {{- value -}}
+                    {{- pulley_item_label -}}
                     {%- unless value.available -%}
                       <span class="pulley-unavail-badge">Unavailable</span>
                     {%- endunless -%}
