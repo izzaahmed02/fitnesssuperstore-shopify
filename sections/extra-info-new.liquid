@@ -29,27 +29,30 @@
   }
 {%- endstyle -%}
 
-{%- comment -%} TEMP TABLE DEBUG — remove before commit {%- endcomment -%}
+{%- comment -%} TEMP CELL-PATH DEBUG {%- endcomment -%}
 {%- assign sf = product.metafields.custom.features_specs_new.value -%}
+{%- assign t2 = sf.other_features_table.value[1] -%}
+{%- assign col1 = t2.table_headers.value[0] -%}
 <pre style="white-space:pre-wrap;background:#fff;color:#000;padding:12px;border:2px solid red;font-size:12px;">
-=== STEP 1: do we have tables? ===
-other_features_table count: {{ sf.other_features_table.value.size }}
+col1 custom_title: {{ col1.custom_title }}
 
-=== STEP 2: loop them and inspect each ===
-{% for tbl in sf.other_features_table.value %}
-TABLE {{ forloop.index }}:
-  section_header: {{ tbl.section_header }}
-  table_type: {{ tbl.table_type }}
-  headers/columns count: {{ tbl.table_headers.value.size }}
-  first column custom_title: {{ tbl.table_headers.value[0].custom_title }}
-  first column content count: {{ tbl.table_headers.value[0].content.value.size }}
+A) col1.content : {{ col1.content | json | slice: 0, 200 }}
+B) col1.content.value : {{ col1.content.value | json | slice: 0, 200 }}
+C) col1.content.value.size : {{ col1.content.value.size }}
+D) col1.content.size : {{ col1.content.size }}
 
-  --- STEP 3: render via snippet (output appears below this line) ---
-  {% render 'pdp-table', table: tbl %}
-  --- end snippet output ---
+=== iterate col1.content directly ===
+{% for c in col1.content %}
+  [{{ forloop.index }}] values: {{ c.values | json | slice: 0, 120 }}
+  [{{ forloop.index }}] attribute: {{ c.attribute | json | slice: 0, 120 }}
+{% endfor %}
+
+=== iterate col1.content.value ===
+{% for c in col1.content.value %}
+  [{{ forloop.index }}] values: {{ c.values | json | slice: 0, 120 }}
 {% endfor %}
 </pre>
-{%- comment -%} END TEMP TABLE DEBUG {%- endcomment -%}
+{%- comment -%} END TEMP {%- endcomment -%}
 
 {% assign extra = product.metafields.custom.extra_info.value %}
 {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
