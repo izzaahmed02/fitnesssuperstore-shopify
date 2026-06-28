@@ -29,12 +29,25 @@
   }
 {%- endstyle -%}
 
-<pre style="background:#fff;color:#000;padding:12px;border:2px solid red;">
-PRODUCT: {{ product.title }}
-ID: {{ product.id }}
-HANDLE: {{ product.handle }}
-features_specs_new set? {{ product.metafields.custom.features_specs_new }}
-features_specs_new value? {{ product.metafields.custom.features_specs_new.value | json | slice: 0, 200 }}
+<pre style="white-space:pre-wrap;background:#fff;color:#000;padding:12px;border:2px solid red;font-size:12px;">
+{% assign sf = product.metafields.custom.features_specs_new.value %}
+=== other_features_table count: {{ sf.other_features_table.value.size }} ===
+{% for t in sf.other_features_table.value %}
+--- TABLE {{ forloop.index }} ---
+{{ t | json }}
+
+  table_type: {{ t.table_type }}
+  section_header: {{ t.section_header }}
+  >> table_headers count: {{ t.table_headers.value.size }}
+  {% for h in t.table_headers.value %}
+     HEADER {{ forloop.index }}: {{ h | json }}
+       custom_title: {{ h.custom_title }}
+       >> content count: {{ h.content.value.size }}
+       {% for row in h.content.value %}
+          ROW {{ forloop.index }}: {{ row | json }}
+       {% endfor %}
+  {% endfor %}
+{% endfor %}
 </pre>
 
 {% assign extra = product.metafields.custom.extra_info.value %}
