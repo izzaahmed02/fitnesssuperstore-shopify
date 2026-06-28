@@ -29,30 +29,26 @@
   }
 {%- endstyle -%}
 
-{%- comment -%} TEMP CELL-PATH DEBUG {%- endcomment -%}
+{%- comment -%} TEMP LOOP PROBE {%- endcomment -%}
 {%- assign sf = product.metafields.custom.features_specs_new.value -%}
-{%- assign t2 = sf.other_features_table.value[1] -%}
-{%- assign col1 = t2.table_headers.value[0] -%}
 <pre style="white-space:pre-wrap;background:#fff;color:#000;padding:12px;border:2px solid red;font-size:12px;">
-col1 custom_title: {{ col1.custom_title }}
-
-A) col1.content : {{ col1.content | json | slice: 0, 200 }}
-B) col1.content.value : {{ col1.content.value | json | slice: 0, 200 }}
-C) col1.content.value.size : {{ col1.content.value.size }}
-D) col1.content.size : {{ col1.content.size }}
-
-=== iterate col1.content directly ===
-{% for c in col1.content %}
-  [{{ forloop.index }}] values: {{ c.values | json | slice: 0, 120 }}
-  [{{ forloop.index }}] attribute: {{ c.attribute | json | slice: 0, 120 }}
+{% for tbl in sf.other_features_table.value %}
+{% if forloop.index == 2 %}
+TABLE 2 — looping columns:
+{% for col in tbl.table_headers.value %}
+  COLUMN: custom_title = "{{ col.custom_title }}"
+  {% for cell in col.content.value %}
+     cell.values: {{ cell.values | metafield_tag }}
+     cell.attribute: {{ cell.attribute | metafield_tag }}
+  {% endfor %}
+  {% for cell in col.content %}
+     (no .value) cell.values: {{ cell.values | metafield_tag }}
+  {% endfor %}
 {% endfor %}
-
-=== iterate col1.content.value ===
-{% for c in col1.content.value %}
-  [{{ forloop.index }}] values: {{ c.values | json | slice: 0, 120 }}
+{% endif %}
 {% endfor %}
 </pre>
-{%- comment -%} END TEMP {%- endcomment -%}
+{%- comment -%} END {%- endcomment -%}
 
 {% assign extra = product.metafields.custom.extra_info.value %}
 {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
