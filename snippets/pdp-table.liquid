@@ -9,14 +9,14 @@
     table.table_type                -> "Table with header" | "Table without header"
     table.table_headers.value       -> list of COLUMNS (iterate, do NOT index)
         header.custom_title         -> column heading (may be blank)
-        header.content.value        -> that column's cells, top-to-bottom (iterate)
+        header.content.value        -> column's cells, top-to-bottom (iterate)
             cell.values  (rich text)    -> cell content (Package-style)
             cell.attribute (rich text)  -> cell content (Spec-style)
 
-  IMPORTANT: Shopify metaobject reference lists support ITERATION, not
-  positional indexing (value[0] returns null). So we flatten each column's
-  cells into a delimited string while looping, then read rows back out.
-  Columns may be ragged; we size to the longest column and pad with blanks.
+  NOTE: Shopify metaobject reference lists support ITERATION, not positional
+  indexing (value[0] returns null). We flatten each column's cells into a
+  delimited string while looping, then split back into rows. Columns may be
+  ragged; table is sized to the longest column and short columns pad blank.
 {%- endcomment -%}
 
 {%- liquid
@@ -29,7 +29,6 @@
 
 {%- if cols != blank -%}
 
-  {%- comment -%} Flatten each column's cells into a ~~ROW~~-delimited string, and track the max row count. {%- endcomment -%}
   {%- assign col_blobs = '' -%}
   {%- assign max_rows = 0 -%}
   {%- for col in cols -%}
@@ -59,7 +58,7 @@
 
   {%- if max_rows > 0 -%}
     <div class="pdp-table__scroll">
-      <table class="pdp-table">
+      <table class="pdp-table{% unless show_head %} pdp-table--no-head{% endunless %}">
         {%- if show_head -%}
           <thead>
             <tr>
@@ -87,3 +86,36 @@
   {%- endif -%}
 
 {%- endif -%}
+
+{%- stylesheet -%}
+.pdp-table__heading { margin: 24px 0 8px; }
+.pdp-table__scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.pdp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.pdp-table thead th {
+  text-align: left;
+  font-weight: 700;
+  padding: 10px 12px;
+  border-bottom: 2px solid #ddd;
+  vertical-align: top;
+  white-space: nowrap;
+}
+.pdp-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 2px solid #ddd;
+  vertical-align: top;
+}
+.pdp-table td .metafield-rich_text_field p,
+.pdp-table th .metafield-rich_text_field p { margin: 0; }
+.pdp-table a { color: var(--primary-orange-500, #D83D0E); text-decoration: underline; }
+.pdp-table--no-head td { padding-left: 0; }
+@media (max-width: 600px) {
+  .pdp-table { font-size: 14px; }
+  .pdp-table thead th, .pdp-table tbody td { padding: 8px 10px; }
+}
+{%- endstylesheet -%}
