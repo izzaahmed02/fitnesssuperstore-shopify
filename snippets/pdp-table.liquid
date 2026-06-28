@@ -3,79 +3,87 @@
 
   Usage:
     {% render 'pdp-table', table: table_entry %}
-  where `table_entry` is a single value from
-  product.metafields.custom.features_specs_new.value.other_features_table.value
 
   Data model (column-major):
-    table.section_header                -> heading above the table
-    table.table_type                    -> "Table with header" | "Table without header"
-    table.table_headers.value           -> list of COLUMNS
-        header.custom_title             -> column heading text (may be blank)
-        header.content.value            -> that column's cells, top-to-bottom
-            cell.values  (rich text)    -> cell content (Package-style tables)
-            cell.attribute (rich text)  -> cell content (Spec-style tables)
+    table.section_header            -> heading above the table
+    table.table_type                -> "Table with header" | "Table without header"
+    table.table_headers.value       -> list of COLUMNS (iterate, do NOT index)
+        header.custom_title         -> column heading (may be blank)
+        header.content.value        -> that column's cells, top-to-bottom (iterate)
+            cell.values  (rich text)    -> cell content (Package-style)
+            cell.attribute (rich text)  -> cell content (Spec-style)
 
-  Rows are reconstructed by reading across columns at the same index.
-  Columns can be ragged (unequal lengths); we size the table to the
-  LONGEST column and emit empty <td> for missing cells so nothing misaligns.
+  IMPORTANT: Shopify metaobject reference lists support ITERATION, not
+  positional indexing (value[0] returns null). So we flatten each column's
+  cells into a delimited string while looping, then read rows back out.
+  Columns may be ragged; we size to the longest column and pad with blanks.
 {%- endcomment -%}
 
 {%- liquid
   assign cols = table.table_headers.value
-
-  # Determine whether a real header row should be shown.
   assign show_head = false
   if table.table_type == 'Table with header'
     assign show_head = true
   endif
-
-  # Find the longest column so ragged columns don't misalign.
-  assign max_rows = 0
-  for col in cols
-    assign n = col.content.value.size
-    if n > max_rows
-      assign max_rows = n
-    endif
-  endfor
 -%}
 
 {%- if cols != blank -%}
-{%- if table.section_header != blank -%}
-  <h3 class="pdp-table__heading product__extra_info-title">{{ table.section_header }}</h3>
-{%- endif -%}
 
-{%- if max_rows > 0 -%}
-  <div class="pdp-table__scroll">
-    <table class="pdp-table">
-      {%- if show_head -%}
-        <thead>
-          <tr>
-            {%- for col in cols -%}
-              <th scope="col">{{ col.custom_title }}</th>
-            {%- endfor -%}
-          </tr>
-        </thead>
-      {%- endif -%}
-      <tbody>
-        {%- for i in (1..max_rows) -%}
-          {%- assign idx = forloop.index0 -%}
-          <tr>
-            {%- for col in cols -%}
-              {%- assign cell = col.content.value[idx] -%}
-              {%- liquid
-                assign cell_html = ''
-                if cell.values != blank
-                  assign cell_html = cell.values | metafield_tag
-                elsif cell.attribute != blank
-                  assign cell_html = cell.attribute | metafield_tag
-                endif
-              -%}
-              <td>{{ cell_html }}</td>
-            {%- endfor -%}
-          </tr>
-        {%- endfor -%}
-      </tbody>
-    </table>
-  </div>
-{%- endif -%}
+  {%- comment -%} Flatten each column's cells into a ~~ROW~~-delimited string, and track the max row count. {%- endcomment -%}
+  {%- assign col_blobs = '' -%}
+  {%- assign max_rows = 0 -%}
+  {%- for col in cols -%}
+    {%- assign cell_count = 0 -%}
+    {%- capture this_col -%}
+      {%- for cell in col.content.value -%}
+        {%- assign cell_count = cell_count | plus: 1 -%}
+        {%- if cell.values != blank -%}
+          {{ cell.values | metafield_tag }}
+        {%- elsif cell.attribute != blank -%}
+          {{ cell.attribute | metafield_tag }}
+        {%- endif -%}
+        ~~CELL~~
+      {%- endfor -%}
+    {%- endcapture -%}
+    {%- if cell_count > max_rows -%}
+      {%- assign max_rows = cell_count -%}
+    {%- endif -%}
+    {%- assign col_blobs = col_blobs | append: this_col | append: '~~COL~~' -%}
+  {%- endfor -%}
+
+  {%- assign columns_data = col_blobs | split: '~~COL~~' -%}
+
+  {%- if table.section_header != blank -%}
+    <h3 class="pdp-table__heading product__extra_info-title">{{ table.section_header }}</h3>
+  {%- endif -%}
+
+  {%- if max_rows > 0 -%}
+    <div class="pdp-table__scroll">
+      <table class="pdp-table">
+        {%- if show_head -%}
+          <thead>
+            <tr>
+              {%- for col in cols -%}
+                <th scope="col">{{ col.custom_title }}</th>
+              {%- endfor -%}
+            </tr>
+          </thead>
+        {%- endif -%}
+        <tbody>
+          {%- for r in (1..max_rows) -%}
+            {%- assign row_idx = forloop.index0 -%}
+            <tr>
+              {%- for col_blob in columns_data -%}
+                {%- if col_blob != blank -%}
+                  {%- assign cells = col_blob | split: '~~CELL~~' -%}
+                  <td>{{ cells[row_idx] }}</td>
+                {%- endif -%}
+              {%- endfor -%}
+            </tr>
+          {%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+  {%- endif -%}
+
 {%- endif -%}
