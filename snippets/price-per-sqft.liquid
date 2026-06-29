@@ -1,0 +1,36 @@
+{% comment %}
+  Renders a dynamic "price per sq ft" line for flooring products.
+
+  The figure is computed at render time from the CURRENT variant price and the
+  product's coverage area, so it never goes stale when pricing changes — there
+  are no hardcoded price-per-sq-ft values to maintain.
+
+  Coverage is derived from the existing length_in x width_in dimension
+  metafields (inches -> sq ft), e.g. 984 in x 78 in / 144 = approx. 533 sq ft.
+
+  Scoped to flooring via the custom.main_category metafield so it never shows
+  on non-flooring products (treadmills, racks, etc. also carry length/width).
+
+  Renders nothing unless the product is flooring AND has usable dimensions AND
+  a price. On combined listings the value is updated per selected grade by the
+  variant-change JS in main-product-comb.liquid (see [data-price-per-sqft]).
+
+  Accepts:
+  - product: {Object} Product Liquid object (required)
+{% endcomment %}
+{%- liquid
+  assign category = product.metafields.custom.main_category | downcase | strip
+  assign length_in = product.metafields.custom.length_in | times: 1.0
+  assign width_in = product.metafields.custom.width_in | times: 1.0
+  assign variant = product.selected_or_first_available_variant
+  assign coverage_sqft = 0
+  if length_in > 0 and width_in > 0
+    assign coverage_sqft = length_in | times: width_in | divided_by: 144.0
+  endif
+-%}
+{%- if category == 'flooring' and coverage_sqft > 0 and variant.price > 0 -%}
+  {%- assign price_per_sqft = variant.price | divided_by: coverage_sqft | round -%}
+  <div class="price-per-sqft" data-price-per-sqft-wrap data-coverage-sqft="{{ coverage_sqft | round }}">
+    approx. <span data-price-per-sqft>{{ price_per_sqft | money }}</span> per sq ft
+  </div>
+{%- endif -%}

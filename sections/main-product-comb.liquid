@@ -282,6 +282,8 @@
                         price_class: 'price--large'
                       -%}
 
+                      {% render 'price-per-sqft', product: product %}
+
                       {% comment %}{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %} {% endcomment %}
 
                        <div>
@@ -805,6 +807,8 @@
                         show_badges: true,
                         price_class: 'price--large'
                       -%}
+
+                      {% render 'price-per-sqft', product: product %}
 
                        <div>
 
@@ -3880,6 +3884,8 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
           CMP_WRAP:".pr_custom_compare_price",
           CMP:".pr_custom_compare_price s",
           SAVE:".you-save",
+          PPS:"[data-price-per-sqft]",
+          PPS_WRAP:"[data-price-per-sqft-wrap]",
           VID:".product-variant-id",
           PRODUCT_JSON:'script[type="application/json"][data-product],script[type="application/json"][data-product-json]'
         };
@@ -3932,7 +3938,8 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
       const e=this.$(t.CMP), r=this.$(t.CMP_WRAP);
       e&&(e.textContent="");
       r&&r.classList.add("pm-empty");
-      const n=this.$(t.SAVE); n&&(n.textContent="",n.classList.add("pm-empty"))
+      const n=this.$(t.SAVE); n&&(n.textContent="",n.classList.add("pm-empty"));
+      const s=this.$(t.PPS_WRAP); s&&s.classList.add("pm-empty")
     }
 
     paint(e){
@@ -3947,6 +3954,8 @@ if(!window.__pmMin){window.__pmMin=1;(function(){
       c&&c.classList.toggle("pm-empty",!o);
       const i=this.$(t.SAVE);
       if(i) if(o){const t=n(e.compare_at_price)-n(e.price); i.textContent="You save "+r(t), i.classList.remove("pm-empty")} else i.textContent="",i.classList.add("pm-empty")
+      const p=this.$(t.PPS), pw=this.$(t.PPS_WRAP);
+      if(p&&pw){const cov=parseFloat(pw.getAttribute("data-coverage-sqft"))||0, pr=n(e.price); if(cov>0&&Number.isFinite(pr)){p.textContent=r(Math.round(pr/cov)); pw.classList.remove("pm-empty")} else pw.classList.add("pm-empty")}
     }
 
     currentVariantFromId(){
