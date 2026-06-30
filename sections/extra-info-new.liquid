@@ -807,11 +807,14 @@ document.addEventListener("DOMContentLoaded", function() {
       {% endfor %}
 
       {% for block in section.blocks %}
-        {% if block.type == 'warranty' and block.settings.warranty != blank %}
-          <div class="product__extra_warranty extra-info-width">
-            <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
-            <div>{{ block.settings.warranty }}</div>
-          </div>
+        {% if block.type == 'warranty' %}
+          {%- assign warranty_info = product.metafields.custom.features_specs_new.value.warranty_info -%}
+          {%- if warranty_info != blank -%}
+            <div class="product__extra_warranty extra-info-width">
+              <h2 class="product__extra_info-title">{{ block.settings.title | default: 'Warranty' }}</h2>
+              <div>{{ warranty_info | metafield_tag }}</div>
+            </div>
+          {%- endif -%}
         {% endif %}
       {% endfor %}
 
