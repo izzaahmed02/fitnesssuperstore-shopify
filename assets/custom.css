@@ -87,16 +87,45 @@ font-size: 28px!important;
   }
 }
 
+/* PDP gallery tuning knobs — adjust these two values to taste.
+   --pdp-info-width: width of the right buy-box column (wider = less blank space).
+   --pdp-image-max:  max width of the centered main gallery image (smaller = avoids
+                     upscaling low-res photos, which looked blurry when enlarged). */
+.product-layout {
+  --pdp-info-width: 560px;
+  --pdp-image-max: 440px;
+}
+
 @media (min-width: 990px) {
-  /* Gallery column fills the row minus the info column (480px) and the 2rem grid gap.
-     The previous calc subtracted 15rem to reserve space for the old left sidebar, which
-     is now removed — that slack became wasted blank space and shrank the gallery. */
+  /* Gallery column fills the row minus the (widened) info column and the 2rem grid gap. */
   .product-layout .product-main-left-container {
-    width: calc(100% - 2rem - 480px) !important;
+    width: calc(100% - 2rem - var(--pdp-info-width)) !important;
   }
 
   .product-layout .extraInfo {
-    width: calc(100% - 2rem - 480px) !important;
+    width: calc(100% - 2rem - var(--pdp-info-width)) !important;
+  }
+
+  /* Cap and center the main image so it is no longer overwhelming and low-res photos
+     are not upscaled. Thumbnails stay pinned left; the image centers in the space left
+     over in the gallery column. */
+  .product-layout .main-image-container {
+    max-width: var(--pdp-image-max) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Widen the right buy-box column and its inner content blocks so the freed space is
+     used by the buy box instead of becoming blank white space. */
+  .product-layout .product--large:not(.product--no-media) .product__info-wrapper,
+  .product-layout .product__info-wrapper.fixed,
+  .product-layout .product__info-wrapper.absolute {
+    max-width: var(--pdp-info-width) !important;
+  }
+
+  .product-layout .product-main-right-wrapper,
+  .product-layout .product__accesnt-text {
+    max-width: var(--pdp-info-width) !important;
   }
 }
 
@@ -133,9 +162,9 @@ font-size: 28px!important;
 }
 
 @media screen and (min-width: 1200px) {
-  /* Keep the info column at the theme's standard 480px so the gallery calc above
-     and the sticky buy box (also 480px) stay consistent. */
+  /* Keep the info column at the same widened width as the 990px rules above so it
+     does not snap back to the theme default on large screens. */
   .product-layout .product--large:not(.product--no-media) .product__info-wrapper {
-    max-width: 480px !important;
+    max-width: var(--pdp-info-width) !important;
   }
 }
