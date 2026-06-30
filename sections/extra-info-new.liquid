@@ -716,12 +716,22 @@ document.addEventListener("DOMContentLoaded", function() {
               </div>
             {% endif %}
  
-          {% when 'faq' %}
+        {% when 'faq' %}
             {% assign faq = product.metafields.custom.features_specs_new.value.frequently_asked_questions.value %}
             {% if faq != blank %}
-              <div class="product__extra_tech extra-info-width">
+              <div class="product__extra_faq extra-info-width">
                 <h2 class="product__extra_info-title">{{ block.settings.title }}</h2>
-                <div>{{ faq }}</div>
+                <dl class="pdp-faq">
+                  {% for i in (1..20) %}
+                    {% assign q_key = 'question_' | append: i %}
+                    {% assign a_key = 'answer_' | append: i %}
+                    {% assign q = faq[q_key] %}
+                    {% assign a = faq[a_key] %}
+                    {% if q == blank %}{% break %}{% endif %}
+                    <dt class="pdp-faq__q">{{ q }}</dt>
+                    <dd class="pdp-faq__a">{{ a | metafield_tag }}</dd>
+                  {% endfor %}
+                </dl>
               </div>
             {% endif %}
 
