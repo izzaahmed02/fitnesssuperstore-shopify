@@ -708,11 +708,14 @@ document.addEventListener("DOMContentLoaded", function() {
   {% endif %}
 
 
-          {% when 'buyingguide' %}
+        {% when 'buyingguide' %}
             {% assign buyingGuide = product.metafields.custom.features_specs_new.value.buying_guide.value %}
             {% if buyingGuide != blank %}
               <div class="product__extra_tech extra-info-width">
-                <div>{{ buyingGuide }}</div>
+                {% if buyingGuide.header != blank %}
+                  <h2 class="product__extra_info-title">{{ buyingGuide.header }}</h2>
+                {% endif %}
+                <div>{{ buyingGuide.content | metafield_tag }}</div>
               </div>
             {% endif %}
  
