@@ -5,10 +5,11 @@
   form in the DOM and:
     - shows itself once the real Add-to-Cart button has scrolled out of view;
     - mirrors the live product price;
-    - builds a dropdown for each visible "must-select" option in
-      #Product-Options-<section> (variant/config + key services; upsell add-ons
-      such as mats, attachments and accessories are excluded; see isMustSelect)
-      and keeps it in two-way sync with the real option control, so pricing,
+    - builds a dropdown for each option listed in the product's
+      `custom.sticky_bar_options` metafield (the per-product list from the
+      "Sticky Cart Logic" sheet), in that order; if the metafield is empty it
+      falls back to "Full Assembly & Installation" only (see buildOptions). Each
+      dropdown stays in two-way sync with the real option control, so pricing,
       validation and cart submission stay owned by product-custom-options.js;
     - on click, scrolls the options into view (if any) and triggers the real
       submit button.
@@ -116,43 +117,73 @@ if (!customElements.get('sticky-atc')) {
     }
 
     /* ----- Option proxies ----- */
+    // Which options the bar shows is driven by the product's
+    // `custom.sticky_bar_options` metafield (the per-product list from the
+    // "Sticky Cart Logic" sheet, Tab 1), in the order given. When the metafield
+    // is empty/absent we fall back to showing only "Full Assembly & Installation"
+    // if the product has it.
     buildOptions() {
       if (!this.optionsBlock || !this.optionsTarget) return;
 
-      const items = [];
-      const add = (el, build) => {
-        if (this.isVisible(el) && this.isMustSelect(el)) items.push({ el, build });
+      // Gather every visible option control with its matchable names + builder.
+      const candidates = [];
+      const add = (el, kind, build) => {
+        if (this.isVisible(el)) candidates.push({ el, build, names: this.namesFor(el, kind) });
       };
-      this.optionsBlock.querySelectorAll('[data-select-option]').forEach((el) => add(el, () => this.buildSelectProxy(el)));
-      this.optionsBlock.querySelectorAll('[data-option-accordion]').forEach((el) => add(el, () => this.buildAccordionProxy(el)));
-      this.optionsBlock.querySelectorAll('.custom-color-group').forEach((el) => add(el, () => this.buildColorProxy(el)));
-      this.optionsBlock.querySelectorAll('[data-quantity-option]').forEach((el) => add(el, () => this.buildScrollProxy(el, this.categoryTitleFor(el))));
+      this.optionsBlock.querySelectorAll('[data-select-option]').forEach((el) => add(el, 'select', () => this.buildSelectProxy(el)));
+      this.optionsBlock.querySelectorAll('[data-option-accordion]').forEach((el) => add(el, 'accordion', () => this.buildAccordionProxy(el)));
+      this.optionsBlock.querySelectorAll('.custom-color-group').forEach((el) => add(el, 'color', () => this.buildColorProxy(el)));
+      this.optionsBlock.querySelectorAll('[data-quantity-option]').forEach((el) => add(el, 'quantity', () => this.buildScrollProxy(el, this.categoryTitleFor(el))));
 
-      // Assembly / Room of Choice installation is always the last option, right
-      // before Add to Cart (per the approved design); keep the rest in DOM order.
-      items.sort((a, b) => {
-        const aa = this.isAssembly(a.el);
-        const ba = this.isAssembly(b.el);
-        if (aa !== ba) return aa - ba;
-        return (a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
-      });
+      const sheetList = this.parseStickyOptions();
+      const chosen = [];
 
-      items.forEach((item) => item.build());
-      this.classList.toggle('has-options', items.length > 0);
+      if (sheetList.length) {
+        // Exact per-product list, in the sheet's order.
+        const used = new Set();
+        sheetList.forEach((name) => {
+          const idx = candidates.findIndex((c, i) => !used.has(i) && this.matchesName(name, c.names));
+          if (idx !== -1) { used.add(idx); chosen.push(candidates[idx]); }
+        });
+      } else {
+        // Fallback: Full Assembly & Installation only, if present.
+        const assembly = candidates.find((c) =>
+          c.names.some((n) => /assembly|room of choice|installation/.test(n.toLowerCase())));
+        if (assembly) chosen.push(assembly);
+      }
+
+      chosen.forEach((c) => c.build());
+      this.classList.toggle('has-options', chosen.length > 0);
     }
 
-    isAssembly(el) {
-      const t = this.categoryTitleFor(el).toLowerCase();
-      return (t.includes('assembly') || t.includes('room of choice') || t.includes('installation')) ? 1 : 0;
+    // The list of option names configured for this product (from the metafield).
+    parseStickyOptions() {
+      try {
+        const arr = JSON.parse(this.dataset.stickyOptions || '[]');
+        return Array.isArray(arr) ? arr.filter(Boolean) : [];
+      } catch (e) {
+        return [];
+      }
     }
 
-    // The bar surfaces only the "must-select" options for the product:
-    // configuration / variant choices (color, weight stack, rig sections, rig
-    // upright height) and the key services (assembly / room of choice, warranty).
-    // Everything else (mats, attachments, cable attachments, accessories / add-ons,
-    // etc.) is treated as a cart upsell and excluded. The decision is made on the
-    // option's category title (the <h2>), which is the reliable signal — the long
-    // accessory lists live under their own categories.
+    // Names an option can be matched against: its category title plus, where
+    // relevant, its sub-option / select title (sheet names map to either level).
+    namesFor(el, kind) {
+      const names = [];
+      const cat = this.categoryTitleFor(el);
+      if (cat) names.push(cat);
+      if (kind === 'accordion') names.push(this.accordionTitle(el));
+      if (kind === 'select' && el.dataset.selectTitle) names.push(el.dataset.selectTitle);
+      return names.filter(Boolean);
+    }
+
+    matchesName(sheetName, names) {
+      const s = sheetName.toLowerCase().replace(/\s+/g, ' ').trim();
+      const norm = names.map((n) => n.toLowerCase().replace(/\s+/g, ' ').trim());
+      if (norm.some((n) => n === s)) return true; // prefer exact
+      return norm.some((n) => n.includes(s) || s.includes(n));
+    }
+
     categoryTitleFor(el) {
       const category = el.closest('.product-option__item');
       const titleEl = category && category.querySelector('.product-options__category-title');
@@ -164,22 +195,6 @@ if (!customElements.get('sticky-atc')) {
         if (node.nodeType === Node.TEXT_NODE) text += node.textContent;
       });
       return text.replace(/\s+/g, ' ').trim();
-    }
-
-    isMustSelect(el) {
-      const t = this.categoryTitleFor(el).toLowerCase();
-      if (!t) return false;
-      return t.includes('warranty') ||
-        t.includes('weight stack') ||
-        t.includes('color') ||
-        t.includes('colour') ||
-        t.includes('assembly') ||
-        t.includes('room of choice') ||
-        t.includes('rig option') ||
-        t.includes('rig section') ||
-        t.includes('number of rig') ||
-        t.includes('rig upright') ||
-        t.includes('upright height');
     }
 
     makeField(labelText) {
