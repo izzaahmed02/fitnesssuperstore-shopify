@@ -444,7 +444,14 @@ observePopup() {
       const slideWrap = document.createElement('div');
       slideWrap.className = 'mobile-gallery-slide-wrap';
 
-      if (media.media_type === 'image' && media.preview_image) {
+      if (media.media_type === 'video') {
+        slideWrap.innerHTML = `<div class="mobile-gallery-slide" data-media-id="${media.id}"><video controls muted playsinline preload="none" poster="${media.preview_image?.src || ''}">${(media.sources || []).map((source) => `<source src="${source.url}" type="${source.mime_type}">`).join('')}</video></div>`;
+      } else if (media.media_type === 'external_video') {
+        slideWrap.innerHTML = `<div class="mobile-gallery-slide external-video" data-media-id="${media.id}"><div class="video-wrapper"><div class="video-iframe-overlay" aria-hidden="true"></div></div></div>`;
+      } else if (media.preview_image) {
+        // Images, plus 3D models and any other previewable media shown via their preview
+        // image. Previously only 'image' was handled, so a 3D model (media_type 'model')
+        // fell through every branch and produced an empty slide and an extra pagination dot.
         const skeleton = document.createElement('div');
         skeleton.className = 'image-skeleton-wrapper';
 
@@ -470,10 +477,9 @@ observePopup() {
         slide.appendChild(img);
         skeleton.appendChild(slide);
         slideWrap.appendChild(skeleton);
-      } else if (media.media_type === 'video') {
-        slideWrap.innerHTML = `<div class="mobile-gallery-slide" data-media-id="${media.id}"><video controls muted playsinline preload="none" poster="${media.preview_image?.src || ''}">${(media.sources || []).map((source) => `<source src="${source.url}" type="${source.mime_type}">`).join('')}</video></div>`;
-      } else if (media.media_type === 'external_video') {
-        slideWrap.innerHTML = `<div class="mobile-gallery-slide external-video" data-media-id="${media.id}"><div class="video-wrapper"><div class="video-iframe-overlay" aria-hidden="true"></div></div></div>`;
+      } else {
+        // Nothing renderable for this media — skip it rather than leaving an empty slide.
+        return;
       }
 
       container.appendChild(slideWrap);
