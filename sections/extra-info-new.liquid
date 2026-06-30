@@ -803,6 +803,20 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div>{{ block.settings.text }}</div>
               </div>
             {% endif %}
+
+            {% when 'extracontent' %}
+            {%- assign extraContent = product.metafields.custom.features_specs_new.value.extra_content.value -%}
+            {%- if extraContent != blank -%}
+              <div class="product__extra_tech extra-info-width">
+                {%- for item in extraContent -%}
+                  {% if item.header != blank %}
+                    <h2 class="product__extra_info-title">{{ item.header }}</h2>
+                  {% endif %}
+                  <div>{{ item.content | metafield_tag }}</div>
+                {%- endfor -%}
+              </div>
+            {%- endif -%}
+            
         {% endcase %}
       {% endfor %}
 
@@ -817,6 +831,8 @@ document.addEventListener("DOMContentLoaded", function() {
           {%- endif -%}
         {% endif %}
       {% endfor %}
+
+
 
        {% unless is_gift_cards_template %}
 
