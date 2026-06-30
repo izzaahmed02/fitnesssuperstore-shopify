@@ -1,0 +1,134 @@
+{%- comment -%}
+  Renders a LABEL-VALUE / side-by-side comparison pdp_table.
+
+  Usage:
+    {% render 'pdp-table-comparison', table: table_entry %}
+
+  Data model (label-value):
+    table.section_header              -> heading above the table
+    table.table_headers.value         -> list of COLUMNS (iterate, never index)
+        header.custom_title           -> column heading (e.g. product name)
+        header.content.value          -> column's cells, top to bottom (iterate)
+            cell.attribute (rich text) -> ROW LABEL (same down every column)
+            cell.values    (rich text) -> the data for THIS column
+
+  Output: first column = row labels (from column 1's `attribute`),
+  then one data column per header (from each column's `values`).
+  Labels become <th scope="row">, product columns become <th scope="col">.
+
+  Shopify metaobject reference lists support ITERATION only (value[0] is null),
+  so we flatten each column via capture+split, then read rows back out.
+{%- endcomment -%}
+
+{%- liquid
+  assign cols = table.table_headers.value
+-%}
+
+{%- if cols != blank -%}
+
+  {%- comment -%} 1) Build the row-label blob from the FIRST column's `attribute`. {%- endcomment -%}
+  {%- assign label_blob = '' -%}
+  {%- assign max_rows = 0 -%}
+  {%- for col in cols -%}
+    {%- if forloop.first -%}
+      {%- for cell in col.content.value -%}
+        {%- assign max_rows = max_rows | plus: 1 -%}
+        {%- capture lbl -%}{{ cell.attribute | metafield_tag }}{%- endcapture -%}
+        {%- assign label_blob = label_blob | append: lbl | append: '~~CELL~~' -%}
+      {%- endfor -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+  {%- comment -%} 2) Build each column's DATA blob from `values`, tracking the longest. {%- endcomment -%}
+  {%- assign col_blobs = '' -%}
+  {%- for col in cols -%}
+    {%- assign cell_count = 0 -%}
+    {%- capture this_col -%}
+      {%- for cell in col.content.value -%}
+        {%- assign cell_count = cell_count | plus: 1 -%}
+        {{ cell.values | metafield_tag }}~~CELL~~
+      {%- endfor -%}
+    {%- endcapture -%}
+    {%- if cell_count > max_rows -%}{%- assign max_rows = cell_count -%}{%- endif -%}
+    {%- assign col_blobs = col_blobs | append: this_col | append: '~~COL~~' -%}
+  {%- endfor -%}
+
+  {%- assign label_cells = label_blob | split: '~~CELL~~' -%}
+  {%- assign columns_data = col_blobs | split: '~~COL~~' -%}
+
+  {%- if table.section_header != blank -%}
+    <h3 class="pdp-ctable__heading product__extra_info-title">{{ table.section_header }}</h3>
+  {%- endif -%}
+
+  {%- if max_rows > 0 -%}
+    <div class="pdp-ctable__scroll">
+      <table class="pdp-ctable">
+        <thead>
+          <tr>
+            <th scope="col" class="pdp-ctable__corner"></th>
+            {%- for col in cols -%}
+              <th scope="col">{{ col.custom_title }}</th>
+            {%- endfor -%}
+          </tr>
+        </thead>
+        <tbody>
+          {%- for r in (1..max_rows) -%}
+            {%- assign row_idx = forloop.index0 -%}
+            <tr>
+              <th scope="row" class="pdp-ctable__label">{{ label_cells[row_idx] }}</th>
+              {%- for col_blob in columns_data -%}
+                {%- if col_blob != blank -%}
+                  {%- assign cells = col_blob | split: '~~CELL~~' -%}
+                  <td>{{ cells[row_idx] }}</td>
+                {%- endif -%}
+              {%- endfor -%}
+            </tr>
+          {%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+  {%- endif -%}
+
+{%- endif -%}
+
+{%- stylesheet -%}
+.pdp-ctable__heading { margin: 24px 0 8px; }
+.pdp-ctable__scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.pdp-ctable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.4;
+  border: 1px solid #ddd;
+  min-width: 640px;
+}
+.pdp-ctable thead th {
+  text-align: left;
+  font-weight: 700;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  background: #f7f7f7;
+  vertical-align: top;
+}
+.pdp-ctable tbody th.pdp-ctable__label {
+  text-align: left;
+  font-weight: 700;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  vertical-align: top;
+  white-space: nowrap;
+}
+.pdp-ctable tbody td {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  vertical-align: top;
+}
+.pdp-ctable .metafield-rich_text_field p { margin: 0; }
+.pdp-ctable a { color: var(--primary-orange-500, #D83D0E); text-decoration: underline; }
+@media (max-width: 600px) {
+  .pdp-ctable { font-size: 14px; }
+  .pdp-ctable thead th, .pdp-ctable tbody th.pdp-ctable__label, .pdp-ctable tbody td { padding: 8px 10px; }
+}
+{%- endstylesheet -%}
