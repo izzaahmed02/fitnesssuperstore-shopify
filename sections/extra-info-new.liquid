@@ -29,27 +29,34 @@
   }
 {%- endstyle -%}
 
-<pre style="background:#fff;color:#000;padding:12px;border:2px solid red;font-size:12px;">
-PRODUCT: {{ product.title }}
-ID: {{ product.id }}
-HANDLE: {{ product.handle }}
-template suffix: {{ template.suffix }}
 {%- assign sf = product.metafields.custom.features_specs_new.value -%}
-features_specs_new present? {% if sf != blank %}YES{% else %}NO{% endif %}
+<pre style="white-space:pre-wrap;background:#fff;color:#000;padding:12px;border:2px solid red;font-size:11px;">
+=== SIDE BY SIDE COMPARISON (PDP Table) ===
+type: {{ sf.side_by_side_comparison.type }}
+section_header: {{ sf.side_by_side_comparison.value.section_header }}
+table_type: {{ sf.side_by_side_comparison.value.table_type }}
+columns: {{ sf.side_by_side_comparison.value.table_headers.value.size }}
+first col title: {{ sf.side_by_side_comparison.value.table_headers.value[0].custom_title }}
 
-=== which fields have data ===
-features: {% if sf.features != blank %}Y{% endif %}
-tech_specs: {% if sf.tech_specs != blank %}Y{% endif %}
-weight_stacks: {% if sf.weight_stacks != blank %}Y{% endif %}
-warranty_info: {% if sf.warranty_info != blank %}Y{% endif %}
-benefits: {% if sf.benefits != blank %}Y{% endif %}
-other_features_table count: {{ sf.other_features_table.value.size }}
-side_by_side_comparison present? {% if sf.side_by_side_comparison != blank %}Y{% endif %}
-shipping_dimensions_weight present? {% if sf.shipping_dimensions_weight != blank %}Y{% endif %}
-buying_guide present? {% if sf.buying_guide != blank %}Y{% endif %}
-extra_content count: {{ sf.extra_content.value.size }}
-faq present? {% if sf.frequently_asked_questions != blank %}Y{% endif %}
-set_includes count: {{ sf.set_includes.value.size }}
+=== SHIPPING DIMENSIONS (PDP Table) ===
+type: {{ sf.shipping_dimensions_weight.type }}
+section_header: {{ sf.shipping_dimensions_weight.value.section_header }}
+table_type: {{ sf.shipping_dimensions_weight.value.table_type }}
+columns: {{ sf.shipping_dimensions_weight.value.table_headers.value.size }}
+
+=== BUYING GUIDE (PDP Sections) ===
+type: {{ sf.buying_guide.type }}
+{% for s in sf.buying_guide.value %}  section [{{ forloop.index }}] keys: {{ s | json | slice: 0, 200 }}
+{% endfor %}
+
+=== EXTRA CONTENT (PDP Sections, 2) ===
+type: {{ sf.extra_content.type }}
+{% for s in sf.extra_content.value %}  extra [{{ forloop.index }}]: {{ s | json | slice: 0, 200 }}
+{% endfor %}
+
+=== FAQ (PDP FAQ) ===
+type: {{ sf.frequently_asked_questions.type }}
+{{ sf.frequently_asked_questions.value | json | slice: 0, 400 }}
 </pre>
 
 {% assign extra = product.metafields.custom.extra_info.value %}
