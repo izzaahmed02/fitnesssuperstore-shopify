@@ -30,6 +30,28 @@
 {%- endstyle -%}
 
 {%- assign sf = product.metafields.custom.features_specs_new.value -%}
+{%- assign sf = product.metafields.custom.features_specs_new.value -%}
+<pre style="white-space:pre-wrap;background:#fff;color:#000;padding:12px;border:2px solid red;font-size:11px;">
+=== FAQ full structure ===
+{{ sf.frequently_asked_questions.value | json }}
+
+=== BUYING GUIDE full structure ===
+{{ sf.buying_guide.value | json }}
+
+=== SHIPPING TABLE first column cells ===
+{% assign shdr = sf.shipping_dimensions_weight.value.table_headers.value[0] %}
+custom_title: {{ shdr.custom_title }}
+content count: {{ shdr.content.value.size }}
+{% for c in shdr.content.value %}cell: values={{ c.values | json | slice:0,80 }} attr={{ c.attribute | json | slice:0,80 }}
+{% endfor %}
+
+=== SIDE BY SIDE first column cells ===
+{% assign sbs = sf.side_by_side_comparison.value.table_headers.value[0] %}
+custom_title: {{ sbs.custom_title }}
+content count: {{ sbs.content.value.size }}
+{% for c in sbs.content.value %}cell: values={{ c.values | json | slice:0,80 }} attr={{ c.attribute | json | slice:0,80 }}
+{% endfor %}
+</pre>
 
 {% assign extra = product.metafields.custom.extra_info.value %}
 {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
