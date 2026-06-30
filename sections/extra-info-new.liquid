@@ -29,7 +29,28 @@
   }
 {%- endstyle -%}
 
+<pre style="background:#fff;color:#000;padding:12px;border:2px solid red;font-size:12px;">
+PRODUCT: {{ product.title }}
+ID: {{ product.id }}
+HANDLE: {{ product.handle }}
+template suffix: {{ template.suffix }}
+{%- assign sf = product.metafields.custom.features_specs_new.value -%}
+features_specs_new present? {% if sf != blank %}YES{% else %}NO{% endif %}
 
+=== which fields have data ===
+features: {% if sf.features != blank %}Y{% endif %}
+tech_specs: {% if sf.tech_specs != blank %}Y{% endif %}
+weight_stacks: {% if sf.weight_stacks != blank %}Y{% endif %}
+warranty_info: {% if sf.warranty_info != blank %}Y{% endif %}
+benefits: {% if sf.benefits != blank %}Y{% endif %}
+other_features_table count: {{ sf.other_features_table.value.size }}
+side_by_side_comparison present? {% if sf.side_by_side_comparison != blank %}Y{% endif %}
+shipping_dimensions_weight present? {% if sf.shipping_dimensions_weight != blank %}Y{% endif %}
+buying_guide present? {% if sf.buying_guide != blank %}Y{% endif %}
+extra_content count: {{ sf.extra_content.value.size }}
+faq present? {% if sf.frequently_asked_questions != blank %}Y{% endif %}
+set_includes count: {{ sf.set_includes.value.size }}
+</pre>
 
 {% assign extra = product.metafields.custom.extra_info.value %}
 {% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
