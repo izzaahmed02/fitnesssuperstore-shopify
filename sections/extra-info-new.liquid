@@ -425,11 +425,24 @@ document.addEventListener("DOMContentLoaded", function() {
  
           {% assign otherFeatures = product.metafields.custom.features_specs_new.value.other_features.value %}
 
-          {%- assign feature_tables = product.metafields.custom.features_specs_new.value.other_features_table.value -%}
+         {%- assign feature_tables = product.metafields.custom.features_specs_new.value.other_features_table.value -%}
 {%- if feature_tables != blank -%}
   <div class="product__extra_tech extra-info-width">
     {%- for tbl in feature_tables -%}
-      {% render 'pdp-table', table: tbl %}
+      {%- comment -%} Detect label-value tables (cells have `attribute`) vs simple tables. {%- endcomment -%}
+      {%- assign is_label_value = false -%}
+      {%- for col in tbl.table_headers.value -%}
+        {%- for cell in col.content.value -%}
+          {%- if cell.attribute != blank -%}{%- assign is_label_value = true -%}{%- endif -%}
+          {%- break -%}
+        {%- endfor -%}
+        {%- break -%}
+      {%- endfor -%}
+      {%- if is_label_value -%}
+        {% render 'pdp-table-comparison', table: tbl %}
+      {%- else -%}
+        {% render 'pdp-table', table: tbl %}
+      {%- endif -%}
     {%- endfor -%}
   </div>
 {%- endif -%}
