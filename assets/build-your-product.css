@@ -352,18 +352,24 @@
 .byp-floating-cart__error { color: #c1281c; font-size: 1.3rem; margin: 1rem 0 0; }
 
 /* Sagi review: Affirm financing line sits directly below the Add to Cart button in
-   the expanded sticky cart. The JS moves this element to immediately follow the ATC;
-   these styles handle spacing/alignment. It is a direct child of the cart body, so the
-   collapsed-mobile rules below keep it hidden until the cart is expanded. */
-.byp-floating-cart__affirm {
+   the expanded sticky cart. The JS moves this element to immediately follow the ATC.
+   NOTE: the theme has a global rule `.affirm-as-low-as { display: none }`, so this
+   instance needs a scoped display override (with !important) to render at all. It is
+   only shown when the cart is open — the collapsed-mobile rule below re-hides it. */
+.byp-floating-cart .byp-floating-cart__affirm.affirm-as-low-as {
+  display: block !important;
+  min-height: 2rem;
   margin-top: 1.2rem;
   font-size: 1.3rem;
-  line-height: 1.4;
+  line-height: 1.5;
   color: var(--byp-ink);
   text-align: center;
 }
-.byp-floating-cart__affirm .affirm-modal-trigger,
-.byp-floating-cart__affirm a { color: var(--byp-ink); }
+.byp-floating-cart .byp-floating-cart__affirm.affirm-as-low-as a,
+.byp-floating-cart .byp-floating-cart__affirm.affirm-as-low-as .affirm-modal-trigger {
+  color: var(--byp-ink);
+  text-decoration: underline;
+}
 
 /* Warranty highlights */
 .byp-floating-cart__warranty {
@@ -519,7 +525,7 @@ body.byp-modal-open { overflow: hidden; }
     overflow-y: auto;
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
   }
-  .byp-floating-cart__inner { border-radius: 12px 12px 0 0; padding: 12px;}
+  .byp-floating-cart__inner { border-radius: 12px 12px 0 0; }
   .byp-modal__main { grid-template-columns: 1fr; }
   .byp-modal__main-media { min-height: 12rem; }
 
@@ -537,6 +543,14 @@ body.byp-modal-open { overflow: hidden; }
   }
   .byp-floating-cart--collapsed .byp-floating-cart__atc { display: block; }
   .byp-floating-cart--collapsed .byp-floating-cart__error:not([hidden]) { display: block; }
+
+  /* Keep the Affirm line hidden in the collapsed (closed) mobile strip, alongside the
+     other cart items. It carries a display:block !important override (to beat the
+     theme-wide .affirm-as-low-as hide), so re-hiding it needs equal force + higher
+     specificity. It reappears below the ATC only when the cart is expanded. */
+  .byp-floating-cart--collapsed .byp-floating-cart__body .byp-floating-cart__affirm.affirm-as-low-as {
+    display: none !important;
+  }
 
   /* Sagi review #5: when the cart is expanded on mobile, keep the header (with the
      close chevron) pinned to the top of the scroll area so it can be closed without
@@ -621,14 +635,3 @@ body.byp-modal-open { overflow: hidden; }
 .byp-modal__atc.button:hover { background: #f3bda6; }
 .byp-modal__atc.button:disabled { opacity: 0.5; cursor: not-allowed; }
 .byp-modal__actions .byp-modal__atc--in-order.button { background-color: #808080 !important; color: #fff; }
-
-.byp-floating-cart .byp-floating-cart__affirm.affirm-as-low-as {
-  display: block !important;
-  font-size: 14px;
-  color: rgba(35, 35, 43, 1);
-
-}
-.byp-floating-cart .byp-floating-cart__affirm.affirm-as-low-as a {
-  display: block;
-  text-decoration: underline;
-}
