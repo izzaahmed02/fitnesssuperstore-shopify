@@ -102,15 +102,21 @@ if (!customElements.get('build-your-product')) {
           }
         });
 
+        this.positionAffirmBelowAtc();
         this.renderFloatingCart();
         this.initSliders();
         this.collapseCartOnMobile();
-        this.positionAffirmBelowAtc();
 
         // Fix the main-form price base (engine reads the first .pr_custom_price as base).
         // Set the value synchronously, then re-run after the engine's init paint.
         this.syncMainFormBasePrice();
         setTimeout(() => this.syncMainFormBasePrice(), 350);
+
+        // The options engine initialises asynchronously, so the FSR90's real price is
+        // not available on first paint (base variant can read as 0). Re-render once it
+        // has settled so the subtotal — and the Affirm amount derived from it — reflect
+        // the engine-computed price instead of the 0/base figure Affirm won't render.
+        setTimeout(() => this.renderFloatingCart(), 500);
       }
 
       /* ---------- product sliders ---------- */
@@ -160,6 +166,9 @@ if (!customElements.get('build-your-product')) {
         const toggle = this.floatingCart.querySelector('.byp-floating-cart__toggle');
         toggle.setAttribute('aria-expanded', String(!collapsed));
         toggle.setAttribute('aria-label', collapsed ? 'Maximize cart' : 'Minimize cart');
+        // Affirm won't paint into a hidden element; when the cart is expanded, re-render
+        // so refreshAffirm() runs with the affirm line now visible.
+        if (!collapsed) this.renderFloatingCart();
       }
 
       // Sagi review #2: on mobile the floating cart is a fixed bottom bar. Start it
@@ -356,14 +365,36 @@ if (!customElements.get('build-your-product')) {
       }
 
       // Update the Affirm "as low as" amount (cents) and re-render it. Affirm's
-      // site-wide script renders/refreshes any .affirm-as-low-as element; if it
-      // hasn't loaded yet, it will pick this element up on its own initial scan.
+      // promo script renders/refreshes any .affirm-as-low-as element from its
+      // data-amount. Two guards matter here: (1) Affirm renders nothing for a 0 or
+      // blank amount, so we skip the refresh until we have a real figure; (2) on a
+      // custom template the promo module may not be ready on first paint, so if
+      // affirm.ui.refresh isn't available yet we retry briefly until it is.
       refreshAffirm(amountCents) {
         if (!this.affirmEl) return;
-        this.affirmEl.setAttribute('data-amount', String(Math.round(amountCents)));
-        if (window.affirm && window.affirm.ui && typeof window.affirm.ui.refresh === 'function') {
+        const cents = Math.round(amountCents) || 0;
+        this._affirmAmount = cents;
+        this.affirmEl.setAttribute('data-amount', String(cents));
+        if (cents <= 0) return; // Affirm won't render a 0 amount — wait for a real subtotal.
+
+        const canRefresh = () =>
+          window.affirm && window.affirm.ui && typeof window.affirm.ui.refresh === 'function';
+
+        if (canRefresh()) {
           window.affirm.ui.refresh();
+          return;
         }
+        // Affirm's promo module isn't ready yet — poll a few seconds, then give up.
+        let tries = 0;
+        clearInterval(this._affirmTimer);
+        this._affirmTimer = setInterval(() => {
+          if (canRefresh()) {
+            window.affirm.ui.refresh();
+            clearInterval(this._affirmTimer);
+          } else if ((tries += 1) >= 12) {
+            clearInterval(this._affirmTimer);
+          }
+        }, 500);
       }
 
       /* ---------- FSR90 line options (colour + assembly) from the Build section ---------- */
