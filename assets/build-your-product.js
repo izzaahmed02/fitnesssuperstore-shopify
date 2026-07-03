@@ -105,6 +105,7 @@ if (!customElements.get('build-your-product')) {
         this.renderFloatingCart();
         this.initSliders();
         this.collapseCartOnMobile();
+        this.positionAffirmBelowAtc();
 
         // Fix the main-form price base (engine reads the first .pr_custom_price as base).
         // Set the value synchronously, then re-run after the engine's init paint.
@@ -171,6 +172,19 @@ if (!customElements.get('build-your-product')) {
         if (toggle) {
           toggle.setAttribute('aria-expanded', 'false');
           toggle.setAttribute('aria-label', 'Maximize cart');
+        }
+      }
+
+      // Sagi review: in the expanded sticky cart the Affirm financing line should sit
+      // directly BELOW the Add to Cart button. Its source position varies, so relocate
+      // it once on init to immediately follow the ATC. Because it then becomes a direct
+      // child of .byp-floating-cart__body right after the ATC, the collapsed-mobile
+      // rules (which hide every body child except subtotal + ATC) keep it hidden in the
+      // condensed strip and only reveal it when the cart is open — exactly as requested.
+      positionAffirmBelowAtc() {
+        const atc = this.querySelector('.byp-floating-cart__atc');
+        if (this.affirmEl && atc && atc.parentNode) {
+          atc.insertAdjacentElement('afterend', this.affirmEl);
         }
       }
 
