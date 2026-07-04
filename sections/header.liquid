@@ -47,19 +47,23 @@
 
     .section-header {
     position: sticky;
-    /* Mobile: pin the section but push the announcement bar above the viewport
-       by offsetting top upward by exactly the bar's height (set by JS below).
-       Result: banner scrolls away, logo/search/icons row stays stuck at top.
-       Falls back to 0px (whole header sticks) if JS doesn't run. */
-    top: calc(-1 * var(--announcement-bar-height, 0px));
+    top: 0;
     z-index: 3;
     margin-bottom: {{ section.settings.margin_bottom | times: 0.75 | round: 0 }}px;
     }
 
+    /* Mobile: remove the top announcement/trust bar entirely (per Tim, 6/29).
+       Hiding the wrapper drops the special offer, the static "Nationwide Delivery
+       & Installation" line, and the scrolling trust items in one rule. Desktop is
+       untouched — the bar only renders at >=990px. */
     @media screen and (max-width: 989px) {
-    /* Make .section-header the single sticky container on mobile. Neutralize the
-       JS-driven sticky/hide states on .header-wrapper so it neither double-sticks
-       nor slides away on scroll-down — header stays visible the whole way. */
+    .header__upper-block-wrapper {
+    display: none;
+    }
+
+    /* .section-header is the single sticky element on mobile. Neutralize the
+       JS-driven sticky/hide states on .header-wrapper so the header stays pinned
+       and doesn't slide away on scroll-down. */
     .header-wrapper.shopify-section-header-sticky,
     .header-wrapper.shopify-section-header-hidden {
     position: static;
@@ -143,6 +147,7 @@
     }
     }
 {%- endstyle -%}
+
 <script src="{{ 'details-disclosure.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'details-modal.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'cart-notification.js' | asset_url }}" defer="defer"></script>
