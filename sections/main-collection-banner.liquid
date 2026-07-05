@@ -28,7 +28,14 @@
 
     <ul class="collection-hero__related-collections">
      {% for subcat in collection.metafields.custom.subcategories_custom_titles.value %}
-  {% if subcat.collection != blank %}
+  {% if subcat.custom_url != blank %}
+    <li>
+      <a href="{{ subcat.custom_url }}"
+         class="collection-hero__related-collection {% if request.path == subcat.custom_url %}active{% endif %}">
+        {{ subcat.custom_title | default: subcat.custom_url }}
+      </a>
+    </li>
+  {% elsif subcat.collection != blank %}
     {% assign sub_handle = subcat.collection.value.handle %}
     <li>
       <a href="/collections/{{ sub_handle }}"
