@@ -60,9 +60,31 @@ Between May 29 and July 4 we merged **50+ PRs to `main`** on the fitnesssupersto
 - Turf Flooring PDP dynamic "As high as / per sq ft" revision (#598 branch)
 - Global Power Sand Bag + Strongman Sandbag PDP revisions in-flight
 
-**Sticky cart / cart drawer:** I want to call this out explicitly because you asked. Sticky-ATC and cart-drawer work has been split into isolated branches by design so we do not destabilize the buy-flow while we ship PDP improvements (`atc-sticky-usman`, `cart-cart-drawer`, `cart-options-popup`, `cart-shipping-widget-calculator`, `cart-upsells-without-avis`, `cart-without-avis`, `cart-invistigation`). Those are staged behind the current PDP work on purpose — the cart is our highest-blast-radius surface and I do not want a heading/H1 refactor and a sticky-ATC refactor colliding on the same preview theme.
+**Sticky cart / cart drawer:** I want to call this out explicitly because you asked. Sticky-ATC and cart-drawer work has been split into isolated branches by design so we do not destabilize the buy-flow while we ship PDP improvements (`atc-sticky-usman`, `cart-cart-drawer`, `cart-options-popup`, `cart-shipping-widget-calculator`, `cart-upsells-without-avis`, `cart-without-avis`, `cart-invistigation`). Those are staged behind the current PDP work on purpose — the cart is our highest-blast-radius surface and I do not want a heading/H1 refactor and a sticky-ATC refactor colliding on the same preview theme. The V2 "No Cart Drawer" test is being evaluated in parallel — I am reviewing the Convert app and Sagi is running the parallel VWO outreach.
 
-The mobile PDP quick wins (the ones I got the "PDP images cut off on mobile" flag on 6/30) shipped inside a few hours (#600 + #601) and are live.
+**Mobile PDP quick wins that shipped this window:**
+- "PDP images cut off on mobile" — full product photos now display, forced 1:1 removed (#600 + #601, live within hours of the 6/30 flag).
+- About / Trust Hub desktop + mobile update — Tim confirmed 7/1 "much better and solves the main issue" (Nationwide section revised).
+- Home page CTA update — desktop + mobile CTAs re-linked to /collections/all; final mobile wording tweak to "Shop Now" outstanding per your 7/1 note.
+
+**French Fitness page development in flight right now (beyond what's already merged):**
+- **French Fitness Home Page** — Usman built from Figma; I reviewed 7/5 and delivered feedback on layout, header/footer, hero, product/category sections; dev iterating.
+- **FF redesign pages ("Our CEO" and other brand pages)** — approved in Figma, handed off to dev 7/1.
+- **French Fitness Rack/Rig consolidation** — dev review of `main-collection-banner.liquid` done, two competing subcategory-button mechanisms identified, Phase 1A held as "prepared for approval" waiting on Iqra/Larianne.
+- **Top 45 French Fitness hero products / Agentic AI PDP lane** — first 15 SKUs named (FFT-ACD, FFB-SM200, FFB-8SMJG…), dev tracker columns filled by me; Masum needs SKU triage into diagnostic vs. product-data lanes before he can hit P0.
+- **Top 30 French Fitness hero-product optimization quote** — Phase 1 diagnostic approved at $3800 with checkpoint gate; Phases 2/3 pending your approval.
+- **GymBuild package PDPs (Build your gym / 1500 sq ft or less)** — moving onto the new Package PDP / AI PDP design system with /pages/gym-packages as parent decision hub.
+- **New French Fitness 5-Stack combined PDP** — sales.cs requested 7/3 build with +$800 custom configuration; queued for assignment.
+
+**Other active PDP threads worth naming so nothing looks invisible:**
+- **FSR90 PDP Design** — Waqas integrated the Judge.me widget and it is rendering; awaiting Sagi re-review (nudged 7/3).
+- **Send to Yurii / A/B test on product pages** — gallery + spacing fixes done, dropdowns in progress per your two-step plan (step 1 dropdowns + more company text without A/B, step 2 A/B vs. AI PDP).
+- **Home Page NON A/B Test Updates + Mobile PDP quick wins** — combined thread that Waqas/Zafran/I are working; you flagged the home page as "messed up" and Sagi's A/B compatibility question is still open.
+- **PageSpeed Insights cleanup** — Yusra owns, gated on Waqas closing the PDP architecture/regression thread first.
+- **Mixed Signals to Google** — origin story, team-size, schema, and copy-alignment fixes with Zafran; status still outstanding since 5/16.
+- **Product Operations Support & Availability** — I sent Iqra additional product-ops context 7/5, Zafran CC'd.
+- **Remanufacturing Videos on FSS PDPs** — Sagi asked for a status in Jan; genuinely stale, I will close the loop this week.
+- **Voltage information on Woodway Treadmill** — voltage dropdown restore is blocked because I cannot see the voltage selection in the metafield; waiting on Larianne.
 
 So the honest read from the execution side: **the pace is healthy and the queue is moving.** What is worth improving is not the volume — it is the shape of the process. That is where your eight questions land, and here is the joint answer.
 
@@ -88,13 +110,16 @@ So the honest read from the execution side: **the pace is healthy and the queue 
 
 **Shared theme / template dev (must be sequenced, WIP-limited):**
 - PDP master template + combined-listings + variant behavior
-- Cart drawer / sticky-ATC / cart upsells
-- Homepage template + brand pages
+- Cart drawer / sticky-ATC / cart upsells + V2 "No Cart Drawer" test evaluation
+- Homepage template + brand pages (Fitness Superstore + French Fitness Figma builds)
 - Rack/Rig collection consolidation (banner subcategory buttons + Phase 1B)
 - Roomplanner + BYOR integration on gym-packages hub
 - Global schema / VideoObject / breadcrumb refactors
-- A/B test scaffolding for dropdowns vs. AI PDP (Yurii/Sagi lane)
+- A/B test scaffolding for dropdowns vs. AI PDP (Yurii/Sagi lane) — step 1 dropdowns in progress
 - New French Fitness 5-Stack combined PDP with +$800 custom configuration
+- FSR90 PDP design (Waqas — Judge.me widget rendering, awaiting Sagi re-review)
+- Home Page NON A/B Test Updates + Mobile PDP quick wins combined thread
+- FF redesign pages ("Our CEO" + other brand pages from Figma, dev handoff open)
 
 **Product-family rollout (pilot-then-replicate):**
 - 500/1,000/1,500 sq ft package validation (after 2,000 pilot approved)
@@ -144,7 +169,10 @@ Honest list of where scope drifted mid-flight in the last month:
 - **Rack/Rig consolidation** — Phase 1A moved from "approved to publish" to "prepared for approval only" while we were mid-implementation.
 - **Turf Flooring PDP** — "As high as" placeholder + dynamic per-sq-ft was scoped, then extended to include price display formatting.
 - **Voltage / 220V–240V metafield** — original ask was "restore the dropdown," which then became "no dropdown, PDP note only, gated on a metafield" (#584).
-- **Top 45 hero PDPs** — moved from Top 30 to Top 45 mid-quote.
+- **Top 45 hero PDPs** — moved from Top 30 to Top 45 mid-quote; Phase 1 diagnostic then had Phases 2/3 explicitly deferred.
+- **Home page CTA update** — desktop-only fix expanded to mobile parity; mobile shipped as "Shop Remanufactured" then re-scoped to "Shop Now."
+- **Send to Yurii / A/B test** — originally a straight A/B; re-scoped to a two-step plan (step 1 dropdowns + more company text non-A/B, step 2 A/B vs. AI PDP) mid-thread.
+- **French Fitness Rack/Rig thread** — started as consolidation, expanded into UX guardrails + dev review of `main-collection-banner.liquid` + Phase 1A "prepared for approval" hold.
 
 Recommended rule (for both sides): once a task is in dev, new requirements go into a **v2 follow-up branch** with a new PR, not into the active branch. I will enforce this on my side. On your side, when you send a new requirement, please add "add to v2 follow-up" or "block current release" so I know which lane it goes in.
 
@@ -202,18 +230,23 @@ Uneven. Some threads (mobile PDP fix, Puerto Rico shipping, Order #48688) turn a
 ### Current top five priorities
 
 1. **Combined Listings source-of-truth review** (Ayyaz onboarded 7/1, guidance sent 7/3 — needs his completion this week so we stop re-fixing the same variant logic).
-2. **Sticky-ATC / cart-drawer refactor** (moves to active as soon as this PDP-heading wave clears — I will not open it while the H1/heading refactor is still on preview).
-3. **Rack/Rig collection consolidation Phase 1B** (dev-ready; waiting only on Iqra/Larianne product-side decision on which subcategory-button mechanism to standardize on).
-4. **Top 45 French Fitness hero products — PDP + Agentic AI PDP lane** (dev tracker columns already filled by me; blocked on Larianne/Iqra completing their columns).
-5. **Order-flow correctness sweep** — close #48619 cart-pricing bug, verify #48688 duplicate-SKU class is contained, confirm Puerto Rico Intuitive Shipping fix holds.
+2. **Sticky-ATC / cart-drawer refactor + V2 "No Cart Drawer" test** (moves to active as soon as this PDP-heading wave clears — I will not open it while the H1/heading refactor is still on preview; Convert app evaluation and VWO outreach with Sagi in parallel).
+3. **French Fitness Home Page + FF redesign pages** (Usman's Figma build reviewed 7/5; "Our CEO" and other brand pages in dev handoff — this is a large French Fitness page batch that should ship together, not one-off).
+4. **Top 45 French Fitness hero products — PDP + Agentic AI PDP lane** + step-1 dropdowns for Yurii/Sagi A/B (dev tracker filled by me; step-1 dropdowns in progress; blocked on Larianne/Iqra completing their tracker columns).
+5. **Order-flow correctness sweep** — close #48619 cart-pricing bug, verify #48688 duplicate-SKU class is contained, confirm Puerto Rico Intuitive Shipping fix holds, resolve FSR90 Judge.me widget re-review with Sagi.
+
+Immediately behind the top five (queued, dev-ready or near-ready): Rack/Rig Phase 1B (waiting Iqra/Larianne), GymBuild/1500 sq ft package PDP on new AI PDP design system, FF 5-Stack combined PDP (+$800 custom), 220V–240V transformer metafield rollout, mobile PDP home page fix (Waqas).
 
 ### What should be paused or reassigned
 
-- **Pause:** Yurii A/B test for dropdowns vs. AI PDP (Sagi's read is correct — outdated given AI PDP progress; revisit after step-1 dropdowns ship).
+- **Pause (only the A/B):** Yurii A/B test scaffolding for dropdowns vs. AI PDP — Sagi's read is correct that the A/B is outdated given AI PDP progress. Keep step 1 (dropdowns + more company text) moving without A/B, then revisit A/B vs. AI PDP once the AI PDP lane is closer.
+- **Pause (stale + low-signal):** Remanufacturing videos on FSS PDPs — Sagi's open ask has been dormant since January; close the loop this week or park it.
 - **Reassign to Yusra:** Meta/Shopify ad-image non-1:1 fix, PageSpeed accessibility + link-descriptive-text pass, Contact Us form follow-up, blog cleanup SOP resume, comparison-chart content patches.
-- **Reassign to Waqas:** PDP architecture / regression sweep continuation.
+- **Reassign to Waqas:** PDP architecture / regression sweep continuation, Home Page NON A/B updates + FSR90 iteration until Sagi re-review closes.
+- **Reassign to Usman:** French Fitness Home Page + FF brand-page Figma builds (already the current owner; keep him on the FF page batch to ship as a set).
 - **Reassign to Ayyaz:** Combined Listings SOPs + product-family structure normalization.
 - **Reassign to Hafiz:** all draft-listing cleanup (FF-X90, FF-X90-HLP, StudioWall, FFM-PSM, Belt Squat).
+- **Escalate to product-side (Larianne/Iqra):** voltage-metafield selection for Woodway (blocking PDP dropdown restore), Top 45 tracker column completion, 5-50 test package $0 option-category listings, Rack/Rig subcategory-button mechanism decision.
 
 ### Work that should no longer involve Zafran
 
