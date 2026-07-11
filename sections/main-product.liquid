@@ -2155,36 +2155,7 @@
 
 {% render 'option-help-content' %}
 <script src="{{ 'old-custom.js' | asset_url }}" defer="defer"></script>
-
-{%- comment -%}
-  Mobile-only: move the "Available to Order" / stock badge directly
-  under the price container per Tim's May 13 direction. The badge is
-  authored inside the `review_widget` block for legacy reasons, so a
-  DOM move on mobile is safer than a template/block-order refactor
-  (which would fight the merchant-configurable section block order).
-  Runs once on load, and re-runs on variant change so the badge stays
-  positioned as inventory state updates.
-{%- endcomment -%}
-<script>
-  (function () {
-    if (!window.matchMedia('(max-width: 749px)').matches) return;
-    function moveStockBadgeUnderPrice() {
-      var wrapper = document.querySelector('.product__info-wrapper');
-      if (!wrapper) return;
-      var priceContainer = wrapper.querySelector('.price-container');
-      var stockBadge = wrapper.querySelector('.available-wrap');
-      if (!priceContainer || !stockBadge) return;
-      if (priceContainer.nextElementSibling === stockBadge) return;
-      priceContainer.parentNode.insertBefore(stockBadge, priceContainer.nextSibling);
-    }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', moveStockBadgeUnderPrice);
-    } else {
-      moveStockBadgeUnderPrice();
-    }
-    document.addEventListener('variant:change', moveStockBadgeUnderPrice);
-  })();
-</script>
+<script src="{{ 'mobile-pdp-polish.js' | asset_url }}" defer="defer"></script>
 
 {% schema %}
 {

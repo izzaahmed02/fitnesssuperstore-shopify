@@ -2237,33 +2237,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
 </script>
-
-{%- comment -%}
-  Mobile-only: move the "Available to Order" / stock badge directly
-  under the price container per Tim's May 13 direction. Same helper
-  as main-product.liquid; DOM move is safer than fighting the
-  merchant-configurable section block order.
-{%- endcomment -%}
-<script>
-  (function () {
-    if (!window.matchMedia('(max-width: 749px)').matches) return;
-    function moveStockBadgeUnderPrice() {
-      var wrapper = document.querySelector('.product__info-wrapper');
-      if (!wrapper) return;
-      var priceContainer = wrapper.querySelector('.price-container');
-      var stockBadge = wrapper.querySelector('.available-wrap');
-      if (!priceContainer || !stockBadge) return;
-      if (priceContainer.nextElementSibling === stockBadge) return;
-      priceContainer.parentNode.insertBefore(stockBadge, priceContainer.nextSibling);
-    }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', moveStockBadgeUnderPrice);
-    } else {
-      moveStockBadgeUnderPrice();
-    }
-    document.addEventListener('variant:change', moveStockBadgeUnderPrice);
-  })();
-</script>
+<script src="{{ 'mobile-pdp-polish.js' | asset_url }}" defer="defer"></script>
 
 {% schema %}
 {
