@@ -1,0 +1,282 @@
+{{ 'component-image-with-text-card.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top | times: 0.55 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.55 | round: 0 }}px;
+    background: {{ section.settings.bg_color }};
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div {% if section.settings.anchor_id != blank %}id="{{ section.settings.anchor_id }}"{% endif %} class="image-with-text-card section-{{ section.id }} scroll-trigger animate--slide-in">
+  <div class="image-with-text-card__container">
+
+    {%- comment -%} Full-width image {%- endcomment -%}
+    <div class="image-with-text-card__image-wrapper">
+      {%- if section.settings.image != blank -%}
+        {{
+          section.settings.image
+          | image_url: width: 2000
+          | image_tag:
+            class: 'image-with-text-card__image',
+            loading: 'lazy',
+            widths: '750, 1100, 1500, 2000',
+            sizes: '100vw'
+        }}
+      {%- else -%}
+        {{ 'collection-apparel-1' | placeholder_svg_tag: 'image-with-text-card__image placeholder-svg' }}
+      {%- endif -%}
+    </div>
+
+    {%- comment -%} White card overlapping image {%- endcomment -%}
+    <div class="image-with-text-card__card">
+
+      {%- comment -%} Heading {%- endcomment -%}
+      {%- assign heading_block = section.blocks | where: 'type', 'heading' | first -%}
+      {%- if heading_block -%}
+        <div class="image-with-text-card__heading-row">
+          {%- if section.settings.h1 -%}
+            <h1 class="image-with-text-card__heading {{ heading_block.settings.heading_size }}">
+              {%- assign parts = heading_block.settings.heading | split: '*' -%}
+              {%- if parts.size > 1 -%}
+                <span>{{ parts[0] }}</span><span class="accent">{{ parts[1] }}</span>{{ parts[2] }}
+              {%- else -%}
+                {{ heading_block.settings.heading }}
+              {%- endif -%}
+            </h1>
+          {%- else -%}
+            <h2 class="image-with-text-card__heading {{ heading_block.settings.heading_size }}">
+              {%- assign parts = heading_block.settings.heading | split: '*' -%}
+              {%- if parts.size > 1 -%}
+                <span>{{ parts[0] }}</span><span class="accent">{{ parts[1] }}</span>{{ parts[2] }}
+              {%- else -%}
+                {{ heading_block.settings.heading }}
+              {%- endif -%}
+            </h2>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+
+      {%- comment -%} Two-column text + buttons row {%- endcomment -%}
+      <div class="image-with-text-card__body">
+
+        {%- comment -%} Left column: text block 1 {%- endcomment -%}
+        <div class="image-with-text-card__col">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'text_left' -%}
+              <div class="image-with-text-card__text rte" {{ block.shopify_attributes }}>
+                {{ block.settings.text }}
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+
+        {%- comment -%} Right column: text block 2 + buttons {%- endcomment -%}
+        <div class="image-with-text-card__col">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'text_right' -%}
+              <div class="image-with-text-card__text rte" {{ block.shopify_attributes }}>
+                {{ block.settings.text }}
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'button' -%}
+              <div class="image-with-text-card__buttons" {{ block.shopify_attributes }}>
+                {%- if block.settings.button_label != blank -%}
+                  <a
+                    href="{{ block.settings.button_link | default: '#' }}"
+                    class="button{% if block.settings.button_style_secondary %} button--secondary{% else %} button--primary{% endif %}"
+                  >
+                    {{ block.settings.button_label | escape }}
+                  </a>
+                {%- endif -%}
+
+                {%- if block.settings.link_label != blank -%}
+                  <a
+                    href="{{ block.settings.link_url | default: '#' }}"
+                    class="image-with-text-card__link-style"
+                  >
+                    {{ block.settings.link_label | escape }}
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" clip-rule="evenodd"
+                        d="M9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967L16.5303 11.4697C16.8232 11.7626 16.8232 12.2374 16.5303 12.5303L10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303C9.17678 18.2374 9.17678 17.7626 9.46967 17.4697L14.9393 12L9.46967 6.53033C9.17678 6.23744 9.17678 5.76256 9.46967 5.46967Z"
+                        fill="#D83D0E"/>
+                    </svg>
+                  </a>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+
+      </div>{%- comment -%} /.image-with-text-card__body {%- endcomment -%}
+    </div>{%- comment -%} /.image-with-text-card__card {%- endcomment -%}
+
+  </div>{%- comment -%} /.image-with-text-card__container {%- endcomment -%}
+</div>
+
+{% schema %}
+{
+  "name": "Image with Text Card",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "anchor_id",
+      "label": "Anchor ID (for in-page links)",
+      "info": "Used as the section's HTML id so other elements can link to it, e.g. brand-french-fitness. Use lowercase letters, numbers and hyphens only."
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "checkbox",
+      "id": "h1",
+      "label": "Use H1 tag for heading",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px",
+      "label": "Padding top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px",
+      "label": "Padding bottom",
+      "default": 36
+    }
+  ],
+  "blocks": [
+    {
+      "type": "heading",
+      "name": "Heading",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "inline_richtext",
+          "id": "heading",
+          "default": "Section Heading",
+          "label": "Heading"
+        },
+        {
+          "type": "select",
+          "id": "heading_size",
+          "label": "Heading size",
+          "options": [
+            { "value": "h2", "label": "Small" },
+            { "value": "h1", "label": "Medium" },
+            { "value": "h0", "label": "Large" }
+          ],
+          "default": "h1"
+        }
+      ]
+    },
+    {
+      "type": "text_left",
+      "name": "Text – Left column",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "default": "<p>Add your left column text here.</p>",
+          "label": "Text"
+        }
+      ]
+    },
+    {
+      "type": "text_right",
+      "name": "Text – Right column",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "default": "<p>Add your right column text here.</p>",
+          "label": "Text"
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "name": "Buttons",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Primary button label",
+          "default": "Shop Now"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Primary button link"
+        },
+        {
+          "type": "checkbox",
+          "id": "button_style_secondary",
+          "label": "Use outline style",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "link_label",
+          "label": "Link label",
+          "default": "Browse our products here"
+        },
+        {
+          "type": "url",
+          "id": "link_url",
+          "label": "Link URL"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image with Text Card",
+      "blocks": [
+        { "type": "heading" },
+        { "type": "text_left" },
+        { "type": "text_right" },
+        { "type": "button" }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,333 @@
+{% comment %}
+  Pulley-template variant picker.
+
+  Option 1 (Product Line) → button/tile pills  (unchanged UX)
+  Option 2 (Machine Model) → searchable dropdown with vertical scroll
+
+  All Shopify variant-selection wiring is preserved: hidden radio inputs
+  behind the custom dropdown mean variant-selects, selectedOptionValues,
+  and product-info.js all work exactly as they do for the standard picker.
+{% endcomment %}
+
+{%- unless product.has_only_default_variant -%}
+  {{ 'pulley-variant-picker.css' | asset_url | stylesheet_tag }}
+
+  <variant-selects
+    id="variant-selects-{{ section.id }}"
+    data-section="{{ section.id }}"
+    {{ block.shopify_attributes }}
+  >
+
+    {%- for option in product.options_with_values -%}
+
+      {%- if forloop.index == 1 -%}
+        {%- comment -%} ── Option 1: Product Line – button tiles ── {%- endcomment -%}
+        <fieldset
+          class="js product-form__input product-form__input--pill pulley-product-line"
+          data-variant-options
+          data-pulley-section="{{ section.id }}"
+        >
+          <legend class="form__label">{{ option.name }}:</legend>
+          {%- render 'product-variant-options',
+            product: product,
+            option: option,
+            block: block,
+            picker_type: 'button'
+          -%}
+        </fieldset>
+
+      {%- elsif forloop.index == 2 -%}
+        {%- comment -%} ── Option 2: Machine Model – searchable dropdown ── {%- endcomment -%}
+        <fieldset
+          class="js product-form__input pulley-machine-model"
+          data-variant-options
+          data-pulley-section="{{ section.id }}"
+        >
+          <legend class="form__label">{{ option.name }}:</legend>
+
+          {%- comment -%}
+            Real radio inputs drive Shopify's variant system.
+            They are visually hidden; the custom dropdown clicks them.
+          {%- endcomment -%}
+          <div
+            class="pulley-hidden-radios"
+            aria-hidden="true"
+            id="pulley-radios-{{ section.id }}"
+          >
+            {%- render 'product-variant-options',
+              product: product,
+              option: option,
+              block: block,
+              picker_type: 'button'
+            -%}
+          </div>
+
+          {%- comment -%} Custom searchable dropdown UI {%- endcomment -%}
+          <div class="pulley-searchable" id="pulley-searchable-{{ section.id }}">
+            <button
+              type="button"
+              class="pulley-trigger"
+              id="pulley-trigger-{{ section.id }}"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-controls="pulley-panel-{{ section.id }}"
+            >
+              {%- liquid
+                # Friendly label for the currently selected option, sourced from the
+                # selected variant's custom.option_display_name metafield. Falls back to
+                # the raw selected option value when the metafield is blank. The variant
+                # title / SKU / id are never changed — this only affects the visible text.
+                assign pulley_selected_variant = product.selected_or_first_available_variant
+                assign pulley_selected_dn = pulley_selected_variant.metafields.custom.option_display_name.value
+                if pulley_selected_dn == blank
+                  assign pulley_trigger_label = option.selected_value
+                else
+                  assign pulley_trigger_label = pulley_selected_dn
+                endif
+              -%}
+              <span class="pulley-trigger-text" id="pulley-trigger-text-{{ section.id }}">
+                {{- pulley_trigger_label -}}
+              </span>
+              <svg class="pulley-chevron" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+
+            <div
+              class="pulley-panel"
+              id="pulley-panel-{{ section.id }}"
+              role="listbox"
+              aria-label="{{ option.name | escape }}"
+              hidden
+            >
+              <div class="pulley-filter-wrap">
+                <svg class="pulley-search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/>
+                  <path d="M9.5 9.5L12.5 12.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                </svg>
+                <input
+                  type="text"
+                  class="pulley-filter"
+                  id="pulley-filter-{{ section.id }}"
+                  placeholder="Search model…"
+                  autocomplete="off"
+                  aria-label="Filter {{ option.name | escape }}"
+                >
+              </div>
+
+              <ul class="pulley-list" id="pulley-list-{{ section.id }}" role="presentation">
+                {%- for value in option.values -%}
+                  {%- liquid
+                    # Resolve the friendly customer-facing label for this option value.
+                    # The label comes from the matching variant's custom.option_display_name
+                    # metafield (e.g. "Matched to: FF-X90"); when blank we keep the raw
+                    # option value exactly as before. data-value stays the raw option value
+                    # so variant selection, SKU, cart, and order data are unchanged — only
+                    # the visible text is friendlier.
+                    assign pulley_value_str = value | append: ''
+                    assign pulley_matched_variant = product.variants | where: 'option2', pulley_value_str | first
+                    assign pulley_display_name = pulley_matched_variant.metafields.custom.option_display_name.value
+                    if pulley_display_name == blank
+                      assign pulley_item_label = value
+                    else
+                      assign pulley_item_label = pulley_display_name
+                    endif
+                  -%}
+                  <li
+                    class="pulley-item{% unless value.available %} pulley-item--unavail{% endunless %}{% if value.selected %} pulley-item--selected{% endif %}"
+                    role="option"
+                    aria-selected="{{ value.selected }}"
+                    data-value="{{ value | escape }}"
+                    data-available="{{ value.available }}"
+                    tabindex="0"
+                  >
+                    {{- pulley_item_label -}}
+                    {%- unless value.available -%}
+                      <span class="pulley-unavail-badge">Unavailable</span>
+                    {%- endunless -%}
+                  </li>
+                {%- endfor -%}
+              </ul>
+            </div>
+          </div>
+        </fieldset>
+
+      {%- endif -%}
+    {%- endfor -%}
+
+    <script type="application/json" data-selected-variant>
+      {{ product.selected_or_first_available_variant | json }}
+    </script>
+  </variant-selects>
+
+  {%- comment -%} Slim variant map: o1 = Product Line, o2 = Machine Model {%- endcomment -%}
+  <script type="application/json" id="pulley-variants-{{ section.id }}">
+    [{%- for variant in product.variants -%}
+      {"id":{{ variant.id }},"o1":{{ variant.option1 | json }},"o2":{{ variant.option2 | json }},"avail":{{ variant.available }}}
+      {%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}]
+  </script>
+
+  <script>
+  (function () {
+    var SID = {{ section.id | json }};
+
+    // Load variants data (includes id, o1=Product Line, o2=Machine Model)
+    var variantsData = [];
+    try {
+      var raw = document.getElementById('pulley-variants-' + SID);
+      if (raw) variantsData = JSON.parse(raw.textContent);
+    } catch (_) {}
+
+    // Navigate to the best variant for a given Product Line + Machine Model combination.
+    // Falls back to first available with the Product Line if the exact combo doesn't exist.
+    function navigateToVariant(productLine, machineModel) {
+      var target = null;
+      if (machineModel) {
+        target = variantsData.find(function (v) { return v.o1 === productLine && v.o2 === machineModel; });
+      }
+      if (!target) {
+        target = variantsData.find(function (v) { return v.o1 === productLine && v.avail; });
+      }
+      if (!target) {
+        target = variantsData.find(function (v) { return v.o1 === productLine; });
+      }
+      if (target && target.id) {
+        window.location.assign(window.location.pathname + '?variant=' + target.id);
+      }
+    }
+
+    function getCurrentProductLine() {
+      var plFieldset = document.querySelector('[data-pulley-section="' + SID + '"].pulley-product-line');
+      if (!plFieldset) return null;
+      var checked = plFieldset.querySelector('input[type="radio"]:checked');
+      return checked ? checked.value : null;
+    }
+
+    function getCurrentMachineModel() {
+      var radiosDiv = document.getElementById('pulley-radios-' + SID);
+      if (!radiosDiv) return null;
+      var checked = radiosDiv.querySelector('input[type="radio"]:checked');
+      return checked ? checked.value : null;
+    }
+
+    // ── Dropdown helpers ──────────────────────────────────────────────────
+
+    function openPanel(panel, trigger, filter) {
+      panel.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      if (filter) { filter.value = ''; applyFilter(filter, panel, ''); filter.focus(); }
+    }
+
+    function closePanel(panel, trigger) {
+      panel.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function applyFilter(filter, panel, query) {
+      var q = query.toLowerCase().trim();
+      panel.querySelectorAll('.pulley-item').forEach(function (el) {
+        var match = !q || el.dataset.value.toLowerCase().includes(q) ||
+                    el.textContent.toLowerCase().includes(q);
+        el.classList.toggle('pulley-item--hidden', !match);
+      });
+    }
+
+    function filterModelsByProductLine(productLine, list) {
+      if (!productLine || !variantsData.length) return;
+      var valid = {};
+      variantsData.forEach(function (v) { if (v.o1 === productLine) valid[v.o2] = true; });
+      list.querySelectorAll('.pulley-item').forEach(function (el) {
+        el.classList.toggle('pulley-item--out-of-line', !valid[el.dataset.value]);
+      });
+    }
+
+    // ── Document-level listeners (registered once) ────────────────────────
+
+    if (!window['_pulleyDocListeners_' + SID]) {
+      window['_pulleyDocListeners_' + SID] = true;
+
+      document.addEventListener('click', function (e) {
+        var wrapper = document.getElementById('pulley-searchable-' + SID);
+        var panel   = document.getElementById('pulley-panel-' + SID);
+        if (panel && !panel.hidden && wrapper && !wrapper.contains(e.target)) {
+          var trigger = document.getElementById('pulley-trigger-' + SID);
+          closePanel(panel, trigger);
+        }
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        var panel   = document.getElementById('pulley-panel-' + SID);
+        var trigger = document.getElementById('pulley-trigger-' + SID);
+        if (panel && !panel.hidden) {
+          closePanel(panel, trigger);
+          if (trigger) trigger.focus();
+        }
+      });
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────
+
+    function init() {
+      var trigger = document.getElementById('pulley-trigger-' + SID);
+      var panel   = document.getElementById('pulley-panel-' + SID);
+      var filter  = document.getElementById('pulley-filter-' + SID);
+      var list    = document.getElementById('pulley-list-' + SID);
+
+      if (!trigger || !panel || !list) return;
+      if (trigger.dataset.pulleyBound === 'true') return;
+      trigger.dataset.pulleyBound = 'true';
+
+      // Trigger open/close
+      trigger.addEventListener('click', function () {
+        if (panel.hidden) { openPanel(panel, trigger, filter); } else { closePanel(panel, trigger); }
+      });
+
+      // Type-to-filter
+      if (filter) {
+        filter.addEventListener('input', function () { applyFilter(filter, panel, filter.value); });
+      }
+
+      // Machine Model selection → navigate to variant (full page load, no AJAX)
+      list.addEventListener('click', function (e) {
+        var el = e.target.closest('.pulley-item');
+        if (!el || el.classList.contains('pulley-item--hidden') || el.classList.contains('pulley-item--out-of-line')) return;
+        var pl = getCurrentProductLine();
+        navigateToVariant(pl || '', el.dataset.value);
+      });
+
+      list.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        var el = e.target.closest('.pulley-item');
+        if (!el) return;
+        e.preventDefault();
+        var pl = getCurrentProductLine();
+        navigateToVariant(pl || '', el.dataset.value);
+      });
+
+      // Product Line selection → navigate to variant (full page load, no AJAX)
+      var plFieldset = document.querySelector('[data-pulley-section="' + SID + '"].pulley-product-line');
+      if (plFieldset) {
+        // Intercept in capture phase so we navigate before Shopify's AJAX fires
+        plFieldset.addEventListener('change', function (e) {
+          if (e.target && e.target.type === 'radio') {
+            e.stopImmediatePropagation();
+            navigateToVariant(e.target.value, getCurrentMachineModel());
+          }
+        }, true);
+
+        // Filter dropdown to show only compatible models for initial Product Line
+        var checkedPL = plFieldset.querySelector('input[type="radio"]:checked');
+        if (checkedPL) filterModelsByProductLine(checkedPL.value, list);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+  </script>
+{%- endunless -%}

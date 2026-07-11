@@ -245,6 +245,11 @@
 
   {% comment %} pdp-page-width main-container {% endcomment %}
     <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} product--mobile-{{ section.settings.mobile_thumbnails }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
+      {% comment %} Single semantic product-title heading: visually hidden but present and
+         accessible at every breakpoint. The visible titles below (mobile + desktop) are
+         non-heading .product__title-text divs styled identically, so the DOM has exactly one
+         H1 for the product title. (Heading Optimization - SEO Audit.) {% endcomment %}
+      <h1 class="visually-hidden">{{ product.title | escape }}</h1>
       <div class="product__info-wrapper--mobile">
         <div class="product__info-container--mobile">
           {%- for block in section.blocks -%}
@@ -252,13 +257,17 @@
               {%- when 'title' -%}
                 <div class="product__title" {{ block.shopify_attributes }}>
                    {% if is_gift_cards_template %}
-                    <h2>{{ product.title | escape }}</h2>
+                    <div class="product__title-text">{{ product.title | escape }}</div>
                   {% else %}
-                    <h2>{{ product.title | escape }}</h2>
+                    <div class="product__title-text">{{ product.title | escape }}</div>
                     <a href="{{ product.url }}" class="product__title">
-                      <h2 class="h1">
+                      {% comment %} Non-heading duplicate of the title (single-H1 SEO). div.h1
+                         renders identically to the former h2.h1: the grouped heading rule and
+                         .h1 class pin font/size/weight/color, and the universal margin reset
+                         zeroes margins for this only-child. {% endcomment %}
+                      <div class="h1">
                         {{ product.title | escape }}
-                      </h2>
+                      </div>
                     </a>
                   {% endif %}
                 </div>
@@ -807,13 +816,17 @@
               {%- when 'title' -%}
                 <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
                   {% if is_gift_cards_template %}
-                    <h1>{{ product.title | escape }}</h1>
+                    <div class="product__title-text">{{ product.title | escape }}</div>
                   {% else %}
-                    <h1>{{ product.title | escape }}</h1>
+                    <div class="product__title-text">{{ product.title | escape }}</div>
                     <a href="{{ product.url }}" class="product__title">
-                      <h2 class="h1">
+                      {% comment %} Non-heading duplicate of the title (single-H1 SEO). div.h1
+                         renders identically to the former h2.h1: the grouped heading rule and
+                         .h1 class pin font/size/weight/color, and the universal margin reset
+                         zeroes margins for this only-child. {% endcomment %}
+                      <div class="h1">
                         {{ product.title | escape }}
-                      </h2>
+                      </div>
                     </a>
                   {% endif %}
                 </div>
@@ -1240,6 +1253,7 @@
                       </div>
                     </div>
                   </div>
+                  {% render 'intl-transformer-note', product: product %}
                   {% if product.metafields.custom.backorder == true and product.metafields.custom.back_order_availability_date %}
                     <div class="backorder_container">
                       <span>
@@ -1648,7 +1662,11 @@
                 %}
 
               {%- when 'variant_picker' -%}
-                {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
+                {%- if template.suffix == 'variants-pulley' -%}
+                  {% render 'product-variant-picker-pulley', product: product, block: block, product_form_id: product_form_id %}
+                {%- else -%}
+                  {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
+                {%- endif -%}
               {%- when 'buy_buttons' -%}
                 {%- render 'buy-buttons',
                   block: block,

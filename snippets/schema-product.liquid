@@ -338,12 +338,6 @@
           {%- endfor -%}
         {%- endif -%}
 
-        {%- assign crumbs_text = product.metafields.custom.breadcrumbs.value -%}
-
-        {%- if active_path == nil and crumbs_text != blank -%}
-          {%- assign source_flag = "text" -%}
-        {%- endif -%}
-
         {%- if source_flag == "unset" and product.collections.first -%}
           {%- assign default_coll = product.collections.first -%}
           {%- assign source_flag = "default" -%}
@@ -360,26 +354,6 @@
                 "position": {{ position }},
                 "name": {{ nav_titles[forloop.index0] | default: nav_coll.title | json }},
                 "item": {{ request.origin | append: '/collections/' | append: nav_coll.handle | json }}
-              }
-              {%- assign position = position | plus: 1 -%}
-            {%- endif -%}
-          {%- endfor -%}
-
-        {%- elsif source_flag == "text" -%}
-          {%- assign parts_split = crumbs_text | split: 'Home' -%}
-          {%- assign text_parts = parts_split[1] | split: '>' -%}
-          {%- assign crumbs_size = text_parts.size | minus: 1 -%}
-
-          {%- for idx in (0..crumbs_size) -%}
-            {%- assign raw = text_parts[idx] | strip | handleize -%}
-            {%- assign title = text_parts[idx] | strip | replace: '&amp;', '&' -%}
-            {%- if idx > 0 and raw != blank and collections[raw] -%}
-              ,
-              {
-                "@type": "ListItem",
-                "position": {{ position }},
-                "name": {{ title | json }},
-                "item": {{ request.origin | append: '/collections/' | append: raw | json }}
               }
               {%- assign position = position | plus: 1 -%}
             {%- endif -%}
