@@ -1441,27 +1441,32 @@
                 {%- endif -%}
 
               {%- when 'review_widget' -%}
-             {% unless product.tags contains 'avisplus-product-options' %}
-                <div class="available-wrap">
-                  {% if product.template_suffix == 'discontinued' %}
-                    <div class="badge stock-badge out">
-                      <span>Discontinued</span>
-                    </div>
-                  {% elsif product.metafields.custom.backorder == true %}
-                    <div class="badge backorder-badge stock-badge">
-                      <span>Available to Pre-Order</span>
-                    </div>
-                  {% else %}
-                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                      {% if product.available == true %}
-                        <span>Available to Order</span>
-                      {% else %}
-                        <span>Out of stock</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-              {% endunless %}
+              {% comment %}
+                Availability badge is rendered for every product (including
+                Avis Plus products) so Tim's May 13 direction to show
+                "Available to Order" directly under the price applies
+                consistently. The mobile DOM move in mobile-pdp-polish.js
+                places .available-wrap under .price-container.
+              {% endcomment %}
+              <div class="available-wrap">
+                {% if product.template_suffix == 'discontinued' %}
+                  <div class="badge stock-badge out">
+                    <span>Discontinued</span>
+                  </div>
+                {% elsif product.metafields.custom.backorder == true %}
+                  <div class="badge backorder-badge stock-badge">
+                    <span>Available to Pre-Order</span>
+                  </div>
+                {% else %}
+                  <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
+                    {% if product.available == true %}
+                      <span>Available to Order</span>
+                    {% else %}
+                      <span>Out of stock</span>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
               {%- when 'sku' -%}
                 <p
                   class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"

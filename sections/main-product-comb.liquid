@@ -201,25 +201,28 @@
                   {% endif %}
                 </div>
               {%- when 'review_widget' -%}
-              {% unless product.tags contains 'avisplus-product-options' %}
-                  {% unless is_gift_cards_template %}
-              <div class="available-wrap">
+              {% comment %}
+                Availability badge renders for every product (including
+                Avis Plus) per Tim's May 13 direction. Only gift-card
+                templates are skipped.
+              {% endcomment %}
+              {% unless is_gift_cards_template %}
+                <div class="available-wrap">
 
-                {% if product.metafields.custom.backorder == true %}
-                  <div class="badge backorder-badge stock-badge">
-                      <span>Available to Pre-Order</span>
-                  </div>
-                {% else %}
-                  <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                    {% if product.available == true %}
-                      <span>Available to Order</span>
-                    {% else %}
-                      <span>Out of stock</span>
-                    {% endif %}
-                  </div>
-                {% endif %}
-              </div>
-                {% endunless %}
+                  {% if product.metafields.custom.backorder == true %}
+                    <div class="badge backorder-badge stock-badge">
+                        <span>Available to Pre-Order</span>
+                    </div>
+                  {% else %}
+                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
+                      {% if product.available == true %}
+                        <span>Available to Order</span>
+                      {% else %}
+                        <span>Out of stock</span>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                </div>
               {% endunless %}
               {% when 'price' %}
                 {% unless is_gift_cards_template %}
@@ -1294,8 +1297,11 @@
                 {%- endif -%}
 
               {%- when 'review_widget' -%}
-              {% unless product.tags contains 'avisplus-product-options' %}
-                {% unless is_gift_cards_template %}
+              {% comment %}
+                Desktop availability badge — same "always render" policy
+                as the mobile block above. Gift cards still skipped.
+              {% endcomment %}
+              {% unless is_gift_cards_template %}
                 <div class="available-wrap hidden lg:flex">
 
 
@@ -1313,7 +1319,6 @@
                     </div>
                   {% endif %}
                 </div>
-                 {% endunless %}
               {% endunless %}
               {%- when 'sku' -%}
                 <p
