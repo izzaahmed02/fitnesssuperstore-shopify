@@ -3,23 +3,36 @@
  * Loaded by main-product.liquid, main-product-comb.liquid, and
  * main-product-variants.liquid.
  *
- * Currently: on mobile only, move the "Available to Order" / stock
- * badge (.available-wrap) directly under the price container.
- * The badge is authored inside the review_widget block for legacy
- * reasons, so a DOM move is safer than a template/block-order
- * refactor (which would fight the merchant-configurable section
- * block order in the theme editor).
+ * On mobile only, place the "Available to Order" / stock badge
+ * (.available-wrap) directly after the mobile-visible price. The
+ * mobile info container is .product__info-container--mobile; the
+ * badge itself may originate there (comb / variants templates) or
+ * from the shared/desktop .product__info-wrapper below the gallery
+ * (regular main-product template). We anchor on the mobile price
+ * and cross-parent insert the badge next to it.
  */
 (function () {
   var mobileQuery = window.matchMedia('(max-width: 749px)');
   if (!mobileQuery.matches) return;
 
+  function findVisibleStockBadge() {
+    var candidates = document.querySelectorAll('.available-wrap');
+    for (var i = 0; i < candidates.length; i++) {
+      // Skip the desktop-only variant that carries the .hidden utility class.
+      if (!candidates[i].classList.contains('hidden')) {
+        return candidates[i];
+      }
+    }
+    return candidates[0] || null;
+  }
+
   function moveStockBadgeUnderPrice() {
-    var wrapper = document.querySelector('.product__info-wrapper');
-    if (!wrapper) return;
-    var priceContainer = wrapper.querySelector('.price-container');
-    var stockBadge = wrapper.querySelector('.available-wrap');
-    if (!priceContainer || !stockBadge) return;
+    var mobileContainer = document.querySelector('.product__info-container--mobile');
+    if (!mobileContainer) return;
+    var priceContainer = mobileContainer.querySelector('.price-container');
+    if (!priceContainer) return;
+    var stockBadge = findVisibleStockBadge();
+    if (!stockBadge) return;
     if (priceContainer.nextElementSibling === stockBadge) return;
     priceContainer.parentNode.insertBefore(stockBadge, priceContainer.nextSibling);
   }
