@@ -81,4 +81,39 @@
 {% endif %}
 
 
-<script>/* >> Heatmap.com :: Snippet << */(function (h,e,a,t,m,ap) { (h._heatmap_paq = []).push([ 'setTrackerUrl', (h.heatUrl = e) + a]); h.hErrorLogs=h.hErrorLogs || []; ap=t.createElement('script');  ap.src=h.heatUrl+'preprocessor.min.js?sid='+m;  ap.defer=true; t.head.appendChild(ap); ['error', 'unhandledrejection'].forEach(function (ty) {     h.addEventListener(ty, function (et) { h.hErrorLogs.push({ type: ty, event: et }); }); });})(window,'https://dashboard.heatmap.com/','heatmap.php',document,2798);</script>
+<script>
+  (function () {
+    var heatmapLoaded = false;
+
+    function loadHeatmap() {
+      if (heatmapLoaded) return;
+      heatmapLoaded = true;
+      /* >> Heatmap.com :: Snippet << */
+      (function (h, e, a, t, m, ap) {
+        (h._heatmap_paq = []).push(['setTrackerUrl', (h.heatUrl = e) + a]);
+        h.hErrorLogs = h.hErrorLogs || [];
+        ap = t.createElement('script');
+        ap.src = h.heatUrl + 'preprocessor.min.js?sid=' + m;
+        ap.defer = true;
+        t.head.appendChild(ap);
+        ['error', 'unhandledrejection'].forEach(function (ty) {
+          h.addEventListener(ty, function (et) { h.hErrorLogs.push({ type: ty, event: et }); });
+        });
+      })(window, 'https://dashboard.heatmap.com/', 'heatmap.php', document, 2798);
+    }
+
+    ['keydown', 'click', 'touchstart', 'scroll', 'mousemove'].forEach(function (evt) {
+      window.addEventListener(evt, loadHeatmap, { once: true, passive: true });
+    });
+
+    window.addEventListener('load', function () {
+      window.setTimeout(function () {
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(loadHeatmap, { timeout: 5000 });
+        } else {
+          loadHeatmap();
+        }
+      }, 3000);
+    }, { once: true });
+  })();
+</script>

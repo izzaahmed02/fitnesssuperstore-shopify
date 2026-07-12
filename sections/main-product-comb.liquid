@@ -91,8 +91,15 @@
     {{ 'component-volume-pricing.css' | asset_url | stylesheet_tag }}
   {%- endif -%}
 
-  <link rel="stylesheet" href="{{ 'avis-custom.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'avis-custom.css' | asset_url | stylesheet_tag }}</noscript>
+  {% comment %}
+    Load Avis CSS only when this product actually uses AvisPlus options.
+    Products without the 'avisplus-product-options' tag do not need this
+    stylesheet, so we avoid always-on CSS shipping to every PDP.
+  {% endcomment %}
+  {% if product.tags contains 'avisplus-product-options' %}
+    <link rel="stylesheet" href="{{ 'avis-custom.css' | asset_url }}" media="print" onload="this.media='all'">
+    <noscript>{{ 'avis-custom.css' | asset_url | stylesheet_tag }}</noscript>
+  {% endif %}
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
   <link rel="stylesheet" href="{{ 'custom-option-picker-snippet.css' | asset_url }}" media="print" onload="this.media='all'">
@@ -419,15 +426,20 @@
                   >
                     {% if first_media.media_type == 'image' %}
                       <div class="image-skeleton-wrapper">
-                        <img
-                          src="{{ preview | image_url: width: 800 }}"
-                          alt="{{ first_media.alt | escape }}"
-                          class="main-product-image"
-                          width="{{ preview.width }}"
-                          height="{{ preview.height }}"
-                          loading="eager"
-                          onload="this.closest('.image-skeleton-wrapper').classList.add('loaded')"
-                        >
+                        {%- capture pdp_hero_sizes -%}(min-width: 1200px) 34vw, (min-width: 990px) 38vw, 100vw{%- endcapture -%}
+                        {%- capture pdp_hero_widths -%}360, 540, 720, 900, 1080, 1200, 1400, 1500{%- endcapture -%}
+                        {{
+                          preview
+                          | image_url: width: 1500
+                          | image_tag:
+                            class: 'main-product-image',
+                            widths: pdp_hero_widths,
+                            sizes: pdp_hero_sizes,
+                            loading: 'eager',
+                            fetchpriority: 'high',
+                            alt: first_media.alt,
+                            onload: "this.closest('.image-skeleton-wrapper').classList.add('loaded')"
+                        }}
                       </div>
                     {% elsif first_media.media_type == 'video' %}
                       {{ first_media | media_tag }}
@@ -1863,10 +1875,13 @@
     {%- if product.media.size > 0 -%}
 
     <script src="{{ 'product-gallery.js' | asset_url }}" defer="defer"></script>
-      <script src="{{ 'product-mobile-gallery.js' | asset_url }}" defer="defer"></script> 
+      <script src="{{ 'product-mobile-gallery.js' | asset_url }}" defer="defer"></script>
 
-
-      <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js" defer="defer"></script>
+      {% comment %}
+        Hammer is used only for mobile gallery swipe gestures and is lazy-loaded
+        on demand inside product-mobile-gallery.js (ensureHammerLoaded). Do not
+        ship it eagerly on every PDP.
+      {% endcomment %}
     {%- endif -%}
 
     {%- if first_3d_model -%}
@@ -2095,7 +2110,44 @@
 </style>
 
 <script>
-  window.product = {{ product | json }}
+  {% comment %}
+    Slim window.product payload — only the fields the on-page JS actually reads.
+    Full product JSON (description html, metafields, images[]) would bloat the
+    inline document by tens of KB per PDP.
+  {% endcomment %}
+  window.product = {
+    "id": {{ product.id | json }},
+    "handle": {{ product.handle | json }},
+    "title": {{ product.title | json }},
+    "url": {{ product.url | json }},
+    "type": {{ product.type | json }},
+    "vendor": {{ product.vendor | json }},
+    "tags": {{ product.tags | json }},
+    "available": {{ product.available | json }},
+    "price": {{ product.price | json }},
+    "compare_at_price": {{ product.compare_at_price | json }},
+    "options": {{ product.options | json }},
+    "featured_image": {{ product.featured_image | json }},
+    "variants": [
+      {%- for v in product.variants -%}
+        {
+          "id": {{ v.id | json }},
+          "sku": {{ v.sku | json }},
+          "title": {{ v.title | json }},
+          "price": {{ v.price | json }},
+          "compare_at_price": {{ v.compare_at_price | json }},
+          "available": {{ v.available | json }},
+          "option1": {{ v.option1 | json }},
+          "option2": {{ v.option2 | json }},
+          "option3": {{ v.option3 | json }},
+          "options": {{ v.options | json }},
+          "featured_image": {{ v.featured_image | json }},
+          "requires_shipping": {{ v.requires_shipping | json }},
+          "inventory_quantity": {{ v.inventory_quantity | json }}
+        }{%- unless forloop.last -%},{%- endunless -%}
+      {%- endfor -%}
+    ]
+  };
 </script>
 
 {% render 'option-help-content' %}
@@ -2202,21 +2254,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <script defer type="text/javascript">
-  var sa_products_count = 3;
-  var sa_date_format = 'F j, Y';
-  var sa_product = window.product.variants[0].sku;
-  (function (w, d, t, f, o, s, a) {
-    o = 'shopperapproved';
-    if (!w[o]) {
-      w[o] = function () {
-        (w[o].arg = w[o].arg || []).push(arguments);
-      };
-      (s = d.createElement(t)), (a = d.getElementsByTagName(t)[0]);
-      s.async = 1;
-      s.src = f;
-      a.parentNode.insertBefore(s, a);
+  (function () {
+    var saLoaded = false;
+
+    function loadShopperApproved() {
+      if (saLoaded) return;
+      if (!window.product || !window.product.variants || !window.product.variants[0]) return;
+      saLoaded = true;
+      window.sa_products_count = 3;
+      window.sa_date_format = 'F j, Y';
+      var sa_product = window.product.variants[0].sku;
+      (function (w, d, t, f, o, s, a) {
+        o = 'shopperapproved';
+        if (!w[o]) {
+          w[o] = function () {
+            (w[o].arg = w[o].arg || []).push(arguments);
+          };
+          (s = d.createElement(t)), (a = d.getElementsByTagName(t)[0]);
+          s.async = 1;
+          s.src = f;
+          a.parentNode.insertBefore(s, a);
+        }
+      })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
     }
-  })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
+
+    ['keydown', 'click', 'touchstart', 'scroll', 'mousemove'].forEach(function (evt) {
+      window.addEventListener(evt, loadShopperApproved, { once: true, passive: true });
+    });
+
+    window.addEventListener('load', function () {
+      window.setTimeout(function () {
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(loadShopperApproved, { timeout: 5000 });
+        } else {
+          loadShopperApproved();
+        }
+      }, 3000);
+    }, { once: true });
+  })();
 </script>
 
 {% schema %}
