@@ -265,8 +265,31 @@ if (!customElements.get('product-customization-options')) {
               optionHandler.dataset.selectedOptions = '';
               optionHandler.style.display = 'none';
             }
+          } else {
+            this.restoreDefaultSelection(acc);
           }
         });
+      }
+
+      // A conditional group's own default (product_option_sets_default) is only
+      // applied by Liquid on first render. Re-showing a group after a parent
+      // change (or hiding-then-reshowing) leaves it cleared by the `!shouldShow`
+      // branch above, so re-apply its default here whenever it becomes visible
+      // with nothing currently selected. Keeps mandatory groups like
+      // "Station Layout" from sitting in a persistent empty state.
+      restoreDefaultSelection(acc) {
+        const optionHandler = acc.querySelector('[data-selected-options]');
+        if (!optionHandler) return;
+        if (acc.querySelector('[data-customization-option]:checked')) return;
+        if (optionHandler.dataset.selectedOptions !== '') return;
+        const defaultValue = acc.dataset.defaultValue;
+        if (!defaultValue) return;
+        const defaultInput = acc.querySelector(`[data-customization-option][value="${defaultValue}"]`);
+        if (!defaultInput) return;
+        defaultInput.checked = true;
+        this.createOptionHTML(optionHandler, defaultInput);
+        optionHandler.dataset.selectedOptions = defaultInput.value;
+        optionHandler.style.display = 'flex';
       }
 
       conditionalChoice(option) {

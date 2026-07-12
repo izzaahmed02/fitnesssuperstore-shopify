@@ -21,6 +21,16 @@
   if product_option.hide_values
     assign option_visible = false
   endif
+  assign price = product_option.product_option_sets_default.value.price
+  assign price_substract = product_option.product_option_sets_default.value.metafields.custom.price_reduction_value_new
+  assign default_value = product_option.product_option_sets_default.value.id
+  if price_substract != blank
+    assign default_value = default_value | append: ':::-' | append: price_substract
+  endif
+  if price > 0
+    assign price_no_currency = price | money_without_currency | replace: ',', ''
+    assign default_value = default_value | append: ':::' | append: price_no_currency
+  endif
 %}
 
 {% if option_type == 'Accordion' %}
@@ -30,6 +40,9 @@
     class="product-options__accordion"
     {% if conditions_to_render != blank %}
       data-conditions-to-render="{{ conditions_to_render | replace_last: ',', '' | strip }}"
+    {% endif %}
+    {% if default_value != blank %}
+      data-default-value="{{ default_value }}"
     {% endif %}
     {% if product_option.enable_multichoice %}
       multichoice
@@ -65,9 +78,6 @@
           %}
         {% endif %}
       </h3>
-      {% assign price = product_option.product_option_sets_default.value.price %}
-      {% assign price_substract = product_option.product_option_sets_default.value.metafields.custom.price_reduction_value_new %}
-
       <span
         class="product-options__accordion-label"
         data-selected-options="{{ product_option.product_option_sets_default.value.id }}{% if price_substract != blank %}:::-{{price_substract}}{% endif %}{% if price > 0 %}:::{{price | money_without_currency }}{% endif %}"
