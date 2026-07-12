@@ -209,7 +209,7 @@ try {
 
 		  if (affirmElement || afterPayElement) {
 			 document.querySelectorAll('.paylater-container').forEach(container => {
-				container.style.display = 'block';
+				container.style.display = 'flex';
 			 });
 			 document.querySelectorAll('.paylater-text').forEach(container => {
 				 container.innerHTML = getPaylaterModal(payLaterText);
