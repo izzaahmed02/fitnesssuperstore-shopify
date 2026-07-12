@@ -274,7 +274,7 @@ function generatePayLaterText() {
 	payLaterText = `As low as ${lowestRate.toLocaleString('en-US', {
 		style: 'currency',
 		currency: 'USD',
-		})}/mo (options at checkout)`
+		})}/mo`
 
 	return payLaterText;
 }
