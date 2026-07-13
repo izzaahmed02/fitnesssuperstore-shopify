@@ -16,3 +16,173 @@
     margin: auto;
     background-color: #ffffff61;
 }
+
+
+.jm-review-widget-minimal-header__title{
+font-size: 28px!important;
+        line-height: 36px!important;
+        font-family: Lato!important;
+        color: #000000!important;
+        font-weight: 700!important;
+}
+
+.jdgm-write-review-modal .jdgm-write-review-modal__product-image {
+    width: 200px!important;
+    height: auto!important;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.product-layout .page-width {
+    padding-left: 16px;
+}
+
+.product-layout .customBreadcrumbs .page-width {
+    padding-left: 0px;
+}
+
+ @media (max-width: 749px) {
+.jm-review-widget-minimal-header__title {
+    font-family: Lato !important;
+        font-size: 20px;
+    font-weight: 700;
+    line-height: 26px;
+    color: #000;
+}
+
+.jdgm-preview-badge--with-link{
+    padding-top: 10px;
+}
+ }
+
+
+ .campaign-sale-container {
+  display: none!important;
+}
+
+/* Remove left side nav on Collection and Product templates only (from A/B test winner).
+   Collection rules use .collection-template (collection pages only) instead of
+   .collection-layout, which is shared with search pages and must keep its sidebar. */
+.product-layout aside.sidebarmenu,
+.collection-template aside.sidebarmenu {
+  display: none;
+}
+
+.product-layout .inner-container,
+.collection-template .inner-container {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+@media only screen and (min-width: 992px) {
+  .collection-template .boost-sd-layout {
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media only screen and (min-width: 576px) {
+  .collection-template .boost-sd__product-list-grid--3-col.boost-sd__product-list--margin .boost-sd__product-item {
+    width: calc(25% - var(--boostsd-product-list-gap-desktop)) !important;
+  }
+}
+
+/* PDP gallery tuning knobs — adjust these two values to taste.
+   --pdp-info-width: width of the right buy-box column (wider = less blank space).
+   --pdp-image-max:  max width of the centered main gallery image (smaller = avoids
+                     upscaling low-res photos, which looked blurry when enlarged). */
+.product-layout {
+  --pdp-info-width: 560px;
+  --pdp-image-max: 440px;
+}
+
+@media (min-width: 990px) {
+  /* Gallery column fills the row minus the (widened) info column and the 2rem grid gap. */
+  .product-layout .product-main-left-container {
+    width: calc(100% - 2rem - var(--pdp-info-width)) !important;
+  }
+
+  .product-layout .extraInfo {
+    width: calc(100% - 2rem - var(--pdp-info-width)) !important;
+  }
+
+  /* Cap and center the main image so it is no longer overwhelming and low-res photos
+     are not upscaled. Thumbnails stay pinned left; the image centers in the space left
+     over in the gallery column. */
+  .product-layout .main-image-container {
+    max-width: var(--pdp-image-max) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Widen the right buy-box column and its inner content blocks so the freed space is
+     used by the buy box instead of becoming blank white space. */
+  .product-layout .product--large:not(.product--no-media) .product__info-wrapper,
+  .product-layout .product__info-wrapper.fixed,
+  .product-layout .product__info-wrapper.absolute {
+    max-width: var(--pdp-info-width) !important;
+  }
+
+  .product-layout .product-main-right-wrapper,
+  .product-layout .product__accesnt-text {
+    max-width: var(--pdp-info-width) !important;
+  }
+}
+
+@media screen and (min-width: 990px) {
+  .product-layout video.custom-video,
+  .product-layout .custom-video-poster img,
+  .product-layout .custom-video-wrapper,
+  .product-layout .custom-video-poster {
+    max-height: 100% !important;
+  }
+
+  /* Match the theme's default gallery/info gap. The previous 10rem gap combined with
+     space-between dumped the leftover row width (~240px) between the image and the buy
+     box, which is the large blank gap the client reported. */
+  .product-layout .product.grid {
+    gap: 2rem !important;
+  }
+
+  .product-layout .product__info-wrapper.fixed {
+    margin-left: -4px !important;
+  }
+
+  .product-layout .product__info-wrapper.absolute {
+    right: 0 !important;
+  }
+
+  .product-layout product-gallery {
+    padding-top: 0 !important;
+  }
+
+  .product-layout .prodTemplate {
+    margin-right: 0 !important;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  /* Keep the info column at the same widened width as the 990px rules above so it
+     does not snap back to the theme default on large screens. */
+  .product-layout .product--large:not(.product--no-media) .product__info-wrapper {
+    max-width: var(--pdp-info-width) !important;
+  }
+}
+
+@media (max-width: 989px) {
+  /* Mobile gallery: the slides were hard-forced to a 1:1 square (padding-top:100%),
+     which cropped/clipped non-square product photos. The script already computes each
+     product's real image ratio into --mobile-gallery-aspect-ratio (defaulting to 1),
+     so use it and keep the image fully contained. max-height guards against unusually
+     tall images taking over the screen. */
+  .product-layout .mobile-gallery-slide {
+    padding-top: 0 !important;
+    aspect-ratio: var(--mobile-gallery-aspect-ratio, 1) !important;
+    max-height: 75vh !important;
+  }
+
+  .product-layout .mobile-gallery-slide img {
+    object-fit: contain !important;
+  }
+}
