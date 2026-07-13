@@ -538,11 +538,35 @@ body.byp-modal-open { overflow: hidden; }
   .byp-floating-cart--collapsed .byp-floating-cart__atc { display: block; }
   .byp-floating-cart--collapsed .byp-floating-cart__error:not([hidden]) { display: block; }
 
+  /* The action cluster (Add to cart + Affirm + error) lives in .byp-floating-cart__footer.
+     The collapsed rule above hides all direct body children, so re-show the footer in the
+     closed strip — this keeps the Add to cart button visible exactly as before. */
+  .byp-floating-cart--collapsed .byp-floating-cart__footer { display: block; }
+
   /* Affirm line follows the other cart items: hidden in the collapsed (closed)
      mobile strip, shown only when the cart is expanded. Higher specificity + !important
      so it beats the display:block !important override at the bottom of this file. */
   .byp-floating-cart--collapsed .byp-floating-cart__body .byp-floating-cart__affirm.affirm-as-low-as {
     display: none !important;
+  }
+
+  /* Remove the trust/warranty icons entirely on mobile. */
+  .byp-floating-cart__warranty { display: none !important; }
+
+  /* When the cart is expanded on mobile, pin the action cluster (Add to cart + Affirm)
+     to the bottom of the cart so it's always visible while the items/options scroll.
+     Grouping them in one footer means a single sticky element — no overlap. The negative
+     side/bottom margins cancel the inner's 12px mobile padding so it spans full width and
+     sits flush at the bottom edge. */
+  .byp-floating-cart:not(.byp-floating-cart--collapsed) { max-height: 85vh; }
+  .byp-floating-cart:not(.byp-floating-cart--collapsed) .byp-floating-cart__footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: #fafafa;
+    margin: 0 -12px -12px;
+    padding: 1.2rem 12px;
+    border-top: 1px solid var(--byp-border);
   }
 
   /* Sagi review #5: when the cart is expanded on mobile, keep the header (with the
@@ -642,4 +666,16 @@ body.byp-modal-open { overflow: hidden; }
 
 .byp-options-engine--install .product-options__category-title .button--popup {
   display: none !important;
+}
+
+/* Affirm pay-later widget: lay the "As low as $X/mo" text and the Affirm logo out in
+   a row on the same baseline. The widget's JS sets an inline display:block, so
+   !important is required to override it. Not scoped to the cart because the widget
+   renders outside .byp-floating-cart; it stays FSR90-only because this stylesheet is
+   loaded only where the Build Your Product section renders. */
+.paylater-container {
+  display: flex !important;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.6rem;
 }
