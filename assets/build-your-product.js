@@ -102,7 +102,7 @@ if (!customElements.get('build-your-product')) {
           }
         });
 
-        this.positionAffirmBelowAtc();
+        this.groupCartActions();
         this.renderFloatingCart();
         this.initSliders();
         this.collapseCartOnMobile();
@@ -184,17 +184,22 @@ if (!customElements.get('build-your-product')) {
         }
       }
 
-      // Sagi review: in the expanded sticky cart the Affirm financing line should sit
-      // directly BELOW the Add to Cart button. Its source position varies, so relocate
-      // it once on init to immediately follow the ATC. Because it then becomes a direct
-      // child of .byp-floating-cart__body right after the ATC, the collapsed-mobile
-      // rules (which hide every body child except subtotal + ATC) keep it hidden in the
-      // condensed strip and only reveal it when the cart is open — exactly as requested.
-      positionAffirmBelowAtc() {
+      // Group the Add to Cart button, the Affirm line, and the error message into a
+      // single .byp-floating-cart__footer, inserted where the ATC sat. Two reasons:
+      // (1) the Affirm line ends up directly below the ATC (Sagi's request); (2) on
+      // mobile the whole cluster can be pinned to the bottom of the expanded cart as
+      // one sticky unit via CSS (two separate sticky-bottom elements would overlap).
+      // Desktop order is unchanged (footer renders where the ATC was, warranty after).
+      // The collapsed-mobile CSS re-shows the footer + ATC so the closed strip is intact.
+      groupCartActions() {
         const atc = this.querySelector('.byp-floating-cart__atc');
-        if (this.affirmEl && atc && atc.parentNode) {
-          atc.insertAdjacentElement('afterend', this.affirmEl);
-        }
+        if (!atc || atc.closest('.byp-floating-cart__footer')) return; // don't double-wrap
+        const footer = document.createElement('div');
+        footer.className = 'byp-floating-cart__footer';
+        atc.parentNode.insertBefore(footer, atc);
+        footer.appendChild(atc);
+        if (this.affirmEl) footer.appendChild(this.affirmEl);
+        if (this.errorEl) footer.appendChild(this.errorEl);
       }
 
       /* ---------- main product ---------- */
