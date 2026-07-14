@@ -31,26 +31,19 @@
 
 {%- assign sf = product.metafields.custom.features_specs_new.value -%}
 <pre style="white-space:pre-wrap;background:#fff;color:#000;padding:12px;border:2px solid red;font-size:11px;">
-=== hunt for the new "table with images" field ===
-other_features_image: {% if sf.other_features_image != blank %}POPULATED{% else %}empty{% endif %}
-other_tech_specs_image: {% if sf.other_tech_specs_image != blank %}POPULATED{% else %}empty{% endif %}
-other_features_table count: {{ sf.other_features_table.value.size }}
-
-=== dump each other_features_table (look for image cells) ===
 {% for tbl in sf.other_features_table.value %}
---- TABLE {{ forloop.index }} ---
-section_header: {{ tbl.section_header }}
-table_type: {{ tbl.table_type }}
-{% for col in tbl.table_headers.value %}
-  col custom_title: {{ col.custom_title }}
-  {% for cell in col.content.value -%}
-    cell keys/json: {{ cell | json | slice: 0, 300 }}
-  {%- endfor %}
+  {% if tbl.table_type == 'Table with images' %}
+    {% for col in tbl.table_headers.value %}
+      {% for cell in col.content.value %}
+--- CELL {{ forloop.index }} ---
+image_if_any type: {{ cell.image_if_any }}
+image class check — .src: {{ cell.image_if_any.src }}
+image via image_url: {{ cell.image_if_any | image_url: width: 300 }}
+values (caption+link) rendered: {{ cell.values | metafield_tag }}
+      {% endfor %}
+    {% endfor %}
+  {% endif %}
 {% endfor %}
-{% endfor %}
-
-=== also check the image-list fields' structure ===
-other_features_image json: {{ sf.other_features_image.value | json | slice: 0, 500 }}
 </pre>
 
 
