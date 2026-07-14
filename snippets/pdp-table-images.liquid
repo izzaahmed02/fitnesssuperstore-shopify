@@ -1,6 +1,18 @@
 {%- comment -%}
   Renders a "Table with images" pdp_table entry as a responsive row of
-  image + linked-caption cells (the "confirm stations of each machine" row).
+  image + linked-caption cells (e.g. the "confirm stations of each machine" row).
+
+  Usage:
+    {% render 'pdp-table-images', table: tbl, heading: 'To confirm stations of each machine:' %}
+
+  Data model:
+    table.table_headers.value      -> columns (iterate)
+      col.content.value            -> cells (iterate)
+        cell.image_if_any          -> MediaImage (render via image_url)
+        cell.values                -> rich text: linked caption
+
+  Metaobject reference lists support iteration only (no indexing), so we iterate.
+  Images render with alt text derived from the caption text for accessibility.
 {%- endcomment -%}
 
 {%- liquid
@@ -17,6 +29,7 @@
   <div class="pdp-itable">
     {%- for col in cols -%}
       {%- for cell in col.content.value -%}
+        {%- comment -%} Derive plain-text alt from the caption rich text. {%- endcomment -%}
         {%- capture caption_txt -%}{{ cell.values | metafield_tag | strip_html | strip }}{%- endcapture -%}
         <div class="pdp-itable__cell">
           {%- if cell.image_if_any != blank -%}
@@ -67,60 +80,5 @@
 }
 @media (max-width: 749px) {
   .pdp-itable { grid-template-columns: 1fr; gap: 20px; }
-}
-
-.pdp-ctable__heading { margin: 24px 0 8px; }
-.pdp-ctable__intro { margin: 0 0 12px; }
-.pdp-ctable__intro .metafield-rich_text_field p { margin: 0 0 8px; }
-.pdp-ctable__scroll { width: 100%; }
-.pdp-ctable {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-  margin: 0 0 12px;
-  font-size: 15px;
-  line-height: 1.4;
-  border: 1px solid #ddd;
-}
-.pdp-ctable th,
-.pdp-ctable td {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
-}
-.pdp-ctable thead th {
-  text-align: left;
-  font-weight: 700;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  background: #f7f7f7;
-  vertical-align: top;
-}
-.pdp-ctable tbody th.pdp-ctable__label {
-  text-align: left;
-  font-weight: 700;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  background: #fafafa;
-  vertical-align: top;
-}
-.pdp-ctable tbody td {
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  vertical-align: top;
-}
-.pdp-ctable .metafield-rich_text_field p { margin: 0; }
-.pdp-ctable a { color: var(--primary-orange-500, #D83D0E); text-decoration: underline; }
-.pdp-ctable__disclaimer {
-  margin: 0 0 24px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #666;
-}
-.pdp-ctable__disclaimer .metafield-rich_text_field p { margin: 0; }
-@media (max-width: 600px) {
-  .pdp-ctable { font-size: 13px; }
-  .pdp-ctable thead th, .pdp-ctable tbody th.pdp-ctable__label, .pdp-ctable tbody td { padding: 8px 6px; }
-  .pdp-ctable__disclaimer { font-size: 11px; }
 }
 {%- endstylesheet -%}
