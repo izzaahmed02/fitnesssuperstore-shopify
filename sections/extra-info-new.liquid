@@ -29,7 +29,23 @@
   }
 {%- endstyle -%}
 
-
+{%- assign sf = product.metafields.custom.features_specs_new.value -%}
+<pre style="white-space:pre-wrap;background:#fff;color:#000;padding:12px;border:2px solid red;font-size:11px;">
+{% for tbl in sf.other_features_table.value %}
+  {% if tbl.table_type == 'Table with images' %}
+    {% for col in tbl.table_headers.value %}
+      {% for cell in col.content.value %}
+--- CELL {{ forloop.index }} ---
+image_if_any raw: [{{ cell.image_if_any }}]
+image_if_any == blank? {% if cell.image_if_any == blank %}YES-BLANK{% else %}no-has-value{% endif %}
+image_if_any != blank? {% if cell.image_if_any != blank %}TRUE-should-render{% else %}false{% endif %}
+via image_url: [{{ cell.image_if_any | image_url: width: 300 }}]
+type check - is it a string or object: {{ cell.image_if_any | json | slice: 0, 80 }}
+      {% endfor %}
+    {% endfor %}
+  {% endif %}
+{% endfor %}
+</pre>
 
 
 
