@@ -1,23 +1,6 @@
 {%- comment -%}
   Renders a LABEL-VALUE / side-by-side comparison pdp_table.
-
-  Usage:
-    {% render 'pdp-table-comparison', table: table_entry %}
-
-  Data model (label-value):
-    table.section_header              -> heading above the table
-    table.table_headers.value         -> list of COLUMNS (iterate, never index)
-        header.custom_title           -> column heading (e.g. product name)
-        header.content.value          -> column's cells, top to bottom (iterate)
-            cell.attribute (rich text) -> ROW LABEL (same down every column)
-            cell.values    (rich text) -> the data for THIS column
-
-  Output: first column = row labels (from column 1's `attribute`),
-  then one data column per header (from each column's `values`).
-  Labels become <th scope="row">, product columns become <th scope="col">.
-
-  Shopify metaobject reference lists support ITERATION only (value[0] is null),
-  so we flatten each column via capture+split, then read rows back out.
+  Reads: section_header, introduction, disclaimer_if_any, table_headers.value
 {%- endcomment -%}
 
 {%- liquid
@@ -26,7 +9,6 @@
 
 {%- if cols != blank -%}
 
-  {%- comment -%} 1) Build the row-label blob from the FIRST column's `attribute`. {%- endcomment -%}
   {%- assign label_blob = '' -%}
   {%- assign max_rows = 0 -%}
   {%- for col in cols -%}
@@ -39,7 +21,6 @@
     {%- endif -%}
   {%- endfor -%}
 
-  {%- comment -%} 2) Build each column's DATA blob from `values`, tracking the longest. {%- endcomment -%}
   {%- assign col_blobs = '' -%}
   {%- for col in cols -%}
     {%- assign cell_count = 0 -%}
@@ -57,7 +38,11 @@
   {%- assign columns_data = col_blobs | split: '~~COL~~' -%}
 
   {%- if table.section_header != blank -%}
-    <h3 class="pdp-ctable__heading product__extra_info-title">{{ table.section_header }}</h3>
+    <h2 class="product__extra_info-title pdp-ctable__heading">{{ table.section_header }}</h2>
+  {%- endif -%}
+
+  {%- if table.introduction != blank -%}
+    <div class="pdp-ctable__intro">{{ table.introduction | metafield_tag }}</div>
   {%- endif -%}
 
   {%- if max_rows > 0 -%}
@@ -89,16 +74,22 @@
     </div>
   {%- endif -%}
 
+  {%- if table.disclaimer_if_any != blank -%}
+    <div class="pdp-ctable__disclaimer">{{ table.disclaimer_if_any | metafield_tag }}</div>
+  {%- endif -%}
+
 {%- endif -%}
 
 {%- stylesheet -%}
 .pdp-ctable__heading { margin: 24px 0 8px; }
+.pdp-ctable__intro { margin: 0 0 12px; }
+.pdp-ctable__intro .metafield-rich_text_field p { margin: 0 0 8px; }
 .pdp-ctable__scroll { width: 100%; }
 .pdp-ctable {
   width: 100%;
-  table-layout: fixed;          /* columns share width evenly */
+  table-layout: fixed;
   border-collapse: collapse;
-  margin: 0 0 24px;
+  margin: 0 0 12px;
   font-size: 15px;
   line-height: 1.4;
   border: 1px solid #ddd;
@@ -106,7 +97,7 @@
 .pdp-ctable th,
 .pdp-ctable td {
   word-wrap: break-word;
-  overflow-wrap: break-word;    /* long values wrap instead of forcing width */
+  overflow-wrap: break-word;
   hyphens: auto;
 }
 .pdp-ctable thead th {
@@ -132,8 +123,16 @@
 }
 .pdp-ctable .metafield-rich_text_field p { margin: 0; }
 .pdp-ctable a { color: var(--primary-orange-500, #D83D0E); text-decoration: underline; }
+.pdp-ctable__disclaimer {
+  margin: 0 0 24px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #666;
+}
+.pdp-ctable__disclaimer .metafield-rich_text_field p { margin: 0; }
 @media (max-width: 600px) {
   .pdp-ctable { font-size: 13px; }
   .pdp-ctable thead th, .pdp-ctable tbody th.pdp-ctable__label, .pdp-ctable tbody td { padding: 8px 6px; }
+  .pdp-ctable__disclaimer { font-size: 11px; }
 }
 {%- endstylesheet -%}
