@@ -1,0 +1,25 @@
+name: PDP Fix Scope Guard
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - 'pdp-css-fix*'
+      - 'pdp-option-picker*'
+      - 'below-fold-content'
+
+jobs:
+  scope-guard:
+    if: startsWith(github.head_ref, 'pdp-css-fix') || startsWith(github.head_ref, 'pdp-option-picker') || github.head_ref == 'below-fold-content' || startsWith(github.ref_name, 'pdp-css-fix') || startsWith(github.ref_name, 'pdp-option-picker') || github.ref_name == 'below-fold-content'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enforce PDP fix file scope
+        run: python3 scripts/pdp_fix_scope_guard.py
