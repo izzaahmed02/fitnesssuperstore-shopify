@@ -1,18 +1,16 @@
 {%- comment -%}
-  Renders a "Table with images" pdp_table entry as a responsive row of
-  image + linked-caption cells (e.g. the "confirm stations of each machine" row).
+  Renders a LABEL-VALUE / side-by-side comparison pdp_table.
+  Usage: {% render 'pdp-table-comparison', table: table_entry %}
 
-  Usage:
-    {% render 'pdp-table-images', table: tbl, heading: 'To confirm stations of each machine:' %}
-
-  Data model:
-    table.table_headers.value      -> columns (iterate)
-      col.content.value            -> cells (iterate)
-        cell.image_if_any          -> MediaImage (render via image_url)
-        cell.values                -> rich text: linked caption
-
-  Metaobject reference lists support iteration only (no indexing), so we iterate.
-  Images render with alt text derived from the caption text for accessibility.
+  Reads (all optional except table_headers):
+    table.section_header       -> heading above the table
+    table.introduction         -> intro rich text (rendered above table)   [side-by-side only]
+    table.disclaimer_if_any    -> disclaimer rich text (rendered below)     [side-by-side only]
+    table.table_headers.value  -> columns (iterate, never index)
+        header.custom_title    -> column heading
+        header.content.value   -> cells (iterate)
+            cell.attribute     -> ROW LABEL (col 1 supplies labels)
+            cell.values        -> data for THIS column
 {%- endcomment -%}
 
 {%- liquid
@@ -20,65 +18,131 @@
 -%}
 
 {%- if cols != blank -%}
-  {%- if heading != blank -%}
-    <h2 class="product__extra_info-title pdp-itable__heading">{{ heading }}</h2>
-  {%- elsif table.section_header != blank -%}
-    <h2 class="product__extra_info-title pdp-itable__heading">{{ table.section_header }}</h2>
+
+  {%- assign label_blob = '' -%}
+  {%- assign max_rows = 0 -%}
+  {%- for col in cols -%}
+    {%- if forloop.first -%}
+      {%- for cell in col.content.value -%}
+        {%- assign max_rows = max_rows | plus: 1 -%}
+        {%- capture lbl -%}{{ cell.attribute | metafield_tag }}{%- endcapture -%}
+        {%- assign label_blob = label_blob | append: lbl | append: '~~CELL~~' -%}
+      {%- endfor -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+  {%- assign col_blobs = '' -%}
+  {%- for col in cols -%}
+    {%- assign cell_count = 0 -%}
+    {%- capture this_col -%}
+      {%- for cell in col.content.value -%}
+        {%- assign cell_count = cell_count | plus: 1 -%}
+        {{ cell.values | metafield_tag }}~~CELL~~
+      {%- endfor -%}
+    {%- endcapture -%}
+    {%- if cell_count > max_rows -%}{%- assign max_rows = cell_count -%}{%- endif -%}
+    {%- assign col_blobs = col_blobs | append: this_col | append: '~~COL~~' -%}
+  {%- endfor -%}
+
+  {%- assign label_cells = label_blob | split: '~~CELL~~' -%}
+  {%- assign columns_data = col_blobs | split: '~~COL~~' -%}
+
+  {%- if table.section_header != blank -%}
+    <h2 class="product__extra_info-title pdp-ctable__heading">{{ table.section_header }}</h2>
   {%- endif -%}
 
-  <div class="pdp-itable">
-    {%- for col in cols -%}
-      {%- for cell in col.content.value -%}
-        {%- comment -%} Derive plain-text alt from the caption rich text. {%- endcomment -%}
-        {%- capture caption_txt -%}{{ cell.values | metafield_tag | strip_html | strip }}{%- endcapture -%}
-        <div class="pdp-itable__cell">
-          {%- if cell.image_if_any != blank -%}
-            <div class="pdp-itable__img">
-              <img
-                src="{{ cell.image_if_any | image_url: width: 600 }}"
-                alt="{{ caption_txt | escape }}"
-                loading="lazy"
-                width="600">
-            </div>
-          {%- endif -%}
-          <div class="pdp-itable__caption">{{ cell.values | metafield_tag }}</div>
-        </div>
-      {%- endfor -%}
-    {%- endfor -%}
-  </div>
+  {%- if table.introduction != blank -%}
+    <div class="pdp-ctable__intro">{{ table.introduction | metafield_tag }}</div>
+  {%- endif -%}
+
+  {%- if max_rows > 0 -%}
+    <div class="pdp-ctable__scroll">
+      <table class="pdp-ctable">
+        <thead>
+          <tr>
+            <th scope="col" class="pdp-ctable__corner">Feature / Specification</th>
+            {%- for col in cols -%}
+              <th scope="col">{{ col.custom_title }}</th>
+            {%- endfor -%}
+          </tr>
+        </thead>
+        <tbody>
+          {%- for r in (1..max_rows) -%}
+            {%- assign row_idx = forloop.index0 -%}
+            <tr>
+              <th scope="row" class="pdp-ctable__label">{{ label_cells[row_idx] }}</th>
+              {%- for col_blob in columns_data -%}
+                {%- if col_blob != blank -%}
+                  {%- assign cells = col_blob | split: '~~CELL~~' -%}
+                  <td>{{ cells[row_idx] }}</td>
+                {%- endif -%}
+              {%- endfor -%}
+            </tr>
+          {%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+  {%- endif -%}
+
+  {%- if table.disclaimer_if_any != blank -%}
+    <div class="pdp-ctable__disclaimer">{{ table.disclaimer_if_any | metafield_tag }}</div>
+  {%- endif -%}
+
 {%- endif -%}
 
 {%- stylesheet -%}
-.pdp-itable__heading { margin: 24px 0 12px; }
-.pdp-itable {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin: 0 0 24px;
-  border: 1px solid #ddd;
-  padding: 16px;
-}
-.pdp-itable__cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-.pdp-itable__img { width: 100%; }
-.pdp-itable__img img {
+.pdp-ctable__heading { margin: 24px 0 8px; }
+.pdp-ctable__intro { margin: 0 0 12px; }
+.pdp-ctable__intro .metafield-rich_text_field p { margin: 0 0 8px; }
+.pdp-ctable__scroll { width: 100%; }
+.pdp-ctable {
   width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.4;
+  border: 1px solid #ddd;
 }
-.pdp-itable__caption { margin-top: 10px; }
-.pdp-itable__caption .metafield-rich_text_field p { margin: 0; }
-.pdp-itable__caption a {
-  color: var(--primary-orange-500, #D83D0E);
-  text-decoration: underline;
-  font-weight: 600;
+.pdp-ctable th,
+.pdp-ctable td {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
-@media (max-width: 749px) {
-  .pdp-itable { grid-template-columns: 1fr; gap: 20px; }
+.pdp-ctable thead th {
+  text-align: left;
+  font-weight: 700;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  background: #f7f7f7;
+  vertical-align: top;
+}
+.pdp-ctable tbody th.pdp-ctable__label {
+  text-align: left;
+  font-weight: 700;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  vertical-align: top;
+}
+.pdp-ctable tbody td {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  vertical-align: top;
+}
+.pdp-ctable .metafield-rich_text_field p { margin: 0; }
+.pdp-ctable a { color: var(--primary-orange-500, #D83D0E); text-decoration: underline; }
+.pdp-ctable__disclaimer {
+  margin: 0 0 24px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #666;
+}
+.pdp-ctable__disclaimer .metafield-rich_text_field p { margin: 0; }
+@media (max-width: 600px) {
+  .pdp-ctable { font-size: 13px; }
+  .pdp-ctable thead th, .pdp-ctable tbody th.pdp-ctable__label, .pdp-ctable tbody td { padding: 8px 6px; }
+  .pdp-ctable__disclaimer { font-size: 11px; }
 }
 {%- endstylesheet -%}
