@@ -1,3 +1,9 @@
+{%- assign sbs = product.metafields.custom.features_specs_new.value.side_by_side_comparison.value -%}
+<div style="background:#ffffcc;padding:12px;border:2px solid orange;">
+introduction present? {% if sbs.introduction != blank %}YES: {{ sbs.introduction | metafield_tag | strip_html | truncate: 50 }}{% else %}NO{% endif %}<br>
+disclaimer_if_any present? {% if sbs.disclaimer_if_any != blank %}YES: {{ sbs.disclaimer_if_any | metafield_tag | strip_html | truncate: 50 }}{% else %}NO{% endif %}
+</div>
+
 {{ 'extra-info.css' | asset_url | stylesheet_tag: preload: false }}
 
 {% assign is_gift_cards_template = false %}
@@ -28,17 +34,6 @@
     }
   }
 {%- endstyle -%}
-
-{%- assign ft = product.metafields.custom.features_specs_new.value.other_features_table.value -%}
-<pre style="background:#fff;color:#000;padding:12px;border:2px solid blue;">
-{% for tbl in ft %}
-TABLE {{ forloop.index }}:
-  table_type = [{{ tbl.table_type }}]
-  type class = {{ tbl.table_type.type }}
-  equals 'Table with images'? {% if tbl.table_type == 'Table with images' %}YES{% else %}NO{% endif %}
-  first cell has attribute? {% for col in tbl.table_headers.value %}{% for cell in col.content.value %}{% if cell.attribute != blank %}YES-attr{% else %}no-attr{% endif %}{% break %}{% endfor %}{% break %}{% endfor %}
-{% endfor %}
-</pre>
 
 
 {% assign extra = product.metafields.custom.extra_info.value %}
