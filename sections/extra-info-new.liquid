@@ -29,22 +29,7 @@
   }
 {%- endstyle -%}
 
-{%- assign sf = product.metafields.custom.features_specs_new.value -%}
-<pre style="white-space:pre-wrap;background:#fff;color:#000;padding:12px;border:2px solid red;font-size:11px;">
-{% for tbl in sf.other_features_table.value %}
-  {% if tbl.table_type == 'Table with images' %}
-    {% for col in tbl.table_headers.value %}
-      {% for cell in col.content.value %}
---- CELL {{ forloop.index }} ---
-image_if_any type: {{ cell.image_if_any }}
-image class check — .src: {{ cell.image_if_any.src }}
-image via image_url: {{ cell.image_if_any | image_url: width: 300 }}
-values (caption+link) rendered: {{ cell.values | metafield_tag }}
-      {% endfor %}
-    {% endfor %}
-  {% endif %}
-{% endfor %}
-</pre>
+
 
 
 
@@ -427,24 +412,20 @@ document.addEventListener("DOMContentLoaded", function() {
          {%- assign feature_tables = product.metafields.custom.features_specs_new.value.other_features_table.value -%}
 {%- if feature_tables != blank -%}
   <div class="product__extra_tech extra-info-width">
-   {%- for tbl in feature_tables -%}
-      {%- if tbl.table_type == 'Table with images' -%}
-        {% render 'pdp-table-images', table: tbl, heading: 'To confirm stations of each machine:' %}
-      {%- else -%}
-        {%- comment -%} Detect label-value tables (cells have `attribute`) vs simple tables. {%- endcomment -%}
-        {%- assign is_label_value = false -%}
-        {%- for col in tbl.table_headers.value -%}
-          {%- for cell in col.content.value -%}
-            {%- if cell.attribute != blank -%}{%- assign is_label_value = true -%}{%- endif -%}
-            {%- break -%}
-          {%- endfor -%}
+    {%- for tbl in feature_tables -%}
+      {%- comment -%} Detect label-value tables (cells have `attribute`) vs simple tables. {%- endcomment -%}
+      {%- assign is_label_value = false -%}
+      {%- for col in tbl.table_headers.value -%}
+        {%- for cell in col.content.value -%}
+          {%- if cell.attribute != blank -%}{%- assign is_label_value = true -%}{%- endif -%}
           {%- break -%}
         {%- endfor -%}
-        {%- if is_label_value -%}
-          {% render 'pdp-table-comparison', table: tbl %}
-        {%- else -%}
-          {% render 'pdp-table', table: tbl %}
-        {%- endif -%}
+        {%- break -%}
+      {%- endfor -%}
+      {%- if is_label_value -%}
+        {% render 'pdp-table-comparison', table: tbl %}
+      {%- else -%}
+        {% render 'pdp-table', table: tbl %}
       {%- endif -%}
     {%- endfor -%}
   </div>
