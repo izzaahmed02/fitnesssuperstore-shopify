@@ -28,6 +28,27 @@
   .footer__chevron {
   display: none;
 }
+
+  /* Reset native button chrome for the accordion toggle at all widths so desktop still reads as a plain heading */
+  .footer__accordion-toggle {
+    background: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-appearance: none;
+       -moz-appearance: none;
+            appearance: none;
+  }
+
+  .footer__accordion-toggle:focus-visible {
+    outline: 2px solid #ffb100;
+    outline-offset: 2px;
+  }
+
   /* ── Footer accordion — mobile only ── */
   @media screen and (max-width: 749px) {
 
@@ -142,7 +163,8 @@
 
             <div class="footer__menu-col">
               {% if has_submenu %}
-                <div
+                <button
+                  type="button"
                   class="footer__menu-label footer__accordion-toggle"
                   aria-expanded="false"
                   aria-controls="footer-submenu-{{ section.id }}-{{ forloop.index }}"
@@ -151,7 +173,7 @@
                   <svg class="footer__chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
-                </div>
+                </button>
                 <ul
                   class="footer__menu-links"
                   id="footer-submenu-{{ section.id }}-{{ forloop.index }}"
@@ -330,9 +352,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Reflect the true state to AT at desktop widths (submenu links are always visible there)
+  function syncDesktopState() {
+    document.querySelectorAll('.footer__accordion-toggle').forEach(toggle => {
+      toggle.setAttribute('aria-expanded', mq.matches ? 'false' : 'true');
+    });
+  }
+
   // Only activate on mobile; also re-run if viewport crosses the breakpoint
+  syncDesktopState();
   if (mq.matches) initAccordions();
   mq.addEventListener('change', e => {
+    syncDesktopState();
     if (e.matches) initAccordions();
   });
 });
