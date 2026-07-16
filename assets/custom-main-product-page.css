@@ -93,3 +93,113 @@
         margin-top: 0;
         text-transform: capitalize;
     }
+
+/* --------------------------------------------------------------------------
+   PDP gallery: keep the product image fully visible above the fold on short
+   laptop viewports (e.g. 1536 x 695). The base rules size the gallery with
+   fixed pixel heights (max-height:450px image / 520px track) inside
+   overflow:hidden containers, so on a short screen the bottom of the image
+   gets clipped. Here we scale the gallery to the viewport height instead, so
+   it always fits. Scoped to desktop + short height only, so normal / tall
+   screens keep the existing sizing unchanged.
+   -------------------------------------------------------------------------- */
+@media (min-width: 990px) and (max-height: 780px) {
+  .main-slider img {
+    max-height: 58vh;
+  }
+  .main-slider,
+  .main-slider .slick-list.draggable,
+  .main-slider .slick-slide,
+  .main-slider .slick-track {
+    max-height: 62vh;
+  }
+  .thumbnail-slider {
+    max-height: 62vh;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Price row: place the "As low as .../mo (options at checkout)" financing
+   text to the right of the price, on the same row (desktop).
+   -------------------------------------------------------------------------- */
+@media (min-width: 990px) {
+  .product__price-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 16px;
+  }
+  .product__price-row .product__prices {
+    flex: 0 0 auto;
+    min-width: 0;
+    margin: 0;
+  }
+  /* Keep the "You save" badge on a single line so it isn't squeezed by the
+     financing column. !important + higher specificity so it wins over the
+     base .price-container .you-save rules. */
+  .product__price-row .product__prices .price-container .you-save {
+    white-space: nowrap !important;
+    flex-shrink: 0;
+  }
+  .product__price-row .paylater-container {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 0 0 auto;
+    text-align: right;
+  }
+  .product__price-row .paylater-container .paylater-text {
+    justify-content: flex-end;
+    text-align: right;
+  }
+  .product__price-row .paylater-container .paylater-logo {
+    justify-content: flex-end;
+  }
+}
+@media (max-width: 991.98px) {
+  .product__price-row .paylater-container {
+    display: none !important;
+  }
+}
+/* --------------------------------------------------------------------------
+   PDP buy-box tweaks (client review round 2)
+   -------------------------------------------------------------------------- */
+
+/* 3) Make the price slightly larger */
+@media (min-width: 990px) {
+  .price-container .price-item,
+  .price-container .price-item-fixed {
+    font-size: 32px;
+    line-height: 40px;
+  }
+}
+@media (min-width: 1200px) {
+  .price-container .price-item,
+  .price-container .price-item-fixed {
+    font-size: 36px;
+    line-height: 44px;
+  }
+}
+
+/* 2) Make the financing "?" popup icon larger */
+.paylater-container .paylater-text svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* 1) Move "Available to Order" up so it sits to the right of the reviews row
+   (adjacent block after the reviews badge); this also pulls the price block up. */
+@media (min-width: 990px) {
+  .available-wrap {
+    justify-content: flex-end;
+    margin-top: -40px;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 2;
+  }
+}
+
+/* Financing text size */
+.paylater-container .paylater-text {
+  font-size: 12px;
+  line-height: 14px;
+}
