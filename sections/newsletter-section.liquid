@@ -1,8 +1,36 @@
+{%- liquid
+  assign sbg_source = section.settings.source | default: 'footer'
+  assign nl_tags = 'newsletter'
+  if section.settings.guide_capture
+    assign nl_tags = nl_tags | append: ',smart_buyers_guide_requested,smart_buyers_guide_source_' | append: sbg_source
+  endif
+-%}
 <style>
   #shopify-section-{{ section.id }} {
     padding-top: {{ section.settings.padding_top }}px;
     padding-bottom: {{ section.settings.padding_bottom }}px;
     background: #FAF9F9;
+  }
+  #shopify-section-{{ section.id }} .newsletter-subtext {
+    margin: 8px 0 0;
+    max-width: 560px;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 150%;
+    color: #393940;
+  }
+  #shopify-section-{{ section.id }} .sbg-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 12px 24px;
+    background: #D83D0E;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 16px;
+    color: #fff;
+    text-decoration: none;
   }
 
   #shopify-section-{{ section.id }}
@@ -149,16 +177,27 @@
 
 <div class="page-width">
   <div class="wrapper">
-    <h2 class="title">
-      {{ section.settings.title }}
-    </h2>
-    <div class="newsletter-form-wrapper">
+    <div class="newsletter-heading">
+      <h2 class="title">
+        {{ section.settings.title }}
+      </h2>
+      {%- if section.settings.subtext != blank -%}
+        <div class="newsletter-subtext">{{ section.settings.subtext }}</div>
+      {%- endif -%}
+    </div>
+    <div
+      class="newsletter-form-wrapper"
+      {% if section.settings.guide_capture %}data-sbg-capture data-sbg-source="{{ sbg_source }}"{% endif %}
+    >
       {% form 'customer'
         , class: 'newsletter-custom-form' %}
         <input
           type="hidden"
           name="contact[tags]"
-          value="newsletter">
+          value="{{ nl_tags }}">
+        {%- if section.settings.guide_capture -%}
+          <input type="hidden" name="contact[note]" value="Smart Buyer's Guide request — source: {{ sbg_source }}">
+        {%- endif -%}
         <div class="newsletter-form__wrapper">
           <div class="form-field">
             <input
@@ -185,8 +224,9 @@
               class="newsletter-form__button field__button"
               name="commit"
               id="Subscribe"
+              {% if section.settings.guide_capture %}data-sbg-submit data-sbg-source="{{ sbg_source }}"{% endif %}
               aria-label="{{ 'newsletter.button_label' | t }}">
-              Subscribe
+              {{ section.settings.button_label | default: 'Subscribe' }}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="8"
@@ -218,6 +258,17 @@
             {% render 'icon-success' -%}
             {{- 'newsletter.success' | t }}
           </h3>
+          {%- if section.settings.guide_capture and section.settings.show_guide_download and section.settings.guide_pdf_url != blank -%}
+            <a
+              class="sbg-download"
+              href="{{ section.settings.guide_pdf_url }}"
+              target="_blank"
+              rel="noopener"
+              data-sbg-download
+              data-sbg-source="{{ sbg_source }}">
+              {{ section.settings.download_label | default: 'Download the guide (PDF)' }}
+            </a>
+          {%- endif -%}
         {%- endif -%}
       {% endform %}
       <div class="form-note">
@@ -264,9 +315,54 @@
         "id": "title",
         "label": "Heading"
       }, {
+        "type": "richtext",
+        "id": "subtext",
+        "label": "Subtext"
+      }, {
         "type": "text",
         "id": "note",
         "label": "Note"
+      }, {
+        "type": "text",
+        "id": "button_label",
+        "label": "Button label",
+        "default": "Subscribe"
+      }, {
+        "type": "header",
+        "content": "Smart Buyer's Guide"
+      }, {
+        "type": "checkbox",
+        "id": "guide_capture",
+        "label": "Enable Smart Buyer's Guide capture",
+        "info": "Adds smart_buyers_guide_requested + smart_buyers_guide_source_* tags at submission for Klaviyo.",
+        "default": false
+      }, {
+        "type": "select",
+        "id": "source",
+        "label": "Lead source (Klaviyo attribution)",
+        "options": [
+          { "value": "footer", "label": "Footer / newsletter" },
+          { "value": "comparison_charts", "label": "Comparison Charts page" },
+          { "value": "blog", "label": "Blog page" },
+          { "value": "welcome_email", "label": "Welcome email" },
+          { "value": "existing_subscriber_campaign", "label": "Existing-subscriber campaign" }
+        ],
+        "default": "footer"
+      }, {
+        "type": "checkbox",
+        "id": "show_guide_download",
+        "label": "Show download button after submit",
+        "default": false
+      }, {
+        "type": "url",
+        "id": "guide_pdf_url",
+        "label": "Guide PDF (Shopify CDN URL)",
+        "info": "Use the Shopify Files CDN URL — not the Google Drive link."
+      }, {
+        "type": "text",
+        "id": "download_label",
+        "label": "Download button label",
+        "default": "Download the guide (PDF)"
       }, {
         "type": "range",
         "id": "padding_top",

@@ -1,0 +1,384 @@
+{% comment %}
+  Smart Buyer's Guide — email capture section
+  ---------------------------------------------------------------------------
+  Reusable, email-gated capture block for the free Smart Buyer's Guide PDF.
+  Built for the Smart Buyer's Guide rollout (staging/dev only — do not publish
+  until desktop/mobile previews and the Klaviyo trigger are approved).
+
+  Source attribution is assigned AT SUBMISSION (not on a later email click) via
+  Shopify customer tags, so Klaviyo can distinguish where each lead came from:
+    - newsletter
+    - smart_buyers_guide_requested
+    - smart_buyers_guide_source_{{ source }}   (footer | comparison_charts | blog | ...)
+
+  Josh (Klaviyo) can either map these tags to profile properties
+  (smart_buyers_guide_requested / smart_buyers_guide_source) or drop a native
+  Klaviyo embedded form into the "Klaviyo form embed code" setting, which will
+  render in place of the native Shopify form.
+
+  Tracking hooks for Klaviyo / GTM / GA:
+    [data-sbg-capture]  wrapper (carries data-sbg-source)
+    [data-sbg-submit]   submit button
+    [data-sbg-download] guide download link (carries data-sbg-source)
+{% endcomment %}
+
+{%- liquid
+  assign sbg_source = section.settings.source | default: 'footer'
+  assign guide_url = section.settings.guide_pdf_url
+  assign tag_list = 'newsletter,smart_buyers_guide_requested,smart_buyers_guide_source_' | append: sbg_source
+-%}
+
+<style>
+  #shopify-section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    background: {{ section.settings.background }};
+  }
+  #shopify-section-{{ section.id }} .sbg-capture {
+    max-width: 1000px;
+    margin-inline: auto;
+    text-align: {{ section.settings.text_alignment }};
+  }
+  #shopify-section-{{ section.id }} .sbg-eyebrow {
+    margin: 0 0 8px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #D83D0E;
+  }
+  #shopify-section-{{ section.id }} .sbg-title {
+    margin: 0;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 40px;
+    line-height: 120%;
+    text-transform: uppercase;
+    color: #23232B;
+  }
+  #shopify-section-{{ section.id }} .sbg-subtext {
+    margin: 12px 0 0;
+    font-family: 'Lato', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 150%;
+    color: #393940;
+  }
+  #shopify-section-{{ section.id }} .sbg-form-wrap {
+    max-width: 560px;
+    margin-top: 24px;
+    margin-inline: {% if section.settings.text_alignment == 'center' %}auto{% else %}0{% endif %};
+  }
+  #shopify-section-{{ section.id }} .sbg-field {
+    display: flex;
+  }
+  #shopify-section-{{ section.id }} .sbg-input {
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    width: 100%;
+    padding: 12px;
+    background: #FFFFFF;
+    border: 1.5px solid #E5E5E5;
+    border-radius: 8px 0 0 8px;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+  }
+  #shopify-section-{{ section.id }} .sbg-button {
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    padding: 12px 24px;
+    background: #D83D0E;
+    border-radius: 0 8px 8px 0;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 24px;
+    color: #FFFFFF;
+  }
+  #shopify-section-{{ section.id }} .sbg-note {
+    display: flex;
+    align-items: center;
+    justify-content: {% if section.settings.text_alignment == 'center' %}center{% else %}flex-start{% endif %};
+    gap: 8px;
+    margin-top: 12px;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    line-height: 150%;
+    color: #393940;
+  }
+  #shopify-section-{{ section.id }} .sbg-success {
+    margin-top: 16px;
+    padding: 16px;
+    background: #FFFFFF;
+    border: 1.5px solid #E5E5E5;
+    border-radius: 8px;
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    color: #23232B;
+  }
+  #shopify-section-{{ section.id }} .sbg-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 12px 24px;
+    background: #D83D0E;
+    border-radius: 8px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #FFFFFF;
+    text-decoration: none;
+  }
+  #shopify-section-{{ section.id }} .sbg-error {
+    margin-top: 12px;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    color: #D83D0E;
+  }
+  @media (max-width: 749px) {
+    #shopify-section-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top | times: 0.6 | round: 0 }}px;
+      padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round: 0 }}px;
+    }
+    #shopify-section-{{ section.id }} .sbg-capture { text-align: center; }
+    #shopify-section-{{ section.id }} .sbg-title { font-size: 24px; }
+    #shopify-section-{{ section.id }} .sbg-field { flex-direction: column; gap: 12px; }
+    #shopify-section-{{ section.id }} .sbg-input { border-radius: 8px; }
+    #shopify-section-{{ section.id }} .sbg-button { border-radius: 8px; width: 100%; }
+    #shopify-section-{{ section.id }} .sbg-form-wrap { margin-inline: auto; }
+    #shopify-section-{{ section.id }} .sbg-note { justify-content: center; }
+  }
+</style>
+
+<div class="page-width">
+  <div class="sbg-capture" data-sbg-capture data-sbg-source="{{ sbg_source }}">
+    {%- if section.settings.eyebrow != blank -%}
+      <p class="sbg-eyebrow">{{ section.settings.eyebrow }}</p>
+    {%- endif -%}
+
+    {%- if section.settings.title != blank -%}
+      <h2 class="sbg-title">{{ section.settings.title }}</h2>
+    {%- endif -%}
+
+    {%- if section.settings.subtext != blank -%}
+      <div class="sbg-subtext">{{ section.settings.subtext }}</div>
+    {%- endif -%}
+
+    <div class="sbg-form-wrap">
+      {%- if section.settings.klaviyo_form_code != blank -%}
+        {% comment %} Klaviyo native embedded form takes over when provided. {% endcomment %}
+        {{ section.settings.klaviyo_form_code }}
+      {%- else -%}
+        {%- form 'customer', class: 'sbg-form' -%}
+          <input type="hidden" name="contact[tags]" value="{{ tag_list }}">
+          <input type="hidden" name="contact[note]" value="Smart Buyer's Guide request — source: {{ sbg_source }}">
+          <div class="sbg-field">
+            <input
+              id="SbgEmail--{{ section.id }}"
+              class="sbg-input"
+              type="email"
+              name="contact[email]"
+              value="{{ form.email }}"
+              aria-label="Email"
+              aria-required="true"
+              autocorrect="off"
+              autocapitalize="off"
+              autocomplete="email"
+              placeholder="Enter your email"
+              required
+            >
+            <button
+              type="submit"
+              class="sbg-button"
+              name="commit"
+              data-sbg-submit
+              data-sbg-source="{{ sbg_source }}"
+            >
+              {{ section.settings.button_label | default: 'Get the Guide' }}
+            </button>
+          </div>
+
+          {%- if form.errors -%}
+            <small class="sbg-error" id="SbgError--{{ section.id }}">
+              {{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email }}
+            </small>
+          {%- endif -%}
+
+          {%- if form.posted_successfully? -%}
+            <div class="sbg-success" id="SbgSuccess--{{ section.id }}" tabindex="-1">
+              {{ section.settings.success_message }}
+              {%- if section.settings.show_download_on_success and guide_url != blank -%}
+                <div>
+                  <a
+                    class="sbg-download"
+                    href="{{ guide_url }}"
+                    target="_blank"
+                    rel="noopener"
+                    data-sbg-download
+                    data-sbg-source="{{ sbg_source }}"
+                  >
+                    {{ section.settings.download_label | default: 'Download the guide (PDF)' }}
+                  </a>
+                </div>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        {%- endform -%}
+
+        {%- if section.settings.note != blank -%}
+          <div class="sbg-note">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <rect x="0.5" y="0.5" width="17" height="17" rx="8.5" fill="#D83D0E"/>
+              <rect x="0.5" y="0.5" width="17" height="17" rx="8.5" stroke="#D83D0E"/>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M13.9629 5.1775C14.1411 5.34077 14.1531 5.61752 13.9898 5.79563L7.57316 12.7956C7.49252 12.8836 7.37946 12.9348 7.26016 12.9374C7.14085 12.94 7.02567 12.8937 6.94129 12.8094L4.02463 9.8927C3.85377 9.72184 3.85377 9.44483 4.02463 9.27398C4.19548 9.10312 4.47249 9.10312 4.64334 9.27398L7.23691 11.8675L13.3448 5.20437C13.5081 5.02626 13.7848 5.01423 13.9629 5.1775Z" fill="white"/>
+            </svg>
+            <span>{{ section.settings.note }}</span>
+          </div>
+        {%- endif -%}
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Smart Buyer's Guide",
+  "class": "smart-buyers-guide-capture",
+  "settings": [
+    {
+      "type": "select",
+      "id": "source",
+      "label": "Lead source (Klaviyo attribution)",
+      "info": "Sets the smart_buyers_guide_source_* customer tag at submission.",
+      "options": [
+        { "value": "footer", "label": "Footer / newsletter" },
+        { "value": "comparison_charts", "label": "Comparison Charts page" },
+        { "value": "blog", "label": "Blog page" },
+        { "value": "welcome_email", "label": "Welcome email" },
+        { "value": "existing_subscriber_campaign", "label": "Existing-subscriber campaign" }
+      ],
+      "default": "footer"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Free download"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "Get the Smart Buyer's Guide — free"
+    },
+    {
+      "type": "richtext",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "<p>Join our email list to receive the free 34-page guide, product news, and exclusive offers.</p>"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Get the Guide"
+    },
+    {
+      "type": "text",
+      "id": "note",
+      "label": "Note under form",
+      "default": "Instant access. No cost. Unsubscribe anytime."
+    },
+    {
+      "type": "header",
+      "content": "After submission"
+    },
+    {
+      "type": "richtext",
+      "id": "success_message",
+      "label": "Success message",
+      "default": "<p>Thanks — check your inbox for the guide. You can also download it now below.</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_download_on_success",
+      "label": "Show download button after submit",
+      "default": true
+    },
+    {
+      "type": "url",
+      "id": "guide_pdf_url",
+      "label": "Guide PDF (Shopify CDN URL)",
+      "info": "Use the Shopify Files CDN URL — not the Google Drive link.",
+      "default": "https://cdn.shopify.com/s/files/1/0884/2012/2940/files/fitness-superstore-smart-buyers-guide-to-fitness-equipment.pdf"
+    },
+    {
+      "type": "text",
+      "id": "download_label",
+      "label": "Download button label",
+      "default": "Download the guide (PDF)"
+    },
+    {
+      "type": "header",
+      "content": "Klaviyo (optional)"
+    },
+    {
+      "type": "html",
+      "id": "klaviyo_form_code",
+      "label": "Klaviyo form embed code",
+      "info": "If set, a native Klaviyo embedded form renders here instead of the Shopify form."
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Text alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "color",
+      "id": "background",
+      "label": "Background",
+      "default": "#FAF9F9"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Smart Buyer's Guide"
+    }
+  ]
+}
+{% endschema %}
