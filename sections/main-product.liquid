@@ -1427,9 +1427,15 @@
                 {%- endif -%}
 
               {%- when 'review_widget' -%}
-             {% unless product.tags contains 'avisplus-product-options' %}
-                {% render 'product-availability-badge', product: product, check_discontinued: true %}
-              {% endunless %}
+                {%- assign avisplus_options = false -%}
+                {%- if product.tags contains 'avisplus-product-options' -%}
+                  {%- assign avisplus_options = true -%}
+                {%- endif -%}
+                {% render 'product-availability-badge',
+                  product: product,
+                  check_discontinued: true,
+                  hide_badge: avisplus_options
+                %}
               {%- when 'sku' -%}
                 <p
                   class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
