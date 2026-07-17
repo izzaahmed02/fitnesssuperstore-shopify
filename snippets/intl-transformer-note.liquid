@@ -4,65 +4,44 @@
   Renders a single note below Add to Cart on PRODUCT PAGES ONLY, for machines that
   are explicitly flagged as compatible with the 220V–240V external transformer box.
 
-  Eligibility (source of truth is an explicit, product-level compatibility control):
-    1. custom.external_transformer_product   — product reference (PREFERRED).
-                                                When set, the note links to that product's URL.
-    2. custom.external_transformer_eligible   — boolean (acceptable fallback).
-                                                When true, the note links to the default
-                                                transformer product handle.
+  Eligibility (single source of truth):
+    custom.external_transformer_product  — product reference to the approved transformer.
 
-  custom.electrical_requirement is a SECONDARY guard only: if it is populated with a
-  value that is not a US-voltage rating (e.g. a native 220V machine), the note stays
-  hidden even if a compatibility flag was set by mistake. It is never the source of
-  truth for compatibility on its own.
+  The electrical_requirement metafield is intentionally NOT consulted here:
+    - It never independently grants eligibility.
+    - It never blocks an intentionally approved product reference because its wording
+      differs from a specific voltage format.
+
+  While a canonical machine/transformer combination is still under review, the note
+  links to Contact Us rather than to the transformer product.
 
   Usage: {% render 'intl-transformer-note', product: product %}
 {%- endcomment -%}
 
 {%- if request.page_type == 'product' and product != blank -%}
   {%- assign xfmr_product = product.metafields.custom.external_transformer_product.value -%}
-  {%- assign xfmr_eligible = product.metafields.custom.external_transformer_eligible.value -%}
 
-  {%- if xfmr_product != blank or xfmr_eligible == true -%}
-    {%- comment -%} Secondary guard: hide on machines whose electrical requirement is a known non US-voltage value. {%- endcomment -%}
-    {%- assign er = product.metafields.custom.electrical_requirement.value | default: '' -%}
-    {%- assign er_is_us = false -%}
-    {%- if er contains '120V / 15A' or er contains '120V / 20A' -%}
-      {%- assign er_is_us = true -%}
-    {%- endif -%}
-    {%- assign er_ok = true -%}
-    {%- if er != '' -%}
-      {%- unless er_is_us -%}
-        {%- assign er_ok = false -%}
-      {%- endunless -%}
-    {%- endif -%}
-
-    {%- if er_ok -%}
-      {%- if xfmr_product != blank -%}
-        {%- assign xfmr_url = xfmr_product.url -%}
-      {%- else -%}
-        {%- assign xfmr_url = '/products/220v-240v-external-transformer-box' -%}
-      {%- endif -%}
-      {%- style -%}
+  {%- if xfmr_product != blank -%}
+    {%- style -%}
+      .intl-transformer-note {
+        margin-top: 0.5rem;
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+        line-height: 1.4;
+        color: rgb(var(--color-foreground));
+      }
+      @media screen and (min-width: 750px) {
         .intl-transformer-note {
-          margin-top: 0.5rem;
-          margin-bottom: 0.75rem;
-          font-size: 1rem;
-          line-height: 1.4;
-          color: rgb(var(--color-foreground));
+          font-size: 1.2rem;
         }
-        @media screen and (min-width: 750px) {
-          .intl-transformer-note {
-            font-size: 1.2rem;
-          }
-        }
-        .intl-transformer-note a { text-decoration: underline; }
-      {%- endstyle -%}
-      <p class="intl-transformer-note">
-        Shipping outside the U.S. or Canada? We can supply a
-        <a href="{{ xfmr_url }}">220V–240V external transformer box</a>
-        for compatible machines.
-      </p>
-    {%- endif -%}
+      }
+      .intl-transformer-note a { text-decoration: underline; }
+    {%- endstyle -%}
+    <p class="intl-transformer-note">
+      Planning to use this machine outside the U.S. or Canada?
+      <a href="/pages/contact">Contact us</a> before ordering.
+      International compatibility depends on the machine's voltage, frequency, plug, and power requirements.
+      A transformer may not be suitable for every model.
+    </p>
   {%- endif -%}
 {%- endif -%}
