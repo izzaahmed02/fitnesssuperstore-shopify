@@ -271,27 +271,17 @@
                   {% endif %}
                 </div>
               {%- when 'review_widget' -%}
-              {% unless product.tags contains 'avisplus-product-options' %}
-                  {% unless is_gift_cards_template %}
-              <div class="available-wrap" id="Stock-Badge-Mobile-{{ section.id }}">
-
-                {%- assign variant_available = product.selected_or_first_available_variant.available -%}
-                {% if product.metafields.custom.backorder == true %}
-                  <div class="badge backorder-badge stock-badge">
-                      <span>Available to Pre-Order</span>
-                  </div>
-                {% else %}
-                  <div class="badge stock-badge {% if variant_available %}in{% else %}out{% endif %}">
-                    {% if variant_available %}
-                      <span>Available to Order</span>
-                    {% else %}
-                      <span>Out of stock</span>
-                    {% endif %}
-                  </div>
-                {% endif %}
-              </div>
-                {% endunless %}
-              {% endunless %}
+                {%- assign hide_avail_mobile = false -%}
+                {%- if product.tags contains 'avisplus-product-options' or is_gift_cards_template -%}
+                  {%- assign hide_avail_mobile = true -%}
+                {%- endif -%}
+                {%- assign stock_badge_mobile_id = 'Stock-Badge-Mobile-' | append: section.id -%}
+                {% render 'product-availability-badge',
+                  product: product,
+                  available: product.selected_or_first_available_variant.available,
+                  wrapper_id: stock_badge_mobile_id,
+                  hide_badge: hide_avail_mobile
+                %}
               {% when 'price' %}
                 {% unless is_gift_cards_template %}
                   <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
@@ -902,6 +892,11 @@
                     <p>{{ boyboxvariant.metafields.custom.buy_box_note }}</p>
                   {% endif %}
 
+                  <div id="Options-Added-{{ section.id }}" class="options-added-line" role="status" aria-live="polite">
+                    <span class="options-added-line__label">Options added:</span>
+                    <span class="options-added-line__value" data-options-added-value data-currency="{{ cart.currency.symbol }}">+{{ 0 | money }}</span>
+                  </div>
+
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
                    <div class="product_price_with_options-contaniner">
@@ -1253,7 +1248,8 @@
                           {{ 'products.product.duties_included' | t }}
                         {%- endif -%}
                         {%- if shop.shipping_policy.body != blank -%}
-                          {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}
+                         Shipping calculated at checkout. Financing options available at checkout.<br>
+                         <span style="color: #D83D0E!important;font-weight: 600;">Need help? Call +1-925-215-2927</span>
                         {%- endif -%}
                       </div>
                     {%- endif -%}
@@ -1270,9 +1266,6 @@
                     </div>
                   </div>
 
-                {% unless is_gift_cards_template %}
-                {% render 'paylater-providers' %}
-              {% endunless %}
                 </{{tag}}>
                {% endunless %}
               {%- when 'inventory' -%}
@@ -1338,28 +1331,18 @@
                 {%- endif -%}
 
               {%- when 'review_widget' -%}
-              {% unless product.tags contains 'avisplus-product-options' %}
-                {% unless is_gift_cards_template %}
-                <div class="available-wrap hidden lg:flex" id="Stock-Badge-Desktop-{{ section.id }}">
-
-
-                  {%- assign variant_available = product.selected_or_first_available_variant.available -%}
-                  {% if product.metafields.custom.backorder == true %}
-                    <div class="badge backorder-badge stock-badge">
-                       <span>Available to Pre-Order</span>
-                    </div>
-                  {% else %}
-                    <div class="badge stock-badge {% if variant_available %}in{% else %}out{% endif %}">
-                      {% if variant_available %}
-                        <span>Available to Order</span>
-                      {% else %}
-                        <span>Out of stock</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-                 {% endunless %}
-              {% endunless %}
+                {%- assign hide_avail_desktop = false -%}
+                {%- if product.tags contains 'avisplus-product-options' or is_gift_cards_template -%}
+                  {%- assign hide_avail_desktop = true -%}
+                {%- endif -%}
+                {%- assign stock_badge_desktop_id = 'Stock-Badge-Desktop-' | append: section.id -%}
+                {% render 'product-availability-badge',
+                  product: product,
+                  available: product.selected_or_first_available_variant.available,
+                  wrapper_id: stock_badge_desktop_id,
+                  wrapper_class: 'hidden lg:flex',
+                  hide_badge: hide_avail_desktop
+                %}
               {%- when 'sku' -%}
                 <p
                   class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
