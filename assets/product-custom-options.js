@@ -749,8 +749,6 @@ if (!customElements.get('product-customization-options')) {
       // Helper to create corect price HTML
 
       priceHelper(priceAdjustment) {
-        console.log('priceAdjustment',priceAdjustment);
-        
         const priceElement = document.querySelectorAll('.pr_custom_price');
         if (priceElement.length === 0) return;
 
@@ -761,10 +759,26 @@ if (!customElements.get('product-customization-options')) {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
-        console.log('formattedPrice',formattedPrice);
-        
+
         priceElement.forEach((el) => {
           el.innerText = `${priceElement[0].dataset?.currency || ''}${formattedPrice}`;
+        });
+
+        this.renderOptionsAddedTotal(priceAdjustment);
+      }
+
+      renderOptionsAddedTotal(priceAdjustment) {
+        const targets = document.querySelectorAll('[data-options-added-value]');
+        if (targets.length === 0) return;
+        const delta = Number(priceAdjustment) || 0;
+        const formatted = Math.abs(delta).toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        targets.forEach((el) => {
+          const currency = el.dataset.currency || '$';
+          const sign = delta < 0 ? '-' : '+';
+          el.innerText = `${sign}${currency}${formatted}`;
         });
       }
 

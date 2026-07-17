@@ -186,20 +186,64 @@
   height: 24px;
 }
 
-/* 1) Move "Available to Order" up so it sits to the right of the reviews row
-   (adjacent block after the reviews badge); this also pulls the price block up. */
-@media (min-width: 990px) {
-  .available-wrap {
-    justify-content: flex-end;
-    margin-top: -40px;
-    margin-bottom: 8px;
-    position: relative;
-    z-index: 2;
-  }
+/* Availability badge + reviews-stars row.
+   Layout the Judge.me stars and the stock badge on the same flex row so the
+   badge sits to the right of the reviews at wide widths, and wraps below the
+   stars at narrower desktop/tablet widths — no negative margins, no overlap
+   with the title. */
+.available-wrap.available-wrap--flex {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 12px;
+  row-gap: 8px;
+  margin-bottom: 8px;
+}
+.available-wrap.available-wrap--flex .available-wrap__stars {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.available-wrap.available-wrap--flex .available-wrap__status {
+  flex: 0 0 auto;
+  margin-left: 0;
+}
+.available-wrap.available-wrap--flex .available-wrap__status .stock-badge {
+  margin-left: 0;
 }
 
 /* Financing text size */
 .paylater-container .paylater-text {
   font-size: 12px;
   line-height: 14px;
+}
+
+/* --------------------------------------------------------------------------
+   "Options added: +$X.XX" running total.
+   Placed directly below the notes / selected-options summary and above
+   "Total with options". Pale-yellow highlight so shoppers can see the delta
+   from the base price separately from the final total.
+   -------------------------------------------------------------------------- */
+.options-added-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 16px 0 12px;
+  padding: 10px 12px;
+  background-color: #fff6cc;
+  border: 1px solid #f2d94c;
+  border-radius: 8px;
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: #23232b;
+}
+.options-added-line__label {
+  font-weight: 700;
+}
+.options-added-line__value {
+  font-weight: 700;
+  color: #7a5a00;
+  white-space: nowrap;
 }

@@ -1,0 +1,45 @@
+{%- comment -%}
+  Renders the product reviews stars (Judge.me badge) and the stock
+  availability badge on the same responsive flex row. On narrower
+  desktop/tablet widths the badge wraps onto its own line below the
+  stars so it never overlaps the title/reviews row.
+
+  Accepts:
+    - product: {Object} product object (required)
+    - wrapper_class: {String} extra classes appended to .available-wrap (optional)
+    - wrapper_id: {String} id attribute for the wrapper (optional)
+    - available: {Boolean} availability override; defaults to product.available (optional)
+    - check_discontinued: {Boolean} also render a Discontinued state (optional)
+{%- endcomment -%}
+
+{%- if available == nil -%}
+  {%- assign available = product.available -%}
+{%- endif -%}
+
+<div class="available-wrap available-wrap--flex {{ wrapper_class }}"
+  {%- if wrapper_id %} id="{{ wrapper_id }}"{% endif -%}>
+  <div class="available-wrap__stars">
+    <div class="jdgm-widget jdgm-preview-badge" data-id="{{ product.id }}">
+      {{ product.metafields.judgeme.badge }}
+    </div>
+  </div>
+  <div class="available-wrap__status">
+    {% if check_discontinued and product.template_suffix == 'discontinued' %}
+      <div class="badge stock-badge out">
+        <span>Discontinued</span>
+      </div>
+    {% elsif product.metafields.custom.backorder == true %}
+      <div class="badge backorder-badge stock-badge">
+        <span>Available to Pre-Order</span>
+      </div>
+    {% else %}
+      <div class="badge stock-badge {% if available %}in{% else %}out{% endif %}">
+        {% if available %}
+          <span>Available to Order</span>
+        {% else %}
+          <span>Out of stock</span>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
