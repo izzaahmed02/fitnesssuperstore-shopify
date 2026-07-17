@@ -207,11 +207,14 @@
                   {% endif %}
                 </div>
               {%- when 'review_widget' -%}
-              {% unless product.tags contains 'avisplus-product-options' %}
-                  {% unless is_gift_cards_template %}
-                {% render 'product-availability-badge', product: product %}
-                {% endunless %}
-              {% endunless %}
+                {%- assign hide_avail_mobile = false -%}
+                {%- if product.tags contains 'avisplus-product-options' or is_gift_cards_template -%}
+                  {%- assign hide_avail_mobile = true -%}
+                {%- endif -%}
+                {% render 'product-availability-badge',
+                  product: product,
+                  hide_badge: hide_avail_mobile
+                %}
               {% when 'price' %}
                 {% unless is_gift_cards_template %}
                   <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
@@ -1271,14 +1274,15 @@
                 {%- endif -%}
 
               {%- when 'review_widget' -%}
-              {% unless product.tags contains 'avisplus-product-options' %}
-                {% unless is_gift_cards_template %}
+                {%- assign hide_avail_desktop = false -%}
+                {%- if product.tags contains 'avisplus-product-options' or is_gift_cards_template -%}
+                  {%- assign hide_avail_desktop = true -%}
+                {%- endif -%}
                 {% render 'product-availability-badge',
                   product: product,
-                  wrapper_class: 'hidden lg:flex'
+                  wrapper_class: 'hidden lg:flex',
+                  hide_badge: hide_avail_desktop
                 %}
-                 {% endunless %}
-              {% endunless %}
               {%- when 'sku' -%}
                 <p
                   class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
