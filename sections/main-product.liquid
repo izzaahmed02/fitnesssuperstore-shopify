@@ -962,6 +962,10 @@
                       <p>{{ buy_box_variant.metafields.custom.buy_box_note }}</p>
                     {% endif %}
                   </div>
+                  <div id="Options-Added-{{ section.id }}" class="options-added-line" role="status" aria-live="polite">
+                    <span class="options-added-line__label">Options added:</span>
+                    <span class="options-added-line__value" data-options-added-value data-currency="{{ cart.currency.symbol }}">+{{ 0 | money }}</span>
+                  </div>
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
                   <div class="product_price_with_options-contaniner">
@@ -1340,7 +1344,7 @@
                         {%- endif -%}
                         {%- if shop.shipping_policy.body != blank -%}
                         {% comment %}  {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}{% endcomment %}
-                         Shipping calculated at checkout. Financing options at checkout.<br>
+                         Shipping calculated at checkout. Financing options available at checkout.<br>
                          <span style="color: #D83D0E!important;font-weight: 600;">Need help? Call +1-925-215-2927</span>
                         {%- endif -%}
                       </div>
@@ -1358,7 +1362,6 @@
                     </div>
                   </div>
 
-                {% render 'paylater-providers' %}
                  </{{ tag }}>
                {% endunless %}
               {%- when 'inventory' -%}
@@ -1425,25 +1428,7 @@
 
               {%- when 'review_widget' -%}
              {% unless product.tags contains 'avisplus-product-options' %}
-                <div class="available-wrap">
-                  {% if product.template_suffix == 'discontinued' %}
-                    <div class="badge stock-badge out">
-                      <span>Discontinued</span>
-                    </div>
-                  {% elsif product.metafields.custom.backorder == true %}
-                    <div class="badge backorder-badge stock-badge">
-                      <span>Available to Pre-Order</span>
-                    </div>
-                  {% else %}
-                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                      {% if product.available == true %}
-                        <span>Available to Order</span>
-                      {% else %}
-                        <span>Out of stock</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
+                {% render 'product-availability-badge', product: product, check_discontinued: true %}
               {% endunless %}
               {%- when 'sku' -%}
                 <p
