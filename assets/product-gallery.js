@@ -921,7 +921,7 @@ class ProductGallery extends HTMLElement {
       video.muted = true;
       video.loop = true;
       video.playsInline = true;
-      video.preload = 'metadata';
+      video.preload = 'none';
       video.style.maxWidth = '100%';
       video.style.maxHeight = '100%';
 
