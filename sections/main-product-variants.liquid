@@ -892,10 +892,18 @@
                     <p>{{ boyboxvariant.metafields.custom.buy_box_note }}</p>
                   {% endif %}
 
-                  <div id="Options-Added-{{ section.id }}" class="options-added-line" role="status" aria-live="polite">
-                    <span class="options-added-line__label">Options added:</span>
-                    <span class="options-added-line__value" data-options-added-value data-currency="{{ cart.currency.symbol }}">+{{ 0 | money }}</span>
-                  </div>
+                  {%- assign has_product_options = false -%}
+                  {%- if product.metafields.options.product_options.value != blank
+                    or boyboxvariant.metafields.options.product_options.value != blank
+                  -%}
+                    {%- assign has_product_options = true -%}
+                  {%- endif -%}
+                  {%- if has_product_options -%}
+                    <div id="Options-Added-{{ section.id }}" class="options-added-line" role="status" aria-live="polite">
+                      <span class="options-added-line__label">Options added:</span>
+                      <span class="options-added-line__value" data-options-added-value data-currency="{{ cart.currency.symbol }}">+{{ 0 | money }}</span>
+                    </div>
+                  {%- endif -%}
 
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
