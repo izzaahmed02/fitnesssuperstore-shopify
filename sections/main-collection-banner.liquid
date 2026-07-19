@@ -17,8 +17,26 @@
       {% endif %}
 
       {% if collection.metafields.custom.subcategories_custom_titles != blank %}
+  {% comment %}
+    Same-page subcategory filtering (progressive enhancement).
+    Each chip keeps a real /collections/<handle> href as a no-JS / crawler fallback.
+    When enabled for this collection, assets/subcollection-filter.js intercepts the click
+    and applies the subcategory on the SAME page via a URL parameter + History API
+    (no reload, no redirect to a separate collection URL).
+  {% endcomment %}
   {% assign current_url = collection.url %}
-  <div class="collection-hero__related-collections-wrapper">
+  {% assign ajax_enabled = false %}
+  {% if section.settings.enable_subcategory_ajax_filter %}
+    {% assign allow_list = section.settings.subcategory_filter_collections | default: '' | downcase %}
+    {% if allow_list == blank or allow_list contains collection.handle %}
+      {% assign ajax_enabled = true %}
+    {% endif %}
+  {% endif %}
+  <div
+    class="collection-hero__related-collections-wrapper"
+    data-subcat-filter="{% if ajax_enabled %}true{% else %}false{% endif %}"
+    data-filter-key="{{ section.settings.subcategory_filter_key | escape }}"
+    data-collection-url="{{ collection.url }}">
     <button class="collection-hero__related-collections-toggle" aria-expanded="false">
       <span>{{ section.settings.related_collections_toggle | default: "Browse subcategories" }}</span>
       <svg class="icon icon-caret" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -30,10 +48,13 @@
      {% for subcat in collection.metafields.custom.subcategories_custom_titles.value %}
   {% if subcat.collection != blank %}
     {% assign sub_handle = subcat.collection.value.handle %}
+    {% assign sub_title = subcat.custom_title | default: sub_handle %}
     <li>
       <a href="/collections/{{ sub_handle }}"
-         class="collection-hero__related-collection {% if request.path contains sub_handle %}active{% endif %}">
-        {{ subcat.custom_title | default: sub_handle }}
+         class="collection-hero__related-collection {% if request.path contains sub_handle %}active{% endif %}"
+         data-filter-value="{{ sub_title | escape }}"
+         data-source-url="/collections/{{ sub_handle }}">
+        {{ sub_title }}
       </a>
     </li>
   {% endif %}
@@ -41,7 +62,8 @@
 
     </ul>
   </div>
-{% endif %} 
+  {% if ajax_enabled %}{{ 'subcollection-filter.js' | asset_url | script_tag }}{% endif %}
+{% endif %}
 
       {% if section.metafields.custom.related_collections != blank %}
         <div class="collection-hero__related-collections-wrapper">
@@ -112,6 +134,10 @@
     { "type": "checkbox", "id": "show_collection_description", "default": true, "label": "t:sections.main-collection-banner.settings.show_collection_description.label" },
     { "type": "checkbox", "id": "show_collection_image", "default": false, "label": "t:sections.main-collection-banner.settings.show_collection_image.label" },
     { "type": "text", "id": "related_collections_toggle", "label": "t:sections.main-collection-banner.settings.related_collections_toggle.label", "default": "Browse subcategories" },
+    { "type": "header", "content": "Subcategory filtering" },
+    { "type": "checkbox", "id": "enable_subcategory_ajax_filter", "label": "Apply subcategories as same-page filters (no redirect)", "default": true, "info": "When on, clicking a subcategory filters the current collection page via a URL parameter using the History API instead of opening a separate collection page. Falls back to normal links if JavaScript is unavailable." },
+    { "type": "text", "id": "subcategory_filter_collections", "label": "Enable only on these collections", "default": "treadmills", "info": "Comma-separated collection handles (e.g. treadmills). Leave blank to enable on every collection that has subcategories." },
+    { "type": "text", "id": "subcategory_filter_key", "label": "Boost filter URL key (optional)", "info": "The Boost Smart Filter parameter key that maps to the subcategory filter (e.g. pf_t_...). Get this from your Boost filter configuration. Leave blank to fetch the subcategory collection's grid directly and show a readable ?subcategory= parameter." },
     { "type": "color_scheme", "id": "color_scheme", "label": "t:sections.all.colors.label", "default": "scheme-1" }
   ]
 }
