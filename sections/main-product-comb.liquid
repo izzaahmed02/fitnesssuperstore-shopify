@@ -91,12 +91,9 @@
     {{ 'component-volume-pricing.css' | asset_url | stylesheet_tag }}
   {%- endif -%}
 
-  <link rel="stylesheet" href="{{ 'avis-custom.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'avis-custom.css' | asset_url | stylesheet_tag }}</noscript>
   {{ 'custom-main-product-page.css' | asset_url | stylesheet_tag }}
   {{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
-  <link rel="stylesheet" href="{{ 'custom-option-picker-snippet.css' | asset_url }}" media="print" onload="this.media='all'">
-  <noscript>{{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}</noscript>
+  {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
   <link rel="stylesheet" href="{{ 'paylater-modal.css' | asset_url }}" media="print" onload="this.media='all'">
   <noscript>{{ 'paylater-modal.css' | asset_url | stylesheet_tag }}</noscript>
 
@@ -210,29 +207,14 @@
                   {% endif %}
                 </div>
               {%- when 'review_widget' -%}
-              {% comment %}
-                Availability badge renders for every product (including
-                Avis Plus) per Tim's May 13 direction. Only gift-card
-                templates are skipped.
-              {% endcomment %}
-              {% unless is_gift_cards_template %}
-                <div class="available-wrap">
-
-                  {% if product.metafields.custom.backorder == true %}
-                    <div class="badge backorder-badge stock-badge">
-                        <span>Available to Pre-Order</span>
-                    </div>
-                  {% else %}
-                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                      {% if product.available == true %}
-                        <span>Available to Order</span>
-                      {% else %}
-                        <span>Out of stock</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-              {% endunless %}
+                {%- assign hide_avail_mobile = false -%}
+                {%- if product.tags contains 'avisplus-product-options' or is_gift_cards_template -%}
+                  {%- assign hide_avail_mobile = true -%}
+                {%- endif -%}
+                {% render 'product-availability-badge',
+                  product: product,
+                  hide_badge: hide_avail_mobile
+                %}
               {% when 'price' %}
                 {% unless is_gift_cards_template %}
                   <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
@@ -673,28 +655,7 @@
                       <div class="item__text">
                         <span class="title">Ships:</span>
                         {{ product.metafields.custom.ships }}
-                        {% for collection in product.collections %}
-                          {% if collection.handle contains 'shop-by-strength-product-line' %}
-                            <span class="more-info" data-customfield="Shipping">(More Info)</span>
-
-                            <script>
-  var attachClickHandler = setInterval(function () {
-    var $target = $('.custom_shipping_container');
-    if ($target.length > 0) {
-      var $clickTarget = $target.parent().parent();
-
-      $clickTarget.off('click.clearContent').on('click.clearContent', function () {
-        $('#dynamic-product-content').empty();
-      });
-
-      clearInterval(attachClickHandler); 
-    }
-  }, 200);
-</script>
-
-
-                          {% endif %}
-                        {% endfor %}
+                        {% render 'shipping-packaging-video-link', product: product %}
                       </div>
                     </div>
                   {% endif %}
@@ -858,6 +819,11 @@
                     </svg>
                     <span class="product-form__error-message"></span>
                   </div>
+                  {% render 'product-options-added-line',
+                    product: product,
+                    variant: product.selected_or_first_available_variant,
+                    section_id: section.id
+                  %}
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
                    <div class="product_price_with_options-contaniner">
@@ -1209,7 +1175,8 @@
                           {{ 'products.product.duties_included' | t }}
                         {%- endif -%}
                         {%- if shop.shipping_policy.body != blank -%}
-                          {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}
+                         Shipping calculated at checkout. Financing options available at checkout.<br>
+                         <span style="color: #D83D0E!important;font-weight: 600;">Need help? Call +1-925-215-2927</span>
                         {%- endif -%}
                       </div>
                     {%- endif -%}
@@ -1243,9 +1210,6 @@
                       </button>
                     </div>
                   {% endif %}
-                {% unless is_gift_cards_template %}
-                {% render 'paylater-providers' %}
-              {% endunless %}
                 </{{tag}}>
                {% endunless %}
               {%- when 'inventory' -%}
@@ -1311,29 +1275,15 @@
                 {%- endif -%}
 
               {%- when 'review_widget' -%}
-              {% comment %}
-                Desktop availability badge — same "always render" policy
-                as the mobile block above. Gift cards still skipped.
-              {% endcomment %}
-              {% unless is_gift_cards_template %}
-                <div class="available-wrap hidden lg:flex">
-
-
-                  {% if product.metafields.custom.backorder == true %}
-                    <div class="badge backorder-badge stock-badge">
-                       <span>Available to Pre-Order</span>
-                    </div>
-                  {% else %}
-                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                      {% if product.available == true %}
-                        <span>Available to Order</span>
-                      {% else %}
-                        <span>Out of stock</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-              {% endunless %}
+                {%- assign hide_avail_desktop = false -%}
+                {%- if product.tags contains 'avisplus-product-options' or is_gift_cards_template -%}
+                  {%- assign hide_avail_desktop = true -%}
+                {%- endif -%}
+                {% render 'product-availability-badge',
+                  product: product,
+                  wrapper_class: 'hidden lg:flex',
+                  hide_badge: hide_avail_desktop
+                %}
               {%- when 'sku' -%}
                 <p
                   class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"

@@ -88,10 +88,10 @@
             >
               <video
                 class="video-thumb-video"
-                src="{{ instructional_url }}"
+                data-video-src="{{ instructional_url }}"
                 muted
                 playsinline
-                preload="metadata"
+                preload="none"
               ></video>
               <div class="play-button">&#9658;</div>
             </div>
@@ -122,10 +122,10 @@
             {% else %}
               <video
                 class="video-thumb-video"
-                src="{{ video_file.sources[0].url }}"
+                data-video-src="{{ video_file.sources[0].url }}"
                 muted
                 playsinline
-                preload="metadata"
+                preload="none"
               ></video>
             {% endif %}
             <div class="play-button">&#9658;</div>
@@ -148,10 +148,10 @@
             >
               <video
                 class="video-thumb-video"
-                src="{{ assembly_url }}"
+                data-video-src="{{ assembly_url }}"
                 muted
                 playsinline
-                preload="metadata"
+                preload="none"
               ></video>
               <div class="play-button">&#9658;</div>
             </div>
@@ -171,17 +171,12 @@
                   class="video-thumbnail"
                   data-video-url="{{ other_url }}"
                 >
-                  {%- comment -%}
-                    If other_url is an mp4, the video tag will show first frame.
-                    If it's e.g. YouTube or Drive, the tag may not load; we still use it
-                    as a visual container and let the popup handle playing properly.
-                  {%- endcomment -%}
                   <video
                     class="video-thumb-video"
-                    src="{{ other_url }}"
+                    data-video-src="{{ other_url }}"
                     muted
                     playsinline
-                    preload="metadata"
+                    preload="none"
                   ></video>
                   <div class="play-button">&#9658;</div>
                 </div>
@@ -202,17 +197,12 @@
                   class="video-thumbnail"
                   data-video-url="{{ other_url }}"
                 >
-                  {%- comment -%}
-                    If other_url is an mp4, the video tag will show first frame.
-                    If it's e.g. YouTube or Drive, the tag may not load; we still use it
-                    as a visual container and let the popup handle playing properly.
-                  {%- endcomment -%}
                   <video
                     class="video-thumb-video"
-                    src="{{ other_url }}"
+                    data-video-src="{{ other_url }}"
                     muted
                     playsinline
-                    preload="metadata"
+                    preload="none"
                   ></video>
                   <div class="play-button">&#9658;</div>
                 </div>
@@ -221,7 +211,7 @@
             </div>
           {% endif %}
         {% endfor %}
-      {% endif %} 
+      {% endif %}
     </div>
 
     {%- comment -%} Popup modal (plays video) {%- endcomment -%}
@@ -241,6 +231,9 @@
   border-radius: 12px;
   display: block;
   pointer-events: none; /* prevent inline play on click */
+  background-color: #23232B;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
 }
 
 .prodVideoSlider .extra-info-video-slider .video-thumb-image {
@@ -408,6 +401,22 @@
     pointer-events: none;
   }
 
+  .prodVideoSlider .extra-info-videos .video-modal-error {
+    background: #23232B;
+    color: #fff;
+    border-radius: 16px;
+    padding: 40px 24px;
+    text-align: center;
+    font-family: 'Lato';
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .prodVideoSlider .extra-info-videos .video-modal-error p {
+    margin: 0;
+    color: #fff;
+  }
+
   .prodVideoSlider .extra-info-videos .close-modal {
     position: absolute;
     top: -52px;
@@ -544,13 +553,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var $thumbVideo = $thumb.find('.video-thumb-video').first();
     if ($thumbVideo.length) {
-      var videoSrc = $thumbVideo.attr('src') || '';
       var videoPoster = $thumbVideo.attr('poster');
       var posterAttr = videoPoster ? (' poster="' + videoPoster + '"') : '';
       return (
-        '<video muted playsinline preload="metadata"' + posterAttr + '>' +
-        '<source src="' + videoSrc + '">' +
-        '</video>'
+        '<video muted playsinline preload="none"' + posterAttr + '></video>'
       );
     }
 
@@ -581,11 +587,22 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!$video.length) return;
 
     var videoEl = $video.get(0);
+
+    var handleVideoError = function () {
+      $container.html(
+        '<div class="video-modal-error" role="alert">' +
+          '<p>Sorry, this video is currently unavailable.</p>' +
+        '</div>'
+      );
+    };
+    videoEl.addEventListener('error', handleVideoError);
+    $video.find('source').on('error', handleVideoError);
+
     var playPromise = videoEl.play();
     if (playPromise && typeof playPromise.catch === 'function') {
       playPromise.catch(function () {
         videoEl.muted = true;
-        videoEl.play();
+        videoEl.play().catch(function () { /* handled by error listener */ });
       });
     }
   }
