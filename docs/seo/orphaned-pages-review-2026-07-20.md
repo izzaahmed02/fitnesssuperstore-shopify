@@ -1,92 +1,57 @@
-# Orphaned Pages Review — Fitness Superstore
+# Orphaned Pages — Status Check & Zafran's Open-Item Analysis
 
 **Thread:** "Orphaned Pages - 29 Apr"
 **Reviewed:** 2026-07-20
-**Source of original list:** Google Sheet `Orphaned_page_in_sitemaps_20260429` (1,086 URLs)
-**Verified against:** Semrush Site Audit project `www.fitnesssuperstore.com` (snapshot finished 2026-07-18) and the Shopify Admin API (live store).
+**Verified against:** the full email thread (through 2026-07-14), Shopify Admin API (live store), and Semrush (Site Audit project `www.fitnesssuperstore.com` + backlink/organic data).
 
 ---
 
-## TL;DR
+## Where the project actually stands
 
-- The orphaned-pages problem is **still open**: the current Site Audit shows **1,058 "Orphaned sitemap pages"** — essentially unchanged from the 1,086 in the 29 Apr sheet.
-- The 9 test/admin/duplicate URLs flagged as "do not link" are **already fixed** — all carry the `seo.hidden` metafield, which natively removes them from `sitemap.xml` and adds `noindex`/`nofollow`. No further action needed on those.
-- The "fix-first" product remedy in the 30 Apr ChatGPT triage — *"add internal links through a relevant collection"* — **does not apply as written.** The sampled fix-first products are already ACTIVE, published, and sit in 16–20 collections each (plus the crawlable `product-index` hub) yet are **still flagged orphaned**.
-- Root cause is **internal-link depth / crawl reachability**, not missing collection membership. Supporting signals from the same audit: **1,094 pages need >3 clicks to reach**, **459 pages have only one internal link**.
-- Recommended next step: treat this as an internal-linking-architecture fix + re-audit, **not** a per-product "add to collection" task. Do not bulk-edit collections — the products are already in them.
+This is a mature, team-led cleanup that is **nearly closed**, not a fresh task. Per Tim's 2026-07-12 status and Saliha's 2026-07-13 completion note, the following are **done and verified in Shopify**:
 
----
+- Redirects closed (single 301, no chains): Precor Reman → Precor · TRUE Reman → TRUE Fitness · SportsArt New → SportsArt · Freeweight Gyms & French Fitness Freeweight Gyms → Multi Functional Squat Rack Systems · French Fitness Cable/Cross-Functional Trainers → French Fitness Selectorized Cable Cross-Functional Trainers.
+- `gym-systems` recalculated to 181 products and confirmed a true superset of `resistance-based-gym-systems`.
+- `seo.hidden = 1` confirmed on all 6 junk collections + 3 pages (removed from sitemap.xml, noindex/nofollow), pages remain published — **independently confirmed here** via the Admin API.
+- Josh's Klaviyo audit reviewed; no action required.
 
-## Scope note (important)
+**Agreed baseline for the final audit:** 1,072 orphaned sitemap pages · 470 one-internal-link pages. (Current Semrush snapshot 2026-07-18: 1,058 orphaned / 459 one-link — moving in the right direction.)
 
-This thread accumulated two different task sets. Per Tim's 30 Apr message *"ignore everything here… the correct thread is 'Pages with only one internal link - 29 Apr'"*, the **"Shop by Condition" / condition pages / redirect-map** plan belongs to that **other** thread (it targets the "466 pages with only one internal link" issue — the current audit shows 459 of those). This document covers only the **orphaned-pages** work for *this* thread.
-
----
-
-## Current data (Semrush Site Audit, snapshot 2026-07-18)
-
-| Audit issue | Count (now) | 29 Apr sheet |
-|---|---|---|
-| **207 — Orphaned sitemap pages** | **1,058** | 1,086 |
-| 206 — Orphaned pages (Google Analytics) | 4,323 | — |
-| 213 — Pages with only one internal link | 459 | (other thread: 466) |
-| 212 — Pages >3 clicks deep | 1,094 | — |
-
-**Breakdown of the 1,058 orphaned sitemap pages:** 1,034 products · 14 collections · 9 pages · 1 other (`/agents.md`).
-
-Full current list: `docs/seo/orphaned_sitemap_pages_current_20260720.csv` (regenerated from the live audit; replaces the stale 29 Apr sheet).
+**Remaining gates before the final Semrush crawl (from Tim, 2026-07-14):**
+1. **Zafran** — GSC/backlink decisions on `resistance-based-gym-systems` and the Alabama page (analysis below).
+2. **Izza / Larianne** — `templates/page.categories.json` stale-reference check (still lists `freeweight-gyms` + `resistance-based-gym-systems`). Auto-generated file → must be fixed via Shopify Theme Editor and synced back, **not** hand-edited in GitHub.
+3. **Site-access owner** — final visual spot-check of the live `sitemap.xml`.
 
 ---
 
-## What was verified
+## Zafran's open item — data + recommendation
 
-### 1. The 9 "remove / do-not-link" URLs — already handled ✅
-All six collections and three pages Tim listed as "URLs I would not link" already have `seo.hidden = 1` on the live store:
+Tim asked for the GSC/backlink review on two URLs, sent together. Semrush data below; **GSC clicks/impressions should be confirmed in Google Search Console before finalizing** (that's the one signal not available here).
 
-- `/collections/collection-filter-test-1`, `/collections/all-products-tax-settings`,
-  `/collections/smart-product-filter-index-do-not-delete`, `/collections/tax-excluded-products`,
-  `/collections/products-tax-collection`, `/collections/zz-boost-test`
-- `/pages/test-options`, `/pages/homepage`, `/pages/data-sharing-opt-out`
+### 1. `/collections/resistance-based-gym-systems` → **Recommend: KEEP + improve + internal-link (do not redirect)**
 
-Per Shopify's documented behavior, `seo.hidden` **removes the resource from `sitemap.xml` and adds `noindex`/`nofollow`** automatically — no theme code required. These are done.
+- **Backlinks:** none found to this URL (Semrush URL-level: nothing found). So no link-equity loss risk either way.
+- **Organic rankings (Semrush, US):** the page holds **real, independent page-1/2 rankings**, including:
+  - `resistance home gym` — **#6** (vol 90)
+  - `resistance gym` — **#12** (vol 140)
+  - `resistance training machine` — #16 (vol 50)
+  - `home gym resistance` — #6 (vol 30)
+  - `resistance machines for home` — #25 (vol 70), `home gym resistance machines` — #26 (vol 40), plus a long tail of 40–80 positions.
+- **Why keep:** Tim's own rule says a page with meaningful independent rankings should be kept and internally linked rather than redirected. Folding it into the broad `gym-systems` page risks losing the specific "resistance …" rankings, since `gym-systems` doesn't target those terms. Estimated traffic is modest, so **confirm GSC clicks/impressions**; if GSC also shows ~zero clicks/impressions over 3–6 months, consolidation into `gym-systems` (single 301) becomes acceptable.
 
-> Note: `/pages/data-sharing-opt-out` ("Your Privacy Choices") is a privacy/compliance page. It is correctly hidden and was **left untouched** — any change to a compliance page should go through human/legal review.
+### 2. `/pages/fitness-equipment-alabama` → **Recommend: DELETE (do not redirect to homepage)**
 
-### 2. The "fix-first" products — already well-connected in-admin, still orphaned in-crawl ⚠️
-All nine of Tim's "top examples to fix first" were checked live. Every one is **ACTIVE, published, and in 16–20 collections**, including real category and brand collections (e.g. `french-fitness`, `strength-training-equipment`, `new-equipment`, `products-remanufactured`) **and** the site-wide `product-index` collection.
-
-Yet two of them (`technogym-excite-vario-1000-w-unity-3-0-console-remanufactured`, `french-fitness-rubber-flooring-ramps-beveled-edge-transition-strip-12mm-new`) **still appear in the current orphaned list.** Adding them to more collections would change nothing — they are already there.
-
-### 3. A crawlable product hub exists but isn't resolving the orphaning
-`/collections/product-index` (theme sections `product-index.liquid` / `product-index-item.liquid`) server-renders a plain `<a href="{{ product.url }}">` for every product, paginated, and is **not** `seo.hidden` (indexable, 3,759 products). Because products remain orphaned despite this hub, the crawler is effectively **not reaching them through it** — consistent with the depth signals above (deep pagination → >3 clicks → treated as orphaned/only-in-sitemap).
+- **Backlinks:** none found. **Organic rankings:** none found. Page is currently **empty** (per Tim).
+- **Why delete:** no search value, no links, no content — matches Tim's "no value → delete, do not redirect generically to the homepage." Keep it out of the index either way. Only retain (noindexed) if the team commits to writing genuine Alabama service-area content; otherwise deleting is the clean close.
 
 ---
 
-## Recommended direction
+## Note on scope / theme changes
 
-1. **Re-baseline, don't reuse the April sheet.** Work from `orphaned_sitemap_pages_current_20260720.csv`.
-2. **Do not bulk-edit collection membership for the orphaned products** — they are already in collections. This would be wasted/risky work.
-3. **Fix internal-link depth/reachability instead** (theme/architecture work, needs design + QA + SEO sign-off before going live):
-   - Make the `product-index` hub reachable in few clicks (link it from the footer/site map and reduce reliance on deep `?page=` pagination), and/or expose a crawlable, server-rendered A–Z or category-chunked product index.
-   - Ensure category/brand collection grids expose server-rendered product links within crawl depth.
-   - Strengthen cross-linking (related products, breadcrumbs, hub pages).
-4. **Link the orphaned *collections* that matter.** Several are real, revenue-relevant pages missing from navigation, e.g. `stairmaster-new`, `stairmaster-remanufactured`, `power-plate-new`, `power-plate-remanufactured`, `gym-packages`, `starter-packages`, `french-fitness-summer-overstock-sale`. (Note: the New/Remanufactured brand hubs overlap with the "Shop by Condition" mega-menu plan tracked in the *other* thread.)
-5. **Review the orphaned comparison-chart / info pages** (e.g. `octane-seated-elliptical-comparison-chart`, `costars-cooperative-purchasing-program`, `fitness-equipment-alabama`) — link the ones worth keeping, redirect/`noindex` the stale ones. Investigate `/agents.md` appearing in the sitemap.
-6. **Re-run the Site Audit after changes** and confirm issue 207 drops before touching the medium-priority set.
+No theme code changes are included here. The `page.categories.json` stale-reference cleanup is assigned to Izza/Larianne and must go through the Shopify Theme Editor → GitHub sync per Tim's instruction (the file is auto-generated). A footer/sitemap "Product Index hub" internal-linking idea was considered to help the ~1,034 orphaned products, but it is **not** part of the team's agreed plan and would change the theme outside their process right before the final audit — so it was not pursued. It can be proposed separately after the final crawl if the orphan count needs further reduction.
+
+**Reference file:** `docs/seo/orphaned_sitemap_pages_current_20260720.csv` — current Semrush export of all 1,058 orphaned sitemap URLs (1,034 products, 14 collections, 9 pages).
 
 ---
 
-## Update 2026-07-20 — internal-linking fix implemented (this branch / PR #639)
-
-Two theme changes were made to attack the root cause (hub reachability + orphaned collections). Both are on the branch for review; no live-store data was changed.
-
-1. **Footer (`sections/footer.liquid`)** — added a site-wide "Site Map | Product Index" utility row in the footer bottom bar. This gives both the HTML sitemap page (`/pages/sitemap`) and the Product Index hub (`/collections/product-index`) a shallow, crawlable internal link from **every** page. Because the Product Index server-renders `<a>` links to all products (paginated), crawlers can now reach the orphaned products through it.
-2. **HTML sitemap page (`sections/sitemap.liquid`)** — added a "Browse the Full Catalog" card linking the Product Index plus 9 previously-orphaned, public, non-empty collections: `stairmaster-new`, `stairmaster-remanufactured`, `power-plate-new`, `power-plate-remanufactured`, `french-fitness-vail-series-1`, `french-fitness-telluride-series-1`, `french-fitness-wall-mounted-cable-machines`, `selectorized-bicep-tricep-combo`, `resistance-based-gym-systems`. Each collection link is guarded — it renders only if the collection exists and has at least one product.
-
-**Deliberately excluded from the linked set:** `meta-pilot-products-for-multifeeds` (product-feed/utility collection — recommend `seo.hidden` instead), `starter-packages` / `gym-packages` / `french-fitness-inversion-tables` (0 products — empty), `french-fitness-summer-overstock-sale` (seasonal promo, not evergreen).
-
-**Still pending (owner action):** merge PR #639 → publish theme → re-run the Site Audit and confirm issue 207 (orphaned sitemap pages) drops. The 1,034 orphaned products won't clear in Google until the theme is live and re-crawled.
-
----
-
-*Prepared as an internal analysis for the Fitness Superstore SEO cleanup. The theme changes above live on branch `claude/orphaned-pages-task-9ceaji` (PR #639) for review; no live-store/product/collection data was modified.*
+*Internal analysis for the Fitness Superstore SEO cleanup. Semrush figures are estimates; confirm GSC clicks/impressions before finalizing the two decisions. No live-store or theme changes were made as part of this review.*
