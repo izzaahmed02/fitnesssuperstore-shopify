@@ -76,4 +76,17 @@ Yet two of them (`technogym-excite-vario-1000-w-unity-3-0-console-remanufactured
 
 ---
 
-*Prepared as an internal analysis for the Fitness Superstore SEO cleanup. No live-store or theme changes were made as part of this review.*
+## Update 2026-07-20 — internal-linking fix implemented (this branch / PR #639)
+
+Two theme changes were made to attack the root cause (hub reachability + orphaned collections). Both are on the branch for review; no live-store data was changed.
+
+1. **Footer (`sections/footer.liquid`)** — added a site-wide "Site Map | Product Index" utility row in the footer bottom bar. This gives both the HTML sitemap page (`/pages/sitemap`) and the Product Index hub (`/collections/product-index`) a shallow, crawlable internal link from **every** page. Because the Product Index server-renders `<a>` links to all products (paginated), crawlers can now reach the orphaned products through it.
+2. **HTML sitemap page (`sections/sitemap.liquid`)** — added a "Browse the Full Catalog" card linking the Product Index plus 9 previously-orphaned, public, non-empty collections: `stairmaster-new`, `stairmaster-remanufactured`, `power-plate-new`, `power-plate-remanufactured`, `french-fitness-vail-series-1`, `french-fitness-telluride-series-1`, `french-fitness-wall-mounted-cable-machines`, `selectorized-bicep-tricep-combo`, `resistance-based-gym-systems`. Each collection link is guarded — it renders only if the collection exists and has at least one product.
+
+**Deliberately excluded from the linked set:** `meta-pilot-products-for-multifeeds` (product-feed/utility collection — recommend `seo.hidden` instead), `starter-packages` / `gym-packages` / `french-fitness-inversion-tables` (0 products — empty), `french-fitness-summer-overstock-sale` (seasonal promo, not evergreen).
+
+**Still pending (owner action):** merge PR #639 → publish theme → re-run the Site Audit and confirm issue 207 (orphaned sitemap pages) drops. The 1,034 orphaned products won't clear in Google until the theme is live and re-crawled.
+
+---
+
+*Prepared as an internal analysis for the Fitness Superstore SEO cleanup. The theme changes above live on branch `claude/orphaned-pages-task-9ceaji` (PR #639) for review; no live-store/product/collection data was modified.*
