@@ -197,7 +197,34 @@
                                 {% endunless %}
                               >
 
-                              <input type="hidden" name="quantity" value="1">
+                              <div class="product-add-ons__qty" data-add-on-qty>
+                                <button
+                                  type="button"
+                                  class="product-add-ons__qty-btn"
+                                  data-qty-minus
+                                  aria-label="Decrease quantity"
+                                  {% unless add_on_variant.available %}disabled{% endunless %}
+                                >&minus;</button>
+                                <input
+                                  type="number"
+                                  name="quantity"
+                                  class="product-add-ons__qty-input"
+                                  value="1"
+                                  min="1"
+                                  step="1"
+                                  inputmode="numeric"
+                                  aria-label="Quantity"
+                                  data-qty-input
+                                  {% unless add_on_variant.available %}disabled{% endunless %}
+                                >
+                                <button
+                                  type="button"
+                                  class="product-add-ons__qty-btn"
+                                  data-qty-plus
+                                  aria-label="Increase quantity"
+                                  {% unless add_on_variant.available %}disabled{% endunless %}
+                                >+</button>
+                              </div>
 
                               <button
                                 type="submit"
@@ -440,6 +467,61 @@
       display: block;
     }
 
+    .product-add-ons__qty {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      border: 1px solid #e5e5e5;
+      border-radius: 7px;
+      overflow: hidden;
+      width: max-content;
+      max-width: 100%;
+    }
+
+    .product-add-ons__qty-btn {
+      appearance: none;
+      -webkit-appearance: none;
+      border: 0;
+      background: #f2f2f2;
+      color: #23232b;
+      width: 34px;
+      min-height: 38px;
+      font: inherit;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .product-add-ons__qty-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .product-add-ons__qty-input {
+      width: 44px;
+      min-height: 38px;
+      border: 0;
+      border-left: 1px solid #e5e5e5;
+      border-right: 1px solid #e5e5e5;
+      text-align: center;
+      font: inherit;
+      font-size: 14px;
+      -moz-appearance: textfield;
+      appearance: textfield;
+      background: #fff;
+    }
+
+    .product-add-ons__qty-input::-webkit-outer-spin-button,
+    .product-add-ons__qty-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .product-add-ons__qty-input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .product-add-ons__button {
       width: 100%;
       min-height: 42px;
@@ -579,6 +661,7 @@
               form.addEventListener('submit', (event) => this.onSubmit(event));
             });
 
+            this.initQtySteppers();
             this.initSliders();
             this.refreshAddOnButtons();
 
@@ -627,6 +710,43 @@
 
               panel.classList.toggle('is-active', isActive);
               panel.hidden = !isActive;
+            });
+          }
+
+          initQtySteppers() {
+            this.querySelectorAll('[data-add-on-qty]').forEach((wrap) => {
+              const input = wrap.querySelector('[data-qty-input]');
+              const minus = wrap.querySelector('[data-qty-minus]');
+              const plus = wrap.querySelector('[data-qty-plus]');
+
+              if (!input) return;
+
+              const clamp = () => {
+                let value = parseInt(input.value, 10);
+                if (isNaN(value) || value < 1) value = 1;
+                input.value = value;
+              };
+
+              if (minus) {
+                minus.addEventListener('click', () => {
+                  if (input.disabled) return;
+                  let value = parseInt(input.value, 10);
+                  if (isNaN(value)) value = 1;
+                  input.value = Math.max(1, value - 1);
+                });
+              }
+
+              if (plus) {
+                plus.addEventListener('click', () => {
+                  if (input.disabled) return;
+                  let value = parseInt(input.value, 10);
+                  if (isNaN(value)) value = 1;
+                  input.value = value + 1;
+                });
+              }
+
+              input.addEventListener('change', clamp);
+              input.addEventListener('blur', clamp);
             });
           }
 
@@ -730,6 +850,10 @@
               // Re-enable so the same add-on can be added again,
               // with a brief "Added" confirmation.
               this.flashAdded(button);
+
+              // Reset the quantity stepper to 1 after a successful add.
+              const qtyInput = form.querySelector('[data-qty-input]');
+              if (qtyInput) qtyInput.value = 1;
             } catch (error) {
               button.disabled = false;
               button.removeAttribute('aria-disabled');
