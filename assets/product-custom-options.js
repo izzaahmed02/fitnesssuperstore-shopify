@@ -111,6 +111,7 @@ if (!customElements.get('product-customization-options')) {
         this.setDefaultOptionsListener();
         this.handleQuantity();
         this.handlePopupHelper();
+        this.handleHelpPopupAccordions();
         this.relatedProductsSwitcher();
         this.colorSwatchHandler();
         this.addCustomColorHandler();
@@ -688,6 +689,32 @@ if (!customElements.get('product-customization-options')) {
             const popup = document.querySelector(`[data-popup="${button.dataset?.closePopup}"]`);
             if (!popup) return;
             popup.classList.remove('active');
+          });
+        });
+      }
+
+      // Accordion rows inside the option help popups (e.g. the "Assembly & Room of
+      // Choice" delivery details). The popup body is metaobject rich-text whose markup
+      // uses .accordion / .accordion-header / .accordion-body and expects an `active`
+      // class toggle, but nothing wired it up on the PDP, so the rows never expanded.
+      // Popups are rendered at the section level (outside this element), so query the
+      // document and guard each header against double-binding across instances.
+
+      handleHelpPopupAccordions() {
+        const headers = document.querySelectorAll('.option-popup .accordion-header');
+        if (headers.length === 0) return;
+        headers.forEach((header) => {
+          if (header.dataset.accordionBound === 'true') return;
+          header.dataset.accordionBound = 'true';
+          const body = header.nextElementSibling;
+          if (!body || !body.classList.contains('accordion-body')) return;
+          header.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const accordion = header.closest('.accordion');
+            if (!accordion) return;
+            const isActive = accordion.classList.toggle('active');
+            body.style.display = isActive ? 'block' : 'none';
           });
         });
       }
