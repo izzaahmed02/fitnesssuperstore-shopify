@@ -18,7 +18,22 @@
 
       {% if collection.metafields.custom.subcategories_custom_titles != blank %}
   {% assign current_url = collection.url %}
-  <div class="collection-hero__related-collections-wrapper">
+  {% comment %}
+    Same-page sub-collection filtering is rolled out one collection at a time.
+    Add a collection handle to this comma-separated allowlist to enable the
+    History-API behavior for it. Everything else keeps the plain-link default.
+  {% endcomment %}
+  {% assign subcoll_same_page_allowlist = 'treadmills' | split: ',' %}
+  {% assign enable_subcoll_filter = false %}
+  {% if subcoll_same_page_allowlist contains collection.handle %}
+    {% assign enable_subcoll_filter = true %}
+  {% endif %}
+  <div class="collection-hero__related-collections-wrapper"
+       data-subcollection-nav
+       data-enabled="{{ enable_subcoll_filter }}"
+       data-collection-handle="{{ collection.handle }}"
+       data-url-param="subcategory"
+       data-boost-filter-key="">
     <button class="collection-hero__related-collections-toggle" aria-expanded="false">
       <span>{{ section.settings.related_collections_toggle | default: "Browse subcategories" }}</span>
       <svg class="icon icon-caret" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -30,10 +45,14 @@
      {% for subcat in collection.metafields.custom.subcategories_custom_titles.value %}
   {% if subcat.collection != blank %}
     {% assign sub_handle = subcat.collection.value.handle %}
+    {% assign sub_title = subcat.custom_title | default: sub_handle %}
     <li>
       <a href="/collections/{{ sub_handle }}"
-         class="collection-hero__related-collection {% if request.path contains sub_handle %}active{% endif %}">
-        {{ subcat.custom_title | default: sub_handle }}
+         class="collection-hero__related-collection {% if request.path contains sub_handle %}active{% endif %}"
+         {% if enable_subcoll_filter %}data-subcollection-link
+         data-subcollection-handle="{{ sub_handle }}"
+         data-filter-value="{{ sub_title | escape }}"{% endif %}>
+        {{ sub_title }}
       </a>
     </li>
   {% endif %}
@@ -41,7 +60,10 @@
 
     </ul>
   </div>
-{% endif %} 
+  {% if enable_subcoll_filter %}
+    <script src="{{ 'collection-subcollection-filter.js' | asset_url }}" defer="defer"></script>
+  {% endif %}
+{% endif %}
 
       {% if section.metafields.custom.related_collections != blank %}
         <div class="collection-hero__related-collections-wrapper">
