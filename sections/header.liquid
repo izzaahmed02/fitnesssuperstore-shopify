@@ -1,6 +1,7 @@
-<link rel="stylesheet" href="{{ 'component-list-menu.css' | asset_url }}" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="{{ 'component-search.css' | asset_url }}" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="{{ 'component-menu-drawer.css' | asset_url }}" media="print" onload="this.media='all'">
+<!-- Header structural CSS: render-blocking so the nav/search paint in final layout (prevents CLS). -->
+<link rel="stylesheet" href="{{ 'component-list-menu.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'component-search.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'component-menu-drawer.css' | asset_url }}">
 <link rel="stylesheet" href="{{ 'component-cart-notification.css' | asset_url }}" media="print"
       onload="this.media='all'">
 <link rel="stylesheet" href="{{ 'component-cart-items.css' | asset_url }}" media="print" onload="this.media='all'">
@@ -8,11 +9,7 @@
     <link rel="stylesheet" href="{{ 'component-price.css' | asset_url }}" media="print" onload="this.media='all'">
 {%- endif -%}
 {%- if section.settings.menu_type_desktop == 'mega' -%}
-    <link rel="preload" href="{{ 'component-mega-menu.css' | asset_url }}" as="style">
-    <link rel="stylesheet" href="{{ 'component-mega-menu.css' | asset_url }}" media="print" onload="this.media='all'">
-    <noscript>
-        <link rel="stylesheet" href="{{ 'component-mega-menu.css' | asset_url }}">
-    </noscript>
+    <link rel="stylesheet" href="{{ 'component-mega-menu.css' | asset_url }}">
 {%- endif -%}
 
 {%- if settings.cart_type == "drawer" -%}
@@ -375,7 +372,7 @@
     <header class="header header--{{ section.settings.logo_position }} header--mobile-{{ section.settings.mobile_logo_position }} {% if section.settings.menu_type_desktop == 'drawer' %} drawer-menu{% endif %}{% if section.settings.menu != blank %} header--has-menu{% endif %}{% if has_app_block %} header--has-app{% endif %}{% if social_links %} header--has-social{% endif %}{% if shop.customer_accounts_enabled %} header--has-account{% endif %}{% if localization_forms %} header--has-localizations{% endif %}">
         <div class="header__logo-icons--container">
             {%- if section.settings.logo_position != 'middle-center' -%}
-                <a href="{{ routes.root_url }}" class="header__heading-link link link--text focus-inset">
+                <a href="{{ routes.root_url }}" class="header__heading-link link link--text focus-inset" aria-label="{{ shop.name | escape }} home">
                     {%- if settings.logo != blank -%}
                         <div class="header__heading-logo-wrapper">
                             {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
@@ -400,7 +397,7 @@
                 </a>
             {%- endif -%}
             {%- if section.settings.logo_position == 'middle-center' -%}
-                <a href="{{ routes.root_url }}" class="header__heading-link link link--text focus-inset">
+                <a href="{{ routes.root_url }}" class="header__heading-link link link--text focus-inset" aria-label="{{ shop.name | escape }} home">
                     {%- if settings.logo != blank -%}
                         <div class="header__heading-logo-wrapper">
                             {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
@@ -474,8 +471,8 @@
                         <localization-form class="small-hide medium-hide" data-prevent-hide>
                             {%- form 'localization', id: 'HeaderCountryForm', class: 'localization-form' -%}
                                 <div>
-                                    <h2 class="visually-hidden"
-                                        id="HeaderCountryLabel">{{ 'localization.country_label' | t }}</h2>
+                                    <span class="visually-hidden"
+                                        id="HeaderCountryLabel">{{ 'localization.country_label' | t }}</span>
                                     {%- render 'country-localization', localPosition: 'HeaderCountry' -%}
                                 </div>
                             {%- endform -%}
@@ -483,8 +480,8 @@
                         <localization-form class="small-hide medium-hide" data-prevent-hide>
                             {%- form 'localization', id: 'HeaderLanguageForm', class: 'localization-form' -%}
                                 <div>
-                                    <h2 class="visually-hidden"
-                                        id="HeaderLanguageLabel">{{ 'localization.language_label' | t }}</h2>
+                                    <span class="visually-hidden"
+                                        id="HeaderLanguageLabel">{{ 'localization.language_label' | t }}</span>
                                     {%- render 'language-localization', localPosition: 'HeaderLanguage' -%}
                                 </div>
                             {%- endform -%}
