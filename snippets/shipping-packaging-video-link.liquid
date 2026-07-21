@@ -1,3 +1,28 @@
+{%- comment -%}
+  Shop by Strength Product Line — packaging-video CTA on the PDP "Ships" row.
+
+  Remediation per Tim French (thread: "Update needed — Shop by Strength Product
+  Line shipping block / packaging video", 2026-07-17):
+
+    1. Hardcoded 15-handle exclusion list REMOVED. Suppression is now driven by
+       controlled product data: the boolean metafield custom.packaging_video_exception.
+       Rule: every product in the "shop-by-strength-product-line" collection shows the
+       CTA UNLESS it carries an approved, documented exception (metafield == true).
+
+    2. CTA text changed from "Watch Packaging Video" to "Watch Packaging Example".
+
+    3. CTA is now a real link to the packaging video that opens in a new tab with
+       target="_blank" rel="noopener noreferrer" (replacing the previous JS popup span).
+
+    4. Video URL is read from the controlled product metafield custom.watch_packaging_video,
+       with a single theme-level fallback defined ONCE here (not repeated across the three
+       PDP sections: main-product, main-product-comb, main-product-variants).
+
+    5. Representative-example disclaimer/tooltip is rendered from the controlled metafield
+       custom.packaging_disclaimer ONLY when populated. Left blank for now, pending
+       validation of per-product packaging facts by the Products team and Tim's approval
+       of the final copy/presentation before it is enabled in production.
+{%- endcomment -%}
 {%- liquid
   assign in_strength_line = false
   for collection in product.collections
@@ -7,35 +32,29 @@
     endif
   endfor
 
-  assign show_packaging_video = false
-  if in_strength_line
-    assign excluded_handles = 'french-fitness-marin-seated-leg-curl-extension-plate-loaded-new,french-fitness-napa-seated-leg-curl-extension-plate-loaded-new,french-fitness-napa-hip-abductor-adductor-plate-loaded-new,french-fitness-marin-hip-abductor-adductor-plate-loaded-new,french-fitness-ffs-silver-4-stack-multi-jungle-gym-new,french-fitness-ffs-silver-5-stack-multi-jungle-gym-new,french-fitness-ffb-black-4-stack-multi-jungle-gym-new,french-fitness-ffs-silver-8-stack-multi-jungle-gym-new,french-fitness-ffs-silver-12-stack-multi-jungle-gym-new,french-fitness-ffb-black-12-stack-multi-jungle-gym-new,french-fitness-ffb-black-5-stack-multi-jungle-gym-new,french-fitness-ffb-dfib-15-to-90-degree-adjustable-decline-bench-new,french-fitness-ffb-black-8-stack-multi-jungle-gym-new,french-fitness-ffb-black-pendulum-squat-leg-press-machine-new,french-fitness-ffb-black-leverage-squat-calf-machine-new' | split: ','
-    assign is_excluded = false
-    for handle in excluded_handles
-      if handle == product.handle
-        assign is_excluded = true
-        break
-      endif
-    endfor
-    unless is_excluded
-      assign show_packaging_video = true
-    endunless
+  assign is_exception = false
+  if product.metafields.custom.packaging_video_exception.value == true
+    assign is_exception = true
   endif
+
+  assign show_packaging_video = false
+  if in_strength_line and is_exception == false
+    assign show_packaging_video = true
+  endif
+
+  assign packaging_video_url = product.metafields.custom.watch_packaging_video.value
+  if packaging_video_url == blank
+    assign packaging_video_url = 'https://cdn.shopify.com/videos/c/o/v/ac6b9c86a3c741059abf9f9fd23b51ec.mp4'
+  endif
+
+  assign packaging_disclaimer = product.metafields.custom.packaging_disclaimer.value
 -%}
 {%- if show_packaging_video -%}
-  <span class="more-info" data-customfield="Shipping">— Watch Packaging Video</span>
-  <script>
-    var attachClickHandler = setInterval(function () {
-      var $target = $('.custom_shipping_container');
-      if ($target.length > 0) {
-        var $clickTarget = $target.parent().parent();
-
-        $clickTarget.off('click.clearContent').on('click.clearContent', function () {
-          $('#dynamic-product-content').empty();
-        });
-
-        clearInterval(attachClickHandler);
-      }
-    }, 200);
-  </script>
+  <a
+    class="packaging-video-link"
+    href="{{ packaging_video_url }}"
+    target="_blank"
+    rel="noopener noreferrer"
+    {%- if packaging_disclaimer != blank %} title="{{ packaging_disclaimer | strip_html | escape }}"{% endif -%}
+  >— Watch Packaging Example</a>
 {%- endif -%}
