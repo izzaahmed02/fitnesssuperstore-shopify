@@ -112,6 +112,7 @@ if (!customElements.get('product-customization-options')) {
         this.handleQuantity();
         this.handlePopupHelper();
         this.handleHelpPopupAccordions();
+        this.handleMandatoryReset();
         this.relatedProductsSwitcher();
         this.colorSwatchHandler();
         this.addCustomColorHandler();
@@ -557,6 +558,35 @@ if (!customElements.get('product-customization-options')) {
             <path fill-rule="evenodd" clip-rule="evenodd" d="M3.57808 3.57417C3.81239 3.33986 4.19229 3.33986 4.42661 3.57417L8.00234 7.14991L11.5781 3.57417C11.8124 3.33986 12.1923 3.33986 12.4266 3.57417C12.6609 3.80849 12.6609 4.18839 12.4266 4.4227L8.85087 7.99844L12.4266 11.5742C12.6609 11.8085 12.6609 12.1884 12.4266 12.4227C12.1923 12.657 11.8124 12.657 11.5781 12.4227L8.00234 8.84697L4.42661 12.4227C4.19229 12.657 3.81239 12.657 3.57808 12.4227C3.34377 12.1884 3.34377 11.8085 3.57808 11.5742L7.15382 7.99844L3.57808 4.4227C3.34377 4.18839 3.34377 3.80849 3.57808 3.57417Z" fill="black"/>
         </svg>
         </p>`;
+      }
+
+      // Mandatory options (e.g. "Assembly & Room of Choice", Warranty) can't be
+      // cleared - addRemoveListener intentionally skips them, so their badge "x"
+      // did nothing. For a mandatory option the "x" should instead revert the
+      // selection to the default variant (typically the free option), matching how
+      // the other options behave. Delegate the click so it also covers badges that
+      // are recreated when the selection changes, and reuse the existing radio
+      // `input` handler (setCustomizationOption) to refresh the label and price.
+
+      handleMandatoryReset() {
+        const containers = this.querySelectorAll('[data-option-accordion]');
+        if (containers.length === 0) return;
+        containers.forEach((container) => {
+          const optionHandler = container.querySelector('[data-selected-options][data-mandatory]');
+          if (!optionHandler) return;
+          const defaultId = container.dataset.defaultOption;
+          if (!defaultId) return;
+          optionHandler.addEventListener('click', (event) => {
+            const closeButton = event.target.closest('.close-option');
+            if (!closeButton) return;
+            event.preventDefault();
+            event.stopPropagation();
+            const defaultInput = container.querySelector(`[data-customization-option="${defaultId}"]`);
+            if (!defaultInput || defaultInput.checked) return;
+            defaultInput.checked = true;
+            defaultInput.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+        });
       }
 
       // Default option event lister (Add possibility to remove default)
