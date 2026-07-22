@@ -35,11 +35,11 @@
   endif
   comment
     Final fallback: the storefront product card shows "As high as" from the
-    custom.retail_price metafield, which is stored at 100x cents, so divide by 100
-    to get a cents value that `money` and the JS (cents-based) both handle correctly.
+    custom.retail_price metafield. On these products it is stored in plain cents,
+    which is what `money` and the JS (cents-based) both expect, so use it as-is.
   endcomment
   if main_compare == 0 or main_compare == blank
-    assign main_compare = main_product.metafields.custom.retail_price | divided_by: 100
+    assign main_compare = main_product.metafields.custom.retail_price
   endif
 -%}
 
@@ -85,7 +85,7 @@
                   {%- assign fam_variant = fam.selected_or_first_available_variant -%}
                   {%- assign fam_compare = fam.compare_at_price_max -%}
                   {%- if fam_compare == 0 -%}{%- assign fam_compare = fam_variant.compare_at_price -%}{%- endif -%}
-                  {%- if fam_compare == 0 or fam_compare == blank -%}{%- assign fam_compare = fam.metafields.custom.retail_price | divided_by: 100 -%}{%- endif -%}
+                  {%- if fam_compare == 0 or fam_compare == blank -%}{%- assign fam_compare = fam.metafields.custom.retail_price -%}{%- endif -%}
                   {
                     "id": {{ fam.id }},
                     "variant_id": {{ fam_variant.id }},
@@ -177,7 +177,7 @@
                     assign addon_compare = addon_variant.compare_at_price
                   endif
                   if addon_compare == 0 or addon_compare == blank
-                    assign addon_compare = addon.metafields.custom.retail_price | divided_by: 100
+                    assign addon_compare = addon.metafields.custom.retail_price
                   endif
                 -%}
                 <li class="byp-card"
@@ -336,7 +336,7 @@
           <div class="byp-floating-cart__subtotal">
             <span>Subtotal</span>
             <span class="byp-floating-cart__flex">
-            <p class="pr_addon_custom_compare_price">{{ product.metafields.custom.retail_price | divided_by: 100 | money -}}</p>
+            <p class="pr_addon_custom_compare_price">{{ product.metafields.custom.retail_price | money -}}</p>
             <span class="byp-floating-cart__subtotal-values">
               <s data-subtotal-compare class="hidden"></s>
               <strong data-subtotal></strong>
