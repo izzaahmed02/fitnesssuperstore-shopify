@@ -33,6 +33,14 @@
   if main_compare == 0
     assign main_compare = main_variant.compare_at_price
   endif
+  comment
+    Final fallback: the storefront product card shows "As high as" from the
+    custom.retail_price metafield, which is stored at 100x cents, so divide by 100
+    to get a cents value that `money` and the JS (cents-based) both handle correctly.
+  endcomment
+  if main_compare == 0 or main_compare == blank
+    assign main_compare = main_product.metafields.custom.retail_price | divided_by: 100
+  endif
 -%}
 
 <build-your-product
@@ -75,6 +83,9 @@
               [
                 {%- for fam in block.settings.products -%}
                   {%- assign fam_variant = fam.selected_or_first_available_variant -%}
+                  {%- assign fam_compare = fam.compare_at_price_max -%}
+                  {%- if fam_compare == 0 -%}{%- assign fam_compare = fam_variant.compare_at_price -%}{%- endif -%}
+                  {%- if fam_compare == 0 or fam_compare == blank -%}{%- assign fam_compare = fam.metafields.custom.retail_price | divided_by: 100 -%}{%- endif -%}
                   {
                     "id": {{ fam.id }},
                     "variant_id": {{ fam_variant.id }},
@@ -85,7 +96,7 @@
                     "image": {{ fam.featured_media | image_url: width: 400 | json }},
                     "price": {{ fam_variant.price }},
                     "compare_at_price": {{ fam_variant.compare_at_price | default: 0 }},
-                    "compare_max": {{ fam.compare_at_price_max | default: 0 }},
+                    "compare_max": {{ fam_compare | default: 0 }},
                     "rating": {{ fam.metafields.reviews.rating.value.rating | default: 0 | json }},
                     "rating_count": {{ fam.metafields.reviews.rating_count.value | default: 0 | json }},
                     "description": {{ fam.description | json }}
@@ -165,12 +176,15 @@
                   if addon_compare == 0
                     assign addon_compare = addon_variant.compare_at_price
                   endif
+                  if addon_compare == 0 or addon_compare == blank
+                    assign addon_compare = addon.metafields.custom.retail_price | divided_by: 100
+                  endif
                 -%}
                 <li class="byp-card"
                     data-product-id="{{ addon.id }}"
                     data-product-handle="{{ addon.handle }}"
                     data-product-title="{{ addon.title | escape }}"
-                    data-compare-max="{{ addon.compare_at_price_max | default: 0 }}">
+                    data-compare-max="{{ addon_compare | default: 0 }}">
 
                   {% render 'byp-product-badge', product: addon, badge_tags: section.settings.badge_tags %}
 
@@ -322,7 +336,7 @@
           <div class="byp-floating-cart__subtotal">
             <span>Subtotal</span>
             <span class="byp-floating-cart__flex">
-            <p class="pr_addon_custom_compare_price">{{ product.metafields.custom.retail_price | money -}}</p>
+            <p class="pr_addon_custom_compare_price">{{ product.metafields.custom.retail_price | divided_by: 100 | money -}}</p>
             <span class="byp-floating-cart__subtotal-values">
               <s data-subtotal-compare class="hidden"></s>
               <strong data-subtotal></strong>
