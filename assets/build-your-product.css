@@ -682,3 +682,53 @@ body.byp-modal-open { overflow: hidden; }
   align-items: baseline;
   gap: 0.6rem;
 }
+
+/* ==========================================================================
+   Desktop floating cart — always framed in the viewport (Sagi).
+   The header (title bar) and footer (subtotal + Add to cart) stay visible at all
+   times; only the add-on list scrolls when the build has many items. Desktop only
+   (min-width: 990px) so the mobile behavior above is completely untouched.
+   ========================================================================== */
+@media screen and (min-width: 990px) {
+  /* Cap the whole cart to the viewport so nothing overflows above/below the fold.
+     Still sticky as the page scrolls. */
+  .byp-floating-cart {
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    display: flex;
+  }
+
+  .byp-floating-cart__inner {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Header row (title + minimize) always visible at the top */
+  .byp-floating-cart__bar { flex: 0 0 auto; }
+
+  /* Body lays its children in a column between the header and the footer */
+  .byp-floating-cart__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Everything except the add-on list keeps its natural height and stays visible
+     (the "You are buying" block, subtotal, footer with Add to cart + Affirm, warranty) */
+  .byp-floating-cart__body > * { flex: 0 0 auto; }
+
+  /* Only the add-on items list scrolls. flex: 0 1 auto = take natural height up to
+     the available space, then shrink and scroll — no empty gap when there are few. */
+  .byp-floating-cart__body > .byp-floating-cart__items {
+    flex: 0 1 auto;
+    min-height: 5rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
