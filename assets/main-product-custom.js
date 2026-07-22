@@ -166,7 +166,12 @@ try {
 							console.warn('Option Help key not found. Tried:', candidateKeys);
 						}
 						if (product) {
-							document.querySelector('#dynamic-product-content').style.width = "auto";
+							const dynamicProductContent = document.querySelector('#dynamic-product-content');
+							if (!dynamicProductContent || !modalWrapper || !container) {
+								console.warn('Option Help modal elements not found on page; skipping popup.');
+								return;
+							}
+							dynamicProductContent.style.width = "auto";
 							modalWrapper.style.display = 'flex';
 							const tempDiv = document.createElement('div');
 							tempDiv.innerHTML = product.body_html;
@@ -328,6 +333,11 @@ function computeAfterPayLoanDetails(principal, monthlyPayment, numPayments, newT
 function showPayLaterModal() {
 	const payLaterAggregateHTML = generatePayLaterAggregate();
 
+	if (!modalWrapper || !container) {
+		console.warn('Pay Later modal elements not found on page; skipping popup.');
+		return;
+	}
+
 	if (generatePayLaterAggregate) {
 		modalWrapper.style.display = 'flex';
 		const tempDiv = document.createElement('div');
@@ -341,7 +351,7 @@ function showPayLaterModal() {
 			modalWrapper.style.display = 'none';
 		});
 
-		document.querySelector('#dynamic-product-content').style.width = "600px";
+		container.style.width = "600px";
 	}
 }
 
