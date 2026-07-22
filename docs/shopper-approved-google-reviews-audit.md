@@ -80,32 +80,81 @@ Findings:
    multi-variant product the widget will always show the first variant's reviews regardless of
    the variant selected. Worth fixing as a separate hardening item; it is **not** the cause of
    the Tahoe Google gap.
+3. **The Shopper Approved product widget is missing its render container.** The theme loads the
+   SA product script (`.../product/34099/<sku>.js`) but does **not** include the container HTML
+   the widget renders into (`<div id="shopper_review_page">` → `#review_header` / `#product_page`
+   / `#review_image`). Without it the SA product widget has nowhere to display, which is why
+   Shopper Approved support reports "the widgets on Fitness Superstore aren't ours" and why
+   on-site product reviews are currently served by Judge.me instead (per Tim). See §3a.
+
+## 3a. Shopper Approved support confirmation (SiteID 34099 & 36248)
+
+From the thread "Cross-domain product review sharing — Fitness Superstore (SiteID 34099) &
+French Fitness (SiteID 36248)," latest reply from Khéri González (Technical Account Manager,
+Shopper Approved), 2026-07-22:
+
+- **Account IDs:** Fitness Superstore = **SiteID 34099**; French Fitness = **SiteID 36248**.
+  The Tahoe (`FFT-SLCLE`) has reviews split across both accounts (≈4 under Fitness Superstore,
+  ≈3 under French Fitness — 7 total).
+- **Review "sharing" ≠ Google syndication.** Confirmed: with sharing on, *each site still
+  syndicates its own reviews and Google matches them by product identifier; sharing itself does
+  not change what is sent to Google.* Sharing only affects **on-site combined display**.
+  → **Re-enabling sharing will not change the Google review count.** That is the key correction
+  to the earlier assumption in the Google thread.
+- **Sharing requirements:** the **same ProductID in both accounts** (we've standardized on
+  legacy SKUs, e.g. `FFT-SLCLE`) **plus** Shopper Approved's older/official product widget.
+  Sharing is global (account-wide), not per-product, and is retroactive.
+- **Our current widget "isn't theirs."** Support provided the official snippet (script **plus**
+  the `#shopper_review_page` container). Our theme has the script but not the container — the
+  gap identified in §3, finding 3.
+- **Change freeze:** Tim instructed Shopper Approved (2026-07-20) **not** to enable sharing or
+  change widgets, ProductIDs, feeds, product URLs, or Google syndication — information-gathering
+  only. **No code change has been made for this; none is approved yet.**
 
 ## 4. Diagnosis
 
 The 7→4 gap is **not** caused by bad/missing identifiers on the Fitness Superstore catalog
-(the GTIN/MPN/Brand are all present and consistent) and **not** by anything fixable in this
-theme repo. The remaining causes match the thread's own conclusion:
+(the GTIN/MPN/Brand are all present and consistent), **not** fixable in this theme repo, and —
+per Shopper Approved support — **not** solved by turning "review sharing" back on (sharing is
+on-site display only; each site syndicates its own reviews to Google independently). The ~4
+reviews Google shows line up with the Fitness Superstore-side reviews, which is consistent with
+the Fitness Superstore identity being clean while the **French Fitness side** is the weak link.
+The remaining causes match the thread's own conclusion:
 
-1. **Feed source/domain mapping inside Shopper Approved** — the Fitness Superstore feed was
+1. **French Fitness syndication path** — the French Fitness Merchant Center sub-account
+   (`524282941`) is unrecovered, so French Fitness reviews have no domain-matched destination,
+   and its feed/product URLs need the same identity parity we confirmed on the Fitness
+   Superstore side.
+2. **Feed source/domain mapping inside Shopper Approved** — the Fitness Superstore feed was
    reported (by Jordan) to be pulling `.myshopify.com` URLs from the Shopify connector instead
-   of a `www.fitnesssuperstore.com` feed. A domain mismatch here breaks Google matching.
-2. **Cross-domain review split + missing French Fitness Merchant Center destination** — same
-   GTIN on two domains, with the French Fitness Merchant Center sub-account unrecovered.
+   of a `www.fitnesssuperstore.com` feed. Support also noted outdated URLs can be corrected
+   "through the feed." A domain mismatch here breaks Google matching.
 
 ## 5. Recommended next actions (owners)
 
+Nothing below should be executed while Tim's change freeze is in effect — these are the
+teed-up actions once changes are approved.
+
+**To fix Google (the actual thread topic):**
+- **French Fitness Merchant Center:** recover sub-account `524282941` (or stand up a
+  domain-matched replacement) so French Fitness reviews have a valid destination.
+- **French Fitness catalog:** run this same identity audit on the frenchfitness.com Tahoe SKU
+  and confirm GTIN/MPN/Brand parity with the table in §1 (support says both accounts should
+  share the same ProductID — `FFT-SLCLE`).
 - **Kevin (feeds):** confirm, in writing, the exact live product-feed URL Shopper Approved uses
   for each domain, and that the Fitness Superstore feed uses `www.fitnesssuperstore.com` URLs —
   not `.myshopify.com`.
 - **Jordan / Shopper Approved:** confirm the review feed→domain mapping and the last successful
   Google syndication date for each domain.
-- **French Fitness Merchant Center:** recover sub-account `524282941` (or stand up a
-  domain-matched replacement) so French Fitness reviews have a valid destination.
-- **French Fitness catalog:** run this same identity audit on the frenchfitness.com Tahoe SKU
-  and confirm GTIN/MPN/Brand parity with the table in §1.
-- **Theme (optional hardening, separate from this issue):** make the PDP review widget
-  variant-aware instead of hardcoding `variants[0].sku`.
 - **Verification:** judge success on live Google output for the Tahoe SKU (and 3–5 other shared
   hero SKUs), not the empty Merchant Center "product review sources" screen. Allow ~4–6 weeks
   for Google display after feed corrections.
+
+**Separate decision — on-site combined display (does NOT affect Google):**
+- If we want the combined 7 reviews to *show on each domain's product page*, that requires
+  re-installing Shopper Approved's official product widget snippet (script **+**
+  `#shopper_review_page` container) keyed on the shared ProductID, and re-enabling account-wide
+  sharing. This is a display-only decision and is currently frozen pending Tim's approval.
+- **Theme hardening (independent):** make the PDP review widget variant-aware instead of
+  hardcoding `variants[0].sku`, and — if the SA widget is retained — add the missing render
+  container.
