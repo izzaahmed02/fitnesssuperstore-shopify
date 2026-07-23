@@ -691,10 +691,14 @@ body.byp-modal-open { overflow: hidden; }
    ========================================================================== */
 @media screen and (min-width: 990px) {
   /* Cap the whole cart to the viewport so nothing overflows above/below the fold.
-     Still sticky as the page scrolls. */
+     Still sticky as the page scrolls. --byp-cart-offset is the single value to tune:
+     it sets both the sticky scroll offset (to clear the theme's sticky header) AND is
+     subtracted from the height cap, so the two always stay in sync on every screen
+     height. The extra 2rem is a small bottom gap. */
   .byp-floating-cart {
-    top: 13rem;
-    max-height: calc(100vh - 4rem);
+    --byp-cart-offset: 13rem;
+    top: var(--byp-cart-offset);
+    max-height: calc(100vh - var(--byp-cart-offset) - 2rem);
     display: flex;
   }
 
@@ -719,16 +723,22 @@ body.byp-modal-open { overflow: hidden; }
     overflow: hidden;
   }
 
-  /* Everything except the add-on list keeps its natural height and stays visible
-     (the "You are buying" block, subtotal, footer with Add to cart + Affirm, warranty) */
+  /* Option C: pin ONLY the header (bar, above) and the bottom stack (subtotal +
+     Add to cart footer + warranty). Everything in between — "You are buying", the
+     main product, "Add Ons", the add-on list, and the install dropdown — lives in
+     .byp-floating-cart__scroll and scrolls as one region. This keeps the fixed
+     stack tiny (~header + subtotal + ATC), so the title and Add to cart stay
+     visible together down to very short viewports. */
   .byp-floating-cart__body > * { flex: 0 0 auto; }
 
-  /* Only the add-on items list scrolls. flex: 0 1 auto = take natural height up to
-     the available space, then shrink and scroll — no empty gap when there are few. */
-  .byp-floating-cart__body > .byp-floating-cart__items {
-    flex: 0 1 auto;
-    min-height: 5rem;
+  /* The single scrollable middle region takes the remaining height and scrolls. */
+  .byp-floating-cart__body > .byp-floating-cart__scroll {
+    flex: 1 1 auto;
+    min-height: 4rem;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
+  /* The add-on list no longer scrolls on its own — it flows inside the middle
+     region so the whole middle scrolls together. */
+  .byp-floating-cart__scroll .byp-floating-cart__items { overflow: visible; }
 }
