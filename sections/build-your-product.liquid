@@ -4,40 +4,16 @@
 <script src="{{ 'build-your-product.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'product-custom-options.js' | asset_url }}" defer="defer"></script>
 
-{%- comment -%}
-  ============================================================================
-  DATA SOURCE — the only place that decides WHERE the section's data comes
-  from. Reads from theme-editor block settings today; to move to metafields
-  later, replace only the assigns here with metafield/metaobject reads that
-  produce the same shapes. The rendered markup below (classes + data-*
-  attributes + per-accordion JSON) is the contract the CSS/JS depend on.
-
-  COLOR: rendered by the live options engine (product-options.liquid) as a card
-  inside the first accordion ("Best Selling Add-Ons"). The engine element wires
-  the swatches and exposes prepareOptions()/prepareFunctionalProperties(); the
-  floating cart will call those at "Add to cart" so colour attaches to the FSR90
-  line via _functionOperation. byp-options-skin.css styles the swatches and hides
-  the non-colour engine categories inside the colour card.
-  ============================================================================
-{%- endcomment -%}
 {%- liquid
   assign main_product = product
   assign main_variant = main_product.selected_or_first_available_variant
   assign install_product = section.settings.installation_product
-  comment
-    The main product form shows the compare-at via the product-level "As high as"
-    price (compare_at_price_max), not the default variant's compare_at_price (which
-    is often null). Mirror that here so the cards + floating cart match the form.
-  endcomment
+ 
   assign main_compare = main_product.compare_at_price_max
   if main_compare == 0
     assign main_compare = main_variant.compare_at_price
   endif
-  comment
-    Final fallback: the storefront product card shows "As high as" from the
-    custom.retail_price metafield. On these products it is stored in plain cents,
-    which is what `money` and the JS (cents-based) both expect, so use it as-is.
-  endcomment
+  
   if main_compare == 0 or main_compare == blank
     assign main_compare = main_product.metafields.custom.retail_price
   endif
