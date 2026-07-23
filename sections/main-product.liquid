@@ -821,7 +821,15 @@
                       </div>
                     </div>
                   {% endif %}
-                  {% if product.metafields.custom.processing_time != blank %}
+                  {%- comment -%}
+                    Only surface processing/lead time when the product is actually
+                    purchasable. product.available is false only when no variant can be
+                    bought (out of stock AND inventory policy DENY), so an out-of-stock
+                    hold like the ROM hides it, while in-stock and legitimate
+                    continue-selling (preorder/backorder) products still show it. The
+                    stored metafield value is untouched.
+                  {%- endcomment -%}
+                  {% if product.available and product.metafields.custom.processing_time != blank %}
                     <div class="item">
                       <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
                       <div class="item__text">
