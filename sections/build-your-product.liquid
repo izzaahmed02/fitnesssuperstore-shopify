@@ -143,6 +143,11 @@
 
                   <p class="byp-card__title">{{ main_product.title }}</p>
 
+                  {%- comment -%} Judge.me preview badge for the FSR90 itself, same as the add-on cards. {%- endcomment -%}
+                  <div class="byp-card__rating">
+                    <div class="jdgm-widget jdgm-preview-badge" data-id="{{ main_product.id }}" data-template="manual-installation"></div>
+                  </div>
+
                   <div class="byp-options-engine byp-options-engine--color-only">
                     {% render 'product-options', product: main_product, color_only: true %}
                   </div>
@@ -170,8 +175,6 @@
               {%- for addon in block.settings.products -%}
                 {%- liquid
                   assign addon_variant = addon.selected_or_first_available_variant
-                  assign rating = addon.metafields.reviews.rating.value
-                  assign rating_count = addon.metafields.reviews.rating_count.value
                   assign addon_compare = addon.compare_at_price_max
                   if addon_compare == 0
                     assign addon_compare = addon_variant.compare_at_price
@@ -224,12 +227,16 @@
 
                   <p class="byp-card__title">{{ addon.title }}</p>
 
-                  {%- if rating -%}
-                    <div class="byp-card__rating" data-rating="{{ rating.rating | default: rating }}">
-                      <span class="byp-star" aria-hidden="true">&#9733;</span>
-                      <span class="byp-card__rating-count">{{ rating_count | default: 0 }} reviews</span>
-                    </div>
-                  {%- endif -%}
+                  {%- comment -%}
+                    Judge.me consistency (Tim): render the same Judge.me preview badge
+                    used elsewhere, keyed to THIS product's id so each card shows its own
+                    rating. Judge.me's widget script fills .jdgm-preview-badge from data-id.
+                    The wrapper always renders (reserved height in CSS) so cards with zero
+                    reviews stay the same height as cards with stars.
+                  {%- endcomment -%}
+                  <div class="byp-card__rating">
+                    <div class="jdgm-widget jdgm-preview-badge" data-id="{{ addon.id }}" data-template="manual-installation"></div>
+                  </div>
 
                   <p class="byp-card__excerpt">{{ addon.description | strip_html | truncatewords: 24 }}</p>
 
@@ -429,6 +436,25 @@
     </div>
   </div>
 </build-your-product>
+
+<script>
+  {%- comment -%}
+    Judge.me badges are added per card above (.jdgm-preview-badge[data-id]). Judge.me's
+    widget script renders these automatically on load; this re-triggers a render as a
+    safety net for cards that mount after its initial pass (e.g. slider re-render).
+    Guarded so it is a no-op if the Judge.me script is not present.
+  {%- endcomment -%}
+  (function () {
+    function renderJdgm() {
+      if (window.jdgm && typeof window.jdgm.batchRenderBadges === 'function') {
+        window.jdgm.batchRenderBadges();
+      }
+    }
+    if (document.readyState !== 'loading') { renderJdgm(); }
+    else { document.addEventListener('DOMContentLoaded', renderJdgm); }
+    window.addEventListener('load', function () { setTimeout(renderJdgm, 400); });
+  })();
+</script>
 
 {% schema %}
 {
