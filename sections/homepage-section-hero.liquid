@@ -1,22 +1,25 @@
 {{ 'homepage-section-hero.css' | asset_url | stylesheet_tag: preload: true }}
 
+<script>window.fssHpVariant = 'B';</script>
+<script src="{{ 'fss-hp-analytics.js' | asset_url }}" defer="defer"></script>
+
 <div class="hero-section">
   <div class="image-wrapper">
     <picture>
       {%- comment -%} Serve WebP first with PNG/JPEG fallback {%- endcomment -%}
       <source srcset="{{ section.settings.background_image | image_url: width: 1000, format: 'webp' }}" type="image/webp">
-      <img 
-        src="{{ section.settings.background_image | image_url: width: 1000 }}" 
-        alt="{{ section.settings.title_text | escape }}" 
+      <img
+        src="{{ section.settings.background_image | image_url: width: 1000 }}"
+        alt="{{ section.settings.title_text | escape }}"
         class="hero-bg"
-        loading="eager" 
+        loading="eager"
         fetchpriority="high"
         width="1030"
         height="auto"
       >
     </picture>
 
-    <div class="overlay"></div> 
+    <div class="overlay"></div>
 
     <div class="content">
       <div class="description">
@@ -32,11 +35,12 @@
         {% if section.settings.rating_link != blank %}
         </a>
         {% endif %}
-     {% comment %}   <a href="{{ section.settings.button_link }}" class="bannerBtn mobile button button--secondary">
-            {{ section.settings.button_text }}
-            {% render 'chevron-button' %}
-        </a> {% endcomment %}
-        <a href="{{ section.settings.button_link_1 }}" class="bannerBtn mobile button button--primary">
+        <a
+          href="{{ section.settings.button_link_1 }}"
+          class="bannerBtn mobile button button--primary"
+          data-fss-hp-event="fss_hp_primary_cta"
+          data-fss-hp-props='{"destination": "{{ section.settings.button_link_1 }}"}'
+        >
             {{ section.settings.button_text_1 }}
             {% render 'chevron-button' %}
         </a>
@@ -49,133 +53,28 @@
 
       <div class="btn-container">
 
-      <a href="{{ section.settings.button_link }}" class="bannerBtn desktop button button--secondary">
+      <a
+        href="{{ section.settings.button_link }}"
+        class="bannerBtn desktop button button--secondary"
+        data-fss-hp-event="fss_hp_primary_cta"
+        data-fss-hp-props='{"destination": "{{ section.settings.button_link }}"}'
+      >
         {{ section.settings.button_text }}
         {% render 'chevron-button' %}
       </a>
-     
-      
-      </div>
-      
-    </div>
-  </div>
 
-  <div class="questions">
-    <div class="benefit-card">
-      <div class="text">
-       
-        <h2>Why Choose Us</h2>
-        <p>{{ section.settings.why_choose_us }}</p>
+
       </div>
-     
-    </div>
-    <div class="benefit-card">
-      <div class="text">
-        
-        <h2>Warranty</h2>
-        <p>{{ section.settings.warranty_text }}</p>
-      </div>
-    
-    </div>
-    <div class="benefit-card">
-      <div class="text">
-      
-        <h2>Mission</h2>
-        <p>{{ section.settings.mission_text }}</p>
-      </div>
-     
+
     </div>
   </div>
 </div>
 
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    function initHeroCarousel() {
-      const $questions = $('.homepageHeroSection .questions');
-      
-      if (window.innerWidth <= 768) {
-        // Initialize Slick only on mobile
-        if (!$questions.hasClass('slick-initialized')) {
-          $questions.slick({
-            slidesToShow: 1,
-            slidesToScroll: 1,
-            centerMode: true,
-            centerPadding: '40px',
-            arrows: false,
-            dots: true,
-            infinite: true,
-            autoplay: false,
-            responsive: [
-              {
-                breakpoint: 480,
-                settings: {
-                  centerPadding: '30px'
-                }
-              }
-            ]
-          });
-        }
-      } else {
-        // Destroy Slick on desktop
-        if ($questions.hasClass('slick-initialized')) {
-          $questions.slick('unslick');
-        }
-      }
-    }
-
-    // Initialize on load
-    initHeroCarousel();
-
-    // Re-initialize on window resize
-    let resizeTimer;
-    $(window).on('resize', function() {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function() {
-        initHeroCarousel();
-      }, 250);
-    });
-  });
-</script>
-
 <style>
- .homepageHeroSection .btn-container {
+.homepageHeroSection .btn-container {
   display: flex;
   order: 3;
   gap: 8px;
-}
-.homepageHeroSection .benefit-card .learn-more {
-order: 2;
-display: block;
-width: 100%;
-
-}
-body .homepageHeroSection .learn-more .button {
-text-align: center;
-display: block;
-background-color: #D83D0E33 !Important;
-color: #D83D0E;
-border-top: 1px solid #D83D0E33;
-border-top-left-radius: 0px !Important;
-border-top-right-radius: 0px !Important;
-}
-.homepageHeroSection .benefit-card {
-padding: 0px;
-justify-content: space-between;
-}
-.homepageHeroSection .benefit-card .text {
-padding: 24px;
-}
-.homepageHeroSection .text h2 {
-text-transform: uppercase;
-}
-.homepageHeroSection .benefits-img {
-  display: block;
-  width: 100%;
-  text-align: center;
-}
-.homepageHeroSection .benefits-img img {
-width: 60px;
-margin: 0 auto;
 }
 .homepageHeroSection .cta-description {
 order: 4;
@@ -186,11 +85,6 @@ color: #B0B0B0;
 color: #D83D0E;
 margin-left: 3px;
 margin-right: 3px;
-}
-.homepageHeroSection .benefit-card .text span {
-  color: #D83D0E;
-  margin-left: 3px;
-  margin-right: 3px;
 }
 .homepageHeroSection .cta-description p {
 margin-top: 0px;
@@ -308,7 +202,7 @@ margin-bottom: 0px;
       "label": "Second Button Link",
       "default": "/collections/all"
     },
-    
+
     {
       "type": "richtext",
       "id": "why_choose_us",
