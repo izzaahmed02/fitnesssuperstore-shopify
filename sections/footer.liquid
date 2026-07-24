@@ -89,19 +89,25 @@
       transform: rotate(180deg);
     }
 
-    /* Collapsed — hidden but animatable */
+    /* Collapsed — visually hidden AND removed from keyboard tab order.
+       visibility:hidden makes the links non-focusable while keeping them
+       in the DOM; JS also applies the `inert` attribute for immediate,
+       semantically-correct focus/AT removal. */
     .footer__menu-col .footer__menu-links {
       max-height: 0;
       overflow: hidden;
-      transition: max-height 0.35s ease;
+      visibility: hidden;
+      transition: max-height 0.35s ease, visibility 0s linear 0.35s;
       margin: 0;
       padding: 0;
       list-style: none;
     }
 
-    /* Expanded */
+    /* Expanded — visible and focusable */
     .footer__menu-col .footer__menu-links.is-open {
       max-height: 600px; /* large enough for any realistic list */
+      visibility: visible;
+      transition: max-height 0.35s ease, visibility 0s linear 0s;
     }
   }
 {%- endstyle -%}
@@ -318,6 +324,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Only run accordion behaviour on mobile
   const mq = window.matchMedia('(max-width: 749px)');
 
+  // Keep a collapsed submenu out of the keyboard tab order / accessibility tree
+  // while its links stay in the DOM. Mirrors the .is-open visual state.
+  function setSubmenuOpen(submenu, open) {
+    if (!submenu) return;
+    submenu.classList.toggle('is-open', open);
+    if (open) {
+      submenu.removeAttribute('inert');
+    } else {
+      submenu.setAttribute('inert', '');
+    }
+  }
+
   function initAccordions() {
     const toggles = document.querySelectorAll('.footer__accordion-toggle');
     if (!toggles.length) return;
@@ -330,30 +348,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Re-query after clone
     document.querySelectorAll('.footer__accordion-toggle').forEach(toggle => {
+      // Reflect the initial collapsed state: closed submenus are non-focusable.
+      const submenu = document.getElementById(toggle.getAttribute('aria-controls'));
+      setSubmenuOpen(submenu, toggle.getAttribute('aria-expanded') === 'true');
+
       toggle.addEventListener('click', () => {
         const isOpen = toggle.getAttribute('aria-expanded') === 'true';
-        const submenuId = toggle.getAttribute('aria-controls');
-        const submenu = document.getElementById(submenuId);
+        const submenu = document.getElementById(toggle.getAttribute('aria-controls'));
 
         // Close all others
         document.querySelectorAll('.footer__accordion-toggle').forEach(other => {
           if (other !== toggle) {
             other.setAttribute('aria-expanded', 'false');
-            const otherMenu = document.getElementById(other.getAttribute('aria-controls'));
-            if (otherMenu) otherMenu.classList.remove('is-open');
+            setSubmenuOpen(document.getElementById(other.getAttribute('aria-controls')), false);
           }
         });
 
         toggle.setAttribute('aria-expanded', String(!isOpen));
-        if (submenu) submenu.classList.toggle('is-open', !isOpen);
+        setSubmenuOpen(submenu, !isOpen);
       });
     });
   }
 
+  // On desktop the submenus are always visible, so they must never be inert
+  // or hidden from the keyboard.
+  function clearInert() {
+    document.querySelectorAll('.footer__menu-links').forEach(submenu => {
+      submenu.removeAttribute('inert');
+    });
+  }
+
   // Only activate on mobile; also re-run if viewport crosses the breakpoint
-  if (mq.matches) initAccordions();
+  if (mq.matches) initAccordions(); else clearInert();
   mq.addEventListener('change', e => {
-    if (e.matches) initAccordions();
+    if (e.matches) initAccordions(); else clearInert();
   });
 });
 </script>
