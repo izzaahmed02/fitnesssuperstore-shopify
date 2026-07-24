@@ -4,40 +4,16 @@
 <script src="{{ 'build-your-product.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'product-custom-options.js' | asset_url }}" defer="defer"></script>
 
-{%- comment -%}
-  ============================================================================
-  DATA SOURCE — the only place that decides WHERE the section's data comes
-  from. Reads from theme-editor block settings today; to move to metafields
-  later, replace only the assigns here with metafield/metaobject reads that
-  produce the same shapes. The rendered markup below (classes + data-*
-  attributes + per-accordion JSON) is the contract the CSS/JS depend on.
-
-  COLOR: rendered by the live options engine (product-options.liquid) as a card
-  inside the first accordion ("Best Selling Add-Ons"). The engine element wires
-  the swatches and exposes prepareOptions()/prepareFunctionalProperties(); the
-  floating cart will call those at "Add to cart" so colour attaches to the FSR90
-  line via _functionOperation. byp-options-skin.css styles the swatches and hides
-  the non-colour engine categories inside the colour card.
-  ============================================================================
-{%- endcomment -%}
 {%- liquid
   assign main_product = product
   assign main_variant = main_product.selected_or_first_available_variant
   assign install_product = section.settings.installation_product
-  comment
-    The main product form shows the compare-at via the product-level "As high as"
-    price (compare_at_price_max), not the default variant's compare_at_price (which
-    is often null). Mirror that here so the cards + floating cart match the form.
-  endcomment
+ 
   assign main_compare = main_product.compare_at_price_max
   if main_compare == 0
     assign main_compare = main_variant.compare_at_price
   endif
-  comment
-    Final fallback: the storefront product card shows "As high as" from the
-    custom.retail_price metafield. On these products it is stored in plain cents,
-    which is what `money` and the JS (cents-based) both expect, so use it as-is.
-  endcomment
+ 
   if main_compare == 0 or main_compare == blank
     assign main_compare = main_product.metafields.custom.retail_price
   endif
@@ -319,12 +295,7 @@
         </div>
 
         <div class="byp-floating-cart__body">
-          {%- comment -%}
-            Desktop (>=990px): everything inside .byp-floating-cart__scroll scrolls as
-            one region, while the header bar (above) and the subtotal + Add to cart
-            footer (below) stay pinned. On mobile this wrapper is an inert block — the
-            mobile rules operate on the cart as a whole and are unaffected.
-          {%- endcomment -%}
+         
           <div class="byp-floating-cart__scroll">
           <p class="byp-floating-cart__heading">You are buying</p>
 
@@ -346,15 +317,7 @@
           <p class="byp-floating-cart__subheading">Add Ons</p>
           <ul class="byp-floating-cart__items" role="list"></ul>
 
-          {%- comment -%}
-            Assembly & Room of Choice Installation — rendered through the live
-            options engine (install_only) so the customer's choice attaches to the
-            FSR90's OWN line as properties + a _functionOperation entry, exactly
-            like the main product form. The pricing function then applies the
-            upcharge and the cart drawer shows it inline under the FSR90.
-            id_suffix keeps this engine instance's wrapper id unique so it does not
-            collide with the colour card's engine instance in this same section.
-          {%- endcomment -%}
+         
           <div class="byp-floating-cart__install byp-options-engine byp-options-engine--install">
             {% render 'product-options', product: main_product, install_only: true, id_suffix: '-install' %}
           </div>
@@ -371,13 +334,7 @@
           <button type="button" class="byp-floating-cart__atc button button--primary">Add to cart</button>
           <p class="byp-floating-cart__error" role="alert" hidden></p>
 
-          {%- comment -%}
-            Affirm monthly-payment messaging. Affirm's site-wide script renders the
-            copy ("Starting at $X/mo or 0% APR — See if you qualify") into this
-            element from data-amount (in cents). build-your-product.js updates the
-            amount and calls affirm.ui.refresh() as the subtotal changes. Requires
-            the store's Affirm script to be loaded on the page (as on the live theme).
-          {%- endcomment -%}
+          
           <p class="affirm-as-low-as byp-floating-cart__affirm"
              data-page-type="product"
              data-amount="{{ main_variant.price }}"></p>
@@ -447,12 +404,7 @@
 </build-your-product>
 
 <script>
-  {%- comment -%}
-    Judge.me badges are added per card above (.jdgm-preview-badge[data-id]). Judge.me's
-    widget script renders these automatically on load; this re-triggers a render as a
-    safety net for cards that mount after its initial pass (e.g. slider re-render).
-    Guarded so it is a no-op if the Judge.me script is not present.
-  {%- endcomment -%}
+  
   (function () {
     function renderJdgm() {
       if (window.jdgm && typeof window.jdgm.batchRenderBadges === 'function') {
