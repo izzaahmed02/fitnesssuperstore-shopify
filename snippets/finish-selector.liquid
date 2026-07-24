@@ -1,0 +1,55 @@
+{%- comment -%}
+  Near-title finish selector (e.g. Black / Silver).
+
+  Renders a small button group directly under the product title that lets the
+  customer switch between the same model in different finishes. Each finish is a
+  separate product, so a "finish sibling" is detected from the product's
+  related_products: a related product qualifies when it has a
+  custom.product_color set AND its title (with the colour word removed) matches
+  this product's title (with its own colour word removed). This avoids needing a
+  dedicated linking metafield and works for any colour-sibling pair that follows
+  the store's "<Model> <Colour> <Type>" naming convention.
+
+  Accepts:
+    product - {Object} the product to render the selector for (required)
+{%- endcomment -%}
+
+{%- liquid
+  assign this_color = product.metafields.custom.product_color.value
+  assign related = product.metafields.custom.related_products.value
+
+  assign this_key = product.title
+  if this_color != blank
+    assign this_key = this_key | replace: this_color, ''
+  endif
+  assign this_key = this_key | strip | downcase | replace: '  ', ' '
+-%}
+
+{%- if this_color != blank and related != blank -%}
+  {%- capture sibling_buttons -%}
+    {%- for sib in related -%}
+      {%- assign sib_color = sib.metafields.custom.product_color.value -%}
+      {%- if sib_color != blank -%}
+        {%- assign sib_key = sib.title | replace: sib_color, '' | strip | downcase | replace: '  ', ' ' -%}
+        {%- if sib_key == this_key -%}
+          <a class="finish-selector__option" href="{{ sib.url }}">{{ sib_color | escape }}</a>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+
+  {%- if sibling_buttons != blank -%}
+    {%- style -%}
+      .finish-selector{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:0 0 20px;}
+      .finish-selector__label{font-family:"Lato",sans-serif;font-size:14px;font-weight:700;color:#23232B;margin-right:2px;}
+      .finish-selector__option{display:inline-flex;align-items:center;justify-content:center;min-width:72px;padding:8px 16px;border:1px solid #D4D4D8;border-radius:4px;background:#fff;font-family:"Lato",sans-serif;font-size:14px;font-weight:600;line-height:1;color:#23232B;text-decoration:none;cursor:pointer;transition:border-color .2s ease,color .2s ease,background .2s ease;}
+      .finish-selector__option:hover{border-color:#F1592A;color:#F1592A;}
+      .finish-selector__option.is-active{border-color:#F1592A;background:#F1592A;color:#fff;cursor:default;pointer-events:none;}
+    {%- endstyle -%}
+    <div class="finish-selector" role="group" aria-label="Choose finish">
+      <span class="finish-selector__label">Finish:</span>
+      <span class="finish-selector__option is-active" aria-current="true">{{ this_color | escape }}</span>
+      {{ sibling_buttons }}
+    </div>
+  {%- endif -%}
+{%- endif -%}
