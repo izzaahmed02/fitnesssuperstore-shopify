@@ -1,27 +1,26 @@
 {%- comment -%}
   International transformer note (informational only — NOT an add-on or voltage selector).
 
-  Renders a single note below Add to Cart on PRODUCT PAGES ONLY, for machines that
-  are explicitly flagged as compatible with the 220V–240V external transformer box.
+  Renders a single general note below Add to Cart on PRODUCT PAGES ONLY, for corded
+  cardio products where the display flag has been turned on.
 
-  Eligibility (single source of truth):
-    custom.external_transformer_product  — product reference to the approved transformer.
+  Display control (single source of truth):
+    custom.show_external_transformer_note (boolean) — content-display toggle only.
 
-  The electrical_requirement metafield is intentionally NOT consulted here:
-    - It never independently grants eligibility.
-    - It never blocks an intentionally approved product reference because its wording
-      differs from a specific voltage format.
+  This flag is a content-display control. It does not represent or imply that any
+  particular machine, model, or brand works or does not work with a transformer.
 
-  While a canonical machine/transformer combination is still under review, the note
-  links to Contact Us rather than to the transformer product.
+  The following metafields are intentionally NOT consulted here and must not decide
+  whether the note displays:
+    - custom.external_transformer_product
+    - custom.external_transformer_eligible
+    - custom.electrical_requirement
 
   Usage: {% render 'intl-transformer-note', product: product %}
 {%- endcomment -%}
 
 {%- if request.page_type == 'product' and product != blank -%}
-  {%- assign xfmr_product = product.metafields.custom.external_transformer_product.value -%}
-
-  {%- if xfmr_product != blank -%}
+  {%- if product.metafields.custom.show_external_transformer_note -%}
     {%- style -%}
       .intl-transformer-note {
         margin-top: 1.25rem;
@@ -43,10 +42,11 @@
       }
     {%- endstyle -%}
     <p class="intl-transformer-note">
-      Planning to use this machine outside the U.S. or Canada?
-      <a href="/pages/contact">Contact us</a> before ordering.
-      International compatibility depends on the machine's voltage, frequency, plug, and power requirements.
-      A transformer may not be suitable for every model.
+      Shipping outside the U.S. or Canada? External transformer options are available
+      for treadmills, ellipticals, exercise bikes, steppers, and other corded cardio
+      fitness equipment. <a href="/pages/contact">Contact us</a> before ordering so we
+      can help select the appropriate transformer capacity and connection for your
+      electrical requirements and destination power supply.
     </p>
   {%- endif -%}
 {%- endif -%}
