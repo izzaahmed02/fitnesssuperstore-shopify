@@ -199,8 +199,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 			}
 
 			if (!document.querySelector('.merchantheader')) {
-				document.querySelector('.product__info-container .available-wrap .sa-reviews').style.display = 'flex';
-				document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews').style.display = 'flex';
+				const saReviewsDesktop = document.querySelector('.product__info-container .available-wrap .sa-reviews');
+				const saReviewsMobile = document.querySelector('.product__info-container--mobile .available-wrap .sa-reviews');
+				if (saReviewsDesktop) saReviewsDesktop.style.display = 'flex';
+				if (saReviewsMobile) saReviewsMobile.style.display = 'flex';
 			} 
 		}
       }, 500);
@@ -213,6 +215,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 			if (reviewSection) {			
 				clearInterval(interval);
 				const productInfoContainer = document.querySelector('.product__info-container');
+				if (!productInfoContainer) return;
 
 				const starsReview =  productInfoContainer.querySelector('#product_just_stars .on');
 
