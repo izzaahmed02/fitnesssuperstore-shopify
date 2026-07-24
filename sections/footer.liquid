@@ -353,6 +353,12 @@ document.addEventListener('DOMContentLoaded', () => {
       setSubmenuOpen(submenu, toggle.getAttribute('aria-expanded') === 'true');
 
       toggle.addEventListener('click', () => {
+        // Listeners persist after the viewport widens past the breakpoint.
+        // Do nothing on desktop, where every submenu is meant to stay visible
+        // and focusable — a desktop heading click must never toggle open/closed
+        // state or apply `inert`.
+        if (!mq.matches) return;
+
         const isOpen = toggle.getAttribute('aria-expanded') === 'true';
         const submenu = document.getElementById(toggle.getAttribute('aria-controls'));
 
