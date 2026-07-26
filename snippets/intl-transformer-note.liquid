@@ -7,6 +7,10 @@
   Display control (single source of truth):
     custom.show_external_transformer_note (boolean) — content-display toggle only.
 
+  Test the metafield's .value, never the metafield object. Once the metafield exists on
+  a product the object stays truthy even after the toggle is set to false, so an object
+  test would keep the note visible when it should be hidden.
+
   This flag is a content-display control. It does not represent or imply that any
   particular machine, model, or brand works or does not work with a transformer.
 
@@ -20,7 +24,7 @@
 {%- endcomment -%}
 
 {%- if request.page_type == 'product' and product != blank -%}
-  {%- if product.metafields.custom.show_external_transformer_note -%}
+  {%- if product.metafields.custom.show_external_transformer_note.value == true -%}
     {%- style -%}
       .intl-transformer-note {
         margin-top: 1.25rem;
