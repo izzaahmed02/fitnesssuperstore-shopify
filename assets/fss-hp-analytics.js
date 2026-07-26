@@ -70,6 +70,10 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    // This is a mobile-only experiment. CSS hides the desktop-only markup,
+    // but display:none doesn't stop scripts from running, so gate here too -
+    // desktop sessions must never fire fss_hp_* events.
+    if (getDevice() !== 'mobile') return;
     fireExposureOnce();
     document.addEventListener('click', onClick);
   });
