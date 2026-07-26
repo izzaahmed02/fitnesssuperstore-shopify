@@ -5,10 +5,14 @@
   customer switch between the same model in different finishes. Each finish is a
   separate product, so a "finish sibling" is detected from the product's
   related_products: a related product qualifies when it has a
-  custom.product_color set AND its title (with the colour word removed) matches
-  this product's title (with its own colour word removed). This avoids needing a
-  dedicated linking metafield and works for any colour-sibling pair that follows
-  the store's "<Model> <Colour> <Type>" naming convention.
+  custom.product_color set AND its finish-family key matches this product's key
+  (the title with the finish wording removed - see finish-family-key.liquid).
+  This avoids needing a dedicated linking metafield and works for any
+  colour-sibling pair that follows the store's naming conventions.
+
+  related_products usually lists the product itself, so the current product is
+  skipped while collecting siblings. Without that skip the product matches its
+  own key and its finish is rendered twice ("Finish: Black Black").
 
   The buttons are sorted by finish name, so a finish family keeps the same
   left-to-right order on every one of its PDPs (Black left, Silver right) and the
@@ -21,36 +25,37 @@
 {%- liquid
   assign this_color = product.metafields.custom.product_color.value
   assign related = product.metafields.custom.related_products.value
-
-  assign this_key = product.title
-  if this_color != blank
-    assign this_key = this_key | replace: this_color, ''
-  endif
-  assign this_key = this_key | strip | downcase | replace: '  ', ' '
 -%}
 
 {%- if this_color != blank and related != blank -%}
+  {%- capture this_key -%}
+    {%- render 'finish-family-key', title: product.title, color: this_color -%}
+  {%- endcapture -%}
+  {%- assign this_key = this_key | strip -%}
+
   {%- comment -%}
     Collect this product and each finish sibling as a "<colour>|<url>" entry, then sort
     the entries so the buttons keep the same left-to-right order on every finish's PDP
     (alphabetical, which puts Black left of Silver). Rendering the current finish first
     is what made the blocks swap position depending on which page was open.
   {%- endcomment -%}
-  {%- liquid
-    assign entries = this_color | append: '|' | append: product.url
-
-    for sib in related
-      assign sib_color = sib.metafields.custom.product_color.value
-      if sib_color != blank
-        assign sib_key = sib.title | replace: sib_color, '' | strip | downcase | replace: '  ', ' '
-        if sib_key == this_key
-          assign entries = entries | append: '~~' | append: sib_color | append: '|' | append: sib.url
-        endif
-      endif
-    endfor
-
-    assign finishes = entries | split: '~~' | sort_natural
-  -%}
+  {%- assign entries = this_color | append: '|' | append: product.url -%}
+  {%- for sib in related -%}
+    {%- assign sib_color = sib.metafields.custom.product_color.value -%}
+    {%- if sib.id != product.id and sib_color != blank -%}
+      {%- capture sib_key -%}
+        {%- render 'finish-family-key', title: sib.title, color: sib_color -%}
+      {%- endcapture -%}
+      {%- assign sib_key = sib_key | strip -%}
+      {%- if sib_key == this_key -%}
+        {%- assign sib_entry = sib_color | append: '|' | append: sib.url -%}
+        {%- unless entries contains sib_entry -%}
+          {%- assign entries = entries | append: '~~' | append: sib_entry -%}
+        {%- endunless -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- assign finishes = entries | split: '~~' | sort_natural -%}
 
   {%- if finishes.size > 1 -%}
     {%- style -%}

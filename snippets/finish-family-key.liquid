@@ -1,0 +1,28 @@
+{%- comment -%}
+  Normalised "finish family" key for a product title: the part of the title that
+  is identical across every finish of the same model, so two products can be
+  compared to see whether they are the same machine in a different finish.
+
+  Drops the finish word itself, and also the French Fitness series code that
+  carries the finish (FFB = Black, FFS = Silver). Those products are named
+  "French Fitness FFB Black <Type>" / "French Fitness FFS Silver <Type>", so
+  removing only the colour word would leave FFB vs FFS in the key and the two
+  finishes of the same machine would never match.
+
+  Accepts:
+    title - {String} the product title (required)
+    color - {String} the product's custom.product_color value (required)
+{%- endcomment -%}
+{%- liquid
+  assign key = title
+
+  if color != blank
+    assign finish_codes = 'FFB Black,FFS Silver' | split: ','
+    for finish_code in finish_codes
+      assign key = key | replace: finish_code, ''
+    endfor
+    assign key = key | replace: color, ''
+  endif
+
+  echo key | downcase | split: ' ' | join: ' '
+-%}
