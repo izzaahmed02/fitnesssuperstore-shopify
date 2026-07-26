@@ -1,0 +1,96 @@
+{% comment %}
+  Module 7 — Compact proof. One rating block + four approved trust chips.
+  Copy is fixed per scope doc §8 — no new/strengthened claims.
+{% endcomment %}
+
+<div class="compact-proof">
+  <a href="{{ section.settings.rating_link }}" class="compact-proof__rating">
+    <div class="rating">
+      {% render 'rating' %}
+    </div>
+    <span>{{ section.settings.rating_text }}</span>
+  </a>
+
+  <div class="compact-proof__chips">
+    {% for block in section.blocks %}
+      {% if block.type == 'trust_chip' %}
+        <span class="compact-proof__chip">{{ block.settings.label }}</span>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+.compact-proof {
+  padding: 24px 16px;
+  text-align: center;
+}
+.compact-proof__rating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 16px;
+}
+.compact-proof__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.compact-proof__chip {
+  border: 1px solid #E5E5E5;
+  border-radius: 99px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4f4e4e;
+}
+</style>
+
+{% schema %}
+{
+  "name": "Homepage Compact Proof",
+  "class": "compact-proof-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "rating_text",
+      "label": "Rating Text",
+      "default": "4.9/5 by thousands of happy customers"
+    },
+    {
+      "type": "url",
+      "id": "rating_link",
+      "label": "Rating Link"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "trust_chip",
+      "name": "Trust Chip",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Chip Label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Homepage Compact Proof",
+      "category": "Custom",
+      "blocks": [
+        { "type": "trust_chip", "settings": { "label": "Warranty options" } },
+        { "type": "trust_chip", "settings": { "label": "Nationwide delivery" } },
+        { "type": "trust_chip", "settings": { "label": "New equipment" } },
+        { "type": "trust_chip", "settings": { "label": "Remanufactured" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
