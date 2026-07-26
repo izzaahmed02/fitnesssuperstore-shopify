@@ -676,6 +676,35 @@ document.addEventListener("DOMContentLoaded", function() {
               </div>
           {% endif %}
 
+          {%- assign tech_tables = product.metafields.custom.features_specs_new.value.other_tech_specs_table.value -%}
+          {%- if tech_tables != blank -%}
+            <!-- TECH-TABLES-LOOP-V1 -->
+            <div class="product__extra_tech extra-info-width">
+              {%- for tbl in tech_tables -%}
+                <!-- tech-tbl-type: {{ tbl.table_type }} -->
+                {%- if tbl.table_type == 'Table with images' -%}
+                  {% render 'pdp-table-images', table: tbl %}
+                {%- elsif tbl.table_type == 'Table with header' or tbl.table_type == 'Table without header' -%}
+                  {%- assign is_label_value = false -%}
+                  {%- for col in tbl.table_headers.value -%}
+                    {%- for cell in col.content.value -%}
+                      {%- if cell.attribute != blank -%}{%- assign is_label_value = true -%}{%- endif -%}
+                      {%- break -%}
+                    {%- endfor -%}
+                    {%- break -%}
+                  {%- endfor -%}
+                  {%- if is_label_value -%}
+                    {% render 'pdp-table-comparison', table: tbl %}
+                  {%- else -%}
+                    {% render 'pdp-table', table: tbl %}
+                  {%- endif -%}
+                {%- else -%}
+                  {% render 'pdp-table', table: tbl %}
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+
           {% when 'comparisonchartitle' %}
             {% assign comparisonChartTitle = product.metafields.custom.features_specs_new.value.comparison_chart_title.value %}
             {% if comparisonChartTitle != blank %}
