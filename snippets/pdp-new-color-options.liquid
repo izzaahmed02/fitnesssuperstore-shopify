@@ -1,0 +1,155 @@
+{% comment %}
+  pdp-new-color-options — renders ONLY the paint/vinyl COLOR categories from the
+  product's options.product_options configurator, reusing the live PDP's
+  custom-color-picker. The swatch UI and the add-to-cart markers
+  ([data-selected-color-option] / [data-color-selected-title]) are therefore
+  byte-identical to the live PDP; product-form-with-options.js (buy-buttons)
+  reads those markers inside #MainProduct-<section.id> at add-to-cart, and
+  product-custom-options.js (the <product-customization-options> element) drives
+  selection + price. Non-color categories (add-ons/assembly/warranty/quantity)
+  are handled elsewhere and deliberately skipped here — this is the colours-only
+  slice of sections/main-product.liquid's configurator.
+{% endcomment %}
+{% liquid
+  assign options = product.metafields.options.product_options.value
+  if product.selected_or_first_available_variant.metafields.options.product_options.value != blank
+    assign options = product.selected_or_first_available_variant.metafields.options.product_options.value
+  endif
+%}
+{%- if options == blank -%}{% break %}{%- endif -%}
+
+{%- comment -%} Bail out entirely (render nothing) when the product has no visible colours. {%- endcomment -%}
+{%- assign has_any_color = false -%}
+{%- for category in options -%}
+  {%- if category.hide_option -%}{%- continue -%}{%- endif -%}
+  {%- for po in category.product_options.value -%}
+    {%- assign pt = po.product_option_title | downcase -%}
+    {%- if pt == 'paint color' or pt == 'paint colors' or pt == 'color' or pt == 'vinyl color' or pt == 'vinyl colors' -%}
+      {%- unless po.hide_values -%}{%- assign has_any_color = true -%}{%- endunless -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endfor -%}
+
+{%- if has_any_color -%}
+  <product-customization-options
+    data-product-id="{{ product.selected_or_first_available_variant.id }}"
+    class="product-options pdp-new__color-options"
+    data-product="default"
+  >
+    {% for category in options %}
+      {% liquid
+        assign color_counter = 0
+        assign color_title = ''
+        assign color_group = ''
+        assign hidden_option = false
+        for product_option in category.product_options.value
+          assign title = product_option.product_option_title | downcase
+          if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
+            assign color_counter = color_counter | plus: 1
+            assign color_title = product_option.product_option_title
+            assign color_group = title | handleize
+          endif
+          if product_option.hide_values
+            assign hidden_option = true
+          endif
+        endfor
+      %}
+      {%- if category.hide_option or hidden_option or color_counter == 0 -%}{%- continue -%}{%- endif -%}
+
+      <div class="product-option__item">
+        {% if category.title != blank %}
+          {% comment %} Category label kept as a styled div, not a heading (PDP heading QA). {% endcomment %}
+          <div
+            class="product-options__category-title"
+            {% if color_counter == 1 %}
+              data-group-color-name="{{ color_group }}"
+              data-color-name-title="{{ color_title }}"
+            {% endif %}
+          >
+            {%- comment -%} No numbered step badge here (the live configurator's
+                #fce6de circle) — the new PDP follows the Figma option style: a
+                plain bold label, matching the Delivery & Installation Options
+                block. {%- endcomment -%}
+            {{- category.title }}
+            {% if category.help_text.value != blank %}
+              {% render 'related-products-button',
+                product_id: product.id,
+                product_handle: product.handle,
+                product_category: product.metafields.custom.option_category_id.value,
+                option_title: category.title
+              %}
+            {% endif %}
+            {% if color_counter == 1 %}
+              {% for product_option in category.product_options.value %}
+                {% assign title = product_option.product_option_title | downcase %}
+                {% if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color' %}
+                  {% if product_option.product_option_sets_default.value.id %}
+                    {% render 'related-products-button',
+                      product_id: product.id,
+                      product_handle: product.handle,
+                      product_category: product.metafields.custom.option_category_id.value,
+                      option_title: product_option.product_option_title
+                    %}
+                    <div class="option_selected-container" data-selected-color-option="{{ title | handleize }}">
+                      <div class="option_selected" data-option-id="{{ product_option.product_option_sets_default.value.id }}">
+                        <div data-color-selected-title>
+                          {{ product_option.product_option_sets_default.value.title }}
+                        </div>
+                        <div class="option_selected-price">
+                          {% if product_option.product_option_sets_default.value.price > 0 %}
+                            {{ product_option.product_option_sets_default.value.price }}
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    {% break %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+          </div>
+        {% endif %}
+        <div class="product-options__category-notification"></div>
+        {% for product_option in category.product_options.value %}
+          {% assign title = product_option.product_option_title | downcase %}
+          {% if title == 'paint color' or title == 'paint colors' or title == 'color' %}
+            {% if product_option.product_option_sets_default.value.id %}
+              {% assign default = product_option.product_option_sets_default.value.id %}
+            {% endif %}
+            {% render 'custom-color-picker',
+              product: product_option.product_option_variants.value,
+              products: product_option,
+              default: default,
+              color_type: 'paint',
+              title: category.title,
+              color_counter: color_counter
+            %}
+          {% endif %}
+          {% if title == 'vinyl color' or title == 'vinyl colors' %}
+            {% if product_option.product_option_sets_default.value.id %}
+              {% assign default = product_option.product_option_sets_default.value.id %}
+            {% endif %}
+            {% render 'custom-color-picker',
+              product: product_option.product_option_variants.value,
+              products: product_option,
+              default: default,
+              color_type: 'vinyl',
+              title: category.title,
+              color_counter: color_counter
+            %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    <div
+      id="product-options-total-add"
+      class="product-options__total-add product-options__total-add--hide"
+    >
+      Selection will add
+      <span id="product-options-totalpriceadd" class="product-options__total-price-add">$0.00</span>
+      to the price
+    </div>
+    <input type="hidden" value="0" class="product-options__total-addcharge">
+  </product-customization-options>
+{%- endif -%}

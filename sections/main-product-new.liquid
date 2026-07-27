@@ -1,0 +1,671 @@
+{% comment %}
+  main-product-new — v1 modular PDP system per Figma "A/B Test - PDP NEW"
+  (client file CjESkSxUaelGHMIMn4yvOx node 1669:47124; working copy frame 19:18772).
+  Standard-machine flow. Reuses purchase-critical snippets: buy-buttons, price,
+  product-variant-picker, product-availability-badge. See docs/PDP.md.
+{% endcomment %}
+
+{{ 'pdp-new.css' | asset_url | stylesheet_tag }}
+{{ 'component-price.css' | asset_url | stylesheet_tag }}
+{{ 'custom-product-gallery.css' | asset_url | stylesheet_tag }}
+{%- unless product.has_only_default_variant -%}
+  {{ 'component-product-variant-picker.css' | asset_url | stylesheet_tag }}
+  {{ 'component-swatch-input.css' | asset_url | stylesheet_tag }}
+  {{ 'component-swatch.css' | asset_url | stylesheet_tag }}
+{%- endunless -%}
+
+{%- comment -%} Colour/paint configurator (options.product_options). Loaded only
+    when the product actually has visible colours, so no CWV cost elsewhere.
+    Same assets the live PDP uses. {%- endcomment -%}
+{%- assign pdp_color_opts = product.metafields.options.product_options.value -%}
+{%- if product.selected_or_first_available_variant.metafields.options.product_options.value != blank -%}
+  {%- assign pdp_color_opts = product.selected_or_first_available_variant.metafields.options.product_options.value -%}
+{%- endif -%}
+{%- assign pdp_has_colors = false -%}
+{%- if pdp_color_opts != blank -%}
+  {%- for category in pdp_color_opts -%}
+    {%- unless category.hide_option -%}
+      {%- for po in category.product_options.value -%}
+        {%- assign pt = po.product_option_title | downcase -%}
+        {%- if pt == 'paint color' or pt == 'paint colors' or pt == 'color' or pt == 'vinyl color' or pt == 'vinyl colors' -%}
+          {%- unless po.hide_values -%}{%- assign pdp_has_colors = true -%}{%- endunless -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endunless -%}
+  {%- endfor -%}
+{%- endif -%}
+{%- if pdp_has_colors -%}
+  {{ 'product-options.css' | asset_url | stylesheet_tag }}
+  {%- comment -%} Swatch layout (.color-options flex row, custom-color trigger) lives
+      here, same as the live PDP (main-product.liquid). {%- endcomment -%}
+  {{ 'custom-option-picker-snippet.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'product-custom-options.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+
+<link rel="stylesheet" href="{{ 'paylater-modal.css' | asset_url }}" media="print" onload="this.media='all'">
+<noscript>{{ 'paylater-modal.css' | asset_url | stylesheet_tag }}</noscript>
+
+<script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'product-form-with-options.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'main-product-custom.js' | asset_url }}" defer="defer"></script>
+{%- comment -%} old-custom.js declares the modal globals (modalWrapper/container/
+    closeIconTemplate) that main-product-custom.js needs for the Affirm and
+    option-help popups. It requires #icon-close-template in the DOM. {%- endcomment -%}
+<script src="{{ 'old-custom.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'product-gallery.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'product-mobile-gallery.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'pdp-new.js' | asset_url }}" defer="defer"></script>
+
+{%- assign product_form_id = 'product-form-' | append: section.id -%}
+{%- assign info_tab_blocks = section.blocks | where: 'type', 'info_tab' -%}
+{%- comment -%} Block type must be `product_options`: buy-buttons keys on it to render
+    <product-form-with-options>, which reads the option markers at add-to-cart. {%- endcomment -%}
+{%- assign addon_tab_blocks = section.blocks | where: 'type', 'product_options' -%}
+{%- assign content_blocks = section.blocks | where: 'type', 'content_section' -%}
+
+<product-info
+  id="MainProduct-{{ section.id }}"
+  class="pdp-new"
+  data-section="{{ section.id }}"
+  data-product-id="{{ product.id }}"
+  data-update-url="true"
+  data-url="{{ product.url }}"
+>
+  <div class="pdp-new__breadcrumbs">
+    {% render 'metaobjects-breadcrumbs', with product: product %}
+  </div>
+
+  <div class="pdp-new__buybox">
+    {%- comment -%} ============ Left: media gallery (live PDP gallery, reused) ============ {%- endcomment -%}
+    <div class="pdp-new__media-card">
+      {% render 'pdp-new-gallery', product: product %}
+    </div>
+
+    {%- comment -%} ============ Right: main info column ============ {%- endcomment -%}
+    <section id="ProductInfo-{{ section.id }}" class="pdp-new__info">
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+          {%- when 'title' -%}
+            <h1 class="pdp-new__title" {{ block.shopify_attributes }}>{{ product.title | escape }}</h1>
+
+          {%- when 'rating' -%}
+            <div class="pdp-new__meta-row" {{ block.shopify_attributes }}>
+              {%- if product.metafields.reviews.rating.value != blank -%}
+                <a class="pdp-new__rating" href="#pdp-new-reviews">
+                  <svg class="pdp-new__star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17l-6.1 3.6 1.4-6.8-5.1-4.7 6.9-.8z"/></svg>
+                  <strong>{{ product.metafields.reviews.rating.value.rating }}</strong>
+                  <span class="pdp-new__rating-count">({{ product.metafields.reviews.rating_count | default: 0 }} reviews)</span>
+                </a>
+              {%- endif -%}
+              {%- assign avisplus_options = false -%}
+              {%- if product.tags contains 'avisplus-product-options' -%}
+                {%- assign avisplus_options = true -%}
+              {%- endif -%}
+              <div class="pdp-new__badge">
+                {% render 'product-availability-badge', product: product, check_discontinued: true, hide_badge: avisplus_options %}
+              </div>
+            </div>
+
+          {%- when 'variant_picker' -%}
+            <div class="pdp-new__variant-picker" {{ block.shopify_attributes }}>
+              {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
+            </div>
+
+          {%- when 'color_options' -%}
+            {%- comment -%} Paint/vinyl colour configurator (colours only). Reuses the
+                live PDP's custom-color-picker via pdp-new-color-options; add-to-cart is
+                handled by product-form-with-options.js reading the colour markers inside
+                #MainProduct. Renders nothing when the product has no colours. {%- endcomment -%}
+            <div class="pdp-new__color-picker" {{ block.shopify_attributes }}>
+              {% render 'pdp-new-color-options', product: product %}
+            </div>
+
+          {%- when 'info_tab' -%}
+            {%- comment -%} Rendered as one tab group at the position of the first info_tab
+                block. source "product_meta" renders the live PDP's metafield lines
+                (Condition/Grade/Warranty/Ships/Processing/Code); source "custom" renders
+                the block's bound content and is skipped when that resolves empty. {%- endcomment -%}
+            {%- if block.id == info_tab_blocks.first.id -%}
+              <div class="pdp-new__tabs" data-tabs-section {{ block.shopify_attributes }}>
+                <div class="tabs__buttons pdp-new__tabs-nav">
+                  {%- assign info_i = 0 -%}
+                  {%- for tab in info_tab_blocks -%}
+                    {%- assign tab_content_check = tab.settings.content | strip_html | strip -%}
+                    {%- if tab.settings.source == 'product_meta' or tab_content_check != blank -%}
+                      {%- assign info_i = info_i | plus: 1 -%}
+                      <button type="button" class="tab-btn{% if info_i == 1 %} active{% endif %}" data-index="{{ info_i }}">
+                        {{ tab.settings.tab_title | escape }}
+                      </button>
+                    {%- endif -%}
+                  {%- endfor -%}
+                </div>
+                <div class="tabs__content pdp-new__tabs-content">
+                  {%- assign info_i = 0 -%}
+                  {%- for tab in info_tab_blocks -%}
+                    {%- assign tab_content_check = tab.settings.content | strip_html | strip -%}
+                    {%- if tab.settings.source == 'product_meta' or tab_content_check != blank -%}
+                      {%- assign info_i = info_i | plus: 1 -%}
+                      <div class="tabs__item{% if info_i == 1 %} active visible{% endif %}" data-index="{{ info_i }}">
+                        {%- if tab.settings.source == 'product_meta' -%}
+                          <ul class="pdp-new__meta-list" role="list">
+                            {%- if product.metafields.custom.condition_state != blank -%}
+                              <li><strong>Condition:</strong> {{ product.metafields.custom.condition_state | strip_html | replace: ' (See Description for Details)', '' | replace: '(What Does this Mean?)', '' }}</li>
+                            {%- endif -%}
+                            {%- if product.metafields.custom.grade != blank -%}
+                              <li><strong>Grade:</strong> {{ product.metafields.custom.grade }}</li>
+                            {%- endif -%}
+                            {%- if product.metafields.custom.warranty != blank -%}
+                              <li><strong>Warranty:</strong> {{ product.metafields.custom.warranty | strip_html | replace: ' (See Description for Details)', '' }}</li>
+                            {%- endif -%}
+                            {%- if product.metafields.custom.ships != blank -%}
+                              <li><strong>Ships:</strong> {{ product.metafields.custom.ships }}</li>
+                            {%- endif -%}
+                            {%- if product.metafields.custom.processing_time != blank -%}
+                              <li><strong>Processing Time:</strong> {{ product.metafields.custom.processing_time_long }}</li>
+                            {%- endif -%}
+                            {%- if product.metafields.custom.product_code != blank -%}
+                              <li><strong>Product Code:</strong> {{ product.metafields.custom.product_code }}</li>
+                            {%- endif -%}
+                          </ul>
+                        {%- else -%}
+                          {{ tab.settings.content }}
+                        {%- endif -%}
+                      </div>
+                    {%- endif -%}
+                  {%- endfor -%}
+                </div>
+              </div>
+            {%- endif -%}
+
+          {%- when 'price' -%}
+            <div class="pdp-new__payments" {{ block.shopify_attributes }}>
+              {%- comment -%} Same visible price element as the live PDP: .pr_custom_price
+                  aggregates selected add-on prices (pdp-new.js), feeds the Affirm
+                  modal (main-product-custom.js) and is swapped on variant change
+                  via the #price-{id} contract in product-info.js. {%- endcomment -%}
+              <div id="price-{{ section.id }}" role="status" class="pdp-new__price">
+                <div class="pr_custom_price-container">
+                  <p class="pr_custom_price{% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{ product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{ cart.currency.symbol }}">
+                    {{ product.selected_or_first_available_variant.price | money }}
+                  </p>
+                </div>
+              </div>
+              {%- if block.settings.show_financing -%}
+                {%- comment -%} Same Affirm stack as the live PDP: affirm-as-low-as promo
+                    element + paylater-providers snippet, driven by main-product-custom.js
+                    and styled by paylater-modal.css. {%- endcomment -%}
+                <div class="pdp-new__financing">
+                  <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
+                  {% render 'paylater-providers' %}
+                </div>
+              {%- endif -%}
+            </div>
+
+          {%- when 'delivery_options' -%}
+            {%- if block.settings.options != blank -%}
+              <div class="pdp-new__delivery" {{ block.shopify_attributes }}>
+                <label class="pdp-new__label" for="PdpNewDelivery-{{ section.id }}">{{ block.settings.label | escape }}</label>
+                <div class="pdp-new__select-wrap">
+                  <select
+                    id="PdpNewDelivery-{{ section.id }}"
+                    name="properties[{{ block.settings.label | escape }}]"
+                    form="{{ product_form_id }}"
+                    class="pdp-new__select"
+                  >
+                    {%- assign delivery_opts = block.settings.options | newline_to_br | split: '<br />' -%}
+                    {%- for opt in delivery_opts -%}
+                      {%- assign opt_clean = opt | strip -%}
+                      {%- if opt_clean != blank -%}
+                        <option value="{{ opt_clean | escape }}">{{ opt_clean | escape }}</option>
+                      {%- endif -%}
+                    {%- endfor -%}
+                  </select>
+                </div>
+              </div>
+            {%- endif -%}
+
+          {%- when 'buy_buttons' -%}
+            <div class="pdp-new__buy" {{ block.shopify_attributes }}>
+              {%- render 'buy-buttons',
+                block: block,
+                product: product,
+                product_form_id: product_form_id,
+                section_id: section.id,
+                show_pickup_availability: false
+              -%}
+              {%- if block.settings.quote_text != blank -%}
+                <a class="pdp-new__quote-link" href="{{ block.settings.quote_url | default: '/pages/contact-us' }}">{{ block.settings.quote_text | escape }}</a>
+              {%- endif -%}
+            </div>
+
+          {%- when 'product_options' -%}
+            {%- comment -%} Real per-product add-ons: the same options.product_options
+                metaobject that powers the live PDP's configurator. Tabs = visible
+                categories whose options reference products; cards = those products.
+                Non-product categories (colors/warranty/quantity) are configurator
+                territory — rendered by the options layer, not here. {%- endcomment -%}
+            {%- if block.id == addon_tab_blocks.first.id -%}
+              {%- assign addon_options = product.metafields.options.product_options.value -%}
+              {%- if product.selected_or_first_available_variant.metafields.options.product_options.value != blank -%}
+                {%- assign addon_options = product.selected_or_first_available_variant.metafields.options.product_options.value -%}
+              {%- endif -%}
+              {%- if addon_options != blank -%}
+              <div class="pdp-new__addons" {{ block.shopify_attributes }}>
+                <p class="pdp-new__label pdp-new__addons-heading">{{ section.settings.addons_heading | escape }}</p>
+                <div data-tabs-section>
+                  <div class="tabs__buttons pdp-new__tabs-nav">
+                    {%- assign addon_i = 0 -%}
+                    {%- for category in addon_options -%}
+                      {%- assign cat_title_dc = category.title | downcase -%}
+                      {%- if category.hide_option or cat_title_dc contains 'color' or cat_title_dc contains 'assembly' or cat_title_dc contains 'warranty' or cat_title_dc contains 'quantity' -%}
+                        {%- continue -%}
+                      {%- endif -%}
+                      {%- unless category.hide_option -%}
+                        {%- assign cat_products_count = 0 -%}
+                        {%- for po in category.product_options.value -%}
+                          {%- unless po.hide_values -%}
+                            {%- assign cat_products_count = cat_products_count | plus: po.product_option_variants.value.size -%}
+                          {%- endunless -%}
+                        {%- endfor -%}
+                        {%- if cat_products_count > 0 -%}
+                          {%- assign addon_i = addon_i | plus: 1 -%}
+                          <button type="button" class="tab-btn{% if addon_i == 1 %} active{% endif %}" data-index="{{ addon_i }}">
+                            {{ category.title | escape }}
+                          </button>
+                        {%- endif -%}
+                      {%- endunless -%}
+                    {%- endfor -%}
+                  </div>
+                  <div class="tabs__content pdp-new__addons-content">
+                    {%- assign addon_i = 0 -%}
+                    {%- for category in addon_options -%}
+                      {%- assign cat_title_dc = category.title | downcase -%}
+                      {%- if category.hide_option or cat_title_dc contains 'color' or cat_title_dc contains 'assembly' or cat_title_dc contains 'warranty' or cat_title_dc contains 'quantity' -%}
+                        {%- continue -%}
+                      {%- endif -%}
+                      {%- unless category.hide_option -%}
+                        {%- assign cat_products_count = 0 -%}
+                        {%- for po in category.product_options.value -%}
+                          {%- unless po.hide_values -%}
+                            {%- assign cat_products_count = cat_products_count | plus: po.product_option_variants.value.size -%}
+                          {%- endunless -%}
+                        {%- endfor -%}
+                        {%- if cat_products_count > 0 -%}
+                        {%- assign addon_i = addon_i | plus: 1 -%}
+                        <div class="tabs__item{% if addon_i == 1 %} active visible{% endif %}" data-index="{{ addon_i }}">
+                          {%- comment -%} Hidden option markers with the same data attributes as
+                              snippets/product-option-accordion.liquid. The visible card buttons
+                              toggle these checkboxes (pdp-new.js); product-form-with-options.js
+                              reads them at add-to-cart to attach the add-ons to the order. {%- endcomment -%}
+                          {%- for po in category.product_options.value -%}
+                            {%- unless po.hide_values -%}
+                              <div data-option-accordion data-type="{{ po.product_option_title | handleize }}" hidden>
+                                <span data-option-title>{{ po.product_option_title | escape }}</span>
+                                <div data-selected-options=""></div>
+                                {%- for addon in po.product_option_variants.value -%}
+                                  {%- liquid
+                                    assign addon_product = addon.product | default: addon
+                                    assign addon_variant_id = addon.id | default: addon.selected_or_first_available_variant.id
+                                  -%}
+                                  <input
+                                    type="checkbox"
+                                    data-customization-option="{{ addon_variant_id }}"
+                                    name="pdp-addon-{{ po.product_option_title | handleize }}"
+                                    value="{{ addon_variant_id }}{% if addon.metafields.custom.price_reduction_value_new != blank %}:::-{{ addon.metafields.custom.price_reduction_value_new }}{% endif %}{% if addon.price > 0 %}:::{{ addon.price | money_without_currency | replace: ',', '' }}{% endif %}"
+                                    data-field-name="{{ addon_product.title | escape }}"
+                                    data-field-price="{{ addon.price | money }}"
+                                  >
+                                {%- endfor -%}
+                              </div>
+                            {%- endunless -%}
+                          {%- endfor -%}
+                          <pdp-carousel class="pdp-new__addon-carousel">
+                            <ul class="pdp-new__addon-track" role="list">
+                              {%- for po in category.product_options.value -%}
+                              {%- unless po.hide_values -%}
+                              {%- for addon in po.product_option_variants.value -%}
+                                {%- liquid
+                                  comment
+                                    product_option_variants hold VARIANT references —
+                                    resolve product-level fields via addon.product.
+                                  endcomment
+                                  assign addon_product = addon.product | default: addon
+                                  assign addon_variant_id = addon.id | default: addon.selected_or_first_available_variant.id
+                                  assign addon_img = addon.featured_image | default: addon.image | default: addon_product.featured_image
+                                -%}
+                                <li class="pdp-new__addon-card">
+                                  <a class="pdp-new__addon-img" href="{{ addon_product.url }}" tabindex="-1">
+                                    {%- if addon_img -%}
+                                      <img src="{{ addon_img | image_url: width: 336 }}" alt="{{ addon_img.alt | escape }}" width="168" height="168" loading="lazy">
+                                    {%- endif -%}
+                                  </a>
+                                  <div class="pdp-new__addon-info">
+                                    <a class="pdp-new__addon-title" href="{{ addon_product.url }}">{{ addon_product.title | escape }}</a>
+                                    {%- if addon.sku != blank -%}
+                                      <span class="pdp-new__addon-sku">Product Code: {{ addon.sku | escape }}</span>
+                                    {%- endif -%}
+                                    <span class="pdp-new__addon-price">Price: {{ addon.price | money }}</span>
+                                    {%- comment -%} Attaches the add-on to THIS order (option-style, price
+                                        aggregates) — wired by the options layer, not core cart add. {%- endcomment -%}
+                                    <button
+                                      type="button"
+                                      class="pdp-new__addon-atc button button--primary"
+                                      data-addon-attach
+                                      data-variant-id="{{ addon_variant_id }}"
+                                      data-option-category="{{ category.title | escape }}"
+                                      {% unless addon.available %}disabled{% endunless %}
+                                    >
+                                      <span>{% if addon.available %}Add To Cart{% else %}{{ 'products.product.sold_out' | t }}{% endif %}</span>
+                                    </button>
+                                  </div>
+                                </li>
+                              {%- endfor -%}
+                              {%- endunless -%}
+                              {%- endfor -%}
+                            </ul>
+                            <button type="button" class="pdp-new__carousel-arrow pdp-new__carousel-arrow--prev" aria-label="{{ 'general.slider.previous_slide' | t }}" hidden>
+                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                            <button type="button" class="pdp-new__carousel-arrow pdp-new__carousel-arrow--next" aria-label="{{ 'general.slider.next_slide' | t }}">
+                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                          </pdp-carousel>
+                        </div>
+                        {%- endif -%}
+                      {%- endunless -%}
+                    {%- endfor -%}
+                  </div>
+                </div>
+              </div>
+              {%- endif -%}
+            {%- endif -%}
+
+          {%- when '@app' -%}
+            {% render block %}
+
+          {%- when 'custom_liquid' -%}
+            <div {{ block.shopify_attributes }}>{{ block.settings.custom_liquid }}</div>
+        {%- endcase -%}
+      {%- endfor -%}
+    </section>
+  </div>
+
+  {%- comment -%} ============ Lower content: tabs DERIVED from product data ============
+      Curated groups (Overview/Features/Specs/Accessories/Comparison/FAQ) that
+      auto-hide when their data sources are empty for this product; "Content
+      section" blocks append as extra custom tabs; Warranty/Prop 65/Downloads
+      always visible below. See snippets/pdp-new-content-tabs.liquid. {%- endcomment -%}
+  {% render 'pdp-new-content-tabs', content_blocks: content_blocks %}
+
+  {%- comment -%} ============ Sticky Add to Cart bar ============ {%- endcomment -%}
+  {%- if section.settings.show_sticky_atc -%}
+    <div class="pdp-new__sticky" id="PdpNewSticky-{{ section.id }}" hidden>
+      <div class="pdp-new__sticky-inner">
+        {%- if product.featured_media -%}
+          <img src="{{ product.featured_media | image_url: width: 96 }}" alt="" width="48" height="48" loading="lazy">
+        {%- endif -%}
+        <span class="pdp-new__sticky-title">{{ product.title | escape }}</span>
+        <span class="pdp-new__sticky-price">{{ product.selected_or_first_available_variant.price | money }}</span>
+        <button
+          type="submit"
+          form="{{ product_form_id }}"
+          class="pdp-new__sticky-atc button button--primary"
+          {% unless product.selected_or_first_available_variant.available %}disabled{% endunless %}
+        >
+          {{ 'products.product.add_to_cart' | t }}
+        </button>
+      </div>
+    </div>
+  {%- endif -%}
+</product-info>
+
+{%- comment -%} Close-icon template read by old-custom.js at load (same as live PDP). {%- endcomment -%}
+<div id="icon-close-template" style="display: none;">
+  {% render 'icon-close-small' %}
+</div>
+
+{%- comment -%} Gallery popups live OUTSIDE product-info (as on the live PDP) so no
+    ancestor stacking context (e.g. the sticky media card) can trap their z-index. {%- endcomment -%}
+<div id="product-gallery-popup" class="product-popup-overlay" hidden>
+  <div class="product-popup-backdrop"></div>
+
+  <div class="product-popup" role="dialog" aria-modal="true">
+    <button class="popup-close" type="button" aria-label="Close popup">&times;</button>
+
+    <div class="popup-tabs">
+      <button class="popup-tab is-active" data-tab="images">Images</button>
+
+      {%- assign has_videos = false -%}
+      {%- for media in product.media -%}
+        {%- if media.media_type == 'video' or media.media_type == 'external_video' -%}
+          {%- assign has_videos = true -%}
+          {%- break -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if has_videos -%}
+        <button class="popup-tab" data-tab="videos">Videos</button>
+      {%- endif -%}
+    </div>
+
+    <div class="popup-content">
+      <div class="popup-media-viewer" data-popup-viewer></div>
+
+      <div class="popup-sidebar">
+        <div class="popup-product-title" data-popup-title></div>
+        <div class="popup-thumbnails" data-tab-content="images"></div>
+        <div class="popup-thumbnails hidden" data-tab-content="videos"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="mobile-gallery-popup" class="mobile-popup-overlay" hidden>
+  <div class="mobile-popup-backdrop"></div>
+  <button class="mobile-popup-close" aria-label="Close">×</button>
+  <div class="mobile-popup-slider"></div>
+  <div class="mobile-popup-thumbnails"></div>
+  <div class="mobile-popup-dots"></div>
+</div>
+
+
+
+{% schema %}
+{
+  "name": "Main product NEW (Figma)",
+  "tag": "section",
+  "class": "section section-main-product-new",
+  "blocks": [
+    {
+      "type": "@app"
+    },
+    {
+      "type": "title",
+      "name": "Title",
+      "limit": 1
+    },
+    {
+      "type": "rating",
+      "name": "Rating + availability",
+      "limit": 1
+    },
+    {
+      "type": "variant_picker",
+      "name": "Variant picker",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "select",
+          "id": "picker_type",
+          "label": "Type",
+          "options": [
+            { "value": "dropdown", "label": "Dropdown" },
+            { "value": "button", "label": "Pills" }
+          ],
+          "default": "button"
+        },
+        {
+          "type": "select",
+          "id": "swatch_shape",
+          "label": "Swatch shape",
+          "options": [
+            { "value": "circle", "label": "Circle" },
+            { "value": "square", "label": "Square" },
+            { "value": "none", "label": "None" }
+          ],
+          "default": "circle"
+        }
+      ]
+    },
+    {
+      "type": "color_options",
+      "name": "Colour options",
+      "limit": 1
+    },
+    {
+      "type": "info_tab",
+      "name": "Info tab",
+      "limit": 4,
+      "settings": [
+        {
+          "type": "text",
+          "id": "tab_title",
+          "label": "Tab title",
+          "default": "Key Specs"
+        },
+        {
+          "type": "select",
+          "id": "source",
+          "label": "Content source",
+          "options": [
+            { "value": "custom", "label": "Custom content below" },
+            { "value": "product_meta", "label": "Product metafields (condition, warranty, ships)" }
+          ],
+          "default": "custom"
+        },
+        {
+          "type": "liquid",
+          "id": "content",
+          "label": "Content (HTML/Liquid)"
+        }
+      ]
+    },
+    {
+      "type": "price",
+      "name": "Price + financing",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "show_financing",
+          "label": "Show Affirm financing row",
+          "default": true
+        }
+      ]
+    },
+    {
+      "type": "delivery_options",
+      "name": "Delivery options dropdown",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Delivery & Installation Options"
+        },
+        {
+          "type": "textarea",
+          "id": "options",
+          "label": "Options (one per line)",
+          "default": "Curbside Delivery Only"
+        }
+      ]
+    },
+    {
+      "type": "buy_buttons",
+      "name": "Buy buttons",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "show_dynamic_checkout",
+          "label": "Show dynamic checkout buttons",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_gift_card_recipient",
+          "label": "Show gift card recipient form",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "quote_text",
+          "label": "Quote link text",
+          "default": "Get delivered quote / confirm fit"
+        },
+        {
+          "type": "url",
+          "id": "quote_url",
+          "label": "Quote link URL"
+        }
+      ]
+    },
+    {
+      "type": "product_options",
+      "name": "Add-Ons (product options)",
+      "limit": 1,
+      "settings": []
+    },
+    {
+      "type": "content_section",
+      "name": "Content section",
+      "limit": 8,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Overview"
+        },
+        {
+          "type": "liquid",
+          "id": "content",
+          "label": "Content (HTML/Liquid)"
+        }
+      ]
+    },
+    {
+      "type": "custom_liquid",
+      "name": "Custom liquid",
+      "settings": [
+        {
+          "type": "liquid",
+          "id": "custom_liquid",
+          "label": "Custom liquid"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "text",
+      "id": "addons_heading",
+      "label": "Add-Ons heading",
+      "default": "Add-Ons:"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sticky_atc",
+      "label": "Show sticky Add to Cart bar",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Main product NEW (Figma)"
+    }
+  ]
+}
+{% endschema %}

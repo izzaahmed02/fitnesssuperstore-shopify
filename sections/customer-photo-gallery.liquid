@@ -212,7 +212,13 @@
   border-radius: 50%;
   font-size: 22px;
   cursor: pointer;
-  z-index: 20;
+  /* Must stay under the sticky header's z-index:3. Nothing between the arrows
+     and the root creates a stacking context, so the old z-index:20 competed
+     with the header directly and painted the arrows over the nav on scroll.
+     2 still clears the slides (they are static, arrows are positioned), and
+     the lightbox is unaffected — it is fixed at z-index:9999 and forms its
+     own context, so its inner controls keep working. */
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
