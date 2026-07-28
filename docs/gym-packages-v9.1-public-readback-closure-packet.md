@@ -23,8 +23,9 @@ markets, price lists, catalogs, automatic discounts, URL redirects) and the **pu
 
 **Theme parity is proven, not assumed.** The live published theme is
 `fitnesssuperstore-shopify/main` (`gid://shopify/OnlineStoreTheme/186120208700`, MAIN role). Its
-`sections/main-product.liquid` has checksum `ff7023525b7dd6dcdc1043bcbd434218`. The same file at
-repo `main` has the identical MD5. **The repo file is therefore authoritative for what the live
+`sections/main-product.liquid` has checksum `ff7023525b7dd6dcdc1043bcbd434218` and size 194,417
+bytes. The repo file returns the identical MD5 and identical byte size (verified with `md5sum` and
+`stat`, not inferred). **The repo file is therefore authoritative for what the live
 PDP renders**, and the line references below apply to production.
 
 **Not done:** logged-out desktop/mobile screenshots. Outbound requests to
@@ -55,10 +56,11 @@ turn out not to belong to the products under test at all.
 All five acceptance values Tim specified (15-inch URL, FF-E620T, $3,399, 5–7 weeks, no redirect)
 are **correct at source**.
 
-### There is no 21-inch product
+### There is no 21-inch E620T product
 
 A catalog-wide query for any product matching `E620` returns exactly **one** record — the 15-inch
-one above. No 21-inch E620T product exists to redirect to.
+one above. No 21-inch E620T product exists to redirect to. (Scope: this rules out a 21-inch *E620T*.
+It does not survey 21-inch consoles on other models, which is not what the gate turns on.)
 
 ### The redirect runs the correct direction
 
@@ -88,12 +90,16 @@ Both reported numbers match FF-E600 exactly. This is a wrong-product read, not a
 
 ### Why the two get conflated (the real, fixable defect)
 
-Redirect `536328569148` above — `…-e600-…-new-copy` → the E620T handle — is direct evidence that
-**the E620T record was created by duplicating the E600 record**. Three artifacts of that
-duplication still carry the wrong identity on the E620T product:
+Redirect `536328569148` above — `…-e600-…-new-copy` → the E620T handle — indicates the E620T record
+was created by duplicating the E600 record and then renamed (Shopify auto-creates a redirect on a
+handle change). Creation timestamps are consistent with that order: E600 `2026-03-18T00:40:11Z`,
+E620T `2026-03-18T22:21:08Z` — E620T created about 22 hours after E600. This is a strong inference
+from the redirect plus timestamps, not a logged history.
+
+Three artifacts still carry the wrong identity on the E620T product:
 
 1. `custom.productnameshort` = `French Fitness E620T Elliptical w/21" Touch Console - Commercial Grade, Lifetime Frame Warranty` — **says 21 inch. Wrong.**
-2. `product_seo.product_seo_template` = `French Fitness E300 Elliptical Trainer w/ LED Console:||:…` — **an entirely different model (E300)**, carried over from the duplicate lineage. This field feeds the SEO app's title/description.
+2. `product_seo.product_seo_template` = `French Fitness E300 Elliptical Trainer w/ LED Console:||:…` — **an entirely different model (E300)**. This is an app-owned field. **I did not confirm whether it is currently applied to the live page**, and it is worth noting the native Shopify SEO fields on E620T are both empty (`seo.title` and `seo.description` are null), so the page title falls back to the correct `product.title`. Flagging it as wrong data to clean rather than as a proven live symptom.
 3. `custom.short_description` says "21-inch stride" on both E600 and E620T. That one is legitimate (stride length, not console size) but it compounds the confusion in any text scan.
 
 The PDP `<h1>` renders `product.title` (`sections/main-product.liquid:876`), which is correct, so
@@ -133,7 +139,13 @@ Admin or the published theme can currently produce that result.
 ```
 
 The displayed string is `custom.processing_time_long`, verbatim. There is no hardcoded lead time,
-no conditional override, no app injection, and no market/locale branch in this path.
+no conditional override, and no market/locale branch in this path.
+
+**Scope limit, stated honestly:** I audited the theme Liquid and the product metafields. I did not
+audit installed-app script tags or theme app extensions, so I cannot claim "no app anywhere could
+inject a lead time." What I can say is that the theme's own render path takes the metafield
+verbatim, and that the metafield currently holds the wrong value — which is sufficient to explain
+the FAIL without invoking an app.
 
 ### FF-T850's current values
 
@@ -158,11 +170,19 @@ Two products on the identical code path render correctly today:
 FF-HPB100 is the one product Tim confirmed **passes** public read-back at 1–2 weeks. It is the
 exact template for the values FF-T850 needs.
 
-### FF-T850 is the only French Fitness treadmill still on 3–5 weeks
+### FF-T850 is the only ACTIVE French Fitness treadmill not on 1–2 weeks
 
-All 14 other French Fitness treadmills in the catalog read `Ships in 1-2 Weeks`: FF-T300, FF-T400,
-FF-T600, FF-T700, FF-T800, FF-T900, FF-CT80, FF-CT-100, FF-FT300, FF-FT500, FF-ST100, FF-ST200,
-FF-ST300 (FF-PVC375 is a floor mat at 2–5 business days). FF-T850 is the single outlier.
+Full count across 18 French Fitness products titled "Treadmill":
+
+- **15 read `Ships in 1-2 Weeks`:** FF-T300, FF-T400, FF-T600, FF-T700, FF-T800, FF-T900, FF-CT50,
+  FF-CT-70, FF-CT80, FF-CT-100, FF-FT300, FF-FT500, FF-ST100, FF-ST200, FF-ST300.
+- **FF-T850 — `Ships in 3-5 Weeks`** (ACTIVE).
+- **FF-T100 — `Ships in 4-6 Weeks`** (UNLISTED, so not publicly reachable).
+- **FF-PVC375 — `Ships in 2-5 Business Days`** (a floor mat, not a treadmill).
+
+So among ACTIVE treadmills FF-T850 is the sole outlier. It is not the only record in the family
+off 1–2 weeks catalog-wide — FF-T100 is at 4–6 weeks, but it is UNLISTED and therefore outside the
+public read-back.
 
 ### On the reported "3–7 business days"
 
@@ -207,8 +227,12 @@ $4,799 selling**. `$4,799` is the only selling price the intended product can re
 
 Checked exhaustively; nothing can produce a different PDP price for this product:
 
-- **Markets / price lists:** all seven (United States, Canada, Mexico, International,
-  International duties-not-collected, UK, All B2B) are `PERCENTAGE_DECREASE` **0**.
+- **Market price lists:** five market catalogs carry price lists — United States, Canada, Mexico,
+  International, UK — and every one is `PERCENTAGE_DECREASE` **0**. (Correcting my own earlier
+  count: seven *markets* are enabled, but only these five have market catalogs with price lists.
+  "All B2B" and "International (duties not collected)" returned no market catalog.)
+- **B2B price list:** the `b2b` company-location catalog's price list holds **zero fixed prices** —
+  queried directly, empty result. It also would not apply to a logged-out public PDP.
 - **Catalogs:** no product-level price override on this variant.
 - **Automatic discounts:** exactly one active ("auto discount", 5%). It is cart-level, not a PDP
   price, and 5% of $4,799 is not $4,299 in any case.
@@ -264,7 +288,7 @@ Gate status is Tim's to set. The table records only what the technical check fou
 
 | Item | Technical check | Source finding | Owner of the fix |
 |---|---|---|---|
-| FF-E620T routing | No fault found — record correct, published, redirect correct, no 21-inch product exists | $2,999 / 1–2 weeks matches FF-E600 exactly. Plus stale duplicate-lineage metafields on E620T (`productnameshort` says 21", `product_seo_template` says E300) | Product — metafield cleanup; re-read against the 15-inch URL |
+| FF-E620T routing | No fault found — record correct, published, redirect correct, no 21-inch E620T exists | $2,999 / 1–2 weeks matches FF-E600 exactly. Plus stale duplicate-lineage metafields on E620T (`productnameshort` says 21", `product_seo_template` says E300) | Product — metafield cleanup; re-read against the 15-inch URL |
 | FF-T850 lead time | No fault found — theme renders the metafield verbatim | Approved 1–2 weeks never written; still `Ships in 3-5 Weeks`. Only FF treadmill still on 3–5 weeks | Product — 3 metafields |
 | FF-SM920T price | No fault found — no override in markets, catalogs, price lists, or discounts | SM920T's record carries $4,799; $4,299 is FF-SM900's price | Tim — HOLD and intended price remain his decision |
 | FF-SM920T lead time | No fault found — same code path | Still `Ships in 3-5 Weeks`, not 1–2 weeks | Product — 3 metafields, pending Tim's confirmation the 1–2 week status applies |
@@ -300,7 +324,7 @@ No dedicated Gym Packages v9.1 branch or PR exists, which matches Tim's read:
 
 - `feature/gym-packages` on origin is stale — last commit `fdd243c`, **2025-05-19**, 14 months old. Not v9.1.
 - PR #647 is the separate SP-HG3500 workstream and will not be reused.
-- No other open PR touches Gym Packages v9.1.
+- No other open PR touches Gym Packages v9.1 — checked all 11 open PRs (#622, #625, #640, #647, #654, #663, #664, #668, #669, #672, #673), not a first page only.
 
 Per Tim's instruction, the dedicated branch, PR, preview theme link, and test plan will be created
 **only after** the controlled Parts 1–3 source passes QA. Nothing is merged, deployed, or
