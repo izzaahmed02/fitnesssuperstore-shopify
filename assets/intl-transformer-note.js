@@ -48,6 +48,9 @@
 
     toggle.addEventListener('pointerdown', () => {
       openingWithPointer = true;
+      // A pointer press is its own activation, even on a button focus already opened
+      // from the keyboard, so it must not be swallowed as the keyboard follow-up.
+      openedByFocus = false;
     });
 
     toggle.addEventListener('click', () => {
