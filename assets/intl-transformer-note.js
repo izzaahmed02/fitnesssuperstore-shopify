@@ -4,36 +4,47 @@
 // popover open so it survives the pointer leaving; hover alone closes on leave.
 // Closes on Escape, on an outside click/tap, and when focus leaves the note.
 (() => {
+  const NOTE_SELECTOR = '[data-intl-transformer-note]';
   const canHover = window.matchMedia('(hover: hover)').matches;
 
-  const setUpNote = (note) => {
-    const toggle = note.querySelector('[data-intl-transformer-toggle]');
-    const popover = note.querySelector('[data-intl-transformer-popover]');
+  const toggleOf = (note) => note.querySelector('[data-intl-transformer-toggle]');
+  const popoverOf = (note) => note.querySelector('[data-intl-transformer-popover]');
+  const isOpen = (note) => toggleOf(note)?.getAttribute('aria-expanded') === 'true';
 
-    if (!toggle || !popover || toggle.dataset.intlTransformerReady) return;
+  const open = (note, { pin = false } = {}) => {
+    if (pin) note.dataset.intlTransformerPinned = 'true';
+    popoverOf(note).hidden = false;
+    toggleOf(note).setAttribute('aria-expanded', 'true');
+  };
+
+  const close = (note) => {
+    delete note.dataset.intlTransformerPinned;
+    popoverOf(note).hidden = true;
+    toggleOf(note).setAttribute('aria-expanded', 'false');
+  };
+
+  const setUpNote = (note) => {
+    const toggle = toggleOf(note);
+    const popover = popoverOf(note);
+
+    if (!toggle || !popover) return;
+
+    // The quick-add modal fetches the product page and injects its product-info
+    // markup, so a copy of this note arrives in a context it must never render in.
+    // Discard that copy rather than wiring it up.
+    if (note.closest('quick-add-modal, [id^="QuickAddInfo-"]')) {
+      note.remove();
+      return;
+    }
+
+    if (toggle.dataset.intlTransformerReady) return;
     toggle.dataset.intlTransformerReady = 'true';
 
-    // Pinned means opened deliberately by click, tap, or keyboard, so hovering
-    // away must not close it.
-    let pinned = false;
-    // A pointer press focuses the button before the click event lands. Without
-    // this the focus handler would open the popover and the click would read as
-    // a second interaction and close it again.
+    // A pointer press focuses the button before its click event lands, and focus on
+    // its own already opens the popover. These two flags stop one interaction from
+    // reading as two and cancelling itself out.
     let openingWithPointer = false;
-
-    const isOpen = () => toggle.getAttribute('aria-expanded') === 'true';
-
-    const open = ({ pin = false } = {}) => {
-      if (pin) pinned = true;
-      popover.hidden = false;
-      toggle.setAttribute('aria-expanded', 'true');
-    };
-
-    const close = () => {
-      pinned = false;
-      popover.hidden = true;
-      toggle.setAttribute('aria-expanded', 'false');
-    };
+    let openedByFocus = false;
 
     toggle.addEventListener('pointerdown', () => {
       openingWithPointer = true;
@@ -41,41 +52,61 @@
 
     toggle.addEventListener('click', () => {
       openingWithPointer = false;
-      if (isOpen() && pinned) {
-        close();
+
+      // A keyboard user's first Enter or Space lands on a popover that focus has
+      // already opened. Treat it as confirming that state, not collapsing it.
+      if (openedByFocus) {
+        openedByFocus = false;
+        return;
+      }
+
+      if (isOpen(note) && note.dataset.intlTransformerPinned) {
+        close(note);
       } else {
-        open({ pin: true });
+        open(note, { pin: true });
       }
     });
 
     toggle.addEventListener('focus', () => {
       if (openingWithPointer) return;
-      open({ pin: true });
+      openedByFocus = true;
+      open(note, { pin: true });
     });
 
     if (canHover) {
-      note.addEventListener('mouseenter', () => open());
+      note.addEventListener('mouseenter', () => open(note));
       note.addEventListener('mouseleave', () => {
-        if (!pinned) close();
+        if (!note.dataset.intlTransformerPinned) close(note);
       });
     }
 
     note.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape' || !isOpen()) return;
-      close();
+      if (event.key !== 'Escape' || !isOpen(note)) return;
+      openedByFocus = false;
+      close(note);
       toggle.focus();
     });
 
     note.addEventListener('focusout', (event) => {
       if (note.contains(event.relatedTarget)) return;
-      close();
-    });
-
-    document.addEventListener('pointerdown', (event) => {
-      if (!isOpen() || note.contains(event.target)) return;
-      close();
+      openedByFocus = false;
+      close(note);
     });
   };
 
-  document.querySelectorAll('[data-intl-transformer-note]').forEach(setUpNote);
+  // One delegated listener for the whole document. The quick-add modal re-runs this
+  // script and then throws its DOM away, so a listener per note would pile up and
+  // keep the discarded notes alive.
+  if (!document.documentElement.dataset.intlTransformerNoteBound) {
+    document.documentElement.dataset.intlTransformerNoteBound = 'true';
+
+    document.addEventListener('pointerdown', (event) => {
+      document.querySelectorAll(NOTE_SELECTOR).forEach((note) => {
+        if (!isOpen(note) || note.contains(event.target)) return;
+        close(note);
+      });
+    });
+  }
+
+  document.querySelectorAll(NOTE_SELECTOR).forEach(setUpNote);
 })();
