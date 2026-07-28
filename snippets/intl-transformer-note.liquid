@@ -1,8 +1,9 @@
 {%- comment -%}
   International transformer note (informational only — NOT an add-on or voltage selector).
 
-  Renders a single general note below Add to Cart on PRODUCT PAGES ONLY, for corded
-  cardio products where the display flag has been turned on.
+  Renders a single compact line below Add to Cart on PRODUCT PAGES ONLY, for corded
+  cardio products where the display flag has been turned on. The supporting detail sits
+  in an information popover opened by hover, keyboard focus, or tap.
 
   Display control (single source of truth):
     custom.show_external_transformer_note (boolean) — content-display toggle only.
@@ -25,32 +26,114 @@
 
 {%- if request.page_type == 'product' and product != blank -%}
   {%- if product.metafields.custom.show_external_transformer_note.value == true -%}
+    {%- assign intl_transformer_popover_id = 'IntlTransformerInfo-' | append: product.id -%}
     {%- style -%}
       .intl-transformer-note {
+        position: relative;
         margin-top: 1.25rem;
         margin-bottom: 1.25rem;
         padding-top: 1rem;
         border-top: 1px solid rgba(var(--color-foreground), 0.12);
         font-size: 1rem;
         line-height: 1.6;
-        color: rgb(var(--color-foreground));
+        color: rgba(var(--color-foreground), 0.8);
       }
       @media screen and (min-width: 750px) {
         .intl-transformer-note {
-          font-size: 1.2rem;
+          font-size: 1.1rem;
         }
       }
       .intl-transformer-note a {
+        color: inherit;
         text-decoration: underline;
         font-weight: 500;
       }
+      /* Stays static so the popover is positioned against the note, not the icon,
+         which keeps it inside the viewport when the icon sits near a screen edge. */
+      .intl-transformer-note__info {
+        position: static;
+        display: inline-flex;
+        vertical-align: text-bottom;
+      }
+      .intl-transformer-note__toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 0 0 0.2rem;
+        padding: 0.2rem;
+        border: 0;
+        border-radius: 50%;
+        background: none;
+        color: inherit;
+        cursor: pointer;
+        line-height: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .intl-transformer-note__toggle svg {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+      .intl-transformer-note__toggle:hover,
+      .intl-transformer-note__toggle[aria-expanded='true'] {
+        color: rgb(var(--color-foreground));
+      }
+      .intl-transformer-note__toggle:focus-visible {
+        outline: 0.2rem solid rgb(var(--color-foreground));
+        outline-offset: 0.1rem;
+      }
+      /* Quick add fetches the product page and injects its product-info markup, which
+         carries a copy of this note. Hide it there immediately; the script removes it. */
+      quick-add-modal .intl-transformer-note,
+      [id^='QuickAddInfo-'] .intl-transformer-note {
+        display: none;
+      }
+      .intl-transformer-note__popover {
+        position: absolute;
+        z-index: 3;
+        top: calc(100% + 0.6rem);
+        left: 0;
+        right: 0;
+        max-width: 42rem;
+        padding: 1rem 1.2rem;
+        border: 1px solid rgba(var(--color-foreground), 0.28);
+        border-radius: 0.4rem;
+        background-color: rgb(var(--color-background));
+        box-shadow: 0 0.3rem 1.2rem rgba(var(--color-foreground), 0.18);
+        font-size: 1rem;
+        line-height: 1.5;
+        color: rgb(var(--color-foreground));
+      }
     {%- endstyle -%}
-    <p class="intl-transformer-note">
-      Shipping outside the U.S. or Canada? External transformer options are available
-      for treadmills, ellipticals, exercise bikes, steppers, and other corded cardio
-      fitness equipment. <a href="/pages/contact">Contact us</a> before ordering so we
-      can help select the appropriate transformer capacity and connection for your
-      electrical requirements and destination power supply.
+    <p class="intl-transformer-note" data-intl-transformer-note>
+      Shipping outside the U.S. or Canada? <a href="/pages/contact">Contact us</a> about
+      transformer options before ordering.<span class="intl-transformer-note__info">
+        <button
+          type="button"
+          class="intl-transformer-note__toggle"
+          aria-label="Transformer information"
+          aria-expanded="false"
+          aria-controls="{{ intl_transformer_popover_id }}"
+          data-intl-transformer-toggle
+        >
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+            <circle cx="10" cy="10" r="8.25" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10 8.75V14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="10" cy="6.25" r="1" fill="currentColor"/>
+          </svg>
+        </button>
+      </span>
+      <span
+        id="{{ intl_transformer_popover_id }}"
+        class="intl-transformer-note__popover"
+        data-intl-transformer-popover
+        hidden
+      >
+        For treadmills, ellipticals, exercise bikes, steppers, and other corded cardio
+        equipment. We&rsquo;ll help identify the appropriate transformer capacity and
+        connection based on the equipment&rsquo;s electrical requirements and destination
+        power supply.
+      </span>
     </p>
+    <script src="{{ 'intl-transformer-note.js' | asset_url }}" defer="defer"></script>
   {%- endif -%}
 {%- endif -%}
