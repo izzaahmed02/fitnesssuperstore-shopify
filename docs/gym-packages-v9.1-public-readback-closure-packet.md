@@ -9,6 +9,11 @@
 This packet identifies the exact source producing each reported public value and states the
 intended result. It does not change any product data, theme code, or live storefront behavior.
 
+**Standing of this document.** This is evidence submitted for Tim's decision, not a closure
+declaration. Opening or closing the public/price gates, lifting the FF-SM920T price HOLD, and
+approving any customer-facing price remain Tim's calls. Where a check came back clean, that is
+recorded as "no fault found" in the technical lane — not as a gate closed.
+
 ---
 
 ## 0. Method and the one thing I could not do
@@ -31,7 +36,7 @@ turn out not to belong to the products under test at all.
 
 ---
 
-## 1. FF-E620T — routing is **not** broken. The reported values belong to a different product.
+## 1. FF-E620T — routing and record check came back clean; the reported values match a different product
 
 ### Intended product (Admin, verified)
 
@@ -97,14 +102,19 @@ above, which is where feeds and SEO output read from.
 
 ### Result
 
-**Routing/theme/cache: PASS — nothing to fix in the technical lane.** The E620T record is correct
-and correctly published, and no redirect diverts the intended URL.
+**Technical lane — no fault found.** The E620T record is correct and correctly published, and no
+redirect diverts the intended URL. I found nothing to fix in theme, redirect, cache, app, market,
+or routing for this item. Whether that closes the E620T gate is Tim's call.
 
 **Source-data cleanup required (Product lane, Larianne):** correct `custom.productnameshort` to
 15-inch and clear/repoint `product_seo.product_seo_template` off the E300 content.
 
-**Re-read required:** the read that produced $2,999 / 1–2 weeks was against FF-E600, not FF-E620T.
-Please re-run it against `/products/french-fitness-e620t-elliptical-w-15-touch-console-new`.
+**Re-read requested:** the $2,999 / 1–2 week pair matches FF-E600 exactly. To settle which record
+the earlier read resolved to, a fresh read against
+`/products/french-fitness-e620t-elliptical-w-15-touch-console-new` — with the URL and timestamp
+recorded — would close the question either way. If that read still returns $2,999 / 1–2 weeks
+against the 15-inch URL, send it to me and I will reopen this item immediately, because nothing in
+Admin or the published theme can currently produce that result.
 
 ---
 
@@ -164,7 +174,8 @@ finding above stands: FF-T850's own value is 3–5 weeks and must be changed.
 
 ### Result
 
-**Theme: PASS — no code change required.** **FAIL is source data.** Set on FF-T850:
+**Theme — no fault found; no code change required.** The FAIL Tim recorded is real, and its cause
+is source data. Set on FF-T850:
 
 - `custom.processing_time` → `Ships in 1-2 Weeks`
 - `custom.processing_time_long` → `Ships from our Warehouse in 1-2 Weeks + Transit Time`
@@ -174,7 +185,7 @@ Public read-back will then pass without any deployment.
 
 ---
 
-## 3. FF-SM920T — no price conflict on the product. $4,299 belongs to a different product.
+## 3. FF-SM920T — source trace on the $4,799 Admin / $4,299 public question
 
 ### Intended product (Admin, verified)
 
@@ -218,17 +229,22 @@ A **different live product** — the same sibling-confusion pattern as E620T/E60
 Note the two records were updated six minutes apart on 2026-07-27 (SM920T 10:39:17Z, SM900
 10:45:03Z), which is consistent with both being open during the same editing session.
 
-### Result — recommend lifting the price HOLD
+### Result — evidence for Tim's decision; HOLD stays in place
 
-**There is no Admin-versus-public price conflict on FF-SM920T.** Admin is internally consistent
-and is the controlling source. The intended customer-facing price is **$4,799**, and $4,299 is
-FF-SM900's price. On that basis the **Shopify-Admin scenario** is the one that applies to the QA
-figures. Final commercial sign-off stays with Tim and Carlos — this packet resolves only the
-source question, not the customer package price.
+**The price HOLD remains in place per Tim's instruction.** This packet does not lift it and does
+not set a customer-facing price.
 
-### New finding — FF-SM920T has the same lead-time defect as FF-T850
+What the source trace establishes: FF-SM920T's own record carries **$4,799** and nothing in the
+pricing chain can render a different figure for it, while **$4,299 is FF-SM900's price** on a
+separate live product. Which figure is the intended customer price, which source controls it, and
+when the HOLD lifts are Tim's calls, with commercial sign-off from Tim and Carlos. If Tim resolves
+it to $4,799, the Shopify-Admin scenario is the one that matches these figures — but that
+determination is his to make, not this packet's.
 
-Recorded as a lead-time PASS in the last email, but it is not:
+### Additional item — FF-SM920T lead-time fields
+
+Adding this to the open list rather than treating SM920T's lead time as settled. Its processing
+fields currently read:
 
 | Metafield | Current value |
 |---|---|
@@ -237,26 +253,30 @@ Recorded as a lead-time PASS in the last email, but it is not:
 | `custom.processing_time_filter` | **`Ships in 2-5 weeks`** |
 
 FF-SM920T and FF-SM900 are the only two French Fitness stairmills still on 3–5 weeks; FFS-SM200,
-FFB-SM200, FF-SC500 and FF-SC600 all read `Ships in 1-2 Weeks`. **FF-SM920T needs the same
-three-field correction as FF-T850.**
+FFB-SM200, FF-SC500 and FF-SC600 all read `Ships in 1-2 Weeks`. If the approved 1–2 week status
+applies to SM920T as it does to T850, it needs the same three-field correction.
 
 ---
 
 ## 4. Consolidated status
 
-| Item | Technical lane | Root cause | Owner of the fix |
-|---|---|---|---|
-| FF-E620T routing | **PASS** — record correct, published, redirect correct, no 21-inch product exists | Read was against FF-E600 ($2,999 / 1–2 weeks). Plus stale duplicate-lineage metafields on E620T (`productnameshort` says 21", `product_seo_template` says E300) | Product — metafield cleanup; re-read correct URL |
-| FF-T850 lead time | **PASS** — theme renders the metafield verbatim | Approved 1–2 weeks never written; still `Ships in 3-5 Weeks`. Only FF treadmill still on 3–5 weeks | Product — 3 metafields |
-| FF-SM920T price | **PASS** — no override in markets, catalogs, price lists, or discounts | No conflict. $4,799 is correct; $4,299 is FF-SM900 | None — recommend lifting HOLD at $4,799 |
-| FF-SM920T lead time | **PASS** — same code path | **New FAIL.** Still `Ships in 3-5 Weeks`, not 1–2 weeks | Product — 3 metafields |
+Gate status is Tim's to set. The table records only what the technical check found.
 
-**No theme code change is required for any of the four.** Every defect is product source data.
-Zafran is not needed — there is no shared architecture, app, routing, cache, or market issue.
+| Item | Technical check | Source finding | Owner of the fix |
+|---|---|---|---|
+| FF-E620T routing | No fault found — record correct, published, redirect correct, no 21-inch product exists | $2,999 / 1–2 weeks matches FF-E600 exactly. Plus stale duplicate-lineage metafields on E620T (`productnameshort` says 21", `product_seo_template` says E300) | Product — metafield cleanup; re-read against the 15-inch URL |
+| FF-T850 lead time | No fault found — theme renders the metafield verbatim | Approved 1–2 weeks never written; still `Ships in 3-5 Weeks`. Only FF treadmill still on 3–5 weeks | Product — 3 metafields |
+| FF-SM920T price | No fault found — no override in markets, catalogs, price lists, or discounts | SM920T's record carries $4,799; $4,299 is FF-SM900's price | Tim — HOLD and intended price remain his decision |
+| FF-SM920T lead time | No fault found — same code path | Still `Ships in 3-5 Weeks`, not 1–2 weeks | Product — 3 metafields, pending Tim's confirmation the 1–2 week status applies |
+
+**No theme code change is required for any of the four.** Every defect I could act on is product
+source data. Zafran is not needed — there is no shared architecture, app, routing, cache, or market
+issue.
 
 ## 5. Exact corrections requested (Product lane)
 
-**FF-T850** and **FF-SM920T**, identical for both:
+**FF-T850** and **FF-SM920T**, identical for both — the SM920T set pending Tim's confirmation that
+the approved 1–2 week status applies to it as it does to T850:
 
 | Metafield | From | To |
 |---|---|---|
