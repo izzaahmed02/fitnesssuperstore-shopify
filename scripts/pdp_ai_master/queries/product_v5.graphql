@@ -1,0 +1,160 @@
+# PDP AI Master V5 - product read query.
+#
+# READ-ONLY BY CONSTRUCTION. This file must contain exactly one `query`
+# operation and no `mutation`. export.py refuses to run if that changes
+# (see guardrails.assert_read_only).
+#
+# Scopes required: read_products, read_inventory, read_metaobjects,
+# read_product_listings. No write scope is used or needed.
+
+query PdpAiMasterProduct($id: ID!) {
+  product(id: $id) {
+    id
+    handle
+    title
+    status
+    vendor
+    productType
+    tags
+    onlineStoreUrl
+    createdAt
+    updatedAt
+    publishedAt
+    descriptionHtml
+    seo {
+      title
+      description
+    }
+    category {
+      id
+      fullName
+    }
+    featuredMedia {
+      ... on MediaImage {
+        image {
+          url
+        }
+      }
+    }
+    media(first: 50) {
+      nodes {
+        mediaContentType
+        alt
+        ... on MediaImage {
+          image {
+            url
+            width
+            height
+          }
+        }
+        ... on Video {
+          sources {
+            url
+          }
+        }
+        ... on ExternalVideo {
+          originUrl
+        }
+      }
+    }
+    collections(first: 100) {
+      nodes {
+        id
+        handle
+        title
+      }
+    }
+    # Namespace-scoped so app-owned review blobs (judgeme.*) stay out of the
+    # export. Those are volatile and never embedded anyway.
+    customFields: metafields(first: 100, namespace: "custom") {
+      nodes {
+        namespace
+        key
+        type
+        value
+        reference {
+          ...MetaobjectRef
+        }
+        references(first: 50) {
+          nodes {
+            ...MetaobjectRef
+            ... on Product {
+              id
+              handle
+              title
+            }
+          }
+        }
+      }
+    }
+    optionFields: metafields(first: 25, namespace: "options") {
+      nodes {
+        namespace
+        key
+        type
+        value
+        references(first: 50) {
+          nodes {
+            ...MetaobjectRef
+          }
+        }
+      }
+    }
+    googleFields: metafields(first: 25, namespace: "mm-google-shopping") {
+      nodes {
+        namespace
+        key
+        type
+        value
+      }
+    }
+    reviewFields: metafields(first: 10, namespace: "reviews") {
+      nodes {
+        namespace
+        key
+        type
+        value
+      }
+    }
+    variants(first: 100) {
+      nodes {
+        id
+        sku
+        title
+        barcode
+        price
+        compareAtPrice
+        inventoryQuantity
+        inventoryPolicy
+        availableForSale
+        selectedOptions {
+          name
+          value
+        }
+        inventoryItem {
+          unitCost {
+            amount
+          }
+          measurement {
+            weight {
+              value
+              unit
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+fragment MetaobjectRef on Metaobject {
+  id
+  handle
+  type
+  updatedAt
+  fields {
+    key
+    type
+    value
+  }
+}
