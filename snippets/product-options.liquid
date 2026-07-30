@@ -89,6 +89,14 @@
         assign category_title_downcase = category.title | downcase
         assign hidden_option = false
 
+        assign is_cable_ab = false
+        if product.tags contains 'ff-cable-ab'
+          assign is_cable_ab = true
+        endif
+        if is_cable_ab and category_title_downcase != 'assembly & room of choice installation needed?'
+          continue
+        endif
+
         for product_option in category.product_options.value
           assign title = product_option.product_option_title | downcase
           if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
@@ -124,6 +132,10 @@
         endunless
         if index == assambly_index
           assign index = index | minus: 1
+        endif
+
+        if is_cable_ab and category_title_downcase == 'assembly & room of choice installation needed?'
+          assign display_number = 2
         endif
 
         if quantity_option

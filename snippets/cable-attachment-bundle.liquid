@@ -1,0 +1,154 @@
+{%- comment -%}
+  Cable Attachments bundle selector (NON-Avis) — data-driven.
+
+  The set list is sourced entirely from the product metafield
+  `custom.cable_attachment_sets` (a list of `cable_attachment_bundle`
+  metaobjects). Each metaobject provides:
+    - set_key           : stable id (A/B/C)
+    - bundle_product     : the backend bundle product (price/image/variant/reviews)
+    - badge              : optional card badge ("Best Value")
+    - included_products  : the individual attachments shown in the popup
+
+  Nothing about the sets (variant ids, prices, images, SKUs, handles) is
+  hardcoded here — it all comes from the metaobjects, so the list is editable
+  in Shopify admin. The visible design is the dev-usman-11-jan port
+  (bundle-selector.css / bundle-selector.js) wrapped in the native
+  product-options contract so selection flows to cart without Avis.
+
+  Params: product (required), section (required)
+{%- endcomment -%}
+
+{%- liquid
+  assign sets = product.metafields.custom.cable_attachment_sets.value
+-%}
+
+{%- if sets != blank and sets.size > 0 -%}
+  {{ 'bundle-selector.css' | asset_url | stylesheet_tag }}
+
+  <div id="Product-Options-cable-{{ section.id }}" class="cable-bundle">
+    <div
+      class="cable-bundle__group"
+      data-option-accordion
+      data-type="cable-attachments"
+      data-cable-bundle
+    >
+      {%- comment -%} Native contract holder + hidden radios (from the metaobjects). {%- endcomment -%}
+      <span class="visually-hidden" data-selected-options=""></span>
+      {%- for set in sets -%}
+        {%- assign bp = set.bundle_product.value -%}
+        {%- assign variant_id = bp.selected_or_first_available_variant.id -%}
+        {%- assign price = bp.price | money_without_currency | replace: ',', '' -%}
+        {%- assign field_name = bp.title | remove: 'French Fitness Cable Machine Attachment ' | remove: ' (New)' -%}
+        <input
+          type="radio"
+          class="visually-hidden"
+          name="Cable Attachments"
+          data-bundle-set="{{ set.set_key.value }}"
+          data-customization-option="{{ variant_id }}"
+          data-field-name="{{ field_name | escape }}"
+          value="{{ variant_id }}:::{{ price }}"
+        >
+      {%- endfor -%}
+      <input type="radio" class="visually-hidden" name="Cable Attachments" data-cable-none data-customization-option="none" data-field-name="No Thanks" value="" checked>
+
+      <details class="bundle-selector-dropdown" data-section-id="{{ section.id }}" open>
+        <summary class="bundle-selector-summary">
+          <span class="bundle-selector-summary__title" data-option-title>Cable Attachments</span>
+        </summary>
+        <div class="bundle-selector-dropdown__content">
+          <div class="bundle-selector-container" data-section-id="{{ section.id }}">
+            <div class="bundle-cards-wrapper">
+              {%- for set in sets -%}
+                {%- assign bp = set.bundle_product.value -%}
+                <div class="bundle-card" data-bundle-set="{{ set.set_key.value }}">
+                  {%- if set.badge.value != blank -%}
+                    <div class="bundle-badge">{{ set.badge.value }}</div>
+                  {%- endif -%}
+                  <div class="bundle-card__image">
+                    <img src="{{ bp.featured_image | image_url: width: 300 }}" alt="{{ bp.title | escape }}" width="300" height="300" loading="lazy">
+                  </div>
+                  <div class="bundle-card__content">
+                    <h4 class="bundle-card__title">{{ bp.title }}</h4>
+                    <a href="#" class="bundle-card__link" data-bundle-set="{{ set.set_key.value }}">See What's Included</a>
+                    <div class="bundle-card__price">
+                      <span class="bundle-price-current">{{ bp.price | money }} USD</span>
+                      {%- assign retail = bp.metafields.custom.retail_price.value -%}
+                      {%- if retail != blank -%}
+                        <span class="bundle-price-original">{{ retail | money }}</span>
+                      {%- endif -%}
+                    </div>
+                  </div>
+                </div>
+              {%- endfor -%}
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div id="bundle-modal" class="bundle-modal" hidden style="display: none;">
+      <div class="bundle-modal__backdrop"></div>
+      <div class="bundle-modal__content">
+        <button class="bundle-modal__close" aria-label="Close modal">&times;</button>
+        <div class="bundle-modal__header">
+          <h2 class="bundle-modal__title">ABOUT THIS BUNDLE</h2>
+        </div>
+        <div class="bundle-modal__body">
+          <div class="bundle-modal__main-product">
+            <div class="bundle-modal__product-image">
+              <img id="bundle-main-image" src="" alt="" width="200" height="200" loading="lazy">
+            </div>
+            <div class="bundle-modal__product-info">
+              <div class="bundle-modal__rating" id="bundle-main-rating"></div>
+              <h3 id="bundle-main-title" class="bundle-modal__product-title"></h3>
+              <p id="bundle-main-description" class="bundle-modal__product-description"></p>
+            </div>
+          </div>
+          <div class="bundle-modal__included-section">
+            <h4 class="bundle-modal__included-title">The set includes the following:</h4>
+            <div class="bundle-modal__products-grid" id="bundle-products-grid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {%- comment -%} Data config for bundle-selector.js — all set/product data, no hardcoding. {%- endcomment -%}
+    <script type="application/json" data-cable-config>
+    {
+      "sets": [
+        {%- for set in sets -%}
+          {%- assign bp = set.bundle_product.value -%}
+          {%- assign bpbadge = bp.metafields.judgeme.badge -%}
+          {%- assign bpbadgeval = bpbadge.value | default: bpbadge -%}
+          {
+            "key": {{ set.set_key.value | json }},
+            "handle": {{ bp.handle | json }},
+            "variantId": {{ bp.selected_or_first_available_variant.id | json }},
+            "title": {{ bp.title | json }},
+            "price": {{ bp.price | json }},
+            "image": {{ bp.featured_image | image_url: width: 400 | json }},
+            "description": {{ bp.description | json }},
+            "badge": {{ bpbadgeval | json }},
+            "included": [
+              {%- for ip in set.included_products.value -%}
+                {%- assign ipbadge = ip.metafields.judgeme.badge -%}
+                {%- assign ipbadgeval = ipbadge.value | default: ipbadge -%}
+                {
+                  "handle": {{ ip.handle | json }},
+                  "title": {{ ip.title | json }},
+                  "sku": {{ ip.metafields.custom.product_code.value | default: ip.selected_or_first_available_variant.sku | json }},
+                  "image": {{ ip.featured_image | image_url: width: 240 | json }},
+                  "price": {{ ip.price | json }},
+                  "badge": {{ ipbadgeval | json }}
+                }{%- unless forloop.last -%},{%- endunless -%}
+              {%- endfor -%}
+            ]
+          }{%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      ]
+    }
+    </script>
+
+    <script src="{{ 'bundle-selector.js' | asset_url }}" defer="defer"></script>
+  </div>
+{%- endif -%}
