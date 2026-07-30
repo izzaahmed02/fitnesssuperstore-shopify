@@ -63,35 +63,85 @@ jobs:
           echo "@shopify/cli:    $(npm ls -g --depth=0 @shopify/cli | sed -n 's/.*@shopify\/cli@//p')"
           echo "shopify --version: $(shopify version 2>/dev/null || true)"
 
+      # `-o json` is deliberate. The default text formatter prints a source-context
+      # box per offense; on this theme's current backlog that produced a >100 MB log
+      # when measured locally — unreadable, a huge artifact, and slow. JSON is
+      # compact, countable, and diffable run to run.
+      #
       # stdin from /dev/null so the linter can never hang CI waiting on a prompt.
-      # Exit-code handling: 0/1 = the lint ran (1 = findings). Anything else is a
-      # real failure (124 = timed out, i.e. an incomplete report) and fails the job
-      # even in report-only mode.
       - name: Run Theme Check
         id: check
         run: |
           set +e
-          timeout 1200 shopify theme check --no-color < /dev/null | tee theme-check-report.txt
-          status=${PIPESTATUS[0]}
+          timeout 1200 shopify theme check --no-color -o json < /dev/null > theme-check-report.json
+          status=$?
           set -e
           echo "status=${status}" >> "$GITHUB_OUTPUT"
 
           if [ "$status" -eq 124 ]; then
-            echo "::error::Theme Check timed out after 20 minutes — report is incomplete."
+            echo "::error::Theme Check timed out after 20 minutes - the report is incomplete and proves nothing."
             exit 1
           fi
-          if [ "$status" -gt 1 ]; then
-            echo "::error::Theme Check failed to run (exit ${status})."
-            exit "$status"
+          if [ ! -s theme-check-report.json ]; then
+            echo "::error::Theme Check produced no report (exit ${status})."
+            exit 1
           fi
-          if [ "$status" -eq 1 ]; then
-            if [ "${REPORT_ONLY}" = 'true' ]; then
-              echo "::warning::Theme Check reported findings. Report-only during rollout — not failing the job. This is not a quality gate."
-            else
-              echo "::error::Theme Check reported findings and REPORT_ONLY is disabled."
-              exit 1
-            fi
+
+      # Counts by severity and by check, so the result is usable as evidence
+      # without opening the artifact, and so backlog progress is visible.
+      - name: Summarise findings
+        if: always() && steps.check.outputs.status != '124' && steps.check.outputs.status != ''
+        run: |
+          node --input-type=module -e '
+            import { readFileSync, appendFileSync } from "node:fs";
+            const data = JSON.parse(readFileSync("theme-check-report.json", "utf8"));
+            const files = Array.isArray(data) ? data : [data];
+            const bySeverity = new Map(), byCheck = new Map();
+            let total = 0;
+            for (const f of files) {
+              for (const o of f.offenses ?? []) {
+                total++;
+                const sev = String(o.severity ?? "unknown");
+                bySeverity.set(sev, (bySeverity.get(sev) ?? 0) + 1);
+                byCheck.set(o.check, (byCheck.get(o.check) ?? 0) + 1);
+              }
+            }
+            const top = [...byCheck].sort((a, b) => b[1] - a[1]).slice(0, 15);
+            const lines = [
+              "## Theme Check (report-only - not a quality gate)",
+              "",
+              "Commit: `" + process.env.GITHUB_SHA + "` / Shopify CLI `" + process.env.THEME_CHECK_CLI_VERSION + "`",
+              "",
+              "**" + total + "** findings across **" + files.length + "** files scanned.",
+              "",
+              "| Severity | Count |", "|---|---|",
+              ...[...bySeverity].sort().map(([s, n]) => "| " + s + " | " + n + " |"),
+              "",
+              "| Top check | Count |", "|---|---|",
+              ...top.map(([c, n]) => "| `" + c + "` | " + n + " |"),
+            ];
+            const out = lines.join("\n");
+            console.log(out);
+            if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, out + "\n");
+          '
+
+      # Report-only means "findings do not fail the job" - never "any outcome
+      # passes". A crash, empty report, or timeout already failed the step above.
+      - name: Apply report-only policy
+        if: always() && steps.check.outputs.status != ''
+        env:
+          STATUS: ${{ steps.check.outputs.status }}
+        run: |
+          if [ "$STATUS" = '0' ]; then
+            echo "Theme Check completed with no findings at the configured fail level."
+            exit 0
           fi
+          if [ "${REPORT_ONLY}" = 'true' ]; then
+            echo "::warning::Theme Check reported findings (exit ${STATUS}). Report-only during rollout - not failing the job. This is NOT a quality gate."
+            exit 0
+          fi
+          echo "::error::Theme Check reported findings (exit ${STATUS}) and REPORT_ONLY is disabled."
+          exit 1
 
       # The report is the attachable evidence for a release packet.
       - name: Upload Theme Check report
@@ -99,6 +149,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: theme-check-report-${{ github.sha }}
-          path: theme-check-report.txt
+          path: theme-check-report.json
           if-no-files-found: warn
           retention-days: 30
