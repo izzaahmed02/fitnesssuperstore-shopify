@@ -44,14 +44,23 @@
     var bySet = {};
     (config.sets || []).forEach(function (s) { bySet[s.key] = s; });
 
-    // ── Slick carousel (mobile only) ──────────────────────
+    // ── Slick carousel (all screen sizes) ─────────────────
+    // Must run after the modal is visible so Slick can measure widths.
     function initProductsCarousel(grid) {
       if (typeof window.$ === 'undefined' || !window.$.fn || !window.$.fn.slick) return;
       var $grid = window.$(grid);
       if ($grid.hasClass('slick-initialized')) $grid.slick('unslick');
-      if (window.matchMedia('(max-width: 749px)').matches) {
-        $grid.slick({ slidesToShow: 1, slidesToScroll: 1, arrows: true, dots: true, infinite: false });
-      }
+      $grid.slick({
+        slidesToShow: 3,
+        slidesToScroll: 1,
+        arrows: true,
+        dots: true,
+        infinite: false,
+        responsive: [
+          { breakpoint: 990, settings: { slidesToShow: 2 } },
+          { breakpoint: 749, settings: { slidesToShow: 1 } }
+        ]
+      });
     }
 
     // ── Selection -> native contract ──────────────────────
@@ -124,11 +133,12 @@
             card.querySelector('.bundle-product-card__title').textContent = ip.title || '';
             grid.appendChild(card);
           });
-          initProductsCarousel(grid);
         }
 
         modal.hidden = false;
         modal.style.display = 'flex';
+        // Init the carousel after the modal is visible so Slick can measure widths.
+        if (grid) requestAnimationFrame(function () { initProductsCarousel(grid); });
         document.body.classList.add('bundle-modal-open');
         document.body.style.overflow = 'hidden';
       }
