@@ -6,6 +6,16 @@
   - product_form_id: {String} product form id.
   - section_id: {String} id of section to which this snippet belongs.
   - show_pickup_availability: {Boolean} for the pickup availability. If true the pickup availability is rendered, false - not rendered (optional).
+  - include_quantity_input: {Boolean} render a hidden quantity input inside the form (optional, default false).
+    <product-form-with-options> reads `[name=quantity]` from inside itself at add-to-cart
+    and throws if it is absent. main-product.liquid builds its own form markup with a
+    visible quantity selector, so it does not need this; sections that rely on this
+    snippet for the whole form (main-product-new.liquid) do. Opt-in, so callers that
+    don't pass it render exactly as before.
+  - show_cart_icon: {Boolean} render the Figma cart glyph inside the submit button,
+    before the label (optional, default false). Opt-in so every other caller is
+    unchanged. (Liquid's `render` takes a literal snippet name, so this is a flag
+    rather than a snippet-name parameter.)
 
   Usage:
   {% render 'buy-buttons', block: block, product: product, product_form_id: product_form_id, section_id: section.id, show_pickup_availability: true %}
@@ -61,6 +71,10 @@
           class="product-variant-id"
         >
 
+        {%- if include_quantity_input -%}
+          <input type="hidden" name="quantity" value="1">
+        {%- endif -%}
+
         {%- if gift_card_recipient_feature_active -%}
           {%- render 'gift-card-recipient-form', product: product, form: form, section: section -%}
         {%- endif -%}
@@ -84,6 +98,9 @@
               disabled
             {% endif %}
           >
+            {%- if show_cart_icon -%}
+              {%- render 'pdp-new-icon-cart' -%}
+            {%- endif -%}
             <span>
               {%- if product.selected_or_first_available_variant == null -%}
                 {{ 'products.product.unavailable' | t }}

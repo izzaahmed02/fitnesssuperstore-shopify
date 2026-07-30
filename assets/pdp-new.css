@@ -235,6 +235,41 @@
   background-size: 20px;
 }
 
+/* ---- Full configurator (snippets/product-options.liquid, rendered verbatim) ----
+       Deliberately minimal: the live look from product-options.css is kept, this
+       only seats the block in the new buy-box column. ---- */
+.pdp-new__configurator {
+  margin: 0 0 20px;
+}
+
+.pdp-new__configurator [id^='Product-Options-'] {
+  width: 100%;
+}
+
+/* The shared snippet's dark "Configure your order here." header bar isn't in the
+   Figma design. Hidden here rather than removed from snippets/product-options.liquid,
+   which the live PDP renders too. */
+.pdp-new .product-options__bar {
+  display: none;
+}
+
+/* Circled step number in each option-group heading ("1 Colors") — not in the
+   Figma design; the titles and their help "?" stay. Targets the first direct
+   child span, which is the number badge: a descendant selector would also catch
+   the .option_selected spans that sit in this same row. display:none rather than
+   visibility, so the heading's 8px column-gap closes up too. Shared snippet, so
+   this is scoped to .pdp-new and the live PDP keeps its numbering. */
+.pdp-new .product-options__category-title > span:first-child {
+  display: none;
+}
+
+/* Accessory groups that are also shown as Figma cards below. Hidden for
+   presentation only — the inputs stay in the DOM and remain fully functional,
+   so nothing is filtered out of the purchase path. Applied by pdp-new.js. */
+.pdp-new .product-option__item.pdp-new--card-covered {
+  display: none;
+}
+
 /* ---- Info tabs (buy box): per Figma, every tab has a grey underline segment;
        the active tab's segment turns orange. Labels stay black. ---- */
 .pdp-new__tabs .tabs__buttons,
@@ -342,6 +377,7 @@
 }
 
 /* ---- Price / financing ---- */
+/* Headline price (grand total: product + selected options). */
 .pdp-new__price .pr_custom_price {
   margin: 0;
   font-family: 'Lato', sans-serif;
@@ -414,23 +450,95 @@
   display: block;
 }
 
-/* ---- Buy buttons ---- */
-.pdp-new__buy .product-form__submit {
-  height: 48px;
-  font-weight: 700;
-  font-size: 16px;
-  background: #d83d0e;
-  color: #fff;
+/* ---- Selected configuration total ----
+   Sits directly above Add to Cart and states the amount being committed to.
+   Deliberately heavier than the pale-yellow "Options added" line, which reports
+   only the delta: this is the final figure, so it should read as the answer. */
+.pdp-new__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  background: #faf9f7;
+  border: 1px solid #d5d5d5;
   border-radius: 8px;
 }
 
-.pdp-new__quote-link {
-  display: block;
-  text-align: center;
-  margin-top: 12px;
-  color: #3e77aa;
+.pdp-new__total-label {
+  font-size: 14px;
+  line-height: 20px;
   font-weight: 700;
-  text-decoration: underline;
+  color: #23232b;
+}
+
+/* Also carries .pr_custom_price so priceHelper keeps it in step; these beat
+   product-options.css's buy-box price styling. */
+.pdp-new .pdp-new__total-value,
+.pdp-new .pdp-new__total-value.pr_custom_price {
+  margin: 0;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #d83d0e;
+  white-space: nowrap;
+}
+
+@media screen and (max-width: 749px) {
+  .pdp-new__total {
+    padding: 10px 12px;
+  }
+
+  .pdp-new__total-label {
+    font-size: 13px;
+  }
+
+  .pdp-new .pdp-new__total-value,
+  .pdp-new .pdp-new__total-value.pr_custom_price {
+    font-size: 18px;
+  }
+}
+
+/* ---- Buy buttons ----
+   Figma node 19:19171 "Simple button": #D83D0E, 8px radius, full width, padding
+   12px with a 24px right inset, 8px gap, 24px cart glyph then Lato Bold 16/24
+   white. Scoped with .pdp-new and doubled on the class so it beats the theme
+   button styles that load after this sheet. */
+.pdp-new .pdp-new__buy .product-form__submit,
+.pdp-new .pdp-new__buy .product-form__submit.button--primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  height: auto;
+  padding: 12px 24px 12px 12px;
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
+  background: #d83d0e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Exported glyph. The design draws a 21.58x20.5 leaf inside a 24px box on the
+   main button and 18.167x17.333 inside a 20px box on the add-on button; both
+   dimensions are set explicitly so neither is stretched by a parent. */
+.pdp-new .pdp-new__cart-icon {
+  flex: 0 0 auto;
+  width: 21.58px;
+  height: 20.5px;
+}
+
+.pdp-new .pdp-new__cart-icon--sm {
+  width: 18.167px;
+  height: 17.333px;
 }
 
 /* ---- Add-Ons carousel arrows (restored after gallery-CSS cleanup) ---- */
@@ -545,30 +653,69 @@
   color: #808080;
 }
 
-.pdp-new__addon-price {
+/* Figma node 19:19560: Lato Bold 14/20 in primary orange, on its own line
+   directly above the button. */
+.pdp-new .pdp-new__addon-price {
   font-size: 14px;
   line-height: 20px;
   font-weight: 700;
+  color: #d83d0e;
 }
 
-.pdp-new__addon-atc {
+/* Card CTA: price on its own line, full-width button beneath it. */
+.pdp-new__addon-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
   margin-top: auto;
+}
+
+/* Figma node 19:19562 "Simple button": #D83D0E, 40px tall, 8px radius, 6px gap,
+   padding 10px with a 20px right inset, 20px glyph then Lato Bold 14/20 white.
+   This button deliberately does NOT carry the theme's .button/.button--primary
+   classes. The site ships an accessibility-mode stylesheet with
+   `body.accessibility-mode .button { background-color: #D83D0E !important }`,
+   which silently forced every state orange — the selected state never went green
+   even though .is-added was applied, and the base orange only looked correct by
+   coincidence. Since this button's look is defined entirely here, opting out of
+   .button is cleaner than escalating to !important against an accessibility
+   feature. It also drops the theme's ~47px min-height. */
+.pdp-new .pdp-new__addon-atc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   width: 100%;
   height: 40px;
+  /* The theme's .button sets a min-height (~47px) that otherwise wins over
+     height, leaving the button taller than the design's 40px. */
+  min-height: 40px;
+  padding: 10px 16px;
+  font-family: 'Lato', sans-serif;
   font-size: 14px;
+  line-height: 20px;
   font-weight: 700;
   background: #d83d0e;
   color: #fff;
   border: none;
   border-radius: 8px;
+  overflow: hidden;
   cursor: pointer;
 }
 
-.pdp-new__addon-atc.is-added {
+/* Selected: green, and the cart glyph is dropped — it has already been added to
+   the configuration, so a cart icon next to "Selected" would misdescribe it. */
+.pdp-new .pdp-new__addon-atc.is-added {
   background: #1d7f36;
+  color: #fff;
 }
 
-.pdp-new__addon-atc[disabled] {
+.pdp-new .pdp-new__addon-atc.is-added .pdp-new__cart-icon {
+  display: none;
+}
+
+.pdp-new .pdp-new__addon-atc[disabled] {
   background: #e5e5e5;
   color: #808080;
   cursor: not-allowed;
@@ -1167,9 +1314,31 @@
   white-space: nowrap;
 }
 
-.pdp-new__sticky-price {
+/* Same label as the buy box, so the sticky bar is visibly the same total rather
+   than a second, unexplained number. */
+.pdp-new__sticky-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.pdp-new__sticky-label {
+  font-size: 11px;
+  line-height: 14px;
+  color: #4d4d4d;
+  white-space: nowrap;
+}
+
+/* Also carries .pr_custom_price so the live price writer keeps it in step with
+   the buy box; these win over product-options.css's buy-box price styling. */
+.pdp-new .pdp-new__sticky-price,
+.pdp-new .pdp-new__sticky-price.pr_custom_price {
+  margin: 0;
+  padding: 0;
   font-weight: 700;
   font-size: 18px;
+  line-height: 1.2;
   color: #d83d0e;
 }
 
@@ -1200,7 +1369,13 @@
     height: 40px;
   }
 
-  .pdp-new__sticky-price {
+  .pdp-new__sticky-label {
+    font-size: 11px;
+    line-height: 14px;
+  }
+
+  .pdp-new .pdp-new__sticky-price,
+  .pdp-new .pdp-new__sticky-price.pr_custom_price {
     font-size: 16px;
     white-space: nowrap;
   }
