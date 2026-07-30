@@ -1,0 +1,31 @@
+# Shopify Theme Check configuration
+# Docs: https://shopify.dev/docs/storefronts/themes/tools/theme-check
+#
+# Rollout note: the theme has a large pre-existing lint backlog. Theme Check runs
+# in CI as REPORT-ONLY today (see .github/workflows/theme-check.yml) and is NOT a
+# quality gate. Once the backlog is triaged and a blocking threshold is approved,
+# flip REPORT_ONLY in that workflow and make the check REQUIRED for merges to main
+# (see docs/governance-packet.md, branch-protection proposal).
+#
+# Reproducibility: the Shopify CLI version that runs these checks is pinned in
+# .github/workflows/theme-check.yml (THEME_CHECK_CLI_VERSION). Findings depend on
+# the tool version, so pin/bump it deliberately and re-attach the report.
+
+# Uses the default check set; `root: .` because the theme lives at the repo root.
+root: "."
+
+# Files generated/managed outside the theme code we review.
+ignore:
+  - node_modules/
+  - .idea/
+  - "scripts/**"
+
+# Keep the defaults; explicitly document a couple of high-signal checks.
+ParserBlockingJavaScript:
+  enabled: true
+ImgLazyLoading:
+  enabled: true
+UnusedAssign:
+  enabled: true
+RequiredLayoutThemeObject:
+  enabled: true
