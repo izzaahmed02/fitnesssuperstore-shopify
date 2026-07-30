@@ -1919,7 +1919,11 @@
               {%- when 'icon-with-text' -%}
                 {% render 'icon-with-text', block: block %}
                  {% when 'product_options' %}
-                {% render 'product-options', product: product %}  
+                {%- comment -%} Cable Attachments A/B test (non-Avis). Renders above Assembly for tagged test products only. {%- endcomment -%}
+                {%- if product.tags contains 'ff-cable-ab' -%}
+                  {% render 'cable-attachment-bundle', product: product, section: section %}
+                {%- endif -%}
+                {% render 'product-options', product: product %}
             {%- endcase -%}
           {%- endfor -%}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">

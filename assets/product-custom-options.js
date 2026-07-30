@@ -28,6 +28,7 @@ if (!customElements.get('product-customization-options')) {
       #cartUpdateUnsubscribe = null;
       #variantChangeUnsubscribe = null;
       #onPageShow = null;
+      #onCableChange = null;
 
       get modifyID() {
         return this.dataset.productId;
@@ -78,6 +79,12 @@ if (!customElements.get('product-customization-options')) {
         // reverts to the base amount. Recompute once restoration is complete.
         this.#onPageShow = () => this.updatePrice();
         window.addEventListener('pageshow', this.#onPageShow);
+
+        // The Cable Attachments bundle renders outside this component, so its
+        // selection isn't in updatePrice()'s query. Recompute the "Total with
+        // Options" price whenever the bundle dispatches this event.
+        this.#onCableChange = () => this.updatePrice();
+        document.addEventListener('cable-bundle:change', this.#onCableChange);
       }
 
       disconnectedCallback() {
@@ -94,6 +101,10 @@ if (!customElements.get('product-customization-options')) {
         if (this.#onPageShow) {
           window.removeEventListener('pageshow', this.#onPageShow);
           this.#onPageShow = null;
+        }
+        if (this.#onCableChange) {
+          document.removeEventListener('cable-bundle:change', this.#onCableChange);
+          this.#onCableChange = null;
         }
       }
 
@@ -772,7 +783,12 @@ if (!customElements.get('product-customization-options')) {
       updatePrice() {
         let priceAdjustment = 0;
         const activeOptions = this.querySelectorAll('[data-customization-option]:checked, [data-select-option], [data-quantity-option-input]');
-        if (activeOptions.length === 0) return;
+        if (activeOptions.length === 0) {
+          // No native options on this template, but a Cable Attachments
+          // selection may still need to be reflected in the price.
+          this.priceHelper(0);
+          return;
+        }
         activeOptions.forEach((option) => {
           const value = option.value;
           if (value.includes(':::')) {
@@ -803,15 +819,32 @@ if (!customElements.get('product-customization-options')) {
         this.priceHelper(priceAdjustment);
       }
 
+      // Price adjustment from the Cable Attachments bundle (rendered outside
+      // this component). Reads its [data-selected-options] holder, whose value
+      // is "variantId:::price" (empty when "No thanks" is selected).
+      cablePriceAdjustment() {
+        const holder = document.querySelector('[data-cable-bundle] [data-selected-options]');
+        const value = holder && holder.dataset.selectedOptions;
+        if (!value) return 0;
+        let sum = 0;
+        value.split(',').forEach((entry) => {
+          const parts = entry.split(':::');
+          if (parts.length > 1) sum += Number(parts[1]) || 0;
+        });
+        return sum;
+      }
+
       // Helper to create corect price HTML
 
       priceHelper(priceAdjustment) {
         const priceElement = document.querySelectorAll('.pr_custom_price');
         if (priceElement.length === 0) return;
 
+        // Include the Cable Attachments bundle in the "Total with Options".
+        const totalAdjustment = Number(priceAdjustment) + this.cablePriceAdjustment();
         const priceValueRaw = priceElement[0].dataset?.priceValue ?? '';
         const currentPrice = Number(String(priceValueRaw).replace(/,/g, '')) || 0;
-        const finalPrice = currentPrice + priceAdjustment;
+        const finalPrice = currentPrice + totalAdjustment;
         const formattedPrice = finalPrice.toLocaleString('en-US', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
@@ -821,7 +854,7 @@ if (!customElements.get('product-customization-options')) {
           el.innerText = `${priceElement[0].dataset?.currency || ''}${formattedPrice}`;
         });
 
-        this.renderOptionsAddedTotal(priceAdjustment);
+        this.renderOptionsAddedTotal(totalAdjustment);
       }
 
       renderOptionsAddedTotal(priceAdjustment) {
