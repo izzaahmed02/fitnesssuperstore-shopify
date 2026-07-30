@@ -164,6 +164,7 @@ def main() -> int:
             ("unauthored set_includes is flagged", "set_includes is unauthored"),
             ("missing manuals is flagged", "No manuals or downloads"),
             ("REMOVE FROM FEEDS tag is surfaced", "tagged out of the Google feeds"),
+            ("invisible characters are reported not stripped", "U+200B"),
         ):
             check(needle in conflicts, label)
 

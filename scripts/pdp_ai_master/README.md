@@ -15,6 +15,7 @@ the package filenames returned nothing.
 | Query document | `scripts/pdp_ai_master/queries/product_v5.graphql` |
 | Approved scope | `scripts/pdp_ai_master/config/p0p1_skus.json` — 20 products |
 | Field classification | `scripts/pdp_ai_master/config/field_source_matrix_v5.csv` |
+| Reviewed field matrix | the published `field_source_matrix_V5` in the canonical Drive folder |
 | Read-only enforcement | `scripts/pdp_ai_master/guardrails.py` |
 | Tests | `scripts/pdp_ai_master/tests/test_export.py` |
 | Admin API version | `2025-07` |
@@ -32,6 +33,29 @@ metaobject shapes the theme renders on the PDP, and the conflict rules
 beside the theme means a metaobject or schema change and the export that
 depends on it move in the same commit and the same review. Nothing here is
 loaded by the theme at runtime — Liquid never reads this directory.
+
+## Relationship to the published field matrix
+
+The reviewed field-source matrix is the `field_source_matrix_V5` artifact in
+the canonical Drive folder (62 rows, published 2026-07-27). That remains the
+human-reviewed authority.
+
+`config/field_source_matrix_v5.csv` here is the machine-readable version the
+harness ships with each package, so the classification is generated rather
+than hand-maintained. It enumerates 82 rows against the same coverage: the
+extra rows are leaf fields the published sheet grouped (`inventory_policy`,
+`updated_at`, the two review fields, rendered breadcrumbs, and the split of
+`ships` from `processing_time`), each broken out so it can carry its own
+volatility and embed flag. Google, theme and manual counts are identical.
+
+Findings carried over from the published sheet rather than rediscovered:
+`product_canonical_url` is null on all 20 and is not the canonical source
+(Smart SEO emits those), `custom_labels` are feed-side only with no Shopify
+field behind them, `preorder_backorder_status` / `discontinued_status` /
+`replacement_product_link` have no field created yet, `grade` is misused as a
+turf grade on FF-AGSL, and most `warranty` values carry a leading U+200B.
+That last one is reported as a conflict rather than stripped, because silent
+normalisation is how bad values survive review.
 
 ## Read-only guarantees
 

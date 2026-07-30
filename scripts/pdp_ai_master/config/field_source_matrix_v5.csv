@@ -28,9 +28,9 @@ shipping_weight,SAPI-DIRECT,variant.inventoryItem.measurement.weight,durable,TRU
 updated_at,SAPI-DIRECT,product.updatedAt,durable,FALSE,FALSE,API_POPULATED,Staleness input.
 product_code,SAPI-META,metafield custom.product_code,durable,TRUE,FALSE,API_POPULATED,
 brand,SAPI-META,metafield custom.brand,durable,TRUE,TRUE,API_POPULATED,
-grade,SAPI-META,metafield custom.grade,durable,TRUE,TRUE,API_POPULATED,Commercial / Light Commercial / Home.
+grade,SAPI-META,metafield custom.grade,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,"Commercial / Light Commercial / Home. Misused as a turf grade on FF-AGSL, so it is not safely comparable across the catalog."
 condition_state,SAPI-META,metafield custom.condition_state,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,New / remanufactured / As Is. Verify before any AI statement.
-warranty,SAPI-META,metafield custom.warranty,volatile,FALSE,TRUE,NEEDS_HUMAN_VERIFICATION,Never embedded. Never stated unverified.
+warranty,SAPI-META,metafield custom.warranty,volatile,FALSE,TRUE,NEEDS_HUMAN_VERIFICATION,"Never embedded. Never stated unverified. Carries a leading U+200B zero-width space on most SKUs - strip before comparison or matching."
 warranty_info,SAPI-META,metaobject features_specs.warranty_info,volatile,FALSE,TRUE,NEEDS_HUMAN_VERIFICATION,Rich text. Same rule as warranty.
 ships,SAPI-META,metafield custom.ships,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,
 processing_time,SAPI-META,metafield custom.processing_time,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,
@@ -62,7 +62,7 @@ accessories_included,SAPI-META,metaobject features_specs.accessories_included,du
 shipping_dims_weight,SAPI-META,metaobject features_specs.shipping_dims_weight(_2),durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,
 manuals_downloads,SAPI-META,metaobject custom.extra_info + downloads_other_info,durable,TRUE,TRUE,API_POPULATED,Resolved to link JSON. Absent on part of the sample.
 retail_price,SAPI-META,metafield custom.retail_price,volatile,FALSE,FALSE,LIVE_FETCH_REQUIRED,Integer cents. Not the PDP price.
-product_canonical_url,SAPI-META,metafield custom.product_canonical_url,durable,TRUE,FALSE,API_POPULATED,
+product_canonical_url,SAPI-META,metafield custom.product_canonical_url,durable,FALSE,FALSE,NOT_A_SOURCE,"Null on all 20 sample SKUs. Canonicals are emitted by Smart SEO, not this field. Do not read it as the canonical."
 main_category,SAPI-META,metafield custom.main_category,durable,TRUE,FALSE,API_POPULATED,
 sub_category,SAPI-META,metafield custom.sub_category,durable,TRUE,FALSE,API_POPULATED,
 review_rating,SAPI-META,metafield reviews.rating,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,Never embedded.
@@ -70,7 +70,7 @@ review_count,SAPI-META,metafield reviews.rating_count,volatile,FALSE,TRUE,LIVE_F
 google_product_category,GMC,metafield mm-google-shopping.google_product_category,durable,TRUE,FALSE,API_POPULATED,Also mirrored in mc-facebook namespace.
 google_product_type,GMC,Google Shopping feed export,durable,TRUE,FALSE,FEED_JOIN_REQUIRED,Requires the feed export - outstanding.
 item_group_id,GMC,Google Shopping feed export,durable,TRUE,FALSE,BLOCKED,Blocked on the Rubber Hex parent/URL decision.
-custom_labels,GMC,Google Shopping feed export,durable,FALSE,FALSE,FEED_JOIN_REQUIRED,Requires the feed export - outstanding.
+custom_labels,GMC,Google Shopping feed export,durable,FALSE,FALSE,NOT_IN_SHOPIFY,Feed-side only. No Shopify field backs these.
 structured_data_schema,THEME,theme/Liquid product schema output,durable,FALSE,TRUE,NEEDS_HUMAN_VERIFICATION,Must not publish InStock where available_for_sale is false.
 pdp_badges,THEME,theme section settings,durable,FALSE,TRUE,NEEDS_HUMAN_VERIFICATION,
 promo_messaging,THEME,theme section settings,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,Never embedded.
@@ -78,6 +78,6 @@ financing_messaging,THEME,theme/app block,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRE
 delivery_installation_notes,THEME,theme/Liquid + metafield mix,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,Never embedded.
 breadcrumb_rendered,THEME,theme/Liquid breadcrumb output,durable,TRUE,TRUE,API_POPULATED,Rendered path can differ from breadcrumb_paths.
 recommendation_overlay,MANUAL,Product Recommendation Matrix REV9,durable,FALSE,FALSE,PREVIEW_UNAPPROVED,Overlay only. Never a factual PDP source.
-replacement_product_link,MANUAL,Product team maintained,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,
-discontinued_status,MANUAL,Product team maintained,durable,TRUE,TRUE,NEEDS_HUMAN_VERIFICATION,
-preorder_backorder_status,MANUAL,Product team maintained,volatile,FALSE,TRUE,LIVE_FETCH_REQUIRED,Never embedded.
+replacement_product_link,MANUAL,Product team maintained,durable,TRUE,TRUE,NOT_IN_SHOPIFY,No field exists yet - needs creating before it can be populated.
+discontinued_status,MANUAL,Product team maintained,durable,TRUE,TRUE,NOT_IN_SHOPIFY,No field exists yet - needs creating before it can be populated.
+preorder_backorder_status,MANUAL,Product team maintained,volatile,FALSE,TRUE,NOT_IN_SHOPIFY,No field exists yet. Never embedded once it does.

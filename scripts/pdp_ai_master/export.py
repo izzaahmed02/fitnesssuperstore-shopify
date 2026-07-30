@@ -98,6 +98,11 @@ UNVERIFIABLE_WARRANTY = re.compile(
     re.IGNORECASE,
 )
 
+# Zero-width and bidi control characters. Present as a leading U+200B on most
+# warranty values in the sample. Reported rather than stripped, per the rule
+# that nothing is silently normalised.
+INVISIBLE_CHARS = re.compile(r"[​-‏  ﻿]")
+
 
 # --------------------------------------------------------------------------
 # transport
@@ -531,6 +536,20 @@ def detect_conflicts(record: dict[str, Any]) -> list[dict[str, str]]:
             "verifiable and cannot be stated",
             f"warranty={v['warranty']!r}",
             "Larianne / Product", "BLOCKED")
+
+    for label, text in (
+        ("warranty", v.get("warranty")),
+        ("condition_state", d.get("condition_state")),
+        ("grade", d.get("grade")),
+        ("product_code", d.get("product_code")),
+    ):
+        if text and INVISIBLE_CHARS.search(text):
+            found = sorted({f"U+{ord(c):04X}" for c in INVISIBLE_CHARS.findall(text)})
+            add("LOW", label,
+                "Value contains invisible characters, which break exact-match "
+                "comparison and join keys",
+                f"{label}={text!r} contains {', '.join(found)}",
+                "Larianne / Product", "BLOCKED")
 
     chart = (d.get("pdp_content_needs_approval") or {}).get("comparison_chart_table")
     chart_title = (d.get("pdp_content_needs_approval") or {}).get(
