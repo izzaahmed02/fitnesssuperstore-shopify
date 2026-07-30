@@ -51,7 +51,7 @@
       var $grid = window.$(grid);
       if ($grid.hasClass('slick-initialized')) $grid.slick('unslick');
       $grid.slick({
-        slidesToShow: 3,
+        slidesToShow: 4,
         slidesToScroll: 1,
         arrows: true,
         dots: true,
