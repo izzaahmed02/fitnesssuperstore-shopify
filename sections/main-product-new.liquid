@@ -14,27 +14,52 @@
   {{ 'component-swatch.css' | asset_url | stylesheet_tag }}
 {%- endunless -%}
 
-{%- comment -%} Colour/paint configurator (options.product_options). Loaded only
-    when the product actually has visible colours, so no CWV cost elsewhere.
-    Same assets the live PDP uses. {%- endcomment -%}
-{%- assign pdp_color_opts = product.metafields.options.product_options.value -%}
+{%- comment -%} Full product configurator (options.product_options) — every option
+    group the metafield defines: colours, assembly/room-of-choice installation,
+    accessories, cable attachments, warranty, quantity inputs. Assets load only
+    when the product actually has a visible option group, so there is no CWV cost
+    on products without one. Same assets the live PDP uses. {%- endcomment -%}
+{%- assign pdp_opts = product.metafields.options.product_options.value -%}
 {%- if product.selected_or_first_available_variant.metafields.options.product_options.value != blank -%}
-  {%- assign pdp_color_opts = product.selected_or_first_available_variant.metafields.options.product_options.value -%}
+  {%- assign pdp_opts = product.selected_or_first_available_variant.metafields.options.product_options.value -%}
 {%- endif -%}
-{%- assign pdp_has_colors = false -%}
-{%- if pdp_color_opts != blank -%}
-  {%- for category in pdp_color_opts -%}
-    {%- unless category.hide_option -%}
-      {%- for po in category.product_options.value -%}
-        {%- assign pt = po.product_option_title | downcase -%}
-        {%- if pt == 'paint color' or pt == 'paint colors' or pt == 'color' or pt == 'vinyl color' or pt == 'vinyl colors' -%}
-          {%- unless po.hide_values -%}{%- assign pdp_has_colors = true -%}{%- endunless -%}
-        {%- endif -%}
-      {%- endfor -%}
-    {%- endunless -%}
+{%- comment -%} Any configurator metafield at all, exactly as the live PDP decides.
+    Deliberately NOT narrowed to "has visible values": groups whose values are
+    hidden (Warranty, Processing Time) still contribute their default selection to
+    the order's _functionOperation payload, and product-options.liquid renders
+    their labels — so narrowing the gate would both drop order data and leave that
+    markup unstyled. Products with no configurator metafield still skip these
+    assets entirely, which is where the CWV saving actually is. {%- endcomment -%}
+{%- assign pdp_has_options = false -%}
+{%- if pdp_opts != blank -%}
+  {%- assign pdp_has_options = true -%}
+{%- endif -%}
+
+{%- comment -%} Cart-transform flag, computed exactly as the live PDP computes it
+    (main-product.liquid:125-133): true once any cart item carries a
+    _functionOperation payload.
+
+    It gates ONLY this section's own asset tags below — the option markup always
+    renders — which is the same thing the live PDP does. Note the gate is close to
+    a no-op in practice: snippets/cart-drawer.liquid loads product-options.css and
+    product-custom-options.js unconditionally on every page, so the configurator
+    stays styled and functional either way. That is exactly why the live PDP keeps
+    working after a configured item is added, and this template must match it.
+
+    Do NOT extend this flag to the markup. An earlier revision did, which made the
+    configurator, add-on cards and help popups vanish for the rest of the session
+    once anything configured was in the cart — a regression against live, not a
+    safeguard. {%- endcomment -%}
+{%- assign hide_product_options = false -%}
+{%- for item in cart.items -%}
+  {%- for property in item.properties -%}
+    {%- if property.first == '_functionOperation' -%}
+      {%- assign hide_product_options = true -%}
+    {%- endif -%}
   {%- endfor -%}
-{%- endif -%}
-{%- if pdp_has_colors -%}
+{%- endfor -%}
+
+{%- if pdp_has_options and hide_product_options == false -%}
   {{ 'product-options.css' | asset_url | stylesheet_tag }}
   {%- comment -%} Swatch layout (.color-options flex row, custom-color trigger) lives
       here, same as the live PDP (main-product.liquid). {%- endcomment -%}
@@ -102,7 +127,9 @@
               {%- if product.tags contains 'avisplus-product-options' -%}
                 {%- assign avisplus_options = true -%}
               {%- endif -%}
-              <div class="pdp-new__badge">
+              {%- comment -%} Availability is per-variant, so this is a swap target for the
+                  variant-change sync in pdp-new.js. {%- endcomment -%}
+              <div class="pdp-new__badge" id="PdpNewBadge-{{ section.id }}">
                 {% render 'product-availability-badge', product: product, check_discontinued: true, hide_badge: avisplus_options %}
               </div>
             </div>
@@ -113,12 +140,18 @@
             </div>
 
           {%- when 'color_options' -%}
-            {%- comment -%} Paint/vinyl colour configurator (colours only). Reuses the
-                live PDP's custom-color-picker via pdp-new-color-options; add-to-cart is
-                handled by product-form-with-options.js reading the colour markers inside
-                #MainProduct. Renders nothing when the product has no colours. {%- endcomment -%}
-            <div class="pdp-new__color-picker" {{ block.shopify_attributes }}>
-              {% render 'pdp-new-color-options', product: product %}
+            {%- comment -%} FULL configurator — the live PDP's product-options snippet
+                rendered verbatim, so every option group (colours, assembly/room-of-choice
+                installation, accessories, cable attachments, warranty, quantity inputs)
+                is selectable with the live pricing, mandatory/conditional/multichoice
+                rules and order data. It brings its own #Product-Options-{{ section.id }}
+                wrapper, which is what product-info.js and product-custom-options.js swap
+                on variant change, and its markers sit inside #MainProduct-{{ section.id }}
+                where product-form-with-options.js reads them at add-to-cart.
+                Nothing is filtered here: the add-on cards below are an alternate view of
+                these same inputs, not a replacement for them. {%- endcomment -%}
+            <div class="pdp-new__configurator" {{ block.shopify_attributes }}>
+              {% render 'product-options', product: product %}
             </div>
 
           {%- when 'info_tab' -%}
@@ -180,10 +213,14 @@
 
           {%- when 'price' -%}
             <div class="pdp-new__payments" {{ block.shopify_attributes }}>
-              {%- comment -%} Same visible price element as the live PDP: .pr_custom_price
-                  aggregates selected add-on prices (pdp-new.js), feeds the Affirm
-                  modal (main-product-custom.js) and is swapped on variant change
-                  via the #price-{id} contract in product-info.js. {%- endcomment -%}
+              {%- comment -%} Headline price: the GRAND total — variant price plus every
+                  selected option. .pr_custom_price is the contract for that: it is the
+                  first such element in the document, so priceHelper()
+                  (product-custom-options.js) reads its data-price-value as the base and
+                  writes the running total into it. data-price-value itself is never
+                  rewritten, so it stays the variant's own price (the financing quote
+                  reads it from there). Swapped per variant via the #price-{id} contract
+                  in product-info.js. {%- endcomment -%}
               <div id="price-{{ section.id }}" role="status" class="pdp-new__price">
                 <div class="pr_custom_price-container">
                   <p class="pr_custom_price{% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{ product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{ cart.currency.symbol }}">
@@ -191,6 +228,9 @@
                   </p>
                 </div>
               </div>
+              {%- comment -%} The live "Options added: +$X" line is deliberately not rendered
+                  here: the headline above already shows the total including options, and the
+                  labelled row above Add to Cart carries the options-only figure. {%- endcomment -%}
               {%- if block.settings.show_financing -%}
                 {%- comment -%} Same Affirm stack as the live PDP: affirm-as-low-as promo
                     element + paylater-providers snippet, driven by main-product-custom.js
@@ -203,49 +243,77 @@
             </div>
 
           {%- when 'delivery_options' -%}
-            {%- if block.settings.options != blank -%}
-              <div class="pdp-new__delivery" {{ block.shopify_attributes }}>
-                <label class="pdp-new__label" for="PdpNewDelivery-{{ section.id }}">{{ block.settings.label | escape }}</label>
-                <div class="pdp-new__select-wrap">
-                  <select
-                    id="PdpNewDelivery-{{ section.id }}"
-                    name="properties[{{ block.settings.label | escape }}]"
-                    form="{{ product_form_id }}"
-                    class="pdp-new__select"
-                  >
-                    {%- assign delivery_opts = block.settings.options | newline_to_br | split: '<br />' -%}
-                    {%- for opt in delivery_opts -%}
-                      {%- assign opt_clean = opt | strip -%}
-                      {%- if opt_clean != blank -%}
-                        <option value="{{ opt_clean | escape }}">{{ opt_clean | escape }}</option>
-                      {%- endif -%}
-                    {%- endfor -%}
-                  </select>
-                </div>
+            {%- comment -%} The Figma "Delivery & Installation Options" dropdown is a VIEW of the
+                real, priced installation group the configurator already renders — the same
+                pattern as the add-on cards, never a second control. It deliberately carries no
+                name attribute and is not in the form, so it submits nothing itself: choosing an
+                option clicks the real radio, which is what carries the price and the order data.
+                (It previously rendered a static theme-editor list that submitted its own
+                unpriced properties[...] duplicate of this decision.) pdp-new.js fills it from the
+                rendered configurator and hides the duplicate accordion group; if no matching
+                group exists for this product it stays hidden rather than inventing options. {%- endcomment -%}
+            <div
+              class="pdp-new__delivery"
+              data-option-group-view="{{ block.settings.group_match | escape }}"
+              hidden
+              {{ block.shopify_attributes }}
+            >
+              <label class="pdp-new__label" for="PdpNewDelivery-{{ section.id }}">{{ block.settings.label | escape }}</label>
+              <div class="pdp-new__select-wrap">
+                <select id="PdpNewDelivery-{{ section.id }}" class="pdp-new__select" data-option-group-select></select>
               </div>
-            {%- endif -%}
+            </div>
 
           {%- when 'buy_buttons' -%}
             <div class="pdp-new__buy" {{ block.shopify_attributes }}>
+              {%- comment -%} One clearly labelled total sitting directly above Add to Cart, so
+                  the amount the customer is committing to is stated rather than inferred from
+                  the headline price. This is now the FIRST .pr_custom_price in the document,
+                  which is what priceHelper (product-custom-options.js) reads its base from
+                  (data-price-value) and writes the running total into — so it, and the sticky
+                  bar that mirrors it, are the only prices that move with option selections.
+                  pdp-new.js re-swaps this block by id on variant change. {%- endcomment -%}
+              <div class="pdp-new__total" id="PdpNewConfigTotal-{{ section.id }}" role="status" aria-live="polite">
+                <span class="pdp-new__total-label">Selected configuration total</span>
+                {%- comment -%} The options-only figure, NOT base+options — the headline price
+                    already shows that. data-options-added-value is the live contract
+                    renderOptionsAddedTotal() writes the running option delta into, so this
+                    reuses the component's own arithmetic instead of totalling a second time.
+                    Deliberately not .pr_custom_price: that would make priceHelper() overwrite
+                    it with the grand total. {%- endcomment -%}
+                <span
+                  class="pdp-new__total-value"
+                  data-config-total
+                  data-options-added-value
+                  data-currency="{{ cart.currency.symbol }}"
+                >+{{ 0 | money }}</span>
+              </div>
+              {%- comment -%} include_quantity_input: this section gets its whole form from
+                  buy-buttons, and <product-form-with-options> reads [name=quantity] from
+                  inside itself at add-to-cart. Without it, add-to-cart throws. {%- endcomment -%}
               {%- render 'buy-buttons',
                 block: block,
                 product: product,
                 product_form_id: product_form_id,
                 section_id: section.id,
-                show_pickup_availability: false
+                show_pickup_availability: false,
+                include_quantity_input: true,
+                show_cart_icon: true
               -%}
-              {%- if block.settings.quote_text != blank -%}
-                <a class="pdp-new__quote-link" href="{{ block.settings.quote_url | default: '/pages/contact-us' }}">{{ block.settings.quote_text | escape }}</a>
-              {%- endif -%}
             </div>
 
           {%- when 'product_options' -%}
-            {%- comment -%} Real per-product add-ons: the same options.product_options
-                metaobject that powers the live PDP's configurator. Tabs = visible
-                categories whose options reference products; cards = those products.
-                Non-product categories (colors/warranty/quantity) are configurator
-                territory — rendered by the options layer, not here. {%- endcomment -%}
+            {%- comment -%} Figma add-on cards. These are a convenience VIEW of accessory
+                groups that the full configurator above already renders — the tab filter
+                below only decides which groups additionally get cards, never what is
+                purchasable, so a filter miss costs a card, never an option. Gated by the
+                same cart-transform kill-switch as the configurator. {%- endcomment -%}
             {%- if block.id == addon_tab_blocks.first.id -%}
+              {%- comment -%} Wrapper is unconditional so the variant-change swap in
+                  pdp-new.js always finds both a source and a target for this id, even
+                  when one variant has add-ons and the next has none. Add-ons come from
+                  the variant-level metafield, so they must re-render per variant. {%- endcomment -%}
+              <div id="PdpNewAddons-{{ section.id }}">
               {%- assign addon_options = product.metafields.options.product_options.value -%}
               {%- if product.selected_or_first_available_variant.metafields.options.product_options.value != blank -%}
                 {%- assign addon_options = product.selected_or_first_available_variant.metafields.options.product_options.value -%}
@@ -294,32 +362,14 @@
                         {%- if cat_products_count > 0 -%}
                         {%- assign addon_i = addon_i | plus: 1 -%}
                         <div class="tabs__item{% if addon_i == 1 %} active visible{% endif %}" data-index="{{ addon_i }}">
-                          {%- comment -%} Hidden option markers with the same data attributes as
-                              snippets/product-option-accordion.liquid. The visible card buttons
-                              toggle these checkboxes (pdp-new.js); product-form-with-options.js
-                              reads them at add-to-cart to attach the add-ons to the order. {%- endcomment -%}
-                          {%- for po in category.product_options.value -%}
-                            {%- unless po.hide_values -%}
-                              <div data-option-accordion data-type="{{ po.product_option_title | handleize }}" hidden>
-                                <span data-option-title>{{ po.product_option_title | escape }}</span>
-                                <div data-selected-options=""></div>
-                                {%- for addon in po.product_option_variants.value -%}
-                                  {%- liquid
-                                    assign addon_product = addon.product | default: addon
-                                    assign addon_variant_id = addon.id | default: addon.selected_or_first_available_variant.id
-                                  -%}
-                                  <input
-                                    type="checkbox"
-                                    data-customization-option="{{ addon_variant_id }}"
-                                    name="pdp-addon-{{ po.product_option_title | handleize }}"
-                                    value="{{ addon_variant_id }}{% if addon.metafields.custom.price_reduction_value_new != blank %}:::-{{ addon.metafields.custom.price_reduction_value_new }}{% endif %}{% if addon.price > 0 %}:::{{ addon.price | money_without_currency | replace: ',', '' }}{% endif %}"
-                                    data-field-name="{{ addon_product.title | escape }}"
-                                    data-field-price="{{ addon.price | money }}"
-                                  >
-                                {%- endfor -%}
-                              </div>
-                            {%- endunless -%}
-                          {%- endfor -%}
+                          {%- comment -%} No hidden option markers here. These cards are an
+                              alternate VIEW of the real configurator inputs rendered by
+                              snippets/product-options.liquid above: pdp-new.js resolves each
+                              card's data-variant-id to the matching [data-customization-option]
+                              inside #Product-Options and clicks it, so selection, pricing,
+                              mandatory/conditional/multichoice rules and add-to-cart data all
+                              come from one source of truth. Duplicating the inputs here would
+                              double-count prices and emit duplicate line-item properties. {%- endcomment -%}
                           <pdp-carousel class="pdp-new__addon-carousel">
                             <ul class="pdp-new__addon-track" role="list">
                               {%- for po in category.product_options.value -%}
@@ -345,19 +395,27 @@
                                     {%- if addon.sku != blank -%}
                                       <span class="pdp-new__addon-sku">Product Code: {{ addon.sku | escape }}</span>
                                     {%- endif -%}
-                                    <span class="pdp-new__addon-price">Price: {{ addon.price | money }}</span>
-                                    {%- comment -%} Attaches the add-on to THIS order (option-style, price
-                                        aggregates) — wired by the options layer, not core cart add. {%- endcomment -%}
-                                    <button
-                                      type="button"
-                                      class="pdp-new__addon-atc button button--primary"
-                                      data-addon-attach
-                                      data-variant-id="{{ addon_variant_id }}"
-                                      data-option-category="{{ category.title | escape }}"
-                                      {% unless addon.available %}disabled{% endunless %}
-                                    >
-                                      <span>{% if addon.available %}Add To Cart{% else %}{{ 'products.product.sold_out' | t }}{% endif %}</span>
-                                    </button>
+                                    {%- comment -%} Card CTA: price on its own line above a
+                                        full-width button, per the Figma card. {%- endcomment -%}
+                                    <div class="pdp-new__addon-cta">
+                                      <span class="pdp-new__addon-price">Price: {{ addon.price | money }}</span>
+                                      {%- comment -%} Attaches the add-on to THIS order (option-style, price
+                                          aggregates) — wired by the options layer, not core cart add.
+                                          Label stays "Add option" (Tim's item 3) even though the Figma
+                                          button reads "Add To Cart": these never create a cart line. {%- endcomment -%}
+                                      <button
+                                        type="button"
+                                        class="pdp-new__addon-atc"
+                                        data-addon-attach
+                                        data-variant-id="{{ addon_variant_id }}"
+                                        data-option-category="{{ category.title | escape }}"
+                                        aria-pressed="false"
+                                        {% unless addon.available %}disabled{% endunless %}
+                                      >
+                                        {% render 'pdp-new-icon-cart', class: 'pdp-new__cart-icon--sm' %}
+                                        <span>{% if addon.available %}Add option{% else %}{{ 'products.product.sold_out' | t }}{% endif %}</span>
+                                      </button>
+                                    </div>
                                   </div>
                                 </li>
                               {%- endfor -%}
@@ -379,6 +437,7 @@
                 </div>
               </div>
               {%- endif -%}
+              </div>
             {%- endif -%}
 
           {%- when '@app' -%}
@@ -406,7 +465,17 @@
           <img src="{{ product.featured_media | image_url: width: 96 }}" alt="" width="48" height="48" loading="lazy">
         {%- endif -%}
         <span class="pdp-new__sticky-title">{{ product.title | escape }}</span>
-        <span class="pdp-new__sticky-price">{{ product.selected_or_first_available_variant.price | money }}</span>
+        {%- comment -%} .pr_custom_price so the live price writer (product-custom-options.js
+            priceHelper) keeps the sticky total in step with the buy-box price when options
+            are selected. The buy-box price element comes first in the DOM, so it stays the
+            base-price source priceHelper reads from. {%- endcomment -%}
+        <span class="pdp-new__sticky-total">
+          {%- comment -%} Mirrors the headline grand total (product + options), so it is
+              labelled "Total" rather than repeating the options-only figure shown above
+              Add to Cart. {%- endcomment -%}
+          <span class="pdp-new__sticky-label">Total</span>
+          <span class="pdp-new__sticky-price pr_custom_price" data-price-value="{{ product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{ cart.currency.symbol }}">{{ product.selected_or_first_available_variant.price | money }}</span>
+        </span>
         <button
           type="submit"
           form="{{ product_form_id }}"
@@ -468,7 +537,55 @@
   <div class="mobile-popup-dots"></div>
 </div>
 
+{%- comment -%} ============ Configurator help popups ============
+    The "?" buttons the configurator renders ([data-popup-open="<title>"]) look up
+    a matching [data-popup="<title>"] elsewhere in the document, so these popups
+    must exist or every help button dead-ends. Ported verbatim from the live PDP
+    (main-product.liquid), including the option-help metaobject source that
+    old-custom.js reads. Wrapped in an unconditional id so the variant-change sync
+    can re-render it: help text is attached to the option groups, which are
+    themselves per-variant. {%- endcomment -%}
+<div id="PdpNewOptionPopups-{{ section.id }}">
+  {%- assign help_options = product.metafields.options.product_options.value -%}
+  {%- if product.selected_or_first_available_variant.metafields.options.product_options.value != blank -%}
+    {%- assign help_options = product.selected_or_first_available_variant.metafields.options.product_options.value -%}
+  {%- endif -%}
+  {%- for category in help_options -%}
+    {%- if category.help_text.value != blank -%}
+      {%- liquid
+        assign content = category.help_text.value
+        assign title = content.title
+        assign text = content.help_text
+        assign related_products = content.related_products.value
+      -%}
+      {% render 'related-products-popup-for-options',
+        popup_id: category.title,
+        title: title,
+        related_products: related_products,
+        text: text
+      %}
+    {%- endif -%}
 
+    {%- for product_option in category.product_options.value -%}
+      {%- if product_option.help_text.value != blank -%}
+        {%- liquid
+          assign content = product_option.help_text.value
+          assign title = content.title
+          assign text = content.help_text
+          assign related_products = content.related_products.value
+        -%}
+        {% render 'related-products-popup-for-options',
+          popup_id: product_option.product_option_title,
+          title: title,
+          related_products: related_products,
+          text: text
+        %}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endfor -%}
+
+  {% render 'option-help-content' %}
+</div>
 
 {% schema %}
 {
@@ -519,7 +636,7 @@
     },
     {
       "type": "color_options",
-      "name": "Colour options",
+      "name": "Configurator",
       "limit": 1
     },
     {
@@ -575,10 +692,11 @@
           "default": "Delivery & Installation Options"
         },
         {
-          "type": "textarea",
-          "id": "options",
-          "label": "Options (one per line)",
-          "default": "Curbside Delivery Only"
+          "type": "text",
+          "id": "group_match",
+          "label": "Option group to show (name contains)",
+          "info": "Matches an option group from the product's configurator, e.g. \"assembly\". The dropdown shows that group's real, priced choices. Leave blank to hide.",
+          "default": "assembly"
         }
       ]
     },
@@ -598,17 +716,6 @@
           "id": "show_gift_card_recipient",
           "label": "Show gift card recipient form",
           "default": false
-        },
-        {
-          "type": "text",
-          "id": "quote_text",
-          "label": "Quote link text",
-          "default": "Get delivered quote / confirm fit"
-        },
-        {
-          "type": "url",
-          "id": "quote_url",
-          "label": "Quote link URL"
         }
       ]
     },
