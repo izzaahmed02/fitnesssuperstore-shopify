@@ -3,6 +3,116 @@
 {%- assign fallback_logo_url = 'logo.png' | asset_url -%}
 {%- capture search_target -%}{{ request.origin }}/search?q={search_term_string}{%- endcapture -%}
 
+{%- comment -%}
+  AI channel / merchant-listing data.
+
+  product.type is an internal bucket ("Product Index") and must never be emitted as the
+  schema category. Prefer the Shopify taxonomy category that Shopify Catalog syndicates to
+  ChatGPT / Copilot / Gemini, then the merchandising metafields, then a generic fallback.
+{%- endcomment -%}
+{%- liquid
+  assign schema_category = product.metafields.custom.main_category
+  if product.metafields.custom.sub_category != blank
+    assign schema_category = schema_category | append: ' > ' | append: product.metafields.custom.sub_category
+  endif
+  if schema_category == blank
+    assign schema_category = 'Fitness Equipment'
+  endif
+
+  assign price_valid_until = 'now' | date: '%s' | plus: 31536000 | date: '%Y-%m-%d'
+
+  assign condition_state = product.metafields.custom.condition_state | downcase
+  if condition_state contains 'as is'
+    assign schema_condition = 'UsedCondition'
+  elsif condition_state contains 'remanufactured'
+    assign schema_condition = 'RefurbishedCondition'
+  elsif condition_state != blank
+    assign schema_condition = product.metafields.custom.condition_state | append: 'Condition'
+  else
+    assign schema_condition = 'NewCondition'
+  endif
+
+  comment
+    Returns differ by condition. Per the published Cancellations, Returns & Refunds Policy:
+    remanufactured commercial equipment is not returnable once delivered (warranty service
+    only); everything else is a 14-day, buyer-paid return with a 25% restocking fee.
+  endcomment
+  if schema_condition == 'RefurbishedCondition'
+    assign return_days = 0
+  else
+    assign return_days = 14
+  endif
+
+  comment
+    Handling time comes from the merchandising lead-time metafield. Only emit it when the
+    value matches a pattern we can convert to days - never guess a delivery window.
+  endcomment
+  assign handling_min = false
+  assign handling_max = false
+  assign lead_time = product.metafields.custom.processing_time | default: '' | downcase
+  assign lead_digits = lead_time | remove: 'ships in ' | split: ' ' | first | split: '-'
+  if lead_time contains 'week'
+    assign handling_min = lead_digits[0] | times: 7
+    assign handling_max = lead_digits | last | times: 7
+  elsif lead_time contains 'business day' or lead_time contains 'day'
+    assign handling_min = lead_digits[0] | times: 1
+    assign handling_max = lead_digits | last | times: 1
+  endif
+  if handling_min == 0 or handling_max == 0
+    assign handling_min = false
+    assign handling_max = false
+  endif
+-%}
+
+{%- capture merchant_return_policy -%}
+        "hasMerchantReturnPolicy": {
+          "@type": "MerchantReturnPolicy",
+          "@id": {{ request.origin | append: '#return-policy-' | append: schema_condition | json }},
+          "applicableCountry": "US",
+          "returnPolicyCountry": "US",
+          "merchantReturnLink": {{ request.origin | append: '/pages/return-policy' | json }},
+          {%- if return_days > 0 %}
+          "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+          "merchantReturnDays": {{ return_days }},
+          "returnMethod": "https://schema.org/ReturnByMail",
+          "returnFees": "https://schema.org/ReturnFeesCustomerResponsibleForShipping",
+          "restockingFee": {
+            "@type": "MonetaryAmount",
+            "currency": {{ shop.currency | default: 'USD' | json }},
+            "value": 25,
+            "unitText": "PERCENT"
+          }
+          {%- else %}
+          "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
+          {%- endif %}
+        }
+{%- endcapture -%}
+
+{%- capture shipping_details -%}
+        "shippingDetails": {
+          "@type": "OfferShippingDetails",
+          "@id": {{ request.origin | append: product.url | append: '#shipping' | json }},
+          "shippingDestination": {
+            "@type": "DefinedRegion",
+            "addressCountry": "US"
+          }
+          {%- if product.metafields.custom.ships != blank %},
+          "shippingSettingsLink": {{ request.origin | append: '/pages/shipping-information' | json }}
+          {%- endif %}
+          {%- if handling_min and handling_max %},
+          "deliveryTime": {
+            "@type": "ShippingDeliveryTime",
+            "handlingTime": {
+              "@type": "QuantitativeValue",
+              "minValue": {{ handling_min }},
+              "maxValue": {{ handling_max }},
+              "unitCode": "DAY"
+            }
+          }
+          {%- endif %}
+        }
+{%- endcapture -%}
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -30,7 +140,7 @@
       {% endif %}
 
       "audience": {{ product.metafields.custom.audience | default: 'Fitness enthusiasts and commercial gym users' | json }},
-      "category": {{ product.type | default: 'Fitness Equipment' | json }},
+      "category": {{ schema_category | json }},
       "description": {{ product.description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | truncate: 500 | default: 'High-quality fitness equipment for home or commercial use.' | json }},
       "image": [
         {% for image in product.images %}
@@ -53,11 +163,27 @@
       "color": {{ product.metafields.custom.product_color | default: 'Not specified' | json }},
       "countryOfAssembly": {{ product.metafields.custom.country_of_assembly | default: 'US' | json }},
       "countryOfLastProcessing": {{ product.metafields.custom.country_of_last_processing | default: 'US' | json }},
-      "hasMeasurement": {
+      {% if product.metafields.custom.length_in != blank %}
+      "depth": {
         "@type": "QuantitativeValue",
-        "@id": {{ request.origin | append: product.url | append: '#measurement' | json }},
-        "value": {{ 'Dimensions: ' | append: product.metafields.custom.length_in | append: ' inch length x ' | append: product.metafields.custom.width_in | append: ' inch width x ' | append: product.metafields.custom.height_in | append: ' inch height' | json }}
+        "value": {{ product.metafields.custom.length_in | json }},
+        "unitCode": "INH"
       },
+      {% endif %}
+      {% if product.metafields.custom.width_in != blank %}
+      "width": {
+        "@type": "QuantitativeValue",
+        "value": {{ product.metafields.custom.width_in | json }},
+        "unitCode": "INH"
+      },
+      {% endif %}
+      {% if product.metafields.custom.height_in != blank %}
+      "height": {
+        "@type": "QuantitativeValue",
+        "value": {{ product.metafields.custom.height_in | json }},
+        "unitCode": "INH"
+      },
+      {% endif %}
       "keywords": [
         {%- assign keyword_list = product.metafields.custom.keywords.value -%}
         {%- if keyword_list != blank -%}
@@ -80,17 +206,59 @@
         "@id": {{ request.origin | append: product.url | append: '#manufacturer' | json }},
         "name": {{ product.vendor | default: shop.name | json }}
       },
-      "weight": {{ product.metafields.custom.product_weight_lbs | default: 'Not specified' | json }},
-      "mpn": {{ product.selected_or_first_available_variant.sku | default: product.handle | json }},
-      "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is' or product.metafields.custom.condition_state contains 'As is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
+      {% if product.metafields.custom.product_weight_lbs != blank %}
+      "weight": {
+        "@type": "QuantitativeValue",
+        "value": {{ product.metafields.custom.product_weight_lbs | json }},
+        "unitCode": "LBR"
+      },
+      {% endif %}
+      "mpn": {{ product.metafields.custom.mpn | default: product.selected_or_first_available_variant.sku | default: product.handle | json }},
+      {% if product.selected_or_first_available_variant.barcode != blank %}
+      "gtin": {{ product.selected_or_first_available_variant.barcode | json }},
+      {% elsif product.metafields.custom.upc_code != blank %}
+      "gtin": {{ product.metafields.custom.upc_code | json }},
+      {% endif %}
+      "itemCondition": "https://schema.org/{{ schema_condition }}",
+
+      {%- comment -%}
+        The facts AI shopping agents ask for: who the machine is built for, how it ships,
+        how long it takes, and what the warranty is. Sourced from merchandising metafields
+        so the answer AI gives matches the PDP.
+      {%- endcomment -%}
+      "additionalProperty": [
+        {%- capture ai_facts -%}
+          {%- if product.metafields.custom.grade != blank -%}Equipment Grade|{{ product.metafields.custom.grade | strip }}~{%- endif -%}
+          {%- if product.metafields.custom.condition_state != blank -%}Condition|{{ product.metafields.custom.condition_state | strip }}~{%- endif -%}
+          {%- if product.metafields.custom.ships != blank -%}Shipping Method|{{ product.metafields.custom.ships | strip }}~{%- endif -%}
+          {%- if product.metafields.custom.processing_time != blank -%}Lead Time|{{ product.metafields.custom.processing_time | strip }}~{%- endif -%}
+          {%- if product.metafields.custom.warranty != blank -%}Warranty|{{ product.metafields.custom.warranty | strip }}~{%- endif -%}
+        {%- endcapture -%}
+        {%- assign ai_fact_list = ai_facts | split: '~' -%}
+        {%- for fact in ai_fact_list -%}
+          {%- assign fact_parts = fact | split: '|' -%}
+          {
+            "@type": "PropertyValue",
+            "name": {{ fact_parts[0] | strip | json }},
+            "value": {{ fact_parts[1] | strip | json }}
+          }{% unless forloop.last %},{% endunless %}
+        {%- endfor -%}
+      ],
 
       {% if product.has_only_default_variant %}
       "offers": {
         "@id": {{ request.origin | append: product.url | append: '?variant=' | append: product.selected_or_first_available_variant.id | append: '#offer' | json }},
         "@type": "Offer",
         "availability": "https://schema.org/{% if product.selected_or_first_available_variant.available %}InStock{% else %}OutOfStock{% endif %}",
+        "itemCondition": "https://schema.org/{{ schema_condition }}",
         "price": {{ product.selected_or_first_available_variant.price | divided_by: 100.0 | json }},
         "priceCurrency": {{ shop.currency | default: 'USD' | json }},
+        "priceValidUntil": {{ price_valid_until | json }},
+        {% if product.selected_or_first_available_variant.barcode != blank %}
+        "gtin": {{ product.selected_or_first_available_variant.barcode | json }},
+        {% endif %}
+{{ merchant_return_policy }},
+{{ shipping_details }},
 
         {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
         "priceSpecification": [
@@ -162,6 +330,7 @@
             "availability": "https://schema.org/{% if variant.available %}InStock{% else %}OutOfStock{% endif %}",
             "price": {{ variant.price | divided_by: 100.0 | json }},
             "priceCurrency": {{ shop.currency | default: 'USD' | json }},
+            "priceValidUntil": {{ price_valid_until | json }},
 
             {% if variant.compare_at_price > variant.price %}
             "priceSpecification": [
@@ -182,7 +351,12 @@
 
             "url": {{ request.origin | append: product.url | append: '?variant=' | append: variant.id | json }},
             "sku": {{ variant.sku | default: product.handle | json }},
-            "itemCondition": "https://schema.org/{% if product.metafields.custom.condition_state %}{% if product.metafields.custom.condition_state contains 'as is' or product.metafields.custom.condition_state contains 'As is' %}UsedCondition{% elsif product.metafields.custom.condition_state contains 'Remanufactured' %}RefurbishedCondition{% else %}{{ product.metafields.custom.condition_state }}Condition{% endif %}{% else %}NewCondition{% endif %}",
+            {% if variant.barcode != blank %}
+            "gtin": {{ variant.barcode | json }},
+            {% endif %}
+            "itemCondition": "https://schema.org/{{ schema_condition }}",
+{{ merchant_return_policy }},
+{{ shipping_details }},
             "offeredBy": {
               "@type": "Organization",
               "@id": {{ request.origin | append: '#seller' | json }},
