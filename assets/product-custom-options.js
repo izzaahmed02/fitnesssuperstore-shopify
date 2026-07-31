@@ -286,6 +286,12 @@ if (!customElements.get('product-customization-options')) {
       restoreConditionalDefault(accordion) {
         const defaultId = accordion.dataset.defaultOption;
         if (!defaultId) return false;
+        // Authoritative visibility check: in a deeper tier chain, restoring an earlier
+        // default dispatches an `input` that can re-run syncConditionalVisibility() and
+        // hide this accordion, so the caller's list may already be stale. Checking a
+        // hidden accordion's default would leave a hidden-but-checked option that
+        // prepareOptions() and updatePrice() would still count.
+        if (window.getComputedStyle(accordion).display === 'none') return false;
         // Never override a selection the shopper already made.
         if (accordion.querySelector('[data-customization-option]:checked')) return false;
         const defaultInput = accordion.querySelector(`[data-customization-option="${defaultId}"]`);
@@ -315,15 +321,25 @@ if (!customElements.get('product-customization-options')) {
         this.#applyingConditionalDefaults = true;
         try {
           // Restoring a default can reveal the next tier down, so keep going until a
-          // pass changes nothing.
+          // pass changes nothing. Each accordion is attempted at most once per call:
+          // two accordions that share a radio group name (which is what happens when
+          // they share an option title) would otherwise keep clearing each other's
+          // default and spin this loop forever.
+          const attempted = new Set();
           for (;;) {
             const pending = Array.from(this.querySelectorAll('[data-conditions-to-render][data-default-option]')).filter(
               (accordion) =>
-                window.getComputedStyle(accordion).display !== 'none' && !accordion.querySelector('[data-customization-option]:checked'),
+                !attempted.has(accordion) &&
+                window.getComputedStyle(accordion).display !== 'none' &&
+                !accordion.querySelector('[data-customization-option]:checked'),
             );
             if (pending.length === 0) return;
-            const restored = pending.filter((accordion) => this.restoreConditionalDefault(accordion));
-            if (restored.length === 0) return;
+            let restored = 0;
+            pending.forEach((accordion) => {
+              attempted.add(accordion);
+              if (this.restoreConditionalDefault(accordion)) restored += 1;
+            });
+            if (restored === 0) return;
           }
         } finally {
           this.#applyingConditionalDefaults = false;
