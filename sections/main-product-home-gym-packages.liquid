@@ -1078,15 +1078,25 @@
         </div>
       {% endif %}
 
-       
-        <div class="item">
-          <div class="item__icon-wrap">{% render 'icon-on-display' %}</div>
-          <div class="item__text">
-            <span class="title">On Display:</span>
-            {{ "Northern California showroom" }}
+      {%- comment -%}
+        Only claim showroom display when the product is actually flagged as on
+        display in Benicia, same condition the standard PDP uses. Without the
+        gate every package on this template claims a showroom unit exists.
+      {%- endcomment -%}
+      {%- assign hgs_3rd_party = product.metafields.custom['3rd_party'].value -%}
+      {%- if hgs_3rd_party != blank and hgs_3rd_party.google_material != blank -%}
+        {%- assign hgs_on_display = hgs_3rd_party.google_material | downcase -%}
+        {%- if hgs_on_display == 'on display in benicia' -%}
+          <div class="item">
+            <div class="item__icon-wrap">{% render 'icon-on-display' %}</div>
+            <div class="item__text">
+              <span class="title">On Display:</span>
+              Northern California showroom
               <a class="showroom-visit" href="/pages/contact#showroom-visit">(Schedule visit)</a>
+            </div>
           </div>
-        </div>
+        {%- endif -%}
+      {%- endif -%}
 
       {% if product.metafields.custom.product_code != blank %}
         <div class="item">
