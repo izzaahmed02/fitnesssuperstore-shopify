@@ -5,10 +5,20 @@
   customer switch between the same model in different finishes. Each finish is a
   separate product, so a "finish sibling" is detected from the product's
   related_products: a related product qualifies when it has a
-  custom.product_color set AND its title (with the colour word removed) matches
-  this product's title (with its own colour word removed). This avoids needing a
-  dedicated linking metafield and works for any colour-sibling pair that follows
-  the store's "<Model> <Colour> <Type>" naming convention.
+  custom.product_color set that differs from this product's, AND its
+  finish-family key matches this product's key (the title with the finish wording
+  removed - see finish-family-key.liquid). This avoids needing a dedicated linking
+  metafield and works for any colour-sibling pair that follows the store's naming
+  conventions.
+
+  related_products usually lists the product itself, so the current product is
+  skipped while collecting siblings. Without that skip the product matches its
+  own key and its finish is rendered twice ("Finish: Black Black"). Requiring a
+  different colour rules the same thing out for any other self-referencing entry.
+
+  The buttons are sorted by finish name, so a finish family keeps the same
+  left-to-right order on every one of its PDPs (Black left, Silver right) and the
+  blocks no longer swap position depending on which finish the customer is on.
 
   Accepts:
     product - {Object} the product to render the selector for (required)
@@ -17,39 +27,58 @@
 {%- liquid
   assign this_color = product.metafields.custom.product_color.value
   assign related = product.metafields.custom.related_products.value
-
-  assign this_key = product.title
-  if this_color != blank
-    assign this_key = this_key | replace: this_color, ''
-  endif
-  assign this_key = this_key | strip | downcase | replace: '  ', ' '
 -%}
 
 {%- if this_color != blank and related != blank -%}
-  {%- capture sibling_buttons -%}
-    {%- for sib in related -%}
-      {%- assign sib_color = sib.metafields.custom.product_color.value -%}
-      {%- if sib_color != blank -%}
-        {%- assign sib_key = sib.title | replace: sib_color, '' | strip | downcase | replace: '  ', ' ' -%}
-        {%- if sib_key == this_key -%}
-          <a class="finish-selector__option" href="{{ sib.url }}">{{ sib_color | escape }}</a>
-        {%- endif -%}
-      {%- endif -%}
-    {%- endfor -%}
+  {%- capture this_key -%}
+    {%- render 'finish-family-key', product: product -%}
   {%- endcapture -%}
+  {%- assign this_key = this_key | strip -%}
 
-  {%- if sibling_buttons != blank -%}
+  {%- comment -%}
+    Collect this product and each finish sibling as a "<colour>|<url>" entry, then sort
+    the entries so the buttons keep the same left-to-right order on every finish's PDP
+    (alphabetical, which puts Black left of Silver). Rendering the current finish first
+    is what made the blocks swap position depending on which page was open.
+  {%- endcomment -%}
+  {%- assign entries = this_color | append: '|' | append: product.url -%}
+  {%- for sib in related -%}
+    {%- assign sib_color = sib.metafields.custom.product_color.value -%}
+    {%- if sib.id != product.id and sib_color != blank and sib_color != this_color -%}
+      {%- capture sib_key -%}
+        {%- render 'finish-family-key', product: sib -%}
+      {%- endcapture -%}
+      {%- assign sib_key = sib_key | strip -%}
+      {%- if sib_key == this_key -%}
+        {%- assign sib_entry = sib_color | append: '|' | append: sib.url -%}
+        {%- unless entries contains sib_entry -%}
+          {%- assign entries = entries | append: '~~' | append: sib_entry -%}
+        {%- endunless -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- assign finishes = entries | split: '~~' | sort_natural -%}
+
+  {%- if finishes.size > 1 -%}
     {%- style -%}
       .finish-selector{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:0 0 20px;}
       .finish-selector__label{font-family:"Lato",sans-serif;font-size:14px;font-weight:700;color:#23232B;margin-right:2px;}
       .finish-selector__option{display:inline-flex;align-items:center;justify-content:center;min-width:72px;padding:8px 16px;border:1px solid #D4D4D8;border-radius:4px;background:#fff;font-family:"Lato",sans-serif;font-size:14px;font-weight:600;line-height:1;color:#23232B;text-decoration:none;cursor:pointer;transition:border-color .2s ease,color .2s ease,background .2s ease;}
-      .finish-selector__option:hover{border-color:#F1592A;color:#F1592A;}
-      .finish-selector__option.is-active{border-color:#F1592A;background:#F1592A;color:#fff;cursor:default;pointer-events:none;}
+      .finish-selector__option:hover{border-color:#D12E06;color:#D12E06;}
+      .finish-selector__option.is-active{border-color:#D12E06;background:#D12E06;color:#fff;cursor:default;pointer-events:none;}
     {%- endstyle -%}
     <div class="finish-selector" role="group" aria-label="Choose finish">
       <span class="finish-selector__label">Finish:</span>
-      <span class="finish-selector__option is-active" aria-current="true">{{ this_color | escape }}</span>
-      {{ sibling_buttons }}
+      {%- for entry in finishes -%}
+        {%- assign parts = entry | split: '|' -%}
+        {%- assign finish_color = parts[0] -%}
+        {%- assign finish_url = parts[1] -%}
+        {%- if finish_url == product.url -%}
+          <span class="finish-selector__option is-active" aria-current="true">{{ finish_color | escape }}</span>
+        {%- else -%}
+          <a class="finish-selector__option" href="{{ finish_url }}">{{ finish_color | escape }}</a>
+        {%- endif -%}
+      {%- endfor -%}
     </div>
   {%- endif -%}
 {%- endif -%}

@@ -25,6 +25,7 @@ if (!customElements.get('product-customization-options')) {
       #itemUpdateListenerAdded = false;
       #isReplacing = false;
       #initialized = false;
+      #applyingConditionalDefaults = false;
       #cartUpdateUnsubscribe = null;
       #variantChangeUnsubscribe = null;
       #onPageShow = null;
@@ -271,13 +272,89 @@ if (!customElements.get('product-customization-options')) {
         });
       }
 
+      // A conditional (tiered) option is hidden until its parent choice is picked,
+      // and hiding it clears whatever was selected inside. Nothing ever re-applied
+      // the option's own default when it became visible again, so the dependent step
+      // ended up with no selection at all - e.g. on the 5 Stack PDPs, switching
+      // "Stations Included" left "Station Layout" showing its default in the
+      // accordion label while no radio was actually checked. Because prepareOptions()
+      // reads `[data-customization-option]:checked`, that state also dropped the
+      // option from the cart line item even though the PDP looked configured.
+      // The same happens on first paint: both "Station Layout" accordions share a
+      // radio group name, so the server-rendered `checked` of the visible one is
+      // knocked out by the hidden one before it is cleared.
+      restoreConditionalDefault(accordion) {
+        const defaultId = accordion.dataset.defaultOption;
+        if (!defaultId) return false;
+        // Authoritative visibility check: in a deeper tier chain, restoring an earlier
+        // default dispatches an `input` that can re-run syncConditionalVisibility() and
+        // hide this accordion, so the caller's list may already be stale. Checking a
+        // hidden accordion's default would leave a hidden-but-checked option that
+        // prepareOptions() and updatePrice() would still count.
+        if (window.getComputedStyle(accordion).display === 'none') return false;
+        // Never override a selection the shopper already made.
+        if (accordion.querySelector('[data-customization-option]:checked')) return false;
+        const defaultInput = accordion.querySelector(`[data-customization-option="${defaultId}"]`);
+        if (!defaultInput || defaultInput.disabled) return false;
+        // The label is server-rendered with the default badge already in it, so clear
+        // it first - otherwise createOptionHTML appends a second copy of the badge.
+        const optionHandler = accordion.querySelector('[data-selected-options]');
+        if (optionHandler) {
+          optionHandler.querySelectorAll('[data-option-id]').forEach((badge) => badge.remove());
+          optionHandler.dataset.selectedOptions = '';
+        }
+        defaultInput.checked = true;
+        // Reuse the radio `input` handler (setCustomizationOption) so the label, the
+        // conditional state and the price all refresh the same way a click would.
+        defaultInput.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+      }
+
+      // Applies the default of every conditional option that is currently visible
+      // with nothing selected. Only called when a parent choice changed or on init -
+      // not from addRemoveListener, so clearing an optional selection by hand still
+      // sticks. Defaults belong to the PDP configuration flow, so the cart contexts
+      // (which render the shopper's saved selections) are left untouched.
+      applyConditionalDefaults() {
+        if (window.location.href.includes('/cart') || this.closest('cart-notification') || this.closest('cart-drawer')) return;
+        if (this.#applyingConditionalDefaults) return;
+        this.#applyingConditionalDefaults = true;
+        try {
+          // Restoring a default can reveal the next tier down, so keep going until a
+          // pass changes nothing. Each accordion is attempted at most once per call:
+          // two accordions that share a radio group name (which is what happens when
+          // they share an option title) would otherwise keep clearing each other's
+          // default and spin this loop forever.
+          const attempted = new Set();
+          for (;;) {
+            const pending = Array.from(this.querySelectorAll('[data-conditions-to-render][data-default-option]')).filter(
+              (accordion) =>
+                !attempted.has(accordion) &&
+                window.getComputedStyle(accordion).display !== 'none' &&
+                !accordion.querySelector('[data-customization-option]:checked'),
+            );
+            if (pending.length === 0) return;
+            let restored = 0;
+            pending.forEach((accordion) => {
+              attempted.add(accordion);
+              if (this.restoreConditionalDefault(accordion)) restored += 1;
+            });
+            if (restored === 0) return;
+          }
+        } finally {
+          this.#applyingConditionalDefaults = false;
+        }
+      }
+
       conditionalChoice(option) {
         this.syncConditionalVisibility();
+        this.applyConditionalDefaults();
         this.updateConditionalBanners();
       }
 
       checkDefaultConditionsToRender() {
         this.syncConditionalVisibility();
+        this.applyConditionalDefaults();
         this.updateConditionalBanners();
       }
 
