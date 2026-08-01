@@ -660,6 +660,14 @@
                     </div>
                   {% endif %}
                 {% assign current_variant = product.selected_or_first_available_variant %}
+{%- comment -%}
+  Only surface processing/lead time when the product is actually purchasable.
+  product.available is false only when no variant can be bought (out of stock AND
+  inventory policy DENY), so an out-of-stock hold hides it while in-stock and
+  legitimate continue-selling (preorder/backorder) products still show it. The
+  stored metafield value is untouched.
+{%- endcomment -%}
+{% if product.available %}
 {% if current_variant.metafields.custom.processing_time_long_variant != blank or product.metafields.custom.processing_time_long != blank %}
   <div class="item">
     <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
@@ -671,6 +679,7 @@
       <span class="more-info" data-customfield="Processing Time" data-processingtime="{{ current_variant.metafields.custom.processing_time_long_variant }}">(More Info)</span>
     </div>
   </div>
+{% endif %}
 {% endif %}
 
                   {% if product.metafields.custom.product_code != blank %}
