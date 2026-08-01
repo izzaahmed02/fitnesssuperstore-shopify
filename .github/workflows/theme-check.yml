@@ -1,0 +1,162 @@
+name: Theme Check
+
+# Static Liquid/theme lint via Shopify CLI. No store credentials are used or needed.
+#
+# REPRODUCIBILITY: the Shopify CLI version is PINNED below (THEME_CHECK_CLI_VERSION).
+# An unpinned `npm install -g @shopify/cli` makes the result depend on the day the
+# job ran. Bump the pin deliberately, in its own PR, and re-attach the report.
+#
+# ROLLOUT: report-only today, because the theme has a large pre-existing lint
+# backlog. Report-only means "findings do not fail the job" — it does NOT mean
+# "any outcome passes": a crash or a timeout still fails the job below, so a broken
+# run can never be mistaken for a clean one. Once the backlog is triaged and a
+# blocking threshold is approved, set REPORT_ONLY to 'false' and make this a
+# REQUIRED status check on `main` (see docs/governance-packet.md). Until then it is
+# not a quality gate.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+# Supersede an in-progress run only for a branch push. PR runs are NOT cancelled:
+# a cancelled check cannot serve as release evidence for an exact head SHA.
+concurrency:
+  group: theme-check-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
+
+permissions:
+  contents: read
+
+jobs:
+  theme-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Pinned tool version — the whole point of this workflow being reproducible.
+      THEME_CHECK_CLI_VERSION: '4.5.2'
+      # 'false' makes lint findings fail the job. Do not flip without the approved
+      # blocking threshold.
+      REPORT_ONLY: 'true'
+      CI: 'true'
+      SHOPIFY_CLI_NO_ANALYTICS: '1'
+      SHOPIFY_FLAG_NON_INTERACTIVE: 'true'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pinned Shopify CLI
+        run: npm install -g "@shopify/cli@${THEME_CHECK_CLI_VERSION}"
+
+      # Recorded in the log so any attached report states exactly what produced it.
+      - name: Record tool versions
+        run: |
+          echo "commit:          ${GITHUB_SHA}"
+          echo "node:            $(node --version)"
+          echo "npm:             $(npm --version)"
+          echo "@shopify/cli:    $(npm ls -g --depth=0 @shopify/cli | sed -n 's/.*@shopify\/cli@//p')"
+          echo "shopify --version: $(shopify version 2>/dev/null || true)"
+
+      # `-o json` is deliberate. The default text formatter prints a source-context
+      # box per offense; on this theme's current backlog that produced a >100 MB log
+      # when measured locally — unreadable, a huge artifact, and slow. JSON is
+      # compact, countable, and diffable run to run.
+      #
+      # stdin from /dev/null so the linter can never hang CI waiting on a prompt.
+      - name: Run Theme Check
+        id: check
+        run: |
+          set +e
+          timeout 1200 shopify theme check --no-color -o json < /dev/null > theme-check-report.json
+          status=$?
+          set -e
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
+
+          if [ "$status" -eq 124 ]; then
+            echo "::error::Theme Check timed out after 20 minutes - the report is incomplete and proves nothing."
+            exit 1
+          fi
+          if [ ! -s theme-check-report.json ]; then
+            echo "::error::Theme Check produced no report (exit ${status})."
+            exit 1
+          fi
+
+      # Counts by severity and by check, so the result is usable as evidence
+      # without opening the artifact, and so backlog progress is visible.
+      - name: Summarise findings
+        if: always() && steps.check.outputs.status != '124' && steps.check.outputs.status != ''
+        run: |
+          node --input-type=module -e '
+            import { readFileSync, appendFileSync } from "node:fs";
+            const data = JSON.parse(readFileSync("theme-check-report.json", "utf8"));
+            const files = Array.isArray(data) ? data : [data];
+            const bySeverity = new Map(), byCheck = new Map();
+            let total = 0;
+            for (const f of files) {
+              for (const o of f.offenses ?? []) {
+                total++;
+                const sev = String(o.severity ?? "unknown");
+                bySeverity.set(sev, (bySeverity.get(sev) ?? 0) + 1);
+                byCheck.set(o.check, (byCheck.get(o.check) ?? 0) + 1);
+              }
+            }
+            const top = [...byCheck].sort((a, b) => b[1] - a[1]).slice(0, 15);
+            const lines = [
+              "## Theme Check (report-only - not a quality gate)",
+              "",
+              "Commit: `" + process.env.GITHUB_SHA + "` / Shopify CLI `" + process.env.THEME_CHECK_CLI_VERSION + "`",
+              "",
+              "**" + total + "** findings across **" + files.length + "** files scanned.",
+              "",
+              "| Severity | Count |", "|---|---|",
+              ...[...bySeverity].sort().map(([s, n]) => "| " + s + " | " + n + " |"),
+              "",
+              "| Top check | Count |", "|---|---|",
+              ...top.map(([c, n]) => "| `" + c + "` | " + n + " |"),
+            ];
+            const out = lines.join("\n");
+            console.log(out);
+            if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, out + "\n");
+          '
+
+      # Report-only means "findings do not fail the job" - never "any outcome
+      # passes". A crash, empty report, or timeout already failed the step above.
+      - name: Apply report-only policy
+        if: always() && steps.check.outputs.status != ''
+        env:
+          STATUS: ${{ steps.check.outputs.status }}
+        run: |
+          # exit 0 = clean; exit 1 = lint findings (the only nonzero accepted while
+          # report-only); any OTHER nonzero is an unexpected/broken run and must fail
+          # even in report-only, so a crash can never be mistaken for findings.
+          if [ "$STATUS" = '0' ]; then
+            echo "Theme Check completed with no findings at the configured fail level."
+            exit 0
+          fi
+          if [ "$STATUS" != '1' ]; then
+            echo "::error::Theme Check exited with unexpected status ${STATUS} (expected 0=clean or 1=findings). Treating as a broken run - not a pass."
+            exit 1
+          fi
+          # STATUS is exactly 1: lint findings were reported.
+          if [ "${REPORT_ONLY}" = 'true' ]; then
+            echo "::warning::Theme Check reported findings (exit 1). Report-only during rollout - not failing the job. This is NOT a quality gate."
+            exit 0
+          fi
+          echo "::error::Theme Check reported findings (exit 1) and REPORT_ONLY is disabled."
+          exit 1
+
+      # The report is the attachable evidence for a release packet.
+      - name: Upload Theme Check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: theme-check-report-${{ github.sha }}
+          path: theme-check-report.json
+          if-no-files-found: warn
+          retention-days: 30

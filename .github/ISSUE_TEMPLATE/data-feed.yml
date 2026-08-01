@@ -1,0 +1,46 @@
+name: "Data / feed / import"
+description: "Product data, metafields, catalog imports/exports, GMC/Multifeed, or structured data affecting product truth."
+labels: ["data-feed"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Product-truth rules apply. Never publish an inventory sentinel (9999/-9999)
+        as a public availability claim. Never apply blanket warranty/processing
+        defaults without an approved per-SKU source. Mark unknowns UNKNOWN — do not
+        fill with assumptions. Product/catalog acceptance is a business signoff, separate
+        from GitHub code review.
+  - type: textarea
+    id: source-of-truth
+    attributes:
+      label: Authoritative source(s)
+      description: Link the approved source (product master, supplier docs, etc.). Do not paste credentials.
+    validations:
+      required: true
+  - type: textarea
+    id: fields
+    attributes:
+      label: Exact fields / SKUs in scope
+      description: Fields validated before and after; fields that must remain unchanged.
+    validations:
+      required: true
+  - type: textarea
+    id: downstream
+    attributes:
+      label: Downstream impact
+      description: Shopify Catalog / Agentic (ChatGPT) / GMC / Multifeed / canonical effects.
+    validations:
+      required: true
+  - type: input
+    id: data-acceptance-owner
+    attributes:
+      label: Product/catalog acceptance owner
+    validations:
+      required: true
+  - type: textarea
+    id: rollback
+    attributes:
+      label: Rollback
+      description: How the import/change is reverted; where the pre-change export is kept (do not delete historical exports).
+    validations:
+      required: true
