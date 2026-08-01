@@ -233,11 +233,15 @@
     <div class="explore-packages__track" id="explore-track-{{ section.id }}">
       {% for block in section.blocks %}
         {% assign prod = block.settings.product %}
-        {% if prod != blank %}
+        {% if prod != blank and prod.handle != product.handle %}
           <a href="{{ prod.url }}" class="explore-packages__card" {{ block.shopify_attributes }}>
             <div>
               <div class="explore-packages__card-image-wrap">
-                {% if prod.metafields.custom.condition_state != blank %}
+                {% if prod.available == false %}
+                  <div class="explore-packages__badge">
+                    {{ 'products.product.sold_out' | t }}
+                  </div>
+                {% elsif prod.metafields.custom.condition_state != blank %}
                   <div class="explore-packages__badge">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                     {{ prod.metafields.custom.condition_state }}
