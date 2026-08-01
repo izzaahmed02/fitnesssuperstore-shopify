@@ -49,7 +49,10 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Must satisfy @shopify/cli's engine requirement (>=22.12.0 for the
+          # pinned 4.5.2). On Node 20 the CLI crashes at startup and writes no
+          # report. Bump alongside THEME_CHECK_CLI_VERSION.
+          node-version: '22'
 
       - name: Install pinned Shopify CLI
         run: npm install -g "@shopify/cli@${THEME_CHECK_CLI_VERSION}"
