@@ -18,8 +18,8 @@ the package filenames returned nothing.
 | Reviewed field matrix | the published `field_source_matrix_V5` in the canonical Drive folder |
 | Read-only enforcement | `scripts/pdp_ai_master/guardrails.py` |
 | Tests | `scripts/pdp_ai_master/tests/test_export.py` |
-| Admin API version | `2025-07` |
-| Scopes required | `read_products`, `read_inventory`, `read_metaobjects`, `read_product_listings` |
+| Admin API version | `2026-07` |
+| Scopes required | `read_products`, `read_metaobjects`, `read_inventory` — nothing else |
 | Write scopes required | none |
 | Mutation path | none — see below |
 | Schema version | V5 |
@@ -33,6 +33,40 @@ metaobject shapes the theme renders on the PDP, and the conflict rules
 beside the theme means a metaobject or schema change and the export that
 depends on it move in the same commit and the same review. Nothing here is
 loaded by the theme at runtime — Liquid never reads this directory.
+
+## Least-privilege scopes, and why the query avoids `media`
+
+The scope set was established by validating the exact shipped query against
+the 2026-07 schema, not by assumption. The result is three scopes:
+
+    read_products, read_metaobjects, read_inventory
+
+`read_product_listings` was previously claimed in this README. Validation
+does not require it and it has been removed. Do not grant it.
+
+The query uses the deprecated `images` / `featuredImage` fields rather than
+the current `media` / `featuredMedia`. That is deliberate. Requesting `media`
+— even bare, selecting nothing but `id` — costs seven scopes:
+
+    read_products, read_files, read_themes, read_orders,
+    read_draft_orders, read_images, read_quick_sale
+
+The cost sits on the `media` field itself rather than on its sub-selections,
+so it cannot be narrowed by trimming fragments. `images` returns the same
+image data for `read_products` alone. Holding `read_orders` and
+`read_draft_orders` on a PDP export credential is an over-grant we are not
+making in exchange for image URLs.
+
+Two consequences, both stated rather than hidden:
+
+* **Video links are not exported in this lane.** They live behind `media`.
+  No acceptance gate for this package asks for them.
+* **`images` and `featuredImage` are deprecated.** They are valid and
+  returning data on 2026-07, and `tests/test_export.py` fails if anyone
+  reintroduces `media` without a fresh scope review. When Shopify removes
+  them this query must change, and that change is a scope decision for Tim
+  rather than a mechanical fix: either accept the seven-scope set or drop
+  image export from this lane.
 
 ## Relationship to the published field matrix
 

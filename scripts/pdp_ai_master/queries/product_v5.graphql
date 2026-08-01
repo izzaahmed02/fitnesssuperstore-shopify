@@ -4,8 +4,33 @@
 # operation and no `mutation`. export.py refuses to run if that changes
 # (see guardrails.assert_read_only).
 #
-# Scopes required: read_products, read_inventory, read_metaobjects,
-# read_product_listings. No write scope is used or needed.
+# Scopes required: read_products, read_metaobjects, read_inventory.
+# Nothing else. No write scope is used or needed. Validated against the
+# Admin GraphQL 2026-07 schema; see the scope note below before adding a
+# field, because scope cost is not obvious from the field name.
+#
+# WHY images/featuredImage RATHER THAN media/featuredMedia
+#
+# `media` is the current, non-deprecated field, but requesting it - even
+# bare, selecting nothing but `id` - costs seven scopes:
+#
+#   read_products, read_files, read_themes, read_orders,
+#   read_draft_orders, read_images, read_quick_sale
+#
+# The cost is on the `media` field itself, not on the sub-selections, so it
+# cannot be narrowed by trimming fragments. `images` and `featuredImage`
+# return the same image data for read_products alone.
+#
+# Holding read_orders and read_draft_orders on a PDP export credential is
+# an over-grant we are not willing to make for image URLs, so this lane
+# uses the narrow fields and does not export video links. Videos are not
+# in any acceptance gate for this package.
+#
+# TRADE-OFF, STATED PLAINLY: `images` and `featuredImage` are deprecated in
+# favour of `media`. They are valid and returning data on 2026-07. When
+# Shopify removes them this query must change, and that change is a scope
+# decision for Tim, not a mechanical fix - either accept the seven-scope
+# set or drop image export from this lane.
 
 query PdpAiMasterProduct($id: ID!) {
   product(id: $id) {
@@ -29,32 +54,16 @@ query PdpAiMasterProduct($id: ID!) {
       id
       fullName
     }
-    featuredMedia {
-      ... on MediaImage {
-        image {
-          url
-        }
-      }
+    featuredImage {
+      url
+      altText
     }
-    media(first: 50) {
+    images(first: 50) {
       nodes {
-        mediaContentType
-        alt
-        ... on MediaImage {
-          image {
-            url
-            width
-            height
-          }
-        }
-        ... on Video {
-          sources {
-            url
-          }
-        }
-        ... on ExternalVideo {
-          originUrl
-        }
+        url
+        altText
+        width
+        height
       }
     }
     collections(first: 100) {

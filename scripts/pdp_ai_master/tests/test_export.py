@@ -83,6 +83,29 @@ def main() -> int:
     except ReadOnlyViolation as exc:
         check(False, f"the shipped query document passes read-only ({exc})")
 
+    print("\nleast-privilege scope discipline")
+    from export import API_VERSION, REQUIRED_SCOPES  # noqa: E402
+    check(API_VERSION == "2026-07", f"API version is 2026-07 (got {API_VERSION})")
+    check(set(REQUIRED_SCOPES) == {"read_products", "read_metaobjects",
+                                   "read_inventory"},
+          "scope set is exactly the three validated read scopes")
+    check("read_product_listings" not in real_query
+          and "read_product_listings" not in (PKG / "export.py").read_text(),
+          "read_product_listings is not claimed anywhere")
+    # `media` costs six extra scopes including read_orders. If someone
+    # reintroduces it, this fails and the scope review happens again.
+    # Comments are stripped first: the scope note legitimately names the
+    # fields it is telling you not to use.
+    query_body = "\n".join(
+        line for line in real_query.splitlines()
+        if not line.lstrip().startswith("#")
+    )
+    check("media(first" not in query_body and "featuredMedia" not in query_body,
+          "the query does not use media/featuredMedia (six extra scopes)")
+    for forbidden in ("read_orders", "read_draft_orders", "read_themes"):
+        check(f'"{forbidden}"' not in (PKG / "export.py").read_text(),
+              f"{forbidden} is not requested")
+
     with tempfile.TemporaryDirectory() as tmp:
         tmpdir = Path(tmp)
         scope_path = tmpdir / "scope.json"

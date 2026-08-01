@@ -43,8 +43,9 @@ Attach the REV9 overlay as a preview only:
 
     ... --overlay path/to/Product_Recommendation_Matrix_REV9_*.csv
 
-Required Shopify scopes: read_products, read_inventory, read_metaobjects,
-read_product_listings. No write scope.
+Required Shopify scopes: read_products, read_metaobjects, read_inventory.
+Nothing else, and no write scope. That set was established by validating the
+exact shipped query against the 2026-07 schema, not by assumption.
 """
 
 from __future__ import annotations
@@ -73,8 +74,14 @@ from guardrails import (  # noqa: E402
 )
 
 HERE = Path(__file__).resolve().parent
-API_VERSION = "2025-07"
+API_VERSION = "2026-07"
 SCHEMA_VERSION = "V5"
+
+# Least-privilege scope set, established by validating the exact shipped
+# query against the 2026-07 schema rather than by assumption. Do not widen
+# this without re-validating - see the scope note in
+# queries/product_v5.graphql, which explains why `media` is not used.
+REQUIRED_SCOPES = ("read_products", "read_metaobjects", "read_inventory")
 
 # Inventory at or above this is a placeholder buffer, not stock on hand.
 PLACEHOLDER_INVENTORY_FLOOR = 9000
@@ -278,17 +285,20 @@ def build_record(product: dict[str, Any], run_ts: str) -> dict[str, Any]:
     )
     attributes = resolve_metaobject(mfs, attr_key) if attr_key else {}
 
-    media = (product.get("media") or {}).get("nodes", []) or []
+    # `images` rather than `media`: same image data for read_products alone,
+    # where `media` would cost six more scopes including read_orders. Video
+    # links are therefore not exported in this lane. See the scope note in
+    # queries/product_v5.graphql.
     images = [
-        m["image"]["url"]
-        for m in media
-        if m.get("mediaContentType") == "IMAGE" and (m.get("image") or {}).get("url")
+        node["url"]
+        for node in (product.get("images") or {}).get("nodes", []) or []
+        if node.get("url")
     ]
-    videos = [
-        (m.get("originUrl") or (m.get("sources") or [{}])[0].get("url"))
-        for m in media
-        if m.get("mediaContentType") in ("VIDEO", "EXTERNAL_VIDEO")
-    ]
+    featured = (product.get("featuredImage") or {}).get("url")
+    if featured and featured in images:
+        # Keep the featured image first so image_link is the PDP's main image
+        # rather than whichever image happens to sort first.
+        images = [featured] + [url for url in images if url != featured]
 
     variants: list[dict[str, Any]] = []
     volatile_variants: list[dict[str, Any]] = []
@@ -361,7 +371,7 @@ def build_record(product: dict[str, Any], run_ts: str) -> dict[str, Any]:
         },
         "image_link": images[0] if images else None,
         "additional_image_links": images[1:],
-        "video_links": videos,
+        "video_links_not_exported": "media field not queried - see scope note",
         "breadcrumbs": mf_value(mfs, "breadcrumbs"),
         "breadcrumb_paths": resolve_metaobject_list(mfs, "breadcrumb_paths"),
         "product_options": resolve_metaobject_list(mfs, "product_options"),
@@ -793,8 +803,7 @@ python3 scripts/pdp_ai_master/export.py \\
 ```
 
 Live equivalent, read scopes only
-(`read_products`, `read_inventory`, `read_metaobjects`,
-`read_product_listings`):
+(`read_products`, `read_metaobjects`, `read_inventory`):
 
 ```
 SHOPIFY_SHOP=... SHOPIFY_ADMIN_TOKEN=... \\
@@ -996,8 +1005,8 @@ def main() -> int:
             "commit": args.commit,
             "query_document": str(query_path.relative_to(HERE.parent.parent)),
             "query_document_sha256": hashlib.sha256(document.encode()).hexdigest(),
-            "scopes_required": ["read_products", "read_inventory",
-                                "read_metaobjects", "read_product_listings"],
+            "scopes_required": list(REQUIRED_SCOPES),
+            "scopes_validated_against": f"Admin GraphQL {API_VERSION} schema",
             "write_path_exists": False,
             "shopify_writes_made": 0,
         },
