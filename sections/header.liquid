@@ -58,6 +58,18 @@
     display: none;
     }
 
+    {%- if section.settings.sticky_header_type == 'none' -%}
+        /* Mobile: when the merchant hasn't opted into any sticky header type,
+           don't let .section-header stay pinned - the wrapper below already
+           renders as a plain div (not the sticky-header custom element) in
+           that case, so CSS shouldn't force sticky behavior on top of it. */
+        .section-header {
+        position: static;
+        top: auto;
+        }
+
+    {%- endif -%}
+
     /* .section-header is the single sticky element on mobile. Neutralize the
        JS-driven sticky/hide states on .header-wrapper so the header stays pinned
        and doesn't slide away on scroll-down. */
@@ -65,6 +77,29 @@
     .header-wrapper.shopify-section-header-hidden {
     position: static;
     top: auto;
+    }
+
+    /* Keep the initial site-header compact on mobile without changing its
+       functions (phone, cart, menu, search). Cap the logo, give the search
+       field a comfortable 48px tap target, and tighten the vertical spacing
+       around it. */
+    .header__heading-logo {
+    max-width: 240px;
+    height: auto;
+    }
+
+    .custom-header-search--input {
+    min-height: 48px;
+    }
+
+    .custom-header-search-container {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    }
+
+    .header {
+    padding-top: 6px;
+    padding-bottom: 6px;
     }
     }
 

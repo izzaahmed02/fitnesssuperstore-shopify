@@ -444,6 +444,134 @@ margin: 0;
 }
 }
 
+/* ── Why Choose Us — mobile carousel (per #670) ──
+   Content-sized cards: one full-width slide, no side peeks, and no
+   equal-height stretch that leaves a large blank panel under short copy.
+   adaptiveHeight (set in the Slick init) sizes the viewport to the current
+   card; these rules stop the earlier flex/stretch behavior from forcing
+   every card to the tallest slide's height. */
+@media (max-width: 768px) {
+  /* Once Slick initializes, .questions is the carousel container - let it be a
+     normal block instead of an equal-height flex row. */
+  .homepageHeroSection .questions.slick-initialized {
+    display: block;
+    align-items: initial;
+  }
+
+  /* Restore Slick's default (float) track so adaptiveHeight can size to the
+     current card instead of the tallest one. */
+  .homepageHeroSection .questions .slick-track {
+    display: block;
+  }
+
+  .homepageHeroSection .questions .slick-slide {
+    height: auto;
+  }
+
+  .homepageHeroSection .benefit-card {
+    height: auto;
+    min-height: 0;
+    flex: 0 0 auto;
+    flex-grow: 0;
+    align-self: flex-start;
+    margin: 0;
+    padding: 24px 20px;
+  }
+
+  /* .questions' side padding widens from 16px to 24px here so the arrow
+     buttons below have a full 32px of gutter (24 padding + 8 card margin)
+     with zero card overlap and zero viewport-edge bleed at 360/390/428px -
+     see PR notes for the math. Top/bottom stay 24px (unchanged from above). */
+  .homepageHeroSection .questions {
+    padding: 24px;
+  }
+
+  /* Nav cue: Slick's default prev/next buttons already carry aria-label
+     "Previous"/"Next" and are real <button> elements (keyboard-focusable).
+     The button box itself is taller than the visual circle (32x44) purely
+     to grow the tappable area without widening it - width is capped at 32px
+     because that's all the gutter above allows without overlapping the
+     card. The circle, border and shadow live on ::after so the button's
+     own box can be transparent and 44px tall without becoming an ellipse. */
+  .homepageHeroSection .questions .slick-prev,
+  .homepageHeroSection .questions .slick-next {
+    width: 32px;
+    height: 44px;
+    z-index: 2;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .homepageHeroSection .questions .slick-prev {
+    left: 0;
+  }
+
+  .homepageHeroSection .questions .slick-next {
+    right: 0;
+  }
+
+  .homepageHeroSection .questions .slick-prev::after,
+  .homepageHeroSection .questions .slick-next::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    z-index: -1;
+  }
+
+  /* Slick's stock glyph relies on an icon font (@font-face in
+     slick-theme.min.css) whose src URLs are empty/unresolvable in this
+     bundle - assets/ has no slick.woff/eot/ttf/svg file at all - so the
+     arrow would fall back to an unstyled Unicode character. Replace it
+     with an inline SVG chevron instead: no font dependency, renders
+     identically everywhere. */
+  .homepageHeroSection .questions .slick-prev:before,
+  .homepageHeroSection .questions .slick-next:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 12px 12px;
+    opacity: 1;
+  }
+
+  .homepageHeroSection .questions .slick-prev:before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23393940' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='15 18 9 12 15 6'%3E%3C/polyline%3E%3C/svg%3E");
+  }
+
+  .homepageHeroSection .questions .slick-next:before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23393940' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E");
+  }
+
+  .homepageHeroSection .questions .slick-prev:focus-visible,
+  .homepageHeroSection .questions .slick-next:focus-visible {
+    outline: 2px solid #D83D0E;
+    outline-offset: 2px;
+  }
+
+  /* Disabled (first/last slide) state: dim the whole button (icon + circle)
+     to 40% opacity. That's a dark gray (#393940) icon on white at 40% -
+     still clearly a visible, legible arrow shape, just muted as a cue that
+     this direction isn't available - not invisible. */
+  .homepageHeroSection .questions .slick-prev.slick-disabled,
+  .homepageHeroSection .questions .slick-next.slick-disabled {
+    opacity: 0.4;
+  }
+}
+
 
 @media (max-width: 480px) {
   .homepageHeroSection .image {
@@ -471,11 +599,11 @@ margin: 0;
   }
 
   .homepageHeroSection .benefit-card {
-    padding: 16px;
-     flex: 1; 
+    padding: 24px 20px;
+     flex: 0 0 auto;
   }
 
   .homepageHeroSection .slick-track{
-    display: flex;
+    display: block;
   }
 }
