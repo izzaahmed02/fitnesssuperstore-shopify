@@ -89,14 +89,17 @@
         assign category_title_downcase = category.title | downcase
         assign hidden_option = false
         comment
-          The delivery / room-of-choice / installation group is always pinned to the
-          last position and numbered separately. Match on "room of choice" rather than
-          the full group title so the ordering survives the approved rename from
-          "Assembly & Room of Choice Installation Needed?" to
-          "Delivery / Room of Choice / Installation Options".
+          The delivery / room-of-choice / installation group is pinned to the last
+          position and numbered separately. Recognised titles live in the snippet so
+          this stays in step with cart-item-product-options and
+          product-option-accordion.
         endcomment
+        capture delivery_group_flag
+          render 'is-delivery-option-group', category_title: category.title
+        endcapture
+        assign delivery_group_flag = delivery_group_flag | strip
         assign is_delivery_group = false
-        if category_title_downcase contains 'room of choice'
+        if delivery_group_flag == 'true'
           assign is_delivery_group = true
         endif
 
