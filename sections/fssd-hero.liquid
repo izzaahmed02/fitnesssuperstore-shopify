@@ -1,0 +1,358 @@
+{% comment %}
+  Desktop Homepage A/B Test (Variant B) — Module 2, per spec §4.
+  DRAFT / NOT LAUNCHED. Not wired into any template; templates/index.json is
+  frozen until S4.
+
+  Self-contained per spec R3: own scoped CSS, no shared stylesheet import.
+  Deliberately does NOT reference assets/homepage-section-hero.css or
+  assets/fss-hp-device-targeting.css (spec R2), and does NOT load
+  assets/fss-hp-analytics.js — the helper stays on the mobile branch until S2
+  and desktop inherits it at S4 (spec §8). The data-fss-hp-* attributes below
+  are therefore inert during S1; that is expected.
+
+  This section owns the single <h1> for the Variant B desktop set (spec R5).
+  All customer-facing copy is a schema value — content approval from Larianne
+  and Carlos is still open, so nothing is hardcoded in markup.
+{% endcomment %}
+
+<div class="fssd-hero">
+  {%- if section.settings.background_image != blank -%}
+    {%- comment -%}
+      Decorative background. alt intentionally falls back to empty rather than
+      repeating the H1 for screen-reader users.
+    {%- endcomment -%}
+    <img
+      class="fssd-hero__image"
+      src="{{ section.settings.background_image | image_url: width: 1600 }}"
+      srcset="
+        {{ section.settings.background_image | image_url: width: 800 }} 800w,
+        {{ section.settings.background_image | image_url: width: 1200 }} 1200w,
+        {{ section.settings.background_image | image_url: width: 1600 }} 1600w,
+        {{ section.settings.background_image | image_url: width: 2000 }} 2000w
+      "
+      sizes="100vw"
+      alt="{{ section.settings.background_image.alt | escape }}"
+      width="{{ section.settings.background_image.width }}"
+      height="{{ section.settings.background_image.height }}"
+      loading="eager"
+      fetchpriority="high"
+      decoding="async"
+    >
+  {%- endif -%}
+
+  <div class="fssd-hero__scrim"></div>
+
+  <div class="fssd-hero__content">
+    {%- if section.settings.rating_text != blank -%}
+      {%- if section.settings.rating_link != blank -%}
+        <a
+          class="fssd-hero__rating"
+          href="{{ section.settings.rating_link }}"
+          aria-label="{{ section.settings.rating_text | escape }}"
+        >
+          <span class="fssd-hero__stars" aria-hidden="true">{% render 'rating' %}</span>
+          <span class="fssd-hero__rating-text">{{ section.settings.rating_text }}</span>
+        </a>
+      {%- else -%}
+        <span class="fssd-hero__rating">
+          <span class="fssd-hero__stars" aria-hidden="true">{% render 'rating' %}</span>
+          <span class="fssd-hero__rating-text">{{ section.settings.rating_text }}</span>
+        </span>
+      {%- endif -%}
+    {%- endif -%}
+
+    {%- if section.settings.title_text != blank -%}
+      <h1 class="fssd-hero__title">{{ section.settings.title_text }}</h1>
+    {%- endif -%}
+
+    {%- if section.settings.copy_text != blank -%}
+      <p class="fssd-hero__copy">{{ section.settings.copy_text }}</p>
+    {%- endif -%}
+
+    <div class="fssd-hero__actions">
+      {%- if section.settings.cta_primary_text != blank -%}
+        <a
+          class="fssd-hero__cta fssd-hero__cta--primary"
+          href="{{ section.settings.cta_primary_link }}"
+          data-fss-hp-event="fss_hp_primary_cta"
+          data-fss-hp-props='{"condition": {{ section.settings.cta_primary_condition | json | escape }}}'
+        >
+          {{ section.settings.cta_primary_text }}
+        </a>
+      {%- endif -%}
+
+      {%- if section.settings.cta_secondary_text != blank -%}
+        <a
+          class="fssd-hero__cta fssd-hero__cta--secondary"
+          href="{{ section.settings.cta_secondary_link }}"
+          data-fss-hp-event="fss_hp_primary_cta"
+          data-fss-hp-props='{"condition": {{ section.settings.cta_secondary_condition | json | escape }}}'
+        >
+          {{ section.settings.cta_secondary_text }}
+        </a>
+      {%- endif -%}
+    </div>
+
+    {%- for block in section.blocks -%}
+      {%- if block.type == 'supporting_link' and block.settings.text != blank -%}
+        <a
+          class="fssd-hero__supporting-link"
+          href="{{ block.settings.link }}"
+          {{ block.shopify_attributes }}
+        >
+          {{ block.settings.text }}
+        </a>
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+</div>
+
+<style>
+  .fssd-hero {
+    --fssd-hero-ink: #ffffff;
+    --fssd-hero-accent: #d83d0e;
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 420px;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .fssd-hero__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    z-index: -2;
+  }
+  .fssd-hero__scrim {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(180deg, rgba(35, 35, 43, 0) 0%, rgba(35, 35, 43, 0.45) 100%),
+      linear-gradient(269.75deg, rgba(35, 35, 43, 0) 1.15%, rgba(35, 35, 43, 0.62) 68.4%);
+  }
+  .fssd-hero__content {
+    position: relative;
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 56px 40px;
+    color: var(--fssd-hero-ink);
+  }
+  .fssd-hero__rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    color: inherit;
+    font-size: 14px;
+    line-height: 20px;
+    text-decoration: none;
+  }
+  .fssd-hero__rating-text {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .fssd-hero__stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .fssd-hero__stars svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+  }
+  .fssd-hero__title {
+    max-width: 18ch;
+    margin: 0 0 12px;
+    font-size: clamp(30px, 3vw, 46px);
+    line-height: 1.15;
+    color: inherit;
+  }
+  .fssd-hero__copy {
+    max-width: 56ch;
+    margin: 0 0 24px;
+    font-size: 16px;
+    line-height: 24px;
+  }
+  .fssd-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .fssd-hero__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 12px 28px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+  }
+  .fssd-hero__cta--primary {
+    background-color: var(--fssd-hero-accent);
+    border-color: var(--fssd-hero-accent);
+    color: #ffffff;
+  }
+  .fssd-hero__cta--secondary {
+    background-color: #ffffff;
+    border-color: #ffffff;
+    color: var(--fssd-hero-accent);
+  }
+  .fssd-hero__cta:hover {
+    opacity: 0.92;
+  }
+  .fssd-hero__supporting-link {
+    display: inline-block;
+    margin-top: 20px;
+    color: inherit;
+    font-size: 15px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .fssd-hero a:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 3px;
+  }
+  @media screen and (max-width: 749px) {
+    .fssd-hero__content {
+      padding: 40px 20px;
+    }
+    .fssd-hero__cta {
+      flex: 1 1 200px;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Desktop Hero",
+  "class": "fssd-hero-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "rating_text",
+      "label": "Rating Text",
+      "default": "4.9/5 by Thousands of happy customers"
+    },
+    {
+      "type": "url",
+      "id": "rating_link",
+      "label": "Rating Link",
+      "default": "/pages/reviews"
+    },
+    {
+      "type": "text",
+      "id": "title_text",
+      "label": "Heading (renders as the page H1)",
+      "default": "Shop New & Remanufactured Gym Equipment"
+    },
+    {
+      "type": "textarea",
+      "id": "copy_text",
+      "label": "Body Copy",
+      "default": "Compare new and remanufactured commercial gym equipment across cardio, strength, free weights, and complete gym solutions."
+    },
+    {
+      "type": "header",
+      "content": "Primary CTA"
+    },
+    {
+      "type": "text",
+      "id": "cta_primary_text",
+      "label": "Primary CTA Text",
+      "default": "Shop Remanufactured"
+    },
+    {
+      "type": "url",
+      "id": "cta_primary_link",
+      "label": "Primary CTA Link",
+      "default": "/collections/products-remanufactured"
+    },
+    {
+      "type": "select",
+      "id": "cta_primary_condition",
+      "label": "Primary CTA condition (fss_hp_primary_cta property)",
+      "options": [
+        { "value": "remanufactured", "label": "Remanufactured" },
+        { "value": "new", "label": "New" }
+      ],
+      "default": "remanufactured"
+    },
+    {
+      "type": "header",
+      "content": "Secondary CTA"
+    },
+    {
+      "type": "text",
+      "id": "cta_secondary_text",
+      "label": "Secondary CTA Text",
+      "default": "Shop New Equipment"
+    },
+    {
+      "type": "url",
+      "id": "cta_secondary_link",
+      "label": "Secondary CTA Link",
+      "default": "/collections/new-equipment"
+    },
+    {
+      "type": "select",
+      "id": "cta_secondary_condition",
+      "label": "Secondary CTA condition (fss_hp_primary_cta property)",
+      "options": [
+        { "value": "remanufactured", "label": "Remanufactured" },
+        { "value": "new", "label": "New" }
+      ],
+      "default": "new"
+    },
+    {
+      "type": "header",
+      "content": "Background"
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background Image"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "supporting_link",
+      "name": "Supporting Text Link",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Link Text",
+          "default": "Browse French Fitness"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link URL",
+          "default": "/collections/french-fitness"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Desktop Hero",
+      "category": "Custom",
+      "blocks": [
+        { "type": "supporting_link" }
+      ]
+    }
+  ]
+}
+{% endschema %}

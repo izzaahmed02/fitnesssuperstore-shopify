@@ -1,0 +1,310 @@
+{% comment %}
+  Desktop Homepage A/B Test (Variant B) — Module 4, per spec §4.
+  DRAFT / NOT LAUNCHED. Not wired into any template; templates/index.json is
+  frozen until S4.
+
+  Six category tiles rendered as a static grid. No tabs, no carousel, no slick
+  initialisation — visibility of all six without interaction is the point of
+  the module (spec §4 item 4). Self-contained per spec R3; no shared stylesheet
+  import, no device-targeting CSS (spec R2), no analytics helper (spec §8).
+
+  The subtitle field has no equivalent on the Control section. Both the six
+  category destinations and the subtitle copy are pending the consolidated
+  Carlos / Larianne approval (spec §7, gate G0-j), so every value is a schema
+  setting with a default rather than markup.
+{% endcomment %}
+
+<section class="fssd-popular-categories" aria-labelledby="fssd-popular-categories-heading-{{ section.id }}">
+  <div class="fssd-popular-categories__inner">
+    {%- if section.settings.heading != blank -%}
+      <h2 class="fssd-popular-categories__heading" id="fssd-popular-categories-heading-{{ section.id }}">
+        {{ section.settings.heading }}
+      </h2>
+    {%- endif -%}
+
+    {%- if section.settings.subheading != blank -%}
+      <p class="fssd-popular-categories__subheading">{{ section.settings.subheading }}</p>
+    {%- endif -%}
+
+    <ul class="fssd-popular-categories__grid" role="list">
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'category_card' -%}
+          <li class="fssd-popular-categories__item" {{ block.shopify_attributes }}>
+            <a
+              class="fssd-popular-categories__card"
+              href="{{ block.settings.link }}"
+              data-fss-hp-event="fss_hp_category_click"
+              data-fss-hp-props='{"category_handle": {{ block.settings.category_handle | json | escape }}, "slot": {{ forloop.index }}}'
+            >
+              {%- if block.settings.image != blank -%}
+                <span class="fssd-popular-categories__media">
+                  <img
+                    src="{{ block.settings.image | image_url: width: 400 }}"
+                    srcset="
+                      {{ block.settings.image | image_url: width: 200 }} 200w,
+                      {{ block.settings.image | image_url: width: 400 }} 400w
+                    "
+                    sizes="(min-width: 990px) 16vw, 45vw"
+                    alt="{{ block.settings.image.alt | escape }}"
+                    width="{{ block.settings.image.width }}"
+                    height="{{ block.settings.image.height }}"
+                    loading="lazy"
+                    decoding="async"
+                  >
+                </span>
+              {%- endif -%}
+
+              <span class="fssd-popular-categories__body">
+                {%- if block.settings.title != blank -%}
+                  <span class="fssd-popular-categories__title">{{ block.settings.title }}</span>
+                {%- endif -%}
+
+                {%- if block.settings.subtitle != blank -%}
+                  <span class="fssd-popular-categories__subtitle">{{ block.settings.subtitle }}</span>
+                {%- endif -%}
+              </span>
+            </a>
+          </li>
+        {%- endif -%}
+      {%- endfor -%}
+    </ul>
+
+    {%- if section.settings.view_all_link != blank and section.settings.view_all_text != blank -%}
+      <a class="fssd-popular-categories__view-all" href="{{ section.settings.view_all_link }}">
+        {{ section.settings.view_all_text }}
+      </a>
+    {%- endif -%}
+  </div>
+</section>
+
+<style>
+  .fssd-popular-categories {
+    --fssd-cat-accent: #d83d0e;
+    --fssd-cat-border: #e5e5e5;
+    --fssd-cat-muted: #616166;
+    padding: 40px 0;
+  }
+  .fssd-popular-categories__inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+  .fssd-popular-categories__heading {
+    margin: 0 0 8px;
+    font-size: clamp(22px, 2vw, 30px);
+    line-height: 1.2;
+  }
+  .fssd-popular-categories__subheading {
+    max-width: 72ch;
+    margin: 0 0 24px;
+    color: var(--fssd-cat-muted);
+    font-size: 15px;
+    line-height: 22px;
+  }
+  .fssd-popular-categories__grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .fssd-popular-categories__item {
+    display: flex;
+  }
+  .fssd-popular-categories__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 16px 12px;
+    border: 1px solid var(--fssd-cat-border);
+    border-radius: 12px;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    background: #ffffff;
+  }
+  .fssd-popular-categories__card:hover {
+    border-color: var(--fssd-cat-accent);
+  }
+  .fssd-popular-categories__card:focus-visible {
+    outline: 3px solid var(--fssd-cat-accent);
+    outline-offset: 2px;
+  }
+  .fssd-popular-categories__media {
+    display: block;
+    width: 100%;
+    max-width: 132px;
+    margin-bottom: 12px;
+  }
+  .fssd-popular-categories__media img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .fssd-popular-categories__body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .fssd-popular-categories__title {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 20px;
+  }
+  .fssd-popular-categories__subtitle {
+    color: var(--fssd-cat-muted);
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .fssd-popular-categories__view-all {
+    display: inline-block;
+    margin-top: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--fssd-cat-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  @media screen and (max-width: 1199px) {
+    .fssd-popular-categories__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media screen and (max-width: 749px) {
+    .fssd-popular-categories__inner {
+      padding: 0 20px;
+    }
+    .fssd-popular-categories__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Popular Categories",
+  "class": "fssd-popular-categories-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Section Heading",
+      "default": "Popular Categories"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Section Subheading",
+      "default": "Six high-intent paths are visible immediately — no tabs or carousel required."
+    },
+    {
+      "type": "text",
+      "id": "view_all_text",
+      "label": "View All Link Text",
+      "default": "View all categories"
+    },
+    {
+      "type": "url",
+      "id": "view_all_link",
+      "label": "View All Link URL"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "category_card",
+      "name": "Category Card",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title"
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Subtitle"
+        },
+        {
+          "type": "text",
+          "id": "category_handle",
+          "label": "Category handle (fss_hp_category_click property)"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link URL"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Card Image"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Popular Categories",
+      "category": "Custom",
+      "blocks": [
+        {
+          "type": "category_card",
+          "settings": {
+            "title": "Treadmills",
+            "subtitle": "Commercial & performance cardio",
+            "category_handle": "treadmills",
+            "link": "/collections/treadmills"
+          }
+        },
+        {
+          "type": "category_card",
+          "settings": {
+            "title": "Exercise Bikes",
+            "subtitle": "Upright, recumbent & indoor cycles",
+            "category_handle": "exercise-bikes",
+            "link": "/collections/exercise-bikes"
+          }
+        },
+        {
+          "type": "category_card",
+          "settings": {
+            "title": "Selectorized",
+            "subtitle": "Pin-loaded commercial strength",
+            "category_handle": "selectorized-pin-loaded",
+            "link": "/collections/selectorized-pin-loaded"
+          }
+        },
+        {
+          "type": "category_card",
+          "settings": {
+            "title": "Plate Loaded",
+            "subtitle": "Leverage and free-weight machines",
+            "category_handle": "plate-loaded",
+            "link": "/collections/plate-loaded"
+          }
+        },
+        {
+          "type": "category_card",
+          "settings": {
+            "title": "Cages, Racks & Rigs",
+            "subtitle": "Training systems & rack solutions",
+            "category_handle": "cages-racks-rigs",
+            "link": "/collections/cages-racks-rigs"
+          }
+        },
+        {
+          "type": "category_card",
+          "settings": {
+            "title": "Free Weights",
+            "subtitle": "Dumbbells, plates, bars & storage",
+            "category_handle": "free-weights",
+            "link": "/collections/free-weights"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
