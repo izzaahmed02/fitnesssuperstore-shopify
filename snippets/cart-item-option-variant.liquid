@@ -49,6 +49,17 @@
   endfor
 %}
 
+{%- comment -%}
+  Keep the cart-drawer option label in sync with the PDP override so the same
+  wording is shown before and after add-to-cart.
+{%- endcomment -%}
+{%- capture label_override -%}
+  {%- render 'option-variant-label-override', product_option: product_option, variant: variant -%}
+{%- endcapture -%}
+{%- if label_override != blank -%}
+  {%- assign cleaned_title = label_override | strip -%}
+{%- endif -%}
+
 <label
   class="product-options__swatch-wrapper {% if variant.available == false %}product-options__swatch-wrapper--soldout{% endif %}"
   {% if variant.available == false %}
