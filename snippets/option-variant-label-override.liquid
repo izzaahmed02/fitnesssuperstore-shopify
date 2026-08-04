@@ -17,9 +17,15 @@
   "No Thanks" is not just a label - product-custom-options.js matches
   data-field-name against that exact string to identify the opt-out choice, clear
   the other selections in the group and hide dependent options. So overrides are
-  refused in both directions for that sentinel: a "No Thanks" variant keeps its
-  title, and an override may not introduce the text. Relabelling the opt-out is a
+  refused in both directions for that sentinel: a "No Thanks" option keeps its
+  label, and an override may not introduce the text. Relabelling the opt-out is a
   deliberate JS change, not a data entry.
+
+  The sentinel test uses the same effective title the callers display - the
+  product title when the option product has only a default variant, otherwise the
+  variant title. Every "No Thanks" in the catalogue is currently a variant title,
+  but the callers support both shapes, so this stays in step with them rather than
+  relying on that.
 
   Parameters:
     - product_option: the product_option metaobject holding the overrides
@@ -32,7 +38,11 @@
 {% endcomment %}
 {%- liquid
   assign overrides = product_option.variant_label_overrides
-  if overrides != blank and variant.title != 'No Thanks'
+  assign effective_title = variant.title
+  if variant.product.has_only_default_variant
+    assign effective_title = variant.product.title
+  endif
+  if overrides != blank and effective_title != 'No Thanks'
     assign variant_id_string = variant.id | append: ''
     assign override_lines = overrides | newline_to_br | split: '<br />'
     for override_line in override_lines
