@@ -23,12 +23,23 @@
   the three states explicitly. A blank or unrecognised value renders NO badge
   rather than being inferred as New. Tim's launch-hold for such products is a
   process gate handled in QA, not here — this template only declines to guess.
+
+  The value is downcased before testing, because the theme's own structured-data
+  snippets test both 'as is' and 'As is' (snippets/schema-product.liquid:85,
+  snippets/schema-collection.liquid:50) — matching a single casing risks a
+  silent fallthrough to no badge. Test order is deliberate: 'remanufactured'
+  before 'new', so a value merely containing "new" as a substring cannot
+  mis-resolve a remanufactured product.
 {% endcomment %}
 
 {%- liquid
-  assign condition_state = product.metafields.custom.condition_state
+  comment
+    downcase also coerces a nil metafield to an empty string, so every contains
+    test below is simply false and the no-badge fallback holds.
+  endcomment
+  assign condition_state = product.metafields.custom.condition_state | downcase
   assign retail_price = product.metafields.custom.retail_price
-  assign display_title = product.title | replace: '(Remanufactured)', '' | replace: '(New)', '' | strip
+  assign display_title = product.title | replace: '(Remanufactured)', '' | replace: '(New)', '' | replace: '(As Is)', '' | replace: '(As is)', '' | replace: '(as is)', '' | strip
 -%}
 
 <a
@@ -55,13 +66,13 @@
     {%- endif -%}
 
     <span class="fssd-top-sellers__tags">
-      {%- if condition_state contains 'New' -%}
-        <span class="condition-tag">{% render 'icon-new' %}New</span>
-      {%- elsif condition_state contains 'Remanufactured' -%}
+      {%- if condition_state contains 'remanufactured' -%}
         <span class="condition-tag blue">{% render 'icon-remanufactured' %}Remanufactured</span>
-      {%- elsif condition_state contains 'As Is' -%}
+      {%- elsif condition_state contains 'as is' -%}
         {%- comment -%} No icon snippet exists for As Is — text-only pill. {%- endcomment -%}
         <span class="condition-tag neutral">As Is</span>
+      {%- elsif condition_state contains 'new' -%}
+        <span class="condition-tag">{% render 'icon-new' %}New</span>
       {%- endif -%}
 
       {%- if product.compare_at_price != blank -%}
