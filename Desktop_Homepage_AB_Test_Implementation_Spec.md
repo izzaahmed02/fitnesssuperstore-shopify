@@ -13,8 +13,8 @@ disagree, this document wins.
 
 ## 1. Branch of record
 
-**Build here:** `claude/desktop-homepage-ab-test-email-ubub52`, cut from `main` at `9f2a9aa4d`
-(2026-07-31).
+**Build here:** `desktop-homepage-ab-test-1aug`, cut from `main` at merge base
+`c1ee980730a5c19d07d98a8ec4995d88a8dd126a` (2026-08-01).
 
 **Do not build on `desktop-ab-test-28jul`.** It is 19 commits behind and 3 ahead of `main`. All
 three commits ahead are Shopify theme-editor sync commits, and they carry only unrelated drift:
