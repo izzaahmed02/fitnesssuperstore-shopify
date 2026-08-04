@@ -18,12 +18,15 @@
     assign option_type = product_option.option_type
   endif
   comment
-    "Assembly & Room of Choice" is configured as a Select in the metafields, but it
-    should use the same accordion/swatch selector as the other product options instead
-    of a native dropdown. Force the accordion rendering for this category.
+    The delivery / room-of-choice / installation group is configured as a Select in the
+    metafields, but it should use the same accordion/swatch selector as the other product
+    options instead of a native dropdown. Force the accordion rendering for this category.
+    Matched on "room of choice" so this survives the approved rename from
+    "Assembly & Room of Choice Installation Needed?" to
+    "Delivery / Room of Choice / Installation Options".
   endcomment
   assign category_title_downcase = category.title | downcase
-  if category_title_downcase == 'assembly & room of choice installation needed?'
+  if category_title_downcase contains 'room of choice'
     assign option_type = 'Accordion'
   endif
   assign option_visible = true
@@ -88,8 +91,18 @@
         {% endif %}
       >
         {% if product_option.product_option_sets_default.value != blank %}
-          <p data-option-id="{{ product_option.product_option_sets_default.value.id }}" data-option-variant-name="{{ product_option.product_option_sets_default.value.title }}">
-            <span class="product-options__accordion-label-title" data-option-title>{{ product_option.product_option_sets_default.value.title }}</span>
+          {%- capture default_label -%}
+            {%- render 'option-variant-label-override',
+              product_option: product_option,
+              variant: product_option.product_option_sets_default.value
+            -%}
+          {%- endcapture -%}
+          {%- assign default_label = default_label | strip -%}
+          {%- if default_label == blank -%}
+            {%- assign default_label = product_option.product_option_sets_default.value.title -%}
+          {%- endif -%}
+          <p data-option-id="{{ product_option.product_option_sets_default.value.id }}" data-option-variant-name="{{ default_label }}">
+            <span class="product-options__accordion-label-title" data-option-title>{{ default_label }}</span>
             {% if product_option.product_option_sets_default.value.price != 0 %}
               <span class="product-options__accordion-label-price" data-option-price>{{ product_option.product_option_sets_default.value.price | money }}</span>
             {% endif %}
@@ -181,6 +194,12 @@
           assign cleaned_title = product_title | split: '(-$' | first
         endif
       %}
+      {%- capture label_override -%}
+        {%- render 'option-variant-label-override', product_option: product_option, variant: variant -%}
+      {%- endcapture -%}
+      {%- if label_override != blank -%}
+        {%- assign cleaned_title = label_override | strip -%}
+      {%- endif -%}
       <option
         value="{{ variant.id }}{% if variant.metafields.custom.price_reduction_value_new != blank %}:::-{{variant.metafields.custom.price_reduction_value_new}}{% endif %}{% if variant.price > 0%}:::{{ variant.price | money_without_currency | replace: ',','' }}{% endif %}"
         data-select-variant-title="{{ cleaned_title }}"
