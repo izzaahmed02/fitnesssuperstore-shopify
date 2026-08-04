@@ -1,0 +1,93 @@
+{% comment %}
+  Desktop Homepage A/B Test (Variant B) — Top Sellers card, spec §4 module 5.
+  DRAFT / NOT LAUNCHED.
+
+  Parameters:
+    product   - required, a Shopify product object from a block product picker
+    slot      - required, 1-based position within the module (fss_hp_product_click prop)
+    cta_label - optional, per-card CTA text
+
+  Every displayed field is bound live to Shopify per Tim's Jul 29 item 7 —
+  title, image, URL, price, availability, and condition. Nothing hardcoded, no
+  Jul 26 concept snapshot values.
+
+  Price follows the established theme convention, not the mobile branch's chain:
+    - product.price                              -> current price
+    - product.metafields.custom.retail_price     -> struck anchor
+    - product.compare_at_price                   -> gates the Sale tag only
+  See snippets/product-item.liquid:86-96 and
+  sections/homepage-popular-fitness.liquid:86-93. compare_at_price_max is
+  deliberately not used — it appears nowhere else in this theme.
+
+  Condition badge reads product.metafields.custom.condition_state and handles
+  the three states explicitly. A blank or unrecognised value renders NO badge
+  rather than being inferred as New. Tim's launch-hold for such products is a
+  process gate handled in QA, not here — this template only declines to guess.
+{% endcomment %}
+
+{%- liquid
+  assign condition_state = product.metafields.custom.condition_state
+  assign retail_price = product.metafields.custom.retail_price
+  assign display_title = product.title | replace: '(Remanufactured)', '' | replace: '(New)', '' | strip
+-%}
+
+<a
+  class="fssd-top-sellers__card"
+  href="{{ product.url }}"
+  data-fss-hp-event="fss_hp_product_click"
+  data-fss-hp-props='{"product_handle": {{ product.handle | json | escape }}, "slot": {{ slot }}}'
+>
+  <span class="fssd-top-sellers__media">
+    {%- if product.featured_image != blank -%}
+      <img
+        src="{{ product.featured_image | image_url: width: 600 }}"
+        srcset="
+          {{ product.featured_image | image_url: width: 300 }} 300w,
+          {{ product.featured_image | image_url: width: 600 }} 600w
+        "
+        sizes="(min-width: 1200px) 30vw, (min-width: 750px) 45vw, 90vw"
+        alt="{{ product.featured_image.alt | default: display_title | escape }}"
+        width="{{ product.featured_image.width }}"
+        height="{{ product.featured_image.height }}"
+        loading="lazy"
+        decoding="async"
+      >
+    {%- endif -%}
+
+    <span class="fssd-top-sellers__tags">
+      {%- if condition_state contains 'New' -%}
+        <span class="condition-tag">{% render 'icon-new' %}New</span>
+      {%- elsif condition_state contains 'Remanufactured' -%}
+        <span class="condition-tag blue">{% render 'icon-remanufactured' %}Remanufactured</span>
+      {%- elsif condition_state contains 'As Is' -%}
+        {%- comment -%} No icon snippet exists for As Is — text-only pill. {%- endcomment -%}
+        <span class="condition-tag neutral">As Is</span>
+      {%- endif -%}
+
+      {%- if product.compare_at_price != blank -%}
+        <span class="fssd-top-sellers__sale-tag">Sale</span>
+      {%- endif -%}
+    </span>
+
+    {%- unless product.available -%}
+      <span class="fssd-top-sellers__soldout">
+        {% render 'icon-sold-out' %}{{ 'products.product.sold_out' | t }}
+      </span>
+    {%- endunless -%}
+  </span>
+
+  <span class="fssd-top-sellers__info">
+    <span class="fssd-top-sellers__title">{{ display_title }}</span>
+
+    <span class="fssd-top-sellers__prices">
+      <span class="fssd-top-sellers__price">{{ product.price | money }}</span>
+      {%- if retail_price != blank and retail_price > product.price -%}
+        <span class="fssd-top-sellers__retail">{{ retail_price | money }}</span>
+      {%- endif -%}
+    </span>
+
+    {%- if cta_label != blank -%}
+      <span class="fssd-top-sellers__cta">{{ cta_label }}</span>
+    {%- endif -%}
+  </span>
+</a>
