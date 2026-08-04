@@ -133,7 +133,7 @@
               endfor
             %}
 
-            <p data-option-id="{{ id }}" data-option-variant-name="{{ default_variant_title }}">
+            <p data-option-id="{{ id }}" data-option-variant-name="{{ default_variant_title | escape }}">
               {% for variant in product_option.product_option_variants.value %}
                 {% if variant.id == id %}
                   <span class="product-options__accordion-label-title" data-option-title>
@@ -178,7 +178,7 @@
           {%- if default_label == blank -%}
             {%- assign default_label = product_option.product_option_sets_default.value.title -%}
           {%- endif -%}
-          <p data-option-id="{{ product_option.product_option_sets_default.value.id }}" data-option-variant-name="{{ default_label }}">
+          <p data-option-id="{{ product_option.product_option_sets_default.value.id }}" data-option-variant-name="{{ default_label | escape }}">
             <span class="product-options__accordion-label-title" data-option-title>{{ default_label }}</span>
             {% if product_option.product_option_sets_default.value.price != 0 %}
               <span class="product-options__accordion-label-price" data-option-price>{{ product_option.product_option_sets_default.value.price | money }}</span>
@@ -282,7 +282,7 @@
       {%- endif -%}
       <option
         value="{{ variant.id }}{% if variant.metafields.custom.price_reduction_value_new != blank %}:::-{{variant.metafields.custom.price_reduction_value_new}}{% endif %}{% if variant.price > 0%}:::{{ variant.price | money_without_currency | replace: ',','' }}{% endif %}"
-        data-select-variant-title="{{ cleaned_title }}"
+        data-select-variant-title="{{ cleaned_title | escape }}"
         {% if variant.id == default_values %}
           selected
         {% endif %}
