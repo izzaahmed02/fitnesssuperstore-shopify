@@ -87,18 +87,6 @@
           assign color_group = ''
           assign category_title_downcase = category.title | downcase
           assign hidden_option = false
-          comment
-            Recognised delivery-group titles live in the snippet. Mirrors
-            product-options.
-          endcomment
-          capture delivery_group_flag
-            render 'is-delivery-option-group', category_title: category.title
-          endcapture
-          assign delivery_group_flag = delivery_group_flag | strip
-          assign is_delivery_group = false
-          if delivery_group_flag == 'true'
-            assign is_delivery_group = true
-          endif
           for product_option in category.product_options.value
             assign title = product_option.product_option_title | downcase
             if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
@@ -119,12 +107,12 @@
           endfor
           unless category.hide_option
             unless hidden_option
-              if color_title == '' and category_title_downcase != 'warranty' and is_delivery_group == false
+              if color_title == '' and category_title_downcase != 'warranty' and category_title_downcase != 'assembly & room of choice installation needed?'
                 assign index = index | plus: 1
               endif
               if category_title_downcase == 'warranty'
                 assign display_number = 1
-              elsif is_delivery_group
+              elsif category_title_downcase == 'assembly & room of choice installation needed?'
                 assign display_number = visible_total
               else
                 assign other_display_counter = other_display_counter | plus: 1
@@ -144,7 +132,7 @@
         <div
           class="product-option__item"
           {% unless category.hide_option %}
-            style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif is_delivery_group %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
+            style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
           {% endunless %}
         >
           {% if category.title != blank %}
