@@ -14,6 +14,13 @@
   Format: one override per line, `VariantID=Label`
     52770268479804=Tahoe / FFT-DCC
 
+  "No Thanks" is not just a label - product-custom-options.js matches
+  data-field-name against that exact string to identify the opt-out choice, clear
+  the other selections in the group and hide dependent options. So overrides are
+  refused in both directions for that sentinel: a "No Thanks" variant keeps its
+  title, and an override may not introduce the text. Relabelling the opt-out is a
+  deliberate JS change, not a data entry.
+
   Parameters:
     - product_option: the product_option metaobject holding the overrides
     - variant: the variant being rendered
@@ -25,7 +32,7 @@
 {% endcomment %}
 {%- liquid
   assign overrides = product_option.variant_label_overrides
-  if overrides != blank
+  if overrides != blank and variant.title != 'No Thanks'
     assign variant_id_string = variant.id | append: ''
     assign override_lines = overrides | newline_to_br | split: '<br />'
     for override_line in override_lines
@@ -37,7 +44,9 @@
       assign override_id = override_parts[0] | strip
       if override_id == variant_id_string
         assign override_label = override_line | remove_first: override_parts[0] | remove_first: '=' | strip
-        echo override_label
+        unless override_label == 'No Thanks'
+          echo override_label
+        endunless
         break
       endif
     endfor

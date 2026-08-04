@@ -1,0 +1,43 @@
+{% comment %}
+  Identifies the delivery / room-of-choice / installation option group.
+
+  That group gets special treatment on the PDP: it is pinned to the last position,
+  numbered separately from the other groups, and forced to render as an accordion
+  of swatches even when its option is configured as a Select. Three snippets
+  depend on this test (product-options, cart-item-product-options and
+  product-option-accordion), so the list of recognised titles lives here to keep
+  them in agreement.
+
+  Matching is exact against an allowlist rather than a substring like
+  "room of choice", because a looser test also catches the FF-AGSL flooring
+  group ("Delivery / Room of Choice / Flooring Installation Options"), which
+  today renders as a plain dropdown in its natural position. Pulling that group
+  into the pinned/accordion treatment is a deliberate change to those product
+  pages, not a side effect of this test - add its title below when that change is
+  actually wanted.
+
+  Parameters:
+    - category_title: the option group title (any case)
+
+  Outputs 'true' when the group is the delivery group, otherwise nothing. Convert to
+  a real boolean before use - an empty string is truthy in Liquid, so testing the
+  captured value directly would match every group:
+    {%- capture delivery_group_flag -%}
+      {%- render 'is-delivery-option-group', category_title: category.title -%}
+    {%- endcapture -%}
+    {%- assign delivery_group_flag = delivery_group_flag | strip -%}
+    {%- assign is_delivery_group = false -%}
+    {%- if delivery_group_flag == 'true' -%}
+      {%- assign is_delivery_group = true -%}
+    {%- endif -%}
+{% endcomment %}
+{%- liquid
+  assign known_titles = 'assembly & room of choice installation needed?,delivery / room of choice / installation options' | split: ','
+  assign candidate = category_title | downcase | strip
+  for known_title in known_titles
+    if candidate == known_title
+      echo 'true'
+      break
+    endif
+  endfor
+-%}
