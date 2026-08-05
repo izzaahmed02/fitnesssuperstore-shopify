@@ -13,8 +13,27 @@
 | Frozen dev theme | `fitnesssuperstore-shopify/yusra-random-fixes`, ID `186772685116` | UNPUBLISHED (reference only) |
 
 Method: Shopify Admin API theme-file reads (checksum + full body) compared against the
-PR head tree, plus an exact-string sweep of the whole theme at PR head — not just the
-13 changed files.
+repo tree, plus an exact-string sweep of the whole theme — not just the 13 changed files.
+
+## Scan surface — the preview theme is fully accounted for
+
+The preview theme tracks GitHub branch `Mixed-Google-Signals` (head `70607da`). That mapping
+was proven, not assumed: for every file spot-checked, the theme's `checksumMd5`/size equals the
+branch's raw bytes, **including the three files where the branch and PR head differ** —
+`config/settings_data.json` (`c5bfb84b…`/18073 = branch, not PR head's `3091d4a7…`/18074),
+`templates/collection.json` (`61b784fc…`/3509), `templates/search.json` (`56f24571…`/1501).
+
+With the mapping pinned, the branch↔PR-head comparison covers the whole theme, not a sample:
+
+| Files differing, preview branch vs PR head | Nature of difference |
+|---|---|
+| `templates/collection.json` | `"disabled": true` moved between the Boost AI search-filter app block and `main-collection-product-grid` |
+| `templates/search.json` | `"disabled": true` key reordered on the Boost AI app block |
+| `config/settings_data.json` | one boolean flipped `true` → `false` |
+
+**Zero copy differences.** So the preview carries no customer-facing text that isn't in PR #664,
+and the string sweep below was additionally re-run directly against the preview branch itself
+with identical results.
 
 ## Preview ↔ PR parity — PASS
 
@@ -67,12 +86,29 @@ and PR head `9275654` (MD5, independently recomputed):
 | `incorporat*` | 2 | PASS — benign product/warranty prose (`page.new-equip.json` "incorporating high-quality electronics", `page.warranty.json` legal-addendum sentence). No legal-entity brand history. |
 | **`50+ person team`** | **1** | **FAIL — see F-1** |
 
+### Robustness sweep (variant forms, so a reworded claim can't slip the literal list)
+
+| Pattern | Hits | Result |
+|---|---|---|
+| `million`, `employees`, `manpower`, `annual sales`, `in revenue` | 0 each | PASS |
+| `S-?Corp`, `TJF Ventures`, `Fitness Superstore,? Inc` | 0 each | PASS |
+| `[0-9]+ years of`, `[0-9]{2} ?years` | 24 total | PASS — all third-party brand history ("For over 30 years, Body-Solid…"), warranty terms ("10 Years Parts"), product age ranges ("3 to 20 years"), or a financing partner's experience. No Fitness Superstore company-history claim. |
+| `experts` | 17 | PASS — generic marketing with no count ("Our team of experts is ready to help", "Backed by the Experts") plus the "Total Body Experts" product name. No team-size claim. |
+| `\bISO\b` | 9 | PASS — all `Iso-Lateral` product handles/names. No certification language. |
+| `[0-9]+\+? ?person team` | 1 | FAIL — the same F-1 occurrence |
+
 ## Approved-wording presence — PASS
 
 - `snippets/schema-organization.liquid`: `"foundingDate": "2010"` on the existing
-  `OnlineStore` entity at `{{ shop.url }}/#organization`. Same `@id`, no duplicate
-  Organization node, `WebSite.publisher` still resolves. Live MAIN's copy of this file
-  differs (`f85f88e0…`, 2617 bytes) and still lacks `foundingDate` — correct pre-publish state.
+  `OnlineStore` entity at `{{ shop.url }}/#organization`. The diff against `main` is a single
+  added line — nothing else in the JSON-LD changed. Structural validation (Liquid logic
+  resolved, the pre-existing Liquid-built `sameAs` list neutralized): parses clean,
+  `@graph` = `[WebSite, OnlineStore]`, exactly one organization-type node (no duplicate),
+  `@id` = `…/#organization`, `foundingDate` = `"2010"`, `WebSite.publisher` resolves to it,
+  `address` + `contactPoint` intact. Live MAIN's copy of this file is byte-identical to
+  `origin/main` (`f85f88e0…`, 2617 bytes) and contains 0 occurrences of `foundingDate` —
+  confirmed directly, correct pre-publish state. Rendered-output validation on the live page
+  remains the post-publish step already assigned.
 - `page.trusthub.json` — "Our Story in Brief" opens with: *"Tim French began selling
   fitness equipment in 2003 from his garage. Fitness Superstore was officially
   founded/launched in 2010."* Uses `100 team members`.
@@ -133,9 +169,15 @@ a Jul-14 dev-theme reference, so the tracker overstates the release contents.
 **Action:** Izza to port `templates/page.new-warehouse-page-v-1.json` from theme
 `186772685116` into PR #664 (14th file), refresh the preview, then re-scan.
 
+Re-verified directly against the preview: `/pages/warehouse-page` is **published** with
+`templateSuffix: new-warehouse-page-v-1`, so this template is customer-facing today. The
+preview theme's copy is `4c67bbc4609c…` / 29225 bytes — the defective version. Live MAIN has a
+separate copy (`18fba00d…` / 21497) carrying the same four defects, so publishing as staged
+neither fixes nor worsens them.
+
 ### F-2 · False "Benicia since 2010" history survives in `page.about-us-new.json`
-This file **is** in PR #664, but the claim Tim asked to fix on Jul 12 is still there, in both
-instances:
+This file **is** in PR #664 (`e91987dd…` / 55073 in both the preview theme and PR head), but the
+claim Tim asked to fix on Jul 12 is still there — exactly 2 instances:
 
 > "Since 2010, Fitness Superstore has specialized in remanufacturing premium gym equipment
 > from our Benicia, California facility."
@@ -148,10 +190,13 @@ per the tracker row:
 > in 2016. Today, we provide new and remanufactured gym equipment for home and commercial
 > customers nationwide."
 
-The related `led the industry` superlative **was** removed (0 occurrences) — only the
-Benicia-since-2010 half of that row landed. This restates the exact company-history error this
-whole workstream exists to correct, so it should not ship even though
-`/pages/about-fitnesssuperstore` currently 301s to `/pages/about-us`.
+Counts re-verified on the preview: the false sentence = 2, `2003` = 0,
+`moved its operations to Benicia` = 0, `led the industry` = 0. So the superlative half of that
+tracker row landed and the company-history half did not. This restates the exact error this whole
+workstream exists to correct, so it should not ship — even though
+`/pages/about-fitnesssuperstore` is confirmed **unpublished** (verified via Shopify: `isPublished:
+false`, `templateSuffix: about-us-new`) and 301s to `/pages/about-us`, which is why this is lower
+customer-facing risk than F-1.
 
 **Action:** Izza to replace both instances in `templates/page.about-us-new.json` with the
 approved wording, then re-scan.
