@@ -1,8 +1,15 @@
 # Desktop Homepage A/B Test — Implementation Spec (Variant B)
 
-**Status: DRAFT / NOT LAUNCHED.** Theme `187242119484` stays unpublished. No merge, publish,
+**Status: DRAFT / NOT LAUNCHED.** Theme `187440431420` stays unpublished. No merge, publish,
 launch, or traffic ramp without Tim's explicit written approval in the email thread
 "Desktop Homepage A/B Test implementation package."
+
+**Temporary artifact — remove before the final implementation PR.** This file is a build
+reference only and is not part of the Shopify theme. Two temporary artifacts must be removed
+before the final implementation PR is opened:
+
+1. this document, `Desktop_Homepage_AB_Test_Implementation_Spec.md`; and
+2. `templates/page.fssd-desktop-b-preview.json`, together with its backing hidden Page in admin.
 
 This document is the single build contract for the desktop experiment. It records the branch
 cleanup required by Tim's Jul 29 email (item 1) and the `templates/index.json` sequencing that
@@ -212,10 +219,25 @@ pattern already in the helper:
 | --- | --- | --- |
 | `fss_hp_exposure` | once, after assignment and successful render | — |
 | `fss_hp_primary_cta` | hero condition CTA | `condition` (`new` \| `remanufactured`) |
-| `fss_hp_condition_select` | shopping-path condition cards | `condition` |
 | `fss_hp_path_click` | shopping-path cards | `path` (`remanufactured` \| `new` \| `french_fitness` \| `gym_packages`) |
 | `fss_hp_category_click` | category tiles | `category_handle`, `slot` |
 | `fss_hp_product_click` | Top Sellers cards | `product_handle`, `slot` |
+
+**Path-to-condition mapping (Tim approved option (a)).** `fss_hp_condition_select` is **not**
+emitted on the desktop shopping-path surface. Each card emits `fss_hp_path_click` only, and
+condition reporting is derived downstream from the path value:
+
+    path=remanufactured   -> condition=remanufactured
+    path=new              -> condition=new
+    path=french_fitness   -> no condition
+    path=gym_packages     -> no condition
+
+An earlier revision of this table assigned `fss_hp_condition_select` to the "shopping-path
+condition cards" alongside `fss_hp_path_click` on the "shopping-path cards" — the same two
+elements. The delegation helper reads one `data-fss-hp-event` per element, so a single anchor
+cannot emit both. This mapping resolves that overlap and matches the comment block at the top of
+`sections/fssd-shopping-paths.liquid`. Mobile continues to emit `fss_hp_condition_select` on its
+own surface; this change is desktop-only.
 
 The homepage Gym Packages click is tracked separately from the destination-page planner and
 quote-intake clicks (Tim, Jul 27), so the experiment can distinguish interest from a completed
@@ -232,7 +254,7 @@ attribution through.
 Required before Tim's approval (item 8). One packet:
 
 - clean draft PR and exact changed-file list
-- unpublished theme preview (`187242119484`) at representative desktop widths
+- unpublished theme preview (`187440431420`) at representative desktop widths
 - Control unchanged and Variant B module-order screenshots
 - links, keyboard / accessibility, console, performance, cart / checkout, and rollback checks
 - event payload plus destination receipt proof
@@ -264,6 +286,6 @@ the concept prototype — every link in the prototype is a placeholder.
 
 ## 11. Not authorized by this document
 
-No merge, publish, launch, or traffic ramp. Theme `187242119484` stays unpublished. No changes to
+No merge, publish, launch, or traffic ramp. Theme `187440431420` stays unpublished. No changes to
 Control `templates/index.json` before S4. No second Room Planner workstream. No unrelated fixes on
 this branch — the changed-file list stays limited to the desktop experiment.
