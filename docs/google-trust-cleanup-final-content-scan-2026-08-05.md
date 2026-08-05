@@ -281,21 +281,63 @@ Approved wording confirmed present: combined-footprint framing ×2, "50 team mem
 Benicia" ×1, "Remanufactured Equipment" ×1, "StairMaster units. Benches" ×1, 2003 garage origin ×2,
 2010-Concord/2016-Benicia line ×2. Both JSON templates re-parse cleanly.
 
+## Fold-in + preview refresh + delta re-scan — 2026-08-05, all PASS
+
+The fixes were folded into the single release PR and the preview refreshed through the branch the
+theme tracks (**not** by direct theme-file API writes), so Shopify and GitHub stay in sync.
+
+| Step | Result |
+|---|---|
+| PR #664 head | `9275654` → **`32767ee`**; changed files 13 → **14**, all theme files (`page.new-warehouse-page-v-1.json` added). No docs or non-theme files added, keeping the PR scope as reviewed. |
+| Preview refresh | Pushed to `Mixed-Google-Signals` (`70607da` → **`2abc23e`**); only the two templates changed, that branch's own theme-editor files (`settings_data.json`, `collection.json`, `search.json`) left untouched. |
+| Shopify sync | Theme `187347599676` picked it up at `2026-08-05T21:33:4xZ`: `page.about-us-new.json` = `e5afc023…`, `page.new-warehouse-page-v-1.json` = `e00dd129…` — both match the corrected files exactly. |
+| Preview ↔ PR parity | **14/14** files byte-identical. Whole-tree diff still only the 3 app/section toggle files — zero copy differences. |
+| Disapproved-string sweep | **31/31 terms at zero occurrences**, including `50+ person team`, `Equpiment`, `unitsBenches`, `primary location with 63,500`, and the false Benicia-since-2010 sentence. |
+| Approved wording | combined two-facility framing ×2, "50 team members based in Benicia" ×1, "Remanufactured Equipment" ×3, "StairMaster units. Benches" ×1, 2003 garage origin ×2, 2010-Concord/2016-Benicia ×2, `foundingDate: "2010"` ×1. |
+| JSON validity | both changed templates parse cleanly. |
+| CI | `cwv-regression` **success** on the new head. |
+| Live MAIN | still unchanged (`f85f88e0…` schema, `18fba00d…` warehouse) — correct pre-publish state. |
+| PR #699 | closed; it was only the delivery vehicle. |
+
+### Tracker task closed: the six "TBD – Zafran to locate exact page(s)" rows
+
+Those rows could not be actioned without knowing where the claims live. Located, so Saliha and the
+source owners have concrete targets. **All are pre-existing and unchanged by this release — none is
+a blocker for it**, but the rating claims are materially wider than the tracker implied:
+
+| Needs-Source row | Files |
+|---|---|
+| Review / rating claims | `templates/page.reviews.json` ("98% 5-star reviews", "Verified buyers only", "4.92 Average Rating", "Thousands of verified buyers"); **live homepage** `templates/index.json` ("4.9/5 by Thousands of happy customers", "Rated 4.9/5 by 2,000+ verified customers."); `templates/page.new-equip.json` ("4.9/5 across Google, Trustpilot, Bing, Yelp, and Shopper Approved"); plus shared sections `header-group.json`, `homepage-homepage-reviews.liquid`, `homepage-section-hero.liquid`, `section-hero.liquid`, `contact-section-hero.liquid`, `rich-text-with-image.liquid`, and `page.homepage.json` / `index.a_index_…json` |
+| Stock / lead-time claims | `page.new-warehouse-page-v-1.json`, `page.shipping-information.json`, `page.landing.json`, `page.reviews.json`, `page.financing.json`, `page.french-fitness-warranty.json` |
+| 80% remanufacturing stat | `page.new-warehouse-page-v-1.json` |
+| 25% wear SOP threshold | `page.new-warehouse-page-v-1.json`, `page.remanufactured.json` |
+| Superlative / warranty claims | `page.homepage.json`, `index.a_index_…json`, `page.landing.json`, `page.gym-designer.json`, `sections/why-use-platform.liquid` |
+| Assembled in the USA | `index.json`, `page.about-us.json`, `page.about-us-new.json`, `page.government-sales.json`, `page.homepage.json`, `page.landing.json`, `index.a_index_…json`, `sections/table-section.liquid` |
+
+Note the `4.9/5` figures sit in **shared header/hero sections**, so they render across many pages,
+not just the ones listed — worth knowing before anyone commits to sourcing or rewording them.
+
 ## Gate recommendation
 
-**Do not merge or publish yet — but the two content blockers are cleared.** Remaining steps are
-mechanical rather than editorial:
+**Content gate is CLEAR. PR #664 is ready to merge and publish once the two remaining human checks
+land.** Nothing editorial is outstanding on the content side.
 
-1. **Izza** lands these two files into PR #664 (the Warehouse template joins as a 14th file) and
-   refreshes preview `187347599676` from the updated branch.
-2. **Zafran** re-scans the refreshed preview — a short delta check on two files.
-3. **Sagi** re-checks only the Warehouse and About Fitness Superstore pages visually, plus his own
-   two open design points (About Us review widgets, Government Sales banner height) once Tim rules
-   on them.
-4. Saliha's Needs-Source rows and the homepage exact-wording advisory remain open and are
-   unaffected by these fixes.
-5. Then publish, confirm live Shopify/GitHub parity, verify rendered `foundingDate: "2010"` and the
-   approved copy live, close the tracker, and request recrawling.
+Remaining before publish:
+
+1. **Sagi** — visual pass on the two changed pages in the refreshed preview (Warehouse, About
+   Fitness Superstore), plus Tim's ruling on Sagi's own two Aug-5 design points (About Us review
+   widgets, Government Sales banner height). Those are aesthetic, not factual, so they do not
+   trigger Saliha's flag-only review.
+2. **Tim** — optional call on the homepage exact-wording advisory (item 1 under Advisory below).
+   Substance is correct either way; not a blocker.
+
+Then: merge and publish, confirm live Shopify/GitHub parity, verify rendered `foundingDate: "2010"`
+and the approved copy on the live canonical pages, close the tracker with proof, and request
+recrawling in Search Console.
+
+Saliha's Needs-Source rows stay open as a separate workstream. They are all pre-existing and
+unchanged by this release, so they do not gate it — but the located file list above should be
+attached to those rows so they can finally be actioned.
 
 ## Tracker updates (paste-ready)
 
