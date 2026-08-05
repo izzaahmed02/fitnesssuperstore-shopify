@@ -233,12 +233,62 @@ Google in this release.
    facility" — a combined variant rather than the two exact approved phrasings. Numbers match
    Tim's approved figures.
 
+## Fixes applied — 2026-08-05 (addendum)
+
+F-1 and F-2 have been remediated on branch `claude/mixed-signals-google-task-5twh2g`, which is
+merged up to PR #664 head `9275654` so the two files start from the exact PR versions. Seven
+text-value edits across two files; no structural, section-order, or settings changes.
+
+**F-1 · `templates/page.new-warehouse-page-v-1.json`** — the approved copy was ported
+*surgically* from dev theme `186772685116`, **not** by replacing the file. That matters: the dev
+theme's copy of this template also differs in unrelated ways (13 gallery items vs 15, a different
+`icon_color`, a missing `anchor_id`), so a wholesale swap would have rolled back live-theme work —
+the exact risk flagged on Jul 18. Five edits:
+
+| Section / block | Change |
+|---|---|
+| `rich_text_e3gbzE` → `text_ex6GLK` | intro now opens "Our Benicia operations total 63,500 sq ft across two facilities. The public showroom is at 457 Industrial Way; remanufacturing, offices, and outbound shipping operate from 537 Stone Rd Suite F." |
+| `faq_warehouse_GjVkrd` → `faq_Kcrn9H` | "Where should I visit?" no longer ties 63,500 sq ft to one location; same combined-footprint framing |
+| `faq_warehouse_GjVkrd` → `faq_rPEQej` | "Our 50+ person team handles" → "Our 50 team members based in Benicia handle" |
+| `image_banner_warehouse_mXLQbA` → `heading_GEh8Ta` | "Remanufactured Equpiment" → "Remanufactured Equipment" |
+| `gallery_slider_warehouse_PjdJkU` | "StairMaster, unitsBenches, racks" → "StairMaster units. Benches, racks" |
+
+The `80%` remanufacturing and `25% wear` claims in `faq_rPEQej` were deliberately left untouched —
+they sit on Saliha's open Needs-Source rows and are not approved for rewording.
+
+**F-2 · `templates/page.about-us-new.json`** — both instances of the false
+"Since 2010 … from our Benicia, California facility" sentence replaced with the approved history
+wording; the following craftsmanship sentence retained unchanged.
+
+Two wording decisions worth Tim's eye, neither inventing copy:
+1. Used the **Approved Rules tab** canonical founding-location line — "…in 2010 in Concord, CA,
+   and **later** moved its operations to Benicia, CA in 2016" — rather than the row note's variant
+   which omits "later". The Approved Rules tab governs and matches Tim's Jul 3 / Jul 12 emails.
+2. The approved paragraph ends "…for home and commercial customers nationwide," and the retained
+   next sentence also ends "…nationwide." Approved wording was kept verbatim rather than smoothing
+   it; the repetition is a copy-polish call for Sagi or Saliha, not a claims issue.
+
+**Post-fix verification:** all 30 disapproved terms (including `50+ person team`, `Equpiment`,
+`unitsBenches`, `primary location with 63,500`) now return **zero** occurrences across the theme.
+Approved wording confirmed present: combined-footprint framing ×2, "50 team members based in
+Benicia" ×1, "Remanufactured Equipment" ×1, "StairMaster units. Benches" ×1, 2003 garage origin ×2,
+2010-Concord/2016-Benicia line ×2. Both JSON templates re-parse cleanly.
+
 ## Gate recommendation
 
-**Do not merge or publish.** F-1 and F-2 are in-scope approved fixes that are absent from the
-release. Both are small, single-file edits with the exact target wording already established.
-Once Izza lands them and refreshes preview `187347599676`, the re-scan is a short delta check
-on two files.
+**Do not merge or publish yet — but the two content blockers are cleared.** Remaining steps are
+mechanical rather than editorial:
+
+1. **Izza** lands these two files into PR #664 (the Warehouse template joins as a 14th file) and
+   refreshes preview `187347599676` from the updated branch.
+2. **Zafran** re-scans the refreshed preview — a short delta check on two files.
+3. **Sagi** re-checks only the Warehouse and About Fitness Superstore pages visually, plus his own
+   two open design points (About Us review widgets, Government Sales banner height) once Tim rules
+   on them.
+4. Saliha's Needs-Source rows and the homepage exact-wording advisory remain open and are
+   unaffected by these fixes.
+5. Then publish, confirm live Shopify/GitHub parity, verify rendered `foundingDate: "2010"` and the
+   approved copy live, close the tracker, and request recrawling.
 
 ## Tracker updates (paste-ready)
 
@@ -259,7 +309,7 @@ on two files.
 | Reviews — "In the last 14 years" | Ready for QA — PASS | Zafran | 2026-08-05 — now "Since 2010, the company has earned a strong reputation…". |
 | Homepage — "50+ warehouse manpower" | Ready for QA — PASS | Zafran | 2026-08-05 — term 0 occurrences; live homepage section now reads "an in-house warehouse team" with no count. |
 | Homepage — intro / company history | Ready for QA — PASS with advisory | Zafran | 2026-08-05 — reads "Founded in 2010 in Concord, CA and now operating out of Benicia, CA…" instead of the exact approved line incl. the 2016 Benicia move. Substance correct; flagging the wording variance. |
-| **Warehouse page — team-size wording ("Our 50+ person team")** | **Blocked — FAIL (F-1)** | **Izza (port) → Zafran (re-scan)** | **2026-08-05 — `templates/page.new-warehouse-page-v-1.json` is NOT in PR #664. Preview, repo main and PR head all carry `4c67bbc4609c…` with "50+ person team", "Equpiment", "unitsBenches", and 63,500 sq ft attributed to the single 457 Industrial Way location. Corrected copy verified in dev theme `186772685116` — port it into the PR as a 14th file, refresh preview, then re-scan.** |
-| **Warehouse page — title/intro facility claim** | **Blocked — FAIL (F-1)** | **Izza (port) → Zafran (re-scan)** | **2026-08-05 — combined-footprint framing (Tim Jul 26) not met in the preview; FAQ "Where should I visit?" still ties 63,500 sq ft to one location. Fix exists in dev theme `186772685116`.** |
-| **About FitnessSuperstore — company history** | **Blocked — FAIL (F-2)** | **Izza → Zafran (re-scan)** | **2026-08-05 — `page.about-us-new.json` still says "Since 2010… from our Benicia, California facility" in both instances; approved 2003/2010-Concord/2016-Benicia wording absent (`2003` = 0 occurrences). "led the industry" was removed. Replace both instances, then re-scan.** |
+| Warehouse page — team-size wording ("Our 50+ person team") | Fixed — awaiting PR landing + preview refresh | Zafran (fixed) → Izza (land) | 2026-08-05 — `templates/page.new-warehouse-page-v-1.json` was NOT in PR #664; now corrected on `claude/mixed-signals-google-task-5twh2g`. "Our 50+ person team handles" → "Our 50 team members based in Benicia handle"; also "Equpiment" → "Equipment" and "StairMaster units. Benches". Post-fix scan: 0 occurrences. Izza to land as the PR's 14th file and refresh preview `187347599676`. |
+| Warehouse page — title/intro facility claim | Fixed — awaiting PR landing + preview refresh | Zafran (fixed) → Izza (land) | 2026-08-05 — intro and the "Where should I visit?" FAQ now both read "Our Benicia operations total 63,500 sq ft across two facilities…", meeting Tim's Jul 26 combined-footprint rule. Post-fix scan: "primary location with 63,500" = 0 occurrences. |
+| About FitnessSuperstore — company history | Fixed — awaiting PR landing + preview refresh | Zafran (fixed) → Izza (land) | 2026-08-05 — both instances of "Since 2010… from our Benicia, California facility" replaced with the approved 2003 founder / 2010-Concord / 2016-Benicia wording. Post-fix scan: false sentence = 0; approved wording = 2 instances. |
 | Search Console | Blocked — awaiting publish | Zafran | 2026-08-05 — recrawl request stays blocked until F-1/F-2 land, Izza publishes, and live pages + rendered `foundingDate: "2010"` are verified. |
