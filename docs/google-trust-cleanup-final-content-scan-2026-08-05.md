@@ -239,6 +239,13 @@ F-1 and F-2 have been remediated on branch `claude/mixed-signals-google-task-5tw
 merged up to PR #664 head `9275654` so the two files start from the exact PR versions. Seven
 text-value edits across two files; no structural, section-order, or settings changes.
 
+> **PR #699 is a delivery vehicle, not a second release path.**
+> <https://github.com/izzaahmed02/fitnesssuperstore-shopify/pull/699> carries these two fixes and
+> this QA report. It is **not** an alternative release PR — Tim's standing instruction is a single
+> release PR (#664) with no duplicate ownership lanes. The intended path is: Izza folds the two
+> template files into **PR #664**, refreshes preview `187347599676`, and **#699 is closed**. Do not
+> merge #699 as a parallel release.
+
 **F-1 · `templates/page.new-warehouse-page-v-1.json`** — the approved copy was ported
 *surgically* from dev theme `186772685116`, **not** by replacing the file. That matters: the dev
 theme's copy of this template also differs in unrelated ways (13 gallery items vs 15, a different
