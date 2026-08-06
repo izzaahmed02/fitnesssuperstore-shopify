@@ -127,15 +127,26 @@
 {% assign sale_price_raw = sale_price | replace: ',', '' %}
 {% assign sale_price = sale_price_raw | times: 100.0 %}
 
+{%- comment -%}
+  The struck-through compare price is a public reference-price claim, so it only
+  renders when the product's reference price is documented. See 'price-reference'.
+{%- endcomment -%}
+{%- assign reference_price_verified = false -%}
+{%- if product.metafields.compliance.reference_price_verified.value == true -%}
+  {%- assign reference_price_verified = true -%}
+{%- endif -%}
+
 {% if current_price > sale_price %}
   <div class="price-banner">
     <div class="price-banner__prices">
       <span class="price-banner__price">
           ${{ sale_price | money_without_currency }}
       </span>
-      <span class="price-banner__compare">
-        {{ current_price | money }}
-      </span>
+      {% if reference_price_verified %}
+        <span class="price-banner__compare">
+          {{ current_price | money }}
+        </span>
+      {% endif %}
     </div>
     <div class="price-banner__label">
       <span>

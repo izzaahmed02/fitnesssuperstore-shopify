@@ -45,10 +45,12 @@
         </div>
 
         <div class="product-item__price-container">
-          {% if product.metafields.custom.retail_price != blank %}
-            <div class="old-price-wrapper">
-              <span>Retail Price:</span> {{ product.metafields.custom.retail_price | money }}
-            </div>
+          {%- capture price_reference_html -%}
+            {%- render 'price-reference', product: product, part: 'card' -%}
+          {%- endcapture -%}
+          {%- assign price_reference_html = price_reference_html | strip -%}
+          {% if price_reference_html != blank %}
+            <div class="old-price-wrapper">{{ price_reference_html }}</div>
           {% endif %}
 
           <div class="price-wrapper">

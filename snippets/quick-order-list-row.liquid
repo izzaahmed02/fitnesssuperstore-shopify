@@ -13,6 +13,19 @@
 {% assign cart_qty = cart | item_count_for_variant: variant.id %}
 {% # theme-check-enable %}
 
+{%- liquid
+  comment
+    A compare-at price is a public reference-price claim, so it only renders when
+    the product's reference price is documented. See 'price-reference'.
+  endcomment
+  assign reference_price_verified = false
+  if item.product.metafields.compliance.reference_price_verified.value == true
+    assign reference_price_verified = true
+  elsif item.metafields.compliance.reference_price_verified.value == true
+    assign reference_price_verified = true
+  endif
+-%}
+
 <tr
   class="variant-item{% unless show_image %} variant-item--no-media{% endunless %}{% if item.available and item.unit_price_measurement %} variant-item--unit-price{% endif %}"
   id="Variant-{{ variant.id }}"
@@ -60,7 +73,7 @@
     </div>
 
     {%- assign item_price = item.price | money -%}
-    {%- if item.compare_at_price -%}
+    {%- if item.compare_at_price and reference_price_verified -%}
       <dl class="variant-item__discounted-prices">
         <dt class="visually-hidden">
           {{ 'products.product.price.regular_price' | t }}
@@ -337,7 +350,7 @@
   </td>
   {%- assign item_price = item.price | money -%}
   <td class="variant-item__price small-hide medium-hide">
-    {%- if item.compare_at_price -%}
+    {%- if item.compare_at_price and reference_price_verified -%}
       <dl class="variant-item__discounted-prices">
         <dt class="visually-hidden">
           {{ 'products.product.price.regular_price' | t }}

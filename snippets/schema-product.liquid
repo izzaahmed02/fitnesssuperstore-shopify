@@ -1,3 +1,13 @@
+{%- comment -%}
+  A ListPrice in structured data is a public reference-price claim that Merchant
+  Center reads, so it is only published when the product's reference price is
+  documented. Same gate the storefront uses — see 'price-reference'.
+{%- endcomment -%}
+{%- assign reference_price_verified = false -%}
+{%- if product.metafields.compliance.reference_price_verified.value == true -%}
+  {%- assign reference_price_verified = true -%}
+{%- endif -%}
+
 {%- assign domain_origin = request.origin -%}
 {%- assign seller_logo_url = settings.logo | image_url: width: 800 -%}
 {%- assign fallback_logo_url = 'logo.png' | asset_url -%}
@@ -92,7 +102,7 @@
         "price": {{ product.selected_or_first_available_variant.price | divided_by: 100.0 | json }},
         "priceCurrency": {{ shop.currency | default: 'USD' | json }},
 
-        {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
+        {% if reference_price_verified and product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
         "priceSpecification": [
           {
             "@type": "UnitPriceSpecification",
@@ -163,7 +173,7 @@
             "price": {{ variant.price | divided_by: 100.0 | json }},
             "priceCurrency": {{ shop.currency | default: 'USD' | json }},
 
-            {% if variant.compare_at_price > variant.price %}
+            {% if reference_price_verified and variant.compare_at_price > variant.price %}
             "priceSpecification": [
               {
                 "@type": "UnitPriceSpecification",

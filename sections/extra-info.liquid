@@ -342,8 +342,12 @@
                       <h3 class="rig-product-name">{{ product_ref.title }}</h3>
                       <div class="rig-lower-details">
                         <div class="rig-product-price">
-                          {% if product_ref.metafields.custom.retail_price != blank %}
-                            <s>MSRP: {{ product_ref.metafields.custom.retail_price | money -}}</s>
+                          {%- capture price_reference_html -%}
+                            {%- render 'price-reference', product: product_ref, part: 'card' -%}
+                          {%- endcapture -%}
+                          {%- assign price_reference_html = price_reference_html | strip -%}
+                          {% if price_reference_html != blank %}
+                            <s>{{ price_reference_html }}</s>
                           {% endif %}
                           <p>{{ product_ref.price | money }}</p>
                         </div>

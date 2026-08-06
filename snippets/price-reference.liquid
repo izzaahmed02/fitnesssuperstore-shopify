@@ -1,0 +1,85 @@
+{% comment %}
+  Renders the public reference-price ("MSRP") and exact-savings display for a
+  product, gated on documented substantiation.
+
+  Storefront copy must show the actual selling price only unless the reference
+  price is documented, so nothing here renders unless
+  product.metafields.compliance.reference_price_verified is true. That keeps
+  "As high as", "Retail Price", strikethrough reference prices and "You save $X"
+  off the storefront (and out of the Google Shopping feed) by default, and lets
+  them come back per product once the reference price is on file.
+
+  Supporting product metafields (namespace: compliance):
+  - reference_price_verified        boolean
+  - reference_price_type            single line text (MSRP / Former Price / Original Retail Price When New)
+  - reference_price_source          single line text (source file, catalog, vendor sheet, approval record)
+  - reference_price_effective_date  date
+  - reference_price_last_reviewed   date
+
+  Accepts:
+  - product: {Object} Product Liquid object (required)
+  - variant: {Object} Variant to price against (optional, defaults to the
+    selected or first available variant)
+  - part: {String} 'reference' renders the reference price only, 'savings' the
+    savings line only, 'card' renders the bare label + price used inside a
+    product card's .old-price-wrapper, 'both' (default) renders reference +
+    savings
+  - reference_class: {String} Extra class(es) for the reference price element (optional)
+  - savings_class: {String} Extra class(es) for the savings element (optional)
+  - show_disclaimer: {Boolean} Renders the disclaimer under the savings line
+    (optional, defaults to true)
+
+  Usage:
+  {% render 'price-reference', product: product, part: 'reference' %}
+{% endcomment %}
+
+{%- liquid
+  assign target = variant | default: product.selected_or_first_available_variant
+
+  assign reference_verified = false
+  if product.metafields.compliance.reference_price_verified.value == true
+    assign reference_verified = true
+  endif
+
+  assign reference_type = product.metafields.compliance.reference_price_type.value | default: 'MSRP'
+  assign reference_price = product.metafields.custom.retail_price.value | default: target.compare_at_price
+  assign selling_price = target.price | default: product.price
+
+  assign part = part | default: 'both'
+  if show_disclaimer == nil
+    assign show_disclaimer = true
+  endif
+
+  assign show_reference = false
+  if reference_verified and reference_price > selling_price
+    assign show_reference = true
+  endif
+-%}
+
+{%- if show_reference -%}
+  {%- if part == 'card' -%}
+    {%- comment -%}
+      Product cards strike the price through with CSS and hide the label span,
+      so keep the markup shape the cards already style.
+    {%- endcomment -%}
+    <span>{{ reference_type }}:</span> {{ reference_price | money }}
+  {%- endif -%}
+
+  {%- if part == 'reference' or part == 'both' -%}
+    <span class="pr_custom_compare_price{% if reference_class != blank %} {{ reference_class }}{% endif %}"
+      >{{ reference_type }}:
+      <s>{{ reference_price | money_with_currency }}</s>
+    </span>
+  {%- endif -%}
+
+  {%- if part == 'savings' or part == 'both' -%}
+    <span class="you-save{% if savings_class != blank %} {{ savings_class }}{% endif %}"
+      >You save {{ reference_price | minus: selling_price | money }}
+    </span>
+    {%- if show_disclaimer -%}
+      <span class="price-disclaimer">
+        Savings shown against {{ reference_type }}. Prices and availability may change.
+      </span>
+    {%- endif -%}
+  {%- endif -%}
+{%- endif -%}

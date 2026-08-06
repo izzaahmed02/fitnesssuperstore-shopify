@@ -6,7 +6,8 @@
   - use_variant: {Boolean} Renders selected or first variant price instead of overall product pricing (optional)
   - show_badges: {Boolean} Renders 'Sale' and 'Sold Out' tags if the product matches the condition (optional)
   - price_class: {String} Adds a price class to the price element (optional)
-  - show_compare_at_price: {Boolean} Renders the compare at price if the product matches the condition (optional)
+  - show_compare_at_price: {Boolean} Renders the compare at price if the product matches the condition (optional).
+    Suppressed unless the product's reference price is documented — see 'price-reference'.
 
   Usage:
   {% render 'price', product: product %}
@@ -20,6 +21,14 @@
 
   assign compare_at_price = target.compare_at_price
   assign price = target.price | default: 1999
+
+  comment
+    A compare-at price is a public reference-price claim, so it may only be shown
+    when the reference price is documented on the product.
+  endcomment
+  unless product.metafields.compliance.reference_price_verified.value == true
+    assign show_compare_at_price = false
+  endunless
   assign price_min = product.price_min
   assign price_max = product.price_max
   assign available = target.available | default: false

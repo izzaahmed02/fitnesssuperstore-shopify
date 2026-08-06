@@ -1,3 +1,12 @@
+{%- comment -%}
+  A struck-through compare-at price is a public reference-price claim, so it only
+  renders when the product's reference price is documented. See 'price-reference'.
+{%- endcomment -%}
+{%- assign reference_price_verified = false -%}
+{%- if product.metafields.compliance.reference_price_verified.value == true -%}
+  {%- assign reference_price_verified = true -%}
+{%- endif -%}
+
 {% style %}
   #shopify-section-{{ section.id }} .product-main-container{
     display: grid;
@@ -237,14 +246,10 @@
                 {% endunless %}
 
                 <div>
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-                    <span class="pr_custom_compare_price"
-                      >As high as:
-                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-                    </span>
-                  {% endif %}
+                  {%- render 'price-reference', product: product, part: 'reference' -%}
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
+                      product: product,
                       sale_name: product.metafields.custom.saleprice_name,
                       current_price: product.selected_or_first_available_variant.compare_at_price,
                       sale_price: product.metafields.custom.sale_price
@@ -258,17 +263,7 @@
                         price_class: 'price--large'
                       -%}
 
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
-                      %}
-                        <span class="you-save"
-                          >You save
-                          {{
-                            product.metafields.custom.retail_price
-                            | minus: product.selected_or_first_available_variant.price
-                            | money
-                          -}}
-                        </span>
-                      {% endif %}
+                      {%- render 'price-reference', product: product, part: 'savings' -%}
                     </div>
                   {% endif %}
                 </div>
@@ -898,14 +893,10 @@
 
                 <div class="product__price-row">
                 <div class="product__prices hidden lg:block">
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
-                    <span class="pr_custom_compare_price"
-                      >As high as:
-                      <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
-                    </span>
-                  {% endif %}
+                  {%- render 'price-reference', product: product, part: 'reference' -%}
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
+                      product: product,
                       sale_name: product.metafields.custom.saleprice_name,
                       current_price: product.selected_or_first_available_variant.compare_at_price,
                       sale_price: product.metafields.custom.sale_price
@@ -919,17 +910,7 @@
                         price_class: 'price--large'
                       -%}
 
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price
-                      %}
-                        <span class="you-save"
-                          >You save
-                          {{
-                            product.metafields.custom.retail_price
-                            | minus: product.selected_or_first_available_variant.price
-                            | money
-                          -}}
-                        </span>
-                      {% endif %}
+                      {%- render 'price-reference', product: product, part: 'savings' -%}
                     </div>
                   {% endif %}
                 </div>
@@ -1052,7 +1033,7 @@
                               {%- if product.selected_or_first_available_variant.quantity_price_breaks.size > 0 -%}
                                 {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
                                 <div class="price-per-item">
-                                  {%- if variant_price_compare -%}
+                                  {%- if variant_price_compare and reference_price_verified -%}
                                     <dl class="price-per-item--current">
                                       <dt class="visually-hidden">
                                         {{ 'products.product.price.regular_price' | t }}
@@ -1092,7 +1073,7 @@
                                 -%}
                                 {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
                                 <div class="price-per-item">
-                                  {%- if variant_price_compare -%}
+                                  {%- if variant_price_compare and reference_price_verified -%}
                                     <dl class="price-per-item--current">
                                       <dt class="visually-hidden">
                                         {{ 'products.product.price.regular_price' | t }}
@@ -1563,7 +1544,7 @@
                         {%- if product.selected_or_first_available_variant.quantity_price_breaks.size > 0 -%}
                           {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
                           <div class="price-per-item">
-                            {%- if variant_price_compare -%}
+                            {%- if variant_price_compare and reference_price_verified -%}
                               <dl class="price-per-item--current">
                                 <dt class="visually-hidden">
                                   {{ 'products.product.price.regular_price' | t }}
@@ -1603,7 +1584,7 @@
                           -%}
                           {%- assign variant_price_compare = product.selected_or_first_available_variant.compare_at_price -%}
                           <div class="price-per-item">
-                            {%- if variant_price_compare -%}
+                            {%- if variant_price_compare and reference_price_verified -%}
                               <dl class="price-per-item--current">
                                 <dt class="visually-hidden">
                                   {{ 'products.product.price.regular_price' | t }}
