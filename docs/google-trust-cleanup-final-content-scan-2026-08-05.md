@@ -362,3 +362,75 @@ attached to those rows so they can finally be actioned.
 | Warehouse page — title/intro facility claim | Fixed — awaiting PR landing + preview refresh | Zafran (fixed) → Izza (land) | 2026-08-05 — intro and the "Where should I visit?" FAQ now both read "Our Benicia operations total 63,500 sq ft across two facilities…", meeting Tim's Jul 26 combined-footprint rule. Post-fix scan: "primary location with 63,500" = 0 occurrences. |
 | About FitnessSuperstore — company history | Fixed — awaiting PR landing + preview refresh | Zafran (fixed) → Izza (land) | 2026-08-05 — both instances of "Since 2010… from our Benicia, California facility" replaced with the approved 2003 founder / 2010-Concord / 2016-Benicia wording. Post-fix scan: false sentence = 0; approved wording = 2 instances. |
 | Search Console | Blocked — awaiting publish | Zafran | 2026-08-05 — recrawl request stays blocked until F-1/F-2 land, Izza publishes, and live pages + rendered `foundingDate: "2010"` are verified. |
+
+---
+
+# Round 2 — conservative-copy pass on proof-sensitive claims (2026-08-06)
+
+Tim's Aug-6 review held the merge for a narrow pass on exact, proof-sensitive static claims that
+sat outside the disapproved-string list, assigned to Izza and Zafran. Four required changes.
+
+Izza had already pushed most of the pass (`e1fb8ac`) and refreshed the preview before this scan.
+My role was verification; two gaps were found and closed.
+
+## Gaps found and closed (head `e68b051`)
+
+Both were static rating claims in changed files on **published** pages, so both were in scope for
+Tim's item 4 and both had been missed:
+
+| File | Page | Before | After |
+|---|---|---|---|
+| `templates/page.reviews.json` | `/pages/reviews` (published) | card title "Verified buyers only" | "Customer reviews and feedback" — Tim's approved option |
+| `templates/page.landing.json` | `/pages/french-fitness-overview` (published) | heading "5-Star Customer Service" | "Customer Service" — same drop-the-rating pattern used elsewhere in the pass |
+
+The `5-Star_Customer_Service.png` asset filename is unchanged: not visible copy, and renaming it
+would break the reference.
+
+## Verification against Tim's four items — all PASS
+
+Scope held to the 14 changed files, per "static review/rating quantities in changed files".
+
+| Item | Check | Result |
+|---|---|---|
+| 1 · stock quantities, same-day/week promises, exact delivery windows | `units in stock`, `ready to ship`, `same-day`, `same-week`, `Same-week delivery`, `2 to 7 business days`, `2 to 14 business days`, `2 to 5 weeks` | **0 each**; the approved replacement sentence is present verbatim |
+| 2 · the 80% figure | `80%` | **0**; replaced with non-numeric "Much of our remanufactured equipment is rebuilt right here at our Benicia facility" |
+| 3 · the 25% wear threshold | `25% wear` | **0**; Tim's exact sentence "Worn components are replaced as needed during inspection and rebuilding." present |
+| 4 · static review/rating counts | `4.9/5`, `4.92`, `2,000+`, `98%`, `Thousands of verified`, `Trusted by Thousands`, `thousands of satisfied/positive/verified`, `consistent 5-star`, `5-star reviews`, `5-Star Customer Service`, `Verified buyers only`, `Average Rating` | **0 each**; approved replacements present — "Verified customer reviews" ×6, "Customer reviews and feedback" ×1 |
+
+## No regression from round 1
+
+- Original 31-term disapproved sweep: **still 31/31 at zero** across the theme.
+- Earlier approved wording intact: `foundingDate: "2010"`, warehouse combined-footprint framing ×2,
+  "50 team members based in Benicia", "Remanufactured Equipment", the about-us-new 2003/2010/2016
+  history ×2, trusthub 2003 garage origin + "100 team members".
+- All 13 changed JSON templates parse cleanly.
+- Preview theme `187347599676` synced `2026-08-06T14:36:3xZ` and byte-identical to PR head on every
+  spot-checked file; whole-tree preview-branch vs PR-head diff is still only the 3 app/section
+  toggle files — zero copy differences.
+- `cwv-regression` **success** on `e68b051`.
+- Live MAIN still unchanged.
+
+## Flagged for Tim, deliberately not changed
+
+Outside his four numbered items, so left alone to respect the "no broad rewrite" instruction. Each
+is a one-line change if he wants it:
+
+1. **24-hour response-time claims** on two published pages — `page.landing.json`
+   ("Our goal is to respond to you within 24 hours", "12-hour service per weekday") and
+   `page.reviews.json` ("They respond to customer concerns within 24 hours during business hours").
+   The tracker's stock/lead-time Needs-Source row does list a "24-hr response promise" with approved
+   softened wording ("We aim to respond promptly to all inquiries"), so this is arguably adjacent to
+   item 1 — but a support response time is not availability or delivery timing.
+2. **Warehouse shipping FAQ** retains "Orders within 120 to 200 miles of Benicia are delivered by our
+   own trucks" and "in-store pickup at no additional charge" — a service-area distance rather than a
+   delivery window.
+3. **Wording variance, no action needed:** in the warehouse logistics list the pass used
+   "Delivery timing varies by product, destination, and service level — contact us for a current
+   estimate." rather than Tim's exact sentence, which does appear verbatim in the "How fast can I
+   receive my order?" FAQ. Substantively equivalent.
+
+## Status
+
+Content gate clear for the second time. Remaining before merge: Sagi's focused desktop/mobile check
+on Warehouse and About Fitness Superstore in the refreshed preview, and dismissal of the standing
+CHANGES_REQUESTED review on PR #664 — GitHub still reports the PR as blocked on it.
