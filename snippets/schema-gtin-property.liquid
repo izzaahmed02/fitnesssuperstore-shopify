@@ -1,0 +1,39 @@
+{%- comment -%}
+  Emits a single typed GTIN property for merchant / AI-channel structured data.
+
+  Usage:  {% render 'schema-gtin-property', value: variant.barcode %}
+  Output: "gtin12": "810041970862",     (including the trailing comma)
+          or nothing at all when the value is not a valid identifier.
+
+  The identifier is treated as a string throughout. Digits are verified by removing every
+  digit character and requiring an empty remainder. It is deliberately NOT verified by
+  coercing to a number and comparing the round trip: that silently destroys leading
+  zeroes, and this catalogue holds well-formed GTINs that begin with one.
+
+  Length selects the typed property, so the identifier format is declared rather than
+  left for a consumer to infer. Lengths outside 8 / 12 / 13 / 14 are not valid GTINs and
+  are dropped rather than published.
+{%- endcomment -%}
+{%- liquid
+  assign gtin = value | default: '' | strip
+  assign gtin_property = ''
+
+  if gtin != blank
+    assign gtin_residue = gtin | remove: '0' | remove: '1' | remove: '2' | remove: '3' | remove: '4' | remove: '5' | remove: '6' | remove: '7' | remove: '8' | remove: '9'
+
+    if gtin_residue == blank
+      assign gtin_length = gtin | size
+      case gtin_length
+        when 8
+          assign gtin_property = 'gtin8'
+        when 12
+          assign gtin_property = 'gtin12'
+        when 13
+          assign gtin_property = 'gtin13'
+        when 14
+          assign gtin_property = 'gtin14'
+      endcase
+    endif
+  endif
+-%}
+{%- if gtin_property != blank %}"{{ gtin_property }}": {{ gtin | json }},{% endif -%}

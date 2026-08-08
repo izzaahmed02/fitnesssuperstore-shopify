@@ -21,16 +21,31 @@
     "this is new" about products we know nothing about.
 
   GTIN
-    Merchant markup requires a numeric identifier of 8, 12, 13 or 14 digits. Anything else
-    (internal SKU strings, truncated codes, typos) is dropped rather than passed through.
-    The times/append round trip is the Liquid idiom for "is this all digits".
+    Validated as a string. Digits are checked by removing every digit character and
+    requiring an empty remainder - never by coercing to a number, because that silently
+    destroys leading zeroes and four well-formed GTINs in this catalogue begin with one.
+    Length selects the typed property (gtin8 / gtin12 / gtin13 / gtin14) so the identifier
+    format is declared rather than left for a consumer to infer.
+
+    A product-level identifier is emitted only for single-variant products. On a
+    multi-variant product an identifier belongs to one variant, so it is emitted on that
+    variant's Offer and nowhere else.
+
+  MPN
+    Emitted only from the dedicated mpn metafield. It is never taken from the Shopify SKU,
+    which is our internal code, not a manufacturer-assigned part number. The SKU stays in
+    the sku field.
+
+  Typed metafields
+    Read through .value throughout, so the typed value is used rather than the metafield
+    object's string coercion.
 
 {%- endcomment -%}
 {%- liquid
   assign schema_category = product.category.name | default: '' | strip
   if schema_category == blank
-    assign category_main = product.metafields.custom.main_category.value | default: product.metafields.custom.main_category | default: '' | strip
-    assign category_sub = product.metafields.custom.sub_category.value | default: product.metafields.custom.sub_category | default: '' | strip
+    assign category_main = product.metafields.custom.main_category.value | default: '' | strip
+    assign category_sub = product.metafields.custom.sub_category.value | default: '' | strip
     if category_main != blank and category_sub != blank
       assign schema_category = category_main | append: ' > ' | append: category_sub
     elsif category_main != blank
@@ -40,7 +55,7 @@
     endif
   endif
 
-  assign condition_state = product.metafields.custom.condition_state.value | default: product.metafields.custom.condition_state | default: '' | strip
+  assign condition_state = product.metafields.custom.condition_state.value | default: '' | strip
   assign condition_key = condition_state | downcase
   assign schema_condition = ''
   if condition_key contains 'as is'
@@ -51,18 +66,24 @@
     assign schema_condition = 'NewCondition'
   endif
 
-  assign gtin_raw = product.selected_or_first_available_variant.barcode | default: product.metafields.custom.upc_code.value | default: product.metafields.custom.upc_code | default: '' | strip
-  assign schema_gtin = ''
-  if gtin_raw != blank
-    assign gtin_len = gtin_raw | size
-    if gtin_len == 8 or gtin_len == 12 or gtin_len == 13 or gtin_len == 14
-      assign gtin_roundtrip = gtin_raw | times: 1 | append: ''
-      if gtin_roundtrip == gtin_raw
-        assign schema_gtin = gtin_raw
-      endif
-    endif
-  endif
+  assign schema_mpn = product.metafields.custom.mpn.value | default: '' | strip
+  assign schema_color = product.metafields.custom.product_color.value | default: '' | strip
+  assign schema_coa = product.metafields.custom.country_of_assembly.value | default: '' | strip
+  assign schema_colp = product.metafields.custom.country_of_last_processing.value | default: '' | strip
+  assign schema_weight = product.metafields.custom.product_weight_lbs.value | default: '' | strip
+  assign schema_length = product.metafields.custom.length_in.value | default: '' | strip
+  assign schema_width = product.metafields.custom.width_in.value | default: '' | strip
+  assign schema_height = product.metafields.custom.height_in.value | default: '' | strip
 
+  assign fact_grade = product.metafields.custom.grade.value | default: '' | strip
+  assign fact_ships = product.metafields.custom.ships.value | default: '' | strip
+  assign fact_lead = product.metafields.custom.processing_time.value | default: '' | strip
+  assign fact_warranty = product.metafields.custom.warranty.value | default: '' | strip
+
+  assign product_gtin_raw = ''
+  if product.variants.size == 1
+    assign product_gtin_raw = product.selected_or_first_available_variant.barcode | default: product.metafields.custom.upc_code.value | default: '' | strip
+  endif
 -%}
 
 <script type="application/ld+json">
@@ -91,9 +112,6 @@
       },
       {% endif %}
 
-      {% if product.metafields.custom.audience != blank %}
-      "audience": {{ product.metafields.custom.audience | json }},
-      {% endif %}
       {% if schema_category != blank %}
       "category": {{ schema_category | json }},
       {% endif %}
@@ -119,33 +137,33 @@
         {% endfor %}
       ],
       "name": {{ product.title | json }},
-      {% if product.metafields.custom.product_color != blank %}
-      "color": {{ product.metafields.custom.product_color | json }},
+      {% if schema_color != blank %}
+      "color": {{ schema_color | json }},
       {% endif %}
-      {% if product.metafields.custom.country_of_assembly != blank %}
-      "countryOfAssembly": {{ product.metafields.custom.country_of_assembly | json }},
+      {% if schema_coa != blank %}
+      "countryOfAssembly": {{ schema_coa | json }},
       {% endif %}
-      {% if product.metafields.custom.country_of_last_processing != blank %}
-      "countryOfLastProcessing": {{ product.metafields.custom.country_of_last_processing | json }},
+      {% if schema_colp != blank %}
+      "countryOfLastProcessing": {{ schema_colp | json }},
       {% endif %}
-      {% if product.metafields.custom.length_in != blank %}
+      {% if schema_length != blank %}
       "depth": {
         "@type": "QuantitativeValue",
-        "value": {{ product.metafields.custom.length_in | json }},
+        "value": {{ schema_length | json }},
         "unitCode": "INH"
       },
       {% endif %}
-      {% if product.metafields.custom.width_in != blank %}
+      {% if schema_width != blank %}
       "width": {
         "@type": "QuantitativeValue",
-        "value": {{ product.metafields.custom.width_in | json }},
+        "value": {{ schema_width | json }},
         "unitCode": "INH"
       },
       {% endif %}
-      {% if product.metafields.custom.height_in != blank %}
+      {% if schema_height != blank %}
       "height": {
         "@type": "QuantitativeValue",
-        "value": {{ product.metafields.custom.height_in | json }},
+        "value": {{ schema_height | json }},
         "unitCode": "INH"
       },
       {% endif %}
@@ -171,20 +189,17 @@
         "@id": {{ request.origin | append: product.url | append: '#manufacturer' | json }},
         "name": {{ product.vendor | default: shop.name | json }}
       },
-      {% if product.metafields.custom.product_weight_lbs != blank %}
+      {% if schema_weight != blank %}
       "weight": {
         "@type": "QuantitativeValue",
-        "value": {{ product.metafields.custom.product_weight_lbs | json }},
+        "value": {{ schema_weight | json }},
         "unitCode": "LBR"
       },
       {% endif %}
-      {%- assign schema_mpn = product.metafields.custom.mpn | default: product.selected_or_first_available_variant.sku -%}
       {% if schema_mpn != blank %}
       "mpn": {{ schema_mpn | json }},
       {% endif %}
-      {% if schema_gtin != blank %}
-      "gtin": {{ schema_gtin | json }},
-      {% endif %}
+      {% render 'schema-gtin-property', value: product_gtin_raw %}
       {% if schema_condition != blank %}
       "itemCondition": "https://schema.org/{{ schema_condition }}",
       {% endif %}
@@ -194,25 +209,17 @@
         how long it takes, and what the warranty is. Sourced from merchandising metafields
         so the answer AI gives matches the PDP.
       {%- endcomment -%}
-      {%- capture ai_facts -%}
-          {%- if product.metafields.custom.grade != blank -%}Equipment Grade|{{ product.metafields.custom.grade | strip }}~{%- endif -%}
-          {%- if product.metafields.custom.condition_state != blank -%}Condition|{{ product.metafields.custom.condition_state | strip }}~{%- endif -%}
-          {%- if product.metafields.custom.ships != blank -%}Shipping Method|{{ product.metafields.custom.ships | strip }}~{%- endif -%}
-          {%- if product.metafields.custom.processing_time != blank -%}Lead Time|{{ product.metafields.custom.processing_time | strip }}~{%- endif -%}
-          {%- if product.metafields.custom.warranty != blank -%}Warranty|{{ product.metafields.custom.warranty | strip }}~{%- endif -%}
+      {%- capture ai_props -%}
+        {%- if fact_grade != blank -%}{"@type":"PropertyValue","name":"Equipment Grade","value":{{ fact_grade | json }}},{%- endif -%}
+        {%- if condition_state != blank -%}{"@type":"PropertyValue","name":"Condition","value":{{ condition_state | json }}},{%- endif -%}
+        {%- if fact_ships != blank -%}{"@type":"PropertyValue","name":"Shipping Method","value":{{ fact_ships | json }}},{%- endif -%}
+        {%- if fact_lead != blank -%}{"@type":"PropertyValue","name":"Lead Time","value":{{ fact_lead | json }}},{%- endif -%}
+        {%- if fact_warranty != blank -%}{"@type":"PropertyValue","name":"Warranty","value":{{ fact_warranty | json }}},{%- endif -%}
       {%- endcapture -%}
-      {%- assign ai_fact_list = ai_facts | strip | split: '~' -%}
-      {% if ai_fact_list.size > 0 %}
-      "additionalProperty": [
-        {%- for fact in ai_fact_list -%}
-          {%- assign fact_parts = fact | split: '|' -%}
-          {
-            "@type": "PropertyValue",
-            "name": {{ fact_parts[0] | strip | json }},
-            "value": {{ fact_parts[1] | strip | json }}
-          }{% unless forloop.last %},{% endunless %}
-        {%- endfor -%}
-      ],
+      {%- assign ai_props = ai_props | strip -%}
+      {% if ai_props != blank %}
+      {%- assign ai_props_len = ai_props | size | minus: 1 -%}
+      "additionalProperty": [{{ ai_props | slice: 0, ai_props_len }}],
       {% endif %}
 
       {% if product.has_only_default_variant %}
@@ -225,9 +232,7 @@
         {% endif %}
         "price": {{ product.selected_or_first_available_variant.price | divided_by: 100.0 | json }},
         "priceCurrency": {{ shop.currency | default: 'USD' | json }},
-        {% if schema_gtin != blank %}
-        "gtin": {{ schema_gtin | json }},
-        {% endif %}
+        {% render 'schema-gtin-property', value: product.selected_or_first_available_variant.barcode %}
 
         {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
         "priceSpecification": [
@@ -321,17 +326,7 @@
             {% if variant.sku != blank %}
             "sku": {{ variant.sku | json }},
             {% endif %}
-            {%- assign variant_gtin = '' -%}
-            {%- if variant.barcode != blank -%}
-              {%- assign variant_gtin_len = variant.barcode | size -%}
-              {%- if variant_gtin_len == 8 or variant_gtin_len == 12 or variant_gtin_len == 13 or variant_gtin_len == 14 -%}
-                {%- assign variant_gtin_roundtrip = variant.barcode | times: 1 | append: '' -%}
-                {%- if variant_gtin_roundtrip == variant.barcode -%}{%- assign variant_gtin = variant.barcode -%}{%- endif -%}
-              {%- endif -%}
-            {%- endif -%}
-            {% if variant_gtin != blank %}
-            "gtin": {{ variant_gtin | json }},
-            {% endif %}
+            {% render 'schema-gtin-property', value: variant.barcode %}
             {% if schema_condition != blank %}
             "itemCondition": "https://schema.org/{{ schema_condition }}",
             {% endif %}
