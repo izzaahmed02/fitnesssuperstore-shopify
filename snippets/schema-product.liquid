@@ -4,114 +4,66 @@
 {%- capture search_target -%}{{ request.origin }}/search?q={search_term_string}{%- endcapture -%}
 
 {%- comment -%}
-  AI channel / merchant-listing data.
+  AI channel / merchant-listing facts.
 
-  product.type is an internal bucket ("Product Index") and must never be emitted as the
-  schema category. Prefer the Shopify taxonomy category that Shopify Catalog syndicates to
-  ChatGPT / Copilot / Gemini, then the merchandising metafields, then a generic fallback.
+  Governing rule for this whole block: a fact we do not hold is omitted, never replaced
+  with a confident default. An AI channel repeating an invented fact back to a customer
+  costs more than a missing field does.
+
+  Category
+    product.type is an internal bucket (Product Index) and must never be emitted. Shopify's
+    own taxonomy category is the value Shopify Catalog syndicates to ChatGPT / Copilot /
+    Gemini, so it leads. The merchandising metafields are the fallback for products the
+    taxonomy has not been set on.
+
+  Condition
+    Omitted when we hold no condition fact. Defaulting to NewCondition would assert
+    "this is new" about products we know nothing about.
+
+  GTIN
+    Merchant markup requires a numeric identifier of 8, 12, 13 or 14 digits. Anything else
+    (internal SKU strings, truncated codes, typos) is dropped rather than passed through.
+    The times/append round trip is the Liquid idiom for "is this all digits".
+
 {%- endcomment -%}
 {%- liquid
-  assign schema_category = product.metafields.custom.main_category
-  if product.metafields.custom.sub_category != blank
-    assign schema_category = schema_category | append: ' > ' | append: product.metafields.custom.sub_category
-  endif
+  assign schema_category = product.category.name | default: '' | strip
   if schema_category == blank
-    assign schema_category = 'Fitness Equipment'
+    assign category_main = product.metafields.custom.main_category.value | default: product.metafields.custom.main_category | default: '' | strip
+    assign category_sub = product.metafields.custom.sub_category.value | default: product.metafields.custom.sub_category | default: '' | strip
+    if category_main != blank and category_sub != blank
+      assign schema_category = category_main | append: ' > ' | append: category_sub
+    elsif category_main != blank
+      assign schema_category = category_main
+    else
+      assign schema_category = category_sub
+    endif
   endif
 
-  assign price_valid_until = 'now' | date: '%s' | plus: 31536000 | date: '%Y-%m-%d'
-
-  assign condition_state = product.metafields.custom.condition_state | downcase
-  if condition_state contains 'as is'
+  assign condition_state = product.metafields.custom.condition_state.value | default: product.metafields.custom.condition_state | default: '' | strip
+  assign condition_key = condition_state | downcase
+  assign schema_condition = ''
+  if condition_key contains 'as is'
     assign schema_condition = 'UsedCondition'
-  elsif condition_state contains 'remanufactured'
+  elsif condition_key contains 'remanufactured'
     assign schema_condition = 'RefurbishedCondition'
-  elsif condition_state != blank
-    assign schema_condition = product.metafields.custom.condition_state | append: 'Condition'
-  else
+  elsif condition_key contains 'new'
     assign schema_condition = 'NewCondition'
   endif
 
-  comment
-    Returns differ by condition. Per the published Cancellations, Returns & Refunds Policy:
-    remanufactured commercial equipment is not returnable once delivered (warranty service
-    only); everything else is a 14-day, buyer-paid return with a 25% restocking fee.
-  endcomment
-  if schema_condition == 'RefurbishedCondition'
-    assign return_days = 0
-  else
-    assign return_days = 14
+  assign gtin_raw = product.selected_or_first_available_variant.barcode | default: product.metafields.custom.upc_code.value | default: product.metafields.custom.upc_code | default: '' | strip
+  assign schema_gtin = ''
+  if gtin_raw != blank
+    assign gtin_len = gtin_raw | size
+    if gtin_len == 8 or gtin_len == 12 or gtin_len == 13 or gtin_len == 14
+      assign gtin_roundtrip = gtin_raw | times: 1 | append: ''
+      if gtin_roundtrip == gtin_raw
+        assign schema_gtin = gtin_raw
+      endif
+    endif
   endif
 
-  comment
-    Handling time comes from the merchandising lead-time metafield. Only emit it when the
-    value matches a pattern we can convert to days - never guess a delivery window.
-  endcomment
-  assign handling_min = false
-  assign handling_max = false
-  assign lead_time = product.metafields.custom.processing_time | default: '' | downcase
-  assign lead_digits = lead_time | remove: 'ships in ' | split: ' ' | first | split: '-'
-  if lead_time contains 'week'
-    assign handling_min = lead_digits[0] | times: 7
-    assign handling_max = lead_digits | last | times: 7
-  elsif lead_time contains 'business day' or lead_time contains 'day'
-    assign handling_min = lead_digits[0] | times: 1
-    assign handling_max = lead_digits | last | times: 1
-  endif
-  if handling_min == 0 or handling_max == 0
-    assign handling_min = false
-    assign handling_max = false
-  endif
 -%}
-
-{%- capture merchant_return_policy -%}
-        "hasMerchantReturnPolicy": {
-          "@type": "MerchantReturnPolicy",
-          "@id": {{ request.origin | append: '#return-policy-' | append: schema_condition | json }},
-          "applicableCountry": "US",
-          "returnPolicyCountry": "US",
-          "merchantReturnLink": {{ request.origin | append: '/pages/return-policy' | json }},
-          {%- if return_days > 0 %}
-          "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
-          "merchantReturnDays": {{ return_days }},
-          "returnMethod": "https://schema.org/ReturnByMail",
-          "returnFees": "https://schema.org/ReturnFeesCustomerResponsibleForShipping",
-          "restockingFee": {
-            "@type": "MonetaryAmount",
-            "currency": {{ shop.currency | default: 'USD' | json }},
-            "value": 25,
-            "unitText": "PERCENT"
-          }
-          {%- else %}
-          "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
-          {%- endif %}
-        }
-{%- endcapture -%}
-
-{%- capture shipping_details -%}
-        "shippingDetails": {
-          "@type": "OfferShippingDetails",
-          "@id": {{ request.origin | append: product.url | append: '#shipping' | json }},
-          "shippingDestination": {
-            "@type": "DefinedRegion",
-            "addressCountry": "US"
-          }
-          {%- if product.metafields.custom.ships != blank %},
-          "shippingSettingsLink": {{ request.origin | append: '/pages/shipping-information' | json }}
-          {%- endif %}
-          {%- if handling_min and handling_max %},
-          "deliveryTime": {
-            "@type": "ShippingDeliveryTime",
-            "handlingTime": {
-              "@type": "QuantitativeValue",
-              "minValue": {{ handling_min }},
-              "maxValue": {{ handling_max }},
-              "unitCode": "DAY"
-            }
-          }
-          {%- endif %}
-        }
-{%- endcapture -%}
 
 <script type="application/ld+json">
 {
@@ -139,9 +91,16 @@
       },
       {% endif %}
 
-      "audience": {{ product.metafields.custom.audience | default: 'Fitness enthusiasts and commercial gym users' | json }},
+      {% if product.metafields.custom.audience != blank %}
+      "audience": {{ product.metafields.custom.audience | json }},
+      {% endif %}
+      {% if schema_category != blank %}
       "category": {{ schema_category | json }},
-      "description": {{ product.description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | truncate: 500 | default: 'High-quality fitness equipment for home or commercial use.' | json }},
+      {% endif %}
+      {%- assign schema_description = product.description | strip_html | strip_newlines | strip | replace: '&amp;', '&' | truncate: 500 -%}
+      {% if schema_description != blank %}
+      "description": {{ schema_description | json }},
+      {% endif %}
       "image": [
         {% for image in product.images %}
           {%- assign product_image_url = image.src | img_url: 'master' | split: '?' | first -%}
@@ -160,9 +119,15 @@
         {% endfor %}
       ],
       "name": {{ product.title | json }},
-      "color": {{ product.metafields.custom.product_color | default: 'Not specified' | json }},
-      "countryOfAssembly": {{ product.metafields.custom.country_of_assembly | default: 'US' | json }},
-      "countryOfLastProcessing": {{ product.metafields.custom.country_of_last_processing | default: 'US' | json }},
+      {% if product.metafields.custom.product_color != blank %}
+      "color": {{ product.metafields.custom.product_color | json }},
+      {% endif %}
+      {% if product.metafields.custom.country_of_assembly != blank %}
+      "countryOfAssembly": {{ product.metafields.custom.country_of_assembly | json }},
+      {% endif %}
+      {% if product.metafields.custom.country_of_last_processing != blank %}
+      "countryOfLastProcessing": {{ product.metafields.custom.country_of_last_processing | json }},
+      {% endif %}
       {% if product.metafields.custom.length_in != blank %}
       "depth": {
         "@type": "QuantitativeValue",
@@ -213,28 +178,32 @@
         "unitCode": "LBR"
       },
       {% endif %}
-      "mpn": {{ product.metafields.custom.mpn | default: product.selected_or_first_available_variant.sku | default: product.handle | json }},
-      {% if product.selected_or_first_available_variant.barcode != blank %}
-      "gtin": {{ product.selected_or_first_available_variant.barcode | json }},
-      {% elsif product.metafields.custom.upc_code != blank %}
-      "gtin": {{ product.metafields.custom.upc_code | json }},
+      {%- assign schema_mpn = product.metafields.custom.mpn | default: product.selected_or_first_available_variant.sku -%}
+      {% if schema_mpn != blank %}
+      "mpn": {{ schema_mpn | json }},
       {% endif %}
+      {% if schema_gtin != blank %}
+      "gtin": {{ schema_gtin | json }},
+      {% endif %}
+      {% if schema_condition != blank %}
       "itemCondition": "https://schema.org/{{ schema_condition }}",
+      {% endif %}
 
       {%- comment -%}
         The facts AI shopping agents ask for: who the machine is built for, how it ships,
         how long it takes, and what the warranty is. Sourced from merchandising metafields
         so the answer AI gives matches the PDP.
       {%- endcomment -%}
-      "additionalProperty": [
-        {%- capture ai_facts -%}
+      {%- capture ai_facts -%}
           {%- if product.metafields.custom.grade != blank -%}Equipment Grade|{{ product.metafields.custom.grade | strip }}~{%- endif -%}
           {%- if product.metafields.custom.condition_state != blank -%}Condition|{{ product.metafields.custom.condition_state | strip }}~{%- endif -%}
           {%- if product.metafields.custom.ships != blank -%}Shipping Method|{{ product.metafields.custom.ships | strip }}~{%- endif -%}
           {%- if product.metafields.custom.processing_time != blank -%}Lead Time|{{ product.metafields.custom.processing_time | strip }}~{%- endif -%}
           {%- if product.metafields.custom.warranty != blank -%}Warranty|{{ product.metafields.custom.warranty | strip }}~{%- endif -%}
-        {%- endcapture -%}
-        {%- assign ai_fact_list = ai_facts | split: '~' -%}
+      {%- endcapture -%}
+      {%- assign ai_fact_list = ai_facts | strip | split: '~' -%}
+      {% if ai_fact_list.size > 0 %}
+      "additionalProperty": [
         {%- for fact in ai_fact_list -%}
           {%- assign fact_parts = fact | split: '|' -%}
           {
@@ -244,21 +213,21 @@
           }{% unless forloop.last %},{% endunless %}
         {%- endfor -%}
       ],
+      {% endif %}
 
       {% if product.has_only_default_variant %}
       "offers": {
         "@id": {{ request.origin | append: product.url | append: '?variant=' | append: product.selected_or_first_available_variant.id | append: '#offer' | json }},
         "@type": "Offer",
         "availability": "https://schema.org/{% if product.selected_or_first_available_variant.available %}InStock{% else %}OutOfStock{% endif %}",
+        {% if schema_condition != blank %}
         "itemCondition": "https://schema.org/{{ schema_condition }}",
+        {% endif %}
         "price": {{ product.selected_or_first_available_variant.price | divided_by: 100.0 | json }},
         "priceCurrency": {{ shop.currency | default: 'USD' | json }},
-        "priceValidUntil": {{ price_valid_until | json }},
-        {% if product.selected_or_first_available_variant.barcode != blank %}
-        "gtin": {{ product.selected_or_first_available_variant.barcode | json }},
+        {% if schema_gtin != blank %}
+        "gtin": {{ schema_gtin | json }},
         {% endif %}
-{{ merchant_return_policy }},
-{{ shipping_details }},
 
         {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
         "priceSpecification": [
@@ -330,7 +299,6 @@
             "availability": "https://schema.org/{% if variant.available %}InStock{% else %}OutOfStock{% endif %}",
             "price": {{ variant.price | divided_by: 100.0 | json }},
             "priceCurrency": {{ shop.currency | default: 'USD' | json }},
-            "priceValidUntil": {{ price_valid_until | json }},
 
             {% if variant.compare_at_price > variant.price %}
             "priceSpecification": [
@@ -350,13 +318,23 @@
             {% endif %}
 
             "url": {{ request.origin | append: product.url | append: '?variant=' | append: variant.id | json }},
-            "sku": {{ variant.sku | default: product.handle | json }},
-            {% if variant.barcode != blank %}
-            "gtin": {{ variant.barcode | json }},
+            {% if variant.sku != blank %}
+            "sku": {{ variant.sku | json }},
             {% endif %}
+            {%- assign variant_gtin = '' -%}
+            {%- if variant.barcode != blank -%}
+              {%- assign variant_gtin_len = variant.barcode | size -%}
+              {%- if variant_gtin_len == 8 or variant_gtin_len == 12 or variant_gtin_len == 13 or variant_gtin_len == 14 -%}
+                {%- assign variant_gtin_roundtrip = variant.barcode | times: 1 | append: '' -%}
+                {%- if variant_gtin_roundtrip == variant.barcode -%}{%- assign variant_gtin = variant.barcode -%}{%- endif -%}
+              {%- endif -%}
+            {%- endif -%}
+            {% if variant_gtin != blank %}
+            "gtin": {{ variant_gtin | json }},
+            {% endif %}
+            {% if schema_condition != blank %}
             "itemCondition": "https://schema.org/{{ schema_condition }}",
-{{ merchant_return_policy }},
-{{ shipping_details }},
+            {% endif %}
             "offeredBy": {
               "@type": "Organization",
               "@id": {{ request.origin | append: '#seller' | json }},
@@ -403,7 +381,9 @@
       ],
       {% endif %}
 
-      "sku": {{ product.selected_or_first_available_variant.sku | default: product.handle | json }},
+      {% if product.selected_or_first_available_variant.sku != blank %}
+      "sku": {{ product.selected_or_first_available_variant.sku | json }},
+      {% endif %}
       "url": {{ request.origin | append: product.url | json }}
 
       {% if product.metafields.custom.seo_videos %}
