@@ -28,8 +28,10 @@ The independent findings and the controlled specification agree on substance —
 So that nobody has to guess how much weight a given line carries:
 
 - **Confirmed by reading the current `main` branch** — every file and line citation in this document. These are statements about what the code does, and they can be checked directly.
-- **Confirmed absent** — no `BlogPosting` or `Article` schema anywhere in the theme; no `Boost` or `bc-sf-filter` reference anywhere in the theme; `perview`, `_pos`, `_sid`, `_ss` and `srsltid` each appear zero times in `templates/robots.txt.liquid`.
-- **Not yet verified — requires live checking, and flagged as such at each point:** whether the `?view=` manuals endpoints are currently erroring (`T-020`); the distinct live `condition_state` values and whether any combine conditions (`T-006b`); whether collection descriptions contain markup at the word-43 boundary (`T-010`); the current per-article byline state (`T-012`); the live values of the `product_canonical_url` override metafield (`T-008`).
+- **Confirmed absent** — no `BlogPosting` or `Article` schema anywhere in the theme; `perview`, `_pos`, `_sid`, `_ss` and `srsltid` each appear zero times in `templates/robots.txt.liquid`.
+- **Confirmed against the live store** — 50+ products carrying `productType: Avis-add-charge` and tag `avisplus-product-options`, 49 `UNLISTED` and 1 `ARCHIVED` in the first page of fifty, with the result set still paginating (`T-001` scope addition).
+- **Expected absence, not a finding** — Boost does not appear in theme code because it is an app embed. App-layer scripts cannot be inventoried from this repository at all, which is a measurement constraint recorded under `T-013`.
+- **Not yet verified — requires live checking, and flagged as such at each point:** whether the `?view=` manuals endpoints are currently erroring (`T-020`); the distinct live `condition_state` values and whether any combine conditions (`T-006b`); whether collection descriptions contain markup at the word-43 boundary (`T-010`); the current per-article byline state (`T-012`); the live values of the `product_canonical_url` override metafield (`T-008`); whether the `Avis-add-charge` URLs are in the sitemap, indexed, or excluded from the feed (`T-001`, `T-016`).
 - **Inference, stated as such:** that "experimentation" in the Lighthouse budget table means Convert.
 
 I have not treated any code-path finding as a confirmed live defect without saying which of these categories it falls in.
@@ -105,8 +107,22 @@ Batch E  T-010, T-011, T-012, T-015  Copy, internal links, article credibility, 
 
 Assign one intended state per URL from the controlled taxonomy. Export must carry final status, canonical, robots rule, meta robots, sitemap inclusion, internal-link count, template, page type, revenue/traffic tier and intended state. No blanket parameter rule without sampled evidence. No indexable money page left blocked, noindexed, canonicalised elsewhere, absent from its sitemap or orphaned.
 
-- **Executor:** Zafran *(reassigned from Jake)* · **Independent verifier:** Izza · **Approval of URL intent:** Tim
-- **Evidence:** GSC export · crawl · sitemap · Shopify · internal-link export · ≥10 sampled URLs per cohort with raw status, canonical and robots
+**Scope addition — an Avis-era product cohort that belongs in this inventory.** The Avis Plus product-options app was removed some time ago, but its helper records remain in the live catalog. Queried against the live store: **50+ products (the result set was still paginating) all carrying `productType: Avis-add-charge` and the tag `avisplus-product-options`** — 49 `UNLISTED`, 1 `ARCHIVED` in the first fifty.
+
+These are not real products. They are Avis option pickers: `warranty-30` (36 variants), `mat-accessories-add-ons-32` (64 variants), plus records that are not products in any sense — `shipping-tax-faqs-shipping-information-39`, `methods-of-payment-accepted-payment-information-40`, `checkout-problem-faqs-checkout-issues-45`, `region-37`, `condition-53`, `voltage-86`.
+
+Why this matters to three tickets:
+
+- **`T-001` / `T-005`** — `UNLISTED` in Shopify excludes a product from collections and search **but leaves it reachable at its direct URL**, so `/products/warranty-30` and the rest resolve and are crawlable. A cohort of thin, near-duplicate, non-product PDPs is exactly the profile that accumulates in *crawled — currently not indexed*, and it should be classified deliberately (`BLOCK_CRAWL` or `410`) rather than left as an accident.
+- **`T-006`** — these are the worst case for every fabricated-default finding at once. With no condition metafield they emit `NewCondition`, so a **warranty is marked as a new-condition product**; `mpn` and `sku` fall back to the handle; and `mat-accessories-add-ons-32` at 64 variants emits the full `offeredBy` Organization block **64 times** on one page. The `warranty-30` description also begins with raw CSS (`.warranty-container { font-family: ... }`), which `strip_html` at `schema-product.liquid:34` will not remove, so that CSS lands in the schema `description`.
+- **The theme still branches on the tag.** `sections/main-product.liquid:946` and `:1445-1452` test `product.tags contains 'avisplus-product-options'` and pass `hide_badge`, so this is live conditional rendering, not dead code.
+
+**Not yet verified:** whether these URLs appear in the sitemap, whether any are indexed, and whether the `DrShipIgnore` / `hidden` tags actually exclude them from the Merchant Center feed. The tags suggest that intent but I have not confirmed it — Kevin should, under `T-016`.
+
+Also worth a separate look, though not SEO: `assets/cart.js:215-225` runs a `MutationObserver` over `document.body` with `childList` and `subtree` watching for `.avis-edit-options` elements, for an app that is gone. `assets/cart-stale-cleanup.js` is a deliberate post-Avis migration script and should stay until carts from that era have aged out, then be given a retirement date. Both are `T-009` third-party profiling items rather than tickets of their own.
+
+- **Executor:** Zafran *(reassigned from Jake)* · **Independent verifier:** Izza · **Approval of URL intent:** Tim · **Catalog input:** Larianne (whether the Avis records can be retired), Kevin (feed exclusion)
+- **Evidence:** GSC export · crawl · sitemap · Shopify · internal-link export · ≥10 sampled URLs per cohort with raw status, canonical and robots · full export of the `Avis-add-charge` cohort with sitemap and index status per URL
 - **Rollback:** n/a — no production change · **Blocks:** T-002 through T-008
 
 ### T-002 — Map legacy `.asp` / `.htm` / BigCommerce routes · Aug 12
@@ -315,7 +331,9 @@ Stand up Lighthouse CI against `lighthouse_ci_scope.md` — the eight representa
 
 **Two blockers to state.** First, `T-017`: budgets set against a page that hides Gorgias and Convert from Lighthouse would produce a green dashboard and no information. Second, the scope requires third-party main-thread time reported separately for **experimentation** — that is Convert, which is one of the two scripts the gate hides, so **this line of the budget table cannot be produced at all until `T-017` is resolved.**
 
-**One scope correction.** Representative URL 2 is described as "Tier-1 collection with Boost product grid and Judge.me." I found **no Boost or `bc-sf-filter` reference anywhere in the theme.** The collection stack is the custom `assets/facets-product-index.js` and `sections/product-index-grid.liquid`, and the CI test asserts the removal of Globo filter remnants. Either Boost is an app-embed injection outside theme code or the scope description is stale. The "search" line in the third-party budget table should name whatever is actually in the request waterfall — worth confirming before thresholds are set.
+**One measurement note, not a scope correction.** Representative URL 2 is described as "Tier-1 collection with Boost product grid and Judge.me." Boost is an app, injected as an app embed rather than through theme code, so its absence from the repository is expected and the scope description is correct — an earlier draft of this plan wrongly read that absence as a stale reference.
+
+The useful consequence is a measurement one. **App-embed third parties cannot be inventoried from this repository**, which means two things for this batch: the per-template third-party table in `T-009` has to be built from the live request waterfall rather than from theme code, and the static assertions in `scripts/cwv_regression_test.py` are structurally blind to app-embed scripts — they can only see what is committed here. So Boost, Judge.me's own app payload, and anything else embedded through the app surface are invisible to the existing CI and must come from Lighthouse and the network panel. Worth stating before thresholds are set, so nobody reads a green static test as coverage of the app layer.
 
 - **Executor:** Izza · **Independent verifier:** Zafran · **Thresholds:** Tim
 - **Evidence:** CI config · baseline runs collected after T-017 · JSON/HTML report per URL/device · PR summary table against main · scripts added/removed · filmstrips for failures · CI link in PR
