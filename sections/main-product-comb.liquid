@@ -207,26 +207,14 @@
                   {% endif %}
                 </div>
               {%- when 'review_widget' -%}
-              {% unless product.tags contains 'avisplus-product-options' %}
-                  {% unless is_gift_cards_template %}
-              <div class="available-wrap">
-
-                {% if product.metafields.custom.backorder == true %}
-                  <div class="badge backorder-badge stock-badge">
-                      <span>Available to Pre-Order</span>
-                  </div>
-                {% else %}
-                  <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                    {% if product.available == true %}
-                      <span>Available to Order</span>
-                    {% else %}
-                      <span>Out of stock</span>
-                    {% endif %}
-                  </div>
-                {% endif %}
-              </div>
-                {% endunless %}
-              {% endunless %}
+                {%- assign hide_avail_mobile = false -%}
+                {%- if product.tags contains 'avisplus-product-options' or is_gift_cards_template -%}
+                  {%- assign hide_avail_mobile = true -%}
+                {%- endif -%}
+                {% render 'product-availability-badge',
+                  product: product,
+                  hide_badge: hide_avail_mobile
+                %}
               {% when 'price' %}
                 {% unless is_gift_cards_template %}
                   <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
@@ -672,6 +660,14 @@
                     </div>
                   {% endif %}
                 {% assign current_variant = product.selected_or_first_available_variant %}
+{%- comment -%}
+  Only surface processing/lead time when the product is actually purchasable.
+  product.available is false only when no variant can be bought (out of stock AND
+  inventory policy DENY), so an out-of-stock hold hides it while in-stock and
+  legitimate continue-selling (preorder/backorder) products still show it. The
+  stored metafield value is untouched.
+{%- endcomment -%}
+{% if product.available %}
 {% if current_variant.metafields.custom.processing_time_long_variant != blank or product.metafields.custom.processing_time_long != blank %}
   <div class="item">
     <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
@@ -683,6 +679,7 @@
       <span class="more-info" data-customfield="Processing Time" data-processingtime="{{ current_variant.metafields.custom.processing_time_long_variant }}">(More Info)</span>
     </div>
   </div>
+{% endif %}
 {% endif %}
 
                   {% if product.metafields.custom.product_code != blank %}
@@ -831,6 +828,11 @@
                     </svg>
                     <span class="product-form__error-message"></span>
                   </div>
+                  {% render 'product-options-added-line',
+                    product: product,
+                    variant: product.selected_or_first_available_variant,
+                    section_id: section.id
+                  %}
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
                    <div class="product_price_with_options-contaniner">
@@ -1182,7 +1184,8 @@
                           {{ 'products.product.duties_included' | t }}
                         {%- endif -%}
                         {%- if shop.shipping_policy.body != blank -%}
-                          {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}
+                         Shipping calculated at checkout. Financing options available at checkout.<br>
+                         <span style="color: #D83D0E!important;font-weight: 600;">Need help? Call +1-925-215-2927</span>
                         {%- endif -%}
                       </div>
                     {%- endif -%}
@@ -1216,9 +1219,6 @@
                       </button>
                     </div>
                   {% endif %}
-                {% unless is_gift_cards_template %}
-                {% render 'paylater-providers' %}
-              {% endunless %}
                 </{{tag}}>
                {% endunless %}
               {%- when 'inventory' -%}
@@ -1284,27 +1284,15 @@
                 {%- endif -%}
 
               {%- when 'review_widget' -%}
-              {% unless product.tags contains 'avisplus-product-options' %}
-                {% unless is_gift_cards_template %}
-                <div class="available-wrap hidden lg:flex">
-
-
-                  {% if product.metafields.custom.backorder == true %}
-                    <div class="badge backorder-badge stock-badge">
-                       <span>Available to Pre-Order</span>
-                    </div>
-                  {% else %}
-                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                      {% if product.available == true %}
-                        <span>Available to Order</span>
-                      {% else %}
-                        <span>Out of stock</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-                 {% endunless %}
-              {% endunless %}
+                {%- assign hide_avail_desktop = false -%}
+                {%- if product.tags contains 'avisplus-product-options' or is_gift_cards_template -%}
+                  {%- assign hide_avail_desktop = true -%}
+                {%- endif -%}
+                {% render 'product-availability-badge',
+                  product: product,
+                  wrapper_class: 'hidden lg:flex',
+                  hide_badge: hide_avail_desktop
+                %}
               {%- when 'sku' -%}
                 <p
                   class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
@@ -2215,6 +2203,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
 </script>
+<script src="{{ 'mobile-pdp-polish.js' | asset_url }}" defer="defer"></script>
 
 {% schema %}
 {

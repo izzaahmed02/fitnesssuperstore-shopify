@@ -212,7 +212,10 @@
                 <div class="product__title" {{ block.shopify_attributes }}>
                   <p class="h2">{{ product.title | escape }}</p>
                 </div>
-            
+                {%- if product.metafields.custom.product_color != blank -%}
+                  {% render 'finish-selector', product: product %}
+                {%- endif -%}
+
               {% when 'price' %}
                 <p class="affirm-as-low-as" data-page-type="product" data-amount="{{ product.price }}"></p>
 
@@ -821,7 +824,15 @@
                       </div>
                     </div>
                   {% endif %}
-                  {% if product.metafields.custom.processing_time != blank %}
+                  {%- comment -%}
+                    Only surface processing/lead time when the product is actually
+                    purchasable. product.available is false only when no variant can be
+                    bought (out of stock AND inventory policy DENY), so an out-of-stock
+                    hold like the ROM hides it, while in-stock and legitimate
+                    continue-selling (preorder/backorder) products still show it. The
+                    stored metafield value is untouched.
+                  {%- endcomment -%}
+                  {% if product.available and product.metafields.custom.processing_time != blank %}
                     <div class="item">
                       <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
                       <div class="item__text">
@@ -864,6 +875,9 @@
                 <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
                   <h1>{{ product.title | escape }}</h1>
                 </div>
+                {%- if product.metafields.custom.product_color != blank -%}
+                  {% render 'finish-selector', product: product %}
+                {%- endif -%}
               {% when 'price' %}
 
 {% assign campaign_text = '' %}
@@ -962,6 +976,11 @@
                       <p>{{ buy_box_variant.metafields.custom.buy_box_note }}</p>
                     {% endif %}
                   </div>
+                  {% render 'product-options-added-line',
+                    product: product,
+                    variant: buy_box_variant,
+                    section_id: section.id
+                  %}
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
                   <div class="product_price_with_options-contaniner">
@@ -1340,7 +1359,7 @@
                         {%- endif -%}
                         {%- if shop.shipping_policy.body != blank -%}
                         {% comment %}  {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}{% endcomment %}
-                         Shipping calculated at checkout. Financing options at checkout.<br>
+                         Shipping calculated at checkout. Financing options available at checkout.<br>
                          <span style="color: #D83D0E!important;font-weight: 600;">Need help? Call +1-925-215-2927</span>
                         {%- endif -%}
                       </div>
@@ -1358,7 +1377,6 @@
                     </div>
                   </div>
 
-                {% render 'paylater-providers' %}
                  </{{ tag }}>
                {% endunless %}
               {%- when 'inventory' -%}
@@ -1424,27 +1442,15 @@
                 {%- endif -%}
 
               {%- when 'review_widget' -%}
-             {% unless product.tags contains 'avisplus-product-options' %}
-                <div class="available-wrap">
-                  {% if product.template_suffix == 'discontinued' %}
-                    <div class="badge stock-badge out">
-                      <span>Discontinued</span>
-                    </div>
-                  {% elsif product.metafields.custom.backorder == true %}
-                    <div class="badge backorder-badge stock-badge">
-                      <span>Available to Pre-Order</span>
-                    </div>
-                  {% else %}
-                    <div class="badge stock-badge {% if product.available == true %}in{% else %}out{% endif %}">
-                      {% if product.available == true %}
-                        <span>Available to Order</span>
-                      {% else %}
-                        <span>Out of stock</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-              {% endunless %}
+                {%- assign avisplus_options = false -%}
+                {%- if product.tags contains 'avisplus-product-options' -%}
+                  {%- assign avisplus_options = true -%}
+                {%- endif -%}
+                {% render 'product-availability-badge',
+                  product: product,
+                  check_discontinued: true,
+                  hide_badge: avisplus_options
+                %}
               {%- when 'sku' -%}
                 <p
                   class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}"
@@ -2138,8 +2144,7 @@
 
 {% render 'option-help-content' %}
 <script src="{{ 'old-custom.js' | asset_url }}" defer="defer"></script>
-
-
+<script src="{{ 'mobile-pdp-polish.js' | asset_url }}" defer="defer"></script>
 
 {% schema %}
 {

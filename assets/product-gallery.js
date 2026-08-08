@@ -92,12 +92,6 @@ class ProductGallery extends HTMLElement {
         const popup = document.getElementById('product-gallery-popup');
         if (media && media.media_type !== 'model' && (!popup || popup.hidden)) {
           this.openPopup(this.activeMediaId);
-        } else if (media && media.media_type === 'model') {
-          console.log('Main image click: Media type is model, not opening popup.');
-        } else if (popup && !popup.hidden) {
-          console.log('Main image click: Popup is already open, not re-opening.');
-        } else {
-          console.log('Main image click: Conditions not met to open popup.');
         }
       }
     });
@@ -164,8 +158,6 @@ class ProductGallery extends HTMLElement {
             this.initZoom(container, media);
           };
         }
-      } else {
-        console.log('handleResize: Not desktop, not initializing zoom.');
       }
     });
   }
@@ -372,7 +364,6 @@ class ProductGallery extends HTMLElement {
       const minZoomRatio = 1.2;
       const zoomRatio = zoomImg.naturalWidth / img.clientWidth;
       if (zoomImg.naturalWidth < 100) {
-       console.log("Natural width is low");
         zoomResult.remove();
         lens.remove();
         return;

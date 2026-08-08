@@ -1,0 +1,44 @@
+{%- comment -%}
+  Renders the "Options added: +$0.00" pale-yellow running-total line, but
+  only when the product actually has visible custom options. The check
+  mirrors the visibility logic in snippets/product-options.liquid so a
+  product whose metafields.options.product_options exists but has every
+  category / value hidden does not show an empty tracker.
+
+  Accepts:
+    - product: {Object} product object (required)
+    - variant: {Object} buy-box variant, used to check per-variant options
+      metafield override (optional; defaults to selected_or_first_available_variant)
+    - section_id: {String} the section id used to build the DOM id (required)
+{%- endcomment -%}
+
+{%- if variant == nil -%}
+  {%- assign variant = product.selected_or_first_available_variant -%}
+{%- endif -%}
+
+{%- assign options = product.metafields.options.product_options.value -%}
+{%- if variant.metafields.options.product_options.value != blank -%}
+  {%- assign options = variant.metafields.options.product_options.value -%}
+{%- endif -%}
+
+{%- assign visible_options_count = 0 -%}
+{%- for category in options -%}
+  {%- assign category_hidden_values = false -%}
+  {%- for product_option in category.product_options.value -%}
+    {%- if product_option.hide_values -%}
+      {%- assign category_hidden_values = true -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- unless category.hide_option -%}
+    {%- unless category_hidden_values -%}
+      {%- assign visible_options_count = visible_options_count | plus: 1 -%}
+    {%- endunless -%}
+  {%- endunless -%}
+{%- endfor -%}
+
+{%- if visible_options_count > 0 -%}
+  <div id="Options-Added-{{ section_id }}" class="options-added-line" role="status" aria-live="polite">
+    <span class="options-added-line__label">Options added:</span>
+    <span class="options-added-line__value" data-options-added-value data-currency="{{ cart.currency.symbol }}">+{{ 0 | money }}</span>
+  </div>
+{%- endif -%}

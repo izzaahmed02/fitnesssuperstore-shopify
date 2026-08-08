@@ -1,379 +1,278 @@
-{% comment %}
-  ------------------------------------------------------------------
-  Build Your Own Rig (BYOR) — hybrid configurator
-  ------------------------------------------------------------------
-  Implements the customer-facing structure directed by Tim (2026-05-20):
-    1. Standard layout cards first (guided starting points)
-    2. Underlying section-count configurator logic second
-    3. Quote-gating for risky / non-standard builds
-    4. Roomplanner as a SECONDARY planning tool, never a blocker
+{{ 'byor-configurator.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'byor-data.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'byor-configurator.js' | asset_url }}" defer="defer"></script>
 
-  SCAFFOLD NOTE FOR PRODUCT / DEV HANDOFF
-  --------------------------------------
-  This section is intentionally DATA-DRIVEN. It ships the full customer
-  experience shell but does NOT hardcode any SKUs, prices, dimensions,
-  warranties, or stock. Those are populated by Product via section blocks
-  / theme settings once Larianne's finalized BYOR logic + validated SKUs
-  are ready (the "simple" system is ready; varied upright heights + angled
-  junction bars are still pending and are quote-gated here by default).
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.6 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round: 0 }}px;
+  }
 
-  Every place that needs finalized Product data is marked with:  TODO(product)
-  Source logic sheet:
-  https://docs.google.com/spreadsheets/d/14uW9r0KnbhKZ3MG78rlcqQh3KHX5GreHgYSQbG9g34E
-  ------------------------------------------------------------------
-{% endcomment %}
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
 
-<style>
-  .byor {
-    --byor-accent: {{ section.settings.accent_color }};
-    --byor-accent-hover: {{ section.settings.accent_hover_color }};
-    --byor-ink: {{ section.settings.heading_color }};
-    --byor-body: {{ section.settings.text_color }};
-    --byor-line: #E1E4EA;
-    --byor-panel: #EDEFF3;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 40px 16px;
-    font-family: 'Lato', sans-serif;
-    color: var(--byor-body);
-  }
-  .byor__eyebrow {
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 700;
-    font-size: 13px;
-    color: var(--byor-accent);
-    margin: 0 0 8px;
-  }
-  .byor__title {
-    font-family: 'Oswald', sans-serif;
-    text-transform: uppercase;
-    color: var(--byor-ink);
-    margin: 0 0 12px;
-    font-size: 34px;
-    line-height: 1.1;
-  }
-  .byor__intro { max-width: 780px; margin: 0 0 32px; }
-  .byor__section-title {
-    font-family: 'Oswald', sans-serif;
-    text-transform: uppercase;
-    color: var(--byor-ink);
-    font-size: 22px;
-    margin: 40px 0 6px;
-  }
-  .byor__section-note { margin: 0 0 20px; font-size: 15px; }
-
-  /* Standard layout cards */
-  .byor__cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 16px;
-  }
-  .byor__card {
-    border: 1px solid var(--byor-line);
-    border-radius: 16px;
-    overflow: hidden;
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    transition: box-shadow .2s ease, border-color .2s ease;
-  }
-  .byor__card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.08); border-color: var(--byor-accent); }
-  .byor__card-media { aspect-ratio: 4 / 3; background: var(--byor-panel); display: block; }
-  .byor__card-media img { width: 100%; height: 100%; object-fit: cover; }
-  .byor__card-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-  .byor__card-name { font-family: 'Oswald', sans-serif; text-transform: uppercase; color: var(--byor-ink); font-size: 17px; margin: 0; }
-  .byor__card-desc { font-size: 14px; margin: 0; flex: 1; }
-  .byor__card-price { font-size: 13px; color: var(--byor-ink); font-weight: 700; margin: 0; }
-  .byor__card-cta {
-    display: inline-block; text-align: center; margin-top: 8px;
-    padding: 10px 16px; border-radius: 8px; background: var(--byor-accent);
-    color: #fff; text-decoration: none; font-size: 14px; cursor: pointer; border: none;
-  }
-  .byor__card-cta:hover { background: var(--byor-accent-hover); }
-
-  /* Configurator */
-  .byor__config { margin-top: 12px; border: 1px solid var(--byor-line); border-radius: 20px; padding: 24px; background: #fff; }
-  .byor__step { border-bottom: 1px solid var(--byor-line); padding: 18px 0; }
-  .byor__step:last-of-type { border-bottom: none; }
-  .byor__step-head { display: flex; align-items: baseline; gap: 10px; }
-  .byor__step-num {
-    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
-    background: var(--byor-ink); color: #fff; font-size: 13px; font-weight: 700;
-    display: inline-flex; align-items: center; justify-content: center;
-  }
-  .byor__step-title { font-family: 'Oswald', sans-serif; text-transform: uppercase; color: var(--byor-ink); font-size: 16px; margin: 0; }
-  .byor__step-help { font-size: 13px; margin: 6px 0 12px 36px; }
-  .byor__options { display: flex; flex-wrap: wrap; gap: 10px; margin-left: 36px; }
-  .byor__option {
-    border: 1px solid var(--byor-line); border-radius: 10px; padding: 10px 14px;
-    font-size: 14px; cursor: pointer; background: #fff; user-select: none;
-  }
-  .byor__option[aria-pressed="true"] { border-color: var(--byor-accent); box-shadow: inset 0 0 0 1px var(--byor-accent); font-weight: 700; }
-  .byor__option[data-quote-gate="true"]::after { content: " • quote"; color: var(--byor-accent); font-size: 11px; }
-
-  /* Summary + CTA rail */
-  .byor__rail { margin-top: 24px; background: var(--byor-panel); border-radius: 16px; padding: 20px; }
-  .byor__summary-title { font-family: 'Oswald', sans-serif; text-transform: uppercase; color: var(--byor-ink); font-size: 15px; margin: 0 0 10px; }
-  .byor__summary { list-style: none; padding: 0; margin: 0 0 16px; font-size: 14px; }
-  .byor__summary li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--byor-line); }
-  .byor__quote-banner {
-    display: none; margin: 0 0 16px; padding: 12px 16px; border-radius: 10px;
-    background: #FFF4EF; border: 1px solid var(--byor-accent); font-size: 14px; color: var(--byor-ink);
-  }
-  .byor__quote-banner.is-visible { display: block; }
-  .byor__actions { display: flex; flex-wrap: wrap; gap: 12px; }
-  .byor__btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    padding: 12px 22px; border-radius: 8px; font-size: 15px; font-weight: 700;
-    cursor: pointer; text-decoration: none; border: none;
-  }
-  .byor__btn--primary { background: var(--byor-accent); color: #fff; }
-  .byor__btn--primary:hover { background: var(--byor-accent-hover); }
-  .byor__btn--primary[disabled] { opacity: .5; cursor: not-allowed; }
-  .byor__btn--ghost { background: #fff; color: var(--byor-ink); border: 1px solid var(--byor-ink); }
-
-  /* Roomplanner (secondary) */
-  .byor__roomplanner { margin-top: 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 20px; border: 1px dashed var(--byor-line); border-radius: 16px; }
-  .byor__roomplanner p { margin: 0; flex: 1; min-width: 220px; font-size: 14px; }
-  .byor__roomplanner-heading { font-family: 'Oswald', sans-serif; text-transform: uppercase; color: var(--byor-ink); font-size: 16px; margin: 0 0 4px; }
-
-  .byor__disclaimer { margin-top: 24px; font-size: 12px; color: #6b6b73; }
-
-  @media (max-width: 768px) {
-    .byor__title { font-size: 26px; }
-    .byor__options, .byor__step-help { margin-left: 0; }
-    .byor__step-head { align-items: center; }
-  }
-</style>
-
-<section class="byor" data-byor
-  data-roomplanner-url="{{ section.settings.roomplanner_url }}"
-  data-quote-url="{{ section.settings.quote_url }}">
-
-  {%- comment -%} Intro {%- endcomment -%}
-  {% if section.settings.eyebrow != blank %}<p class="byor__eyebrow">{{ section.settings.eyebrow }}</p>{% endif %}
-  {% if section.settings.heading != blank %}<h1 class="byor__title">{{ section.settings.heading }}</h1>{% endif %}
-  {% if section.settings.intro != blank %}<div class="byor__intro rte">{{ section.settings.intro }}</div>{% endif %}
-
-  {%- comment -%} 1. Standard layout cards {%- endcomment -%}
-  {% assign card_blocks = section.blocks | where: "type", "layout_card" %}
-  {% if card_blocks.size > 0 %}
-    <h2 class="byor__section-title">{{ section.settings.cards_title | default: 'Start with a standard layout' }}</h2>
-    {% if section.settings.cards_note != blank %}<p class="byor__section-note">{{ section.settings.cards_note }}</p>{% endif %}
-    <div class="byor__cards">
-      {% for block in card_blocks %}
-        <article class="byor__card" {{ block.shopify_attributes }}
-          data-layout-card
-          data-sections="{{ block.settings.section_count }}"
-          data-quote-gate="{{ block.settings.quote_only }}">
-          <span class="byor__card-media">
-            {% if block.settings.image != blank %}
-              <img src="{{ block.settings.image | image_url: width: 480 }}" alt="{{ block.settings.name | escape }}" loading="lazy" width="480" height="360">
-            {% endif %}
-          </span>
-          <div class="byor__card-body">
-            <h3 class="byor__card-name">{{ block.settings.name }}</h3>
-            {% if block.settings.description != blank %}<p class="byor__card-desc">{{ block.settings.description }}</p>{% endif %}
-            {%- comment -%} TODO(product): starting price is free text; do NOT invent — leave blank until validated. {%- endcomment -%}
-            {% if block.settings.starting_price != blank %}<p class="byor__card-price">{{ block.settings.starting_price }}</p>{% endif %}
-            {% if block.settings.link != blank %}
-              <a class="byor__card-cta" href="{{ block.settings.link }}">{{ block.settings.cta_label | default: 'Configure this layout' }}</a>
-            {% else %}
-              <button type="button" class="byor__card-cta" data-prefill="{{ block.settings.section_count }}">{{ block.settings.cta_label | default: 'Configure this layout' }}</button>
-            {% endif %}
-          </div>
-        </article>
-      {% endfor %}
+<div class="page-width section-{{ section.id }}-padding">
+  <byor-configurator class="byor">
+    <div class="byor__intro">
+      <h2 class="byor__heading">{{ section.settings.heading }}</h2>
+      {%- if section.settings.subheading != blank -%}
+        <p class="byor__subheading">{{ section.settings.subheading }}</p>
+      {%- endif -%}
     </div>
-  {% endif %}
 
-  {%- comment -%} 2. Underlying configurator logic {%- endcomment -%}
-  {% assign step_blocks = section.blocks | where: "type", "config_step" %}
-  {% if step_blocks.size > 0 %}
-    <h2 class="byor__section-title">{{ section.settings.config_title | default: 'Or configure your rig step by step' }}</h2>
-    {% if section.settings.config_note != blank %}<p class="byor__section-note">{{ section.settings.config_note }}</p>{% endif %}
+    {%- if section.settings.layouts_heading != blank -%}
+      <h3 class="byor__section-heading">{{ section.settings.layouts_heading }}</h3>
+    {%- endif -%}
+    {%- if section.settings.layouts_note != blank -%}
+      <p class="byor__section-note">{{ section.settings.layouts_note }}</p>
+    {%- endif -%}
 
-    <div class="byor__config">
-      {% assign step_index = 0 %}
-      {% for block in step_blocks %}
-        {% assign step_index = step_index | plus: 1 %}
-        <div class="byor__step" {{ block.shopify_attributes }} data-step="{{ block.settings.step_key }}">
-          <div class="byor__step-head">
-            <span class="byor__step-num">{{ step_index }}</span>
-            <h3 class="byor__step-title">{{ block.settings.title }}</h3>
-          </div>
-          {% if block.settings.help != blank %}<p class="byor__step-help">{{ block.settings.help }}</p>{% endif %}
-          <div class="byor__options" role="group" aria-label="{{ block.settings.title | escape }}">
-            {%- comment -%}
-              Options format (one per line):  Label | value | quote
-              The optional third field "quote" flags that choosing it quote-gates the build.
-              TODO(product): replace example option labels with validated SKUs / quantities
-              from the BYOR logic sheet once finalized.
-            {%- endcomment -%}
-            {% assign lines = block.settings.options | newline_to_br | split: '<br />' %}
-            {% for line in lines %}
-              {% assign parts = line | strip | split: '|' %}
-              {% if parts.size > 0 and parts[0] != blank %}
-                {% assign label = parts[0] | strip %}
-                {% assign value = parts[1] | default: label | strip %}
-                {% assign gate = parts[2] | strip | downcase %}
-                <button type="button" class="byor__option"
-                  aria-pressed="false"
-                  data-value="{{ value | escape }}"
-                  {% if gate == 'quote' %}data-quote-gate="true"{% endif %}>
-                  {{ label }}
-                </button>
-              {% endif %}
-            {% endfor %}
-          </div>
-        </div>
-      {% endfor %}
+    <div class="byor-layouts" data-byor-layouts></div>
 
-      {%- comment -%} Summary + CTA rail {%- endcomment -%}
-      <div class="byor__rail">
-        <p class="byor__summary-title">{{ section.settings.summary_title | default: 'Your configuration' }}</p>
-        <ul class="byor__summary" data-byor-summary>
-          <li data-empty><span>Make your selections above</span><span></span></li>
-        </ul>
+    <div class="byor-layout">
+      <div data-byor-steps></div>
 
-        <div class="byor__quote-banner" data-quote-banner>
-          {{ section.settings.quote_message | default: 'This configuration includes options our team needs to review for safety and fit. Add it to a quote and we’ll confirm compatibility, dimensions, and availability.' }}
-        </div>
+      <aside class="byor-summary-panel">
+        <div data-byor-summary></div>
 
-        <div class="byor__actions">
-          {%- comment -%}
-            TODO(product/dev): wire primary Add to Cart to the real BYOR product/variant
-            or line-item bundle once SKUs are validated. Until then the primary honest
-            action is "Request a quote", and Add to Cart stays disabled.
-          {%- endcomment -%}
-          <button type="button" class="byor__btn byor__btn--primary" data-add-to-cart disabled>
-            {{ section.settings.atc_label | default: 'Add rig to cart' }}
+        <div class="byor-actions">
+          <button type="button" class="button button--primary" data-byor-add disabled>
+            {{ section.settings.add_button_label }}
           </button>
-          <a class="byor__btn byor__btn--ghost" data-request-quote href="{{ section.settings.quote_url }}">
-            {{ section.settings.quote_label | default: 'Request a quote' }}
-          </a>
+          <p class="byor-status" data-byor-status role="status" aria-live="polite"></p>
         </div>
-      </div>
+
+        <div class="byor-quote-panel" data-byor-quote-panel hidden>
+          <p class="byor-quote-panel__title">{{ section.settings.quote_heading }}</p>
+          {%- if section.settings.quote_note != blank -%}
+            <p class="byor-note">{{ section.settings.quote_note }}</p>
+          {%- endif -%}
+
+          {%- form 'contact', class: 'byor-quote-form', id: 'byor-quote-form' -%}
+            {%- if form.posted_successfully? -%}
+              <p class="form__message">{{ section.settings.quote_success_message }}</p>
+            {%- elsif form.errors -%}
+              <p class="form__message">{{ form.errors | default_errors }}</p>
+            {%- endif -%}
+
+            <input type="hidden" name="contact[subject]" value="Build Your Own Rig — layout review request">
+            <div class="field">
+              <label class="visually-hidden" for="byor-quote-name">Name</label>
+              <input
+                type="text"
+                id="byor-quote-name"
+                name="contact[name]"
+                placeholder="Name"
+                autocomplete="name"
+                required
+              >
+            </div>
+            <div class="field">
+              <label class="visually-hidden" for="byor-quote-email">Email</label>
+              <input
+                type="email"
+                id="byor-quote-email"
+                name="contact[email]"
+                placeholder="Email"
+                autocomplete="email"
+                required
+              >
+            </div>
+            <div class="field">
+              <label class="visually-hidden" for="byor-quote-phone">Phone</label>
+              <input
+                type="tel"
+                id="byor-quote-phone"
+                name="contact[phone]"
+                placeholder="Phone (optional)"
+                autocomplete="tel"
+              >
+            </div>
+            <div class="field">
+              <label class="visually-hidden" for="byor-quote-notes">Anything else we should know</label>
+              <textarea
+                id="byor-quote-notes"
+                name="contact[notes]"
+                rows="3"
+                placeholder="Anything else we should know — room size, ceiling height, timing"
+              ></textarea>
+            </div>
+            <textarea
+              class="visually-hidden"
+              aria-hidden="true"
+              tabindex="-1"
+              name="contact[body]"
+              data-byor-quote-details
+            ></textarea>
+
+            <button type="submit" class="button">{{ section.settings.quote_button_label }}</button>
+          {%- endform -%}
+        </div>
+      </aside>
     </div>
-  {% endif %}
 
-  {%- comment -%} 3. Roomplanner — secondary planning tool, not a blocker {%- endcomment -%}
-  {% if section.settings.roomplanner_url != blank %}
-    <div class="byor__roomplanner">
-      <div>
-        <p class="byor__roomplanner-heading">{{ section.settings.roomplanner_heading | default: 'Plan this rig in your room' }}</p>
-        <p>{{ section.settings.roomplanner_text | default: 'See your rig to scale before you buy, then send us your Roomplanner layout for quote review.' }}</p>
-      </div>
-      <a class="byor__btn byor__btn--ghost" href="{{ section.settings.roomplanner_url }}" target="_blank" rel="noopener">
-        {{ section.settings.roomplanner_cta | default: 'Open Roomplanner' }}
-      </a>
-      <a class="byor__btn byor__btn--ghost" href="{{ section.settings.quote_url }}">
-        {{ section.settings.roomplanner_send_cta | default: 'Send us your Roomplanner layout for quote review' }}
+    <noscript>
+      <p class="byor-noscript">
+        The rig builder needs JavaScript. You can still
+        <a href="{{ section.settings.contact_link | default: '/pages/contact' }}">contact our team</a>
+        and we will spec the rig with you.
+      </p>
+    </noscript>
+  </byor-configurator>
+
+  {%- if section.settings.roomplanner_url != blank -%}
+    <div class="byor-planner">
+      <p class="byor-planner__title">{{ section.settings.roomplanner_heading }}</p>
+      <p>{{ section.settings.roomplanner_note }}</p>
+      <a
+        class="button button--secondary"
+        href="{{ section.settings.roomplanner_url }}"
+        target="_blank"
+        rel="noopener"
+      >
+        {{ section.settings.roomplanner_button_label }}
       </a>
     </div>
-  {% endif %}
-
-  {% if section.settings.disclaimer != blank %}
-    <p class="byor__disclaimer">{{ section.settings.disclaimer }}</p>
-  {% endif %}
-</section>
-
-<script src="{{ 'byor-configurator.js' | asset_url }}" defer></script>
+  {%- endif -%}
+</div>
 
 {% schema %}
 {
-  "name": "BYOR Configurator",
+  "name": "Build Your Own Rig",
   "tag": "section",
-  "class": "section byor-section",
+  "class": "byor-section",
   "settings": [
-    { "type": "header", "content": "Intro" },
-    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "French Fitness Rack & Rig" },
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Build Your Own Rig" },
-    { "type": "richtext", "id": "intro", "label": "Intro text", "default": "<p>Start from a standard layout or configure your own rig step by step. Minimum build is a 1-Section Starter Bay. Anything larger or non-standard is confirmed by our team with a quick quote review.</p>" },
-
-    { "type": "header", "content": "Standard layout cards" },
-    { "type": "text", "id": "cards_title", "label": "Cards heading", "default": "Start with a standard layout" },
-    { "type": "textarea", "id": "cards_note", "label": "Cards note", "default": "Guided starting points. You can fine-tune any of these in the configurator below." },
-
-    { "type": "header", "content": "Configurator" },
-    { "type": "text", "id": "config_title", "label": "Configurator heading", "default": "Or configure your rig step by step" },
-    { "type": "textarea", "id": "config_note", "label": "Configurator note", "default": "Every choice updates your build. Options marked “quote” are confirmed by our team before purchase." },
-    { "type": "text", "id": "summary_title", "label": "Summary heading", "default": "Your configuration" },
-
-    { "type": "header", "content": "Purchase / quote actions" },
-    { "type": "text", "id": "atc_label", "label": "Add to cart label", "default": "Add rig to cart" },
-    { "type": "text", "id": "quote_label", "label": "Request a quote label", "default": "Request a quote" },
-    { "type": "url", "id": "quote_url", "label": "Quote / contact URL" },
-    { "type": "textarea", "id": "quote_message", "label": "Quote-gate message", "default": "This configuration includes options our team needs to review for safety and fit. Add it to a quote and we’ll confirm compatibility, dimensions, and availability." },
-
-    { "type": "header", "content": "Roomplanner (secondary)" },
-    { "type": "url", "id": "roomplanner_url", "label": "Roomplanner URL" },
-    { "type": "text", "id": "roomplanner_heading", "label": "Roomplanner heading", "default": "Plan this rig in your room" },
-    { "type": "textarea", "id": "roomplanner_text", "label": "Roomplanner text", "default": "See your rig to scale before you buy, then send us your Roomplanner layout for quote review." },
-    { "type": "text", "id": "roomplanner_cta", "label": "Roomplanner button", "default": "Open Roomplanner" },
-    { "type": "text", "id": "roomplanner_send_cta", "label": "Roomplanner send button", "default": "Send us your Roomplanner layout for quote review" },
-
-    { "type": "header", "content": "Legal / compliance" },
-    { "type": "textarea", "id": "disclaimer", "label": "Disclaimer", "default": "Configurations are subject to team review. Availability, dimensions, warranty, delivery, and site suitability are confirmed by French Fitness before your order is finalized." },
-
-    { "type": "header", "content": "Colors" },
-    { "type": "color", "id": "accent_color", "label": "Accent", "default": "#D83D0E" },
-    { "type": "color", "id": "accent_hover_color", "label": "Accent hover", "default": "#e55a2e" },
-    { "type": "color", "id": "heading_color", "label": "Heading", "default": "#23232B" },
-    { "type": "color", "id": "text_color", "label": "Body text", "default": "#393940" }
-  ],
-  "blocks": [
     {
-      "type": "layout_card",
-      "name": "Layout card",
-      "settings": [
-        { "type": "text", "id": "name", "label": "Name", "default": "1-Section Starter Bay" },
-        { "type": "textarea", "id": "description", "label": "Description" },
-        { "type": "image_picker", "id": "image", "label": "Image" },
-        { "type": "text", "id": "starting_price", "label": "Starting price (leave blank until validated)", "info": "Do not invent pricing. Populate only from validated Product data." },
-        { "type": "text", "id": "section_count", "label": "Section count (for configurator prefill)", "default": "1" },
-        { "type": "checkbox", "id": "quote_only", "label": "Quote-only layout", "default": false },
-        { "type": "text", "id": "cta_label", "label": "Button label", "default": "Configure this layout" },
-        { "type": "url", "id": "link", "label": "Link (optional — leave blank to prefill configurator)" }
-      ]
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Build your own rig"
     },
     {
-      "type": "config_step",
-      "name": "Configurator step",
-      "settings": [
-        { "type": "text", "id": "step_key", "label": "Step key", "info": "Machine key, e.g. mounting, upright_height, rig_depth" },
-        { "type": "text", "id": "title", "label": "Step title", "default": "Choose an option" },
-        { "type": "textarea", "id": "help", "label": "Help text" },
-        { "type": "textarea", "id": "options", "label": "Options", "info": "One per line: Label | value | quote  (the optional 'quote' flag quote-gates that choice)", "default": "Option A | a\nOption B | b" }
-      ]
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Intro text",
+      "default": "Start from a standard layout, then adjust every piece. We show you the exact parts list as you build."
+    },
+    {
+      "type": "header",
+      "content": "Standard layouts"
+    },
+    {
+      "type": "text",
+      "id": "layouts_heading",
+      "label": "Layouts heading",
+      "default": "Start from a standard layout"
+    },
+    {
+      "type": "textarea",
+      "id": "layouts_note",
+      "label": "Layouts note",
+      "default": "Pick the closest match and change anything you like below. One section is the smallest rig we build."
+    },
+    {
+      "type": "header",
+      "content": "Cart"
+    },
+    {
+      "type": "text",
+      "id": "add_button_label",
+      "label": "Add to cart button",
+      "default": "Add this rig to cart"
+    },
+    {
+      "type": "header",
+      "content": "Quote review"
+    },
+    {
+      "type": "text",
+      "id": "quote_heading",
+      "label": "Quote heading",
+      "default": "Send this build for layout review"
+    },
+    {
+      "type": "textarea",
+      "id": "quote_note",
+      "label": "Quote note",
+      "default": "We will confirm the parts list, fit and anchoring before anything ships."
+    },
+    {
+      "type": "text",
+      "id": "quote_button_label",
+      "label": "Quote button",
+      "default": "Send my build"
+    },
+    {
+      "type": "textarea",
+      "id": "quote_success_message",
+      "label": "Quote success message",
+      "default": "Thanks — we have your build and will come back to you."
+    },
+    {
+      "type": "url",
+      "id": "contact_link",
+      "label": "Contact page link"
+    },
+    {
+      "type": "header",
+      "content": "Roomplanner"
+    },
+    {
+      "type": "text",
+      "id": "roomplanner_heading",
+      "label": "Roomplanner heading",
+      "default": "Plan this rig in your room"
+    },
+    {
+      "type": "textarea",
+      "id": "roomplanner_note",
+      "label": "Roomplanner note",
+      "default": "Lay your rig out to scale, then send us the plan for review."
+    },
+    {
+      "type": "url",
+      "id": "roomplanner_url",
+      "label": "Roomplanner link"
+    },
+    {
+      "type": "text",
+      "id": "roomplanner_button_label",
+      "label": "Roomplanner button",
+      "default": "Open Roomplanner"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 52
     }
   ],
   "presets": [
     {
-      "name": "BYOR Configurator",
-      "blocks": [
-        { "type": "layout_card", "settings": { "name": "Compact Wall / Studio Rig", "section_count": "1", "description": "Wall-mounted, space-saving rig for studios and home gyms." } },
-        { "type": "layout_card", "settings": { "name": "1-Section Starter Bay", "section_count": "1", "description": "The minimum standard build — one full section to start your rig." } },
-        { "type": "layout_card", "settings": { "name": "1.5-Section Expansion Layout", "section_count": "1.5", "description": "One starter bay plus an expansion/connecting bay." } },
-        { "type": "layout_card", "settings": { "name": "2-Section Training Rig", "section_count": "2", "description": "Two full sections for growing training spaces." } },
-        { "type": "layout_card", "settings": { "name": "2.5-Section Extended Rig", "section_count": "2.5", "description": "Two sections plus an extension/expansion bay." } },
-        { "type": "layout_card", "settings": { "name": "3-Section Functional Rig", "section_count": "3", "description": "Three sections for functional training setups." } },
-        { "type": "layout_card", "settings": { "name": "4-Section Commercial Rig", "section_count": "4", "quote_only": true, "description": "Commercial-scale rig. Confirmed by our team before purchase." } },
-        { "type": "layout_card", "settings": { "name": "Large Multi-Station Rig", "section_count": "5", "quote_only": true, "description": "Large multi-station centerpiece. Quote review required." } },
-        { "type": "layout_card", "settings": { "name": "Ninja / Performance Rig", "section_count": "3", "quote_only": true, "description": "Performance / ninja configuration. Quote review required." } },
-        { "type": "layout_card", "settings": { "name": "Custom Configuration", "section_count": "custom", "quote_only": true, "description": "Fully custom build designed with our team." } },
-
-        { "type": "config_step", "settings": { "step_key": "mounting", "title": "Wall mounted or floor mounted", "help": "How your rig attaches to the space.", "options": "Floor mounted | floor\nWall mounted | wall" } },
-        { "type": "config_step", "settings": { "step_key": "upright_height", "title": "Upright height", "help": "Standard heights are order-ready. Mixed heights need a quick team review.", "options": "Standard height | standard\nMixed / varied heights | mixed | quote" } },
-        { "type": "config_step", "settings": { "step_key": "rig_depth", "title": "Rig depth", "help": "Depth of each section.", "options": "Standard depth | standard\nExtended depth | extended" } },
-        { "type": "config_step", "settings": { "step_key": "section_spacing", "title": "Spacing between sections", "help": "Crossmember spacing used between sections.", "options": "Standard spacing | standard\n20\" crossmember | cm20\n96\" crossmember | cm96" } },
-        { "type": "config_step", "settings": { "step_key": "top_style", "title": "Top style", "help": "Top of the rig.", "options": "Basic | basic\nCrossmember | crossmember\nMonkey bar | monkey_bar" } },
-        { "type": "config_step", "settings": { "step_key": "width_bar", "title": "Width bar / between-section bar", "help": "Bar style over the squat rack and between sections.", "options": "Standard width bar | standard\nAngled junction bar | angled | quote" } },
-        { "type": "config_step", "settings": { "step_key": "sections", "title": "Number of sections", "help": "Minimum is 1 section. 4+ sections are confirmed by our team.", "options": "1 Section (Starter Bay) | 1\n1.5 Sections | 1.5\n2 Sections | 2\n2.5 Sections | 2.5\n3 Sections | 3\n4 Sections | 4 | quote\nLarge multi-station | 5 | quote" } },
-        { "type": "config_step", "settings": { "step_key": "integrations", "title": "Cable / lat / low-row integration", "help": "Add functional training stations.", "options": "None | none\nCable / lat / low-row | cable | quote" } },
-        { "type": "config_step", "settings": { "step_key": "addons", "title": "Add-on bundles", "help": "Compatible storage and attachment bundles.", "options": "No add-ons | none\nStorage bundle | storage\nAttachment bundle | attachments" } }
-      ]
+      "name": "Build Your Own Rig"
     }
   ]
 }

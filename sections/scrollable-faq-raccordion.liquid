@@ -1,5 +1,7 @@
 {{ 'section-scrollable-faq.css' | asset_url | stylesheet_tag }}
 
+{% assign section_anchor_id = section.settings.section_id | handle %}
+
 <style>
     #shopify-section-{{ section.id }} {
         background-color: {{ section.settings.bg_color }};
@@ -131,7 +133,7 @@
 </style>
 
 
-<scrollable-faq class="scrollable-faq section-padding scroll-trigger animate--slide-in">
+<scrollable-faq class="scrollable-faq section-padding scroll-trigger animate--slide-in"{% if section_anchor_id != blank %} id="{{ section_anchor_id }}"{% endif %}>
     
         <div class="scrollable-faq__wrapper {% if section.settings.mobile_layout == 'dropdown' %}mobile_dropdown{% endif %}">
             <div class="scrollable-faq__left-side">
@@ -363,6 +365,16 @@
   "name": "Scrollable FAQ Accordion",
   "class": "scrollable-faqDiv",
   "settings": [
+    {
+      "type": "header",
+      "content": "Section anchor"
+    },
+    {
+      "type": "text",
+      "id": "section_id",
+      "label": "Anchor ID",
+      "info": "Adds an id to this section so it can be linked directly. Example: enter seven-stage-process, then link to #seven-stage-process. Lowercase letters, numbers, and hyphens only \u2014 other characters are auto-converted. Leave blank for none."
+    },
     {
       "type": "color",
       "id": "bg_color",
