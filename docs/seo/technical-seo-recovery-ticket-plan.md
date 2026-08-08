@@ -19,9 +19,20 @@ The independent findings and the controlled specification agree on substance —
 **Four things changed materially in this revision:**
 
 1. **Three P0 tickets have an owner Tim has since removed.** The backlog assigns **Jake** to `T-001`, `T-002`, `T-004`, `T-005`, `T-011`, `T-014`, `T-015` — seven of sixteen. Tim's 2026-08-06 email states Jake is *not* an owner of this workstream and his lane is link building only. I have reassigned those to **Zafran** as technical SEO co-lead, per the later instruction. **The controlled backlog and brief still read the other way and need a revision note from Tim.**
-2. **The existing CI actively blocks two of the fixes.** `scripts/cwv_regression_test.py` asserts the current third-party arrangement as a requirement. Details in `T-019` — this reorders the CWV batch.
+2. **The existing CI constrains how two of the CWV fixes may be implemented.** `scripts/cwv_regression_test.py` pins specific strings and forbids specific refactor patterns. It does not block the fixes outright — details and the exact limits are in `T-019`.
 3. **The Lighthouse CI scope cannot be satisfied as written** while the user-agent gate in `T-017` stands. The scope requires third-party main-thread time reported separately for *experimentation*; experimentation is Convert, and Convert is one of the two scripts hidden from Lighthouse.
 4. **I inspected the four files the brief named that I had not opened** — `snippets/script-tags.liquid`, `sections/main-collection-intro.liquid`, `sections/main-article.liquid`, and the CWV workflow. All four findings in the brief are confirmed, with additions noted per ticket.
+
+### Verification status of the findings in this plan
+
+So that nobody has to guess how much weight a given line carries:
+
+- **Confirmed by reading the current `main` branch** — every file and line citation in this document. These are statements about what the code does, and they can be checked directly.
+- **Confirmed absent** — no `BlogPosting` or `Article` schema anywhere in the theme; no `Boost` or `bc-sf-filter` reference anywhere in the theme; `perview`, `_pos`, `_sid`, `_ss` and `srsltid` each appear zero times in `templates/robots.txt.liquid`.
+- **Not yet verified — requires live checking, and flagged as such at each point:** whether the `?view=` manuals endpoints are currently erroring (`T-020`); the distinct live `condition_state` values and whether any combine conditions (`T-006b`); whether collection descriptions contain markup at the word-43 boundary (`T-010`); the current per-article byline state (`T-012`); the live values of the `product_canonical_url` override metafield (`T-008`).
+- **Inference, stated as such:** that "experimentation" in the Lighthouse budget table means Convert.
+
+I have not treated any code-path finding as a confirmed live defect without saying which of these categories it falls in.
 
 ### Adopted from the controlled documents
 
@@ -76,7 +87,7 @@ Per Tim's 2026-08-06 email, which supersedes the owner table in the brief and ba
 Tim's decision was *fix truthfulness and crawl architecture before adding more template complexity.* The controlled release sequence is preserved. Two insertions:
 
 ```
-Batch A  T-017, T-019, T-001         Measurement integrity + CI unblock + URL inventory
+Batch A  T-017, T-019, T-001         Measurement integrity + CI constraint map + URL inventory
 Batch B  T-002, T-014, T-004, T-003, T-005    Crawl / indexability / legacy / robots+WAF
 Batch C  T-006, T-008, T-007, T-016  Schema truthfulness + server-rendered controls + feeds
 Batch D  T-009, T-018, T-013         Mobile CWV + Lighthouse CI
@@ -84,7 +95,7 @@ Batch E  T-010, T-011, T-012, T-015  Copy, internal links, article credibility, 
          T-020                        Triaged separately — customer-facing, not SEO
 ```
 
-`T-017` and `T-019` sit ahead of the CWV batch because without them the CWV batch cannot be measured or merged. Everything else keeps its controlled order and target date.
+`T-017` sits ahead of the CWV batch because without it that batch cannot be measured honestly. `T-019` sits there because it determines which implementation shapes are available, which is cheaper to know before writing the fix than after. Everything else keeps its controlled order and target date.
 
 ---
 
@@ -110,7 +121,10 @@ The backlog supplies a live example: `https://fitnesssuperstore.com/remanufactur
 
 Rank by links, traffic and revenue history. Top-impact resolved; intentional `404`/`410` preserved as `410`. No redirect chains introduced.
 
-- **Executor:** Izza · **Independent verifier:** Zafran · **Evidence:** GSC Coverage · ranked list with the value signal per URL · post-change `curl -I` samples · **Dependency:** T-001, T-002
+- **Executor:** Izza · **Independent verifier:** Zafran
+- **Evidence:** GSC Coverage · ranked list with the value signal per URL · post-change `curl -I` samples showing single-hop resolution
+- **Rollback:** redirects removable individually; the ranked list and prior state retained in the PR so any single decision can be reversed without touching the others
+- **Dependency:** T-001, T-002 · **Dependency owner:** Zafran (URL intent), Kevin if any resolved URL is a feed landing page
 
 ### T-004 — Classify 21,046 robots-blocked URLs by intent · Aug 19
 
@@ -155,7 +169,7 @@ Files: `snippets/schema-product.liquid`, `snippets/schema-collection.liquid`, `s
 | 54 | `countryOfAssembly` | `'US'` — **prohibited "United States default"** |
 | 55 | `countryOfLastProcessing` | `'US'` — same |
 | 83 | `weight` | `'Not specified'` |
-| 84, 232 | `mpn`, `sku` | fall back to `product.handle`; `sku` is feed-visible |
+| 84, 232 | `mpn`, `sku` | fall back to `product.handle`; `sku` also travels in the product feed, so Kevin should assess this one |
 | 119, 192 | seller `description` | `'Premium fitness equipment at competitive prices.'` |
 | 135, 208 | `telephone` | hardcoded `'925-215-2927'` |
 | 142-146, 215-219 | seller address | hardcoded street/city/region/postal/country |
@@ -171,7 +185,11 @@ Same pattern at `schema-collection.liquid:98` (`uploadDate`) and `:155` (`teleph
 ```
 
 - Any unanticipated `condition_state` concatenates raw text into the URL. `Open Box` yields `https://schema.org/Open BoxCondition` — contains a space, matches no type. The spec's `prohibited_fallbacks` names "arbitrary condition URL" exactly.
-- **More serious:** condition is emitted **per-variant from a product-level metafield.** In the multi-variant branch every `Offer` inherits it, so on a product listed as new/remanufactured the `contains 'Remanufactured'` test matches and **every variant is marked `RefurbishedCondition`, including the new ones.** Feed-visible, and condition mismatches cause Merchant Center disapprovals. Map only to `NewCondition` / `RefurbishedCondition` / `UsedCondition` per the spec, resolved at variant level where variants differ.
+- **More consequential:** condition is emitted **per-variant from a product-level metafield.** In the multi-variant branch every `Offer` inherits the product's value, so **any product whose `condition_state` contains the string `Remanufactured` marks every variant `RefurbishedCondition`, new variants included.**
+
+  **Two things to separate here.** The code behaviour is certain — it follows directly from `schema-product.liquid:185`. Whether products are actually configured this way live is **not yet verified**: it requires a `condition_state` value that combines conditions (for example a combined new/remanufactured value) on a product that also has genuinely new variants. Enumerating the distinct live `condition_state` values is the first task in this ticket, and if no product is configured that way then this reduces to the invalid-URL issue above. I would rather state that plainly than present a code path as a confirmed live defect.
+
+  On the feed side, `itemCondition` is markup rather than a feed field, so the risk is a **mismatch between the PDP markup and the condition attribute the feed sends** — which is Kevin's call to assess, not mine to assert. Map only to `NewCondition` / `RefurbishedCondition` / `UsedCondition` per the spec, resolved at variant level where variants differ.
 
 **6c — Review data has two independent sources.** Schema reads `product.metafields.reviews.rating` (`schema-product.liquid:19-29`, `schema-collection.liquid:58-69`). Visible PDP stars come from Judge.me — `snippets/product-review-stars.liquid` renders `product.metafields.judgeme.badge`, surfaced via `snippets/product-availability-badge.liquid`. Where the two diverge we publish an `aggregateRating` the customer cannot see, which fails the spec's first global rule. Also `ratingCount` and `reviewCount` are both set to the same value; those are different quantities. **Needs a decision on the system of record.**
 
@@ -208,7 +226,9 @@ Highest effort-adjusted score in the backlog (10). Configure a permanent platfor
 Three defects in `snippets/head-meta.liquid`:
 
 1. **Client-side `noindex` injection.** The `{% if template contains 'product' %}` block builds `<meta name="robots" content="noindex,follow">` in JavaScript and appends it to `document.head` when the URL contains `variant=`. Not in initial HTML; depends on the crawler rendering. The patch examples are explicit: **do not apply a blanket `variant=` noindex until combined listings, canonical variants, Merchant Center landing URLs and internal links are sampled.** The server-rendered canonical already in this file is the correct control.
-2. **`noindex` combined with a cross-URL `canonical`.** Paginated collection URLs get `noindex,follow` from the `page=` check, while the canonical for the same URL resolves to page 1 via `{{ collection.url | prepend: base_url }}`. Contradictory signals, and it removes page 2+ as a discovery route to deeper products — which bears directly on `T-005` and `T-011`. **Needs one documented position and Tim's GO.**
+2. **`noindex` combined with a cross-URL `canonical`.** Paginated collection URLs get `noindex,follow` from the `page=` check, while the canonical for the same URL resolves to page 1 via `{{ collection.url | prepend: base_url }}`. These are contradictory instructions about the same URL — one says do not index this, the other says the real version is elsewhere — and Google's guidance is not to combine them.
+
+To be precise about the discovery consequence, since it is easy to overstate: `noindex,follow` **does** preserve link following, so page 2+ links are not cut off today. The risk is second-order — Google has indicated that long-term `noindex` pages tend to get crawled less over time, and a page carrying both signals is a candidate for reduced crawling, which would weaken discovery of products only reachable deep in pagination. That is a reason to resolve the contradiction, not a claim that discovery is currently broken. Worth measuring against `T-005` and `T-011` rather than assuming either way. **Needs one documented position and Tim's GO.**
 3. **`history.replaceState` stripping `option_values`** — browser-only; a crawler never sees it.
 
 **Also in this file:** the canonical override reads `product.metafields.custom.product_canonical_url` with no validation, so a mis-set free-text metafield can deindex a product. Audit current values as part of `T-001`.
@@ -235,7 +255,11 @@ Joint highest effort-adjusted score (12.5), **and due at this checkpoint.** Exec
 
 Checklist items, unchanged: save the raw public `robots.txt`; confirm Shopify-generated disallows survive; confirm the approved `OAI-SearchBot`, `ChatGPT-User`, `Claude-SearchBot`, `Claude-User` and `PerplexityBot` groups are visible publicly; confirm Googlebot and Bingbot can fetch homepage, Tier-1 collection, PDP, article and authority page; confirm `Sitemap` resolves `200`; test approved bots by **verified IP/DNS methodology, not user-agent spoofing**; review 30 days of WAF/CDN logs for challenge, 403, 429, bot-fight, rate-limit and JS-challenge events; confirm search/retrieval crawlers are not grouped with blocked training crawlers.
 
-**Scope addition — one policy item needing Tim's decision.** `templates/robots.txt.liquid` sets `User-agent: Google-Extended` → `Disallow: /`. That blocks Google from using our content for AI Overviews and Gemini sourcing, while we deliberately allow every other AI-search crawler. It may be intentional as a training-policy choice, but `Google-Extended` also governs retrieval-grounded surfaces, so it works against the GEO objectives in the same backlog — the GEO Scorecard targets AI referral growth and 5 approved-AI-crawler fetches. The checklist's own policy-split rule says not to treat `GPTBot`/`ClaudeBot`/`Google-Extended` policy as equivalent to search visibility. **This is Tim's decision, and I am flagging it rather than proposing a change.**
+**Scope addition — one policy item worth a conscious decision.** `templates/robots.txt.liquid` sets `User-agent: Google-Extended` → `Disallow: /`, while we deliberately allow every other AI-search crawler.
+
+**Correcting my own earlier framing on this:** `Google-Extended` governs whether content may be used by Gemini and Vertex AI generative features. Per Google's own documentation it does **not** affect inclusion or ranking in Google Search, and AI Overviews are served as part of Search via Googlebot rather than gated by `Google-Extended`. So the directive does **not** remove us from AI Overviews, and I should not have implied otherwise. The checklist's policy-split rule says exactly this — do not treat `GPTBot`/`ClaudeBot`/`Google-Extended` policy as equivalent to `OAI-SearchBot`/`Claude-SearchBot`/Googlebot/Bingbot search visibility — so the controlled document already had it right.
+
+What remains is narrower and still worth deciding: the setting blocks Gemini grounding specifically, which is an asymmetry against the other AI-search crawlers we allow, and the GEO Scorecard tracks AI referral growth without a Gemini line. If it is a deliberate training-policy choice, no change is needed. **Tim's decision; flagged, not proposed.**
 
 Minor: `AhrefsSiteAudit` carries `Crawl-delay: 10`, which throttles our own audits enough to slow the evidence gathering this sprint depends on.
 
@@ -248,13 +272,16 @@ Minor: `AhrefsSiteAudit` carries `Crawl-delay: 10`, which throttles our own audi
 
 Baseline documented; **no auto-submit until approved.** Blocked on Bing Webmaster Tools access.
 
-- **Executor:** Izza · **Independent verifier:** Zafran *(reassigned from Jake)* · **Dependency:** T-014, plus access
+- **Executor:** Izza · **Independent verifier:** Zafran *(reassigned from Jake)*
+- **Evidence:** Bing Webmaster Tools baseline captured before any change · documented IndexNow proposal with no submissions made · confirmation that auto-submit remains off
+- **Rollback:** no production change in this ticket; if IndexNow is later enabled it is disabled by revoking the key
+- **Dependency:** T-014 · **Dependency owner:** Tim (approval before any submission), plus Bing Webmaster Tools access
 
 ---
 
 ## 8. Mobile Core Web Vitals
 
-**Objective:** reduce the 309 INP-affected and 229 LCP-affected mobile URLs by ≥50%, then continue until shared-template causes are cleared. All before/after evidence in this batch is invalid until `T-017` is resolved and unmergeable until `T-019` is.
+**Objective:** reduce the 309 INP-affected and 229 LCP-affected mobile URLs by ≥50%, then continue until shared-template causes are cleared. Before/after evidence in this batch is not trustworthy until `T-017` is resolved; `T-019` determines which implementation routes are available but does not gate merge on its own.
 
 ### T-009 — Bound Judge.me polling and profile third parties · Aug 26
 
@@ -276,11 +303,11 @@ No `clearInterval`. Fires every 1.5s for the page's entire lifetime on every col
 
 **Also global on every page:** `jquery.min.js` and `slick.min.js` (`script-tags.liquid:6, 17`) — both count against the JS transfer and request-count budgets.
 
-**9c cannot ship without `T-019`** — the existing CI requires the heatmap snippet to stay byte-identical.
+**9c's implementation route is constrained by `T-019`** — wrapping the heatmap in a Liquid template conditional passes the existing CI; a deferred-init refactor does not, and would need the test updated in the same PR. Decide the route before writing it.
 
 - **Executor:** Izza · **Independent verifier:** Zafran · **QA:** Iqra (mobile, logged out — badges must still render)
 - **Evidence:** Performance-panel trace showing the recurring task gone · Lighthouse mobile TBT/INP before and after **collected after T-017** · per-template third-party main-thread table for Judge.me, heatmap, search, analytics, reviews, experimentation · badges visually confirmed · field CWV watched 14 days
-- **Rollback:** single-commit revert; theme version pinned · **Dependency:** T-017, T-019
+- **Rollback:** single-commit revert; theme version pinned · **Dependency:** T-017 (for valid measurement), T-019 (for implementation route) · **Dependency owner:** whoever owns the Judge.me app configuration, for 9b
 
 ### T-013 — Add browser-based preview regression tests · Sep 2
 
@@ -330,7 +357,7 @@ Historical baseline from PR #639: **1,058 orphaned pages, 1,094 pages deeper tha
 
 `sections/main-article.liquid:80-85` renders `article.published_at` and `article.author`, the latter gated behind `block.settings.blog_show_author`. Two gaps against the spec:
 
-1. **`article.author` is the Shopify staff account name**, so it can surface a personal byline that has not been approved. The spec requires the default to be the `Fitness Superstore` Organization, with `Tim French` only on explicit asset-level approval. Note the related hardcoding of `founder: "Timothy French"` in product schema, addressed in `T-006a`.
+1. **`article.author` renders the article's author field from Shopify admin**, which normally defaults to the staff account that created the post and is editable there. So it can surface a personal byline that has not been approved for the asset — though note the whole block is gated behind `block.settings.blog_show_author`, so depending on the setting no byline may render at all today. The current live state per article needs checking rather than assuming. The spec requires the default to be the `Fitness Superstore` Organization, with `Tim French` only on explicit asset-level approval. Note the related hardcoding of `founder: "Timothy French"` in product schema, addressed in `T-006a`.
 2. **No visible `dateModified`** — only `published_at`. The spec requires visible publish *and* modified dates, plus a reviewer/methodology block.
 
 **Scope addition: there is no article schema at all.** `snippets/schema-ld-json.liquid` renders only `schema-video` for the `article` case — no `BlogPosting` or `Article` node exists. So this is not "align schema to visible content," it is **build the schema and the visible block together**, with `headline`, `description`, `author`, `datePublished`, `dateModified`, `mainEntityOfPage` and `image` all matching what renders. The acceptance criterion that no article schema is duplicated by both theme and pasted JSON-LD still needs checking against live articles, since pasted blocks would not appear in the repository.
@@ -354,7 +381,7 @@ if (ua.includes("Chrome-Lighthouse") || ua.includes("Page Speed Insights")) {
 }
 ```
 
-This guards the block that injects the Gorgias widget (`:151-157`) and the Convert bundle loader (`:159-165`). When the visitor identifies as Lighthouse or PageSpeed Insights, **both are skipped.** Every other visitor gets them.
+This guards the block that injects the Gorgias widget (`:151-157`) and the Convert bundle loader (`:159-165`). When the visitor identifies as Lighthouse or PageSpeed Insights, **both are skipped entirely.** Every other visitor receives them — on first interaction, or roughly 1.5s after `load`, whichever comes first.
 
 Why it matters more now than when I first raised it: the acceptance criteria set a **numeric ≥50% reduction target on 309 INP-affected and 229 LCP-affected URLs**, and the Lighthouse CI scope sets **budgets enforced per PR** — including a line requiring third-party main-thread time for *experimentation*, which is Convert. All of that would be measured on a page that hides its two heaviest third parties from the measurement tool. Field data in Search Console comes from real Chrome users who do receive both scripts, so lab and field will diverge, and field is what the Core Web Vitals assessment uses. Serving materially different resources to a measurement user-agent than to users is also a pattern search engines treat as cloaking; I am not asserting a penalty exists, only that the risk should be a deliberate decision rather than an inherited one.
 
@@ -383,23 +410,26 @@ This is the same live-installation question **Tim has already put to Convert** i
 - **Evidence:** Convert's written confirmation · network evidence of both loaders firing today · request count, transfer size and main-thread delta · experiment tracking confirmed intact
 - **Rollback:** revert restoring both loaders verbatim · **Status: BLOCKED — do not start**
 
-### T-019 — The existing CI asserts the current third-party arrangement *(P0 — proposed; sequencing blocker)*
+### T-019 — Map the existing CI assertions against the planned CWV changes *(P1 — proposed; sequencing input, not a blocker)*
 
-`.github/workflows/cwv-regression.yml` runs `scripts/cwv_regression_test.py` **on every push to every branch and on every PR.** That script is static string assertions over theme files, and it encodes today's arrangement as a requirement. Three collisions with this sprint:
+`.github/workflows/cwv-regression.yml` runs `scripts/cwv_regression_test.py` **on every push to every branch and on every PR.** The script is static substring assertions over theme files, written to lock in earlier performance wins. It constrains *how* some of this sprint's CWV work can be implemented. Stated precisely, because the distinction matters:
 
-1. **`forbid(theme, "requestIdleCallback(injectNonCriticalVendors")`** — the CI **prohibits** scheduling vendor injection via `requestIdleCallback`, which is exactly the improvement the CWV work would consider for `T-009`.
-2. **`require(script_tags, 'preprocessor.min.js?sid=')`** and **`require(script_tags, "['error', 'unhandledrejection'].forEach(function (ty) {")`** — the CI **requires the global Heatmap.com snippet to remain byte-identical**, including the global error listeners. Scoping or deferring it, which the brief asks for, fails CI.
-3. **`forbid(script_tags, "function initHeatmap()")`** — forbids the deferred-init pattern that scoping would introduce.
+**What it does not block.** Removing the `T-017` user-agent gate on its own leaves every required string in that block intact — `var injected = false;`, the `injectNonCriticalVendors` listener registration, the `load` handler, `waitForGorgiasLoaded`, `clearTimeout` — so **a `T-017` edit alone passes CI unchanged.** The `T-009a` Judge.me change also passes: the test asserts nothing about the `setInterval`.
 
-It also `require`s several strings inside the block `T-017` touches, so a `T-017` edit must preserve them or update the test.
+**What it does constrain.**
 
-None of this is wrong of the test — it was written to lock in prior wins. But it means **`T-009c` and any `T-017` edit cannot merge until the test is updated in the same PR**, with the change to the test reviewed as deliberately as the theme change. Otherwise the honest outcomes are a red build or a quietly weakened test.
+1. **`forbid(theme, "requestIdleCallback(injectNonCriticalVendors")`** — prohibits that exact call form, so scheduling vendor injection via `requestIdleCallback` under the current function name would fail. A different structure or name would pass, which is worth knowing before choosing an approach for `T-032`-style scheduling work.
+2. **`require(script_tags, 'preprocessor.min.js?sid=')`** and **`require(script_tags, "['error', 'unhandledrejection'].forEach(function (ty) {")`** — both strings must remain present in `script-tags.liquid`. **Scoping the heatmap by wrapping it in a Liquid template conditional keeps both strings and therefore passes.** Removing or rewriting the snippet fails.
+3. **`forbid(script_tags, "function initHeatmap()")`** — a deferred-init refactor using that function name fails, so if `T-009c` goes the deferred route the test needs updating in the same PR.
 
-Worth noting the test asserts nothing about the Judge.me `setInterval` and nothing about the user-agent gate — the two largest CWV findings are invisible to it.
+So the accurate position is: **`T-009c` has one implementation path that passes CI today (template scoping) and one that does not (deferred init).** Choosing knowingly is the point of this ticket, rather than discovering it from a red build.
 
-- **Executor:** Izza · **Independent verifier:** Zafran · **Review:** Tim (a CI assertion is a controlled expectation; changing one should be visible)
-- **Evidence:** current test mapped assertion-by-assertion against the planned changes · updated test with rationale per changed assertion · green run on the preview branch
-- **Rollback:** revert the test alongside the theme change · **Blocks:** T-009c, T-013, T-017
+Also worth recording: the test asserts nothing about the Judge.me `setInterval` and nothing about the user-agent gate, so the two largest CWV findings in this plan are invisible to it. That is a gap in coverage, not a fault — it predates both findings.
+
+- **Executor:** Izza · **Independent verifier:** Zafran · **Review:** Tim, if any assertion changes (a CI assertion is a controlled expectation)
+- **Evidence:** the current test mapped assertion-by-assertion against each planned change · for any changed assertion, a stated rationale · green run on the preview branch
+- **Rollback:** revert the test alongside the theme change
+- **Dependency:** none. **Informs:** T-009c, T-013, T-017
 
 ### T-020 — Liquid syntax defect in three manuals templates *(customer-facing — triage separately)*
 
@@ -438,8 +468,8 @@ All three read `... | remove: "All" | | remove: 'Manuals' ...`. These are `{% la
 
 1. **`T-017` — the Lighthouse/PSI user-agent gate.** Remove, or keep and document why? Until this is settled the ≥50% INP/LCP target and the Lighthouse CI budgets cannot be measured honestly. **Highest priority.**
 2. **Jake's assignments.** Seven controlled backlog tickets name Jake as owner or co-owner, which your 2026-08-06 email supersedes. I have reassigned them to Zafran. **The brief and backlog need a revision note** so Control Tower is not tracking against a superseded owner table.
-3. **`T-008` — pagination posture.** `noindex,follow` plus a canonical to page 1 is contradictory and removes page 2+ as a discovery route. Keep or change, with documented intent either way?
-4. **`T-014` — `Google-Extended: Disallow: /`.** Intentional training-policy choice, or an oversight? It also affects AI Overviews sourcing, so it works against the GEO targets in the same backlog.
+3. **`T-008` — pagination posture.** `noindex,follow` plus a canonical to page 1 sends contradictory instructions about the same URL. Link following is preserved today, so this is about resolving a conflicting signal pair rather than an active discovery outage. Keep or change, with documented intent either way?
+4. **`T-014` — `Google-Extended: Disallow: /`.** Intentional training-policy choice, or an oversight? It blocks Gemini grounding specifically; it does **not** affect Google Search or AI Overviews, contrary to what I first suggested.
 5. **`T-006c` — review system of record.** Judge.me, or the Shopify `reviews` metafields? Schema and visible stars read from different sources today.
 6. **`T-019` — CI assertion changes.** Confirm you want changes to `cwv_regression_test.py` surfaced for your review rather than treated as incidental test maintenance.
 7. **`T-020`** — if the manuals views are erroring live, may I pull that out of this sprint and treat it as a customer-facing defect now?
