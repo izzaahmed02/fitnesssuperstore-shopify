@@ -20,7 +20,7 @@ const sandbox = {
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
-['byor-data.js', 'byor-configurator.js'].forEach((file) => {
+['byor-data.js', 'byor-visual.js', 'byor-share.js', 'byor-configurator.js'].forEach((file) => {
   vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), sandbox, { filename: file });
 });
 
@@ -224,6 +224,159 @@ console.log('Roster integrity');
 
   const badHandles = Object.keys(data.roster).filter((sku) => !/^[a-z0-9-]+$/.test(data.roster[sku]));
   check('handles look like storefront handles', badHandles, []);
+}
+
+/* -------------------------------------------------------------------------
+ * Scale-aware 2D visual — geometry only, no DOM.
+ * ---------------------------------------------------------------------- */
+const visual = BYOR.visual;
+
+console.log('Visual geometry');
+{
+  // Wall mounted, one section: two columns bracketing a single 43" bay.
+  const wall = visual.buildGeometry(
+    build({ mounting: 'wall', uprights: { 108: 1 }, depth: 43, topStyle: 'basic' }),
+    rules
+  );
+  check('wall 1 section — column count', wall.columns.length, 2);
+  check('wall 1 section — column positions', wall.columns.map((c) => c.x), [0, 43]);
+  check('wall 1 section — overall width', wall.totalWidth, 43);
+  check('wall 1 section — height', wall.maxHeight, 108);
+  check('wall 1 section — upright count', wall.uprightCount, 2);
+  check('wall 1 section — no spans', wall.spans.length, 0);
+
+  // Floor mounted, one section: same footprint, twice the uprights.
+  const floor1 = visual.buildGeometry(
+    build({ mounting: 'floor', uprights: { 108: 2 }, depth: 43, topStyle: 'basic' }),
+    rules
+  );
+  check('floor 1 section — column count', floor1.columns.length, 2);
+  check('floor 1 section — overall width', floor1.totalWidth, 43);
+  check('floor 1 section — upright count', floor1.uprightCount, 4);
+
+  // Floor mounted, two sections at 43" spacing: 43 + 43 + 43.
+  const floor2 = visual.buildGeometry(
+    build({ mounting: 'floor', uprights: { 108: 4 }, depth: 43, spacing: 43, topStyle: 'basic' }),
+    rules
+  );
+  check('floor 2 sections — column positions', floor2.columns.map((c) => c.x), [0, 43, 86, 129]);
+  check('floor 2 sections — overall width', floor2.totalWidth, 129);
+  check('floor 2 sections — section runs', floor2.sections.map((s) => s.width), [43, 43]);
+  check('floor 2 sections — span runs', floor2.spans.map((s) => s.width), [43]);
+  check('floor 2 sections — not a partial bay', floor2.hasPartialBay, false);
+
+  // 71" spacing widens only the span.
+  const wide = visual.buildGeometry(
+    build({ mounting: 'floor', uprights: { 108: 4 }, depth: 43, spacing: 71, topStyle: 'basic' }),
+    rules
+  );
+  check('71" spacing — overall width', wide.totalWidth, 157);
+  check('71" spacing — span width', wide.spans.map((s) => s.width), [71]);
+
+  // 1.5 sections: an odd column count, drawn as a partial bay rather than
+  // being rounded up to a full second section.
+  const half = visual.buildGeometry(
+    build({ mounting: 'floor', uprights: { 108: 3 }, depth: 43, spacing: 43, topStyle: 'basic' }),
+    rules
+  );
+  check('1.5 sections — column count', half.columns.length, 3);
+  check('1.5 sections — overall width', half.totalWidth, 86);
+  check('1.5 sections — flagged partial bay', half.hasPartialBay, true);
+
+  // Mixed heights: tallest first, and flagged so the caption can say so.
+  const mixed = visual.buildGeometry(
+    build({ mounting: 'floor', uprights: { 108: 2, 120: 2 }, depth: 43, spacing: 43, topStyle: 'basic' }),
+    rules
+  );
+  check('mixed heights — flagged', mixed.mixedHeights, true);
+  check('mixed heights — tallest first', mixed.columns.map((c) => c.height), [120, 120, 108, 108]);
+  check('mixed heights — overall height', mixed.maxHeight, 120);
+
+  // Not enough information to draw anything honest.
+  check('no mounting — nothing drawn', visual.buildGeometry(build({ uprights: { 108: 2 } }), rules), null);
+  check('no uprights — nothing drawn', visual.buildGeometry(build({ mounting: 'floor' }), rules), null);
+  check(
+    'multi-section without spacing — nothing drawn',
+    visual.buildGeometry(build({ mounting: 'floor', uprights: { 108: 4 }, depth: 43 }), rules),
+    null
+  );
+}
+
+/* -------------------------------------------------------------------------
+ * Saved / shareable output — encode/decode round trip.
+ * ---------------------------------------------------------------------- */
+const share = BYOR.share;
+
+console.log('Share encode/decode');
+{
+  const original = build({
+    layoutId: 'training-2',
+    mounting: 'floor',
+    uprights: { 108: 4 },
+    depth: 43,
+    spacing: 43,
+    topStyle: 'basic',
+    sectionBars: { 0: { 'FF-RR-PB-43': 2 }, 1: { 'FF-RR-PB-43': 2 } },
+    gapBars: { 0: { 'FF-RR-DPB-43': 2 } },
+    hooks: 'both',
+    hookQty: { 'FF-RR-JC': 2 },
+    extras: { 'FF-RR-BP': 1 },
+    siteUncertain: true
+  });
+
+  const token = share.encode(original);
+  const restored = share.decode(token, newState());
+
+  check('round trip — mounting', restored.mounting, 'floor');
+  check('round trip — uprights', restored.uprights, { 108: 4 });
+  check('round trip — depth', restored.depth, 43);
+  check('round trip — spacing', restored.spacing, 43);
+  check('round trip — top style', restored.topStyle, 'basic');
+  check('round trip — layout id', restored.layoutId, 'training-2');
+  check('round trip — section bars', restored.sectionBars, original.sectionBars);
+  check('round trip — gap bars', restored.gapBars, original.gapBars);
+  check('round trip — hook quantities', restored.hookQty, { 'FF-RR-JC': 2 });
+  check('round trip — extras', restored.extras, { 'FF-RR-BP': 1 });
+  check('round trip — site uncertainty', restored.siteUncertain, true);
+
+  // The restored build must resolve to exactly the same parts list.
+  check(
+    'round trip — identical bill of materials',
+    billOfMaterials(restored),
+    billOfMaterials(original)
+  );
+  check('round trip — identical section count', rules.sections(restored), rules.sections(original));
+
+  // A restored build draws the same picture.
+  check(
+    'round trip — identical geometry width',
+    visual.buildGeometry(restored, rules).totalWidth,
+    visual.buildGeometry(original, rules).totalWidth
+  );
+
+  // Untrusted input must never yield a half-valid state.
+  check('rejects empty token', share.decode('', newState()), null);
+  check('rejects non-string token', share.decode(null, newState()), null);
+  check('rejects characters outside the alphabet', share.decode('not a token!!', newState()), null);
+  check('rejects truncated token', share.decode(token.slice(0, 12), newState()), null);
+  check('rejects a token with no build in it', share.decode(share.encode(newState()), newState()), null);
+
+  // Injected keys and junk values are dropped, not merged.
+  const dirty = share.decode(
+    share.encode(
+      build({
+        mounting: 'floor',
+        uprights: { 108: 2, '<script>': 5, 999: -3 },
+        depth: 43,
+        topStyle: 'basic',
+        extras: { 'FF-RR-BP': 'lots' }
+      })
+    ),
+    newState()
+  );
+  check('drops non-token upright keys', dirty.uprights, { 108: 2 });
+  check('drops non-numeric quantities', dirty.extras, {});
+  check('rejects an unknown mounting value', share.decode(share.encode(build({ mounting: 'roof', uprights: { 108: 2 } })), newState()).mounting, null);
 }
 
 console.log('');

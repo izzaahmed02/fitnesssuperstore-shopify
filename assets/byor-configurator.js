@@ -489,6 +489,10 @@
     this.quotePanel = this.querySelector('[data-byor-quote-panel]');
     this.quoteField = this.querySelector('[data-byor-quote-details]');
     this.addButton = this.querySelector('[data-byor-add]');
+    this.visualHost = this.querySelector('[data-byor-visual]');
+    this.shareHost = this.querySelector('[data-byor-share]');
+    this.shareLinkField = this.querySelector('[data-byor-share-link]');
+    this.shareStatus = this.querySelector('[data-byor-share-status]');
 
     var self = this;
     if (this.addButton) {
@@ -496,6 +500,12 @@
         self.addToCart();
       });
     }
+
+    this.bindShareControls();
+
+    // A shared or bookmarked build is restored before anything is drawn, so the
+    // steps and the visual come up already reflecting the saved configuration.
+    this.restoreSharedBuild();
 
     this.renderLayouts();
     this.setStatus('Loading current pricing and availability…');
@@ -1226,6 +1236,11 @@
       this.quoteField.value = this.buildText(lines, reasons);
     }
 
+    // Scale-aware 2D visual and the shareable link both follow the same state,
+    // so they are refreshed together on every change.
+    this.renderVisual();
+    this.refreshShare();
+
     if (!this.catalogReady) {
       this.setStatus('Loading current pricing and availability…');
     } else if (todo.length) {
@@ -1267,6 +1282,161 @@
     }
 
     return out.join('\n');
+  };
+
+  /* -------------------------------------------------------------------------
+   * Scale-aware 2D visual (assets/byor-visual.js)
+   * ---------------------------------------------------------------------- */
+  BYORConfigurator.prototype.renderVisual = function () {
+    if (!this.visualHost) return;
+    var visual = window.BYOR && window.BYOR.visual;
+    if (!visual) return; // asset not loaded — the rest of the page still works
+    visual.renderInto(this.visualHost, this.state, Rules);
+  };
+
+  /* -------------------------------------------------------------------------
+   * Saved / shareable output (assets/byor-share.js)
+   * ---------------------------------------------------------------------- */
+  /* A bad link must never stop the configurator booting — this is the purchase
+   * path, so every failure here degrades to "start a fresh build". */
+  BYORConfigurator.prototype.restoreSharedBuild = function () {
+    var share = window.BYOR && window.BYOR.share;
+    if (!share) return;
+
+    try {
+      var token = share.readToken();
+      if (!token) return;
+
+      var restored = share.decode(token, newState());
+      if (!restored) {
+        this.setShareStatus('That saved build link could not be read. Start a new build below.');
+        return;
+      }
+
+      this.state = restored;
+      this.restoredFromLink = true;
+    } catch (err) {
+      this.state = newState();
+      this.setShareStatus('That saved build link could not be read. Start a new build below.');
+    }
+  };
+
+  BYORConfigurator.prototype.bindShareControls = function () {
+    if (!this.shareHost) return;
+    var self = this;
+
+    var copyBtn = this.shareHost.querySelector('[data-byor-copy-link]');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function () {
+        self.copyShareLink();
+      });
+    }
+
+    var downloadBtn = this.shareHost.querySelector('[data-byor-download]');
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', function () {
+        self.downloadBuild();
+      });
+    }
+
+    var printBtn = this.shareHost.querySelector('[data-byor-print]');
+    if (printBtn) {
+      printBtn.addEventListener('click', function () {
+        window.print();
+      });
+    }
+
+    if (this.shareLinkField) {
+      // Selecting the whole link on focus makes manual copying easy on mobile,
+      // where the clipboard API is not always available.
+      this.shareLinkField.addEventListener('focus', function () {
+        this.select();
+      });
+    }
+  };
+
+  BYORConfigurator.prototype.setShareStatus = function (message) {
+    if (this.shareStatus) this.shareStatus.textContent = message || '';
+  };
+
+  /* A build is only shareable once it has something in it. */
+  BYORConfigurator.prototype.shareableState = function () {
+    var state = this.state;
+    return !!(state && state.mounting && Rules.sections(state) > 0);
+  };
+
+  BYORConfigurator.prototype.refreshShare = function () {
+    if (!this.shareHost) return;
+    var share = window.BYOR && window.BYOR.share;
+    if (!share) return;
+
+    var ready = this.shareableState();
+    this.shareHost.hidden = !ready;
+    if (!ready) return;
+
+    var url = share.buildUrl(this.state);
+    if (this.shareLinkField) this.shareLinkField.value = url;
+    share.syncUrl(this.state);
+
+    if (this.restoredFromLink) {
+      this.setShareStatus('Saved build loaded from your link.');
+      this.restoredFromLink = false;
+    }
+  };
+
+  BYORConfigurator.prototype.copyShareLink = function () {
+    var share = window.BYOR && window.BYOR.share;
+    if (!share) return;
+    var self = this;
+    var url = share.buildUrl(this.state);
+    if (!url) return;
+
+    var done = function () {
+      self.setShareStatus('Link copied. Anyone with it opens this exact build.');
+    };
+    var fallback = function () {
+      if (self.shareLinkField) {
+        self.shareLinkField.focus();
+        self.shareLinkField.select();
+      }
+      self.setShareStatus('Press Ctrl+C (or Cmd+C) to copy the highlighted link.');
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done, fallback);
+    } else {
+      fallback();
+    }
+  };
+
+  BYORConfigurator.prototype.downloadBuild = function () {
+    var share = window.BYOR && window.BYOR.share;
+    var state = this.state;
+    var lines = billOfMaterials(state);
+    var reasons = quoteReasons(state, this.catalog, lines);
+
+    var text = this.buildText(lines, reasons);
+    if (share) {
+      text += '\n\nReopen this build:\n' + share.buildUrl(state);
+    }
+    text += '\n\nPrices and availability are confirmed at checkout or by our team.\n';
+
+    try {
+      var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = 'french-fitness-rig-build.txt';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(function () {
+        URL.revokeObjectURL(url);
+      }, 0);
+      this.setShareStatus('Build saved to your downloads.');
+    } catch (err) {
+      this.setShareStatus('We could not save the file. Copy the link instead.');
+    }
   };
 
   BYORConfigurator.prototype.addToCart = function () {

@@ -1,5 +1,7 @@
 {{ 'byor-configurator.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'byor-data.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'byor-visual.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'byor-share.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'byor-configurator.js' | asset_url }}" defer="defer"></script>
 
 {%- style -%}
@@ -38,7 +40,39 @@
       <div data-byor-steps></div>
 
       <aside class="byor-summary-panel">
+        <div class="byor-visual" data-byor-visual></div>
+
         <div data-byor-summary></div>
+
+        <div class="byor-share" data-byor-share hidden>
+          <p class="byor-share__title">{{ section.settings.share_heading }}</p>
+          {%- if section.settings.share_note != blank -%}
+            <p class="byor-note">{{ section.settings.share_note }}</p>
+          {%- endif -%}
+
+          <label class="visually-hidden" for="byor-share-link">Link to this build</label>
+          <input
+            type="text"
+            id="byor-share-link"
+            class="byor-share__link"
+            data-byor-share-link
+            readonly
+          >
+
+          <div class="byor-share__actions">
+            <button type="button" class="button button--secondary" data-byor-copy-link>
+              {{ section.settings.share_copy_label }}
+            </button>
+            <button type="button" class="button button--secondary" data-byor-download>
+              {{ section.settings.share_download_label }}
+            </button>
+            <button type="button" class="button button--secondary" data-byor-print>
+              {{ section.settings.share_print_label }}
+            </button>
+          </div>
+
+          <p class="byor-share__status" data-byor-share-status role="status" aria-live="polite"></p>
+        </div>
 
         <div class="byor-actions">
           <button type="button" class="button button--primary" data-byor-add disabled>
@@ -184,6 +218,40 @@
       "id": "add_button_label",
       "label": "Add to cart button",
       "default": "Add this rig to cart"
+    },
+    {
+      "type": "header",
+      "content": "Save and share"
+    },
+    {
+      "type": "text",
+      "id": "share_heading",
+      "label": "Save/share heading",
+      "default": "Save or share this build"
+    },
+    {
+      "type": "textarea",
+      "id": "share_note",
+      "label": "Save/share note",
+      "default": "Your link reopens this exact rig, so you can come back to it or send it to us."
+    },
+    {
+      "type": "text",
+      "id": "share_copy_label",
+      "label": "Copy link button",
+      "default": "Copy link"
+    },
+    {
+      "type": "text",
+      "id": "share_download_label",
+      "label": "Download button",
+      "default": "Download parts list"
+    },
+    {
+      "type": "text",
+      "id": "share_print_label",
+      "label": "Print button",
+      "default": "Print / save as PDF"
     },
     {
       "type": "header",
