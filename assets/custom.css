@@ -86,11 +86,16 @@ font-size: 28px!important;
 
 /* PDP gallery tuning knobs — adjust these two values to taste.
    --pdp-info-width: width of the right buy-box column (wider = less blank space).
-   --pdp-image-max:  max width of the centered main gallery image (smaller = avoids
-                     upscaling low-res photos, which looked blurry when enlarged). */
+   --pdp-image-max:  max width of the main gallery image. This matches the gallery
+                     column's own max-width (.custom-gallery-main is capped at 700px),
+                     so the primary image fills the available gallery width and stays
+                     centered, rather than being boxed to a small centered square. The
+                     image uses object-fit: contain, so it is never distorted or
+                     clipped, and it is only ever downscaled to fit — never upscaled
+                     beyond its intrinsic size. */
 .product-layout {
   --pdp-info-width: 560px;
-  --pdp-image-max: 440px;
+  --pdp-image-max: 700px;
 }
 
 @media (min-width: 990px) {
@@ -103,9 +108,9 @@ font-size: 28px!important;
     width: calc(100% - 2rem - var(--pdp-info-width)) !important;
   }
 
-  /* Cap and center the main image so it is no longer overwhelming and low-res photos
-     are not upscaled. Thumbnails stay pinned left; the image centers in the space left
-     over in the gallery column. */
+  /* Let the main image fill the available gallery width (up to --pdp-image-max) and
+     stay centered. Thumbnails stay pinned left; if the gallery column is ever wider
+     than the cap, margin auto keeps the image centered in the leftover space. */
   .product-layout .main-image-container {
     max-width: var(--pdp-image-max) !important;
     margin-left: auto !important;

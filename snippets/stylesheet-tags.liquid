@@ -7,12 +7,13 @@
 {% endunless %}
 
 
-<link rel="preload" href="{{ 'main.min.css' | asset_url }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="{{ 'main.min.css' | asset_url }}"></noscript>
+<!-- Core layout CSS: render-blocking so the page paints in its final layout.
+     Loading these async caused an unstyled paint then a full-page reflow (CLS).
+     Files are small and served from the preconnected Shopify CDN. -->
+<link rel="stylesheet" href="{{ 'main.min.css' | asset_url }}">
 
 <!-- Base styles that must render before LCP -->
-<link rel="preload" href="{{ 'base-v2.min.css' | asset_url }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="{{ 'base-v2.min.css' | asset_url }}"></noscript>
+<link rel="stylesheet" href="{{ 'base-v2.min.css' | asset_url }}">
 
 <!-- Non-critical CSS (load after LCP) -->
 
