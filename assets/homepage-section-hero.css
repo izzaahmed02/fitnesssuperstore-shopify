@@ -530,31 +530,32 @@ margin: 0;
   /* Slick's stock glyph relies on an icon font (@font-face in
      slick-theme.min.css) whose src URLs are empty/unresolvable in this
      bundle - assets/ has no slick.woff/eot/ttf/svg file at all - so the
-     arrow would fall back to an unstyled Unicode character. Replace it
-     with an inline SVG chevron instead: no font dependency, renders
-     identically everywhere. */
+     arrow would fall back to an unstyled Unicode character. An inline SVG
+     data-URI was tried next, but its background-image never painted across
+     three variations while ::after (same technique, no image) rendered
+     fine - so this is a pure-CSS chevron instead: two borders rotated into
+     an arrow shape, no image, no font dependency. */
   .homepageHeroSection .questions .slick-prev:before,
   .homepageHeroSection .questions .slick-next:before {
     content: '';
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    width: 16px;
-    height: 16px;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 16px 16px;
+    width: 9px;
+    height: 9px;
+    border-top: 3px solid #000000;
+    border-right: 3px solid #000000;
+    background: none;
     opacity: 1;
     z-index: 1;
   }
 
   .homepageHeroSection .questions .slick-prev:before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='15 18 9 12 15 6'%3E%3C/polyline%3E%3C/svg%3E");
+    transform: translate(-35%, -50%) rotate(-135deg);
   }
 
   .homepageHeroSection .questions .slick-next:before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E");
+    transform: translate(-65%, -50%) rotate(45deg);
   }
 
   .homepageHeroSection .questions .slick-prev:focus-visible,
