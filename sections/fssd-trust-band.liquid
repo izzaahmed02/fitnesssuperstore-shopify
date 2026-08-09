@@ -33,18 +33,30 @@
       {%- for block in section.blocks -%}
         {%- if block.type == 'trust_chip' -%}
           <li class="fssd-trust-band__chip" {{ block.shopify_attributes }}>
-            {%- if block.settings.icon != blank -%}
-              <span class="fssd-trust-band__icon">
+            {%- comment -%}
+              Decorative only — aria-hidden, empty alt. The adjacent chip title
+              and body carry the meaning. An uploaded image overrides the
+              selected inline SVG, so design assets drop in with no code change.
+            {%- endcomment -%}
+            <span class="fssd-trust-band__icon" aria-hidden="true">
+              {%- if block.settings.icon_image != blank -%}
                 <img
-                  src="{{ block.settings.icon | image_url: width: 96 }}"
-                  alt="{{ block.settings.icon.alt | escape }}"
-                  width="{{ block.settings.icon.width }}"
-                  height="{{ block.settings.icon.height }}"
+                  src="{{ block.settings.icon_image | image_url: width: 96 }}"
+                  alt=""
+                  width="{{ block.settings.icon_image.width }}"
+                  height="{{ block.settings.icon_image.height }}"
                   loading="lazy"
                   decoding="async"
                 >
-              </span>
-            {%- endif -%}
+              {%- else -%}
+              {%- case block.settings.icon -%}
+                {%- when 'compare' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 9h13l-3-3"/><path d="M20 15H7l3 3"/></svg>
+                {%- when 'shield' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+                {%- when 'truck' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/></svg>
+                {%- when 'question' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.8a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.9-.9 1.5v.5"/><path d="M12 17h.01"/></svg>
+              {%- endcase -%}
+              {%- endif -%}
+            </span>
 
             <span class="fssd-trust-band__chip-body">
               {%- if block.settings.title != blank -%}
@@ -64,6 +76,7 @@
 
 <style>
   .fssd-trust-band {
+    --fssd-trust-accent: #d83d0e;
     --fssd-trust-border: #e5e5e5;
     --fssd-trust-muted: #616166;
     padding: 24px 0;
@@ -107,12 +120,23 @@
   }
   .fssd-trust-band__icon {
     flex: 0 0 auto;
-    width: 24px;
-    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #edeff3;
+    color: var(--fssd-trust-accent);
+  }
+  .fssd-trust-band__icon svg {
+    width: 18px;
+    height: 18px;
+    display: block;
   }
   .fssd-trust-band__icon img {
-    width: 100%;
-    height: 100%;
+    width: 18px;
+    height: 18px;
     object-fit: contain;
     display: block;
   }
@@ -173,9 +197,22 @@
           "label": "Chip Body"
         },
         {
-          "type": "image_picker",
+          "type": "select",
           "id": "icon",
-          "label": "Chip Icon"
+          "label": "Icon",
+          "info": "Decorative inline SVG. Overridden if a Chip Icon Image is uploaded.",
+          "options": [
+            { "value": "compare", "label": "Condition / compare" },
+            { "value": "shield", "label": "Warranty / shield" },
+            { "value": "truck", "label": "Delivery / truck" },
+            { "value": "question", "label": "Help / question" }
+          ],
+          "default": "compare"
+        },
+        {
+          "type": "image_picker",
+          "id": "icon_image",
+          "label": "Chip Icon Image (overrides the icon)"
         }
       ]
     }
@@ -189,28 +226,32 @@
           "type": "trust_chip",
           "settings": {
             "title": "New & Remanufactured",
-            "body": "Compare available condition options"
+            "body": "Compare available condition options",
+            "icon": "compare"
           }
         },
         {
           "type": "trust_chip",
           "settings": {
             "title": "Warranty Information",
-            "body": "See product-specific coverage"
+            "body": "See product-specific coverage",
+            "icon": "shield"
           }
         },
         {
           "type": "trust_chip",
           "settings": {
             "title": "Delivery Options",
-            "body": "Review available services by destination"
+            "body": "Review available services by destination",
+            "icon": "truck"
           }
         },
         {
           "type": "trust_chip",
           "settings": {
             "title": "Equipment Help",
-            "body": "Get help comparing equipment"
+            "body": "Get help comparing equipment",
+            "icon": "question"
           }
         }
       ]

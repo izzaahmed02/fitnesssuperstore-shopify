@@ -36,23 +36,32 @@
               data-fss-hp-event="fss_hp_category_click"
               data-fss-hp-props='{"category_handle": {{ block.settings.category_handle | json | escape }}, "slot": {{ forloop.index }}}'
             >
-              {%- if block.settings.image != blank -%}
-                <span class="fssd-popular-categories__media">
+              {%- comment -%}
+                Decorative only — aria-hidden, empty alt. The adjacent title and
+                subtitle carry the meaning. An uploaded image overrides the
+                selected inline SVG, so design assets drop in with no code change.
+              {%- endcomment -%}
+              <span class="fssd-popular-categories__icon" aria-hidden="true">
+                {%- if block.settings.image != blank -%}
                   <img
-                    src="{{ block.settings.image | image_url: width: 400 }}"
-                    srcset="
-                      {{ block.settings.image | image_url: width: 200 }} 200w,
-                      {{ block.settings.image | image_url: width: 400 }} 400w
-                    "
-                    sizes="(min-width: 990px) 16vw, 45vw"
-                    alt="{{ block.settings.image.alt | escape }}"
+                    src="{{ block.settings.image | image_url: width: 96 }}"
+                    alt=""
                     width="{{ block.settings.image.width }}"
                     height="{{ block.settings.image.height }}"
                     loading="lazy"
                     decoding="async"
                   >
-                </span>
-              {%- endif -%}
+                {%- else -%}
+                  {%- case block.settings.icon -%}
+                    {%- when 'treadmill' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 17h12l4-10"/><path d="M19 7V4h2"/><path d="M4 17v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-1"/></svg>
+                    {%- when 'bike' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h5"/><path d="M10 9l3 8"/><path d="M13 6h3"/></svg>
+                    {%- when 'weight_stack' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="7" y="5" width="10" height="3" rx="1"/><rect x="7" y="10" width="10" height="3" rx="1"/><rect x="7" y="15" width="10" height="3" rx="1"/><path d="M12 2v3"/></svg>
+                    {%- when 'weight_plate' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/><path d="M12 4v2"/><path d="M12 18v2"/><path d="M4 12h2"/><path d="M18 12h2"/></svg>
+                    {%- when 'rack' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 4v16"/><path d="M19 4v16"/><path d="M5 8h14"/><path d="M5 14h14"/><path d="M3 20h4"/><path d="M17 20h4"/></svg>
+                    {%- when 'barbell' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 9v6"/><path d="M6 7v10"/><path d="M18 7v10"/><path d="M21 9v6"/><path d="M6 12h12"/></svg>
+                  {%- endcase -%}
+                {%- endif -%}
+              </span>
 
               <span class="fssd-popular-categories__body">
                 {%- if block.settings.title != blank -%}
@@ -114,13 +123,14 @@
   }
   .fssd-popular-categories__card {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
+    gap: 12px;
     width: 100%;
     padding: 16px 12px;
     border: 1px solid var(--fssd-cat-border);
     border-radius: 12px;
-    text-align: center;
+    text-align: left;
     text-decoration: none;
     color: inherit;
     background: #ffffff;
@@ -134,15 +144,26 @@
     outline: 3px solid var(--fssd-cat-accent);
     outline-offset: 2px;
   }
-  .fssd-popular-categories__media {
-    display: block;
-    width: 100%;
-    max-width: 132px;
-    margin-bottom: 12px;
+  .fssd-popular-categories__icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: #edeff3;
+    color: var(--fssd-cat-accent);
   }
-  .fssd-popular-categories__media img {
-    width: 100%;
-    height: auto;
+  .fssd-popular-categories__icon svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+  }
+  .fssd-popular-categories__icon img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
     display: block;
   }
   .fssd-popular-categories__body {
@@ -243,9 +264,24 @@
           "label": "Link URL"
         },
         {
+          "type": "select",
+          "id": "icon",
+          "label": "Icon",
+          "info": "Decorative inline SVG. Overridden if a Card Image is uploaded.",
+          "options": [
+            { "value": "treadmill", "label": "Treadmill" },
+            { "value": "bike", "label": "Exercise bike" },
+            { "value": "weight_stack", "label": "Weight stack" },
+            { "value": "weight_plate", "label": "Weight plate" },
+            { "value": "rack", "label": "Rack / rig" },
+            { "value": "barbell", "label": "Barbell" }
+          ],
+          "default": "treadmill"
+        },
+        {
           "type": "image_picker",
           "id": "image",
-          "label": "Card Image"
+          "label": "Card Image (overrides the icon)"
         }
       ]
     }
@@ -261,7 +297,8 @@
             "title": "Treadmills",
             "subtitle": "Commercial & performance cardio",
             "category_handle": "treadmills",
-            "link": "/collections/treadmills"
+            "link": "/collections/treadmills",
+            "icon": "treadmill"
           }
         },
         {
@@ -270,7 +307,8 @@
             "title": "Exercise Bikes",
             "subtitle": "Upright, recumbent & indoor cycles",
             "category_handle": "exercise-bikes",
-            "link": "/collections/exercise-bikes"
+            "link": "/collections/exercise-bikes",
+            "icon": "bike"
           }
         },
         {
@@ -279,7 +317,8 @@
             "title": "Selectorized",
             "subtitle": "Pin-loaded commercial strength",
             "category_handle": "selectorized-pin-loaded",
-            "link": "/collections/selectorized-pin-loaded"
+            "link": "/collections/selectorized-pin-loaded",
+            "icon": "weight_stack"
           }
         },
         {
@@ -288,7 +327,8 @@
             "title": "Plate Loaded",
             "subtitle": "Leverage and free-weight machines",
             "category_handle": "plate-loaded",
-            "link": "/collections/plate-loaded"
+            "link": "/collections/plate-loaded",
+            "icon": "weight_plate"
           }
         },
         {
@@ -297,7 +337,8 @@
             "title": "Cages, Racks & Rigs",
             "subtitle": "Training systems & rack solutions",
             "category_handle": "cages-racks-rigs",
-            "link": "/collections/cages-racks-rigs"
+            "link": "/collections/cages-racks-rigs",
+            "icon": "rack"
           }
         },
         {
@@ -306,7 +347,8 @@
             "title": "Free Weights",
             "subtitle": "Dumbbells, plates, bars & storage",
             "category_handle": "free-weights",
-            "link": "/collections/free-weights"
+            "link": "/collections/free-weights",
+            "icon": "barbell"
           }
         }
       ]
