@@ -27,8 +27,8 @@ Product counts re-confirmed live 2026-07-31: 116/116, 16/16, 29/29, 56/56, 13/13
 | Group | Source of truth | Affected records | Old-URL occurrences | Status |
 |---|---|---|---|---|
 | A. PDP breadcrumbs | `breadcrumb_path` metaobjects referenced by `product.metafields.custom.breadcrumb_paths` | **6** of 694 | 6 collection refs | **APPLIED** |
-| B. PDP option/extra-info (product descriptions) | `product.descriptionHtml` | **95** of 6,462 | 95 anchors | **23 of 95 APPLIED** (2026-08-01); 72 remaining |
-| C. PDP option-content (option help popups) | `product_option_help_text` metaobject, `help_text` field | **74** of 1,096 | 143 anchors | prepared, not applied |
+| B. PDP option/extra-info (product descriptions) | `product.descriptionHtml` | **95** of 6,462 | 95 anchors | **APPLIED — 95 of 95** (2026-08-02) |
+| C. PDP option-content (option help popups) | `product_option_help_text` metaobject, `help_text` field | **74** of 1,096 | 143 anchors | prepared; Matrixify sheets issued to Larianne |
 | D. HTML sitemap | `sitemap_menu_1` metaobject tree under `main-sitemap-root` | **1** parent edit (drops 5 entries) | 5 | **APPLIED** |
 | E. Category index | `index-f` navigation menu | **1** menu item (drops 5 entries) | 5 | **APPLIED** |
 
@@ -207,3 +207,58 @@ Applying the remaining 146 records through per-record mutations requires roughly
 dozen further round trips. The staged-upload half of the bulk path works; only the
 `bulkOperationRunMutation` call is blocked. Running `RUNNING.md` against the Admin API
 with a token completes both groups in one operation each.
+
+**2026-08-09** — Group B complete. Larianne imported `products_REMAINING` via
+Matrixify on 2026-08-02 (72 updates / 0 new / 0 deletes).
+
+Whole-store re-verification today: **0 of 6,469 products** contain any of the five
+old collection URLs. 92 of the 95 are byte-identical to the prepared values; the
+other 3 differ only by benign entity/whitespace normalisation from later editing
+(`&amp;amp;`→`&amp;` on one, non-breaking space→space on two). All three still carry
+the approved generic link and none contains an old handle.
+
+Groups A, D and E re-confirmed intact after 9 days: breadcrumb metaobjects still
+`updatedAt` 2026-07-31T16:19Z, the sitemap node still holds exactly the three
+retained children, and `index-f` still shows only the three genuinely distinct
+French Fitness Racks and Cages children. Counts still 116/116, 16/16, 29/29,
+56/56, 13/13, and `urlRedirects` for the five source paths is still empty.
+
+Group C re-checked against the prepared payload: still 74 records / 143
+occurrences, **zero drift**, so the payload remains valid. Matrixify sheets issued
+(`matrixify/optionhelp_REMAINING.xlsx` + rollback) since Larianne's plan includes
+Metaobjects.
+
+### Recurring bulk process — gate 4 evidence
+
+A **daily** job runs at approximately 11:23–11:28 UTC and bumps `updatedAt` on
+collections. It has run every day observed, most recently 2026-08-09T11:24:10Z
+touching 90 collections; 425 collection bumps fall in that window overall. It does
+touch the collections in this migration, including `french-fitness-rack-rig-systems`,
+`rack-rig-systems`, the hub and `rack-rig-attachments`.
+
+It re-evaluates collection membership rather than editing content. Source and target
+pairs share identical timestamps to the second (both rack-rig-systems collections at
+2026-08-09T11:24:10Z; both pre-configured-rigs at 2026-07-17T11:25:25Z), which is the
+signature of rule-based membership refresh driven by shared product membership.
+
+Evidence it **cannot** rewrite the records in scope:
+
+- breadcrumb metaobjects still carry `updatedAt` 2026-07-31T16:19:31–32Z — untouched
+  across nine daily runs;
+- the `sitemap_menu_1` node still carries 2026-07-31T16:20:10Z with the correct
+  `children1`;
+- no product in scope has an `updatedAt` in the 11:2x window;
+- no migration edit has been reverted in nine days.
+
+The 2026-07-18 19:15–19:17 UTC incident is **not** this job — it sits outside the
+daily window and has not recurred.
+
+Residual risk and recommendation: the daily job bumps the five source collections,
+so schedule the cutover window outside roughly 11:15–11:35 UTC to avoid contention
+while unpublishing. No process needs pausing.
+
+Separately, three in-scope products were edited by someone else after the migration
+(2026-08-02T17:52Z, and two at 2026-08-06T18:5xZ). Those are the benign
+normalisations noted above — no old URL was reintroduced — but it confirms these
+records are still being edited by people, so the final crawl should run close to
+cutover.
