@@ -580,34 +580,108 @@
   opacity: 0.8;
 }
 
-/* Print / save as PDF: the build sheet only. ------------------------------- */
+/* Print header — only ever shown on the printed build sheet. --------------- */
+
+.byor-print-header {
+  display: none;
+}
+
+/* Print / save as PDF: the build sheet only. -------------------------------
+ * Without this the browser prints the entire product page — gallery, tabs,
+ * reviews, related products and footer — instead of the customer's build.
+ * Everything outside the configurator section is dropped, then the
+ * interactive controls inside it are dropped too, leaving the drawing and
+ * the parts list. */
 
 @media print {
+  /* 1. Drop every part of the page except the configurator section. */
+  .shopify-section:not(.byor-section),
+  .header-wrapper,
+  .announcement-bar,
+  header,
+  footer,
+  .footer,
+  cart-drawer,
+  .cart-drawer,
+  .cart-drawer__overlay,
+  .modal-wrapper,
+  .cart-items__overlay,
+  .cart-items__popup,
+  #shopify-chat,
+  .needsclick {
+    display: none !important;
+  }
+
+  /* 2. Drop the interactive controls inside the configurator. */
   .byor-layouts,
   .byor-steps,
-  .byor-share__actions,
-  .byor-share__link,
+  .byor__section-heading,
+  .byor__section-note,
+  .byor__intro,
+  /* The whole save/share block goes — its link is reprinted in the header. */
+  .byor-share,
   .byor-actions,
   .byor-quote-panel,
   .byor-planner,
-  .byor__intro,
+  .byor-noscript,
   [data-byor-steps] {
     display: none !important;
   }
 
+  /* 3. Lay the remainder out as a single-column sheet. */
+  .byor-print-header {
+    display: block;
+    margin: 0 0 16px;
+    padding: 0 0 12px;
+    border-bottom: 2px solid #000;
+  }
+
+  .byor-print-header__title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 2px;
+  }
+
+  .byor-print-header__meta {
+    font-size: 11px;
+    margin: 0;
+    /* The build token is long; wrap it instead of letting it run off the
+     * sheet and widen every other block on the page. */
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+
+  .byor-layout {
+    display: block !important;
+  }
+
   .byor-summary-panel {
-    position: static;
+    position: static !important;
     border: none;
     padding: 0;
   }
 
   .byor-summary__list {
-    max-height: none;
-    overflow: visible;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .byor-share {
+    border: none;
+    padding: 0;
   }
 
   .byor-visual__figure {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  .byor-visual__svg {
+    max-height: 260px;
+  }
+
+  a[href]::after {
+    content: '';
   }
 }

@@ -493,6 +493,7 @@
     this.shareHost = this.querySelector('[data-byor-share]');
     this.shareLinkField = this.querySelector('[data-byor-share-link]');
     this.shareStatus = this.querySelector('[data-byor-share-status]');
+    this.printUrlHost = this.querySelector('[data-byor-print-url]');
 
     var self = this;
     if (this.addButton) {
@@ -1376,6 +1377,9 @@
 
     var url = share.buildUrl(this.state);
     if (this.shareLinkField) this.shareLinkField.value = url;
+    // The printed sheet carries the same link so a paper or PDF copy can be
+    // reopened as a live build.
+    if (this.printUrlHost) this.printUrlHost.textContent = 'Reopen this build: ' + url;
     share.syncUrl(this.state);
 
     if (this.restoredFromLink) {
