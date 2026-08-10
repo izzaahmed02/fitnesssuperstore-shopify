@@ -875,8 +875,18 @@
                 <div class="product__title hidden lg:block" {{ block.shopify_attributes }}>
                   <h1>{{ product.title | escape }}</h1>
                 </div>
+                {%- comment -%}
+                  Desktop only, scoped the same way as the title it belongs to.
+                  .product__info-wrapper--mobile renders its own copy of the finish
+                  selector next to the mobile title and is hidden from 990px up, so
+                  leaving this render unwrapped painted a second Finish row on
+                  mobile - one under the product title and one under the image
+                  gallery.
+                {%- endcomment -%}
                 {%- if product.metafields.custom.product_color != blank -%}
-                  {% render 'finish-selector', product: product %}
+                  <div class="hidden lg:block">
+                    {% render 'finish-selector', product: product %}
+                  </div>
                 {%- endif -%}
               {% when 'price' %}
 
