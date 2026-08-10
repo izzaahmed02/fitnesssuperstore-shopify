@@ -68,7 +68,30 @@
     var cards = Array.prototype.slice.call(container.querySelectorAll('.bundle-card'));
     var selected = null;
 
+    // Fail closed, second line of defence. The component gate in
+    // cable-attachment-bundle.liquid already drops a set with an unavailable
+    // component from both the config and the hidden radios, so a set key that
+    // has no config entry and no radio is one the server refused to offer.
+    // Selecting it would write a price into the native contract with nothing
+    // orderable behind it, so it is treated as "No thanks" instead.
+    function offeredRadio(setKey) {
+      var radios = document.querySelectorAll('[data-cable-bundle] input[name="Cable Attachments"]');
+      for (var i = 0; i < radios.length; i++) {
+        if (radios[i].dataset.bundleSet === setKey) return radios[i];
+      }
+      return null;
+    }
+
+    function isSelectable(setKey) {
+      return !!setKey && !!bySet[setKey] && !!offeredRadio(setKey);
+    }
+
     function applySelection(setKey) {
+      if (setKey && !isSelectable(setKey)) {
+        console.warn('[Bundle Selector] Set "' + setKey + '" is not offered on this page; falling back to No thanks.');
+        setKey = '';
+        selected = null;
+      }
       var holderVal = '';
       document.querySelectorAll('[data-cable-bundle] input[name="Cable Attachments"]').forEach(function (r) {
         var on = setKey ? r.dataset.bundleSet === setKey : r.hasAttribute('data-cable-none');

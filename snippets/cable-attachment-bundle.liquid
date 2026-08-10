@@ -15,19 +15,73 @@
   (bundle-selector.css / bundle-selector.js) wrapped in the native
   product-options contract so selection flows to cart without Avis.
 
+  Component gate (fail closed)
+  ----------------------------
+  A set is an all-or-nothing kit: the customer pays one bundle price and expects
+  every piece. A set is therefore only offered when the bundle product itself is
+  available AND every one of its included_products is available. If any single
+  component is unavailable the whole set is dropped - no card, no radio, and no
+  entry in the JSON config - so it cannot be selected, priced, or added to cart
+  from this page. A set that lists no components at all is treated the same way,
+  since an empty kit cannot be verified.
+
+  This is deliberately generic rather than keyed to a specific SKU: the gate
+  follows live inventory, so a set closes the moment a component goes
+  unavailable and reopens on restock with no code change. It is the page-level
+  half of the guarantee only - the matching variant-level containment in Shopify
+  is what closes the direct-URL, hidden-parent, app and cart-transform paths.
+
   Params: product (required), section (required)
 {%- endcomment -%}
 
 {%- liquid
   assign sets = product.metafields.custom.cable_attachment_sets.value
+
+  assign orderable_keys = '|'
+  assign orderable_count = 0
+  assign blocked_keys = ''
+
+  for set in sets
+    assign bundle = set.bundle_product.value
+    assign components = set.included_products.value
+    assign set_orderable = false
+
+    if bundle != blank and bundle.available and components != blank and components.size > 0
+      assign set_orderable = true
+      for component in components
+        unless component.available
+          assign set_orderable = false
+        endunless
+      endfor
+    endif
+
+    if set_orderable
+      assign orderable_keys = orderable_keys | append: set.set_key.value | append: '|'
+      assign orderable_count = orderable_count | plus: 1
+    else
+      assign blocked_keys = blocked_keys | append: set.set_key.value | append: ' '
+    endif
+  endfor
+
+  assign blocked_keys = blocked_keys | strip | split: ' ' | join: ','
 -%}
 
-{%- if sets != blank and sets.size > 0 -%}
+{%- comment -%}
+  orderable_count is the gate on the whole block: if every set is closed there is
+  nothing valid left to offer, so the selector is not rendered at all and the
+  page falls back to the plain trainer purchase.
+{%- endcomment -%}
+{%- if sets != blank and orderable_count > 0 -%}
   {{ 'bundle-selector.css' | asset_url | stylesheet_tag }}
   {{ 'slick.min.css' | asset_url | stylesheet_tag }}
   {{ 'slick-theme.min.css' | asset_url | stylesheet_tag }}
 
-  <div id="Product-Options-cable-{{ section.id }}" class="cable-bundle">
+  <div
+    id="Product-Options-cable-{{ section.id }}"
+    class="cable-bundle"
+    {%- comment -%} Surfaced for QA/proof: which sets the component gate closed on this render. {%- endcomment -%}
+    data-cable-blocked-sets="{{ blocked_keys }}"
+  >
     <div
       class="cable-bundle__group"
       data-option-accordion
@@ -37,6 +91,10 @@
       {%- comment -%} Native contract holder + hidden radios (from the metaobjects). {%- endcomment -%}
       <span class="visually-hidden" data-selected-options=""></span>
       {%- for set in sets -%}
+        {%- assign set_token = '|' | append: set.set_key.value | append: '|' -%}
+        {%- unless orderable_keys contains set_token -%}
+          {%- continue -%}
+        {%- endunless -%}
         {%- assign bp = set.bundle_product.value -%}
         {%- assign variant_id = bp.selected_or_first_available_variant.id -%}
         {%- assign price = bp.price | money_without_currency | replace: ',', '' -%}
@@ -61,6 +119,10 @@
           <div class="bundle-selector-container" data-section-id="{{ section.id }}">
             <div class="bundle-cards-wrapper">
               {%- for set in sets -%}
+                {%- assign set_token = '|' | append: set.set_key.value | append: '|' -%}
+                {%- unless orderable_keys contains set_token -%}
+                  {%- continue -%}
+                {%- endunless -%}
                 {%- assign bp = set.bundle_product.value -%}
                 <div class="bundle-card" data-bundle-set="{{ set.set_key.value }}">
                   {%- if set.badge.value != blank -%}
@@ -118,7 +180,20 @@
     <script type="application/json" data-cable-config>
     {
       "sets": [
+        {%- assign emitted = 0 -%}
         {%- for set in sets -%}
+          {%- comment -%}
+            Gated sets are left out of the config as well, so the popup and the
+            selection handler in bundle-selector.js have no way to reach a set
+            whose components are incomplete. Commas are tracked with `emitted`
+            because forloop.last no longer marks the last rendered entry.
+          {%- endcomment -%}
+          {%- assign set_token = '|' | append: set.set_key.value | append: '|' -%}
+          {%- unless orderable_keys contains set_token -%}
+            {%- continue -%}
+          {%- endunless -%}
+          {%- if emitted > 0 -%},{%- endif -%}
+          {%- assign emitted = emitted | plus: 1 -%}
           {%- assign bp = set.bundle_product.value -%}
           {%- assign bpbadge = bp.metafields.judgeme.badge -%}
           {%- assign bpbadgeval = bpbadge.value | default: bpbadge -%}
@@ -145,7 +220,7 @@
                 }{%- unless forloop.last -%},{%- endunless -%}
               {%- endfor -%}
             ]
-          }{%- unless forloop.last -%},{%- endunless -%}
+          }
         {%- endfor -%}
       ]
     }

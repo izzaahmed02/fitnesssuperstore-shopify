@@ -1,4 +1,26 @@
+{%- comment -%}
+  Cable Attachments A/B test (Newport). The whole treatment hangs off this one
+  tag, so an untagged product renders exactly the control experience. The
+  treatment differs from the control in three places, all guarded by this flag:
+  the Cable Attachments block, the "Configure your order here" bar moving above
+  it, and the single Finish callout moving under the On Display row.
+{%- endcomment -%}
+{%- liquid
+  assign cable_ab_test = false
+  if product.tags contains 'ff-cable-ab'
+    assign cable_ab_test = true
+  endif
+-%}
 {% style %}
+  /* Treatment-only Finish callout under the On Display row. Declared here rather
+     than in bundle-selector.css because that stylesheet only loads when the Cable
+     Attachments block renders, and the callout is independent of it. */
+  #shopify-section-{{ section.id }} .cable-ab-finish{
+    margin-top: 16px;
+  }
+  #shopify-section-{{ section.id }} .cable-ab-finish .finish-selector{
+    margin-bottom: 0;
+  }
   #shopify-section-{{ section.id }} .product-main-container{
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -212,7 +234,11 @@
                 <div class="product__title" {{ block.shopify_attributes }}>
                   <p class="h2">{{ product.title | escape }}</p>
                 </div>
-                {%- if product.metafields.custom.product_color != blank -%}
+                {%- comment -%}
+                  In the treatment the finish callout is not rendered next to the
+                  title on either breakpoint - it moves under the On Display row.
+                {%- endcomment -%}
+                {%- if product.metafields.custom.product_color != blank and cable_ab_test != true -%}
                   {% render 'finish-selector', product: product %}
                 {%- endif -%}
 
@@ -863,6 +889,20 @@
                       </div>
                     {% endif %}
                   {% endif %}
+
+                  {%- comment -%}
+                    Treatment only: the single Finish callout sits here, directly
+                    under the On Display row, instead of next to the product title.
+                    This block renders once at both breakpoints, which is what keeps
+                    it a single callout rather than the duplicate the control had.
+                    finish-selector renders nothing unless the product has a linked
+                    finish sibling in custom.related_products.
+                  {%- endcomment -%}
+                  {%- if cable_ab_test and product.metafields.custom.product_color != blank -%}
+                    <div class="cable-ab-finish">
+                      {% render 'finish-selector', product: product %}
+                    </div>
+                  {%- endif -%}
             
               {%- when 'text' -%}
                 <p
@@ -882,8 +922,11 @@
                   leaving this render unwrapped painted a second Finish row on
                   mobile - one under the product title and one under the image
                   gallery.
+
+                  Suppressed in the treatment, where the callout moves under the
+                  On Display row instead.
                 {%- endcomment -%}
-                {%- if product.metafields.custom.product_color != blank -%}
+                {%- if product.metafields.custom.product_color != blank and cable_ab_test != true -%}
                   <div class="hidden lg:block">
                     {% render 'finish-selector', product: product %}
                   </div>
@@ -1929,11 +1972,36 @@
               {%- when 'icon-with-text' -%}
                 {% render 'icon-with-text', block: block %}
                  {% when 'product_options' %}
-                {%- comment -%} Cable Attachments A/B test (non-Avis). Renders above Assembly for tagged test products only. {%- endcomment -%}
-                {%- if product.tags contains 'ff-cable-ab' -%}
-                  {% render 'cable-attachment-bundle', product: product, section: section %}
+                {%- comment -%}
+                  Cable Attachments A/B test (non-Avis), tagged test products only.
+                  The treatment order is: "Configure your order here." bar, then
+                  Cable Attachments (1), then Assembly (2). The bar normally lives
+                  inside product-options.liquid, so here it is hoisted above the
+                  Cable Attachments block and suppressed in the snippet below.
+                {%- endcomment -%}
+                {%- if cable_ab_test -%}
+                  {%- comment -%}
+                    Both blocks are captured first so the bar can be suppressed
+                    when neither of them renders anything - the Cable Attachments
+                    block removes itself when its component gate closes every set,
+                    and product-options renders nothing when the product has no
+                    visible categories. Without this the bar could be left sitting
+                    on its own with nothing to configure underneath it.
+                  {%- endcomment -%}
+                  {%- capture cable_attachments_block -%}
+                    {% render 'cable-attachment-bundle', product: product, section: section %}
+                  {%- endcapture -%}
+                  {%- capture product_options_block -%}
+                    {% render 'product-options', product: product, skip_bar: true %}
+                  {%- endcapture -%}
+                  {%- if cable_attachments_block contains 'cable-bundle__group' or product_options_block contains 'product-option__item' -%}
+                    {% render 'product-options-bar' %}
+                  {%- endif -%}
+                  {{ cable_attachments_block }}
+                  {{ product_options_block }}
+                {%- else -%}
+                  {% render 'product-options', product: product %}
                 {%- endif -%}
-                {% render 'product-options', product: product %}
             {%- endcase -%}
           {%- endfor -%}
           <a href="{{ product.url }}" class="link product__view-details animate-arrow">
