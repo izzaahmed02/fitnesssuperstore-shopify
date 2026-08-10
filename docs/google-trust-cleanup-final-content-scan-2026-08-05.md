@@ -434,3 +434,94 @@ is a one-line change if he wants it:
 Content gate clear for the second time. Remaining before merge: Sagi's focused desktop/mobile check
 on Warehouse and About Fitness Superstore in the refreshed preview, and dismissal of the standing
 CHANGES_REQUESTED review on PR #664 — GitHub still reports the PR as blocked on it.
+
+---
+
+# Post-publication live verification (2026-08-10)
+
+PR #664 was approved at head `2a45dff` and merged/published by Izza on 2026-08-06. Per Tim's
+standing instruction, this is Zafran's post-publication verification of the canonical live pages,
+the rendered `foundingDate`, and the release's final proof items.
+
+## Merge and parity — PASS
+
+| Check | Result |
+|---|---|
+| PR #664 merged into `main` | **Yes** — the branch is an ancestor of `main`; approved head `2a45dff` ("Neutralize warehouse rebuild-volume wording per Codex review") is present |
+| Live Shopify MAIN theme | `186120208700`, release files last written `2026-08-06T18:42Z` |
+| Shopify ↔ GitHub parity | **14/14 release files byte-identical** between the live MAIN theme and GitHub `main` (`8e6b074`), MD5-compared |
+
+## Rendered organization schema on the live homepage — PASS
+
+Parsed from the live HTML at `https://www.fitnesssuperstore.com/`, not from theme source:
+
+- `@type`: `OnlineStore` · `@id`: `https://www.fitnesssuperstore.com/#organization`
+- **`foundingDate`: `"2010"`** — renders correctly
+- Exactly **one** organization-type node in the graph (no duplicate), `address` and `contactPoint` intact
+- 9 JSON-LD blocks on the page; the organization entity parses cleanly
+
+## Live visible-copy verification — PASS
+
+Six canonical pages fetched (all HTTP 200) and swept as rendered visible text, with scripts and
+styles stripped: `/`, `/pages/about-us`, `/pages/warehouse-page`, `/pages/government-sales`,
+`/pages/reviews`, `/pages/french-fitness-overview`.
+
+**Zero occurrences** of all 31 disapproved terms and all of Tim's Aug-6 proof-sensitive items in
+visible text on every page.
+
+Approved wording confirmed rendering live:
+
+| Page | Verified live |
+|---|---|
+| `/pages/about-us` | "Tim French began selling fitness equipment in 2003 from his garage" · "officially founded/launched in 2010" · "100 team members" · "Both facilities total 63,500 sq ft" |
+| `/` | "Founded in 2010 in Concord, CA" · neutral "Rated by our…" review wording |
+| `/pages/warehouse-page` | "Our Benicia operations total 63,500 sq ft across two facilities" · "50 team members based in Benicia" · "Remanufactured Equipment" · "StairMaster units. Benches" · "Current availability and timing vary by product…" · "Worn components are replaced as needed during inspection and rebuilding" |
+| `/pages/government-sales` | "Founded in 2010" |
+| `/pages/reviews` | "Since 2010, the company has earned a strong reputation" · "Customer reviews and feedback" |
+| `/pages/french-fitness-overview` | "Customer Service" (rating dropped) |
+
+Also swept the whole live theme source: the 31 disapproved terms are at zero. The residual
+proof-sensitive matches all fall **outside the 14 release files** — `page.shipping-information.json`,
+`page.remanufactured.json`, `page.california-delivery.json`, `page.new-equip.json` and several
+shared `sections/*.liquid` — so the release met its declared scope. The 72 `4.92` matches are SVG
+path coordinates, not rating claims.
+
+## Final proof items from the Jul-26 homepage URL control — all PASS
+
+| Item | Result |
+|---|---|
+| Root 200 and self-canonical | `200`; `<link rel="canonical" href="https://www.fitnesssuperstore.com">` |
+| One-hop permanent redirect `/pages/homepage` → `/` | `301` → `https://www.fitnesssuperstore.com/` |
+| No active sitemap reference | `/pages/homepage` **0** occurrences in `sitemap_pages_1.xml`; retired About variants also 0; `/pages/about-us` and `/pages/warehouse-page` present |
+| Historical UTM redirect test | `/pages/homepage?utm_source=test` → `301` → `/?utm_source=test` — query string preserved |
+| Legacy URL inventory | `/pages/our-story`, `/pages/about-our-ceo`, `/pages/about-fitnesssuperstore`, `/aboutus.asp` all one-hop `301` → `/pages/about-us` |
+| Shopify/GitHub parity | 14/14 verified above |
+| Search Console inspection + recrawl | **outstanding — no API access from this environment; must be done in the Search Console UI** |
+
+## One live finding — pre-existing, not a regression
+
+The header announcement bar carries a static **"4.9/5 rating"** claim that renders on **every page
+sitewide**. Source: `sections/header-group.json` line 56, `"text": "4.9/5 rating"`.
+
+- It is **not** one of the 14 release files, so the release complied with the "static review/rating
+  quantities in changed files" scope, and this is **not** a regression — it was live before the
+  release and is unchanged by it.
+- It is, however, the single widest-exposure static rating claim left on the site, and it sits on the
+  tracker's existing "Review / rating claims" Needs-Source row.
+- Fix is one line in `sections/header-group.json` whenever approved. Suggested neutral replacement
+  consistent with the wording already used in this release: `"Rated by our customers"`.
+
+Related, same category and also outside the release scope: `4.9/5` defaults in
+`sections/contact-section-hero.liquid`, `homepage-section-hero.liquid`, `section-hero.liquid`,
+`rich-text-with-image.liquid`, `homepage-homepage-reviews.liquid`, plus `page.new-equip.json`
+("4.9/5 across Google, Trustpilot, Bing, Yelp, and Shopper Approved") and
+`sections/multicolumn-reviews.liquid` ("Thousands of verified"). The section defaults do not render
+on the live canonical pages because the templates that use them override the setting — verified: the
+reviews section is referenced only by `index.json` and `page.homepage.json`, both of which now set
+the neutral wording.
+
+## Status
+
+**Release is live and verified.** Content, schema, parity, redirects, canonical and sitemap proof all
+pass. Two closeout actions remain and both require UI access this environment does not have:
+updating the tracker rows to Done, and submitting the Search Console recrawl requests.
