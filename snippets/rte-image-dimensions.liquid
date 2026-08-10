@@ -5,17 +5,27 @@
   image pushes the text below it down as it decodes — a large CLS contributor on
   blog/article templates.
 
-  Real dimensions are resolved through the global `images` object, which exposes
-  every file uploaded to Settings > Files by filename. Combined with the existing
-  `.rte img { height: auto; max-width: 100% }` rule, the width/height pair gives the
-  browser the aspect ratio, so the correct box is reserved before the image loads.
+  Dimensions are resolved in two steps:
+
+  1. The global `images` object, which exposes files uploaded to Settings > Files by
+     filename. This is the authoritative source and covers most content images.
+  2. A `-WIDTHxHEIGHT` suffix on the filename, e.g. `arc-vs-elliptical-1600x900.png`.
+     Some files are not indexed with usable dimensions — notably ones saved with an
+     extension that does not match their real encoding — and the content team's newer
+     exports carry the size in the name. Only accepted when the trailing segment is
+     two plain integers within Shopify's supported range, so a name like `rack-2x4`
+     is rejected.
+
+  Combined with the existing `.rte img { height: auto; max-width: 100% }` rule, the
+  width/height pair gives the browser the aspect ratio, so the correct box is reserved
+  before the image loads.
 
   Every image after the first also gets loading="lazy" so the run of body images stops
   competing with the LCP resource for bandwidth. The first one is left eager because it
   is the one that may still be in the initial viewport.
 
-  Fail-safe: a tag that already carries both attributes, or whose filename cannot be
-  resolved, keeps its original attributes; only the additions above are ever made.
+  Fail-safe: a tag that already carries both attributes, or whose dimensions cannot be
+  resolved by either step, keeps its original attributes; only additions are ever made.
 
   Usage: {% render 'rte-image-dimensions', html: article.content %}
 {%- endcomment -%}
@@ -48,20 +58,47 @@
         assign src = tag_body | split: "src='" | last | split: "'" | first
       endif
 
+      assign resolved_width = 0
+      assign resolved_height = 0
+
       if src != ''
         assign filename = src | split: '?' | first | split: '/' | last
+
+        # Step 1: the Files index.
         assign source_image = images[filename]
-
         if source_image != blank and source_image.width > 0
-          assign injected = ' width="' | append: source_image.width | append: '" height="' | append: source_image.height | append: '" decoding="async"'
-          assign image_index = image_index | plus: 1
+          assign resolved_width = source_image.width
+          assign resolved_height = source_image.height
+        else
+          # Step 2: a -WIDTHxHEIGHT suffix on the filename.
+          assign size_segment = filename | split: '-' | last | split: '.' | first
+          assign size_pair = size_segment | split: 'x'
 
-          unless image_index == 1
-            unless tag_body contains 'loading='
-              assign injected = injected | append: ' loading="lazy"'
-            endunless
-          endunless
+          if size_pair.size == 2
+            assign width_text = size_pair[0]
+            assign height_text = size_pair[1]
+            assign width_number = width_text | plus: 0
+            assign height_number = height_text | plus: 0
+            assign width_roundtrip = width_number | append: ''
+            assign height_roundtrip = height_number | append: ''
+
+            if width_roundtrip == width_text and height_roundtrip == height_text and width_number >= 100 and width_number <= 5760 and height_number >= 100 and height_number <= 5760
+              assign resolved_width = width_number
+              assign resolved_height = height_number
+            endif
+          endif
         endif
+      endif
+
+      if resolved_width > 0
+        assign injected = ' width="' | append: resolved_width | append: '" height="' | append: resolved_height | append: '" decoding="async"'
+        assign image_index = image_index | plus: 1
+
+        unless image_index == 1
+          unless tag_body contains 'loading='
+            assign injected = injected | append: ' loading="lazy"'
+          endunless
+        endunless
       endif
     endunless
 
