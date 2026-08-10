@@ -14,42 +14,32 @@
   {{ 'component-swatch.css' | asset_url | stylesheet_tag }}
 {%- endunless -%}
 
-{%- comment -%} Full product configurator (options.product_options) — every option
-    group the metafield defines: colours, assembly/room-of-choice installation,
-    accessories, cable attachments, warranty, quantity inputs. Assets load only
-    when the product actually has a visible option group, so there is no CWV cost
-    on products without one. Same assets the live PDP uses. {%- endcomment -%}
+{%- comment -%} Full product configurator (options.product_options). Assets are the
+    live PDP's and load only when the product has a configurator metafield, so
+    products without one carry no CWV cost. {%- endcomment -%}
 {%- assign pdp_opts = product.metafields.options.product_options.value -%}
 {%- if product.selected_or_first_available_variant.metafields.options.product_options.value != blank -%}
   {%- assign pdp_opts = product.selected_or_first_available_variant.metafields.options.product_options.value -%}
 {%- endif -%}
 {%- comment -%} Any configurator metafield at all, exactly as the live PDP decides.
-    Deliberately NOT narrowed to "has visible values": groups whose values are
-    hidden (Warranty, Processing Time) still contribute their default selection to
-    the order's _functionOperation payload, and product-options.liquid renders
-    their labels — so narrowing the gate would both drop order data and leave that
-    markup unstyled. Products with no configurator metafield still skip these
-    assets entirely, which is where the CWV saving actually is. {%- endcomment -%}
+    Deliberately NOT narrowed to "has visible values": hidden-value groups (Warranty,
+    Processing Time) still contribute their default to the _functionOperation payload
+    and still render labels, so a narrower gate would drop order data and leave that
+    markup unstyled. {%- endcomment -%}
 {%- assign pdp_has_options = false -%}
 {%- if pdp_opts != blank -%}
   {%- assign pdp_has_options = true -%}
 {%- endif -%}
 
-{%- comment -%} Cart-transform flag, computed exactly as the live PDP computes it
+{%- comment -%} Cart-transform flag, computed as the live PDP computes it
     (main-product.liquid:125-133): true once any cart item carries a
     _functionOperation payload.
 
-    It gates ONLY this section's own asset tags below — the option markup always
-    renders — which is the same thing the live PDP does. Note the gate is close to
-    a no-op in practice: snippets/cart-drawer.liquid loads product-options.css and
-    product-custom-options.js unconditionally on every page, so the configurator
-    stays styled and functional either way. That is exactly why the live PDP keeps
-    working after a configured item is added, and this template must match it.
-
-    Do NOT extend this flag to the markup. An earlier revision did, which made the
-    configurator, add-on cards and help popups vanish for the rest of the session
-    once anything configured was in the cart — a regression against live, not a
-    safeguard. {%- endcomment -%}
+    Gates ONLY this section's asset tags below, never the markup. Extending it to
+    the markup makes the configurator, add-on cards and help popups vanish for the
+    rest of the session once a configured item is in the cart. The gate is nearly a
+    no-op anyway: cart-drawer.liquid loads product-options.css and
+    product-custom-options.js on every page. {%- endcomment -%}
 {%- assign hide_product_options = false -%}
 {%- for item in cart.items -%}
   {%- for property in item.properties -%}
@@ -81,6 +71,14 @@
 <script src="{{ 'product-gallery.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'product-mobile-gallery.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'pdp-new.js' | asset_url }}" defer="defer"></script>
+
+{%- comment -%} main-product-custom.js's "(More Info)" handler reads window.product
+    (vendor + title) to find the matching Option Help entry; without it the links
+    render but do nothing. Full product JSON rather than a trimmed object because
+    custom-color-picker.js and old-custom.js read this global too. {%- endcomment -%}
+<script>
+  window.product = {{ product | json }};
+</script>
 
 {%- assign product_form_id = 'product-form-' | append: section.id -%}
 {%- assign info_tab_blocks = section.blocks | where: 'type', 'info_tab' -%}
@@ -140,18 +138,28 @@
             </div>
 
           {%- when 'color_options' -%}
-            {%- comment -%} FULL configurator — the live PDP's product-options snippet
-                rendered verbatim, so every option group (colours, assembly/room-of-choice
-                installation, accessories, cable attachments, warranty, quantity inputs)
-                is selectable with the live pricing, mandatory/conditional/multichoice
-                rules and order data. It brings its own #Product-Options-{{ section.id }}
-                wrapper, which is what product-info.js and product-custom-options.js swap
-                on variant change, and its markers sit inside #MainProduct-{{ section.id }}
-                where product-form-with-options.js reads them at add-to-cart.
-                Nothing is filtered here: the add-on cards below are an alternate view of
-                these same inputs, not a replacement for them. {%- endcomment -%}
+            {%- comment -%} FULL configurator. Every option group stays selectable with the
+                live pricing, mandatory/conditional rules and order data. It brings its own
+                #Product-Options-{{ section.id }} wrapper — what product-info.js and
+                product-custom-options.js swap on variant change — and its markers sit
+                inside #MainProduct-{{ section.id }} where product-form-with-options.js
+                reads them at add-to-cart.
+
+                Nothing is filtered or hidden. The only relocation is the installation
+                group, re-presented as the Figma "Delivery & Installation Options"
+                dropdown, which drives this same input. {%- endcomment -%}
+            {%- assign pdp_install_match = '' -%}
+            {%- for b in section.blocks -%}
+              {%- if b.type == 'delivery_options' -%}
+                {%- assign pdp_install_match = b.settings.group_match -%}
+              {%- endif -%}
+            {%- endfor -%}
             <div class="pdp-new__configurator" {{ block.shopify_attributes }}>
-              {% render 'product-options', product: product %}
+              {% render 'pdp-new-product-options',
+                product: product,
+                section_id: section.id,
+                installation_match: pdp_install_match
+              %}
             </div>
 
           {%- when 'info_tab' -%}
@@ -181,26 +189,73 @@
                       {%- assign info_i = info_i | plus: 1 -%}
                       <div class="tabs__item{% if info_i == 1 %} active visible{% endif %}" data-index="{{ info_i }}">
                         {%- if tab.settings.source == 'product_meta' -%}
-                          <ul class="pdp-new__meta-list" role="list">
+                          {%- comment -%} Same rows the live PDP renders (main-product.liquid's
+                              .metainfo-wrapper). The wrapper class is not cosmetic:
+                              main-product-custom.js binds the popup handler to
+                              `.metainfo-wrapper .more-info` specifically.
+
+                              Processing Time is gated on product.available as on live — an
+                              out-of-stock hold shouldn't advertise a lead time. {%- endcomment -%}
+                          <div class="metainfo-wrapper pdp-new__metainfo">
                             {%- if product.metafields.custom.condition_state != blank -%}
-                              <li><strong>Condition:</strong> {{ product.metafields.custom.condition_state | strip_html | replace: ' (See Description for Details)', '' | replace: '(What Does this Mean?)', '' }}</li>
+                              <div class="item">
+                                <div class="item__icon-wrap">{% render 'icon-star' %}</div>
+                                <div class="item__text">
+                                  <span class="title">Condition:</span>
+                                  {{ product.metafields.custom.condition_state | strip_html | replace: ' (See Description for Details)', '' | replace: '(What Does this Mean?)', '' }}
+                                </div>
+                              </div>
                             {%- endif -%}
                             {%- if product.metafields.custom.grade != blank -%}
-                              <li><strong>Grade:</strong> {{ product.metafields.custom.grade }}</li>
+                              <div class="item">
+                                <div class="item__icon-wrap">{% render 'icon-chart' %}</div>
+                                <div class="item__text">
+                                  <span class="title">Grade:</span>
+                                  {{ product.metafields.custom.grade }}
+                                  <span class="more-info" data-customfield="Grade">(More Info)</span>
+                                </div>
+                              </div>
                             {%- endif -%}
                             {%- if product.metafields.custom.warranty != blank -%}
-                              <li><strong>Warranty:</strong> {{ product.metafields.custom.warranty | strip_html | replace: ' (See Description for Details)', '' }}</li>
+                              <div class="item">
+                                <div class="item__icon-wrap">{% render 'icon-verified' %}</div>
+                                <div class="item__text">
+                                  <span class="title">Warranty:</span>
+                                  {{ product.metafields.custom.warranty | strip_html | replace: ' (See Description for Details)', '' }}
+                                  <span class="more-info" data-customfield="Warranty">(More Info)</span>
+                                </div>
+                              </div>
                             {%- endif -%}
                             {%- if product.metafields.custom.ships != blank -%}
-                              <li><strong>Ships:</strong> {{ product.metafields.custom.ships }}</li>
+                              <div class="item">
+                                <div class="item__icon-wrap">{% render 'icon-box' %}</div>
+                                <div class="item__text">
+                                  <span class="title">Ships:</span>
+                                  {{ product.metafields.custom.ships }}
+                                  {% render 'shipping-packaging-video-link', product: product %}
+                                </div>
+                              </div>
                             {%- endif -%}
-                            {%- if product.metafields.custom.processing_time != blank -%}
-                              <li><strong>Processing Time:</strong> {{ product.metafields.custom.processing_time_long }}</li>
+                            {%- if product.available and product.metafields.custom.processing_time != blank -%}
+                              <div class="item">
+                                <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
+                                <div class="item__text">
+                                  <span class="title">Processing Time:</span>
+                                  {{ product.metafields.custom.processing_time_long }}
+                                  <span class="more-info" data-customfield="Processing Time" data-processingtime="{{ product.metafields.custom.processing_time }}">(More Info)</span>
+                                </div>
+                              </div>
                             {%- endif -%}
                             {%- if product.metafields.custom.product_code != blank -%}
-                              <li><strong>Product Code:</strong> {{ product.metafields.custom.product_code }}</li>
+                              <div class="item">
+                                <div class="item__icon-wrap">{% render 'icon-hashtag' %}</div>
+                                <div class="item__text">
+                                  <span class="title">Product Code:</span>
+                                  {{ product.metafields.custom.product_code }}
+                                </div>
+                              </div>
                             {%- endif -%}
-                          </ul>
+                          </div>
                         {%- else -%}
                           {{ tab.settings.content }}
                         {%- endif -%}
@@ -213,24 +268,20 @@
 
           {%- when 'price' -%}
             <div class="pdp-new__payments" {{ block.shopify_attributes }}>
-              {%- comment -%} Headline price: the GRAND total — variant price plus every
-                  selected option. .pr_custom_price is the contract for that: it is the
-                  first such element in the document, so priceHelper()
-                  (product-custom-options.js) reads its data-price-value as the base and
-                  writes the running total into it. data-price-value itself is never
-                  rewritten, so it stays the variant's own price (the financing quote
-                  reads it from there). Swapped per variant via the #price-{id} contract
-                  in product-info.js. {%- endcomment -%}
+              {%- comment -%} Headline price: the variant's own price, STATIC. It carries no
+                  .pr_custom_price class, so priceHelper() (product-custom-options.js) never
+                  rewrites it when options are selected — the running total belongs to the
+                  "Selected configuration total" row above Add to Cart. Still swapped per
+                  variant via the #price-{id} contract in product-info.js, and
+                  data-price-value is kept as the source pdp-new.js reads for the financing
+                  quote. {%- endcomment -%}
               <div id="price-{{ section.id }}" role="status" class="pdp-new__price">
                 <div class="pr_custom_price-container">
-                  <p class="pr_custom_price{% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{ product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{ cart.currency.symbol }}">
+                  <p class="pdp-new__price-value{% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{ product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{ cart.currency.symbol }}">
                     {{ product.selected_or_first_available_variant.price | money }}
                   </p>
                 </div>
               </div>
-              {%- comment -%} The live "Options added: +$X" line is deliberately not rendered
-                  here: the headline above already shows the total including options, and the
-                  labelled row above Add to Cart carries the options-only figure. {%- endcomment -%}
               {%- if block.settings.show_financing -%}
                 {%- comment -%} Same Affirm stack as the live PDP: affirm-as-low-as promo
                     element + paylater-providers snippet, driven by main-product-custom.js
@@ -244,49 +295,86 @@
 
           {%- when 'delivery_options' -%}
             {%- comment -%} The Figma "Delivery & Installation Options" dropdown is a VIEW of the
-                real, priced installation group the configurator already renders — the same
-                pattern as the add-on cards, never a second control. It deliberately carries no
-                name attribute and is not in the form, so it submits nothing itself: choosing an
-                option clicks the real radio, which is what carries the price and the order data.
-                (It previously rendered a static theme-editor list that submitted its own
-                unpriced properties[...] duplicate of this decision.) pdp-new.js fills it from the
-                rendered configurator and hides the duplicate accordion group; if no matching
-                group exists for this product it stays hidden rather than inventing options. {%- endcomment -%}
-            <div
-              class="pdp-new__delivery"
-              data-option-group-view="{{ block.settings.group_match | escape }}"
-              hidden
-              {{ block.shopify_attributes }}
-            >
-              <label class="pdp-new__label" for="PdpNewDelivery-{{ section.id }}">{{ block.settings.label | escape }}</label>
-              <div class="pdp-new__select-wrap">
-                <select id="PdpNewDelivery-{{ section.id }}" class="pdp-new__select" data-option-group-select></select>
-              </div>
+                real, priced installation group the configurator renders, never a second
+                control. No name attribute and outside the form, so it submits nothing:
+                choosing an option clicks the real radio, which carries the price and order
+                data. Stays hidden when the product has no matching group. {%- endcomment -%}
+            {%- comment -%} Built server-side from the same option group the configurator
+                renders (that group is hidden there, never dropped). Each <option> value is
+                the real variant id, so choosing one just clicks the matching
+                [data-customization-option] input and the configurator owns the price and
+                order data exactly as if the accordion had been used. Carries no name and
+                is outside the form, so it submits nothing itself. Renders nothing when the
+                product has no matching group, rather than inventing options. {%- endcomment -%}
+            {%- assign pdp_del_needle = block.settings.group_match | downcase | strip -%}
+            {%- assign pdp_del_option = nil -%}
+            {%- if pdp_del_needle != blank -%}
+              {%- assign pdp_del_opts = product.metafields.options.product_options.value -%}
+              {%- if product.selected_or_first_available_variant.metafields.options.product_options.value != blank -%}
+                {%- assign pdp_del_opts = product.selected_or_first_available_variant.metafields.options.product_options.value -%}
+              {%- endif -%}
+              {%- for category in pdp_del_opts -%}
+                {%- for po in category.product_options.value -%}
+                  {%- assign po_dc = po.product_option_title | downcase -%}
+                  {%- if po_dc contains pdp_del_needle and po.hide_values != true -%}
+                    {%- assign pdp_del_option = po -%}
+                    {%- break -%}
+                  {%- endif -%}
+                {%- endfor -%}
+                {%- if pdp_del_option != nil -%}{%- break -%}{%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
+            <div id="PdpNewDeliveryBlock-{{ section.id }}">
+              {%- if pdp_del_option != nil -%}
+                {%- assign pdp_del_default = pdp_del_option.product_option_sets_default.value.id -%}
+                <div
+                  class="pdp-new__delivery"
+                  data-option-group-view="{{ block.settings.group_match | escape }}"
+                  {{ block.shopify_attributes }}
+                >
+                  <label class="pdp-new__label" for="PdpNewDelivery-{{ section.id }}">{{ block.settings.label | escape }}</label>
+                  <div class="pdp-new__select-wrap">
+                    <select id="PdpNewDelivery-{{ section.id }}" class="pdp-new__select" data-option-group-select>
+                      {%- for variant in pdp_del_option.product_option_variants.value -%}
+                        {%- liquid
+                          assign v_title = variant.title
+                          if variant.product.has_only_default_variant
+                            assign v_title = variant.product.title
+                          endif
+                          assign v_clean = v_title | split: ' (' | first | strip
+                        -%}
+                        <option
+                          value="{{ variant.id }}"
+                          {% if variant.id == pdp_del_default %}selected{% endif %}
+                          {% if variant.available == false %}disabled{% endif %}
+                        >{{ v_clean | escape }}{% if variant.price > 0 %} — {{ variant.price | money }}{% endif %}</option>
+                      {%- endfor -%}
+                    </select>
+                  </div>
+                </div>
+              {%- endif -%}
             </div>
 
           {%- when 'buy_buttons' -%}
             <div class="pdp-new__buy" {{ block.shopify_attributes }}>
-              {%- comment -%} One clearly labelled total sitting directly above Add to Cart, so
-                  the amount the customer is committing to is stated rather than inferred from
-                  the headline price. This is now the FIRST .pr_custom_price in the document,
-                  which is what priceHelper (product-custom-options.js) reads its base from
-                  (data-price-value) and writes the running total into — so it, and the sticky
-                  bar that mirrors it, are the only prices that move with option selections.
-                  pdp-new.js re-swaps this block by id on variant change. {%- endcomment -%}
+              {%- comment -%} The running grand total: variant price plus every selected option,
+                  stated directly above Add to Cart.
+
+                  This is the FIRST .pr_custom_price in the document, which is the contract
+                  priceHelper() (product-custom-options.js) works to: it reads
+                  data-price-value off that first element as the base, adds the option
+                  adjustment, and writes the result into every .pr_custom_price. The headline
+                  price deliberately does not carry the class, so it stays static.
+                  data-price-value itself is never rewritten. Re-swapped by id on variant
+                  change (pdp-new.js). {%- endcomment -%}
               <div class="pdp-new__total" id="PdpNewConfigTotal-{{ section.id }}" role="status" aria-live="polite">
                 <span class="pdp-new__total-label">Selected configuration total</span>
-                {%- comment -%} The options-only figure, NOT base+options — the headline price
-                    already shows that. data-options-added-value is the live contract
-                    renderOptionsAddedTotal() writes the running option delta into, so this
-                    reuses the component's own arithmetic instead of totalling a second time.
-                    Deliberately not .pr_custom_price: that would make priceHelper() overwrite
-                    it with the grand total. {%- endcomment -%}
                 <span
-                  class="pdp-new__total-value"
+                  class="pdp-new__total-value pr_custom_price"
                   data-config-total
-                  data-options-added-value
+                  data-price-value="{{ product.selected_or_first_available_variant.price | money_without_currency }}"
                   data-currency="{{ cart.currency.symbol }}"
-                >+{{ 0 | money }}</span>
+                >{{ product.selected_or_first_available_variant.price | money }}</span>
               </div>
               {%- comment -%} include_quantity_input: this section gets its whole form from
                   buy-buttons, and <product-form-with-options> reads [name=quantity] from
@@ -300,144 +388,24 @@
                 include_quantity_input: true,
                 show_cart_icon: true
               -%}
+              {%- comment -%} Figma: prompt directly under Add to Cart. Static text, no
+                  link — the wireframe shows no destination for it. {%- endcomment -%}
+              <p class="pdp-new__buy-note">Get delivered quote / confirm fit</p>
             </div>
 
           {%- when 'product_options' -%}
-            {%- comment -%} Figma add-on cards. These are a convenience VIEW of accessory
-                groups that the full configurator above already renders — the tab filter
-                below only decides which groups additionally get cards, never what is
-                purchasable, so a filter miss costs a card, never an option. Gated by the
-                same cart-transform kill-switch as the configurator. {%- endcomment -%}
+            {%- comment -%} Figma add-on cards — TRUE linked-product upsells. Each is a real
+                Shopify product/variant adding a SEPARATE cart line. NOT a view of the
+                configurator: it clicks no options.product_options input and hides no
+                configurator category. List comes from a per-product metafield. {%- endcomment -%}
             {%- if block.id == addon_tab_blocks.first.id -%}
-              {%- comment -%} Wrapper is unconditional so the variant-change swap in
-                  pdp-new.js always finds both a source and a target for this id, even
-                  when one variant has add-ons and the next has none. Add-ons come from
-                  the variant-level metafield, so they must re-render per variant. {%- endcomment -%}
-              <div id="PdpNewAddons-{{ section.id }}">
-              {%- assign addon_options = product.metafields.options.product_options.value -%}
-              {%- if product.selected_or_first_available_variant.metafields.options.product_options.value != blank -%}
-                {%- assign addon_options = product.selected_or_first_available_variant.metafields.options.product_options.value -%}
-              {%- endif -%}
-              {%- if addon_options != blank -%}
-              <div class="pdp-new__addons" {{ block.shopify_attributes }}>
-                <p class="pdp-new__label pdp-new__addons-heading">{{ section.settings.addons_heading | escape }}</p>
-                <div data-tabs-section>
-                  <div class="tabs__buttons pdp-new__tabs-nav">
-                    {%- assign addon_i = 0 -%}
-                    {%- for category in addon_options -%}
-                      {%- assign cat_title_dc = category.title | downcase -%}
-                      {%- if category.hide_option or cat_title_dc contains 'color' or cat_title_dc contains 'assembly' or cat_title_dc contains 'warranty' or cat_title_dc contains 'quantity' -%}
-                        {%- continue -%}
-                      {%- endif -%}
-                      {%- unless category.hide_option -%}
-                        {%- assign cat_products_count = 0 -%}
-                        {%- for po in category.product_options.value -%}
-                          {%- unless po.hide_values -%}
-                            {%- assign cat_products_count = cat_products_count | plus: po.product_option_variants.value.size -%}
-                          {%- endunless -%}
-                        {%- endfor -%}
-                        {%- if cat_products_count > 0 -%}
-                          {%- assign addon_i = addon_i | plus: 1 -%}
-                          <button type="button" class="tab-btn{% if addon_i == 1 %} active{% endif %}" data-index="{{ addon_i }}">
-                            {{ category.title | escape }}
-                          </button>
-                        {%- endif -%}
-                      {%- endunless -%}
-                    {%- endfor -%}
-                  </div>
-                  <div class="tabs__content pdp-new__addons-content">
-                    {%- assign addon_i = 0 -%}
-                    {%- for category in addon_options -%}
-                      {%- assign cat_title_dc = category.title | downcase -%}
-                      {%- if category.hide_option or cat_title_dc contains 'color' or cat_title_dc contains 'assembly' or cat_title_dc contains 'warranty' or cat_title_dc contains 'quantity' -%}
-                        {%- continue -%}
-                      {%- endif -%}
-                      {%- unless category.hide_option -%}
-                        {%- assign cat_products_count = 0 -%}
-                        {%- for po in category.product_options.value -%}
-                          {%- unless po.hide_values -%}
-                            {%- assign cat_products_count = cat_products_count | plus: po.product_option_variants.value.size -%}
-                          {%- endunless -%}
-                        {%- endfor -%}
-                        {%- if cat_products_count > 0 -%}
-                        {%- assign addon_i = addon_i | plus: 1 -%}
-                        <div class="tabs__item{% if addon_i == 1 %} active visible{% endif %}" data-index="{{ addon_i }}">
-                          {%- comment -%} No hidden option markers here. These cards are an
-                              alternate VIEW of the real configurator inputs rendered by
-                              snippets/product-options.liquid above: pdp-new.js resolves each
-                              card's data-variant-id to the matching [data-customization-option]
-                              inside #Product-Options and clicks it, so selection, pricing,
-                              mandatory/conditional/multichoice rules and add-to-cart data all
-                              come from one source of truth. Duplicating the inputs here would
-                              double-count prices and emit duplicate line-item properties. {%- endcomment -%}
-                          <pdp-carousel class="pdp-new__addon-carousel">
-                            <ul class="pdp-new__addon-track" role="list">
-                              {%- for po in category.product_options.value -%}
-                              {%- unless po.hide_values -%}
-                              {%- for addon in po.product_option_variants.value -%}
-                                {%- liquid
-                                  comment
-                                    product_option_variants hold VARIANT references —
-                                    resolve product-level fields via addon.product.
-                                  endcomment
-                                  assign addon_product = addon.product | default: addon
-                                  assign addon_variant_id = addon.id | default: addon.selected_or_first_available_variant.id
-                                  assign addon_img = addon.featured_image | default: addon.image | default: addon_product.featured_image
-                                -%}
-                                <li class="pdp-new__addon-card">
-                                  <a class="pdp-new__addon-img" href="{{ addon_product.url }}" tabindex="-1">
-                                    {%- if addon_img -%}
-                                      <img src="{{ addon_img | image_url: width: 336 }}" alt="{{ addon_img.alt | escape }}" width="168" height="168" loading="lazy">
-                                    {%- endif -%}
-                                  </a>
-                                  <div class="pdp-new__addon-info">
-                                    <a class="pdp-new__addon-title" href="{{ addon_product.url }}">{{ addon_product.title | escape }}</a>
-                                    {%- if addon.sku != blank -%}
-                                      <span class="pdp-new__addon-sku">Product Code: {{ addon.sku | escape }}</span>
-                                    {%- endif -%}
-                                    {%- comment -%} Card CTA: price on its own line above a
-                                        full-width button, per the Figma card. {%- endcomment -%}
-                                    <div class="pdp-new__addon-cta">
-                                      <span class="pdp-new__addon-price">Price: {{ addon.price | money }}</span>
-                                      {%- comment -%} Attaches the add-on to THIS order (option-style, price
-                                          aggregates) — wired by the options layer, not core cart add.
-                                          Label stays "Add option" (Tim's item 3) even though the Figma
-                                          button reads "Add To Cart": these never create a cart line. {%- endcomment -%}
-                                      <button
-                                        type="button"
-                                        class="pdp-new__addon-atc"
-                                        data-addon-attach
-                                        data-variant-id="{{ addon_variant_id }}"
-                                        data-option-category="{{ category.title | escape }}"
-                                        aria-pressed="false"
-                                        {% unless addon.available %}disabled{% endunless %}
-                                      >
-                                        {% render 'pdp-new-icon-cart', class: 'pdp-new__cart-icon--sm' %}
-                                        <span>{% if addon.available %}Add option{% else %}{{ 'products.product.sold_out' | t }}{% endif %}</span>
-                                      </button>
-                                    </div>
-                                  </div>
-                                </li>
-                              {%- endfor -%}
-                              {%- endunless -%}
-                              {%- endfor -%}
-                            </ul>
-                            <button type="button" class="pdp-new__carousel-arrow pdp-new__carousel-arrow--prev" aria-label="{{ 'general.slider.previous_slide' | t }}" hidden>
-                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            </button>
-                            <button type="button" class="pdp-new__carousel-arrow pdp-new__carousel-arrow--next" aria-label="{{ 'general.slider.next_slide' | t }}">
-                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            </button>
-                          </pdp-carousel>
-                        </div>
-                        {%- endif -%}
-                      {%- endunless -%}
-                    {%- endfor -%}
-                  </div>
-                </div>
-              </div>
-              {%- endif -%}
-              </div>
+              {% render 'pdp-new-upsells',
+                product: product,
+                section_id: section.id,
+                heading: section.settings.addons_heading,
+                metafield: block.settings.upsell_metafield,
+                block_attributes: block.shopify_attributes
+              %}
             {%- endif -%}
 
           {%- when '@app' -%}
@@ -451,10 +419,9 @@
   </div>
 
   {%- comment -%} ============ Lower content: tabs DERIVED from product data ============
-      Curated groups (Overview/Features/Specs/Accessories/Comparison/FAQ) that
-      auto-hide when their data sources are empty for this product; "Content
-      section" blocks append as extra custom tabs; Warranty/Prop 65/Downloads
-      always visible below. See snippets/pdp-new-content-tabs.liquid. {%- endcomment -%}
+      Curated groups that auto-hide when their sources are empty for this product;
+      "Content section" blocks append as extra custom tabs.
+      See snippets/pdp-new-content-tabs.liquid. {%- endcomment -%}
   {% render 'pdp-new-content-tabs', content_blocks: content_blocks %}
 
   {%- comment -%} ============ Sticky Add to Cart bar ============ {%- endcomment -%}
@@ -465,10 +432,9 @@
           <img src="{{ product.featured_media | image_url: width: 96 }}" alt="" width="48" height="48" loading="lazy">
         {%- endif -%}
         <span class="pdp-new__sticky-title">{{ product.title | escape }}</span>
-        {%- comment -%} .pr_custom_price so the live price writer (product-custom-options.js
-            priceHelper) keeps the sticky total in step with the buy-box price when options
-            are selected. The buy-box price element comes first in the DOM, so it stays the
-            base-price source priceHelper reads from. {%- endcomment -%}
+        {%- comment -%} .pr_custom_price so priceHelper keeps the sticky figure in step with
+            the configuration total. That total comes first in the DOM, so it stays the
+            base-price source priceHelper reads. {%- endcomment -%}
         <span class="pdp-new__sticky-total">
           {%- comment -%} Mirrors the headline grand total (product + options), so it is
               labelled "Total" rather than repeating the options-only figure shown above
@@ -538,13 +504,10 @@
 </div>
 
 {%- comment -%} ============ Configurator help popups ============
-    The "?" buttons the configurator renders ([data-popup-open="<title>"]) look up
-    a matching [data-popup="<title>"] elsewhere in the document, so these popups
-    must exist or every help button dead-ends. Ported verbatim from the live PDP
-    (main-product.liquid), including the option-help metaobject source that
-    old-custom.js reads. Wrapped in an unconditional id so the variant-change sync
-    can re-render it: help text is attached to the option groups, which are
-    themselves per-variant. {%- endcomment -%}
+    The configurator's "?" buttons ([data-popup-open="<title>"]) look up a matching
+    [data-popup="<title>"] elsewhere in the document, so these must exist or every
+    help button dead-ends. Wrapped in an unconditional id so the variant-change sync
+    can re-render it — help text is attached to per-variant option groups. {%- endcomment -%}
 <div id="PdpNewOptionPopups-{{ section.id }}">
   {%- assign help_options = product.metafields.options.product_options.value -%}
   {%- if product.selected_or_first_available_variant.metafields.options.product_options.value != blank -%}
@@ -721,9 +684,17 @@
     },
     {
       "type": "product_options",
-      "name": "Add-Ons (product options)",
+      "name": "Add-Ons (upsells)",
       "limit": 1,
-      "settings": []
+      "settings": [
+        {
+          "type": "text",
+          "id": "upsell_metafield",
+          "label": "Upsell list metafield",
+          "info": "namespace.key of the product metafield holding the upsell list. Accepts a list of metaobjects (variant/product + default_quantity + group), a list of variants, or a list of products. Empty or unset renders nothing.",
+          "default": "custom.pdp_upsells"
+        }
+      ]
     },
     {
       "type": "content_section",
