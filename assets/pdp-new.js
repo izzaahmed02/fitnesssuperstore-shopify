@@ -28,6 +28,16 @@
     track.addEventListener('scroll', function () {
       updateArrowState(track, prev, next);
     }, { passive: true });
+
+    /* A track inside a non-active tab panel measures 0x0 and would look
+       un-scrollable forever. Resize covers both the tab becoming visible and the
+       viewport changing how many cards fit. */
+    if (typeof ResizeObserver === 'function') {
+      new ResizeObserver(function () {
+        updateArrowState(track, prev, next);
+      }).observe(track);
+    }
+
     updateArrowState(track, prev, next);
   }
 
@@ -48,160 +58,161 @@
     );
   }
 
-  /* ---- Add-on cards <-> the real configurator ----
-     The cards are an alternate VIEW of option groups that the live configurator
-     (snippets/product-options.liquid) already renders inside
-     #Product-Options-<sectionId>. A card click resolves its variant id to the
-     real [data-customization-option] input and clicks THAT, so
-     product-custom-options.js runs its own sibling-uncheck, mandatory-reset,
-     multichoice-limit, conditional-visibility and price logic. We deliberately do
-     not set .checked or write [data-selected-options] here: duplicating that
-     bookkeeping is what let the card path drift from the live behaviour (and,
-     with its own price writer, fight priceHelper() over .pr_custom_price).
-     priceHelper() is now the only thing that writes prices. ---- */
+  /* ---- Add-on cards = TRUE linked-product upsells ----
+     Each card is its own Shopify product/variant. Clicking one POSTs that variant
+     id to /cart/add.js, creating a SEPARATE cart line, then re-renders and opens
+     the cart drawer. It never touches the configurator: no [data-customization-option]
+     input is clicked and the configured product's own price and order line are
+     unaffected. Quantity comes from data-quantity, set per entry in the product's
+     upsell metafield (e.g. tile flooring adds at 12). ---- */
 
-  /* The headline price element. Its TEXT is the grand total (priceHelper keeps it
-     in step with option selections); its data-price-value attribute is never
-     rewritten, so that stays the variant's own price. */
+  /* The headline price element: the variant's own price, static. Carries no
+     .pr_custom_price class, so priceHelper never rewrites it; its
+     data-price-value is the source the financing quote reads. */
   function headlinePriceEl(root) {
-    return (root || document).querySelector('.pdp-new__price .pr_custom_price');
+    return (root || document).querySelector('.pdp-new__price .pdp-new__price-value');
+  }
+
+  /* The running grand total above Add to Cart — first .pr_custom_price in the
+     document, so priceHelper takes its base from here and writes into it. */
+  function configTotalEl(root) {
+    return (root || document).querySelector('[data-config-total]');
   }
 
   function optionsRoot(scope) {
     return (scope || document).querySelector('[id^="Product-Options-"]');
   }
 
-  function inputForCard(button, scope) {
-    var root = optionsRoot(scope);
-    if (!root) return null;
-    return root.querySelector('[data-customization-option="' + button.dataset.variantId + '"]');
-  }
-
-  /* A card must never select an option the configurator itself is withholding —
-     a conditional group whose rules the current selections don't unlock.
-     product-custom-options.js expresses exactly that by setting an inline
-     display:none on the [data-conditions-to-render] element, so test for that
-     specifically. A general "any hidden ancestor" test would also match the
-     groups we hide because they are shown as cards, which is precisely the set
-     of inputs a card click is supposed to reach. */
-  function isWithheld(input) {
-    var conditional = input.closest('[data-conditions-to-render]');
-    return !!conditional && conditional.style.display === 'none';
-  }
-
-  /* Most option groups are radios, so re-clicking a checked input does nothing.
-     A card labelled "Selected" has to be un-selectable, or the customer can
-     never back out of a priced accessory. The configurator already ships the
-     correct removal path: every selected option renders a badge whose
-     .close-option button clears the value, re-syncs conditional groups and
-     re-runs the price math. Click that instead of hand-rolling the teardown. */
-  function deselectOption(input, scope) {
-    var root = optionsRoot(scope);
-    if (!root) return false;
-    var badge = root.querySelector('[data-option-id="' + input.dataset.customizationOption + '"]');
-    var remove = badge && badge.querySelector('.close-option');
-    if (!remove) return false;
-    /* The "x" is an <svg>, which has no .click() helper — dispatch a real
-       bubbling click so both the badge's own listener and the delegated
-       mandatory-reset handler see it. */
-    remove.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-    return true;
-  }
-
-  /* These cards attach a configuration choice to THIS order — they never create
-     a separate cart line — so they read "Add option" / "Selected", not
-     "Add to Cart". Sold-out cards keep their server-rendered label. */
-  function setCardState(button, checked) {
-    button.classList.toggle('is-added', checked);
-    button.setAttribute('aria-pressed', checked ? 'true' : 'false');
-    if (button.disabled) return;
+  /* Momentary confirmation only. The button stays enabled so a second unit can be
+     added; each click adds its own quantity and the cart is the source of truth. */
+  function flashAdded(button) {
     var label = button.querySelector('span');
-    if (label) label.textContent = checked ? 'Selected' : 'Add option';
+    if (!label) return;
+    if (button.dataset.restoreLabel === undefined) {
+      button.dataset.restoreLabel = label.textContent.trim();
+    }
+    button.classList.add('is-added');
+    label.textContent = 'Added';
+    clearTimeout(button._addedTimer);
+    button._addedTimer = setTimeout(function () {
+      button.classList.remove('is-added');
+      label.textContent = button.dataset.restoreLabel;
+    }, 2000);
   }
 
-  /* Cards must reflect the configurator, not their own memory: selections can
-     change from the accordion side, be reverted by a multichoice limit, or be
-     wiped when the options wrapper is re-rendered on variant change. */
-  function syncAddonButtons(scope) {
-    var root = scope || document;
-    root.querySelectorAll('[data-addon-attach]').forEach(function (button) {
-      var input = inputForCard(button, scope);
-      setCardState(button, !!(input && input.checked));
-    });
+  /* Re-render the drawer from freshly fetched section HTML and open it — the same
+     contract cart-drawer.js exposes elsewhere. renderContents() calls open(). */
+  function refreshCartDrawer() {
+    var drawer = document.querySelector('cart-drawer') || document.querySelector('cart-notification');
+    if (!drawer || typeof drawer.renderContents !== 'function') {
+      /* No drawer on the page (or an unexpected build): fall back to the cart
+         page rather than silently leaving the buyer with no feedback. */
+      window.location = (window.routes && window.routes.cart_url) || '/cart';
+      return Promise.resolve();
+    }
+
+    /* Ask the element which sections it re-renders rather than hardcoding them; the
+       drawer and the notification want different sets. */
+    var sectionIds = 'cart-drawer,cart-icon-bubble';
+    if (typeof drawer.getSectionsToRender === 'function') {
+      sectionIds = drawer.getSectionsToRender().map(function (s) { return s.id; }).join(',');
+    }
+
+    var root = (window.routes && window.routes.root) || '/';
+    return fetch(root + '?sections=' + encodeURIComponent(sectionIds))
+      .then(function (response) { return response.json(); })
+      .then(function (sections) {
+        return fetch(root + 'cart.js')
+          .then(function (response) { return response.json(); })
+          .then(function (cart) {
+            if (typeof publish === 'function' && typeof PUB_SUB_EVENTS === 'object') {
+              publish(PUB_SUB_EVENTS.cartUpdate, { source: 'pdp-new-upsell', cartData: cart });
+            }
+            drawer.classList.remove('is-empty');
+            drawer.renderContents({ id: cart.id, sections: sections });
+          });
+      });
   }
 
   document.addEventListener('click', function (event) {
-    var button = event.target.closest('[data-addon-attach]');
-    if (!button) return;
-    var scope = button.closest('product-info') || document;
-    var input = inputForCard(button, scope);
-    if (!input) return;
+    var button = event.target.closest && event.target.closest('[data-upsell-add]');
+    if (!button || button.disabled) return;
 
-    if (isWithheld(input)) {
-      var root = optionsRoot(scope);
-      if (root) root.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
+    var variantId = button.dataset.variantId;
+    if (!variantId) return;
+    /* Quantity is per-entry (e.g. flooring tiles add at 12). Guard the parse so a
+       malformed metafield value can never post NaN or 0. */
+    var quantity = parseInt(button.dataset.quantity, 10);
+    if (!(quantity > 0)) quantity = 1;
 
-    if (input.checked) {
-      /* Checkboxes untoggle themselves; radios need the badge-removal path. */
-      if (input.type === 'radio') deselectOption(input, scope);
-      else input.click();
-    } else {
-      /* click(), not .checked = — a real click is what makes
-         product-custom-options.js run its selection + price logic. */
-      input.click();
-    }
-    /* Read back: the component may have reverted or altered the selection. */
-    setCardState(button, input.checked);
+    button.disabled = true;
+    button.classList.add('loading');
+
+    var root = (window.routes && window.routes.root) || '/';
+    fetch(root + 'cart/add.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify({ items: [{ id: Number(variantId), quantity: quantity }] })
+    })
+      .then(function (response) {
+        return response.json().then(function (body) {
+          /* Shopify answers 4xx with a JSON description (sold out, limit
+             reached). Surface it rather than pretending the add worked. */
+          if (!response.ok) throw new Error(body.description || body.message || 'Add to cart failed');
+          return body;
+        });
+      })
+      .then(function () {
+        flashAdded(button);
+        return refreshCartDrawer();
+      })
+      .catch(function (error) {
+        console.error('[pdp-new] upsell add failed', error);
+        var label = button.querySelector('span');
+        if (label) {
+          var previous = label.textContent.trim();
+          label.textContent = 'Unavailable';
+          setTimeout(function () { label.textContent = previous; }, 2000);
+        }
+      })
+      .finally(function () {
+        button.disabled = false;
+        button.classList.remove('loading');
+      });
   });
 
-  /* Accordion-side changes (and sibling-unchecks the component performs) bubble
-     out of the options wrapper. */
+  /* Accordion-side option changes still need to keep the delivery dropdown in
+     step. Upsell cards are not involved: they hold no configurator state. */
   document.addEventListener('change', function (event) {
     if (!event.target.closest || !event.target.closest('[id^="Product-Options-"]')) return;
     var scope = event.target.closest('product-info') || document;
-    syncAddonButtons(scope);
-    syncOptionGroupSelect(scope, false);
+    syncOptionGroupSelect(scope);
     /* No syncFinancing() here on purpose: the quote tracks the headline variant
        price, which option selections no longer change. */
   });
 
-  /* Groups that also appear as Figma cards are hidden in the configurator so the
-     buy box doesn't show the same accessories twice. This is presentation only —
-     the inputs stay in the DOM, fully live and readable by
-     product-form-with-options.js. Nothing is filtered out of the render, so a
-     card that fails to resolve leaves its group visible rather than unbuyable. */
-  function hideCardCoveredGroups(scope) {
-    var root = scope || document;
-    root.querySelectorAll('[data-addon-attach]').forEach(function (button) {
-      var input = inputForCard(button, scope);
-      var group = input && input.closest('.product-option__item');
-      if (group) group.classList.add('pdp-new--card-covered');
-    });
-  }
-
   /* ---- Variant-change synchronisation ----
-     product-info.js re-fetches the whole section and swaps a fixed list of ids
-     (price, Product-Options, stock badges, …), then publishes variantChange with
-     the parsed document. Regions this template adds are not on that list, so they
-     would keep showing the previous variant's data: add-on cards and option help
-     popups are built from the VARIANT-level options metafield, and the sticky bar
-     carries its own copy of the price and availability. We re-render them from the
-     same fetched HTML, using the same id-swap convention, so nothing survives from
-     the prior selection. */
+     product-info.js re-fetches the section and swaps a fixed list of ids, then
+     publishes variantChange with the parsed document. Regions this template adds
+     are not on that list, so they are re-rendered here from the same fetched HTML
+     using the same id-swap convention. Option help popups come from the
+     VARIANT-level options metafield and the sticky bar carries its own copy of
+     price and availability, so both would otherwise show the previous variant. */
   function swapById(fetched, name, sectionId) {
     var source = fetched.getElementById(name + '-' + sectionId);
     var target = document.getElementById(name + '-' + sectionId);
     if (source && target) target.innerHTML = source.innerHTML;
   }
 
-  /* Availability. product-info.js would normally push the new variant's
-     sold-out/disabled state onto the submit button, but its `productForm` getter
-     is `querySelector('product-form')`, which does not match the
-     <product-form-with-options> tag this template renders — so the call is a
-     no-op here and the button keeps the previous variant's state. Apply it from
-     the same source product-info.js reads: the fetched section's own submit
+  /* Availability. product-info.js's `productForm` getter is
+     querySelector('product-form'), which does not match the
+     <product-form-with-options> tag this template renders, so its own update is a
+     no-op here. Apply it from the same source: the fetched section's submit
      button, falling back to the variant payload. */
   function syncAvailability(root, fetched, sectionId, variant) {
     var submit = root.querySelector('.product-form__submit');
@@ -225,16 +236,13 @@
   }
 
   /* Affirm's promo element is seeded with {{ product.price }} — the cheapest
-     variant's price, not the selected one — and nothing ever updates it:
-     main-product-custom.js refreshes Afterpay's <square-placement> amount on
-     variantChange but leaves .affirm-as-low-as alone. On a multi-variant product
-     that means financing is quoted against the wrong price. Point it at the
-     headline variant price so it follows a variant change.
+     variant's price — and nothing updates it, so financing is quoted against the
+     wrong price on a multi-variant product. Point it at the headline variant
+     price instead.
 
-     Deliberately the variant price, not the configured total: the quote is
-     labelled "(options at checkout)", and a monthly figure that moved while the
-     headline price stayed put would contradict itself. Scoped to this template;
-     the shared files are untouched. */
+     Variant price, not the configured total: the quote reads "(options at
+     checkout)", so a monthly figure that moved while the headline stayed put
+     would contradict itself. */
   function syncFinancing(root) {
     var affirm = root.querySelector('.affirm-as-low-as');
     var price = headlinePriceEl(root);
@@ -247,63 +255,24 @@
   }
 
   /* ---- Figma "Delivery & Installation Options" dropdown <-> the real group ----
-     Same contract as the add-on cards: the select is a VIEW of an option group the
-     configurator already renders, never a second control. It is built from the
-     rendered inputs rather than from theme settings, so it can only ever offer
-     what the configurator would accept for this product and variant, with the
-     same prices. ---- */
+     Rendered server-side (main-product-new.liquid) from the same option group the
+     configurator renders, so there is nothing to build here. This only keeps the
+     select in step when the group is changed elsewhere. ---- */
 
-  function optionGroupFor(scope, match) {
-    var options = optionsRoot(scope);
-    var needle = String(match || '').trim().toLowerCase();
-    if (!options || !needle) return null;
-    var groups = options.querySelectorAll('[data-option-accordion]');
-    for (var i = 0; i < groups.length; i++) {
-      var input = groups[i].querySelector('[data-customization-option]');
-      if (input && (input.name || '').toLowerCase().indexOf(needle) !== -1) return groups[i];
+  function syncOptionGroupSelect(root) {
+    var select = root.querySelector('[data-option-group-select]');
+    if (!select || !select.options.length) return;
+    var options = optionsRoot(root);
+    if (!options) return;
+    /* Match on the option list we rendered, not on group identity: the selected
+       input for this group is whichever checked input the select offers. */
+    for (var i = 0; i < select.options.length; i++) {
+      var input = options.querySelector('[data-customization-option="' + select.options[i].value + '"]');
+      if (input && input.checked) {
+        select.value = select.options[i].value;
+        return;
+      }
     }
-    return null;
-  }
-
-  function optionLabel(input) {
-    var name = input.dataset.fieldName || '';
-    var price = input.dataset.fieldPrice || '';
-    /* Free choices show no price, matching the configurator's own rows. */
-    if (price && parseFloat(price.replace(/[^0-9.]/g, '')) > 0) return name + ' — ' + price;
-    return name;
-  }
-
-  function syncOptionGroupSelect(root, rebuild) {
-    var view = root.querySelector('[data-option-group-view]');
-    if (!view) return;
-    var select = view.querySelector('[data-option-group-select]');
-    var group = optionGroupFor(root, view.dataset.optionGroupView);
-    var inputs = group ? group.querySelectorAll('[data-customization-option]') : [];
-    /* No matching group for this product: stay hidden rather than showing a
-       control that submits nothing. */
-    if (!select || !inputs.length) {
-      view.hidden = true;
-      return;
-    }
-
-    if (rebuild) {
-      select.textContent = '';
-      inputs.forEach(function (input) {
-        var option = document.createElement('option');
-        option.value = input.dataset.customizationOption;
-        /* textContent, not innerHTML: these names come from merchant metafields. */
-        option.textContent = optionLabel(input);
-        option.disabled = input.disabled;
-        select.appendChild(option);
-      });
-      /* The group is now represented by this select, so don't show it twice. */
-      var item = group.closest('.product-option__item');
-      if (item) item.classList.add('pdp-new--card-covered');
-    }
-
-    var checked = group.querySelector('[data-customization-option]:checked');
-    if (checked) select.value = checked.dataset.customizationOption;
-    view.hidden = false;
   }
 
   document.addEventListener('change', function (event) {
@@ -318,14 +287,15 @@
   });
 
   /* The sticky bar mirrors the buy box rather than being swapped: the buy-box
-     price is already updated (by product-info.js on variant change, and by
-     priceHelper() on option selection), so mirroring it keeps the two in step in
-     both cases and cannot drift. */
+     price is already updated by product-info.js on variant change and by
+     priceHelper() on option selection, so mirroring keeps the two in step. */
   function syncStickyToBuyBox(root) {
-    /* The sticky bar shows the same grand total as the headline. It also carries
-       .pr_custom_price, so priceHelper writes it too; mirroring covers the paths
-       priceHelper doesn't run on (initial load, variant change). */
-    var source = headlinePriceEl(root);
+    /* Mirrors the configuration TOTAL, not the static headline price: the sticky
+       bar sits beside its own Add to Cart, so it must show the amount that would
+       be committed. It carries .pr_custom_price too, so priceHelper writes it on
+       option selection; mirroring covers the paths priceHelper doesn't run on
+       (initial load, variant change). */
+    var source = configTotalEl(root) || headlinePriceEl(root);
     var sticky = root.querySelector('.pdp-new__sticky-price');
     if (source && sticky) {
       sticky.innerText = source.innerText;
@@ -342,15 +312,145 @@
     }
   }
 
+  /* ---- FAQ accordions ----
+     The FAQ metafield is raw authored HTML, not structured data: each question is
+     a paragraph whose entire content is bold ("<p><b>1. Question?</b></p>"),
+     followed by its answer paragraphs, then unrelated marketing copy and the
+     FAQPage JSON-LD.
+
+     Pairs are found structurally: a bold-only paragraph opens a group, which takes
+     the following paragraphs until the next question or the first non-paragraph
+     node — the latter is what keeps the trailing copy out of the last answer.
+     Anything not consumed stays where it is, so the schema block is never moved.
+
+     Parsed from the DOM, not the metafield string: the authored HTML has unclosed
+     <p> tags that only a real parser resolves. */
+  function faqHost(wrap) {
+    /* The metafield value is usually wrapped in its own <div>; descend through
+       any single-div nesting so we iterate the real paragraph list. */
+    var host = wrap;
+    while (host.children.length === 1 && host.firstElementChild.tagName === 'DIV') {
+      host = host.firstElementChild;
+    }
+    return host;
+  }
+
+  function isFaqQuestion(el) {
+    if (!el || el.tagName !== 'P') return false;
+    var bold = el.querySelector('b, strong');
+    if (!bold) return false;
+    var boldText = bold.textContent.trim();
+    /* Bold-only: a paragraph that merely contains an emphasised phrase is an
+       answer, not a question. */
+    return boldText.length > 0 && el.textContent.trim() === boldText;
+  }
+
+  function buildFaqAccordions(scope) {
+    var wrap = (scope || document).querySelector('[data-pdp-faq]');
+    if (!wrap || wrap.dataset.faqBuilt === 'true') return;
+
+    var host = faqHost(wrap);
+    var nodes = Array.prototype.slice.call(host.children);
+    var built = 0;
+
+    for (var i = 0; i < nodes.length; i++) {
+      if (!isFaqQuestion(nodes[i])) continue;
+
+      var question = nodes[i];
+      var answers = [];
+      for (var j = i + 1; j < nodes.length; j++) {
+        if (nodes[j].tagName !== 'P' || isFaqQuestion(nodes[j])) break;
+        answers.push(nodes[j]);
+      }
+      /* A question with no answer stays as-is: collapsing it would hide the
+         only thing it says behind a control that reveals nothing. */
+      if (!answers.length) continue;
+
+      var details = document.createElement('details');
+      details.className = 'pdp-new__faq-item';
+
+      var summary = document.createElement('summary');
+      summary.className = 'pdp-new__faq-q';
+      /* Drop the authored "1. " / "2) " numbering: the accordion supplies its
+         own visual ordering, and the digits read as noise in a summary. */
+      summary.textContent = question.textContent.trim().replace(/^\s*\d+\s*[.)]\s*/, '');
+
+      var body = document.createElement('div');
+      body.className = 'pdp-new__faq-a';
+
+      details.appendChild(summary);
+      details.appendChild(body);
+      host.insertBefore(details, question);
+      question.parentNode.removeChild(question);
+      answers.forEach(function (a) { body.appendChild(a); });
+
+      built++;
+      i += answers.length;
+    }
+
+    if (!built) return;
+    wrap.dataset.faqBuilt = 'true';
+
+    /* One open at a time. CAPTURE phase on purpose: `toggle` does not bubble, so a
+       delegated listener on the wrapper would never fire, but capture still reaches
+       the container on the way down. Also keeps working for accordions added later. */
+    wrap.addEventListener(
+      'toggle',
+      function (event) {
+        var opened = event.target;
+        if (!opened.open || !opened.classList.contains('pdp-new__faq-item')) return;
+        wrap.querySelectorAll('.pdp-new__faq-item[open]').forEach(function (item) {
+          /* Setting .open fires another toggle, but only for items that were
+             open, and those close — so it never re-enters past one level. */
+          if (item !== opened) item.open = false;
+        });
+      },
+      true
+    );
+  }
+
+  /* Spec tables arrive as raw metafield HTML with no header row; the Figma draws
+     one ("Specification | Details"), so it is added here rather than re-authoring
+     every product's metafield.
+
+     Narrow by design: only two-column tables with no header cell of their own.
+     Comparison charts are multi-column and carry their own headers. */
+  function buildSpecTableHeaders(scope) {
+    /* "Everywhere": the lower content tabs AND the buy box's info tabs (Key
+       Specs / What's Included), both of which render authored metafield HTML. */
+    scope
+      .querySelectorAll('.pdp-new__content-body table, .pdp-new__tabs-content table')
+      .forEach(function (table) {
+      if (table.closest('.pdp-new__comparison-table')) return;
+      if (table.tHead || table.querySelector('th')) return;
+
+      var firstRow = table.rows[0];
+      /* A ragged table (rows of differing width) is not the two-column
+         spec shape, whatever the first row happens to say. */
+      if (!firstRow || firstRow.cells.length !== 2) return;
+      for (var i = 1; i < table.rows.length; i++) {
+        if (table.rows[i].cells.length !== 2) return;
+      }
+
+      var head = table.createTHead();
+      var row = head.insertRow(0);
+      ['Specification', 'Details'].forEach(function (text) {
+        var th = document.createElement('th');
+        th.textContent = text;
+        th.scope = 'col';
+        row.appendChild(th);
+      });
+      table.classList.add('pdp-new__spec-table');
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     var root = document.querySelector('.pdp-new');
     if (!root) return;
 
     var sectionId = root.dataset.section;
 
-    hideCardCoveredGroups(root);
-    syncAddonButtons(root);
-    syncOptionGroupSelect(root, true);
+    syncOptionGroupSelect(root);
     syncStickyToBuyBox(root);
     syncFinancing(root);
 
@@ -366,31 +466,29 @@
             swapById(fetched, 'PdpNewAddons', sectionId);
             swapById(fetched, 'PdpNewBadge', sectionId);
             swapById(fetched, 'PdpNewOptionPopups', sectionId);
-            /* Sits outside the #price- element product-info.js swaps, so it would
-               otherwise keep the previous variant's options total. */
-            swapById(fetched, 'Options-Added', sectionId);
             /* Holds data-price-value, the base priceHelper() adds option prices
                to — a stale one would mis-total every later selection. */
             swapById(fetched, 'PdpNewConfigTotal', sectionId);
+            /* Server-rendered from the variant's own option metafield, so it must
+               re-render or it would offer the previous variant's choices. */
+            swapById(fetched, 'PdpNewDeliveryBlock', sectionId);
           }
           syncAvailability(root, fetched, sectionId, data.variant);
-          /* Cards were just re-rendered: re-derive their state from the new
-             configurator inputs rather than trusting the fresh markup's labels. */
-          hideCardCoveredGroups(root);
-          syncAddonButtons(root);
-          syncOptionGroupSelect(root, true);
-                syncStickyToBuyBox(root);
+          syncOptionGroupSelect(root);
+          syncStickyToBuyBox(root);
           syncFinancing(root);
         });
       });
     }
 
-    /* Publish the info column's geometry for the zoom panel (see pdp-new.css).
-       The panel is fixed, so it can only be placed against the viewport, but
-       the page container is not a fixed inset from it — .inner-container picks
-       up its own gutter below 1280px, and the scrollbar shifts things again.
-       Measuring the column it must cover is exact at every width and survives
-       future container changes. */
+    buildFaqAccordions(root);
+    buildSpecTableHeaders(root);
+
+    /* Publish the info column's geometry for the zoom panel (see pdp-new.css). The
+       panel is fixed, so it can only be placed against the viewport, but the page
+       container is not a fixed inset from it — .inner-container gains its own gutter
+       below 1280px and the scrollbar shifts things again. Measuring the column it
+       must cover is exact at every width. */
     var syncZoomGeometry = function () {
       var info = root.querySelector('.pdp-new__info');
       if (!info) return;
@@ -403,11 +501,10 @@
     window.addEventListener('resize', syncZoomGeometry, { passive: true });
 
     /* ---- Buy-box spec lists: bold the label before the first colon ----
-       The Key Specs tab is a raw rich-text metafield — a flat <ul> of
-       "Label: value" lines with no emphasis. CSS gives each row a divider;
-       this wraps the label so it reads like the Delivery & Warranty tab.
-       Defensive: only the leading text node, only an early colon, and never
-       touches a row that already has its own markup. */
+       The Key Specs tab is a raw rich-text metafield: a flat <ul> of "Label: value"
+       lines with no emphasis. Wrapping the label gives each row the dark lead-in the
+       design shows. Only the leading text node, only an early colon, and never a row
+       that already has its own markup. */
     root.querySelectorAll('.pdp-new__tabs .metafield-rich_text_field li').forEach(function (li) {
       if (li.querySelector('strong, b')) return; // already emphasised
       var node = li.firstChild;
@@ -423,26 +520,23 @@
     });
 
     /* ---- Sticky ATC bar: show once the real Add to Cart button scrolls away ----
-       Watches the submit button, not .pdp-new__buybox. The buy box is ~1600px
-       tall on mobile (gallery stacked above the info column), so observing it
-       left a long dead zone: the actual ATC button had scrolled off but the
-       bar did not appear until the whole block cleared the viewport.
+       Watches the submit button, not .pdp-new__buybox: the buy box is ~1600px tall
+       on mobile, which would leave a long dead zone after the button had scrolled
+       off.
 
-       Recomputed from the button's live rect on scroll/resize (rAF-throttled),
-       not from IntersectionObserver alone: the observer only fires on threshold
-       crossings, so an instant scroll jump or a layout shift (the mobile slick
-       gallery lazy-loads images) can leave it stale. The observer is kept as a
-       cheap extra trigger for non-scroll layout changes. */
+       Recomputed from the button's live rect on scroll/resize (rAF-throttled) rather
+       than IntersectionObserver alone, which only fires on threshold crossings and
+       goes stale on an instant scroll jump or a layout shift (the mobile slick
+       gallery lazy-loads images). The observer stays as a cheap extra trigger. */
     var sticky = root.querySelector('.pdp-new__sticky');
     var atcAnchor = root.querySelector('.product-form__submit') || root.querySelector('.pdp-new__buybox');
     if (sticky && atcAnchor) {
       var updateSticky = function () {
         var r = atcAnchor.getBoundingClientRect();
         var vh = window.innerHeight || document.documentElement.clientHeight;
-        /* On screen (accounting for the 80px the observer's rootMargin trimmed)
-           OR still below the fold (top > 0) → hide. Show only once the button
-           has scrolled up past the top — the bar is a fallback for a button
-           already passed, not a preview of one. */
+        /* Hide while the button is on screen (allowing for the observer's 80px
+           rootMargin) or still below the fold. The bar is a fallback for a button
+           already scrolled past, not a preview of one. */
         var onScreen = r.bottom > 0 && r.top < vh - 80;
         sticky.hidden = onScreen || r.top > 0;
       };
@@ -462,11 +556,9 @@
         new IntersectionObserver(updateSticky, { rootMargin: '0px 0px -80px 0px' }).observe(atcAnchor);
       }
 
-      /* The Gorgias launcher is fixed bottom-right and lands on the bar's Add
-         to Cart button. Rather than move a third-party widget onto whatever
-         sits above it, the bar reserves a gap on its right so the launcher
-         floats over empty space. Flagged via a class so the gap only exists
-         when the widget actually loaded. */
+      /* The Gorgias launcher is fixed bottom-right and lands on the bar's Add to Cart
+         button, so the bar reserves a gap on its right. Flagged via a class so the gap
+         only exists when the widget actually loaded. */
       var chatPolls = 0;
       var chatTimer = setInterval(function () {
         if (document.getElementById('chat-button')) {
@@ -479,13 +571,10 @@
     }
 
     /* ---- Mobile content accordions (<=989px) ----
-       The lower content is one DOM: tabs on desktop, a collapsible list on
-       mobile. Kept here rather than in the shared custom.js .dropdown-btn
-       handler because that one is hard-gated to <=749px and allows several
-       panels open at once; this group is exclusive and uses the PDP's own
-       990px desktop boundary. Rows start collapsed on mobile (CSS), matching
-       the theme's existing .dropdown-content-wrapper behaviour; the content
-       stays in the DOM either way. */
+       The lower content is one DOM: tabs on desktop, a collapsible list on mobile.
+       Not the shared custom.js .dropdown-btn handler, which is hard-gated to <=749px
+       and allows several panels open at once; this group is exclusive and uses the
+       PDP's own 990px boundary. Content stays in the DOM either way. */
     var accGroup = root.querySelector('[data-pdp-accordions]');
     if (accGroup) {
       var mobileMQ = window.matchMedia('(max-width: 989px)');
@@ -536,11 +625,10 @@
 
         setOpen(btn, willOpen);
 
-        /* Closing a tall row above shifts the page — bring the header the
-           user just tapped to the top so they stay oriented. Offset by the
-           sticky site header, otherwise the row lands underneath it.
-           Measured AFTER the collapse animation: measuring during it reads
-           the outgoing layout and overshoots by the closing row's height. */
+        /* Closing a tall row above shifts the page, so bring the tapped header back to
+           the top, offset by the sticky site header. Measured AFTER the collapse
+           animation — during it the outgoing layout overshoots by the closing row's
+           height. */
         if (willOpen) {
           var scrollToBtn = function () {
             var header = document.querySelector('.section-header');
@@ -570,12 +658,10 @@
     }
 
     /* ---- Mobile gallery thumbnails: drive the swipe (slick) carousel ----
-       The mobile gallery keeps its swipeable behaviour (product-mobile-gallery.js
-       inits slick on .mobile-gallery-slider); this only adds a thumbnail strip
-       beneath it. Tapping a thumb calls slickGoTo; the carousel's afterChange
-       highlights the matching thumb. Matched by data-media-id so it survives any
-       slide filtering. slick may init after this runs (or re-init across the
-       breakpoint), so we poll for slick-initialized before binding. */
+       product-mobile-gallery.js inits slick on .mobile-gallery-slider; this adds a
+       thumbnail strip beneath it. Tapping a thumb calls slickGoTo and afterChange
+       highlights the match, keyed by data-media-id so it survives slide filtering.
+       slick may init after this runs, so poll for slick-initialized before binding. */
     var mgThumbs = root.querySelector('[data-mobile-thumbs]');
     var mgEl = root.querySelector('mobile-gallery');
     var jq = window.jQuery;
@@ -598,8 +684,7 @@
           var on = t.getAttribute('data-media-id') === id;
           t.classList.toggle('is-active', on);
           if (on) {
-            /* Keep the active thumb visible by scrolling the STRIP horizontally
-               only — never scrollIntoView, which would also scroll the page
+            /* Scroll the STRIP horizontally only — scrollIntoView would also scroll the page
                vertically and disturb the sticky-ATC observer. */
             var delta = t.getBoundingClientRect().left - mgThumbs.getBoundingClientRect().left;
             mgThumbs.scrollLeft += delta - (mgThumbs.clientWidth - t.offsetWidth) / 2;
