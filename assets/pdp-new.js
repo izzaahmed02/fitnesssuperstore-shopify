@@ -539,6 +539,14 @@
            already scrolled past, not a preview of one. */
         var onScreen = r.bottom > 0 && r.top < vh - 80;
         sticky.hidden = onScreen || r.top > 0;
+        /* The bar is fixed, and so is the Gorgias launcher in the same corner.
+           Flagging <body> lets the CSS lift the launcher clear and reserve space
+           beneath the page; publishing the measured height keeps both exact
+           rather than guessed, since the bar grows by the safe-area inset. */
+        document.body.classList.toggle('pdp-new-sticky-open', !sticky.hidden);
+        if (!sticky.hidden) {
+          document.documentElement.style.setProperty('--pdp-sticky-h', sticky.offsetHeight + 'px');
+        }
       };
       updateSticky();
       var stickyTicking = false;
@@ -555,19 +563,6 @@
       if ('IntersectionObserver' in window) {
         new IntersectionObserver(updateSticky, { rootMargin: '0px 0px -80px 0px' }).observe(atcAnchor);
       }
-
-      /* The Gorgias launcher is fixed bottom-right and lands on the bar's Add to Cart
-         button, so the bar reserves a gap on its right. Flagged via a class so the gap
-         only exists when the widget actually loaded. */
-      var chatPolls = 0;
-      var chatTimer = setInterval(function () {
-        if (document.getElementById('chat-button')) {
-          document.body.classList.add('pdp-new-has-chat');
-          clearInterval(chatTimer);
-        } else if (++chatPolls > 20) {
-          clearInterval(chatTimer);
-        }
-      }, 500);
     }
 
     /* ---- Mobile content accordions (<=989px) ----

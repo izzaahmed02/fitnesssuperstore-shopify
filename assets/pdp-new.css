@@ -1692,6 +1692,15 @@
   background: #fff;
   border-top: 1px solid #e5e5e5;
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  /* Clears the iOS home indicator / Android gesture bar. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* The bar is fixed, so it sits over whatever the page ends on. pdp-new.js adds
+   this class while the bar is showing; reserving the same height means the last
+   rows of content can still be scrolled clear of it. */
+body.pdp-new-sticky-open {
+  padding-bottom: calc(var(--pdp-sticky-h, 64px) + env(safe-area-inset-bottom, 0px));
 }
 
 .pdp-new__sticky-inner {
@@ -1779,6 +1788,13 @@
     line-height: 14px;
   }
 
+  /* Push the total and the CTA to the right edge, thumbnail left. On desktop
+     .pdp-new__sticky-title carries flex:1 and does this; it is hidden here, so
+     without an explicit auto margin everything bunches up on the left. */
+  .pdp-new__sticky-total {
+    margin-left: auto;
+  }
+
   .pdp-new .pdp-new__sticky-price,
   .pdp-new .pdp-new__sticky-price.pr_custom_price {
     font-size: 16px;
@@ -1791,10 +1807,23 @@
     white-space: nowrap;
   }
 
-  /* Keeps the CTA clear of the Gorgias launcher (fixed right:20px, 70px wide),
-     so the widget floats over empty bar instead of over the button. Applied
-     only when the widget is actually present — see pdp-new.js. */
-  body.pdp-new-has-chat .pdp-new__sticky-inner {
-    padding-right: 98px;
+  /* Lift the chat launcher above the bar while the bar is showing.
+     base-v2.min.css gives #chat-button z-index 2, so it renders BEHIND this bar
+     (z-index 40) and becomes untappable. Raising it and moving it above the bar
+     is what the live PDP does (custom-main-product-page.css lifts the same
+     selector list to bottom:84px on mobile); that file is not loaded here
+     because it also caps the gallery via .product-main-left.
+
+     Height comes from the measured bar rather than a fixed 84px, so it stays
+     correct as the bar's contents or the safe-area inset change. The selector
+     list is deliberately broad — the widget is third-party markup and has been
+     served under several different hooks. */
+  body.pdp-new-sticky-open #chat-button,
+  body.pdp-new-sticky-open iframe[title*='chat' i],
+  body.pdp-new-sticky-open .chat-widget,
+  body.pdp-new-sticky-open .gorgias-chat-key,
+  body.pdp-new-sticky-open .gorgias-chat-container {
+    bottom: calc(var(--pdp-sticky-h, 64px) + env(safe-area-inset-bottom, 0px) + 12px) !important;
+    z-index: 41 !important;
   }
 }
