@@ -171,11 +171,76 @@
   </div>
 </div>
 
+{% comment %}
+  Optional FAQPage structured data, generated from the same blocks that render
+  above so the visible questions and the markup cannot drift apart.
+
+  Off by default. Turn it on for exactly ONE FAQ section per page: two emitting
+  sections would put two FAQPage objects on one URL, which is what Zafran's
+  no-duplicate-schema gate checks for.
+
+  A block whose question or answer is blank, or whose answer still carries a
+  bracketed placeholder, is skipped here as well as being unusable on the page.
+  Per Tim's Aug 9 direction an unsupportable answer is omitted rather than
+  published as a placeholder or as a visible/markup mismatch — so if a question
+  is skipped here, its visible answer needs removing too.
+{% endcomment %}
+{%- if section.settings.emit_faq_schema -%}
+  {%- liquid
+    assign schema_ids = ''
+    for block in section.blocks
+      assign q = block.settings.title | strip_html | strip
+      assign a = block.settings.text | strip_html | strip
+      if q == blank or a == blank
+        continue
+      endif
+      if q contains '[VERIFY' or a contains '[VERIFY'
+        continue
+      endif
+      assign schema_ids = schema_ids | append: block.id | append: ','
+    endfor
+    assign schema_id_list = schema_ids | split: ','
+  -%}
+  {%- if schema_id_list.size > 0 -%}
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {%- assign emitted = 0 -%}
+          {%- for block in section.blocks -%}
+            {%- unless schema_id_list contains block.id -%}
+              {%- continue -%}
+            {%- endunless -%}
+            {%- if emitted > 0 %},{% endif -%}
+            {
+              "@type": "Question",
+              "name": {{ block.settings.title | strip_html | strip | json }},
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": {{ block.settings.text | strip_html | strip | json }}
+              }
+            }
+            {%- assign emitted = emitted | plus: 1 -%}
+          {%- endfor -%}
+        ]
+      }
+    </script>
+  {%- endif -%}
+{%- endif -%}
+
 {% schema %}
 {
   "name": "FAQ",
   "class": "faqSection",
   "settings": [
+    {
+      "type": "checkbox",
+      "id": "emit_faq_schema",
+      "label": "Output FAQPage structured data",
+      "info": "Enable on only one FAQ section per page. Questions with a blank answer or a bracketed placeholder are left out of both the markup and, by requirement, the page.",
+      "default": false
+    },
     {
       "type": "text",
       "id": "title",

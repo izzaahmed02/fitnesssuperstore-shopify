@@ -1,6 +1,15 @@
 {{ 'section-collection-intro.css' | asset_url | stylesheet_tag }}
 
 {% assign section_title = section.settings.title | strip | default: collection.title %}
+{% assign title_tag = section.settings.heading_tag | default: 'h2' %}
+
+{% comment %}
+  Iqra's Aug 6 finding 11: the banner alt duplicated the heading. Alt text is now
+  editable. Left blank it keeps the previous fallback, so no existing page changes
+  until someone sets a real description (or an intentionally empty one for a
+  decorative banner).
+{% endcomment %}
+{% assign image_alt = section.settings.image_alt | default: section_title | escape %}
 {% assign section_description = section.settings.description | strip | default: collection.description %}
 {% assign section_image = section.settings.image | default: collection.image %}
 
@@ -23,9 +32,9 @@
     <div class="collection-intro__wrap">
       <div class="collection-intro__content">
         {% if section_title %}
-          <h2 class="collection-intro__title" id="collection-intro__title">
+          <{{ title_tag }} class="collection-intro__title h2" id="collection-intro__title">
             {{ section_title }}
-          </h2>
+          </{{ title_tag }}>
         {% endif %}
 
         {% if section_description %}
@@ -70,7 +79,7 @@
                 class: 'collection-intro__image',
                 sizes: sizes,
                 widths: '375, 550, 750, 1100, 1500, 1780, 2000, 3000, 3840',
-                alt: section_title | escape
+                alt: image_alt
             }}
         </figure>
       {% endif %}
@@ -162,6 +171,17 @@
         "default": "t:sections.collection-intro.settings.title.default"
       },
       {
+        "type": "select",
+        "id": "heading_tag",
+        "label": "Heading level",
+        "info": "Use h1 only on pages where no other section already renders one.",
+        "options": [
+          { "value": "h1", "label": "h1" },
+          { "value": "h2", "label": "h2" }
+        ],
+        "default": "h2"
+      },
+      {
         "type": "textarea",
         "id": "description",
         "label": "t:sections.collection-intro.settings.description.label",
@@ -170,6 +190,11 @@
         "type": "image_picker",
         "id": "image",
         "label": "t:sections.collection-intro.settings.image.label"
+      }, {
+        "type": "text",
+        "id": "image_alt",
+        "label": "Image alt text",
+        "info": "Leave blank to fall back to the heading. Describe the image, or set a single space for a purely decorative banner."
       }
     ],
     "presets": [

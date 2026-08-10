@@ -1,0 +1,224 @@
+{% comment %}
+  Gym-packages decision module.
+
+  Sits as its own section between the intro paragraphs and the dynamic product
+  grid, per Iqra's Aug 6 placement spec. Because it is a sibling section it is
+  outside main-collection-intro's Read-more collapse, which clamps only that
+  section's own description below 990px — so this content renders in full at
+  desktop, 768px and 375px.
+
+  Hard-code ban, satisfied by construction: this section exposes no setting for
+  price, compare-at price, availability, inventory, processing time, lead time or
+  sale state. Those values stay with the product cards, which render them live
+  from Shopify. Square-footage figures here are planning ranges only.
+
+  The section renders nothing until copy is configured, so an unapproved preview
+  shows no placeholder text.
+{% endcomment %}
+
+{%- liquid
+  assign heading = section.settings.heading | strip
+  assign has_branch = false
+  for block in section.blocks
+    assign branch_title = block.settings.title | strip
+    if branch_title != blank
+      assign has_branch = true
+      break
+    endif
+  endfor
+-%}
+
+{%- if heading != blank and has_branch -%}
+  <section
+    class="gym-decision section-{{ section.id }}-padding"
+    {% if section.settings.section_id != blank %}
+      id="{{ section.settings.section_id }}"
+    {% endif %}
+    aria-labelledby="gym-decision__heading-{{ section.id }}"
+  >
+    <div class="page-width">
+      <h2 class="gym-decision__heading h2" id="gym-decision__heading-{{ section.id }}">
+        {{ heading }}
+      </h2>
+
+      {%- if section.settings.intro != blank -%}
+        <div class="gym-decision__intro rte">{{ section.settings.intro }}</div>
+      {%- endif -%}
+
+      <div class="gym-decision__branches">
+        {%- for block in section.blocks -%}
+          {%- assign branch_title = block.settings.title | strip -%}
+          {%- if branch_title == blank -%}
+            {%- continue -%}
+          {%- endif -%}
+          <div class="gym-decision__branch" {{ block.shopify_attributes }}>
+            <h3 class="gym-decision__branch-title h4">{{ branch_title }}</h3>
+
+            {%- if block.settings.space_range != blank -%}
+              <p class="gym-decision__range">{{ block.settings.space_range }}</p>
+            {%- endif -%}
+
+            {%- if block.settings.body != blank -%}
+              <div class="gym-decision__body rte">{{ block.settings.body }}</div>
+            {%- endif -%}
+
+            {%- if block.settings.link_label != blank and block.settings.link_url != blank -%}
+              <a class="gym-decision__link link" href="{{ block.settings.link_url }}">
+                {{ block.settings.link_label }}
+              </a>
+            {%- endif -%}
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </section>
+
+  {%- style -%}
+    .gym-decision__heading {
+      margin: 0 0 1.6rem;
+    }
+
+    .gym-decision__intro {
+      max-width: 78ch;
+      margin-bottom: 2.4rem;
+    }
+
+    .gym-decision__branches {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2.4rem;
+    }
+
+    .gym-decision__branch {
+      border: 1px solid rgba(35, 35, 43, 0.12);
+      border-radius: 4px;
+      padding: 2rem;
+    }
+
+    .gym-decision__branch-title {
+      margin: 0 0 0.8rem;
+    }
+
+    .gym-decision__range {
+      margin: 0 0 1.2rem;
+      font-weight: 600;
+      color: #23232b;
+    }
+
+    .gym-decision__body > :last-child {
+      margin-bottom: 0;
+    }
+
+    .gym-decision__link {
+      display: inline-block;
+      margin-top: 1.2rem;
+    }
+
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+      padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+    }
+
+    @media screen and (min-width: 750px) {
+      .gym-decision__branches {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+
+      .section-{{ section.id }}-padding {
+        padding-top: {{ section.settings.padding_top }}px;
+        padding-bottom: {{ section.settings.padding_bottom }}px;
+      }
+    }
+  {%- endstyle -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Gym packages decision module",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Do not enter price, availability, inventory, processing time or lead time here. Those render live on the package cards below."
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading (renders as h2)"
+    },
+    {
+      "type": "richtext",
+      "id": "intro",
+      "label": "Intro"
+    },
+    {
+      "type": "text",
+      "id": "section_id",
+      "label": "Anchor id",
+      "info": "Optional. Used for in-page links."
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top",
+      "default": 44
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom",
+      "default": 44
+    }
+  ],
+  "blocks": [
+    {
+      "type": "branch",
+      "name": "Decision branch",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Branch title (renders as h3)"
+        },
+        {
+          "type": "text",
+          "id": "space_range",
+          "label": "Planning range",
+          "info": "Square footage as a planning range, for example 250-700 sq ft. Not a quantity or price."
+        },
+        {
+          "type": "richtext",
+          "id": "body",
+          "label": "Body"
+        },
+        {
+          "type": "text",
+          "id": "link_label",
+          "label": "Link label"
+        },
+        {
+          "type": "url",
+          "id": "link_url",
+          "label": "Link destination",
+          "info": "Must be a public, logged-out-accessible destination."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Gym packages decision module",
+      "blocks": [{ "type": "branch" }, { "type": "branch" }, { "type": "branch" }]
+    }
+  ]
+}
+{% endschema %}
