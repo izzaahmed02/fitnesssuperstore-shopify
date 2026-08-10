@@ -1,16 +1,12 @@
 {% comment %}
   pdp-new-content-tabs — lower-content tabs DERIVED from product data.
 
-  The template declares curated tab
-  groups; each group aggregates related product-level data sources and the
-  tab only renders when at least one source is non-empty for this product.
-  One template therefore serves every product — no per-product template
-  cloning, no hand-pasted content.
+  Each tab aggregates related product-level sources and renders only when at
+  least one of them is non-empty, so one template serves every product.
 
-  Sources mirror the live PDP (sections/extra-info.liquid + the metafield
-  bindings its blocks carry in templates/product.json), all from
-  product.metafields.custom.features_specs (metaobject) + description +
-  gym_package_inclusions:
+  Sources mirror the live PDP (sections/extra-info.liquid and the metafield
+  bindings in templates/product.json): features_specs, description and
+  gym_package_inclusions.
 
     Overview .... package inclusions, description, all_in_one_overview,
                   benefits, buying_guide
@@ -22,10 +18,10 @@
     Comparison .. comparison_chart_title, comparison_chart_table,
                   other_comparison_charts
     FAQ ......... frequently_asked_questions
+    Warranty .... warranty_info, Prop 65 notice, downloadable data sheets
 
   After the derived tabs, any non-empty "Content section" blocks from the
   section (passed as content_blocks) are appended as extra custom tabs.
-  Warranty + Prop 65 + Downloads render below the tabs, always visible.
 
   Out of scope for FSR90-class v1 (render on live via extra-info; add with
   the package/rig flows): add_more_sections accordions,
@@ -166,8 +162,24 @@
 {%- capture tab_faq -%}
   {%- if fs.frequently_asked_questions != blank -%}
     <h2 class="pdp-new__content-heading">Frequently Asked Questions</h2>
-    {{ fs.frequently_asked_questions.value }}
+    {%- comment -%} Raw authored HTML: <p><b>1. Question?</b></p> followed by
+        answer paragraphs, then unrelated copy and the FAQPage JSON-LD.
+        pdp-new.js folds each pair into a <details> accordion. Nothing is hidden
+        by default, so without JS it still renders as plain paragraphs. {%- endcomment -%}
+    <div class="pdp-new__faq" data-pdp-faq>{{ fs.frequently_asked_questions.value }}</div>
   {%- endif -%}
+{%- endcapture -%}
+
+{%- comment -%} Warranty groups the three sources the live PDP scatters: the
+    warranty_info metafield, the California Prop 65 notice and the downloadable
+    data sheets. {%- endcomment -%}
+{%- capture tab_warranty -%}
+  {%- if fs.warranty_info != blank -%}
+    <h2 class="pdp-new__content-heading">Warranty</h2>
+    {{ fs.warranty_info | metafield_tag }}
+  {%- endif -%}
+  {% render 'prop65' %}
+  {% render 'product-downloads' %}
 {%- endcapture -%}
 
 {%- comment -%} Assemble: label + content pairs, skipping empty groups. {%- endcomment -%}
@@ -185,6 +197,10 @@
 {%- if check != blank -%}{%- assign tab_labels = tab_labels | append: 'Comparison|||' -%}{%- endif -%}
 {%- assign check = tab_faq | strip_html | strip -%}
 {%- if check != blank -%}{%- assign tab_labels = tab_labels | append: 'FAQ|||' -%}{%- endif -%}
+{%- comment -%} strip_html would flatten prop65's icon-only markup to nothing, so the
+    emptiness test here has to look at the raw capture. {%- endcomment -%}
+{%- assign check = tab_warranty | strip -%}
+{%- if check != blank -%}{%- assign tab_labels = tab_labels | append: 'Warranty|||' -%}{%- endif -%}
 
 {%- assign derived_labels = tab_labels | split: '|||' -%}
 {%- assign has_custom = false -%}
@@ -238,6 +254,7 @@
                 {%- when 'Accessories' -%}{{ tab_accessories }}
                 {%- when 'Comparison' -%}{{ tab_comparison }}
                 {%- when 'FAQ' -%}{{ tab_faq }}
+                {%- when 'Warranty' -%}{{ tab_warranty }}
               {%- endcase -%}
             </div>
           </div>
@@ -264,13 +281,4 @@
   </div>
 {%- endif -%}
 
-{%- comment -%} Legal strip: Prop 65 + Downloads, always-visible at every
-    breakpoint (a legal warning should not sit behind a tap, and the download
-    list is short). Warranty is intentionally NOT here — it already appears in
-    the buy box's "Delivery & Warranty" tab, so repeating it lower down is
-    redundant. {%- endcomment -%}
-<div class="pdp-new__legal">
-  {% render 'prop65' %}
-  {% render 'product-downloads' %}
-</div>
 </div>
