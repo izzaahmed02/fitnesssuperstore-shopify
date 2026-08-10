@@ -15,12 +15,12 @@
 <!-- Base styles that must render before LCP -->
 <link rel="stylesheet" href="{{ 'base-v2.min.css' | asset_url }}">
 
-<!-- Non-critical CSS (load after LCP) -->
-
-<link rel="preload" href="{{ 'custom.css' | asset_url }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="{{ 'custom.css' | asset_url }}"></noscript>
-
-
+<!-- custom.css defines the layout of the site header and the breadcrumbs, both of
+     which sit above the fold on every template. Loading it async painted those
+     elements unstyled first and then reflowed the whole page once it arrived,
+     which was the main source of the Core Web Vitals CLS failures. Render-blocking
+     so the first paint is already the final layout. -->
+<link rel="stylesheet" href="{{ 'custom.css' | asset_url }}">
 
 
 
@@ -28,10 +28,7 @@
   <link rel="stylesheet" href="{{ 'component-predictive-search.css' | asset_url }}" media="print" onload="this.media='all'">
 {% endif %}
 
-<link rel="preload" as="style" href="{{ 'slick.min.css' | asset_url }}" onload="this.onload=null;this.rel='stylesheet';">
-<link rel="preload" as="style" href="{{ 'slick-theme.min.css' | asset_url }}" onload="this.onload=null;this.rel='stylesheet';">
-
-<noscript>
-  <link rel="stylesheet" href="{{ 'slick.min.css' | asset_url }}">
-  <link rel="stylesheet" href="{{ 'slick-theme.min.css' | asset_url }}">
-</noscript>
+<!-- Slider CSS sizes carousel track/slides. Loading it async let the slides stack
+     full width before collapsing into the carousel, shifting everything below. -->
+<link rel="stylesheet" href="{{ 'slick.min.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'slick-theme.min.css' | asset_url }}">
