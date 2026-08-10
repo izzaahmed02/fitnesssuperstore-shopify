@@ -1,0 +1,291 @@
+{%- comment -%}
+  Native new-PDP configurator.
+
+  A fork of snippets/product-options.liquid rendering the Figma layout
+  server-side. Only the structure is ours: every per-option input still comes
+  from the same product-option-accordion / custom-color-picker snippets, so
+  product-custom-options.js and product-form-with-options.js bind to the same
+  hooks and build the same line-item payload. Nothing here re-implements
+  pricing or cart data.
+
+  Differences from the live snippet:
+    - no dark "Configure your order here." bar, no circled step numbers (the
+      ordering indices are still computed — they drive the CSS `order` that
+      places colours / warranty / assembly)
+    - groups presented elsewhere in this template are marked
+      .pdp-new--card-covered at render time rather than by script, avoiding a
+      flash of live-styled options on load. HIDDEN, never skipped: the inputs
+      stay in the DOM and live, so nothing leaves the purchase path.
+
+  Accepts:
+    - product: {Object} product object (required)
+    - section_id: {String} section id for the wrapper (optional, defaults to section.id)
+    - installation_match: {String} lowercase needle matched against an option
+      group's title; that group is presented as the Figma delivery dropdown
+      instead, so it is hidden here (optional)
+{%- endcomment -%}
+
+{% liquid
+  assign options = product.metafields.options.product_options.value
+  if product.selected_or_first_available_variant.metafields.options.product_options.value != blank
+    assign options = product.selected_or_first_available_variant.metafields.options.product_options.value
+  endif
+
+  if section_id == blank
+    assign section_id = section.id
+  endif
+  assign installation_needle = installation_match | downcase | strip
+
+  assign quantity_index = 0
+  assign warranty_index = 1
+  assign color_index = 1
+  assign assambly_index = 0
+  assign visible_total = 0
+  assign has_warranty_visible = false
+  assign title_downcase = product.title | downcase
+  if title_downcase contains 'remanufactured'
+    assign color_index = 2
+  endif
+  assign index = color_index
+  assign last_index = index
+  assign has_color_option = false
+
+  for category in options
+    assign category_title_downcase = category.title | downcase
+    if category_title_downcase contains 'color' or category_title_downcase contains 'colors'
+      assign has_color_option = true
+    endif
+    assign color_title = ''
+    assign hidden_option = false
+    for product_option in category.product_options.value
+      assign title = product_option.product_option_title | downcase
+      if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
+        assign color_title = product_option.product_option_title
+      else
+        assign color_title = ''
+      endif
+      if product_option.hide_values
+        assign hidden_option = true
+      endif
+    endfor
+    unless category.hide_option
+      unless hidden_option
+        if color_title == '' and category_title_downcase != 'warranty'
+          assign last_index = last_index | plus: 1
+        endif
+        assign visible_total = visible_total | plus: 1
+        if category_title_downcase == 'warranty'
+          assign has_warranty_visible = true
+        endif
+      endunless
+    endunless
+    assign assambly_index = last_index
+  endfor
+%}
+<div id="Product-Options-{{ section_id }}">
+  <product-customization-options
+    data-product-id="{{ product.selected_or_first_available_variant.id }}"
+    class="product-options"
+    data-product="default"
+  >
+    {% liquid
+      unless has_color_option
+        assign index = 0
+        assign assambly_index = assambly_index | minus: 1
+      endunless
+      assign quantity_option = false
+    %}
+
+    {% for category in options %}
+      {% liquid
+        assign color_counter = 0
+        assign color_title = ''
+        assign color_group = ''
+        assign category_title_downcase = category.title | downcase
+        assign hidden_option = false
+
+        for product_option in category.product_options.value
+          assign title = product_option.product_option_title | downcase
+          if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color'
+            assign color_counter = color_counter | plus: 1
+            assign color_title = product_option.product_option_title
+            assign color_group = title | handleize
+          else
+            assign color_title = ''
+          endif
+          if product_option.hide_values
+            assign hidden_option = true
+          endif
+          if product_option.option_type == 'Quantity input'
+            assign quantity_option = true
+          else
+            assign quantity_option = false
+          endif
+        endfor
+        unless category.hide_option
+          unless hidden_option
+            if color_title == '' and category_title_downcase != 'warranty' and category_title_downcase != 'assembly & room of choice installation needed?'
+              assign index = index | plus: 1
+            endif
+          endunless
+        endunless
+        if index == assambly_index
+          assign index = index | minus: 1
+        endif
+
+        if quantity_option
+          assign quantity_index = 1
+          assign color_index = color_index | plus: 1
+        endif
+
+        comment
+          Which groups this template presents somewhere else.
+
+          Accessory categories are NO LONGER covered here (Tim, Aug 2). The
+          add-on cards below the buy box are true linked products on their own
+          cart lines, not a view of these inputs, so hiding a configurator
+          category because a related product is also sold as an upsell would
+          simply remove a purchasable option. Every category now renders.
+
+          The installation group remains covered: it is genuinely re-presented,
+          as the Figma "Delivery & Installation Options" dropdown, which drives
+          this same input. That is a relocation, not a removal.
+        endcomment
+        assign pdp_covered = false
+
+        if installation_needle != blank
+          for product_option in category.product_options.value
+            assign po_title_dc = product_option.product_option_title | downcase
+            if po_title_dc contains installation_needle
+              assign pdp_covered = true
+              break
+            endif
+          endfor
+        endif
+      %}
+
+      <div
+        class="product-option__item{% if pdp_covered %} pdp-new--card-covered{% endif %}"
+        {% unless category.hide_option %}
+          style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
+        {% endunless %}
+      >
+        {% if category.title != blank %}
+          {% comment %} Option-group label - kept as a styled div, not a heading, so it
+             doesn't add UI heading tags to the PDP outline (SEO heading QA). The live
+             snippet renders a circled step number here; the Figma design has none. {% endcomment %}
+          <div
+            class="product-options__category-title"
+            {% if color_counter == 1 %}
+              data-group-color-name="{{ color_group }}"
+              data-color-name-title="{{ color_title }}"
+            {% endif %}
+            {% if category.hide_option %}
+              style="display: none !important"
+            {% endif %}
+          >
+            {{- category.title }}
+            {% if category.help_text.value != blank %}
+              {% render 'related-products-button',
+                product_id: product.id,
+                product_handle: product.handle,
+                product_category: product.metafields.custom.option_category_id.value,
+                option_title: category.title
+              %}
+            {% else %}
+              {% for product_option in category.product_options.value %}
+                {% if product_option.option_type == 'Select' and product_option.help_text.value != blank %}
+                  {% render 'related-products-button',
+                    product_id: product.id,
+                    product_handle: product.handle,
+                    product_category: product.metafields.custom.option_category_id.value,
+                    option_title: product_option.product_option_title
+                  %}
+                  {% break %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            {% if color_counter == 1 %}
+              {% for product_option in category.product_options.value %}
+                {% assign title = product_option.product_option_title | downcase %}
+                {% if title == 'paint color' or title == 'paint colors' or title == 'color' or title == 'vinyl colors' or title == 'vinyl color' %}
+                  {% if product_option.product_option_sets_default.value.id %}
+                    {% render 'related-products-button',
+                      product_id: product.id,
+                      product_handle: product.handle,
+                      product_category: product.metafields.custom.option_category_id.value,
+                      option_title: product_option.product_option_title
+                    %}
+                    <div class="option_selected-container" data-selected-color-option="{{ title | handleize }}">
+                      <div class="option_selected" data-option-id="{{ product_option.product_option_sets_default.value.id }}">
+                        <div data-color-selected-title>
+                          {{ product_option.product_option_sets_default.value.title }}
+                        </div>
+                        <div class="option_selected-price">
+                          {% if product_option.product_option_sets_default.value.price > 0 %}
+                            {{ product_option.product_option_sets_default.value.price }}
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    {% break %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+          </div>
+        {% endif %}
+        <div class="product-options__category-notification"></div>
+        {% for product_option in category.product_options.value %}
+          {% assign title = product_option.product_option_title | downcase %}
+          {% if title == 'paint color' or title == 'paint colors' or title == 'color' %}
+            {% if product_option.product_option_sets_default.value.id %}
+              {% assign default = product_option.product_option_sets_default.value.id %}
+            {% endif %}
+            {% render 'custom-color-picker',
+              product: product_option.product_option_variants.value,
+              products: product_option,
+              default: default,
+              color_type: 'paint',
+              title: category.title,
+              color_counter: color_counter
+            %}
+          {% endif %}
+          {% if title == 'vinyl color' or title == 'vinyl colors' %}
+            {% if product_option.product_option_sets_default.value.id %}
+              {% assign default = product_option.product_option_sets_default.value.id %}
+            {% endif %}
+            {% render 'custom-color-picker',
+              product: product_option.product_option_variants.value,
+              products: product_option,
+              default: default,
+              color_type: 'vinyl',
+              title: category.title,
+              color_counter: color_counter
+            %}
+          {% endif %}
+          {% if title != 'paint color' and title != 'vinyl color' and title != 'paint colors' and title != 'vinyl colors' %}
+            {% if product_option.product_option_sets_default.value.id %}
+              {% assign default = product_option.product_option_sets_default.value.id %}
+            {% endif %}
+            {% render 'product-option-accordion', category: category, default: default, product_option: product_option, forloop_index: forloop.index, product_id: product.id %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    <div
+      id="product-options-total-add"
+      class="product-options__total-add product-options__total-add--hide"
+    >
+      Selection will add
+      <span
+        id="product-options-totalpriceadd"
+        class="product-options__total-price-add"
+        >$0.00</span
+      >
+      to the price
+    </div>
+    <input type="hidden" value="0" class="product-options__total-addcharge">
+  </product-customization-options>
+</div>

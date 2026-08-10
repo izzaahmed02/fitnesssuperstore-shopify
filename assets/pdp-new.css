@@ -2,10 +2,9 @@
    Tokens: orange #D83D0E / #FBD1C3, border #E5E5E5, bg #F2F2F2 / #FAF9F9,
    green #00A344, blue #3E77AA, H1 Oswald 600 30/40, body Lato 16/24 + 14/20. */
 
-/* Side padding kept (24px), top padding removed so the breadcrumb sits just
-   under the nav like the live PDP — only the top gap was excessive, not the
-   gutter. The zoom panel measures the info column directly (pdp-new.js), so it
-   stays aligned regardless of this gutter. */
+/* No side padding: the info column's #faf9f9 panel must reach this container's
+   edges. Each block supplies its own padding instead (.pdp-new__info,
+   .pdp-new__media-card, .pdp-new__content). */
 .pdp-new {
   display: block;
   font-family: 'Lato', sans-serif;
@@ -14,7 +13,53 @@
   color: #000;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 24px 24px;
+  padding: 0 0 24px;
+}
+
+/* Breadcrumb row spacing. Desktop only — below 990px the wrapper's own 16px
+   gutter applies. */
+@media screen and (min-width: 990px) {
+  .pdp-new__breadcrumbs {
+    padding-bottom: 24px;
+  }
+}
+
+/* Reset the UA fieldset/legend chrome the shared variant picker inherits.
+   min-width:0 lifts fieldset's min-content floor so flex/grid children shrink. */
+.pdp-new fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.pdp-new legend {
+  padding: 0;
+}
+
+/* ---- Variant chips ----
+   Squared 4px chip, orange when selected (Figma). Scoped to .pdp-new because
+   component-product-variant-picker.css is the live PDP's stylesheet too. */
+.pdp-new .product-form__input--pill input[type='radio'] + label {
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  background: #fff;
+  color: #23232b;
+  padding: 12px 16px;
+  margin: 0 8px 8px 0;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0;
+}
+
+.pdp-new .product-form__input--pill input[type='radio'] + label:hover {
+  border-color: #23232b;
+}
+
+.pdp-new .product-form__input--pill input[type='radio']:checked + label {
+  background: #d83d0e;
+  border-color: #d83d0e;
+  color: #fff;
 }
 
 /* Judge.me auto-injects its preview badge next to the title — the design has
@@ -25,21 +70,21 @@
 }
 
 /* ============ Buy box ============ */
+/* No border or radius: the info column's #faf9f9 panel reaches the edges of
+   this section. */
 .pdp-new__buybox {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   background: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
 }
 
 .pdp-new__buybox > * {
   min-width: 0;
 }
 
+/* No divider between the columns — the white-to-#faf9f9 change separates them. */
 .pdp-new__media-card {
   padding: 16px;
-  border-right: 1px solid #e5e5e5;
 }
 
 .pdp-new__info {
@@ -103,33 +148,27 @@
   min-width: 0;
 }
 
-/* Image box: square by default (padding-top:100% of column width), but on short
-   viewports that pushes the thumbnail row below the fold. Cap the box to the
-   viewport minus the fixed chrome above/below it, with a 320px floor so it
-   never collapses. The image inside is object-fit:contain, so it just
-   letterboxes. The 335px subtrahend covers header/nav (~142) + breadcrumb/gap
-   (~73) + gap+thumbnail row (~108) + ~12 breathing room; it was 370 before the
-   top padding was removed, and dropping it grows the box ~35px while keeping
-   the thumbnails on-screen at the 1536x695 QA viewport. */
+/* Image box: square by default, capped to the viewport minus the fixed chrome
+   above and below (335px ≈ header 142 + breadcrumb 73 + thumbnail row 108) with
+   a 320px floor, so the thumbnail strip stays above the fold on short screens.
+   The image is object-fit:contain, so a capped box just letterboxes. */
 .pdp-new .main-image-container {
   padding-top: min(100%, max(320px, calc(100vh - 335px)));
 }
 
-/* Zoom panel: one consistent size in every state. The gallery JS
-   (updateZoomTop) inlines top:14px + height:~98vh on scroll for portrait
-   images, which grows the panel and slides it behind the header — pin the
-   base CSS geometry (below the header, 73vh minus header) instead. */
+/* Zoom panel: one consistent size in every state. The gallery JS (updateZoomTop)
+   inlines top:14px + height:~98vh on scroll for portrait images, which slides the
+   panel behind the header — pin the geometry here instead. */
 .pdp-new .zoom-result {
   top: calc(var(--header-height, 200px) + 0px) !important;
   /* Fill the viewport below the header so no buy-box content peeks out
      beneath the zoom panel while zooming. */
   height: calc(100vh - var(--header-height, 200px)) !important;
   /* Cover the info column exactly. Measured from that column by pdp-new.js
-     (--pdp-info-w / --pdp-info-right) rather than computed from vw: the panel
-     is fixed, but the page container is not a fixed inset from the viewport —
-     .inner-container gains its own gutter below 1280px. The vw formula this
-     replaces was tuned to the old 24px .pdp-new padding and drifted whenever
-     either changed. Fallbacks keep it sane before the script runs. */
+     (--pdp-info-w / --pdp-info-right) rather than computed from vw: the panel is
+     fixed, but .inner-container gains its own gutter below 1280px so the page
+     container is not a fixed inset from the viewport. Fallbacks cover the window
+     before the script runs. */
   width: var(--pdp-info-w, calc(min(100vw, 1280px) / 2)) !important;
   max-width: none !important;
   right: var(--pdp-info-right, max(0px, calc((100vw - 1280px) / 2))) !important;
@@ -191,19 +230,51 @@
   color: #808080;
 }
 
-/* Buy-box "Delivery & Warranty" metafield lines */
-.pdp-new__meta-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* Buy-box "Delivery & Warranty" rows, matching the live PDP. Copied from
+   custom-main-product-page.css rather than loading that file, which also caps
+   the gallery via .product-main-left and would fight this layout. */
+.pdp-new .metainfo-wrapper .item {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font-size: 14px;
-  line-height: 20px;
+  align-items: flex-start;
+  margin-bottom: 14px;
 }
 
-.pdp-new__meta-list strong {
+.pdp-new .metainfo-wrapper .item:last-of-type {
+  margin-bottom: 0;
+}
+
+.pdp-new .metainfo-wrapper .item__icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 20px;
+  flex: 0 0 20px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.pdp-new .metainfo-wrapper .item__icon-wrap svg {
+  width: 100%;
+  max-height: 20px;
+}
+
+.pdp-new .metainfo-wrapper .item__text {
+  padding-left: 8px;
+  font-size: 14px;
+  color: #393940;
+}
+
+.pdp-new .metainfo-wrapper .item__text .title {
+  margin-right: 4px;
+  font-weight: 700;
+  color: #000;
+}
+
+.pdp-new .metainfo-wrapper .item__text .more-info {
+  margin-left: 5px;
+  color: #000;
+  text-decoration: underline;
+  cursor: pointer;
   font-weight: 700;
 }
 
@@ -253,12 +324,10 @@
   display: none;
 }
 
-/* Circled step number in each option-group heading ("1 Colors") — not in the
-   Figma design; the titles and their help "?" stay. Targets the first direct
-   child span, which is the number badge: a descendant selector would also catch
-   the .option_selected spans that sit in this same row. display:none rather than
-   visibility, so the heading's 8px column-gap closes up too. Shared snippet, so
-   this is scoped to .pdp-new and the live PDP keeps its numbering. */
+/* Hides the circled step number in each option-group heading ("1 Colors"), which
+   the Figma omits. `> span:first-child` and not a descendant selector: the help
+   "?" is an <svg> and the colour summary a <div>, but a descendant match would
+   also hit the .option_selected spans in the same row. */
 .pdp-new .product-options__category-title > span:first-child {
   display: none;
 }
@@ -272,10 +341,13 @@
 
 /* ---- Info tabs (buy box): per Figma, every tab has a grey underline segment;
        the active tab's segment turns orange. Labels stay black. ---- */
+/* No gap between buttons: per Figma the underline reads as ONE continuous rule
+   across the whole row, with the active portion coloured — not a row of
+   separate pills. */
 .pdp-new__tabs .tabs__buttons,
 .pdp-new__addons .tabs__buttons {
   display: flex;
-  gap: 2px;
+  gap: 0;
 }
 
 .pdp-new__tabs .tab-btn,
@@ -284,7 +356,7 @@
   width: auto;
   min-width: 0;
   position: relative;
-  padding: 12px 8px 16px;
+  padding: 12px 8px 10px;
   font-family: 'Lato', sans-serif;
   font-weight: 700;
   font-size: 14px;
@@ -304,13 +376,29 @@
   right: 0;
   bottom: 0;
   height: 4px;
-  border-radius: 2px;
+  border-radius: 0;
   background: #e5e5e5;
 }
 
+/* Only the two outer ends of the rule are rounded, so the segments read as one
+   bar rather than a set of pills. */
+.pdp-new__tabs .tab-btn:first-child::after,
+.pdp-new__addons .tab-btn:first-child::after {
+  border-radius: 2px 0 0 2px;
+}
+
+.pdp-new__tabs .tab-btn:last-child::after,
+.pdp-new__addons .tab-btn:last-child::after {
+  border-radius: 0 2px 2px 0;
+}
+
+/* The active (orange) segment is rounded on all four corners so it reads as a
+   pill sitting on the grey rule. Placed after the :first-child/:last-child
+   rules (equal specificity) so it wins for the end tabs too. */
 .pdp-new__tabs .tab-btn.active::after,
 .pdp-new__addons .tab-btn.active::after {
   background: #d83d0e;
+  border-radius: 6px;
 }
 
 .pdp-new__tabs .tabs__item,
@@ -334,30 +422,75 @@
   margin: 4px 0 12px;
 }
 
-/* Key Specs (and any rich-text metafield rendered in a buy-box tab): the raw
-   metafield is a flat <ul> of "Label: value" lines with no structure, which
-   reads as a cramped run-on. Turn it into a scannable spec sheet — each row a
-   divider-separated line, the label before the first colon bolded by
-   pdp-new.js. The dividers/spacing stand on their own if that JS never runs. */
-.pdp-new__tabs .tabs__item .metafield-rich_text_field ul {
+/* Text Bullet Point */
+.pdp-new__tabs .tabs__item ul,
+.pdp-new__content-body ul {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  padding-left: 0;
+}
+
+.pdp-new__tabs .tabs__item ul > li,
+.pdp-new__content-body ul > li {
+  position: relative;
+  list-style: none;
+}
+
+.pdp-new__tabs .tabs__item ul > li::before,
+.pdp-new__content-body ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  border-radius: 50%;
+  background: #3e77aa;
+}
+
+/* Info box: the smaller 4px dot. */
+.pdp-new__tabs .tabs__item ul > li {
+  padding-left: 8px;
+}
+
+.pdp-new__tabs .tabs__item ul > li::before {
+  width: 4px;
+  height: 4px;
+  /* Fallback for browsers without the `lh` unit; correct only when the line
+     box happens to be 1em taller than the dot. */
+  top: 0.5em;
+  /* Centre the dot on the FIRST LINE of the item. `1lh` is the element's own
+     computed line-height, so this holds at any font-size. `top: 50%` would centre
+     on the whole block and drop the dot into line two of a wrapped item. */
+  top: calc((1lh - 4px) / 2);
+}
+
+/* Lower content tabs: the larger 8px dot. */
+.pdp-new__content-body ul > li {
+  padding-left: 16px;
+}
+
+.pdp-new__content-body ul > li::before {
+  width: 8px;
+  height: 8px;
+  top: 0.5em;
+  top: calc((1lh - 8px) / 2);
+}
+
+.pdp-new__tabs .tabs__item ul li {
+  color: #808080;
+  margin-bottom: 6px;
+}
+
+/* Key Specs and any other rich-text metafield in a buy-box tab: same blue-bullet
+   list as the other tabs. The content is a flat <ul> of "Label: value" lines;
+   pdp-new.js bolds the label before the first colon. */
+/* Geometry comes from the shared bullet rules above (this ul is inside
+   .tabs__item, so it is already matched); only spacing and colour differ. */
+.pdp-new__tabs .tabs__item .metafield-rich_text_field ul {
+  margin: 4px 0 12px;
 }
 
 .pdp-new__tabs .tabs__item .metafield-rich_text_field li {
-  padding: 8px 0;
-  margin: 0;
+  margin-bottom: 6px;
   line-height: 22px;
-  border-bottom: 1px solid #e5e5e5;
-}
-
-.pdp-new__tabs .tabs__item .metafield-rich_text_field li:first-child {
-  padding-top: 0;
-}
-
-.pdp-new__tabs .tabs__item .metafield-rich_text_field li:last-child {
-  border-bottom: none;
+  color: #808080;
 }
 
 .pdp-new__tabs .tabs__item .metafield-rich_text_field li strong {
@@ -377,8 +510,10 @@
 }
 
 /* ---- Price / financing ---- */
-/* Headline price (grand total: product + selected options). */
-.pdp-new__price .pr_custom_price {
+/* Headline price: the variant's own price, static. Deliberately not
+   .pr_custom_price — that class is the running-total contract and lives on the
+   configuration total above Add to Cart. */
+.pdp-new__price .pdp-new__price-value {
   margin: 0;
   font-family: 'Lato', sans-serif;
   font-weight: 700;
@@ -451,9 +586,9 @@
 }
 
 /* ---- Selected configuration total ----
-   Sits directly above Add to Cart and states the amount being committed to.
-   Deliberately heavier than the pale-yellow "Options added" line, which reports
-   only the delta: this is the final figure, so it should read as the answer. */
+   The running grand total (variant price + selected options), directly above
+   Add to Cart. The headline price stays static, so this is the only figure in
+   the buy box that moves with the configurator. */
 .pdp-new__total {
   display: flex;
   align-items: baseline;
@@ -461,7 +596,6 @@
   gap: 12px;
   margin: 0 0 12px;
   padding: 12px 16px;
-  background: #faf9f7;
   border: 1px solid #d5d5d5;
   border-radius: 8px;
 }
@@ -473,7 +607,7 @@
   color: #23232b;
 }
 
-/* Also carries .pr_custom_price so priceHelper keeps it in step; these beat
+/* Also carries .pr_custom_price — priceHelper writes the total here; these beat
    product-options.css's buy-box price styling. */
 .pdp-new .pdp-new__total-value,
 .pdp-new .pdp-new__total-value.pr_custom_price {
@@ -527,6 +661,18 @@
   overflow: hidden;
 }
 
+/* Prompt under Add to Cart (Figma) — accent-coloured, centred, same Lato 700
+   as the button it follows. */
+.pdp-new .pdp-new__buy-note {
+  margin: 12px 0 0;
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
+  color: #d83d0e;
+  text-align: center;
+}
+
 /* Exported glyph. The design draws a 21.58x20.5 leaf inside a 24px box on the
    main button and 18.167x17.333 inside a 20px box on the add-on button; both
    dimensions are set explicitly so neither is stretched by a parent. */
@@ -542,6 +688,8 @@
 }
 
 /* ---- Add-Ons carousel arrows (restored after gallery-CSS cleanup) ---- */
+/* Figma: a solid dark disc with a white chevron, floating OVER the cards —
+   no outline, no shadow, no white fill. */
 .pdp-new__carousel-arrow {
   position: absolute;
   top: 50%;
@@ -550,27 +698,54 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 1px solid #e5e5e5;
-  background: #fff;
-  color: #000;
+  border: 0;
+  padding: 0;
+  /* Solid #616166, sampled from the Figma component. Opaque, not a translucent
+     dark: the disc must read the same over a card, a photo and the panel. */
+  background: #616166;
+  color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: none;
 }
 
-.pdp-new__carousel-arrow svg {
+.pdp-new__carousel-arrow:hover {
+  background: #4d4d51;
+}
+
+/* pdp-new.js hides an arrow via the `hidden` property when the track cannot
+   scroll further. `[hidden] { display: none }` is a UA rule and loses to the
+   `display: flex` above, so restate it here. */
+.pdp-new__carousel-arrow[hidden] {
+  display: none;
+}
+
+/* An inline <svg> is baseline-aligned, so the line box reserves descender space
+   and the chevron lands below the disc's centre. display:block + line-height:0
+   removes it. Scoped with .pdp-new to outrank product-options.css, which styles
+   a bare `button` element globally. */
+.pdp-new .pdp-new__carousel-arrow {
+  line-height: 0;
+}
+
+.pdp-new .pdp-new__carousel-arrow svg {
+  display: block;
+  flex: 0 0 auto;
   width: 24px;
   height: 24px;
 }
 
+/* Flush with the track edges: the Figma "arrows" frame spans the full carousel
+   width with the discs at x=0 and x=(width - 48), overlapping the
+   partially-visible card that signals more to scroll to. */
 .pdp-new__carousel-arrow--prev {
-  left: -8px;
+  left: 0;
 }
 
 .pdp-new__carousel-arrow--next {
-  right: -8px;
+  right: 0;
 }
 
 /* ---- Add-Ons carousel ---- */
@@ -587,24 +762,42 @@
   display: block;
 }
 
-.pdp-new__addon-track {
+/* Three classes deep to beat an unidentified rule in the theme's stylesheet
+   stack that collapsed the track to a vertical column on phones. Nothing else
+   in the theme mentions these classes, so specificity is used rather than
+   !important. */
+.pdp-new .pdp-new__addon-carousel .pdp-new__addon-track {
   display: flex;
+  flex-direction: row;
+  /* Explicit, not inherited: a wrapped track turns the carousel into a vertical
+     stack. */
+  flex-wrap: nowrap;
   gap: 12px;
   list-style: none;
   margin: 0;
   padding: 0;
   overflow-x: auto;
+  overflow-y: hidden;
+  /* A swipe past the last card must not drag the page sideways on iOS. */
+  overscroll-behavior-x: contain;
   scroll-behavior: smooth;
+  /* Proximity, not mandatory: a mandatory snap fights a slow drag and can trap
+     the last card when it is narrower than the viewport. */
+  scroll-snap-type: x proximity;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .pdp-new__addon-track::-webkit-scrollbar {
   display: none;
 }
 
-.pdp-new__addon-card {
+/* flex: 0 0 auto rather than flex-shrink alone — a card must neither grow into
+   spare space nor shrink below its own width once the row overflows. */
+.pdp-new .pdp-new__addon-carousel .pdp-new__addon-card {
+  flex: 0 0 auto;
   width: 200px;
-  flex-shrink: 0;
+  scroll-snap-align: start;
   border: 1px solid #e5e5e5;
   border-radius: 8px;
   overflow: hidden;
@@ -673,14 +866,11 @@
 
 /* Figma node 19:19562 "Simple button": #D83D0E, 40px tall, 8px radius, 6px gap,
    padding 10px with a 20px right inset, 20px glyph then Lato Bold 14/20 white.
-   This button deliberately does NOT carry the theme's .button/.button--primary
-   classes. The site ships an accessibility-mode stylesheet with
+
+   Deliberately does NOT carry the theme's .button/.button--primary classes: the
+   accessibility-mode stylesheet sets
    `body.accessibility-mode .button { background-color: #D83D0E !important }`,
-   which silently forced every state orange — the selected state never went green
-   even though .is-added was applied, and the base orange only looked correct by
-   coincidence. Since this button's look is defined entirely here, opting out of
-   .button is cleaner than escalating to !important against an accessibility
-   feature. It also drops the theme's ~47px min-height. */
+   which would force every state orange and stop .is-added going green. */
 .pdp-new .pdp-new__addon-atc {
   display: flex;
   align-items: center;
@@ -704,8 +894,8 @@
   cursor: pointer;
 }
 
-/* Selected: green, and the cart glyph is dropped — it has already been added to
-   the configuration, so a cart icon next to "Selected" would misdescribe it. */
+/* Momentary "Added" confirmation. Green, no cart glyph — the drawer opening is
+   the real confirmation. Reverts on a timer and stays enabled for a second unit. */
 .pdp-new .pdp-new__addon-atc.is-added {
   background: #1d7f36;
   color: #fff;
@@ -715,24 +905,71 @@
   display: none;
 }
 
+.pdp-new .pdp-new__addon-atc.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* Shown when an entry's default quantity is above one (e.g. flooring tiles at 12
+   to cover the machine's footprint). The unit price stays the headline figure, so
+   this spells out the multiple and the resulting line total. */
+.pdp-new__addon-qty {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+  color: #4a4a4a;
+}
+
 .pdp-new .pdp-new__addon-atc[disabled] {
   background: #e5e5e5;
   color: #808080;
   cursor: not-allowed;
 }
 
+/* ---- Add-Ons carousel: phone ---- */
+@media screen and (max-width: 749px) {
+  .pdp-new__addon-track {
+    gap: 10px;
+  }
+
+  /* Two cards plus the clipped edge of a third, per the Figma phone frame — the
+     peek is what tells a touch user the row scrolls, since the arrows are hidden
+     here. Selector matches the base rule's specificity to override its 200px. */
+  .pdp-new .pdp-new__addon-carousel .pdp-new__addon-card {
+    width: 46vw;
+    min-width: 152px;
+    max-width: 200px;
+  }
+
+  .pdp-new__addon-img {
+    height: 160px;
+  }
+
+  .pdp-new__addon-img img {
+    max-width: 140px;
+    max-height: 140px;
+  }
+
+  /* Touch users swipe, and the arrows overlapped the cards and the chat widget.
+     Safe to hide: this class is the upsell carousel's only, not the gallery's. */
+  .pdp-new__carousel-arrow {
+    display: none;
+  }
+}
+
 /* ============ Lower content ============ */
+/* No card chrome: the Figma draws this as a plain white area, not an outlined,
+   rounded panel. */
 .pdp-new__content {
   margin-top: 24px;
   background: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
   padding: 0 32px 32px;
 }
 
+/* No border-bottom here: the 4px `::after` rule under the buttons IS the line.
+   A hairline as well left a thinner stub poking out either side of it. */
 .pdp-new__content-nav {
   display: flex;
-  border-bottom: 1px solid #e5e5e5;
   margin: 0 -32px;
   padding: 0 32px;
   overflow-x: auto;
@@ -747,15 +984,15 @@
   color: #808080;
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
   white-space: nowrap;
   cursor: pointer;
 }
 
+/* The active indicator is the shared `::after` bar (coloured by custom.css's
+   `.tabs__buttons button.active::after`) — this tab must not also draw its own
+   border-bottom, or the row shows two stacked underlines. */
 .pdp-new__content-tab.active {
   color: #000;
-  border-bottom-color: #d83d0e;
 }
 
 .pdp-new__content .tabs__item {
@@ -779,14 +1016,111 @@
   margin: 0 0 16px;
 }
 
+/* ---- FAQ accordions ----
+   Built from the raw FAQ metafield by pdp-new.js. Native <details>: open/close
+   needs no script, the state is exposed to assistive tech, and in-page find can
+   still reach collapsed answers. */
+.pdp-new__faq-item {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 8px;
+}
+
+/* Figma: the open card is outlined in the primary orange. */
+.pdp-new__faq-item[open] {
+  border-color: #d83d0e;
+}
+
+.pdp-new__faq-q {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  font-family: 'Lato', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  color: #000;
+  cursor: pointer;
+  list-style: none;
+}
+
+/* Both are needed: WebKit uses ::-webkit-details-marker, everything else
+   honours list-style on the summary itself. */
+.pdp-new__faq-q::-webkit-details-marker {
+  display: none;
+}
+
+/* Chevron drawn in CSS rather than shipped as an asset — two borders rotated
+   45deg, so it inherits colour and needs no extra request. */
+.pdp-new__faq-q::after {
+  content: '';
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  margin-top: 6px;
+  border-right: 2px solid #4a4a4a;
+  border-bottom: 2px solid #4a4a4a;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.pdp-new__faq-item[open] .pdp-new__faq-q::after {
+  transform: rotate(-135deg);
+  margin-top: 10px;
+}
+
+.pdp-new__faq-a {
+  padding: 0 16px 16px;
+}
+
+.pdp-new__faq-a > :first-child {
+  margin-top: 0;
+}
+
+.pdp-new__faq-a > :last-child {
+  margin-bottom: 0;
+}
+
+.pdp-new__faq-a p {
+  font-size: 15px;
+  line-height: 24px;
+  color: #4a4a4a;
+  margin: 0 0 12px;
+}
+
 /* All content tabs visible, evenly distributed across the row (per Figma), no
    horizontal scroll. Resets the global custom.css ".tabs__buttons button
    { width:50% / max-content }" rules with higher specificity. */
 .pdp-new__content-nav {
-  gap: 3px;
+  gap: 0;
   overflow-x: visible;
   flex-wrap: wrap;
   height: auto;
+}
+
+/* custom.css gives every .tabs__buttons button a 4px `::after` with a 6px radius,
+   which renders the underline as separate pills. Figma draws one continuous rule
+   with only the active portion coloured: drop the radius on the inner joins and
+   round the two outer ends only. */
+.pdp-new .pdp-new__content-nav button.tab-btn::after {
+  border-radius: 0;
+}
+
+.pdp-new .pdp-new__content-nav button.tab-btn:first-child::after {
+  border-radius: 2px 0 0 2px;
+}
+
+.pdp-new .pdp-new__content-nav button.tab-btn:last-child::after {
+  border-radius: 0 2px 2px 0;
+}
+
+/* Active segment reads as a rounded pill on top of the grey rule, including
+   when it is the first or last tab. */
+.pdp-new .pdp-new__content-nav button.tab-btn.active::after {
+  border-radius: 6px;
 }
 
 /* Per Figma: tab width proportional to its label (short tabs narrow, long tabs
@@ -795,24 +1129,19 @@
   width: auto;
   flex: 1 1 auto;
   min-width: 0;
-  padding: 18px 12px;
+  padding: 14px 12px 12px;
   text-align: center;
   white-space: nowrap;
 }
 
-/* Content body: restore bullets (theme resets strip them) per Figma */
+/* Content body: bullet geometry comes from the shared rules above; only the
+   list's own vertical rhythm is set here. */
 .pdp-new__content-body ul {
-  list-style: disc outside;
-  padding-left: 20px;
   margin: 0 0 16px;
 }
 
 .pdp-new__content-body ul li {
   margin-bottom: 12px;
-}
-
-.pdp-new__content-body ul li::marker {
-  color: #3e77aa;
 }
 
 /* ---- Derived-content elements (pdp-new-content-tabs snippet) ---- */
@@ -858,6 +1187,84 @@
   vertical-align: top;
 }
 
+/* Spec tables — every authored two-column table on the PDP, in both the lower
+   content tabs and the buy box's info tabs.
+
+   Keyed off the .pdp-new__spec-table class pdp-new.js stamps on qualifying
+   tables, not the bare element: the same guard that decides a table is
+   spec-shaped decides whether it gets this card, so comparison charts are never
+   captured and need no counter-rules. */
+.pdp-new .pdp-new__spec-table {
+  width: 100%;
+  /* Not `collapse`: collapsed borders are painted outside the table's own box
+     and would sit square across the rounded corners. */
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0 0 24px;
+  font-family: 'Lato', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.pdp-new .pdp-new__spec-table th,
+.pdp-new .pdp-new__spec-table td {
+  padding: 12px 16px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+/* Row separators only — the table's own border draws the outer edge, so the
+   last row must not double it up. */
+.pdp-new .pdp-new__spec-table tr:last-child th,
+.pdp-new .pdp-new__spec-table tr:last-child td {
+  border-bottom: 0;
+}
+
+/* First cell of each row carries the label. */
+.pdp-new .pdp-new__spec-table th:first-child,
+.pdp-new .pdp-new__spec-table td:first-child {
+  width: 40%;
+  font-weight: 700;
+  color: #23232b;
+  border-right: 1px solid #e5e5e5;
+}
+
+.pdp-new .pdp-new__spec-table td:not(:first-child) {
+  color: #33343a;
+}
+
+/* Header band. "Specification" reads as the column label, "Details" is muted
+   to match the Figma. */
+.pdp-new .pdp-new__spec-table thead th {
+  background: #faf9f9;
+  font-weight: 700;
+  color: #23232b;
+}
+
+.pdp-new .pdp-new__spec-table thead th:not(:first-child) {
+  font-weight: 400;
+  color: #666b73;
+}
+
+@media (max-width: 749px) {
+  .pdp-new .pdp-new__spec-table th,
+  .pdp-new .pdp-new__spec-table td {
+    padding: 10px 12px;
+    font-size: 15px;
+    line-height: 22px;
+  }
+
+  /* Narrower viewport, so the label column gives ground to the value. */
+  .pdp-new .pdp-new__spec-table th:first-child,
+  .pdp-new .pdp-new__spec-table td:first-child {
+    width: 42%;
+  }
+}
+
 .pdp-new__chart-title {
   font-weight: 700;
   margin: 0 0 12px;
@@ -877,22 +1284,12 @@
   margin: 0 0 20px;
 }
 
-/* Legal / always-visible strip under the tabs (Warranty, Prop 65, Downloads) */
-.pdp-new__legal {
-  margin-top: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
 /* ---- Accordion (mobile) ----
-   The lower content renders once. Desktop shows it as tabs and keeps every
-   panel forced open with the header buttons hidden; <=989px (the PDP's own
-   desktop boundary, per main-product.liquid / product-mobile-gallery.js)
-   hides the tab row, shows every panel as a collapsible row, and pdp-new.js
-   drives open/close. Defaults below are the DESKTOP state so that no-JS and
-   pre-hydration render fully expanded content — nothing is hidden from
-   crawlers or from a user whose JS fails. */
+   The lower content renders once. Desktop shows it as tabs with every panel
+   forced open and the header buttons hidden; <=989px (the PDP's desktop
+   boundary) hides the tab row and pdp-new.js drives open/close. Defaults below
+   are the DESKTOP state, so no-JS and pre-hydration render fully expanded —
+   nothing is hidden from crawlers. */
 .pdp-new__acc-btn {
   display: none;
 }
@@ -930,8 +1327,7 @@
     padding-top: 0;
   }
 
-  .pdp-new__acc-btn,
-  .pdp-new__legal .pdp-new__acc-btn {
+  .pdp-new__acc-btn {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -990,12 +1386,6 @@
     display: none;
   }
 
-  /* Warranty joins the stacked list; Prop 65 and Downloads follow it as
-     ordinary always-visible blocks, spaced by the existing column gap. */
-  .pdp-new__legal {
-    margin-top: 0;
-  }
-
   /* In-panel headings step down to the wireframe's Lato 16/24 */
   .pdp-new__content-heading {
     font-family: 'Lato', sans-serif;
@@ -1025,7 +1415,10 @@
   flex-wrap: wrap;
 }
 
-.pdp-new__btn {
+/* Scoped with `.pdp-new`: these buttons are authored inside a metafield body
+   carrying `.rte`, and base-v2.min.css's `.rte a` (0,1,1) outranks a lone
+   .pdp-new__btn (0,1,0). Two classes takes it back. */
+.pdp-new .pdp-new__btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1041,32 +1434,37 @@
   border: 1px solid #d83d0e;
 }
 
-.pdp-new__btn--outline {
+.pdp-new .pdp-new__btn--outline {
   background: #fff;
   color: #000;
   border-color: #e5e5e5;
 }
 
-.pdp-new__btn:hover {
+.pdp-new .pdp-new__btn:hover {
   opacity: 0.9;
+  color: #fff;
 }
 
-.pdp-new__cta-link {
+.pdp-new .pdp-new__btn--outline:hover {
+  color: #000;
+}
+
+.pdp-new .pdp-new__cta-link {
   color: #d83d0e;
   font-weight: 700;
   text-decoration: none;
 }
 
-.pdp-new__cta-link:hover {
+.pdp-new .pdp-new__cta-link:hover {
+  color: #d83d0e;
   text-decoration: underline;
 }
 
 /* ============ Mobile ============ */
 @media screen and (max-width: 989px) {
-  /* 16px side gutter — the live PDP's mobile breadcrumb inset and the wireframe
-     both use 16, where this template was using 24; top stays removed like
-     desktop. The card keeps a gutter rather than going full-bleed like live,
-     because it has a visible border that would otherwise touch the screen edge. */
+  /* 16px side gutter, matching the live PDP's mobile breadcrumb inset and the
+     wireframe. The card keeps a gutter rather than going full-bleed because its
+     border would otherwise touch the screen edge. */
   .pdp-new {
     padding: 0 16px 24px;
   }
@@ -1076,6 +1474,24 @@
   .pdp-new__breadcrumbs .customBreadcrumbs {
     padding-left: 0;
     padding-right: 0;
+  }
+
+  /* Customization CTAs stack full-width on phone (Figma): primary, outline, then
+     the text link centred under both. */
+  .pdp-new__cta-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .pdp-new .pdp-new__cta-row .pdp-new__btn {
+    width: 100%;
+  }
+
+  .pdp-new .pdp-new__cta-row .pdp-new__cta-link {
+    display: block;
+    margin-top: 4px;
+    text-align: center;
   }
 
   .pdp-new__buybox {
@@ -1091,9 +1507,8 @@
      thumbnail strip beneath it (Figma node 19:22082). The desktop
      <product-gallery> stays hidden on mobile (it's inline/collapsed <990px, as
      on the live PDP). */
-  /* Keep the swipe-carousel arrows under the sticky header (which sits at
-     z-index 3): custom-product-gallery.css gives them 999/99, so they ride
-     over the header when the page scrolls. Scoped override — that file is
+  /* Keep the swipe-carousel arrows under the sticky header (z-index 3):
+     custom-product-gallery.css gives them 999/99. Scoped override — that file is
      shared with the live PDP. */
   .pdp-new mobile-gallery .slick-prev.slick-arrow,
   .pdp-new mobile-gallery .slick-next.slick-arrow {
@@ -1166,11 +1581,10 @@
   }
 
   /* ---- Breadcrumbs: collapse to "… > Product name" ----
-     The full trail is 6 crumbs and wraps to ~186px of above-the-fold height on
-     a 375px screen. Scoped to .pdp-new__breadcrumbs so the shared breadcrumb
-     snippet is untouched everywhere else on the site. The ancestors stay in
-     the DOM (crawlers still see the trail); only the immediate parent remains
-     visible, rendered as a tappable "…" so the up-link is not lost. */
+     The full 6-crumb trail wraps to ~186px of above-the-fold height on a 375px
+     screen. Ancestors stay in the DOM for crawlers; only the immediate parent is
+     visible, with a tappable "…" preserving the up-link. Scoped so breadcrumbs
+     elsewhere on the site are untouched. */
   .pdp-new__breadcrumbs .custom-breadcrumbs__navigation {
     flex-wrap: nowrap;
     align-items: center;
@@ -1221,20 +1635,16 @@
     font-weight: 700;
   }
 
-  /* base-v2.min.css sets "body.accessibility-mode
-     .custom-breadcrumbs__navigation span { color: #D83D0E !important }" at
-     (0,2,2) — the extra .pdp-new is needed to outrank it, !important alone
-     is not enough. Scoped to this PDP, so breadcrumbs elsewhere keep the
-     orange. Contrast improves either way: #23232B is ~14:1 on white where
-     the orange is ~4.4:1. */
+  /* base-v2.min.css sets "body.accessibility-mode .custom-breadcrumbs__navigation
+     span { color: #D83D0E !important }" at (0,2,2), so the extra .pdp-new is
+     needed to outrank it — !important alone is not enough. #23232B is ~14:1 on
+     white where the orange is ~4.4:1. */
   .pdp-new .pdp-new__breadcrumbs .custom-breadcrumbs__navigation > span {
     color: #23232b !important;
   }
 
-  /* The card inset is dropped on mobile (the wireframe draws a flush list),
-     so the rows align to .pdp-new's own 24px section gutter rather than
-     adding a second one. NOTE: the wireframe's page gutter is 16px, not 24 —
-     changing that is a whole-page decision, not a tabs one. */
+  /* The card inset is dropped on mobile (the wireframe draws a flush list), so the
+     rows align to .pdp-new's own section gutter rather than adding a second one. */
   .pdp-new__content-wrap {
     padding: 0 0 24px;
   }
@@ -1258,17 +1668,12 @@
 }
 
 /* ============ Column stickiness + sticky ATC bar ============ */
-/* Gallery pins while the taller info column scrolls, then releases with the
-   buy box (native sticky, contained by the grid row — same top offset as the
-   live PDP's .product-main-left-container). No z-index: sticky already paints
-   above the static info card (so the zoom panel shows), while the site header
-   keeps its own higher stacking. */
+/* Gallery pins while the taller info column scrolls, then releases with the buy
+   box. No z-index: sticky already paints above the static info card, while the
+   site header keeps its own higher stacking. */
 @media screen and (min-width: 990px) {
-  /* Sticky like live's .product-main-left-container. z-index 2: above the info
-     column's positioned elements (so the fixed zoom panel inside the gallery
-     paints over them), below the sticky header (z >= 3) so nothing ever covers
-     the header/nav. The zoom panel itself is header-safe by construction:
-     live CSS pins it at top:var(--header-height) with height 73vh minus header. */
+  /* z-index 2: above the info column's positioned elements so the fixed zoom panel
+     paints over them, below the sticky header (z >= 3) so nothing covers the nav. */
   .pdp-new__media-card {
     position: sticky;
     top: 170px;
