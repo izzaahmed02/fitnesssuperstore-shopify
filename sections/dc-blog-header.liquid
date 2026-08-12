@@ -24,7 +24,24 @@
                 <h1 class="dc-blog-header-content-text-title">{{ section.settings.title }}</h1>
                 <p class="dc-blog-header-content-text-subtitle">{{ section.settings.subtitle }}</p>
             </div>
-            <img src="{{ section.settings.image | img_url: 'master' }}" alt="banner">
+            {%- assign header_image = section.settings.image -%}
+            {%- if header_image != blank -%}
+              <img
+                src="{{ header_image | image_url: width: 1100 }}"
+                srcset="
+                  {%- if header_image.width >= 550 %}{{ header_image | image_url: width: 550 }} 550w,{% endif -%}
+                  {%- if header_image.width >= 1100 %}{{ header_image | image_url: width: 1100 }} 1100w,{% endif -%}
+                  {%- if header_image.width >= 1650 %}{{ header_image | image_url: width: 1650 }} 1650w,{% endif -%}
+                  {{ header_image | image_url: width: header_image.width }} {{ header_image.width }}w
+                "
+                sizes="(min-width: 750px) 50vw, 100vw"
+                width="{{ header_image.width }}"
+                height="{{ header_image.height }}"
+                alt="{{ header_image.alt | default: 'banner' | escape }}"
+                loading="eager"
+                fetchpriority="high"
+              >
+            {%- endif -%}
         </div>
     </div>
 </section>

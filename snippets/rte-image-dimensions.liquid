@@ -1,0 +1,71 @@
+{%- comment -%}
+  Adds intrinsic width/height attributes to <img> tags inside rich-text HTML
+  (article bodies, page content) that were inserted by the Shopify editor without
+  them. Without dimensions the browser cannot reserve space for the image, so every
+  image pushes the text below it down as it decodes — a large CLS contributor on
+  blog/article templates.
+
+  Real dimensions are resolved through the global `images` object, which exposes
+  every file uploaded to Settings > Files by filename. Combined with the existing
+  `.rte img { height: auto; max-width: 100% }` rule, the width/height pair gives the
+  browser the aspect ratio, so the correct box is reserved before the image loads.
+
+  Every image after the first also gets loading="lazy" so the run of body images stops
+  competing with the LCP resource for bandwidth. The first one is left eager because it
+  is the one that may still be in the initial viewport.
+
+  Fail-safe: a tag that already carries both attributes, or whose filename cannot be
+  resolved, keeps its original attributes; only the additions above are ever made.
+
+  Usage: {% render 'rte-image-dimensions', html: article.content %}
+{%- endcomment -%}
+{%- liquid
+  assign parts = html | split: '<img'
+  assign output = parts[0]
+  assign image_index = 0
+
+  for part in parts offset: 1
+    assign tag_halves = part | split: '>'
+    assign tag_body = tag_halves[0]
+    assign remainder = part | remove_first: tag_body
+
+    assign has_width = false
+    assign has_height = false
+    if tag_body contains 'width='
+      assign has_width = true
+    endif
+    if tag_body contains 'height='
+      assign has_height = true
+    endif
+
+    assign injected = ''
+
+    unless has_width and has_height
+      assign src = ''
+      if tag_body contains 'src="'
+        assign src = tag_body | split: 'src="' | last | split: '"' | first
+      elsif tag_body contains "src='"
+        assign src = tag_body | split: "src='" | last | split: "'" | first
+      endif
+
+      if src != ''
+        assign filename = src | split: '?' | first | split: '/' | last
+        assign source_image = images[filename]
+
+        if source_image != blank and source_image.width > 0
+          assign injected = ' width="' | append: source_image.width | append: '" height="' | append: source_image.height | append: '" decoding="async"'
+          assign image_index = image_index | plus: 1
+
+          unless image_index == 1
+            unless tag_body contains 'loading='
+              assign injected = injected | append: ' loading="lazy"'
+            endunless
+          endunless
+        endif
+      endif
+    endunless
+
+    assign output = output | append: '<img' | append: injected | append: tag_body | append: remainder
+  endfor
+-%}
+{{- output -}}

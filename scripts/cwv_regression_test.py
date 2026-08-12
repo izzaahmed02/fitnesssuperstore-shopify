@@ -40,9 +40,9 @@ require(head_meta, 'fetchpriority="high"', 'snippets/head-meta.liquid')
 # 5) jQuery should not be render-blocking.
 require(script_tags, "<script src=\"{{ 'jquery.min.js' | asset_url }}\" defer=\"defer\"></script>", 'snippets/script-tags.liquid')
 
-# 6) Square marketplace on product pages should be interaction/load triggered.
-require(script_tags, "function loadSquareMarketplace()", 'snippets/script-tags.liquid')
-forbid(script_tags, '<script src="https://js.squarecdn.com/square-marketplace.js" async></script>', 'snippets/script-tags.liquid')
+# 6) Square marketplace is no longer used and should not be reintroduced in any form.
+forbid(script_tags, 'js.squarecdn.com', 'snippets/script-tags.liquid')
+forbid(script_tags, "function loadSquareMarketplace()", 'snippets/script-tags.liquid')
 
 # 7) Google Maps should be interaction/load triggered for heavy pages.
 require(script_tags, "function loadGoogleMaps()", 'snippets/script-tags.liquid')
