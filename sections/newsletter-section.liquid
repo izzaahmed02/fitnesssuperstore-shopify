@@ -253,6 +253,7 @@
           <h3
             class="newsletter-form__message newsletter-form__message--success form__message"
             id="Newsletter-success--{{ section.id }}"
+            {% if section.settings.guide_capture %}data-sbg-success{% endif %}
             tabindex="-1"
             autofocus>
             {% render 'icon-success' -%}
@@ -305,6 +306,10 @@
   </div>
 </div>
 
+{%- if section.settings.guide_capture -%}
+  <script src="{{ 'smart-buyers-guide-tracking.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+
 {% schema %}
   {
     "name": "Newsletter",
@@ -354,10 +359,11 @@
         "label": "Show download button after submit",
         "default": false
       }, {
-        "type": "url",
+        "type": "text",
         "id": "guide_pdf_url",
         "label": "Guide PDF (Shopify CDN URL)",
-        "info": "Use the Shopify Files CDN URL — not the Google Drive link."
+        "info": "Use the exact versioned Shopify Files CDN URL — not the Google Drive link.",
+        "default": "https://cdn.shopify.com/s/files/1/0884/2012/2940/files/fitness-superstore-smart-buyers-guide-to-fitness-equipment.pdf?v=1784326414"
       }, {
         "type": "text",
         "id": "download_label",
