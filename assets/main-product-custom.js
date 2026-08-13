@@ -159,7 +159,6 @@ try {
 						for (var i = 0; i < candidateKeys.length; i++) {
 							product = await fetchProductByTitle(candidateKeys[i]);
 							if (product) {
-								console.log('Option Help key matched:', candidateKeys[i]);
 								break;
 							}
 						}
@@ -246,7 +245,7 @@ try {
 		}
 	});
 } catch (error) {
-	console.log(error)
+	/* initialization error intentionally ignored */
 }
 
 function getPaylaterModal(payLaterText) {

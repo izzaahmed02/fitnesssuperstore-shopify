@@ -49,12 +49,23 @@
 }
 .belowfoldCharts a {
   color: #D83D0E;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .belowfoldCharts li {
   list-style: disc;
 }
 .belowfoldCharts ul {
   padding-left: 35px;
+}
+.belowfoldCharts td,
+.belowfoldCharts th {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.belowfoldCharts table {
+  table-layout: fixed;
+  max-width: 100%;
 }
 
 .compareChart .comparison-table a {
@@ -231,6 +242,7 @@
 
 @media (max-width: 500px) {
   .compareChart .col-feature,
+  .compareChart .feature-col,
   .compareChart .sticky-header .feature-col,
   .compareChart .feature-label {
     width: 150px !important;
@@ -505,9 +517,9 @@
     <thead>
       <tr>
         <th class="feature-col"></th>
-        {% for product in products %}          
+        {% for product in products %}
           <th class="product-header">
-             <a href="{{ product.url }}">
+            {% if product.url.value != blank %}<a href="{{ product.url.value }}">{% endif %}
             <div class="product-title">{{ product.custom_title }}</div>
             {% if product.image %}
               <div class="product-header-image">
@@ -518,8 +530,8 @@
                 >
               </div>
             {% endif %}
-             </a>
-          </th>           
+            {% if product.url.value != blank %}</a>{% endif %}
+          </th>
         {% endfor %}
       </tr>
     </thead>
@@ -566,9 +578,9 @@
             {% assign feature_names = feature_names | split: '|||' | uniq | compact %}
             {% assign product_feature_blocks = product_features_map | split: '##' | reject: '' %}
 
-            {% for product in products %}          
+            {% for product in products %}
               <th class="product-header">
-                 <a href="{{ product.url }}">
+                {% if product.url.value != blank %}<a href="{{ product.url.value }}">{% endif %}
                 <div class="product-title">{{ product.custom_title }}</div>
                 {% if product.image %}
                   <div class="product-header-image">
@@ -579,8 +591,8 @@
                     >
                   </div>
                 {% endif %}
-                 </a>
-              </th>           
+                {% if product.url.value != blank %}</a>{% endif %}
+              </th>
             {% endfor %}
           </tr>
         </thead>
@@ -634,11 +646,17 @@ document.addEventListener("DOMContentLoaded", function () {
   const productCount = document.querySelectorAll("#mainTable .col-product").length;
   const shouldShowStickyArrows = productCount > 7;
 
+  function updateBottomArrowVisibility() {
+    if (shouldShowStickyArrows) {
+      bottomScrollArrows.classList.add("hidden");
+      return;
+    }
+    const hasOverflow = scrollableContent.scrollWidth > scrollableContent.clientWidth + 1;
+    bottomScrollArrows.classList.toggle("hidden", !hasOverflow);
+  }
+
   if (shouldShowStickyArrows) {
     stickyScrollArrows.style.display = "flex";
-    bottomScrollArrows.classList.add("hidden");
-  } else if (productCount <= 7) {
-    bottomScrollArrows.classList.add("hidden");
   }
 
   // ─── Detect the fixed/sticky site header height reliably ───
@@ -764,10 +782,11 @@ document.addEventListener("DOMContentLoaded", function () {
   function onResize() {
     if (resizeTimer) cancelAnimationFrame(resizeTimer);
     resizeTimer = requestAnimationFrame(() => {
-      repositionStickyHeader();   // update left / width / top
-      handleStickyHeader();       // re-evaluate visibility
-      updateArrowStates();        // scroll position may have changed
-      syncHorizontalScroll();     // scroll offset is still valid, just re-sync
+      repositionStickyHeader();      // update left / width / top
+      handleStickyHeader();          // re-evaluate visibility
+      updateBottomArrowVisibility(); // overflow may have changed with viewport
+      updateArrowStates();           // scroll position may have changed
+      syncHorizontalScroll();        // scroll offset is still valid, just re-sync
     });
   }
   window.addEventListener("resize", onResize);
@@ -780,8 +799,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ─── Initial setup ───
   repositionStickyHeader();  // sync column widths before first scroll
+  updateBottomArrowVisibility();
   updateArrowStates();
   handleStickyHeader();
+
+  // Re-check overflow after images load — header images can change table width
+  window.addEventListener("load", () => {
+    updateBottomArrowVisibility();
+    updateArrowStates();
+  });
 });
 
 // ─── Equalise product-title heights so columns line up ───

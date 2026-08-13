@@ -21,6 +21,8 @@
   assign alt = 'sections.video.load_video' | t: description: video_alt | escape
   assign poster = section.settings.video.preview_image | default: section.settings.cover_image
 
+  assign section_anchor_id = section.settings.section_id | handle
+
   if section.settings.video != null
     assign ratio_diff = section.settings.video.aspect_ratio | minus: poster.aspect_ratio | abs
     if ratio_diff < 0.01 and ratio_diff > 0
@@ -38,7 +40,10 @@
   {%- endif %}
 {%- endcapture -%}
 
-<div class="color-{{ section.settings.color_scheme }} gradient">
+<div
+  class="color-{{ section.settings.color_scheme }} gradient"
+  {%- if section_anchor_id != blank %} id="{{ section_anchor_id }}"{% endif -%}
+>
   <div class="video-section isolate{% unless section.settings.full_width %} page-width{% endunless %} section-{{ section.id }}-padding">
     <div
       {% if section.settings.full_width %}
@@ -129,6 +134,16 @@
     "groups": ["header", "footer"]
   },
   "settings": [
+    {
+      "type": "header",
+      "content": "Section anchor"
+    },
+    {
+      "type": "text",
+      "id": "section_id",
+      "label": "Anchor ID",
+      "info": "Adds an id to this section so it can be linked directly. Example: enter seven-stage-process-video, then link to #seven-stage-process-video. Lowercase letters, numbers, and hyphens only \u2014 other characters are auto-converted. Leave blank for none."
+    },
     {
       "type": "inline_richtext",
       "id": "heading",

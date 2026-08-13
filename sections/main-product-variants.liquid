@@ -727,6 +727,14 @@
                     </div>
                   {% endif %}
                 {% assign current_variant = product.selected_or_first_available_variant %}
+{%- comment -%}
+  Only surface processing/lead time when the product is actually purchasable.
+  product.available is false only when no variant can be bought (out of stock AND
+  inventory policy DENY), so an out-of-stock hold hides it while in-stock and
+  legitimate continue-selling (preorder/backorder) products still show it. The
+  stored metafield value is untouched.
+{%- endcomment -%}
+{% if product.available %}
 {% if current_variant.metafields.custom.processing_time_long_variant != blank or product.metafields.custom.processing_time_long != blank %}
   <div class="item">
     <div class="item__icon-wrap">{% render 'icon-timer' %}</div>
@@ -738,6 +746,7 @@
       <span class="more-info" data-customfield="Processing Time" data-processingtime="{{ current_variant.metafields.custom.processing_time_long_variant }}">(More Info)</span>
     </div>
   </div>
+{% endif %}
 {% endif %}
 
                   {% if product.metafields.custom.product_code != blank %}
@@ -892,10 +901,11 @@
                     <p>{{ boyboxvariant.metafields.custom.buy_box_note }}</p>
                   {% endif %}
 
-                  <div id="Options-Added-{{ section.id }}" class="options-added-line" role="status" aria-live="polite">
-                    <span class="options-added-line__label">Options added:</span>
-                    <span class="options-added-line__value" data-options-added-value data-currency="{{ cart.currency.symbol }}">+{{ 0 | money }}</span>
-                  </div>
+                  {% render 'product-options-added-line',
+                    product: product,
+                    variant: boyboxvariant,
+                    section_id: section.id
+                  %}
 
                   <h2 class="product_price_with_options-heading">Total with options</h2>
 
@@ -2216,6 +2226,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   })(window, document, 'script', 'https://www.shopperapproved.com/product/34099/' + sa_product + '.js');
 </script>
+<script src="{{ 'mobile-pdp-polish.js' | asset_url }}" defer="defer"></script>
 
 {% schema %}
 {

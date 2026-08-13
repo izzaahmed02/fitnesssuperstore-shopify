@@ -59,7 +59,37 @@
           </svg>
         {%- endif -%}
       {%- endcapture -%}
-      {%- if picker_type == 'swatch' -%}
+      {%- if option.values.size == 1 -%}
+        {%- comment -%}
+          Single-choice option: render as inline "Label: Value" per Tim's
+          May 13 direction. The <select> stays in the DOM (visually hidden)
+          so variant-selects JS and form submission continue to receive
+          options[Name] with the sole value — cart line-item properties
+          pass through unchanged.
+        {%- endcomment -%}
+        <div class="product-form__input product-form__input--single-value" data-variant-options>
+          <p class="product-form__inline-option">
+            <span class="form__label">{{ option.name }}:</span>
+            <span class="product-form__inline-option__value">{{- option.selected_value -}}</span>
+            {{ variant_help_icon }}
+          </p>
+          <select
+            class="visually-hidden"
+            id="Option-{{ section.id }}-{{ forloop.index0 }}"
+            name="options[{{ option.name | escape }}]"
+            form="{{ product_form_id }}"
+            aria-hidden="true"
+            tabindex="-1"
+          >
+            {% render 'product-variant-options',
+              product: product,
+              option: option,
+              block: block,
+              picker_type: 'dropdown'
+            %}
+          </select>
+        </div>
+      {%- elsif picker_type == 'swatch' -%}
         <fieldset class="js product-form__input product-form__input--swatch" data-variant-options>
           <legend class="form__label">
             {{ option.name }}:

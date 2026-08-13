@@ -142,7 +142,7 @@ customElements.get('product-info') ||
               document.querySelector(`#${e}`)?.focus();
             })
             .catch((t) => {
-              'AbortError' === t.name ? console.log('Fetch aborted by user') : console.error(t);
+              if ('AbortError' !== t.name) console.error(t);
             }));
       }
       getSelectedVariant(t) {
