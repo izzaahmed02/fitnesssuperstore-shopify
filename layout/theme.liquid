@@ -121,11 +121,13 @@
 
 <script>
 (function() {
-  var ua = navigator.userAgent || "";
-  if (ua.includes("Chrome-Lighthouse") || ua.includes("Page Speed Insights")) {
-    return;
-  }
-
+  // Synthetic clients (Chrome-Lighthouse, Page Speed Insights) used to return here,
+  // so lab runs skipped the Gorgias widget and the Convert loader that every real
+  // visitor receives. The CWV acceptance criteria set a numeric target on the
+  // INP- and LCP-affected mobile URLs and the CI budget table has a separate
+  // experimentation line, so measuring a page customers never get made the
+  // baseline untrustworthy and put lab permanently out of step with the field
+  // data in Search Console. Vendors now load on the same terms for everyone.
   var injected = false;
 
   function injectNonCriticalVendors() {
