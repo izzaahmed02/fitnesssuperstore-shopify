@@ -31,6 +31,12 @@
     multi-variant product an identifier belongs to one variant, so it is emitted on that
     variant's Offer and nowhere else.
 
+  SKU
+    A top-level Product SKU is emitted only for a single-variant product, where it
+    unambiguously identifies the whole product, and it is carried on that product's sole
+    Offer as well. On a multi-variant product each SKU belongs to one variant, so the SKUs
+    stay on their matching Offers and the Product carries none.
+
   MPN
     Emitted only from the dedicated mpn metafield. It is never taken from the Shopify SKU,
     which is our internal code, not a manufacturer-assigned part number. The SKU stays in
@@ -79,6 +85,11 @@
   assign fact_ships = product.metafields.custom.ships.value | default: '' | strip
   assign fact_lead = product.metafields.custom.processing_time.value | default: '' | strip
   assign fact_warranty = product.metafields.custom.warranty.value | default: '' | strip
+
+  assign product_sku = ''
+  if product.variants.size == 1
+    assign product_sku = product.selected_or_first_available_variant.sku | default: '' | strip
+  endif
 
   assign product_gtin_raw = ''
   if product.variants.size == 1
@@ -232,6 +243,9 @@
         {% endif %}
         "price": {{ product.selected_or_first_available_variant.price | divided_by: 100.0 | json }},
         "priceCurrency": {{ shop.currency | default: 'USD' | json }},
+        {% if product_sku != blank %}
+        "sku": {{ product_sku | json }},
+        {% endif %}
         {% render 'schema-gtin-property', value: product.selected_or_first_available_variant.barcode %}
 
         {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
@@ -376,8 +390,8 @@
       ],
       {% endif %}
 
-      {% if product.selected_or_first_available_variant.sku != blank %}
-      "sku": {{ product.selected_or_first_available_variant.sku | json }},
+      {% if product_sku != blank %}
+      "sku": {{ product_sku | json }},
       {% endif %}
       "url": {{ request.origin | append: product.url | json }}
 
