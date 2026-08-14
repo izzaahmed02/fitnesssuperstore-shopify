@@ -62,7 +62,14 @@
     {%- endif -%}
 
     {%- if section.settings.title_text != blank -%}
-      <h1 class="fssd-hero__title">{{ section.settings.title_text }}</h1>
+      {%- comment -%}
+        Bind the final two words with a non-breaking space so the last word is
+        never orphaned on a line of its own. replace_last only touches the last
+        space, so this is generic: a one-word heading is unchanged, and any
+        other heading simply keeps its final two words together. The heading
+        string itself is never hardcoded.
+      {%- endcomment -%}
+      <h1 class="fssd-hero__title">{{ section.settings.title_text | replace_last: ' ', '&nbsp;' }}</h1>
     {%- endif -%}
 
     {%- if section.settings.copy_text != blank -%}
@@ -167,8 +174,13 @@
     width: 16px;
     height: 16px;
   }
+  /* Constrains only the h1 -- __copy (56ch) and the CTA row keep their own
+     measure. 18ch was too narrow for "Shop New & Remanufactured" and forced a
+     third line. 26ch fits that phrase while staying well short of the full
+     heading, so the break falls after "Remanufactured". A different heading
+     simply reflows; nothing breaks. */
   .fssd-hero__title {
-    max-width: 18ch;
+    max-width: 26ch;
     margin: 0 0 12px;
     font-family: 'Oswald', sans-serif;
     font-weight: 600;
