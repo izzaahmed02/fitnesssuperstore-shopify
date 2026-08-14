@@ -385,7 +385,8 @@
                 {% endunless %}
 
                 <div>
-                 {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                 {% comment %} GMC/MSRP compliance (2026-04): reference "retail price" ("As high as") display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
+{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
   <span class="pr_custom_compare_price"
     >As high as:
     <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
@@ -396,6 +397,7 @@
     <s>{{ product.selected_or_first_available_variant.compare_at_price | money_with_currency -}}</s>
   </span>
 {% endif %}
+{% endcomment %}
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
@@ -411,7 +413,8 @@
                         price_class: 'price--large'
                       -%}
 
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                      {% comment %} GMC/MSRP compliance (2026-04): "You save $X" savings display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
+{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
   <span class="you-save"
     >You save
     {{ product.metafields.custom.retail_price | minus: product.selected_or_first_available_variant.price | money -}}
@@ -422,6 +425,7 @@
     {{ product.selected_or_first_available_variant.compare_at_price | minus: product.selected_or_first_available_variant.price | money -}}
   </span>
 {% endif %}
+{% endcomment %}
                     </div>
                   {% endif %}
                 </div>
@@ -1153,7 +1157,8 @@
 {% endunless %}
 
                 <div class="product__prices hidden lg:block">
-                  {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                  {% comment %} GMC/MSRP compliance (2026-04): reference "retail price" ("As high as") display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
+{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
   <span class="pr_custom_compare_price"
     >As high as:
     <s>{{ product.metafields.custom.retail_price | money_with_currency -}}</s>
@@ -1164,6 +1169,7 @@
     <s>{{ product.selected_or_first_available_variant.compare_at_price | money_with_currency -}}</s>
   </span>
 {% endif %}
+{% endcomment %}
                   {% if product.metafields.custom.saleprice_name != blank %}
                     {% render 'super-sale',
                       sale_name: product.metafields.custom.saleprice_name,
@@ -1179,7 +1185,8 @@
                         price_class: 'price--large'
                       -%}
 
-                      {% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
+                      {% comment %} GMC/MSRP compliance (2026-04): "You save $X" savings display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
+{% if product.metafields.custom.retail_price > product.selected_or_first_available_variant.price %}
   <span class="you-save"
     >You save
     {{ product.metafields.custom.retail_price | minus: product.selected_or_first_available_variant.price | money -}}
@@ -1190,6 +1197,7 @@
     {{ product.selected_or_first_available_variant.compare_at_price | minus: product.selected_or_first_available_variant.price | money -}}
   </span>
 {% endif %}
+{% endcomment %}
                     </div>
                   {% endif %}
                  </div>
@@ -1267,11 +1275,13 @@
        <p class="pr_custom_price {% unless product.available %} out-of-stock{% endunless %}" data-price-value="{{  product.selected_or_first_available_variant.price | money_without_currency }}" data-currency="{{cart.currency.symbol }}">
         {{ product.selected_or_first_available_variant.price | money }}
       </p>
+{% comment %} GMC/MSRP compliance (2026-04): reference "retail price" ("As high as") display hidden — show actual selling price only. Do not re-enable without a verified/substantiated reference price.
        {% if mp_compare > mp_price %}
     <span class="pr_custom_compare_price">
       <s>{{ mp_compare | money -}}</s>
     </span>
   {% endif %}
+  {% endcomment %}
       
     </div>
    
