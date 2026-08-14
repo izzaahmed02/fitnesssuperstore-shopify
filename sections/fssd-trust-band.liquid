@@ -34,10 +34,17 @@
         {%- if block.type == 'trust_chip' -%}
           <li class="fssd-trust-band__chip" {{ block.shopify_attributes }}>
             {%- comment -%}
-              Decorative only — aria-hidden, empty alt. The adjacent chip title
-              and body carry the meaning. An uploaded image overrides the
-              selected inline SVG, so design assets drop in with no code change.
+              When a link is set the chip becomes an anchor; when empty it stays a
+              plain span. Both carry __chip-inner, so the resting layout is
+              identical — only hover/focus differ. The icon stays aria-hidden; the
+              title and body are the anchor's accessible name, so no aria-label is
+              needed. No data-fss-hp-* attributes: spec §8 defines no event here.
             {%- endcomment -%}
+            {%- if block.settings.link != blank -%}
+              <a class="fssd-trust-band__chip-inner" href="{{ block.settings.link }}">
+            {%- else -%}
+              <span class="fssd-trust-band__chip-inner">
+            {%- endif -%}
             <span class="fssd-trust-band__icon" aria-hidden="true">
               {%- if block.settings.icon_image != blank -%}
                 <img
@@ -67,6 +74,11 @@
                 <span class="fssd-trust-band__chip-text">{{ block.settings.body }}</span>
               {%- endif -%}
             </span>
+            {%- if block.settings.link != blank -%}
+              </a>
+            {%- else -%}
+              </span>
+            {%- endif -%}
           </li>
         {%- endif -%}
       {%- endfor -%}
@@ -114,9 +126,23 @@
     border-bottom: 1px solid var(--fssd-trust-border);
   }
   .fssd-trust-band__chip {
+    display: block;
+  }
+  .fssd-trust-band__chip-inner {
     display: flex;
     align-items: flex-start;
     gap: 10px;
+    color: inherit;
+    text-decoration: none;
+  }
+  .fssd-trust-band__chip-inner:focus-visible {
+    outline: 3px solid var(--fssd-trust-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  a.fssd-trust-band__chip-inner:hover .fssd-trust-band__chip-title {
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
   .fssd-trust-band__icon {
     flex: 0 0 auto;
@@ -197,6 +223,12 @@
           "label": "Chip Body"
         },
         {
+          "type": "url",
+          "id": "link",
+          "label": "Chip Link (optional)",
+          "info": "Leave blank for a static chip. No default: a url setting only accepts /collections or /collections/all as a default, so verified destinations are set per preset/template instead."
+        },
+        {
           "type": "select",
           "id": "icon",
           "label": "Icon",
@@ -226,7 +258,7 @@
           "type": "trust_chip",
           "settings": {
             "title": "New & Remanufactured",
-            "body": "Compare available condition options",
+            "body": "Choose the condition that fits your project.",
             "icon": "compare"
           }
         },
@@ -234,7 +266,8 @@
           "type": "trust_chip",
           "settings": {
             "title": "Warranty Information",
-            "body": "See product-specific coverage",
+            "body": "Review product-specific coverage.",
+            "link": "/pages/warranty",
             "icon": "shield"
           }
         },
@@ -242,7 +275,7 @@
           "type": "trust_chip",
           "settings": {
             "title": "Delivery Options",
-            "body": "Review available services by destination",
+            "body": "Review services available for your destination.",
             "icon": "truck"
           }
         },
@@ -251,6 +284,7 @@
           "settings": {
             "title": "Equipment Help",
             "body": "Get help comparing equipment",
+            "link": "/pages/contact",
             "icon": "question"
           }
         }
