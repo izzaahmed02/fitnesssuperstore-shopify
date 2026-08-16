@@ -40,10 +40,11 @@ if (!customElements.get('product-form-with-options')) {
         this.cart?.setActiveElement(document.activeElement);
         const url = `${window.Shopify.routes.root}cart/add.js`;
 
+        const visibleOptions = { ...this.prepareDefaultProperties(), ...this.prepareOptions() };
         const productProperties = {
-          ...this.prepareDefaultProperties(),
-          ...this.prepareOptions(),
+          ...visibleOptions,
           _functionOperation: this.prepareFunctionalProperties(),
+          _bundlePublicProperties: this.prepareBundlePublicProperties(visibleOptions),
         };
 
         const bodyRequest = {
@@ -205,6 +206,50 @@ if (!customElements.get('product-form-with-options')) {
         }
 
         return lineItemProperties;
+      }
+
+      // Item D — the bounded, versioned presentation manifest.
+      //
+      // Built from EXACTLY the properties `prepareOptions()` already renders, in
+      // the same place and at the same time as `_functionOperation`, so the two
+      // cannot disagree about what the customer selected (§D.2).
+      //
+      // Why it exists: `lineExpand` REPLACES the parent cart line, and the
+      // expanded children carry only the attributes the transform writes. The
+      // customer's Warranty, Processing Time and every $0 selection never become
+      // child lines, so without this manifest they are lost from the order
+      // entirely. That is the second half of the loss mechanism visible in
+      // order #1004.
+      //
+      // Bounds come from window.FSBundleEstimator, which is generated from the
+      // same spec as the transform's. A manifest this emits and the transform
+      // rejects is a BLOCKED CHECKOUT, so the two must agree by construction.
+      prepareBundlePublicProperties(lineItemProperties) {
+        const spec = window.FSBundleEstimator;
+        const version = spec ? spec.MANIFEST_VERSION : 1;
+        const maxKey = spec ? spec.MAX_PUBLIC_KEY_LEN : 64;
+        const maxValue = spec ? spec.MAX_PUBLIC_VALUE_LEN : 255;
+
+        const entries = Object.entries(lineItemProperties || {})
+          // Private keys are never carried onto an expanded line. The transform
+          // REJECTS a manifest containing one rather than skipping it, and
+          // sending `_functionOperation` here would break the validation
+          // function's detection rule, which depends on that payload being
+          // absent after a successful expand.
+          .filter(([key, value]) => key && !String(key).startsWith('_') && value != null && String(value).trim() !== '')
+          .map(([key, value]) => ({
+            // Lengths are clamped rather than rejected: truncating a long
+            // display string is cosmetic, and blocking a customer's checkout
+            // over a verbose option label would be a poor trade.
+            key: String(key).slice(0, maxKey),
+            value: String(value).slice(0, maxValue),
+          }));
+
+        // The property COUNT is deliberately NOT clamped. Dropping selections to
+        // fit would silently lose exactly what this manifest exists to preserve.
+        // Over the cap, the transform rejects and the checkout blocks — visible
+        // and recoverable, rather than a quietly incomplete order.
+        return JSON.stringify({ v: version, p: entries });
       }
 
       prepareFunctionalProperties() {
