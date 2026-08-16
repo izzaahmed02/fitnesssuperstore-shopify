@@ -1,0 +1,1558 @@
+{{ 'hgs-extra-info.css' | asset_url | stylesheet_tag: preload: false }}
+{{ 'accordion.css' | asset_url | stylesheet_tag: preload: false }}
+
+
+{% assign is_gift_cards_template = false %}
+{% if template.suffix == 'gift_cards' %}
+  {% assign is_gift_cards_template = true %}
+{% endif %}
+
+{%- style -%}
+
+.faq-accordion-item {
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    transition: .3s linear;
+    padding-bottom: 0;
+    margin-bottom: 12px;
+}
+
+.faq-accordion-item p {
+  margin: 0px;
+}
+
+.metainfo-tabs-content h5 {
+  font-weight: 100;
+}
+
+.faq-accordion-item:has(button[aria-expanded="true"]) {
+  border-color: #D83D0E;
+}
+
+.meta-accordion-item ul li {
+  color: #808080;
+}
+
+.meta-accordion-item ul li::marker {
+  color: #3E77AA;
+}
+  .main-container {
+    max-width: 1920px;
+    padding-left: 80px;
+  }
+
+  .product__extra_info {
+    overflow: hidden;
+  }
+
+  .product__extra_info a {
+    color: var(--primary-orange-500, #D83D0E) !important;
+  }
+
+  #shopify-section-{{ section.id }} .product__extra_info {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-tabs-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #EDEFF3;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-tab-button {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+    color: #23232B;
+    flex: 1;
+    text-align: center;
+    padding: 0 0 8px;
+    cursor: pointer;
+    transition: 0.2s ease;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-tab-button.is-active {
+    border-bottom-color: #D83D0E;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-tab-panel {
+    display: none;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-tab-panel.is-active {
+    display: block;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-tab-panel > * + * {
+    margin-top: 16px;
+  }
+
+  /*
+    List fix:
+    The previous version forced list-style on both UL and LI.
+    Some theme CSS also adds li::before bullets, causing double bullets.
+  */
+  #shopify-section-{{ section.id }} .extra-info-width ul,
+  #shopify-section-{{ section.id }} .metafield-rich_text_field ul,
+  #shopify-section-{{ section.id }} .product__extra_info ul {
+    padding-left: 24px;
+    margin-left: 0;
+    list-style: disc;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-width ol,
+  #shopify-section-{{ section.id }} .metafield-rich_text_field ol,
+  #shopify-section-{{ section.id }} .product__extra_info ol {
+    padding-left: 24px;
+    margin-left: 0;
+    list-style: decimal;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-width li,
+  #shopify-section-{{ section.id }} .metafield-rich_text_field li,
+  #shopify-section-{{ section.id }} .product__extra_info li {
+    list-style: inherit;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-width li::before,
+  #shopify-section-{{ section.id }} .metafield-rich_text_field li::before,
+  #shopify-section-{{ section.id }} .product__extra_info li::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  {% for block in section.blocks %}
+    {% if block.settings.use_checkmark_bullets %}
+      #shopify-section-{{ section.id }} [data-extra-tab-panel="{{ section.id }}-{{ block.id }}"] ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      #shopify-section-{{ section.id }} [data-extra-tab-panel="{{ section.id }}-{{ block.id }}"] ul li {
+        position: relative;
+        padding-left: 28px;
+        list-style: none;
+        margin-bottom: 6px;
+      }
+
+      #shopify-section-{{ section.id }} [data-extra-tab-panel="{{ section.id }}-{{ block.id }}"] ul li::before {
+        content: '' !important;
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 3px;
+        width: 19px;
+        height: 19px;
+        background-image: url("data:image/svg+xml,%3Csvg width='19' height='19' viewBox='0 0 19 19' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0.599948' y='0.600192' width='17.2' height='17.2' rx='8.6' fill='%23EDEFF3'/%3E%3Crect x='0.599948' y='0.600192' width='17.2' height='17.2' rx='8.6' stroke='%233E77AA' stroke-width='1.20001'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M13.4239 5.2948C13.6478 5.05053 14.0283 5.03378 14.2725 5.25769C14.5166 5.48164 14.5325 5.86115 14.3087 6.10535L7.89266 13.1053C7.78207 13.226 7.62658 13.2961 7.46297 13.2997C7.29936 13.3032 7.14119 13.2396 7.02547 13.1239L4.10945 10.2079C3.87514 9.97357 3.87514 9.59357 4.10945 9.35926C4.34373 9.12516 4.72283 9.12516 4.95711 9.35926L7.43074 11.8329L13.4239 5.2948Z' fill='%233E77AA'/%3E%3C%2Fsvg%3E");
+        background-repeat: no-repeat;
+        background-size: contain;
+      }
+    {% endif %}
+  {% endfor %}
+
+  #shopify-section-{{ section.id }} .extra-info-empty-message {
+    display: none;
+  }
+
+  {% if request.design_mode %}
+    #shopify-section-{{ section.id }} .extra-info-empty-message {
+      display: block;
+      padding: 16px;
+      border: 1px dashed #D83D0E;
+      border-radius: 8px;
+      font-family: Lato, sans-serif;
+      font-size: 14px;
+      line-height: 22px;
+    }
+  {% endif %}
+
+  .product-videos-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .product-video-item {
+    width: 100%;
+  }
+
+  .product-video-thumbnail-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .product-video-thumbnail {
+    width: 100%;
+    border-radius: 12px;
+    cursor: pointer;
+    height: auto;
+    display: block;
+  }
+
+  .product-video-play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    color: white;
+    text-shadow: 0 0 10px rgba(0,0,0,0.6);
+    pointer-events: none;
+  }
+
+  .product-video-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .product-video-modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+  }
+
+  .product-video-modal-poster {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .product-video-modal-poster-image {
+    width: 100%;
+    height: auto;
+    max-height: 90vh;
+    object-fit: cover;
+    border-radius: 12px;
+    display: block;
+  }
+
+  .product-video-modal-play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    color: white;
+    text-shadow: 0 0 10px rgba(0,0,0,0.6);
+    pointer-events: none;
+  }
+
+  .product-video-modal iframe,
+  .product-video-modal video {
+    width: 100%;
+    height: auto;
+    max-height: 90vh;
+    border-radius: 12px;
+  }
+
+  .product-video-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    font-size: 32px;
+    color: white;
+    cursor: pointer;
+  }
+
+  html.no-scroll,
+  body.no-scroll {
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .custom-video-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin-top: 10px;
+    max-height: 320px;
+  }
+
+  .custom-video-poster {
+    position: relative;
+    cursor: pointer;
+    max-height: 320px;
+  }
+
+  video.custom-video {
+    border-radius: 20px;
+  }
+
+  .custom-video-poster img {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-height: 320px;
+    object-fit: cover;
+    border-radius: 20px;
+  }
+
+  .custom-play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .product-details-description-body .custom-video-wrapper .custom-video {
+    display: block !important;
+  }
+
+  @media screen and (max-width: 750px) {
+    #shopify-section-{{ section.id }} .product__extra_info {
+      padding-top: {{ section.settings.padding_top | times: 0.6 | round }}px;
+      padding-bottom: {{ section.settings.padding_bottom | times: 0.6 | round }}px;
+    }
+
+    .product__extra_info h5 {
+      font-size: 16px;
+    }
+  }
+
+  @media screen and (max-width: 600px) {
+    #shopify-section-{{ section.id }} .extra-info-tabs-nav {
+      gap: 8px;
+      overflow-x: auto;
+      justify-content: flex-start;
+    }
+
+    #shopify-section-{{ section.id }} .extra-info-tab-button {
+      font-size: 14px;
+      line-height: 22px;
+      min-width: max-content;
+      flex: 0 0 auto;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    .product-video-play-icon {
+      font-size: 36px;
+    }
+
+    .product-video-close {
+      top: 10px;
+      right: 10px;
+      font-size: 28px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 50%;
+      padding: 4px 10px;
+      z-index: 999;
+    }
+  }
+
+  @media(max-width: 650px) {
+    .custom-video-wrapper {
+      max-height: 230px;
+    }
+
+    .custom-video-poster {
+      max-height: 230px;
+    }
+
+    .custom-video-poster img {
+      max-height: 230px;
+    }
+  }
+
+  .product__extra_train.extra-info-width {
+  column-count: 2;
+  column-gap: 48px;
+}
+
+.product__extra_train.extra-info-width h5 {
+  break-after: avoid;
+}
+
+.product__extra_train.extra-info-width ul {
+  break-inside: avoid;
+  margin-top: 0;
+}
+
+@media screen and (max-width: 749px) {
+   .product__extra_train.extra-info-width {
+    column-count: 1;
+  }
+  #shopify-section-{{ section.id }} .extra-info-tabs-nav {
+    display: none;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-tab-panel {
+    display: block !important;
+    border-bottom: 1px solid #EDEFF3;
+  }
+
+  #shopify-section-{{ section.id }} .extra-info-tab-panel > * + * {
+    margin-top: 0;
+  }
+
+  #shopify-section-{{ section.id }} .product__extra_info h4 {
+    display: none;
+  }
+}
+
+
+{%- endstyle -%}
+
+{% assign addMoreSections = product.metafields.custom.add_more_sections.value %}
+
+<div class="product__extra_info product__extra_info-tabs">
+  <div class="product__extra_info-wrap">
+
+    {% assign has_visible_tabs = false %}
+
+    <div class="extra-info-tabs-nav" role="tablist">
+      {% for block in section.blocks %}
+        {% assign tab_title = block.settings.title %}
+        {% assign supported_tab = false %}
+
+        {% case block.type %}
+          {% when 'description', 'features', 'benefits', 'what_you_can_train', 'buyingguide', 'faq', 'warranty' %}
+            {% assign supported_tab = true %}
+        {% endcase %}
+
+        {% if supported_tab and tab_title != blank %}
+          {% assign has_visible_tabs = true %}
+          <button
+            type="button"
+            class="extra-info-tab-button"
+            data-extra-tab-button="{{ section.id }}-{{ block.id }}"
+            role="tab"
+            aria-controls="extra-tab-panel-{{ section.id }}-{{ block.id }}"
+            aria-selected="false"
+            {{ block.shopify_attributes }}
+          >
+            {{ tab_title }}
+          </button>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="extra-info-tabs-content">
+      {% for block in section.blocks %}
+        {% assign tab_title = block.settings.title %}
+        {% assign supported_panel = false %}
+
+        {% case block.type %}
+          {% when 'description', 'features', 'benefits', 'what_you_can_train', 'buyingguide', 'faq', 'warranty' %}
+            {% assign supported_panel = true %}
+        {% endcase %}
+
+        {% if supported_panel and tab_title != blank %}
+          <div
+            class="extra-info-tab-panel"
+            id="extra-tab-panel-{{ section.id }}-{{ block.id }}"
+            data-extra-tab-panel="{{ section.id }}-{{ block.id }}"
+            role="tabpanel"
+          >
+            {% case block.type %}
+
+              {% when 'description' %}
+                {% if product.content != blank %}
+                  <div class="extra-info-width">
+                    <h4>{{ block.settings.title }}</h4>
+                    {% assign videos = product.media | where: "media_type", "video" %}
+                    {% if videos.size > 0 %}
+                      <div class="product-videos-wrapper" id="descriptionvideo">
+                        {% for video in videos %}
+                          <div class="product-video-item">
+                            <a href="#" class="product-video-trigger" data-video-id="video-{{ video.id }}">
+                              {% if video.preview_image %}
+                                {% capture video_thumbnail_alt %}{{ product.title }} video preview {{ forloop.index }}{% endcapture %}
+                                <div class="product-video-thumbnail-wrapper">
+                                  {{
+                                    video.preview_image
+                                    | image_url: width: 800
+                                    | image_tag:
+                                      alt: video_thumbnail_alt,
+                                      class: 'product-video-thumbnail',
+                                      widths: '320, 480, 640, 800',
+                                      sizes: '(min-width: 990px) 532px, 100vw',
+                                      loading: 'lazy'
+                                  }}
+                                  <span class="product-video-play-icon">▶</span>
+                                </div>
+                              {% else %}
+                                <div class="video-placeholder">
+                                  ▶ Play Video {{ forloop.index }}
+                                </div>
+                              {% endif %}
+                            </a>
+                          </div>
+
+                          <div id="video-{{ video.id }}" class="product-video-modal">
+                            <div class="product-video-modal-content">
+                              <span class="product-video-close">&times;</span>
+                              <button
+                                type="button"
+                                class="product-video-modal-poster"
+                                aria-label="Play {{ product.title }} video {{ forloop.index }}"
+                              >
+                                {% if video.preview_image %}
+                                  <img
+                                    src="{{ video.preview_image | img_url: '1200x' }}"
+                                    alt="{{ product.title }} video preview {{ forloop.index }}"
+                                    class="product-video-modal-poster-image"
+                                  >
+                                {% endif %}
+                                <span class="product-video-modal-play-icon">▶</span>
+                              </button>
+                              <video controls playsinline preload="none" poster="{{ video.preview_image | image_url: width: 1200 }}" style="width:100%; border-radius:12px; display:none;">
+                                {% for source in video.sources %}
+                                  <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                                {% endfor %}
+                              </video>
+                            </div>
+                          </div>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+
+                    {% render 'clean-description', description: product.description %}
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Product description is empty.
+                  </div>
+                {% endif %}
+
+                {% if product.metafields.custom.condition_state == 'Remanufactured' %}
+                  <div class="extra-info-width remanufacturing-process-video">
+                    <h2 class="product__extra_info-title">Our Remanufacturing Process</h2>
+                    <div class="custom-video-wrapper">
+                      <div class="custom-video-poster" style="display:block;">
+                        <img
+                          src="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Our_Remanufacturing_Process_Video_Thumbnail_-_PDP.png?v=1763416095"
+                          alt="Remanufacturing Process Thumbnail"
+                        >
+                        <svg class="custom-play-button" width="80" height="80" viewBox="0 0 80 80" fill="none">
+                          <circle cx="40" cy="40" r="40" fill="rgba(0,0,0,0.5)"/>
+                          <polygon points="32,25 60,40 32,55" fill="#fff"/>
+                        </svg>
+                      </div>
+                      <video
+                        class="custom-video"
+                        style="display:none; width:100%; max-height:320px;"
+                        controls
+                        poster="https://cdn.shopify.com/s/files/1/0884/2012/2940/files/Our_Remanufacturing_Process_Video_Thumbnail_-_PDP.png?v=1763416095"
+                      >
+                        <source
+                          src="https://cdn.shopify.com/videos/c/o/v/2596b47c911e44c3a9f1fc683663f105.mp4"
+                          type="video/mp4"
+                        >
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                  </div>
+                {% endif %}
+
+              {% when 'features' %}
+                {% assign otherFeatures = product.metafields.custom.features_specs.value.other_features.value %}
+
+                {% if block.settings.features_liquid != blank %}
+                  {% capture features_output %}{{ block.settings.features_liquid }}{% endcapture %}
+                  <div class="product__extra_features extra-info-width">
+                    <h4>{{ block.settings.title }}</h4>
+                    {{ features_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
+                  </div>
+                {% elsif block.settings.features != blank %}
+                  {% capture features_output %}{{ block.settings.features }}{% endcapture %}
+                  <div class="product__extra_features extra-info-width">
+                    <h4>{{ block.settings.title }}</h4>
+                    {{ features_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this Features block, connect a dynamic source, or use the Custom liquid field.
+                  </div>
+                {% endif %}
+                {% comment %}
+                {% if otherFeatures != blank %}
+                  <div class="product__extra_tech extra-info-width">
+                    <div>{{ otherFeatures }}</div>
+                  </div>
+                {% endif %}
+                 {%endcomment %}
+
+                {% if addMoreSections != blank %}
+                  <div class="extra-info-width">
+                    {% assign add_more_keys = "2_sections,3_sections,4_sections,5_sections" | split: "," %}
+                    {% for add_key in add_more_keys %}
+                      {% if addMoreSections[add_key] != blank %}
+                        <div class="extra-info-accordion">
+                          <span class="accordion-item">
+                            <h2 class="product__extra_info-title">{{ add_key | replace: "_", " " }}</h2>
+                            <svg
+                              class="arrow"
+                              width="14"
+                              height="8"
+                              viewBox="0 0 14 8"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="black"/>
+                            </svg>
+                          </span>
+
+                          <div class="extra-info-accordion-content">
+                            {% render 'clean-description', description: addMoreSections[add_key] %}
+                          </div>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+              {% when 'benefits' %}
+                {% if block.settings.benefits_liquid != blank %}
+                  {% capture benefits_output %}{{ block.settings.benefits_liquid }}{% endcapture %}
+                  <div class="product__extra_overview extra-info-width">
+                    <h4>{{ block.settings.title }}</h4>
+                    {{ benefits_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
+                  </div>
+                {% elsif block.settings.benefits != blank %}
+                  {% capture benefits_output %}{{ block.settings.benefits }}{% endcapture %}
+                  <div class="product__extra_overview extra-info-width">
+                    <h4>{{ block.settings.title }}</h4>
+                    {{ benefits_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this Benefits block, connect a dynamic source, or use the Custom liquid field.
+                  </div>
+                {% endif %}
+
+              {% when 'what_you_can_train' %}
+                {% if block.settings.what_you_can_train_liquid != blank %}
+                  {% capture train_output %}{{ block.settings.what_you_can_train_liquid }}{% endcapture %}
+                  <div class="product__extra_train extra-info-width">
+                    {{ train_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
+                  </div>
+                {% elsif block.settings.what_you_can_train != blank %}
+                  {% capture train_output %}{{ block.settings.what_you_can_train }}{% endcapture %}
+                  <div class="product__extra_train extra-info-width">
+                    {{ train_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this What You Can Train block, connect a dynamic source, or use the Custom liquid field.
+                  </div>
+                {% endif %}
+
+              {% when 'buyingguide' %}
+                {% if block.settings.buyingguide_liquid != blank %}
+                  {% capture buyingguide_output %}{{ block.settings.buyingguide_liquid }}{% endcapture %}
+                  <div class="product__extra_tech extra-info-width">
+                    {{ buyingguide_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
+                  </div>
+                {% elsif block.settings.buyingguide != blank %}
+                  {% capture buyingguide_output %}{{ block.settings.buyingguide }}{% endcapture %}
+                  <div class="product__extra_tech extra-info-width">
+                    {{ buyingguide_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this Buying Guide block, connect a dynamic source, or use the Custom liquid field.
+                  </div>
+                {% endif %}
+
+              {% when 'faq' %}
+                {% if block.settings.faq_liquid != blank %}
+                  {% capture faq_output %}{{ block.settings.faq_liquid }}{% endcapture %}
+                  <div class="product__extra_tech extra-info-width" id="faq-raw-{{ block.id }}">
+                    <h4>{{ block.settings.title }}</h4>
+                    <div class="faq-raw-content">
+                      {{ faq_output
+                        | replace: '&amp;lt;', '<'
+                        | replace: '&amp;gt;', '>'
+                        | replace: '&lt;', '<'
+                        | replace: '&gt;', '>'
+                        | replace: '&quot;', '"'
+                        | replace: '&#39;', "'"
+                        | replace: '&amp;nbsp;', '&nbsp;'
+                      }}
+                    </div>
+                  </div>
+                {% elsif block.settings.faq != blank %}
+                  {% capture faq_output %}{{ block.settings.faq }}{% endcapture %}
+                  <div class="product__extra_tech extra-info-width" id="faq-raw-{{ block.id }}">
+                    <h4>{{ block.settings.title }}</h4>
+                    <div class="faq-raw-content">
+                      {{ faq_output
+                        | replace: '&amp;lt;', '<'
+                        | replace: '&amp;gt;', '>'
+                        | replace: '&lt;', '<'
+                        | replace: '&gt;', '>'
+                        | replace: '&quot;', '"'
+                        | replace: '&#39;', "'"
+                        | replace: '&amp;nbsp;', '&nbsp;'
+                      }}
+                    </div>
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this FAQ block, connect a dynamic source, or use the Custom liquid field.
+                  </div>
+                {% endif %}
+
+              {% when 'warranty' %}
+                {% if block.settings.warranty_liquid != blank %}
+                  {% capture warranty_output %}{{ block.settings.warranty_liquid }}{% endcapture %}
+                  <div class="product__extra_warranty extra-info-width">
+                    <h4>{{ block.settings.title }}</h4>
+                    {{ warranty_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
+                  </div>
+                {% elsif block.settings.warranty != blank %}
+                  {% capture warranty_output %}{{ block.settings.warranty }}{% endcapture %}
+                  <div class="product__extra_warranty extra-info-width">
+                    <h4>{{ block.settings.title }}</h4>
+                    {{ warranty_output
+                      | replace: '&amp;lt;', '<'
+                      | replace: '&amp;gt;', '>'
+                      | replace: '&lt;', '<'
+                      | replace: '&gt;', '>'
+                      | replace: '&quot;', '"'
+                      | replace: '&#39;', "'"
+                      | replace: '&amp;nbsp;', '&nbsp;'
+                    }}
+                  </div>
+                {% elsif request.design_mode %}
+                  <div class="extra-info-empty-message">
+                    Add content to this Warranty block, connect a dynamic source, or use the Custom liquid field.
+                  </div>
+                {% endif %}
+
+                {% unless is_gift_cards_template %}
+                  {% render 'prop65' %}
+
+                  {% if customer and customer.tags contains 'admin' %}
+                    <a id="download-pds" style="cursor:pointer;">Download Product Data Sheet</a>
+                  {% endif %}
+
+                  {% render 'product-downloads' %}
+                {% endunless %}
+
+            {% endcase %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% unless has_visible_tabs %}
+      {% if request.design_mode %}
+        <div class="extra-info-empty-message">
+          Add blocks to create tabs. Each tab uses the block Tab title as the label.
+        </div>
+      {% endif %}
+    {% endunless %}
+
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "HGS Extra info",
+  "class": "extraInfo",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section paddings"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 200,
+      "step": 5,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 200,
+      "step": 5,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 80
+    }
+  ],
+  "blocks": [
+    {
+      "type": "description",
+      "name": "Description",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Description"
+        },
+        {
+          "type": "checkbox",
+          "id": "use_checkmark_bullets",
+          "label": "Use checkmark bullets for lists",
+          "default": false,
+          "info": "Replaces default disc bullets with a blue checkmark icon on all lists in this tab."
+        },
+        {
+          "type": "checkbox",
+          "id": "show_tile_calculator",
+          "label": "t:sections.main-product.blocks.tile_calculator.show_tile_calculator.label",
+          "default": false,
+          "info": "t:sections.main-product.blocks.tile_calculator.show_tile_calculator.info"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:sections.main-product.blocks.tile_calculator.heading.label",
+          "default": "How many tiles do I need?"
+        },
+        {
+          "type": "text",
+          "id": "calculate_button",
+          "label": "t:sections.main-product.blocks.tile_calculator.calculate_button.label",
+          "default": "Calculate"
+        },
+        {
+          "type": "text",
+          "id": "breakdown_heading",
+          "label": "t:sections.main-product.blocks.tile_calculator.breakdown_heading.label",
+          "default": "Select your amount:"
+        },
+        {
+          "type": "text",
+          "id": "tile_type_suffix",
+          "label": "t:sections.main-product.blocks.tile_calculator.tile_type_suffix.label",
+          "default": "Mats"
+        }
+      ]
+    },
+    {
+      "type": "features",
+      "name": "Features",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Features"
+        },
+        {
+          "type": "checkbox",
+          "id": "use_checkmark_bullets",
+          "label": "Use checkmark bullets for lists",
+          "default": false,
+          "info": "Replaces default disc bullets with a blue checkmark icon on all lists in this tab."
+        },
+        {
+          "type": "richtext",
+          "id": "features",
+          "label": "Content"
+        },
+        {
+          "type": "liquid",
+          "id": "features_liquid",
+          "label": "Custom liquid / metafield output"
+        }
+      ]
+    },
+    {
+      "type": "benefits",
+      "name": "Benefits",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Benefits"
+        },
+        {
+          "type": "checkbox",
+          "id": "use_checkmark_bullets",
+          "label": "Use checkmark bullets for lists",
+          "default": false,
+          "info": "Replaces default disc bullets with a blue checkmark icon on all lists in this tab."
+        },
+        {
+          "type": "richtext",
+          "id": "benefits",
+          "label": "Content"
+        },
+        {
+          "type": "liquid",
+          "id": "benefits_liquid",
+          "label": "Custom liquid / metafield output"
+        }
+      ]
+    },
+    {
+      "type": "what_you_can_train",
+      "name": "What You Can Train",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "What You Can Train"
+        },
+        {
+          "type": "checkbox",
+          "id": "use_checkmark_bullets",
+          "label": "Use checkmark bullets for lists",
+          "default": false,
+          "info": "Replaces default disc bullets with a blue checkmark icon on all lists in this tab."
+        },
+        {
+          "type": "richtext",
+          "id": "what_you_can_train",
+          "label": "Content"
+        },
+        {
+          "type": "liquid",
+          "id": "what_you_can_train_liquid",
+          "label": "Custom liquid / metafield output"
+        }
+      ]
+    },
+    {
+      "type": "buyingguide",
+      "name": "Buying Guide",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Buying Guide"
+        },
+        {
+          "type": "checkbox",
+          "id": "use_checkmark_bullets",
+          "label": "Use checkmark bullets for lists",
+          "default": false,
+          "info": "Replaces default disc bullets with a blue checkmark icon on all lists in this tab."
+        },
+        {
+          "type": "richtext",
+          "id": "buyingguide",
+          "label": "Content"
+        },
+        {
+          "type": "liquid",
+          "id": "buyingguide_liquid",
+          "label": "Custom liquid / metafield output"
+        }
+      ]
+    },
+    {
+      "type": "faq",
+      "name": "FAQ",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Frequently Asked Questions"
+        },
+        {
+          "type": "checkbox",
+          "id": "use_checkmark_bullets",
+          "label": "Use checkmark bullets for lists",
+          "default": false,
+          "info": "Replaces default disc bullets with a blue checkmark icon on all lists in this tab."
+        },
+        {
+          "type": "richtext",
+          "id": "faq",
+          "label": "Content"
+        },
+        {
+          "type": "liquid",
+          "id": "faq_liquid",
+          "label": "Custom liquid / metafield output"
+        }
+      ]
+    },
+    {
+      "type": "warranty",
+      "name": "Warranty",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Tab title",
+          "default": "Warranty"
+        },
+        {
+          "type": "checkbox",
+          "id": "use_checkmark_bullets",
+          "label": "Use checkmark bullets for lists",
+          "default": false,
+          "info": "Replaces default disc bullets with a blue checkmark icon on all lists in this tab."
+        },
+        {
+          "type": "richtext",
+          "id": "warranty",
+          "label": "Content"
+        },
+        {
+          "type": "liquid",
+          "id": "warranty_liquid",
+          "label": "Custom liquid / metafield output"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "HGS Extra info"
+    }
+  ]
+}
+{% endschema %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll("#shopify-section-{{ section.id }} .product__extra_info-tabs").forEach(section => {
+      const buttons = section.querySelectorAll("[data-extra-tab-button]");
+      const panels = section.querySelectorAll("[data-extra-tab-panel]");
+
+      if (!buttons.length || !panels.length) return;
+
+      function activateTab(tabId) {
+        buttons.forEach(button => {
+          const isActive = button.getAttribute("data-extra-tab-button") === tabId;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+
+        panels.forEach(panel => {
+          const isActive = panel.getAttribute("data-extra-tab-panel") === tabId;
+          panel.classList.toggle("is-active", isActive);
+        });
+      }
+
+      buttons.forEach(button => {
+        button.addEventListener("click", function() {
+          activateTab(this.getAttribute("data-extra-tab-button"));
+        });
+      });
+
+      activateTab(buttons[0].getAttribute("data-extra-tab-button"));
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const triggers = document.querySelectorAll(".product-video-trigger");
+    const modals = document.querySelectorAll(".product-video-modal");
+
+    triggers.forEach(trigger => {
+      trigger.addEventListener("click", function(e) {
+        e.preventDefault();
+
+        const videoId = this.getAttribute("data-video-id");
+        const modal = document.getElementById(videoId);
+
+        if (modal) {
+          resetModalVideo(modal);
+          modal.style.display = "flex";
+          document.body.classList.add("no-scroll");
+        }
+      });
+    });
+
+    modals.forEach(modal => {
+      const closeBtn = modal.querySelector(".product-video-close");
+      const posterBtn = modal.querySelector(".product-video-modal-poster");
+
+      if (posterBtn) {
+        posterBtn.addEventListener("click", function() {
+          const video = modal.querySelector("video");
+
+          posterBtn.style.display = "none";
+
+          if (video) {
+            video.style.display = "block";
+            video.play();
+          }
+        });
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener("click", function() {
+          modal.style.display = "none";
+          document.body.classList.remove("no-scroll");
+          stopVideo(modal);
+        });
+      }
+    });
+
+    window.addEventListener("click", function(e) {
+      modals.forEach(modal => {
+        if (e.target === modal) {
+          modal.style.display = "none";
+          document.body.classList.remove("no-scroll");
+          stopVideo(modal);
+        }
+      });
+    });
+
+    function resetModalVideo(modal) {
+      const posterBtn = modal.querySelector(".product-video-modal-poster");
+      const video = modal.querySelector("video");
+
+      if (posterBtn) {
+        posterBtn.style.display = "block";
+      }
+
+      if (video) {
+        video.pause();
+        video.currentTime = 0;
+        video.style.display = "none";
+      }
+    }
+
+    function stopVideo(modal) {
+      const iframe = modal.querySelector("iframe");
+
+      resetModalVideo(modal);
+
+      if (iframe) {
+        iframe.src = iframe.src;
+      }
+    }
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".custom-video-wrapper").forEach(wrapper => {
+      const poster = wrapper.querySelector(".custom-video-poster");
+      const video = wrapper.querySelector(".custom-video");
+
+      if (poster && video) {
+        poster.addEventListener("click", () => {
+          poster.style.display = "none";
+          video.style.display = "block";
+          video.play();
+        });
+      }
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const video = document.querySelector(".custom-product-video");
+    const wrapper = document.querySelector(".custom-product-video-wrapper");
+
+    if (!video || !wrapper) return;
+
+    video.addEventListener("click", function (e) {
+      e.preventDefault();
+
+      if (video.paused) {
+        video.play();
+        wrapper.classList.add("playing");
+      } else {
+        video.pause();
+        wrapper.classList.remove("playing");
+      }
+    });
+
+    video.addEventListener("ended", function () {
+      wrapper.classList.remove("playing");
+    });
+  });
+</script>
+
+<script src="{{ 'accordion.js' | asset_url }}" defer="defer"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("#shopify-section-{{ section.id }} .faq-raw-content").forEach(function (container) {
+      const nodes = Array.from(container.childNodes);
+      const accordionItems = [];
+      let currentQuestion = null;
+      let currentAnswerNodes = [];
+
+      function flushItem() {
+        if (!currentQuestion) return;
+        const questionText = currentQuestion.textContent.trim();
+        if (!questionText) return;
+
+        const itemId = 'faq-item-' + Math.random().toString(36).slice(2, 8);
+
+        const item = document.createElement('div');
+        item.className = 'faq-accordion-item';
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.style.cssText = 'display:flex; justify-content:space-between; align-items:center; width:100%; background:none; border:none; padding:12px; cursor:pointer; text-align:left; font-family:Lato,sans-serif; font-size:18px; line-height:24px; font-weight:700; color:#23232B;';
+        button.setAttribute('aria-expanded', 'false');
+        button.setAttribute('aria-controls', itemId);
+        button.textContent = questionText;
+
+        button.insertAdjacentHTML('beforeend', `
+          <svg style="flex-shrink:0; margin-left:12px; transition:transform 0.3s ease;" width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#23232B"/>
+          </svg>
+        `);
+
+        const contentDiv = document.createElement('div');
+        contentDiv.id = itemId;
+        contentDiv.style.cssText = 'overflow:hidden; max-height:0; transition:max-height 0.3s ease;';
+        contentDiv.setAttribute('aria-hidden', 'true');
+
+        const innerDiv = document.createElement('div');
+        innerDiv.style.cssText = 'padding:12px; font-family:Lato,sans-serif; font-size:15px; line-height:1.6; color:#23232B;';
+
+        currentAnswerNodes.forEach(function (node) {
+          if (node.nodeName === 'BR') return;
+          if (node.nodeType === 3 && !node.textContent.trim()) return;
+          innerDiv.appendChild(node.cloneNode(true));
+        });
+
+        contentDiv.appendChild(innerDiv);
+        item.appendChild(button);
+        item.appendChild(contentDiv);
+
+        button.addEventListener('click', function () {
+          const isOpen = button.getAttribute('aria-expanded') === 'true';
+          const svg = button.querySelector('svg');
+
+          if (isOpen) {
+            button.setAttribute('aria-expanded', 'false');
+            contentDiv.setAttribute('aria-hidden', 'true');
+            contentDiv.style.maxHeight = '0';
+            if (svg) svg.style.transform = 'rotate(0deg)';
+          } else {
+            button.setAttribute('aria-expanded', 'true');
+            contentDiv.setAttribute('aria-hidden', 'false');
+            contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
+            if (svg) svg.style.transform = 'rotate(180deg)';
+          }
+        });
+
+        accordionItems.push(item);
+        currentQuestion = null;
+        currentAnswerNodes = [];
+      }
+
+      nodes.forEach(function (node) {
+        if (node.nodeName === 'B' || node.nodeName === 'STRONG') {
+          flushItem();
+          currentQuestion = node;
+        } else if (currentQuestion !== null) {
+          currentAnswerNodes.push(node);
+        }
+      });
+
+      flushItem();
+
+      container.innerHTML = '';
+      accordionItems.forEach(function (item) {
+        container.appendChild(item);
+      });
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("#shopify-section-{{ section.id }} .metainfo-tab-custom-content").forEach(function (container) {
+      const nodes = Array.from(container.childNodes);
+      const accordionItems = [];
+      let currentTitle = null;
+      let currentContentNodes = [];
+
+      function flushItem() {
+        if (!currentTitle) return;
+        const titleText = currentTitle.textContent.trim();
+        if (!titleText) return;
+
+        const itemId = 'meta-item-' + Math.random().toString(36).slice(2, 8);
+
+        const item = document.createElement('div');
+        item.className = 'meta-accordion-item';
+        item.style.borderBottom = '1px solid #EDEFF3';
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.style.cssText = 'display:flex; justify-content:space-between; align-items:center; width:100%; background:none; border:none; padding:12px 0; cursor:pointer; text-align:left; font-family:Lato,sans-serif; font-size:16px; color:#000000;';
+        button.setAttribute('aria-expanded', 'false');
+        button.setAttribute('aria-controls', itemId);
+        button.textContent = titleText;
+
+        button.insertAdjacentHTML('beforeend', `
+          <svg style="flex-shrink:0; margin-left:12px; transition:transform 0.3s ease;" width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#23232B"/>
+          </svg>
+        `);
+
+        const contentDiv = document.createElement('div');
+        contentDiv.id = itemId;
+        contentDiv.style.cssText = 'overflow:hidden; max-height:0; transition:max-height 0.3s ease;';
+        contentDiv.setAttribute('aria-hidden', 'true');
+
+        const innerDiv = document.createElement('div');
+        innerDiv.style.cssText = 'padding:12px 0; font-family:Lato,sans-serif; font-size:15px; line-height:1.6; color:#23232B;';
+
+        currentContentNodes.forEach(function (node) {
+          if (node.nodeName === 'BR') return;
+          if (node.nodeType === 3 && !node.textContent.trim()) return;
+          // skip spacer divs
+          if (node.nodeName === 'DIV' && node.style && node.style.minHeight) return;
+          innerDiv.appendChild(node.cloneNode(true));
+        });
+
+        contentDiv.appendChild(innerDiv);
+        item.appendChild(button);
+        item.appendChild(contentDiv);
+        accordionItems.push(item);
+
+        currentTitle = null;
+        currentContentNodes = [];
+      }
+
+      nodes.forEach(function (node) {
+        if (node.nodeName === 'H5') {
+          flushItem();
+          currentTitle = node;
+        } else if (currentTitle !== null) {
+          currentContentNodes.push(node);
+        }
+      });
+
+      flushItem();
+
+      container.innerHTML = '';
+      accordionItems.forEach(function (item) {
+        container.appendChild(item);
+      });
+
+      function openItem(button, contentDiv) {
+        button.setAttribute('aria-expanded', 'true');
+        contentDiv.setAttribute('aria-hidden', 'false');
+        contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
+        const svg = button.querySelector('svg');
+        if (svg) svg.style.transform = 'rotate(180deg)';
+      }
+
+      function closeItem(button, contentDiv) {
+        button.setAttribute('aria-expanded', 'false');
+        contentDiv.setAttribute('aria-hidden', 'true');
+        contentDiv.style.maxHeight = '0';
+        const svg = button.querySelector('svg');
+        if (svg) svg.style.transform = 'rotate(0deg)';
+      }
+
+      const allItems = container.querySelectorAll('.meta-accordion-item');
+
+      allItems.forEach(function (item, index) {
+        const button = item.querySelector('button');
+        const contentDiv = item.querySelector('div[id^="meta-item-"]');
+
+        if (index === 0) {
+          button.setAttribute('aria-expanded', 'true');
+          contentDiv.setAttribute('aria-hidden', 'false');
+          contentDiv.style.maxHeight = 'none';
+          const svg = button.querySelector('svg');
+          if (svg) svg.style.transform = 'rotate(180deg)';
+        }
+
+        button.addEventListener('click', function () {
+          const isOpen = button.getAttribute('aria-expanded') === 'true';
+
+          allItems.forEach(function (otherItem) {
+            const otherButton = otherItem.querySelector('button');
+            const otherContent = otherItem.querySelector('div[id^="meta-item-"]');
+            closeItem(otherButton, otherContent);
+          });
+
+          if (!isOpen) {
+            openItem(button, contentDiv);
+          }
+        });
+      });
+    });
+  });
+</script>
+
+<script>
+  (function () {
+    if (window.innerWidth >= 750) return;
+
+    var sectionId = '{{ section.id }}';
+    var sectionEl = document.querySelector('#shopify-section-' + sectionId);
+    if (!sectionEl) return;
+
+    // Only target panels inside THIS section's tab content
+    var panels = sectionEl.querySelectorAll('.extra-info-tabs-content > .extra-info-tab-panel');
+    if (!panels.length) return;
+
+    panels.forEach(function (panel, index) {
+      var tabId = panel.getAttribute('data-extra-tab-panel');
+      var tabBtn = sectionEl.querySelector('[data-extra-tab-button="' + tabId + '"]');
+      if (!tabBtn) return;
+
+      var title = tabBtn.textContent.trim();
+
+      var header = document.createElement('button');
+      header.type = 'button';
+      // Unique data attribute so no other script can accidentally target these
+      header.setAttribute('data-hgs-tab-accordion', sectionId);
+      header.setAttribute('aria-expanded', 'false');
+      header.style.cssText = 'display:flex; justify-content:space-between; align-items:center; width:100%; background:none; border:none; padding:16px 0; cursor:pointer; text-align:left; font-family:Lato,sans-serif; font-size:18px; font-weight:700; color:#23232B;';
+      header.textContent = title;
+      header.insertAdjacentHTML('beforeend', `
+        <svg data-hgs-chevron style="flex-shrink:0; margin-left:12px; transition:transform 0.3s ease;" width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M0.46967 0.46967C0.762563 0.176777 1.23744 0.176777 1.53033 0.46967L7 5.93934L12.4697 0.46967C12.7626 0.176777 13.2374 0.176777 13.5303 0.46967C13.8232 0.762563 13.8232 1.23744 13.5303 1.53033L7.53033 7.53033C7.23744 7.82322 6.76256 7.82322 6.46967 7.53033L0.46967 1.53033C0.176777 1.23744 0.176777 0.762563 0.46967 0.46967Z" fill="#23232B"/>
+        </svg>
+      `);
+
+      var inner = document.createElement('div');
+      inner.setAttribute('data-hgs-tab-inner', sectionId);
+      inner.style.cssText = 'overflow:hidden; max-height:0; transition:max-height 0.35s ease;';
+
+      var innerWrap = document.createElement('div');
+      innerWrap.style.cssText = 'padding-bottom:16px;';
+
+      while (panel.firstChild) {
+        innerWrap.appendChild(panel.firstChild);
+      }
+
+      inner.appendChild(innerWrap);
+      panel.appendChild(header);
+      panel.appendChild(inner);
+
+      if (index === 0) {
+        header.setAttribute('aria-expanded', 'true');
+        inner.style.maxHeight = 'none';
+        var firstSvg = header.querySelector('[data-hgs-chevron]');
+        if (firstSvg) firstSvg.style.transform = 'rotate(180deg)';
+      }
+
+      header.addEventListener('click', function () {
+        var isOpen = header.getAttribute('aria-expanded') === 'true';
+
+        // Only close/open headers that belong to THIS section's tab accordion
+        panels.forEach(function (otherPanel) {
+          var otherHeader = otherPanel.querySelector('[data-hgs-tab-accordion="' + sectionId + '"]');
+          var otherInner = otherPanel.querySelector('[data-hgs-tab-inner="' + sectionId + '"]');
+          if (otherHeader) {
+            otherHeader.setAttribute('aria-expanded', 'false');
+            var otherSvg = otherHeader.querySelector('[data-hgs-chevron]');
+            if (otherSvg) otherSvg.style.transform = 'rotate(0deg)';
+          }
+          if (otherInner) otherInner.style.maxHeight = '0';
+        });
+
+        if (!isOpen) {
+          header.setAttribute('aria-expanded', 'true');
+          inner.style.maxHeight = inner.scrollHeight + 'px';
+          var svg = header.querySelector('[data-hgs-chevron]');
+          if (svg) svg.style.transform = 'rotate(180deg)';
+        }
+      });
+    });
+  })();
+</script>
