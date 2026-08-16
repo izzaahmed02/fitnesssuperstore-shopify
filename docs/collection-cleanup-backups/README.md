@@ -57,6 +57,22 @@ jq -r '.[] | select(.handle=="woodway-usa")
 Write the value back with `metafieldsSet` on the collection GID above, type
 `multi_line_text_field`.
 
+## Follow-up: Woodway intro replaced 2026-08-16
+
+The Woodway above-grid description was replaced with approved copy on 2026-08-16, which
+removed the unsupported collection-wide claims (savings percentage, universal
+remanufacturing location, warranty duration, nationwide on-site service) and restored the
+link to `/pages/woodway-treadmill-comparison-chart`.
+
+The previous intro — the version carrying those claims — is preserved verbatim in
+`woodway-usa__description.html` in this directory. That file is the pre-replacement state
+and was **not** updated, so it remains an accurate record of what was live before.
+
+The primary backup for both pages is the August 13 collection export: TreadClimbers at
+Smart Collections row 92, Woodway USA at row 225, Body HTML in column E and
+`custom.post_lisiting_content` in column AG. This directory is a secondary,
+documentation-only backup and is not intended to be merged into the theme.
+
 ## Known side effects of the clear
 
 - **TreadClimbers** — the cleared field carried a `FAQPage` JSON-LD block covering five
