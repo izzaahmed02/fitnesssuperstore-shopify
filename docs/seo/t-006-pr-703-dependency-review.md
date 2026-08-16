@@ -2,7 +2,23 @@
 
 **Owner:** Zafran (technical SEO co-lead — architecture, schema, canonical, robots, CWV, independent release-gate review)
 **Authority:** Tim's August 9 decision on the *Technical SEO recovery sprint* thread — register PR #703 as a dependency of `T-006` before either workstream merges, and review only the material overlap.
-**Status:** Dependency registered. Overlap reviewed. **Not signed off** — five items below need closing, two of them need live/preview evidence.
+**Status:** Dependency registered. Overlap reviewed. **Not signed off.**
+
+> **UPDATE, 2026-08-16 — Tim's August 14 Stage 0 HOLD decision changes item 3 below from a
+> question into a required change.** The reference-price source of record is decided:
+> `custom.retail_price` is the single source for the visible price, the savings figure
+> **and** the JSON-LD `ListPrice`, permitted only when the verification flag is true, the
+> source is recorded, the effective and last-reviewed dates are populated, and the visible
+> and structured values are identical. **`compare_at_price` may not be used as a
+> `ListPrice` fallback** unless separately substantiated through the same control.
+>
+> As it stands **this PR does not satisfy that decision.** Its schema gate reads
+> `compare_at_price` (`schema-product.liquid:105`, `:176`), and `price-reference.liquid:45`
+> falls back to `compare_at_price` when `retail_price` is absent. Both must change.
+> Separately, Tim has directed that #700 and #703 be reconciled onto **one** current-main
+> implementation path rather than a third schema rewrite — see the plan's §0A.3 and §0A.4.
+> Stage 0 remains HOLD; independent review resumes after Izza posts the refreshed draft PR
+> and preview evidence.
 **Nothing is deployed by this document.** It is a register entry and a review record. No theme, robots, redirect, canonical, schema or feed change is made here.
 
 This is the T-006 dependency line, written to be folded into
@@ -282,18 +298,30 @@ changes. For the #703 overlap specifically, sign-off needs:
    `price-reference`.
 2. **F5 closed** — disclaimer rendered wherever a savings figure is shown, at
    least on the two variant PDP templates.
-3. **F3 decided by Tim** — one source of record for the reference price, visible
-   and markup reading the same field.
+3. **F3 — no longer a decision, now a required change.** Decided 2026-08-14:
+   `custom.retail_price` is the single source for the visible price, the savings
+   figure and `ListPrice`; **no `compare_at_price` fallback for `ListPrice`**;
+   permitted only with the verification flag, a recorded source, populated
+   effective and last-reviewed dates, and identical visible and structured
+   values. `schema-product.liquid:105`/`:176` and `price-reference.liquid:45`
+   must be changed to match.
 4. **F2 and F4 evidenced on preview** — sampled raw HTML and JSON-LD in both flag
    states, including one variant change on a verified multi-variant product.
+   An unpublished isolation theme now exists for the CWV workstream
+   (`gid://shopify/OnlineStoreTheme/187691401532`); this PR still needs its own
+   connected preview, which is Izza's to establish.
 5. **F6 documented** — a written position on sale badging without a visible
    reference price.
-6. PR refreshed onto current `main` (it branched from `f914cb0`; `main` is at
-   `a8805bf`), taken out of draft, and the regression assertion in §3.5 decided
-   either way.
+6. PR refreshed onto current `main` (it branched from `f914cb0`; `main` is now at
+   `575a8de`), and the regression assertion in §3.5 decided either way. It stays
+   **draft** — Stage 0 is HOLD and nothing here is approval-ready.
+7. **Reconciled with PR #700** onto one implementation path, per Tim's August 14
+   direction. #700 already carries the condition omission and product-fact default
+   removals; three competing schema rewrites are not to be maintained.
 
-Items 1, 2 and 6 are mechanical. Item 3 is the one that needs Tim. Items 4 and 5
-are blocked only by the absence of a preview, not by disagreement.
+Items 1, 2 and 6 are mechanical. Item 3 is now a code change with a decided
+target rather than an open question. Items 4, 5 and 7 are the substantive
+remainder, and 4 is blocked only by the absence of a preview for this branch.
 
 ---
 

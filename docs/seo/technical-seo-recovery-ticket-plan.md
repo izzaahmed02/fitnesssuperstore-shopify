@@ -5,9 +5,182 @@
 **Controlled inputs reconciled:** `03_Technical_SEO_Developer_Brief.docx` · `technical_acceptance_criteria.md` · `schema_remediation_spec.json` · `shopify_technical_seo_patch_examples.md` · `robots_waf_validation_checklist.txt` · `lighthouse_ci_scope.md` · `crawl_indexation_workplan.csv` · `FSS_SEO_GEO_Implementation_Backlog.xlsx`
 **Prepared by:** Izza — Full-Stack Lead Developer, primary implementation lead
 **Revision:** 3 — 2026-08-13. Revision 1 used a local `TS-xxx` scheme written before the attachments were available; **it is retired.** Revision 2 adopted the controlled `T-001`–`T-016` IDs, target dates, intended-state taxonomy and Lighthouse budgets from the backlog and workplan; revision 3 preserves all of it unchanged and records Tim's August 8 and August 9 decisions, the work done under them, and the live evidence gathered since.
-**Branch state:** refreshed onto current `main` (`a8805bf`) per Tim's August 9 instruction. The plan and source register carry over unchanged from `claude/seo-recovery-sprint-pb3w4z`; no ticket was renumbered, retired or rescoped in the move.
+**Revision 4 — 2026-08-16.** Source-register update per Tim's August 14 Stage 0 HOLD decision: current-main SHA, corrected `T-018` framing, PR #700 **and** PR #703 registered against `T-006`, and the current access block. Ticket numbering preserved; nothing re-audited. **See §0A, which controls wherever it differs from §0.**
+**Branch state:** `claude/seo-recovery-sprint-ctwbtp` — **3 commits ahead, 26 behind current `main` (`575a8de`), with no draft PR yet.** The rebase and the draft PR are Izza's outstanding items. The plan and source register carried over unchanged from `claude/seo-recovery-sprint-pb3w4z`; no ticket was renumbered, retired or rescoped.
 **Checkpoint this satisfies:** August 12 ticket/PR plan checkpoint (met August 8)
-**Status:** Approved for bounded implementation and preview work per Tim's August 8 decision. **Nothing is merged, deployed or published.** Two prepared branch changes exist and are described in §0 below; both await written GO.
+**Status:** **Stage 0 HOLD — NO-GO in force.** The branch is accepted as the current working record but is **not approval-ready or merge-ready**. Nothing is merged, deployed or published, and live Shopify MAIN is untouched by this branch.
+
+---
+
+## 0A. Revision 4 — source-register update per Tim's August 14 Stage 0 HOLD
+
+**Scope of this revision, exactly as assigned.** Tim's August 14 02:52 UTC decision gave
+Zafran four things: record the current-main SHA, correct the `T-018` framing, add **both**
+PR #700 and PR #703 to the `T-006` dependency register, and restate the current access
+block. Ticket numbering is preserved and nothing has been re-audited. Revision 3 below is
+left intact; where the two differ, **revision 4 controls.**
+
+**Status: Stage 0 remains HOLD. NO-GO is in force.** Nothing here is approval-ready or
+merge-ready. Independent review by Zafran begins only after Izza posts the refreshed draft
+PR and preview evidence.
+
+### 0A.1 Current source state
+
+| Field | Value |
+|---|---|
+| Current GitHub `main` | `575a8defcb8526ab76cdc9570b7c336e4c10a696` |
+| This branch | `claude/seo-recovery-sprint-ctwbtp` @ `4c12def` (was `fa427126` at Tim's August 14 audit) |
+| Branch position | **3 commits ahead, 26 commits behind current `main`** |
+| Draft PR for this branch | **None yet** — outstanding on Izza |
+| Live Shopify MAIN | `gid://shopify/OnlineStoreTheme/186120208700`, still carries the existing schema, robots and Lighthouse/PageSpeed behaviour. **No live change has been made by this branch.** |
+
+Tim's audit recorded the branch as 2 ahead / 14 behind at `fa427126`. Both numbers have
+moved since — the third commit is the accuracy correction to `T-006b`, and `main` has
+advanced. The rebase onto current `main` remains Izza's item, not something this revision
+performs.
+
+### 0A.2 `T-018` — corrected framing
+
+**The revision-3 heading "Two Convert installations live in the same document" is wrong
+and is superseded.** Per Tim's August 14 decision, the controlling evidence is that the
+`cdn.9gtb.com` request is the **Gorgias Convert/Campaign bundle**, not a second Convert
+Experiences A/B-testing loader. There are not two competing experiment platforms in the
+page. **No 9gtb or Gorgias removal is authorised**, and the revision-3 framing must not be
+carried into any PR description, evidence pack or Control Tower entry.
+
+The ticket is not closed — the blocker changed rather than disappeared. What remains open
+is the **supported Convert Shopify target architecture**, and specifically these six
+confirmations, still unanswered by the vendor as of Tim's August 14 20:19 update:
+
+1. Custom Shopify app / Theme Extension / Web Pixel versus the current manual head snippet.
+2. The correct production project/environment.
+3. Proof of exactly **one** Convert Experiences initialisation.
+4. Before-first-paint / no-flicker behaviour.
+5. Checkout-start, purchase and revenue goal mapping.
+6. Confirmation on an unpublished theme before any baseline is approved.
+
+Convert has confirmed the supported target is its custom Shopify app with Theme
+Extension/App Embed and Web Pixel mapping, and that only one initialisation may be
+present. The six substantive confirmations remain outstanding. **Customer experiment
+traffic stays at 0. No separate vendor thread is to be opened** — this stays in the
+existing Convert thread.
+
+### 0A.3 `T-006` dependency register — both PRs
+
+Tim's instruction is to reconcile these into **one current-main implementation path**
+rather than maintain three competing schema rewrites, and to add both to the register
+**before** writing a third implementation.
+
+| PR | #700 | #703 |
+|---|---|---|
+| Title | Gate 1A — PDP product-data schema for AI channels (REVIEW ONLY) | Gate reference-price and savings displays on documented substantiation |
+| Branch | `claude/shopify-openai-email-reply-m2eb9o` | `claude/gmc-data-deception-issues-i79kys` |
+| Head | `5ac71b1e` | `dd3516d` |
+| Base | `e84455cf` | `f914cb0` (merge-base) |
+| State | Draft, unmerged, `mergeable_state: blocked` | Draft, unmerged, `mergeable_state: blocked` |
+| Size | 2 files, +217 / −15 | 16 files, +283 / −124 |
+| Shared file | `snippets/schema-product.liquid` | `snippets/schema-product.liquid` |
+| Overlaps | `T-006a` (fabricated defaults), `T-006b` (`itemCondition` omission), `T-006e`-`T-006g` | `T-006a`/`T-006d` file overlap; reference-price gate and `ListPrice` |
+
+**What #700 already does that `T-006` was going to do again.** It omits `itemCondition`
+when no condition fact is held rather than defaulting to `NewCondition`; removes the
+`countryOfAssembly` / `countryOfLastProcessing` `"US"` defaults, the `audience`, `color`
+and `description` defaults and the `mpn`/`sku` fallback to `product.handle`; validates
+GTIN length; drops `priceValidUntil` as an unsupportable assertion; and states the
+omit-rather-than-invent rule at the top of the file. That is most of `T-006a` and the
+substance of the `T-006b` mapping proposed in
+`docs/seo/t-006-t-008-current-vs-proposed.md`.
+
+**Consequence for the plan, stated plainly:** `T-006a` and `T-006b` should not be written
+a third time. The current-vs-proposed diff document remains valid as the *specification*,
+but the implementation path is to reconcile #700 and #703 onto current `main` — #700 for
+the product-fact omissions, #703 for the reference-price gate — and close or supersede
+whatever is redundant. `T-006d` (oversized graphs) and `T-006c` (review source of record)
+are the parts neither PR covers and are what a third change would legitimately carry.
+
+Both PRs remain coupled to the technical SEO release gate and **must not merge
+independently of it.** Kevin and Yusra are added only for the bounded feed/GMC parity gate
+covering condition omission and the verified-reference-price rule; no broad catalogue
+reconciliation is assigned.
+
+### 0A.4 Reference-price source of record — DECIDED, supersedes the open question
+
+Revision 3 §12 listed this as an open decision. **It is decided** (Tim, August 14). Use
+`custom.retail_price` as the single source for the visible reference price, the savings
+display **and** the JSON-LD `ListPrice`, and only when **all four** of these hold:
+
+1. `compliance.reference_price_verified` = true;
+2. the reference-price source is recorded;
+3. the effective date and last-reviewed date are populated; and
+4. the visible value and the structured-data value are **identical**.
+
+**Do not fall back to variant `compare_at_price` for `ListPrice`** unless that exact value
+is separately substantiated through the same control. Where the gate is incomplete, omit
+the strikethrough, the exact savings and the `ListPrice` from both the visible page and
+the structured data.
+
+This resolves the divergence recorded in the PR #703 review — visible reading
+`custom.retail_price` while `ListPrice` read `compare_at_price` — in favour of a single
+field, and it goes further than the review's recommendation by adding the source, dates
+and identical-value conditions. **PR #703 does not currently implement this**: its schema
+gate still reads `compare_at_price` (`schema-product.liquid:105`, `:176`) and its visible
+path falls back to `compare_at_price` when `retail_price` is absent
+(`price-reference.liquid:45`). Both need changing before that PR can satisfy the decision.
+That is now a required change, not a review finding.
+
+### 0A.5 `T-017` and `T-020` — current status
+
+**`T-017` — prepared, unmerged, and now held behind a further gate.** Do not merge ahead
+of the Convert reconciliation in §0A.2. Per the August 14 clarification, **do not
+establish or approve the final CWV baseline until the supported Convert target
+architecture is confirmed on an unpublished theme.** The interim customer-equivalent
+baseline uses the already-approved overridden-user-agent method and is remeasured after
+`T-018` resolves.
+
+**`T-020` — reclassification approved.** It is legacy cleanup, removed from the P0 release
+path. **Do not delete the legacy templates in this sprint.** Tim requires the three
+one-character cleanups to sit in **a separate reversible commit** so they cannot ride into
+a `T-017` release.
+
+> **Outstanding, and it is Izza's to fix, not this revision's:** on this branch the
+> `T-017` theme edit and the three `T-020` template edits are currently in **one commit**
+> (`fa427126`). That does not meet the independently-reversible requirement. It should be
+> split when the branch is rebased onto current `main`. Nobody should force-push this
+> shared branch to fix it as a side effect of a documentation update, which is why it is
+> flagged here rather than done here.
+
+### 0A.6 Access and evidence block — current
+
+Unchanged in substance and now confirmed by Tim's own search as well as mine:
+
+- The **August 5 per-URL Coverage and Performance exports are not present** in the
+  accessible Drive. Older Coverage Drilldown files (most recent: May 2026) do not
+  substitute for those rows.
+- **Search Console UI, Merchant Center, Bing Webmaster Tools** and the **30-day WAF/CDN**
+  challenge / 403 / 429 / rate-limit logs are not available through the connected tools.
+- `T-001`, `T-014`, `T-015` and `T-016` may be marked **partially evidenced** but **not
+  VERIFIED** without their required sources.
+- The existing system owners place the required exports, screenshots or logs in the current
+  Drive/Gmail evidence path and link them in the canonical thread. No separate tracker.
+
+### 0A.7 Cross-reference — the August 11 CWV delta
+
+Recorded here as a link only, because Tim's instruction is one record and no duplicate
+trackers. The CWV delta runs on its own controlled target and does **not** change any
+ticket numbering in this plan.
+
+| Field | Value |
+|---|---|
+| Focused issue | [#716](https://github.com/izzaahmed02/fitnesssuperstore-shopify/issues/716) |
+| Canonical branch | `claude/core-web-vitals-mobile-vwzm5w` @ `fe990b6b`, based on `main` @ `575a8de` |
+| Draft PR | [#723](https://github.com/izzaahmed02/fitnesssuperstore-shopify/pull/723) — `[DO NOT MERGE]`; #717 closed and superseded |
+| Unpublished isolation theme | `gid://shopify/OnlineStoreTheme/187691401532`, connected 2026-08-16, checksum-verified against the branch commit |
+| Priority | **Desktop LCP is P0**; mobile LCP second, mobile INP third |
+| Status language | **VALIDATING** — not fixed, not verified, not a predicted pass |
+
+The `T-017` gate removal is the change under test on that branch too, which is the other
+reason `T-017` here must stay unmerged: the same edit is currently serving as the isolation
+variable for the CWV baseline.
 
 ---
 
@@ -414,7 +587,7 @@ Same pattern at `schema-collection.liquid:98` (`uploadDate`) and `:155` (`teleph
 - **Executor:** Izza · **Independent verifier:** Zafran · **Feed gate:** Kevin + Yusra — **blocks merge**
 - **Evidence:** current-vs-proposed JSON-LD across the spec's full QA matrix — new French Fitness simple, new multi-variant, remanufactured, combined-listing parent and child, out-of-stock, Tier-1 collection, article with FAQ, static authority page · Rich Results Test and Schema Markup Validator saved per template · visible-versus-markup comparison · Merchant Center attribute diff from Kevin
 - **Rollback:** single-commit revert; theme version pinned · **Dependency:** T-016 sign-off before merge
-- **Dependency — PR #703** (registered per Tim's August 9 decision): *Gate reference-price and savings displays on documented substantiation*, `claude/gmc-data-deception-issues-i79kys` @ `dd3516d`. Changes shared public price/savings rendering and `snippets/schema-product.liquid`. **Must not merge independently of the technical SEO release gate.** T-006 rebases onto #703, not the reverse — #703 is one revertible commit, T-006 is the large rewrite of the same file. Overlap reviewed by Zafran in `docs/seo/t-006-pr-703-dependency-review.md`: five items open, of which one (a single reference-price source of record for visible markup and JSON-LD alike) is a T-006 decision for Tim rather than a #703 defect. If #703 is held, T-006 must not silently inherit the ungated `ListPrice`.
+- **Dependencies — PR #700 and PR #703.** Both registered per Tim's August 9 and August 14 decisions; full register entry at **§0A.3**, which controls. In short: #700 (`claude/shopify-openai-email-reply-m2eb9o` @ `5ac71b1e`) already implements the condition omission and the product-fact default removals this ticket specifies, and #703 (`claude/gmc-data-deception-issues-i79kys` @ `dd3516d`) implements the reference-price gate. Both touch `snippets/schema-product.liquid` and **neither may merge independently of the technical SEO release gate.** Per Tim, reconcile the two onto one current-main implementation path rather than write a third schema rewrite — `T-006a` and `T-006b` should not be implemented again; `T-006c` and `T-006d` are what a third change would legitimately carry. Overlap review of #703: `docs/seo/t-006-pr-703-dependency-review.md`. Note that the reference-price decision at §0A.4 **requires changes to #703 as it stands** — its schema gate reads `compare_at_price`, which the decision disallows.
 
 ### T-007 — Replace the JavaScript `/collections` redirect · Aug 19
 
@@ -627,7 +800,18 @@ The brief criticises the CWV workflow for being static string checks and the pat
 - **Evidence:** `curl` with default and Lighthouse user-agents showing the served difference · Lighthouse with and without UA override · field-versus-lab gap for the same templates
 - **Rollback:** single-commit revert · **Dependency:** shares the code block with T-018
 
-### T-018 — Two Convert installations live in the same document *(P1 — proposed; BLOCKED)*
+### T-018 — Convert installation architecture *(approved; BLOCKED — framing corrected)*
+
+> **SUPERSEDED FRAMING — read §0A.2 first.** This section was written as "two Convert
+> installations live in the same document." **That is wrong.** Per Tim's August 14
+> decision the `cdn.9gtb.com` request is the **Gorgias Convert/Campaign bundle**, not a
+> second Convert Experiences A/B-testing loader, and **no 9gtb or Gorgias removal is
+> authorised.** The text below is retained only as the record of what was originally
+> observed. The live blocker is the supported Convert Shopify target architecture and the
+> six outstanding vendor confirmations listed at §0A.2. Customer experiment traffic stays
+> at 0; no separate vendor thread.
+
+*Original revision-2 text follows.*
 
 `layout/theme.liquid` loads Convert **twice, from two endpoints with two identifiers**:
 
@@ -724,19 +908,15 @@ resolutions so the record reads in one place, followed by the two new ones.
 | 7 | `T-020` — pull the manuals views out as a customer-facing defect? | **No — tested, and nothing live calls them** (§0.4). Legacy cleanup |
 | 8 | `T-018` — waiting on Convert | **Stays blocked.** No duplicate thread |
 
-**New, and the only two things I need from you before the next batch moves:**
+**Both questions raised at revision 3 are now answered too** (Tim, 2026-08-14):
 
-1. **`T-006` — one source of record for the reference price.** Raised by Zafran's review
-   of PR #703. The visible strikethrough reads `custom.retail_price`; the JSON-LD
-   `ListPrice` reads the variant compare-at price. Both are gated, so nothing
-   unsubstantiated publishes either way, but where a product carries both values and
-   they differ the customer and Merchant Center see different numbers — which is the
-   `T-006` rule about visible content matching schema. Recommendation: `retail_price` is
-   the documented reference price and the schema should read the same field.
-2. **`T-017` merge order.** The prepared change shares a code block with the unanswered
-   duplicate-Convert question. I do not intend to merge it ahead of `T-018` unless you
-   want the CWV baseline set sooner and accept that it will be re-measured once the
-   Convert installations are resolved.
+| # | Question from revision 3 | Resolution |
+|---|---|---|
+| 9 | `T-006` — one source of record for the reference price | **`custom.retail_price`, for the visible price, the savings figure and the JSON-LD `ListPrice` alike**, and only when the verification flag, recorded source, effective date, last-reviewed date and identical visible/structured values all hold. **No `compare_at_price` fallback for `ListPrice`** unless separately substantiated. Full terms and the resulting required changes to PR #703 are at §0A.4 |
+| 10 | `T-017` merge order | **Keep prepared and unmerged.** Do not merge ahead of the Convert target-architecture reconciliation; do not approve a final CWV baseline until that architecture is confirmed on an unpublished theme (§0A.2, §0A.5) |
+
+**Nothing in this plan is currently waiting on a decision from Tim.** Everything open is
+waiting on evidence, on the vendor, or on access — see §0A.5 and §0A.6.
 
 ## 13. Access and evidence gaps
 

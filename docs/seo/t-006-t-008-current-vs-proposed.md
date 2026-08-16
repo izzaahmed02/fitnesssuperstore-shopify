@@ -3,6 +3,14 @@
 **Prepared by:** Izza (implementation lead) · **Independent verifier:** Zafran
 **Authority:** Tim's August 8 decision, implementation order item 3 — *"Prepare bounded
 current-versus-proposed diffs for `T-006` and `T-008` before code changes."*
+> **UPDATE, 2026-08-16.** Tim's August 14 Stage 0 HOLD decision directs that PR #700 and
+> PR #703 be reconciled onto **one** current-main implementation path rather than a third
+> schema rewrite. **PR #700 already implements the `T-006b` proposal below** — it omits
+> `itemCondition` when no condition fact is held instead of defaulting to `NewCondition`,
+> and removes the same class of invented defaults. So §1 and the `T-006a` work should be
+> read as the **specification against which #700 is verified**, not as a change still to
+> be written. `T-006c` (§2) and `T-006d` remain genuinely unimplemented. See plan §0A.3.
+
 **Status:** **Design record only. No code in this document has been written to the theme.**
 The branch carries the `T-017` and `T-020` changes and this documentation; nothing here
 is implemented, and none of it merges without independent QA, Kevin's feed sign-off where
@@ -229,5 +237,5 @@ URLs for the same content.
 | `T-006a` fabricated defaults | Mechanical and already fully specified in the plan's line-by-line table. The diff is "delete the `default:` filter, omit the property" repeated ~15 times; it will be written as one PR against that table rather than restated here |
 | `T-006d` oversized graphs | Depends on PR #703's merge order, since both rewrite `schema-product.liquid`. Diff written after the #703 sequencing is settled, to avoid drafting against a file that is about to change |
 | `T-006e`–`T-006g` | Mechanical; folded into the `T-006a` PR |
-| Reference-price source of record | **Open decision for Tim** (plan §12, new item 1). Visible reads `custom.retail_price`, JSON-LD `ListPrice` reads variant compare-at. Cannot be diffed until one is chosen |
+| Reference-price source of record | ~~Open decision~~ **DECIDED 2026-08-14** — `custom.retail_price` is the single source for visible price, savings and `ListPrice`, with no `compare_at_price` fallback, gated on the verification flag, recorded source, effective and last-reviewed dates, and identical visible/structured values. Implemented via the reconciled PR #700 / #703 path, not a separate diff. See plan §0A.4 |
 | `T-008` `variant=` posture | Blocked on `T-001` sampling, which is blocked on the August 5 per-URL export |
