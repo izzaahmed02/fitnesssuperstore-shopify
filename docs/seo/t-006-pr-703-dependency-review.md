@@ -19,7 +19,7 @@ and links here for the evidence.
 | Depends on | PR #703 — *Gate reference-price and savings displays on documented substantiation* |
 | URL | https://github.com/izzaahmed02/fitnesssuperstore-shopify/pull/703 |
 | Head branch / commit | `claude/gmc-data-deception-issues-i79kys` @ `dd3516d` (single commit) |
-| Base at time of review | `d0e52fd` — behind current `main` (`a8805bf`) |
+| Base | Branched from `f914cb0` (merge-base with `main`); GitHub records the PR base as `d0e52fd`. Either way it is **behind current `main`, `a8805bf`** and needs refreshing |
 | PR state | Draft; `mergeable_state: blocked` |
 | Originating workstream | GMC data issues ("Remove Save 40% Everywhere") — separate from this sprint |
 | Author | Zafran |
@@ -63,35 +63,50 @@ code path as a confirmed production defect.
 
 ### 3.1 Storefront price parity
 
-**F1 — One ungated reference-price surface remains. (code-confirmed)**
-`sections/homepage-popular-fitness.liquid:87-91` still renders
+**F1 — One ungated reference-price surface remains. (code-confirmed; live-checked)**
+`sections/homepage-popular-fitness.liquid:89-92` still renders
 `product.metafields.custom.retail_price` into `.old-price-wrapper` with no
 substantiation check. That section is live in both `templates/index.json:356`
-and `templates/page.homepage.json:384`. Every comparable card surface
-(`product-item`, `related-items`, `related-items-colln`, `product-items-home`,
+and `templates/page.homepage.json:384`, and it renders on the production
+homepage today. Every comparable card surface (`product-item`,
+`related-items`, `related-items-colln`, `product-items-home`,
 `homepage-product-items-home`, `extra-info`) was routed through
 `price-reference`; this one was missed. The second price block in the same file
 (lines 104-112, `compare_at_price` strikethrough) is inside a `{% comment %}`
 and is dead — no action there.
+
+Sizing it honestly rather than leaving it as "a surface": `custom.retail_price`
+is populated on **2,145 products**, so the gap is live for any featured product
+carrying that value. On the homepage as fetched on 2026-08-16 the three sampled
+cards in that section rendered a selling price only, because those particular
+products have no `retail_price` — so the miss is currently latent rather than
+visibly publishing an unsubstantiated price. It publishes the moment the
+merchandising selection changes.
 **→ Blocks sign-off.** One-line fix, same `part: 'card'` pattern as the sibling snippets.
 
-**F2 — Metafield read changed from the object to `.value`. (code-confirmed; effect is LIVE)**
+**F2 — Metafield read changed from the object to `.value`, and cards changed from an existence check to a comparison. (code-confirmed; units verified)**
 `snippets/price-reference.liquid:45` reads
 `product.metafields.custom.retail_price.value`, where the replaced code read the
 metafield object directly (e.g. pre-PR `sections/main-product.liquid`,
-`{% if product.metafields.custom.retail_price > ...price %}`). Comparing a
-metafield object against an integer and comparing `.value` against an integer do
-not behave the same way in Liquid. `.value` is the more correct read, but it
-means the reference price can now render on products where the old comparison
-silently never matched. Currently masked because no product carries the
-verification flag.
-**→ Needs sampled raw HTML** on a product with `reference_price_verified` set
-true and `custom.retail_price` populated, before the first product is flagged.
-Confirm the strikethrough amount is right, and specifically that the stored
-retail price and `money` agree on units (the theme's existing convention treats
-it as cents).
+`{% if product.metafields.custom.retail_price > ...price %}`).
 
-**F3 — Visible reference price and JSON-LD `ListPrice` read different sources. (code-confirmed)**
+The units question this raised is now settled and is **not** a problem. The
+definition is typed `number_integer` and the values are stored in cents — a
+sampled product carries `559900` against a `$3,799.00` selling price. Liquid's
+`variant.price` is also in cents, so both the `>` comparison and the `money`
+filter are consistent. No unit mismatch.
+
+Worth recording as an improvement rather than a risk: the card snippets
+previously rendered on `retail_price != blank` — an existence check with no
+comparison — so a retail price at or below the selling price would still have
+printed. `price-reference` requires `reference_price > selling_price`, which
+closes that quietly.
+**→ Still wants one sampled raw-HTML check** on a product with
+`reference_price_verified` true and `retail_price` populated, before the first
+product is flagged — to confirm `.value` resolves as expected in the live
+Liquid runtime rather than only on type grounds.
+
+**F3 — Visible reference price and JSON-LD `ListPrice` read different sources. (code-confirmed; divergence sampled)**
 Visible: `price-reference.liquid:45` — `custom.retail_price`, falling back to
 `compare_at_price`.
 Markup: `schema-product.liquid:105-111` and `176-182` — `compare_at_price` only.
@@ -100,6 +115,17 @@ way. But where a product has both values and they differ, the customer sees one
 number and Merchant Center reads another. That is exactly the `T-006` global
 rule — visible page content must match schema — so it should be settled inside
 `T-006`, not left to the two workstreams separately.
+
+**This is not hypothetical, and the common case is worse than a mismatch — it is
+a total absence.** `retail_price` is populated on 2,145 products, and in a
+sampled set of products carrying it, every one had **no compare-at price at
+all** (for example `french-fitness-fsr100-…`: `retail_price` 559900,
+`compareAtPrice` null). For any such product, once flagged verified, the page
+would show "MSRP $5,599.00 — You save …" while the JSON-LD emits **no
+`ListPrice` whatsoever**, because the schema gate additionally requires
+`compare_at_price > price`. Visible and markup would not merely disagree; the
+markup would be silent. That is the strongest argument for pointing both at the
+same field.
 **→ Recommend one source of record for the reference price**, the same way
 `T-006c` settles review data. My position: `custom.retail_price` is the
 documented reference price, so the schema should read the same field and fall
@@ -229,10 +255,16 @@ Consequences, stated for the record:
 ### 3.6 Rollback
 
 Adequate. Single commit `dd3516d`, revertible in one operation, theme version
-pinnable at release. The five `compliance.*` metafields are created but empty on
-all products, so a revert restores the prior display exactly with no data
-migration and no orphaned state. Reverting after products have been flagged is
-also safe — the flags simply stop being read.
+pinnable at release. **Verified independently against the live store on
+2026-08-16:** all five `compliance.*` definitions exist and every one reports a
+population of **0 products** — `reference_price_verified`,
+`reference_price_type`, `reference_price_source`,
+`reference_price_effective_date`, `reference_price_last_reviewed`. So the PR's
+"empty on all products" claim holds, a revert restores the prior display exactly
+with no data migration and no orphaned state, and on merge every reference-price
+and savings display goes dark until a product is deliberately flagged.
+Reverting after products have been flagged is also safe — the flags simply stop
+being read.
 
 One sequencing caveat: once `T-006` rebases onto #703 and rewrites
 `schema-product.liquid`, "revert #703" is no longer a single clean operation.
@@ -256,7 +288,7 @@ changes. For the #703 overlap specifically, sign-off needs:
    states, including one variant change on a verified multi-variant product.
 5. **F6 documented** — a written position on sale badging without a visible
    reference price.
-6. PR refreshed onto current `main` (base is at `d0e52fd`, `main` is at
+6. PR refreshed onto current `main` (it branched from `f914cb0`; `main` is at
    `a8805bf`), taken out of draft, and the regression assertion in §3.5 decided
    either way.
 

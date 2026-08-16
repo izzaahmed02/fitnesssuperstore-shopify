@@ -29,23 +29,30 @@ expression.
 
 ### Behaviour against the live data
 
-Live enumeration, 2026-08-13 (see plan §0.5): `New` 3,157 · `Remanufactured` 1,331 ·
-`As is` 4 · **no value 1,977** · no product combines conditions · the metafield
-definition is free text with no validations.
+Live enumeration (see plan §0.5): `New` 3,157 · `Remanufactured` 1,331 · `As is` 4 ·
+**no value 1,977 catalogue-wide, but only 13 of the 3,750 active products** · no product
+combines conditions · the metafield definition is free text with no validations.
 
 | Input | Emitted today | Valid? |
 |---|---|---|
 | `Remanufactured` | `RefurbishedCondition` | Yes |
 | `As is` | `UsedCondition` | Yes |
 | `New` | `NewCondition` | Yes, but only because `New` + `Condition` concatenates into a real type — not because `New` is mapped |
-| *absent* | `NewCondition` | **Syntactically valid, factually fabricated.** 1,977 products assert new condition with nothing behind it |
+| *absent* | `NewCondition` | **Syntactically valid, factually fabricated.** 1,977 products catalogue-wide, but only **13 of the 3,750 active** ones — see the reconciliation caveat in plan §0.5 before quoting either figure |
 | `Open Box` (hypothetical) | `https://schema.org/Open BoxCondition` | **No** — space in a URL, matches no type |
 
 Two things this settles. The per-variant contradiction that opened the ticket — a value
 containing `Remanufactured` marking genuinely new variants `RefurbishedCondition` — is a
 real code path with **no live data behind it today**. And the invalid-URL case is
-likewise not firing. What *is* firing is the fabricated `NewCondition` default on roughly
-30% of the catalogue.
+likewise not firing. What *is* firing is the fabricated `NewCondition` default, on a
+dozen or so active products rather than the third of the catalogue the raw count implies.
+
+**So this ticket carries no confirmed high-volume live defect.** All three live values
+emit valid markup; the contradiction has no data behind it; the fabricated default is
+real but small. The change is still worth making — it removes an invented assertion and
+guards a free-text field that nothing validates — but it should be sequenced on that
+basis rather than as a P0 emergency, and nobody should carry the earlier framing into
+the release notes.
 
 ### Proposed
 

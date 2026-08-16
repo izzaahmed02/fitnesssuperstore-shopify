@@ -138,12 +138,29 @@ is a real property of the code and would fire the moment someone types a fourth 
 into an unvalidated free-text field — but it is not firing now, and the ticket should
 say so rather than carry an implied live defect.
 
-**What is live, and is the larger number.** `1,977` products carry **no**
+**What is live is the fabricated default — but it is much smaller than the raw catalogue
+count suggests, and the count needs stating carefully.** `1,977` products carry **no**
 `condition_state` at all (6,469 total minus the 4,492 that have it), and the `{% else %}`
-branch asserts `https://schema.org/NewCondition` for every one of them. That is a
-fabricated default on roughly 30% of the catalogue — the same category as the
-`T-006a` table, and on this evidence the highest-volume schema-truthfulness issue in the
-ticket. Where condition is genuinely unknown the property should be omitted.
+branch asserts `https://schema.org/NewCondition` for every one of them. That is the same
+category as the `T-006a` fabricated-default table.
+
+**It is not 30% of the storefront.** Of the 3,750 products the Admin API reports as
+`status:active`, **3,737 carry a condition value — only 13 do not.** The gap between 13
+and 1,977 sits almost entirely in products that are not active, and those render no PDP.
+
+One honest caveat on the arithmetic, because it does not reconcile: the status counts
+returned by the API (`active` 3,750, `draft` 28, `archived` 464) total 4,242 against a
+catalogue of 6,469, so roughly 2,200 products are not accounted for by any status filter,
+and a `published_status:published` query returns 5,972 — more than the active count,
+which cannot be literally true. Something about how this store's product index answers
+status filters is unreliable, so **the exact live exposure cannot be pinned down from
+these queries.** What is safe to say: the fabricated `NewCondition` default is real, it
+is the right thing to fix, and on the active-product figure it currently affects on the
+order of a dozen rendered pages rather than a third of the catalogue. Anyone quoting a
+number should quote 13-of-3,750 and note the reconciliation gap, not 1,977.
+
+Where condition is genuinely unknown the property should be omitted regardless — the
+volume changes the priority, not the correctness.
 
 **So `T-006b` reduces to three changes**, none of which is the per-variant contradiction
 that opened the ticket:
@@ -153,7 +170,7 @@ that opened the ticket:
 | `New` (3,157) | `NewCondition` — correct by string coincidence | `NewCondition`, mapped explicitly |
 | `Remanufactured` (1,331) | `RefurbishedCondition` | unchanged |
 | `As is` (4) | `UsedCondition` | unchanged |
-| No value (1,977) | **`NewCondition` asserted with nothing behind it** | **omit the property** |
+| No value (1,977 catalogue-wide, but only **13 of 3,750 active** products) | **`NewCondition` asserted with nothing behind it** | **omit the property** |
 | Any future value | raw text concatenated into the URL | **omit the property** |
 
 Kevin still assesses the feed side: `itemCondition` is markup rather than a feed field,
