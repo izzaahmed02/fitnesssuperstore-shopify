@@ -1,0 +1,86 @@
+{%- comment -%}
+  Renders one approved replacement product for the discontinued replacement
+  module.
+
+  The card is rendered from an explicit product reference only. It shows the
+  replacement image, exact product title, its PDP link and its current
+  source-controlled availability/lead-time language. It renders the product
+  whether or not it is available, and it never renders a price or any purchase
+  control, so the discontinued page it sits on keeps no purchase path.
+
+  Accepts:
+    - replacement: {Object} the referenced replacement product (required)
+    - intro: {Object} controlled rich-text introduction for this replacement (optional)
+{%- endcomment -%}
+
+{%- if replacement != blank -%}
+  {%- liquid
+    assign lead_time = replacement.metafields.custom.processing_time_long.value
+    if lead_time == blank
+      assign lead_time = replacement.metafields.custom.processing_time.value
+    endif
+
+    assign replacement_image = replacement.featured_media
+    assign image_alt = replacement_image.alt | default: replacement.title
+  -%}
+
+  <div class="discontinued-replacement__card">
+    {%- if intro.value != blank -%}
+      <div class="discontinued-replacement__card-intro rte">
+        {{ intro | metafield_tag }}
+      </div>
+    {%- endif -%}
+
+    <div class="discontinued-replacement__product">
+      <a
+        class="discontinued-replacement__media"
+        href="{{ replacement.url }}"
+        aria-label="{{ replacement.title | escape }}"
+        tabindex="-1"
+      >
+        {%- if replacement_image != blank -%}
+          <img
+            src="{{ replacement_image | image_url: width: 360 }}"
+            srcset="
+              {%- if replacement_image.width >= 165 -%}{{ replacement_image | image_url: width: 165 }} 165w,{%- endif -%}
+              {%- if replacement_image.width >= 360 -%}{{ replacement_image | image_url: width: 360 }} 360w,{%- endif -%}
+              {%- if replacement_image.width >= 533 -%}{{ replacement_image | image_url: width: 533 }} 533w,{%- endif -%}
+              {{ replacement_image | image_url }} {{ replacement_image.width }}w
+            "
+            sizes="(min-width: 750px) 200px, 40vw"
+            alt="{{ image_alt | escape }}"
+            width="{{ replacement_image.width }}"
+            height="{{ replacement_image.height }}"
+            loading="lazy"
+          >
+        {%- else -%}
+          {{ 'product-1' | placeholder_svg_tag: 'discontinued-replacement__placeholder' }}
+        {%- endif -%}
+      </a>
+
+      <div class="discontinued-replacement__details">
+        <a class="discontinued-replacement__title" href="{{ replacement.url }}">
+          {{- replacement.title | escape -}}
+        </a>
+
+        <div class="discontinued-replacement__status">
+          <span class="badge stock-badge {% if replacement.available %}in{% else %}out{% endif %}">
+            {%- if replacement.available -%}
+              Available to Order
+            {%- else -%}
+              Out of stock
+            {%- endif -%}
+          </span>
+        </div>
+
+        {%- if lead_time != blank -%}
+          <p class="discontinued-replacement__lead-time">{{ lead_time | escape }}</p>
+        {%- endif -%}
+
+        <a class="discontinued-replacement__link" href="{{ replacement.url }}">
+          View product details
+        </a>
+      </div>
+    </div>
+  </div>
+{%- endif -%}
