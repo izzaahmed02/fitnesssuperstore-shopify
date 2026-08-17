@@ -5,10 +5,124 @@
 **Controlled inputs reconciled:** `03_Technical_SEO_Developer_Brief.docx` · `technical_acceptance_criteria.md` · `schema_remediation_spec.json` · `shopify_technical_seo_patch_examples.md` · `robots_waf_validation_checklist.txt` · `lighthouse_ci_scope.md` · `crawl_indexation_workplan.csv` · `FSS_SEO_GEO_Implementation_Backlog.xlsx`
 **Prepared by:** Izza — Full-Stack Lead Developer, primary implementation lead
 **Revision:** 3 — 2026-08-13. Revision 1 used a local `TS-xxx` scheme written before the attachments were available; **it is retired.** Revision 2 adopted the controlled `T-001`–`T-016` IDs, target dates, intended-state taxonomy and Lighthouse budgets from the backlog and workplan; revision 3 preserves all of it unchanged and records Tim's August 8 and August 9 decisions, the work done under them, and the live evidence gathered since.
+**Revision 5 — 2026-08-16.** T-018 partial resolution and the corrected CWV source record, per Tim's two control updates of 2026-08-16. **See §0B, which controls.**
 **Revision 4 — 2026-08-16.** Source-register update per Tim's August 14 Stage 0 HOLD decision: current-main SHA, corrected `T-018` framing, PR #700 **and** PR #703 registered against `T-006`, and the current access block. Ticket numbering preserved; nothing re-audited. **See §0A, which controls wherever it differs from §0.**
 **Branch state:** `claude/seo-recovery-sprint-ctwbtp` — **3 commits ahead, 26 behind current `main` (`575a8de`), with no draft PR yet.** The rebase and the draft PR are Izza's outstanding items. The plan and source register carried over unchanged from `claude/seo-recovery-sprint-pb3w4z`; no ticket was renumbered, retired or rescoped.
 **Checkpoint this satisfies:** August 12 ticket/PR plan checkpoint (met August 8)
 **Status:** **Stage 0 HOLD — NO-GO in force.** The branch is accepted as the current working record but is **not approval-ready or merge-ready**. Nothing is merged, deployed or published, and live Shopify MAIN is untouched by this branch.
+
+---
+
+## 0B. Revision 5 — T-018 partial resolution and the corrected CWV source record
+
+Per Tim's two control updates of 2026-08-16 (18:13 and 18:16 UTC). **Revision 5 controls
+where it differs from §0A and §0.** Stage 0 remains HOLD, NO-GO in force, no production
+change approved.
+
+### 0B.1 `T-018` — PARTIALLY RESOLVED / HOLD FOR SAFE STAGING SEQUENCE
+
+Status changes from BLOCKED. Rohan's August 15 Convert response answered most of the
+architecture question. **Confirmed by the vendor:**
+
+1. The supported Shopify target is the **Convert custom Shopify app** with its Theme
+   Extension / App Embed and Web Pixel mapping.
+2. The manual `cdn-4.convertexperiments.com` installation **must be removed** from the
+   app-based target so a second installation cannot interfere.
+3. The `cdn.9gtb.com` loader is **not related to Convert Experiences** and **must not be
+   removed** as part of this migration — which independently confirms the §0A.2 framing
+   correction.
+4. Account/project `10019770-100110328` and `environment=production` are correct.
+5. Add to cart, checkout started, purchase and revenue must use **JavaScript Triggered
+   goals** mapped to the corresponding Shopify Web Pixel events.
+6. Convert Support will review the experience in **QA mode** once given the experience
+   ID / summary URL and test evidence.
+
+**One material question remains open**, and it is the reason this is HOLD rather than
+resolved: whether installing the custom app or enabling its Web Pixel affects **published
+MAIN immediately**, even when the Theme App Embed is enabled only on an unpublished theme —
+and what exact sequence prevents double initialisation for production visitors during
+testing. Tim has requested that in writing in the existing Convert thread. **Next vendor
+checkpoint: August 17, 12:00 PM Pacific.**
+
+**Prohibited until Convert answers the staging-scope question.** Do not install or enable
+the Convert app or its Web Pixel; do not remove the manual script from MAIN; do not remove
+the 9gtb loader; do not publish a theme; do not activate customer traffic.
+
+**Permitted now.** The customer-equivalent diagnostic baseline may proceed on the existing
+unpublished theme as the **current-state benchmark**. It is explicitly *not* the final
+supported-architecture baseline, and it will be re-measured once the app-based target
+exists.
+
+**After Convert answers**, Izza and Zafran prepare a separately reversible unpublished
+target, preserve the current-state benchmark, and submit the experience ID / summary URL,
+Network initialisation proof, QA-mode proof, test-purchase and revenue mapping, source diff
+and rollback to Convert Support for written review. The release decision stays separate and
+needs the complete evidence pack plus Tim's written GO.
+
+Control Tower blocker line, to be added to the existing record and nowhere else:
+
+> `T-018 PARTIALLY RESOLVED / HOLD — supported Convert Shopify app architecture,
+> manual-script removal requirement, correct project/environment IDs, non-Convert 9gtb
+> classification, JS-triggered goal mapping, and QA-mode support review confirmed; safe
+> unpublished-theme/Web Pixel staging sequence awaiting Convert's written response.`
+
+### 0B.2 `T-017` — consequence of the above
+
+The prepared change on this branch stays **unmerged**, and the reason is now sharper than
+it was at §0A.5. It is no longer "the Convert question is unanswered" — it is that the
+supported target requires **removing** the manual `convertexperiments` head script, which
+is a different change from the one prepared here, and the sequence for doing that safely is
+what the vendor has not yet supplied. Merging the gate removal first would set a baseline
+against an installation that is about to change.
+
+### 0B.3 Corrected CWV source record
+
+The figures in §0A.7 were stale within hours of being written. Corrected, verified
+2026-08-16:
+
+| Field | §0A.7 said | Actual |
+|---|---|---|
+| PR #723 head | `fe990b6b` | **`7936660dc1a49a79537c50c64f3ce730d7dce558`** |
+| Files changed vs `main` | 1 | **2** — `layout/theme.liquid`, `config/settings_data.json` |
+| Diff totals | 5 deletions | **5 insertions, 10 deletions** |
+| Commits ahead of base | 1 | **3** |
+| CI | runs 5306 / 5307 on `fe990b6b` | **run 5317** (`pull_request`) and 5318 (`push`), both success on `7936660d` |
+
+The two additional commits are `shopify[bot]` theme syncs — the GitHub↔theme connection
+writing the connected theme's state back to the branch. They touched
+`templates/collection.json` and `templates/search.json` at the commit level but **net to
+zero** against `main`; the surviving change is `config/settings_data.json`, which is
+**ordering-only** (the Boost `instant-search-app-embedded` entry moves position; `type`,
+`disabled: false` and `settings` are identical).
+
+**Two framing corrections that must not be lost:**
+
+- **"Only five lines differ" is true of `layout/theme.liquid` and nothing wider** — not the
+  theme, not the PR diff, not the branch history. Always qualify it with the filename.
+- **The served-HTML parity check is preflight evidence, not runtime evidence and not a CWV
+  result.** Tim accepted it for diagnostic use only.
+
+**Live semantic comparison** (read-only): `templates/collection.json` and
+`templates/search.json` are byte-identical between MAIN and the isolation theme, including
+the Boost `filter-product-list-ssr` block and `product-grid` `disabled: true` on both. At
+render level on the search template every app and vendor marker matches except the gate
+strings, with one unexplained single-occurrence delta in `boost` (347 versus 346). The
+collection template comparison is **outstanding** — the MAIN request returned HTTP 429 from
+my own request volume, not from anything about either theme.
+
+**Method caveat worth carrying forward:** the Admin API's `checksumMd5` is **not comparable
+across themes for JSON files**. It reports different checksums and sizes for MAIN and the
+isolation theme on files whose content is byte-identical, because a GitHub-synced theme and
+an admin-edited theme store them differently. It is reliable for `.liquid` files. Anyone
+verifying theme parity by checksum on JSON templates will see phantom divergences.
+
+### 0B.4 Runtime baseline ownership
+
+Unchanged and unblocked by anything in this plan: **Arafat owns the real-browser
+execution.** First valid three-run desktop sample plus runtime vendor-load proof due
+August 17, 9:00 AM Pacific; full ten-URL baseline, desktop then mobile, medians and
+required traces, due August 17 EOD Pacific. My headless environment cannot navigate
+externally, so the constraint is an execution environment, not a decision.
 
 ---
 
@@ -172,7 +286,7 @@ ticket numbering in this plan.
 | Field | Value |
 |---|---|
 | Focused issue | [#716](https://github.com/izzaahmed02/fitnesssuperstore-shopify/issues/716) |
-| Canonical branch | `claude/core-web-vitals-mobile-vwzm5w` @ `fe990b6b`, based on `main` @ `575a8de` |
+| Canonical branch | `claude/core-web-vitals-mobile-vwzm5w` @ **`7936660d`** (was `fe990b6b`; see §0B.3), based on `main` @ `575a8de` |
 | Draft PR | [#723](https://github.com/izzaahmed02/fitnesssuperstore-shopify/pull/723) — `[DO NOT MERGE]`; #717 closed and superseded |
 | Unpublished isolation theme | `gid://shopify/OnlineStoreTheme/187691401532`, connected 2026-08-16, checksum-verified against the branch commit |
 | Priority | **Desktop LCP is P0**; mobile LCP second, mobile INP third |
