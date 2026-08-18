@@ -240,18 +240,84 @@
      wrong price on a multi-variant product. Point it at the headline variant
      price instead.
 
-     Variant price, not the configured total: the quote reads "(options at
-     checkout)", so a monthly figure that moved while the headline stayed put
-     would contradict itself. */
+     The configured grand total, not the variant price: Figma's price row reads
+     "As low as $137.46/mo" with no qualifier (19:22276), so the figure has to be
+     what the buyer will actually owe. Falls back to the headline variant price
+     before the configurator has computed a total. */
   function syncFinancing(root) {
     var affirm = root.querySelector('.affirm-as-low-as');
-    var price = headlinePriceEl(root);
-    if (!affirm || !price) return;
-    /* data-price-value, not innerText: the quote is labelled "(options at
-       checkout)", so it tracks the variant price. priceHelper rewrites the text
-       with the grand total but never touches this attribute. */
-    var amount = Math.round(parseFloat(String(price.dataset.priceValue || '').replace(/[^0-9.]/g, '')) * 100);
+    if (!affirm) return;
+    var amount = 0;
+    var total = configTotalEl(root);
+    if (total) {
+      /* textContent, not data-price-value: priceHelper writes the grand total into
+         the text and leaves the attribute at the variant base. */
+      var match = String(total.textContent).match(/[\d,]+(?:\.\d+)?/);
+      if (match) amount = Math.round(parseFloat(match[0].replace(/,/g, '')) * 100);
+    }
+    if (!amount) {
+      var price = headlinePriceEl(root);
+      if (price) {
+        amount = Math.round(parseFloat(String(price.dataset.priceValue || '').replace(/[^0-9.]/g, '')) * 100);
+      }
+    }
     if (amount > 0) affirm.dataset.amount = String(amount);
+  }
+
+  /* ---- "As low as" quote ----
+     Figma shows "As low as $X/mo" followed by the help icon, with no qualifier.
+     The shared main-product-custom.js appends "(options at checkout)" because on
+     the live PDP the quote is the variant price. Here .pr_custom_price IS the
+     configured total, so the quote already includes the options and the qualifier
+     is both inaccurate and absent from the design.
+
+     Stripped after the fact rather than fixed at source: that file also drives the
+     live PDP, whose copy is not ours to change. */
+  function stripPayLaterQualifier(root) {
+    root.querySelectorAll('.pdp-new__financing .paylater-text span').forEach(function (span) {
+      var cleaned = span.textContent.replace(/\s*\(options at checkout\)\s*$/, '');
+      /* Only write on a real change, so the observer below cannot re-trigger itself. */
+      if (cleaned !== span.textContent) span.textContent = cleaned;
+    });
+  }
+
+  /* main-product-custom.js recomputes the quote on load and on variant change, but
+     not when an option is picked — so the monthly figure would lag the total it is
+     derived from. Re-running its own generator keeps one source of truth. */
+  function refreshPayLater(root) {
+    if (typeof generatePayLaterText === 'function' && typeof getPaylaterModal === 'function') {
+      try {
+        var text = generatePayLaterText();
+        root.querySelectorAll('.pdp-new__financing .paylater-text').forEach(function (container) {
+          container.innerHTML = getPaylaterModal(text);
+        });
+      } catch (e) {
+        /* Price element not parsed yet; the observer fires again on the next write. */
+      }
+    }
+    stripPayLaterQualifier(root);
+  }
+
+  function bindPayLater(root) {
+    var financing = root.querySelector('.pdp-new__financing');
+    if (!financing || typeof MutationObserver !== 'function') return;
+
+    /* The shared script injects the quote on a 100ms poll and again on variant
+       change, so the qualifier is re-added each time. Observing is race-free where
+       a one-shot strip at init would not be. */
+    new MutationObserver(function () {
+      stripPayLaterQualifier(root);
+    }).observe(financing, { childList: true, subtree: true, characterData: true });
+
+    var total = configTotalEl(root);
+    if (total) {
+      new MutationObserver(function () {
+        refreshPayLater(root);
+        syncFinancing(root);
+      }).observe(total, { childList: true, subtree: true, characterData: true });
+    }
+
+    stripPayLaterQualifier(root);
   }
 
   /* ---- Figma "Delivery & Installation Options" dropdown <-> the real group ----
@@ -453,6 +519,7 @@
     syncOptionGroupSelect(root);
     syncStickyToBuyBox(root);
     syncFinancing(root);
+    bindPayLater(root);
 
     if (typeof subscribe === 'function' && typeof PUB_SUB_EVENTS === 'object') {
       subscribe(PUB_SUB_EVENTS.variantChange, function (event) {
