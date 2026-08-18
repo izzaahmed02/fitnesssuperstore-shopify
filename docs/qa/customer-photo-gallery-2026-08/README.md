@@ -79,9 +79,15 @@ Viewports: desktop 1440×900, mobile iPhone 13 (390×844, touch). Harness and ra
 
 ```sh
 cd docs/qa/customer-photo-gallery-2026-08/harness
-npm install     # Playwright only; nothing is added to the theme's own dependencies
+npm run setup   # installs Playwright and its Chromium binary; nothing is added to
+                # the theme's own dependencies
 npm test        # generate fixtures -> build the pages -> run both suites
 ```
+
+`npm install` on its own is not enough: the `playwright` package ships no postinstall step, so
+`chromium.launch()` would fail without the browser download that `npm run setup` performs. If
+the machine already has Playwright browsers, point `PLAYWRIGHT_BROWSERS_PATH` at them and
+`npm install && npm test` is sufficient.
 
 `npm test` exits non-zero if any check fails, so it can be wired into CI. The fixture
 dimensions are committed in `fixtures.json` (each entry names the live product it stands in
