@@ -390,9 +390,11 @@ async function mobile(browser) {
   await p2.goto(url('single'));
   await p2.waitForSelector('.customer-photo-gallery__slide img');
   const mArrows = await p2.$$eval('.customer-photo-gallery__arrow', (bs) => bs.map(b => getComputedStyle(b).display));
-  check('M9 single-image PDP: strip arrows hidden on mobile (DEFECT if not)',
-    mArrows.every(d => d === 'none'),
-    `display=${JSON.stringify(mArrows)} - the data-count<=4 hide rule is scoped to @media (min-width:990px), so a 1-photo gallery still paints two no-op arrows under 990px`);
+  const mArrowsHidden = mArrows.every(d => d === 'none');
+  check('M9 single-image PDP: strip arrows hidden on mobile',
+    mArrowsHidden,
+    `display=${JSON.stringify(mArrows)}` + (mArrowsHidden ? ''
+      : ' - a 1-photo gallery is painting no-op arrows under 990px; check that the data-count="1" hide rule has not been re-scoped to @media (min-width:990px)'));
   await p2.screenshot({ path: path.join(SHOTS, 'mobile-05-single-image.png') });
   await p2.close();
 
