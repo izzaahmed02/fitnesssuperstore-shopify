@@ -481,6 +481,42 @@
       });
     }
 
+    /* ---- Shipping & Service Regions popover ----
+       One delegated listener: the trigger toggles its own panel and closes any
+       other, a click outside or Escape closes all. Delegation rather than
+       per-trigger binding because the metainfo block is re-rendered on variant
+       change. */
+    document.addEventListener('click', function (event) {
+      var target = event.target;
+      var trigger = target.closest && target.closest('[data-pdp-popover-trigger]');
+      var closer = target.closest && target.closest('[data-pdp-popover-close]');
+      var inPanel = target.closest && target.closest('[data-pdp-popover-panel]');
+
+      root.querySelectorAll('[data-pdp-popover-panel]').forEach(function (panel) {
+        var own = trigger && trigger.parentElement === panel.parentElement;
+        if (own || (inPanel === panel && !closer)) return;
+        panel.hidden = true;
+        var t = panel.parentElement.querySelector('[data-pdp-popover-trigger]');
+        if (t) t.setAttribute('aria-expanded', 'false');
+      });
+
+      if (!trigger) return;
+      event.preventDefault();
+      var panel = trigger.parentElement.querySelector('[data-pdp-popover-panel]');
+      if (!panel) return;
+      panel.hidden = !panel.hidden;
+      trigger.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key !== 'Escape') return;
+      root.querySelectorAll('[data-pdp-popover-panel]').forEach(function (panel) {
+        panel.hidden = true;
+        var t = panel.parentElement.querySelector('[data-pdp-popover-trigger]');
+        if (t) t.setAttribute('aria-expanded', 'false');
+      });
+    });
+
     buildFaqAccordions(root);
     buildSpecTableHeaders(root);
 
