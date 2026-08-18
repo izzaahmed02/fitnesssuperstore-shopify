@@ -75,6 +75,31 @@ live Shopify assets**, read from the Admin API:
 Viewports: desktop 1440×900, mobile iPhone 13 (390×844, touch). Harness and raw results are in
 `harness/`; screenshots in `evidence/`.
 
+### Re-running it
+
+```sh
+cd docs/qa/customer-photo-gallery-2026-08/harness
+npm install     # Playwright only; nothing is added to the theme's own dependencies
+npm test        # generate fixtures -> build the pages -> run both suites
+```
+
+`npm test` exits non-zero if any check fails, so it can be wired into CI. The fixture
+dimensions are committed in `fixtures.json` (each entry names the live product it stands in
+for); the generated images, built pages and `node_modules` are gitignored. `results.json` is the
+raw output of the run recorded in this report — 38/38 against the section file as it stands on
+this branch.
+
+To reproduce the before/after evidence for a fix, build the pages from another revision of the
+section and re-run:
+
+```sh
+node build.js <(git show origin/main:sections/customer-photo-gallery.liquid) && npm run qa
+```
+
+That run writes `results.other-source.json` instead of `results.json`, so a comparison run can
+never overwrite the committed evidence. Against the released section it reports 37/38 and exits
+non-zero, the M9 failure being the dead single-photo arrows fixed here.
+
 A human spot-check on two or three live PDPs is still worth doing before the closeout is signed
 off — this run proves the code's behaviour, not the CDN delivery path.
 

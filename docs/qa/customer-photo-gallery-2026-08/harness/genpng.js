@@ -46,9 +46,16 @@ function png(w, h, hue) {
   ]);
 }
 
-const out = process.argv[2];
-const specs = JSON.parse(process.argv[3]);
+// Defaults make this runnable from a clean checkout with no arguments:
+// the fixture list is committed in fixtures.json and the output directory is created.
+// Optional args: [outputDir] [fixturesFile]
+const path = require('path');
+const out = process.argv[2] ? path.resolve(process.argv[2]) : path.join(__dirname, 'img');
+const manifest = process.argv[3] ? path.resolve(process.argv[3]) : path.join(__dirname, 'fixtures.json');
+const specs = JSON.parse(fs.readFileSync(manifest, 'utf8')).images;
+
+fs.mkdirSync(out, { recursive: true });
 for (const s of specs) {
-  fs.writeFileSync(`${out}/${s.name}.png`, png(s.w, s.h, s.hue || [40, 90, 200]));
-  console.log(s.name, s.w + 'x' + s.h);
+  fs.writeFileSync(path.join(out, `${s.name}.png`), png(s.w, s.h, s.hue || [40, 90, 200]));
+  console.log(`${s.name}  ${s.w}x${s.h}  ${s.source || ''}`);
 }

@@ -432,7 +432,14 @@ async function mobile(browser) {
   }
   const failed = results.filter(r => !r.pass);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
-  fs.writeFileSync(path.join(DIR, 'results.json'), JSON.stringify(results, null, 2));
+  // results.json is the committed evidence for the section as it stands in this checkout.
+  // A run against pages built from another revision (before/after comparisons) is written
+  // elsewhere so it cannot silently replace that evidence.
+  let info = { isWorkingTreeSection: true };
+  try { info = JSON.parse(fs.readFileSync(path.join(DIR, 'build-info.json'), 'utf8')); } catch (e) {}
+  const outFile = info.isWorkingTreeSection ? 'results.json' : 'results.other-source.json';
+  fs.writeFileSync(path.join(DIR, outFile), JSON.stringify(results, null, 2));
+  console.log(`results written to ${outFile}`);
   if (failed.length) {
     console.log('FAILURES:');
     failed.forEach(f => console.log(' -', f.id, f.detail));

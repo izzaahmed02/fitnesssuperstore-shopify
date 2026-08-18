@@ -3,7 +3,9 @@ const path = require('path');
 // Resolve the section from this checkout (harness lives at
 // docs/qa/customer-photo-gallery-2026-08/harness/), so the run reproduces anywhere.
 // Pass a path as argv[2] to build the harness from a different revision of the file.
-const SRC = process.argv[2] || path.join(__dirname, '..', '..', '..', '..', 'sections', 'customer-photo-gallery.liquid');
+const DEFAULT_SRC = path.join(__dirname, '..', '..', '..', '..', 'sections', 'customer-photo-gallery.liquid');
+const SRC = process.argv[2] || DEFAULT_SRC;
+const IS_DEFAULT_SRC = !process.argv[2];
 const src = fs.readFileSync(SRC, 'utf8');
 
 // Extract the section's shipped CSS and JS verbatim; only substitute the Liquid
@@ -85,3 +87,11 @@ ${LIGHTBOX}</section>
   fs.writeFileSync(path.join(__dirname, `case-${key}.html`), html);
   console.log('wrote case-' + key + '.html');
 }
+
+// Record what these pages were built from, so the runner can label its results and
+// never overwrite the committed baseline with a run against some other revision.
+fs.writeFileSync(path.join(__dirname, 'build-info.json'),
+  JSON.stringify({ source: SRC, isWorkingTreeSection: IS_DEFAULT_SRC }, null, 2));
+console.log(IS_DEFAULT_SRC
+  ? 'built from the working-tree section'
+  : `built from ${SRC} (results will be written to results.other-source.json)`);
