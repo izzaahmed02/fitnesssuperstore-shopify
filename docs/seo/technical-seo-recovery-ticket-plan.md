@@ -301,12 +301,17 @@ path. **Do not delete the legacy templates in this sprint.** Tim requires the th
 one-character cleanups to sit in **a separate reversible commit** so they cannot ride into
 a `T-017` release.
 
-> **Outstanding, and it is Izza's to fix, not this revision's:** on this branch the
-> `T-017` theme edit and the three `T-020` template edits are currently in **one commit**
-> (`fa427126`). That does not meet the independently-reversible requirement. It should be
-> split when the branch is rebased onto current `main`. Nobody should force-push this
-> shared branch to fix it as a side effect of a documentation update, which is why it is
-> flagged here rather than done here.
+> **Outstanding, and it is mine to own:** on this branch the `T-017` theme edit and the
+> three `T-020` template edits sit in **one commit** (`fa427126`) together with the
+> documentation. That commit is mine — I packaged them together while preparing the branch,
+> before Tim's separately-reversible requirement was issued on August 14. It does not meet
+> that requirement now.
+>
+> It should be split when the branch is rebased onto current `main`, which is the mechanical
+> step where it costs nothing. That step sits with Izza only because the rebase does — the
+> thing being corrected is my packaging, not her work, and it should not be recorded as an
+> implementation-side lapse. I have not force-pushed this shared branch to fix it as a side
+> effect of a documentation update, which is why it is flagged here rather than done here.
 
 ### 0A.6 Access and evidence block — current
 
