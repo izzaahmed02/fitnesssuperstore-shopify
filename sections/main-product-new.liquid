@@ -249,9 +249,9 @@
                             {%- comment -%} Delivery and On Display complete the Figma's
                                 eight-row set. Both are gated on their own metafield, so
                                 they render only where the data exists and nothing is
-                                hardcoded — the row simply does not appear until the field
-                                is populated. Keys are custom.delivery and
-                                custom.on_display; neither exists in the store yet.
+                                hardcoded — the row simply does not appear until its source
+                                is populated. Delivery reads custom.delivery; On Display has
+                                no definition available and falls back to a product tag.
 
                                 Delivery's "More Info" opens the Shipping & Service Regions
                                 popup (Tim). On Display links to the contact form with the
@@ -300,13 +300,36 @@
                                 </div>
                               </div>
                             {%- endif -%}
-                            {%- if product.metafields.custom.on_display != blank -%}
+                            {%- liquid
+                              comment
+                                Same source and same gate as the live PDP
+                                (main-product.liquid:856) so both templates agree on which
+                                products are on display: the google_material field of
+                                custom.3rd_party, matched exactly against one value. The
+                                stored text ("On display in Benicia") does not read correctly
+                                after the "On Display:" label, so the row prints the showroom
+                                name from settings instead — the same substitution the live
+                                PDP makes with its own fixed string.
+                              endcomment
+                              assign on_display = ''
+                              assign third_party = product.metafields.custom['3rd_party'].value
+                              if third_party != blank and third_party.google_material != blank
+                                assign google_material = third_party.google_material | downcase
+                                if google_material == 'on display in benicia'
+                                  assign on_display = section.settings.showroom_text
+                                endif
+                              endif
+                            -%}
+                            {%- if on_display != blank -%}
                               <div class="item">
                                 <div class="item__icon-wrap">{% render 'icon-verified' %}</div>
                                 <div class="item__text">
                                   <span class="title">On Display:</span>
-                                  {{ product.metafields.custom.on_display }}
-                                  <a class="more-info" href="/pages/contact?service=showroom">(Schedule visit)</a>
+                                  {{ on_display }}
+                                  {%- comment -%} Not class "more-info": main-product-custom.js
+                                      binds to every .metainfo-wrapper .more-info and calls
+                                      preventDefault, which would stop this link navigating. {%- endcomment -%}
+                                  <a class="pdp-new__meta-link" href="/pages/contact?service=showroom">(Schedule visit)</a>
                                 </div>
                               </div>
                             {%- endif -%}
@@ -804,6 +827,13 @@
       "id": "addons_heading",
       "label": "Add-Ons heading",
       "default": "Add-Ons:"
+    },
+    {
+      "type": "text",
+      "id": "showroom_text",
+      "label": "Showroom name",
+      "info": "Shown as \"On Display: <name>\" on products whose 3rd_party.google_material marks them as on display.",
+      "default": "Benicia California Showroom"
     },
     {
       "type": "header",
