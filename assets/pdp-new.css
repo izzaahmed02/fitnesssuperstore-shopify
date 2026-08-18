@@ -87,11 +87,15 @@
   padding: 16px;
 }
 
+/* Figma frame 19:18772, right column: every block is inset 32px from the left
+   at 458 wide, the first starts 36px down, and consecutive blocks sit exactly
+   32px apart (Title 36->160, Details 192->676, payments 708->784, Options
+   816->928, Buttons 960->1044, Add-Ons 1076). */
 .pdp-new__info {
   padding: 36px 32px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 32px;
   background: #faf9f9;
 }
 
@@ -184,12 +188,16 @@
   margin: 0;
 }
 
+/* Figma groups the H1 and this row as one "Title" block with an 8px internal
+   gap (product 0-80, rating row at 88), so it pulls back against the info
+   column's 32px block gap. */
 .pdp-new__meta-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  margin-top: -24px;
 }
 
 .pdp-new__rating {
@@ -236,7 +244,8 @@
 .pdp-new .metainfo-wrapper .item {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 14px;
+  /* Figma rows sit on a 36px pitch — 20px line plus 16px gap. */
+  margin-bottom: 16px;
 }
 
 .pdp-new .metainfo-wrapper .item:last-of-type {
@@ -339,6 +348,151 @@
   display: none;
 }
 
+/* ---- Shipping & Service Regions popover (Delivery row) ----
+   Figma component "Popover (tooltips)" (19:39057 desktop, 19:56932 phone). Both
+   frames are the same card — 16px padding, 8px radius, 16px between the text
+   group and the link, 6px between title and body. Only the width differs (289
+   desktop / 343 phone) and the phone adds the close control. */
+
+/* The panel anchors to the whole Delivery row, not to the trigger: the trigger
+   sits at an arbitrary point on a wrapping line, so anchoring to it would push a
+   289px card past the right edge of the 458px info column on longer copy. */
+.pdp-new__popover-host {
+  position: relative;
+}
+
+.pdp-new__popover {
+  display: inline;
+}
+
+/* Matches .metainfo-wrapper .item__text .more-info above — the trigger cannot carry
+   that class without a legacy handler eating its click, so it repeats the styling. */
+.pdp-new .pdp-new__popover-trigger {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  margin-left: 5px;
+  color: #000;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.pdp-new__popover-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 289px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+  /* Figma "hover card shadow": #35353529, offset 0/12, blur 30. */
+  box-shadow: 0 12px 30px rgba(53, 53, 53, 0.16);
+  text-align: left;
+}
+
+/* Author display:flex outranks the UA sheet's [hidden] rule, so the panel needs
+   its own hidden case or it would never close. */
+.pdp-new__popover-panel[hidden] {
+  display: none;
+}
+
+.pdp-new__popover-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pdp-new__popover-titlerow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdp-new__popover-title {
+  flex: 1;
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
+  color: #000;
+}
+
+.pdp-new__popover-body {
+  font-family: 'Lato', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #808080;
+}
+
+.pdp-new__popover-link {
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 20px;
+  color: #d83d0e;
+  text-decoration: none;
+}
+
+.pdp-new__popover-link:hover {
+  color: #d83d0e;
+  text-decoration: underline;
+}
+
+/* Hidden in the desktop Figma frame — an anchored card needs no close affordance. */
+.pdp-new__popover-close {
+  display: none;
+}
+
+@media screen and (max-width: 749px) {
+  /* Centred over a scrim, per the phone frame: 343 wide at 375 (16px margins) and
+     centred on both axes. Fixed rather than absolute so the tab panel's overflow
+     cannot clip it. */
+  .pdp-new__popover-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100vw - 32px);
+    z-index: 50;
+  }
+
+  .pdp-new__popover-panel::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: rgba(0, 0, 0, 0.31);
+  }
+
+  /* 20px box in the 24px title row, 8px after the heading — sized and placed by
+     the flex row rather than absolutely, so a wrapping heading still clears it. */
+  .pdp-new__popover-close {
+    display: block;
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    background: none;
+    line-height: 0;
+    color: #000;
+    cursor: pointer;
+  }
+
+  .pdp-new__popover-close svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+  }
+}
+
 /* ---- Info tabs (buy box): per Figma, every tab has a grey underline segment;
        the active tab's segment turns orange. Labels stay black. ---- */
 /* No gap between buttons: per Figma the underline reads as ONE continuous rule
@@ -401,6 +555,15 @@
   border-radius: 6px;
 }
 
+/* custom.css puts `margin-top: 28px` on every .tabs__content (24px in its own
+   media query). That stacked on top of the padding below, pushing the first row
+   ~40px under the tab rule where the Figma has 12 (nav 0-56, content at y=68).
+   The gap is owned by .tabs__item here, so the inherited margin is zeroed. */
+.pdp-new__tabs .tabs__content,
+.pdp-new__addons .tabs__content {
+  margin-top: 0;
+}
+
 .pdp-new__tabs .tabs__item,
 .pdp-new__addons .tabs__item {
   display: none;
@@ -412,14 +575,21 @@
 }
 
 .pdp-new__tabs .tabs__item {
-  padding-top: 16px;
+  /* 12px under the 56px tab nav (Figma: nav 0-56, Info at y=68). The add-on
+     carousel below uses 16 — they are not the same gap. */
+  padding-top: 12px;
   font-size: 14px;
   line-height: 20px;
 }
 
+/* Figma spaces the labelled groups inside a tab 8px apart (group ends 68, next
+   starts 76), with the heading 20 tall and its first bullet 4px below it. */
+.pdp-new__tabs .tabs__item ul {
+  margin: 4px 0 8px;
+}
+
 .pdp-new__tabs .tabs__item ul {
   padding-left: 16px;
-  margin: 4px 0 12px;
 }
 
 /* Text Bullet Point */
@@ -473,9 +643,11 @@
   top: calc((1lh - 8px) / 2);
 }
 
+/* 24px pitch: 20px line box, 4px gap. */
 .pdp-new__tabs .tabs__item ul li {
   color: #808080;
-  margin-bottom: 6px;
+  line-height: 20px;
+  margin-bottom: 4px;
 }
 
 /* Key Specs and any other rich-text metafield in a buy-box tab: same blue-bullet
@@ -484,12 +656,12 @@
 /* Geometry comes from the shared bullet rules above (this ul is inside
    .tabs__item, so it is already matched); only spacing and colour differ. */
 .pdp-new__tabs .tabs__item .metafield-rich_text_field ul {
-  margin: 4px 0 12px;
+  margin: 4px 0 8px;
 }
 
 .pdp-new__tabs .tabs__item .metafield-rich_text_field li {
-  margin-bottom: 6px;
-  line-height: 22px;
+  margin-bottom: 4px;
+  line-height: 20px;
   color: #808080;
 }
 
@@ -664,6 +836,8 @@
 /* Prompt under Add to Cart (Figma) — accent-coloured, centred, same Lato 700
    as the button it follows. */
 .pdp-new .pdp-new__buy-note {
+  display: block;
+  text-decoration: none;
   margin: 12px 0 0;
   font-family: 'Lato', sans-serif;
   font-weight: 700;
@@ -671,6 +845,11 @@
   line-height: 24px;
   color: #d83d0e;
   text-align: center;
+}
+
+.pdp-new .pdp-new__buy-note:hover {
+  color: #d83d0e;
+  text-decoration: underline;
 }
 
 /* Exported glyph. The design draws a 21.58x20.5 leaf inside a 24px box on the
@@ -749,8 +928,10 @@
 }
 
 /* ---- Add-Ons carousel ---- */
+/* Figma: the "Add-Ons:" label is 24 tall at y=0 and the card row starts at
+   y=36 — a 12px gap. */
 .pdp-new__addons-heading {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .pdp-new__addons .tabs__content {
@@ -798,7 +979,11 @@
   flex: 0 0 auto;
   width: 200px;
   scroll-snap-align: start;
-  border: 1px solid #e5e5e5;
+  /* Sampled from the Figma card render (19:19216): #fff fill throughout, an
+     #EDEFF3 hairline border, 8px radius. Without an explicit background the card
+     inherited the info panel's #faf9f9. */
+  background: #fff;
+  border: 1px solid #edeff3;
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -824,7 +1009,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border-top: 1px solid #e5e5e5;
   flex: 1;
 }
 
@@ -928,26 +1112,25 @@
 
 /* ---- Add-Ons carousel: phone ---- */
 @media screen and (max-width: 749px) {
-  .pdp-new__addon-track {
-    gap: 10px;
+  /* Figma phone frame: cards are a fixed 160 wide on an 8px gap (card at x=0,
+     next at 168), so two fit with the third clipped — the peek is what tells a
+     touch user the row scrolls, since the arrows are hidden here. */
+  .pdp-new .pdp-new__addon-carousel .pdp-new__addon-track {
+    gap: 8px;
   }
 
-  /* Two cards plus the clipped edge of a third, per the Figma phone frame — the
-     peek is what tells a touch user the row scrolls, since the arrows are hidden
-     here. Selector matches the base rule's specificity to override its 200px. */
   .pdp-new .pdp-new__addon-carousel .pdp-new__addon-card {
-    width: 46vw;
-    min-width: 152px;
-    max-width: 200px;
+    width: 160px;
   }
 
+  /* 160 square image box holding a 148 image inset 6. */
   .pdp-new__addon-img {
     height: 160px;
   }
 
   .pdp-new__addon-img img {
-    max-width: 140px;
-    max-height: 140px;
+    max-width: 148px;
+    max-height: 148px;
   }
 
   /* Touch users swipe, and the arrows overlapped the cards and the chat widget.
@@ -960,10 +1143,20 @@
 /* ============ Lower content ============ */
 /* No card chrome: the Figma draws this as a plain white area, not an outlined,
    rounded panel. */
+/* Figma: the lower-content block sits flush against the buy box (buy box ends
+   1658, this starts 1658) with its own 32px inset, and the tab nav is the first
+   thing in it (nav at y=32). */
 .pdp-new__content {
-  margin-top: 24px;
+  margin-top: 0;
   background: #fff;
-  padding: 0 32px 32px;
+  padding: 32px 32px 32px;
+}
+
+/* Same inherited custom.css `.tabs__content { margin-top: 28px }` as the buy-box
+   tabs. Figma runs the panel straight off the nav here (nav 32-88, content at
+   y=88) and lets each section carry its own top padding. */
+.pdp-new__content .tabs__content {
+  margin-top: 0;
 }
 
 /* No border-bottom here: the 4px `::after` rule under the buttons IS the line.
@@ -1003,8 +1196,10 @@
   display: block;
 }
 
+/* Figma: sections stack flush and each provides its own top inset (Title at
+   y=20 inside the panel). */
 .pdp-new__content-section {
-  padding-top: 32px;
+  padding-top: 20px;
 }
 
 .pdp-new__content-heading {
@@ -1265,6 +1460,74 @@
   }
 }
 
+/* Downloads sit between the content tabs and the customer photos, outside the
+   tab group. The snippet is shared with the live PDP, so its heading is
+   restyled here to the same Oswald 600 24/36 as every other section heading in
+   this template rather than editing the shared file. */
+/* ---- Judge.me review widget ----
+   The widget is app markup injected outside .pdp-new, carrying its own font
+   stack, so it renders in a different face to every other heading on the page.
+   These rules are unscoped by necessity but only ever load with this template —
+   pdp-new.css is tagged inside the main-product-new section, so it is not
+   present on any other page.
+
+   Figma (19:19809/19:19810) puts a 36px-tall section title above the widget and
+   a 24px "Customer Reviews" label inside it. Judge.me renders only the one
+   heading, so it takes the page's section-heading treatment: the same Oswald
+   600 32/34 uppercase as Downloads and Customers Photos beside it. */
+/* Set on the widget roots and inherited down. `.jdgm-rev-widg__header` and
+   `__body` are not classes this build emits — the ones present are
+   .jdgm-widget, .jdgm-rev-widg, .jdgm-rev-widg__title,
+   .jdgm-rev-widg__summary-text, .jdgm-rev and .jdgm-author-fullname. */
+.jdgm-widget,
+.jdgm-rev-widg,
+.jdgm-rev-widg__summary-text,
+.jdgm-rev,
+.jdgm-author-fullname {
+  font-family: 'Lato', sans-serif;
+}
+
+.jdgm-rev-widg__title {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 34px;
+  text-transform: uppercase;
+  color: #23232b;
+}
+
+/* Sits outside .pdp-new__content, which is where the rest of the lower page
+   gets its inset from. Matched to the customer photo gallery directly below it
+   (sections/customer-photo-gallery.liquid: margin 20px 0, padding 0 12px) so the
+   two headings line up. */
+.pdp-new__downloads {
+  /* No bottom margin: the Figma stacks these lower blocks flush and lets each
+     one carry its own top inset, and the gallery below already brings 20px. */
+  margin: 0;
+  background: #fff;
+  padding: 0 12px;
+}
+
+/* Same as the gallery's <h2>, which takes the theme's global heading style
+   (base-v2.min.css). Restated rather than inherited because the shared
+   downloads snippet ships its own title size. */
+.pdp-new .pdp-new__downloads .fs-downloads__title {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 34px;
+  text-transform: uppercase;
+  color: #23232b;
+  margin: 0 0 16px;
+}
+
+@media screen and (max-width: 989px) {
+  .pdp-new__downloads {
+    margin: 0;
+    padding: 0 12px;
+  }
+}
+
 .pdp-new__chart-title {
   font-weight: 700;
   margin: 0 0 12px;
@@ -1467,6 +1730,22 @@
      border would otherwise touch the screen edge. */
   .pdp-new {
     padding: 0 16px 24px;
+  }
+
+  /* Figma phone frame: blocks inside the buy box sit 24px apart, not the 32 the
+     desktop frame uses. The title/rating pullback tracks that. */
+  .pdp-new__info {
+    gap: 24px;
+  }
+
+  .pdp-new__meta-row {
+    margin-top: -16px;
+  }
+
+  /* Add-on cards sit 12px under their tab nav on phone (Figma: nav 36-92,
+     cards at 104), where desktop uses 16. */
+  .pdp-new__addons .tabs__content {
+    padding-top: 12px;
   }
 
   /* .customBreadcrumbs adds its own 16px on mobile; zero it so the breadcrumb

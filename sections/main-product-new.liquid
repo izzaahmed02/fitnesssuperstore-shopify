@@ -246,6 +246,70 @@
                                 </div>
                               </div>
                             {%- endif -%}
+                            {%- comment -%} Delivery and On Display complete the Figma's
+                                eight-row set. Both are gated on their own metafield, so
+                                they render only where the data exists and nothing is
+                                hardcoded — the row simply does not appear until the field
+                                is populated. Keys are custom.delivery and
+                                custom.on_display; neither exists in the store yet.
+
+                                Delivery's "More Info" opens the Shipping & Service Regions
+                                popup (Tim). On Display links to the contact form with the
+                                showroom enquiry preselected (Sagi), reusing the same
+                                ?service= handler as the quote link under Add to Cart. {%- endcomment -%}
+                            {%- if product.metafields.custom.delivery != blank -%}
+                              <div class="item">
+                                <div class="item__icon-wrap">{% render 'icon-box' %}</div>
+                                {%- comment -%} pdp-new__popover-host is the panel's positioning
+                                    context — see the anchoring note in pdp-new.css. {%- endcomment -%}
+                                <div class="item__text pdp-new__popover-host">
+                                  <span class="title">Delivery:</span>
+                                  {{ product.metafields.custom.delivery }}
+                                  {%- comment -%} Shipping & Service Regions popover (Figma).
+                                      Copy is theme-editor content rather than a metafield: it is
+                                      identical on every product, and the store is at Shopify's
+                                      256 product-definition cap. {%- endcomment -%}
+                                  <span class="pdp-new__popover">
+                                    {%- comment -%} Deliberately NOT class "more-info":
+                                        main-product-custom.js binds a click listener to every
+                                        .metainfo-wrapper .more-info and calls stopPropagation,
+                                        which would swallow the click before it reached the
+                                        delegated handler in pdp-new.js. {%- endcomment -%}
+                                    <button
+                                      type="button"
+                                      class="pdp-new__popover-trigger"
+                                      aria-expanded="false"
+                                      data-pdp-popover-trigger
+                                    >More Info</button>
+                                    <span class="pdp-new__popover-panel" data-pdp-popover-panel hidden>
+                                      <span class="pdp-new__popover-text">
+                                        <span class="pdp-new__popover-titlerow">
+                                          <span class="pdp-new__popover-title">{{ section.settings.regions_heading }}</span>
+                                          {%- comment -%} Phone-only per the Figma frames; hidden by CSS on desktop. {%- endcomment -%}
+                                          <button type="button" class="pdp-new__popover-close" aria-label="Close" data-pdp-popover-close>
+                                            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                          </button>
+                                        </span>
+                                        <span class="pdp-new__popover-body">{{ section.settings.regions_text }}</span>
+                                      </span>
+                                      {%- if section.settings.regions_link != blank -%}
+                                        <a class="pdp-new__popover-link" href="{{ section.settings.regions_link }}">{{ section.settings.regions_link_text }}</a>
+                                      {%- endif -%}
+                                    </span>
+                                  </span>
+                                </div>
+                              </div>
+                            {%- endif -%}
+                            {%- if product.metafields.custom.on_display != blank -%}
+                              <div class="item">
+                                <div class="item__icon-wrap">{% render 'icon-verified' %}</div>
+                                <div class="item__text">
+                                  <span class="title">On Display:</span>
+                                  {{ product.metafields.custom.on_display }}
+                                  <a class="more-info" href="/pages/contact?service=showroom">(Schedule visit)</a>
+                                </div>
+                              </div>
+                            {%- endif -%}
                             {%- if product.metafields.custom.product_code != blank -%}
                               <div class="item">
                                 <div class="item__icon-wrap">{% render 'icon-hashtag' %}</div>
@@ -388,9 +452,11 @@
                 include_quantity_input: true,
                 show_cart_icon: true
               -%}
-              {%- comment -%} Figma: prompt directly under Add to Cart. Static text, no
-                  link — the wireframe shows no destination for it. {%- endcomment -%}
-              <p class="pdp-new__buy-note">Get delivered quote / confirm fit</p>
+              {%- comment -%} Figma: prompt directly under Add to Cart. Deep-links to the
+                  contact form with the enquiry type preselected — ?service=quote is read by
+                  sections/contact-section-hero.liquid, which scrolls the form into view and
+                  sets the dropdown to "Product Question / Sales Quote". {%- endcomment -%}
+              <a class="pdp-new__buy-note" href="/pages/contact?service=quote">Get delivered quote / confirm fit</a>
             </div>
 
           {%- when 'product_options' -%}
@@ -423,6 +489,12 @@
       "Content section" blocks append as extra custom tabs.
       See snippets/pdp-new-content-tabs.liquid. {%- endcomment -%}
   {% render 'pdp-new-content-tabs', content_blocks: content_blocks %}
+
+  {%- comment -%} Downloads sit outside the tab group, between the content tabs and
+      the customer photos. {%- endcomment -%}
+  <div class="pdp-new__downloads">
+    {% render 'product-downloads' %}
+  </div>
 
   {%- comment -%} ============ Sticky Add to Cart bar ============ {%- endcomment -%}
   {%- if section.settings.show_sticky_atc -%}
@@ -732,6 +804,35 @@
       "id": "addons_heading",
       "label": "Add-Ons heading",
       "default": "Add-Ons:"
+    },
+    {
+      "type": "header",
+      "content": "Shipping & Service Regions"
+    },
+    {
+      "type": "text",
+      "id": "regions_heading",
+      "label": "Popover heading",
+      "default": "Shipping & Service Regions"
+    },
+    {
+      "type": "textarea",
+      "id": "regions_text",
+      "label": "Popover text",
+      "default": "Shipping, Room of Choice, installation, warranty service, and delivery options may vary for Hawaii, Alaska, Puerto Rico, Canada, international, and remote-area destinations. Please review Shipping & Service Regions or contact us before ordering if you are in a special-service area."
+    },
+    {
+      "type": "text",
+      "id": "regions_link_text",
+      "label": "Popover link text",
+      "default": "View Shipping & Service Regions"
+    },
+    {
+      "type": "text",
+      "id": "regions_link",
+      "label": "Popover link URL",
+      "info": "Root-relative so it resolves on preview themes as well as the live domain. Shopify's url picker cannot target a #fragment, hence a text field.",
+      "default": "/pages/shipping-information#shipping-service-regions"
     },
     {
       "type": "checkbox",
