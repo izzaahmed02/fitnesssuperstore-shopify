@@ -5,11 +5,56 @@
 **Controlled inputs reconciled:** `03_Technical_SEO_Developer_Brief.docx` · `technical_acceptance_criteria.md` · `schema_remediation_spec.json` · `shopify_technical_seo_patch_examples.md` · `robots_waf_validation_checklist.txt` · `lighthouse_ci_scope.md` · `crawl_indexation_workplan.csv` · `FSS_SEO_GEO_Implementation_Backlog.xlsx`
 **Prepared by:** Izza — Full-Stack Lead Developer, primary implementation lead
 **Revision:** 3 — 2026-08-13. Revision 1 used a local `TS-xxx` scheme written before the attachments were available; **it is retired.** Revision 2 adopted the controlled `T-001`–`T-016` IDs, target dates, intended-state taxonomy and Lighthouse budgets from the backlog and workplan; revision 3 preserves all of it unchanged and records Tim's August 8 and August 9 decisions, the work done under them, and the live evidence gathered since.
+**Revision 6 — 2026-08-18.** The two bounded parity items closed, plus a preview-versus-MAIN script-equivalence finding that affects the runtime baseline. **See §0C.**
 **Revision 5 — 2026-08-16.** T-018 partial resolution and the corrected CWV source record, per Tim's two control updates of 2026-08-16. **See §0B, which controls.**
 **Revision 4 — 2026-08-16.** Source-register update per Tim's August 14 Stage 0 HOLD decision: current-main SHA, corrected `T-018` framing, PR #700 **and** PR #703 registered against `T-006`, and the current access block. Ticket numbering preserved; nothing re-audited. **See §0A, which controls wherever it differs from §0.**
 **Branch state:** `claude/seo-recovery-sprint-ctwbtp` — **3 commits ahead, 26 behind current `main` (`575a8de`), with no draft PR yet.** The rebase and the draft PR are Izza's outstanding items. The plan and source register carried over unchanged from `claude/seo-recovery-sprint-pb3w4z`; no ticket was renumbered, retired or rescoped.
 **Checkpoint this satisfies:** August 12 ticket/PR plan checkpoint (met August 8)
 **Status:** **Stage 0 HOLD — NO-GO in force.** The branch is accepted as the current working record but is **not approval-ready or merge-ready**. Nothing is merged, deployed or published, and live Shopify MAIN is untouched by this branch.
+
+---
+
+## 0C. Revision 6 — the two bounded parity items closed
+
+Recorded in the existing register; the evidence itself is in issue #716
+([comment](https://github.com/izzaahmed02/fitnesssuperstore-shopify/issues/716#issuecomment-5333779315)),
+per Tim's instruction to use the existing issue and PR records. No new tracker or document.
+Status VALIDATING / HOLD; nothing merged, published or changed in production.
+
+**Paced collection comparison — closed.** URL01 (Free Weights), MAIN versus preview, requests
+38 seconds apart, both HTTP 200, no 429. Every app and vendor marker matches on true
+occurrence counts — `boost` 1,842 on both, `boost-sd` 1,724, plus Gorgias, Convert, 9gtb,
+Heatmap, Judge.me, Klaviyo, Instafeed and instant-search all equal. The only differences are
+the two gate strings, which is the change under test.
+
+**Generic `boost` delta — closed, and it was my measurement error.** The 347-versus-346
+figure came from `grep -oic`, where `-c` overrides `-o` and counts matching *lines*. True
+occurrences are **1,835 on both sides**. The residual textual differences are whitespace
+before an app-block comment and the Shopify-generated per-theme app-block DOM id, which two
+themes cannot share. Non-material; no HOLD preserved. **Count occurrences, not lines.**
+
+**New finding — the preview URL is not script-equivalent to MAIN.** Script tags: MAIN 85,
+preview 88, preview with `&pb=0` 86. The default preview injects Shopify's preview-bar
+module, its inline `OnlineStorePreviewBarNextData`, and `theme-hot-reload.js`, none of which
+a customer receives. With `&pb=0` and theme asset paths normalised, MAIN and preview are
+script-for-script identical except `theme-hot-reload.js`, which is present because the theme
+is GitHub-connected and holds a polling connection.
+
+This is a **second reason, independent of the no-throttle / no-CPU hardware caveat, that the
+current runtime numbers are not customer-equivalent** — and unlike the hardware caveat it is
+fixable mid-run. Recommended to Arafat, whose runs they are: append `&pb=0` to every baseline
+URL, account for `theme-hot-reload.js` explicitly, and note that URL01 was measured without
+`&pb=0` so it is not directly comparable with later runs unless re-run.
+
+**Freeze and isolation verified** for Izza's line. MAIN `186120208700` unchanged since
+2026-08-13 and still carrying the gate; CWV theme `187691401532` UNPUBLISHED and untouched
+since the 2026-08-16 09:21:35Z sync, including throughout URL01; PageSpeed theme
+`187731542332` (#724 / PR #726) UNPUBLISHED with `layout/theme.liquid` **identical to MAIN**,
+so it has not inherited the CWV change. Isolation holds in both directions.
+
+**Still open on my side:** the ranked template-level diagnosis, due after the complete desktop
+packet. Not attemptable from URL01 alone, and no third-party causation will be asserted before
+the packet exists — URL01's LCP was a text element dominated by render delay.
 
 ---
 
