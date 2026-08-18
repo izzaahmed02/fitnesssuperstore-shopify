@@ -8,6 +8,15 @@
   whether or not it is available, and it never renders a price or any purchase
   control, so the discontinued page it sits on keeps no purchase path.
 
+  Availability follows the same controlled precedence as
+  snippets/product-availability-badge.liquid: a backorder/pre-order product is
+  labelled before the general available/out-of-stock branch.
+
+  Lead time follows the same source precedence as the PDP and cart
+  (sections/main-product-variants.liquid, snippets/cart-drawer.liquid):
+  variant processing_time_long_variant, then product processing_time_long,
+  then product processing_time.
+
   Accepts:
     - replacement: {Object} the referenced replacement product (required)
     - intro: {Object} controlled rich-text introduction for this replacement (optional)
@@ -15,13 +24,13 @@
 
 {%- if replacement != blank -%}
   {%- liquid
-    assign lead_time = replacement.metafields.custom.processing_time_long.value
-    if lead_time == blank
-      assign lead_time = replacement.metafields.custom.processing_time.value
-    endif
-
+    assign replacement_variant = replacement.selected_or_first_available_variant
     assign replacement_image = replacement.featured_media
     assign image_alt = replacement_image.alt | default: replacement.title
+  -%}
+  {%- assign lead_time = replacement_variant.metafields.custom.processing_time_long_variant
+    | default: replacement.metafields.custom.processing_time_long
+    | default: replacement.metafields.custom.processing_time
   -%}
 
   <div class="discontinued-replacement__card">
@@ -64,13 +73,13 @@
         </a>
 
         <div class="discontinued-replacement__status">
-          <span class="badge stock-badge {% if replacement.available %}in{% else %}out{% endif %}">
-            {%- if replacement.available -%}
-              Available to Order
-            {%- else -%}
-              Out of stock
-            {%- endif -%}
-          </span>
+          {%- if replacement.metafields.custom.backorder == true -%}
+            <span class="badge backorder-badge stock-badge">Available to Pre-Order</span>
+          {%- elsif replacement.available -%}
+            <span class="badge stock-badge in">Available to Order</span>
+          {%- else -%}
+            <span class="badge stock-badge out">Out of stock</span>
+          {%- endif -%}
         </div>
 
         {%- if lead_time != blank -%}
