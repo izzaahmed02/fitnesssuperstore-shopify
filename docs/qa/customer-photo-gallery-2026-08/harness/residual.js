@@ -54,5 +54,7 @@ const rec = (id, ok, detail) => { out.push({id, ok, detail}); console.log(`${ok 
   await p2.close(); await rm.close();
 
   await b.close();
-  console.log(`\n${out.filter(o=>o.ok).length}/${out.length} clean; ${out.filter(o=>!o.ok).length} residual finding(s)`);
+  const findings = out.filter(o => !o.ok);
+  console.log(`\n${out.length - findings.length}/${out.length} clean; ${findings.length} residual finding(s)`);
+  if (findings.length) process.exitCode = 1;
 })();

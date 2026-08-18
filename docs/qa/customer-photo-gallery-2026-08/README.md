@@ -21,15 +21,22 @@ Live theme: `fitnesssuperstore-shopify/main`, `gid://shopify/OnlineStoreTheme/18
 role `MAIN`.
 
 **The live theme and `origin/main` are byte-identical** for all three files — MD5 read from the
-Shopify Admin API matches the MD5 of the committed file:
+Shopify Admin API on 18 Aug 2026 matches the MD5 of the file on `origin/main`:
 
-| File | MD5 (live theme = origin/main) | Bytes |
+| File | MD5 (live theme = `origin/main`) | Bytes |
 | --- | --- | --- |
 | `sections/customer-photo-gallery.liquid` | `032fdfcbc8270cddd8de8d41c1cea827` | 31,646 |
 | `assets/custom.css` | `e08415841edce5e34577a48c11232305` | 67,686 |
 | `assets/product-mobile-gallery.js` | `7c62f34d032e4bc352699774e5da3442` | 29,457 |
 
 So there is no drift between GitHub and what customers are served.
+
+These three hashes are the **pre-fix baseline** — the released state that was audited. This
+branch deliberately differs from it: the fixes in section 5 change
+`sections/customer-photo-gallery.liquid`, so on this branch that file hashes
+`c75779ea40a936aba44e2a4f69271e1e`. The other two files are untouched and still match the table.
+Reproduce the baseline with
+`git show origin/main:sections/customer-photo-gallery.liquid | md5sum`.
 
 ### Merged PR chain
 

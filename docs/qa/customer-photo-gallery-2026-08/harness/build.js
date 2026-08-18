@@ -1,5 +1,9 @@
 const fs = require('fs');
-const SRC = '/home/user/fitnesssuperstore-shopify/sections/customer-photo-gallery.liquid';
+const path = require('path');
+// Resolve the section from this checkout (harness lives at
+// docs/qa/customer-photo-gallery-2026-08/harness/), so the run reproduces anywhere.
+// Pass a path as argv[2] to build the harness from a different revision of the file.
+const SRC = process.argv[2] || path.join(__dirname, '..', '..', '..', '..', 'sections', 'customer-photo-gallery.liquid');
 const src = fs.readFileSync(SRC, 'utf8');
 
 // Extract the section's shipped CSS and JS verbatim; only substitute the Liquid
@@ -78,6 +82,6 @@ ${LIGHTBOX}</section>
 </main>
 <script>${js}</script>
 </body></html>`;
-  fs.writeFileSync(`case-${key}.html`, html);
+  fs.writeFileSync(path.join(__dirname, `case-${key}.html`), html);
   console.log('wrote case-' + key + '.html');
 }

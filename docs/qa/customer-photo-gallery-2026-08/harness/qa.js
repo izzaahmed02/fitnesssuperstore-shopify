@@ -433,5 +433,9 @@ async function mobile(browser) {
   const failed = results.filter(r => !r.pass);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
   fs.writeFileSync(path.join(DIR, 'results.json'), JSON.stringify(results, null, 2));
-  if (failed.length) { console.log('FAILURES:'); failed.forEach(f => console.log(' -', f.id, f.detail)); }
+  if (failed.length) {
+    console.log('FAILURES:');
+    failed.forEach(f => console.log(' -', f.id, f.detail));
+    process.exitCode = 1;  // so a CI job can tell a regression from a clean run
+  }
 })();
