@@ -346,17 +346,26 @@
 .sr-hero .sr-btn--link { color: var(--sr-accent); padding: 0; gap: 4px; }
 .sr-hero .sr-btn--link:hover { color: #fff; }
 
-/* Carousel */
+/* Carousel — multi-item portrait slides with peeking edges */
 .sr-gallery { padding-block: 80px; }
+.sr-gallery > .sr-container { max-width: none; padding-inline: 0; }
+.sr-gallery > .sr-container > .sr-section__title,
+.sr-gallery > .sr-container > .sr-section__lede,
+.sr-gallery > .sr-container > .sr-gallery__note { padding-inline: 20px; }
 .sr-gallery > .sr-container > .sr-section__lede { margin-bottom: 28px; }
 .sr-carousel { position: relative; }
-.sr-carousel__track { display: flex; gap: 13px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 0 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.sr-carousel__track { display: flex; gap: 13px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 0 8px; scroll-padding-inline: 40px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .sr-carousel__track::-webkit-scrollbar { display: none; }
-.sr-slide { position: relative; flex: 0 0 auto; width: min(585px, 84vw); aspect-ratio: 585 / 400; border-radius: 16px; overflow: hidden; scroll-snap-align: center; margin: 0; background: #eee; }
+.sr-carousel__track::before, .sr-carousel__track::after { content: ""; flex: 0 0 40px; }
+.sr-slide { position: relative; flex: 0 0 auto; width: 312px; aspect-ratio: 312 / 460; border-radius: 20px; overflow: hidden; scroll-snap-align: center; margin: 0; background: #eee; }
 .sr-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.sr-slide figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 32px 20px 16px; background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,.5) 100%); color: #fff; font-size: 13px; font-weight: 700; text-align: center; }
+.sr-slide figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 44px 20px 20px; background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.6) 100%); color: #fff; font-size: 13px; font-weight: 700; text-align: center; line-height: 1.4; }
+/* Dark fade masks over the peeking edge slides */
+.sr-carousel::before, .sr-carousel::after { content: ""; position: absolute; top: 4px; bottom: 12px; width: 200px; z-index: 1; pointer-events: none; }
+.sr-carousel::before { left: 0; background: linear-gradient(90deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,0) 100%); }
+.sr-carousel::after { right: 0; background: linear-gradient(270deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,0) 100%); }
 .sr-carousel__btn { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 33px; background: #fff; border: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 12px rgba(0,0,0,.18); z-index: 2; }
-.sr-carousel__btn--prev { left: 10px; } .sr-carousel__btn--next { right: 10px; }
+.sr-carousel__btn--prev { left: 24px; } .sr-carousel__btn--next { right: 24px; }
 .sr-carousel__btn svg { width: 22px; height: 22px; color: var(--sr-accent); }
 .sr-dots { display: flex; justify-content: center; gap: 5px; margin-top: 20px; }
 .sr-dots button { width: 12px; height: 12px; border-radius: 50%; border: 0; background: var(--sr-ink); opacity: .2; cursor: pointer; padding: 0; }
@@ -491,11 +500,18 @@
     var prev = root.querySelector('[data-sr-prev]');
     var next = root.querySelector('[data-sr-next]');
 
-    function step() { return slides[0].offsetWidth + 16; }
-    function current() { return Math.round(track.scrollLeft / step()); }
+    function centerFor(sl) { return sl.offsetLeft - (track.clientWidth - sl.offsetWidth) / 2; }
+    function current() {
+      var mid = track.scrollLeft + track.clientWidth / 2, best = 0, bd = Infinity;
+      slides.forEach(function (sl, i) {
+        var m = sl.offsetLeft + sl.offsetWidth / 2, d = Math.abs(m - mid);
+        if (d < bd) { bd = d; best = i; }
+      });
+      return best;
+    }
     function go(i) {
       i = Math.max(0, Math.min(slides.length - 1, i));
-      track.scrollTo({ left: i * step(), behavior: 'smooth' });
+      track.scrollTo({ left: centerFor(slides[i]), behavior: 'smooth' });
     }
     if (prev) prev.addEventListener('click', function () { go(current() - 1); });
     if (next) next.addEventListener('click', function () { go(current() + 1); });
