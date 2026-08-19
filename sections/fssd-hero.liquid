@@ -98,19 +98,26 @@
           {{ section.settings.cta_secondary_text }}
         </a>
       {%- endif -%}
-    </div>
 
-    {%- for block in section.blocks -%}
-      {%- if block.type == 'supporting_link' and block.settings.text != blank -%}
-        <a
-          class="fssd-hero__supporting-link"
-          href="{{ block.settings.link }}"
-          {{ block.shopify_attributes }}
-        >
-          {{ block.settings.text }}
-        </a>
-      {%- endif -%}
-    {%- endfor -%}
+      {%- comment -%}
+        Browse French Fitness: tertiary ghost CTA inside the action group, not a
+        text link. Shares .fssd-hero__cta so height, padding, radius, hover and
+        focus match the two CTAs above; --tertiary only swaps the fill for a
+        transparent, white-bordered treatment. No data-fss-hp-* attribute: spec
+        §8 defines no event for the supporting link.
+      {%- endcomment -%}
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'supporting_link' and block.settings.text != blank -%}
+          <a
+            class="fssd-hero__cta fssd-hero__cta--tertiary"
+            href="{{ block.settings.link }}"
+            {{ block.shopify_attributes }}
+          >
+            {{ block.settings.text }}
+          </a>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
   </div>
 </div>
 
@@ -225,13 +232,10 @@
   .fssd-hero__cta:hover {
     opacity: 0.92;
   }
-  .fssd-hero__supporting-link {
-    display: inline-block;
-    margin-top: 20px;
-    color: inherit;
-    font-size: 15px;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+  .fssd-hero__cta--tertiary {
+    background-color: transparent;
+    border-color: #ffffff;
+    color: #ffffff;
   }
   .fssd-hero a:focus-visible {
     outline: 3px solid #ffffff;
