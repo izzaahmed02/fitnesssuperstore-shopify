@@ -3,17 +3,18 @@
 **Thread:** Re: Pages are blocked from crawling — 29 Apr
 **Prepared by:** Saliha (SEO) — DRAFT for internal review before posting to the thread
 **Date:** 2026-08-19
-**Source of truth:** `www.fitnesssuperstore.com_semrush_bot_blocked_20260429` (SEMrush export, owner Larianne) + live Shopify Admin verification (2026-08-19) + theme code audit (`fitnesssuperstore-shopify`)
+**Sources:** `www.fitnesssuperstore.com_semrush_bot_blocked_20260429` (SEMrush export, owner Larianne) · live Shopify Admin verification of all 53 real product pages (2026-08-19) · theme code audit (`fitnesssuperstore-shopify`)
 
 ---
 
 ## 0. Bottom line (TL;DR)
 
-- The 136 "blocked from crawling" URLs are **not a theme/code defect**. The theme's crawl/index configuration is correct. Nothing needs to be fixed in GitHub/the theme.
-- **65 of 136** are intentional, correct blocks: system pages, faceted-search/param duplicates, legacy `.asp` URLs, and `/collections/<x>/products/<handle>` duplicate paths that already canonicalize to a live `/products/<handle>`.
-- The only real work is a **Shopify merchandising decision**: **50 real product pages are set to Hidden/Archived (unpublished from the Online Store channel)**. "Hidden in metafields" from the earlier thread is really the Shopify **publication status**, not a theme metafield.
-- The True Fitness VC900 Palisade Climber w/Emerge LED Console (Remanufactured) fix is **complete and verified live** today.
-- **Before count:** 136 blocked (SEMrush, 2026-04-29). **After count:** pending a fresh SEMrush re-crawl, which can only be produced once the Products team executes the hidden-product decisions (owner: Larianne / SEMrush access).
+- The 136 "blocked from crawling" URLs are **not a theme/code defect**. The theme's crawl / index / canonical configuration is correct — **no GitHub/theme change is required.**
+- **83 of 136** are intentional, correct blocks (system pages, search, faceted-search/param duplicates, legacy `.asp`, blog pagination, and `/collections/<x>/products/<handle>` duplicate paths that already canonicalize to a live `/products/<handle>`).
+- **53 of 136** are real canonical `/products/<handle>` pages. Verified live today: **8 are already ACTIVE/indexable, 43 are genuinely hidden** (unpublished from the Online Store channel), and **2 are option/add-on objects that must stay unlisted**.
+- "Hidden in metafields" from the earlier thread is really the Shopify **publication status** (Unlisted/Archived), not a theme metafield. Fixing it = a **Products/merchandising decision in Shopify Admin**, not code.
+- The True Fitness VC900 Palisade Climber w/Emerge LED Console (Remanufactured) fix is **complete and verified live**.
+- **Before count:** 136 blocked (SEMrush, 2026-04-29). **After count:** pending a fresh SEMrush re-crawl, which can only be run once the Products team executes the publish decisions (owner: Larianne / SEMrush).
 
 ---
 
@@ -22,103 +23,116 @@
 | Category | Count | Final disposition |
 |---|---:|---|
 | **A. Intentional system block** (`/account`, `/cart`, `/customer_authentication/redirect`) | 3 | Leave blocked — correct (robots.txt) |
-| **B. Search pages** — 25 legacy `/searchresults.asp?...` + 5 Shopify `/search?q=...` | 30 | Leave blocked — correct. `.asp` = dead legacy URLs from the pre-Shopify site (not real pages). |
-| **C. Collection param/facet duplicates** (`/collections/<h>?sort_by=relevance&q=...`) | 35 | Leave blocked — non-canonical. robots.txt `Disallow: /collections/*sort_by*` |
-| **D. Blog pagination** (`/blogs/<h>?page=2`) | 3 | Leave blocked — `noindex,follow` by design (theme) |
-| **E. Duplicate/non-canonical collection-scoped product paths** (`/collections/<x>/products/<handle>`) | 11 | No product action — the canonical `/products/<handle>` is already live/indexed. robots.txt `Disallow: /collections/*/products/` + theme canonical → `/products/<handle>` |
-| **F. Policy URL (redirect case)** (`/policies/shipping-policy`) | 1 | Redirect to `/pages/shipping-information` (already the live canonical). Confirm 301 exists. |
-| **G. Real canonical product pages** (`/products/<handle>`) | 53 | See §2 — 1 already live, 50 hidden (escalate to Products), 2 non-real |
+| **B. Search pages** — 25 legacy `/searchresults.asp?...` + 5 Shopify `/search?q=...` | 30 | Leave blocked — correct. `.asp` = dead pre-Shopify URLs. |
+| **C. Collection param/facet duplicates** (`/collections/<h>?sort_by=relevance&q=...`) | 35 | Leave blocked — non-canonical (`Disallow: /collections/*sort_by*`) |
+| **D. Blog pagination** (`/blogs/<h>?page=2`) | 3 | Leave blocked — `noindex,follow` by design |
+| **E. Collection-scoped product duplicates** (`/collections/<x>/products/<handle>`) | 11 | No product action — canonical `/products/<handle>` already live/indexed |
+| **F. Policy URL** (`/policies/shipping-policy`) | 1 | Confirm 301 → `/pages/shipping-information` (live canonical) |
+| **G. Real canonical product pages** (`/products/<handle>`) | 53 | See §2 |
 | **Total** | **136** | |
 
-Reconciliation: 3 + 30 + 35 + 3 + 11 + 1 + 53 = **136**. Categories A–F (65 URLs) are intentional/duplicate and require no indexing change. Only category G carries decisions.
+Reconciliation: 3 + 30 + 35 + 3 + 11 + 1 + 53 = **136**. Categories A–F (83 URLs) are intentional/duplicate and correctly stay blocked. Only category G carries decisions.
 
 ---
 
-## 2. The 53 real product URLs — status and required action
+## 2. The 53 real product URLs — current status (verified in Shopify Admin, 2026-08-19)
 
-| Sub-group | Count | Disposition |
+| Group | Count | Disposition |
 |---|---:|---|
-| **Already LIVE / indexable** | 1 | `true-fitness-vc900-palisade-climber-w-emerge-led-console-remanufactured` — verified ACTIVE, inventory 9999, canonical live (2026-08-19). **Completed.** |
-| **Hidden — real SKUs, currently unpublished** | 50 | Escalate to Products team for publish/keep-hidden decision (see below). Cause = Shopify publication status = Hidden/Unlisted/Archived (NOT a theme noindex). |
-| **Non-real / not an index target** | 2 | `plyo-boxes-accessories-add-ons-553` (product-option object, not a standalone page) and `weight-stack-2` (non-existent). De-index / no action. |
+| **Already ACTIVE / indexable** | 8 | No action — live now (includes the VC900 fix). |
+| **Hidden — UNLISTED, in stock** | 19 | **Publish candidates** — Products to confirm & publish to Online Store. |
+| **Hidden — ARCHIVED, in stock** | 4 | **Un-archive + publish candidates** — Products decision. |
+| **Hidden — UNLISTED, out of stock** | 19 | Products decision — likely intentional OOS hold; publish only if sellable. |
+| **Hidden — ARCHIVED, out of stock** | 1 | Products decision — likely stays archived. |
+| **Option / add-on objects** | 2 | **Keep UNLISTED** — used in the post-Avis option process (options metaobject); not standalone pages. |
+| **Total** | **53** | |
 
-### 2a. The 50 hidden real products — snapshot from the 2026-04-29 crawl
+> **Note on the `hidden` tag:** several already-ACTIVE products still carry a stale `hidden`/`draft` tag. The tag does **not** control indexing — the Shopify **status** (ACTIVE vs UNLISTED/ARCHIVED) does. Tags can be cleaned up separately; they are not the cause of any block.
 
-- **31 hidden with stock on hand** (positive inventory in the crawl) — primary publish candidates.
-- **19 hidden and out of stock** (negative inventory = OOS hold) — likely intentional holds; publish only if the SKU is genuinely sellable.
-
-> **Caution — data drift.** The in-stock/OOS split above is from the April crawl. Live re-checks on 2026-08-19 show status has moved since then (examples in §3), so **each of the 50 must be re-confirmed in Shopify at execution time**, not actioned from the April sheet.
-
-Full 50-handle list is in Appendix A.
-
----
-
-## 3. Exact change made + current live status (verified in Shopify Admin, 2026-08-19)
-
-The seven handles humans flagged in the thread as "should be live," re-verified today:
-
-| Product (`/products/<handle>`) | Flagged as | Current status (2026-08-19) | Inventory | Disposition |
-|---|---|---|---:|---|
-| true-fitness-vc900-palisade-climber-w-emerge-led-console-remanufactured | should be live | **ACTIVE / indexable** | 9999 | ✅ Fixed & verified live |
-| french-fitness-rubber-grip-triceps-v-bar-new | hidden (via `/collections/.../products/`) | **ACTIVE** (canonical `/products/…`) | 9989 | ✅ Live — the flagged URL was just the non-canonical collection path |
-| french-fitness-chrome-multi-purpose-bar-new | hidden (via `/collections/.../products/`) | **ACTIVE** (canonical `/products/…`) | 9995 | ✅ Live — same as above |
-| precor-efx-5-17-elliptical-cross-trainer-remanufactured | hidden | **UNLISTED** (hidden) | 9999 (in stock) | ⚠️ Still hidden — strong publish candidate |
-| french-fitness-rack-rig-free-standing-lat-pulldown-low-row-new | hidden | **UNLISTED** (hidden) | −100 (OOS now) | ⚠️ Still hidden + now OOS — publish only if sellable |
-| french-fitness-20-24-30-3-in-1-wooden-plyo-box-new | hidden | **UNLISTED** (hidden) | −99 (OOS) | ⚠️ Still hidden + OOS — Products decision |
-| french-fitness-ff-hgtm-apu-aluminum-pulley-upgrade-new | hidden | **ARCHIVED** | 9999 | ⚠️ Archived (stronger than hidden) — un-archive + publish only if sellable |
-
-**Change actually made in this pass:** none to the live store or theme code. The VC900 Emerge fix was completed earlier (verified here). All other real changes are the Products-team publish decisions in §4, which are held pending sign-off.
+Progress since the April crawl: 8 of these are now live and status has drifted on several others, which is exactly why every row was re-verified today rather than actioned from the April sheet.
 
 ---
 
-## 4. Remaining valid product URLs still blocked — cause, owner, next checkpoint
+## 3. Corrected / already-live pages, and the flagged handles (verified 2026-08-19)
 
-| Item | Cause | Owner | Next checkpoint |
-|---|---|---|---|
-| 50 hidden real products (Appendix A) | Shopify publication status = Hidden / Unlisted / Archived. Not a theme/robots issue. | **Larianne (Products)** decides publish vs keep-hidden per SKU, honoring OOS holds and any Do-Not-Lead designations; Izza executes bulk status change if needed | Product-by-product decision list back in this thread |
-| Fresh SEMrush "after" crawl (before/after counts) | Requires SEMrush; can only run after publish decisions execute | **Larianne / Izza (SEMrush)** | Re-crawl + post before/after blocked count |
-| GSC URL Inspection + validation for corrected pages | Requires Google Search Console access | **Izza / Saliha (GSC)** | Inspect + "Request Indexing" for each newly-published URL; attach screenshots |
-| `/policies/shipping-policy` → `/pages/shipping-information` | Legacy policy path | Izza | Confirm 301 redirect is live |
+The seven handles humans flagged in the thread, re-verified today:
+
+| Handle | Current status | Inventory | Disposition |
+|---|---|---:|---|
+| true-fitness-vc900-…-emerge-led-…-remanufactured | ACTIVE / live | 9999 | ✅ Fixed & verified |
+| french-fitness-rubber-grip-triceps-v-bar-new | ACTIVE (canonical) | 9989 | ✅ Live — flagged URL was only the non-canonical collection path |
+| french-fitness-chrome-multi-purpose-bar-new | ACTIVE (canonical) | 9995 | ✅ Live — same |
+| precor-efx-5-17-elliptical-…-remanufactured | UNLISTED | 9999 (in stock) | ⚠️ Publish candidate |
+| french-fitness-rack-rig-free-standing-lat-pulldown-low-row-new | UNLISTED | −100 (OOS) | ⚠️ OOS hold — publish only if sellable |
+| french-fitness-20-24-30-3-in-1-wooden-plyo-box-new | UNLISTED | −99 (OOS) | ⚠️ OOS hold — Products decision |
+| french-fitness-ff-hgtm-apu-aluminum-pulley-upgrade-new | ARCHIVED | 9999 | ⚠️ Un-archive + publish candidate |
+
+**Changes made in this pass:** none to the live store or theme code. The VC900 fix was completed earlier (verified here). The publish/un-archive actions in §2 are merchandising decisions held for Products sign-off (§5).
 
 ---
 
-## 5. Before / after blocked counts (SEMrush)
+## 4. Before / after blocked counts (SEMrush)
 
 | | Blocked URLs | Source |
 |---|---:|---|
-| **Before** | 136 | SEMrush crawl, 2026-04-29 (source sheet) |
-| **After** | *pending re-crawl* | To be produced once §4 publish decisions execute |
+| **Before** | 136 | SEMrush crawl, 2026-04-29 |
+| **After** | *pending re-crawl* | Run once §5 publish decisions execute |
 
-> I have not fabricated an "after" number. A fresh SEMrush crawl is the only valid source and requires SEMrush access. Expected residual after cleanup ≈ the 65 intentional/duplicate blocks (categories A–F), which are correct and expected to remain "blocked."
+Expected residual after cleanup ≈ the 83 intentional/duplicate blocks (categories A–F), which are correct and should remain "blocked." No "after" number is stated here because a fresh SEMrush crawl is the only valid source (SEMrush access required — not fabricated).
 
 ---
 
-## 6. Google Search Console validation evidence
+## 5. Remaining blocked valid URLs — cause, owner, next checkpoint
 
-- **Completed:** True Fitness VC900 Palisade Climber w/Emerge LED Console (Remanufactured) — live/indexable confirmed in Shopify; GSC URL Inspection to be attached.
-- **Method for each newly-published URL:** GSC → URL Inspection → confirm "URL is on Google" or submit "Request Indexing" → capture screenshot → attach to this thread.
+| Item | Cause | Owner | Next checkpoint |
+|---|---|---|---|
+| 43 hidden real products (Appendix A) | Shopify publication status (Unlisted/Archived) — not theme/robots | **Larianne (Products)** decides publish/keep-hidden per SKU (honor OOS holds + any Do-Not-Lead); **Izza** bulk-executes status change | Per-SKU decision posted back here |
+| Fresh SEMrush "after" crawl | Requires SEMrush; run after publish decisions | **Larianne / Izza** | Post before/after blocked counts |
+| GSC URL Inspection + validation | Requires Google Search Console access | **Izza / Saliha** | Inspect + Request Indexing per newly-published URL; attach evidence |
+| `/policies/shipping-policy` 301 | Legacy policy path | **Izza** | Confirm redirect → `/pages/shipping-information` |
+
+---
+
+## 6. Google Search Console validation
+
+- **Completed:** True Fitness VC900 Palisade Climber w/Emerge LED Console (Remanufactured) — live/indexable confirmed in Shopify; GSC URL Inspection screenshot to follow.
+- **Method per newly-published URL:** GSC → URL Inspection → confirm "URL is on Google" or "Request Indexing" → capture screenshot → attach here.
 - GSC evidence for the rest is pending the publish decisions and requires GSC access (not fabricated here).
 
 ---
 
-## 7. Why this is not a GitHub/theme task (evidence from the theme audit)
+## 7. Why this is not a GitHub/theme task (theme audit)
 
-Theme code was audited (`snippets/head-meta.liquid`, `templates/robots.txt.liquid`, `sections/sitemap.liquid`). Findings:
+Audited `snippets/head-meta.liquid`, `templates/robots.txt.liquid`, `sections/sitemap.liquid`:
 
-- The theme applies `noindex` in exactly three intentional cases: paginated URLs (`?page=`), product `variant=` param URLs, and the internal `/search` template. All correct.
+- `noindex` is applied in exactly three intentional cases: paginated URLs (`?page=`), product `variant=` params, and the internal `/search` template. All correct.
 - Product canonical is always `<base>/products/<handle>` — so `/collections/<x>/products/<handle>` correctly consolidates to the clean product URL (explains category E).
 - `robots.txt` intentionally disallows system, sort/filter, `/search`, `/policies/`, and `/collections/*/products/` paths, and blocks AI **training** crawlers (GPTBot, ClaudeBot, CCBot, GrokBot, Google-Extended) while **allowing** search/retrieval bots (Googlebot, Bingbot, OAI-SearchBot, PerplexityBot, etc.). All intentional.
-- **There is no product-level "hidden"/"noindex" metafield in the theme.** A product being invisible to crawlers = it is Hidden/Unlisted/Archived in Shopify (excluded from sitemap + collection links), which is an Admin/merchandising setting, not code.
+- **There is no product-level "hidden"/"noindex" metafield in the theme.** A product being invisible to crawlers = it is Unlisted/Archived in Shopify (excluded from sitemap + collection links) — an Admin/merchandising setting, not code.
 
 Conclusion: no code change is required or recommended.
 
 ---
 
-## Appendix A — the 50 hidden real product handles (from 2026-04-29 crawl; re-verify live before actioning)
+## Appendix A — the 43 hidden real products (verified live 2026-08-19)
 
-**Hidden with stock (31):** body-solid-ob47b-olympic-curl-bar-new · bowflex-revolution-accessory-rack-remanufactured · french-fitness-48-chrome-olympic-bar-new · french-fitness-ff-hgtm-apu-aluminum-pulley-upgrade-new · french-fitness-ff-rr-ft-cave-apu-aluminum-pulley-upgrade-new · french-fitness-ff-ss-vs-apu-aluminum-pulley-upgrade-new · french-fitness-marin-hip-abductor-adductor-plate-loaded-new · french-fitness-monster-universal-storage-system-ff-mss-123-new · french-fitness-newport-chest-shoulder-multi-press-new · french-fitness-pvc-slam-ball-65-lb-new · french-fitness-pvc-slam-ball-75-lb-new · french-fitness-rack-rig-71-junction-bar-nameplate-crossmember-new · french-fitness-rack-rig-battle-rope-anchor-new · french-fitness-rack-rig-double-wall-ball-target-attachment-new · french-fitness-rack-rig-free-standing-lat-pulldown-low-row-new · french-fitness-rubber-coated-hex-dumbbell-set-2-5-22-5-lbs-5-pair-new · french-fitness-rubber-coated-hex-dumbbell-set-2-5-25-lbs-10-pair-new · french-fitness-rubber-coated-hex-dumbbell-set-5-100-lbs-new · french-fitness-rubber-coated-hex-dumbbell-set-5-50-lbs-new · french-fitness-rubber-coated-hex-dumbbell-set-55-75-lbs-new · french-fitness-standard-cast-iron-1-weight-plate-new · french-fitness-urethane-round-pro-style-dumbbell-v2-105-lbs-single-new · french-fitness-urethane-round-pro-style-dumbbell-v2-110-lbs-single-new · french-fitness-urethane-round-pro-style-dumbbell-v2-115-lbs-single-new · french-fitness-urethane-round-pro-style-dumbbell-v2-120-lbs-single-new · french-fitness-urethane-round-pro-style-dumbbell-v2-130-lbs-single-new · french-fitness-vail-torso-rotation-new · power-plate-my7-fit-stop-new · power-plate-pro6-new · precor-efx-5-17-elliptical-cross-trainer-remanufactured · precor-trm-835-treadmill-w-p31-console-remanufactured
+### Publish candidates — UNLISTED, in stock (19)
+body-solid-ob47b-olympic-curl-bar-new · bowflex-revolution-accessory-rack-remanufactured · french-fitness-48-chrome-olympic-bar-new · french-fitness-marin-hip-abductor-adductor-plate-loaded-new · french-fitness-pvc-slam-ball-65-lb-new · french-fitness-pvc-slam-ball-75-lb-new · french-fitness-rack-rig-71-junction-bar-nameplate-crossmember-new · french-fitness-rack-rig-battle-rope-anchor-new · french-fitness-rack-rig-double-wall-ball-target-attachment-new · french-fitness-standard-cast-iron-1-weight-plate-new · french-fitness-urethane-round-pro-style-dumbbell-v2-105-lbs-single-new · french-fitness-urethane-round-pro-style-dumbbell-v2-110-lbs-single-new · french-fitness-urethane-round-pro-style-dumbbell-v2-115-lbs-single-new · french-fitness-urethane-round-pro-style-dumbbell-v2-120-lbs-single-new · french-fitness-urethane-round-pro-style-dumbbell-v2-130-lbs-single-new · power-plate-my7-fit-stop-new · power-plate-pro6-new · precor-efx-5-17-elliptical-cross-trainer-remanufactured · precor-trm-835-treadmill-w-p31-console-remanufactured
 
-**Hidden and out of stock (19):** french-fitness-165-rack-rig-junction-bar-crossmember-v1-new · french-fitness-dscc-dual-stack-cable-cross-new · french-fitness-tahoe-seated-low-row-plate-loaded-new · french-fitness-x12-4-station-functional-trainer-home-gym-system-new · french-fitness-heavy-punching-bag-100-lb-new · precor-efx-5-21si-elliptical-cross-trainer-remanufactured · concept2-model-c-indoor-rower-w-pm2-console-remanufactured · french-fitness-20-24-30-3-in-1-wooden-plyo-box-new · french-fitness-diablo-chest-press-plate-loaded-new · french-fitness-monster-universal-storage-system-ff-mss-151-new · french-fitness-msc10-multi-function-squat-cage-smith-new · french-fitness-r30-3ds-monster-3d-dual-action-smith-rack-new · french-fitness-v2-heavy-punching-bag-100-lb-new · french-fitness-wall-mounted-mirror-functional-trainer-new · french-fitness-x9-functional-multi-gym-system-new · french-fitness-x9lp-functional-multi-gym-system-w-leg-press-new · precor-efx-5-21s-elliptical-cross-trainer-remanufactured · french-fitness-fsr10-multi-cable-functional-smith-rack-machine-new · french-fitness-x7-multi-home-gym-w-functional-arms-new
+### Un-archive + publish candidates — ARCHIVED, in stock (4)
+french-fitness-ff-hgtm-apu-aluminum-pulley-upgrade-new · french-fitness-ff-rr-ft-cave-apu-aluminum-pulley-upgrade-new · french-fitness-ff-ss-vs-apu-aluminum-pulley-upgrade-new · french-fitness-monster-universal-storage-system-ff-mss-123-new
+
+### Likely OOS hold — UNLISTED, out of stock (19)
+concept2-model-c-indoor-rower-w-pm2-console-remanufactured · french-fitness-165-rack-rig-junction-bar-crossmember-v1-new · french-fitness-20-24-30-3-in-1-wooden-plyo-box-new · french-fitness-diablo-chest-press-plate-loaded-new · french-fitness-dscc-dual-stack-cable-cross-new · french-fitness-fsr10-multi-cable-functional-smith-rack-machine-new · french-fitness-msc10-multi-function-squat-cage-smith-new · french-fitness-newport-chest-shoulder-multi-press-new · french-fitness-r30-3ds-monster-3d-dual-action-smith-rack-new · french-fitness-rack-rig-free-standing-lat-pulldown-low-row-new · french-fitness-tahoe-seated-low-row-plate-loaded-new · french-fitness-v2-heavy-punching-bag-100-lb-new · french-fitness-wall-mounted-mirror-functional-trainer-new · french-fitness-x12-4-station-functional-trainer-home-gym-system-new · french-fitness-x7-multi-home-gym-w-functional-arms-new · french-fitness-x9-functional-multi-gym-system-new · french-fitness-x9lp-functional-multi-gym-system-w-leg-press-new · precor-efx-5-21s-elliptical-cross-trainer-remanufactured · precor-efx-5-21si-elliptical-cross-trainer-remanufactured
+
+### ARCHIVED, out of stock (1)
+french-fitness-monster-universal-storage-system-ff-mss-151-new
+
+### Already ACTIVE / live — no action (8)
+french-fitness-heavy-punching-bag-100-lb-new · french-fitness-rubber-coated-hex-dumbbell-set-2-5-22-5-lbs-5-pair-new · french-fitness-rubber-coated-hex-dumbbell-set-2-5-25-lbs-10-pair-new · french-fitness-rubber-coated-hex-dumbbell-set-5-50-lbs-new · french-fitness-rubber-coated-hex-dumbbell-set-5-100-lbs-new · french-fitness-rubber-coated-hex-dumbbell-set-55-75-lbs-new · french-fitness-vail-torso-rotation-new · true-fitness-vc900-palisade-climber-w-emerge-led-console-remanufactured
+
+### Keep UNLISTED — option/add-on objects (2)
+plyo-boxes-accessories-add-ons-553 (product type "Avis-add-charge") · weight-stack-2 (product type "Option Category")
 
 ## Appendix B — the 11 collection-scoped duplicate paths (no product action; canonical `/products/<handle>` is live)
 
