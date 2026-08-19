@@ -173,17 +173,9 @@ document.querySelectorAll('.showroomVisit').forEach(function (btn) {
   });
 });
 
-// Auto-trigger from ?service= in the URL, so other pages can deep-link
-// straight to the form with the right enquiry type already chosen.
-//   ?service=showroom -> Showroom Visit / Video Walkthrough
-//   ?service=quote    -> Product Question / Sales Quote
+// NEW: Auto-trigger if ?service=showroom is in the URL
 const params = new URLSearchParams(window.location.search);
-const SERVICE_OPTIONS = {
-  showroom: 'Showroom Visit / Video Walkthrough',
-  quote: 'Product Question / Sales Quote'
-};
-const requestedService = SERVICE_OPTIONS[params.get('service')];
-if (requestedService) {
+if (params.get('service') === 'showroom') {
   
   function waitForForm(callback, maxAttempts = 20, interval = 300) {
     let attempts = 0;
@@ -204,7 +196,7 @@ if (requestedService) {
     setTimeout(function () {
       const select = document.querySelector('[id="140088-select-2"]');
       if (select) {
-        select.value = requestedService;
+        select.value = 'Showroom Visit / Video Walkthrough';
         select.dispatchEvent(new Event('change', { bubbles: true }));
         select.dispatchEvent(new Event('input', { bubbles: true }));
       }
