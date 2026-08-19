@@ -42,7 +42,24 @@
                 selected inline SVG, so design assets drop in with no code change.
               {%- endcomment -%}
               <span class="fssd-popular-categories__icon" aria-hidden="true">
-                {%- if block.settings.image != blank -%}
+                {%- if block.settings.image_url != blank -%}
+                  {%- comment -%}
+                    Raw Shopify CDN URL — Tim-approved art that is not in
+                    Content > Files, so an image_picker cannot bind it. The
+                    image_url filter does not apply to a raw URL, so retina is
+                    handled with the CDN's own &width= param (URLs already carry
+                    ?v=, so append with &). Decorative: alt stays empty.
+                  {%- endcomment -%}
+                  <img
+                    src="{{ block.settings.image_url }}&width=168"
+                    srcset="{{ block.settings.image_url }}&width=112 1x, {{ block.settings.image_url }}&width=168 2x"
+                    alt=""
+                    width="56"
+                    height="56"
+                    loading="lazy"
+                    decoding="async"
+                  >
+                {%- elsif block.settings.image != blank -%}
                   <img
                     src="{{ block.settings.image | image_url: width: 168 }}"
                     srcset="
@@ -271,10 +288,16 @@
           "label": "Link URL"
         },
         {
+          "type": "text",
+          "id": "image_url",
+          "label": "Image URL (raw CDN, optional)",
+          "info": "Overrides the icon. Precedence: Image URL, then Card Image, then icon. Use for a Shopify CDN URL not stored in Content > Files. Retina via the CDN &width= param; alt stays empty (decorative)."
+        },
+        {
           "type": "select",
           "id": "icon",
           "label": "Icon",
-          "info": "Decorative inline SVG. Overridden if a Card Image is uploaded.",
+          "info": "Decorative inline SVG. Overridden by an Image URL or an uploaded Card Image.",
           "options": [
             { "value": "treadmill", "label": "Treadmill" },
             { "value": "bike", "label": "Exercise bike" },
@@ -305,6 +328,7 @@
             "subtitle": "Commercial & performance cardio",
             "category_handle": "treadmills",
             "link": "/collections/treadmills",
+            "image_url": "https://cdn.shopify.com/s/files/1/0884/2012/2940/collections/image_16.png?v=1739775592",
             "icon": "treadmill"
           }
         },
@@ -315,6 +339,7 @@
             "subtitle": "Upright, recumbent & indoor cycles",
             "category_handle": "exercise-bikes",
             "link": "/collections/exercise-bikes",
+            "image_url": "https://cdn.shopify.com/s/files/1/0884/2012/2940/collections/image_bd424f47-0660-4439-ba5c-48a4560521d5.png?v=1734520137",
             "icon": "bike"
           }
         },
@@ -355,6 +380,7 @@
             "subtitle": "Dumbbells, plates, bars & storage",
             "category_handle": "free-weights",
             "link": "/collections/free-weights",
+            "image_url": "https://cdn.shopify.com/s/files/1/0884/2012/2940/files/FF-RCHD5-50-main.webp?v=1773521358",
             "icon": "barbell"
           }
         }
