@@ -177,7 +177,7 @@ Rule set applied (records reconcile to the 4,542 total):
 
 | Disposition | Count | Definition / rule |
 |---|---|---|
-| **KEEP** | 4,455 | Referenced by ≥1 product and not a merge/hold case. (4,457 referenced − 2 "both-live" primaries counted under MERGE.) |
+| **KEEP** | 4,453 | Referenced by ≥1 product and not a merge case. (4,457 referenced − 4 records belonging to the two both-live duplicate groups, counted under MERGE.) |
 | **KEEP (shared)** | (subset of above, 10) | Referenced by 2 products — flagged separately in §5; must not be archived. |
 | **MERGE CANDIDATE** | 4 | The 2 "both-live" duplicate groups × 2 records (Push/Pull Weight Sled, Versaclimber ALXP). Consolidate content, repoint one product, then archive the emptied record. |
 | **ARCHIVE CANDIDATE** | 21 | 17 orphan duplicate-twins + 4 near-empty standalone orphans (incl. `test`). Low risk: 0 products, content ≤ its kept twin. |
