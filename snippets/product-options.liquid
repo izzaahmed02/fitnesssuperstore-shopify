@@ -87,6 +87,29 @@
         assign color_title = ''
         assign color_group = ''
         assign category_title_downcase = category.title | downcase
+        comment
+          The Assembly & Room of Choice group is positioned and numbered
+          differently from every other option group, so it has to be identified
+          by title. Matching the full title exactly is what broke when the group
+          was renamed during the ROC revisions - every comparison failed at once
+          and the group silently lost its ordering and its accordion renderer -
+          so match on fragments instead.
+
+          'room of choice' alone is too broad: the turf flooring rolls
+          (FF-AGSL / -V2 / -V3) carry a separate "Delivery / Room of Choice /
+          Flooring Installation Options" group that is deliberately a plain
+          Select in its natural position, and matching it here would pin and
+          renumber it as the assembly group. Require 'assembly' as well, and
+          exclude flooring installation explicitly.
+        endcomment
+        assign is_assembly_roc = false
+        if category_title_downcase contains 'room of choice'
+          if category_title_downcase contains 'assembly'
+            unless category_title_downcase contains 'flooring'
+              assign is_assembly_roc = true
+            endunless
+          endif
+        endif
         assign hidden_option = false
 
         for product_option in category.product_options.value
@@ -109,12 +132,12 @@
         endfor
         unless category.hide_option
           unless hidden_option
-            if color_title == '' and category_title_downcase != 'warranty' and category_title_downcase != 'assembly & room of choice installation needed?'
+            if color_title == '' and category_title_downcase != 'warranty' and is_assembly_roc == false
               assign index = index | plus: 1
             endif
             if category_title_downcase == 'warranty'
               assign display_number = 1
-            elsif category_title_downcase == 'assembly & room of choice installation needed?'
+            elsif is_assembly_roc
               assign display_number = visible_total
             else
               assign other_display_counter = other_display_counter | plus: 1
@@ -135,7 +158,7 @@
       <div
         class="product-option__item"
         {% unless category.hide_option %}
-          style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
+          style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif is_assembly_roc %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
         {% endunless %}
       >
         {% if category.title != blank %}

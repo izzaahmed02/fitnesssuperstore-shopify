@@ -86,6 +86,21 @@
           assign color_title = ''
           assign color_group = ''
           assign category_title_downcase = category.title | downcase
+          comment
+            Same title-matching rules as snippets/product-options.liquid, which
+            carries the full explanation: match fragments rather than the exact
+            group title so a rename does not silently break the ordering, but
+            require 'assembly' and exclude 'flooring' so the turf rolls'
+            separate flooring installation group is left alone.
+          endcomment
+          assign is_assembly_roc = false
+          if category_title_downcase contains 'room of choice'
+            if category_title_downcase contains 'assembly'
+              unless category_title_downcase contains 'flooring'
+                assign is_assembly_roc = true
+              endunless
+            endif
+          endif
           assign hidden_option = false
           for product_option in category.product_options.value
             assign title = product_option.product_option_title | downcase
@@ -107,12 +122,12 @@
           endfor
           unless category.hide_option
             unless hidden_option
-              if color_title == '' and category_title_downcase != 'warranty' and category_title_downcase != 'assembly & room of choice installation needed?'
+              if color_title == '' and category_title_downcase != 'warranty' and is_assembly_roc == false
                 assign index = index | plus: 1
               endif
               if category_title_downcase == 'warranty'
                 assign display_number = 1
-              elsif category_title_downcase == 'assembly & room of choice installation needed?'
+              elsif is_assembly_roc
                 assign display_number = visible_total
               else
                 assign other_display_counter = other_display_counter | plus: 1
@@ -132,7 +147,7 @@
         <div
           class="product-option__item"
           {% unless category.hide_option %}
-            style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif category_title_downcase == 'assembly & room of choice installation needed?' %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
+            style="order:  {% if color_title != blank %}{{ color_index }}{% elsif category_title_downcase == 'warranty' %}{{ warranty_index }}{% elsif is_assembly_roc %}{{ assambly_index }}{% elsif quantity_option %}0{% else %}{{ index }}{% endif %};"
           {% endunless %}
         >
           {% if category.title != blank %}
