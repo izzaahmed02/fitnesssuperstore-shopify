@@ -26,6 +26,25 @@ inside the removed sections, so no dead asset files remain.
 
 ---
 
+## Approved assets (from Larianne's asset sheet)
+
+Source: Recent Gym Builds / Customer Installations sheet. All four rows marked
+"Used in a blog post - approved for public use." Homepage uses three (Northville held per Tim).
+
+| Card | Approved asset file | Destination |
+|------|--------------------|-------------|
+| G4 Fitness — Caddo Mills, TX | `Image_1_9fb6557d-4039-41df-bd65-3d81d14ef3c6.jpg` | `/blogs/case-studies/case-study-g4-fitness` |
+| Forge CHS — Charleston, SC | `IMG_9312.webp` | `/blogs/case-studies/forge-chs-charleston-sc` |
+| Revitalize Fitness — Elizabeth City, NC | `Image_11.jpg` | `/blogs/case-studies/case-study-revitalized-fitness` |
+| Northville home gym (**HELD** from homepage) | `image2_5_a94e0257-1985-4580-b2b4-75db13e5f079.jpg` | `/blogs/case-studies/private-home-gym-northville-mi` |
+
+Place these three files in the section's image blocks via the theme editor (image-picker),
+in the order above.
+
+**Caption source note (content-QA flag):** the section uses the captions from Tim's Aug 17
+decision email (with sq. ft. figures), which differ from the draft captions in the asset
+sheet. Treating Tim's email as authoritative. Please confirm this is intended before publish.
+
 ## Content QA
 
 - [x] Heading is **"Recent Gym Builds"** (not "Customer Installations"), per Tim's decision.
