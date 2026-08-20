@@ -222,7 +222,7 @@
 {% endif %}
 
 {% comment %} {% render 'custom-breadcrumbs', with product: product %} {% endcomment %}
-{% render 'metaobjects-breadcrumbs', with product: product %}
+{% render 'metaobjects-breadcrumbs', product: product %}
 
 
 {% assign default_camera_orbit = '24deg 74deg 10m' %}
@@ -551,8 +551,9 @@
                 </button>
               {%- endif -%}
 
-              {%- assign remaining_images = image_media | drop: 3 -%}
-              {%- if remaining_images.size > 0 -%}
+              {%- assign remaining_count = image_media.size | minus: image_limit -%}
+              {%- if remaining_count > 0 -%}
+                {%- assign remaining_images = image_media | slice: image_limit, remaining_count -%}
                 <button
                   class="thumbnail-btn{% if remaining_images.first.alt contains '3D' or remaining_images.first.alt contains '3d' %} threeD-image{% endif %}"
                   data-media-id="{{ remaining_images.first.id }}"

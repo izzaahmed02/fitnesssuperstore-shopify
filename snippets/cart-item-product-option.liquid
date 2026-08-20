@@ -197,10 +197,12 @@
         <span class="product-options__swatch product-options__swatch--single">
           {% for variant in product_option.product_option_variants.value %}
             {% comment %} {% if variant.title != 'No Thanks' %} {% endcomment %}
+              {%- comment -%} Filters are ignored on render arguments, so split first. {%- endcomment -%}
+              {%- assign default_values_list = default_values | split: ',' -%}
               {%
                 render 'cart-item-option-variant',
                 variant: variant,
-                default_values: default_values | split: ',',
+                default_values: default_values_list,
                 product_option: product_option,
                 hide_quantity: product_option.hide_quantity,
                 line_item: line_item,

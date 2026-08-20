@@ -5,8 +5,8 @@
 {% endcomment %}
 
 {% if videos != blank %}
-  {%- assign publisher_logo_url = settings.logo | image_url: width: 800 -%}
-  {%- assign fallback_logo_url = 'logo.png' | asset_url -%}
+  {%- capture publisher_logo_url -%}{%- render 'seo-logo-url' -%}{%- endcapture -%}
+  {%- assign publisher_logo_url = publisher_logo_url | strip -%}
 
   <script type="application/ld+json">
   {
@@ -62,7 +62,7 @@
             "name": {{ shop.name | json }},
             "logo": {
               "@type": "ImageObject",
-              "url": {% if publisher_logo_url contains 'https://' or publisher_logo_url contains 'http://' %}{{ publisher_logo_url | json }}{% elsif publisher_logo_url != blank %}{{ publisher_logo_url | prepend: 'https:' | json }}{% elsif fallback_logo_url contains 'https://' or fallback_logo_url contains 'http://' %}{{ fallback_logo_url | json }}{% else %}{{ fallback_logo_url | prepend: 'https:' | json }}{% endif %}
+              "url": {{ publisher_logo_url | json }}
             }
           }
         }{% unless forloop.last %},{% endunless %}

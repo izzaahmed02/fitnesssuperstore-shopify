@@ -1,3 +1,5 @@
+{%- capture collection_logo_url -%}{%- render 'seo-logo-url' -%}{%- endcapture -%}
+{%- assign collection_logo_url = collection_logo_url | strip -%}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -102,7 +104,7 @@
         assign video_content_url = video.content_url.value | default: video.content_url | default: video.video_url.value | default: video.video_url
         assign video_embed_url = video.embed_url.value | default: video.embed_url | default: video.video_url.value | default: video.video_url
 
-        assign publisher_logo_url = settings.logo | image_url: width: 800
+        assign publisher_logo_url = collection_logo_url
       -%}
       {
         "@type": "VideoObject",
@@ -131,10 +133,10 @@
         "publisher": {
           "@type": "Organization",
           "name": {{ shop.name | json }},
-          {% if settings.logo %}
+          {% if publisher_logo_url != blank %}
           "logo": {
             "@type": "ImageObject",
-            "url": {% if publisher_logo_url contains 'https://' or publisher_logo_url contains 'http://' %}{{ publisher_logo_url | json }}{% else %}{{ publisher_logo_url | prepend: 'https:' | json }}{% endif %}
+            "url": {{ publisher_logo_url | json }}
           }
           {% else %}
           "logo": {
@@ -154,9 +156,8 @@
     "url": {{ request.origin | json }},
     "telephone": {{ shop.phone | default: '925-215-2927' | json }},
     "email": "sales@fitnesssuperstore.com",
-    {% if settings.logo %}
-      {%- assign org_logo_url = settings.logo | image_url: width: 800 -%}
-      "image": {% if org_logo_url contains 'https://' or org_logo_url contains 'http://' %}{{ org_logo_url | json }}{% else %}{{ org_logo_url | prepend: 'https:' | json }}{% endif %},
+    {% if collection_logo_url != blank %}
+      "image": {{ collection_logo_url | json }},
     {% endif %}
     "address": {
       "@type": "PostalAddress",

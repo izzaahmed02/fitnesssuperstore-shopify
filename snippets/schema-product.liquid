@@ -1,6 +1,6 @@
 {%- assign domain_origin = request.origin -%}
-{%- assign seller_logo_url = settings.logo | image_url: width: 800 -%}
-{%- assign fallback_logo_url = 'logo.png' | asset_url -%}
+{%- capture seller_logo_url -%}{%- render 'seo-logo-url' -%}{%- endcapture -%}
+{%- assign seller_logo_url = seller_logo_url | strip -%}
 {%- capture search_target -%}{{ request.origin }}/search?q={search_term_string}{%- endcapture -%}
 
 <script type="application/ld+json">
@@ -41,7 +41,7 @@
             {{ product_image_url | prepend: 'https:' | json }}
           {% endif %}{% unless forloop.last %},{% endunless %}
         {% else %}
-          {%- assign placeholder_url = 'product-placeholder.jpg' | asset_url | split: '?' | first -%}
+          {%- assign placeholder_url = settings.favicon | image_url: width: 512 -%}
           {% if placeholder_url contains 'https://' or placeholder_url contains 'http://' %}
             {{ placeholder_url | json }}
           {% else %}
@@ -115,7 +115,7 @@
           "@id": {{ request.origin | append: '#seller' | json }},
           "name": {{ shop.name | json }},
           "url": {{ request.origin | json }},
-          "logo": {% if seller_logo_url contains 'https://' or seller_logo_url contains 'http://' %}{{ seller_logo_url | json }}{% elsif seller_logo_url != blank %}{{ seller_logo_url | prepend: 'https:' | json }}{% elsif fallback_logo_url contains 'https://' or fallback_logo_url contains 'http://' %}{{ fallback_logo_url | json }}{% else %}{{ fallback_logo_url | prepend: 'https:' | json }}{% endif %},
+          {% if seller_logo_url != blank %}"logo": {{ seller_logo_url | json }},{% endif %}
           "description": {{ shop.description | default: 'Premium fitness equipment at competitive prices.' | strip_html | strip_newlines | strip | replace: '&amp;', '&' | json }},
           "founder": "Timothy French",
           "foundingDate": "2010",
@@ -188,7 +188,7 @@
               "@id": {{ request.origin | append: '#seller' | json }},
               "name": {{ shop.name | json }},
               "url": {{ request.origin | json }},
-              "logo": {% if seller_logo_url contains 'https://' or seller_logo_url contains 'http://' %}{{ seller_logo_url | json }}{% elsif seller_logo_url != blank %}{{ seller_logo_url | prepend: 'https:' | json }}{% elsif fallback_logo_url contains 'https://' or fallback_logo_url contains 'http://' %}{{ fallback_logo_url | json }}{% else %}{{ fallback_logo_url | prepend: 'https:' | json }}{% endif %},
+              {% if seller_logo_url != blank %}"logo": {{ seller_logo_url | json }},{% endif %}
               "description": {{ shop.description | default: 'Premium fitness equipment at competitive prices.' | strip_html | strip_newlines | strip | replace: '&amp;', '&' | json }},
               "founder": "Timothy French",
               "foundingDate": "2010",
@@ -253,7 +253,7 @@
             endif
 
             if video_thumbnail == blank
-              assign video_thumbnail = 'product-placeholder.jpg' | asset_url | split: '?' | first
+              assign video_thumbnail = settings.favicon | image_url: width: 512
             endif
 
             assign video_upload_date = video.upload_date.value | default: video.upload_date | default: product.published_at | default: product.created_at | default: '2026-01-01T00:00:00Z'
@@ -263,7 +263,7 @@
             assign video_content_url = video.content_url.value | default: video.content_url
             assign video_embed_url = video.embed_url.value | default: video.embed_url | default: video.video_url.value | default: video.video_url
 
-            assign publisher_logo_url = settings.logo | image_url: width: 800
+            assign publisher_logo_url = seller_logo_url
           -%}
           {
             "@type": "VideoObject",
@@ -292,7 +292,7 @@
               "name": {{ shop.name | json }},
               "logo": {
                 "@type": "ImageObject",
-                "url": {% if publisher_logo_url contains 'https://' or publisher_logo_url contains 'http://' %}{{ publisher_logo_url | json }}{% elsif publisher_logo_url != blank %}{{ publisher_logo_url | prepend: 'https:' | json }}{% elsif fallback_logo_url contains 'https://' or fallback_logo_url contains 'http://' %}{{ fallback_logo_url | json }}{% else %}{{ fallback_logo_url | prepend: 'https:' | json }}{% endif %}
+                "url": {{ publisher_logo_url | json }}
               }
             }
           }{% unless forloop.last %},{% endunless %}
