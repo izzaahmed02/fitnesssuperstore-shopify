@@ -87,14 +87,19 @@
           assign color_group = ''
           assign category_title_downcase = category.title | downcase
           comment
-            Same title-matching caveat as snippets/product-options.liquid: the
-            Assembly & Room of Choice group is ordered and numbered by title, and
-            it has been renamed more than once while ROC methods and pricing were
-            revised, so match on 'room of choice' instead of the full title.
+            Same title-matching rules as snippets/product-options.liquid, which
+            carries the full explanation: match fragments rather than the exact
+            group title so a rename does not silently break the ordering, but
+            require 'assembly' and exclude 'flooring' so the turf rolls'
+            separate flooring installation group is left alone.
           endcomment
           assign is_assembly_roc = false
           if category_title_downcase contains 'room of choice'
-            assign is_assembly_roc = true
+            if category_title_downcase contains 'assembly'
+              unless category_title_downcase contains 'flooring'
+                assign is_assembly_roc = true
+              endunless
+            endif
           endif
           assign hidden_option = false
           for product_option in category.product_options.value

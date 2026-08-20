@@ -90,15 +90,25 @@
         comment
           The Assembly & Room of Choice group is positioned and numbered
           differently from every other option group, so it has to be identified
-          by title. Match on 'room of choice' rather than the full title: the
-          group has been renamed more than once while ROC methods and pricing
-          were revised, and an exact-title comparison silently stopped
-          recognising it - which reads on the PDP as the ROC option losing its
-          ordering and falling back to a plain dropdown.
+          by title. Matching the full title exactly is what broke when the group
+          was renamed during the ROC revisions - every comparison failed at once
+          and the group silently lost its ordering and its accordion renderer -
+          so match on fragments instead.
+
+          'room of choice' alone is too broad: the turf flooring rolls
+          (FF-AGSL / -V2 / -V3) carry a separate "Delivery / Room of Choice /
+          Flooring Installation Options" group that is deliberately a plain
+          Select in its natural position, and matching it here would pin and
+          renumber it as the assembly group. Require 'assembly' as well, and
+          exclude flooring installation explicitly.
         endcomment
         assign is_assembly_roc = false
         if category_title_downcase contains 'room of choice'
-          assign is_assembly_roc = true
+          if category_title_downcase contains 'assembly'
+            unless category_title_downcase contains 'flooring'
+              assign is_assembly_roc = true
+            endunless
+          endif
         endif
         assign hidden_option = false
 
