@@ -316,7 +316,9 @@
   font: inherit;
   border: 1px solid #e5e5e5;
   border-radius: 8px;
-  background: #fff;
+  /* No fill of its own (Figma "dropdowns inputs V1"): the control sits on the
+     buy box's #faf9f9 panel showing only its border, not as a white card. */
+  background-color: transparent;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -470,9 +472,16 @@
 }
 
 @media screen and (max-width: 749px) {
-  /* Centred over a scrim, per the phone frame: 343 wide at 375 (16px margins) and
-     centred on both axes. Fixed rather than absolute so the tab panel's overflow
-     cannot clip it. */
+  /* Centred over a scrim, per the phone frame: 343 wide at 375 (16px margins),
+     centred on both axes, 16px radius white card. Fixed rather than absolute so
+     the tab panel's overflow cannot clip it.
+
+     The scrim is a 100vmax spread shadow, NOT a fixed ::before: the panel's
+     translate() makes it the containing block for fixed descendants, which
+     shrank a pseudo-element scrim to the panel's own box — and at z-index -1 it
+     painted over the panel's background, greying the card out. A spread shadow
+     covers the viewport from any position, follows the border radius, and has
+     no stacking context to fight. */
   .pdp-new__popover-panel {
     position: fixed;
     top: 50%;
@@ -480,14 +489,8 @@
     transform: translate(-50%, -50%);
     width: calc(100vw - 32px);
     z-index: 50;
-  }
-
-  .pdp-new__popover-panel::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background: rgba(0, 0, 0, 0.31);
+    border-radius: 16px;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.3);
   }
 
   /* 20px box in the 24px title row, 8px after the heading — sized and placed by
@@ -521,13 +524,25 @@
 .pdp-new__addons .tabs__buttons {
   display: flex;
   gap: 0;
+  /* When labels outgrow the row the row scrolls and the RIGHTMOST tab is cut
+     (Figma: the 458px nav overflows the 375 frame), instead of every tab being
+     squeezed to an equal share and long labels clipping at the left edge. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pdp-new__tabs .tabs__buttons::-webkit-scrollbar,
+.pdp-new__addons .tabs__buttons::-webkit-scrollbar {
+  display: none;
 }
 
 .pdp-new__tabs .tab-btn,
 .pdp-new__addons .tab-btn {
   flex: 1;
   width: auto;
-  min-width: 0;
+  /* max-content, not 0: a tab may grow to share leftover row width but never
+     shrink below its own label. */
+  min-width: max-content;
   position: relative;
   padding: 12px 8px 10px;
   font-family: 'Lato', sans-serif;
@@ -698,6 +713,30 @@
   border-radius: 4px;
   font-size: 13px;
   line-height: 18px;
+}
+
+/* Group headings in a rich-text tab (Exercises: "<p><strong>Label:</strong></p>
+   then its <ul>"). A paragraph directly followed by a list is a heading, per the
+   Figma tab (19:19073): bold 14/20 charcoal, list 4px below via the ul's own
+   margin. Everything the callout rule above sets is undone here, so only a
+   trailing paragraph without a list keeps the note treatment. */
+.pdp-new__tabs .tabs__item .metafield-rich_text_field p:has(+ ul) {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  color: #23232b;
+}
+
+/* Figma puts 8px between a group's list and the next heading; the list already
+   carries 12px below (4px last-item margin + 8px ul margin), so a heading that
+   follows a list pulls back the difference. */
+.pdp-new__tabs .tabs__item .metafield-rich_text_field ul + p:has(+ ul) {
+  margin-top: -4px;
 }
 
 /* ---- Price / financing ---- */
@@ -1583,11 +1622,12 @@
 }
 
 @media screen and (max-width: 989px) {
-  /* Flush list, no card chrome — per wireframe node 19:22561 */
+  /* Flush list, no card chrome — per wireframe node 19:22561. The 16px sides
+     are the block's own gutter; the page root is full-bleed. */
   .pdp-new__content {
     border: none;
     border-radius: 0;
-    padding: 0;
+    padding: 0 16px;
     margin-top: 16px;
   }
 
@@ -1744,17 +1784,72 @@
 
 /* ============ Mobile ============ */
 @media screen and (max-width: 989px) {
-  /* 16px side gutter, matching the live PDP's mobile breadcrumb inset and the
-     wireframe. The card keeps a gutter rather than going full-bleed because its
-     border would otherwise touch the screen edge. */
+  /* Full-bleed: the page owns no side gutter, per the Figma phone frames (the
+     buy-box panel runs edge to edge and each block carries its own 16px inset —
+     .pdp-new__info, .pdp-new__media-card, .pdp-new__content). */
   .pdp-new {
-    padding: 0 16px 24px;
+    padding: 0 0 24px;
   }
 
   /* Figma phone frame: blocks inside the buy box sit 24px apart, not the 32 the
      desktop frame uses. The title/rating pullback tracks that. */
   .pdp-new__info {
     gap: 24px;
+  }
+
+  /* Phone block order (Figma 19:30777) differs from the desktop frame: price
+     and the Delivery & Installation dropdown come straight after the variant
+     selections, and the info tabs drop to just above Add to Cart. Reordered
+     with flex `order` so the DOM (and desktop) stay untouched. Every child
+     gets a value — an unlisted block would otherwise default to 0 and jump to
+     the top. The configurator sits under the price, above the Delivery &
+     Installation dropdown (Ayyaz, Aug 20). */
+  .pdp-new__info > * {
+    order: 10;
+  }
+
+  .pdp-new__info > .pdp-new__title {
+    order: 1;
+  }
+
+  .pdp-new__info > .pdp-new__meta-row {
+    order: 2;
+  }
+
+  .pdp-new__info > .pdp-new__variant-picker {
+    order: 3;
+  }
+
+  .pdp-new__info > .pdp-new__payments {
+    order: 4;
+  }
+
+  .pdp-new__info > .pdp-new__configurator {
+    order: 5;
+  }
+
+  .pdp-new__info > [id^="PdpNewDeliveryBlock"] {
+    order: 6;
+  }
+
+  .pdp-new__info > .pdp-new__tabs {
+    order: 7;
+  }
+
+  .pdp-new__info > .pdp-new__buy {
+    order: 8;
+  }
+
+  .pdp-new__info > [id^="PdpNewAddons"] {
+    order: 9;
+  }
+
+  /* Both swap-target wrappers render unconditionally so variant-change sync
+     always finds them; when their product has no content they are empty flex
+     items and would each add a phantom 24px column gap. */
+  .pdp-new__info > [id^="PdpNewDeliveryBlock"]:empty,
+  .pdp-new__info > [id^="PdpNewAddons"]:empty {
+    display: none;
   }
 
   .pdp-new__meta-row {
@@ -1765,13 +1860,6 @@
      cards at 104), where desktop uses 16. */
   .pdp-new__addons .tabs__content {
     padding-top: 12px;
-  }
-
-  /* .customBreadcrumbs adds its own 16px on mobile; zero it so the breadcrumb
-     aligns with the content instead of doubling to 32px. */
-  .pdp-new__breadcrumbs .customBreadcrumbs {
-    padding-left: 0;
-    padding-right: 0;
   }
 
   /* Customization CTAs stack full-width on phone (Figma): primary, outline, then
@@ -1796,7 +1884,11 @@
     grid-template-columns: 1fr;
   }
 
+  /* Edge-to-edge image box (Figma 19:30777: model-viewer 375x375 at x=0). Only
+     the bottom keeps padding — 16px under the thumb strip, the outer frame's
+     471 - 455. The strip below carries its own 16px side inset. */
   .pdp-new__media-card {
+    padding: 0 0 16px;
     border-right: none;
     border-bottom: 1px solid #e5e5e5;
   }
@@ -1805,12 +1897,13 @@
      thumbnail strip beneath it (Figma node 19:22082). The desktop
      <product-gallery> stays hidden on mobile (it's inline/collapsed <990px, as
      on the live PDP). */
-  /* Keep the swipe-carousel arrows under the sticky header (z-index 3):
-     custom-product-gallery.css gives them 999/99. Scoped override — that file is
-     shared with the live PDP. */
+  /* No arrows over the image: the Figma phone gallery (19:30777) is swipe-only —
+     its node tree has no arrow at all; the thumbnail strip is the position
+     indicator. The arrows come from custom-product-gallery.css, shared with the
+     live PDP, hence the scoped hide. !important matches theirs. */
   .pdp-new mobile-gallery .slick-prev.slick-arrow,
   .pdp-new mobile-gallery .slick-next.slick-arrow {
-    z-index: 2;
+    display: none !important;
   }
 
   /* The dots container must stay in the DOM (product-mobile-gallery.js refuses
@@ -1820,12 +1913,24 @@
     display: none;
   }
 
+  /* slick-theme gives every .slick-slider margin-bottom: 30px (dots clearance).
+     With the dots hidden it just pushes the thumbnail strip 38px under the image
+     instead of the Figma 8 (19:30777: image ends y=375, strip at 383). */
+  .pdp-new mobile-gallery .mobile-gallery-slider.slick-slider {
+    margin-bottom: 0;
+  }
+
   /* .pdp-new prefix: the strip also carries the theme's .only-mobile utility,
-     whose mobile `display: block` would otherwise defeat the flex row. */
+     whose mobile `display: block` would otherwise defeat the flex row.
+     The card is full-bleed on phone, so the strip needs no negative margin: it
+     runs to the screen edge itself, cutting the fifth thumb as the scroll
+     affordance (Figma 19:30777), with its own 16px side inset. 8px above,
+     matching the frame (image ends y=375, strip at 383). */
   .pdp-new .pdp-new__mobile-thumbs {
     display: flex;
-    gap: 12px;
-    margin-top: 12px;
+    gap: 8px;
+    margin: 8px 0 0;
+    padding: 0 16px;
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
@@ -1835,11 +1940,12 @@
     display: none;
   }
 
-  /* Exactly 4 thumbs fill the strip width (Figma); the rest scroll
-     horizontally, auto-centered on the active slide by pdp-new.js. */
+  /* Fixed 72x72 on an 80px pitch (Figma 19:30777: buttons at x=16, 96, 176,
+     256...), NOT a fluid quarter-width: the overflow cut is what signals more
+     images. pdp-new.js auto-centers the strip on the active slide. */
   .pdp-new__mobile-thumb {
     position: relative;
-    flex: 0 0 calc((100% - 36px) / 4);
+    flex: 0 0 72px;
     aspect-ratio: 1 / 1;
     height: auto;
     padding: 0;
@@ -1948,7 +2054,7 @@
   }
 
   .pdp-new__content {
-    padding: 0;
+    padding: 0 16px;
   }
 
   .pdp-new__anchor-nav {
@@ -2055,6 +2161,10 @@ body.pdp-new-sticky-open {
 }
 
 .pdp-new__sticky-atc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   height: 44px;
   padding: 0 32px;
   font-weight: 700;
@@ -2065,44 +2175,80 @@ body.pdp-new-sticky-open {
   cursor: pointer;
 }
 
-@media screen and (max-width: 989px) {
-  .pdp-new__sticky-title {
-    display: none;
-  }
+/* Quote link is part of the PHONE sticky panel only (Figma 19:30746); the
+   desktop bar stays a single compact row. */
+.pdp-new__sticky-quote {
+  display: none;
+}
 
-  /* Tighter metrics so price + CTA still fit once the chat gap is reserved */
+@media screen and (max-width: 989px) {
+  /* Stacked panel per the Figma phone frame (ATC sticky panel 19:30746, 375x172):
+     title + price on one row, full-width Add to Cart, quote link centred under
+     it. 16px padding; details row to buttons is 12px (details end y=64, Buttons
+     at 76). */
   .pdp-new__sticky-inner {
-    padding: 10px 16px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding: 16px;
     gap: 12px;
   }
 
+  /* The photo variant is hidden in the Figma component. */
   .pdp-new__sticky-inner img {
-    width: 40px;
-    height: 40px;
+    display: none;
   }
 
+  /* Two-line wrapping title, 16/24 bold — not the desktop's single ellipsised
+     line. The price column takes the rest of the row. */
+  .pdp-new__sticky-title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: normal;
+    text-overflow: clip;
+    overflow: hidden;
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  /* Figma shows the bare figure, top-aligned with the title. The value is still
+     the synced configuration total (Tim: sticky price must track it) — only the
+     "Total" caption goes. */
   .pdp-new__sticky-label {
-    font-size: 11px;
-    line-height: 14px;
+    display: none;
   }
 
-  /* Push the total and the CTA to the right edge, thumbnail left. On desktop
-     .pdp-new__sticky-title carries flex:1 and does this; it is hidden here, so
-     without an explicit auto margin everything bunches up on the left. */
   .pdp-new__sticky-total {
-    margin-left: auto;
+    flex: 0 0 auto;
   }
 
   .pdp-new .pdp-new__sticky-price,
   .pdp-new .pdp-new__sticky-price.pr_custom_price {
     font-size: 16px;
+    line-height: 24px;
     white-space: nowrap;
   }
 
   .pdp-new__sticky-atc {
-    flex: 0 0 auto;
-    padding: 0 20px;
-    white-space: nowrap;
+    flex: 1 0 100%;
+    height: 48px;
+    padding: 12px 24px 12px 12px;
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .pdp-new__sticky-quote {
+    display: block;
+    flex: 1 0 100%;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    color: #d83d0e;
+    text-decoration: none;
   }
 
   /* Lift the chat launcher above the bar while the bar is showing.
