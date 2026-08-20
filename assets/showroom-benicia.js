@@ -25,14 +25,6 @@
     var form = document.getElementById('ShowroomCheckModel');
     if (form) {
       form.addEventListener('submit', function () { push('check_model_submit', { location: 'check_model_form' }); });
-      var method = form.querySelector('[data-sr-method]');
-      var value = form.querySelector('[data-sr-contact-value]');
-      if (method && value) {
-        method.addEventListener('change', function () {
-          if (method.value === 'Email') { value.type = 'email'; value.placeholder = 'your@email.com'; }
-          else if (method.value === 'Phone') { value.type = 'tel'; value.placeholder = '(925) 555-0100'; }
-        });
-      }
     }
 
     // Gallery carousel: arrows + dots
