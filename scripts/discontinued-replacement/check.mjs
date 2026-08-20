@@ -87,6 +87,23 @@ const variantOverrideReplacement = {
   },
 };
 
+// A referenced replacement that is itself on the discontinued template.
+// Deliberately adversarial: available, on backorder, and carrying both a
+// variant and a product lead time, so every branch that could render a badge
+// or a lead-time line is populated. The lifecycle guard must still render
+// nothing for this reference.
+const discontinuedReplacement = {
+  title: 'French Fitness Discontinued Replacement (New)',
+  url: '/products/french-fitness-discontinued-replacement-new',
+  template_suffix: 'discontinued',
+  available: true,
+  featured_media: image('https://cdn.shopify.com/s/files/discontinued-reference.webp', 'Discontinued reference'),
+  selected_or_first_available_variant: {
+    metafields: { custom: { processing_time_long_variant: VARIANT_LEAD_TIME } },
+  },
+  metafields: { custom: { backorder: true, processing_time_long: PRODUCT_LEAD_TIME } },
+};
+
 const discontinuedProduct = (replacement) => ({
   title: 'French Fitness CT80 Manual Curve Treadmill w/Resistance (New)',
   template_suffix: 'discontinued',
@@ -188,6 +205,23 @@ console.log('\ncheck: blank-reference-fails-closed');
   check('renders no replacement card', !html.includes('discontinued-replacement__card'), 'a card was rendered without an approved reference');
   check('substitutes no other product', !html.includes('/products/'), 'a product link was rendered from a blank reference');
   assertNoPurchaseControl('blank-reference-fails-closed', html);
+}
+
+console.log('\ncheck: discontinued-reference-fails-closed');
+{
+  const html = render(discontinuedProduct(discontinuedReplacement));
+  check('keeps the source page controlled header', html.includes('This Product Has Been Discontinued'), 'header missing');
+  check('keeps the source page controlled introduction', html.includes('has been discontinued and is no longer available for purchase'), 'introduction missing');
+  check('renders no replacement card', !html.includes('discontinued-replacement__card'), 'a card was rendered for a discontinued reference');
+  check('renders no product link', !html.includes('/products/'), 'a product link was rendered for a discontinued reference');
+  check('renders no replacement image', !html.includes('<img') && !html.includes('discontinued-reference.webp'), 'an image was rendered for a discontinued reference');
+  check('renders no Available to Order badge', !html.includes('Available to Order'), 'availability badge rendered');
+  check('renders no Available to Pre-Order badge', !html.includes('Available to Pre-Order'), 'pre-order badge rendered');
+  check('renders no Out of stock badge', !html.includes('Out of stock'), 'out-of-stock badge rendered');
+  check('renders no lead-time line', !html.includes('discontinued-replacement__lead-time'), 'lead-time line rendered');
+  check('publishes neither the variant nor the product lead time', !html.includes(VARIANT_LEAD_TIME) && !html.includes(PRODUCT_LEAD_TIME), 'a lead time was published');
+  check('selects no fallback product', !html.includes(CT100_TITLE) && !html.includes('discontinued-replacement__title'), 'a substitute product was selected');
+  assertNoPurchaseControl('discontinued-reference-fails-closed', html);
 }
 
 // --- Result ---------------------------------------------------------------

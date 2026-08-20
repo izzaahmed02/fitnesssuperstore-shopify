@@ -28,6 +28,7 @@ theme.
 | `backorder-preorder` | A replacement carrying `custom.backorder` is labelled "Available to Pre-Order", not "Available to Order", matching `snippets/product-availability-badge.liquid`. |
 | `variant-lead-time-override` | A variant `processing_time_long_variant` wins over a conflicting product-level fallback, matching the PDP and cart precedence. |
 | `blank-reference-fails-closed` | With the approved reference blank, the module renders the controlled header and introduction and no product card, and substitutes no other product. |
+| `discontinued-reference-fails-closed` | When the referenced replacement is itself on the discontinued template, the source page keeps its controlled header and introduction and nothing renders for that reference: no card, product link, image, availability/pre-order/out-of-stock badge, lead-time line or purchase control, and no substitute product. The fixture is deliberately adversarial — available, on backorder, and carrying both a variant and a product lead time — so every branch that could render a badge or lead time is populated and the guard has to suppress all of them. |
 | purchase controls | Every rendered case is asserted to contain no price, form, button, quantity or add-to-cart markup. |
 
 ## Fixtures

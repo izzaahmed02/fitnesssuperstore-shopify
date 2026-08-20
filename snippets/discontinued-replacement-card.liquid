@@ -17,12 +17,26 @@
   variant processing_time_long_variant, then product processing_time_long,
   then product processing_time.
 
+  A referenced replacement that is itself on the discontinued template fails
+  closed: nothing at all is rendered for that reference — no card, product
+  link, image, status badge or lead-time line — so a customer is never sent
+  from one discontinued product to another, and a discontinued product is
+  never presented as merely out of stock. The originating page keeps its own
+  controlled header and introduction, and no substitute product is chosen.
+
   Accepts:
     - replacement: {Object} the referenced replacement product (required)
     - intro: {Object} controlled rich-text introduction for this replacement (optional)
 {%- endcomment -%}
 
-{%- if replacement != blank -%}
+{%- liquid
+  assign reference_is_discontinued = false
+  if replacement.template_suffix == 'discontinued'
+    assign reference_is_discontinued = true
+  endif
+-%}
+
+{%- if replacement != blank and reference_is_discontinued == false -%}
   {%- liquid
     assign replacement_variant = replacement.selected_or_first_available_variant
     assign replacement_image = replacement.featured_media
