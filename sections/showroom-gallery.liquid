@@ -1,0 +1,64 @@
+{%- comment -%} Benicia Showroom — Inside the Showroom carousel {%- endcomment -%}
+{{ 'showroom-benicia.css' | asset_url | stylesheet_tag }}
+{%- assign s = section.settings -%}
+<section class="sr-page sr-section sr-gallery">
+  <div class="sr-container">
+    <h2 class="sr-section__title sr-center">{{ s.gallery_heading }}</h2>
+    <p class="sr-section__lede sr-center">{{ s.gallery_text }}</p>
+
+    <div class="sr-carousel" data-sr-carousel>
+      <button type="button" class="sr-carousel__btn sr-carousel__btn--prev" data-sr-prev aria-label="Previous photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="sr-carousel__track" data-sr-track role="list">
+        {%- for i in (1..4) -%}
+          {%- liquid
+            assign img_key = 'gallery_image_' | append: i
+            assign cap_key = 'gallery_caption_' | append: i
+            assign img = s[img_key]
+            assign cap = s[cap_key]
+          -%}
+          {%- if img != blank -%}
+            <figure class="sr-slide" role="listitem">
+              <img src="{{ img | image_url: width: 1200 }}"
+                   srcset="{{ img | image_url: width: 700 }} 700w, {{ img | image_url: width: 1200 }} 1200w"
+                   sizes="(min-width: 750px) 584px, 82vw"
+                   width="1200" height="{{ 1200 | divided_by: img.aspect_ratio | round }}"
+                   alt="{{ cap | strip_html | escape }}" loading="lazy">
+              {%- if cap != blank -%}<figcaption>{{ cap }}</figcaption>{%- endif -%}
+            </figure>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+      <button type="button" class="sr-carousel__btn sr-carousel__btn--next" data-sr-next aria-label="Next photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div class="sr-dots" data-sr-dots aria-hidden="true"></div>
+
+    <p class="sr-gallery__note sr-center">{{ s.gallery_note }}</p>
+  </div>
+</section>
+<script src="{{ 'showroom-benicia.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Showroom Gallery",
+  "tag": "section",
+  "class": "section section-showroom-gallery",
+  "settings": [
+    { "type": "text", "id": "gallery_heading", "label": "Heading", "default": "Inside the Benicia Showroom" },
+    { "type": "textarea", "id": "gallery_text", "label": "Intro", "default": "Swipe through current showroom photos. Equipment on display rotates as products arrive and sell." },
+    { "type": "image_picker", "id": "gallery_image_1", "label": "Photo 1" },
+    { "type": "text", "id": "gallery_caption_1", "label": "Caption 1", "default": "Selectorized French Fitness strength machines on display. French Fitness selectorized / FSR90 area." },
+    { "type": "image_picker", "id": "gallery_image_2", "label": "Photo 2" },
+    { "type": "text", "id": "gallery_caption_2", "label": "Caption 2", "default": "Wide view across the showroom floor." },
+    { "type": "image_picker", "id": "gallery_image_3", "label": "Photo 3" },
+    { "type": "text", "id": "gallery_caption_3", "label": "Caption 3", "default": "Functional trainers, Smith machines, and racks set up for testing." },
+    { "type": "image_picker", "id": "gallery_image_4", "label": "Photo 4" },
+    { "type": "text", "id": "gallery_caption_4", "label": "Caption 4", "default": "Street-level entrance to the Benicia showroom at 457 Industrial Way." },
+    { "type": "textarea", "id": "gallery_note", "label": "Freshness note", "default": "Showroom photos updated July 2026. Equipment on display changes as products arrive and sell. Call ahead to confirm a specific model." }
+  ],
+  "presets": [{ "name": "Showroom Gallery" }]
+}
+{% endschema %}

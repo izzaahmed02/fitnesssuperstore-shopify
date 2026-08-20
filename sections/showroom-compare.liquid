@@ -1,0 +1,59 @@
+{%- comment -%} Benicia Showroom — What You Can Compare {%- endcomment -%}
+{{ 'showroom-benicia.css' | asset_url | stylesheet_tag }}
+{%- assign s = section.settings -%}
+<section class="sr-page sr-section sr-compare">
+  <div class="sr-container">
+    <h2 class="sr-section__title sr-center">{{ s.compare_heading }}</h2>
+    {%- if s.compare_disclosure != blank -%}
+      <p class="sr-compare__disclosure">{{ s.compare_disclosure }}</p>
+    {%- endif -%}
+    <div class="sr-compare__grid">
+      {%- for i in (1..4) -%}
+        {%- liquid
+          assign t_key = 'compare_title_' | append: i
+          assign d_key = 'compare_text_' | append: i
+          assign im_key = 'compare_image_' | append: i
+          assign t = s[t_key]
+          assign d = s[d_key]
+          assign im = s[im_key]
+        -%}
+        {%- if t != blank -%}
+          <div class="sr-compare__card">
+            {%- if im != blank -%}
+              <div class="sr-compare__media">
+                <img src="{{ im | image_url: width: 500 }}" alt="{{ t | strip_html | escape }}" loading="lazy">
+              </div>
+            {%- endif -%}
+            <h3>{{ t }}</h3>
+            <p>{{ d }}</p>
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Showroom Compare",
+  "tag": "section",
+  "class": "section section-showroom-compare",
+  "settings": [
+    { "type": "text", "id": "compare_heading", "label": "Heading", "default": "What You Can Compare in Person" },
+    { "type": "textarea", "id": "compare_disclosure", "label": "Disclosure", "default": "Representative categories only. Models on display change; call ahead to confirm a specific machine." },
+    { "type": "image_picker", "id": "compare_image_1", "label": "Card 1 image" },
+    { "type": "text", "id": "compare_title_1", "label": "Card 1 title", "default": "French Fitness Strength Machines" },
+    { "type": "textarea", "id": "compare_text_1", "label": "Card 1 text", "default": "Selectorized and plate-loaded strength equipment from our own brand." },
+    { "type": "image_picker", "id": "compare_image_2", "label": "Card 2 image" },
+    { "type": "text", "id": "compare_title_2", "label": "Card 2 title", "default": "Functional Trainers, Smith Machines, Racks & Rigs" },
+    { "type": "textarea", "id": "compare_text_2", "label": "Card 2 text", "default": "Compare frame size, cable paths, and footprint before you buy." },
+    { "type": "image_picker", "id": "compare_image_3", "label": "Card 3 image" },
+    { "type": "text", "id": "compare_title_3", "label": "Card 3 title", "default": "Free Weights, Benches, Flooring & Accessories" },
+    { "type": "textarea", "id": "compare_text_3", "label": "Card 3 text", "default": "Test bench angles, plate feel, and flooring underfoot." },
+    { "type": "image_picker", "id": "compare_image_4", "label": "Card 4 image" },
+    { "type": "text", "id": "compare_title_4", "label": "Card 4 title", "default": "Remanufactured Commercial Cardio" },
+    { "type": "textarea", "id": "compare_text_4", "label": "Card 4 text", "default": "Including Life Fitness, Precor, Technogym, Matrix, and StairMaster." }
+  ],
+  "presets": [{ "name": "Showroom Compare" }]
+}
+{% endschema %}
