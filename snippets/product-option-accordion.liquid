@@ -21,24 +21,9 @@
     "Assembly & Room of Choice" is configured as a Select in the metafields, but it
     should use the same accordion/swatch selector as the other product options instead
     of a native dropdown. Force the accordion rendering for this category.
-
-    Matched on title fragments rather than the full group title, which has been
-    renamed more than once while ROC methods and pricing were revised; an
-    exact-title comparison here silently reverts the group to a native dropdown.
-    'assembly' is required and 'flooring' excluded so the turf rolls' separate
-    "Delivery / Room of Choice / Flooring Installation Options" group keeps its
-    intended Select rendering. See snippets/product-options.liquid.
   endcomment
   assign category_title_downcase = category.title | downcase
-  assign is_assembly_roc = false
-  if category_title_downcase contains 'room of choice'
-    if category_title_downcase contains 'assembly'
-      unless category_title_downcase contains 'flooring'
-        assign is_assembly_roc = true
-      endunless
-    endif
-  endif
-  if is_assembly_roc
+  if category_title_downcase == 'assembly & room of choice installation needed?'
     assign option_type = 'Accordion'
   endif
   assign option_visible = true
