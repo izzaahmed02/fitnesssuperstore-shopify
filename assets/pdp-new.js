@@ -521,6 +521,22 @@
     syncFinancing(root);
     bindPayLater(root);
 
+    /* Tapping the image must not open the shared lightbox on phone — the Figma
+       gallery (19:30777) is swipe-only, and the popup renders half-broken over
+       this template. product-mobile-gallery.js binds openPopup() on each slide
+       (bubble phase); a capture-phase listener on the ancestor fires first and
+       stops the event before it gets there. Shared file, so intercepted here
+       rather than edited. Desktop is unaffected: <mobile-gallery> is the
+       phone-only element, the desktop <product-gallery> zoom keeps working. */
+    var mobileGallery = root.querySelector('mobile-gallery');
+    if (mobileGallery) {
+      mobileGallery.addEventListener('click', function (event) {
+        if (event.target.closest && event.target.closest('.mobile-gallery-slide-wrap')) {
+          event.stopPropagation();
+        }
+      }, true);
+    }
+
     if (typeof subscribe === 'function' && typeof PUB_SUB_EVENTS === 'object') {
       subscribe(PUB_SUB_EVENTS.variantChange, function (event) {
         var data = (event && event.data) || {};
