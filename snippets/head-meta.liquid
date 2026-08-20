@@ -77,7 +77,15 @@
 {% endif %}
 
 {%- if settings.favicon != blank -%}
-  <link rel="icon" href="{{ settings.favicon | image_url: width: 32 }}" type="image/png">
+  {%- comment -%}
+    Google recommends a favicon larger than 48x48 and reads rel="icon",
+    rel="shortcut icon" and rel="apple-touch-icon". A single 32x32 icon is
+    below that recommendation, so serve a set of square sizes.
+  {%- endcomment -%}
+  <link rel="icon" type="image/png" sizes="48x48" href="{{ settings.favicon | image_url: width: 48, height: 48 | prepend: 'https:' }}">
+  <link rel="icon" type="image/png" sizes="96x96" href="{{ settings.favicon | image_url: width: 96, height: 96 | prepend: 'https:' }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ settings.favicon | image_url: width: 192, height: 192 | prepend: 'https:' }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ settings.favicon | image_url: width: 180, height: 180 | prepend: 'https:' }}">
 {%- endif -%}
 
 {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}

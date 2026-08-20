@@ -1,3 +1,27 @@
+{%- liquid
+  # Google requires the Organization logo to be a raster image of at least
+  # 112x112px, and Shopify's CDN cannot resize or rasterize SVG. When the theme
+  # logo is an SVG, fall back to the favicon, which is a square raster image.
+  assign logo_source = settings.logo
+  assign logo_probe = settings.logo | image_url: width: 100
+  if settings.logo == blank or logo_probe contains '.svg'
+    assign logo_source = settings.favicon
+  endif
+
+  assign logo_url = ''
+  assign logo_width = 0
+  assign logo_height = 0
+  if logo_source != blank
+    assign logo_url = logo_source | image_url: width: 512 | prepend: 'https:'
+    if logo_source.width != blank and logo_source.height != blank
+      assign logo_width = logo_source.width
+      if logo_width > 512
+        assign logo_width = 512
+      endif
+      assign logo_height = logo_source.height | times: logo_width | divided_by: logo_source.width
+    endif
+  endif
+-%}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -17,10 +41,12 @@
       "name": "Fitness Superstore",
       "url": "{{ shop.url }}",
       "foundingDate": "2010",
-      "description": "New and remanufactured gym equipment for home gyms and commercial facilities."{% if settings.logo %},
+      "description": "New and remanufactured gym equipment for home gyms and commercial facilities."{% if logo_url != blank %},
       "logo": {
         "@type": "ImageObject",
-        "url": {{ settings.logo | image_url: width: 500 | prepend: "https:" | json }}
+        "url": {{ logo_url | json }}{% if logo_width > 0 and logo_height > 0 %},
+        "width": {{ logo_width }},
+        "height": {{ logo_height }}{% endif %}
       }{% endif %},
       "address": {
         "@type": "PostalAddress",
