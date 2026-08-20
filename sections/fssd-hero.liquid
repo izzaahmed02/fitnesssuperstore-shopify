@@ -263,9 +263,28 @@
     outline: 3px solid #ffffff;
     outline-offset: 3px;
   }
-  @media screen and (max-width: 749px) {
+  /* Mobile: match Control's hero, which goes full-bleed at <=768px
+     (homepage-section-hero.css: @media (max-width: 768px) .hero-section
+     { padding: 0 }) with the text still 20px inside the photo
+     (.image-wrapper .content { padding: 20px 20px }, NOT overridden at
+     mobile — Control's 768px block only changes its gap — so Control's
+     content vertical stays 20px and there is no mobile vertical change to
+     match; our own 40px vertical rhythm is kept). Breakpoint is 768px, not
+     the 749px the other fssd sections use, to line up with Control's
+     full-bleed rule. Full-bleed here means undoing the desktop 16px inset
+     AND the width that inset required, so the photo spans edge to edge:
+     otherwise the 16px image inset and 16px content padding cancel and the
+     headline sits flush on the photo edge (the desktop defect, at mobile). */
+  @media screen and (max-width: 768px) {
+    .fssd-hero__image,
+    .fssd-hero__scrim {
+      inset: 0;
+    }
+    .fssd-hero__image {
+      width: 100%;
+    }
     .fssd-hero__content {
-      padding: 40px 16px;
+      padding: 40px 20px;
     }
     .fssd-hero__title {
       font-size: 36px;
