@@ -1,4 +1,4 @@
-{%- comment -%} Benicia Showroom — Inside the Showroom carousel {%- endcomment -%}
+{%- comment -%} Benicia Showroom — Inside the Showroom carousel (block-based) {%- endcomment -%}
 {{ 'showroom-benicia.css' | asset_url | stylesheet_tag }}
 {%- assign s = section.settings -%}
 <section class="sr-page sr-section sr-gallery">
@@ -11,15 +11,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <div class="sr-carousel__track" data-sr-track role="list">
-        {%- for i in (1..4) -%}
-          {%- liquid
-            assign img_key = 'gallery_image_' | append: i
-            assign cap_key = 'gallery_caption_' | append: i
-            assign img = s[img_key]
-            assign cap = s[cap_key]
-          -%}
+        {%- for block in section.blocks -%}
+          {%- assign img = block.settings.image -%}
+          {%- assign cap = block.settings.caption -%}
           {%- if img != blank -%}
-            <figure class="sr-slide" role="listitem">
+            <figure class="sr-slide" role="listitem" {{ block.shopify_attributes }}>
               <img src="{{ img | image_url: width: 1200 }}"
                    srcset="{{ img | image_url: width: 700 }} 700w, {{ img | image_url: width: 1200 }} 1200w"
                    sizes="(min-width: 750px) 584px, 82vw"
@@ -49,16 +45,29 @@
   "settings": [
     { "type": "text", "id": "gallery_heading", "label": "Heading", "default": "Inside the Benicia Showroom" },
     { "type": "textarea", "id": "gallery_text", "label": "Intro", "default": "Swipe through current showroom photos. Equipment on display rotates as products arrive and sell." },
-    { "type": "image_picker", "id": "gallery_image_1", "label": "Photo 1" },
-    { "type": "text", "id": "gallery_caption_1", "label": "Caption 1", "default": "Selectorized French Fitness strength machines on display. French Fitness selectorized / FSR90 area." },
-    { "type": "image_picker", "id": "gallery_image_2", "label": "Photo 2" },
-    { "type": "text", "id": "gallery_caption_2", "label": "Caption 2", "default": "Wide view across the showroom floor." },
-    { "type": "image_picker", "id": "gallery_image_3", "label": "Photo 3" },
-    { "type": "text", "id": "gallery_caption_3", "label": "Caption 3", "default": "Functional trainers, Smith machines, and racks set up for testing." },
-    { "type": "image_picker", "id": "gallery_image_4", "label": "Photo 4" },
-    { "type": "text", "id": "gallery_caption_4", "label": "Caption 4", "default": "Street-level entrance to the Benicia showroom at 457 Industrial Way." },
     { "type": "textarea", "id": "gallery_note", "label": "Freshness note", "default": "Showroom photos updated July 2026. Equipment on display changes as products arrive and sell. Call ahead to confirm a specific model." }
   ],
-  "presets": [{ "name": "Showroom Gallery" }]
+  "blocks": [
+    {
+      "type": "photo",
+      "name": "Photo",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Photo" },
+        { "type": "text", "id": "caption", "label": "Caption" }
+      ]
+    }
+  ],
+  "max_blocks": 12,
+  "presets": [
+    {
+      "name": "Showroom Gallery",
+      "blocks": [
+        { "type": "photo", "settings": { "caption": "Selectorized French Fitness strength machines on display. French Fitness selectorized / FSR90 area." } },
+        { "type": "photo", "settings": { "caption": "Wide view across the showroom floor." } },
+        { "type": "photo", "settings": { "caption": "Functional trainers, Smith machines, and racks set up for testing." } },
+        { "type": "photo", "settings": { "caption": "Street-level entrance to the Benicia showroom at 457 Industrial Way." } }
+      ]
+    }
+  ]
 }
 {% endschema %}
