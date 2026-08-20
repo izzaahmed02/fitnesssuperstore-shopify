@@ -1,4 +1,4 @@
-{%- comment -%} Benicia Showroom — What You Can Compare {%- endcomment -%}
+{%- comment -%} Benicia Showroom — What You Can Compare (block-based) {%- endcomment -%}
 {{ 'showroom-benicia.css' | asset_url | stylesheet_tag }}
 {%- assign s = section.settings -%}
 <section class="sr-page sr-section sr-compare">
@@ -8,17 +8,12 @@
       <p class="sr-compare__disclosure">{{ s.compare_disclosure }}</p>
     {%- endif -%}
     <div class="sr-compare__grid">
-      {%- for i in (1..4) -%}
-        {%- liquid
-          assign t_key = 'compare_title_' | append: i
-          assign d_key = 'compare_text_' | append: i
-          assign im_key = 'compare_image_' | append: i
-          assign t = s[t_key]
-          assign d = s[d_key]
-          assign im = s[im_key]
-        -%}
+      {%- for block in section.blocks -%}
+        {%- assign t = block.settings.title -%}
+        {%- assign d = block.settings.text -%}
+        {%- assign im = block.settings.image -%}
         {%- if t != blank -%}
-          <div class="sr-compare__card">
+          <div class="sr-compare__card" {{ block.shopify_attributes }}>
             {%- if im != blank -%}
               <div class="sr-compare__media">
                 <img src="{{ im | image_url: width: 500 }}" alt="{{ t | strip_html | escape }}" loading="lazy">
@@ -40,20 +35,30 @@
   "class": "section section-showroom-compare",
   "settings": [
     { "type": "text", "id": "compare_heading", "label": "Heading", "default": "What You Can Compare in Person" },
-    { "type": "textarea", "id": "compare_disclosure", "label": "Disclosure", "default": "Representative categories only. Models on display change; call ahead to confirm a specific machine." },
-    { "type": "image_picker", "id": "compare_image_1", "label": "Card 1 image" },
-    { "type": "text", "id": "compare_title_1", "label": "Card 1 title", "default": "French Fitness Strength Machines" },
-    { "type": "textarea", "id": "compare_text_1", "label": "Card 1 text", "default": "Selectorized and plate-loaded strength equipment from our own brand." },
-    { "type": "image_picker", "id": "compare_image_2", "label": "Card 2 image" },
-    { "type": "text", "id": "compare_title_2", "label": "Card 2 title", "default": "Functional Trainers, Smith Machines, Racks & Rigs" },
-    { "type": "textarea", "id": "compare_text_2", "label": "Card 2 text", "default": "Compare frame size, cable paths, and footprint before you buy." },
-    { "type": "image_picker", "id": "compare_image_3", "label": "Card 3 image" },
-    { "type": "text", "id": "compare_title_3", "label": "Card 3 title", "default": "Free Weights, Benches, Flooring & Accessories" },
-    { "type": "textarea", "id": "compare_text_3", "label": "Card 3 text", "default": "Test bench angles, plate feel, and flooring underfoot." },
-    { "type": "image_picker", "id": "compare_image_4", "label": "Card 4 image" },
-    { "type": "text", "id": "compare_title_4", "label": "Card 4 title", "default": "Remanufactured Commercial Cardio" },
-    { "type": "textarea", "id": "compare_text_4", "label": "Card 4 text", "default": "Including Life Fitness, Precor, Technogym, Matrix, and StairMaster." }
+    { "type": "textarea", "id": "compare_disclosure", "label": "Disclosure", "default": "Representative categories only. Models on display change; call ahead to confirm a specific machine." }
   ],
-  "presets": [{ "name": "Showroom Compare" }]
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Category",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "text", "id": "title", "label": "Title" },
+        { "type": "textarea", "id": "text", "label": "Text" }
+      ]
+    }
+  ],
+  "max_blocks": 8,
+  "presets": [
+    {
+      "name": "Showroom Compare",
+      "blocks": [
+        { "type": "category", "settings": { "title": "French Fitness Strength Machines", "text": "Selectorized and plate-loaded strength equipment from our own brand." } },
+        { "type": "category", "settings": { "title": "Functional Trainers, Smith Machines, Racks & Rigs", "text": "Compare frame size, cable paths, and footprint before you buy." } },
+        { "type": "category", "settings": { "title": "Free Weights, Benches, Flooring & Accessories", "text": "Test bench angles, plate feel, and flooring underfoot." } },
+        { "type": "category", "settings": { "title": "Remanufactured Commercial Cardio", "text": "Including Life Fitness, Precor, Technogym, Matrix, and StairMaster." } }
+      ]
+    }
+  ]
 }
 {% endschema %}
