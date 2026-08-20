@@ -131,20 +131,25 @@
     min-height: 420px;
     overflow: hidden;
     isolation: isolate;
-    /* 16px horizontal inset so the background image no longer runs flush
-       against the sidebar's right edge — matches the 16px gutter the other
-       four fssd sections carry via their __inner padding. Control's own hero
-       is likewise inset (homepage-section-hero.css: .hero-section
-       max-width:1044px; margin:0 auto; padding-left:12px), confirming heroes
-       should not be full-bleed here. The absolute __image and __scrim inset:0
-       resolve to this padding box, so they inset with it; __content keeps its
-       own 16px so the text still sits inside the image edge. */
-    padding: 0 16px;
   }
+  /* 16px horizontal inset so the background no longer runs flush against the
+     sidebar's right edge — matches the 16px gutter the other four fssd
+     sections carry. Applied directly to the absolutely-positioned background
+     layers, NOT via padding on .fssd-hero: inset: 0 resolves against the
+     containing block's PADDING BOX, which includes the padding area, so
+     horizontal padding on the parent cannot inset an absolute child — it
+     would only push __content (the text) inward and break its alignment with
+     the other sections. Both layers get the same inset so the scrim stays
+     registered to the image. __content keeps its own centered max-width and
+     16px padding, so the text still starts at the section's normal 476px. */
   .fssd-hero__image {
     position: absolute;
-    inset: 0;
-    width: 100%;
+    inset: 0 16px;
+    /* An <img> is a replaced element: left+right insets do NOT stretch it the
+       way they stretch the non-replaced __scrim, so its width must be set
+       explicitly to the inset box — the padding-box width minus the two 16px
+       insets — or it collapses to its intrinsic size and ignores the inset. */
+    width: calc(100% - 32px);
     height: 100%;
     object-fit: cover;
     object-position: center;
@@ -152,7 +157,7 @@
   }
   .fssd-hero__scrim {
     position: absolute;
-    inset: 0;
+    inset: 0 16px;
     z-index: -1;
     background:
       linear-gradient(180deg, rgba(35, 35, 43, 0) 0%, rgba(35, 35, 43, 0.45) 100%),
