@@ -174,13 +174,14 @@ off — this run proves the code's behaviour, not the CDN delivery path.
 | F4 | All 10 contained in the viewport | Pass — e.g. delivered 2048×1765 → 919×792, delivered 2048×2731 → 593.9×792 |
 | F5 | All 10 keep their aspect ratio | Pass |
 | F6 | No photo enlarged past its own source at fit size | Pass |
-| F7 | Zoom ceiling stays within each photo's delivered pixels | Pass — ×2.00=1277/1277, ×2.23=2048/2048, ×3.45=2048/2048 ×3, ×1.93=1137/1137, ×2.02=1200/1200, ×1.90=1141/1141, ×2.49=1512/1512 |
+| F7 | Zoom ceiling stays within each photo's delivered pixels | Pass — all ten, verbatim from `results.json`: ×2.00=1277/1277, ×2.23=2048/2048, ×3.45=2048/2048, ×3.45=2048/2048, ×3.45=2048/2048, ×1.93=1137/1137, ×2.02=1200/1200, ×1.90=1141/1141, ×3.45=2048/2048, ×2.49=1512/1512 |
 | F8 | End boundary after walking all 10 | Pass — "10 of 10", next hidden |
 
-F7 is the per-photo form of the no-upscale guarantee. The six photos whose sources are under
-2048px stop at their own native width (1137, 1141, 1200, 1277, 1512); the four above it stop at
-the 2048px rendition Shopify delivers. Either way the ceiling is the pixels the customer actually
-received, never more.
+F7 is the per-photo form of the no-upscale guarantee, and FSR90's ten photos split five/five
+across the delivery cap. The five whose sources are under 2048px stop at their own native width
+(1137, 1141, 1200, 1277, 1512). The five above it — 2682, 3000 ×2, 3482 and 4284 px wide — are
+each delivered at 2048px and stop there: ×2.23 for the landscape one, ×3.45 for the four
+portraits. Either way the ceiling is the pixels the customer actually received, never more.
 
 ## 4. No upscaling, and code defects vs source defects
 
