@@ -366,16 +366,57 @@
         display: block;
         position: relative;
         margin-top: 24px;
+        /* Swiper's own API for the gap between bullets; the rule below also
+           sets it, this covers the case where Swiper's class names change. */
+        --swiper-pagination-bullet-horizontal-gap: 0px;
     }
     
+    /* Accessibility (WCAG 2.5.8, Target Size (Minimum)): these pagination
+       bullets are Swiper defaults - 8x8 with a 4px gap each side, a 16px
+       pitch - so each tap target is under the 24x24 minimum and the bullets
+       sit too close for the spacing exception. Lighthouse names them as the
+       homepage touch-target failure. They are library defaults, present on
+       live MAIN, and not a regression from this PR.
+    
+       The bullet element becomes the 24x24 target and the visible dot moves
+       to ::before at its original 8x8 with the same colours, so the dots
+       stay pixel-identical. The horizontal gap goes to 0, making the pitch
+       exactly 24px: targets sit edge to edge and never overlap.
+    
+       The -8px block margins hold the bullet's margin box at 8px - its
+       current height - so the line box, the dots' vertical position, and
+       everything below the carousel stay exactly where they are. No visual
+       movement, no layout shift, no CLS change. Scoped to .homepage-reviews,
+       so no other carousel is affected. */
     .homepage-reviews .swiper-pagination-bullet {
-        width: 8px;
-        height: 8px;
-        background: #D3D9E5;
+        position: relative;
+        width: 24px;
+        height: 24px;
+        background: transparent;
         opacity: 1;
     }
     
-    .homepage-reviews .swiper-pagination-bullet-active {
+    /* Specificity here has to beat Swiper's own
+       `.swiper-pagination-horizontal.swiper-pagination-bullets
+       .swiper-pagination-bullet { margin: 0 var(--...-gap, 4px) }` (0,3,0),
+       which would otherwise reset the block margins back to 0. */
+    .homepage-reviews .swiper-pagination.swiper-pagination-horizontal.swiper-pagination-bullets .swiper-pagination-bullet {
+        margin: -8px 0;
+    }
+    
+    .homepage-reviews .swiper-pagination-bullet::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 8px;
+        height: 8px;
+        margin: -4px 0 0 -4px;
+        border-radius: 50%;
+        background: #D3D9E5;
+    }
+    
+    .homepage-reviews .swiper-pagination-bullet-active::before {
         background: #23232B;
     }
 }
